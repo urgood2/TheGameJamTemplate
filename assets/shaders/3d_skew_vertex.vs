@@ -57,23 +57,35 @@ void main()
 
     // Flip vertical tilt direction
     relativeMouseDir.y *= -1.0;
+    
+    // Properly normalize and preserve direction across both halves
+    relativeMouseDir.x = -relativeMouseDir.x;
 
     // Final force
     vec2 mouseForce = hovering * relativeMouseDir + randVec * 0.05 * rand_trans_power;
 
 
 
-    // Compute rotation matrix (inverse)
-    float sinY = sin(radians(y_rot) + mouseForce.x);
+    // --- compute inverse rotation to tilt TOWARD the mouse ---
+    float sinY = sin(radians(y_rot) + mouseForce.x);  // yaw  (right = positive)
     float cosY = cos(radians(y_rot) + mouseForce.x);
-    float sinX = sin(radians(x_rot) - mouseForce.y);
+    float sinX = sin(radians(x_rot) - mouseForce.y);  // pitch (up = positive -> forward tilt)
     float cosX = cos(radians(x_rot) - mouseForce.y);
 
-    invRotMat = mat3(
-        vec3( cosY,      0.0, -sinY ),
-        vec3( sinY*sinX, cosX, cosY*sinX ),
-        vec3( sinY*cosX, -sinX, cosY*cosX )
+    mat3 rotY = mat3(
+        cosY, 0.0, sinY,
+        0.0,  1.0, 0.0,
+    -sinY, 0.0, cosY
     );
+    mat3 rotX = mat3(
+        1.0, 0.0, 0.0,
+        0.0, cosX, -sinX,
+        0.0, sinX, cosX
+    );
+    invRotMat = transpose(rotY * rotX); // inverse of rotation
+
+
+
 
     // Apply perspective shift to vertex
     float t = tan(radians(fov) / 2.0);

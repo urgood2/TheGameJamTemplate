@@ -136,3 +136,6 @@
 11/1/2025
   - Full day of work.
   - Got some more assets, sound and art. Maybe I'll use some of them.
+  
+11/2 - 11/4/2025
+  - Trip, almost no work, but did organize assets (sound and graphics), worked on some bugs.

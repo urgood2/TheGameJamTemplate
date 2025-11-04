@@ -304,8 +304,8 @@ namespace game
         globalShaderUniforms.set("3d_skew", "y_rot", 0.0f); // No Y orbit
         globalShaderUniforms.set("3d_skew", "inset", 0.0f); // No edge compression
         // --- Interaction dynamics ---
-        globalShaderUniforms.set("3d_skew", "hovering", 0.07f);         // From your log
-        globalShaderUniforms.set("3d_skew", "rand_trans_power", 0.09f); // From your log
+        globalShaderUniforms.set("3d_skew", "hovering", 0.3f);         // From your log
+        globalShaderUniforms.set("3d_skew", "rand_trans_power", 0.4f); // From your log
         globalShaderUniforms.set("3d_skew", "rand_seed", 3.1415f);      // Per-object offset
         globalShaderUniforms.set("3d_skew", "rotation", 0.0f);          // No UV twist
         globalShaderUniforms.set("3d_skew", "cull_back", 0.0f);         // Disable backface culling

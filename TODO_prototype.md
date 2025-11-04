@@ -44,11 +44,9 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
-- cursor centring not working. 
-- entities not getting filtured porperly 
+- entities not getting filtured porperly, camera not always kicking in.
 - make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
 - creation of tooltips for every type of card, caching away, then showing on hover.
-- test that transform lerping to body is working.
 - Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
 - add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
 - implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
@@ -116,6 +114,7 @@ end)
 
 # errors
 - boards stop updating when I change state. why?
+- test that transform lerping to body is working.
 - enemies move too slowly?
 - cards to immeidate left & right jitter when pushed aside for selection.
 - probably make a physics timer that runs every physics step, instead of relying on main loop timer. how to do this with lua, though? callbacks are slow. physics is jerking from place to place. why is that? jumping back and forth.
@@ -144,6 +143,7 @@ end)
 - Consider using luajit for release.
 
 # polish phase
+- add per-card 3d skew shader pass, disabled when card interacted with. also change 3d skew shader to make card tilt toward mouse, right now it's not facing mouse.
 - graphics need to coalesce. snkrx looks nice. how to replicate?
 - particles with a specific arc (like splashing in a certain direction)
 - experiment with glowing background behind a card to show selection/effect (colorful, glowing, random)
@@ -167,3 +167,17 @@ end)
 - Explore ways to cleanly remove tracy instrumentation from lua scripts & c++ for release builds.
 - Clean up build files so that no docs or unnecessary source files are included.
 - Playtest and get feedback from friends.
+
+
+# particle polish considerations
+- [ ] Chromatic abberation on hit. 
+- [ ] Particles that dwindle in size iregularly (pixelation + rotation) + gravity
+- [ ] Same colored expanding circle outline
+- [ ] Flash with filled circle
+- [ ] Diamond hit fx centered on impact point& roatated to face the point + dwindling after
+- [ ] The sprite itself changing size in hit and going back to normal
+- [ ] Spreading circular ripple - irregular shape + fading
+- [ ] Multiple-point shader distortion (ripple)
+- [ ] Pulsing points of light as sources for lightning
+- [ ] Particles in area traveling toward center & concentric circles traveling toward center & causing wobble + growing circle size + exploding with fat particles, directin
+- [ ] Lightning lines from a to b

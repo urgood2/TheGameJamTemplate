@@ -63,8 +63,9 @@ namespace ui_defs
         auto configBuilder = ui::UIConfig::Builder::create()
             .addColor(WHITE)
             .addText(text)
+            .addPadding(1)
             .addShadow(true)
-            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
+            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
 
         if (refEntity && refComponent && refValue) {
             configBuilder.addRefEntity(*refEntity)
@@ -355,7 +356,7 @@ namespace ui_defs
                     ui::UIConfig::Builder::create()
                         // .addColor(WHITE)
                         .addPadding(1.f)
-                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                         .build());
 
             for (auto &segmentDef : textSegmentDefs) {
@@ -371,7 +372,7 @@ namespace ui_defs
             .addConfig(
                 ui::UIConfig::Builder::create()
                     // .addColor(WHITE)
-                    .addPadding(0.0f)
+                    .addPadding(1.0f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build());
         

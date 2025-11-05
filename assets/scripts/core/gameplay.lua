@@ -73,6 +73,8 @@ local cardW, cardH = 80, 112 -- these are reset on init.
 PLANNING_STATE = "PLANNING"
 ACTION_STATE = "SURVIVORS"
 SHOP_STATE = "SHOP"
+WAND_TOOLTIP_STATE = "WAND_TOOLTIP_STATE" -- we use this to show wand tooltips and hide them when needed.
+CARD_TOOLTIP_STATE = "CARD_TOOLTIP_STATE" -- we use this to show card tooltips and hide them when needed.
 
 -- combat context, to be used with the combat system.
 combat_context = nil
@@ -86,6 +88,10 @@ inventory_board_id = nil
 trigger_board_id_to_action_board_id = {} -- map trigger boards to action boards
 trigger_board_id = nil
 action_board_id = nil
+
+-- ui tooltip cache
+wand_tooltip_cache = {}
+card_tooltip_cache = {}
 
 -- to decide which trigger+action board set is active
 board_sets = {}
@@ -930,6 +936,24 @@ function createNewCard(id, x, y, gameStateToApply)
         cardScript.selected = not cardScript.selected
     end
     
+    nodeComp.methods.onHover = function()
+        -- get script
+        local hoveredCardScript = getScriptTableFromEntityID(card)
+        if not hoveredCardScript then return end
+        
+        -- disable all tooltips in the cache
+        for _, tt in pairs(card_tooltip_cache) do
+            clear_state_tags(tt)
+        end
+        
+        
+        local tooltip = card_tooltip_cache[hoveredCardScript.cardID]
+        if not tooltip then
+            return
+        end
+        add_state_tag(tooltip, CARD_TOOLTIP_STATE)
+        activate_state(CARD_TOOLTIP_STATE)
+    end
     
     nodeComp.methods.onDrag = function()
         
@@ -1759,6 +1783,101 @@ function toggleBoardSetVisibility(boardSet, visible)
     end
 end
 
+
+function makeWandTooltip(wand_def)
+    
+    if not wand_def then
+        wand_def = WandEngine.wand_defs[1]
+    end
+    
+    local text = "[id](background=red;color=pink) [" .. wand_def.id .. "](color=pink)\n" ..
+    "[type](background=gray;color=green) [" .. wand_def.type .. "](color=pink)\n" ..
+    "[cast block size](background=gray;color=green) [" .. wand_def.cast_block_size .. "](color=pink)\n" ..
+    "[cast delay](background=gray;color=green) [" .. (wand_def.cast_delay or "NONE") .. "](color=pink)\n" ..
+    "[recharge](background=gray;color=green) [" .. wand_def.recharge_time .. "](color=pink)\n" ..
+    "[spread](background=gray;color=green) [" .. (wand_def.spread_angle or "none") .. "](color=pink)\n" ..
+    "[shuffle](background=gray;color=green) [" .. (wand_def.shuffle and "on" or "off") .. "](color=pink)\n" ..
+    "[total slots](background=gray;color=green) [" .. (wand_def.total_card_slots or "N/A") .. "](color=pink)\n" ..
+    "[always casts](background=gray;color=green) [" .. table.concat(wand_def.always_cast_cards, ", ") .. "](color=pink)" 
+    
+    local textDef = ui.definitions.getTextFromString(text)
+    
+    local v = dsl.vbox{
+        config = { align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+                   color = "blue" },
+        children = { textDef }
+    }
+    
+    local root = dsl.root{ 
+        config = {
+            color = "purple",
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+        },
+        children = { v } }
+    
+    local boxID = dsl.spawn({x=200, y=200}, root)
+    
+    ui.box.RenewAlignment(registry, boxID)
+    
+    ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
+    remove_default_state_tag(boxID)
+    
+    return boxID
+end
+
+function makeCardTooltip(card_def)
+    if not card_def then
+        card_def = CardTemplates.ACTION_BASIC_PROJECTILE
+    end
+
+    local text =
+    "[id](background=red;color=pink) [" .. (card_def.id or "N/A") .. "](color=pink)\n" ..
+    "[type](background=gray;color=green) [" .. (card_def.type or "N/A") .. "](color=pink)\n" ..
+    "[max uses](background=gray;color=green) [" .. (card_def.max_uses or "N/A") .. "](color=pink)\n" ..
+    "[mana cost](background=gray;color=green) [" .. (card_def.mana_cost or "N/A") .. "](color=pink)\n" ..
+    "[damage](background=gray;color=green) [" .. (card_def.damage or "N/A") .. "](color=pink)\n" ..
+    "[damage type](background=gray;color=green) [" .. (card_def.damage_type or "N/A") .. "](color=pink)\n" ..
+    "[radius of effect](background=gray;color=green) [" .. (card_def.radius_of_effect or "N/A") .. "](color=pink)\n" ..
+    "[spread angle](background=gray;color=green) [" .. (card_def.spread_angle or "N/A") .. "](color=pink)\n" ..
+    "[projectile speed](background=gray;color=green) [" .. (card_def.projectile_speed or "N/A") .. "](color=pink)\n" ..
+    "[lifetime](background=gray;color=green) [" .. (card_def.lifetime or "N/A") .. "](color=pink)\n" ..
+    "[cast delay](background=gray;color=green) [" .. (card_def.cast_delay or "N/A") .. "](color=pink)\n" ..
+    "[recharge](background=gray;color=green) [" .. (card_def.recharge_time or "N/A") .. "](color=pink)\n" ..
+    "[spread modifier](background=gray;color=green) [" .. (card_def.spread_modifier or "N/A") .. "](color=pink)\n" ..
+    "[speed modifier](background=gray;color=green) [" .. (card_def.speed_modifier or "N/A") .. "](color=pink)\n" ..
+    "[lifetime modifier](background=gray;color=green) [" .. (card_def.lifetime_modifier or "N/A") .. "](color=pink)\n" ..
+    "[crit chance mod](background=gray;color=green) [" .. (card_def.critical_hit_chance_modifier or "N/A") .. "](color=pink)\n" ..
+    "[weight](background=gray;color=green) [" .. (card_def.weight or "N/A") .. "](color=pink)"
+
+    local textDef = ui.definitions.getTextFromString(text)
+
+    local v = dsl.vbox{
+        config = {
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+            color = "blue"
+        },
+        children = { textDef }
+    }
+
+    local root = dsl.root{
+        config = {
+            color = "purple",
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER
+        },
+        children = { v }
+    }
+
+    local boxID = dsl.spawn({ x = 200, y = 200 }, root)
+
+    ui.box.RenewAlignment(registry, boxID)
+    -- ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
+    remove_default_state_tag(boxID)
+
+    return boxID
+end
+
+
+
 -- initialize the game area for planning phase, where you combine cards and stuff.
 function initPlanningPhase()
     
@@ -2373,6 +2492,25 @@ function initPlanningPhase()
         boardSet.wand_def = WandEngine.wand_defs[indexToUse]
     end
     
+    -- for each card, make a tooltip
+    for id, cardDef in pairs(WandEngine.card_defs) do
+        card_tooltip_cache[cardDef.id] = makeCardTooltip(cardDef)
+        
+        -- disable by default, enable only on 
+        clear_state_tags(card_tooltip_cache[cardDef.id])
+    end
+    
+    activate_state(WAND_TOOLTIP_STATE) -- keep activated at  all times.
+    -- activate_state(CARD_TOOLTIP_STATE) -- keep activated at all times.
+    
+    -- make tooltip for each wand in WandEngine.wand_defs
+    for id, wandDef in pairs(WandEngine.wand_defs) do
+        wand_tooltip_cache[wandDef.id] = makeWandTooltip(wandDef)
+        
+        -- disable by default
+        clear_state_tags(wand_tooltip_cache[wandDef.id])
+    end
+    
     
     -- let's set up an update timer for triggers.
     setUpLogicTimers()
@@ -2586,7 +2724,21 @@ function cycleBoardSets(amount)
         end
     end
     
+    -- get current board's wand def
+    local currentSet = board_sets[current_board_set_index]
+    local wandDef = currentSet.wand_def
     
+    -- activate the wand tooltip for this wand
+    for id, tooltipEntity in pairs(wand_tooltip_cache) do
+        if id == wandDef.id then
+            add_state_tag(tooltipEntity, WAND_TOOLTIP_STATE)
+        else
+            clear_state_tags(tooltipEntity)
+        end
+    end
+    
+    -- activate tooltip state
+    activate_state(WAND_TOOLTIP_STATE)
     
 end
 
@@ -3485,48 +3637,10 @@ planningUIEntities = {
 }
 
 
-function makeWandTooltip(wand_def)
-    
-    if not wand_def then
-        wand_def = WandEngine.wand_defs[1]
-    end
-    
-    local text = "[id](background=red;color=pink) [" .. wand_def.id .. "](color=yellow)\n" ..
-    "[type](background=gray;color=pink) [" .. wand_def.type .. "](color=yellow)\n" ..
-    "[cast block size](background=gray;color=pink) [" .. wand_def.cast_block_size .. "](color=yellow)\n" ..
-    "[cast delay](background=gray;color=pink) [" .. wand_def.cast_delay .. "](color=yellow)\n" ..
-    "[recharge](background=gray;color=pink) [" .. wand_def.recharge_time .. "](color=yellow)\n" ..
-    "[spread](background=gray;color=pink) [" .. wand_def.spread_angle .. "](color=yellow)\n" ..
-    "[shuffle](background=gray;color=pink) [" .. (wand_def.shuffle and "on" or "off") .. "](color=yellow)\n" ..
-    "[total slots](background=gray;color=pink) [" .. wand_def.total_card_slots .. "](color=yellow)\n" ..
-    "[always casts](background=gray;color=pink) [" .. table.concat(wand_def.always_cast_cards, ", ") .. "](color=yellow)" 
-    
-    local textDef = ui.definitions.getTextFromString(text)
-    
-    local v = dsl.vbox{
-        config = { align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
-                   color = "blue" },
-        children = { textDef }
-    }
-    
-    local root = dsl.root{ 
-        config = {
-            color = "purple",
-            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
-        },
-        children = { v } }
-    
-    local boxID = dsl.spawn({x=200, y=200}, root)
-    
-    ui.box.RenewAlignment(registry, boxID)
-    
-    ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
-    remove_default_state_tag(boxID)
-end
 
 function initPlanningUI() 
     
-    makeWandTooltip()
+    -- makeWandTooltip()
    
     -- simple button to start action phase.
     local startButtonText = ui.definitions.getNewDynamicTextEntry(

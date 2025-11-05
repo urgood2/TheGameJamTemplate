@@ -1,4 +1,5 @@
 # Documentation
+- [ ] using 0 padding with ui will cause clipping issues.
 - [ ] blinking sprites
 ```lua
 local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)

@@ -218,7 +218,9 @@ inline void exposeToLua(sol::state &lua) {
 
     // Expose clear_state_tags(entity)
     lua.set_function("clear_state_tags", [&registry](entt::entity e) {
-        if (registry.all_of<StateTag>(e)) registry.remove<StateTag>(e);
+        if (registry.all_of<StateTag>(e)) {
+            registry.get<StateTag>(e).clear();
+        }
     });
 
     // Expose ActiveStates methods

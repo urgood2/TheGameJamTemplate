@@ -943,7 +943,9 @@ function createNewCard(id, x, y, gameStateToApply)
         
         -- disable all tooltips in the cache
         for _, tt in pairs(card_tooltip_cache) do
-            clear_state_tags(tt)
+            -- clear_state_tags(tt)
+            ui.box.ClearStateTagsFromUIBox(tt)
+            propagate_state_effects_to_ui_box(tt)
         end
         
         
@@ -953,6 +955,7 @@ function createNewCard(id, x, y, gameStateToApply)
         end
         add_state_tag(tooltip, CARD_TOOLTIP_STATE)
         activate_state(CARD_TOOLTIP_STATE)
+        propagate_state_effects_to_ui_box(tooltip)
     end
     
     nodeComp.methods.onDrag = function()
@@ -1871,7 +1874,8 @@ function makeCardTooltip(card_def)
 
     ui.box.RenewAlignment(registry, boxID)
     -- ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
-    remove_default_state_tag(boxID)
+    ui.box.ClearStateTagsFromUIBox(boxID) -- remove all state tags from sub entities and box
+    -- remove_default_state_tag(boxID)
 
     return boxID
 end

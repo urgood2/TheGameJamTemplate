@@ -1,24 +1,19 @@
 #include "spring.hpp"
 
 #include "util/common_headers.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 
 // The arguments passed in are: the initial value of the spring, its stiffness and damping.
 namespace spring
 {
 
-    // updates all spring components in the registry
-    auto updateAllSprings(entt::registry &registry, float deltaTime) -> void
+   auto updateAllSprings(entt::registry &registry, float deltaTime) -> void
     {
         ZoneScopedN("Update springs");
 
-        // Choose a maximum stable substep duration
-        constexpr float maxStep = 0.004f; // X ms for stability
-
-        // Compute how many substeps to run this frame
+        constexpr float maxStep = 0.016f;
         int steps = static_cast<int>(std::ceil(deltaTime / maxStep));
         if (steps < 1) steps = 1;
-
-        // Divide the total frame time evenly
         float stepDt = deltaTime / static_cast<float>(steps);
 
         auto view = registry.view<Spring>();
@@ -28,10 +23,13 @@ namespace spring
             for (auto entity : view)
             {
                 auto &spring = view.get<Spring>(entity);
+
                 spring::update(spring, stepDt);
             }
         }
     }
+
+
 
 
     auto update(Spring &spring, float deltaTime) -> void

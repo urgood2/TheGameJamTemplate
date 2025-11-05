@@ -2110,6 +2110,195 @@ namespace ui
         //              static_cast<int>(uiBox), stateName);
     }
     
+    //-----------------------------------------------------------------------------
+    // Clear all StateTags in a given UI box hierarchy (including owned objects)
+    //-----------------------------------------------------------------------------
+    auto box::ClearStateTagsFromUIBox(entt::registry &registry, entt::entity uiBox) -> void
+    {
+        using namespace entity_gamestate_management;
+
+        struct StackEntry {
+            entt::entity uiElement{entt::null};
+        };
+
+        // 1) Validate and fetch root
+        if (!registry.valid(uiBox)) return;
+        auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
+        if (!uiBoxComp) return;
+
+        // Clear state tag on the box itself
+        if (registry.all_of<StateTag>(uiBox))
+        {
+            registry.get<StateTag>(uiBox).clear();
+            applyStateEffectsToEntity(registry, uiBox);
+        }
+
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
+
+        // 2) Prepare DFS stack
+        std::stack<StackEntry> stack;
+        stack.push({root});
+
+        // 3) DFS traversal
+        while (!stack.empty())
+        {
+            auto e = stack.top().uiElement;
+            stack.pop();
+            if (!registry.valid(e))
+                continue;
+
+            // 4) Clear the state tag for this element
+            if (registry.all_of<StateTag>(e))
+            {
+                registry.get<StateTag>(e).clear();
+                applyStateEffectsToEntity(registry, e);
+            }
+
+            // 5) Clear for any owned object (UIConfig.object)
+            if (auto cfg = registry.try_get<UIConfig>(e))
+            {
+                if (cfg->object)
+                {
+                    entt::entity obj = cfg->object.value();
+                    if (registry.valid(obj) && registry.all_of<StateTag>(obj))
+                    {
+                        registry.get<StateTag>(obj).clear();
+                        applyStateEffectsToEntity(registry, obj);
+                    }
+                }
+            }
+
+            // 6) Push children (reverse for visual order consistency)
+            if (auto node = registry.try_get<transform::GameObject>(e))
+            {
+                for (auto it = node->orderedChildren.rbegin();
+                    it != node->orderedChildren.rend();
+                    ++it)
+                {
+                    if (registry.valid(*it))
+                        stack.push({*it});
+                }
+            }
+        }
+
+        // SPDLOG_DEBUG("=== Done ClearStateTagsFromUIBox for box {} ===",
+        //              static_cast<int>(uiBox));
+    }
+    
+    auto box::SetTransformSpringsEnabledInUIBox(entt::registry &registry, entt::entity uiBox, bool enabled) -> void
+    {
+        using namespace transform;
+
+        struct StackEntry {
+            entt::entity uiElement{entt::null};
+        };
+
+        // 1) Validate root
+        if (!registry.valid(uiBox)) return;
+        auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
+        if (!uiBoxComp) return;
+
+        // Apply to the box’s own transform if it has one
+        if (auto t = registry.try_get<transform::Transform>(uiBox))
+        {
+            auto tryEnableSpring = [&](entt::entity springEnt)
+            {
+                if (registry.valid(springEnt))
+                {
+                    if (auto spring = registry.try_get<Spring>(springEnt))
+                        spring->enabled = enabled;
+                }
+            };
+
+            tryEnableSpring(t->x);
+            tryEnableSpring(t->y);
+            tryEnableSpring(t->w);
+            tryEnableSpring(t->h);
+            tryEnableSpring(t->r);
+            tryEnableSpring(t->s);
+        }
+
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
+
+        // 2) Prepare DFS stack
+        std::stack<StackEntry> stack;
+        stack.push({root});
+
+        // 3) Traverse all descendants
+        while (!stack.empty())
+        {
+            auto e = stack.top().uiElement;
+            stack.pop();
+            if (!registry.valid(e))
+                continue;
+
+            // 4) If this entity has a transform, toggle its springs
+            if (auto t = registry.try_get<transform::Transform>(e))
+            {
+                auto tryEnableSpring = [&](entt::entity springEnt)
+                {
+                    if (registry.valid(springEnt))
+                    {
+                        if (auto spring = registry.try_get<Spring>(springEnt))
+                            spring->enabled = enabled;
+                    }
+                };
+
+                tryEnableSpring(t->x);
+                tryEnableSpring(t->y);
+                tryEnableSpring(t->w);
+                tryEnableSpring(t->h);
+                tryEnableSpring(t->r);
+                tryEnableSpring(t->s);
+            }
+
+            // 5) If this element owns an object, apply same rule
+            if (auto cfg = registry.try_get<UIConfig>(e))
+            {
+                if (cfg->object)
+                {
+                    entt::entity obj = cfg->object.value();
+                    if (registry.valid(obj))
+                    {
+                        if (auto t = registry.try_get<transform::Transform>(obj))
+                        {
+                            auto tryEnableSpring = [&](entt::entity springEnt)
+                            {
+                                if (registry.valid(springEnt))
+                                {
+                                    if (auto spring = registry.try_get<Spring>(springEnt))
+                                        spring->enabled = enabled;
+                                }
+                            };
+
+                            tryEnableSpring(t->x);
+                            tryEnableSpring(t->y);
+                            tryEnableSpring(t->w);
+                            tryEnableSpring(t->h);
+                            tryEnableSpring(t->r);
+                            tryEnableSpring(t->s);
+                        }
+                    }
+                }
+            }
+
+            // 6) Push children (reverse order for visual consistency)
+            if (auto node = registry.try_get<GameObject>(e))
+            {
+                for (auto it = node->orderedChildren.rbegin();
+                    it != node->orderedChildren.rend();
+                    ++it)
+                {
+                    if (registry.valid(*it))
+                        stack.push({*it});
+                }
+            }
+        }
+    }
+
+    
     
     /**
      * @brief Finds the end index of a subtree in a draw order list.

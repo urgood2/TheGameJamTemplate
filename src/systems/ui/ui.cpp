@@ -789,7 +789,13 @@ namespace ui {
         box.set_function("AssignStateTagsToUIBox", [](entt::entity uiBox, const std::string &stateName) -> void {
             box::AssignStateTagsToUIBox(globals::registry, uiBox, stateName);
         });
+        
         rec.record_free_function({"ui", "box"}, {"AssignStateTagsToUIBox", "---@param registry registry\n---@param uiBox Entity\n---@param stateName string\n---@return nil", "Assigns state tags to all elements in a UI box.", true, false});
+        
+        box.set_function("ClearStateTagsFromUIBox", [](entt::entity uiBox) -> void {
+            box::ClearStateTagsFromUIBox(globals::registry, uiBox);
+        });
+        rec.record_free_function({"ui", "box"}, {"ClearStateTagsFromUIBox", "---@param uiBox Entity\n---@return nil", "Clears state tags from all elements in a UI box.", true, false});
         // box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) -> entt::entity {
         //     ui::TransformConfig config{};
         //     config.x = table["x"].get_or(0);

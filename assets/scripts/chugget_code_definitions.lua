@@ -518,6 +518,14 @@ function pauseGame(...) end
 function unpauseGame(...) end
 
 ---
+--- Recursively applies state effects to all elements in the specified UI box.
+---
+---@param uiBox Entity               # The UI box entity whose elements should have state effects applied
+---@return nil
+Recursively applies state effects to the given UI box and all its sub-elements based on their StateTag components and the global active states.
+function propagate_state_effects_to_ui_box(...) end
+
+---
 --- Removes the default state tag from the specified entity, if it exists.
 ---
 ---@param entity Entity             # The entity whose 'default_state' tag should be removed
@@ -9489,6 +9497,13 @@ function ui.box.BuildUIElementTree(...) end
 ---@param stateName string
 ---@return nil
 function ui.box.AssignStateTagsToUIBox(...) end
+
+---
+--- Clears state tags from all elements in a UI box.
+---
+---@param uiBox Entity
+---@return nil
+function ui.box.ClearStateTagsFromUIBox(...) end
 
 ---
 --- Initializes a new UI box from a definition.

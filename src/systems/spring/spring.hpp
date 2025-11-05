@@ -26,6 +26,14 @@ namespace spring {
         bool preventOvershoot = false;  // New flag to enforce non-overshooting behavior
         
         bool usingForTransforms = true; // If true, this spring is used for transforms and will use a different update logic
+        
+        // Adaptive update helpers
+        // --- adaptive update ---
+        float timeSinceUpdate = 0.f;
+        bool  asleep = false;          // true = skip until reactivated
+        float lastTargetValue = 0.f;   // for auto wake-up
+        float lastStiffness   = 0.f;
+        float lastDamping     = 0.f;
 
     };
     

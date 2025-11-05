@@ -15,6 +15,8 @@ local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
+require("ui.ui_definition_helper")
+local dsl = require("ui.ui_syntax_sugar")
 
 
 require("core.type_defs") -- for Node customizations
@@ -2748,14 +2750,6 @@ function initSurvivorEntity()
             -- bail if not in action state
             if not is_state_active(ACTION_STATE) then return end
             
-            -- also make sure player visual matches actual
-            local playerT = component_cache.get(survivorEntity, Transform)
-            if playerT then
-                -- make sure visual matches actual, so there's no lag and vfx always stays on the player
-                playerT.visualX = playerT.actualX
-                playerT.visualY = playerT.actualY
-            end
-            
             -- draw walls
             command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                 c.x = SCREEN_BOUND_LEFT + (SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT) / 2
@@ -3074,6 +3068,7 @@ SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
 function initActionPhase()
     
+    
     log_debug("Action phase started!")
     
     
@@ -3178,7 +3173,7 @@ function initActionPhase()
                 -- add impulse in the direction it's going
                 -- timer that resets damping after a short delay. (SetDamping)
                 
-                local DASH_STRENGTH = 400
+                local DASH_STRENGTH = 340
                 
                 -- physics.ApplyImpulse(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
                 
@@ -3448,6 +3443,7 @@ function initActionPhase()
             )
             
             add_state_tag(expPickupEntity, ACTION_STATE)
+            remove_default_state_tag(expPickupEntity)
             
             local expPickupTransform = component_cache.get(expPickupEntity, Transform)
             expPickupTransform.actualX = lume.random(SCREEN_BOUND_LEFT + 50, SCREEN_BOUND_RIGHT - 50)
@@ -3488,7 +3484,49 @@ planningUIEntities = {
     start_action_button_box = nil
 }
 
+
+function makeWandTooltip(wand_def)
+    
+    if not wand_def then
+        wand_def = WandEngine.wand_defs[1]
+    end
+    
+    local text = "[id](background=red;color=pink) [" .. wand_def.id .. "](color=yellow)\n" ..
+    "[type](background=gray;color=pink) [" .. wand_def.type .. "](color=yellow)\n" ..
+    "[cast block size](background=gray;color=pink) [" .. wand_def.cast_block_size .. "](color=yellow)\n" ..
+    "[cast delay](background=gray;color=pink) [" .. wand_def.cast_delay .. "](color=yellow)\n" ..
+    "[recharge](background=gray;color=pink) [" .. wand_def.recharge_time .. "](color=yellow)\n" ..
+    "[spread](background=gray;color=pink) [" .. wand_def.spread_angle .. "](color=yellow)\n" ..
+    "[shuffle](background=gray;color=pink) [" .. (wand_def.shuffle and "on" or "off") .. "](color=yellow)\n" ..
+    "[total slots](background=gray;color=pink) [" .. wand_def.total_card_slots .. "](color=yellow)\n" ..
+    "[always casts](background=gray;color=pink) [" .. table.concat(wand_def.always_cast_cards, ", ") .. "](color=yellow)" 
+    
+    local textDef = ui.definitions.getTextFromString(text)
+    
+    local v = dsl.vbox{
+        config = { align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+                   color = "blue" },
+        children = { textDef }
+    }
+    
+    local root = dsl.root{ 
+        config = {
+            color = "purple",
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+        },
+        children = { v } }
+    
+    local boxID = dsl.spawn({x=200, y=200}, root)
+    
+    ui.box.RenewAlignment(registry, boxID)
+    
+    ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
+    remove_default_state_tag(boxID)
+end
+
 function initPlanningUI() 
+    
+    makeWandTooltip()
    
     -- simple button to start action phase.
     local startButtonText = ui.definitions.getNewDynamicTextEntry(

@@ -139,3 +139,7 @@
   
 11/2 - 11/4/2025
   - Trip, almost no work, but did organize assets (sound and graphics), worked on some bugs.
+  
+11/5/2025
+  - Fixed UI state management bugs.
+  - Fixed jerky player movement, but not sure if it's perfect yet.

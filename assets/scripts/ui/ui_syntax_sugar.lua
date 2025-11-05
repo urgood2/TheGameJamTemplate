@@ -159,6 +159,7 @@ end
 -- 6️⃣ Spawn a UIBox with optional layer & resize callback
 ------------------------------------------------------------
 function dsl.spawn(pos, defNode, layerName, zIndex, opts)
+    log_debug("DSL: Spawning UIBox at ("..pos.x..","..pos.y..")")
     local box = ui.box.Initialize(pos, defNode)
     ui.box.AssignLayerOrderComponents(registry, box)
 

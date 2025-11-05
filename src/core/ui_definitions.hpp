@@ -372,7 +372,6 @@ namespace ui_defs
                 ui::UIConfig::Builder::create()
                     // .addColor(WHITE)
                     .addPadding(0.0f)
-                    .addMaxWidth(300.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build());
         

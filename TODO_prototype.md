@@ -44,6 +44,7 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- generate tooltip for each wand & card and gate them with state.
 - make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
 - creation of tooltips for every type of card, caching away, then showing on hover.
 - Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
@@ -112,6 +113,7 @@ end)
 - also need currency.
 
 # errors
+- ui strings in tooltips overlap bounds for some reason.
 - entities not getting filtured porperly, camera not always kicking in.
 - boards stop updating when I change state. why?
 - test that transform lerping to body is working.

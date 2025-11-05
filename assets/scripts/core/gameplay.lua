@@ -123,6 +123,19 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
             break
         end
     end
+    
+    -- add the state of whatever the current game state is to the card again
+    if is_state_active(PLANNING_STATE) then
+        add_state_tag(cardEntityID, PLANNING_STATE)
+    end
+    
+    if is_state_active(ACTION_STATE) then
+        add_state_tag(cardEntityID, ACTION_STATE)
+    end
+    
+    if is_state_active(SHOP_STATE) then
+        add_state_tag(cardEntityID, SHOP_STATE)
+    end
 end
 
 function resetCardStackZOrder(rootCardEntityID)
@@ -745,8 +758,8 @@ function createNewCard(id, x, y, gameStateToApply)
     -- local roleComp = component_cache.get(cardScript.labelEntity, InheritedProperties)
     -- roleComp.flags = AlignmentFlag.VERTICAL_CENTER | AlignmentFlag.HORIZONTAL_CENTER 
     
-    local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
-    shaderPipelineComp:addPass("3d_skew")
+    -- local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
+    -- shaderPipelineComp:addPass("3d_skew")
     
     
     -- make draggable and set some callbacks in the transform system
@@ -1705,9 +1718,11 @@ function applyStateToBoardSet(boardSet, stateTagToApply)
             -- apply to cards
             for _, cardEid in ipairs(triggerBoard.cards) do
                 add_state_tag(cardEid, stateTagToApply)
+                remove_state_tag(cardEid, PLANNING_STATE)
             end
             -- apply to board
             add_state_tag(triggerBoard:handle(), stateTagToApply)
+            remove_state_tag(triggerBoard:handle(), PLANNING_STATE)
         end
     end
     
@@ -1717,9 +1732,11 @@ function applyStateToBoardSet(boardSet, stateTagToApply)
             -- apply to cards
             for _, cardEid in ipairs(actionBoard.cards) do
                 add_state_tag(cardEid, stateTagToApply)
+                remove_state_tag(cardEid, PLANNING_STATE)
             end
             -- apply to board
             add_state_tag(actionBoard:handle(), stateTagToApply)
+            remove_state_tag(actionBoard:handle(), PLANNING_STATE)
         end
     end
 end
@@ -2890,6 +2907,8 @@ function initSurvivorEntity()
     
     -- give a state tag to the survivor entity
     add_state_tag(survivorEntity, ACTION_STATE)
+    -- remove default
+    remove_default_state_tag(survivorEntity)
     
     
     
@@ -3264,6 +3283,8 @@ function initActionPhase()
             
             -- give state
             add_state_tag(enemyEntity, ACTION_STATE)
+            -- remove default state tag
+            remove_default_state_tag(enemyEntity)
             
             -- set it to a random position, within the screen bounds.
             local enemyTransform = component_cache.get(enemyEntity, Transform)
@@ -3290,7 +3311,7 @@ function initActionPhase()
             
             -- make it steerable
             -- steering
-            steering.make_steerable(registry, enemyEntity, 140.0, 2000.0, math.pi*2.0, 2.0)
+            steering.make_steerable(registry, enemyEntity, 300.0, 3000.0, math.pi*2.0, 2.0)
             
             
             -- give it a combat table.
@@ -3519,6 +3540,8 @@ function initPlanningUI()
     
     -- ggive entire box the planning state
     ui.box.AssignStateTagsToUIBox(planningUIEntities.start_action_button_box, PLANNING_STATE)
+    -- remove default state
+    remove_default_state_tag(planningUIEntities.start_action_button_box)
     
     
     
@@ -3563,6 +3586,8 @@ function initPlanningUI()
     
     -- ggive entire box the planning state
     ui.box.AssignStateTagsToUIBox(box, PLANNING_STATE)
+    -- remove default state
+    remove_default_state_tag(box)
     
     -- test resize
     timer.after(2.0, function()

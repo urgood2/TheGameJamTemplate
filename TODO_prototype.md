@@ -44,7 +44,6 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
-- entities not getting filtured porperly, camera not always kicking in.
 - make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
 - creation of tooltips for every type of card, caching away, then showing on hover.
 - Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
@@ -69,7 +68,7 @@ Converts encumbrance into damage
 - Add card 3d rotation for when initially dropped?
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
 - make dashed lines be used only when a trigger + action is valid and active.
-- add new stats with 
+- add new stats with below:
 ```lua
 add_basic(defs, 'projectile_count')
 -- modify
@@ -107,12 +106,13 @@ end)
 - implement level-ups. just grant +5 to a chosen stat.
 - maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
 - add basic triggers, actions, and modifiers and hook them up to gameplay.
-- mods projectile_pierces_twice and summon_minion_wandering not implemented. why is minion wandering a mod?
+- mods projectile_pierces_twice and summon_minion_wandering not implemented. 
 - apply card tag synergies: mobility, defense, hazard, brute
 - think up and  apply card upgrades. e.g., bolt -> takes on an element -> pierces 3 times -> explodes on impact. We  need an upgrade resource, and an area where upgrades can be applied.
 - also need currency.
 
 # errors
+- entities not getting filtured porperly, camera not always kicking in.
 - boards stop updating when I change state. why?
 - test that transform lerping to body is working.
 - enemies move too slowly?

@@ -2024,6 +2024,8 @@ namespace ui
         }
     }
     
+    
+    
     // Assign the given state tag to all elements in the given UI box (including owned objects)
     auto box::AssignStateTagsToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &stateName) -> void
     {
@@ -2034,12 +2036,22 @@ namespace ui
         };
 
         // 1) Read root info
-        if (!registry.valid(uiBox)) return;
+    if (!registry.valid(uiBox)) return;
         auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
         if (!uiBoxComp) return;
-
+        
+        if (registry.any_of<StateTag>(uiBox))
+        {
+            registry.get<StateTag>(uiBox).add_tag(stateName);
+        } else {
+            registry.emplace<StateTag>(uiBox, stateName);
+        }
+        
+        
         entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
         if (root == entt::null) return;
+        
+        
 
         // 2) Prepare DFS stack
         std::stack<StackEntry> stack;
@@ -2056,7 +2068,12 @@ namespace ui
                 continue;
 
             // 4) Apply the given state tag to this element
-            registry.emplace_or_replace<StateTag>(e, stateName);
+            if (registry.any_of<StateTag>(e))
+            {
+                registry.get<StateTag>(e).add_tag(stateName);
+            } else {
+                registry.emplace<StateTag>(e, stateName);
+            }
 
             // 5) If this element owns an object, give it the same tag
             if (auto cfg = registry.try_get<UIConfig>(e))
@@ -2066,7 +2083,12 @@ namespace ui
                     entt::entity obj = cfg->object.value();
                     if (registry.valid(obj))
                     {
-                        registry.emplace_or_replace<StateTag>(obj, stateName);
+                        if (registry.any_of<StateTag>(obj))
+                        {
+                            registry.get<StateTag>(obj).add_tag(stateName);
+                        } else {
+                            registry.emplace<StateTag>(obj, stateName);
+                        }
                     }
                 }
             }
@@ -2132,6 +2154,8 @@ namespace ui
         auto view = registry.view<UIBoxComponent>();
         for (auto ent : view)
         {
+            // auto &stateTag = registry.get<entity_gamestate_management::StateTag>(ent);
+            // bool isActive = entity_gamestate_management::active_states_instance().is_active(stateTag);
             // check if the entity is active
             if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
                 continue; // skip inactive entities
@@ -2508,6 +2532,15 @@ namespace ui
         std::vector<UIDrawListItem> &out,
         int depth )
     {
+        
+        using namespace entity_gamestate_management;
+
+        // --- top of buildUIBoxDrawList ---
+        if (auto* tag = registry.try_get<StateTag>(boxEntity)) {
+            if (!is_active(*tag))
+                return; // skip entire box and subtree
+        }
+        
         // Fetch the UIBox and its GameObject. If either is missing, bail.
         auto *uiBox = registry.try_get<UIBoxComponent>(boxEntity);
         auto *boxNode = registry.try_get<transform::GameObject>(boxEntity);
@@ -2521,6 +2554,12 @@ namespace ui
             // entry.first is the name (string), entry.second is the entity
             const auto &entryName = entry.first;
             entt::entity child = entry.second;
+            
+            if (auto* tag = registry.try_get<StateTag>(child)) {
+                if (!is_active(*tag))
+                    continue; // skip inactive elements
+            }
+
 
             auto *childUIElement = registry.try_get<UIElementComponent>(child);
             auto *childUIBox = registry.try_get<UIBoxComponent>(child);

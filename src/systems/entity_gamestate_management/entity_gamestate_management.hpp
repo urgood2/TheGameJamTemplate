@@ -201,8 +201,19 @@ inline void exposeToLua(sol::state &lua) {
 
 
     // Expose remove_state_tag(entity)
-    lua.set_function("remove_state_tag", [&registry](entt::entity e) {
-        registry.remove<StateTag>(e);
+    lua.set_function("remove_state_tag", [&registry](entt::entity e, std::string name) {
+        
+        if (registry.any_of<StateTag>(e)) {
+            auto &tag = registry.get<StateTag>(e);
+            auto it = std::find(tag.names.begin(), tag.names.end(), name);
+            if (it != tag.names.end()) {
+                std::size_t h = std::hash<std::string>{}(*it);
+                tag.names.erase(it);
+                auto hashIt = std::find(tag.hashes.begin(), tag.hashes.end(), h);
+                if (hashIt != tag.hashes.end())
+                    tag.hashes.erase(hashIt);
+            }
+        }
     });
 
     // Expose clear_state_tags(entity)
@@ -363,8 +374,9 @@ inline void exposeToLua(sol::state &lua) {
 
     rec.record_free_function({}, { "remove_state_tag",
         "---@param entity Entity             # The entity from which to remove its state tag\n"
+        "---@param name string               # The name of the state tag to remove\n"
         "---@return nil",
-        "Removes the StateTag component from the specified entity.", true, false
+        "Removes a specific state tag from the StateTag component on the specified entity.", true, false
     });
 
     rec.record_free_function({}, { "clear_state_tags",

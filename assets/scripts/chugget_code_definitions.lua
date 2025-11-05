@@ -611,9 +611,10 @@ function is_state_active(...) end
 function add_state_tag(...) end
 
 ---
---- Removes the StateTag component from the specified entity.
+--- Removes a specific state tag from the StateTag component on the specified entity.
 ---
 ---@param entity Entity             # The entity from which to remove its state tag
+---@param name string               # The name of the state tag to remove
 ---@return nil
 function remove_state_tag(...) end
 

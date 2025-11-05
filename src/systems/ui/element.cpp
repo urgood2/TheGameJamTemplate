@@ -681,6 +681,11 @@ namespace ui
         // Pull exactly the same pointers you had in DrawChildren:
         auto *node = registry.try_get<transform::GameObject>(root);
         auto *uiConfig = registry.try_get<UIConfig>(root);
+        
+        // return if not active state.
+        if (entity_gamestate_management::isEntityActive(root) == false) {
+            return;
+        }
 
         // If the node isn’t a UI element or isn’t visible, skip its entire subtree
         if (!node || !uiConfig || !node->state.visible)

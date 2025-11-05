@@ -136,7 +136,8 @@ namespace transform
         // emplace a collision filter component by default
         auto &collisionFilter = registry->emplace<collision::CollisionFilter>(e);
         
-        // default gamestate tag
+        // empty gamestate tag by default
+        // registry->emplace<entity_gamestate_management::StateTag>(e);
         entity_gamestate_management::assignDefaultStateTag(e);
 
         // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag

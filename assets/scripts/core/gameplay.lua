@@ -945,8 +945,8 @@ function createNewCard(id, x, y, gameStateToApply)
         -- disable all tooltips in the cache
         if previously_hovered_tooltip then
             clear_state_tags(previously_hovered_tooltip)
-            ui.box.ClearStateTagsFromUIBox(previously_hovered_tooltip)
-            propagate_state_effects_to_ui_box(previously_hovered_tooltip)
+            -- ui.box.ClearStateTagsFromUIBox(previously_hovered_tooltip)
+            -- propagate_state_effects_to_ui_box(previously_hovered_tooltip)
             previously_hovered_tooltip = nil
         end
         
@@ -956,7 +956,7 @@ function createNewCard(id, x, y, gameStateToApply)
         end
         add_state_tag(tooltip, CARD_TOOLTIP_STATE)
         activate_state(CARD_TOOLTIP_STATE)
-        propagate_state_effects_to_ui_box(tooltip)
+        -- propagate_state_effects_to_ui_box(tooltip)
         
         previously_hovered_tooltip = tooltip
     end
@@ -1877,7 +1877,7 @@ function makeCardTooltip(card_def)
 
     ui.box.RenewAlignment(registry, boxID)
     -- ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
-    ui.box.ClearStateTagsFromUIBox(boxID) -- remove all state tags from sub entities and box
+    -- ui.box.ClearStateTagsFromUIBox(boxID) -- remove all state tags from sub entities and box
     -- remove_default_state_tag(boxID)
 
     return boxID

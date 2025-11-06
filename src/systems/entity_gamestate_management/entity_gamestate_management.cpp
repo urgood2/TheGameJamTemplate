@@ -190,44 +190,44 @@ void applyStateEffectsToEntity(entt::registry &registry, entt::entity entity)
         //         s->velocity = 0.0f;
         // }
         
-        for (auto sEntity : { transform.x, transform.y, transform.w,
-                           transform.h, transform.r, transform.s })
-        {
-            using namespace spring;
-            if (!active) {
-                registry.emplace_or_replace<SpringDisabledTag>(sEntity);
-                // SPDLOG_DEBUG("Added spring disabled tag to entity {}", static_cast<int>(sEntity));
-            }
-            else if (active && registry.any_of<SpringDisabledTag>(sEntity)) {
-                registry.remove<SpringDisabledTag>(sEntity);
-                // SPDLOG_DEBUG("Removed spring disabled tag from entity {}", static_cast<int>(sEntity));
-            }
+        // for (auto sEntity : { transform.x, transform.y, transform.w,
+        //                    transform.h, transform.r, transform.s })
+        // {
+        //     using namespace spring;
+        //     if (!active) {
+        //         registry.emplace_or_replace<SpringDisabledTag>(sEntity);
+        //         // SPDLOG_DEBUG("Added spring disabled tag to entity {}", static_cast<int>(sEntity));
+        //     }
+        //     else if (active && registry.any_of<SpringDisabledTag>(sEntity)) {
+        //         registry.remove<SpringDisabledTag>(sEntity);
+        //         // SPDLOG_DEBUG("Removed spring disabled tag from entity {}", static_cast<int>(sEntity));
+        //     }
             
-            auto &s = registry.get<Spring>(sEntity);
+        //     auto &s = registry.get<Spring>(sEntity);
             
-            s.enabled = active;
-            if (!active)
-                s.velocity = 0.0f;
+        //     s.enabled = active;
+        //     if (!active)
+        //         s.velocity = 0.0f;
             
-            // SPDLOG_INFO("Entity {} active={} hasSpringX={} vel={}",
-            // (int)entity, active, registry.all_of<Spring>(transform.x),
-            // registry.get<Spring>(transform.x).velocity);
-        }
+        //     // SPDLOG_INFO("Entity {} active={} hasSpringX={} vel={}",
+        //     // (int)entity, active, registry.all_of<Spring>(transform.x),
+        //     // registry.get<Spring>(transform.x).velocity);
+        // }
     }
 
     // spring component in the entity itself?
-    if (registry.all_of<Spring>(entity)) {
-        auto &spring = registry.get<Spring>(entity);
-        spring.enabled = active;
-        if (!active)
-            spring.velocity = 0.0f;
-    }
+    // if (registry.all_of<Spring>(entity)) {
+    //     auto &spring = registry.get<Spring>(entity);
+    //     spring.enabled = active;
+    //     if (!active)
+    //         spring.velocity = 0.0f;
+    // }
     
     // does it have a UIBox component?
-    if (registry.all_of<ui::UIBoxComponent>(entity)) {
-        ui::box::SetTransformSpringsEnabledInUIBox(registry, entity, active);
+    // if (registry.all_of<ui::UIBoxComponent>(entity)) {
+    //     ui::box::SetTransformSpringsEnabledInUIBox(registry, entity, active);
         
-    }
+    // }
 }
 
 //-----------------------------------------------------------------------------

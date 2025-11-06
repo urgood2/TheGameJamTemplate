@@ -489,7 +489,7 @@ namespace game
         );
 
         // Populate the Quadtree Per Frame
-        globals::registry.view<transform::Transform, transform::GameObject, entity_gamestate_management::StateTag>(entt::exclude<collision::ScreenSpaceCollisionMarker>)
+        globals::registry.view<transform::Transform, transform::GameObject, entity_gamestate_management::StateTag>(entt::exclude<collision::ScreenSpaceCollisionMarker, entity_gamestate_management::InactiveTag>)
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag) {
                 if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
@@ -559,8 +559,10 @@ namespace game
             globals::getBoxWorld
         );
         
+        // check how many have InactiveTag
+        SPDLOG_DEBUG("Inactive tag in {} entities", globals::registry.view<entity_gamestate_management::InactiveTag>().size());
                 
-        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag>()
+        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag >(entt::exclude<entity_gamestate_management::InactiveTag>)
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag){
                 if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;

@@ -75,10 +75,12 @@ namespace globals {
 
     int worldWidth{}, worldHeight{}; // world dimensions
     
+    
+    
     // collision detection
     std::function<quadtree::Box<float>(entt::entity)> getBoxWorld = [](entt::entity e) -> quadtree::Box<float> {
         auto &transform = globals::registry.get<transform::Transform>(e);
-    
+        
         const float x = transform.getActualX();
         const float y = transform.getActualY();
         const float w = transform.getActualW();

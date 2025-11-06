@@ -11,6 +11,8 @@
 #include <sol/sol.hpp>
 
 namespace entity_gamestate_management {
+    
+    struct InactiveTag {}; // tag to indicate entity is inactive for updates.
 
 inline void applyStateEffectsToEntity(entt::registry &registry, entt::entity entity);
 

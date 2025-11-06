@@ -17,7 +17,7 @@ namespace main_loop
         
 
         float timescale = 1.0f;    // Time scale for updates
-        float rate = 1.0f / 120.0f; // Fixed timestep (e.g., 60 updates per second)
+        float rate = 1.0f / 60.0f; // Fixed timestep (e.g., 60 updates per second)
         float lag = 0.0f;          // Accumulated time
         float maxFrameSkip = 5.0f; // Maximum frames to skip
         int frame = 0;             // fixed update frame count

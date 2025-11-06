@@ -36,6 +36,10 @@ namespace spring {
         float lastTargetValue = 0.f;   // for auto wake-up
         float lastStiffness   = 0.f;
         float lastDamping     = 0.f;
+        
+        
+        // Index in SoA pool
+        size_t poolIndex = SIZE_MAX;
 
     };
     

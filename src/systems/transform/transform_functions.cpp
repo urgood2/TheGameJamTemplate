@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
+#include <tracy/Tracy.hpp>
 #include "spdlog/spdlog.h"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -1102,50 +1103,50 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
     }
     
-    void UpdateTransformMatrices(entt::registry& registry)
+    void UpdateTransformMatrices(entt::registry& registry, entt::entity e)
     {
-        registry.view<Transform>().each([](auto e, Transform& t) {
-            // if (!t.matrixDirty) return; 
-            // FIXME: for now, always update the matrix every frame
+        ZoneScopedN("UpdateTransformMatrices(single)");
 
-            const float cx = t.getVisualX() + t.getVisualW() * 0.5f;
-            const float cy = t.getVisualY() + t.getVisualH() * 0.5f;
-            const float s  = t.getVisualScaleWithHoverAndDynamicMotionReflected();
-            const float r  = (t.getVisualR() + t.rotationOffset) * DEG2RAD;
-            const float ox = t.getVisualW() * 0.5f;
-            const float oy = t.getVisualH() * 0.5f;
+        if (!registry.valid(e) || !registry.all_of<Transform>(e)) return;
 
-            const float c  = cosf(r);
-            const float sn = sinf(r);
+        auto &t = registry.get<Transform>(e);
 
-            // Compose M = T(center) * R * S * T(-origin)
-            Matrix m;
+        const float cx = t.getVisualX() + t.getVisualW() * 0.5f;
+        const float cy = t.getVisualY() + t.getVisualH() * 0.5f;
+        const float s  = t.getVisualScaleWithHoverAndDynamicMotionReflected();
+        const float r  = (t.getVisualR() + t.rotationOffset) * DEG2RAD;
+        const float ox = t.getVisualW() * 0.5f;
+        const float oy = t.getVisualH() * 0.5f;
 
-            m.m0  =  s * c;
-            m.m1  =  s * sn;
-            m.m2  =  0.0f;
-            m.m3  =  0.0f;
+        const float c  = cosf(r);
+        const float sn = sinf(r);
 
-            m.m4  = -s * sn;
-            m.m5  =  s * c;
-            m.m6  =  0.0f;
-            m.m7  =  0.0f;
+        // Compose M = T(center) * R * S * T(-origin)
+        Matrix m;
 
-            m.m8  =  0.0f;
-            m.m9  =  0.0f;
-            m.m10 =  1.0f;
-            m.m11 =  0.0f;
+        m.m0  =  s * c;
+        m.m1  =  s * sn;
+        m.m2  =  0.0f;
+        m.m3  =  0.0f;
 
-            // Final translation (same as T(center) * R * S * T(-origin))
-            m.m12 = cx + (-ox * s * c + oy * s * sn);
-            m.m13 = cy + (-ox * s * sn - oy * s * c);
-            m.m14 = 0.0f;
-            m.m15 = 1.0f;
+        m.m4  = -s * sn;
+        m.m5  =  s * c;
+        m.m6  =  0.0f;
+        m.m7  =  0.0f;
 
+        m.m8  =  0.0f;
+        m.m9  =  0.0f;
+        m.m10 =  1.0f;
+        m.m11 =  0.0f;
 
-            t.cachedMatrix = m;
-            t.matrixDirty = false;
-        });
+        // Final translation (same as T(center) * R * S * T(-origin))
+        m.m12 = cx + (-ox * s * c + oy * s * sn);
+        m.m13 = cy + (-ox * s * sn - oy * s * c);
+        m.m14 = 0.0f;
+        m.m15 = 1.0f;
+
+        t.cachedMatrix = m;
+        t.matrixDirty = false;
     }
 
     
@@ -1165,13 +1166,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         // updateTransformCacheForAllTransforms();
         
-        static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>);
+        using namespace entity_gamestate_management;
+        
+        static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>, entt::exclude<InactiveTag>);
         
         group.each([dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
             UpdateTransform(e, dt, transform, role, node);
+            UpdateTransformMatrices(globals::registry, e);
         });
         
-        UpdateTransformMatrices(*registry);
+        
         
         
         // auto test = GetActualX(transformSpringGroup, registry->get<Transform>(globals::gameWorldContainerEntity));

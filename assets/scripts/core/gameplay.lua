@@ -92,6 +92,7 @@ action_board_id = nil
 -- ui tooltip cache
 wand_tooltip_cache = {}
 card_tooltip_cache = {}
+previously_hovered_tooltip = nil
 
 -- to decide which trigger+action board set is active
 board_sets = {}
@@ -942,12 +943,12 @@ function createNewCard(id, x, y, gameStateToApply)
         if not hoveredCardScript then return end
         
         -- disable all tooltips in the cache
-        for _, tt in pairs(card_tooltip_cache) do
-            -- clear_state_tags(tt)
-            ui.box.ClearStateTagsFromUIBox(tt)
-            propagate_state_effects_to_ui_box(tt)
+        if previously_hovered_tooltip then
+            clear_state_tags(previously_hovered_tooltip)
+            ui.box.ClearStateTagsFromUIBox(previously_hovered_tooltip)
+            propagate_state_effects_to_ui_box(previously_hovered_tooltip)
+            previously_hovered_tooltip = nil
         end
-        
         
         local tooltip = card_tooltip_cache[hoveredCardScript.cardID]
         if not tooltip then
@@ -956,6 +957,8 @@ function createNewCard(id, x, y, gameStateToApply)
         add_state_tag(tooltip, CARD_TOOLTIP_STATE)
         activate_state(CARD_TOOLTIP_STATE)
         propagate_state_effects_to_ui_box(tooltip)
+        
+        previously_hovered_tooltip = tooltip
     end
     
     nodeComp.methods.onDrag = function()

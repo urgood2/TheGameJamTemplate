@@ -2168,6 +2168,7 @@ namespace ui
                     }
                 }
             }
+            
 
             // 6) Push children (reverse for visual order consistency)
             if (auto node = registry.try_get<transform::GameObject>(e))
@@ -2360,11 +2361,13 @@ namespace ui
             // It contains the five components we need to draw any UI element.
             uiGroupInitialized = true;
 
-            globalUIGroup = registry.group<UIElementComponent,
-                                           UIConfig,
-                                           UIState,
-                                           transform::GameObject,
-                                           transform::Transform>();
+            globalUIGroup = globals::registry.group<
+                UIElementComponent,
+                UIConfig,
+                UIState,
+                transform::GameObject,
+                transform::Transform
+              >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
         }
 
         entt::entity uiBoxEntity{entt::null};
@@ -2640,11 +2643,13 @@ namespace ui
             // It contains the five components we need to draw any UI element.
             uiGroupInitialized = true;
 
-            globalUIGroup = registry.group<UIElementComponent,
-                                           UIConfig,
-                                           UIState,
-                                           transform::GameObject,
-                                           transform::Transform>();
+            globalUIGroup = registry.group<
+                    UIElementComponent,
+                    UIConfig,
+                    UIState,
+                    transform::GameObject,
+                    transform::Transform
+                >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
         }
 
         entt::entity uiBoxEntity{entt::null};

@@ -1,4 +1,5 @@
 #include "entity_gamestate_management.hpp"
+#include "spdlog/spdlog.h"
 #include "systems/transform/transform.hpp"
 #include "systems/ui/box.hpp"
 #include "systems/ui/ui_data.hpp"
@@ -165,7 +166,7 @@ void applyStateEffectsToEntity(entt::registry &registry, entt::entity entity)
 {
     if (!registry.valid(entity)) return;
 
-    bool active = true;
+    bool active = false;
     if (registry.all_of<StateTag>(entity)) {
         auto &tag = registry.get<StateTag>(entity);
         active = is_active(tag);
@@ -173,29 +174,44 @@ void applyStateEffectsToEntity(entt::registry &registry, entt::entity entity)
 
     if (registry.all_of<transform::Transform>(entity)) {
         auto &transform = registry.get<transform::Transform>(entity);
-
-        for (Spring* s : { &transform.getXSpring(), &transform.getYSpring(), &transform.getWSpring(),
-                           &transform.getHSpring(), &transform.getRSpring(), &transform.getSSpring() })
-        {
-            s->enabled = active;
-            if (!active)
-                s->velocity = 0.0f;
+        
+        if (!active) {
+            registry.emplace_or_replace<InactiveTag>(entity);
+        } else {
+            if (registry.any_of<InactiveTag>(entity))
+                registry.remove<InactiveTag>(entity);
         }
+
+        // for (Spring* s : { &transform.getXSpring(), &transform.getYSpring(), &transform.getWSpring(),
+        //                    &transform.getHSpring(), &transform.getRSpring(), &transform.getSSpring() })
+        // {
+        //     s->enabled = active;
+        //     if (!active)
+        //         s->velocity = 0.0f;
+        // }
         
         for (auto sEntity : { transform.x, transform.y, transform.w,
                            transform.h, transform.r, transform.s })
         {
             using namespace spring;
-            if (!active) 
+            if (!active) {
                 registry.emplace_or_replace<SpringDisabledTag>(sEntity);
-            else if (active && registry.any_of<SpringDisabledTag>(sEntity))        
+                // SPDLOG_DEBUG("Added spring disabled tag to entity {}", static_cast<int>(sEntity));
+            }
+            else if (active && registry.any_of<SpringDisabledTag>(sEntity)) {
                 registry.remove<SpringDisabledTag>(sEntity);
+                // SPDLOG_DEBUG("Removed spring disabled tag from entity {}", static_cast<int>(sEntity));
+            }
             
             auto &s = registry.get<Spring>(sEntity);
             
             s.enabled = active;
             if (!active)
                 s.velocity = 0.0f;
+            
+            // SPDLOG_INFO("Entity {} active={} hasSpringX={} vel={}",
+            // (int)entity, active, registry.all_of<Spring>(transform.x),
+            // registry.get<Spring>(transform.x).velocity);
         }
     }
 
@@ -225,7 +241,11 @@ void PropagateStateEffectsToUIBox(entt::registry &registry, entt::entity uiBox)
     using namespace transform;
 
     std::stack<entt::entity> stack;
-    stack.push(uiBox);
+    auto uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
+    if (!uiBoxComp) return;
+    entt::entity uiRoot = uiBoxComp->uiRoot.value_or(entt::null);
+    if (!registry.valid(uiRoot)) return;
+    stack.push(uiRoot);
 
     while (!stack.empty())
     {

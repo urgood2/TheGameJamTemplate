@@ -143,3 +143,6 @@
 11/5/2025
   - Fixed UI state management bugs.
   - Fixed jerky player movement, but not sure if it's perfect yet.
+  
+11/6/2025
+  - Stuck in... optimization hell?

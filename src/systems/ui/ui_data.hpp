@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entt/entity/fwd.hpp"
 #include "util/common_headers.hpp"
 
 #include <string>
@@ -931,7 +932,8 @@ namespace ui
         std::vector<Vector2> outerVerticesFullRect{}; // outer vertices for rounded rect (full width)
 
     };
-
+    
+    
     extern bool uiGroupInitialized; // Flag to check if the UI group has been initialized
     extern decltype(std::declval<entt::registry&>()
                  .group<
@@ -940,7 +942,7 @@ namespace ui
                    UIState,
                    transform::GameObject,
                    transform::Transform
-                 >()) globalUIGroup;
+                 >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>)) globalUIGroup;
     
     
 }

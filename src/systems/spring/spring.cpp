@@ -16,8 +16,9 @@ namespace spring
         if (steps < 1) steps = 1;
         float stepDt = deltaTime / static_cast<float>(steps);
 
-        auto view = registry.view<Spring>();
-
+        auto view = registry.view<Spring>(entt::exclude<SpringDisabledTag>);
+        
+        auto size = view.size_hint();
         for (int i = 0; i < steps; ++i)
         {
             for (auto entity : view)

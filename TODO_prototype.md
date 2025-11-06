@@ -44,6 +44,7 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- use tag components to filter springs being updated in UIBox based on game state.
 - generate tooltip for each wand & card and gate them with state.
 - make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
 - creation of tooltips for every type of card, caching away, then showing on hover.

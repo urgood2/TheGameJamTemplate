@@ -181,8 +181,25 @@ void applyStateEffectsToEntity(entt::registry &registry, entt::entity entity)
             if (!active)
                 s->velocity = 0.0f;
         }
+        
+        for (auto sEntity : { transform.x, transform.y, transform.w,
+                           transform.h, transform.r, transform.s })
+        {
+            using namespace spring;
+            if (!active) 
+                registry.emplace_or_replace<SpringDisabledTag>(sEntity);
+            else if (active && registry.any_of<SpringDisabledTag>(sEntity))        
+                registry.remove<SpringDisabledTag>(sEntity);
+            
+            auto &s = registry.get<Spring>(sEntity);
+            
+            s.enabled = active;
+            if (!active)
+                s.velocity = 0.0f;
+        }
     }
 
+    // spring component in the entity itself?
     if (registry.all_of<Spring>(entity)) {
         auto &spring = registry.get<Spring>(entity);
         spring.enabled = active;

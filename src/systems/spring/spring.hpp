@@ -5,6 +5,8 @@
 
 // The arguments passed in are: the initial value of the spring, its stiffness and damping.
 namespace spring {
+    
+    struct SpringDisabledTag {}; // tag to indicate spring is disabled for updates.
 
     struct Spring {
         float value{};

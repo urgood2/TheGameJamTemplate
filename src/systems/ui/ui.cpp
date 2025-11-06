@@ -791,6 +791,11 @@ namespace ui {
         });
         
         rec.record_free_function({"ui", "box"}, {"AssignStateTagsToUIBox", "---@param registry registry\n---@param uiBox Entity\n---@param stateName string\n---@return nil", "Assigns state tags to all elements in a UI box.", true, false});
+         
+        box.set_function("AddStateTagToUIBox", [](entt::entity uiBox, const std::string &tagToAdd) -> void {
+            box::AddStateTagToUIBox(globals::registry, uiBox, tagToAdd);
+        });
+        rec.record_free_function({"ui", "box"}, {"AddStateTagToUIBox", "---@param uiBox Entity\n---@param tagToAdd string\n---@return nil", "Adds a state tag to all elements in a UI box.", true, false});
         
         box.set_function("ClearStateTagsFromUIBox", [](entt::entity uiBox) -> void {
             box::ClearStateTagsFromUIBox(globals::registry, uiBox);

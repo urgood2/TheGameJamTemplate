@@ -2110,6 +2110,85 @@ namespace ui
         //              static_cast<int>(uiBox), stateName);
     }
     
+    
+    // do the opposite of ClearStateTags: add the tag to all elements in the box
+    auto box::AddStateTagToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &tagToAdd) -> void
+    {
+        using namespace entity_gamestate_management;
+
+        struct StackEntry { entt::entity uiElement{entt::null}; };
+
+        // 1) Validate root
+        if (!registry.valid(uiBox)) return;
+        auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
+        if (!uiBoxComp) return;
+
+        // 2) Add tag to the box itself
+        if (registry.all_of<StateTag>(uiBox)) {
+            registry.get<StateTag>(uiBox).add_tag(tagToAdd);
+        } else {
+            StateTag tag{};
+            tag.add_tag(tagToAdd);
+            registry.emplace<StateTag>(uiBox, std::move(tag));
+        }
+        applyStateEffectsToEntity(registry, uiBox);
+
+        // 3) Find the root
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
+
+        std::stack<StackEntry> stack;
+        stack.push({root});
+
+        // 4) DFS traversal
+        while (!stack.empty())
+        {
+            auto e = stack.top().uiElement;
+            stack.pop();
+            if (!registry.valid(e)) continue;
+
+            // 5) Add or modify the tag
+            if (registry.all_of<StateTag>(e)) {
+                registry.get<StateTag>(e).add_tag(tagToAdd);
+            } else {
+                StateTag tag{};
+                tag.add_tag(tagToAdd);
+                registry.emplace<StateTag>(e, std::move(tag));
+            }
+
+            applyStateEffectsToEntity(registry, e);
+
+            // 6) If it owns an object, propagate
+            if (auto cfg = registry.try_get<UIConfig>(e)) {
+                if (cfg->object) {
+                    entt::entity obj = cfg->object.value();
+                    if (registry.valid(obj)) {
+                        if (registry.all_of<StateTag>(obj)) {
+                            registry.get<StateTag>(obj).add_tag(tagToAdd);
+                        } else {
+                            StateTag tag{};
+                            tag.add_tag(tagToAdd);
+                            registry.emplace<StateTag>(obj, std::move(tag));
+                        }
+                        applyStateEffectsToEntity(registry, obj);
+                    }
+                }
+            }
+
+            // 7) Push children
+            if (auto node = registry.try_get<transform::GameObject>(e)) {
+                for (auto it = node->orderedChildren.rbegin(); it != node->orderedChildren.rend(); ++it) {
+                    if (registry.valid(*it))
+                        stack.push({*it});
+                }
+            }
+        }
+
+        // SPDLOG_DEBUG("=== Done ReverseClearStateTagsFromUIBox for box {} with tag '{}' ===",
+        //              static_cast<int>(uiBox), tagToAdd);
+    }
+
+    
     //-----------------------------------------------------------------------------
     // Clear all StateTags in a given UI box hierarchy (including owned objects)
     //-----------------------------------------------------------------------------

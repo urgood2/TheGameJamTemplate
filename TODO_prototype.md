@@ -44,6 +44,7 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- add an onstophover() callback for transforms.
 - ClearStateTagsFromUIBox() needs to be fixed. its effect should be reversible, right now it isn't.
 - use tag components to filter springs being updated in UIBox based on game state.
 - generate tooltip for each wand & card and gate them with state.

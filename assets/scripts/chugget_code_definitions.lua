@@ -9499,6 +9499,14 @@ function ui.box.BuildUIElementTree(...) end
 function ui.box.AssignStateTagsToUIBox(...) end
 
 ---
+--- Adds a state tag to all elements in a UI box.
+---
+---@param uiBox Entity
+---@param tagToAdd string
+---@return nil
+function ui.box.AddStateTagToUIBox(...) end
+
+---
 --- Clears state tags from all elements in a UI box.
 ---
 ---@param uiBox Entity

@@ -44,6 +44,8 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- debug onstophover, get tooltips to show above everything else, also place wand tooltip somwhere (maybe add a icon to hover?) 
+
 - add an onstophover() callback for transforms.
 - ClearStateTagsFromUIBox() needs to be fixed. its effect should be reversible, right now it isn't.
 - use tag components to filter springs being updated in UIBox based on game state.

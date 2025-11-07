@@ -341,44 +341,73 @@ function particle.spawnDirectionalCone(origin, count, seconds, opts)
     local renderType = opts.renderType or particle.ParticleRenderType.RECTANGLE_FILLED
     local space = opts.space or "screen"
     local z = opts.z or 0
+    local lifetimeJitter = opts.lifetimeJitter or 0.0 -- e.g. 0.2 = ±20%
+    local scaleJitter = opts.scaleJitter or 0.0       -- e.g. 0.3 = ±30%
+    local rotationSpeed = opts.rotationSpeed or 0.0   -- degrees per second (base)
+    local rotationJitter = opts.rotationJitter or 0.0 -- e.g. 0.3 = ±30% variance on rotation speed
 
     -- normalize base direction
     local dirLen = math.sqrt(direction.x^2 + direction.y^2)
     local baseDir = Vec2(direction.x / dirLen, direction.y / dirLen)
 
     for i = 1, count do
+        -- random angle within cone
         local angleOffset = (math.random() - 0.5) * spread
         local cosA, sinA = math.cos(angleOffset), math.sin(angleOffset)
-        local dir = Vec2(baseDir.x * cosA - baseDir.y * sinA, baseDir.x * sinA + baseDir.y * cosA)
+        local dir = Vec2(
+            baseDir.x * cosA - baseDir.y * sinA,
+            baseDir.x * sinA + baseDir.y * cosA
+        )
+
+        -- randomized speed & colors
         local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
         local startColor = colorSet[math.random(1, #colorSet)]
         local endColor = opts.endColor or startColor
 
+        -- jittered lifespan
+        local jitterFactorLife = 1 + (math.random() * 2 - 1) * lifetimeJitter
+        local lifespan = seconds * jitterFactorLife
+
+        -- jittered scale
+        local scale = math.random() * (maxScale - minScale) + minScale
+        local jitterFactorScale = 1 + (math.random() * 2 - 1) * scaleJitter
+        scale = scale * jitterFactorScale
+
+        -- jittered rotation speed (signed)
+        local finalRotationSpeed = rotationSpeed * (1 + (math.random() * 2 - 1) * rotationJitter)
+        if math.random() < 0.5 then finalRotationSpeed = -finalRotationSpeed end
+
         particle.CreateParticle(
             Vec2(origin.x, origin.y),
-            Vec2(minScale, minScale),
+            Vec2(scale, scale),
             {
                 renderType = renderType,
-                lifespan = seconds,
+                lifespan = lifespan,
                 startColor = startColor,
                 endColor = endColor,
                 space = space,
                 z = z,
                 gravity = gravity,
+                rotationSpeed = finalRotationSpeed,
                 onUpdateCallback = function(comp, dt)
                     local age = comp.age or 0
-                    local life = comp.lifespan or seconds
+                    local life = comp.lifespan or lifespan
                     local progress = math.min(math.max(age / life, 0), 1)
                     local eased = easing.d(progress)
                     comp.velocity = Vec2(dir.x * speed * eased, dir.y * speed * eased)
                     if gravity ~= 0 then
                         comp.velocity.y = comp.velocity.y + gravity * dt
                     end
+                    -- Apply rotation each frame
+                    if finalRotationSpeed ~= 0 then
+                        comp.rotation = (comp.rotation or 0) + finalRotationSpeed * dt
+                    end
                 end
             }
         )
     end
 end
+
 
 
 ---@param x number

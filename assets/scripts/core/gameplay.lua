@@ -343,7 +343,7 @@ function transitionInOutCircle(duration, message, color, startPosition)
         timer.tween_fields(duration * 0.3, self, { radius = math.sqrt(globals.screenWidth()^2 + globals.screenHeight()^2) }, Easing.inOutCubic.f, nil, "transition_circle_expand", "ui")
         
         -- spawn text in center after duration * 0.1, scaling up from 0 to 1 in duration * 0.2 (tween cubic).
-        timer.after(duration * 0.1, function ()
+        timer.after(duration * 0.05, function ()
             timer.tween_fields(duration * 0.2, self, { textScale = 1.0 }, Easing.inOutCubic.f, nil, "transition_text_scale_up", "ui")
         end, "transition_text_delay", "ui")
         
@@ -352,9 +352,14 @@ function transitionInOutCircle(duration, message, color, startPosition)
             timer.tween_fields(duration * 0.3, self, { radius = 0 }, Easing.inOutCubic.f, nil, "transition_circle_shrink", "ui")
         end, "transition_circle_shrink_delay", "ui")
         
+        timer.after(duration * 0.8, function ()
+            playSoundEffect("effects", "transition_whoosh_out", 1.0)
+        end, "transition_sound_delay", "ui")
+        
         -- at duration 0.9, scale text back down to 0.
         timer.after(duration * 0.9, function ()
             timer.tween_fields(duration * 0.1, self, { textScale = 0.0 }, Easing.inOutCubic.f, nil, "transition_text_scale_down", "ui")
+            
         end, "transition_text_scale_down_delay", "ui")
         
         playSoundEffect("effects", "transition_whoosh", 1.0)
@@ -388,7 +393,7 @@ function transitionInOutCircle(duration, message, color, startPosition)
     end
     
     function TransitionType:destroy()
-        playSoundEffect("effects", "transition_whoosh_out", 1.0)
+        -- playSoundEffect("effects", "transition_whoosh_out", 1.0)
     end
     
     local transition = TransitionType{}
@@ -938,17 +943,10 @@ function createNewCard(id, x, y, gameStateToApply)
     end
     
     nodeComp.methods.onHover = function()
+        log_debug("card onHover called for", card)
         -- get script
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
-        
-        -- disable all tooltips in the cache
-        if previously_hovered_tooltip then
-            clear_state_tags(previously_hovered_tooltip)
-            ui.box.ClearStateTagsFromUIBox(previously_hovered_tooltip)
-            -- propagate_state_effects_to_ui_box(previously_hovered_tooltip)
-            previously_hovered_tooltip = nil
-        end
         
         local tooltip = card_tooltip_cache[hoveredCardScript.cardID]
         if not tooltip then
@@ -960,6 +958,21 @@ function createNewCard(id, x, y, gameStateToApply)
         -- propagate_state_effects_to_ui_box(tooltip)
         
         previously_hovered_tooltip = tooltip
+    end
+    
+    nodeComp.methods.onStopHover = function()
+        log_debug("card onStopHover called for", card)
+        -- get script
+        local hoveredCardScript = getScriptTableFromEntityID(card)
+        if not hoveredCardScript then return end
+        
+        -- disable all tooltips in the cache
+        if previously_hovered_tooltip then
+            clear_state_tags(previously_hovered_tooltip)
+            ui.box.ClearStateTagsFromUIBox(previously_hovered_tooltip)
+            -- propagate_state_effects_to_ui_box(previously_hovered_tooltip)
+            previously_hovered_tooltip = nil
+        end
     end
     
     nodeComp.methods.onDrag = function()
@@ -1053,7 +1066,7 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
     
     -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
     local PulseObjectType = Node:extend()
-    pulseObject.update = function(self, dt)
+    function PulseObjectType:update(dt)
         local addedScaleAmount = 0.3
         
         self.age = self.age + dt
@@ -1135,7 +1148,7 @@ function killPlayer()
         local playerY = transform.actualY + transform.actualH * 0.5
         local playerW = transform.actualW
         local playerH = transform.actualH
-        DeathCircleType.update = function(self, dt)
+        function DeathCircleType:update(dt)
             self.age = self.age + dt
             command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
                 local t = component_cache.get(survivorEntity, Transform)
@@ -1178,7 +1191,7 @@ function spawnRandomBullet()
     local playerTransform = component_cache.get(survivorEntity, Transform)
     
     local BulletType = Node:extend() -- define the type before instantiating
-    BulletType.update = function(self, dt)
+    function BulletType:update(dt)
         self.age = self.age + dt
         
         -- draw a circle
@@ -1251,7 +1264,7 @@ function spawnRandomBullet()
     
     -- make a new node that discards after 0.1 seconds to mark bullet firing
     local FireMarkType = Node:extend()
-    FireMarkType.update = function(self, dt)
+    function FireMarkType:update(dt)
         self.age = self.age + dt
         -- draw a small flash at the bullet position
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
@@ -2632,6 +2645,12 @@ function initCombatSystem()
     ctx._attach     = CombatSystem.Game.Content.attach_attribute_derivations
     ctx._make_actor = make_actor
     
+    -- subscribe to events.
+    ctx.bus:on('OnLevelUp', function ()
+        -- send player level up signal.
+        signal.emit("player_level_up")
+    end)
+    
     
     -- update combat system every frame / render health bars
     timer.run(
@@ -3027,7 +3046,9 @@ function initSurvivorEntity()
         playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
         slowTime(1.5, 0.1) -- slow time for 2 seconds, to 20% speed
         
-        timer.after(0.3, function()
+        playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
+        
+        timer.after(0.2, function()
             playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
         end)
         
@@ -3114,6 +3135,11 @@ function initSurvivorEntity()
         context = "gameplay"
     })
     
+    signal.register("player_level_up", function()
+        log_debug("Player leveled up!")
+        playSoundEffect("effects", "level_up", 1.0)
+        
+    end)
     
     
     -- let's register signal listeners
@@ -3127,7 +3153,9 @@ function initSurvivorEntity()
             return
         end
         
-        CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 20) -- grant 20 exp per pickup
+        playSoundEffect("effects", "gain_exp_pickup", 1.0)
+        
+        CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
         
         --TODo: this is just a test.
         
@@ -3226,6 +3254,50 @@ SCREEN_BOUND_LEFT = 0
 SCREEN_BOUND_TOP = 0
 SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
+
+local playerFootStepSounds = {
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_4",  
+    "walk_5"
+}
+
+-- location is top left of circle
+local function makeSpawnMarkerCircle(x, y, radius, color, state)
+
+    -- make circle marker for enemy appearance, tween it down to 0 scale and then remove it
+    local SpawnMarkerType = Node:extend()
+    local enemyX = x + radius / 2
+    local enemyY = y + radius / 2
+    function SpawnMarkerType:update(dt)
+        
+        
+        command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+            c.x = enemyX
+            c.y = enemyY
+            c.w = 64 * self.scale
+            c.h = 64 * self.scale
+            c.rx = 32
+            c.ry = 32
+            c.color = color or Col(255, 255, 255, 255)
+            
+        end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+    end
+    
+    local spawnMarkerNode = SpawnMarkerType{}
+    spawnMarkerNode.scale = 1.0
+    
+    spawnMarkerNode:attach_ecs{ create_new = true }
+    add_state_tag(spawnMarkerNode:handle(), state or ACTION_STATE)
+    
+    -- tween down
+    -- local h5 = timer.tween(1.2, camera, { x = 320, y = 180, zoom = 1.25 }, nil, nil, "cam_move", "camera")
+    timer.tween_fields(0.2, spawnMarkerNode, { scale = 0.0 }, nil, function()
+        registry:destroy(spawnMarkerNode:handle())
+    end)
+            
+end
 function initActionPhase()
     
     
@@ -3269,6 +3341,8 @@ function initActionPhase()
             
             local moveDir = { x = 0, y = 0 }
             
+            local playerMoving = false
+            
             if (isGamePadActive) then
                 
                 -- log_debug("Gamepad active for movement")
@@ -3300,9 +3374,28 @@ function initActionPhase()
                 local len = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
                 if len ~= 0 then
                     moveDir.x, moveDir.y = moveDir.x / len, moveDir.y / len
+                    playerMoving = true
                 else 
                     moveDir.x, moveDir.y = 0, 0
                 end
+            end
+            
+            -- if player is moving, keep the timer running. if not, end the timer.
+            local timerName = "survivorFootstepsSoundTimer"
+            if playerMoving then
+                if not timer.get_timer_and_delay(timerName) then
+                    -- timer not active. turn it on.
+                    timer.every(0.8, function()
+                        -- play footstep sound at survivor position
+                        playSoundEffect("effects", random_utils.random_element_string(playerFootStepSounds))
+                    end, 0, true, nil, timerName)
+                else
+                    -- timer active, do nothing.
+                end
+                    
+            else 
+                -- turn off timer if active
+                timer.cancel(timerName)
             end
             
             if not playerIsDashing and input.action_down("survivor_dash") then
@@ -3345,46 +3438,57 @@ function initActionPhase()
                 
                 local DASH_LENGTH_SEC = 0.5
                 
-                -- for 5 times during dash, spawn trail particles
-                timer.every((DASH_LENGTH_SEC * 0.6) / 30, function()
-                    local t = component_cache.get(survivorEntity, Transform)
-                    if t then
-                        
-                        -- new node
-                        local ParticleType = Node:extend()
-                        ParticleType.update = function(self, dt)
-                            self.age = self.age + dt
-                            
-                            
-                            -- draw a gradient rounded rect at the survivor position
-                            command_buffer.queueDrawGradientRectRoundedCentered(layers.sprites, function(c)
-                                local t = component_cache.get(survivorEntity, Transform)
-                                c.cx = self.savedPos.x + t.actualW / 2 -- center of survivor
-                                c.cy = self.savedPos.y + t.actualH / 2
-                                c.width = t.actualW * (1.0 - self.age / self.lifetime)
-                                c.height = t.actualH  * (1.0 - self.age / self.lifetime)
-                                c.roundness = 0.5
-                                c.segments = 8
-                                c.topLeft = util.getColor("yellow")
-                                c.topRight = util.getColor("blue")
-                                c.bottomRight = util.getColor("green")
-                                c.bottomLeft = util.getColor("apricot_cream")
-                            end, z_orders.player_vfx - 20, layer.DrawCommandSpace.World)
-                        end
-                        local particleNode = ParticleType{}
-                        particleNode.lifetime = 0.1
-                        particleNode.age = 0.0
-                        particleNode.savedPos = { x = t.actualX, y = t.actualY }
-                        
-                        
-                        particleNode
-                            :attach_ecs{ create_new = true }
-                            :destroy_when(function(self, eid) return self.age >= self.lifetime end)
-                        
-                        
-                    end
-                end, 5) -- 5 times
+                playSoundEffect("effects", "dash", math.random() * 0.2 + 0.9)
                 
+                -- timer.every((DASH_LENGTH_SEC) / 20, function()
+                --     local t = component_cache.get(survivorEntity, Transform)
+                --     if t then
+                        
+                --         -- new node
+                        
+                --         local particleNode = ParticleType{}
+                --         particleNode.lifetime = 0.1
+                --         particleNode.age = 0.0
+                --         particleNode.savedPos = { x = t.visualX, y = t.visualY }
+                        
+                        
+                --         particleNode
+                --             :attach_ecs{ create_new = true }
+                --             :destroy_when(function(self, eid) return self.age >= self.lifetime end)
+                        
+                --         add_state_tag(particleNode:handle(), ACTION_STATE)
+                        
+                --     end
+                -- end, 10) -- 5 times
+                
+                -- directional dash trail particles
+                local survivorTransform = component_cache.get(survivorEntity, Transform)
+                if survivorTransform then
+                    local origin = Vec2(survivorTransform.actualX + survivorTransform.actualW * 0.5,
+                                        survivorTransform.actualY + survivorTransform.actualH * 0.5)
+
+                    particle.spawnDirectionalCone(origin, 30, DASH_LENGTH_SEC, {
+                        direction = Vec2(-moveDir.x, -moveDir.y),
+                        spread = 30,                -- degrees
+                        colors = {
+                            util.getColor("blue")
+                        },
+                        endColor = util.getColor("blue"),
+                        minSpeed = 120,
+                        maxSpeed = 340,
+                        minScale = 3,
+                        maxScale = 10,
+                        rotationSpeed = 10,
+                        rotationJitter = 0.2,
+                        lifetimeJitter = 0.3,
+                        scaleJitter = 0.1,
+                        gravity = 0,
+                        easing = "outCubic",
+                        renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+                        space = "world",
+                        z = z_orders.player_vfx - 20
+                    })
+                end
                 
 
                 timer.after(DASH_LENGTH_SEC, function()
@@ -3504,7 +3608,7 @@ function initActionPhase()
             local SpawnMarkerType = Node:extend()
             local enemyX = enemyTransform.actualX + enemyTransform.actualW/2
             local enemyY = enemyTransform.actualY + enemyTransform.actualH/2
-            SpawnMarkerType.update = function(self, dt)
+            function SpawnMarkerType:update(dt)
                 
                 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
@@ -3519,10 +3623,12 @@ function initActionPhase()
                 end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
             end
             
-            local spawnMarkerNode = Node{}
+            local spawnMarkerNode = SpawnMarkerType{}
             spawnMarkerNode.scale = 1.0
             
-            spawnMarkerNode:attach_ecs{}
+            spawnMarkerNode:attach_ecs{ create_new = true }
+            add_state_tag(spawnMarkerNode:handle(), ACTION_STATE)
+            
             -- tween down
             -- local h5 = timer.tween(1.2, camera, { x = 320, y = 180, zoom = 1.25 }, nil, nil, "cam_move", "camera")
             timer.tween_fields(0.2, spawnMarkerNode, { scale = 0.0 }, nil, function()
@@ -3610,6 +3716,18 @@ function initActionPhase()
             expPickupTransform.actualY = lume.random(SCREEN_BOUND_TOP + 50, SCREEN_BOUND_BOTTOM - 50)
             expPickupTransform.visualX = expPickupTransform.actualX
             expPickupTransform.visualY = expPickupTransform.actualY
+            
+            
+            -- add marker spanw
+            makeSpawnMarkerCircle(
+                expPickupTransform.actualX,
+                expPickupTransform.actualY,
+                64,
+                util.getColor("yellow"),
+                ACTION_STATE
+            )
+
+            
             
             -- give it physics
             local info = { shape = "rectangle", tag = "pickup", sensor = false, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"

@@ -146,3 +146,9 @@
   
 11/6/2025
   - Stuck in... optimization hell?
+  
+11/7/2025
+  - More optimization work.
+  - Got spawn markers working again.
+  - Added more sfx.
+  - Tweaked some particle effects.

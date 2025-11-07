@@ -39,7 +39,18 @@
                 
                 "fire_bolt": "AXE_Chop_Tree_Subtle_01_RR2_mono.wav",
                 "place_trap": "MECHANICS_Metal_Mechanism_05_mono.wav",
-                "strength_bonus": "UI_Animate_Whisper_Appear_stereo.wav"
+                "strength_bonus": "UI_Animate_Whisper_Appear_stereo.wav",
+                
+                "dash": "WHOOSH_Air_Slow_RR10_mono.wav",
+                "walk_1": "Dry Vegetation - Default Footwear - Walk 1.wav",
+                "walk_2": "Dry Vegetation - Default Footwear - Walk 2.wav",
+                "walk_3": "Dry Vegetation - Default Footwear - Walk 4.wav",
+                "walk_4": "Dry Vegetation - Default Footwear - Walk 5.wav",
+                "walk_5": "Dry Vegetation - Default Footwear - Walk 6.wav",
+                "gain_exp_pickup": "Gems Loot 1.wav",
+                "level_up": "Casual Whoosh 8.wav",
+                "player_hurt": "Default Strike (3).wav"
+                
             },
             "volume": 0.3
         },

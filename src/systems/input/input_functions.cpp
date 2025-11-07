@@ -396,9 +396,32 @@ namespace input
         input::TickActionHolds(inputState, dt);
         input::DecayActions(inputState);
     }
+    
+    void stopHover(entt::registry &registry, entt::entity target)
+    {
+        if (!registry.valid(target)) return;
+
+        if (registry.any_of<ui::UIElementComponent>(target))
+        {
+            ui::element::StopHover(registry, target);
+        }
+        else if (auto *node = registry.try_get<transform::GameObject>(target))
+        {
+            if (node->methods.onStopHover)
+                node->methods.onStopHover(registry, target);
+        }
+    }
+
 
     void propagateReleaseToGameObjects(input::InputState &inputState, entt::registry &registry)
     {
+        // explicit stop hover to ensure no hover stop is missed
+        if (inputState.prev_designated_hover_target != entt::null &&
+        inputState.current_designated_hover_target != inputState.prev_designated_hover_target)
+        {
+            stopHover(registry, inputState.prev_designated_hover_target);
+        }
+
         if (inputState.cursor_released_on_handled == false && registry.valid(inputState.cursor_prev_dragging_target))
         {
             auto &releasedOnTargetNode = registry.get<transform::GameObject>(inputState.cursor_released_on_target);
@@ -535,6 +558,8 @@ namespace input
             }
         }
     }
+    
+    
 
     void propagateDragToGameObjects(entt::registry &registry, input::InputState &inputState)
     {
@@ -625,6 +650,7 @@ namespace input
             auto &hoverTargetNode = registry.get<transform::GameObject>(inputState.current_designated_hover_target);
             hoverTargetNode.state.isBeingHovered = false;
             SPDLOG_DEBUG("Stop hovering over entity {}", static_cast<int>(inputState.current_designated_hover_target));
+            input::stopHover(registry, inputState.current_designated_hover_target);
             inputState.current_designated_hover_target = entt::null;
         }
     }

@@ -55,7 +55,7 @@ struct ParticleTag {
 };
 
 struct Particle {
-  ParticleRenderType renderType = ParticleRenderType::RECTANGLE_FILLED;
+  ParticleRenderType renderType = ParticleRenderType::CIRCLE_FILLED;
 
   std::optional<Vector2> velocity;
   std::optional<float> rotation;

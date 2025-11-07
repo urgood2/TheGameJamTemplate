@@ -220,3 +220,36 @@ function BoardType:swapCardWithNeighbor(selectedEid, direction)
     -- optional: immediately re-run layout (or wait until next frame)
     -- self:update(0)
 end
+
+
+-- -------------------------------------------------------------------------- --
+--                                Particle type                               --
+-- -------------------------------------------------------------------------- --
+
+ParticleType = Node:extend()
+
+function ParticleType:update(dt) 
+    self.age = self.age + dt
+    
+    log_debug("Particle age:", self.age)
+    
+    -- draw a gradient rounded rect at the survivor position
+    command_buffer.queueDrawGradientRectRoundedCentered(layers.sprites, function(c)
+        local t = component_cache.get(survivorEntity, Transform)
+        c.cx = self.savedPos.x + t.actualW / 2 -- center of survivor
+        c.cy = self.savedPos.y + t.actualH / 2
+        c.width = t.actualW * (1.0 - self.age / self.lifetime)
+        c.height = t.actualH  * (1.0 - self.age / self.lifetime)
+        c.roundness = 0.5
+        c.segments = 8
+        c.topLeft = util.getColor("yellow")
+        c.topRight = util.getColor("blue")
+        c.bottomRight = util.getColor("green")
+        c.bottomLeft = util.getColor("apricot_cream")
+    end, z_orders.player_vfx - 20, layer.DrawCommandSpace.World)
+end
+
+
+-- -------------------------------------------------------------------------- --
+--                            Generic spawn marker                            --
+-- -------------------------------------------------------------------------- --

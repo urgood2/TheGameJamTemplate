@@ -45,11 +45,10 @@ Converts encumbrance into damage
     
 # programming side
 - debug onstophover, get tooltips to show above everything else, also place wand tooltip somwhere (maybe add a icon to hover?) 
+-pickups should gravitate toward player when close enough.
+- start wand evaluation mechanism.
+- abberation on hit.
 
-- add an onstophover() callback for transforms.
-- ClearStateTagsFromUIBox() needs to be fixed. its effect should be reversible, right now it isn't.
-- use tag components to filter springs being updated in UIBox based on game state.
-- generate tooltip for each wand & card and gate them with state.
 - make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
 - creation of tooltips for every type of card, caching away, then showing on hover.
 - Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.

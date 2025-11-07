@@ -152,3 +152,4 @@
   - Got spawn markers working again.
   - Added more sfx.
   - Tweaked some particle effects.
+  - Tweaked tooltips.

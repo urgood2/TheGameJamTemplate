@@ -356,7 +356,7 @@ namespace ui_defs
                     ui::UIConfig::Builder::create()
                         // .addColor(WHITE)
                         .addPadding(1.f)
-                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                         .build());
 
             for (auto &segmentDef : textSegmentDefs) {
@@ -373,7 +373,7 @@ namespace ui_defs
                 ui::UIConfig::Builder::create()
                     // .addColor(WHITE)
                     .addPadding(1.0f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build());
         
         for (auto &rowDef : textRowDefs) {

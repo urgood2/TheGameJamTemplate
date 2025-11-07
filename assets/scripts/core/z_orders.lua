@@ -15,6 +15,7 @@ local z_orders = {
   
   -- general
   ui_transition = 1000,
+  ui_tooltips   = 900,
 }
 
 return z_orders

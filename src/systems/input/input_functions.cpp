@@ -400,6 +400,14 @@ namespace input
     void stopHover(entt::registry &registry, entt::entity target)
     {
         if (!registry.valid(target)) return;
+        
+        // ❌ Don’t stop hover while dragging this entity
+        if (registry.any_of<transform::GameObject>(target))
+        {
+            auto &node = registry.get<transform::GameObject>(target);
+            if (node.state.isBeingDragged)
+                return;
+        }
 
         if (registry.any_of<ui::UIElementComponent>(target))
         {
@@ -419,7 +427,7 @@ namespace input
         if (inputState.prev_designated_hover_target != entt::null &&
         inputState.current_designated_hover_target != inputState.prev_designated_hover_target)
         {
-            stopHover(registry, inputState.prev_designated_hover_target);
+            // stopHover(registry, inputState.prev_designated_hover_target);
         }
 
         if (inputState.cursor_released_on_handled == false && registry.valid(inputState.cursor_prev_dragging_target))
@@ -436,7 +444,8 @@ namespace input
                     ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
                 }
                 else if (releasedOnTargetNode.methods.onStopHover)
-                    releasedOnTargetNode.methods.onStopHover(registry, inputState.cursor_released_on_target);
+                    // releasedOnTargetNode.methods.onStopHover(registry, inputState.cursor_released_on_target);
+                    ;
 
                 inputState.current_designated_hover_target = entt::null;
             }
@@ -517,7 +526,7 @@ namespace input
                         }
                         else if (prevHoverTargetNode.methods.onStopHover)
                         {
-                            prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
+                            // prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                         }
                     }
                 }
@@ -534,7 +543,7 @@ namespace input
                     }
                     else if (prevHoverTargetNode.methods.onStopHover)
                     {
-                        prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
+                        // prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                     }
                 }
             }
@@ -549,11 +558,11 @@ namespace input
                 if (registry.any_of<ui::UIElementComponent>(inputState.prev_designated_hover_target))
                 {
                     auto &uiElement = registry.get<ui::UIElementComponent>(inputState.prev_designated_hover_target);
-                    ui::element::StopHover(registry, inputState.prev_designated_hover_target);
+                    // ui::element::StopHover(registry, inputState.prev_designated_hover_target);
                 }
                 else if (prevHoverTargetNode.methods.onStopHover)
                 {
-                    prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
+                    // prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                 }
             }
         }
@@ -624,36 +633,33 @@ namespace input
         }
     }
 
-    void handleCursorHoverEvent(input::InputState &inputState, entt::registry &registry)
-    {
-        bool noTouchInputOrCursorIsDown = !inputState.hid.touch_enabled || inputState.is_cursor_down;
-        auto *cursorHoveringTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_hovering_target);
-        if (registry.valid(inputState.cursor_hovering_target) && cursorHoveringTargetNode->state.hoverEnabled && (noTouchInputOrCursorIsDown))
-        {
-            inputState.current_designated_hover_target = inputState.cursor_hovering_target;
+    void handleCursorHoverEvent(InputState &inputState, entt::registry &registry) {
+        // 🔒 Skip hover updates while dragging
+        if (registry.valid(inputState.cursor_dragging_target))
+            return;
+        
+    bool hasHover = registry.valid(inputState.cursor_hovering_target) || inputState.is_cursor_down;
+    entt::entity current = inputState.current_designated_hover_target;
+    entt::entity newHover = hasHover ? inputState.cursor_hovering_target : entt::null;
 
-            // reset prev hover
-            if (registry.valid(inputState.prev_designated_hover_target) && inputState.prev_designated_hover_target != inputState.current_designated_hover_target)
-            {
-                auto &prevHoverTargetNode = registry.get<transform::GameObject>(inputState.prev_designated_hover_target);
-                prevHoverTargetNode.state.isBeingHovered = false;
-            }
+    // 1. If new == old → just mark still hovered
+    if (newHover == current && newHover != entt::null) return;
 
-            auto &hoverTargetNode = registry.get<transform::GameObject>(inputState.current_designated_hover_target);
-            hoverTargetNode.state.isBeingHovered = true;
-            transform::SetClickOffset(&registry, inputState.current_designated_hover_target, inputState.cursor_hover_transform.value(), false);
-        }
+    // 2. If old exists and is different → stop old
+    if (registry.valid(current) && current != newHover)
+        stopHover(registry, current);
 
-        // reset hover target, there is no cursor hovering target or touch input is active
-        else if ((!registry.valid(inputState.cursor_hovering_target) || (inputState.hid.touch_enabled || !inputState.is_cursor_down)) && registry.valid(inputState.current_designated_hover_target))
-        {
-            auto &hoverTargetNode = registry.get<transform::GameObject>(inputState.current_designated_hover_target);
-            hoverTargetNode.state.isBeingHovered = false;
-            SPDLOG_DEBUG("Stop hovering over entity {}", static_cast<int>(inputState.current_designated_hover_target));
-            input::stopHover(registry, inputState.current_designated_hover_target);
-            inputState.current_designated_hover_target = entt::null;
-        }
+    // 3. If new exists → start hover
+    if (registry.valid(newHover)) {
+        auto &node = registry.get<transform::GameObject>(newHover);
+        node.state.isBeingHovered = true;
+        if (node.methods.onHover) node.methods.onHover(registry, newHover);
     }
+
+    // 4. Update
+    inputState.current_designated_hover_target = newHover;
+}
+
 
     
 

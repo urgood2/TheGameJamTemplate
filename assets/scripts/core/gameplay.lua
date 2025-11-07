@@ -1823,7 +1823,7 @@ function makeWandTooltip(wand_def)
     local textDef = ui.definitions.getTextFromString(text)
     
     local v = dsl.vbox{
-        config = { align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+        config = { align = AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER,
                    color = "blue" },
         children = { textDef }
     }
@@ -1911,7 +1911,7 @@ function initPlanningPhase()
     activate_state(PLANNING_STATE)
     
     -- set up timer to render tooltips
-    setUpCardAndWandStatDisplay()
+    -- setUpCardAndWandStatDisplay()
     
     -- let's bind d-pad input to switch between cards, and A to select.
     input.bind("controller-navigation-planning-select", {
@@ -2255,11 +2255,11 @@ function initPlanningPhase()
     
     local testTable = getScriptTableFromEntityID(card1)
     
-    local boardHeight = globals.screenHeight() / 5
+    boardHeight = globals.screenHeight() / 5
     local actionBoardWidth = globals.screenWidth() * 0.7
     local triggerBoardWidth = globals.screenWidth() * 0.2
     
-    local boardPadding = globals.screenWidth() * 0.1 / 3
+    boardPadding = globals.screenWidth() * 0.1 / 3
     
     local runningYValue = boardPadding
     local leftAlignValueTriggerBoardX = boardPadding
@@ -2517,6 +2517,19 @@ function initPlanningPhase()
     for id, cardDef in pairs(WandEngine.card_defs) do
         card_tooltip_cache[cardDef.id] = makeCardTooltip(cardDef)
         
+        -- z_orders
+        layer_order_system.assignZIndexToEntity(
+            card_tooltip_cache[cardDef.id], 
+            z_orders.ui_tooltips
+        )
+        
+        -- get transform and center vertically
+        local t = component_cache.get(card_tooltip_cache[cardDef.id], Transform)
+        if t then
+            t.actualY = globals.screenHeight() * 0.5 - (t.actualH * 0.5)
+            t.visualY = t.actualY
+        end
+        
         -- disable by default, enable only on 
         clear_state_tags(card_tooltip_cache[cardDef.id])
     end
@@ -2527,6 +2540,12 @@ function initPlanningPhase()
     -- make tooltip for each wand in WandEngine.wand_defs
     for id, wandDef in pairs(WandEngine.wand_defs) do
         wand_tooltip_cache[wandDef.id] = makeWandTooltip(wandDef)
+        
+        -- z_orders
+        layer_order_system.assignZIndexToEntity(
+            wand_tooltip_cache[wandDef.id], 
+            z_orders.ui_tooltips
+        )
         
         -- disable by default
         clear_state_tags(wand_tooltip_cache[wandDef.id])
@@ -3833,7 +3852,7 @@ function initPlanningUI()
             id    = "shop_button",
             color = "red",
             align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
-            hover = { title = "Shop", body = "Open the item store" },
+            hover = true,
             onClick = function()
                 playSoundEffect("effects", "button-click")
                 log_debug("Shop button clicked!")
@@ -3841,7 +3860,7 @@ function initPlanningUI()
         },
         children = {
             dsl.anim("4130-TheRoguelike_1_10_alpha_923.png", { w = 20, h = 20, isAnimation = false, shadow = false }),
-            dsl.text("Shop", { color = "blackberry" }),
+            dsl.text(localization.get("ui.tooltip_wand_button"), { color = "blackberry", fontSize = 27.0 }),
         }
     }
 
@@ -3853,7 +3872,7 @@ function initPlanningUI()
         children = { shopButton } }
 
     -- Create box and attach resize callback
-    local box = dsl.spawn({x = 50, y = 100}, root, "HUD", 5, {
+    local box = dsl.spawn({x = 0, y = 700}, root, "HUD", 5, {
         onBoxResize = function(registry, eid, w, h)
             log_debug("Resized box", eid, "to", w, h)
         end
@@ -3866,6 +3885,46 @@ function initPlanningUI()
     ui.box.AssignStateTagsToUIBox(box, PLANNING_STATE)
     -- remove default state
     remove_default_state_tag(box)
+    
+    -- get shop button entity
+    local buttonEntity =  ui.box.GetUIEByID(registry, "shop_button")
+    
+    -- add onhover and stophover
+    local node = component_cache.get(buttonEntity, GameObject)
+    
+    if node then
+        node.state.hoverEnabled = true
+        node.state.collisionEnabled = true   
+    
+        node.methods.onHover = function(registry, hoveredEntity)
+            log_debug("Shop button hovered!", hoveredEntity)
+            -- playSoundEffect("effects", "button-hover")
+            
+            -- show current wand tooltip
+             -- get current board's wand def
+            local currentSet = board_sets[current_board_set_index]
+            local wandDef = currentSet.wand_def
+            
+            -- activate the wand tooltip for this wand
+            for id, tooltipEntity in pairs(wand_tooltip_cache) do
+                if id == wandDef.id then
+                    add_state_tag(tooltipEntity, WAND_TOOLTIP_STATE)
+                else
+                    clear_state_tags(tooltipEntity)
+                end
+            end
+            
+            -- activate tooltip state
+            activate_state(WAND_TOOLTIP_STATE)
+        end
+        node.methods.onStopHover = function(registry, hoveredEntity)
+            log_debug("Shop button stop hovered!", hoveredEntity)
+            
+            -- hide all wand tooltips
+            
+            deactivate_state(WAND_TOOLTIP_STATE)
+        end
+    end
     
     -- test resize
     timer.after(2.0, function()

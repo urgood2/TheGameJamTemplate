@@ -92,75 +92,94 @@ namespace Steering {
     //--------------------------------------------
     // Frame update
     //--------------------------------------------
-    void Update(entt::registry& r, entt::entity e, float dt){
-        auto &s = r.get<SteerableComponent>(e);
-        if(!s.enabled) return;
+    void Update(entt::registry& r, entt::entity e, float dt) {
+    if (!r.any_of<SteerableComponent>(e))
+        return;
 
-        // Compose
-        s.steeringForce = cpvzero;
-        if(s.isSeeking)      s.steeringForce = cpvadd(s.steeringForce, s.seekForce);
-        if(s.isFleeing)      s.steeringForce = cpvadd(s.steeringForce, s.fleeForce);
-        if(s.isPursuing)     s.steeringForce = cpvadd(s.steeringForce, s.pursuitForce);
-        if(s.isEvading)      s.steeringForce = cpvadd(s.steeringForce, s.evadeForce);
-        if(s.isWandering)    s.steeringForce = cpvadd(s.steeringForce, s.wanderForce);
-        if(s.isPathFollowing)s.steeringForce = cpvadd(s.steeringForce, s.pathFollowForce);
-        if(s.isSeparating)   s.steeringForce = cpvadd(s.steeringForce, s.separationForce);
-        if(s.isAligning)     s.steeringForce = cpvadd(s.steeringForce, s.alignmentForce);
-        if(s.isCohesing)     s.steeringForce = cpvadd(s.steeringForce, s.cohesionForce);
+    auto& s = r.get<SteerableComponent>(e);
+    if (!s.enabled) return;
 
-        // Timed steering force (linear decay to 0 over duration)
-        if(s.timedForceTimeLeft > 0.f){
-            float k = s.timedForceTimeLeft / s.timedForceDuration; // 1..0
-            s.steeringForce = cpvadd(s.steeringForce, cpvmult(s.timedForce, k));
-            s.timedForceTimeLeft = std::max(0.f, s.timedForceTimeLeft - dt);
-        }
+    // Combine steering forces (truncate individually for better blending)
+    s.steeringForce = cpvzero;
 
-        s.steeringForce = truncate(s.steeringForce, s.maxForce);
+    auto limit = [&](const cpVect& v) { return truncate(v, s.maxForce); };
 
-        // Reset flags
-        s.isSeeking=s.isFleeing=s.isPursuing=s.isEvading=false;
-        s.isWandering=s.isPathFollowing=false;
-        s.isSeparating=s.isAligning=s.isCohesing=false;
+    if (s.isSeeking)       s.steeringForce = cpvadd(s.steeringForce, limit(s.seekForce));
+    if (s.isFleeing)       s.steeringForce = cpvadd(s.steeringForce, limit(s.fleeForce));
+    if (s.isPursuing)      s.steeringForce = cpvadd(s.steeringForce, limit(s.pursuitForce));
+    if (s.isEvading)       s.steeringForce = cpvadd(s.steeringForce, limit(s.evadeForce));
+    if (s.isWandering)     s.steeringForce = cpvadd(s.steeringForce, limit(s.wanderForce));
+    if (s.isPathFollowing) s.steeringForce = cpvadd(s.steeringForce, limit(s.pathFollowForce));
+    if (s.isSeparating)    s.steeringForce = cpvadd(s.steeringForce, limit(s.separationForce));
+    if (s.isAligning)      s.steeringForce = cpvadd(s.steeringForce, limit(s.alignmentForce));
+    if (s.isCohesing)      s.steeringForce = cpvadd(s.steeringForce, limit(s.cohesionForce));
 
-        auto* body = get_cpBody(r, e);
-        if(!body) return;
-
-        // Apply force at CoM
-        cpBodyApplyForceAtLocalPoint(body, s.steeringForce, cpvzero);
-
-        // Timed impulse: apply per-frame impulse chunk
-        if(s.timedImpulseTimeLeft > 0.f){
-            float slice = std::min(dt, s.timedImpulseTimeLeft);
-            cpVect impulse = cpvmult(s.timedImpulsePerSec, slice);
-            cpBodyApplyImpulseAtLocalPoint(body, impulse, cpvzero);
-            s.timedImpulseTimeLeft = std::max(0.f, s.timedImpulseTimeLeft - dt);
-        }
-
-        // Optional pre-step clamp
-        cpVect vel = cpBodyGetVelocity(body);
-        float v2 = cpvlengthsq(vel);
-        if(v2 > s.maxSpeed*s.maxSpeed){
-            cpBodySetVelocity(body, cpvmult(cpvnormalize(vel), s.maxSpeed));
-        }
-        if(v2 > 1e-6f){
-            s.heading = cpvnormalize(vel);
-            s.side    = cpvperp(s.heading);
-        }
-
-        if (v2 > 1e-6f) {
-            s.heading = cpvnormalize(vel);
-            s.side    = cpvperp(s.heading);
-
-            // Rotate body so that its angle matches heading
-            float desiredAngle = atan2f(s.heading.y, s.heading.x);
-            float currentAngle = cpBodyGetAngle(body);
-            float diff = desiredAngle - currentAngle;
-
-            // Clamp turn rate
-            diff = std::fmax(-s.maxTurnRate * dt, std::fmin(s.maxTurnRate * dt, diff));
-            cpBodySetAngle(body, currentAngle + diff);
-        }
+    // Timed steering force (linear decay)
+    if (s.timedForceTimeLeft > 0.f) {
+        float k = s.timedForceTimeLeft / s.timedForceDuration;
+        s.steeringForce = cpvadd(s.steeringForce, cpvmult(s.timedForce, k));
+        s.timedForceTimeLeft = std::max(0.f, s.timedForceTimeLeft - dt);
     }
+
+    // Truncate total force again just in case
+    s.steeringForce = truncate(s.steeringForce, s.maxForce);
+
+    // Reset flags
+    s.isSeeking = s.isFleeing = s.isPursuing = s.isEvading = false;
+    s.isWandering = s.isPathFollowing = false;
+    s.isSeparating = s.isAligning = s.isCohesing = false;
+
+    cpBody* body = get_cpBody(r, e);
+    if (!body) return;
+
+    // --------------------------------------------------
+    // Apply forces (scaled by dt for framerate consistency)
+    // --------------------------------------------------
+    cpVect appliedForce = cpvmult(s.steeringForce, dt * s.mass);
+    cpBodyApplyForceAtLocalPoint(body, appliedForce, cpvzero);
+
+    // Timed impulses (framerate-independent)
+    if (s.timedImpulseTimeLeft > 0.f) {
+        float slice = std::min(dt, s.timedImpulseTimeLeft);
+        cpVect impulse = cpvmult(s.timedImpulsePerSec, slice);
+        cpBodyApplyImpulseAtLocalPoint(body, impulse, cpvzero);
+        s.timedImpulseTimeLeft = std::max(0.f, s.timedImpulseTimeLeft - dt);
+    }
+
+    // --------------------------------------------------
+    // Handle velocity and rotation
+    // --------------------------------------------------
+    cpVect vel = cpBodyGetVelocity(body);
+    float speed = cpvlength(vel);
+
+    // Soft clamp speed (avoid snapping)
+    if (speed > s.maxSpeed) {
+        float blend = 0.5f + 0.5f * (s.maxSpeed / speed);
+        vel = cpvmult(vel, blend);
+        cpBodySetVelocity(body, vel);
+    }
+
+    // Rotate body to face direction of travel
+    if (speed > 1e-4f) {
+        s.heading = cpvnormalize(vel);
+        s.side = cpvperp(s.heading);
+
+        float desiredAngle = atan2f(s.heading.y, s.heading.x);
+        float currentAngle = cpBodyGetAngle(body);
+        float diff = desiredAngle - currentAngle;
+
+        // Normalize to [-pi, pi]
+        while (diff > M_PI) diff -= 2.f * M_PI;
+        while (diff < -M_PI) diff += 2.f * M_PI;
+
+        // Clamp turning rate
+        float maxTurn = s.maxTurnRate * dt;
+        diff = std::fmax(-maxTurn, std::fmin(maxTurn, diff));
+
+        cpBodySetAngle(body, currentAngle + diff);
+        cpBodySetAngularVelocity(body, 0.f); // prevent Chipmunk wobble
+    }
+}
 
     //--------------------------------------------
     // Behaviors
@@ -181,7 +200,9 @@ namespace Steering {
         float  dist     = cpvlength(toTarget);
 
         if (dist > 1e-5f) {
-            float speed   = std::min(dist / (deceleration * 0.3f), s.maxSpeed);
+            float decelTweaker = 0.3f;
+            float speed = dist / (deceleration * decelTweaker);
+            speed = std::min(speed, s.maxSpeed);
             cpVect desired= cpvmult(toTarget, speed / dist);
             cpVect vel    = cpBodyGetVelocity(body);
 

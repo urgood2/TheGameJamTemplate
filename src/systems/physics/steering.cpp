@@ -146,6 +146,20 @@ namespace Steering {
             s.heading = cpvnormalize(vel);
             s.side    = cpvperp(s.heading);
         }
+
+        if (v2 > 1e-6f) {
+            s.heading = cpvnormalize(vel);
+            s.side    = cpvperp(s.heading);
+
+            // Rotate body so that its angle matches heading
+            float desiredAngle = atan2f(s.heading.y, s.heading.x);
+            float currentAngle = cpBodyGetAngle(body);
+            float diff = desiredAngle - currentAngle;
+
+            // Clamp turn rate
+            diff = std::fmax(-s.maxTurnRate * dt, std::fmin(s.maxTurnRate * dt, diff));
+            cpBodySetAngle(body, currentAngle + diff);
+        }
     }
 
     //--------------------------------------------
@@ -167,7 +181,7 @@ namespace Steering {
         float  dist     = cpvlength(toTarget);
 
         if (dist > 1e-5f) {
-            float speed   = std::min(dist / (deceleration * 0.08f), s.maxSpeed);
+            float speed   = std::min(dist / (deceleration * 0.3f), s.maxSpeed);
             cpVect desired= cpvmult(toTarget, speed / dist);
             cpVect vel    = cpBodyGetVelocity(body);
 

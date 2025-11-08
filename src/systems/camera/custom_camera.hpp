@@ -146,7 +146,7 @@ public:
     /// max camera‐target offset speed (world units/sec)
     float maxOffsetX   = 200.0f,  maxOffsetY   =  200.0f;
     /// maximum tilt angle in degrees
-    float tiltAngle         = 360.f/256.f;  // ≈1.4°
+    float tiltAngle         = 0.5f;  // ≈1.4°
     /// how quickly to tilt toward max (per second)
     float tiltSpeed         =  8.0f;
     /// how quickly to recover back to 0° (per second)

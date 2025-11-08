@@ -149,6 +149,7 @@ end)
 - Consider using luajit for release.
 
 # polish phase
+- juice the ui bars with springs.
 - add per-card 3d skew shader pass, disabled when card interacted with. also change 3d skew shader to make card tilt toward mouse, right now it's not facing mouse.
 - graphics need to coalesce. snkrx looks nice. how to replicate?
 - particles with a specific arc (like splashing in a certain direction)

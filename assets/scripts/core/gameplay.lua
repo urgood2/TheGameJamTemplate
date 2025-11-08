@@ -3090,6 +3090,29 @@ function initSurvivorEntity()
             end
         end)
         
+        -- set abberation
+        globalShaderUniforms:set("crt", "aberation_amount", 10)
+        -- set to 0 after 0.5 seconds
+        timer.after(0.5, function()
+            globalShaderUniforms:set("crt", "aberation_amount", 0)
+        end)
+        
+        -- tween up noise, then back down
+        timer.tween_scalar(
+            0.1, -- duration in seconds
+            function() return globalShaderUniforms:get("crt", "noise_amount") end, -- getter
+            function(v) globalShaderUniforms:set("crt", "noise_amount", v) end, -- setter
+            0.7 -- target value
+        )
+        timer.after(0.1, function()
+            timer.tween_scalar(
+                0.1, -- duration in seconds
+                function() return globalShaderUniforms:get("crt", "noise_amount") end, -- getter
+                function(v) globalShaderUniforms:set("crt", "noise_amount", v) end, -- setter
+                0 -- target value
+            )
+        end)
+        
         return false -- reject collision 
     end)
 

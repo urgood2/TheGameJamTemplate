@@ -3093,7 +3093,7 @@ function initSurvivorEntity()
         -- set abberation
         globalShaderUniforms:set("crt", "aberation_amount", 10)
         -- set to 0 after 0.5 seconds
-        timer.after(0.5, function()
+        timer.after(0.2, function()
             globalShaderUniforms:set("crt", "aberation_amount", 0)
         end)
         
@@ -3612,7 +3612,7 @@ function initActionPhase()
             
             -- make it steerable
             -- steering
-            steering.make_steerable(registry, enemyEntity, 300.0, 3000.0, math.pi*2.0, 2.0)
+            steering.make_steerable(registry, enemyEntity, 3000.0, 30000.0, math.pi*2.0, 2.0)
             
             
             -- give it a combat table.

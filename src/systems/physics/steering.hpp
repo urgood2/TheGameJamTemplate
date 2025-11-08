@@ -24,8 +24,8 @@ struct BodyComponent { // OPTIONAL legacy support
 struct SteerableComponent {
   bool enabled = false;
   float mass = 1.0f;
-  float maxSpeed = 100.0f;
-  float maxForce = 2000.0f;
+  float maxSpeed = 4000.0f;
+  float maxForce = 4000.0f;
   float maxTurnRate = 2.0f * float(M_PI);
   float turnMultiplier = 2.0f;
 

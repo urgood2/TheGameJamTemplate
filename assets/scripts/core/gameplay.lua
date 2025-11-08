@@ -3019,15 +3019,28 @@ function initSurvivorEntity()
                 -- create a small particle effect at pickup location
                 local pickupTransform = component_cache.get(pickupEntity, Transform)
                 if pickupTransform then
-                    spawnCircularBurstParticles(
+                    
+                    particle.spawnRadialParticles(
                         pickupTransform.actualX + pickupTransform.actualW / 2,
                         pickupTransform.actualY + pickupTransform.actualH / 2,
-                        15, -- num particles
-                        0.4,
-                        util.getColor("yellow"), 
-                        util.getColor("apricot_cream"), -- colors
-                        "cubic_in_out", -- ease
-                        "world"
+                        20,                      -- count
+                        0.4,                     -- base lifespan
+                        {
+                            lifetimeJitter = 0.5,                -- ±50% lifetime variance
+                            scaleJitter = 0.3,                   -- ±30% scale variance
+                            minScale = 3,
+                            maxScale = 4,
+                            scaleEasing = "cubic",
+                            minSpeed = 100,
+                            maxSpeed = 300,
+                            colors = { util.getColor("RED") },
+                            renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+                            easing = "cubic",
+                            rotationSpeed = 90,                  -- degrees/sec
+                            rotationJitter = 0.5,                -- ±50% variance
+                            space = "world",
+                            z = 0,
+                        }
                     )
                 end
                 
@@ -3689,7 +3702,7 @@ function initActionPhase()
                 
                 steering.seek_point(registry, enemyEntity, playerLocation, 1.0, 0.5)
                 -- steering.flee_point(registry, player, {x=playerT.actualX + playerT.actualW/2, y=playerT.actualY + playerT.actualH/2}, 300.0, 1.0)
-                steering.wander(registry, enemyEntity, 20.0, 150.0, 40.0, 0.5)
+                steering.wander(registry, enemyEntity, 300.0, 300.0, 150.0, 10)
                 
                 -- steering.path_follow(registry, player, 1.0, 1.0)
                 
@@ -3764,7 +3777,7 @@ function initActionPhase()
             makeSpawnMarkerCircle(
                 expPickupTransform.actualX,
                 expPickupTransform.actualY,
-                64,
+                expPickupTransform.actualW,
                 util.getColor("yellow"),
                 ACTION_STATE
             )

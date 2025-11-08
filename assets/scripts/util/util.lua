@@ -94,65 +94,99 @@ end
 function particle.spawnRadialParticles(x, y, count, seconds, opts)
     opts = opts or {}
 
-    local easing      = Easing[opts.easing or "cubic"]
-    local startAngle  = math.rad(opts.startAngle or 0)
-    local endAngle    = math.rad(opts.endAngle or 360)
-    local minRadius   = opts.minRadius or 0
-    local maxRadius   = opts.maxRadius or 0
-    local minSpeed    = opts.minSpeed or 100
-    local maxSpeed    = opts.maxSpeed or 300
-    local minScale    = opts.minScale or 5
-    local maxScale    = opts.maxScale or 15
-    local renderType  = opts.renderType or particle.ParticleRenderType.CIRCLE_FILLED
-    local space       = opts.space or "screen"
-    local z           = opts.z or 0
-    local colorSet    = opts.colors or { util.getColor("WHITE") }
-    seconds = applyDurationVariance(seconds, opts.durationVariance or 0.2)
-
+    local easing          = Easing[opts.easing or "cubic"]
+    local startAngle      = math.rad(opts.startAngle or 0)
+    local endAngle        = math.rad(opts.endAngle or 360)
+    local minRadius       = opts.minRadius or 0
+    local maxRadius       = opts.maxRadius or 0
+    local minSpeed        = opts.minSpeed or 100
+    local maxSpeed        = opts.maxSpeed or 300
+    local minScale        = opts.minScale or 5
+    local maxScale        = opts.maxScale or 15
+    local renderType      = opts.renderType or particle.ParticleRenderType.CIRCLE_FILLED
+    local space           = opts.space or "screen"
+    local z               = opts.z or 0
+    local colorSet        = opts.colors or { util.getColor("WHITE") }
+    local gravity         = opts.gravity or 0
+    local lifetimeJitter  = opts.lifetimeJitter or 0.0 -- ±fraction of lifetime variance
+    local scaleJitter     = opts.scaleJitter or 0.0    -- ±fractional scale variance
+    local rotationSpeed   = opts.rotationSpeed or 0.0
+    local rotationJitter  = opts.rotationJitter or 0.0
 
     for i = 1, count do
+        -- Random radial direction
         local angle = startAngle + math.random() * (endAngle - startAngle)
-        local dir   = Vec2(math.cos(angle), math.sin(angle))
-        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+        local dir = Vec2(math.cos(angle), math.sin(angle))
+
+        -- Randomized radius offset
         local radius = math.random() * (maxRadius - minRadius) + minRadius
+
+        -- Randomized speed
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+
+        -- Randomized colors
         local startColor = colorSet[math.random(1, #colorSet)]
         local endColor   = opts.endColor or startColor
 
+        -- Jittered lifespan
+        local jitterFactorLife = 1 + (math.random() * 2 - 1) * lifetimeJitter
+        local lifespan = seconds * jitterFactorLife
+
+        -- Jittered scale
+        local scale = math.random() * (maxScale - minScale) + minScale
+        local jitterFactorScale = 1 + (math.random() * 2 - 1) * scaleJitter
+        scale = scale * jitterFactorScale
+
+        -- Jittered rotation speed (signed)
+        local finalRotationSpeed = rotationSpeed * (1 + (math.random() * 2 - 1) * rotationJitter)
+        if math.random() < 0.5 then finalRotationSpeed = -finalRotationSpeed end
+
         particle.CreateParticle(
             Vec2(x + dir.x * radius, y + dir.y * radius),
-            Vec2(minScale, minScale),
+            Vec2(scale, scale),
             {
                 renderType    = renderType,
                 velocity      = Vec2(0, 0),
                 acceleration  = 0,
-                lifespan      = seconds,
+                lifespan      = lifespan,
                 startColor    = startColor,
                 endColor      = endColor,
-                rotationSpeed = opts.rotationSpeed or 0,
+                rotationSpeed = finalRotationSpeed,
                 space         = space,
                 z             = z,
+                gravity       = gravity,
 
                 onUpdateCallback = function(comp, dt)
                     local age      = comp.age or 0.0
-                    local life     = comp.lifespan or seconds or 0.000001
+                    local life     = comp.lifespan or lifespan or 0.000001
                     local progress = math.min(math.max(age / life, 0), 1)
 
                     -- easing-based outward velocity
-                    local speedNow = (minSpeed + (maxSpeed - minSpeed) * easing.d(progress))
-                    comp.velocity = Vec2(dir.x * speedNow, dir.y * speedNow)
+                    local eased = easing.d(progress)
+                    comp.velocity = Vec2(dir.x * speed * eased, dir.y * speed * eased)
 
                     -- optional easing-based scale growth
                     if opts.scaleEasing then
                         local sEasing = Easing[opts.scaleEasing] or Easing.linear
-                        local eased = sEasing.f(progress)
-                        comp.scale = minScale + (maxScale - minScale) * eased
+                        local easedScale = sEasing.f(progress)
+                        comp.scale = minScale + (maxScale - minScale) * easedScale
+                    end
+
+                    -- apply rotation
+                    if finalRotationSpeed ~= 0 then
+                        comp.rotation = (comp.rotation or 0) + finalRotationSpeed * dt
+                    end
+
+                    -- optional gravity
+                    if gravity ~= 0 then
+                        comp.velocity.y = comp.velocity.y + gravity * dt
                     end
                 end,
-            },
-            nil
+            }
         )
     end
 end
+
 
 
 ---@param x number

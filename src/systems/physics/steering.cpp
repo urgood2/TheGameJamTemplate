@@ -2,6 +2,7 @@
 
 #include "physics_world.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
+#include "systems/transform/transform.hpp"
 
 
 
@@ -178,6 +179,28 @@ namespace Steering {
         s.heading = cpvnormalize(vel);
         s.side    = cpvperp(s.heading);
     }
+    
+     // --------------------------------------------------
+    // Smoothly rotate body to match heading (if moving)
+    // --------------------------------------------------
+    vel = cpBodyGetVelocity(body);
+    float speedSq = cpvlengthsq(vel);
+
+    // --------------------------------------------------
+    // Update heading for drawing / logic (not physics)
+    // --------------------------------------------------
+    if (speedSq > 1e-5f) {
+        s.heading = cpvnormalize(vel);
+        s.side    = cpvperp(s.heading);
+
+        // Just store visual angle if you want to draw rotation
+        auto visualAngle = atan2f(s.heading.y, s.heading.x) * (180.0f / M_PI);
+
+        
+        auto &transform = r.get<transform::Transform>(e);
+        transform.setActualRotation(visualAngle);
+    }
+
 }
 
 
@@ -267,7 +290,7 @@ namespace Steering {
         auto rnd = []() -> float { return float(rand()) / float(RAND_MAX); };
         s.wanderTarget = cpvadd(s.wanderTarget,
                                 cpvmult(cpv(2.0f*rnd()-1.0f, 2.0f*rnd()-1.0f),
-                                        s.wanderJitter * main_loop::getDelta())); // scaled by dt
+                                        s.wanderJitter)); // scaled by dt
         s.wanderTarget = cpvnormalize(s.wanderTarget);
         s.wanderTarget = cpvmult(s.wanderTarget, s.wanderRadius);
 

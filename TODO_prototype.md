@@ -149,6 +149,7 @@ end)
 - Consider using luajit for release.
 
 # polish phase
+- add a physics sync mode that completey desyncs rotation. then test using it with the skellies.
 - juice the ui bars with springs.
 - add per-card 3d skew shader pass, disabled when card interacted with. also change 3d skew shader to make card tilt toward mouse, right now it's not facing mouse.
 - graphics need to coalesce. snkrx looks nice. how to replicate?

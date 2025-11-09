@@ -145,7 +145,7 @@ namespace physics {
 
         // ---- ROTATION HANDOFF ----
         if (cfg.rotMode == RotationSyncMode::PhysicsFree_TransformFollows) {
-            T.setActualRotation(displayRot);
+            // T.setActualRotation(displayRot);
         }
         else {
             // Transform is authoritative → do NOT pull angle from physics.

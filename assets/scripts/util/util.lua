@@ -617,17 +617,12 @@ function hitFX(entity, magnitude, duration)
   if not duration then duration = 0.1 end
   
   -- apply a size wobble by magnitude
-  if registry.has(entity, Transform) then
+  -- if registry:has(entity, Transform) then
     local transformComp = component_cache.get(entity, Transform)
-    local originalW = transformComp.actualW
-    local originalH = transformComp.actualH
-    
-    -- increase size temporarily by magnitude
-    transformComp.visualW = transformComp.actualW * magnitude
-    transformComp.visualH = transformComp.actualH * magnitude
-  end
+    transformComp.visualS = transformComp.visualS * magnitude
+  -- end
   
-  if registry.has(entity, shader_pipeline.ShaderPipelineComponent) == false then
+  if registry:has(entity, shader_pipeline.ShaderPipelineComponent) == false then
     return
   end
   

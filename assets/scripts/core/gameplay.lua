@@ -3071,6 +3071,7 @@ function initSurvivorEntity()
             signal.emit("on_bump_enemy", enemyEntity)
         end
         
+        hitFX(survivorEntity, 10, 0.2)
         
         
         -- play sound
@@ -3086,27 +3087,27 @@ function initSurvivorEntity()
         
         -- TODO: make player take damage, play hit effect, etc.
         
-        local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
-        shaderPipelineComp:addPass("flash")
+        -- local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+        -- shaderPipelineComp:addPass("flash")
         
         -- shake camera
         local cam = camera.Get("world_camera")
         if cam then
-            cam:Shake(10.0, 0.35, 30.0)
+            cam:Shake(5.0, 0.35, 100.0)
         end
         
-        -- remove after a short delay
-        timer.after(1.0, function()
-            local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
-            if shaderPipelineComp then
-                shaderPipelineComp:removePass("flash")
-            end
-        end)
+        -- -- remove after a short delay
+        -- timer.after(1.0, function()
+        --     local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+        --     if shaderPipelineComp then
+        --         shaderPipelineComp:removePass("flash")
+        --     end
+        -- end)
         
         -- set abberation
         globalShaderUniforms:set("crt", "aberation_amount", 10)
         -- set to 0 after 0.5 seconds
-        timer.after(0.2, function()
+        timer.after(0.15, function()
             globalShaderUniforms:set("crt", "aberation_amount", 0)
         end)
         
@@ -3211,6 +3212,11 @@ function initSurvivorEntity()
         playSoundEffect("effects", "gain_exp_pickup", 1.0)
         
         CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
+        
+        local playerT = component_cache.get(survivorEntity, Transform)
+        if playerT then
+            playerT.visualS = 1.5
+        end
         
         --TODo: this is just a test.
         
@@ -3591,7 +3597,7 @@ function initActionPhase()
             
             -- animation entity
             local enemyEntity = animation_system.createAnimatedObjectWithTransform(
-                "b453.png", -- animation ID
+                "b1060.png", -- animation ID
                 true             -- use animation, not sprite identifier, if false
             )
             
@@ -3702,7 +3708,7 @@ function initActionPhase()
                 
                 steering.seek_point(registry, enemyEntity, playerLocation, 1.0, 0.5)
                 -- steering.flee_point(registry, player, {x=playerT.actualX + playerT.actualW/2, y=playerT.actualY + playerT.actualH/2}, 300.0, 1.0)
-                steering.wander(registry, enemyEntity, 300.0, 300.0, 150.0, 10)
+                steering.wander(registry, enemyEntity, 300.0, 300.0, 150.0, 3)
                 
                 -- steering.path_follow(registry, player, 1.0, 1.0)
                 

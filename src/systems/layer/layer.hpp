@@ -412,6 +412,7 @@ void beginStencilMask();
 void endStencilMask();
 
 void endStencil();
+RenderTexture2D LoadRenderTextureStencilEnabled(int width, int height);
 
     // NOTE that you should set shader uniforms directly when rendering at the layer level-- that is, rendering entire layers.
     void AddUniformFloat(std::shared_ptr<Layer> layer, Shader shader, const std::string &uniform, float value);

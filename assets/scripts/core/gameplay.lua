@@ -3443,6 +3443,8 @@ local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
         local L = layers.sprites
         local z = z_orders.particle_vfx
         local space = layer.DrawCommandSpace.World
+        
+        command_buffer.queueClearStencilBuffer(L, function() end, z, space)
 
         ------------------------------------------------------------------
         -- (1) Begin stencil workflow (enable + clear)
@@ -3483,8 +3485,7 @@ local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
             c.dpfail = GL_KEEP
             c.dppass = GL_REPLACE
         end, z, space)
-
-        -- Disable color writes (we're modifying stencil only)
+        
         command_buffer.queueColorMask(L, function(c)
             c.r, c.g, c.b, c.a = false, false, false, false
         end, z, space)
@@ -3502,29 +3503,29 @@ local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
         ------------------------------------------------------------------
         -- (3b) Disable further stencil writes (glStencilMask(0x00))
         ------------------------------------------------------------------
-        command_buffer.queueAtomicStencilMask(L, function(c)
-            c.mask = 0x00
-        end, z, space)
+        -- command_buffer.queueAtomicStencilMask(L, function(c)
+        --     c.mask = 0x00
+        -- end, z, space)
 
         ------------------------------------------------------------------
         -- (4) End mask phase — restore stencil test (stencil == 1)
         ------------------------------------------------------------------
-        command_buffer.queueStencilFunc(L, function(c)
-            c.func = GL_EQUAL
-            c.ref = 1
-            c.mask = 0xFF
-        end, z, space)
+        -- command_buffer.queueStencilFunc(L, function(c)
+        --     c.func = GL_EQUAL
+        --     c.ref = 1
+        --     c.mask = 0xFF
+        -- end, z, space)
 
-        command_buffer.queueStencilOp(L, function(c)
-            c.sfail = GL_KEEP
-            c.dpfail = GL_KEEP
-            c.dppass = GL_KEEP
-        end, z, space)
+        -- command_buffer.queueStencilOp(L, function(c)
+        --     c.sfail = GL_KEEP
+        --     c.dpfail = GL_KEEP
+        --     c.dppass = GL_KEEP
+        -- end, z, space)
 
         -- Restore color writes (draw visible content again)
-        command_buffer.queueColorMask(L, function(c)
-            c.r, c.g, c.b, c.a = true, true, true, true
-        end, z, space)
+        -- command_buffer.queueColorMask(L, function(c)
+        --     c.r, c.g, c.b, c.a = true, true, true, true
+        -- end, z, space)
 
         -- End the mask stage (should mirror endStencilMask C++)
         command_buffer.queueEndStencilMask(L, function() end, z, space)
@@ -3545,9 +3546,9 @@ local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
         -- (6) End stencil mode (disable + cleanup)
         ------------------------------------------------------------------
         -- Restore full write mask before disabling stencil
-        command_buffer.queueAtomicStencilMask(L, function(c)
-            c.mask = 0xFF
-        end, z, space)
+        -- command_buffer.queueAtomicStencilMask(L, function(c)
+        --     c.mask = 0xFF
+        -- end, z, space)
 
         command_buffer.queueEndStencilMode(L, function() end, z, space)
 

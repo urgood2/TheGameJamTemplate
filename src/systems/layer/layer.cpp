@@ -2897,8 +2897,8 @@ void ResizeCanvasInLayer(std::shared_ptr<Layer> layer,
   auto it = layer->canvases.find(canvasName);
   if (it != layer->canvases.end()) {
     UnloadRenderTexture(it->second); // Free the existing texture
-    it->second = LoadRenderTexture(
-        width, height); // Create a new one with the specified dimensions
+    // it->second = LoadRenderTexture(width, height); // Create a new one with the specified dimensions
+    it->second = LoadRenderTextureStencilEnabled(width, height); // Create a new one with the specified dimensions
   } else {
     // Handle error: Canvas does not exist
     SPDLOG_ERROR("Error: Canvas '{}' does not exist in the layer.", canvasName);
@@ -2908,7 +2908,9 @@ void ResizeCanvasInLayer(std::shared_ptr<Layer> layer,
 std::shared_ptr<Layer> CreateLayerWithSize(int width, int height) {
   auto layer = std::make_shared<Layer>();
   // Create a default "main" canvas with the specified size
-  RenderTexture2D mainCanvas = LoadRenderTexture(width, height);
+  // RenderTexture2D mainCanvas = LoadRenderTexture(width, height);
+  RenderTexture2D mainCanvas =
+      LoadRenderTextureStencilEnabled(width, height);
   layer->canvases["main"] = mainCanvas;
   layers.push_back(layer);
   return layer;
@@ -2956,13 +2958,16 @@ void UnloadAllLayers() {
 
 void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name,
                       int width, int height) {
-  RenderTexture2D canvas = LoadRenderTexture(width, height);
+  // RenderTexture2D canvas = LoadRenderTexture(width, height);
+  RenderTexture2D canvas =
+      LoadRenderTextureStencilEnabled(width, height);
   layer->canvases[name] = canvas;
 }
 
 void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name) {
   RenderTexture2D canvas =
-      LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+      // LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+      LoadRenderTextureStencilEnabled(GetScreenWidth(), GetScreenHeight());
   layer->canvases[name] = canvas;
 }
 
@@ -3067,7 +3072,9 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
     // create it with same size as ping:
     auto &srcTex = layerPtr->canvases.at(ping);
     layerPtr->canvases[pong] =
-        LoadRenderTexture(srcTex.texture.width, srcTex.texture.height);
+        // LoadRenderTexture(srcTex.texture.width, srcTex.texture.height);
+        LoadRenderTextureStencilEnabled(srcTex.texture.width,
+                                        srcTex.texture.height);
   }
 
   // 3) Run the full-screen shader chain:
@@ -6373,6 +6380,67 @@ void endStencilMask() {
 void endStencil() {
   rlDrawRenderBatchActive();
   glDisable(GL_STENCIL_TEST);
+}
+
+RenderTexture2D LoadRenderTextureStencilEnabled(int width, int height)
+{
+    RenderTexture2D target = { 0 };
+
+    target.id = rlLoadFramebuffer(); // Create framebuffer object
+    if (target.id <= 0)
+    {
+        TRACELOG(LOG_WARNING, "FBO: Framebuffer object cannot be created");
+        return target;
+    }
+
+    rlEnableFramebuffer(target.id);
+
+    // ------------------------------------------------------------
+    // COLOR ATTACHMENT (RGBA8)
+    // ------------------------------------------------------------
+    target.texture.id = rlLoadTexture(NULL, width, height,
+                                      PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
+    target.texture.width  = width;
+    target.texture.height = height;
+    target.texture.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+    target.texture.mipmaps = 1;
+
+    rlFramebufferAttach(target.id, target.texture.id,
+                        RL_ATTACHMENT_COLOR_CHANNEL0,
+                        RL_ATTACHMENT_TEXTURE2D, 0);
+
+    // ------------------------------------------------------------
+    // DEPTH + STENCIL RENDERBUFFER (GL_DEPTH24_STENCIL8)
+    // ------------------------------------------------------------
+    unsigned int depthStencilId = 0;
+    glGenRenderbuffers(1, &depthStencilId);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthStencilId);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+
+    // Attach same renderbuffer to both depth and stencil
+    rlFramebufferAttach(target.id, depthStencilId,
+                        RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
+    rlFramebufferAttach(target.id, depthStencilId,
+                        RL_ATTACHMENT_STENCIL, RL_ATTACHMENT_RENDERBUFFER, 0);
+
+    // Store metadata
+    target.depth.id = depthStencilId;
+    target.depth.width  = width;
+    target.depth.height = height;
+    target.depth.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8; // placeholder
+    target.depth.mipmaps = 1;
+
+    // ------------------------------------------------------------
+    // VALIDATION + CLEANUP
+    // ------------------------------------------------------------
+    if (rlFramebufferComplete(target.id))
+        TRACELOG(LOG_INFO, "FBO: [ID %i] Framebuffer with depth+stencil created successfully", target.id);
+    else
+        TRACELOG(LOG_WARNING, "FBO: [ID %i] Framebuffer is incomplete", target.id);
+
+    rlDisableFramebuffer();
+
+    return target;
 }
 
 

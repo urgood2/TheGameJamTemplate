@@ -1604,7 +1604,7 @@ static std::unordered_map<entt::entity, uint64_t> s_drawAnchorByEntity;
 
 void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color color) {
     
-    DrawEllipse(400, 300, 100, 50, RED);
+    // DrawEllipse(400, 300, 100, 50, RED);
     // --- 1. Begin stencil workflow ---
     layer::beginStencil();
 

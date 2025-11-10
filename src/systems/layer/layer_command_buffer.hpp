@@ -121,6 +121,12 @@ namespace layer
         
         template<> inline DrawCommandType GetDrawCommandType<CmdClearStencilBuffer>() { return DrawCommandType::ClearStencilBuffer; }
         template<> inline DrawCommandType GetDrawCommandType<CmdBeginStencilMode>() { return DrawCommandType::BeginStencilMode; }
+        template<> inline DrawCommandType 
+        GetDrawCommandType<CmdStencilOp>() { return DrawCommandType::StencilOp; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdStencilFunc>() { return DrawCommandType::StencilFunc; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdRenderBatchFlush>() { return DrawCommandType::RenderBatchFlush; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdAtomicStencilMask>() { return DrawCommandType::AtomicStencilMask; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdColorMask>() { return DrawCommandType::ColorMask; }
         template<> inline DrawCommandType GetDrawCommandType<CmdEndStencilMode>() { return DrawCommandType::EndStencilMode; }
         template<> inline DrawCommandType GetDrawCommandType<CmdBeginStencilMask>() { return DrawCommandType::BeginStencilMask; }
         template<> inline DrawCommandType GetDrawCommandType<CmdEndStencilMask>() { return DrawCommandType::EndStencilMask; }
@@ -340,6 +346,11 @@ namespace layer
             CmdRenderNPatchRect,
             CmdDrawTriangle,
             CmdClearStencilBuffer,
+            CmdStencilOp,
+            CmdRenderBatchFlush,
+            CmdAtomicStencilMask,
+            CmdColorMask,
+            CmdStencilFunc,
             CmdBeginStencilMode,
             CmdEndStencilMode,
             CmdBeginStencilMask,

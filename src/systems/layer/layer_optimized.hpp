@@ -13,6 +13,7 @@
 
 #include "third_party/objectpool-master/src/object_pool.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
+#include "third_party/spine_impl/spine_raylib.hpp"
 
 namespace layer
 {
@@ -104,6 +105,11 @@ namespace layer
         RenderUISliceFromDrawList, // for ui
         RenderUISelfImmediate, // for ui
         ClearStencilBuffer,
+        StencilOp,
+        RenderBatchFlush,
+        AtomicStencilMask,
+        ColorMask,
+        StencilFunc,
         BeginStencilMode,
         BeginStencilMask,
         EndStencilMode,
@@ -435,6 +441,33 @@ namespace layer
         bool dummy = false; // Placeholder
     };
     
+    struct CmdColorMask {
+        bool red;
+        bool green;
+        bool blue;
+        bool alpha;
+    };
+    
+    struct CmdStencilFunc {
+        int func;
+        int ref;
+        unsigned int mask;
+    };
+    
+    struct CmdStencilOp {
+        int sfail;
+        int dpfail;
+        int dppass;
+    };
+    
+    struct CmdRenderBatchFlush {
+        bool dummy = false; // Placeholder
+    };
+    
+    struct CmdAtomicStencilMask {
+        unsigned int mask;
+    };
+    
     struct CmdEndStencilMode {
         bool dummy = false; // Placeholder
     };
@@ -628,6 +661,11 @@ namespace layer
     
     extern void ExecuteClearStencilBuffer(std::shared_ptr<layer::Layer> layer, CmdClearStencilBuffer* c);
     extern void ExecuteBeginStencilMode(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMode* c);
+    extern void ExecuteStencilOp(std::shared_ptr<layer::Layer> layer, CmdStencilOp* c);
+    extern void ExecuteRenderBatchFlush(std::shared_ptr<layer::Layer> layer, CmdRenderBatchFlush* c);
+    extern void ExecuteAtomicStencilMask(std::shared_ptr<layer::Layer> layer, CmdAtomicStencilMask* c);
+    extern void ExecuteColorMask(std::shared_ptr<layer::Layer> layer, CmdColorMask* c);
+    extern void ExecuteStencilFunc(std::shared_ptr<layer::Layer> layer, CmdStencilFunc* c);
     extern void ExecuteEndStencilMode(std::shared_ptr<layer::Layer> layer, CmdEndStencilMode* c);
     extern void ExecuteBeginStencilMask(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMask* c);
     extern void ExecuteEndStencilMask(std::shared_ptr<layer::Layer> layer, CmdEndStencilMask* c);

@@ -46,7 +46,9 @@ enum class ParticleRenderType {
   RECTANGLE_LINE,
   RECTANGLE_FILLED,
   CIRCLE_LINE,
-  CIRCLE_FILLED
+  CIRCLE_FILLED,
+  ELLIPSE,       // new
+  LINE           // new
 };
 
 // tag component lives alongside Particle, only on entities you explicitly tag
@@ -538,6 +540,38 @@ inline void DrawParticles(entt::registry &registry,
             },
             shadowOrder, drawCommandSpace);
         break;
+        
+        case ParticleRenderType::ELLIPSE:
+          layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
+              layerPtr,
+              [radiusX = transform.getVisualW() * 0.5f,
+              radiusY = transform.getVisualH() * 0.5f,
+              shadowColor](layer::CmdDrawCenteredEllipse *cmd) {
+                cmd->x = radiusX;
+                cmd->y = radiusY;
+                cmd->rx = radiusX;
+                cmd->ry = radiusY;
+                cmd->color = shadowColor;
+                cmd->lineWidth.reset();
+              },
+              shadowOrder, drawCommandSpace);
+          break;
+
+        case ParticleRenderType::LINE:
+          layer::QueueCommand<layer::CmdDrawLine>(
+              layerPtr,
+              [w = transform.getVisualW(), h = transform.getVisualH(),
+              shadowColor](layer::CmdDrawLine *cmd) {
+                cmd->x1 = 0.0f;
+                cmd->y1 = 0.0f;
+                cmd->x2 = w;
+                cmd->y2 = h;
+                cmd->color = shadowColor;
+              },
+              shadowOrder, drawCommandSpace);
+          break;
+        
+      
       default:
         break; // no shadow for TEXTURE or unknown
       }
@@ -748,6 +782,37 @@ inline void DrawParticles(entt::registry &registry,
           order, drawCommandSpace);
       break;
     }
+    case ParticleRenderType::ELLIPSE: {
+        layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
+            layerPtr,
+            [radiusX = transform.getVisualW() * 0.5f,
+            radiusY = transform.getVisualH() * 0.5f,
+            color = drawColor](layer::CmdDrawCenteredEllipse *cmd) {
+              cmd->x = radiusX;
+              cmd->y = radiusY;
+              cmd->rx = radiusX;
+              cmd->ry = radiusY;
+              cmd->color = color;
+              cmd->lineWidth.reset(); // filled
+            },
+            order, drawCommandSpace);
+        break;
+      }
+
+      case ParticleRenderType::LINE: {
+        layer::QueueCommand<layer::CmdDrawLine>(
+            layerPtr,
+            [w = transform.getVisualW(), h = transform.getVisualH(),
+            color = drawColor](layer::CmdDrawLine *cmd) {
+              cmd->x1 = 0.0f;
+              cmd->y1 = 0.0f;
+              cmd->x2 = w;
+              cmd->y2 = h;
+              cmd->color = color;
+            },
+            order, drawCommandSpace);
+        break;
+      }
     default:
       SPDLOG_WARN("Unknown particle render type: {}",
                   static_cast<int>(particle.renderType));
@@ -795,7 +860,20 @@ inline void exposeToLua(sol::state &lua) {
       particle::ParticleRenderType::RECTANGLE_LINE, "RECTANGLE_FILLED",
       particle::ParticleRenderType::RECTANGLE_FILLED, "CIRCLE_LINE",
       particle::ParticleRenderType::CIRCLE_LINE, "CIRCLE_FILLED",
-      particle::ParticleRenderType::CIRCLE_FILLED);
+      particle::ParticleRenderType::CIRCLE_FILLED, 
+    "ELLIPSE", particle::ParticleRenderType::ELLIPSE,
+    "LINE", particle::ParticleRenderType::LINE);
+    
+    rec.record_property("particle.ParticleRenderType",
+                    {"ELLIPSE",
+                     std::to_string(static_cast<int>(
+                         particle::ParticleRenderType::ELLIPSE)),
+                     "Draw a filled ellipse (oval)."});
+  rec.record_property("particle.ParticleRenderType",
+                      {"LINE",
+                      std::to_string(static_cast<int>(
+                          particle::ParticleRenderType::LINE)),
+                      "Draw a straight line segment from (0,0) to (w,h)."});
 
   auto &renderTypeDef = rec.add_type("particle.ParticleRenderType");
   renderTypeDef.doc = "How particles should be rendered";

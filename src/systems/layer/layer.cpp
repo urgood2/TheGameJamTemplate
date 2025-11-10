@@ -802,6 +802,16 @@ void exposeToLua(sol::state &lua) {
            &layer::CmdDrawTriangle::p2, "p3", &layer::CmdDrawTriangle::p3,
            "color", &layer::CmdDrawTriangle::color)
   BIND_CMD(BeginStencilMode, "dummy", &layer::CmdBeginStencilMode::dummy)
+  BIND_CMD(StencilOp, "sfail", &layer::CmdStencilOp::sfail, "dpfail",
+           &layer::CmdStencilOp::dpfail, "dppass",
+           &layer::CmdStencilOp::dppass)
+  BIND_CMD(RenderBatchFlush, "dummy", &layer::CmdRenderBatchFlush::dummy)
+  BIND_CMD(AtomicStencilMask, "mask", &layer::CmdAtomicStencilMask::mask)
+  BIND_CMD(ColorMask, "r", &layer::CmdColorMask::red, "g",
+           &layer::CmdColorMask::green, "b", &layer::CmdColorMask::blue, "a",
+           &layer::CmdColorMask::alpha)
+  BIND_CMD(StencilFunc, "func", &layer::CmdStencilFunc::func, "ref",
+           &layer::CmdStencilFunc::ref, "mask", &layer::CmdStencilFunc::mask)
   BIND_CMD(EndStencilMode, "dummy", &layer::CmdEndStencilMode::dummy)
   BIND_CMD(ClearStencilBuffer, "dummy", &layer::CmdClearStencilBuffer::dummy)
   BIND_CMD(BeginStencilMask, "dummy", &layer::CmdBeginStencilMask::dummy)
@@ -920,7 +930,24 @@ void exposeToLua(sol::state &lua) {
   rec.add_type("layer.CmdTranslate", true);
   rec.record_property("layer.CmdTranslate", {"x", "number", "X offset"});
   rec.record_property("layer.CmdTranslate", {"y", "number", "Y offset"});
-
+  rec.add_type("layer.CmdRenderBatchFlush", true);
+  
+  rec.add_type("layer.CmdStencilOp", true);
+  rec.record_property("layer.CmdStencilOp", {"sfail", "number", "Stencil fail action"});
+  
+  rec.record_property("layer.CmdStencilOp", {"dpfail", "number", "Depth fail action"});
+  rec.record_property("layer.CmdStencilOp", {"dppass", "number", "Depth pass action"});
+  rec.add_type("layer.CmdAtomicStencilMask", true);
+  rec.record_property("layer.CmdAtomicStencilMask", {"mask", "number", "Stencil mask value"});
+  rec.add_type("layer.CmdColorMask", true);
+  rec.record_property("layer.CmdColorMask", {"r", "boolean", "Red channel"});
+  rec.record_property("layer.CmdColorMask", {"g", "boolean", "Green channel"});
+  rec.record_property("layer.CmdColorMask", {"b", "boolean", "Blue channel"});
+  rec.record_property("layer.CmdColorMask", {"a", "boolean", "Alpha channel"});
+  rec.add_type("layer.CmdStencilFunc", true);
+  rec.record_property("layer.CmdStencilFunc", {"func", "number", "Stencil function"});
+  rec.record_property("layer.CmdStencilFunc", {"ref", "number", "Reference value"});
+  rec.record_property("layer.CmdStencilFunc", {"mask", "number", "Mask value"});
   rec.add_type("layer.CmdBeginStencilMode", true);
   rec.record_property("layer.CmdBeginStencilMode",
                       {"dummy", "false", "Unused field"});
@@ -1507,7 +1534,21 @@ void exposeToLua(sol::state &lua) {
 
   // Recorder: Top-level namespace
   rec.add_type("command_buffer");
-
+  
+  lua["GL_KEEP"] = GL_KEEP;
+  lua["GL_ZERO"] = GL_ZERO;
+  lua["GL_REPLACE"] = GL_REPLACE;
+  lua["GL_ALWAYS"] = GL_ALWAYS;
+  lua["GL_EQUAL"] = GL_EQUAL;
+  lua["GL_FALSE"] = GL_FALSE;
+  
+  
+  rec.add_type("GL_KEEP").doc = "OpenGL enum GL_KEEP";;
+  rec.add_type("GL_ZERO").doc = "OpenGL enum GL_ZERO";
+  rec.add_type("GL_REPLACE").doc = "OpenGL enum GL_REPLACE";
+  rec.add_type("GL_ALWAYS").doc = "OpenGL enum GL_ALWAYS";
+  rec.add_type("GL_EQUAL").doc = "OpenGL enum GL_EQUAL";
+  rec.add_type("GL_FALSE").doc = "OpenGL enum GL_FALSE";
 // 3) For each CmdXXX, expose a queueXXX helper
 //    Pattern: queueCmdName(layer, init_fn, z, space)
 // Replace your QUEUE_CMD impl with a guarded one:
@@ -1587,6 +1628,11 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(RenderNPatchRect)
   QUEUE_CMD(DrawTriangle)
   QUEUE_CMD(BeginStencilMode)
+  QUEUE_CMD(StencilOp)
+  QUEUE_CMD(RenderBatchFlush)
+  QUEUE_CMD(AtomicStencilMask)
+  QUEUE_CMD(ColorMask)
+  QUEUE_CMD(StencilFunc)
   QUEUE_CMD(EndStencilMode)
   QUEUE_CMD(ClearStencilBuffer)
   QUEUE_CMD(BeginStencilMask)
@@ -1706,6 +1752,11 @@ cb.set_function("queueScopedTransformCompositeRender",
   EXEC_CMD(ExecuteScopedTransformCompositeRender, ScopedTransformCompositeRender)
   EXEC_CMD(ExecuteClearStencilBuffer, ClearStencilBuffer)
   EXEC_CMD(ExecuteBeginStencilMode, BeginStencilMode)
+  EXEC_CMD(ExecuteStencilOp, StencilOp)
+  EXEC_CMD(ExecuteRenderBatchFlush, RenderBatchFlush)
+  EXEC_CMD(ExecuteAtomicStencilMask, AtomicStencilMask)
+  EXEC_CMD(ExecuteColorMask, ColorMask)
+  EXEC_CMD(ExecuteStencilFunc, StencilFunc)
   EXEC_CMD(ExecuteEndStencilMode, EndStencilMode)
   EXEC_CMD(ExecuteBeginStencilMask, BeginStencilMask)
   EXEC_CMD(ExecuteEndStencilMask, EndStencilMask)
@@ -1773,6 +1824,75 @@ cb.set_function("queueScopedTransformCompositeRender",
         ---@return void)",
           .doc =
               R"(Queues a CmdClearStencilBuffer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueColorMask",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdColorMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdColorMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueStencilOp",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilOp) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdStencilOp into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueRenderBatchFlush",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderBatchFlush) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdRenderBatchFlush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueAtomicStencilMask",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAtomicStencilMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdAtomicStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false}); 
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueStencilFunc",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilFunc) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdStencilFunc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
   rec.record_free_function(
@@ -6115,25 +6235,24 @@ void rounded_line(float x1, float y1, float x2, float y2,
 void ellipse(float x, float y, float rx, float ry,
              std::optional<Color> color,
              std::optional<float> lineWidth) {
-  Color C = color.value_or(defaultColor());
-  if (lineWidth.has_value()) {
-    float t = std::max(1.0f, lineWidth.value());
-    // Draw a unit circle ring at origin, scale to rx/ry, then translate.
-    // This keeps to built-ins (DrawRing) and avoids manual tessellation.
-    rlPushMatrix();
-    rlTranslatef(x, y, 0.0f);
-    rlScalef(1.0f, ry / rx,
-             1.0f); // scale Y so a circle of radius rx becomes ellipse rx,ry
-    float inner = std::max(0.0f, rx - t * 0.5f);
-    float outer = rx + t * 0.5f;
-    DrawRing(Vector2{0, 0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
-    rlPopMatrix();
-  } else if (color.has_value()) {
-    DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
-  } else {
-    DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
-  }
+    Color C = color.value_or(defaultColor());
+    if (lineWidth.has_value()) {
+        float t = std::max(1.0f, lineWidth.value());
+        rlPushMatrix();
+        rlTranslatef(x, y, 0.0f);
+        rlScalef(1.0f, ry / rx, 1.0f);
+        float inner = std::max(0.0f, rx - t * 0.5f);
+        float outer = rx + t * 0.5f;
+        DrawRing(Vector2{0, 0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
+        rlDrawRenderBatchActive();   // <---- CRUCIAL
+        rlPopMatrix();
+    } else if (color.has_value()) {
+        DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
+    } else {
+        DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
+    }
 }
+
 
 // -- immediate sprite render
 auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,
@@ -6255,5 +6374,6 @@ void endStencil() {
   rlDrawRenderBatchActive();
   glDisable(GL_STENCIL_TEST);
 }
+
 
 } // namespace layer

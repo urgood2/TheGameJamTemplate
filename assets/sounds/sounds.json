@@ -3,6 +3,7 @@
 
     "music": 
     {
+        "main-menu": "Tranquil Tides.wav",
         "space-ambiance": "AMBIENCE_SciFi_Space_Hangar_05_loop_stereo.wav",
         "planning-music": "18 - Phantom's Requiem (Loop).ogg",
         "action-music": "3 - Whispers of the Abyss (Loop).mp3",
@@ -42,14 +43,27 @@
                 "strength_bonus": "UI_Animate_Whisper_Appear_stereo.wav",
                 
                 "dash": "WHOOSH_Air_Slow_RR10_mono.wav",
-                "walk_1": "Dry Vegetation - Default Footwear - Walk 1.wav",
-                "walk_2": "Dry Vegetation - Default Footwear - Walk 2.wav",
-                "walk_3": "Dry Vegetation - Default Footwear - Walk 4.wav",
-                "walk_4": "Dry Vegetation - Default Footwear - Walk 5.wav",
-                "walk_5": "Dry Vegetation - Default Footwear - Walk 6.wav",
+                "walk_1": "FOOTSTEP_Rock_Walk_01_RR01_mono.wav",
+                "walk_2": "FOOTSTEP_Rock_Walk_01_RR02_mono.wav",
+                "walk_3": "FOOTSTEP_Rock_Walk_01_RR03_mono.wav",
+                "walk_4": "FOOTSTEP_Rock_Walk_01_RR04_mono.wav",
+                "walk_5": "FOOTSTEP_Rock_Walk_01_RR05_mono.wav",
+                "walk_6": "FOOTSTEP_Rock_Walk_01_RR06_mono.wav",
+                "walk_7": "FOOTSTEP_Rock_Walk_01_RR07_mono.wav",
+                "walk_8": "FOOTSTEP_Rock_Walk_01_RR08_mono.wav",
+                "walk_9": "FOOTSTEP_Rock_Walk_01_RR09_mono.wav",
+                "walk_10": "FOOTSTEP_Rock_Walk_01_RR10_mono.wav",
+                
                 "gain_exp_pickup": "Gems Loot 1.wav",
                 "level_up": "Casual Whoosh 8.wav",
-                "player_hurt": "Default Strike (3).wav"
+                "player_hurt": "Default Strike (3).wav",
+                
+                "item_appear_1": "IMPACT_Stone_On_Stone_01_Subtle_mono.wav",
+                "item_appear_2" : "IMPACT_Stone_On_Stone_02_Subtle_mono.wav",
+                "item_appear_3" : "IMPACT_Stone_On_Stone_03_Subtle_mono.wav",
+                "item_appear_4" : "IMPACT_Stone_On_Stone_04_Subtle_mono.wav",
+                
+                "monster_appear_whoosh": "WHOOSH_Deep_Smooth_02_mono.wav"
                 
             },
             "volume": 0.3

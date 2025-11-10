@@ -1059,6 +1059,67 @@ local function lerp(a, b, t)
     return a + (b - a) * t
 end
 
+
+function setUpScrollingBackgroundSprites()
+    local gridSpacingX = 700
+    local gridSpacingY = 700
+    local scrollSpeedX = 50
+    local scrollSpeedY = -40
+    local spriteName = "light_03.png"
+    local scale = 1
+    local tint = Col(255, 255, 255, 255)
+
+    local bgSprites = {}
+    local screenW, screenH = globals.screenWidth(), globals.screenHeight()
+
+    -- extend bounds by one screen in all directions
+    local startX = -screenW
+    local endX   = screenW * 2
+    local startY = -screenH
+    local endY   = screenH * 2
+
+    for gx = startX, endX, gridSpacingX do
+        for gy = startY, endY, gridSpacingY do
+            table.insert(bgSprites, { x = gx, y = gy })
+        end
+    end
+
+    timer.every(0.016, function()
+        local dt = 0.016
+
+        for _, s in ipairs(bgSprites) do
+            s.x = s.x + scrollSpeedX * dt
+            s.y = s.y + scrollSpeedY * dt
+
+            -- wrap horizontally
+            if s.x > endX + gridSpacingX * 0.5 then
+                s.x = s.x - (endX - startX + gridSpacingX)
+            elseif s.x < startX - gridSpacingX * 0.5 then
+                s.x = s.x + (endX - startX + gridSpacingX)
+            end
+
+            -- wrap vertically
+            if s.y > endY + gridSpacingY * 0.5 then
+                s.y = s.y - (endY - startY + gridSpacingY)
+            elseif s.y < startY - gridSpacingY * 0.5 then
+                s.y = s.y + (endY - startY + gridSpacingY)
+            end
+
+
+            command_buffer.queueDrawSpriteCentered(layers.sprites, function(c)
+                c.spriteName = spriteName
+                c.x = s.x
+                c.y = s.y
+                c.dstW = nil
+                c.dstH = nil
+                c.tint = tint
+            end, z_orders.background, layer.DrawCommandSpace.World)
+        end
+    end)
+end
+
+
+
 function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
     if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
     local cardTransform = component_cache.get(cardEntityID, Transform)
@@ -2798,7 +2859,7 @@ function startActionPhase()
     
     PhysicsManager.enable_step("world", true)
     
-    fadeOutMusic("space-ambiance", 0.3)
+    fadeOutMusic("main-menu", 0.3)
     fadeOutMusic("shop-music", 0.3)
     fadeOutMusic("planning-music", 0.3)
     fadeInMusic("action-music", 0.6)
@@ -2822,7 +2883,7 @@ function startPlanningPhase()
     PhysicsManager.enable_step("world", false)
     
     fadeOutMusic("planning-music", 0.3)
-    fadeOutMusic("space-ambiance", 0.3)
+    fadeOutMusic("main-menu", 0.3)
     fadeOutMusic("action-music", 0.3)
     fadeOutMusic("shop-music", 0.3)
     fadeInMusic("planning-music", 0.6)
@@ -2845,7 +2906,7 @@ function startShopPhase()
     
     PhysicsManager.enable_step("world", false)
     
-    fadeOutMusic("space-ambiance", 0.3)
+    fadeOutMusic("main-menu", 0.3)
     fadeOutMusic("action-music", 0.3)
     fadeOutMusic("planning-music", 0.3)
     fadeInMusic("shop-music", 0.6)
@@ -2954,10 +3015,10 @@ function initSurvivorEntity()
                 c.y = SCREEN_BOUND_TOP + (SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP) / 2
                 c.w = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT
                 c.h = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
-                c.rx = 5
-                c.ry = 5
-                c.lineWidth = 10
-                c.color     = util.getColor("white")
+                c.rx = 30
+                c.ry = 30
+                -- c.lineWidth = 10
+                c.color     = util.getColor("dark_gray_slate")
             end, z_orders.background, layer.DrawCommandSpace.World)
         end
     )
@@ -3321,7 +3382,12 @@ local playerFootStepSounds = {
     "walk_2",
     "walk_3",
     "walk_4",  
-    "walk_5"
+    "walk_5",
+    "walk_6",
+    "walk_7",
+    "walk_8",
+    "walk_9",
+    "walk_10"
 }
 
 -- location is top left of circle
@@ -3359,11 +3425,155 @@ local function makeSpawnMarkerCircle(x, y, radius, color, state)
     end)
             
 end
+
+
+local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
+    local HollowCircle = Node:extend()
+    HollowCircle.radius = radius
+    HollowCircle.age = 0
+    HollowCircle.lifetime = lifetime
+    HollowCircle.color = color or Col(255, 255, 255, 255)
+
+    function HollowCircle:update(dt)
+        self.age = self.age + dt
+        local t = math.min(self.age / self.lifetime, 1.0)
+        local outerR = self.radius
+        local innerR = outerR * t
+
+        local L = layers.sprites
+        local z = z_orders.particle_vfx
+        local space = layer.DrawCommandSpace.World
+
+        ------------------------------------------------------------------
+        -- (1) Begin stencil workflow (enable + clear)
+        ------------------------------------------------------------------
+        command_buffer.queueBeginStencilMode(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (2) Begin outer mask (set stencil = 1)
+        ------------------------------------------------------------------
+        command_buffer.queueBeginStencilMask(L, function() end, z, space)
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = x, y
+            c.rx, c.ry = outerR, outerR
+            c.color = util.getColor("WHITE")
+        end, z, space)
+
+        -- Flush to ensure outer circle writes stencil=1 before next phase
+        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (3) Draw inner circle to erase stencil (set stencil = 0)
+        ------------------------------------------------------------------
+        -- Enable full stencil write mask
+        command_buffer.queueAtomicStencilMask(L, function(c)
+            c.mask = 0xFF
+        end, z, space)
+
+        -- Always pass, write reference 0 (to erase)
+        command_buffer.queueStencilFunc(L, function(c)
+            c.func = GL_ALWAYS
+            c.ref = 0
+            c.mask = 0xFF
+        end, z, space)
+
+        -- Replace stencil value with 0 where we draw
+        command_buffer.queueStencilOp(L, function(c)
+            c.sfail = GL_KEEP
+            c.dpfail = GL_KEEP
+            c.dppass = GL_REPLACE
+        end, z, space)
+
+        -- Disable color writes (we're modifying stencil only)
+        command_buffer.queueColorMask(L, function(c)
+            c.r, c.g, c.b, c.a = false, false, false, false
+        end, z, space)
+
+        -- Draw the inner circle — this clears stencil inside
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = x, y
+            c.rx, c.ry = innerR, innerR
+            c.color = util.getColor("WHITE")
+        end, z, space)
+
+        -- Flush to commit erase before restoring state
+        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (3b) Disable further stencil writes (glStencilMask(0x00))
+        ------------------------------------------------------------------
+        command_buffer.queueAtomicStencilMask(L, function(c)
+            c.mask = 0x00
+        end, z, space)
+
+        ------------------------------------------------------------------
+        -- (4) End mask phase — restore stencil test (stencil == 1)
+        ------------------------------------------------------------------
+        command_buffer.queueStencilFunc(L, function(c)
+            c.func = GL_EQUAL
+            c.ref = 1
+            c.mask = 0xFF
+        end, z, space)
+
+        command_buffer.queueStencilOp(L, function(c)
+            c.sfail = GL_KEEP
+            c.dpfail = GL_KEEP
+            c.dppass = GL_KEEP
+        end, z, space)
+
+        -- Restore color writes (draw visible content again)
+        command_buffer.queueColorMask(L, function(c)
+            c.r, c.g, c.b, c.a = true, true, true, true
+        end, z, space)
+
+        -- End the mask stage (should mirror endStencilMask C++)
+        command_buffer.queueEndStencilMask(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (5) Draw visible ring (only where stencil == 1)
+        ------------------------------------------------------------------
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = x, y
+            c.rx, c.ry = outerR, outerR
+            c.color = self.color
+        end, z, space)
+
+        -- Optional flush for correctness before disabling stencil
+        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (6) End stencil mode (disable + cleanup)
+        ------------------------------------------------------------------
+        -- Restore full write mask before disabling stencil
+        command_buffer.queueAtomicStencilMask(L, function(c)
+            c.mask = 0xFF
+        end, z, space)
+
+        command_buffer.queueEndStencilMode(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (7) Lifetime cleanup
+        ------------------------------------------------------------------
+        if t >= 1.0 then
+            registry:destroy(self:handle())
+        end
+    end
+
+    local e = HollowCircle{}
+    e:attach_ecs{ create_new = true }
+    add_state_tag(e:handle(), ACTION_STATE)
+end
+
+
+
+
+
 function initActionPhase()
     
     
     log_debug("Action phase started!")
     
+    setUpScrollingBackgroundSprites()
     
     -- activate action state
     activate_state(ACTION_STATE)
@@ -3549,6 +3759,15 @@ function initActionPhase()
                         space = "world",
                         z = z_orders.player_vfx - 20
                     })
+                    
+                    spawnHollowCircleParticle(
+                        origin.x,
+                        origin.y,
+                        300,
+                        util.getColor("white"),
+                        1.0
+                    )
+                    
                 end
                 
 
@@ -3600,6 +3819,8 @@ function initActionPhase()
                 "b1060.png", -- animation ID
                 true             -- use animation, not sprite identifier, if false
             )
+            
+            playSoundEffect("effects", "monster_appear_whoosh", 0.8 + math.random() * 0.3)
             
             -- give state
             add_state_tag(enemyEntity, ACTION_STATE)
@@ -3759,10 +3980,18 @@ function initActionPhase()
     nil,
     "cameraPanToPlayerTimer")
     
+    local expPickupSounds = {
+        "item_appear_1",
+        "item_appear_2",
+        "item_appear_3",
+        "item_appear_4"
+    }
     
     -- timer to spawn an exp pickup every few seconds, for testing purposes.
     timer.every(3.0, function()
         if is_state_active(ACTION_STATE) then
+            
+            playSoundEffect("effects", random_utils.random_element_string(expPickupSounds), 0.9 + math.random() * 0.2)
             
             local expPickupEntity = animation_system.createAnimatedObjectWithTransform(
                 "b8090.png", -- animation ID
@@ -3973,5 +4202,14 @@ function initPlanningUI()
         ui.box.RenewAlignment(registry, box)
     end)
     
+    -- test shader
+    shaderPipelineComp = registry:emplace(buttonEntity, shader_pipeline.ShaderPipelineComponent)
+    
+    shaderPipelineComp:addPass("flash")
+    
+    -- jiggle button 
+    timer.every(5.0, function()
+        transform.InjectDynamicMotionDefault(buttonEntity)
+    end)
     
 end

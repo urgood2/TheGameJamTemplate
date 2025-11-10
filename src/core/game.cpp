@@ -560,7 +560,7 @@ namespace game
         );
         
         // check how many have InactiveTag
-        SPDLOG_DEBUG("Inactive tag in {} entities", globals::registry.view<entity_gamestate_management::InactiveTag>().size());
+        // SPDLOG_DEBUG("Inactive tag in {} entities", globals::registry.view<entity_gamestate_management::InactiveTag>().size());
                 
         globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag >(entt::exclude<entity_gamestate_management::InactiveTag>)
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag){
@@ -943,9 +943,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
 
         // create layer the size of the screen, with a main canvas the same size
         background = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+        background->backgroundColor = util::getColor("BLACK");
         sprites = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         ui_layer = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         finalOutput = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+        finalOutput->backgroundColor = util::getColor("BLACK");
         layer::AddCanvasToLayer(finalOutput, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
 
         // set camera to fill the screen
@@ -1600,6 +1602,39 @@ void DrawGradientRectRoundedCentered(
 static std::unordered_map<entt::entity, uint64_t> s_drawAnchorByEntity;
 
 
+void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color color) {
+    
+    DrawEllipse(400, 300, 100, 50, RED);
+    // --- 1. Begin stencil workflow ---
+    layer::beginStencil();
+
+    // --- 2. Begin outer mask (set stencil = 1) ---
+    layer::beginStencilMask();
+    // layer::Circle(center.x, center.y, outerR, color);
+    // layer::ellipse(center.x, center.y, innerR, innerR, color);
+    DrawEllipse(center.x, center.y, outerR, outerR, color);
+    rlDrawRenderBatchActive(); // ensure it's flushed before next stencil op
+    
+    // --- 3. Draw inner circle to erase stencil (set stencil = 0) ---
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    // layer::Circle(center.x, center.y, innerR, color);
+    // layer::ellipse(center.x, center.y, innerR, innerR, color);
+    DrawEllipse(center.x, center.y, innerR, innerR, color);
+    rlDrawRenderBatchActive(); // flush again before switching modes
+
+    // --- 4. End mask, draw visible ring only where stencil == 1 ---
+    layer::endStencilMask();
+    // DrawCircleV(center, outerR, color);
+    DrawEllipse(center.x, center.y, outerR, outerR, color);
+
+    // --- 5. Cleanup ---
+    layer::endStencil();
+}
+
+
     auto draw(float dt) -> void
     {
         ZoneScopedN("game::draw"); // custom label
@@ -1946,6 +1981,8 @@ static std::unordered_map<entt::entity, uint64_t> s_drawAnchorByEntity;
             
             fade_system::draw();
             
+            auto mousePos = GetMousePosition();
+            DrawHollowCircleStencil({mousePos.x, mousePos.y}, 100, 50, YELLOW);
 
             {
                 ZoneScopedN("EndDrawing call");

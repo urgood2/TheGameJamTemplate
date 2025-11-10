@@ -1939,6 +1939,68 @@ layer.CmdTranslate = {
 ---
 --- 
 ---
+---@class layer.CmdRenderBatchFlush
+layer.CmdRenderBatchFlush = {
+}
+
+
+---
+--- 
+---
+---@class layer.CmdStencilOp
+layer.CmdStencilOp = {
+    ---@type number
+    sfail = nil,  -- Stencil fail action
+    ---@type number
+    dpfail = nil,  -- Depth fail action
+    ---@type number
+    dppass = nil  -- Depth pass action
+}
+
+
+---
+--- 
+---
+---@class layer.CmdAtomicStencilMask
+layer.CmdAtomicStencilMask = {
+    ---@type number
+    mask = nil  -- Stencil mask value
+}
+
+
+---
+--- 
+---
+---@class layer.CmdColorMask
+layer.CmdColorMask = {
+    ---@type boolean
+    r = nil,  -- Red channel
+    ---@type boolean
+    g = nil,  -- Green channel
+    ---@type boolean
+    b = nil,  -- Blue channel
+    ---@type boolean
+    a = nil  -- Alpha channel
+}
+
+
+---
+--- 
+---
+---@class layer.CmdStencilFunc
+layer.CmdStencilFunc = {
+    ---@type number
+    func = nil,  -- Stencil function
+    ---@type number
+    ref = nil,  -- Reference value
+    ---@type number
+    mask = nil  -- Mask value
+}
+
+
+---
+--- 
+---
 ---@class layer.CmdBeginStencilMode
 layer.CmdBeginStencilMode = {
     ---@type false
@@ -2957,6 +3019,54 @@ layer.DrawCommandSpace = {
 ---
 ---@class command_buffer
 command_buffer = {
+}
+
+
+---
+--- OpenGL enum GL_KEEP
+---
+---@class GL_KEEP
+GL_KEEP = {
+}
+
+
+---
+--- OpenGL enum GL_ZERO
+---
+---@class GL_ZERO
+GL_ZERO = {
+}
+
+
+---
+--- OpenGL enum GL_REPLACE
+---
+---@class GL_REPLACE
+GL_REPLACE = {
+}
+
+
+---
+--- OpenGL enum GL_ALWAYS
+---
+---@class GL_ALWAYS
+GL_ALWAYS = {
+}
+
+
+---
+--- OpenGL enum GL_EQUAL
+---
+---@class GL_EQUAL
+GL_EQUAL = {
+}
+
+
+---
+--- OpenGL enum GL_FALSE
+---
+---@class GL_FALSE
+GL_FALSE = {
 }
 
 
@@ -6653,6 +6763,56 @@ function layer.queueBeginDrawing(...) end
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueClearStencilBuffer(...) end
+
+---
+--- Queues a CmdColorMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdColorMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueColorMask(...) end
+
+---
+--- Queues a CmdStencilOp into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilOp) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueStencilOp(...) end
+
+---
+--- Queues a CmdRenderBatchFlush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderBatchFlush) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueRenderBatchFlush(...) end
+
+---
+--- Queues a CmdAtomicStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAtomicStencilMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueAtomicStencilMask(...) end
+
+---
+--- Queues a CmdStencilFunc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilFunc) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueStencilFunc(...) end
 
 ---
 --- Queues a CmdBeginStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.

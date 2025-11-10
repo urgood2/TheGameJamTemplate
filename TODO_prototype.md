@@ -44,6 +44,20 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
+- [ ] circle with a hollow inside that grows outward and them vanishtes.
+- [ ] Elongated ellipses that are radial and point outwards.
+- [ ] method that adds trail to entity over x duration
+- [ ] flying crescent shape that faces the direction
+- [ ] rectantle area that wipes in the direction it is going.
+- [ ] circle area with dashed rotating border
+- [ ] circle outline with dots that twirl inward.
+- [ ] cross diamond shaped streaks for impact that thin out over time?
+- [ ] beam attack with pulsating circles on either end
+- [ ] straight line particles that branch outward
+- [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate.
+
+
 - debug onstophover, get tooltips to show above everything else, also place wand tooltip somwhere (maybe add a icon to hover?) 
 -pickups should gravitate toward player when close enough.
 - start wand evaluation mechanism.
@@ -149,6 +163,12 @@ end)
 - Consider using luajit for release.
 
 # polish phase
+- [ ] Some ambient movement (rocking) to items/ui
+- [ ] integrate new music from eagle folder.
+- [ ] Some bg or shader overlay effects for individual sprites  / map\
+- normalize sound effects?
+- layer particle effects of different colors
+- limit camera movement to not go certain distance beyond center?
 - size boing not working fo rplayer on hit.
 - add a physics sync mode that completey desyncs rotation. then test using it with the skellies.
 - juice the ui bars with springs.

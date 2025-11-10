@@ -299,7 +299,7 @@ namespace input
             finalCategory = inputState.hid.last_type; // fallback to last known
         }
         
-        SPDLOG_DEBUG("Final category is {}", magic_enum::enum_name(finalCategory));
+        // SPDLOG_DEBUG("Final category is {}", magic_enum::enum_name(finalCategory));
 
         // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt);
         auto &transform = registry.get<transform::Transform>(globals::cursor);

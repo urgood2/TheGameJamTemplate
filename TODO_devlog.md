@@ -153,3 +153,12 @@
   - Added more sfx.
   - Tweaked some particle effects.
   - Tweaked tooltips.
+  
+11/8-9/2025
+  - Weekend, little work, lots of translation work.
+  
+11/10/2025
+  - Added some new sfx.
+  - Added a scrolling background.
+  - Tweaked some particle effects.
+  - Got started using stencils for a new particle effect, bug fixing almost done.

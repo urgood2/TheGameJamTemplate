@@ -242,6 +242,21 @@ namespace layer
     void ExecuteBeginStencilMode(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMode* c) {
         beginStencil();
     }
+    void ExecuteStencilOp(std::shared_ptr<layer::Layer> layer, CmdStencilOp* c) {
+        glStencilOp(c->sfail, c->dpfail, c->dppass);
+    }
+    void ExecuteRenderBatchFlush(std::shared_ptr<layer::Layer> layer, CmdRenderBatchFlush* c) {
+        rlDrawRenderBatchActive();
+    }
+    void ExecuteAtomicStencilMask(std::shared_ptr<layer::Layer> layer, CmdAtomicStencilMask* c) {
+        glStencilMask(c->mask);
+    }
+    void ExecuteColorMask(std::shared_ptr<layer::Layer> layer, CmdColorMask* c) {
+        glColorMask(c->red, c->green, c->blue, c->alpha);
+    }
+    void ExecuteStencilFunc(std::shared_ptr<layer::Layer> layer, CmdStencilFunc* c) {
+        glStencilFunc(c->func, c->ref, c->mask);
+    }
     void ExecuteEndStencilMode(std::shared_ptr<layer::Layer> layer, CmdEndStencilMode* c) {
         endStencil();
     }
@@ -363,6 +378,11 @@ namespace layer
         RegisterRenderer<CmdRenderNPatchRect>(DrawCommandType::RenderNPatchRect, ExecuteRenderNPatchRect);
         RegisterRenderer<CmdDrawTriangle>(DrawCommandType::Triangle, ExecuteTriangle);        
         RegisterRenderer<CmdClearStencilBuffer>(DrawCommandType::ClearStencilBuffer, ExecuteClearStencilBuffer);
+        RegisterRenderer<CmdStencilOp>(DrawCommandType::StencilOp, ExecuteStencilOp);
+        RegisterRenderer<CmdRenderBatchFlush>(DrawCommandType::RenderBatchFlush, ExecuteRenderBatchFlush);
+        RegisterRenderer<CmdAtomicStencilMask>(DrawCommandType::AtomicStencilMask, ExecuteAtomicStencilMask);
+        RegisterRenderer<CmdColorMask>(DrawCommandType::ColorMask, ExecuteColorMask);
+        RegisterRenderer<CmdStencilFunc>(DrawCommandType::StencilFunc, ExecuteStencilFunc);
         RegisterRenderer<CmdBeginStencilMode>(DrawCommandType::BeginStencilMode, ExecuteBeginStencilMode);
         RegisterRenderer<CmdEndStencilMode>(DrawCommandType::EndStencilMode, ExecuteEndStencilMode);
         RegisterRenderer<CmdBeginStencilMask>(DrawCommandType::BeginStencilMask, ExecuteBeginStencilMask);

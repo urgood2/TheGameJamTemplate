@@ -32,6 +32,7 @@
 #include "raylib.h"             // Raylib types and functions
 
 #include "spdlog/spdlog.h"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/spring/spring.hpp"                  // Spring component definition
 #include "systems/layer/layer.hpp"                    // Layer drawing abstraction
 #include "systems/layer/layer_command_buffer.hpp"     // Buffered draw commands
@@ -83,7 +84,9 @@ struct Shake {
 
     void Update(float dt) {
         if(!shaking) return;
-        elapsedTime += dt;
+        // elapsedTime += dt;
+        // let's used unscaled time for shake
+        elapsedTime += main_loop::mainLoop.rawDeltaTime;
         if(elapsedTime >= duration) shaking = false;
     }
 

@@ -10,20 +10,20 @@ uniform float iTime;  // Time for animation
 
 out vec4 finalColor;
 
-//REVIEW: battle-tested
-
 void main()
 {
-    // Calculate flashing intensity using a sine wave
-    float flashIntensity = 0.5 + 0.5 * sin(iTime * 100.0);  // Adjusted to range between 0.0 and 1.0
+    // Create a square wave that toggles between 0.0 and 1.0 rapidly
+    float flashIntensity = step(0.5, fract(iTime * 10.0));  
+    // ↑ 10.0 = flash frequency; higher = faster blinking
 
-    // Sample the texture color
+    // Sample the texture
     vec4 texelColor = texture(texture0, fragTexCoord);
 
-    // Interpolate between the normal color and white, preserving alpha
-    vec4 whiteColor = vec4(1.0, 1.0, 1.0, texelColor.a);
-    finalColor = mix(texelColor * colDiffuse * fragColor, whiteColor, flashIntensity);
+    // Instant switch between normal color and white
+    vec4 baseColor = texelColor * colDiffuse * fragColor;
+    vec4 flashColor = vec4(1.0, 1.0, 1.0, baseColor.a);
+    finalColor = mix(baseColor, flashColor, flashIntensity);
 
-    // Ensure the alpha is preserved
+    // Preserve alpha
     finalColor.a = texelColor.a * colDiffuse.a * fragColor.a;
 }

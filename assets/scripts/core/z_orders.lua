@@ -14,7 +14,8 @@ local z_orders = {
   enemies    = 30,
   
   -- general
-  particle_vfx = 10,
+  particle_vfx = 0,
+  player_char = 1,
   ui_transition = 1000,
   ui_tooltips   = 900,
 }

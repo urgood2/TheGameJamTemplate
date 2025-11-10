@@ -45,7 +45,6 @@ Converts encumbrance into damage
     
 # programming side
 - [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
-- [ ] circle with a hollow inside that grows outward and them vanishtes.
 - [ ] Elongated ellipses that are radial and point outwards.
 - [ ] method that adds trail to entity over x duration
 - [ ] flying crescent shape that faces the direction
@@ -55,7 +54,9 @@ Converts encumbrance into damage
 - [ ] cross diamond shaped streaks for impact that thin out over time?
 - [ ] beam attack with pulsating circles on either end
 - [ ] straight line particles that branch outward
-- [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate.
+
+- [ ] make pickups magnetic
+
 
 
 - debug onstophover, get tooltips to show above everything else, also place wand tooltip somwhere (maybe add a icon to hover?) 
@@ -163,6 +164,7 @@ end)
 - Consider using luajit for release.
 
 # polish phase
+- [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate. -> it works, but needs some work, since buttons that contain images, etc. can't do this yet.
 - [ ] Some ambient movement (rocking) to items/ui
 - [ ] integrate new music from eagle folder.
 - [ ] Some bg or shader overlay effects for individual sprites  / map\

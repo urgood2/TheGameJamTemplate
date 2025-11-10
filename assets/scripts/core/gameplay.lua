@@ -2993,7 +2993,11 @@ function initSurvivorEntity()
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", {"player"})
     
     
-    
+    -- assign z level
+    layer_order_system.assignZIndexToEntity(
+        survivorEntity, 
+        z_orders.player_char
+    )
     
     
     -- make walls after defining collision relationships, tesitng because of bug.
@@ -3433,12 +3437,22 @@ local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
     HollowCircle.age = 0
     HollowCircle.lifetime = lifetime
     HollowCircle.color = color or Col(255, 255, 255, 255)
-
+    
+    function HollowCircle:init()
+        log_debug("Spawning hollow circle particle at", x, y, "radius", radius, "lifetime", lifetime)
+        
+        self.innerR = 0
+        
+        timer.tween_fields(lifetime, self, { innerR = radius }, Easing.inOutCubic.f, nil, "transition_text_scale_up", "ui")
+        
+        
+    end
+    
     function HollowCircle:update(dt)
         self.age = self.age + dt
         local t = math.min(self.age / self.lifetime, 1.0)
         local outerR = self.radius
-        local innerR = outerR * t
+        -- local innerR = outerR * t
 
         local L = layers.sprites
         local z = z_orders.particle_vfx
@@ -3493,7 +3507,7 @@ local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
         -- Draw the inner circle — this clears stencil inside
         command_buffer.queueDrawCenteredEllipse(L, function(c)
             c.x, c.y = x, y
-            c.rx, c.ry = innerR, innerR
+            c.rx, c.ry = self.innerR, self.innerR
             c.color = util.getColor("WHITE")
         end, z, space)
 
@@ -3764,9 +3778,9 @@ function initActionPhase()
                     spawnHollowCircleParticle(
                         origin.x,
                         origin.y,
-                        300,
-                        util.getColor("white"),
-                        1.0
+                        30,
+                        util.getColor("dim_gray"),
+                    0.2
                     )
                     
                 end
@@ -4014,7 +4028,7 @@ function initActionPhase()
                 expPickupTransform.actualX,
                 expPickupTransform.actualY,
                 expPickupTransform.actualW,
-                util.getColor("yellow"),
+                util.getColor("red"),
                 ACTION_STATE
             )
 
@@ -4132,7 +4146,8 @@ function initPlanningUI()
         },
         children = {
             dsl.anim("4130-TheRoguelike_1_10_alpha_923.png", { w = 20, h = 20, isAnimation = false, shadow = false }),
-            dsl.text(localization.get("ui.tooltip_wand_button"), { color = "blackberry", fontSize = 27.0 }),
+            dsl.text(localization.get("ui.tooltip_wand_button"), 
+            { id = "shopButtonText", color = "blackberry", fontSize = 27.0 }),
         }
     }
 
@@ -4160,6 +4175,7 @@ function initPlanningUI()
     
     -- get shop button entity
     local buttonEntity =  ui.box.GetUIEByID(registry, "shop_button")
+    local textEntity =  ui.box.GetUIEByID(registry, "shopButtonText")
     
     -- add onhover and stophover
     local node = component_cache.get(buttonEntity, GameObject)
@@ -4211,6 +4227,7 @@ function initPlanningUI()
     -- jiggle button 
     timer.every(5.0, function()
         transform.InjectDynamicMotionDefault(buttonEntity)
+        transform.InjectDynamicMotionDefault(textEntity)
     end)
     
 end

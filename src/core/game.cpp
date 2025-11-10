@@ -1982,7 +1982,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             fade_system::draw();
             
             auto mousePos = GetMousePosition();
-            DrawHollowCircleStencil({mousePos.x, mousePos.y}, 100, 50, YELLOW);
+            // DrawHollowCircleStencil({mousePos.x, mousePos.y}, 100, 50, YELLOW);
 
             {
                 ZoneScopedN("EndDrawing call");

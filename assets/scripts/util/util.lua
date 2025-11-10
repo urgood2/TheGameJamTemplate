@@ -443,6 +443,71 @@ function particle.spawnDirectionalCone(origin, count, seconds, opts)
 end
 
 
+function particle.spawnDirectionalStreaksCone(origin, count, seconds, opts)
+    opts = opts or {}
+    local easing      = Easing[opts.easing or "cubic"]
+    local colorSet    = opts.colors or { util.getColor("WHITE") }
+    local minSpeed    = opts.minSpeed or 150
+    local maxSpeed    = opts.maxSpeed or 350
+    local minScale    = opts.minScale or 8
+    local maxScale    = opts.maxScale or 20
+    local shrink      = (opts.shrink ~= false)     -- true by default
+    local aspect      = opts.aspect or 3.0
+    local durationJitter = opts.durationJitter or 0.2
+    local scaleJitter    = opts.scaleJitter or 0.3
+    local space       = opts.space or "screen"
+    local z           = opts.z or 0
+    local direction   = opts.direction or Vec2(0, -1)  -- default: upward
+    local spread      = math.rad(opts.spread or 30)    -- degrees → radians
+    local autoAspect  = opts.autoAspect or false       -- enable speed-based elongation
+
+    -- normalize base direction
+    local len = math.sqrt(direction.x^2 + direction.y^2)
+    local baseDir = Vec2(direction.x / len, direction.y / len)
+
+    for i = 1, count do
+        -- random deviation within cone
+        local offset = (math.random() - 0.5) * spread
+        local cosA, sinA = math.cos(offset), math.sin(offset)
+        local dir = Vec2(
+            baseDir.x * cosA - baseDir.y * sinA,
+            baseDir.x * sinA + baseDir.y * cosA
+        )
+
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+        local lifespan = seconds * (1 + (math.random() * 2 - 1) * durationJitter)
+        local scale = math.random() * (maxScale - minScale) + minScale
+        scale = scale * (1 + (math.random() * 2 - 1) * scaleJitter)
+        local color = colorSet[math.random(1, #colorSet)]
+
+        particle.CreateParticle(
+            Vec2(origin.x, origin.y),
+            Vec2(scale, scale / aspect),
+            {
+                renderType = particle.ParticleRenderType.ELLIPSE_STRETCH,
+                lifespan = lifespan,
+                startColor = color,
+                endColor = color,
+                space = space,
+                z = z,
+                autoAspect = autoAspect,
+                onUpdateCallback = function(comp, dt)
+                    local age = comp.age or 0
+                    local life = comp.lifespan or lifespan
+                    local progress = math.min(age / life, 1.0)
+                    local eased = easing.d(progress)
+                    comp.velocity = Vec2(dir.x * speed * eased, dir.y * speed * eased)
+
+                    if shrink then
+                        local shrinkFactor = 1 - progress
+                        comp.scale = math.max(0.1, scale * shrinkFactor)
+                    end
+                end
+            }
+        )
+    end
+end
+
 
 ---@param x number
 ---@param y number
@@ -493,6 +558,62 @@ function particle.spawnExplosion(x, y, count, seconds, opts)
         colors = opts.colors or { util.getColor("ORANGE"), util.getColor("YELLOW") },
         renderType = particle.ParticleRenderType.RECTANGLE_FILLED
     })
+end
+
+---@param x number
+---@param y number
+---@param count integer
+---@param seconds number
+---@param opts table?
+function particle.spawnDirectionalStreaks(x, y, count, seconds, opts)
+    opts = opts or {}
+    local easing = Easing[opts.easing or "cubic"]
+    local colorSet = opts.colors or { util.getColor("WHITE") }
+    local minSpeed = opts.minSpeed or 150
+    local maxSpeed = opts.maxSpeed or 350
+    local minScale = opts.minScale or 8
+    local maxScale = opts.maxScale or 20
+    local shrink = opts.shrink or true
+    local aspect = opts.aspect or 3.0
+    local durationJitter = opts.durationJitter or 0.2
+    local scaleJitter = opts.scaleJitter or 0.3
+    local space = opts.space or "screen"
+    local z = opts.z or 0
+
+    for i = 1, count do
+        local angle = math.random() * 2 * math.pi
+        local dir = Vec2(math.cos(angle), math.sin(angle))
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+        local lifespan = seconds * (1 + (math.random() * 2 - 1) * durationJitter)
+        local scale = math.random() * (maxScale - minScale) + minScale
+        scale = scale * (1 + (math.random() * 2 - 1) * scaleJitter)
+        local color = colorSet[math.random(1, #colorSet)]
+
+        particle.CreateParticle(
+            Vec2(x, y),
+            Vec2(scale, scale / aspect),
+            {
+                renderType = particle.ParticleRenderType.ELLIPSE_STRETCH,
+                lifespan = lifespan,
+                startColor = color,
+                endColor = color,
+                space = space,
+                z = z,
+                onUpdateCallback = function(comp, dt)
+                    local age = comp.age or 0
+                    local life = comp.lifespan or lifespan
+                    local progress = math.min(age / life, 1.0)
+                    local eased = easing.d(progress)
+                    comp.velocity = Vec2(dir.x * speed * eased, dir.y * speed * eased)
+
+                    if shrink then
+                        local shrinkFactor = 1 - progress
+                        comp.scale = math.max(0.1, scale * shrinkFactor)
+                    end
+                end
+            }
+        )
+    end
 end
 
 

@@ -3783,6 +3783,36 @@ function initActionPhase()
                     0.2
                     )
                     
+                    particle.spawnDirectionalStreaksCone(origin, 10, DASH_LENGTH_SEC, {
+                        direction = Vec2(-moveDir.x, -moveDir.y),  -- up
+                        spread = a,              -- ±22.5° cone
+                        minSpeed = 200,
+                        maxSpeed = 300,
+                        minScale = 8,
+                        maxScale = 10,
+                        autoAspect = true,
+                        shrink = true,
+                        colors = { Col(255,200,100) },
+                        space = "world",
+                        z = 5
+                    })
+                    
+                    -- particle.spawnDirectionalStreaks(origin.x, origin.y, 25, 0.5, {
+                    --     renderType = particle.ParticleRenderType.ELLIPSE_STRETCH,
+                    --     minSpeed = 100,
+                    --     maxSpeed = 300,
+                    --     minScale = 10,
+                    --     maxScale = 20,
+                    --     autoAspect = true,
+                    --     colors = { Col(255,200,100,255), Col(255,255,255,255) },
+                    --     shrink = true,
+                    --     durationJitter = 0.2,
+                    --     scaleJitter = 0.3,
+                    --     easing = "quad",
+                    --     shadow = true,
+                    --     space = "world"
+                    -- })
+                    
                 end
                 
 

@@ -48,7 +48,8 @@ enum class ParticleRenderType {
   CIRCLE_LINE,
   CIRCLE_FILLED,
   ELLIPSE,       // new
-  LINE           // new
+  LINE,           // new
+  ELLIPSE_STRETCH // NEW — elongated ellipse aligned with velocity
 };
 
 // tag component lives alongside Particle, only on entities you explicitly tag
@@ -70,6 +71,8 @@ struct Particle {
   std::optional<float> acceleration = 0.0f;
   std::optional<Color> startColor;
   std::optional<Color> endColor;
+  std::optional<bool> autoAspect;  // when true, stretch depends on velocity
+
 
   // New: per-particle draw order (higher draws later)
   std::optional<int> z;
@@ -492,6 +495,53 @@ inline void DrawParticles(entt::registry &registry,
             },
             shadowOrder, drawCommandSpace);
         break;
+        
+      case ParticleRenderType::ELLIPSE_STRETCH: {
+        // Determine direction based on velocity or rotation
+        float rotDeg = 0.0f;
+        if (particle.velocity && 
+            (particle.velocity->x != 0.0f || particle.velocity->y != 0.0f)) {
+            rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
+        } else if (particle.rotation) {
+            rotDeg = *particle.rotation;
+        }
+
+        // Elongation: width = long axis, height = short axis
+        float baseW = transform.getVisualW();
+        float baseH = transform.getVisualH();
+        float aspect = 3.0f; // default
+        if (particle.autoAspect.value_or(false) && particle.velocity) {
+            float speed = Vector2Length(*particle.velocity);
+            // Clamp between 1.5× and 6× elongation for visual stability
+            aspect = std::clamp(speed / 200.0f, 1.5f, 6.0f);
+        }
+        float radiusX = baseW * 0.5f;
+        float radiusY = (baseH / aspect) * 0.5f;
+
+        // Push transform for rotated stretched ellipse shadow
+        layer::QueueCommand<layer::CmdPushMatrix>(
+            layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
+
+        layer::QueueCommand<layer::CmdRotate>(
+            layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, shadowOrder, drawCommandSpace);
+
+        layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
+            layerPtr,
+            [radiusX, radiusY, shadowColor](layer::CmdDrawCenteredEllipse *cmd) {
+              cmd->x = radiusX;
+              cmd->y = radiusY;
+              cmd->rx = radiusX;
+              cmd->ry = radiusY;
+              cmd->color = shadowColor;
+              cmd->lineWidth.reset(); // filled
+            },
+            shadowOrder, drawCommandSpace);
+
+        layer::QueueCommand<layer::CmdPopMatrix>(
+            layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
+        break;
+    }
+
 
       case ParticleRenderType::RECTANGLE_LINE:
         layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(
@@ -751,6 +801,45 @@ inline void DrawParticles(entt::registry &registry,
           order, drawCommandSpace);
       break;
     }
+    case ParticleRenderType::ELLIPSE_STRETCH: {
+      // Determine orientation based on velocity or rotation
+      float rotDeg = 0.0f;
+      if (particle.velocity && 
+          (particle.velocity->x != 0.0f || particle.velocity->y != 0.0f)) {
+          rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
+      } else if (particle.rotation) {
+          rotDeg = *particle.rotation;
+      }
+
+      float baseW = transform.getVisualW();
+      float baseH = transform.getVisualH();
+      float aspect = 3.0f; // how elongated; tweakable
+      float radiusX = baseW * 0.5f;
+      float radiusY = (baseH / aspect) * 0.5f;
+
+      // Apply rotation locally
+      layer::QueueCommand<layer::CmdPushMatrix>(
+          layerPtr, [](auto *cmd) {}, order, drawCommandSpace);
+
+      layer::QueueCommand<layer::CmdRotate>(
+          layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, order, drawCommandSpace);
+
+      layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
+          layerPtr,
+          [radiusX, radiusY, color = drawColor](layer::CmdDrawCenteredEllipse *cmd) {
+            cmd->x = radiusX;
+            cmd->y = radiusY;
+            cmd->rx = radiusX;
+            cmd->ry = radiusY;
+            cmd->color = color;
+            cmd->lineWidth.reset(); // filled ellipse
+          },
+          order, drawCommandSpace);
+
+      layer::QueueCommand<layer::CmdPopMatrix>(
+          layerPtr, [](auto *cmd) {}, order, drawCommandSpace);
+      break;
+  }
     case ParticleRenderType::CIRCLE_FILLED: {
       layer::QueueCommand<layer::CmdDrawCircleFilled>(
           layerPtr,
@@ -861,8 +950,16 @@ inline void exposeToLua(sol::state &lua) {
       particle::ParticleRenderType::RECTANGLE_FILLED, "CIRCLE_LINE",
       particle::ParticleRenderType::CIRCLE_LINE, "CIRCLE_FILLED",
       particle::ParticleRenderType::CIRCLE_FILLED, 
-    "ELLIPSE", particle::ParticleRenderType::ELLIPSE,
-    "LINE", particle::ParticleRenderType::LINE);
+      "ELLIPSE", particle::ParticleRenderType::ELLIPSE,
+      "LINE", particle::ParticleRenderType::LINE,
+      "ELLIPSE_STRETCH", particle::ParticleRenderType::ELLIPSE_STRETCH
+  );
+  
+  rec.record_property("particle.ParticleRenderType",
+    {"ELLIPSE_STRETCH",
+     std::to_string(static_cast<int>(particle::ParticleRenderType::ELLIPSE_STRETCH)),
+     "Draw an ellipse stretched along the particle’s velocity vector."});
+
     
     rec.record_property("particle.ParticleRenderType",
                     {"ELLIPSE",
@@ -1117,6 +1214,11 @@ inline void exposeToLua(sol::state &lua) {
   rec.record_property(
       "Particle",
       {"color", "nil", "Color?: The current color of the particle."});
+      
+  rec.record_property(
+  "Particle",
+  {"autoAspect", "boolean?", "If true, the particle’s ellipse elongation adapts to its velocity magnitude."});
+
   rec.record_property(
       "Particle",
       {"gravity", "nil", "number?: Gravity strength applied to the particle."});
@@ -1418,6 +1520,7 @@ inline void exposeToLua(sol::state &lua) {
     p.acceleration = opts.get_or("acceleration", p.acceleration);
     p.startColor = opts.get_or("startColor", p.startColor);
     p.endColor = opts.get_or("endColor", p.endColor);
+    p.autoAspect = opts.get_or("autoAspect", p.autoAspect);
 
     // NEW: z + space (allow string or enum)
     if (auto zopt = opts["z"]; zopt.valid() && !zopt.is<sol::lua_nil_t>()) {

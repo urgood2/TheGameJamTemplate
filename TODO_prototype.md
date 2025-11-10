@@ -45,9 +45,11 @@ Converts encumbrance into damage
     
 # programming side
 - [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
-- [ ] Elongated ellipses that are radial and point outwards.
+
+- [ ] looping multiple songs, turning them all off at once.
+
 - [ ] method that adds trail to entity over x duration
-- [ ] flying crescent shape that faces the direction
+- [ ] flying crescent shape that faces the direction it is going.
 - [ ] rectantle area that wipes in the direction it is going.
 - [ ] circle area with dashed rotating border
 - [ ] circle outline with dots that twirl inward.
@@ -62,10 +64,7 @@ Converts encumbrance into damage
 - debug onstophover, get tooltips to show above everything else, also place wand tooltip somwhere (maybe add a icon to hover?) 
 -pickups should gravitate toward player when close enough.
 - start wand evaluation mechanism.
-- abberation on hit.
 
-- make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
-- creation of tooltips for every type of card, caching away, then showing on hover.
 - Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
 - add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
 - implmement needsResort flag for card dragging (card needs to konw which board it belongs to)

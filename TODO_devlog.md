@@ -161,4 +161,7 @@
   - Added some new sfx.
   - Added a scrolling background.
   - Tweaked some particle effects.
+  - New particle effect: circle with expanding center.
   - Got started using stencils for a new particle effect, bug fixing almost done.
+  - Stencil fixed, textures did not have stencil buffer.
+  - Elongated ellipses that are radial and point outwards.

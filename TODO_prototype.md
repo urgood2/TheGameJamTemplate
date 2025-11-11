@@ -44,6 +44,7 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- [ ] cursor hover doesn't work fully correctly when controller (points to wrong card sometimes)
 - [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
 - [ ] how to muffle playing music?
 - [ [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.

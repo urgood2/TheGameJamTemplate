@@ -48,6 +48,10 @@ namespace sound_system {
     void SetTrackVolume(const std::string& name, float vol);
     float GetTrackVolume(const std::string& name);
     void ResetSoundSystem();
+    void PlayPlaylist(const std::vector<std::string>& names, bool loop) ;
+
+void ClearPlaylist();
+void StopAllMusic() ;
     
     // Fading and pausing
     auto FadeInMusic (const std::string &musicName, float duration) -> void;

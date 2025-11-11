@@ -21,6 +21,10 @@ namespace sound_system {
     
     std::vector<MusicEntry> activeMusic;
     std::queue<std::pair<std::string,bool>> musicQueue; // legacy queue for “next” tracks
+    
+    std::vector<std::pair<std::string, bool>> playlist;
+    size_t currentIndex = 0;
+    bool loopPlaylist = false;
 
     std::map<std::string, std::string> musicFiles;
     float globalVolume = 1.0f; // global volume (0.0–1.0)
@@ -93,6 +97,33 @@ namespace sound_system {
             "---@param loop? boolean # If the music should loop. Defaults to false.\n"
             "---@return nil", 
             "Plays a music track.", 
+            true, false
+        });
+        
+        // Playlist management
+        lua.set_function("playPlaylist", &PlayPlaylist);
+        rec.record_free_function({}, {
+            "playPlaylist",
+            "---@param tracks string[] # Ordered list of music track names to play.\n"
+            "---@param loop? boolean # Whether to loop the entire playlist. Defaults to false.\n"
+            "---@return nil",
+            "Starts playing a playlist of tracks sequentially, with optional looping.",
+            true, false
+        });
+
+        lua.set_function("clearPlaylist", &ClearPlaylist);
+        rec.record_free_function({}, {
+            "clearPlaylist",
+            "---@return nil",
+            "Stops and clears the current playlist (does not unload music assets).",
+            true, false
+        });
+
+        lua.set_function("stopAllMusic", &StopAllMusic);
+        rec.record_free_function({}, {
+            "stopAllMusic",
+            "---@return nil",
+            "Stops and removes all currently playing music tracks immediately.",
             true, false
         });
 
@@ -220,6 +251,29 @@ namespace sound_system {
         // lua.set_function("setSoundPitch", &SetSoundPitch);
         
     }
+
+    void PlayPlaylist(const std::vector<std::string>& names, bool loop) {
+    playlist.clear();
+    for (auto &n : names) playlist.emplace_back(n, false);
+    currentIndex = 0;
+    loopPlaylist = loop;
+    if (!playlist.empty())
+        PlayMusic(playlist.front().first, false);
+}
+
+void ClearPlaylist() {
+    playlist.clear();
+    currentIndex = 0;
+    loopPlaylist = false;
+}
+
+void StopAllMusic() {
+    for (auto &me : activeMusic) {
+        StopMusicStream(me.stream);
+        UnloadMusicStream(me.stream);
+    }
+    activeMusic.clear();
+}
 
     void LoadFromJSON(const std::string& filepath) {
         std::ifstream file;
@@ -469,8 +523,18 @@ namespace sound_system {
                 if (me.onComplete) me.onComplete();
                 UnloadMusicStream(me.stream);
                 it = activeMusic.erase(it);
+
+                if (!playlist.empty()) {
+                    currentIndex = (currentIndex + 1) % playlist.size();
+                    if (currentIndex == 0 && !loopPlaylist) {
+                        playlist.clear(); // stop
+                    } else {
+                        PlayMusic(playlist[currentIndex].first, false);
+                    }
+                }
                 continue;
             }
+
             ++it;
         }
 

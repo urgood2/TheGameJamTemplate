@@ -1593,6 +1593,7 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(PushObjectTransformsToMatrix)
   QUEUE_CMD(ScopedTransformCompositeRender)
   QUEUE_CMD(DrawCircleFilled)
+  QUEUE_CMD(DrawCircleLine)
   QUEUE_CMD(DrawRectangle)
   QUEUE_CMD(DrawRectanglePro)
   QUEUE_CMD(DrawRectangleLinesPro)

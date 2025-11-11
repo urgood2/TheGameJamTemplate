@@ -47,9 +47,10 @@ enum class ParticleRenderType {
   RECTANGLE_FILLED,
   CIRCLE_LINE,
   CIRCLE_FILLED,
-  ELLIPSE,       // new
-  LINE,           // new
-  ELLIPSE_STRETCH // NEW — elongated ellipse aligned with velocity
+  ELLIPSE,         // new
+  LINE,            // new
+  ELLIPSE_STRETCH, // NEW — elongated ellipse aligned with velocity
+  LINE_FACING      // NEW — line that faces direction of travel
 };
 
 // tag component lives alongside Particle, only on entities you explicitly tag
@@ -71,8 +72,8 @@ struct Particle {
   std::optional<float> acceleration = 0.0f;
   std::optional<Color> startColor;
   std::optional<Color> endColor;
-  std::optional<bool> autoAspect;  // when true, stretch depends on velocity
-
+  std::optional<bool> autoAspect;   // when true, stretch depends on velocity
+  std::optional<bool> faceVelocity; // when true, line faces direction of travel
 
   // New: per-particle draw order (higher draws later)
   std::optional<int> z;
@@ -495,15 +496,15 @@ inline void DrawParticles(entt::registry &registry,
             },
             shadowOrder, drawCommandSpace);
         break;
-        
+
       case ParticleRenderType::ELLIPSE_STRETCH: {
         // Determine direction based on velocity or rotation
         float rotDeg = 0.0f;
-        if (particle.velocity && 
+        if (particle.velocity &&
             (particle.velocity->x != 0.0f || particle.velocity->y != 0.0f)) {
-            rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
+          rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
         } else if (particle.rotation) {
-            rotDeg = *particle.rotation;
+          rotDeg = *particle.rotation;
         }
 
         // Elongation: width = long axis, height = short axis
@@ -511,9 +512,9 @@ inline void DrawParticles(entt::registry &registry,
         float baseH = transform.getVisualH();
         float aspect = 3.0f; // default
         if (particle.autoAspect.value_or(false) && particle.velocity) {
-            float speed = Vector2Length(*particle.velocity);
-            // Clamp between 1.5× and 6× elongation for visual stability
-            aspect = std::clamp(speed / 200.0f, 1.5f, 6.0f);
+          float speed = Vector2Length(*particle.velocity);
+          // Clamp between 1.5× and 6× elongation for visual stability
+          aspect = std::clamp(speed / 200.0f, 1.5f, 6.0f);
         }
         float radiusX = baseW * 0.5f;
         float radiusY = (baseH / aspect) * 0.5f;
@@ -523,11 +524,13 @@ inline void DrawParticles(entt::registry &registry,
             layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
 
         layer::QueueCommand<layer::CmdRotate>(
-            layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, shadowOrder, drawCommandSpace);
+            layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, shadowOrder,
+            drawCommandSpace);
 
         layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
             layerPtr,
-            [radiusX, radiusY, shadowColor](layer::CmdDrawCenteredEllipse *cmd) {
+            [radiusX, radiusY,
+             shadowColor](layer::CmdDrawCenteredEllipse *cmd) {
               cmd->x = radiusX;
               cmd->y = radiusY;
               cmd->rx = radiusX;
@@ -540,8 +543,44 @@ inline void DrawParticles(entt::registry &registry,
         layer::QueueCommand<layer::CmdPopMatrix>(
             layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
         break;
-    }
+      }
 
+      case ParticleRenderType::LINE_FACING: {
+        // Shadow version of direction-facing line
+        float rotDeg = 0.0f;
+        float length = transform.getVisualW();
+        float thickness = std::max(1.5f, transform.getVisualH());
+
+        if (particle.velocity &&
+            (particle.velocity->x != 0.0f || particle.velocity->y != 0.0f)) {
+          rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
+        } else if (particle.rotation) {
+          rotDeg = *particle.rotation;
+        }
+
+        layer::QueueCommand<layer::CmdPushMatrix>(
+            layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
+
+        layer::QueueCommand<layer::CmdRotate>(
+            layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, shadowOrder,
+            drawCommandSpace);
+
+        layer::QueueCommand<layer::CmdDrawLine>(
+            layerPtr,
+            [length, thickness, shadowColor](layer::CmdDrawLine *cmd) {
+              cmd->x1 = -length * 0.5f;
+              cmd->y1 = 0.0f;
+              cmd->x2 = length * 0.5f;
+              cmd->y2 = 0.0f;
+              cmd->color = shadowColor;
+              cmd->lineWidth = thickness;
+            },
+            shadowOrder, drawCommandSpace);
+
+        layer::QueueCommand<layer::CmdPopMatrix>(
+            layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
+        break;
+      }
 
       case ParticleRenderType::RECTANGLE_LINE:
         layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(
@@ -590,38 +629,37 @@ inline void DrawParticles(entt::registry &registry,
             },
             shadowOrder, drawCommandSpace);
         break;
-        
-        case ParticleRenderType::ELLIPSE:
-          layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
-              layerPtr,
-              [radiusX = transform.getVisualW() * 0.5f,
-              radiusY = transform.getVisualH() * 0.5f,
-              shadowColor](layer::CmdDrawCenteredEllipse *cmd) {
-                cmd->x = radiusX;
-                cmd->y = radiusY;
-                cmd->rx = radiusX;
-                cmd->ry = radiusY;
-                cmd->color = shadowColor;
-                cmd->lineWidth.reset();
-              },
-              shadowOrder, drawCommandSpace);
-          break;
 
-        case ParticleRenderType::LINE:
-          layer::QueueCommand<layer::CmdDrawLine>(
-              layerPtr,
-              [w = transform.getVisualW(), h = transform.getVisualH(),
-              shadowColor](layer::CmdDrawLine *cmd) {
-                cmd->x1 = 0.0f;
-                cmd->y1 = 0.0f;
-                cmd->x2 = w;
-                cmd->y2 = h;
-                cmd->color = shadowColor;
-              },
-              shadowOrder, drawCommandSpace);
-          break;
-        
-      
+      case ParticleRenderType::ELLIPSE:
+        layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
+            layerPtr,
+            [radiusX = transform.getVisualW() * 0.5f,
+             radiusY = transform.getVisualH() * 0.5f,
+             shadowColor](layer::CmdDrawCenteredEllipse *cmd) {
+              cmd->x = radiusX;
+              cmd->y = radiusY;
+              cmd->rx = radiusX;
+              cmd->ry = radiusY;
+              cmd->color = shadowColor;
+              cmd->lineWidth.reset();
+            },
+            shadowOrder, drawCommandSpace);
+        break;
+
+      case ParticleRenderType::LINE:
+        layer::QueueCommand<layer::CmdDrawLine>(
+            layerPtr,
+            [w = transform.getVisualW(), h = transform.getVisualH(),
+             shadowColor](layer::CmdDrawLine *cmd) {
+              cmd->x1 = 0.0f;
+              cmd->y1 = 0.0f;
+              cmd->x2 = w;
+              cmd->y2 = h;
+              cmd->color = shadowColor;
+            },
+            shadowOrder, drawCommandSpace);
+        break;
+
       default:
         break; // no shadow for TEXTURE or unknown
       }
@@ -786,6 +824,47 @@ inline void DrawParticles(entt::registry &registry,
           order, drawCommandSpace);
       break;
     }
+
+    case ParticleRenderType::LINE_FACING: {
+      // Draws a straight line segment oriented along velocity or rotation
+      float rotDeg = 0.0f;
+      float length = transform.getVisualW();
+      float thickness = std::max(1.5f, transform.getVisualH());
+
+      // If particle requests facing velocity, align to its velocity vector
+      bool faceVel = particle.faceVelocity.value_or(true);
+
+      if (faceVel && particle.velocity &&
+          (particle.velocity->x != 0.0f || particle.velocity->y != 0.0f)) {
+        rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
+      } else if (particle.rotation) {
+        rotDeg = *particle.rotation;
+      }
+
+      layer::QueueCommand<layer::CmdPushMatrix>(
+          layerPtr, [](auto *cmd) {}, order, drawCommandSpace);
+
+      layer::QueueCommand<layer::CmdRotate>(
+          layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, order,
+          drawCommandSpace);
+
+      layer::QueueCommand<layer::CmdDrawLine>(
+          layerPtr,
+          [length, thickness, color = drawColor](layer::CmdDrawLine *cmd) {
+            cmd->x1 = -length * 0.5f;
+            cmd->y1 = 0.0f;
+            cmd->x2 = length * 0.5f;
+            cmd->y2 = 0.0f;
+            cmd->color = color;
+            cmd->lineWidth = thickness;
+          },
+          order, drawCommandSpace);
+
+      layer::QueueCommand<layer::CmdPopMatrix>(
+          layerPtr, [](auto *cmd) {}, order, drawCommandSpace);
+      break;
+    }
+
     case ParticleRenderType::RECTANGLE_LINE: {
 
       layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(
@@ -804,11 +883,11 @@ inline void DrawParticles(entt::registry &registry,
     case ParticleRenderType::ELLIPSE_STRETCH: {
       // Determine orientation based on velocity or rotation
       float rotDeg = 0.0f;
-      if (particle.velocity && 
+      if (particle.velocity &&
           (particle.velocity->x != 0.0f || particle.velocity->y != 0.0f)) {
-          rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
+        rotDeg = atan2f(particle.velocity->y, particle.velocity->x) * RAD2DEG;
       } else if (particle.rotation) {
-          rotDeg = *particle.rotation;
+        rotDeg = *particle.rotation;
       }
 
       float baseW = transform.getVisualW();
@@ -822,11 +901,13 @@ inline void DrawParticles(entt::registry &registry,
           layerPtr, [](auto *cmd) {}, order, drawCommandSpace);
 
       layer::QueueCommand<layer::CmdRotate>(
-          layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, order, drawCommandSpace);
+          layerPtr, [rotDeg](auto *cmd) { cmd->angle = rotDeg; }, order,
+          drawCommandSpace);
 
       layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
           layerPtr,
-          [radiusX, radiusY, color = drawColor](layer::CmdDrawCenteredEllipse *cmd) {
+          [radiusX, radiusY,
+           color = drawColor](layer::CmdDrawCenteredEllipse *cmd) {
             cmd->x = radiusX;
             cmd->y = radiusY;
             cmd->rx = radiusX;
@@ -839,7 +920,7 @@ inline void DrawParticles(entt::registry &registry,
       layer::QueueCommand<layer::CmdPopMatrix>(
           layerPtr, [](auto *cmd) {}, order, drawCommandSpace);
       break;
-  }
+    }
     case ParticleRenderType::CIRCLE_FILLED: {
       layer::QueueCommand<layer::CmdDrawCircleFilled>(
           layerPtr,
@@ -872,36 +953,36 @@ inline void DrawParticles(entt::registry &registry,
       break;
     }
     case ParticleRenderType::ELLIPSE: {
-        layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
-            layerPtr,
-            [radiusX = transform.getVisualW() * 0.5f,
-            radiusY = transform.getVisualH() * 0.5f,
-            color = drawColor](layer::CmdDrawCenteredEllipse *cmd) {
-              cmd->x = radiusX;
-              cmd->y = radiusY;
-              cmd->rx = radiusX;
-              cmd->ry = radiusY;
-              cmd->color = color;
-              cmd->lineWidth.reset(); // filled
-            },
-            order, drawCommandSpace);
-        break;
-      }
+      layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
+          layerPtr,
+          [radiusX = transform.getVisualW() * 0.5f,
+           radiusY = transform.getVisualH() * 0.5f,
+           color = drawColor](layer::CmdDrawCenteredEllipse *cmd) {
+            cmd->x = radiusX;
+            cmd->y = radiusY;
+            cmd->rx = radiusX;
+            cmd->ry = radiusY;
+            cmd->color = color;
+            cmd->lineWidth.reset(); // filled
+          },
+          order, drawCommandSpace);
+      break;
+    }
 
-      case ParticleRenderType::LINE: {
-        layer::QueueCommand<layer::CmdDrawLine>(
-            layerPtr,
-            [w = transform.getVisualW(), h = transform.getVisualH(),
-            color = drawColor](layer::CmdDrawLine *cmd) {
-              cmd->x1 = 0.0f;
-              cmd->y1 = 0.0f;
-              cmd->x2 = w;
-              cmd->y2 = h;
-              cmd->color = color;
-            },
-            order, drawCommandSpace);
-        break;
-      }
+    case ParticleRenderType::LINE: {
+      layer::QueueCommand<layer::CmdDrawLine>(
+          layerPtr,
+          [w = transform.getVisualW(), h = transform.getVisualH(),
+           color = drawColor](layer::CmdDrawLine *cmd) {
+            cmd->x1 = 0.0f;
+            cmd->y1 = 0.0f;
+            cmd->x2 = w;
+            cmd->y2 = h;
+            cmd->color = color;
+          },
+          order, drawCommandSpace);
+      break;
+    }
     default:
       SPDLOG_WARN("Unknown particle render type: {}",
                   static_cast<int>(particle.renderType));
@@ -949,28 +1030,36 @@ inline void exposeToLua(sol::state &lua) {
       particle::ParticleRenderType::RECTANGLE_LINE, "RECTANGLE_FILLED",
       particle::ParticleRenderType::RECTANGLE_FILLED, "CIRCLE_LINE",
       particle::ParticleRenderType::CIRCLE_LINE, "CIRCLE_FILLED",
-      particle::ParticleRenderType::CIRCLE_FILLED, 
-      "ELLIPSE", particle::ParticleRenderType::ELLIPSE,
-      "LINE", particle::ParticleRenderType::LINE,
-      "ELLIPSE_STRETCH", particle::ParticleRenderType::ELLIPSE_STRETCH
-  );
-  
-  rec.record_property("particle.ParticleRenderType",
-    {"ELLIPSE_STRETCH",
-     std::to_string(static_cast<int>(particle::ParticleRenderType::ELLIPSE_STRETCH)),
-     "Draw an ellipse stretched along the particle’s velocity vector."});
+      particle::ParticleRenderType::CIRCLE_FILLED, "ELLIPSE",
+      particle::ParticleRenderType::ELLIPSE, "LINE",
+      particle::ParticleRenderType::LINE, "ELLIPSE_STRETCH",
+      particle::ParticleRenderType::ELLIPSE_STRETCH, "LINE_FACING",
+      particle::ParticleRenderType::LINE_FACING);
 
-    
-    rec.record_property("particle.ParticleRenderType",
-                    {"ELLIPSE",
-                     std::to_string(static_cast<int>(
-                         particle::ParticleRenderType::ELLIPSE)),
-                     "Draw a filled ellipse (oval)."});
+  rec.record_property(
+      "particle.ParticleRenderType",
+      {"ELLIPSE_STRETCH",
+       std::to_string(
+           static_cast<int>(particle::ParticleRenderType::ELLIPSE_STRETCH)),
+       "Draw an ellipse stretched along the particle’s velocity vector."});
+
   rec.record_property("particle.ParticleRenderType",
-                      {"LINE",
-                      std::to_string(static_cast<int>(
-                          particle::ParticleRenderType::LINE)),
-                      "Draw a straight line segment from (0,0) to (w,h)."});
+                      {"LINE_FACING",
+                       std::to_string(static_cast<int>(
+                           particle::ParticleRenderType::LINE_FACING)),
+                       "Draws a line segment oriented along the velocity "
+                       "vector (optionally face-locked)."});
+
+  rec.record_property(
+      "particle.ParticleRenderType",
+      {"ELLIPSE",
+       std::to_string(static_cast<int>(particle::ParticleRenderType::ELLIPSE)),
+       "Draw a filled ellipse (oval)."});
+  rec.record_property(
+      "particle.ParticleRenderType",
+      {"LINE",
+       std::to_string(static_cast<int>(particle::ParticleRenderType::LINE)),
+       "Draw a straight line segment from (0,0) to (w,h)."});
 
   auto &renderTypeDef = rec.add_type("particle.ParticleRenderType");
   renderTypeDef.doc = "How particles should be rendered";
@@ -1047,6 +1136,20 @@ inline void exposeToLua(sol::state &lua) {
               p.scale = v.value();
             else
               p.scale.reset();
+          }),
+
+      "faceVelocity",
+      sol::property(
+          [](particle::Particle &p) -> sol::optional<bool> {
+            if (p.faceVelocity)
+              return *p.faceVelocity;
+            return sol::nullopt;
+          },
+          [](particle::Particle &p, sol::optional<bool> v) {
+            if (v)
+              p.faceVelocity = *v;
+            else
+              p.faceVelocity.reset();
           }),
 
       // OPTIONAL<float> rotation
@@ -1204,6 +1307,11 @@ inline void exposeToLua(sol::state &lua) {
   rec.record_property("Particle", {"rotationSpeed", "nil",
                                    "number?: How fast the particle rotates."});
   rec.record_property(
+      "Particle",
+      {"faceVelocity", "boolean?",
+       "If true, the line particle faces its current velocity direction."});
+
+  rec.record_property(
       "Particle", {"scale", "nil", "number?: The particle's current scale."});
   rec.record_property(
       "Particle",
@@ -1214,10 +1322,10 @@ inline void exposeToLua(sol::state &lua) {
   rec.record_property(
       "Particle",
       {"color", "nil", "Color?: The current color of the particle."});
-      
-  rec.record_property(
-  "Particle",
-  {"autoAspect", "boolean?", "If true, the particle’s ellipse elongation adapts to its velocity magnitude."});
+
+  rec.record_property("Particle", {"autoAspect", "boolean?",
+                                   "If true, the particle’s ellipse elongation "
+                                   "adapts to its velocity magnitude."});
 
   rec.record_property(
       "Particle",

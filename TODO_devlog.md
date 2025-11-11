@@ -165,3 +165,9 @@
   - Got started using stencils for a new particle effect, bug fixing almost done.
   - Stencil fixed, textures did not have stencil buffer.
   - Elongated ellipses that are radial and point outwards.
+  
+11/11/2025
+  - Added direction-facing line particle effect.
+  - Added circle outline vfx with dots that twirl inward. Needs some fine tuning later.
+  - Added rectantle area that wipes in the direction it is going.
+  

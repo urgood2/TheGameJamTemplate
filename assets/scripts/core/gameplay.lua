@@ -3431,153 +3431,6 @@ local function makeSpawnMarkerCircle(x, y, radius, color, state)
 end
 
 
-local function spawnHollowCircleParticle(x, y, radius, color, lifetime)
-    local HollowCircle = Node:extend()
-    HollowCircle.radius = radius
-    HollowCircle.age = 0
-    HollowCircle.lifetime = lifetime
-    HollowCircle.color = color or Col(255, 255, 255, 255)
-    
-    function HollowCircle:init()
-        log_debug("Spawning hollow circle particle at", x, y, "radius", radius, "lifetime", lifetime)
-        
-        self.innerR = 0
-        
-        timer.tween_fields(lifetime, self, { innerR = radius }, Easing.inOutCubic.f, nil, "transition_text_scale_up", "ui")
-        
-        
-    end
-    
-    function HollowCircle:update(dt)
-        self.age = self.age + dt
-        local t = math.min(self.age / self.lifetime, 1.0)
-        local outerR = self.radius
-        -- local innerR = outerR * t
-
-        local L = layers.sprites
-        local z = z_orders.particle_vfx
-        local space = layer.DrawCommandSpace.World
-        
-        command_buffer.queueClearStencilBuffer(L, function() end, z, space)
-
-        ------------------------------------------------------------------
-        -- (1) Begin stencil workflow (enable + clear)
-        ------------------------------------------------------------------
-        command_buffer.queueBeginStencilMode(L, function() end, z, space)
-
-        ------------------------------------------------------------------
-        -- (2) Begin outer mask (set stencil = 1)
-        ------------------------------------------------------------------
-        command_buffer.queueBeginStencilMask(L, function() end, z, space)
-        command_buffer.queueDrawCenteredEllipse(L, function(c)
-            c.x, c.y = x, y
-            c.rx, c.ry = outerR, outerR
-            c.color = util.getColor("WHITE")
-        end, z, space)
-
-        -- Flush to ensure outer circle writes stencil=1 before next phase
-        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
-
-        ------------------------------------------------------------------
-        -- (3) Draw inner circle to erase stencil (set stencil = 0)
-        ------------------------------------------------------------------
-        -- Enable full stencil write mask
-        command_buffer.queueAtomicStencilMask(L, function(c)
-            c.mask = 0xFF
-        end, z, space)
-
-        -- Always pass, write reference 0 (to erase)
-        command_buffer.queueStencilFunc(L, function(c)
-            c.func = GL_ALWAYS
-            c.ref = 0
-            c.mask = 0xFF
-        end, z, space)
-
-        -- Replace stencil value with 0 where we draw
-        command_buffer.queueStencilOp(L, function(c)
-            c.sfail = GL_KEEP
-            c.dpfail = GL_KEEP
-            c.dppass = GL_REPLACE
-        end, z, space)
-        
-        command_buffer.queueColorMask(L, function(c)
-            c.r, c.g, c.b, c.a = false, false, false, false
-        end, z, space)
-
-        -- Draw the inner circle — this clears stencil inside
-        command_buffer.queueDrawCenteredEllipse(L, function(c)
-            c.x, c.y = x, y
-            c.rx, c.ry = self.innerR, self.innerR
-            c.color = util.getColor("WHITE")
-        end, z, space)
-
-        -- Flush to commit erase before restoring state
-        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
-
-        ------------------------------------------------------------------
-        -- (3b) Disable further stencil writes (glStencilMask(0x00))
-        ------------------------------------------------------------------
-        -- command_buffer.queueAtomicStencilMask(L, function(c)
-        --     c.mask = 0x00
-        -- end, z, space)
-
-        ------------------------------------------------------------------
-        -- (4) End mask phase — restore stencil test (stencil == 1)
-        ------------------------------------------------------------------
-        -- command_buffer.queueStencilFunc(L, function(c)
-        --     c.func = GL_EQUAL
-        --     c.ref = 1
-        --     c.mask = 0xFF
-        -- end, z, space)
-
-        -- command_buffer.queueStencilOp(L, function(c)
-        --     c.sfail = GL_KEEP
-        --     c.dpfail = GL_KEEP
-        --     c.dppass = GL_KEEP
-        -- end, z, space)
-
-        -- Restore color writes (draw visible content again)
-        -- command_buffer.queueColorMask(L, function(c)
-        --     c.r, c.g, c.b, c.a = true, true, true, true
-        -- end, z, space)
-
-        -- End the mask stage (should mirror endStencilMask C++)
-        command_buffer.queueEndStencilMask(L, function() end, z, space)
-
-        ------------------------------------------------------------------
-        -- (5) Draw visible ring (only where stencil == 1)
-        ------------------------------------------------------------------
-        command_buffer.queueDrawCenteredEllipse(L, function(c)
-            c.x, c.y = x, y
-            c.rx, c.ry = outerR, outerR
-            c.color = self.color
-        end, z, space)
-
-        -- Optional flush for correctness before disabling stencil
-        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
-
-        ------------------------------------------------------------------
-        -- (6) End stencil mode (disable + cleanup)
-        ------------------------------------------------------------------
-        -- Restore full write mask before disabling stencil
-        -- command_buffer.queueAtomicStencilMask(L, function(c)
-        --     c.mask = 0xFF
-        -- end, z, space)
-
-        command_buffer.queueEndStencilMode(L, function() end, z, space)
-
-        ------------------------------------------------------------------
-        -- (7) Lifetime cleanup
-        ------------------------------------------------------------------
-        if t >= 1.0 then
-            registry:destroy(self:handle())
-        end
-    end
-
-    local e = HollowCircle{}
-    e:attach_ecs{ create_new = true }
-    add_state_tag(e:handle(), ACTION_STATE)
-end
 
 
 
@@ -3797,21 +3650,46 @@ function initActionPhase()
                         z = 5
                     })
                     
-                    -- particle.spawnDirectionalStreaks(origin.x, origin.y, 25, 0.5, {
-                    --     renderType = particle.ParticleRenderType.ELLIPSE_STRETCH,
-                    --     minSpeed = 100,
-                    --     maxSpeed = 300,
-                    --     minScale = 10,
-                    --     maxScale = 20,
-                    --     autoAspect = true,
-                    --     colors = { Col(255,200,100,255), Col(255,255,255,255) },
-                    --     shrink = true,
-                    --     durationJitter = 0.2,
-                    --     scaleJitter = 0.3,
-                    --     easing = "quad",
-                    --     shadow = true,
-                    --     space = "world"
-                    -- })
+                    particle.spawnDirectionalLinesCone(origin, 20, 0.8, {
+                        direction = Vec2(-moveDir.x, -moveDir.y),
+                        spread = 45,
+                        minSpeed = 200,
+                        maxSpeed = 400,
+                        minLength = 32,
+                        maxLength = 64,
+                        minThickness = 2,
+                        maxThickness = 5,
+                        colors = { Col(255, 220, 120), Col(255, 180, 80), Col(255, 120, 50) },
+                        durationJitter = 0.3,
+                        sizeJitter = 0.2,
+                        faceVelocity = true,
+                        shrink = true,
+                        space = "world",
+                        z = z_orders.particle_vfx
+                    })
+                    
+                    
+                    -- makeSwirlEmitter(320, 180, 120,
+                    --     { Col(255, 220, 120), Col(255, 160, 80), Col(255, 100, 60) },
+                    --     1.0,   -- emitDuration: spawn new dots for 1 second
+                    --     2.5    -- totalLifetime: fadeout & cleanup
+                    -- )
+                    
+                    makeSwirlEmitterWithRing(
+                        320, 180, 96,
+                        { util.getColor("white"), Col(255, 160, 80), Col(255, 100, 60) },
+                        1.0,  -- emitDuration (how long to spawn new dots)
+                        2.5   -- totalLifetime
+                    )
+                    
+                    
+                    -- Wipe upward while facing 45° angle
+                    makeDirectionalWipeWithTimer(320, 180, 400, 200,
+                        Vec2(0.7, 0.7),  -- facing diagonal
+                        Vec2(0, -1),     -- wipe upward
+                        Col(255, 180, 120, 255),
+                        1.0)
+
                     
                 end
                 

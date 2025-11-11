@@ -3,6 +3,8 @@ local timer = require("core/timer")
 local component_cache = require("core/component_cache")
 local entity_cache = require("core.entity_cache")
 local Easing = require("util.easing")
+local Node = require("monobehavior.behavior_script_v2")
+local z_orders = require("core.z_orders")
 -- local entity_cache = require("core.entity_cache")
 -- local component_cache = require("core.component_cache")
 
@@ -442,6 +444,121 @@ function particle.spawnDirectionalCone(origin, count, seconds, opts)
     end
 end
 
+function makeSwirlEmitter(x, y, radius, colorSet, emitDuration, totalLifetime)
+    colorSet = colorSet or { Col(255, 255, 255, 255) }
+    emitDuration = emitDuration or 1.0
+    totalLifetime = totalLifetime or (emitDuration + 1.0)
+
+    local SwirlEmitter = Node:extend()
+    SwirlEmitter.radius = radius
+    SwirlEmitter.age = 0
+    SwirlEmitter.lifetime = totalLifetime
+    SwirlEmitter.emitTimer = 0
+    SwirlEmitter.dots = {}
+    SwirlEmitter.spawnRate = 1 / 40  -- spawn every 1/40 sec (≈40 per sec)
+    SwirlEmitter.timeSinceLast = 0
+
+    function SwirlEmitter:update(dt)
+        self.age = self.age + dt
+        self.timeSinceLast = self.timeSinceLast + dt
+
+        ------------------------------------------------------------
+        -- 1. Spawn phase (emit new dots gradually)
+        ------------------------------------------------------------
+        if self.age <= emitDuration then
+            while self.timeSinceLast >= self.spawnRate do
+                self.timeSinceLast = self.timeSinceLast - self.spawnRate
+
+                local angle = math.random() * math.pi * 2
+                local d = {
+                    angle = angle,
+                    dist  = self.radius,
+                    -- spiral properties
+                    swirlSpeed = (math.random() * 2.5 + 1.5) * (math.random() < 0.5 and -1 or 1),
+                    pullSpeed  = math.random() * 40 + 60,
+                    life = math.random() * 1.2 + 0.8, -- per-dot life
+                    age = 0,
+                    rx = math.random() * 8 + 4,
+                    ry = math.random() * 3 + 2,
+                    color = colorSet[math.random(1, #colorSet)],
+                    spin = (math.random() - 0.5) * 0.4
+                }
+                table.insert(self.dots, d)
+            end
+        end
+
+        ------------------------------------------------------------
+        -- 2. Update all live dots
+        ------------------------------------------------------------
+        for i = #self.dots, 1, -1 do
+            local d = self.dots[i]
+            d.age = d.age + dt
+            local progress = math.min(d.age / d.life, 1.0)
+            local decay = 1.0 - progress
+
+            -- spiral inward: angular rotation + radius shrink
+            d.angle = d.angle + d.swirlSpeed * dt  -- swirl
+            d.dist  = d.dist - d.pullSpeed * dt * (0.6 + 0.4 * decay) -- inward pull slows near center
+
+            if d.dist < 4 then
+                table.remove(self.dots, i)
+                goto continue
+            end
+
+            -- compute position
+            local px = x + math.cos(d.angle) * d.dist
+            local py = y + math.sin(d.angle) * d.dist
+
+            -- orientation: tangent direction of spiral
+            local dirAngle = d.angle + math.pi / 2
+            local scale = decay
+            local rx = d.rx * scale
+            local ry = d.ry * scale
+
+            --------------------------------------------------------
+            -- draw facing ellipse
+            --------------------------------------------------------
+            command_buffer.queuePushMatrix(layers.sprites, function() end,
+                z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queueTranslate(layers.sprites, function(c)
+                c.x = px
+                c.y = py
+            end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queueRotate(layers.sprites, function(c)
+                c.angle = math.deg(dirAngle)
+            end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                c.x = 0
+                c.y = 0
+                c.rx = rx
+                c.ry = ry
+                c.color = d.color:setAlpha(math.floor(255 * decay))
+                c.lineWidth = nil -- filled
+            end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queuePopMatrix(layers.sprites, function() end,
+                z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            ::continue::
+        end
+
+        ------------------------------------------------------------
+        -- 3. Cleanup when all dots gone and time expired
+        ------------------------------------------------------------
+        if self.age >= self.lifetime and #self.dots == 0 then
+            registry:destroy(self:handle())
+        end
+    end
+
+    local emitterNode = SwirlEmitter{}
+    emitterNode:attach_ecs{ create_new = true }
+    add_state_tag(emitterNode:handle(), ACTION_STATE)
+    return emitterNode
+end
+
 
 function particle.spawnDirectionalStreaksCone(origin, count, seconds, opts)
     opts = opts or {}
@@ -508,6 +625,88 @@ function particle.spawnDirectionalStreaksCone(origin, count, seconds, opts)
     end
 end
 
+---@param origin Vector2
+---@param count integer
+---@param seconds number
+---@param opts table?
+function particle.spawnDirectionalLinesCone(origin, count, seconds, opts)
+    opts = opts or {}
+    local easing         = Easing[opts.easing or "cubic"]
+    local colorSet       = opts.colors or { util.getColor("WHITE") }
+    local minSpeed       = opts.minSpeed or 150
+    local maxSpeed       = opts.maxSpeed or 350
+    local minLength      = opts.minLength or 24
+    local maxLength      = opts.maxLength or 64
+    local minThickness   = opts.minThickness or 2.0
+    local maxThickness   = opts.maxThickness or 4.0
+    local shrink         = (opts.shrink ~= false)   -- shrink over time by default
+    local durationJitter = opts.durationJitter or 0.2
+    local sizeJitter     = opts.sizeJitter or 0.3
+    local space          = opts.space or "screen"
+    local z              = opts.z or 0
+    local direction      = opts.direction or Vec2(0, -1)  -- default: upward
+    local spread         = math.rad(opts.spread or 30)    -- degrees → radians
+    local faceVelocity   = (opts.faceVelocity ~= false)
+
+    -- normalize base direction
+    local len = math.sqrt(direction.x^2 + direction.y^2)
+    local baseDir = Vec2(direction.x / len, direction.y / len)
+
+    for i = 1, count do
+        ----------------------------------------------------------
+        -- Randomized per-particle properties
+        ----------------------------------------------------------
+        local offset = (math.random() - 0.5) * spread
+        local cosA, sinA = math.cos(offset), math.sin(offset)
+        local dir = Vec2(
+            baseDir.x * cosA - baseDir.y * sinA,
+            baseDir.x * sinA + baseDir.y * cosA
+        )
+
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+        local lifespan = seconds * (1 + (math.random() * 2 - 1) * durationJitter)
+        local length = math.random() * (maxLength - minLength) + minLength
+        length = length * (1 + (math.random() * 2 - 1) * sizeJitter)
+        local thickness = math.random() * (maxThickness - minThickness) + minThickness
+        local color = colorSet[math.random(1, #colorSet)]
+
+        ----------------------------------------------------------
+        -- Particle creation
+        ----------------------------------------------------------
+        particle.CreateParticle(
+            Vec2(origin.x, origin.y),
+            Vec2(length, thickness),
+            {
+                renderType    = particle.ParticleRenderType.LINE_FACING,
+                lifespan      = lifespan,
+                startColor    = color,
+                endColor      = color,
+                velocity      = Vec2(dir.x * speed, dir.y * speed),
+                color         = color,
+                faceVelocity  = faceVelocity,
+                space         = space,
+                z             = z,
+
+                onUpdateCallback = function(comp, dt)
+                    local age  = comp.age or 0.0
+                    local life = comp.lifespan or lifespan
+                    local progress = math.min(age / life, 1.0)
+                    local eased = easing.d(progress)
+
+                    -- Velocity eases outward
+                    comp.velocity = Vec2(dir.x * speed * eased, dir.y * speed * eased)
+
+                    -- Shrink / fade behavior
+                    if shrink then
+                        local shrinkFactor = 1.0 - progress
+                        comp.scale = math.max(0.1, shrinkFactor)
+                    end
+                end
+            }
+        )
+    end
+end
+
 
 ---@param x number
 ---@param y number
@@ -530,6 +729,400 @@ function particle.spawnFountain(x, y, count, seconds, opts)
     particle.spawnDirectionalCone(Vec2(x, y), count, seconds, opts)
 end
 
+
+
+function makeDirectionalWipeWithTimer(cx, cy, w, h, facingDir, wipeDir, color, duration, rx, ry, easing)
+    color = color or Col(255, 255, 255, 255)
+    duration = duration or 1.0
+    easing = easing or Easing.cubic.f
+    rx, ry = rx or 0, ry or 0
+
+    ------------------------------------------------------------
+    -- Normalize direction vectors
+    ------------------------------------------------------------
+    local fx, fy = facingDir.x, facingDir.y
+    local flen = math.sqrt(fx*fx + fy*fy)
+    if flen == 0 then fx, fy = 1, 0; flen = 1 end
+    fx, fy = fx / flen, fy / flen
+
+    local wx, wy = wipeDir.x or 1, wipeDir.y or 0
+    local wlen = math.sqrt(wx*wx + wy*wy)
+    if wlen == 0 then wx, wy = 1, 0; wlen = 1 end
+    wx, wy = wx / wlen, wy / wlen
+
+    local angle = math.deg(math.atan(fy, fx))
+
+    ------------------------------------------------------------
+    -- Node definition
+    ------------------------------------------------------------
+    local node = Node:extend()
+    node.progress = 0
+
+    function node:update(dt)
+        local t = self.progress
+        local visFrac = t
+
+        -- Rectangle size depending on wipe axis
+        local drawW = (math.abs(wx) > math.abs(wy)) and (w * visFrac) or w
+        local drawH = (math.abs(wy) > math.abs(wx)) and (h * visFrac) or h
+
+        -- Offset so it expands from one edge
+        local localOffsetX = -wx * (w - drawW) * 0.5
+        local localOffsetY = -wy * (h - drawH) * 0.5
+
+        ------------------------------------------------------------
+        -- Transform stack (rotation to face, anchored wipe)
+        ------------------------------------------------------------
+        command_buffer.queuePushMatrix(layers.sprites, function() end,
+            z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+        command_buffer.queueTranslate(layers.sprites, function(c)
+            c.x = cx
+            c.y = cy
+        end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+        command_buffer.queueRotate(layers.sprites, function(c)
+            c.angle = angle
+        end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+        command_buffer.queueTranslate(layers.sprites, function(c)
+            c.x = localOffsetX
+            c.y = localOffsetY
+        end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+        command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+            c.x = 0
+            c.y = 0
+            c.w = drawW
+            c.h = drawH
+            c.rx = rx
+            c.ry = ry
+            c.color = color
+        end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+        command_buffer.queuePopMatrix(layers.sprites, function() end,
+            z_orders.particle_vfx, layer.DrawCommandSpace.World)
+    end
+
+    local wipeNode = node{}
+    wipeNode:attach_ecs{ create_new = true }
+    add_state_tag(wipeNode:handle(), ACTION_STATE)
+
+    ------------------------------------------------------------
+    -- Timer tween drives progress + cleanup
+    ------------------------------------------------------------
+    timer.tween_scalar(
+        duration,
+        function() return wipeNode.progress end,
+        function(v) wipeNode.progress = v end,
+        1.0,
+        easing,
+        function()
+            registry:destroy(wipeNode:handle())
+        end,
+        "wipe_" .. tostring(wipeNode:handle())
+    )
+
+    return wipeNode
+end
+
+
+function spawnHollowCircleParticle(x, y, radius, color, lifetime)
+    local HollowCircle = Node:extend()
+    HollowCircle.radius = radius
+    HollowCircle.age = 0
+    HollowCircle.lifetime = lifetime
+    HollowCircle.color = color or Col(255, 255, 255, 255)
+    
+    function HollowCircle:init()
+        log_debug("Spawning hollow circle particle at", x, y, "radius", radius, "lifetime", lifetime)
+        
+        self.innerR = 0
+        
+        timer.tween_fields(lifetime, self, { innerR = radius }, Easing.inOutCubic.f, nil, "transition_text_scale_up", "ui")
+        
+        
+    end
+    
+    function HollowCircle:update(dt)
+        self.age = self.age + dt
+        local t = math.min(self.age / self.lifetime, 1.0)
+        local outerR = self.radius
+        -- local innerR = outerR * t
+
+        local L = layers.sprites
+        local z = z_orders.particle_vfx
+        local space = layer.DrawCommandSpace.World
+        
+        command_buffer.queueClearStencilBuffer(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (1) Begin stencil workflow (enable + clear)
+        ------------------------------------------------------------------
+        command_buffer.queueBeginStencilMode(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (2) Begin outer mask (set stencil = 1)
+        ------------------------------------------------------------------
+        command_buffer.queueBeginStencilMask(L, function() end, z, space)
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = x, y
+            c.rx, c.ry = outerR, outerR
+            c.color = util.getColor("WHITE")
+        end, z, space)
+
+        -- Flush to ensure outer circle writes stencil=1 before next phase
+        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (3) Draw inner circle to erase stencil (set stencil = 0)
+        ------------------------------------------------------------------
+        -- Enable full stencil write mask
+        command_buffer.queueAtomicStencilMask(L, function(c)
+            c.mask = 0xFF
+        end, z, space)
+
+        -- Always pass, write reference 0 (to erase)
+        command_buffer.queueStencilFunc(L, function(c)
+            c.func = GL_ALWAYS
+            c.ref = 0
+            c.mask = 0xFF
+        end, z, space)
+
+        -- Replace stencil value with 0 where we draw
+        command_buffer.queueStencilOp(L, function(c)
+            c.sfail = GL_KEEP
+            c.dpfail = GL_KEEP
+            c.dppass = GL_REPLACE
+        end, z, space)
+        
+        command_buffer.queueColorMask(L, function(c)
+            c.r, c.g, c.b, c.a = false, false, false, false
+        end, z, space)
+
+        -- Draw the inner circle — this clears stencil inside
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = x, y
+            c.rx, c.ry = self.innerR, self.innerR
+            c.color = util.getColor("WHITE")
+        end, z, space)
+
+        -- Flush to commit erase before restoring state
+        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (3b) Disable further stencil writes (glStencilMask(0x00))
+        ------------------------------------------------------------------
+        -- command_buffer.queueAtomicStencilMask(L, function(c)
+        --     c.mask = 0x00
+        -- end, z, space)
+
+        ------------------------------------------------------------------
+        -- (4) End mask phase — restore stencil test (stencil == 1)
+        ------------------------------------------------------------------
+        -- command_buffer.queueStencilFunc(L, function(c)
+        --     c.func = GL_EQUAL
+        --     c.ref = 1
+        --     c.mask = 0xFF
+        -- end, z, space)
+
+        -- command_buffer.queueStencilOp(L, function(c)
+        --     c.sfail = GL_KEEP
+        --     c.dpfail = GL_KEEP
+        --     c.dppass = GL_KEEP
+        -- end, z, space)
+
+        -- Restore color writes (draw visible content again)
+        -- command_buffer.queueColorMask(L, function(c)
+        --     c.r, c.g, c.b, c.a = true, true, true, true
+        -- end, z, space)
+
+        -- End the mask stage (should mirror endStencilMask C++)
+        command_buffer.queueEndStencilMask(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (5) Draw visible ring (only where stencil == 1)
+        ------------------------------------------------------------------
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = x, y
+            c.rx, c.ry = outerR, outerR
+            c.color = self.color
+        end, z, space)
+
+        -- Optional flush for correctness before disabling stencil
+        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (6) End stencil mode (disable + cleanup)
+        ------------------------------------------------------------------
+        -- Restore full write mask before disabling stencil
+        -- command_buffer.queueAtomicStencilMask(L, function(c)
+        --     c.mask = 0xFF
+        -- end, z, space)
+
+        command_buffer.queueEndStencilMode(L, function() end, z, space)
+
+        ------------------------------------------------------------------
+        -- (7) Lifetime cleanup
+        ------------------------------------------------------------------
+        if t >= 1.0 then
+            registry:destroy(self:handle())
+        end
+    end
+
+    local e = HollowCircle{}
+    e:attach_ecs{ create_new = true }
+    add_state_tag(e:handle(), ACTION_STATE)
+end
+
+
+function makeSwirlEmitterWithRing(x, y, radius, colorSet, emitDuration, totalLifetime)
+    colorSet = colorSet or { Col(255, 255, 255, 255) }
+    emitDuration = emitDuration or 1.0
+    totalLifetime = totalLifetime or (emitDuration + 1.0)
+
+    local SwirlEmitter = Node:extend()
+    SwirlEmitter.radius = radius
+    SwirlEmitter.age = 0
+    SwirlEmitter.lifetime = totalLifetime
+    SwirlEmitter.dots = {}
+    SwirlEmitter.spawnRate = 1 / 40   -- how often to emit (40 per sec)
+    SwirlEmitter.timeSinceLast = 0
+    SwirlEmitter.ringColor = colorSet[1] or Col(255,255,255,255)
+    SwirlEmitter.ringShadowColor = Col(0, 0, 0, 255)
+    SwirlEmitter.shadowOffset = 8   -- px offset for shadow
+
+    function SwirlEmitter:update(dt)
+        self.age = self.age + dt
+        self.timeSinceLast = self.timeSinceLast + dt
+        local elapsed = self.age
+        local decayGlobal = math.max(0.0, 1.0 - (self.age - emitDuration) / (self.lifetime - emitDuration))
+
+        ------------------------------------------------------------
+        -- 1. Spawn new dots gradually during emitDuration
+        ------------------------------------------------------------
+        if elapsed <= emitDuration then
+            while self.timeSinceLast >= self.spawnRate do
+                self.timeSinceLast = self.timeSinceLast - self.spawnRate
+                local angle = math.random() * math.pi * 2
+                local d = {
+                    angle = angle,
+                    dist  = self.radius,
+                    swirlSpeed = (math.random() * 2.5 + 1.5) * (math.random() < 0.5 and -1 or 1),
+                    pullSpeed  = math.random() * 40 + 60,
+                    life = math.random() * 1.2 + 0.8,
+                    age = 0,
+                    rx = math.random() * 8 + 4,
+                    ry = math.random() * 3 + 2,
+                    color = colorSet[math.random(1, #colorSet)],
+                    spin = (math.random() - 0.5) * 0.4
+                }
+                table.insert(self.dots, d)
+            end
+        end
+
+        ------------------------------------------------------------
+        -- 2. Draw the static ring (shadow + main outline)
+        ------------------------------------------------------------
+        local ringZ = z_orders.particle_vfx - 1
+
+        -- Shadow ring
+        command_buffer.queueDrawCircleLine(layers.sprites, function(c)
+            c.x = x + SwirlEmitter.shadowOffset
+            c.y = y + SwirlEmitter.shadowOffset
+            c.innerRadius = SwirlEmitter.radius - 3.0
+            c.outerRadius = SwirlEmitter.radius
+            c.segments = 64
+            c.startAngle = 0
+            c.endAngle = 360
+            c.color = SwirlEmitter.ringShadowColor:setAlpha(math.floor(120 * decayGlobal))
+            -- c.lineWidth = 3.0
+        end, ringZ, layer.DrawCommandSpace.World)
+
+        -- Main ring
+        command_buffer.queueDrawCircleLine(layers.sprites, function(c)
+            c.x = x
+            c.y = y
+            -- c.rx = SwirlEmitter.radius
+            -- c.ry = SwirlEmitter.radius
+            c.color = SwirlEmitter.ringColor:setAlpha(math.floor(255 * decayGlobal))
+            -- c.lineWidth = 3.0
+            
+            c.innerRadius = SwirlEmitter.radius - 3.0
+            c.outerRadius = SwirlEmitter.radius
+            c.segments = 64
+            c.startAngle = 0
+            c.endAngle = 360
+        end, ringZ + 1, layer.DrawCommandSpace.World)
+
+        ------------------------------------------------------------
+        -- 3. Update and draw swirl dots
+        ------------------------------------------------------------
+        for i = #self.dots, 1, -1 do
+            local d = self.dots[i]
+            d.age = d.age + dt
+            local progress = math.min(d.age / d.life, 1.0)
+            local decay = 1.0 - progress
+
+            -- spiral motion
+            d.angle = d.angle + d.swirlSpeed * dt
+            d.dist  = d.dist - d.pullSpeed * dt * (0.6 + 0.4 * decay)
+
+            if d.dist < 4 then
+                table.remove(self.dots, i)
+                goto continue
+            end
+
+            local px = x + math.cos(d.angle) * d.dist
+            local py = y + math.sin(d.angle) * d.dist
+
+            local dirAngle = d.angle + math.pi / 2
+            local rx = d.rx * decay
+            local ry = d.ry * decay
+
+            --------------------------------------------------------
+            -- draw facing ellipse
+            --------------------------------------------------------
+            command_buffer.queuePushMatrix(layers.sprites, function() end,
+                z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queueTranslate(layers.sprites, function(c)
+                c.x = px
+                c.y = py
+            end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queueRotate(layers.sprites, function(c)
+                c.angle = math.deg(dirAngle)
+            end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                c.x = 0
+                c.y = 0
+                c.rx = rx
+                c.ry = ry
+                c.color = d.color:setAlpha(math.floor(255 * decay * decayGlobal))
+                c.lineWidth = nil -- filled
+            end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            command_buffer.queuePopMatrix(layers.sprites, function() end,
+                z_orders.particle_vfx, layer.DrawCommandSpace.World)
+
+            ::continue::
+        end
+
+        ------------------------------------------------------------
+        -- 4. Cleanup
+        ------------------------------------------------------------
+        if self.age >= self.lifetime and #self.dots == 0 then
+            registry:destroy(self:handle())
+        end
+    end
+
+    local emitterNode = SwirlEmitter{}
+    emitterNode:attach_ecs{ create_new = true }
+    add_state_tag(emitterNode:handle(), ACTION_STATE)
+    return emitterNode
+end
 
 ---@param x number
 ---@param y number

@@ -45,19 +45,23 @@ Converts encumbrance into damage
     
 # programming side
 - [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
+- [ ] how to muffle playing music?
+- [ [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.
+
+- also make him squeeze in the direction of movement (if significant vertical direction, squeeze vertically, else horizontally)
+
+
+- [ ] slow time slightly when player gets too close to an enemy?]
+- [ ] make pickups magnetic -> can we add a shape to player and make that shape a sensor?
 
 - [ ] looping multiple songs, turning them all off at once.
 
 - [ ] method that adds trail to entity over x duration
 - [ ] flying crescent shape that faces the direction it is going.
-- [ ] rectantle area that wipes in the direction it is going.
 - [ ] circle area with dashed rotating border
-- [ ] circle outline with dots that twirl inward.
 - [ ] cross diamond shaped streaks for impact that thin out over time?
 - [ ] beam attack with pulsating circles on either end
-- [ ] straight line particles that branch outward
 
-- [ ] make pickups magnetic
 
 
 

@@ -4674,12 +4674,22 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};
 
+  // PushMatrix();
+  // Translate(position.x, position.y);
+  // Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+  //       transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+  // Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+  // Translate(-origin.x, -origin.y);
+  
   PushMatrix();
-  Translate(position.x, position.y);
-  Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(),
-        transform.getVisualScaleWithHoverAndDynamicMotionReflected());
-  Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-  Translate(-origin.x, -origin.y);
+Translate(position.x, position.y);
+float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+float visualScaleX = (transform.getVisualW() / baseWidth) * s;
+float visualScaleY = (transform.getVisualH() / baseHeight) * s;
+Scale(visualScaleX, visualScaleY);
+Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+Translate(-origin.x, -origin.y);
+
 
   // shadow rendering first
   {

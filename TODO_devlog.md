@@ -170,4 +170,9 @@
   - Added direction-facing line particle effect.
   - Added circle outline vfx with dots that twirl inward. Needs some fine tuning later.
   - Added rectantle area that wipes in the direction it is going.
-  
+  - Added crecent particle effect that faces the direction it is going.
+  - Added cross diamond shaped streaks for impact that thin out over time.
+  - Added method that adds trail to entity over x duration.
+  - circle area with dashed rotating border
+  - beam attack with pulsating circles on either end
+  - Added player stretch/squash when dashing.

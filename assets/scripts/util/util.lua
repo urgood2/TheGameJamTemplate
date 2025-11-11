@@ -374,7 +374,7 @@ function particle.spawnDirectionalCone(origin, count, seconds, opts)
     local minScale = opts.minScale or 3
     local maxScale = opts.maxScale or 8
     local gravity = opts.gravity or 0
-    local renderType = opts.renderType or particle.ParticleRenderType.RECTANGLE_FILLED
+    local renderType = opts.renderType or particle.ParticleRenderType.CIRCLE_FILLED
     local space = opts.space or "screen"
     local z = opts.z or 0
     local lifetimeJitter = opts.lifetimeJitter or 0.0 -- e.g. 0.2 = ±20%
@@ -443,6 +443,252 @@ function particle.spawnDirectionalCone(origin, count, seconds, opts)
         )
     end
 end
+
+
+---@param a Vector2|entt.entity  -- start point or entity
+---@param b Vector2|entt.entity  -- end point or entity
+---@param opts table?            -- optional config
+function makePulsingBeam(a, b, opts)
+    opts = opts or {}
+    local color         = opts.color or util.getColor("CYAN")
+    local duration      = opts.duration or 1.0
+    local pulseSpeed    = opts.pulseSpeed or 5.0
+    local easing        = Easing[opts.easing or "cubic"]
+    local baseRadius    = opts.radius or 12
+    local baseThickness = opts.beamThickness or 10
+    local z             = opts.z or z_orders.particle_vfx
+    local space         = opts.space or layer.DrawCommandSpace.World
+
+    ----------------------------------------------------------------
+    -- Helper: resolve entity or vector to center position
+    ----------------------------------------------------------------
+    local function getCenter(target)
+        if type(target) == "userdata" and registry:valid(target) then
+            local tr = component_cache.get(target, Transform)
+            if tr then
+                return Vec2(
+                    tr.actualX + tr.actualW * 0.5,
+                    tr.actualY + tr.actualH * 0.5
+                )
+            end
+        elseif type(target) == "table" and target.x and target.y then
+            return Vec2(target.x, target.y)
+        end
+        return Vec2(0, 0)
+    end
+
+    ----------------------------------------------------------------
+    -- Node definition
+    ----------------------------------------------------------------
+    local Beam = Node:extend()
+    Beam.age = 0
+    Beam.lifetime = duration
+
+    function Beam:init()
+        timer.tween_scalar(
+            self.lifetime,
+            function() return self.age end,
+            function(v) self.age = v end,
+            duration,
+            Easing.linear.f,
+            function()
+                registry:destroy(self:handle())
+            end,
+            "beam_" .. tostring(self:handle())
+        )
+    end
+
+    function Beam:update(dt)
+        self.age = self.age + dt
+
+        -- resolve live positions (supports moving entities)
+        local p1 = getCenter(a)
+        local p2 = getCenter(b)
+
+        local dx, dy = p2.x - p1.x, p2.y - p1.y
+        local dist = math.sqrt(dx * dx + dy * dy)
+        local angleDeg = math.deg(math.atan(dy, dx))
+        local midX, midY = (p1.x + p2.x) * 0.5, (p1.y + p2.y) * 0.5
+
+        -- progress + pulsing
+        local progress = math.min(self.age / self.lifetime, 1.0)
+        local fade = 1.0 - progress
+        local pulse = 0.5 + 0.5 * math.sin(self.age * pulseSpeed * math.pi * 2)
+        local alpha = math.floor(color.a * (0.6 + 0.4 * pulse) * fade)
+
+        ------------------------------------------------------------
+        -- 1. Endpoint pulsing circles
+        ------------------------------------------------------------
+        local rNow = baseRadius * (0.8 + 0.4 * pulse)
+
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = p1.x
+            c.y = p1.y
+            c.rx = rNow
+            c.ry = rNow
+            c.color = Col(color.r, color.g, color.b, alpha)
+            c.lineWidth = nil
+        end, z, space)
+
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = p2.x
+            c.y = p2.y
+            c.rx = rNow
+            c.ry = rNow
+            c.color = Col(color.r, color.g, color.b, alpha)
+            c.lineWidth = nil
+        end, z, space)
+
+        ------------------------------------------------------------
+        -- 2. Pulsing connecting rectangle
+        ------------------------------------------------------------
+        local beamThicknessNow = baseThickness * (0.6 + 0.4 * pulse)
+
+        command_buffer.queuePushMatrix(layers.sprites, function() end, z, space)
+        command_buffer.queueTranslate(layers.sprites, function(c)
+            c.x = midX
+            c.y = midY
+        end, z, space)
+        command_buffer.queueRotate(layers.sprites, function(c)
+            c.angle = angleDeg
+        end, z, space)
+
+        command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+            c.x = 0
+            c.y = 0
+            c.w = dist
+            c.h = beamThicknessNow
+            c.rx = beamThicknessNow * 0.5
+            c.ry = beamThicknessNow * 0.5
+            c.color = Col(color.r, color.g, color.b, alpha)
+        end, z, space)
+        command_buffer.queuePopMatrix(layers.sprites, function() end, z, space)
+    end
+
+    ----------------------------------------------------------------
+    -- Instantiate and attach
+    ----------------------------------------------------------------
+    local beamNode = Beam{}
+    beamNode:attach_ecs{ create_new = true }
+    add_state_tag(beamNode:handle(), ACTION_STATE)
+    return beamNode
+end
+
+
+---@param p1 Vector2   -- start point
+---@param p2 Vector2   -- end point
+---@param opts table?  -- { color, duration, radius, beamThickness, pulseSpeed, easing }
+function makePulsingBeam(p1, p2, opts)
+    opts = opts or {}
+    local color         = opts.color or util.getColor("CYAN")
+    local duration      = opts.duration or 1.0
+    local pulseSpeed    = opts.pulseSpeed or 5.0  -- how many pulses per second
+    local easing        = Easing[opts.easing or "cubic"]
+    local baseRadius    = opts.radius or 12
+    local baseThickness = opts.beamThickness or 10
+    local z             = opts.z or z_orders.particle_vfx
+    local space         = opts.space or layer.DrawCommandSpace.World
+
+    ----------------------------------------------------------------
+    -- Derived values
+    ----------------------------------------------------------------
+    local dx = p2.x - p1.x
+    local dy = p2.y - p1.y
+    local dist = math.sqrt(dx * dx + dy * dy)
+    local angleDeg = math.deg(math.atan(dy, dx))
+
+    ----------------------------------------------------------------
+    -- Node definition
+    ----------------------------------------------------------------
+    local Beam = Node:extend()
+    Beam.age = 0
+    Beam.lifetime = duration
+
+    function Beam:init()
+        timer.tween_scalar(
+            self.lifetime,
+            function() return self.age end,
+            function(v) self.age = v end,
+            duration,
+            Easing.linear.f,
+            function()
+                registry:destroy(self:handle())
+            end,
+            "beam_" .. tostring(self:handle())
+        )
+    end
+
+    function Beam:update(dt)
+        self.age = self.age + dt
+        local progress = math.min(self.age / self.lifetime, 1.0)
+        local fade = 1.0 - progress
+        local pulse = 0.5 + 0.5 * math.sin(self.age * pulseSpeed * math.pi * 2)
+
+        ------------------------------------------------------------
+        -- 1. Pulsing circles at endpoints
+        ------------------------------------------------------------
+        local rNow = baseRadius * (0.8 + 0.4 * pulse)
+        local alpha = math.floor(color.a * (0.5 + 0.5 * pulse) * fade)
+
+        -- Start circle
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = p1.x
+            c.y = p1.y
+            c.rx = rNow
+            c.ry = rNow
+            c.color = Col(color.r, color.g, color.b, alpha)
+            c.lineWidth = nil
+        end, z, space)
+
+        -- End circle
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = p2.x
+            c.y = p2.y
+            c.rx = rNow
+            c.ry = rNow
+            c.color = Col(color.r, color.g, color.b, alpha)
+            c.lineWidth = nil
+        end, z, space)
+
+        ------------------------------------------------------------
+        -- 2. Beam body — rectangle connecting them
+        ------------------------------------------------------------
+        local beamThicknessNow = baseThickness * (0.6 + 0.4 * pulse)
+        local midX = (p1.x + p2.x) * 0.5
+        local midY = (p1.y + p2.y) * 0.5
+
+        command_buffer.queuePushMatrix(layers.sprites, function() end, z, space)
+        command_buffer.queueTranslate(layers.sprites, function(c)
+            c.x = midX
+            c.y = midY
+        end, z, space)
+
+        command_buffer.queueRotate(layers.sprites, function(c)
+            c.angle = angleDeg
+        end, z, space)
+
+        command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+            c.x = 0
+            c.y = 0
+            c.w = dist
+            c.h = beamThicknessNow
+            c.rx = beamThicknessNow * 0.5
+            c.ry = beamThicknessNow * 0.5
+            c.color = Col(color.r, color.g, color.b, alpha)
+        end, z, space)
+
+        command_buffer.queuePopMatrix(layers.sprites, function() end, z, space)
+    end
+
+    ----------------------------------------------------------------
+    -- Instantiate and attach
+    ----------------------------------------------------------------
+    local beamNode = Beam{}
+    beamNode:attach_ecs{ create_new = true }
+    add_state_tag(beamNode:handle(), ACTION_STATE)
+    return beamNode
+end
+
 
 function makeSwirlEmitter(x, y, radius, colorSet, emitDuration, totalLifetime)
     colorSet = colorSet or { Col(255, 255, 255, 255) }
@@ -827,6 +1073,148 @@ function makeDirectionalWipeWithTimer(cx, cy, w, h, facingDir, wipeDir, color, d
 end
 
 
+
+function spawnCrescentParticle(x, y, radius, velocity, color, lifetime)
+    local Crescent = Node:extend()
+    Crescent.radius = radius
+    Crescent.age = 0
+    Crescent.lifetime = lifetime
+    Crescent.color = color or Col(255, 255, 255, 255)
+    Crescent.vx = velocity.x or 0
+    Crescent.vy = velocity.y or 0
+    Crescent.cx = x
+    Crescent.cy = y
+    Crescent.cutOffsetBase = radius * 0.6     -- base offset for the "bite"
+    Crescent.innerShrinkBase = 0.85           -- base inner circle shrink
+
+    function Crescent:update(dt)
+        self.age = self.age + dt
+        local t = math.min(self.age / self.lifetime, 1.0)
+        local decay = 1.0 - t
+
+        ------------------------------------------------------------
+        -- motion + speed-based deformation
+        ------------------------------------------------------------
+        self.cx = self.cx + self.vx * dt
+        self.cy = self.cy + self.vy * dt
+        local speed = math.sqrt(self.vx * self.vx + self.vy * self.vy)
+
+        -- deformation multipliers
+        local stretch = 1.0 + math.min(speed / 600.0, 1.2) * 0.6  -- faster → longer
+        local flatten = 1.0 / stretch                            -- faster → thinner
+        local cutOffset = self.cutOffsetBase * stretch * 0.9
+        local innerShrink = self.innerShrinkBase * flatten
+
+        ------------------------------------------------------------
+        -- orientation
+        ------------------------------------------------------------
+        local angle = math.deg(math.atan(self.vy, self.vx))
+        local drawColor = self.color:setAlpha(math.floor(self.color.a * decay))
+
+        ------------------------------------------------------------
+        -- stencil crescent construction
+        ------------------------------------------------------------
+        local L = layers.sprites
+        local z = z_orders.particle_vfx
+        local space = layer.DrawCommandSpace.World
+
+        -- Begin stencil
+        command_buffer.queueClearStencilBuffer(L, function() end, z, space)
+        command_buffer.queueBeginStencilMode(L, function() end, z, space)
+
+        -- Outer mask
+        command_buffer.queueBeginStencilMask(L, function() end, z, space)
+        command_buffer.queuePushMatrix(L, function() end, z, space)
+        command_buffer.queueTranslate(L, function(c)
+            c.x = self.cx
+            c.y = self.cy
+        end, z, space)
+        command_buffer.queueRotate(L, function(c)
+            c.angle = angle
+        end, z, space)
+
+        command_buffer.queueScale(L, function(c)
+            c.scaleX = stretch
+            c.scaleY = flatten
+        end, z, space)
+
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = 0, 0
+            c.rx, c.ry = self.radius, self.radius
+            c.color = util.getColor("WHITE")
+        end, z, space)
+
+        -- Cut inner area (erase backward)
+        command_buffer.queueRenderBatchFlush(L, function() end, z, space)
+        command_buffer.queueStencilFunc(L, function(c)
+            c.func = GL_ALWAYS
+            c.ref = 0
+            c.mask = 0xFF
+        end, z, space)
+        command_buffer.queueStencilOp(L, function(c)
+            c.sfail = GL_KEEP
+            c.dpfail = GL_KEEP
+            c.dppass = GL_REPLACE
+        end, z, space)
+        command_buffer.queueColorMask(L, function(c)
+            c.r, c.g, c.b, c.a = false, false, false, false
+        end, z, space)
+
+        command_buffer.queueTranslate(L, function(c)
+            c.x = -cutOffset
+            c.y = 0
+        end, z, space)
+
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = 0, 0
+            c.rx, c.ry = self.radius * innerShrink, self.radius * innerShrink
+            c.color = util.getColor("WHITE")
+        end, z, space)
+
+        -- End stencil mask
+        command_buffer.queuePopMatrix(L, function() end, z, space)
+        command_buffer.queueEndStencilMask(L, function() end, z, space)
+
+        ------------------------------------------------------------
+        -- Draw crescent visible area
+        ------------------------------------------------------------
+        command_buffer.queuePushMatrix(L, function() end, z, space)
+        command_buffer.queueTranslate(L, function(c)
+            c.x = self.cx
+            c.y = self.cy
+        end, z, space)
+        command_buffer.queueRotate(L, function(c)
+            c.angle = angle
+        end, z, space)
+        command_buffer.queueScale(L, function(c)
+            c.scaleX = stretch
+            c.scaleY = flatten
+        end, z, space)
+
+        command_buffer.queueDrawCenteredEllipse(L, function(c)
+            c.x, c.y = 0, 0
+            c.rx, c.ry = self.radius, self.radius
+            c.color = drawColor
+        end, z, space)
+
+        command_buffer.queuePopMatrix(L, function() end, z, space)
+        command_buffer.queueEndStencilMode(L, function() end, z, space)
+
+        ------------------------------------------------------------
+        -- cleanup
+        ------------------------------------------------------------
+        if self.age >= self.lifetime then
+            registry:destroy(self:handle())
+        end
+    end
+
+    local e = Crescent{}
+    e:attach_ecs{ create_new = true }
+    add_state_tag(e:handle(), ACTION_STATE)
+    return e
+end
+
+
 function spawnHollowCircleParticle(x, y, radius, color, lifetime)
     local HollowCircle = Node:extend()
     HollowCircle.radius = radius
@@ -974,6 +1362,292 @@ function spawnHollowCircleParticle(x, y, radius, color, lifetime)
     e:attach_ecs{ create_new = true }
     add_state_tag(e:handle(), ACTION_STATE)
 end
+
+
+
+function spawnImpactSmear(x, y, dir, color, lifetime, opts)
+    opts = opts or {}
+    color = color or Col(255, 255, 255, 255)
+    lifetime = lifetime or 0.25
+
+    local Smear = Node:extend()
+    Smear.cx, Smear.cy = x, y
+    Smear.dir = dir or Vec2(1, 0)
+    Smear.color = color
+    Smear.lifetime = lifetime
+    Smear.progress = 0
+    Smear.single = opts.single or false           -- if true: single streak instead of cross
+    Smear.maxLength = opts.maxLength or 60
+    Smear.maxThickness = opts.maxThickness or 10
+
+    function Smear:init()
+        timer.tween_scalar(
+            self.lifetime,
+            function() return self.progress end,
+            function(v) self.progress = v end,
+            1.0,
+            Easing.outCubic.f,
+            function() registry:destroy(self:handle()) end,
+            "smear_" .. tostring(self:handle())
+        )
+    end
+
+    function Smear:update(dt)
+        local t = self.progress
+        local decay = 1.0 - t
+        local fade = decay * decay
+
+        -- Normalize input direction
+        local dx, dy = self.dir.x, self.dir.y
+        local len = math.sqrt(dx*dx + dy*dy)
+        if len == 0 then dx, dy = 1, 0 else dx, dy = dx/len, dy/len end
+
+        -- perpendicular direction (for orientation)
+        local px, py = -dy, dx
+        local baseAngle = math.deg(math.atan(py, px))
+
+        -- Animate geometry (shorter + thinner as it fades)
+        local length = self.maxLength * (0.6 + 0.4 * fade)
+        local thickness = self.maxThickness * fade
+        local drawColor = self.color:setAlpha(math.floor(self.color.a * fade))
+
+        local L = layers.sprites
+        local z = z_orders.particle_vfx
+        local space = layer.DrawCommandSpace.World
+
+        ------------------------------------------------------------
+        -- Draw one or multiple elliptical streaks
+        ------------------------------------------------------------
+        if self.single then
+            -- just one perpendicular streak
+            command_buffer.queuePushMatrix(L, function() end, z, space)
+
+            command_buffer.queueTranslate(L, function(c)
+                c.x = self.cx
+                c.y = self.cy
+            end, z, space)
+
+            command_buffer.queueRotate(L, function(c)
+                c.angle = baseAngle
+            end, z, space)
+
+            command_buffer.queueDrawCenteredEllipse(L, function(c)
+                c.x = 0
+                c.y = 0
+                c.rx = length
+                c.ry = thickness
+                c.color = drawColor
+                c.lineWidth = nil
+            end, z, space)
+
+            command_buffer.queuePopMatrix(L, function() end, z, space)
+        else
+            -- four-cross version
+            for i = 1, 4 do
+                local angleOffset = (i <= 2) and baseAngle or (baseAngle + 90)
+                local localScale = (i % 2 == 0) and 0.8 or 1.0
+
+                command_buffer.queuePushMatrix(L, function() end, z, space)
+
+                command_buffer.queueTranslate(L, function(c)
+                    c.x = self.cx
+                    c.y = self.cy
+                end, z, space)
+
+                command_buffer.queueRotate(L, function(c)
+                    c.angle = angleOffset
+                end, z, space)
+
+                command_buffer.queueDrawCenteredEllipse(L, function(c)
+                    c.x = 0
+                    c.y = 0
+                    c.rx = length * localScale
+                    c.ry = thickness * localScale
+                    c.color = drawColor
+                    c.lineWidth = nil
+                end, z, space)
+
+                command_buffer.queuePopMatrix(L, function() end, z, space)
+            end
+        end
+    end
+
+    local e = Smear{}
+    e:attach_ecs{ create_new = true }
+    add_state_tag(e:handle(), ACTION_STATE)
+    return e
+end
+
+
+---@param ent entt.entity              -- entity to trail
+---@param duration number              -- total time to emit
+---@param opts table?                  -- options (same as spawnDirectionalCone)
+function particle.attachTrailToEntity(ent, duration, opts)
+    opts = opts or {}
+    local interval = opts.interval or 0.05  -- how often to emit (seconds)
+    local count = opts.count or 3           -- how many per tick
+    local elapsed = 0
+    local timerTag = "trail_" .. tostring(ent) .. "_" .. tostring(math.random(10000))
+    local onFinish = opts.onFinish or nil   -- optional callback(ent)
+
+    -- Core emission settings
+    local easing = Easing[opts.easing or "cubic"]
+    local direction = opts.direction or Vec2(0, -1)
+    local spread = opts.spread or 20
+    local colorSet = opts.colors or { util.getColor("WHITE") }
+    local minSpeed = opts.minSpeed or 100
+    local maxSpeed = opts.maxSpeed or 300
+    local minScale = opts.minScale or 1
+    local maxScale = opts.maxScale or 8
+    local lifetime = opts.lifetime or 0.3
+    local gravity = opts.gravity or 0
+    local space = opts.space or "screen"
+    local z = opts.z or 0
+    local jitterLife = opts.lifetimeJitter or 0.2
+    local jitterScale = opts.scaleJitter or 0.3
+    local rotationSpeed = opts.rotationSpeed or 0.0
+    local rotationJitter = opts.rotationJitter or 0.2
+
+    ----------------------------------------------------------------
+    -- Internal emission logic
+    ----------------------------------------------------------------
+    local function emitAtCurrentPos()
+        if not entity_cache.valid(ent) then return end
+        local transform = component_cache.get(ent, Transform)
+        if not transform then return end
+        local pos = Vec2(transform.actualX + transform.actualW * 0.5, transform.actualY + transform.actualH * 0.5)
+
+        particle.spawnDirectionalCone(
+            pos,
+            count,
+            lifetime,
+            {
+                easing = easing,
+                direction = direction,
+                spread = spread,
+                colors = colorSet,
+                minSpeed = minSpeed,
+                maxSpeed = maxSpeed,
+                minScale = minScale,
+                maxScale = maxScale,
+                gravity = gravity,
+                space = space,
+                z = z,
+                lifetimeJitter = jitterLife,
+                scaleJitter = jitterScale,
+                rotationSpeed = rotationSpeed,
+                rotationJitter = rotationJitter,
+            }
+        )
+    end
+
+    ----------------------------------------------------------------
+    -- Emit at a fixed interval using timer.every()
+    ----------------------------------------------------------------
+    timer.every(interval, function()
+        if not registry:valid(ent) then
+            timer.clear(timerTag)
+            if onFinish then onFinish(ent) end
+            return
+        end
+
+        elapsed = elapsed + interval
+        if elapsed <= duration then
+            emitAtCurrentPos()
+        else
+            timer.cancel(timerTag)
+            if onFinish then onFinish(ent) end
+        end
+    end, 0, true, nil, timerTag)
+end
+
+
+function makeDashedCircleArea(x, y, radius, opts)
+    opts = opts or {}
+    local color       = opts.color or util.getColor("YELLOW")
+    local fillColor   = opts.fillColor or Col(color.r, color.g, color.b, 40) -- faint translucent
+    local hasFill     = (opts.hasFill ~= false)
+    local dashLen     = opts.dashLength or 16
+    local gapLen      = opts.gapLength or 10
+    local thickness   = opts.thickness or 4
+    local segments    = opts.segments or 128
+    local rotateSpeed = opts.rotateSpeed or 90    -- degrees per second
+    local duration    = opts.duration or 1.5
+    local z           = opts.z or z_orders.particle_vfx
+    local space       = opts.space or layer.DrawCommandSpace.World
+
+    ----------------------------------------------------------------
+    -- Node definition
+    ----------------------------------------------------------------
+    local CircleArea = Node:extend()
+    CircleArea.cx = x
+    CircleArea.cy = y
+    CircleArea.radius = radius
+    CircleArea.phase = 0
+    CircleArea.age = 0
+    CircleArea.lifetime = duration
+
+    function CircleArea:init()
+        timer.tween_scalar(
+            self.lifetime,
+            function() return self.age end,
+            function(v) self.age = v end,
+            duration,
+            Easing.linear.f,
+            function()
+                registry:destroy(self:handle())
+            end,
+            "circle_area_" .. tostring(self:handle())
+        )
+    end
+
+    function CircleArea:update(dt)
+        self.phase = (self.phase + rotateSpeed * dt) % 360
+        local progress = math.min(self.age / self.lifetime, 1.0)
+        -- keep fully visible until last 25%, then fade out
+        local fade = 1.0
+        if progress > 0.75 then
+            fade = 1.0 - ((progress - 0.75) / 0.25)
+        end
+
+        ------------------------------------------------------------
+        -- Optional semi-translucent fill
+        ------------------------------------------------------------
+        if hasFill then
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                c.x = self.cx
+                c.y = self.cy
+                c.rx = self.radius
+                c.ry = self.radius
+                c.color = fillColor:setAlpha(math.floor(fillColor.a * fade))
+                c.lineWidth = nil
+            end, z, space)
+        end
+
+        ------------------------------------------------------------
+        -- Rotating dashed circle border
+        ------------------------------------------------------------
+        command_buffer.queueDrawDashedCircle(layers.sprites, function(c)
+            c.center = Vec2(self.cx, self.cy)
+            c.radius = self.radius
+            c.dashLength = dashLen
+            c.gapLength = gapLen
+            c.phase = self.phase
+            c.segments = segments
+            c.thickness = thickness
+            c.color = color:setAlpha(math.floor(color.a * fade))
+        end, z, space)
+    end
+
+    ----------------------------------------------------------------
+    -- Create instance and attach
+    ----------------------------------------------------------------
+    local node = CircleArea{}
+    node:attach_ecs{ create_new = true }
+    add_state_tag(node:handle(), ACTION_STATE)
+    return node
+end
+
 
 
 function makeSwirlEmitterWithRing(x, y, radius, colorSet, emitDuration, totalLifetime)

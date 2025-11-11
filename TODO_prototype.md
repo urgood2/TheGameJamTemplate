@@ -48,19 +48,12 @@ Converts encumbrance into damage
 - [ ] how to muffle playing music?
 - [ [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.
 
-- also make him squeeze in the direction of movement (if significant vertical direction, squeeze vertically, else horizontally)
-
-
 - [ ] slow time slightly when player gets too close to an enemy?]
 - [ ] make pickups magnetic -> can we add a shape to player and make that shape a sensor?
 
 - [ ] looping multiple songs, turning them all off at once.
 
-- [ ] method that adds trail to entity over x duration
-- [ ] flying crescent shape that faces the direction it is going.
-- [ ] circle area with dashed rotating border
-- [ ] cross diamond shaped streaks for impact that thin out over time?
-- [ ] beam attack with pulsating circles on either end
+- [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.
 
 
 

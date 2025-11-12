@@ -1,4 +1,4 @@
-local bit = require("bit") -- LuaJIT's bit library
+-- local bit = require("bit") -- LuaJIT's bit library
 
 -- build defs here
 

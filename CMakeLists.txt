@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.14)
 
 
-set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1"
-    CACHE PATH "Path to LuaJIT source directory" FORCE)
+# set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1"
+#     CACHE PATH "Path to LuaJIT source directory" FORCE)
 
 project(raylib-cpp-cmake-template CXX C)
 
-option(USE_LUAJIT "Use LuaJIT instead of standard Lua" ON)
+option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -335,59 +335,59 @@ add_git_dependency(
 )
 message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
 
-if (USE_LUAJIT)
-    message(STATUS ">> Using LuaJIT as backend for Sol2")
-    # https://github.com/zhaozg/luajit-cmake
+# if (USE_LUAJIT)
+#     message(STATUS ">> Using LuaJIT as backend for Sol2")
+#     # https://github.com/zhaozg/luajit-cmake
     
-    # FetchContent_Declare(
-    #     luajit
-    #     GIT_REPOSITORY https://github.com/LuaJIT/LuaJIT.git
-    #     GIT_TAG v2.1
-    # )
-    # FetchContent_MakeAvailable(luajit)
+#     # FetchContent_Declare(
+#     #     luajit
+#     #     GIT_REPOSITORY https://github.com/LuaJIT/LuaJIT.git
+#     #     GIT_TAG v2.1
+#     # )
+#     # FetchContent_MakeAvailable(luajit)
 
-    # set(LUAJIT_INCLUDE_DIR "${luajit_SOURCE_DIR}/src")
+#     # set(LUAJIT_INCLUDE_DIR "${luajit_SOURCE_DIR}/src")
 
-    # add_library(LuaJIT STATIC IMPORTED GLOBAL)
-    # if (WIN32)
-    #     set_target_properties(LuaJIT PROPERTIES
-    #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/lua51.lib"
-    #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
-    #     )
-    # else()
-    #     set_target_properties(LuaJIT PROPERTIES
-    #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/libluajit.a"
-    #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
-    #     )
-    # endif()
+#     # add_library(LuaJIT STATIC IMPORTED GLOBAL)
+#     # if (WIN32)
+#     #     set_target_properties(LuaJIT PROPERTIES
+#     #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/lua51.lib"
+#     #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
+#     #     )
+#     # else()
+#     #     set_target_properties(LuaJIT PROPERTIES
+#     #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/libluajit.a"
+#     #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
+#     #     )
+#     # endif()
 
-    # target_include_directories(CommonSettings INTERFACE
-    #     ${LUAJIT_INCLUDE_DIR}
-    #     ${sol2_SOURCE_DIR}/include
-    # )
-    # set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1" CACHE PATH "Path to LuaJIT source directory")
-    add_subdirectory("src/third_party/luajit-cmake-master")
-    target_link_libraries(CommonSettings INTERFACE luajit::lib luajit::header)
+#     # target_include_directories(CommonSettings INTERFACE
+#     #     ${LUAJIT_INCLUDE_DIR}
+#     #     ${sol2_SOURCE_DIR}/include
+#     # )
+#     # set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1" CACHE PATH "Path to LuaJIT source directory")
+#     add_subdirectory("src/third_party/luajit-cmake-master")
+#     target_link_libraries(CommonSettings INTERFACE luajit::lib luajit::header)
 
 
 
-    target_link_libraries(CommonSettings INTERFACE
-        # LuaJIT
-        sol2::sol2
-    )
+#     target_link_libraries(CommonSettings INTERFACE
+#         # LuaJIT
+#         sol2::sol2
+#     )
     
-    # Ensure LuaJIT headers are visible to everything using CommonSettings
-    target_include_directories(CommonSettings INTERFACE
-        "${LUAJIT_DIR}/src"
-    )
+#     # Ensure LuaJIT headers are visible to everything using CommonSettings
+#     target_include_directories(CommonSettings INTERFACE
+#         "${LUAJIT_DIR}/src"
+#     )
 
 
-    target_compile_definitions(CommonSettings INTERFACE
-        SOL_LUAJIT=1
-        LUAJIT_VERSION="2.1.0-beta3"
-    )
+#     target_compile_definitions(CommonSettings INTERFACE
+#         SOL_LUAJIT=1
+#         LUAJIT_VERSION="2.1.0-beta3"
+#     )
 
-else()
+# else()
     message(STATUS ">> Using standard Lua 5.4.4 as backend for Sol2")
 
     add_git_dependency(
@@ -409,7 +409,7 @@ else()
         SOL_STD_OPTIONAL
         LUA_VERSION="5.4.4"
     )
-endif()
+# endif()
 # ======================================================================
 
 # Declaring our executable

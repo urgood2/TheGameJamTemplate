@@ -5,7 +5,7 @@ local entity_cache = require("core.entity_cache")
 local Easing = require("util.easing")
 local Node = require("monobehavior.behavior_script_v2")
 local z_orders = require("core.z_orders")
-local bit = require("bit") -- LuaJIT's bit library
+-- local bit = require("bit") -- LuaJIT's bit library
 -- local entity_cache = require("core.entity_cache")
 -- local component_cache = require("core.component_cache")
 

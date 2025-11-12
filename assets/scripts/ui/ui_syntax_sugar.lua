@@ -4,7 +4,7 @@
 -- Depends on: ui.definitions.def, ui.box, layer_order_system,
 -- animation_system, timer, util, registry, etc.
 ------------------------------------------------------------
-local bit = require("bit") -- LuaJIT's bit library
+-- local bit = require("bit") -- LuaJIT's bit library
 
 local dsl = {}
 

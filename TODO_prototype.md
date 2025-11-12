@@ -129,6 +129,7 @@ end)
 - also need currency.
 
 # errors
+- rendeirng background sometimes goes translucent. not sure why?
 - ui strings in tooltips overlap bounds for some reason.
 - entities not getting filtured porperly, camera not always kicking in.
 - boards stop updating when I change state. why?

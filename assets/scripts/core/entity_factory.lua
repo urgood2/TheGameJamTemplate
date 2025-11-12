@@ -1,7 +1,7 @@
 
 local Easing = require("util.easing")  -- the file above
 local timer = require("core.timer")
-local bit = require("bit") -- LuaJIT's bit library
+-- local bit = require("bit") -- LuaJIT's bit library
 
 -- meant to be called within a coroutine.
 -- returns false if entity should stop.

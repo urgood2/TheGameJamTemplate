@@ -1,3 +1,4 @@
+require("init.bit_compat")
 require("core.globals")
 require("registry")
 require("ai.init") -- Read in ai scripts and populate the ai table
@@ -14,7 +15,7 @@ local TimerChain = require("core.timer_chain")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
-local bit = require("bit") -- LuaJIT's bit library
+-- local bit = require("bit") -- LuaJIT's bit library
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 -- Represents game loop main module

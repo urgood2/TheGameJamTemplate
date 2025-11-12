@@ -14,7 +14,7 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 require("ui.ui_definition_helper")
 local dsl = require("ui.ui_syntax_sugar")
-local bit = require("bit") -- LuaJIT's bit library
+-- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
 

@@ -196,6 +196,7 @@ end)
 - https://smiletron.bandcamp.com/album/self-titled (4/5)
 - https://smiletron.bandcamp.com/album/signals (3/5)
 - https://smiletron.bandcamp.com/album/solstice (4/5)
+- https://soundcloud.com/biggiantcircles/the-glory-days-sevcon-full?si=405318c952a14c879be01f1c9d926b9f&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing -> (4/5)
 
 # release & testing
 - Enable github actions + auto loading to itch.io on new release.

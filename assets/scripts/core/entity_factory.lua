@@ -1,6 +1,7 @@
 
 local Easing = require("util.easing")  -- the file above
 local timer = require("core.timer")
+local bit = require("bit") -- LuaJIT's bit library
 
 -- meant to be called within a coroutine.
 -- returns false if entity should stop.
@@ -104,7 +105,7 @@ function spawnGoldDigger(x, y)
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -155,7 +156,7 @@ function spawnGoldDigger(x, y)
     
     -- set the alignment flag for the uibox to be centered above the colonist
     local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
-    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+    roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP)
 
     local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
@@ -257,7 +258,7 @@ function spawnHealer(x, y)
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -310,7 +311,7 @@ function spawnHealer(x, y)
     
     -- set the alignment flag for the uibox to be centered above the colonist
     local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
-    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
+    roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)
 
     local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
@@ -389,7 +390,7 @@ function spawnDamageCushion(x, y)
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -442,7 +443,7 @@ function spawnDamageCushion(x, y)
     
     -- set the alignment flag for the uibox to be centered above the colonist
     local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
-    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
+    roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)
 
     local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
@@ -534,7 +535,7 @@ function spawnNewColonist(x, y)
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -592,7 +593,7 @@ function spawnNewColonist(x, y)
     
     -- set the alignment flag for the uibox to be centered above the colonist
     local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
-    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
+    roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)
 
     local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
@@ -1120,7 +1121,7 @@ function spawnNewWhale()
         120  -- Height
     ) 
     
-    local collider = collision.create_collider_for_entity(bowser, {width = 50, height = 50, alignment = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM})
+    local collider = collision.create_collider_for_entity(bowser, {width = 50, height = 50, alignment = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)})
     
     collision.resetCollisionCategory(collider, "playerColliderTest")
     collision.setCollisionMask(collider, "enemy") -- there is no enemy

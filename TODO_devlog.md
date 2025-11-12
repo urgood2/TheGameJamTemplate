@@ -180,4 +180,5 @@
 11/12/2025
   - I was despairing about performance, but RelWithDebugInfo and LuaJIT just did some magic. Okay... feeling pretty good .
   - Added in SMILETRON music as a tester.
-  - Added low-p
+  - Added low-pass.
+  - Luajit works, but right now it causes some subtle bugs in the graphics for some reason.

@@ -1,3 +1,4 @@
+local bit = require("bit") -- LuaJIT's bit library
 
 -- build defs here
 
@@ -69,7 +70,7 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
                 :addColor(util.getColor("blank"))
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -92,7 +93,7 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
                 :addPadding(0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -118,7 +119,7 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
                     log_debug(globalTextHandle .. " button clicked!")
                     playSoundEffect("effects", "button-click") -- play button click sound
                 end)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -142,7 +143,7 @@ function ui_defs.generateUI()
                 :addEmboss(4.0)
                 :addMinWidth(230)
                 :addMinHeight(230)
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -156,7 +157,7 @@ function ui_defs.generateUI()
             UIConfigBuilder.create()
                 :addText(localization.get("ui.drag_to_duplicate")) -- title text
                 :addColor(util.getColor("blackberry"))
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_BOTTOM))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -170,7 +171,7 @@ function ui_defs.generateUI()
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("dusty_rose"))
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -383,7 +384,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("dusty_rose"))
                 -- :addShadow(true) --- IGNORE ---
                 :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -412,7 +413,7 @@ function ui_defs.generateUI()
                     transform.actualY = globals.screenHeight() -- hide the UI box
                     togglePausedState(false) -- unpause the game
                 end)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_BOTTOM))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -426,7 +427,7 @@ function ui_defs.generateUI()
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("dusty_rose"))
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -598,7 +599,7 @@ function ui_defs.generateUI()
             UIConfigBuilder.create()
                 :addColor(util.getColor("dusty_rose"))
                 :addNoMovementWhenDragged(true)
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -617,7 +618,7 @@ function ui_defs.generateUI()
             UIConfigBuilder.create()
                 :addColor(util.getColor("dusty_rose"))
                 :addNoMovementWhenDragged(true)
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -674,7 +675,7 @@ function ui_defs.generateUI()
                     end
                     
                 end)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -692,7 +693,7 @@ function ui_defs.generateUI()
                 -- :addShadow(true)
                 -- :addMaxWidth(300)
                 :addPadding(0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -726,7 +727,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("blank"))
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -777,7 +778,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("dusty_rose"))
                 :addShadow(true) 
                 -- :addEmboss(4.0) --- IGNORE ---
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -793,7 +794,7 @@ function ui_defs.generateUI()
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
-                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT , AlignmentFlag.VERTICAL_TOP))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -869,7 +870,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("blank"))
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -911,7 +912,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("blank"))
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0) --- IGNORE ---
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -987,7 +988,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("dusty_rose"))
                 -- :addShadow(true) --- IGNORE ---
                 :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -1052,7 +1053,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("blank"))
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -1069,7 +1070,7 @@ function ui_defs.generateUI()
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("dusty_rose"))
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -1106,7 +1107,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("taupe_warm"))
                 -- :addShadow(true) --- IGNORE ---
                 :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -1146,7 +1147,7 @@ function ui_defs.generateUI()
                 :addHover(true) -- needed for button effect
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addButtonCallback(function()
                     -- button click callback
                     log_debug("Pause button clicked!")
@@ -1194,7 +1195,7 @@ function ui_defs.generateUI()
     --         UIConfigBuilder.create()
     --             :addText(localization.get("ui.drag_to_duplicate")) -- title text
     --             :addColor(util.getColor("blackberry"))
-    --             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
+    --             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
     --             :addInitFunc(function(registry, entity)
     --                 -- something init-related here
     --             end)
@@ -1213,7 +1214,7 @@ function ui_defs.generateUI()
                 -- :addMinWidth(500) -- minimum width of the button
                 -- :addShadow(true)
                 -- :addHover(true) -- needed for button effect
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
         -- :addChild(globals.ui.tutorialText)
@@ -1236,7 +1237,7 @@ function ui_defs.generateUI()
                 :addButtonCallback(function ()
                     nextTutorialCallback()
                 end)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
         :addChild(closeButtonText)
@@ -1249,7 +1250,7 @@ function ui_defs.generateUI()
             UIConfigBuilder.create()
                 :addColor(util.getColor("mauve_shadow"))
                 :addShadow(true)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -1294,7 +1295,7 @@ function ui_defs.generateTooltipUI()
             :addColor(util.getColor("taupe_warm"))
             :addMinHeight(50)
             :addMinWidth(200)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -1310,7 +1311,7 @@ function ui_defs.generateTooltipUI()
         UIConfigBuilder.create()
             :addColor(util.getColor("dusty_rose"))
             :addMinHeight(50)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)

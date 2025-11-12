@@ -958,6 +958,14 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 
         exposeToLua(ai_system::masterStateLua); // so layer values will be saved after initialization
+        
+        ai_system::masterStateLua.set_panic([](lua_State* L) -> int {
+            const char* msg = lua_tostring(L, -1);
+            luaL_traceback(L, L, msg, 1);
+            const char* fullTrace = lua_tostring(L, -1);
+            fprintf(stderr, "[LUAJIT PANIC]\n%s\n", fullTrace ? fullTrace : "(nil)");
+            return 0;
+        });
 
 
         transform::registerDestroyListeners(globals::registry);

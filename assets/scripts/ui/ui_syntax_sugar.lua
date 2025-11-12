@@ -4,6 +4,7 @@
 -- Depends on: ui.definitions.def, ui.box, layer_order_system,
 -- animation_system, timer, util, registry, etc.
 ------------------------------------------------------------
+local bit = require("bit") -- LuaJIT's bit library
 
 local dsl = {}
 
@@ -48,7 +49,7 @@ function dsl.text(text, opts)
             id              = opts.id,
             text            = text,
             color           = color(opts.color or "blackberry"),
-            align           = opts.align or (AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER),
+            align           = opts.align or (bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)),
             buttonCallback  = opts.onClick,
             tooltip         = opts.tooltip,
             hover           = opts.hover,

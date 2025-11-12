@@ -14,7 +14,7 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 require("ui.ui_definition_helper")
 local dsl = require("ui.ui_syntax_sugar")
-
+local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
 
@@ -1833,7 +1833,7 @@ function makeWandTooltip(wand_def)
     local textDef = ui.definitions.getTextFromString(text)
 
     local v = dsl.vbox {
-        config = { align = AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER,
+        config = { align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             color = "blue" },
         children = { textDef }
     }
@@ -1841,7 +1841,7 @@ function makeWandTooltip(wand_def)
     local root = dsl.root {
         config = {
             color = "purple",
-            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = { v } }
 
@@ -1887,7 +1887,7 @@ function makeCardTooltip(card_def)
 
     local v = dsl.vbox {
         config = {
-            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             color = "blue"
         },
         children = { textDef }
@@ -1896,7 +1896,7 @@ function makeCardTooltip(card_def)
     local root = dsl.root {
         config = {
             color = "purple",
-            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
         },
         children = { v }
     }
@@ -4019,7 +4019,7 @@ function initPlanningUI()
             :addButtonCallback(function()
                 playSoundEffect("effects", "button-click")     -- play button click sound
             end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER,AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -4034,7 +4034,7 @@ function initPlanningUI()
             UIConfigBuilder.create()
             :addColor(util.getColor("yellow"))
             :addPadding(0)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -4067,7 +4067,7 @@ function initPlanningUI()
         config = {
             id      = "shop_button",
             color   = "red",
-            align   = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+            align   = bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER),
             hover   = true,
             onClick = function()
                 playSoundEffect("effects", "button-click")
@@ -4084,7 +4084,7 @@ function initPlanningUI()
     local root = dsl.root {
         config = {
             color = "blank",
-            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = { shopButton } }
 

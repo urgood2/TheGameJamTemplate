@@ -5,6 +5,7 @@ local entity_cache = require("core.entity_cache")
 local Easing = require("util.easing")
 local Node = require("monobehavior.behavior_script_v2")
 local z_orders = require("core.z_orders")
+local bit = require("bit") -- LuaJIT's bit library
 -- local entity_cache = require("core.entity_cache")
 -- local component_cache = require("core.component_cache")
 
@@ -2163,7 +2164,7 @@ function buyRelicFromSlot(slot)
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
                 :addPadding(0)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)

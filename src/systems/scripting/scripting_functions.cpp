@@ -27,6 +27,7 @@
 
 #include "../layer/layer.hpp"
 
+#include "spdlog/spdlog.h"
 #include "systems/anim_system.hpp"
 
 #include "systems/camera/camera_bindings.hpp"
@@ -74,7 +75,10 @@ namespace scripting {
         auto& rec = BindingRecorder::instance();
         
         // basic lua state initialization
-        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, sol::lib::math, sol::lib::debug, sol::lib::io);
+        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, sol::lib::math, sol::lib::debug, sol::lib::io, sol::lib::bit32);
+        #if defined(LUAJIT_VERSION)
+        stateToInit.open_libraries(sol::lib::ffi, sol::lib::jit);
+        #endif
         
         std::string base1 = util::getRawAssetPathNoUUID("scripts/");
         std::string base2 = util::getRawAssetPathNoUUID("scripts/core");
@@ -96,9 +100,14 @@ namespace scripting {
             // pfr will contain things that went wrong, for either loading or executing the script
             // Can throw your own custom error
             // You can also just return it, and let the call-site handle the error if necessary.
+            SPDLOG_ERROR("Error setting lua path: {}", pfr.get<sol::error>().what());
             return pfr;
         });
         SPDLOG_DEBUG("Lua path set to: {}", lua_path_cmd);
+        
+        
+        
+        
         
         //---------------------------------------------------------
         // methods from ai_system.cpp. These can be called from lua,
@@ -527,6 +536,7 @@ namespace scripting {
             if (code_valid_result.valid() == false) {
                 SPDLOG_ERROR("Lua loading failed. Check script file for errors.");
                 SPDLOG_ERROR("Error: {}", code_valid_result.get<sol::error>().what());
+                throw std::runtime_error("Lua script file loading failed.");
             } else
             {
                 SPDLOG_DEBUG("Lua script file loading success.");

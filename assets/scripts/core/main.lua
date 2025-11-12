@@ -14,7 +14,7 @@ local TimerChain = require("core.timer_chain")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
-
+local bit = require("bit") -- LuaJIT's bit library
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 -- Represents game loop main module
@@ -112,7 +112,7 @@ function initMainMenu()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     startGameButtonCallback() -- callback for the start game button
                 end)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
@@ -154,7 +154,7 @@ function initMainMenu()
                 :addShadow(true)
                 :addMinWidth(500) -- minimum width of the button
                 :addHover(true) -- needed for button effect
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
         :addChild(discordIconTemplate)
@@ -192,7 +192,7 @@ function initMainMenu()
                 end)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
         :addChild(blueskyText)
@@ -208,7 +208,7 @@ function initMainMenu()
                 :addShadow(true)
                 :addMinHeight(50) -- minimum height of the input text
                 :addMinWidth(300) -- minimum width of the input text
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
     :build()
@@ -233,7 +233,7 @@ function initMainMenu()
             :addColor(util.getColor("yellow"))
             :addShadow(true)
             :addHeight(200)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -277,7 +277,7 @@ function initMainMenu()
                         localization.setCurrentLanguage("en_us")
                     end
                 end)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
         :addChild(languageText)
@@ -290,7 +290,7 @@ function initMainMenu()
             UIConfigBuilder.create()
                 :addColor(util.getColor("green"))
                 :addShadow(true)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)

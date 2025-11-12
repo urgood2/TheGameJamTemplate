@@ -72,7 +72,7 @@ namespace game
         globalShaderUniforms.set("pixelate_image", "texSize",
             Vector2{ (float)globals::screenWidth, (float)globals::screenHeight });
         globalShaderUniforms.set("pixelate_image", "pixelRatio",
-            0.25f);
+            0.4f);
 
 
         

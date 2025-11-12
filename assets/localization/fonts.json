@@ -1,10 +1,10 @@
 {
   "en_us": {
-    "file":   "fonts/en/Tomorrow_Night.ttf",
+    "file":   "fonts/en/Kenney Thick.ttf",
     "loadedSize": 25.0,
     "scale":  1.0,
     "spacing": 1.0,
-    "offset": [0, 5],
+    "offset": [0, 0],
     "ranges": [
       [32, 126]           
     ],

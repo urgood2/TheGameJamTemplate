@@ -527,6 +527,7 @@ namespace init {
 
     auto loadSounds() -> void {
         InitAudioDevice();
+        SetAudioStreamBufferSizeDefault(4096);
     }
     
     // Iterate over all shapes stored in a ColliderComponent (main + extras).

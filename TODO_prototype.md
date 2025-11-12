@@ -156,7 +156,7 @@ end)
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
 
 # performance considerations
-- Use luajit
+- Use luajit. It doesn't work ATM. (doens't work for web anyway, skip?)
 - make timers state-sensitive by using cached games state, with optional parameter when creating timer to indicate this.
 - Continue profiling.
 - Consider using luajit for release.

@@ -383,6 +383,10 @@ boards = {}
 
 
 function initMainGame()
+    
+    print("Runtime:", jit and jit.version or _VERSION)
+
+    
     setTrackVolume("main-menu", 0.0)
     
     playPlaylist({ "main-music-1", "main-music-2", "main-music-3", "main-music-4", "main-music-5" }, true) -- loop.

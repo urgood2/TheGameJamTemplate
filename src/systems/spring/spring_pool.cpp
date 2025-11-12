@@ -2,12 +2,12 @@
 #include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 // Only include SIMD intrinsics if we are on x86/x64
-#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
-    #include <immintrin.h>
-    #define SPRINGPOOL_USE_AVX2 1
-#else
+// #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+//     #include <immintrin.h>
+//     #define SPRINGPOOL_USE_AVX2 1
+// #else
     #define SPRINGPOOL_USE_AVX2 0
-#endif
+// #endif
 
 namespace spring {
 

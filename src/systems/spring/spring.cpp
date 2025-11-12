@@ -54,43 +54,43 @@ namespace spring
         }
         
         
-    #if defined(__x86_64__) || defined(_M_X64)
-        const size_t step = 8;
-        const size_t aligned = count - (count % step);
-        for (int iter = 0; iter < steps; ++iter)
-        {
-            const __m256 vdt   = _mm256_set1_ps(stepDt);
-            const __m256 vneg1 = _mm256_set1_ps(-1.f);
+    // #if defined(__x86_64__) || defined(_M_X64)
+    //     const size_t step = 8;
+    //     const size_t aligned = count - (count % step);
+    //     for (int iter = 0; iter < steps; ++iter)
+    //     {
+    //         const __m256 vdt   = _mm256_set1_ps(stepDt);
+    //         const __m256 vneg1 = _mm256_set1_ps(-1.f);
 
-            size_t j = 0;
-            for (; j < aligned; j += step)
-            {
-                __m256 vVal = _mm256_loadu_ps(&value[j]);
-                __m256 vTar = _mm256_loadu_ps(&target[j]);
-                __m256 vVel = _mm256_loadu_ps(&velocity[j]);
-                __m256 vK   = _mm256_loadu_ps(&stiffness[j]);
-                __m256 vD   = _mm256_loadu_ps(&damping[j]);
+    //         size_t j = 0;
+    //         for (; j < aligned; j += step)
+    //         {
+    //             __m256 vVal = _mm256_loadu_ps(&value[j]);
+    //             __m256 vTar = _mm256_loadu_ps(&target[j]);
+    //             __m256 vVel = _mm256_loadu_ps(&velocity[j]);
+    //             __m256 vK   = _mm256_loadu_ps(&stiffness[j]);
+    //             __m256 vD   = _mm256_loadu_ps(&damping[j]);
 
-                __m256 vDiff = _mm256_sub_ps(vVal, vTar);
-                __m256 vA = _mm256_fmadd_ps(vD, vVel, _mm256_mul_ps(vK, vDiff));
-                vA = _mm256_mul_ps(vA, vneg1);
-                vA = _mm256_mul_ps(vA, vdt);
+    //             __m256 vDiff = _mm256_sub_ps(vVal, vTar);
+    //             __m256 vA = _mm256_fmadd_ps(vD, vVel, _mm256_mul_ps(vK, vDiff));
+    //             vA = _mm256_mul_ps(vA, vneg1);
+    //             vA = _mm256_mul_ps(vA, vdt);
 
-                vVel = _mm256_add_ps(vVel, vA);
-                vVal = _mm256_fmadd_ps(vVel, vdt, vVal);
+    //             vVel = _mm256_add_ps(vVel, vA);
+    //             vVal = _mm256_fmadd_ps(vVel, vdt, vVal);
 
-                _mm256_storeu_ps(&velocity[j], vVel);
-                _mm256_storeu_ps(&value[j], vVal);
-            }
+    //             _mm256_storeu_ps(&velocity[j], vVel);
+    //             _mm256_storeu_ps(&value[j], vVal);
+    //         }
 
-            for (; j < count; ++j)
-            {
-                float a = -stiffness[j] * (value[j] - target[j]) - damping[j] * velocity[j];
-                velocity[j] += a * stepDt;
-                value[j] += velocity[j] * stepDt;
-            }
-        }
-    #else
+    //         for (; j < count; ++j)
+    //         {
+    //             float a = -stiffness[j] * (value[j] - target[j]) - damping[j] * velocity[j];
+    //             velocity[j] += a * stepDt;
+    //             value[j] += velocity[j] * stepDt;
+    //         }
+    //     }
+    // #else
     
         // SPDLOG_INFO("Updating {} springs over {} steps of {} ms each", i, steps, stepDt * 1000.0f);
 
@@ -104,7 +104,7 @@ namespace spring
                 value[j] += velocity[j] * stepDt;
             }
         }
-    #endif
+    // #endif
 
         // write back to ECS
         i = 0;

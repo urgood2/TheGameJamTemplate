@@ -2786,15 +2786,17 @@ function startActionPhase()
 
     activate_state(ACTION_STATE)
     activate_state("default_state") -- just for defaults, keep them open
+    
+    setLowPassTarget(0.0) -- low pass filter off
 
     input.set_context("gameplay")   -- set input context to action phase.
 
     PhysicsManager.enable_step("world", true)
 
-    fadeOutMusic("main-menu", 0.3)
-    fadeOutMusic("shop-music", 0.3)
-    fadeOutMusic("planning-music", 0.3)
-    fadeInMusic("action-music", 0.6)
+    -- fadeOutMusic("main-menu", 0.3)
+    -- fadeOutMusic("shop-music", 0.3)
+    -- fadeOutMusic("planning-music", 0.3)
+    -- fadeInMusic("action-music", 0.6)
 
 
     -- debug
@@ -2812,12 +2814,14 @@ function startPlanningPhase()
     input.set_context("planning-phase") -- set input context to planning phase.
 
     PhysicsManager.enable_step("world", false)
+    
+    setLowPassTarget(1.0) -- low pass fileter on
 
-    fadeOutMusic("planning-music", 0.3)
-    fadeOutMusic("main-menu", 0.3)
-    fadeOutMusic("action-music", 0.3)
-    fadeOutMusic("shop-music", 0.3)
-    fadeInMusic("planning-music", 0.6)
+    -- fadeOutMusic("planning-music", 0.3)
+    -- fadeOutMusic("main-menu", 0.3)
+    -- fadeOutMusic("action-music", 0.3)
+    -- fadeOutMusic("shop-music", 0.3)
+    -- fadeInMusic("planning-music", 0.6)
 
     transitionInOutCircle(2, "LOADING", util.getColor("black"),
         { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
@@ -2835,11 +2839,13 @@ function startShopPhase()
     activate_state("default_state") -- just for defaults, keep them open
 
     PhysicsManager.enable_step("world", false)
+    
+    setLowPassTarget(1.0) -- low pass fileter on
 
-    fadeOutMusic("main-menu", 0.3)
-    fadeOutMusic("action-music", 0.3)
-    fadeOutMusic("planning-music", 0.3)
-    fadeInMusic("shop-music", 0.6)
+    -- fadeOutMusic("main-menu", 0.3)
+    -- fadeOutMusic("action-music", 0.3)
+    -- fadeOutMusic("planning-music", 0.3)
+    -- fadeInMusic("shop-music", 0.6)
 
 
     -- debug
@@ -3064,12 +3070,17 @@ function initSurvivorEntity()
         -- play sound
 
         playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
+        -- low pass on
+        setLowPassTarget(1.0)
         slowTime(1.5, 0.1) -- slow time for 2 seconds, to 20% speed
 
         playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
 
-        timer.after(0.2, function()
-            playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
+        timer.after(1.0, function()
+            -- playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
+            
+            -- low pass off
+            setLowPassTarget(0.0)
         end)
 
         -- TODO: make player take damage, play hit effect, etc.
@@ -3430,6 +3441,12 @@ function initActionPhase()
                     moveDir.x, moveDir.y = 0, 0
                 end
             end
+            
+            if (moveDir.x > 0) then
+                animation_system.set_horizontal_flip(survivorEntity, true)
+            elseif (moveDir.x < 0) then
+                animation_system.set_horizontal_flip(survivorEntity, false)
+            end
 
             -- if player is moving, keep the timer running. if not, end the timer.
             local timerName = "survivorFootstepsSoundTimer"
@@ -3572,7 +3589,7 @@ function initActionPhase()
                         lifetimeJitter = 0.3,
                         scaleJitter = 0.1,
                         gravity = 0,
-                        easing = "outCubic",
+                        easing = "cubic",
                         renderType = particle.ParticleRenderType.CIRCLE_FILLED,
                         space = "world",
                         z = z_orders.player_vfx - 20

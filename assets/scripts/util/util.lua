@@ -365,7 +365,7 @@ end
 ---@param opts table?
 function particle.spawnDirectionalCone(origin, count, seconds, opts)
     opts = opts or {}
-    local easing = Easing[opts.easing or "quad"]
+    local easing = Easing[opts.easing or "cubic"]
     local direction = opts.direction or Vec2(0, -1)  -- default: upward
     local spread = math.rad(opts.spread or 30)
     local colorSet = opts.colors or { util.getColor("WHITE") }
@@ -1491,7 +1491,7 @@ function particle.attachTrailToEntity(ent, duration, opts)
     local onFinish = opts.onFinish or nil   -- optional callback(ent)
 
     -- Core emission settings
-    local easing = Easing[opts.easing or "cubic"]
+    local easing = opts.easing or "cubic"
     local direction = opts.direction or Vec2(0, -1)
     local spread = opts.spread or 20
     local colorSet = opts.colors or { util.getColor("WHITE") }

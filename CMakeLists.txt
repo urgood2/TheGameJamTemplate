@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.14)
 project(raylib-cpp-cmake-template CXX C)
 
+option(USE_LUAJIT "Use LuaJIT instead of standard Lua" ON)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
 
 # enable tracy (disable for web)
 option( TRACY_ENABLE "" ON)
@@ -195,22 +197,6 @@ add_git_dependency(
 )
 message(STATUS "glm_SOURCE_DIR: ${glm_SOURCE_DIR}")
 
-
-# Add {sol3} library
-add_git_dependency(
-    sol2
-    https://github.com/ThePhD/sol2.git
-    v3.3.0
-)
-message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
-
-#include lua
-add_git_dependency(
-    lua
-    "https://github.com/marovira/lua"
-    5.4.4
-)
-
 # add uuid
 # add_git_dependency(
 #     uuid_v4
@@ -317,8 +303,6 @@ target_link_libraries(CommonSettings INTERFACE
     # tweeny
     effolkronium_random
     EnTT::EnTT
-    lua::lua
-    sol2::sol2
     gpgoap
     chipmunk_static
     stduuid
@@ -334,6 +318,82 @@ if(NOT EMSCRIPTEN)
         Tracy::TracyClient
     )    
 endif()
+
+
+# ======================================================================
+# Sol2 + Lua / LuaJIT toggle goes HERE ↓↓↓
+# ======================================================================
+add_git_dependency(
+    sol2
+    https://github.com/ThePhD/sol2.git
+    v3.3.0
+)
+message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
+
+if (USE_LUAJIT)
+    message(STATUS ">> Using LuaJIT as backend for Sol2")
+
+    FetchContent_Declare(
+        luajit
+        GIT_REPOSITORY https://github.com/LuaJIT/LuaJIT.git
+        GIT_TAG v2.1
+    )
+    FetchContent_MakeAvailable(luajit)
+
+    set(LUAJIT_INCLUDE_DIR "${luajit_SOURCE_DIR}/src")
+
+    add_library(LuaJIT STATIC IMPORTED GLOBAL)
+    if (WIN32)
+        set_target_properties(LuaJIT PROPERTIES
+            IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/lua51.lib"
+            INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
+        )
+    else()
+        set_target_properties(LuaJIT PROPERTIES
+            IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/libluajit.a"
+            INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
+        )
+    endif()
+
+    target_include_directories(CommonSettings INTERFACE
+        ${LUAJIT_INCLUDE_DIR}
+        ${sol2_SOURCE_DIR}/include
+    )
+
+    target_link_libraries(CommonSettings INTERFACE
+        LuaJIT
+        sol2::sol2
+    )
+
+    target_compile_definitions(CommonSettings INTERFACE
+        SOL_LUAJIT=1
+        LUAJIT_VERSION="2.1.0-beta3"
+    )
+
+else()
+    message(STATUS ">> Using standard Lua 5.4.4 as backend for Sol2")
+
+    add_git_dependency(
+        lua
+        "https://github.com/marovira/lua"
+        5.4.4
+    )
+
+    target_include_directories(CommonSettings INTERFACE
+        ${sol2_SOURCE_DIR}/include
+    )
+
+    target_link_libraries(CommonSettings INTERFACE
+        lua::lua
+        sol2::sol2
+    )
+
+    target_compile_definitions(CommonSettings INTERFACE
+        SOL_STD_OPTIONAL
+        LUA_VERSION="5.4.4"
+    )
+endif()
+# ======================================================================
 
 # Declaring our executable
 add_executable(${PROJECT_NAME})
@@ -584,6 +644,9 @@ if(${PLATFORM} STREQUAL "Web")
 else()
     # your existing Debug / Release logic
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC
+            ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         target_compile_definitions(${PROJECT_NAME} PUBLIC
             ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
     else()

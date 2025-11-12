@@ -176,3 +176,8 @@
   - circle area with dashed rotating border
   - beam attack with pulsating circles on either end
   - Added player stretch/squash when dashing.
+  
+11/12/2025
+  - I was despairing about performance, but RelWithDebugInfo and LuaJIT just did some magic. Okay... feeling pretty good .
+  - Added in SMILETRON music as a tester.
+  - Added low-p

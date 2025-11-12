@@ -385,6 +385,9 @@ boards = {}
 function initMainGame()
     setTrackVolume("main-menu", 0.0)
     
+    playPlaylist({ "main-music-1", "main-music-2", "main-music-3", "main-music-4", "main-music-5" }, true) -- loop.
+
+    
     log_debug("Initializing main game...") -- Debug message to indicate the game is starting
     currentGameState = GAMESTATE.IN_GAME -- Set the game state to IN_GAME
     

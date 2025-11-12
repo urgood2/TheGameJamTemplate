@@ -7,7 +7,13 @@
         "space-ambiance": "AMBIENCE_SciFi_Space_Hangar_05_loop_stereo.wav",
         "planning-music": "18 - Phantom's Requiem (Loop).ogg",
         "action-music": "3 - Whispers of the Abyss (Loop).mp3",
-        "shop-music": "20 - Bard's Ballad (Loop).mp3"
+        "shop-music": "20 - Bard's Ballad (Loop).mp3",
+        
+        "main-music-1": "SMILETRON - Self Titled - 01 SANCTUM.ogg",
+        "main-music-2": "SMILETRON - Self Titled - 02 ORACLE.ogg",
+        "main-music-3": "SMILETRON - Self Titled - 03 MICROCOSMIC.ogg",
+        "main-music-4": "SMILETRON - Self Titled - 04 GEMINI.ogg",
+        "main-music-5": "SMILETRON - Self Titled - 05 CERULEAN.ogg"
     },
     "music_volume": 0.5,
     "categories": {

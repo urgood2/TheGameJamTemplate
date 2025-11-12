@@ -18,6 +18,55 @@
 #include "sol/sol.hpp"
 
 namespace animation_system {
+    
+    void setHorizontalFlip(entt::entity e, bool flip)
+    {
+        if (!globals::registry.any_of<AnimationQueueComponent>(e))
+            return;
+
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+
+        // Apply to default animation
+        animQueue.defaultAnimation.flippedHorizontally = flip;
+
+        // Apply to all animations in the queue
+        for (auto &animObj : animQueue.animationQueue)
+            animObj.flippedHorizontally = flip;
+    }
+
+    
+    void flipAnimation(entt::entity e, bool horizontal, bool vertical)
+    {
+        if (!globals::registry.any_of<AnimationQueueComponent>(e))
+            return;
+
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+
+        // flip default animation
+        animQueue.defaultAnimation.flippedHorizontally = horizontal;
+        animQueue.defaultAnimation.flippedVertically   = vertical;
+
+        // also apply to any queued animations
+        for (auto &animObj : animQueue.animationQueue)
+        {
+            animObj.flippedHorizontally = horizontal;
+            animObj.flippedVertically   = vertical;
+        }
+    }
+
+    void setAnimationFlip(entt::entity e, bool flipH, bool flipV)
+    {
+        flipAnimation(e, flipH, flipV);
+    }
+
+    void toggleAnimationFlip(entt::entity e)
+    {
+        if (!globals::registry.any_of<AnimationQueueComponent>(e))
+            return;
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &anim = animQueue.defaultAnimation;
+        anim.flippedHorizontally = !anim.flippedHorizontally;
+    }
 
     auto exposeToLua(sol::state &lua) -> void {
         
@@ -34,6 +83,15 @@ namespace animation_system {
             "type_id", []() { return entt::type_hash<AnimationQueueComponent>::value(); });
 
         // 2) Bind & record free functions under animation_system
+        
+        rec.bind_function(lua, {"animation_system"}, "set_horizontal_flip",
+            &animation_system::setHorizontalFlip,
+            "---@param e entt.entity # Target entity\n"
+            "---@param flip boolean # Whether to flip horizontally\n"
+            "---@return nil\n"
+            "Flips all animations for the entity horizontally"
+        );
+
 
         // update(dt: number) -> nil
         rec.bind_function(lua, {"animation_system"}, "update",
@@ -136,6 +194,23 @@ namespace animation_system {
         )lua",
             "Configures an existing entity with Transform, AnimationQueueComponent, and optional shader‐pass + shadow settings"
         );
+        
+        
+        rec.bind_function(lua, {"animation_system"}, "set_flip",
+    &animation_system::setAnimationFlip,
+    "---@param e entt.entity\n"
+    "---@param flipH boolean\n"
+    "---@param flipV boolean\n"
+    "---@return nil\n"
+    "Sets the horizontal/vertical flip flags on all animations of an entity"
+);
+
+rec.bind_function(lua, {"animation_system"}, "toggle_flip",
+    &animation_system::toggleAnimationFlip,
+    "---@param e entt.entity\n"
+    "---@return nil\n"
+    "Toggles horizontal flip for the entity's current animation"
+);
 
         // createStillAnimationFromSpriteUUID(spriteUUID: string, fg?: Color, bg?: Color) -> AnimationObject
         rec.bind_function(lua, {"animation_system"}, "createStillAnimationFromSpriteUUID",

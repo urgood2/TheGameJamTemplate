@@ -156,6 +156,7 @@ end)
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
 
 # performance considerations
+- Use luajit
 - make timers state-sensitive by using cached games state, with optional parameter when creating timer to indicate this.
 - Continue profiling.
 - Consider using luajit for release.
@@ -189,6 +190,12 @@ end)
 - music.
 - make sprites blink for effect, like dying or damage.
 - shader pass for legibility (change crt maybe)
+
+
+# potential soundtracks (ask for permission first)
+- https://smiletron.bandcamp.com/album/self-titled (4/5)
+- https://smiletron.bandcamp.com/album/signals (3/5)
+- https://smiletron.bandcamp.com/album/solstice (4/5)
 
 # release & testing
 - Enable github actions + auto loading to itch.io on new release.

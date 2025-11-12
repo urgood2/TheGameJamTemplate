@@ -29,6 +29,9 @@ namespace sound_system {
         float       fadeDur    = 0.f;
         FadeState   fadeState  = None;
         SoundCallback onComplete = nullptr;
+        bool lowPassEnabled = false;
+        float lowPassGain = 1.0f; // 1.0 = no filter, lower = stronger filter
+
     };
     
     

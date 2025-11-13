@@ -3363,9 +3363,14 @@ end
 
 
 function initActionPhase()
+    
+    -- add shader to backgorund layer
+    add_layer_shader("background", "peaches_background")
+    -- add_fullscreen_shader("peaches_background")
+    
     log_debug("Action phase started!")
 
-    setUpScrollingBackgroundSprites()
+    -- setUpScrollingBackgroundSprites()
 
     -- activate action state
     activate_state(ACTION_STATE)

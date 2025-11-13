@@ -1968,12 +1968,17 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
             {
                 ZoneScopedN("Draw canvases to other canvases with shaders");
-                // layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "outer_space_donuts_bg"); // render the background layer main canvas to the screen
+                // FIRST: Composite background (with its shaders applied)
+                layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main",
+                    0, 0, 0, 1, 1, WHITE);
+
 
                 
-                layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
                 
                 layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
+                
+                
+                layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
                 
 
 

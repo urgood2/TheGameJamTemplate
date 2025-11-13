@@ -3,20 +3,20 @@ name: Build & Publish to itch.io
 on:
   push:
     branches:
-      - "**"
+      - "**"   # build on all branches
 
 env:
   ITCH_PROJECT: chugget/testing
-  VERSION: ${{ github.sha }}
 
 jobs:
   build-native:
     name: Build Native (Linux)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake libx11-dev libasound2-dev libudev-dev
@@ -35,37 +35,35 @@ jobs:
           cp -R build/bin/* dist/native/linux/
           cp -R assets dist/native/linux/
 
-      - name: Upload artifact (native)
+      - name: Upload native build (v4)
         uses: actions/upload-artifact@v4
         with:
           name: native-linux
-          path: dist/native/linux/
+          path: dist/native/linux
           compression-level: 0
 
+
   build-web:
-    name: Build Web (WASM)
+    name: Build Web (Emscripten WASM)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Emscripten SDK
-        run: |
-          git clone https://github.com/emscripten-core/emsdk.git
-          cd emsdk
-          ./emsdk install latest
-          ./emsdk activate latest
-          echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: "emsdk-cache"
 
       - name: Configure CMake (Web)
         run: |
-          source $GITHUB_ENV
-          mkdir build-web && cd build-web
-          emcmake cmake -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release ../
+          emcmake cmake -S . -B build-web \
+            -DPLATFORM=Web \
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Web
-        run: |
-          source $GITHUB_ENV
-          emmake make -C build-web -j
+        run: emmake make -C build-web -j
 
       - name: Package Web build
         run: |
@@ -76,18 +74,22 @@ jobs:
           cp -R assets dist/web/
           cd dist && zip -r web-build.zip web/
 
-      - name: Upload artifact (web)
+      - name: Upload web build (v4)
         uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: dist/web-build.zip
           compression-level: 0
 
+
   publish:
     name: Publish to itch.io
     needs: [ build-native, build-web ]
     runs-on: ubuntu-latest
+
     steps:
+      - uses: actions/checkout@v3
+
       - name: Download native build
         uses: actions/download-artifact@v4
         with:
@@ -102,15 +104,39 @@ jobs:
 
       - name: Setup Butler
         uses: jdno/setup-butler@v1
-
-      - name: Upload Linux build
-        run: |
-          butler push native ${{ env.ITCH_PROJECT }}:linux --userversion ${{ env.VERSION }}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
 
-      - name: Upload Web build
+      - name: Determine itch channel
+        id: channel
         run: |
-          butler push web/web-build.zip ${{ env.ITCH_PROJECT }}:web --userversion ${{ env.VERSION }}
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "channel=web" >> $GITHUB_OUTPUT
+          else
+            echo "channel=web-dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Version string
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          else
+            echo "version=build-${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish native build
+        run: |
+          butler push native \
+            ${{ env.ITCH_PROJECT }}:linux \
+            --userversion ${{ steps.version.outputs.version }}
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+
+      - name: Publish web build
+        run: |
+          butler push web/web-build.zip \
+            ${{ env.ITCH_PROJECT }}:${{ steps.channel.outputs.channel }} \
+            --userversion ${{ steps.version.outputs.version }}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}

@@ -44,16 +44,14 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- globalShaderUniforms.set needs to handle integers.
+- test shaders: item_glow, starry_tunnel, fireworks
+- only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.
+- glow doesn't seem to blend with background. why?
+- test new stingers for lootbox open.
 
--try:
-```lua
-add_layer_shader("background", "bg_ramplines")
-clear_layer_shaders("sprites")
-remove_layer_shader("ui", "blur")
-add_fullscreen_shader("heat_glow") -- still supported
-```
-
-- blink for enemies, make pickups magnetic
+- blink for enemies
+- Need to make tooltips smaller and more readable. how?
 
 - [ ] Add https://www.jdno.dev/automate-building-and-publishing-a-game-on-itch-io/ girhub actions web build autmation.
 - [ ] try mkaing background shaders swappable form lua. Do fireworks, then the rush thing when you get an item. 

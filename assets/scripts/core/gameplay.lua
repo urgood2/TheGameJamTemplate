@@ -3082,6 +3082,10 @@ function initSurvivorEntity()
             end
         end)
     end)
+    
+    -- test
+    -- local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+    -- shaderPipelineComp:addPass("vacuum_collapse")
 
 
     -- give survivor collision callback, namely begin.
@@ -3451,7 +3455,10 @@ end
 function initActionPhase()
     
     -- add shader to backgorund layer
-    add_layer_shader("background", "peaches_background")
+    -- add_layer_shader("background", "peaches_background")
+    add_layer_shader("background", "fireworks")
+    -- add_layer_shader("background", "starry_tunnel")
+    -- add_layer_shader("background", "vacuum_collapse")
     -- add_fullscreen_shader("peaches_background")
     
     log_debug("Action phase started!")
@@ -4245,7 +4252,7 @@ function initPlanningUI()
     -- test shader
     shaderPipelineComp = registry:emplace(buttonEntity, shader_pipeline.ShaderPipelineComponent)
 
-    shaderPipelineComp:addPass("flash")
+    shaderPipelineComp:addPass("item_glow")
 
     -- jiggle button
     timer.every(5.0, function()

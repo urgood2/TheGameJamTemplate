@@ -268,5 +268,41 @@
             "vertex": "web/glow_vertex.vs",
             "fragment": "web/glow_fragment.fs"
         }
+    },
+    "fireworks": {
+        "vertex": "fireworks_vertex.vs",
+        "fragment": "fireworks_fragment.fs",
+
+        "web": {
+            "vertex": "web/fireworks_vertex.vs",
+            "fragment": "web/fireworks_fragment.fs"
+        }
+    },
+    "vacuum_collapse": {
+        "vertex": "vacuum_collapse_vertex.vs",
+        "fragment": "vacuum_collapse_fragment.fs",
+
+        "web": {
+            "vertex": "web/vacuum_collapse_vertex.vs",
+            "fragment": "web/vacuum_collapse_fragment.fs"
+        }
+    },
+    "starry_tunnel": {
+        "vertex": "starry_tunnel_vertex.vs",
+        "fragment": "starry_tunnel_fragment.fs",
+
+        "web": {
+            "vertex": "web/starry_tunnel_vertex.vs",
+            "fragment": "web/starry_tunnel_fragment.fs"
+        }
+    },
+    "item_glow": {
+        "vertex": "item_glow_vertex.vs",
+        "fragment": "item_glow_fragment.fs",
+
+        "web": {
+            "vertex": "web/item_glow_vertex.vs",
+            "fragment": "web/item_glow_fragment.fs"
+        }
     }
 }

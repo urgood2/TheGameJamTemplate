@@ -2893,6 +2893,36 @@ end
 cardsSoldInShop = {}
 
 
+
+local function get_mag_items(world, player, radius)
+    
+    local t = component_cache.get(player, Transform)
+    
+    local pos = { x = t.actualX + t.actualW / 2, y = t.actualY + t.actualH / 2 }
+
+    local x1 = pos.x - radius
+    local y1 = pos.y - radius
+    local x2 = pos.x + radius
+    local y2 = pos.y + radius
+
+    local candidates = physics.GetObjectsInArea(world, x1, y1, x2, y2)
+    local result = {}
+
+    for _, e in ipairs(candidates) do
+        if entity_cache.valid(e) then
+            local ipos = physics.GetPosition(world, e)
+            local dx = ipos.x - pos.x
+            local dy = ipos.y - pos.y
+            if (dx*dx + dy*dy) <= radius * radius then
+                table.insert(result, e)
+            end
+        end
+    end
+
+    return result
+end
+
+
 function initSurvivorEntity()
     local world = PhysicsManager.get_world("world")
 
@@ -3206,6 +3236,52 @@ function initSurvivorEntity()
         playSoundEffect("effects", "level_up", 1.0)
     end)
 
+    
+    -- lets run every physics frame, detecting for magnet radus
+    timer.every_physics_step(
+        function()
+            local magnetRadius = 200 -- TODO; make this a player stat later.
+            local magItems = get_mag_items(PhysicsManager.get_world("world"), survivorEntity, magnetRadius)
+            
+            -- iterate
+            for _, itemEntity in ipairs(magItems) do
+                if entity_cache.valid(itemEntity) then
+                    
+                    -- get script
+                    local itemScript = getScriptTableFromEntityID(itemEntity)
+                    if itemScript and itemScript.isPickup and not itemScript.pickedUp then
+                        
+                        -- enable steering towards player
+                        steering.make_steerable(registry, itemEntity, 3000.0, 30000.0, math.pi * 2.0, 10)
+                        
+                        
+                        -- add a timer to move towards player
+                        timer.every_physics_step(
+                            function()
+                                if entity_cache.valid(itemEntity) and entity_cache.valid(survivorEntity) then
+                                    
+                                    local playerT = component_cache.get(survivorEntity, Transform)
+                                    
+                                    -- steering.seek_point(registry, enemyEntity, playerLocation, 1.0, 0.5)
+
+                                    steering.seek_point(registry, itemEntity, { x = playerT.actualX + playerT.actualW / 2,
+                                    y = playerT.actualY + playerT.actualH / 2 }, 1.0, 100)
+                                else
+                                    -- cancel timer, entity no longer valid
+                                    timer.cancel("player_magnet_steering_" .. tostring(itemEntity))
+                                end
+                            end,
+                            "player_magnet_steering_" .. tostring(itemEntity),
+                            nil
+                        )
+                    
+                        itemScript.pickedUp = true -- mark as picked up to avoid double processing
+                    end
+                end
+            end
+        end,
+        "player_magnet_detection", nil
+    )
 
     -- let's register signal listeners
     signal.register("on_pickup", function(pickupEntity)
@@ -4002,6 +4078,8 @@ function initActionPhase()
             local expPickupScript = Node {}
 
             expPickupScript:attach_ecs { create_new = false, existing_entity = expPickupEntity }
+            
+            expPickupScript.isPickup = true
         end
     end)
 

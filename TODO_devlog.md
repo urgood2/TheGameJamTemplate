@@ -185,3 +185,4 @@
   
 11/13/2025
   - Started working on web build automation with github actions. Cache service is down, so I'll continue later.
+  - Pickups now gravitate to player when in range.

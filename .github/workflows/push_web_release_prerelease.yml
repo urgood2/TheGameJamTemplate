@@ -1,8 +1,11 @@
 name: Build & Publish to itch.io
 
+# on:
+#   release:
+#     types: [ prereleased, released ]
 on:
-  release:
-    types: [ prereleased, released ]
+  push:
+    branches: [ CardTriggerSurvivors ]
   # alternatively: on: push: branches: [ main ]  # if you prefer auto-on-merge
   
 env:

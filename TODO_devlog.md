@@ -182,3 +182,6 @@
   - Added in SMILETRON music as a tester.
   - Added low-pass.
   - Luajit works, but right now it causes some subtle bugs in the graphics for some reason.
+  
+11/13/2025
+  - Started working on web build automation with github actions. Cache service is down, so I'll continue later.

@@ -406,6 +406,71 @@ namespace game
 
     } // namespace luaqt
 
+    // New: per-layer shader stacks
+    static std::unordered_map<std::string, std::vector<std::string>> s_layerShaders;
+
+    // ---- Layer shader API ----
+    inline void add_layer_shader(const std::string& layerName, const std::string& shaderName) {
+        auto& vec = s_layerShaders[layerName];
+        if (std::find(vec.begin(), vec.end(), shaderName) == vec.end())
+            vec.push_back(shaderName);
+    }
+
+    inline void remove_layer_shader(const std::string& layerName, const std::string& shaderName) {
+        auto it = s_layerShaders.find(layerName);
+        if (it == s_layerShaders.end()) return;
+
+        auto& vec = it->second;
+        vec.erase(std::remove(vec.begin(), vec.end(), shaderName), vec.end());
+        if (vec.empty()) s_layerShaders.erase(it);
+    }
+
+    inline void clear_layer_shaders(const std::string& layerName) {
+        s_layerShaders.erase(layerName);
+    }
+
+    // ============================================================
+    //  SHARED UNIFIED SHADER PIPELINE (ping-pong)
+    // ============================================================
+
+    inline void run_shader_pipeline(
+        std::shared_ptr<layer::Layer> layer,
+        const std::vector<std::string>& pipeline,
+        const std::string& mainCanvas = "main",
+        const std::string& tempCanvas = "render_double_buffer"
+    ) {
+        if (pipeline.empty()) return;
+
+        std::string src = mainCanvas;
+        std::string dst = tempCanvas;
+
+        for (const auto& shaderName : pipeline) {
+            layer::DrawCanvasOntoOtherLayerWithShader(
+                layer,
+                src,
+                layer,
+                dst,
+                0, 0, 0, 1, 1,
+                WHITE,
+                shaderName
+            );
+            std::swap(src, dst);
+        }
+
+        // Ensure result ends up back in mainCanvas
+        if (src != mainCanvas) {
+            layer::DrawCanvasOntoOtherLayer(
+                layer,
+                src,
+                layer,
+                mainCanvas,
+                0, 0, 0, 1, 1,
+                WHITE
+            );
+        }
+    }
+    
+    
     
 /* --------------------------- reload game helper --------------------------- */
     void resetLuaRefs()
@@ -720,6 +785,31 @@ namespace game
                 SetFollowAnchorForEntity(layer, e);
             }
         );
+        
+        lua.set_function("add_layer_shader", &game::add_layer_shader);
+        lua.set_function("remove_layer_shader", &game::remove_layer_shader);
+        lua.set_function("clear_layer_shaders", &game::clear_layer_shaders);
+
+        rec.record_free_function({""}, {
+            "add_layer_shader",
+            "---@param layer string @ \"background\" | \"sprites\" | \"ui\" | \"final\"",
+            "---@param shader string Adds a post-process shader to the given layer.",
+            true, false
+        });
+
+        rec.record_free_function({""}, {
+            "remove_layer_shader",
+            "---@param layer string",
+            "---@param shader string Removes a shader from that layer.",
+            true, false
+        });
+
+        rec.record_free_function({""}, {
+            "clear_layer_shaders",
+            "---@param layer string",
+            "Clears all shaders from the layer.",
+            true, false
+        });
     }
     
     std::shared_ptr<physics::PhysicsWorld> physicsWorld = nullptr;
@@ -944,8 +1034,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // create layer the size of the screen, with a main canvas the same size
         background = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         background->backgroundColor = util::getColor("BLACK");
+        layer::AddCanvasToLayer(background, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
         sprites = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+        layer::AddCanvasToLayer(sprites, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
         ui_layer = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+        layer::AddCanvasToLayer(ui_layer, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
         finalOutput = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         finalOutput->backgroundColor = util::getColor("BLACK");
         layer::AddCanvasToLayer(finalOutput, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
@@ -1808,26 +1901,52 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         {
             ZoneScopedN("LayerCommandsToCanvas Draw");
             {
-                ZoneScopedN("background layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &worldCamera->cam);  // render the background layer commands to its main canvas
+                ZoneScopedN("background layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &worldCamera->cam);
+
+                if (auto it = game::s_layerShaders.find("background"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(background, it->second);
             }
             
             
             
             {
-                ZoneScopedN("sprites layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &worldCamera->cam);     // render the sprite layer commands to its main canvas
+                ZoneScopedN("sprites layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &worldCamera->cam);
+
+                if (auto it = game::s_layerShaders.find("sprites"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(sprites, it->second);
             }
             
             {
-                
-                ZoneScopedN("ui layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
+                ZoneScopedN("ui layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);
+
+                if (auto it = game::s_layerShaders.find("ui"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(ui_layer, it->second);
             }
+
             
             {
-                ZoneScopedN("final output layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
+                ZoneScopedN("final output layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr);
+
+                // layer-specific final shaders (optional)
+                if (auto it = game::s_layerShaders.find("final"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(finalOutput, it->second);
+
+                // global fullscreen shaders (your old system)
+                game::run_shader_pipeline(finalOutput, game::fullscreenShaders);
+
+                // final pass to screen (still uses CRT unless you later make it dynamic)
+                layer::DrawCanvasToCurrentRenderTargetWithTransform(
+                    finalOutput,
+                    "main",
+                    0, 0, 0,
+                    1, 1,
+                    WHITE,
+                    "crt"
+                );
             }
             
 

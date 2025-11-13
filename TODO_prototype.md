@@ -45,6 +45,14 @@ Converts encumbrance into damage
     
 # programming side
 
+-try:
+```lua
+add_layer_shader("background", "bg_ramplines")
+clear_layer_shaders("sprites")
+remove_layer_shader("ui", "blur")
+add_fullscreen_shader("heat_glow") -- still supported
+```
+
 - blink for enemies, make pickups magnetic
 
 - [ ] Add https://www.jdno.dev/automate-building-and-publishing-a-game-on-itch-io/ girhub actions web build autmation.

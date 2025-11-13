@@ -1,0 +1,97 @@
+name: Build & Publish to itch.io
+
+on:
+  release:
+    types: [ prereleased, released ]
+  # alternatively: on: push: branches: [ main ]  # if you prefer auto-on-merge
+  
+env:
+  ITCH_PROJECT: your-itchuser/yourgame   # set this to match itch.io user/game
+
+jobs:
+  build-native:
+    name: Build Native (Win/Linux/Mac)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup dependencies
+        run: |
+          # Your platform-specific install commands here (apt on linux, etc)
+      
+      - name: Configure CMake
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+      
+      - name: Build
+        run: |
+          cmake --build build --config Release --target ALL_BUILD
+      
+      - name: Package build
+        run: |
+          # Copy binaries + assets into dist/native/${{ matrix.os }}
+          mkdir -p dist/native/${{ matrix.os }}
+          cp -R build/bin/* dist/native/${{ matrix.os }}/
+          cp -R assets/* dist/native/${{ matrix.os }}/
+
+  build-web:
+    name: Build Web (WASM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Emscripten
+        run: |
+          # For example: install/activate emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+      
+      - name: Configure CMake for Web
+        run: |
+          mkdir build-web && cd build-web
+          emcmake cmake -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release ../
+      
+      - name: Build Web
+        run: |
+          cd build-web && emmake make
+      
+      - name: Package Web build
+        run: |
+          # Zip up index.html + .wasm + .js + assets
+          mkdir -p dist/web
+          cp build-web/index.html dist/web/
+          cp build-web/*.wasm dist/web/
+          cp build-web/*.js dist/web/
+          cp -R assets dist/web/
+          zip -r dist/web/web-build.zip -j dist/web/*
+
+  publish:
+    name: Publish to itch.io
+    needs: [ build-native, build-web ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Butler
+        uses: jdno/setup-butler@v1   # or another action
+        # Could call `butler login` if needed internally
+      
+      - name: Upload Native builds
+        run: |
+          # Loop or individual for each os channel
+          butler push dist/native/windows-latest ${{ env.ITCH_PROJECT }}:windows --userversion ${{ github.event.release.name }}
+          butler push dist/native/ubuntu-latest ${{ env.ITCH_PROJECT }}:linux --userversion ${{ github.event.release.name }}
+          butler push dist/native/macos-latest ${{ env.ITCH_PROJECT }}:mac --userversion ${{ github.event.release.name }}
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+
+      - name: Upload Web build
+        run: |
+          butler push dist/web/web-build.zip ${{ env.ITCH_PROJECT }}:web --userversion ${{ github.event.release.name }}
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}

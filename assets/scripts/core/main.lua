@@ -56,7 +56,7 @@ function initMainMenu()
     
     
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
-    setCategoryVolume("effects", 0.2)
+    setCategoryVolume("effects", 0.5)
     playMusic("main-menu", true) 
     setTrackVolume("main-menu", 0.3)
     -- create start game button

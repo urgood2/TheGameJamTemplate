@@ -341,7 +341,7 @@ namespace game
 
         globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
         shaders::registerUniformUpdate("peaches_background", [](Shader &shader)
-                                       { globalShaderUniforms.set("peaches_background", "iTime", (float)main_loop::getTime() * 0.7f); });
+                                       { globalShaderUniforms.set("peaches_background", "iTime", (float)main_loop::getTime() * 0.5f); }); 
         globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
 
         // === Peaches Background Shader Uniforms ===

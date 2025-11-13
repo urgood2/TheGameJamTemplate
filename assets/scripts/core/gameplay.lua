@@ -99,6 +99,16 @@ current_board_set_index = 1
 controller_focused_entity = nil
 
 
+local dash_sfx_list = {
+    "dash_1",
+    "dash_2",
+    "dash_3",
+    "dash_4",
+    "dash_5",
+    "dash_6",
+    "dash_7",
+}
+
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
     if not boardEntityID or boardEntityID == entt_null or not entity_cache.valid(boardEntityID) then return end
@@ -2954,7 +2964,7 @@ function initSurvivorEntity()
                 c.rx    = 30
                 c.ry    = 30
                 -- c.lineWidth = 10
-                c.color = util.getColor("dark_gray_slate")
+                c.color = util.getColor("black"):setAlpha(200)
             end, z_orders.background, layer.DrawCommandSpace.World)
         end
     )
@@ -3549,7 +3559,7 @@ function initActionPhase()
 
                 local DASH_LENGTH_SEC = 0.5
 
-                playSoundEffect("effects", "dash", math.random() * 0.2 + 0.9)
+                playSoundEffect("effects", random_utils.random_element_string(dash_sfx_list), 0.9 + math.random() * 0.2)
 
                 -- timer.every((DASH_LENGTH_SEC) / 20, function()
                 --     local t = component_cache.get(survivorEntity, Transform)

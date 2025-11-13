@@ -48,7 +48,15 @@
                 "place_trap": "MECHANICS_Metal_Mechanism_05_mono.wav",
                 "strength_bonus": "UI_Animate_Whisper_Appear_stereo.wav",
                 
-                "dash": "WHOOSH_Air_Slow_RR10_mono.wav",
+                "dash_1": "WHOOSH_Air_Slow_RR10_mono.wav",
+                "dash_2": "WHOOSH_Air_Super_Fast_RR1_mono.wav",
+                "dash_3": "WHOOSH_Air_Super_Fast_RR3_mono.wav",
+                "dash_4": "WHOOSH_Air_Super_Fast_RR4_mono.wav",
+                "dash_5": "WHOOSH_Air_Super_Fast_RR6_mono.wav",
+                "dash_6": "WHOOSH_Deep_Smooth_02_mono copy.wav",
+                "dash_7": "WHOOSH_Fast_03_mono.wav",
+                
+                
                 "walk_1": "FOOTSTEP_Rock_Walk_01_RR01_mono.wav",
                 "walk_2": "FOOTSTEP_Rock_Walk_01_RR02_mono.wav",
                 "walk_3": "FOOTSTEP_Rock_Walk_01_RR03_mono.wav",

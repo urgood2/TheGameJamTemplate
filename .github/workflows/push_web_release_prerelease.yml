@@ -1,30 +1,52 @@
 name: Build & Publish to itch.io
 
-# on:
-#   release:
-#     types: [ prereleased, released ]
 on:
   push:
     branches:
       - '**'
-  # alternatively: on: push: branches: [ main ]  # if you prefer auto-on-merge
-  
+
 env:
-  ITCH_PROJECT: your-itchuser/yourgame   # set this to match itch.io user/game
+  ITCH_PROJECT: chugget/testing
+  VERSION: ${{ github.sha }}   # fallback version for branch pushes
 
 jobs:
   build-native:
-    name: Build Native (Win/Linux/Mac)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    name: Build Native (Linux)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup dependencies
+      - name: Install system deps
         run: |
-          # Your platform-specific install commands here (apt on linux, etc)
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libx11-dev libasound2-dev libudev-dev
+
+      - name: Configure CMake
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+
+      - name: Package native build
+        run: |
+          mkdir -p dist/native/linux
+          cp -R build/bin/* dist/native/linux/
+          cp -R assets dist/native/linux/
+
+      - name: Upload native artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: native-build
+          path: dist/native/linux
+
+  build-web:
+    name: Build Web (WASM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Install Emscripten SDK
         run: |
@@ -34,77 +56,60 @@ jobs:
           ./emsdk activate latest
           echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
 
-      
-      - name: Configure CMake
+      - name: Configure CMake (Web)
         run: |
-          mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-      
-      - name: Build
-        run: |
-          cmake --build build --config Release --target ALL_BUILD
-      
-      - name: Package build
-        run: |
-          # Copy binaries + assets into dist/native/${{ matrix.os }}
-          mkdir -p dist/native/${{ matrix.os }}
-          cp -R build/bin/* dist/native/${{ matrix.os }}/
-          cp -R assets/* dist/native/${{ matrix.os }}/
-
-  build-web:
-    name: Build Web (WASM)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Emscripten
-        run: |
-          # For example: install/activate emsdk
-          ./emsdk install latest
-          ./emsdk activate latest
-          source ./emsdk_env.sh
-      
-      - name: Configure CMake for Web
-        run: |
+          source $GITHUB_ENV
           mkdir build-web && cd build-web
           emcmake cmake -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release ../
-      
+
       - name: Build Web
         run: |
-          cd build-web && emmake make
-      
+          source $GITHUB_ENV
+          emmake make -C build-web -j
+
       - name: Package Web build
         run: |
-          # Zip up index.html + .wasm + .js + assets
           mkdir -p dist/web
           cp build-web/index.html dist/web/
           cp build-web/*.wasm dist/web/
           cp build-web/*.js dist/web/
           cp -R assets dist/web/
-          zip -r dist/web/web-build.zip -j dist/web/*
+          cd dist && zip -r web-build.zip web
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-build
+          path: dist/web-build.zip
 
   publish:
     name: Publish to itch.io
     needs: [ build-native, build-web ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Download native artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: native-build
+          path: native
+
+      - name: Download web artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: web
 
       - name: Setup Butler
-        uses: jdno/setup-butler@v1   # or another action
-        # Could call `butler login` if needed internally
-      
-      - name: Upload Native builds
+        uses: jdno/setup-butler@v1
+
+      - name: Upload Native
         run: |
-          # Loop or individual for each os channel
-          butler push dist/native/windows-latest ${{ env.ITCH_PROJECT }}:windows --userversion ${{ github.event.release.name }}
-          butler push dist/native/ubuntu-latest ${{ env.ITCH_PROJECT }}:linux --userversion ${{ github.event.release.name }}
-          butler push dist/native/macos-latest ${{ env.ITCH_PROJECT }}:mac --userversion ${{ github.event.release.name }}
+          butler push native ${{ env.ITCH_PROJECT }}:linux --userversion ${{ env.VERSION }}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
 
-      - name: Upload Web build
+      - name: Upload Web
         run: |
-          butler push dist/web/web-build.zip ${{ env.ITCH_PROJECT }}:web --userversion ${{ github.event.release.name }}
+          butler push web/web-build.zip ${{ env.ITCH_PROJECT }}:web --userversion ${{ env.VERSION }}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}

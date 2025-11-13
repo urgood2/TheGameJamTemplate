@@ -44,6 +44,13 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+
+- blink for enemies, make pickups magnetic
+
+- [ ] Add https://www.jdno.dev/automate-building-and-publishing-a-game-on-itch-io/ girhub actions web build autmation.
+- [ ] try mkaing background shaders swappable form lua. Do fireworks, then the rush thing when you get an item. 
+
+
 - [ ] cursor hover doesn't work fully correctly when controller (points to wrong card sometimes)
 - [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
 - [ ] how to muffle playing music?
@@ -162,6 +169,22 @@ end)
 - Continue profiling.
 - Consider using luajit for release.
 
+# shaders to add
+- [ ] https://godotshaders.com/shader/2dradial-shine-2/
+- [ ] https://godotshaders.com/shader/2dfireworks/
+- [ ] https://godotshaders.com/shader/2dstarry-tunnel/
+- [ ] The above three for item scenes.
+- [ ] For cyclic ui: https://godotshaders.com/shader/double-sided-transparent-gradient/
+- [ ] sprite occlusion: https://godotshaders.com/shader/occlusion-outline-for-godot-4/ (maybe)
+- [ ] black hole effect for spells: https://godotshaders.com/shader/polar-coordinate-black-hole/
+- [ ] really nice vanishing/appear effect https://godotshaders.com/shader/vacuum-collapse/
+- [ ] backgrounds belwo:
+- [ ] https://godotshaders.com/shader/liquid-plasma-swirl/
+- [ ] https://godotshaders.com/shader/abstract-3d/
+- [ ] rotating progress display clockwise for icons https://godotshaders.com/shader/clockwise-pixel-outline-progress-display/
+- [ ] edge gradient color for cards, etc. https://godotshaders.com/shader/edge-gradient-border-shader/
+- [ ] Add glow to specfiic sprites: https://godotshaders.com/shader/item-pulse-glow/
+
 # polish phase
 - [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate. -> it works, but needs some work, since buttons that contain images, etc. can't do this yet.
 - [ ] Some ambient movement (rocking) to items/ui
@@ -200,6 +223,7 @@ end)
 - https://soundcloud.com/biggiantcircles/the-glory-days-sevcon-full?si=405318c952a14c879be01f1c9d926b9f&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing -> (4/5)
 
 # release & testing
+- clean up web builds to not include .mds and stuff
 - Enable github actions + auto loading to itch.io on new release.
 - Explore ways to cleanly remove tracy instrumentation from lua scripts & c++ for release builds.
 - Clean up build files so that no docs or unnecessary source files are included.

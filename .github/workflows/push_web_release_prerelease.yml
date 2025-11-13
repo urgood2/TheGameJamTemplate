@@ -25,6 +25,15 @@ jobs:
       - name: Setup dependencies
         run: |
           # Your platform-specific install commands here (apt on linux, etc)
+
+      - name: Install Emscripten SDK
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+          echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
+
       
       - name: Configure CMake
         run: |

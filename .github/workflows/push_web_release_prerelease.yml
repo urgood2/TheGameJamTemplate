@@ -37,10 +37,11 @@ jobs:
           cp -R assets dist/native/linux/
 
       - name: Upload native artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: native-build
           path: dist/native/linux
+          compression-level: 0
 
   build-web:
     name: Build Web (WASM)

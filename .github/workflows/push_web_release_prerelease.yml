@@ -3,11 +3,11 @@ name: Build & Publish to itch.io
 on:
   push:
     branches:
-      - '**'
+      - "**"
 
 env:
   ITCH_PROJECT: chugget/testing
-  VERSION: ${{ github.sha }}   # fallback version for branch pushes
+  VERSION: ${{ github.sha }}
 
 jobs:
   build-native:
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install system deps
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake libx11-dev libasound2-dev libudev-dev
@@ -27,8 +27,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release ..
 
       - name: Build
-        run: |
-          cmake --build build --config Release
+        run: cmake --build build --config Release
 
       - name: Package native build
         run: |
@@ -36,11 +35,11 @@ jobs:
           cp -R build/bin/* dist/native/linux/
           cp -R assets dist/native/linux/
 
-      - name: Upload native artifact
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact (native)
+        uses: actions/upload-artifact@v4
         with:
-          name: native-build
-          path: dist/native/linux
+          name: native-linux
+          path: dist/native/linux/
           compression-level: 0
 
   build-web:
@@ -75,27 +74,28 @@ jobs:
           cp build-web/*.wasm dist/web/
           cp build-web/*.js dist/web/
           cp -R assets dist/web/
-          cd dist && zip -r web-build.zip web
+          cd dist && zip -r web-build.zip web/
 
-      - name: Upload web artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload artifact (web)
+        uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: dist/web-build.zip
+          compression-level: 0
 
   publish:
     name: Publish to itch.io
     needs: [ build-native, build-web ]
     runs-on: ubuntu-latest
     steps:
-      - name: Download native artifacts
-        uses: actions/download-artifact@v3
+      - name: Download native build
+        uses: actions/download-artifact@v4
         with:
-          name: native-build
+          name: native-linux
           path: native
 
-      - name: Download web artifacts
-        uses: actions/download-artifact@v3
+      - name: Download web build
+        uses: actions/download-artifact@v4
         with:
           name: web-build
           path: web
@@ -103,13 +103,13 @@ jobs:
       - name: Setup Butler
         uses: jdno/setup-butler@v1
 
-      - name: Upload Native
+      - name: Upload Linux build
         run: |
           butler push native ${{ env.ITCH_PROJECT }}:linux --userversion ${{ env.VERSION }}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
 
-      - name: Upload Web
+      - name: Upload Web build
         run: |
           butler push web/web-build.zip ${{ env.ITCH_PROJECT }}:web --userversion ${{ env.VERSION }}
         env:

@@ -130,11 +130,28 @@ add_git_dependency(
 #     set(FMT_VERSION 10.2.1)
 # endif()
 
+if (EMSCRIPTEN)
+    message(STATUS ">>> Cleaning cached fmt before re-fetching...")
+    file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-src")
+    file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-build")
+endif()
+
 add_git_dependency(
     fmt
     https://github.com/fmtlib/fmt.git
-    11.1.0
+    9.1.0
 )
+
+# --- DEBUG: print fmt version ---
+if (TARGET fmt)
+    get_target_property(FMT_SOURCE_DIR fmt SOURCE_DIR)
+    message(STATUS ">>> fmt SOURCE DIR = ${FMT_SOURCE_DIR}")
+
+    file(READ "${FMT_SOURCE_DIR}/include/fmt/core.h" FMT_CORE)
+    string(REGEX MATCH "FMT_VERSION [0-9]+" FMT_VERSION_LINE "${FMT_CORE}")
+    message(STATUS ">>> Detected fmt version: ${FMT_VERSION_LINE}")
+endif()
+
 
 
 # --- Force fmt to be header-only for Emscripten ---

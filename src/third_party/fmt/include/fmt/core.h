@@ -8,6 +8,27 @@
 #ifndef FMT_CORE_H_
 #define FMT_CORE_H_
 
+// ------------------------------------------------------------
+// Emscripten constexpr workaround: disable constexpr paths
+// ------------------------------------------------------------
+#if defined(__EMSCRIPTEN__)
+#  undef FMT_USE_CONSTEXPR
+#  undef FMT_USE_CONSTEVAL
+#  undef FMT_CONSTEVAL
+#  undef FMT_ENFORCE_COMPILE_STRING
+#  undef FMT_USE_NONTYPE_TEMPLATE_ARGS
+
+#  define FMT_USE_CONSTEXPR 0
+#  define FMT_USE_CONSTEVAL 0
+#  define FMT_CONSTEVAL constexpr
+#  define FMT_ENFORCE_COMPILE_STRING 0
+#  define FMT_USE_NONTYPE_TEMPLATE_ARGS 0
+
+// Force header-only mode (fmt/src/*.cc must not compile)
+#  undef FMT_HEADER_ONLY
+#  define FMT_HEADER_ONLY 1
+#endif
+
 #include <cstddef>  // std::byte
 #include <cstdio>   // std::FILE
 #include <cstring>  // std::strlen

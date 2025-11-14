@@ -1,6 +1,6 @@
 #pragma once
 
-#include "forward.hpp"
+#include "sol/forward.hpp"
 #include "raylib.h"
 #include <string>
 #include <unordered_map>

@@ -3,7 +3,7 @@
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk_private.h"
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk_structs.h"
 #include "entt/entt.hpp"
-#include "forward.hpp"
+#include "sol/forward.hpp"
 #include "physics_components.hpp"
 #include "raylib.h"
 #include "systems/layer/layer.hpp"

@@ -628,6 +628,9 @@ if(EMSCRIPTEN)
         if(FOUND EQUAL -1)
             # Create the destination directory first
             get_filename_component(DEST_DIR "${BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
+            message(STATUS "ASSET_FILE='${ASSET_FILE}'")
+            message(STATUS "SRC='${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}'")
+            message(STATUS "DST='${BUILD_DIR}/assets/${ASSET_FILE}'")
             add_custom_command(
                 TARGET copy_assets POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"

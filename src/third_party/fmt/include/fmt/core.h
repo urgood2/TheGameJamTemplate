@@ -8,32 +8,6 @@
 #ifndef FMT_CORE_H_
 #define FMT_CORE_H_
 
-// ------------------------------------------------------------
-// Emscripten constexpr workaround: disable constexpr paths
-// ------------------------------------------------------------
-#if defined(__EMSCRIPTEN__)
-    // Disable all constexpr features in fmt for Emscripten
-    #undef FMT_USE_CONSTEXPR
-    #undef FMT_USE_CONSTEVAL
-    #undef FMT_CONSTEVAL
-    #undef FMT_CONSTEXPR
-    #undef FMT_CONSTEXPR20
-    #undef FMT_ENFORCE_COMPILE_STRING
-    #undef FMT_USE_NONTYPE_TEMPLATE_ARGS
-
-    #define FMT_USE_CONSTEXPR 0
-    #define FMT_USE_CONSTEVAL 0
-    #define FMT_CONSTEVAL 
-    #define FMT_CONSTEXPR 
-    #define FMT_CONSTEXPR20 
-    #define FMT_ENFORCE_COMPILE_STRING 0
-    #define FMT_USE_NONTYPE_TEMPLATE_ARGS 0
-
-    // Force header-only mode to avoid any compiled constexpr paths
-    #undef FMT_HEADER_ONLY
-    #define FMT_HEADER_ONLY 1
-#endif
-
 #include <cstddef>  // std::byte
 #include <cstdio>   // std::FILE
 #include <cstring>  // std::strlen
@@ -315,6 +289,34 @@ FMT_GCC_PRAGMA("GCC push_options")
 #if !defined(__OPTIMIZE__) && !defined(__NVCOMPILER)
 FMT_GCC_PRAGMA("GCC optimize(\"Og\")")
 #endif
+
+
+// ------------------------------------------------------------
+// Emscripten constexpr workaround: disable constexpr paths
+// ------------------------------------------------------------
+#if defined(__EMSCRIPTEN__)
+    // Disable all constexpr features in fmt for Emscripten
+    #undef FMT_USE_CONSTEXPR
+    #undef FMT_USE_CONSTEVAL
+    #undef FMT_CONSTEVAL
+    #undef FMT_CONSTEXPR
+    #undef FMT_CONSTEXPR20
+    #undef FMT_ENFORCE_COMPILE_STRING
+    #undef FMT_USE_NONTYPE_TEMPLATE_ARGS
+
+    #define FMT_USE_CONSTEXPR 0
+    #define FMT_USE_CONSTEVAL 0
+    #define FMT_CONSTEVAL 
+    #define FMT_CONSTEXPR 
+    #define FMT_CONSTEXPR20 
+    #define FMT_ENFORCE_COMPILE_STRING 0
+    #define FMT_USE_NONTYPE_TEMPLATE_ARGS 0
+
+    // Force header-only mode to avoid any compiled constexpr paths
+    #undef FMT_HEADER_ONLY
+    #define FMT_HEADER_ONLY 1
+#endif
+
 
 FMT_BEGIN_NAMESPACE
 FMT_MODULE_EXPORT_BEGIN

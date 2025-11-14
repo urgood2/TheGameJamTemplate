@@ -212,9 +212,11 @@ set(FMT_TEST OFF CACHE BOOL "" FORCE)
 set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 
 # For Emscripten we MUST force header-only + disable constexpr
-if(EMSCRIPTEN)
-    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
-endif()
+# if(EMSCRIPTEN)
+# Force spdlog to use external fmt (header-only)
+set(SPDLOG_FMT_EXTERNAL      OFF CACHE BOOL "" FORCE)
+set(SPDLOG_FMT_EXTERNAL_HO   ON  CACHE BOOL "" FORCE)
+# endif()
 
 add_subdirectory(src/third_party/fmt)
 

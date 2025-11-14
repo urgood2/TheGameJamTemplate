@@ -11,8 +11,8 @@ if (PLATFORM STREQUAL "Web")
     add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_PARAMETERS=0)
 endif()
 
-if (EMSCRIPTEN)
-    target_compile_definitions(fmt-header-only INTERFACE FMT_HEADER_ONLY=1)
+if (TARGET fmt-header-only)
+    target_compile_definitions(fmt-header-only PRIVATE FMT_HEADER_ONLY=1)
 endif()
 
 option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)

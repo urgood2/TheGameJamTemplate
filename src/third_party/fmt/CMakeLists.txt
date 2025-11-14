@@ -17,7 +17,8 @@ if (EMSCRIPTEN)
         $<INSTALL_INTERFACE:${FMT_INC_DIR}>
     )
 
-    target_compile_definitions(fmt INTERFACE
+    target_compile_definitions(fmt
+      INTERFACE
         FMT_HEADER_ONLY=1
         FMT_USE_CONSTEXPR=0
         FMT_USE_CONSTEVAL=0

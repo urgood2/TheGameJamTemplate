@@ -55,9 +55,14 @@ endif()
 
 #spdlog
 # set(SPDLOG_FMT_EXTERNAL ON)
-set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+# set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
 
-set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
+# set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
+set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
+set(SPDLOG_FMT_EXTERNAL_HO ON CACHE BOOL "" FORCE)
+set(SPDLOG_BUILD_FMT OFF CACHE BOOL "" FORCE)
+
+
 
 
 #debug
@@ -206,6 +211,7 @@ add_library(fmt INTERFACE)
 target_include_directories(fmt INTERFACE
     "${FMT_LOCAL_PATH}/include"
 )
+add_library(fmt::fmt-header-only ALIAS fmt)
 
 add_library(fmt::fmt-header-only INTERFACE IMPORTED)
 set_target_properties(fmt::fmt-header-only PROPERTIES

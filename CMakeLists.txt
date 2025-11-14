@@ -58,10 +58,10 @@ endif()
 # set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
 
 # set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
-set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
-set(SPDLOG_FMT_EXTERNAL_HO ON CACHE BOOL "" FORCE)
-set(SPDLOG_BUILD_FMT OFF CACHE BOOL "" FORCE)
-
+# set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
+# set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
+# set(SPDLOG_BUILD_FMT OFF CACHE BOOL "" FORCE)
+ 
 
 
 
@@ -203,25 +203,24 @@ add_git_dependency(
 # --------------------------------------------------------------------
 # Local fmt (header-only recommended for Web)
 # --------------------------------------------------------------------
-set(FMT_LOCAL_PATH "${CMAKE_SOURCE_DIR}/src/third_party/fmt")
-
+# ============================================================
+# Local fmt (full repo)
+# ============================================================
 set(FMT_OS OFF CACHE BOOL "" FORCE)
+set(FMT_DOC OFF CACHE BOOL "" FORCE)
+set(FMT_TEST OFF CACHE BOOL "" FORCE)
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 
-add_library(fmt INTERFACE)
-target_include_directories(fmt INTERFACE
-    "${FMT_LOCAL_PATH}/include"
-)
-add_library(fmt::fmt-header-only ALIAS fmt)
-
-add_library(fmt::fmt-header-only INTERFACE IMPORTED)
-set_target_properties(fmt::fmt-header-only PROPERTIES
-    INTERFACE_LINK_LIBRARIES fmt
-    INTERFACE_INCLUDE_DIRECTORIES "${FMT_LOCAL_PATH}/include"
-)
-
-# --- FIX FOR EMSCRIPTEN + FMT (CONSTEXPR BUG) ---
+# For Emscripten we MUST force header-only + disable constexpr
 if(EMSCRIPTEN)
-    target_compile_definitions(fmt INTERFACE
+    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+endif()
+
+add_subdirectory(src/third_party/fmt)
+
+# Emscripten fixes (fmt 10+ constexpr bug)
+if(EMSCRIPTEN)
+    target_compile_definitions(fmt PUBLIC
         FMT_HEADER_ONLY=1
         FMT_USE_CONSTEXPR=0
         FMT_USE_CONSTEVAL=0
@@ -230,6 +229,9 @@ if(EMSCRIPTEN)
         FMT_USE_NONTYPE_TEMPLATE_ARGS=0
     )
 endif()
+
+# Forces the ALIAS export so spdlog sees fmt::fmt
+add_library(fmt::fmt ALIAS fmt)
 
 # Add {nlohmann/json} library
 add_git_dependency(

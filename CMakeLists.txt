@@ -225,16 +225,16 @@ endif()
 # ─────────────────────────────────────────────────────────────
 # Force vendored fmt into safe header-only mode for Emscripten
 # ─────────────────────────────────────────────────────────────
-if(EMSCRIPTEN)
-    add_compile_definitions(
-        FMT_HEADER_ONLY=1
-        FMT_USE_CONSTEXPR=0
-        FMT_USE_CONSTEVAL=0
-        FMT_CONSTEVAL=constexpr
-        FMT_ENFORCE_COMPILE_STRING=0
-        FMT_USE_NONTYPE_TEMPLATE_ARGS=0
-    )
-endif()
+# if(EMSCRIPTEN)
+#     add_compile_definitions(
+#         FMT_HEADER_ONLY=1
+#         FMT_USE_CONSTEXPR=0
+#         FMT_USE_CONSTEVAL=0
+#         FMT_CONSTEVAL=constexpr
+#         FMT_ENFORCE_COMPILE_STRING=0
+#         FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+#     )
+# endif()
 
 add_subdirectory(src/third_party/fmt)
 

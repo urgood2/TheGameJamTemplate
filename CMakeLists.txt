@@ -114,6 +114,13 @@ add_git_dependency(
 #     v2.4.1
 # )
 
+if (EMSCRIPTEN)
+    message(WARNING "Forcing clean of cached fmt for Web build")
+    file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-src")
+    file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-build")
+endif()
+
+
 # Add {fmt} library
 if (EMSCRIPTEN)
     # Use older fmt for Web compatibility

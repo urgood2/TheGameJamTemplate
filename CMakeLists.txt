@@ -163,24 +163,24 @@ endif()
 
 
 # --- Force fmt to be header-only for Emscripten ---
-# if (EMSCRIPTEN)
-#     # fmt tries to add its library target—stop it
-#     set(FMT_ENABLE_TEST OFF CACHE BOOL "" FORCE)
-#     set(FMT_DOC OFF CACHE BOOL "" FORCE)
-#     set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
-#     set(FMT_OS OFF CACHE BOOL "" FORCE)
+if (EMSCRIPTEN)
+    # fmt tries to add its library target—stop it
+    set(FMT_ENABLE_TEST OFF CACHE BOOL "" FORCE)
+    set(FMT_DOC OFF CACHE BOOL "" FORCE)
+    set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+    set(FMT_OS OFF CACHE BOOL "" FORCE)
 
-#     set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
-#     add_compile_definitions(FMT_HEADER_ONLY=1)
-#     target_compile_definitions(fmt PRIVATE
-#         FMT_USE_CONSTEXPR=0
-#         FMT_USE_CONSTEVAL=0
-#         FMT_ENFORCE_COMPILE_STRING=0
-#     )
-#     add_definitions(-DFMT_CONSTEVAL=constexpr)
-#     add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_ARGS=0)
+    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+    add_compile_definitions(FMT_HEADER_ONLY=1)
+    target_compile_definitions(fmt PRIVATE
+        FMT_USE_CONSTEXPR=0
+        FMT_USE_CONSTEVAL=0
+        FMT_ENFORCE_COMPILE_STRING=0
+    )
+    add_definitions(-DFMT_CONSTEVAL=constexpr)
+    add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_ARGS=0)
 
-# endif()
+endif()
 
 # Add {nlohmann/json} library
 add_git_dependency(

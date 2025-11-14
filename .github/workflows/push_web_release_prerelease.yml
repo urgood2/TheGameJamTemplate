@@ -23,7 +23,10 @@ jobs:
           sudo apt-get install -y \
               build-essential cmake \
               libx11-dev libasound2-dev libudev-dev \
-              libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev
+              libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev \
+              libgl1-mesa-dev \
+              libgl-dev \
+              mesa-common-dev
       - name: Configure CMake
         run: |
           mkdir build && cd build

@@ -61,7 +61,7 @@ enum class FollowStyle {
 // Alias for spring component
 using Spring = spring::Spring;
 
-struct Shake {
+struct ShakeStruct {
     float amplitude;
     float duration;
     float frequency;
@@ -69,7 +69,7 @@ struct Shake {
     float elapsedTime = 0.0f;
     bool shaking     = true;
 
-    Shake(float amp, float dur, float freq)
+    ShakeStruct(float amp, float dur, float freq)
       : amplitude(amp)
       , duration(dur)
       , frequency(freq)
@@ -164,7 +164,7 @@ public:
 
     
     // --- noise-based shake storage ---
-    std::vector<Shake> shakesX, shakesY;
+    std::vector<ShakeStruct> shakesX, shakesY;
     float shakeOffsetX = 0.0f, shakeOffsetY = 0.0f;
 
     // --- World bounds clamping ---

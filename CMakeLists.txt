@@ -136,6 +136,14 @@ if (EMSCRIPTEN)
     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-build")
 endif()
 
+# Force fmt to be header-only for Emscripten
+if (EMSCRIPTEN)
+    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+    set(FMT_DOC OFF CACHE BOOL "" FORCE)
+    set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+    set(FMT_OS OFF CACHE BOOL "" FORCE)
+endif()
+
 add_git_dependency(
     fmt
     https://github.com/fmtlib/fmt.git

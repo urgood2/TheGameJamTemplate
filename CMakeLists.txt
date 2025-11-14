@@ -54,7 +54,12 @@ endif()
 
 
 #spdlog
-set(SPDLOG_FMT_EXTERNAL ON)
+# set(SPDLOG_FMT_EXTERNAL ON)
+set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+
+set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
+
+
 #debug
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -130,58 +135,88 @@ add_git_dependency(
 #     set(FMT_VERSION 10.2.1)
 # endif()
 
-if (EMSCRIPTEN)
-    message(STATUS ">>> Cleaning cached fmt before re-fetching...")
-    file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-src")
-    file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-build")
-endif()
+# if (EMSCRIPTEN)
+#     message(STATUS ">>> Cleaning cached fmt before re-fetching...")
+#     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-src")
+#     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-build")
+# endif()
 
-# Force fmt to be header-only for Emscripten
-if (EMSCRIPTEN)
-    # set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
-    # set(FMT_DOC OFF CACHE BOOL "" FORCE)
-    # set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
-    # set(FMT_OS OFF CACHE BOOL "" FORCE)
-endif()
+# # Force fmt to be header-only for Emscripten
+# if (EMSCRIPTEN)
+#     # set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+#     # set(FMT_DOC OFF CACHE BOOL "" FORCE)
+#     # set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+#     # set(FMT_OS OFF CACHE BOOL "" FORCE)
+# endif()
 
-add_git_dependency(
-    fmt
-    https://github.com/fmtlib/fmt.git
-    9.1.0
-)
+# add_git_dependency(
+#     fmt
+#     https://github.com/fmtlib/fmt.git
+#     9.1.0
+# )
 
 # --- DEBUG: print fmt version ---
-if (TARGET fmt)
-    get_target_property(FMT_SOURCE_DIR fmt SOURCE_DIR)
-    message(STATUS ">>> fmt SOURCE DIR = ${FMT_SOURCE_DIR}")
+# if (TARGET fmt)
+#     get_target_property(FMT_SOURCE_DIR fmt SOURCE_DIR)
+#     message(STATUS ">>> fmt SOURCE DIR = ${FMT_SOURCE_DIR}")
 
-    file(READ "${FMT_SOURCE_DIR}/include/fmt/core.h" FMT_CORE)
-    string(REGEX MATCH "FMT_VERSION [0-9]+" FMT_VERSION_LINE "${FMT_CORE}")
-    message(STATUS ">>> Detected fmt version: ${FMT_VERSION_LINE}")
-endif()
+#     file(READ "${FMT_SOURCE_DIR}/include/fmt/core.h" FMT_CORE)
+#     string(REGEX MATCH "FMT_VERSION [0-9]+" FMT_VERSION_LINE "${FMT_CORE}")
+#     message(STATUS ">>> Detected fmt version: ${FMT_VERSION_LINE}")
+# endif()
 
 
 
 # --- Force fmt to be header-only for Emscripten ---
-if (EMSCRIPTEN)
-    # # fmt tries to add its library target—stop it
-    # set(FMT_ENABLE_TEST OFF CACHE BOOL "" FORCE)
-    # set(FMT_DOC OFF CACHE BOOL "" FORCE)
-    # set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
-    # set(FMT_OS OFF CACHE BOOL "" FORCE)
+# if (EMSCRIPTEN)
+#     # # fmt tries to add its library target—stop it
+#     # set(FMT_ENABLE_TEST OFF CACHE BOOL "" FORCE)
+#     # set(FMT_DOC OFF CACHE BOOL "" FORCE)
+#     # set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+#     # set(FMT_OS OFF CACHE BOOL "" FORCE)
 
-    # set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
-    # add_compile_definitions(FMT_HEADER_ONLY=1)
-    # target_compile_definitions(fmt PRIVATE
-    #     FMT_USE_CONSTEXPR=0
-    #     FMT_USE_CONSTEVAL=0
-    #     FMT_ENFORCE_COMPILE_STRING=0
-    # )
-    # add_definitions(-DFMT_CONSTEVAL=constexpr)
-    # add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_ARGS=0)
+#     # set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+#     # add_compile_definitions(FMT_HEADER_ONLY=1)
+#     # target_compile_definitions(fmt PRIVATE
+#     #     FMT_USE_CONSTEXPR=0
+#     #     FMT_USE_CONSTEVAL=0
+#     #     FMT_ENFORCE_COMPILE_STRING=0
+#     # )
+#     # add_definitions(-DFMT_CONSTEVAL=constexpr)
+#     # add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_ARGS=0)
 
-    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
-    target_compile_definitions(fmt PRIVATE
+#     set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+#     target_compile_definitions(fmt PRIVATE
+#         FMT_USE_CONSTEXPR=0
+#         FMT_USE_CONSTEVAL=0
+#         FMT_CONSTEVAL=constexpr
+#         FMT_ENFORCE_COMPILE_STRING=0
+#         FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+#     )
+# endif()
+
+# --------------------------------------------------------------------
+# Local fmt (header-only recommended for Web)
+# --------------------------------------------------------------------
+set(FMT_LOCAL_PATH "${CMAKE_SOURCE_DIR}/src/third_party/fmt")
+
+set(FMT_OS OFF CACHE BOOL "" FORCE)
+
+add_library(fmt INTERFACE)
+target_include_directories(fmt INTERFACE
+    "${FMT_LOCAL_PATH}/include"
+)
+
+add_library(fmt::fmt-header-only INTERFACE IMPORTED)
+set_target_properties(fmt::fmt-header-only PROPERTIES
+    INTERFACE_LINK_LIBRARIES fmt
+    INTERFACE_INCLUDE_DIRECTORIES "${FMT_LOCAL_PATH}/include"
+)
+
+# --- FIX FOR EMSCRIPTEN + FMT (CONSTEXPR BUG) ---
+if(EMSCRIPTEN)
+    target_compile_definitions(fmt INTERFACE
+        FMT_HEADER_ONLY=1
         FMT_USE_CONSTEXPR=0
         FMT_USE_CONSTEVAL=0
         FMT_CONSTEVAL=constexpr

@@ -6,6 +6,12 @@ cmake_minimum_required(VERSION 3.14)
 
 project(raylib-cpp-cmake-template CXX C)
 
+if (PLATFORM STREQUAL "Web")
+    add_definitions(-DFMT_USE_CONSTEXPR=0)
+    add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_PARAMETERS=0)
+endif()
+
+
 option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
 
 set(CMAKE_CXX_STANDARD 20)

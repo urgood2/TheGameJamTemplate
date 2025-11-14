@@ -115,10 +115,18 @@ add_git_dependency(
 # )
 
 # Add {fmt} library
+if (EMSCRIPTEN)
+    # Use older fmt for Web compatibility
+    set(FMT_VERSION 9.1.0)
+else()
+    # Use normal modern version for desktop
+    set(FMT_VERSION 10.2.1)
+endif()
+
 add_git_dependency(
     fmt
     https://github.com/fmtlib/fmt.git
-    10.2.1
+    ${FMT_VERSION}
 )
 
 

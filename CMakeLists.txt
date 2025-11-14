@@ -21,6 +21,14 @@ if (EMSCRIPTEN)
 
     set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
     add_compile_definitions(FMT_HEADER_ONLY=1)
+    target_compile_definitions(fmt PRIVATE
+        FMT_USE_CONSTEXPR=0
+        FMT_USE_CONSTEVAL=0
+        FMT_ENFORCE_COMPILE_STRING=0
+    )
+    add_definitions(-DFMT_CONSTEVAL=constexpr)
+    add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_ARGS=0)
+
 endif()
 
 

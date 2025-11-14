@@ -147,7 +147,7 @@ endif()
 add_git_dependency(
     fmt
     https://github.com/fmtlib/fmt.git
-    10.2.1
+    11.2.0
 )
 
 # --- DEBUG: print fmt version ---

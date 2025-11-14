@@ -1,5 +1,36 @@
 cmake_minimum_required(VERSION 3.1...3.18)
 
+# ───────────────────────────────────────────────────────────────
+# Emscripten workaround: force fmt to be header-only.
+# fmt uses extensive constexpr machinery in .cc files, which
+# Emscripten's Clang rejects. Header-only mode avoids all constexpr
+# instantiation in compiled sources and is fully safe.
+# ───────────────────────────────────────────────────────────────
+if (EMSCRIPTEN)
+    message(STATUS "Emscripten detected: forcing fmt to header-only mode")
+
+    add_library(fmt INTERFACE)
+    add_library(fmt::fmt ALIAS fmt)
+
+    target_include_directories(fmt INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${FMT_INC_DIR}>
+    )
+
+    target_compile_definitions(fmt INTERFACE
+        FMT_HEADER_ONLY=1
+        FMT_USE_CONSTEXPR=0
+        FMT_USE_CONSTEVAL=0
+        FMT_CONSTEVAL=
+        FMT_ENFORCE_COMPILE_STRING=0
+        FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+    )
+
+    # Skip the rest of this file — prevents src/*.cc from being compiled.
+    return()
+endif()
+
+
 # Fallback for using newer policies on CMake <3.12.
 if(${CMAKE_VERSION} VERSION_LESS 3.12)
   cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})

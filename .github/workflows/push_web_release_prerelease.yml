@@ -38,7 +38,7 @@ jobs:
       - name: Package native build
         run: |
           mkdir -p dist/native/linux
-          cp -R build/bin/* dist/native/linux/
+          cp build/* dist/native/linux/ || true
           cp -R assets dist/native/linux/
 
       - name: Upload native build (v4)

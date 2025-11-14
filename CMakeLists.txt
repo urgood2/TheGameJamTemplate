@@ -236,7 +236,7 @@ add_subdirectory(src/third_party/fmt)
 
 if(EMSCRIPTEN)
     # Remove fmt .cc sources
-    set_target_properties(fmt PROPERTIES SOURCES "")
+    # set_target_properties(fmt PROPERTIES SOURCES "")
 endif()
 
 

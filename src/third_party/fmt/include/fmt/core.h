@@ -309,7 +309,7 @@ FMT_GCC_PRAGMA("GCC optimize(\"Og\")")
     #define FMT_CONSTEVAL 
     #define FMT_CONSTEXPR 
     #define FMT_CONSTEXPR20 
-    #define FMT_ENFORCE_COMPILE_STRING 0
+    // #define FMT_ENFORCE_COMPILE_STRING 0
     #define FMT_USE_NONTYPE_TEMPLATE_ARGS 0
 
     // Force header-only mode to avoid any compiled constexpr paths

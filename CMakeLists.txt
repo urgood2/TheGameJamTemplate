@@ -224,22 +224,22 @@ add_git_dependency(
     v5.0.0
 )
 
-if (WIN32 OR EMSCRIPTEN)
-set(Boost_INCLUDE_DIR "D:/boost_1_81_0")
-set(Boost_LIBRARY_DIR "D:/boost_1_81_0/lib")
-find_package(Boost)
-# find_package(Boost REQUIRED regex) # header only libraries must not be added here
-elseif (APPLE)
-    # Adjust the paths if you have installed Boost in a different location
-    set(Boost_INCLUDE_DIR "/opt/homebrew/Cellar/boost/1.83.0/include")
-    set(Boost_LIBRARY_DIR "/opt/homebrew/Cellar/boost/1.83.0/lib")
-    find_package(Boost)
-else ()
-    # Adjust the paths if you have installed Boost in a different location
-    set(Boost_DEBUG 1)
-    find_package(Boost REQUIRED)
-    message(STATUS "BOOST DIR AND LIBS FOUND?:${Boost_FOUND}")
-endif()
+# if (WIN32 OR EMSCRIPTEN)
+# set(Boost_INCLUDE_DIR "D:/boost_1_81_0")
+# set(Boost_LIBRARY_DIR "D:/boost_1_81_0/lib")
+# find_package(Boost)
+# # find_package(Boost REQUIRED regex) # header only libraries must not be added here
+# elseif (APPLE)
+#     # Adjust the paths if you have installed Boost in a different location
+#     set(Boost_INCLUDE_DIR "/opt/homebrew/Cellar/boost/1.83.0/include")
+#     set(Boost_LIBRARY_DIR "/opt/homebrew/Cellar/boost/1.83.0/lib")
+#     find_package(Boost)
+# else ()
+#     # Adjust the paths if you have installed Boost in a different location
+#     set(Boost_DEBUG 1)
+#     find_package(Boost REQUIRED)
+#     message(STATUS "BOOST DIR AND LIBS FOUND?:${Boost_FOUND}")
+# endif()
 
 
 ##########################################################################################
@@ -328,12 +328,14 @@ endif()
 # ======================================================================
 # Sol2 + Lua / LuaJIT toggle goes HERE ↓↓↓
 # ======================================================================
-add_git_dependency(
-    sol2
-    https://github.com/ThePhD/sol2.git
-    v3.3.0
-)
-message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
+# add_git_dependency(
+#     sol2
+#     https://github.com/ThePhD/sol2.git
+#     v3.3.0
+# )
+# message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
+add_subdirectory(src/third_party/sol2)
+set(SOL2_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/third_party/sol2/include/" CACHE PATH "Path to sol2 source directory")
 
 # if (USE_LUAJIT)
 #     message(STATUS ">> Using LuaJIT as backend for Sol2")
@@ -598,8 +600,8 @@ add_custom_target(clean_all
 # now link the included prebuilt libraries
 # target_link_libraries(CommonSettings INTERFACE goap)
 # target_link_libraries(CommonSettings INTERFACE gpgoap)
-target_include_directories(CommonSettings INTERFACE ${Boost_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
+# target_include_directories(CommonSettings INTERFACE ${Boost_INCLUDE_DIRS})
+# target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 
@@ -607,8 +609,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 # Platform-specific settings for prebuilt libraries included with project
 
 # boost
-target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
+# target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+# target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
 
 
 ##########################################################################################

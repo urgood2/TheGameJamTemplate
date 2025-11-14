@@ -4,7 +4,7 @@
 #include "physics_manager.hpp"
 #include "physics_world.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
-#include <sol.hpp>
+#include "sol/sol.hpp"
 
 #include "steering.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk.h"

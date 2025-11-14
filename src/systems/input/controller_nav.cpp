@@ -3,7 +3,7 @@
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
-#include "types.hpp"
+#include "sol/types.hpp"
 
 namespace controller_nav {
 

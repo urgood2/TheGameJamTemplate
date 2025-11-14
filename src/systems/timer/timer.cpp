@@ -1,6 +1,6 @@
 #include "timer.hpp"
 
-#include "types.hpp"
+#include "sol/types.hpp"
 #include "util/common_headers.hpp"
 #include "../../core/globals.hpp"
 #include "../../core/game.hpp"

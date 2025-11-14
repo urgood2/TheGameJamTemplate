@@ -22,7 +22,7 @@
 #include "systems/scripting/binding_recorder.hpp"
 
 #include "core/globals.hpp"
-#include "types.hpp"
+#include "sol/types.hpp"
 
 namespace transform
 {

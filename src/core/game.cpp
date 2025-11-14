@@ -59,7 +59,7 @@
 #include "systems/composable_mechanics/ability.hpp"
 
 #include "systems/scripting/lua_hot_reload.hpp"
-#include "types.hpp"
+#include "sol/types.hpp"
 
 using std::pair;
 

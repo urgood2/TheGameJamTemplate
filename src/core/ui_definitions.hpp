@@ -5,7 +5,7 @@
 #include "core/globals.hpp"
 #include "sol/forward.hpp"
 #include "systems/localization/localization.hpp"
-#include "types.hpp"
+#include "sol/types.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 #include "systems/text/textVer2.hpp"

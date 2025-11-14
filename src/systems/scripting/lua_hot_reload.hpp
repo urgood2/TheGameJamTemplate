@@ -6,7 +6,7 @@
 #include "raylib.h"
 #include "spdlog/spdlog.h"
 #include "third_party/rlImGui/imgui.h"
-#include "types.hpp"
+#include "sol/types.hpp"
 #include "core/game.hpp"
 
 namespace lua_hot_reload {

@@ -2,7 +2,7 @@
 
 #include "entt/entity/fwd.hpp"
 #include "systems/anim_system.hpp"
-#include "types.hpp"
+#include "sol/types.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 

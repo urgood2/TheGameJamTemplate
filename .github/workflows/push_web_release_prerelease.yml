@@ -7,11 +7,10 @@ on:
 
 env:
   ITCH_PROJECT: chugget/testing
-  ENABLE_NATIVE_BUILD: false   # <---- set to true to re-enable native build
 
 jobs:
   build-native:
-    if: env.ENABLE_NATIVE_BUILD == 'true'
+    if: vars.ENABLE_NATIVE_BUILD == 'true'
     name: Build Native (Linux)
     runs-on: ubuntu-latest
 
@@ -43,7 +42,7 @@ jobs:
           cp build/* dist/native/linux/ || true
           cp -R assets dist/native/linux/
 
-      - name: Upload native build (v4)
+      - name: Upload native build
         uses: actions/upload-artifact@v4
         with:
           name: native-linux
@@ -67,7 +66,7 @@ jobs:
       - name: Configure CMake (Web)
         run: |
           emcmake cmake -S . -B build-web \
-            -DPLMAKEFORM=Web \
+            -DPLATFORM=Web \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Web
@@ -82,7 +81,7 @@ jobs:
           cp -R assets dist/web/
           cd dist && zip -r web-build.zip web/
 
-      - name: Upload web build (v4)
+      - name: Upload web build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
@@ -92,15 +91,14 @@ jobs:
 
   publish:
     name: Publish to itch.io
-    # needs only the jobs that actually run
-    needs: [ build-web ]
+    needs: [ build-web ]  # <-- only depends on web
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Download native build
-        if: env.ENABLE_NATIVE_BUILD == 'true'
+        if: vars.ENABLE_NATIVE_BUILD == 'true'
         uses: actions/download-artifact@v4
         with:
           name: native-linux
@@ -136,7 +134,7 @@ jobs:
           fi
 
       - name: Publish native build
-        if: env.ENABLE_NATIVE_BUILD == 'true'
+        if: vars.ENABLE_NATIVE_BUILD == 'true'
         run: |
           butler push native \
             ${{ env.ITCH_PROJECT }}:linux \

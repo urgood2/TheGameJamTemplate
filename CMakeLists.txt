@@ -139,24 +139,8 @@ endif()
 add_git_dependency(
     fmt
     https://github.com/fmtlib/fmt.git
-    9.1.0
+    12.1.0
 )
-
-if (EMSCRIPTEN)
-    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
-    set(FMT_OS OFF CACHE BOOL "" FORCE)
-
-    target_compile_definitions(fmt PRIVATE
-        FMT_HEADER_ONLY=1
-        FMT_USE_CONSTEXPR=0
-        FMT_USE_CONSTEVAL=0
-        FMT_USE_NONTYPE_TEMPLATE_ARGS=0
-        FMT_CONSTEVAL=
-        FMT_CONSTEXPR=
-        FMT_INLINE=
-    )
-endif()
-
 
 # --- DEBUG: print fmt version ---
 if (TARGET fmt)

@@ -7,9 +7,11 @@ on:
 
 env:
   ITCH_PROJECT: chugget/testing
+  ENABLE_NATIVE_BUILD: false   # <---- set to true to re-enable native build
 
 jobs:
   build-native:
+    if: env.ENABLE_NATIVE_BUILD == 'true'
     name: Build Native (Linux)
     runs-on: ubuntu-latest
 
@@ -19,7 +21,6 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          # sudo apt-get install -y build-essential cmake libx11-dev libasound2-dev libudev-dev
           sudo apt-get install -y \
               build-essential cmake \
               libx11-dev libasound2-dev libudev-dev \
@@ -27,6 +28,7 @@ jobs:
               libgl1-mesa-dev \
               libgl-dev \
               mesa-common-dev
+
       - name: Configure CMake
         run: |
           mkdir build && cd build
@@ -65,7 +67,7 @@ jobs:
       - name: Configure CMake (Web)
         run: |
           emcmake cmake -S . -B build-web \
-            -DPLATFORM=Web \
+            -DPLMAKEFORM=Web \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Web
@@ -90,13 +92,15 @@ jobs:
 
   publish:
     name: Publish to itch.io
-    needs: [ build-native, build-web ]
+    # needs only the jobs that actually run
+    needs: [ build-web ]
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Download native build
+        if: env.ENABLE_NATIVE_BUILD == 'true'
         uses: actions/download-artifact@v4
         with:
           name: native-linux
@@ -132,6 +136,7 @@ jobs:
           fi
 
       - name: Publish native build
+        if: env.ENABLE_NATIVE_BUILD == 'true'
         run: |
           butler push native \
             ${{ env.ITCH_PROJECT }}:linux \

@@ -218,7 +218,27 @@ set(SPDLOG_FMT_EXTERNAL      OFF CACHE BOOL "" FORCE)
 set(SPDLOG_FMT_EXTERNAL_HO   ON  CACHE BOOL "" FORCE)
 # endif()
 
+# ─────────────────────────────────────────────────────────────
+# Force vendored fmt into safe header-only mode for Emscripten
+# ─────────────────────────────────────────────────────────────
+if(EMSCRIPTEN)
+    add_compile_definitions(
+        FMT_HEADER_ONLY=1
+        FMT_USE_CONSTEXPR=0
+        FMT_USE_CONSTEVAL=0
+        FMT_CONSTEVAL=constexpr
+        FMT_ENFORCE_COMPILE_STRING=0
+        FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+    )
+endif()
+
 add_subdirectory(src/third_party/fmt)
+
+if(EMSCRIPTEN)
+    # Remove fmt .cc sources
+    set_target_properties(fmt PROPERTIES SOURCES "")
+endif()
+
 
 # Emscripten fixes (fmt 10+ constexpr bug)
 if(EMSCRIPTEN)
@@ -232,8 +252,6 @@ if(EMSCRIPTEN)
     )
 endif()
 
-# Forces the ALIAS export so spdlog sees fmt::fmt
-add_library(fmt::fmt ALIAS fmt)
 
 # Add {nlohmann/json} library
 add_git_dependency(

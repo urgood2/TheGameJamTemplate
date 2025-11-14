@@ -9,16 +9,24 @@ cmake_minimum_required(VERSION 3.1...3.18)
 if (EMSCRIPTEN)
     message(STATUS "Emscripten detected: forcing fmt to header-only mode")
 
+    # Create the primary fmt target (INTERFACE)
+    add_library(fmt-header-only INTERFACE)
+    add_library(fmt::fmt-header-only ALIAS fmt-header-only)
+
+    # Provide the alias that spdlog expects
     add_library(fmt INTERFACE)
     add_library(fmt::fmt ALIAS fmt)
 
+    # BOTH fmt and fmt-header-only refer to the same include directory
+    target_include_directories(fmt-header-only INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
     target_include_directories(fmt INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${FMT_INC_DIR}>
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
 
-    target_compile_definitions(fmt
-      INTERFACE
+    # Required defines
+    target_compile_definitions(fmt-header-only INTERFACE
         FMT_HEADER_ONLY=1
         FMT_USE_CONSTEXPR=0
         FMT_USE_CONSTEVAL=0
@@ -27,7 +35,16 @@ if (EMSCRIPTEN)
         FMT_USE_NONTYPE_TEMPLATE_ARGS=0
     )
 
-    # Skip the rest of this file — prevents src/*.cc from being compiled.
+    target_compile_definitions(fmt INTERFACE
+        FMT_HEADER_ONLY=1
+        FMT_USE_CONSTEXPR=0
+        FMT_USE_CONSTEVAL=0
+        FMT_CONSTEVAL=
+        FMT_ENFORCE_COMPILE_STRING=0
+        FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+    )
+
+    # Skip the rest of fmt's CMake file (this prevents building .cc)
     return()
 endif()
 

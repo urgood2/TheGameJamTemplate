@@ -3,7 +3,7 @@ name: Build & Publish to itch.io
 on:
   push:
     branches:
-      - "**"   # build on all branches 
+      - "**"   # build on all branches
 
 env:
   ITCH_PROJECT: chugget/testing

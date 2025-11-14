@@ -189,3 +189,4 @@
 
 11/14/2025
   - Updated shader system to accept integer uniforms.
+  - Sol integrated into files, isntead of using cmake to fetch it.

@@ -133,7 +133,7 @@ add_git_dependency(
 add_git_dependency(
     fmt
     https://github.com/fmtlib/fmt.git
-    12.1.0
+    11.1.0
 )
 
 

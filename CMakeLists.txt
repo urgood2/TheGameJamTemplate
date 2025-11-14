@@ -218,6 +218,10 @@ set(SPDLOG_FMT_EXTERNAL      OFF CACHE BOOL "" FORCE)
 set(SPDLOG_FMT_EXTERNAL_HO   ON  CACHE BOOL "" FORCE)
 # endif()
 
+if(EMSCRIPTEN)
+    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+endif()
+
 # ─────────────────────────────────────────────────────────────
 # Force vendored fmt into safe header-only mode for Emscripten
 # ─────────────────────────────────────────────────────────────

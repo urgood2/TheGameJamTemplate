@@ -11,9 +11,13 @@ if (PLATFORM STREQUAL "Web")
     add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_PARAMETERS=0)
 endif()
 
-if (TARGET fmt-header-only)
-    target_compile_definitions(fmt-header-only PRIVATE FMT_HEADER_ONLY=1)
+# --- Force fmt to be header-only for Emscripten ---
+if (EMSCRIPTEN)
+    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+    add_definitions(-DFMT_HEADER_ONLY=1)
 endif()
+
+
 
 option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
 

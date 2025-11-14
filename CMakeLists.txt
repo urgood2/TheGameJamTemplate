@@ -571,6 +571,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/GPGOAP")
 
 
+# ------------------------------------------------------------
+# Build directory logic for native vs Emscripten
+# ------------------------------------------------------------
+if(EMSCRIPTEN)
+    # Emscripten uses a single output directory for everything
+    set(BUILD_DIR "${CMAKE_BINARY_DIR}" CACHE PATH "" FORCE)
+endif()
+
 # Add include directories for single-header dependencies
 # target_include_directories(${PROJECT_NAME} PUBLIC "${random_SOURCE_DIR}/include")
 # target_include_directories(${PROJECT_NAME} PUBLIC "${entt_SOURCE_DIR}/single_include")

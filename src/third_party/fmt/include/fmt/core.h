@@ -363,15 +363,25 @@ FMT_BEGIN_DETAIL_NAMESPACE
 // (void)var does not work on many Intel compilers.
 template <typename... T> FMT_CONSTEXPR void ignore_unused(const T&...) {}
 
+#if defined(__EMSCRIPTEN__)
+// ------------------------------------------------------------
+// Emscripten cannot evaluate constexpr branches reliably.
+// Disable constexpr detection entirely.
+// ------------------------------------------------------------
+FMT_INLINE auto is_constant_evaluated(bool = false) noexcept -> bool {
+    return false;   // ALWAYS false under Emscripten
+}
+#else
 constexpr FMT_INLINE auto is_constant_evaluated(
     bool default_value = false) noexcept -> bool {
-#ifdef __cpp_lib_is_constant_evaluated
-  ignore_unused(default_value);
-  return std::is_constant_evaluated();
-#else
-  return default_value;
-#endif
+#  ifdef __cpp_lib_is_constant_evaluated
+    ignore_unused(default_value);
+    return std::is_constant_evaluated();
+#  else
+    return default_value;
+#  endif
 }
+#endif
 
 // Suppresses "conditional expression is constant" warnings.
 template <typename T> constexpr FMT_INLINE auto const_check(T value) -> T {

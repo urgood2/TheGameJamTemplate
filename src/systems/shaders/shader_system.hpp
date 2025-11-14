@@ -21,7 +21,8 @@ using ShaderUniformValue = std::variant<
     Vector3,
     Vector4,
     bool,
-    Texture2D
+    Texture2D,
+    int
     >;
 // #include "third_party/rlImGui/imgui.h"
 // #include "third_party/rlImGui/imgui_internal.h"
@@ -52,6 +53,10 @@ inline void print_uniform_value(const ShaderUniformValue &uv)
                           [](const Vector4 &v)
                           {
                               SPDLOG_DEBUG("Uniform value: Vector4({}, {}, {}, {})", v.x, v.y, v.z, v.w);
+                          },
+                          [](const int &i)
+                          {
+                              SPDLOG_DEBUG("Uniform value: {}", i);
                           },
                           [](bool b)
                           {

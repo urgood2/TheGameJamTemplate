@@ -328,8 +328,8 @@ namespace game
         
         // starry tunnel
 
-        globalShaderUniforms.set("starry_tunnel", "m", 8.f);
-        globalShaderUniforms.set("starry_tunnel", "n", 30.f);
+        globalShaderUniforms.set("starry_tunnel", "m", 8);
+        globalShaderUniforms.set("starry_tunnel", "n", 30);
 
         globalShaderUniforms.set("starry_tunnel", "hasNeonEffect", true);
         globalShaderUniforms.set("starry_tunnel", "hasDot", false);

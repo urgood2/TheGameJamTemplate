@@ -737,7 +737,10 @@ namespace shaders
                                 ImGui::ColorEdit4(uniformName.c_str(), &value.x);
                             } else if constexpr (std::is_same_v<T, bool>) {
                                 ImGui::Checkbox(uniformName.c_str(), &value);
-                            }                          
+                            }                 
+                            else if constexpr (std::is_same_v<T, int>) {
+                                ImGui::DragInt(uniformName.c_str(), &value, 1);
+                            }
                             else if constexpr (std::is_same_v<T, Texture2D>) {
                                 ImGui::Text("%s: Texture2D (id: %d, size: %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
                                 // Optional preview

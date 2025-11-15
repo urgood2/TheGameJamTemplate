@@ -59,6 +59,10 @@ jobs:
   build-web:
     name: Build Web (Emscripten WASM)
     runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.message, '[build]') ||
+      contains(github.event.head_commit.message, '[web]') ||
+      contains(github.event.head_commit.message, '#build')
 
     steps:
       - uses: actions/checkout@v3

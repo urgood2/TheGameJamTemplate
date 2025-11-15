@@ -3066,7 +3066,7 @@ function initSurvivorEntity()
                 c.rx    = 30
                 c.ry    = 30
                 -- c.lineWidth = 10
-                c.color = util.getColor("black"):setAlpha(200)
+                c.color = util.getColor("white"):setAlpha(250)
             end, z_orders.background, layer.DrawCommandSpace.World)
         end
     )

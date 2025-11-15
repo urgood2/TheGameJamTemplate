@@ -1,5 +1,18 @@
 #include "layer.hpp"
 
+#if defined(PLATFORM_WEB)
+#include "util/web_glad_shim.hpp"
+#endif
+
+#if defined(__EMSCRIPTEN__)
+    #define GL_GLEXT_PROTOTYPES
+    #include <GLES3/gl3.h>
+    #include <GLES2/gl2ext.h>
+#else
+    #include <GL/gl.h>
+    #include <GL/glext.h>
+#endif
+
 #include "raylib.h"
 #include <algorithm>
 #include <cmath>
@@ -38,6 +51,7 @@
 #include "layer_command_buffer.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
+
 
 namespace layer {
 // only use for (DrawLayerCommandsToSpecificCanvas)
@@ -6348,8 +6362,10 @@ auto DrawSpriteCentered(const std::string &spriteName, float x, float y,
   const Vector2 origin = {0.0f, 0.0f};
   DrawTexturePro(*tex, src, dst, origin, 0.0f, tint);
 }
+#if !defined(__EMSCRIPTEN__)
+  #include "external/glad.h"
+#endif
 
-#include "external/glad.h"
 #include "rlgl.h"
 
 // Stencil masks
@@ -6384,6 +6400,7 @@ void endStencilMask() {
 
   // Stop writing to stencil bits
   glStencilMask(0x00);
+
 
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }

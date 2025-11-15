@@ -1,6 +1,18 @@
 
 #include <memory>
 
+#if defined(PLATFORM_WEB)
+#include "util/web_glad_shim.hpp"
+#endif
+
+#if defined(__EMSCRIPTEN__)
+    #include <GLES3/gl3.h>
+    #include <GLES2/gl2ext.h>
+#else
+    #include <GL/gl.h>
+    #include <GL/glext.h>
+#endif
+
 #include "../util/utilities.hpp"
 
 #include "graphics.hpp"
@@ -101,6 +113,10 @@ using std::pair;
 
 #include "raymath.h"
 
+
+
+
+#include "rlgl.h"
 
 
 // AsteroidManager *asteroidManager = nullptr;

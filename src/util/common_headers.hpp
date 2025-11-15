@@ -38,4 +38,3 @@ using json = nlohmann::json;
 #define MAGIC_ENUM_RANGE_MAX 400
 #include "magic_enum/magic_enum.hpp" // magic_enum lib
 #include "../core/globals.hpp"
-

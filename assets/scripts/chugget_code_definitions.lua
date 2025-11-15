@@ -4851,6 +4851,18 @@ spring = {
 function spring:make(...) end
 
 ---
+--- Get existing Spring on entity, or create and attach if missing.
+---
+---Spring get_or_make(Registry, entity, number value, number k, number d, table? opts)
+function spring:get_or_make(...) end
+
+---
+--- Get existing Spring on entity; errors if missing.
+---
+---Spring get(Registry, entity)
+function spring:get(...) end
+
+---
 --- Attach or replace Spring on an existing entity.
 ---
 ---Spring attach(Registry, entity, number value, number k, number d, table? opts)

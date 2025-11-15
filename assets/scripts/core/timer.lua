@@ -175,19 +175,28 @@ end
 -- 1) scalar tween(getter, setter)
 function timer.tween_scalar(delay, getter, setter, target_value, method, after, tag, group)
   tag = ensure_valid_tag(tag)
+
+  -- Capture the starting value *once*
+  local start_value = getter()
+
   timer.timers[tag] = {
     type = "tween_scalar",
     timer = 0,
     unresolved_delay = delay,
     delay = timer.resolve_delay(delay),
-    getter = getter,
+
+    getter = getter,     -- not strictly needed anymore but left for parity
     setter = setter,
-    target = target_value,
+
+    initial = start_value,
+    target  = target_value,
+
     method = method or function(t) return t end,
     after = after or empty_function,
     group = group,
   }
 end
+
 
 -- 2) tracks tween (array of descriptors {get, set, to, from?})
 function timer.tween_tracks(delay, tracks, method, after, tag, group)

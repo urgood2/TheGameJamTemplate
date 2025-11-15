@@ -192,3 +192,8 @@
   - Sol integrated into files, isntead of using cmake to fetch it.
   - Working on web build automation again... brain numbing.
   
+11/15/2025
+  - Web build automation mostly working. Need to test more, but hitting rate limits?
+  - Juice for exp and hp bars. 
+  - Made enemies blink when entering the map.
+  

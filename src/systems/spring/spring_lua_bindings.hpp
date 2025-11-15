@@ -134,7 +134,32 @@ inline void bind_spring(sol::state& lua) {
     };
     rec.record_method("spring", {"make", "---(entity, Spring) make(Registry, number value, number k, number d, table? opts)", 
         "Create entity, attach Spring, return both."});
-
+    
+    lua["spring"]["get_or_make"] = +[](entt::registry& reg, entt::entity e, float value, float k, float d, sol::optional<sol::table> opts) {
+        if (reg.all_of<spring::Spring>(e)) {
+            auto &sp = reg.get<spring::Spring>(e);
+            return std::ref(sp);
+        } else {
+            auto &sp = reg.emplace<spring::Spring>(e);
+            sp.value = value;
+            sp.targetValue = value;
+            sp.stiffness = k;
+            sp.damping = d;
+            sp.enabled = true;
+            sp.usingForTransforms = true;
+            apply_opts(sp, opts);
+            return std::ref(sp);
+        }
+    };
+    rec.record_method("spring", {"get_or_make", "---Spring get_or_make(Registry, entity, number value, number k, number d, table? opts)",
+        "Get existing Spring on entity, or create and attach if missing."});    
+        
+    lua["spring"]["get"] = +[](entt::registry& reg, entt::entity e) -> spring::Spring& {
+        return reg.get<spring::Spring>(e);
+    };
+    rec.record_method("spring", {"get", "---Spring get(Registry, entity)",
+        "Get existing Spring on entity; errors if missing."});
+        
     lua["spring"]["attach"] = +[](entt::registry& reg, entt::entity e, float value, float k, float d, sol::optional<sol::table> opts) {
         Spring& sp = attach_to(reg, e, value, k, d, opts);
         return std::ref(sp);

@@ -47,9 +47,7 @@ Converts encumbrance into damage
 - player level. 
     
 # programming side
-- juice for exp and hp bars. (use springs)
-- [ ] slow time slightly when player gets too close to an enemy?
-- blink for enemies
+- 
 
 - test shaders: item_glow, fireworks
 - only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.
@@ -184,7 +182,7 @@ end)
 
 # polish phase
 
-
+- [ ] slow time slightly when player gets too close to an enemy?
 - [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.
 - [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate. -> it works, but needs some work, since buttons that contain images, etc. can't do this yet.
 - [ ] Some ambient movement (rocking) to items/ui

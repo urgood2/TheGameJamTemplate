@@ -1653,6 +1653,17 @@ function setUpLogicTimers()
         -- 1. Basic attack (vanilla weapon hit)
         CombatSystem.Game.Effects.deal_damage { weapon = true, scale_pct = 100 } (combat_context, enemyCombatTable,
             playerCombatTable)
+            
+        -- pull player hp spring
+        local hpBarSpringRef  = spring.get(registry, hpBarSpringEntity)
+        hpBarSpringRef:pull(1.5)
+    end
+    
+    if signal.exists("on_bump_enemy") == false then
+        signal.register(
+            "on_bump_enemy",
+            on_bump_enemy_handler
+        )
     end
 
     -- check the trigger board
@@ -1678,12 +1689,12 @@ function setUpLogicTimers()
 
                             -- bump enemy. if signal not registered, register it.
                             if triggerCardScript and triggerCardScript.card_id == "on_bump_enemy" then
-                                if signal.exists("on_bump_enemy") == false then
-                                    signal.register(
-                                        "on_bump_enemy",
-                                        on_bump_enemy_handler
-                                    )
-                                end
+                                -- if signal.exists("on_bump_enemy") == false then
+                                --     signal.register(
+                                --         "on_bump_enemy",
+                                --         on_bump_enemy_handler
+                                --     )
+                                -- end
                             end
                         end
                     end
@@ -2675,7 +2686,20 @@ function initCombatSystem()
         -- send player level up signal.
         signal.emit("player_level_up")
     end)
-
+    
+    -- make springs for exp bar and hp bar size.
+    expBarSpringEntity, expBarSpringRef = spring.make(registry, 0.0, 120.0, 14.0, {
+        target = 1.0,
+        smoothingFactor = 0.9,
+        preventOvershoot = false,
+        maxVelocity = 10.0
+        })
+    hpBarSpringEntity, hpBarSpringRef = spring.make(registry, 0.0, 120.0, 14.0, {
+        target = 1.0,
+        smoothingFactor = 0.9,
+        preventOvershoot = false,
+        maxVelocity = 10.0
+        })
 
     -- update combat system every frame / render health bars
     timer.run(
@@ -2703,14 +2727,27 @@ function initCombatSystem()
                 local playerXP = playerCombatInfo.xp or 0
                 local playerXPForNextLevel = CombatSystem.Game.Leveling.xp_to_next(ctx, playerCombatInfo,
                     playerCombatInfo.level or 1)
+                
+                local expBarSpringRef = spring.get(registry, expBarSpringEntity)
+                local hpBarSpringRef  = spring.get(registry, hpBarSpringEntity)
 
-                -- rounded rect across the screen (screen space) along the top. One in red for health, one in blue for XP, background is dark gray.
-                local healthBarWidth = globals.screenWidth() * 0.4
-                local healthBarHeight = 20
-                local healthBarX = globals.screenWidth() * 0.5 - healthBarWidth * 0.5
+                local screenCenterX = globals.screenWidth() * 0.5
+
+                ------------------------------------------------------------
+                -- HEALTH BAR (container only – no scaling)
+                ------------------------------------------------------------
+                local baseHealthBarWidth  = globals.screenWidth() * 0.4
+                local baseHealthBarHeight = 20
+
+                local healthBarWidth  = baseHealthBarWidth
+                local healthBarHeight = baseHealthBarHeight
+
+                local healthBarX = screenCenterX
                 local healthBarY = healthBarHeight
+
+                -- background container
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = healthBarX + healthBarWidth * 0.5
+                    c.x     = healthBarX
                     c.y     = healthBarY + healthBarHeight * 0.5
                     c.w     = healthBarWidth
                     c.h     = healthBarHeight
@@ -2718,23 +2755,43 @@ function initCombatSystem()
                     c.ry    = 5
                     c.color = util.getColor("dark_gray")
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
+
+                ------------------------------------------------------------
+                -- HEALTH FILL (scaled + anchored to fill center)
+                ------------------------------------------------------------
+                local hpPct    = playerHealth / playerMaxHealth
+                local hpScale  = hpBarSpringRef.value or 1.0
+
+                local fillBaseWidth = baseHealthBarWidth * hpPct
+                local fillCenterX   = (healthBarX - healthBarWidth*0.5) + fillBaseWidth*0.5
+
+                local scaledFillWidth = fillBaseWidth * hpScale
+
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = healthBarX + (playerHealth / playerMaxHealth) * healthBarWidth * 0.5
+                    c.x     = fillCenterX            -- stays fixed
                     c.y     = healthBarY + healthBarHeight * 0.5
-                    c.w     = (playerHealth / playerMaxHealth) * healthBarWidth
+                    c.w     = scaledFillWidth        -- only this changes
                     c.h     = healthBarHeight
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("red")
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
-                -- exp bar fully across top of screen
-                local expBarWidth = globals.screenWidth()
-                local expBarHeight = healthBarHeight
-                local expBarX = globals.screenWidth() * 0.5 - expBarWidth * 0.5
+                ------------------------------------------------------------
+                -- EXP BAR (container only — no scaling)
+                ------------------------------------------------------------
+                local baseExpBarWidth  = globals.screenWidth()
+                local baseExpBarHeight = 20
+
+                local expBarWidth  = baseExpBarWidth
+                local expBarHeight = baseExpBarHeight
+
+                local expBarX = screenCenterX
                 local expBarY = healthBarY - expBarHeight
+
+                -- background container
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = expBarX + expBarWidth * 0.5
+                    c.x     = expBarX
                     c.y     = expBarY + expBarHeight * 0.5
                     c.w     = expBarWidth
                     c.h     = expBarHeight
@@ -2742,15 +2799,30 @@ function initCombatSystem()
                     c.ry    = 5
                     c.color = util.getColor("dark_gray")
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
+
+                ------------------------------------------------------------
+                -- EXP FILL (scaled + anchored to fill center)
+                ------------------------------------------------------------
+                local xpPct    = math.min(playerXP / playerXPForNextLevel, 1.0)
+                local xpScale  = expBarSpringRef.value or 1.0
+
+                local xpFillBaseWidth = baseExpBarWidth * xpPct
+                local xpFillCenterX   = (expBarX - expBarWidth*0.5) + xpFillBaseWidth*0.5
+
+                local xpScaledFillWidth = xpFillBaseWidth * xpScale
+
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = expBarX + (math.min(playerXP / playerXPForNextLevel, 1.0)) * expBarWidth * 0.5
+                    c.x     = xpFillCenterX
                     c.y     = expBarY + expBarHeight * 0.5
-                    c.w     = (math.min(playerXP / playerXPForNextLevel, 1.0)) * expBarWidth
+                    c.w     = xpScaledFillWidth
                     c.h     = expBarHeight
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("yellow")
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+    
+                    
+                    
             end
         end
 
@@ -3302,6 +3374,10 @@ function initSurvivorEntity()
 
         CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
 
+        -- tug the exp bar spring
+        local expBarSpringRef = spring.get(registry, expBarSpringEntity)
+        expBarSpringRef:pull(1.2)
+        
         local playerT = component_cache.get(survivorEntity, Transform)
         if playerT then
             playerT.visualS = 1.5
@@ -3455,8 +3531,8 @@ end
 function initActionPhase()
     
     -- add shader to backgorund layer
-    -- add_layer_shader("background", "peaches_background")
-    add_layer_shader("background", "fireworks")
+    add_layer_shader("background", "peaches_background")
+    -- add_layer_shader("background", "fireworks")
     -- add_layer_shader("background", "starry_tunnel")
     -- add_layer_shader("background", "vacuum_collapse")
     -- add_fullscreen_shader("peaches_background")
@@ -3908,7 +3984,45 @@ function initActionPhase()
                 -- make it steerable
                 -- steering
                 steering.make_steerable(registry, enemyEntity, 3000.0, 30000.0, math.pi * 2.0, 2.0)
-
+                
+                
+                -- give a blinking timer
+                timer.every(0.1, function()
+                    if entity_cache.valid(enemyEntity) then
+                        local animComp = component_cache.get(enemyEntity, AnimationQueueComponent)
+                        if animComp then
+                            animComp.noDraw = not animComp.noDraw
+                        end
+                    end
+                end, nil, true, function() 
+                end, "enemy_blink_timer_" .. tostring(enemyEntity))
+                
+                -- tween the multiplier up to 3.0 over 0.5 seconds, then remove the timer
+                timer.tween_scalar(0.5, function ()
+                    return timer.get_multiplier("enemy_blink_timer_" .. tostring(enemyEntity))
+                end, 
+                function (v)
+                    timer.set_multiplier("enemy_blink_timer_" .. tostring(enemyEntity), v)
+                end, 2, Easing.cubic.f, function()
+                    timer.cancel("enemy_blink_timer_" .. tostring(enemyEntity))
+                    -- ensure it's visible
+                    local animComp = component_cache.get(enemyEntity, AnimationQueueComponent)
+                    if animComp then
+                        animComp.noDraw = false
+                    end
+                end)
+                
+                
+                timer.after(0.6, function()
+                    -- cancel blinking timer
+                    timer.cancel("enemy_blink_timer_" .. tostring(enemyEntity))
+                    -- ensure it's visible
+                    local animComp = component_cache.get(enemyEntity, AnimationQueueComponent)
+                    if animComp then
+                        animComp.noDraw = false
+                    end
+                end)
+                
 
                 -- give it a combat table.
 

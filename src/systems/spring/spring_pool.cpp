@@ -1,5 +1,5 @@
 #include "spring_pool.hpp"
-#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+#include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 
 // Only include SIMD intrinsics if we are on x86/x64
 // #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
@@ -25,7 +25,7 @@ void registerSpring(entt::registry &r, entt::entity e) {
 // SIMD-optimized update loop
 //------------------------------------------------------------
 void updateSpringPool(float dt) {
-    ZoneScopedN("SpringPool::updateAll");
+    ZONE_SCOPED("SpringPool::updateAll");
     const size_t count = gPool.value.size();
     if (count == 0) return;
 

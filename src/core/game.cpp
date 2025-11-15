@@ -7,7 +7,7 @@
 #include "globals.hpp"
 
 #include "systems/input/controller_nav.hpp"
-#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+
 
 #include "../components/components.hpp"
 #include "../components/graphics.hpp"
@@ -1281,7 +1281,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
         //     });
         
-        ZoneScopedN("game::update"); // custom label
+        ZONE_SCOPED("game::update"); // custom label
         if (gameStarted == false)
             gameStarted = true;
 
@@ -1301,7 +1301,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         // }
             
         {
-            ZoneScopedN("z layers, particles, shaders update");
+            ZONE_SCOPED("z layers, particles, shaders update");
             layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
 
             particle::UpdateParticles(globals::registry, delta);
@@ -1309,7 +1309,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         }
         
         {
-            ZoneScopedN("TextSystem::Update");
+            ZONE_SCOPED("TextSystem::Update");
             auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
             for (auto e : textView)
             {
@@ -1327,7 +1327,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //     ui::box::Move(globals::registry, e, f);
         // }
         {
-            ZoneScopedN("Collison quadtree populate Update");
+            ZONE_SCOPED("Collison quadtree populate Update");
             initAndResolveCollisionEveryFrame();
         }
         
@@ -1343,7 +1343,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             //                                  transform::GameObject,
             //                                  transform::Transform>();
 
-            ZoneScopedN("UIElement Update");
+            ZONE_SCOPED("UIElement Update");
             // static auto uiElementGroup = globals::registry.group
 
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
@@ -1364,13 +1364,13 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
         {
-            ZoneScopedN("lua gc step");
+            ZONE_SCOPED("lua gc step");
             // lua garbage collection
             ai_system::masterStateLua.step_gc(4); 
         }
         
         {
-            ZoneScopedN("lua main update");
+            ZONE_SCOPED("lua main update");
             // update lua main script
             sol::protected_function_result result = luaMainUpdateFunc(delta);
             if (!result.valid()) {
@@ -1738,13 +1738,13 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
     auto draw(float dt) -> void
     {
-        ZoneScopedN("game::draw"); // custom label
+        ZONE_SCOPED("game::draw"); // custom label
 
         // set up layers (needs to happen every frame)
         
         
         {
-            ZoneScopedN("game::draw-lua draw main script");
+            ZONE_SCOPED("game::draw-lua draw main script");
             // update lua main script
             sol::protected_function_result result = luaMainDrawFunc(dt);
             if (!result.valid()) {
@@ -1758,7 +1758,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
 
         {
-            ZoneScopedN("game::draw-UIElement Draw");
+            ZONE_SCOPED("game::draw-UIElement Draw");
             // debug draw ui elements (draw ui boxes, will auto-propogate to children)
             // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
             // for (auto e : viewUI)
@@ -1777,7 +1777,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
         // dynamic text
         {
-            ZoneScopedN("Dynamic Text Draw");
+            ZONE_SCOPED("Dynamic Text Draw");
             auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : textView)
             {
@@ -1804,7 +1804,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
 
         {
-            ZoneScopedN("AnimatedSprite Draw");
+            ZONE_SCOPED("AnimatedSprite Draw");
             auto spriteView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : spriteView)
             {
@@ -1877,12 +1877,12 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         // uiProfiler.Stop();
         
         {
-            ZoneScopedN("Particle Draw");
+            ZONE_SCOPED("Particle Draw");
             particle::DrawParticles(globals::registry, sprites);
         }
         
         {
-            ZoneScopedN("Tilemap draw");
+            ZONE_SCOPED("Tilemap draw");
             
             // ldtk_loader::DrawAllLayers("Everything");
             // ldtk_loader::DrawAllLayers("Background_image");
@@ -1899,9 +1899,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         
 
         {
-            ZoneScopedN("LayerCommandsToCanvas Draw");
+            ZONE_SCOPED("LayerCommandsToCanvas Draw");
             {
-                ZoneScopedN("background layer");
+                ZONE_SCOPED("background layer");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &worldCamera->cam);
 
                 if (auto it = game::s_layerShaders.find("background"); it != game::s_layerShaders.end())
@@ -1911,7 +1911,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
             
             {
-                ZoneScopedN("sprites layer");
+                ZONE_SCOPED("sprites layer");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &worldCamera->cam);
 
                 if (auto it = game::s_layerShaders.find("sprites"); it != game::s_layerShaders.end())
@@ -1919,7 +1919,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             }
             
             {
-                ZoneScopedN("ui layer");
+                ZONE_SCOPED("ui layer");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);
 
                 if (auto it = game::s_layerShaders.find("ui"); it != game::s_layerShaders.end())
@@ -1928,7 +1928,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
             
             {
-                ZoneScopedN("final output layer");
+                ZONE_SCOPED("final output layer");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr);
 
                 // layer-specific final shaders (optional)
@@ -1967,7 +1967,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
             
             {
-                ZoneScopedN("Draw canvases to other canvases with shaders");
+                ZONE_SCOPED("Draw canvases to other canvases with shaders");
                 // FIRST: Composite background (with its shaders applied)
                 layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main",
                     0, 0, 0, 1, 1, WHITE);
@@ -2002,14 +2002,14 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(sprites, "flash", 0, 0, 0, 1, 1, WHITE);   // render the sprite layer flash canvas to the screen
 
         {
-            ZoneScopedN("Final Output Draw to screen");
+            ZONE_SCOPED("Final Output Draw to screen");
             // BeginDrawing();
 
             // clear screen
             ClearBackground(BLACK);
             
             { // build final output layer
-                ZoneScopedN("Draw canvas to render target (screen)");
+                ZONE_SCOPED("Draw canvas to render target (screen)");
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "crt"); // render the final output layer main canvas to the screen
                 
                 
@@ -2059,7 +2059,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             {
 #ifndef __EMSCRIPTEN__
             if (globals::useImGUI) {
-                ZoneScopedN("Debug UI");
+                ZONE_SCOPED("Debug UI");
                 shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
                 ShowDebugUI();
                 lua_hot_reload::draw_imgui(ai_system::masterStateLua);
@@ -2117,7 +2117,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             // DrawHollowCircleStencil({mousePos.x, mousePos.y}, 100, 50, YELLOW);
 
             {
-                ZoneScopedN("EndDrawing call");
+                ZONE_SCOPED("EndDrawing call");
                 // EndDrawing();
             }
 

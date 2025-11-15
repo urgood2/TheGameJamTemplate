@@ -44,43 +44,29 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
-- globalShaderUniforms.set needs to handle integers.
+- juice for exp and hp bars. (use springs)
+- [ ] slow time slightly when player gets too close to an enemy?
+- blink for enemies
+
 - test shaders: item_glow, starry_tunnel, fireworks
 - only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.
 - glow doesn't seem to blend with background. why?
 - test new stingers for lootbox open.
+- [ ] Do fireworks, then the rush thing when you get an item. 
 
-- blink for enemies
 - Need to make tooltips smaller and more readable. how?
 
-- [ ] Add https://www.jdno.dev/automate-building-and-publishing-a-game-on-itch-io/ girhub actions web build autmation.
-- [ ] try mkaing background shaders swappable form lua. Do fireworks, then the rush thing when you get an item. 
 
 
 - [ ] cursor hover doesn't work fully correctly when controller (points to wrong card sometimes)
 - [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
-- [ ] how to muffle playing music?
-- [ [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.
+- [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.
 
-- [ ] slow time slightly when player gets too close to an enemy?]
-- [ ] make pickups magnetic -> can we add a shape to player and make that shape a sensor?
-
-- [ ] looping multiple songs, turning them all off at once.
-
-- [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.
-
-
-
-
-- debug onstophover, get tooltips to show above everything else, also place wand tooltip somwhere (maybe add a icon to hover?) 
--pickups should gravitate toward player when close enough.
 - start wand evaluation mechanism.
 
 - Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
 - add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
 - implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
-- make card area shift cards to left and right of new card.
-- apply the new assets, including some music and ui.
 
 - use the new itch assets to indicate icons for wands & when they are on cooldown.
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
@@ -142,6 +128,7 @@ end)
 - also need currency.
 
 # errors
+- Using 3d_skew shader on cards makes player invisible. why?
 - rendeirng background sometimes goes translucent. not sure why?
 - ui strings in tooltips overlap bounds for some reason.
 - entities not getting filtured porperly, camera not always kicking in.
@@ -192,6 +179,9 @@ end)
 - [ ] Add glow to specfiic sprites: https://godotshaders.com/shader/item-pulse-glow/
 
 # polish phase
+
+
+- [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.
 - [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate. -> it works, but needs some work, since buttons that contain images, etc. can't do this yet.
 - [ ] Some ambient movement (rocking) to items/ui
 - [ ] integrate new music from eagle folder.

@@ -4,10 +4,6 @@
     "music": 
     {
         "main-menu": "Tranquil Tides.wav",
-        "space-ambiance": "AMBIENCE_SciFi_Space_Hangar_05_loop_stereo.wav",
-        "planning-music": "18 - Phantom's Requiem (Loop).ogg",
-        "action-music": "3 - Whispers of the Abyss (Loop).mp3",
-        "shop-music": "20 - Bard's Ballad (Loop).mp3",
         
         "main-music-1": "SMILETRON - Self Titled - 01 SANCTUM.ogg",
         "main-music-2": "SMILETRON - Self Titled - 02 ORACLE.ogg",
@@ -70,7 +66,7 @@
                 
                 "gain_exp_pickup": "Gems Loot 1.wav",
                 "level_up": "Casual Whoosh 8.wav",
-                "player_hurt": "Default Strike (3).wav",
+                "player_hurt": "Default Strike 3.wav",
                 
                 "item_appear_1": "IMPACT_Stone_On_Stone_01_Subtle_mono.wav",
                 "item_appear_2" : "IMPACT_Stone_On_Stone_02_Subtle_mono.wav",

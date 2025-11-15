@@ -1193,7 +1193,7 @@ namespace ui
     void element::UpdateObject(entt::registry &registry, entt::entity entity, UIConfig *elementConfig, transform::GameObject *elementNode, UIConfig *objectConfig, transform::Transform *objectTransform, transform::InheritedProperties *objectRole, 
                                transform::GameObject *objectNode)
     {
-        ZoneScopedN("UI Element: UpdateObject");
+        ZONE_SCOPED("UI Element: UpdateObject");
         // auto *config = registry.try_get<UIConfig>(entity);
 
         // AssertThat(config, Is().Not().EqualTo(nullptr));
@@ -1258,7 +1258,7 @@ namespace ui
         // Step 5: Handle object updates
         if (objectConfig->ui_object_updated)
         {
-            ZoneScopedN("UI Element: UpdateObject - Object Updated");
+            ZONE_SCOPED("UI Element: UpdateObject - Object Updated");
             objectConfig->ui_object_updated = false;
 
             objectConfig->parent = entity;
@@ -1280,7 +1280,7 @@ namespace ui
             // Adjust parent dimensions & alignments
             if (objectConfig->non_recalc)
             { // TODO: there is also no_recalc. what is the difference?
-                ZoneScopedN("UI Element: UpdateObject - Non Recalc");
+                ZONE_SCOPED("UI Element: UpdateObject - Non Recalc");
                 auto *uiElement = registry.try_get<UIElementComponent>(entity);
                 auto *node = registry.try_get<transform::GameObject>(entity);
                 auto parent = node->parent.value();
@@ -1300,7 +1300,7 @@ namespace ui
             }
             else
             {
-                ZoneScopedN("UI Element: UpdateObject - Recalculate");
+                ZONE_SCOPED("UI Element: UpdateObject - Recalculate");
                 auto *uiElement = registry.try_get<UIElementComponent>(entity);
 
                 ui::box::RenewAlignment(registry, uiElement->uiBox);
@@ -1311,7 +1311,7 @@ namespace ui
     void element::DrawSelfImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
     {
         
-        ZoneScopedN("UI Element: DrawSelf");
+        ZONE_SCOPED("UI Element: DrawSelf");
         auto *uiElement = &uiElementComp;
         auto *config = &configComp;
         auto *state = &stateComp;
@@ -1362,7 +1362,7 @@ namespace ui
         // Is it a button?
         if (config->buttonCallback || config->button_UIE)
         {
-            ZoneScopedN("UI Element: Button Logic");
+            ZONE_SCOPED("UI Element: Button Logic");
             auto parentEntity = node->parent.value();
             Vector2 parentParallax = {0, 0};
 
@@ -1396,7 +1396,7 @@ namespace ui
         // is it text?
         if (config->uiType == UITypeEnum::TEXT && config->scale)
         {
-            ZoneScopedN("UI Element: Text Logic");
+            ZONE_SCOPED("UI Element: Text Logic");
             float rawScale = config->scale.value() * localization::getFontData().fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * localization::getFontData().fontLoadedSize * 0.04f * scaleFactor;
@@ -1521,7 +1521,7 @@ namespace ui
         }
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT)
         {
-            ZoneScopedN("UI Element: Rectangle/Container Logic");
+            ZONE_SCOPED("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
@@ -1664,7 +1664,7 @@ namespace ui
         }
         else if (config->uiType == UITypeEnum::OBJECT && config->object && globals::registry.any_of<transform::GameObject>(config->object.value()))
         {
-            ZoneScopedN("UI Element: Object Logic");
+            ZONE_SCOPED("UI Element: Object Logic");
             //TODO: this part needs fixing
             // hightlighted object outline
             auto &objectNode = globals::registry.get<transform::GameObject>(config->object.value());
@@ -1789,7 +1789,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // outline
         if (config->outlineColor && config->outlineColor->a > 0.01f)
         {
-            ZoneScopedN("UI Element: Outline Logic");
+            ZONE_SCOPED("UI Element: Outline Logic");
             if (config->outlineThickness)
             {
                 // util::PrepDraw(layerPtr, registry, entity, 1.0f);
@@ -1935,7 +1935,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     void element::DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex)
     {
-        ZoneScopedN("UI Element: DrawSelf");
+        ZONE_SCOPED("UI Element: DrawSelf");
         auto *uiElement = &uiElementComp;
         auto *config = &configComp;
         auto *state = &stateComp;
@@ -1986,7 +1986,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // Is it a button?
         if (config->buttonCallback || config->button_UIE)
         {
-            ZoneScopedN("UI Element: Button Logic");
+            ZONE_SCOPED("UI Element: Button Logic");
             auto parentEntity = node->parent.value();
             Vector2 parentParallax = {0, 0};
 
@@ -2029,7 +2029,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // is it text?
         if (config->uiType == UITypeEnum::TEXT && config->scale)
         {
-            ZoneScopedN("UI Element: Text Logic");
+            ZONE_SCOPED("UI Element: Text Logic");
             float rawScale = config->scale.value() * localization::getFontData().fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * localization::getFontData().fontLoadedSize * 0.04f * scaleFactor;
@@ -2145,7 +2145,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         }
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT)
         {
-            ZoneScopedN("UI Element: Rectangle/Container Logic");
+            ZONE_SCOPED("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             if (config->shadow && globals::settings.shadowsOn)
@@ -2486,7 +2486,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // outline
         if (config->outlineColor && config->outlineColor->a > 0.01f)
         {
-            ZoneScopedN("UI Element: Outline Logic");
+            ZONE_SCOPED("UI Element: Outline Logic");
             if (config->outlineThickness)
             {
                 // util::PrepDraw(layerPtr, registry, entity, 1.0f);
@@ -2633,7 +2633,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     void element::Update(entt::registry &registry, entt::entity entity, float dt,  UIConfig *uiConfig, transform::Transform *transform, UIElementComponent *uiElement, transform::GameObject *node)
     {
-        ZoneScopedN("UI Element: Update");
+        ZONE_SCOPED("UI Element: Update");
         // if button is disabled, set clickable to false
         if (uiConfig->disable_button)
         {

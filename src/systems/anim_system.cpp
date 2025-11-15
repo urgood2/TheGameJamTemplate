@@ -588,7 +588,7 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     }
 
     auto update(float delta) -> void {
-        ZoneScopedN("Update animation system");
+        ZONE_SCOPED("Update animation system");
         auto view = globals::registry.view<AnimationQueueComponent>();
     
         for (auto &e : view) {

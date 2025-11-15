@@ -13,11 +13,6 @@
 #include "entt/entt.hpp" // ECS
 // #include "tweeny.h"      // tweening library
 
-// #define TRACY_NO_CALLSTACK  // disable callstack capturing in tracy for lua code to work.
-// #undef TRACY_HAS_CALLSTACK
-#include "third_party/tracy-master/public/tracy/Tracy.hpp"
-
-
 
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
@@ -30,7 +25,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h" // or any library that uses Windows.h
 
-#include "util/common_headers.hpp" // common headers like json, spdlog, etc.
+#include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 
 #if defined(_WIN32) // raylib uses these names as function parameters
 #undef near
@@ -138,7 +133,7 @@ void mainMenuStateGameLoop(float dt)
 
 void MainLoopFixedUpdateAbstraction(float dt)
 {
-    ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
+    ZONE_SCOPED("MainLoopFixedUpdateAbstraction"); // custom label
     
     updateSystems(dt);
 
@@ -234,17 +229,17 @@ auto updatePhysics(float dt, float alpha) -> void
 {
     main_loop::mainLoop.physicsTicks++;
     {
-        ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
+        ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
         physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
     }
     
     {
-        ZoneScopedN("Physics Step All Worlds");
+        ZONE_SCOPED("Physics Step All Worlds");
         globals::physicsManager->stepAll(dt); // step all physics worlds
     }
     
     {
-        ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
+        ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
         physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager, alpha);
     
     
@@ -274,10 +269,10 @@ void RunGameLoop()
 #ifndef __EMSCRIPTEN__
     while (!WindowShouldClose())
     {
-        ZoneScopedN("RunGameLoop"); // custom label
+        ZONE_SCOPED("RunGameLoop"); // custom label
 #endif
         {
-            ZoneScopedN("BeginDrawing/rlImGuiBegin call");
+            ZONE_SCOPED("BeginDrawing/rlImGuiBegin call");
             BeginDrawing();
         
 
@@ -313,7 +308,7 @@ void RunGameLoop()
         int updatesPerformed = 0;
         while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
         {
-            ZoneScopedN("Physics Update Step"); // custom label
+            ZONE_SCOPED("Physics Update Step"); // custom label
             float scaledStep = mainLoop.rate * mainLoop.timescale;
 
             // Split into two substeps for improved stability
@@ -376,7 +371,7 @@ void RunGameLoop()
         }
         
         {
-            ZoneScopedN("EndDrawing/rlImGuiEnd call");
+            ZONE_SCOPED("EndDrawing/rlImGuiEnd call");
 
 #ifndef __EMSCRIPTEN__
         if (globals::useImGUI)
@@ -473,44 +468,44 @@ int main(void)
 /// @return
 auto updateSystems(float dt) -> void
 {
-    ZoneScopedN("UpdateSystems"); // custom label
+    ZONE_SCOPED("UpdateSystems"); // custom label
     
     // clear layers
     {
-        ZoneScopedN("layer::Begin");
+        ZONE_SCOPED("layer::Begin");
         layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
     }
     
     {
-        ZoneScopedN("Input System Update");
+        ZONE_SCOPED("Input System Update");
         updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
         fade_system::update(dt); // update fade system
     }
     
     {
-        ZoneScopedN("Input System Update");
+        ZONE_SCOPED("Input System Update");
         input::Update(globals::registry, globals::inputState, dt);
     }
     
     {
-        ZoneScopedN("Global Variables Update & sound");
+        ZONE_SCOPED("Global Variables Update & sound");
         globals::updateGlobalVariables();
         // SPDLOG_DEBUG("Updating sound with dt of {}", main_loop::mainLoop.rawDeltaTime);
         sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
     }
     
     // {
-    //     ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
+    //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
     //     physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
     // }
     
     // {
-    //     ZoneScopedN("Physics Step All Worlds");
+    //     ZONE_SCOPED("Physics Step All Worlds");
     //     globals::physicsManager->stepAll(dt); // step all physics worlds
     // }
     
     // {
-    //     ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
+    //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
     //     physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
     // }
     
@@ -523,22 +518,22 @@ auto updateSystems(float dt) -> void
     transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
     controller_nav::NavManager::instance().update(dt);
     {
-        ZoneScopedN("EventQueueSystem::EventManager::update");
+        ZONE_SCOPED("EventQueueSystem::EventManager::update");
         // update event queue
         timer::EventQueueSystem::EventManager::update(dt);
     }
     
     {
-        ZoneScopedN("scripting::monobehavior_system::update");
+        ZONE_SCOPED("scripting::monobehavior_system::update");
         scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
     }
     {
-        ZoneScopedN("AI System Update");
+        ZONE_SCOPED("AI System Update");
         ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
     }
     
     {
-        ZoneScopedN("ai_system::updateHumanAI");
+        ZONE_SCOPED("ai_system::updateHumanAI");
         ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
     }
 }

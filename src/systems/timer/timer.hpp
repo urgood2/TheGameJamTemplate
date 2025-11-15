@@ -16,8 +16,7 @@
 
 #include "sol/sol.hpp"
 
-
-#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+#include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 
 
 // TODO: probably use a separate random isntance instead of default one
@@ -386,7 +385,7 @@ namespace timer
         {
             inUpdate = true;
 
-            ZoneScopedN("Update Timers"); // custom label
+            ZONE_SCOPED("Update Timers"); // custom label
             for (auto it = timers.begin(); it != timers.end();)
             {
                 Timer &timer = it->second;

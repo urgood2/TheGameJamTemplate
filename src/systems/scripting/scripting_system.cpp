@@ -1,7 +1,6 @@
 #include <thread>
 #include <chrono>
-#include <tracy/Tracy.hpp>
-
+#include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 #include "scripting_system.hpp"
 
 #include "registry_bond.hpp"
@@ -92,13 +91,13 @@ namespace scripting
      */
     void script_system_update(entt::registry &registry, float delta_time)
     {
-        ZoneScopedN("scripting::script_system_update");
+        ZONE_SCOPED("scripting::script_system_update");
         static auto view = registry.view<ScriptComponent>();
         // for (auto [entity, script] : view.each()) {
             
-        //     ZoneScopedN("scripting::script_system_update - per entity");
+        //     ZONE_SCOPED("scripting::script_system_update - per entity");
         //     {
-        //         ZoneScopedN("scripting::script_system_update - is active check");
+        //         ZONE_SCOPED("scripting::script_system_update - is active check");
         //         // Filter only if tagged
         //         if (auto *tag = registry.try_get<entity_gamestate_management::StateTag>(entity)) {
         //             if (!entity_gamestate_management::active_states_instance().is_active(*tag))

@@ -498,7 +498,7 @@ namespace shaders
 
     auto hotReloadShaders() -> void
     {
-        ZoneScopedN("HotReloadShaders"); // custom label
+        ZONE_SCOPED("HotReloadShaders"); // custom label
         for (auto &[shaderName, shader] : loadedShaders)
         {
             // Retrieve shader paths from the map
@@ -604,7 +604,7 @@ namespace shaders
     // Update all shader uniforms
     auto updateAllShaderUniforms() -> void
     {
-        ZoneScopedN("UpdateAllShaderUniforms"); // custom label
+        ZONE_SCOPED("UpdateAllShaderUniforms"); // custom label
         for (const auto &[shaderName, updateLambda] : uniformUpdateCallbacks)
         {
             if (loadedShaders.find(shaderName) != loadedShaders.end())
@@ -623,7 +623,7 @@ namespace shaders
     // Called every frame to update shader system
     auto update(float dt) -> void
     {
-        ZoneScopedN("Shaders update");
+        ZONE_SCOPED("Shaders update");
 
         updateAllShaderUniforms();
         // FIXME: perforamnce intensive on windows, commenting out for now

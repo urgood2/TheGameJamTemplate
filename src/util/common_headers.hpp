@@ -23,8 +23,12 @@ using json = nlohmann::json;
 	#undef far
 #endif
 
-
-#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+#if TRACY_ENABLED
+    #include "third_party/tracy-master/public/tracy/Tracy.hpp"
+    #define ZONE_SCOPED(name) ZoneScopedN(name)
+#else
+    #define ZONE_SCOPED(name) /* no-op */
+#endif
 
 #include "entt/fwd.hpp"
 

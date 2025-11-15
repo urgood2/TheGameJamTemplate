@@ -2935,7 +2935,7 @@ void ClearDrawCommands(std::shared_ptr<Layer> layer) {
 }
 
 void Begin() {
-  ZoneScopedN("Layer Begin-clear commands");
+  ZONE_SCOPED("Layer Begin-clear commands");
   ClearAllDrawCommands();
 }
 

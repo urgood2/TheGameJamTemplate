@@ -278,7 +278,7 @@ namespace input
 
     auto Update(entt::registry &registry, InputState &inputState, float dt) -> void
     {
-        ZoneScopedN("Input system update");
+        ZONE_SCOPED("Input system update");
         
         auto mouseCategory = DetectMouseActivity(inputState);
         auto gamepadCategory = UpdateGamepadAxisInput(inputState, registry, dt);

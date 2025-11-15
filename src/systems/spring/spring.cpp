@@ -14,7 +14,7 @@ namespace spring
     //------------------------------------------------------------
     auto updateAllSprings(entt::registry &registry, float deltaTime) -> void
     {
-        ZoneScopedN("Update springs");
+        ZONE_SCOPED("Update springs");
         
         // SPDLOG_INFO("Total springs: {}", registry.view<spring::Spring>().size());
         // SPDLOG_INFO("Disabled springs: {}", registry.view<spring::SpringDisabledTag>().size());

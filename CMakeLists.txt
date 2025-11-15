@@ -23,8 +23,23 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # set(CMAKE_BUILD_TYPE Debug)
 
 # enable tracy (disable for web)
-option( TRACY_ENABLE "" ON)
-add_definitions(-DTRACY_NO_CRASH_HANDLER)
+
+# Enable tracy only in non-release native builds
+if (NOT EMSCRIPTEN AND
+    NOT CMAKE_BUILD_TYPE MATCHES "Release" AND
+    NOT CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
+
+    message(STATUS "Tracy ENABLED for this build")
+    add_definitions(-DTRACY_ENABLED=1)
+    add_definitions(-DTRACY_NO_CRASH_HANDLER)
+    option( TRACY_ENABLE "" ON)
+
+else()
+    message(STATUS "Tracy DISABLED for this build")
+    add_definitions(-DTRACY_ENABLED=0)
+    option( TRACY_ENABLE "" OFF)
+endif()
+
 
 #set opengl version
 #enum_option(OPENGL_VERSION "OFF;4.3;3.3;2.1;1.1;ES 2.0;ES 3.0" "Force a specific OpenGL Version?")

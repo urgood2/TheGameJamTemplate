@@ -41,7 +41,7 @@ Converts encumbrance into damage
 
 
 # Non-stat values:
-- player level.
+- player level. 
     
 # programming side
 - juice for exp and hp bars. (use springs)

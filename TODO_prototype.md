@@ -47,7 +47,7 @@ Converts encumbrance into damage
 - player level. 
     
 # programming side
-- 
+- full screen responsiveness, changing window size: https://chatgpt.com/share/691886c1-aa70-800a-8908-70f450c17b0b
 
 - test shaders: item_glow, fireworks
 - only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.

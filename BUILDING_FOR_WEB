@@ -1,4 +1,5 @@
-Building for Web
+* Use [build-web] or #build in commit message to trigger web build github action.
+
 
 - If you get errors about sol2, use this; https://github.com/ThePhD/sol2/commit/d805d027e0a0a7222e936926139f06e23828ce9f#diff-6ed9c3214abb954282e4aa199723b4fbbb89c19ac8cc296534b817fae46e818dR2195
 

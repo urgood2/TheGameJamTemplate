@@ -308,49 +308,48 @@ namespace game
         
         globalShaderUniforms.set("fireworks", "uGridRect", Vector4{0,0,1,1});
         globalShaderUniforms.set("fireworks", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
-
-        globalShaderUniforms.set("fireworks", "s11", 0.8f);
-        globalShaderUniforms.set("fireworks", "s33", 0.13f);
-        globalShaderUniforms.set("fireworks", "s55", 0.16f);
-        globalShaderUniforms.set("fireworks", "s77", 0.9f);
-        globalShaderUniforms.set("fireworks", "s99", 6.5f);
-
-        // fireworks
         
-        globalShaderUniforms.set("fireworks", "Praticle_num", 30.f);
 
-        globalShaderUniforms.set("fireworks", "Range", 0.75f);
-        globalShaderUniforms.set("fireworks", "speed", 2.0f);
-        globalShaderUniforms.set("fireworks", "gravity", 0.5f);
-        globalShaderUniforms.set("fireworks", "TimeStep", 2.f);
+        globalShaderUniforms.set("fireworks", "Praticle_num", (int)30);
+        globalShaderUniforms.set("fireworks", "TimeStep", (int)3);
 
-        globalShaderUniforms.set("fireworks", "ShneyMagnitude", 1.0f);
+        // Floats
+        globalShaderUniforms.set("fireworks", "s77",            1.13f);
+        globalShaderUniforms.set("fireworks", "Range",          1.14f);
+        globalShaderUniforms.set("fireworks", "s55",            1.51f);
+        globalShaderUniforms.set("fireworks", "gravity",       -0.49f);
+        globalShaderUniforms.set("fireworks", "ShneyMagnitude", 0.42f);
+        globalShaderUniforms.set("fireworks", "s33",            4.15f);
+        globalShaderUniforms.set("fireworks", "iTime",        373.62292f);
+        globalShaderUniforms.set("fireworks", "s99",            9.92f);
+        globalShaderUniforms.set("fireworks", "s11",            0.40f);
+        globalShaderUniforms.set("fireworks", "speed",          5.57f);
         
         // starry tunnel
-
-        globalShaderUniforms.set("starry_tunnel", "m", 8);
-        globalShaderUniforms.set("starry_tunnel", "n", 30);
+        globalShaderUniforms.set("starry_tunnel", "m", 12);
+        globalShaderUniforms.set("starry_tunnel", "n", 40);
 
         globalShaderUniforms.set("starry_tunnel", "hasNeonEffect", true);
         globalShaderUniforms.set("starry_tunnel", "hasDot", false);
         globalShaderUniforms.set("starry_tunnel", "haszExpend", false);
 
-        globalShaderUniforms.set("starry_tunnel", "theta", 80.0f);
-        globalShaderUniforms.set("starry_tunnel", "addH", 30.0f);
-        globalShaderUniforms.set("starry_tunnel", "scale", 0.01f);
+        globalShaderUniforms.set("starry_tunnel", "theta", 20.0f);
+        globalShaderUniforms.set("starry_tunnel", "addH", 5.0f);
+        globalShaderUniforms.set("starry_tunnel", "scale", 0.05f);
 
-        globalShaderUniforms.set("starry_tunnel", "light_disperse", 2.0f);
+        globalShaderUniforms.set("starry_tunnel", "light_disperse", 4.0f);
         globalShaderUniforms.set("starry_tunnel", "stertch", 30.0f);
-        globalShaderUniforms.set("starry_tunnel", "speed", 10.0f);
+        globalShaderUniforms.set("starry_tunnel", "speed", 30.0f);
         globalShaderUniforms.set("starry_tunnel", "modTime", 20.0f);
 
-        globalShaderUniforms.set("starry_tunnel", "rotate_speed", 0.0f);
-        globalShaderUniforms.set("starry_tunnel", "rotate_plane_speed", 0.0f);
+        globalShaderUniforms.set("starry_tunnel", "rotate_speed", 3.0f);
+        globalShaderUniforms.set("starry_tunnel", "rotate_plane_speed", 1.0f);
         globalShaderUniforms.set("starry_tunnel", "theta_sine_change_speed", 0.0f);
 
         globalShaderUniforms.set("starry_tunnel", "iswhite", false);
         globalShaderUniforms.set("starry_tunnel", "isdarktotransparent", false);
         globalShaderUniforms.set("starry_tunnel", "bemask", false);
+
         
         shaders::registerUniformUpdate("starry_tunnel", [](Shader &shader){
             globalShaderUniforms.set("starry_tunnel", "iTime", (float)GetTime());

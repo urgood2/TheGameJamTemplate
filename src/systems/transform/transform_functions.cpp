@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
-#include <tracy/Tracy.hpp>
+#include "util/common_headers.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"

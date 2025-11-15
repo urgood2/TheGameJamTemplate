@@ -38,7 +38,10 @@ Converts encumbrance into damage
 
 # stat ideas
 - Maybe give wand equip requirements? triggers as well?
-
+- Some basic stats:
+    - physique: health, armor, knockback resistance
+    - cunning: damage, critical chance, attack speed
+    - spirit: cooldown reduction, luck
 
 # Non-stat values:
 - player level. 
@@ -48,7 +51,7 @@ Converts encumbrance into damage
 - [ ] slow time slightly when player gets too close to an enemy?
 - blink for enemies
 
-- test shaders: item_glow, starry_tunnel, fireworks
+- test shaders: item_glow, fireworks
 - only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.
 - glow doesn't seem to blend with background. why?
 - test new stingers for lootbox open.
@@ -128,6 +131,7 @@ end)
 - also need currency.
 
 # errors
+- starry_tunnel shader not working.
 - Using 3d_skew shader on cards makes player invisible. why?
 - rendeirng background sometimes goes translucent. not sure why?
 - ui strings in tooltips overlap bounds for some reason.

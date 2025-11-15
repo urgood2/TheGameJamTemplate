@@ -3,11 +3,11 @@
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
+uniform float iTime;
 
-//────────────────────────────────────────────────────────
-// Custom uniforms (Raylib compatible)
+uniform int m;
+uniform int n;
+
 uniform bool hasNeonEffect;
 uniform bool hasDot;
 uniform bool haszExpend;
@@ -15,7 +15,6 @@ uniform bool haszExpend;
 uniform float theta;
 uniform float addH;
 uniform float scale;
-
 uniform float light_disperse;
 uniform float stertch;
 uniform float speed;
@@ -29,17 +28,14 @@ uniform bool iswhite;
 uniform bool isdarktotransparent;
 uniform bool bemask;
 
-uniform int m;
-uniform int n;
-
-uniform float iTime;
-
-//────────────────────────────────────────────────────────
+uniform int debugMode = 0;     // ⬅ NEW! choose mode 0–5
 
 out vec4 finalColor;
 
-// Random
-float random(in vec2 uv) {
+// -------------------------------------------------------------
+// Utilities
+// -------------------------------------------------------------
+float random2(vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
@@ -47,77 +43,151 @@ bool vec3lower(vec3 A, float v) {
     return (A.r <= v && A.g <= v && A.b <= v);
 }
 
-void main() {
-    vec4 texelColor = texture(texture0, fragTexCoord);
+// -------------------------------------------------------------
+// Main
+// -------------------------------------------------------------
+void main()
+{
+    vec2 suv = fragTexCoord - 0.5;
+
+    float PI = 3.14159265359;
+    float TAU = 6.28318530718;
+
+    // SAFETY FIXES
+    float safeScale = max(scale, 0.03);
+    float angle = clamp(theta + iTime * theta_sine_change_speed, -80.0, 80.0);
+    float angleRad = angle * PI / 180.0;
 
     vec4 COLOR = vec4(0.0);
 
-    vec2 suv = (fragTexCoord - 0.5) * 2.0;
+    //--------------------------------------------
+    // DEBUG VISUALIZATION MODE SHORTCUTS
+    //--------------------------------------------
+    if (debugMode == 1) {
+        // Z-depth stripes
+        float zDbg = abs(sin(iTime + suv.x * 20.0 + suv.y * 10.0));
+        finalColor = vec4(vec3(zDbg), 1.0);
+        return;
+    }
 
-    const float PI = 3.14159265359;
-    const float TAU = 6.28318530718;
+    if (debugMode == 5) {
+        // Theta/tan distortion visualization
+        float th = (angle + 80.0) / 160.0;
+        finalColor = vec4(th, 1.0 - th, 0.5 + 0.5*sin(iTime), 1.0);
+        return;
+    }
 
-    for (int j = 0; j < n && (hasDot || hasNeonEffect); j++) {
+    //--------------------------------------------
+    // Main Loop
+    //--------------------------------------------
+    for (int j = 0; j < n; j++)
+    {
+        float jfix = (j == 0) ? 0.001 : float(j);
+        float seed = random2(vec2(2.0 - jfix, jfix * 37.0));
 
-        float seed = random(vec2(2.0 - float(j), float(j) * 37.0));
-
-        for (int i = 0; i < m; i++) {
-
-            float z = mod(
-                5.0 + float(n)/float(j) * 10.0
-                + iTime * speed + 8.0 + float(i) * scale * stertch,
+        for (int i = 0; i < m; i++)
+        {
+            float rawz = mod(
+                5.0 + float(n)/jfix * 10.0 +
+                iTime * speed + 8.0 + float(i) * safeScale * stertch,
                 modTime
-            ) * scale;
+            );
+
+            float z = rawz * safeScale;
 
             float aphla = seed * TAU + iTime * rotate_speed;
 
-            float H = addH * scale +
-                      z * tan((theta + iTime * theta_sine_change_speed) / 180.0 * PI);
+            float H = addH * safeScale + z * tan(angleRad);
 
             float zscale = haszExpend
-                         ? min(z + 0.06, modTime) * scale * modTime * 0.5
-                         : scale;
+                ? min(z + 0.06, modTime) * safeScale * modTime * 0.5
+                : safeScale;
+
+            zscale = max(zscale, 0.02);
 
             vec2 nuv = vec2(
                 H * cos(aphla + iTime * rotate_plane_speed),
                 H * sin(aphla)
             );
 
-            // Neon
-            if (hasNeonEffect) {
-                float l = max(
-                    exp(-distance(suv / zscale, nuv / zscale) / light_disperse), 
-                    0.0
-                );
-
-                vec4 L = iswhite
-                    ? vec4(l)
-                    : vec4(
-                        random(vec2(seed, float(j) * 37.0)) * l,
-                        random(vec2(7.0 + float(j), seed)) * l,
-                        random(vec2(seed, 3.0 - float(j))) * l,
-                        1.0
-                    );
-
-                COLOR = min(COLOR + L, vec4(1.0));
+            //------------------------------------
+            // DEBUG MODE 2: show NU VECTORS
+            //------------------------------------
+            if (debugMode == 2)
+            {
+                float d = distance(suv, nuv);
+                if (d < 0.01) {
+                    finalColor = vec4(1.0, 1.0, 1.0, 1.0);
+                    return;
+                }
+                continue; // skip other effects
             }
 
-            // Dot mode
-            if (distance(suv, nuv) < 1.0 * zscale && hasDot) {
-                COLOR = vec4(1.0);
+            //------------------------------------
+            // DEBUG MODE 3: neon falloff
+            //------------------------------------
+            if (debugMode == 3)
+            {
+                float d = distance(suv / zscale, nuv / zscale);
+                float l = exp(-d / max(light_disperse, 0.1));
+                finalColor = vec4(vec3(l), 1.0);
+                return;
+            }
+
+            //------------------------------------
+            // DEBUG MODE 4: contribution mask
+            //------------------------------------
+            if (debugMode == 4)
+            {
+                float contrib = 1.0 / (1.0 + float(i) + float(j));
+                finalColor = vec4(contrib, float(i)/float(m), float(j)/float(n), 1.0);
+                return;
+            }
+
+            //------------------------------------
+            // NORMAL RENDERING
+            //------------------------------------
+            if (debugMode == 0)
+            {
+                // Neon effect
+                if (hasNeonEffect)
+                {
+                    float d = distance(suv / zscale, nuv / zscale);
+                    float l = exp(-d / max(light_disperse, 0.1));
+
+                    vec4 L = iswhite
+                        ? vec4(l)
+                        : vec4(
+                              random2(vec2(seed, jfix * 37.0)) * l,
+                              random2(vec2(7.0 + jfix, seed)) * l,
+                              random2(vec2(seed, 3.0 - jfix)) * l,
+                              1.0
+                          );
+
+                    COLOR += L;
+                    COLOR = min(COLOR, vec4(1.0));
+                }
+
+                // Dot mode
+                if (hasDot && distance(suv, nuv) < zscale)
+                {
+                    COLOR = vec4(1.0);
+                }
             }
         }
     }
 
-    // Masking logic
-    if (isdarktotransparent) {
-        COLOR = vec3lower(COLOR.rgb, 0.16) ? vec4(0.0) : COLOR;
-    } 
-    else {
-        COLOR = bemask
-              ? (!vec3lower(COLOR.rgb,0.16) ? vec4(0.0) : COLOR)
-              : COLOR;
-    }
+    if (debugMode == 0)
+    {
+        if (isdarktotransparent) {
+            COLOR = vec3lower(COLOR.rgb, 0.16) ? vec4(0.0) : COLOR;
+        } else {
+            COLOR = bemask
+                ? (!vec3lower(COLOR.rgb,0.16) ? vec4(0.0) : COLOR)
+                : COLOR;
+        }
 
-    finalColor = COLOR * texelColor * colDiffuse * fragColor;
+        finalColor = COLOR;
+        return;
+    }
 }

@@ -31,6 +31,13 @@ void main()
 
     alpha = clamp(alpha * intensity, 0.0, 1.0);
 
+
     // Pure glow — ignores texture
     finalColor = glow_color * alpha;
+    vec4 base = texture(texture0, fragTexCoord);
+
+    finalColor = base + glow_color * alpha;  // additive
+
+
+
 }

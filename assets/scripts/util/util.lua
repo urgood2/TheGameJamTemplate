@@ -3809,3 +3809,30 @@ function removeValueFromTable(t, value)
   end
   return false
 end
+
+function util.deep_copy(orig, copies)
+    copies = copies or {}
+    if type(orig) ~= "table" then
+        return orig
+    end
+
+    -- If this table was already copied, return the same copy (prevents cycles)
+    if copies[orig] then
+        return copies[orig]
+    end
+
+    local copy = {}
+    copies[orig] = copy
+
+    for k, v in pairs(orig) do
+        copy[ deep_copy(k, copies) ] = deep_copy(v, copies)
+    end
+
+    -- Copy metatable (optional)
+    local mt = getmetatable(orig)
+    if mt then
+        setmetatable(copy, deep_copy(mt, copies))
+    end
+
+    return copy
+end

@@ -73,7 +73,9 @@
                 "item_appear_3" : "IMPACT_Stone_On_Stone_03_Subtle_mono.wav",
                 "item_appear_4" : "IMPACT_Stone_On_Stone_04_Subtle_mono.wav",
                 
-                "monster_appear_whoosh": "WHOOSH_Deep_Smooth_02_mono.wav"
+                "monster_appear_whoosh": "WHOOSH_Deep_Smooth_02_mono.wav",
+                
+                "planning_card_activation": "CAMERA_DSLR_Dial_Rotate_03_mono.wav"
                 
             },
             "volume": 0.3

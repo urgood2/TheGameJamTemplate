@@ -360,7 +360,7 @@ namespace game
         shaders::registerUniformUpdate("item_glow", [](Shader &shader) {
             globalShaderUniforms.set("item_glow", "iTime", (float)GetTime());
         });
-        globalShaderUniforms.set("item_glow", "glow_color", Vector4{1.0f, 0.9f, 0.5f, 1.0f});
+        globalShaderUniforms.set("item_glow", "glow_color", Vector4{1.0f, 0.9f, 0.5f, 0.10f});
         globalShaderUniforms.set("item_glow", "intensity", 1.5f);
         globalShaderUniforms.set("item_glow", "spread", 1.0f);
         globalShaderUniforms.set("item_glow", "pulse_speed", 1.0f);

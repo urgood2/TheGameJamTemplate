@@ -1126,12 +1126,21 @@ end
 --==============================================================
 local function simulate_wand(wand, card_pool)
     print("\n=== Simulating " .. wand.id .. " ===")
+    
+    -- Track execution status of every card
+    local card_execution = {}   -- card object -> "unused" | "partial" | "full"
+
+    -- Initialize all cards to unused
+    for _, card in ipairs(card_pool) do
+        card_execution[card:handle()] = "unused"
+    end
 
     ----------------------------------------------------------------------
     -- 🔹 Step 1. Build Card Lookup
     ----------------------------------------------------------------------
     local card_lookup = {}
     for _, card in ipairs(card_pool) do
+        
         card_lookup[card.card_id] = card
     end
 
@@ -1275,6 +1284,11 @@ local function simulate_wand(wand, card_pool)
     -- Helper: spawn sub-cast (timer or trigger)
     ----------------------------------------------------------------------
     local function spawn_sub_cast(i, depth, indent, trigger_card, modifiers, visited_cards)
+        -- Trigger cards that spawn a sub-cast are considered "partial" unless executed later.
+        if card_execution[trigger_card:handle()] == "unused" then
+            card_execution[trigger_card:handle()] = "partial"
+        end
+
         local label = trigger_card.timer_ms
             and string.format("+%dms timer", trigger_card.timer_ms)
             or "on collision"
@@ -1380,6 +1394,9 @@ local function simulate_wand(wand, card_pool)
     local function process_card(indent, card, modifiers, block, depth, i, visited_cards, target_actions,
                                 actions_collected)
         if card.type == "modifier" then
+            -- Mark card as fully executed
+            card_execution[card:handle()] = "full"
+            
             local mod = {
                 card = card,
                 remaining = card.multicast_count or 1,
@@ -1399,6 +1416,9 @@ local function simulate_wand(wand, card_pool)
                     indent, target_actions, extra))
             end
         elseif card.type == "action" then
+            -- Mark card as fully executed
+            card_execution[card:handle()] = "full"
+            
             actions_collected = actions_collected + 1
             table.insert(block.cards, card)
             block.total_cast_delay = block.total_cast_delay + (card.cast_delay or 0)
@@ -1491,6 +1511,13 @@ local function simulate_wand(wand, card_pool)
             safety = safety + 1
             local idx = ((i - 1) % #deck) + 1
             local card = deck[idx]
+            
+            -- If card is seen but not guaranteed to execute, mark it partial.
+            -- process_card(...) will upgrade it to "full" if it actually executes.
+            if card_execution[card:handle()] == "unused" then
+                card_execution[card:handle()] = "partial"
+            end
+            
             if not card then break end
             i = i + 1
 
@@ -1648,7 +1675,6 @@ local function simulate_wand(wand, card_pool)
     -- -----------------------------
     local simulation_result = {
         wand_id = wand.id,
-        wand_handle = wand:handle(),   -- <-- ADD THIS
 
         deck = deck,
         total_cast_delay = 0,
@@ -1657,6 +1683,7 @@ local function simulate_wand(wand, card_pool)
         total_weight = total_weight,
         overload_ratio = overload_ratio,
         global_always_modifiers = global_always_modifiers,
+        card_execution = card_execution,
     }
 
     -- -----------------------------

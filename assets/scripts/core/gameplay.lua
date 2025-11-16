@@ -1101,35 +1101,43 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
     local cardTransform = component_cache.get(cardEntityID, Transform)
     if not cardTransform then return end
 
+    
     -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
     local PulseObjectType = Node:extend()
+
+    PulseObjectType.lifetime = 0.3
+    PulseObjectType.age = 0.0
+    PulseObjectType.cardEntityID = cardEntityID
+    PulseObjectType.startColor = startColor
+    PulseObjectType.endColor = endColor
+
     function PulseObjectType:update(dt)
         local addedScaleAmount = 0.3
 
-        self.age               = self.age + dt
+        self.age = self.age + dt
 
         -- make scale & alpha based on age
-        local alpha            = 1.0 - Easing.outQuart.f(math.min(1.0, self.age / self.lifetime))
-        local scale            = 1.0 + addedScaleAmount * Easing.outQuart.f(math.min(1.0, self.age / self.lifetime))
-        local e                = math.min(1.0, self.age / self.lifetime)
+        local alpha = 1.0 - Easing.outQuart.f(math.min(1.0, self.age / self.lifetime))
+        local scale = 1.0 + addedScaleAmount * Easing.outQuart.f(math.min(1.0, self.age / self.lifetime))
+        local e = math.min(1.0, self.age / self.lifetime)
 
-        local fromColor        = startColor or util.getColor("yellow")
-        local toColor          = endColor or util.getColor("black")
+        local fromColor = self.startColor or util.getColor("yellow")
+        local toColor = self.endColor or util.getColor("black")
 
         -- interpolate per channel
-        local r                = lerp(fromColor.r, toColor.r, e)
-        local g                = lerp(fromColor.g, toColor.g, e)
-        local b                = lerp(fromColor.b, toColor.b, e)
-        local a                = lerp(fromColor.a or 255, toColor.a or 255, e)
+        local r = lerp(fromColor.r, toColor.r, e)
+        local g = lerp(fromColor.g, toColor.g, e)
+        local b = lerp(fromColor.b, toColor.b, e)
+        local a = lerp(fromColor.a or 255, 0, e)
 
         -- make sure they're integers
-        r                      = math.floor(r + 0.5)
-        g                      = math.floor(g + 0.5)
-        b                      = math.floor(b + 0.5)
-        a                      = math.floor(a + 0.5)
+        r = math.floor(r + 0.5)
+        g = math.floor(g + 0.5)
+        b = math.floor(b + 0.5)
+        a = math.floor(a + 0.5)
 
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-            local t = component_cache.get(cardEntityID, Transform)
+            local t = component_cache.get(self.cardEntityID, Transform)
             c.x = t.actualX + t.actualW * 0.5
             c.y = t.actualY + t.actualH * 0.5
             c.w = t.actualW * scale
@@ -1141,12 +1149,12 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
     end
 
     local pulseObject = PulseObjectType {}
-    pulseObject.lifetime = 0.3
-    pulseObject.age = 0.0
-
-    pulseObject
         :attach_ecs { create_new = true }
         :destroy_when(function(self, eid) return self.age >= self.lifetime end)
+        
+    -- add planning state tag after clearing all tags
+    clear_state_tags(pulseObject:handle())
+    add_state_tag(pulseObject:handle(), PLANNING_STATE)
 end
 
 function slowTime(duration, targetTimeScale)
@@ -1670,7 +1678,7 @@ function setUpLogicTimers()
     timer.run(
         function()
             -- bail if not in action state
-            if not is_state_active(ACTION_STATE) then return end
+            -- if not is_state_active(ACTION_STATE) then return end
 
             for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
                 if triggerBoardID and triggerBoardID ~= entt_null and entity_cache.valid(triggerBoardID) then
@@ -1680,22 +1688,88 @@ function setUpLogicTimers()
                         local triggerCardEid = triggerBoard.cards[1]
                         if triggerCardEid and triggerCardEid ~= entt_null and entity_cache.valid(triggerCardEid) then
                             local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
-                            if triggerCardScript and triggerCardScript.cardID == "every_N_seconds" then
-                                local timerName = "every_N_seconds_trigger_" .. tostring(triggerBoardID)
-                                if not timer.get_timer_and_delay(timerName) then
-                                    startTriggerNSecondsTimer(triggerBoardID, actionBoardID, timerName)
-                                end
+                            
+                            -- we have a trigger card in the board. we need to assemble a deck of action cards from the action board, and execute them based on the trigger type.
+                            
+                            -- for now, just make sure that timer is running.
+                            if timer.get_delay("trigger_simul_timer") == nil then
+                                -- this timer will provide visual feedback for any of the cards which are active.
+                                timer.every(
+                                    1.0, -- timing may need to change if there are many cards.
+                                    function() 
+                                        
+                                        -- bail if current action board has no cards
+                                        local currentSet = board_sets[current_board_set_index]
+                                        if not currentSet then return end
+                                        local actionBoardID = currentSet.action_board_id
+                                        if not actionBoardID or actionBoardID == entt_null or not entity_cache.valid(actionBoardID) then return end
+                                        local actionBoard = boards[actionBoardID]
+                                        if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return end
+                                        
+                                        local triggerBoardScript = getScriptTableFromEntityID(currentSet.trigger_board_id)
+                                        log_debug("trigger_simul_timer fired for action board:", actionBoardID)
+                                        log_debug("action board has", #actionBoard.cards, "cards")
+                                        log_debug("Now simulating wand", currentSet.wandDef.id) -- wand def is stored in the set
+                                        
+                                        -- run the simulation, then take the return value to pulse the cards that would be fired.
+                                        
+                                        local deck = {}
+                                        for _, cardEid in ipairs(actionBoard.cards) do
+                                            local cardScript = getScriptTableFromEntityID(cardEid)
+                                            if cardScript then
+                                                table.insert(deck, cardScript)
+                                            
+                                            end
+                                        end
+                                        
+                                        local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
+                                        
+                                        local firstCast = true
+                                        local pitchToUse = 0.7
+                                        
+                                        -- inspect the cast blocks. for each block, pulse the corresponding cards.
+                                        for i, castBlock in ipairs(simulatedResult.blocks) do
+                                            log_debug(" - cast block", i, "type:", castBlock.type)
+                                            
+                                            local castDelay = firstCast and 0.1 or castBlock.total_cast_delay
+                                            
+                                            timer.after(
+                                                castDelay,
+                                                function()
+                                                    for _, card in ipairs(castBlock.cards) do
+                                                        log_debug("   - card in block:", card.cardID)
+                                                        local cardTransform = component_cache.get(card:handle(), Transform)
+                                                        cardTransform.visualS = 1.5
+                                                        playSoundEffect("effects", "planning_card_activation", 0.8 + math.random() * 0.4 + pitchToUse)
+                                                        pitchToUse = pitchToUse + 0.05
+                                                        
+                                                        -- pulse the card
+                                                        addPulseEffectBehindCard(card:handle(), util.getColor("red"), util.getColor("black"))
+                                                    end
+                                                end
+                                            )
+                                            firstCast = false
+                                            
+                                            -- TODO: use total_cast_delay and total_recharge_time to determine wand visual activation.
+                                        end
+                                    end,
+                                    0,
+                                    false,
+                                    nil,
+                                    "trigger_simul_timer"
+                                )
                             end
+                            
+                            -- if triggerCardScript and triggerCardScript.cardID == "every_N_seconds" then
+                            --     local timerName = "every_N_seconds_trigger_" .. tostring(triggerBoardID)
+                            --     if not timer.get_timer_and_delay(timerName) then
+                            --         startTriggerNSecondsTimer(triggerBoardID, actionBoardID, timerName)
+                            --     end
+                            -- end
+                            
+                            -- 
 
                             -- bump enemy. if signal not registered, register it.
-                            if triggerCardScript and triggerCardScript.card_id == "on_bump_enemy" then
-                                -- if signal.exists("on_bump_enemy") == false then
-                                --     signal.register(
-                                --         "on_bump_enemy",
-                                --         on_bump_enemy_handler
-                                --     )
-                                -- end
-                            end
                         end
                     end
                 end
@@ -1801,6 +1875,10 @@ function applyStateToBoardSet(boardSet, stateTagToApply)
             -- apply to board
             add_state_tag(triggerBoard:handle(), stateTagToApply)
             remove_state_tag(triggerBoard:handle(), PLANNING_STATE)
+            
+            -- apply to text entity
+            add_state_tag(triggerBoard.textEntity, stateTagToApply)
+            remove_state_tag(triggerBoard.textEntity, PLANNING_STATE)
         end
     end
 
@@ -2527,7 +2605,13 @@ function initPlanningPhase()
             indexToUse = ((indexToUse - 1) % #WandEngine.wand_defs) + 1
         end
 
-        boardSet.wand_def = WandEngine.wand_defs[indexToUse]
+        boardSet.wandDef = WandEngine.wand_defs[indexToUse]
+        
+        -- inject the def with the trigger board's entity id
+
+        boardSet.wandDef = util.deep_copy(WandEngine.wand_defs[indexToUse]) -- make a copy to avoid mutating original
+        boardSet.wandDef.trigger_board_entity = boardSet.trigger_board_id
+        boardSet.wandDef.action_board_entity = boardSet.action_board_id
     end
 
     -- for each card, make a tooltip
@@ -2846,19 +2930,6 @@ function cycleBoardSets(amount)
         end
     end
 
-    -- get current board's wand def
-    local currentSet = board_sets[current_board_set_index]
-    local wandDef = currentSet.wand_def
-
-    -- activate the wand tooltip for this wand
-    for id, tooltipEntity in pairs(wand_tooltip_cache) do
-        if id == wandDef.id then
-            add_state_tag(tooltipEntity, WAND_TOOLTIP_STATE)
-        else
-            clear_state_tags(tooltipEntity)
-        end
-    end
-
     -- activate tooltip state
     activate_state(WAND_TOOLTIP_STATE)
 end
@@ -2905,7 +2976,7 @@ function startPlanningPhase()
     -- fadeOutMusic("shop-music", 0.3)
     -- fadeInMusic("planning-music", 0.6)
 
-    transitionInOutCircle(2, "LOADING", util.getColor("black"),
+    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
         { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
 
 
@@ -4127,7 +4198,7 @@ function initActionPhase()
                 end
             else
                 -- local cam = camera.Get("world_camera")
-                log_debug("Camera pan timer tick - no action state, centering camera")
+                -- log_debug("Camera pan timer tick - no action state, centering camera")
                 local c = cam:GetActualTarget()
 
                 -- if not already at halfway point in screen, then move it there
@@ -4335,7 +4406,7 @@ function initPlanningUI()
             -- show current wand tooltip
             -- get current board's wand def
             local currentSet = board_sets[current_board_set_index]
-            local wandDef = currentSet.wand_def
+            local wandDef = currentSet.wandDef
 
             -- activate the wand tooltip for this wand
             for id, tooltipEntity in pairs(wand_tooltip_cache) do
@@ -4369,8 +4440,8 @@ function initPlanningUI()
     shaderPipelineComp:addPass("item_glow")
 
     -- jiggle button
-    timer.every(5.0, function()
-        transform.InjectDynamicMotionDefault(buttonEntity)
-        transform.InjectDynamicMotionDefault(textEntity)
-    end)
+    -- timer.every(5.0, function()
+    --     transform.InjectDynamicMotionDefault(buttonEntity)
+    --     transform.InjectDynamicMotionDefault(textEntity)
+    -- end)
 end

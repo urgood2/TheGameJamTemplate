@@ -1,3 +1,5 @@
+
+
 - Projectiles
 Basic test projectile
 Fast, accurate projectile
@@ -35,6 +37,9 @@ Applies all modifiers in wand to next projectile
 Casts all spells in wand at once
 Converts encumbrance into damage
 
+# Genre analysis
+https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
+
 
 # stat ideas
 - Maybe give wand equip requirements? triggers as well?
@@ -47,8 +52,13 @@ Converts encumbrance into damage
 - player level. 
     
 # programming side
-- replace call mouse position calls, including those in lua
-- full screen responsiveness, changing window size: https://chatgpt.com/share/691886c1-aa70-800a-8908-70f450c17b0b
+- more variation in coin collect sounds
+- make dash distance stat-based, and vary particle effects based on that.
+- make trigger area accept only one card.
+- cast blocks generated inconsistently. sometimes two actions fire, sometimes one. check the logic timers method, then simulate_wand.
+- need mods to highlight as well, righ tnow only actions do.
+- after that, make it so cards which are above the wand total are marked with an X
+- cards which are not used should also be marked with an X
 
 - test shaders: item_glow, fireworks
 - only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.

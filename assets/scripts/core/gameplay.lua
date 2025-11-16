@@ -4094,6 +4094,8 @@ function initActionPhase()
                     end
                 end)
                 
+                -- give shader_pipeline
+                registry:emplace(enemyEntity, shader_pipeline.ShaderPipelineComponent)
 
                 -- give it a combat table.
 

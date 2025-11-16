@@ -476,7 +476,7 @@ namespace util {
     // Returns the tile coordinates of the mouse position in world space.
     // Uses the camera and the SpriteComponentASCII of the first tile in the map to calculate the tile coordinates.
     auto getTileCoordsAtMousePos() -> Vector2 {
-        // auto pos = GetScreenToWorld2D(GetMousePosition(), globals::camera);
+        // auto pos = GetScreenToWorld2D(GetScaledMousePosition(), globals::camera);
         
         // // translate to world space
         

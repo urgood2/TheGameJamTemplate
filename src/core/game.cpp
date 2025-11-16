@@ -9,8 +9,8 @@
     #include <GLES3/gl3.h>
     #include <GLES2/gl2ext.h>
 #else
-    #include <GL/gl.h>
-    #include <GL/glext.h>
+    // #include <GL/gl.h>
+    // #include <GL/glext.h>
 #endif
 
 #include "../util/utilities.hpp"
@@ -145,6 +145,8 @@ float transitionShaderPositionVar = 0.f;
 
 namespace game
 {
+    
+
     
     std::vector<std::string> fullscreenShaders;
 
@@ -721,7 +723,7 @@ namespace game
         // all entities intersecting a region
         
         // auto entitiesAtPoint = transform::FindAllEntitiesAtPoint(
-        //     GetMousePosition());
+        //     GetScaledMousePosition());
         
         // // SPDLOG_DEBUG("excluding cursor & background room entity from entities at point, showing in bottom to top order");
             
@@ -733,7 +735,7 @@ namespace game
         //     }
         //     // Entity e intersects with the query area
         //     // SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
-        //     //     (int)e, GetMousePosition().x, GetMousePosition().y);
+        //     //     (int)e, GetScaledMousePosition().x, GetScaledMousePosition().y);
         // }
         
         // Box<float> queryArea = globals::getBox(globals::cursor);
@@ -902,8 +904,8 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
 // Generates (and returns) a Texture2D whose each texel encodes sampler->sample()
 // at the corresponding world‐space position under your Camera2D.
 Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) {
-    int w = GetScreenWidth();
-    int h = GetScreenHeight();
+    int w = globals::VIRTUAL_WIDTH;
+    int h = globals::VIRTUAL_HEIGHT;
 
     // Allocate a raw buffer for RGBA8 pixels
     Image img = {
@@ -941,8 +943,8 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
 }
 
     Texture2D GeneratePointCloudDensityTexture(PointCloudSampler* sampler, const Camera2D& camera) {
-        int w = GetScreenWidth();
-        int h = GetScreenHeight();
+        int w = globals::VIRTUAL_WIDTH;
+        int h = globals::VIRTUAL_HEIGHT;
 
         // Allocate RGBA8 buffer
         Image img = {
@@ -1029,14 +1031,14 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // // set camera to fill the screen
         // // globals::camera = {0};
         // // globals::camera.zoom = 1;
-        // // globals::camera.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // // globals::camera.target = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         // // globals::camera.rotation = 0;
-        // // globals::camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // // globals::camera.offset = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         
         camera_manager::Create("world_camera", globals::registry);
         auto worldCamera = camera_manager::Get("world_camera");
-        worldCamera->SetActualOffset({GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f});
-        worldCamera->SetActualTarget({GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f});
+        worldCamera->SetActualOffset({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
+        worldCamera->SetActualTarget({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
         worldCamera->SetActualZoom(1.0f);
         worldCamera->SetActualRotation(0.0f);
 
@@ -1048,23 +1050,23 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         ui::util::RegisterMeta();
 
         // create layer the size of the screen, with a main canvas the same size
-        background = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+        background = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
         background->backgroundColor = util::getColor("BLACK");
-        layer::AddCanvasToLayer(background, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
-        sprites = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
-        layer::AddCanvasToLayer(sprites, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
-        ui_layer = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
-        layer::AddCanvasToLayer(ui_layer, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
-        finalOutput = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+        layer::AddCanvasToLayer(background, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        sprites = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        layer::AddCanvasToLayer(sprites, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        ui_layer = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        layer::AddCanvasToLayer(ui_layer, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        finalOutput = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
         finalOutput->backgroundColor = util::getColor("BLACK");
-        layer::AddCanvasToLayer(finalOutput, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
+        layer::AddCanvasToLayer(finalOutput, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
 
         // set camera to fill the screen
         // globals::camera2D = {0};
         // globals::camera2D.zoom = 1;
-        // globals::camera2D.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // globals::camera2D.target = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         // globals::camera2D.rotation = 0;
-        // globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // globals::camera2D.offset = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
 
         exposeToLua(ai_system::masterStateLua); // so layer values will be saved after initialization
         
@@ -1121,7 +1123,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
 
-        // physicsWorld->AddScreenBounds(0, 0, GetScreenWidth(), GetScreenHeight());
+        // physicsWorld->AddScreenBounds(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
 
         // physicsWorld->SetDamping(testEntity, 3.5f);
         // physicsWorld->SetAngularDamping(testEntity, 3.0f);
@@ -1180,8 +1182,9 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
     auto update(float delta) -> void
     {
         
+        
         // physicsWorld->Update(delta);
-        // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
+        // _tileCache->ensureRect(cpBBNew(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
         
         camera_manager::UpdateAll(delta);
         
@@ -1239,6 +1242,11 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             globals::useImGUI = !globals::useImGUI;
         }
         
+        if (IsKeyPressed(KEY_TAB)) {
+            // fullscreen toggle
+            ToggleFullscreen();
+        }
+        
         // if (IsKeyDown(KEY_S)) {
         //     // shake camera
         //     worldCamera->Shake(10, 2.0f);
@@ -1247,7 +1255,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         // random chance to set camera target to random location
         // if (Random::get<int>(0, 100) < 5) {
         //     worldCamera->SetActualTarget(
-        //         {Random::get<float>(0, GetScreenWidth()), worldCamera->GetActualTarget().y}
+        //         {Random::get<float>(0, globals::VIRTUAL_WIDTH), worldCamera->GetActualTarget().y}
         //     );
         // }
         
@@ -1755,6 +1763,41 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
     auto draw(float dt) -> void
     {
         ZONE_SCOPED("game::draw"); // custom label
+        
+        
+        
+        // detect fullscreen
+        #ifdef __APPLE__
+        if (IsWindowFullscreen()) {
+            int expectedW = GetMonitorWidth(GetCurrentMonitor());
+            int expectedH = GetMonitorHeight(GetCurrentMonitor());
+
+            if (GetScreenWidth() != expectedW ||
+                GetScreenHeight() != expectedH)
+            {
+                SetWindowSize(expectedW, expectedH);
+            }
+        }
+        #endif
+        
+        // letterbox calculations
+        const int screenW = GetScreenWidth();
+        const int screenH = GetScreenHeight();
+
+        const float scaleX = static_cast<float>(screenW) / static_cast<float>(globals::VIRTUAL_WIDTH);
+        const float scaleY = static_cast<float>(screenH) / static_cast<float>(globals::VIRTUAL_HEIGHT);
+
+        // Uniform scale (letterbox)
+        const float scale   = std::min(scaleX, scaleY);
+        const float outW    = globals::VIRTUAL_WIDTH  * scale;
+        const float outH    = globals::VIRTUAL_HEIGHT * scale;
+        const float offsetX = (screenW - outW) * 0.5f;
+        const float offsetY = (screenH - outH) * 0.5f;
+        
+        // store the offests for letterbox
+        globals::finalLetterboxOffsetX = offsetX;
+        globals::finalLetterboxOffsetY = offsetY;
+        globals::finalRenderScale = scale;
 
         // set up layers (needs to happen every frame)
         
@@ -2033,43 +2076,28 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             }
             
             {
-                std::string srcName = "main";
-                std::string dstName = "render_double_buffer";
+                ZONE_SCOPED("Final Output Draw to screen");
 
-                for (auto &shaderName : fullscreenShaders) {
-                    // draw src → dst through shaderName
-                    layer::DrawCanvasOntoOtherLayerWithShader(
-                        finalOutput,     // src layer
-                        srcName,         // src canvas
-                        finalOutput,     // dst layer (same)
-                        dstName,         // dst canvas
-                        0, 0, 0, 1, 1,   // x, y, rotation, scaleX, scaleY
-                        WHITE,
-                        shaderName
-                    );
+                ClearBackground(BLACK);
 
-                    // swap for next pass
-                    std::swap(srcName, dstName);
-                }
+                // 1) Run fullscreen shader pipeline on finalOutput (in virtual space)
+                game::run_shader_pipeline(finalOutput, game::fullscreenShaders);
 
-                // after the loop, `srcName` holds the fully-composited result.
-                // If it isn’t already “main”, copy it back with no shader:
-                if (srcName != "main") {
-                    layer::DrawCanvasOntoOtherLayer(
-                        finalOutput,
-                        srcName,
-                        finalOutput,
-                        "main",
-                        0, 0, 0, 1, 1,
-                        WHITE
-                    );
-                }
-                
-                // Now, `finalOutput` has the final composited result in its “main” canvas. Draw it to the screen:
+                // 2) Draw finalOutput.main → actual screen with letterboxing
+                // scale & offset from the top of draw()
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(
-                    finalOutput, "main", 
-                    0, 0, 0, 1, 1, WHITE, "crt"
+                    finalOutput,
+                    "main",
+                    offsetX,         // x on physical screen
+                    offsetY,         // y on physical screen
+                    0.0f,            // rotation
+                    scale,           // scaleX
+                    scale,           // scaleY
+                    WHITE,
+                    "crt"            // or "" if you want CRT only sometimes
                 );
+
+                // then your ImGui/debug, physics debug, fade_system, etc...
             }
             
             {
@@ -2099,7 +2127,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
             if (globals::drawDebugInfo) {
                 camera_manager::Begin(worldCamera->cam); // begin camera mode
-                DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(GREEN, 0.1f));
+                DrawRectangle(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT, Fade(GREEN, 0.1f));
                 DrawText("Screen bounds", 5, 35, 20, GREEN);
                 
                 // bounds for ui quad tree
@@ -2129,7 +2157,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
             fade_system::draw();
             
-            auto mousePos = GetMousePosition();
+            // auto mousePos = globals::GetScaledMousePosition();
             // DrawHollowCircleStencil({mousePos.x, mousePos.y}, 100, 50, YELLOW);
 
             {

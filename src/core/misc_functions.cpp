@@ -39,8 +39,8 @@ namespace game
         // spotlight shader
         // one‐time defaults
         // update on every frame in case of resize
-        globalShaderUniforms.set("spotlight", "screen_width",  static_cast<float>(GetScreenWidth()));
-        globalShaderUniforms.set("spotlight", "screen_height", static_cast<float>(GetScreenHeight()));
+        globalShaderUniforms.set("spotlight", "screen_width",  static_cast<float>(globals::VIRTUAL_WIDTH));
+        globalShaderUniforms.set("spotlight", "screen_height", static_cast<float>(globals::VIRTUAL_HEIGHT));
         globalShaderUniforms.set("spotlight", "circle_size",      0.5f);
         globalShaderUniforms.set("spotlight", "feather",          0.05f);
         globalShaderUniforms.set("spotlight", "circle_position",  Vector2{0.5f, 0.5f});
@@ -92,7 +92,7 @@ namespace game
         // tile grid overlay
         shaders::registerUniformUpdate("tile_grid_overlay", [atlas](Shader &s) {            
             globalShaderUniforms.set("tile_grid_overlay", "mouse_position",
-                                     GetMousePosition());   
+                                     GetScaledMousePosition());   
             
             globalShaderUniforms.set("tile_grid_overlay", "atlas", atlas);  
             
@@ -126,7 +126,7 @@ namespace game
             globalShaderUniforms.set("outer_space_donuts_bg", "iTime", static_cast<float>(main_loop::getTime()));
         });
         // One-time setup
-        globalShaderUniforms.set("outer_space_donuts_bg", "iResolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        globalShaderUniforms.set("outer_space_donuts_bg", "iResolution", Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
         globalShaderUniforms.set("outer_space_donuts_bg", "grayAmount", 0.77f); // Set initial gray amount
         globalShaderUniforms.set("outer_space_donuts_bg", "desaturateAmount ", 2.87f); // Set initial desaturation amount
         globalShaderUniforms.set("outer_space_donuts_bg", "speedFactor", 0.61f); // Set initial speed factor
@@ -149,7 +149,7 @@ namespace game
         globalShaderUniforms.set("screen_tone_transition", "in_out", 0.f);
         globalShaderUniforms.set("screen_tone_transition", "position", 0.0f);
         globalShaderUniforms.set("screen_tone_transition", "size", Vector2{32.f, 32.f});
-        globalShaderUniforms.set("screen_tone_transition", "screen_pixel_size", Vector2{1.0f / GetScreenWidth(), 1.0f / GetScreenHeight()});
+        globalShaderUniforms.set("screen_tone_transition", "screen_pixel_size", Vector2{1.0f / globals::VIRTUAL_WIDTH, 1.0f / globals::VIRTUAL_HEIGHT});
         globalShaderUniforms.set("screen_tone_transition", "in_color", Vector4{0.0f, 0.0f, 0.0f, 1.0f});
         globalShaderUniforms.set("screen_tone_transition", "out_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
 
@@ -173,7 +173,7 @@ namespace game
             colour_2	vec4	Any RGBA	Middle blend color. Transitions with contrast and distance.
             colour_3	vec4	Any RGBA	Accent/outer color. Used at edges in the paint-like effect.
         */
-        globalShaderUniforms.set("balatro_background", "texelSize", Vector2{1.0f / GetScreenWidth(), 1.0f / GetScreenHeight()}); // Dynamic resolution
+        globalShaderUniforms.set("balatro_background", "texelSize", Vector2{1.0f / globals::VIRTUAL_WIDTH, 1.0f / globals::VIRTUAL_HEIGHT}); // Dynamic resolution
         globalShaderUniforms.set("balatro_background", "polar_coordinates", 0.0f);
         globalShaderUniforms.set("balatro_background", "polar_center", Vector2{0.5f, 0.5f});
         globalShaderUniforms.set("balatro_background", "polar_zoom", 4.52f);
@@ -222,7 +222,7 @@ namespace game
             roll_line_amount	float	0.0 – 1.0	Strength of vertical rolling white line. Retro TV effect.
             roll_speed	float	-8.0 – 8.0	Speed/direction of the rolling line. Positive = down, negative = up.
         */
-        globalShaderUniforms.set("crt", "resolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
+        globalShaderUniforms.set("crt", "resolution", Vector2{static_cast<float>(globals::VIRTUAL_WIDTH), static_cast<float>(globals::VIRTUAL_HEIGHT)});
         shaders::registerUniformUpdate("crt", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("crt", "iTime", static_cast<float>(main_loop::getTime()));
         });
@@ -256,7 +256,7 @@ namespace game
         
 
         // shockwave
-        globalShaderUniforms.set("shockwave", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        globalShaderUniforms.set("shockwave", "resolution", Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
         globalShaderUniforms.set("shockwave", "strength", 0.18f);
         globalShaderUniforms.set("shockwave", "center", Vector2{0.5f, 0.5f});
         globalShaderUniforms.set("shockwave", "radius", 1.93f);
@@ -265,7 +265,7 @@ namespace game
         globalShaderUniforms.set("shockwave", "feather", 0.415f);
 
         // glitch
-        globalShaderUniforms.set("glitch", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        globalShaderUniforms.set("glitch", "resolution", Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
         shaders::registerUniformUpdate("glitch", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("glitch", "iTime", static_cast<float>(main_loop::getTime()));
         });
@@ -371,10 +371,10 @@ namespace game
     shaders::registerUniformUpdate("3d_skew", [](Shader &shader)
                                        {
         globalShaderUniforms.set("3d_skew", "iTime", static_cast<float>(main_loop::getTime()));
-        globalShaderUniforms.set("3d_skew", "mouse_screen_pos", GetMousePosition());
+        globalShaderUniforms.set("3d_skew", "mouse_screen_pos", GetScaledMousePosition());
         globalShaderUniforms.set("3d_skew", "resolution", Vector2{
-            static_cast<float>(GetScreenWidth()),
-            static_cast<float>(GetScreenHeight())
+            static_cast<float>(globals::VIRTUAL_WIDTH),
+            static_cast<float>(globals::VIRTUAL_HEIGHT)
         }); });
         // --- Projection parameters (from your log) ---
         globalShaderUniforms.set("3d_skew", "fov", -0.39f); // From runtime dump
@@ -388,8 +388,8 @@ namespace game
         globalShaderUniforms.set("3d_skew", "rotation", 0.0f);          // No UV twist
         globalShaderUniforms.set("3d_skew", "cull_back", 0.0f);         // Disable backface culling
         // --- Geometry settings ---
-        float drawWidth = static_cast<float>(GetScreenWidth());
-        float drawHeight = static_cast<float>(GetScreenHeight());
+        float drawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+        float drawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
         globalShaderUniforms.set("3d_skew", "regionRate", Vector2{
                                                               drawWidth / drawWidth,  // = 1.0
                                                               drawHeight / drawHeight // = 1.0
@@ -401,7 +401,7 @@ namespace game
         globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});
         globalShaderUniforms.set("squish", "down_right", Vector2{1.0f, 1.0f});
         globalShaderUniforms.set("squish", "down_left", Vector2{0.0f, 1.0f});
-        globalShaderUniforms.set("squish", "plane_size", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        globalShaderUniforms.set("squish", "plane_size", Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
         shaders::registerUniformUpdate("squish", [](Shader &shader)
                                        {
         // occilate x and y
@@ -417,10 +417,10 @@ namespace game
             YELLOW,
             PURPLE};
 
-        globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
         shaders::registerUniformUpdate("peaches_background", [](Shader &shader)
                                        { globalShaderUniforms.set("peaches_background", "iTime", (float)main_loop::getTime() * 0.5f); }); 
-        globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
 
         // === Peaches Background Shader Uniforms ===
         globalShaderUniforms.set("peaches_background", "iTime", static_cast<float>(main_loop::getTime())); // Real-time updated
@@ -561,7 +561,7 @@ namespace game
         globalShaderUniforms.set("negative", "screen_scale", 1.0f); // UI scale factor
         
         // spectrum rect
-        globalShaderUniforms.set("spectrum_circle", "iResolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
+        globalShaderUniforms.set("spectrum_circle", "iResolution", Vector2{static_cast<float>(globals::VIRTUAL_WIDTH), static_cast<float>(globals::VIRTUAL_HEIGHT)});
 
         shaders::registerUniformUpdate("spectrum_circle", [](Shader &shader) {
             globalShaderUniforms.set("spectrum_circle", "iTime", static_cast<float>(main_loop::getTime()));
@@ -572,7 +572,7 @@ namespace game
         // spectrum line
         shaders::registerUniformUpdate("spectrum_line_background", [](Shader &shader) {
             globalShaderUniforms.set("spectrum_line_background", "iTime", static_cast<float>(main_loop::getTime()));
-            globalShaderUniforms.set("spectrum_line_background", "iResolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
+            globalShaderUniforms.set("spectrum_line_background", "iResolution", Vector2{static_cast<float>(globals::VIRTUAL_WIDTH), static_cast<float>(globals::VIRTUAL_HEIGHT)});
         });
         
         // One-time configuration (or updated as needed)

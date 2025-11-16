@@ -100,7 +100,7 @@ void UpdateCrane(physics::PhysicsWorld& pw, CraneState& s, double dt) {
   cpSpace* space = pw.space;
 
   // Mouse drives target:
-  Vector2 m = GetMousePosition();
+  Vector2 m = globals::GetScaledMousePosition();
   // 1) “Servo” the dolly by moving pivot’s AnchorA along rail:
   cpPivotJointSetAnchorA(s.dollyServo, cpv(m.x, 100));
 

@@ -196,4 +196,9 @@
   - Web build automation mostly working. Need to test more, but hitting rate limits?
   - Juice for exp and hp bars. 
   - Made enemies blink when entering the map.
+
+11/16/2025
+  - Web build works now. Automation hits some snags with usage, but on PC I can build fine. Just some wee errors and shaders to work out on web.
+  - Added fullscreen/window resizing while maintaining collision accuracy
+  - Started work on card eval analysis.
   

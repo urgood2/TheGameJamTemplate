@@ -335,7 +335,7 @@ public:
      * @return World-space coordinates of the mouse cursor.
      */
     Vector2 GetMouseWorld() const {
-        return GetScreenToWorld2D(GetMousePosition(), cam);
+        return GetScreenToWorld2D(globals::GetScaledMousePosition(), cam);
     }
 
     /**
@@ -635,8 +635,8 @@ public:
 
         // 4) Apply follow/deadzone logic
         if (style != FollowStyle::NONE && useDeadzone) {
-            float sw = (float)GetScreenWidth();
-            float sh = (float)GetScreenHeight();
+            float sw = (float)globals::VIRTUAL_WIDTH;
+            float sh = (float)globals::VIRTUAL_HEIGHT;
 
             switch (style) {
                 case FollowStyle::LOCKON: {
@@ -727,8 +727,8 @@ public:
 
         // 5) Clamp within world bounds
         if (useBounds) {
-            float halfW = (float)GetScreenWidth()*0.5f / cam.zoom;
-            float halfH = (float)GetScreenHeight()*0.5f / cam.zoom;
+            float halfW = (float)globals::VIRTUAL_WIDTH*0.5f / cam.zoom;
+            float halfH = (float)globals::VIRTUAL_HEIGHT*0.5f / cam.zoom;
             cam.target.x = ClampF(cam.target.x, bounds.x + halfW, bounds.x + bounds.width - halfW);
             cam.target.y = ClampF(cam.target.y, bounds.y + halfH, bounds.y + bounds.height - halfH);
         }
@@ -750,10 +750,10 @@ private:
         if (flashing || fading) {
             layer::QueueCommand<layer::CmdDrawRectangle>(
                 overlayDrawLayer, [this](auto* cmd) {
-                    cmd->x = 0 + GetScreenWidth() / 2;   // center X
-                    cmd->y = 0 + GetScreenHeight() / 2;  // center Y
-                    cmd->width  = (float)GetScreenWidth();
-                    cmd->height = (float)GetScreenHeight();
+                    cmd->x = 0 + globals::VIRTUAL_WIDTH / 2;   // center X
+                    cmd->y = 0 + globals::VIRTUAL_HEIGHT / 2;  // center Y
+                    cmd->width  = (float)globals::VIRTUAL_WIDTH;
+                    cmd->height = (float)globals::VIRTUAL_HEIGHT;
                     cmd->color = flashColor;            // overlay color
                 }, 1000  // draw priority
             );

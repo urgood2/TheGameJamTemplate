@@ -575,8 +575,8 @@ namespace scripting {
         // 2) simple bools / ints / floats
         lua["globals"]["isGamePaused"]  = &globals::isGamePaused;
         lua["globals"]["screenWipe"]    = &globals::screenWipe;
-        lua["globals"]["screenWidth"]   = [](){ return GetScreenWidth(); };
-        lua["globals"]["screenHeight"]  = [](){ return GetScreenHeight(); };
+        lua["globals"]["screenWidth"]   = [](){ return globals::VIRTUAL_WIDTH; };
+        lua["globals"]["screenHeight"]  = [](){ return globals::VIRTUAL_HEIGHT; };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
         
         lua["globals"]["inputState"] = &(globals::inputState);
@@ -621,10 +621,10 @@ namespace scripting {
         };
         
         lua["GetScreenWidth"] = []() -> int {
-            return GetScreenWidth();
+            return globals::VIRTUAL_WIDTH;
         };
         lua["GetScreenHeight"] = []() -> int {
-            return GetScreenHeight();
+            return globals::VIRTUAL_HEIGHT;
         };
         lua["GetWorldToScreen2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
             // Convert the position from world coordinates to screen coordinates

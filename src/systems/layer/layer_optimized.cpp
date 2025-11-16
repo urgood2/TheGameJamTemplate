@@ -9,8 +9,8 @@
     #include <GLES3/gl3.h>
     #include <GLES2/gl2ext.h>
 #else
-    #include <GL/gl.h>
-    #include <GL/glext.h>
+    // #include <GL/gl.h>
+    // #include <GL/glext.h>
 #endif
 
 #include "layer.hpp"

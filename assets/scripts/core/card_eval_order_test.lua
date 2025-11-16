@@ -1643,7 +1643,25 @@ local function simulate_wand(wand, card_pool)
     ----------------------------------------------------------------------
     -- Execution driver
     ----------------------------------------------------------------------
+    -- -----------------------------
+    -- Add this local table BEFORE execute_wand(deck)
+    -- -----------------------------
+    local simulation_result = {
+        wand_id = wand.id,
+        wand_handle = wand:handle(),   -- <-- ADD THIS
 
+        deck = deck,
+        total_cast_delay = 0,
+        total_recharge_time = 0,
+        blocks = nil,  -- filled in after execution
+        total_weight = total_weight,
+        overload_ratio = overload_ratio,
+        global_always_modifiers = global_always_modifiers,
+    }
+
+    -- -----------------------------
+    -- Replace execute_wand() so it writes into simulation_result
+    -- -----------------------------
     local function execute_wand(deck)
         local blocks = {}
         local total_cast_delay, total_recharge_time = 0, 0
@@ -1656,17 +1674,23 @@ local function simulate_wand(wand, card_pool)
             local block, next_i, c_delay, c_recharge = build_cast_block(i)
             table.insert(blocks, block)
 
-            total_cast_delay = total_cast_delay + (base_cast_delay + c_delay) * overload_ratio
+            total_cast_delay  = total_cast_delay  + (base_cast_delay  + c_delay) * overload_ratio
             total_recharge_time = total_recharge_time + (base_recharge_time + c_recharge) * overload_ratio
 
             i = next_i
         end
 
+        simulation_result.blocks = blocks
+        simulation_result.total_cast_delay = total_cast_delay
+        simulation_result.total_recharge_time = total_recharge_time
+
+        -- keep the existing printer (optional)
         print_execution_summary(blocks, wand, total_cast_delay, total_recharge_time)
     end
 
-
     execute_wand(deck)
+
+    return simulation_result
 end
 
 function testWands()

@@ -33,6 +33,32 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
     
+    // Get mouse position scaled to virtual resolution so collision works regardless of window size
+    
+    Vector2 GetScaledMousePosition()
+    {
+        Vector2 m = GetMousePosition();
+
+        // Remove letterbox offset
+        m.x -= globals::finalLetterboxOffsetX;
+        m.y -= globals::finalLetterboxOffsetY;
+
+        // Undo uniform scale
+        m.x /= globals::finalRenderScale;
+        m.y /= globals::finalRenderScale;
+
+        return m;
+    }
+
+
+    
+    const int VIRTUAL_WIDTH = 1280;
+    const int VIRTUAL_HEIGHT = 800; // steam deck resolution
+    
+    float finalRenderScale = 0.f; // the final render scale to apply when drawing to the screen, updated each frame
+    float finalLetterboxOffsetX = 0.0f;
+    float finalLetterboxOffsetY = 0.0f;
+    
     bool useImGUI = true; // set to true to use imGUI for debugging
     
     std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
@@ -70,8 +96,8 @@ namespace globals {
     Font font{}, smallerFont{}, translationFont{};
 
     // screen dimensions
-    int screenWidth{1280}, screenHeight{800};
-    int gameWorldViewportWidth{800}, gameWorldViewportHeight{500};
+    int screenWidth{VIRTUAL_WIDTH}, screenHeight{VIRTUAL_HEIGHT};
+    int gameWorldViewportWidth{VIRTUAL_WIDTH}, gameWorldViewportHeight{VIRTUAL_HEIGHT};
 
     int worldWidth{}, worldHeight{}; // world dimensions
     
@@ -256,7 +282,7 @@ namespace globals {
         // Update world mouse position
         //==============================================================================
         Vector2 mousePos = GetMousePosition();
-        Vector2 screenCenter = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        Vector2 screenCenter = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         
         // Adjust for zoom and screen center
         Vector2 zoomedPosition = {mousePos.x - screenCenter.x, mousePos.y - screenCenter.y};
@@ -275,6 +301,8 @@ namespace globals {
             rotatedPosition.y + camera2D.target.y
         };
         //==============================================================================
+        
+
     }
 
 

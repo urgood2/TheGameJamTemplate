@@ -1485,8 +1485,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &node = registry->get<GameObject>(e);
         node.state.isUnderOverlay = globals::under_overlay; // LATER: not sure why this is here. move elsewhere?
 
-        float currentScreenWidth = GetScreenWidth() * 1.0f;
-        float currentScreenHeight = GetScreenHeight() * 1.0f;
+        float currentScreenWidth = globals::VIRTUAL_WIDTH * 1.0f;
+        float currentScreenHeight = globals::VIRTUAL_HEIGHT * 1.0f;
 
         auto &transform = registry->get<Transform>(e);
         auto &role = registry->get<InheritedProperties>(e);

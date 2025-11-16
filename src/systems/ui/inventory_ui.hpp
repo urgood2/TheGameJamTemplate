@@ -99,7 +99,7 @@ namespace ui {
                     float y = baseY + grid.padding + slot.row * (grid.cellH + grid.padding);
                     Rectangle slotRect = { x, y, grid.cellW, grid.cellH };
 
-                    if (CheckCollisionPointRec(GetMousePosition(), slotRect)) {
+                    if (CheckCollisionPointRec(globals::GetScaledMousePosition(), slotRect)) {
                         hoveredSlotEntity = slotEntity;
                     }
                 }

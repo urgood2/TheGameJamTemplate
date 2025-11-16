@@ -125,7 +125,7 @@ static void ImGuiNewFrame(float deltaTime)
     }
     else
     {
-        io.DisplaySize.x = float(GetScreenWidth());
+        io.DisplaySize.x = float(globals::VIRTUAL_WIDTH);
         io.DisplaySize.y = float(GetScreenHeight());
     }
 
@@ -134,7 +134,7 @@ static void ImGuiNewFrame(float deltaTime)
         resolutionScale = Vector2{ 1,1 };
 // #endif
 // #else
-//     io.DisplaySize.x = float(GetScreenWidth());
+//     io.DisplaySize.x = float(globals::VIRTUAL_WIDTH);
 //     io.DisplaySize.y = float(GetScreenHeight());
 #endif
 

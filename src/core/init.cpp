@@ -714,8 +714,8 @@ namespace init {
      * @return void
      */
     auto loadConfigFileValues() -> void {
-        globals::screenWidth = globals::configJSON.at("render_data").at("screen").at("width").get<int>();
-        globals::screenHeight = globals::configJSON.at("render_data").at("screen").at("height").get<int>();
+        // globals::screenWidth = globals::configJSON.at("render_data").at("screen").at("width").get<int>();
+        // globals::screenHeight = globals::configJSON.at("render_data").at("screen").at("height").get<int>();
     }
 
 

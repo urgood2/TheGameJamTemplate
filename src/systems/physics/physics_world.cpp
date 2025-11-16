@@ -1664,7 +1664,7 @@ void PhysicsWorld::AccelerateTowardMouse(entt::entity entity,
                                          float acceleration, float maxSpeed) {
   auto &collider = registry->get<ColliderComponent>(entity);
 
-  Vector2 mousePos = GetMousePosition();
+  Vector2 mousePos = globals::GetScaledMousePosition();
   cpVect currentPos = cpBodyGetPosition(collider.body.get());
   cpVect toMouse = cpv(mousePos.x - currentPos.x, mousePos.y - currentPos.y);
   float angle = atan2(toMouse.y, toMouse.x);
@@ -1725,7 +1725,7 @@ void PhysicsWorld::RotateTowardPoint(entt::entity entity, float targetX,
 void PhysicsWorld::RotateTowardMouse(entt::entity entity, float lerpValue) {
   auto &collider = registry->get<ColliderComponent>(entity);
 
-  Vector2 mousePos = GetMousePosition();
+  Vector2 mousePos = globals::GetScaledMousePosition();
   cpVect currentPos = cpBodyGetPosition(collider.body.get());
   float targetAngle =
       atan2(mousePos.y - currentPos.y, mousePos.x - currentPos.x);
@@ -1795,7 +1795,7 @@ void PhysicsWorld::MoveTowardPoint(entt::entity entity, float targetX,
 
 void PhysicsWorld::MoveTowardMouse(entt::entity entity, float speed,
                                    float maxTime) {
-  Vector2 mousePos = GetMousePosition();
+  Vector2 mousePos = globals::GetScaledMousePosition();
   MoveTowardPoint(entity, mousePos.x, mousePos.y, speed, maxTime);
 }
 

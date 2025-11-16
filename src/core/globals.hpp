@@ -98,6 +98,17 @@ class PhysicsManager;
 
 namespace globals
 {
+    
+    extern Vector2 GetScaledMousePosition();
+    
+    // Virtual design resolution (like SNKRX)
+    extern const int VIRTUAL_WIDTH;
+    extern const int VIRTUAL_HEIGHT; // steam deck resolution
+    
+    extern float finalRenderScale; // the final render scale to apply when drawing to the screen, updated each frame, letterbox adjusted
+    extern float finalLetterboxOffsetX; 
+    extern float finalLetterboxOffsetY;
+    
     extern bool useImGUI; // set to true to use imGUI for debugging
     
     extern std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance

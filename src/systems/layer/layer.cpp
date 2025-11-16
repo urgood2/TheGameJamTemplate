@@ -9,8 +9,8 @@
     #include <GLES3/gl3.h>
     #include <GLES2/gl2ext.h>
 #else
-    #include <GL/gl.h>
-    #include <GL/glext.h>
+    // #include <GL/gl.h>
+    // #include <GL/glext.h>
 #endif
 
 #include "raylib.h"
@@ -2904,7 +2904,7 @@ void AddDrawCommand(std::shared_ptr<Layer> layer, const std::string &type,
 }
 
 std::shared_ptr<Layer> CreateLayer() {
-  return CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+  return CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
 }
 
 void ResizeCanvasInLayer(std::shared_ptr<Layer> layer,
@@ -2981,8 +2981,8 @@ void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name,
 
 void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name) {
   RenderTexture2D canvas =
-      // LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
-      LoadRenderTextureStencilEnabled(GetScreenWidth(), GetScreenHeight());
+      // LoadRenderTexture(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+      LoadRenderTextureStencilEnabled(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
   layer->canvases[name] = canvas;
 }
 

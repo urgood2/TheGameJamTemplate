@@ -192,7 +192,10 @@ end)
 - [ ] Add glow to specfiic sprites: https://godotshaders.com/shader/item-pulse-glow/
 
 # polish phase
-
+- settings menu: Reduce motion setting, volume sliders, screen size up and down, fullscreen toggle
+- probably turn pickups into sensors.
+- 
+-  a follow the mouse mode for lazy gamers, like snkrx.
 - [ ] slow time slightly when player gets too close to an enemy?
 - [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.
 - [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate. -> it works, but needs some work, since buttons that contain images, etc. can't do this yet.

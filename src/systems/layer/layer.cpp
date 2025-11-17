@@ -4549,6 +4549,52 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   if (camera) {
     camera_manager::Begin(*camera);
   }
+  
+  // ============================================================
+//               NEW GROUND ELLIPSE SHADOW BLOCK  (FIXED ANCHOR)
+// ============================================================
+if (registry.any_of<transform::GameObject>(e)) {
+    auto &node = registry.get<transform::GameObject>(e);
+
+    if (node.shadowDisplacement &&
+      node.shadowMode == transform::GameObject::ShadowMode::GroundEllipse) {
+
+        // ----- Correct anchor point -----
+        // Center horizontally, bottom vertically
+        float baseX = transform.getVisualX() + transform.getVisualW() * 0.5f;
+        float baseY = transform.getVisualY() + transform.getVisualH()
+                      + node.groundShadowYOffset;
+
+        // Compute visual scale
+        float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+
+        // Sprite size (pre-scale)
+        float spriteW = transform.getVisualW();
+        float spriteH = transform.getVisualH();
+
+        // Radii (auto or override)
+        float rx = node.groundShadowRadiusX.has_value()
+                     ? *node.groundShadowRadiusX
+                     : spriteW * 0.40f;
+
+        float ry = node.groundShadowRadiusY.has_value()
+                     ? *node.groundShadowRadiusY
+                     : spriteH * 0.15f;
+
+        // Apply scaling and height factor
+        rx *= s * node.groundShadowHeightFactor;
+        ry *= s * node.groundShadowHeightFactor;
+
+        if (node.groundShadowColor.a > 0 && rx > 0.1f && ry > 0.1f) {
+            rlPushMatrix();
+            rlTranslatef(baseX, baseY, 0.0f);
+            rlScalef(rx, ry, 1.0f);
+            DrawCircleV({0.0f, 0.0f}, 1.0f, node.groundShadowColor);
+            rlPopMatrix();
+        }
+    }
+}
+// ============================================================
 
   Vector2 drawPos = {transform.getVisualX() - pad,
                      transform.getVisualY() - pad};
@@ -4584,22 +4630,33 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     auto &node = registry.get<transform::GameObject>(e);
 
     if (node.shadowDisplacement) {
-      float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
-      float heightFactor = 1.0f + node.shadowHeight.value_or(0.f);
+      // ============================================================
+      //        ORIGINAL SPRITE-BASED SHADOW (SpriteBased only)
+      // ============================================================
+      {
+          auto &node = registry.get<transform::GameObject>(e);
 
-      float sx = node.shadowDisplacement->x * baseExaggeration * heightFactor;
-      float sy = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+          if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
+              node.shadowDisplacement)
+          {
+              float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+              float heightFactor = 1.0f + node.shadowHeight.value_or(0.f);
 
-      float rot = transform.getVisualRWithDynamicMotionAndXLeaning() * DEG2RAD;
-      float rsx = sx * cosf(rot) - sy * sinf(rot);
-      float rsy = sx * sinf(rot) + sy * cosf(rot);
+              float sx = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+              float sy = node.shadowDisplacement->y * baseExaggeration * heightFactor;
 
-      float shadowAlpha = 0.8f;
-      Color shadowColor = Fade(BLACK, shadowAlpha);
+              float rot = transform.getVisualRWithDynamicMotionAndXLeaning() * DEG2RAD;
+              float rsx = sx * cosf(rot) - sy * sinf(rot);
+              float rsy = sx * sinf(rot) + sy * cosf(rot);
 
-      Translate(-rsx, rsy);
-      DrawTextureRec(toRender.texture, sourceRect, {0, 0}, shadowColor);
-      Translate(rsx, -rsy);
+              float shadowAlpha = 0.8f;
+              Color shadowColor = Fade(BLACK, shadowAlpha);
+
+              Translate(-rsx, rsy);
+              DrawTextureRec(toRender.texture, sourceRect, {0, 0}, shadowColor);
+              Translate(rsx, -rsy);
+          }
+      }
     }
   }
   // ============================================================

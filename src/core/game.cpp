@@ -517,7 +517,9 @@ namespace game
         // clear registry, timers, physics worlds, layers
         globals::physicsManager->clearAllWorlds();
         layer::UnloadAllLayers();
-        
+        clear_layer_shaders("ui_layer");
+        clear_layer_shaders("sprites");
+        clear_layer_shaders("background");  
         controller_nav::NavManager::instance().reset();
         
         // clear lua state and re-load

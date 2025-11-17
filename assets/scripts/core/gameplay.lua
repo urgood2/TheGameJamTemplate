@@ -1722,6 +1722,11 @@ function setUpLogicTimers()
                                             end
                                         end
                                         
+                                        -- print deck
+                                        for i, card in ipairs(deck) do
+                                            log_debug(" - deck card", i, ":", card.cardID)
+                                        end
+                                        
                                         local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
                                         
                                         local firstCast = true

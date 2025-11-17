@@ -973,7 +973,7 @@ local WandTemplates = {
         cast_delay = 200,
         recharge_time = 1000,
         spread_angle = 10,
-        shuffle = true,
+        shuffle = false,
         total_card_slots = 5,
         always_cast_cards = { },
         

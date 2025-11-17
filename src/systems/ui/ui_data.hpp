@@ -3,7 +3,6 @@
 #include "entt/entity/fwd.hpp"
 #include "util/common_headers.hpp"
 
-#include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -99,10 +98,6 @@ namespace ui
     
     struct TextInputHook {
         entt::entity hookedEntity = entt::null;
-    };
-    
-    struct UIBoxLayer {
-        std::string layerName = "sprites"; // name of the layer
     };
 
     /**

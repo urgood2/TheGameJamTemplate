@@ -136,24 +136,6 @@ namespace transform
     {
         // The list of children (and a parent) for a treelike structure. This can be used for things like drawing, deterministice movement and parallax
         std::optional<entt::entity> parent;
-        
-        // ──────────────────────────────────────────────
-        // NEW SHADOW SYSTEM
-        // ──────────────────────────────────────────────
-        enum class ShadowMode {
-            SpriteBased,     // current rotating offset copy
-            GroundEllipse    // new non-rotating ellipse at feet
-        };
-
-        ShadowMode shadowMode = ShadowMode::GroundEllipse;
-
-        std::optional<float> groundShadowRadiusX;
-        std::optional<float> groundShadowRadiusY;
-
-        Color groundShadowColor = {0, 0, 0, 120}; // soft black default
-
-        float groundShadowYOffset = 0.0f;        // vertical offset
-        float groundShadowHeightFactor = 1.0f;   // scales with "height"
 
         // For lookup by ID
         std::map<std::string, entt::entity> children; //TODO: handle all children update code to include both children and orderedChildren, and use orderedChildren for ordered traversal (like in the UI system)

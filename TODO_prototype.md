@@ -43,7 +43,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 # stat ideas
 - Maybe give wand equip requirements? triggers as well?
-- triggers and actions as part of a bigger wand (item? artifact?) that you can move around and replace? maybe  a deck that can be clicked to expand it (for better ux.) decks could have fixed triggers & sometimes always casts (or shuffle) and variations in max card slot size, cast block size, cast speed, wand cooldown,  etc to make things more interesting.
 - Some basic stats:
     - physique: health, armor, knockback resistance
     - cunning: damage, critical chance, attack speed
@@ -53,10 +52,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
     
 # programming side
-
-- [ ] card rotation shader bug, where player doesn't show up.
-- [ ] camera is broken? also, where is screen shake?
-- use box.set_draw_layer, steering.set_disable_arrival
 - more variation in coin collect sounds
 - make dash distance stat-based, and vary particle effects based on that.
 - make trigger area accept only one card.
@@ -198,12 +193,6 @@ end)
 
 # polish phase
 
-- [ ] be sure to use camera rotation jiggle on polish
-- [ ] Record scratching sound for when time slow?
-- settings menu: Reduce motion setting, volume sliders, screen size up and down, fullscreen toggle
-- probably turn pickups into sensors.
-- [ ] give initial impulse when spawning items.
--  a follow the mouse mode for lazy gamers, like snkrx.
 - [ ] slow time slightly when player gets too close to an enemy?
 - [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.
 - [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate. -> it works, but needs some work, since buttons that contain images, etc. can't do this yet.

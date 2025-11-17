@@ -202,7 +202,3 @@
   - Added fullscreen/window resizing while maintaining collision accuracy
   - Started work on card eval analysis.
   
-11/17/2025
-  - Mysterious lua crash?
-  - Added drop shadows instead of the usual sprite shadows.
-  - Added indiviudal layer setting to ui boxes, option to disable deceleration for steering, worked on letter boxing being broken

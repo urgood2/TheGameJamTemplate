@@ -4094,8 +4094,6 @@ function initActionPhase()
                     end
                 end)
                 
-                -- give shader_pipeline
-                registry:emplace(enemyEntity, shader_pipeline.ShaderPipelineComponent)
 
                 -- give it a combat table.
 
@@ -4187,7 +4185,7 @@ function initActionPhase()
     -- timer to pan camera to follow player
     timer.run(function()
             -- tracy.zoneBeginN("Camera Pan Timer Tick") -- just some default depth to avoid bugs
-            log_debug("Camera pan timer tick")
+            -- log_debug("Camera pan timer tick")
             if entity_cache.state_active(ACTION_STATE) then
                 local targetX, targetY = 0, 0
                 local t = component_cache.get(survivorEntity, Transform)
@@ -4195,12 +4193,12 @@ function initActionPhase()
                     targetX = t.actualX + t.actualW / 2
                     targetY = t.actualY + t.actualH / 2
                     -- camera_smooth_pan_to("world_camera", targetX, targetY, { tag = "interval"}) -- pan to the target smoothly
-                    log_debug("Camera pan timer tick - action state active, panning to player at:", targetX, targetY)
+
                     cam:SetActualTarget(targetX, targetY)
                 end
             else
                 -- local cam = camera.Get("world_camera")
-                log_debug("Camera pan timer tick - no action state, centering camera")
+                -- log_debug("Camera pan timer tick - no action state, centering camera")
                 local c = cam:GetActualTarget()
 
                 -- if not already at halfway point in screen, then move it there

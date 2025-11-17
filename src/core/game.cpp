@@ -150,7 +150,12 @@ namespace game
     
     std::vector<std::string> fullscreenShaders;
 
-    std::unordered_map<std::string, std::shared_ptr<layer::Layer>> s_layers{};
+    // make layers to draw to
+    std::shared_ptr<layer::Layer> background;  // background
+    std::shared_ptr<layer::Layer> sprites;     // sprites
+    std::shared_ptr<layer::Layer> ui_layer;    // ui
+    std::shared_ptr<layer::Layer> particles; 
+    std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
     
     std::string randomStringText{"HEY HEY!"
     };
@@ -783,18 +788,14 @@ namespace game
         
         // lua["PhysicsManagerInstance"] = std::ref(*globals::physicsManager);
 
-        for (auto &[name, layerPtr] : s_layers) {
-            lua["layers"][name] = layerPtr;
-            rec.record_property("layers", {name, "Layer", "Layer for " + name + " elements."});
-        }
-        
-        lua.set_function("GetLayer", &GetLayer);
-        rec.record_free_function({""}, {
-            "GetLayer",
-            "---@param name string",
-            "---@return Layer @ Gets the layer pointer by name.",
-            true, false
-        });
+        lua["layers"]["background"] = background;
+        lua["layers"]["sprites"] = sprites;
+        lua["layers"]["ui_layer"] = ui_layer;
+        lua["layers"]["finalOutput"] = finalOutput;
+        rec.record_property("layers", {"background", "Layer", "Layer for background elements."});
+        rec.record_property("layers", {"sprites", "Layer", "Layer for sprite elements."});
+        rec.record_property("layers", {"ui_layer", "Layer", "Layer for UI elements."});
+        rec.record_property("layers", {"finalOutput", "Layer", "Layer for final output, used for post-processing effects."});
         
         
         lua["SetFollowAnchorForEntity"] = sol::overload(
@@ -1049,18 +1050,16 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         ui::util::RegisterMeta();
 
         // create layer the size of the screen, with a main canvas the same size
-        RegisterLayer("background", layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
-        RegisterLayer("sprites",    layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
-        RegisterLayer("ui",         layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
-        RegisterLayer("final",      layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
-
-        GetLayer("background")->backgroundColor = util::getColor("BLACK");
-        GetLayer("final")->backgroundColor = util::getColor("BLACK");
-
-        for (auto name : { "background", "sprites", "ui", "final" }) {
-            AddCanvasToLayer(GetLayer(name), "render_double_buffer",
-                            globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
-        }
+        background = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        background->backgroundColor = util::getColor("BLACK");
+        layer::AddCanvasToLayer(background, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        sprites = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        layer::AddCanvasToLayer(sprites, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        ui_layer = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        layer::AddCanvasToLayer(ui_layer, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        finalOutput = layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        finalOutput->backgroundColor = util::getColor("BLACK");
+        layer::AddCanvasToLayer(finalOutput, "render_double_buffer", globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
 
         // set camera to fill the screen
         // globals::camera2D = {0};
@@ -1765,12 +1764,10 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
     {
         ZONE_SCOPED("game::draw"); // custom label
         
-        auto background = GetLayer("background");
-        auto sprites = GetLayer("sprites");
-        auto ui_layer = GetLayer("ui");
-        auto finalOutput = GetLayer("final");
+        
         
         // detect fullscreen
+        #ifdef __APPLE__
         if (IsWindowFullscreen()) {
             int expectedW = GetMonitorWidth(GetCurrentMonitor());
             int expectedH = GetMonitorHeight(GetCurrentMonitor());
@@ -1779,14 +1776,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
                 GetScreenHeight() != expectedH)
             {
                 SetWindowSize(expectedW, expectedH);
-                #ifndef __EMSCRIPTEN__
-                        // ImGui framebuffer reload
-                        rlImGuiReloadFonts();
-                        rlImGuiSetup(true);
-                #endif
-
             }
         }
+        #endif
         
         // letterbox calculations
         const int screenW = GetScreenWidth();
@@ -2195,10 +2187,6 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
     void unload() {
         // unload all layers
         layer::UnloadAllLayers();
-        for (auto& [name, layerPtr] : s_layers) {
-            clear_layer_shaders(name);
-        }
-        ClearLayers();
 
         // unload all lua scripts
         ai_system::masterStateLua.collect_garbage();

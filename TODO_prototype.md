@@ -42,6 +42,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 
 # stat ideas
+- triggers and actions as part of a bigger wand (item? artifact?) that you can move around and replace? maybe  a deck that can be clicked to expand it (for better ux.) decks could have fixed triggers & sometimes always casts (or shuffle) and variations in max card slot size, cast block size, cast speed, wand cooldown,  etc to make things more interesting.
 - Maybe give wand equip requirements? triggers as well?
 - Some basic stats:
     - physique: health, armor, knockback resistance
@@ -52,10 +53,14 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
     
 # programming side
+- cast blocks generated inconsistently. sometimes two actions fire, sometimes one. check the logic timers method, then simulate_wand.
+- add uibox layer specification back in without brekaing anything please.
+- fix card shader making player shader vanish.
+
 - more variation in coin collect sounds
 - make dash distance stat-based, and vary particle effects based on that.
 - make trigger area accept only one card.
-- cast blocks generated inconsistently. sometimes two actions fire, sometimes one. check the logic timers method, then simulate_wand.
+
 - need mods to highlight as well, righ tnow only actions do.
 - after that, make it so cards which are above the wand total are marked with an X
 - cards which are not used should also be marked with an X
@@ -192,6 +197,12 @@ end)
 - [ ] Add glow to specfiic sprites: https://godotshaders.com/shader/item-pulse-glow/
 
 # polish phase
+- [ ] disable decel on arrival 
+- [ ] turn pickups into sensors?
+- [ ] drop shadow implementation (do lua side, avoid bugs)
+- [ ] be sure to use camera rotation jiggle on polish
+- [ ] Record scratching sound for when time slow?
+- [ ] give initial impulse when spawning items.
 
 - [ ] slow time slightly when player gets too close to an enemy?
 - [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.

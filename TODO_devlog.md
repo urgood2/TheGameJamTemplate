@@ -201,4 +201,8 @@
   - Web build works now. Automation hits some snags with usage, but on PC I can build fine. Just some wee errors and shaders to work out on web.
   - Added fullscreen/window resizing while maintaining collision accuracy
   - Started work on card eval analysis.
-  
+
+11/17/2025
+  - Mysterious lua crash?
+  - Added drop shadows instead of the usual sprite shadows. > reverted because of crash 
+  - Added indiviudal layer setting to ui boxes, option to disable deceleration for steering, worked on letter boxing being broken > reverted because of crash.

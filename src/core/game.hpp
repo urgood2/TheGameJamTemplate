@@ -36,11 +36,20 @@ namespace game {
 
     extern void unload();
 
-    // make layers to draw to
-    extern std::shared_ptr<layer::Layer> background;  // background
-    extern std::shared_ptr<layer::Layer> sprites;     // sprites
-    extern std::shared_ptr<layer::Layer> ui_layer;    // ui
-    extern std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
+    extern std::unordered_map<std::string, std::shared_ptr<layer::Layer>> s_layers;
+
+    inline std::shared_ptr<layer::Layer> GetLayer(const std::string& name) {
+        auto it = s_layers.find(name);
+        return (it != s_layers.end()) ? it->second : nullptr;
+    }
+
+    inline void RegisterLayer(const std::string& name, std::shared_ptr<layer::Layer> layer) {
+        s_layers[name] = layer;
+    }
+
+    inline void ClearLayers() {
+        s_layers.clear();
+    }
 
 
     // part of the main game loop. Place anything that doesn't fit in with systems, etc. in here

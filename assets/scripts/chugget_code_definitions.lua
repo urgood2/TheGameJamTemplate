@@ -9350,6 +9350,27 @@ function steering.make_steerable(...) end
 function steering.seek_point(...) end
 
 ---
+--- Enable/disable arrival deceleration logic.
+--- When true, SeekPoint ignores decel and moves full speed all the way.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param disable boolean
+---@return nil
+
+function steering.set_disable_arrival(...) end
+
+---
+--- Sets arrival deceleration radius (ignored if disableArrival=true).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param radius number @distance at which arrival deceleration begins
+---@return nil
+
+function steering.set_arrive_radius(...) end
+
+---
 --- Flee from a point if within panicDist (Chipmunk coords).
 ---
 ---@param r entt.registry&
@@ -9722,6 +9743,14 @@ function transform.setJiggleOnHover(...) end
 ---@param root Entity
 ---@return nil
 function ui.box.handleAlignment(...) end
+
+---
+--- Sets the draw layer for a UI box.
+---
+---@param uiBox Entity
+---@param name string
+---@return nil
+function ui.box.set_draw_layer(...) end
 
 ---
 --- Builds a UI tree from a template definition.

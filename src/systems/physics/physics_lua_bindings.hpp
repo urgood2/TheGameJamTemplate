@@ -1819,6 +1819,33 @@ inline void expose_steering_to_lua(sol::state& lua) {
         "---@param decel number @arrival deceleration factor\n"
         "---@param weight number @blend weight",
         "Seek a world point (Chipmunk coords) with adjustable deceleration and blend weight.");
+        
+        rec.bind_function(lua, path, "set_disable_arrival",
+    [](entt::registry& r, entt::entity e, bool disable) {
+        auto &s = r.get<SteerableComponent>(e);
+        s.disableArrival = disable;
+    },
+    "---@param r entt.registry&\n"
+    "---@param e entt.entity\n"
+    "---@param disable boolean\n"
+    "---@return nil\n",
+    "Enable/disable arrival deceleration logic.\n"
+    "When true, SeekPoint ignores decel and moves full speed all the way."
+);
+
+rec.bind_function(lua, path, "set_arrive_radius",
+    [](entt::registry& r, entt::entity e, float radius) {
+        auto &s = r.get<SteerableComponent>(e);
+        s.arriveRadius = radius;
+    },
+    "---@param r entt.registry&\n"
+    "---@param e entt.entity\n"
+    "---@param radius number @distance at which arrival deceleration begins\n"
+    "---@return nil\n",
+    "Sets arrival deceleration radius (ignored if disableArrival=true)."
+);
+
+
 
     rec.bind_function(lua, path, "flee_point",
         [](entt::registry& r, entt::entity e, sol::table threat, float panicDist, float weight){

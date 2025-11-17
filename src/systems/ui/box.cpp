@@ -1,5 +1,6 @@
 #include "box.hpp"
 
+#include "core/game.hpp"
 #include "entt/entity/fwd.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
@@ -2462,6 +2463,9 @@ namespace ui
             if (elemComp.uiBox != uiBoxEntity) {
                 uiBoxEntity     = elemComp.uiBox;
                 drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+                if (auto* l = registry.try_get<UIBoxLayer>(uiBoxEntity)) {
+                    layerPtr = game::GetLayer(l->layerName);
+                }
             }
             
             //TODO: update with:drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex; if the uibox has changed.

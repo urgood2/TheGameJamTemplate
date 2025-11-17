@@ -210,31 +210,42 @@ namespace Steering {
 
     // Seek (Chipmunk coords)
     void SeekPoint(entt::registry& r, entt::entity e,
-                        const cpVect& target,
-                        float deceleration,
-                        float weight) {
-        auto *body = get_cpBody(r, e);
+               const cpVect& target,
+               float deceleration,
+               float weight)
+    {
+        auto* body = get_cpBody(r, e);
         if (!body) return;
 
-        auto &s = r.get<SteerableComponent>(e);
+        auto& s = r.get<SteerableComponent>(e);
 
         cpVect pos = cpBodyGetPosition(body);
         cpVect toTarget = cpvsub(target, pos);
-        float  dist     = cpvlength(toTarget);
+        float dist = cpvlength(toTarget);
 
-        if (dist > 1e-5f) {
-            float decelTweaker = 0.3f;
-            float speed = dist / (deceleration * decelTweaker);
-            speed = std::min(speed, s.maxSpeed);
-            cpVect desired= cpvmult(toTarget, speed / dist);
-            cpVect vel    = cpBodyGetVelocity(body);
-
-            s.seekForce = cpvmult(cpvsub(desired, vel), s.turnMultiplier * weight);
-            s.isSeeking = true;
-        } else {
+        if (dist <= 1e-5f) {
             s.seekForce = cpvzero;
             s.isSeeking = false;
+            return;
         }
+
+        cpVect vel = cpBodyGetVelocity(body);
+        float speed;
+
+        if (s.disableArrival) {
+            // FULL SPEED, NO SLOWDOWN
+            speed = s.maxSpeed;
+        }
+        else {
+            // STANDARD ARRIVAL BEHAVIOR
+            float decelTweaker = 0.3f;
+            speed = dist / (deceleration * decelTweaker);
+            speed = std::min(speed, s.maxSpeed);
+        }
+
+        cpVect desired = cpvmult(toTarget, speed / dist);
+        s.seekForce = cpvmult(cpvsub(desired, vel), s.turnMultiplier * weight);
+        s.isSeeking = true;
     }
 
     // Separation (Chipmunk coords)

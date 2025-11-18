@@ -4662,10 +4662,9 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
              10, 300, 20, WHITE);
   }
 
-  // FIX: Camera is automatically restored by CameraGuard (no manual Begin needed)
-  // turn the camera back on if it was active (since we're rendering to the
-  // screen now, and to restore camera state in the command buffer)
-  // OLD CODE: if (camera) { camera_manager::Begin(*camera); }
+  // FIX: Restore camera BEFORE final draw to screen (final draw is in world space!)
+  // The render texture was created in screen space, but now we draw it in world space
+  cameraGuard.restore();
 
   // 5. Final draw with transform
 
@@ -4695,17 +4694,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     // sourceRect.height = (float)-renderHeight;
   }
 
-  Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
-  Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};
-
-  // PushMatrix();
-  // Translate(position.x, position.y);
-  // Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(),
-  //       transform.getVisualScaleWithHoverAndDynamicMotionReflected());
-  // Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-  // Translate(-origin.x, -origin.y);
-  
-  // FIX #8: Use MatrixStackGuard instead of raw PushMatrix/PopMatrix
+  // FIX: Use MatrixStackGuard instead of raw PushMatrix/PopMatrix
   shader_pipeline::MatrixStackGuard matrixGuard;
   if (!matrixGuard.push()) {
     SPDLOG_ERROR("Failed to push matrix for entity {}", (int)e);
@@ -4713,13 +4702,21 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     return;
   }
   
-Translate(position.x, position.y);
-float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
-float visualScaleX = (transform.getVisualW() / baseWidth) * s;
-float visualScaleY = (transform.getVisualH() / baseHeight) * s;
-Scale(visualScaleX, visualScaleY);
-Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-Translate(-origin.x, -origin.y);
+  // FIX: Match the non-pipeline version's transform logic exactly
+  // Translate to center of the transform's visual bounds
+  Translate(transform.getVisualX() + transform.getVisualW() * 0.5f,
+            transform.getVisualY() + transform.getVisualH() * 0.5f);
+  
+  // Apply hover/dynamic scale and rotation
+  float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+  Scale(s, s);
+  Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+  
+  // Translate back by half the visual size (to draw from top-left at origin)
+  Translate(-transform.getVisualW() * 0.5f, -transform.getVisualH() * 0.5f);
+  
+  // Now translate by -pad to account for padding in the render texture
+  Translate(-pad, -pad);
 
 
   // shadow rendering first

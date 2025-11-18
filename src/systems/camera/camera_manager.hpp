@@ -124,7 +124,7 @@ namespace camera_manager {
     /// RAII guard that temporarily disables camera if it's active, then restores it
     class CameraGuard {
     private:
-        Camera2D* savedCamera = nullptr;
+        Camera2D savedCameraValue{}; // FIX: Store the actual Camera2D struct, not pointer
         bool wasActive = false;
         
     public:
@@ -138,11 +138,18 @@ namespace camera_manager {
             }
             
             if (IsActive()) {
-                savedCamera = Current();
-                SPDLOG_DEBUG("CameraGuard: Disabling camera at ({}, {}), zoom={}, rotation={}", 
-                    savedCamera->offset.x, savedCamera->offset.y, savedCamera->zoom, savedCamera->rotation);
-                End();
-                wasActive = true;
+                Camera2D* current = Current();
+                if (current) {
+                    // FIX: Copy the camera struct value, not just the pointer
+                    savedCameraValue = *current;
+                    SPDLOG_DEBUG("CameraGuard: Disabling camera at ({}, {}), zoom={}, rotation={}", 
+                        savedCameraValue.offset.x, savedCameraValue.offset.y, 
+                        savedCameraValue.zoom, savedCameraValue.rotation);
+                    End();
+                    wasActive = true;
+                } else {
+                    SPDLOG_ERROR("CameraGuard: IsActive() true but Current() returned null!");
+                }
             } else {
                 SPDLOG_DEBUG("CameraGuard: No active camera to disable");
             }
@@ -150,25 +157,21 @@ namespace camera_manager {
         
         /// Manually restore camera state
         void restore() {
-            if (wasActive && savedCamera) {
+            if (wasActive) {
                 SPDLOG_DEBUG("CameraGuard: Restoring camera at ({}, {}), zoom={}, rotation={}", 
-                    savedCamera->offset.x, savedCamera->offset.y, savedCamera->zoom, savedCamera->rotation);
-                Begin(*savedCamera);
+                    savedCameraValue.offset.x, savedCameraValue.offset.y, 
+                    savedCameraValue.zoom, savedCameraValue.rotation);
+                Begin(savedCameraValue);
                 wasActive = false;
-                savedCamera = nullptr;
-            } else if (wasActive) {
-                SPDLOG_WARN("CameraGuard: Cannot restore - savedCamera is null!");
             }
         }
         
         /// RAII cleanup - automatically restores camera
         ~CameraGuard() {
-            if (wasActive && savedCamera) {
+            if (wasActive) {
                 SPDLOG_DEBUG("CameraGuard: Destructor restoring camera at ({}, {})", 
-                    savedCamera->offset.x, savedCamera->offset.y);
-                Begin(*savedCamera);
-            } else if (wasActive) {
-                SPDLOG_ERROR("CameraGuard: Destructor - wasActive but savedCamera is null! Camera state corrupted!");
+                    savedCameraValue.offset.x, savedCameraValue.offset.y);
+                Begin(savedCameraValue);
             }
         }
         

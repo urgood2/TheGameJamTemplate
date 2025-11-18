@@ -118,6 +118,57 @@ namespace camera_manager {
     inline bool      IsActive() { return s_active; }
     inline Camera2D* Current()  { return s_camera; }
 
+    //------------------------------------------------------------------------------------
+    // FIX: RAII Guard for Camera State Management
+    //------------------------------------------------------------------------------------
+    /// RAII guard that temporarily disables camera if it's active, then restores it
+    class CameraGuard {
+    private:
+        Camera2D* savedCamera = nullptr;
+        bool wasActive = false;
+        
+    public:
+        CameraGuard() = default;
+        
+        /// Disable camera if active, save state for restoration
+        void disable() {
+            if (wasActive) {
+                SPDLOG_WARN("CameraGuard: Already disabled!");
+                return;
+            }
+            
+            if (IsActive()) {
+                savedCamera = Current();
+                End();
+                wasActive = true;
+            }
+        }
+        
+        /// Manually restore camera state
+        void restore() {
+            if (wasActive && savedCamera) {
+                Begin(*savedCamera);
+                wasActive = false;
+                savedCamera = nullptr;
+            }
+        }
+        
+        /// RAII cleanup - automatically restores camera
+        ~CameraGuard() {
+            if (wasActive && savedCamera) {
+                Begin(*savedCamera);
+            }
+        }
+        
+        // Non-copyable, non-movable
+        CameraGuard(const CameraGuard&) = delete;
+        CameraGuard& operator=(const CameraGuard&) = delete;
+        CameraGuard(CameraGuard&&) = delete;
+        CameraGuard& operator=(CameraGuard&&) = delete;
+        
+        bool isDisabled() const { return wasActive; }
+    };
+
     // ------------------------------------------------------------------
     // Overloads by camera name
     // ------------------------------------------------------------------

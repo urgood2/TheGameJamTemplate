@@ -53,17 +53,27 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
     
 # programming side
-- cast blocks generated inconsistently. sometimes two actions fire, sometimes one. check the logic timers method, then simulate_wand.
-- add uibox layer specification back in without brekaing anything please.
+- try develop branch of sol2. continue debugging
+- it looks like enabling shader pipiline on cards & enemies starts making memory unstable. why? memory issue? but i don't understand. upon pickup delete? but why?
+- when card skew is on, and player pipeline is on, but enemy pipeline isn't, there is no crash.
+- when card skew and enemy pipeline are both on, there is a crash when taking a pickup, but only sometimes? also, camera stops working here.
+- also, player sprite appears when scale changes to above 1, but vanishes again aat normal scale, when card skew is on. -> adding a single pass to it brings it back.
+- second cast block doesn't appear in the visualizer, only the first.
 - fix card shader making player shader vanish.
+- need mods to highlight as well, righ tnow only actions do.
+- after that, make it so cards which are above the wand total are marked with an X
+- cards which are not used should also be marked with an X 
+- camera sometimes stops working, and this messes with cursor collision.d 
+
+
+
+- add uibox layer specification back in without brekaing anything please.
+
 
 - more variation in coin collect sounds
 - make dash distance stat-based, and vary particle effects based on that.
 - make trigger area accept only one card.
 
-- need mods to highlight as well, righ tnow only actions do.
-- after that, make it so cards which are above the wand total are marked with an X
-- cards which are not used should also be marked with an X
 
 - test shaders: item_glow, fireworks
 - only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.

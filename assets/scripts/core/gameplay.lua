@@ -758,8 +758,8 @@ function createNewCard(id, x, y, gameStateToApply)
     -- local roleComp = component_cache.get(cardScript.labelEntity, InheritedProperties)
     -- roleComp.flags = AlignmentFlag.VERTICAL_CENTER | AlignmentFlag.HORIZONTAL_CENTER
 
-    -- local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
-    -- shaderPipelineComp:addPass("3d_skew")
+    local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
+    shaderPipelineComp:addPass("3d_skew")
 
 
     -- make draggable and set some callbacks in the transform system
@@ -4052,7 +4052,8 @@ function initActionPhase()
                     info
                 )
 
-                --
+                -- give pipeline
+                registry:emplace(enemyEntity, shader_pipeline.ShaderPipelineComponent)
 
                 physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", { "player", "enemy" })
                 physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "enemy" })

@@ -1310,6 +1310,13 @@ namespace ui
     
     void element::DrawSelfImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
     {
+        // check validity and bail
+        if (!layerPtr)
+            return;
+        if (!globals::registry.valid(entity))
+            return;
+        if (entity == entt::null)
+            return;
         
         ZONE_SCOPED("UI Element: DrawSelf");
         auto *uiElement = &uiElementComp;

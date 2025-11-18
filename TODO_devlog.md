@@ -206,3 +206,8 @@
   - Mysterious lua crash?
   - Added drop shadows instead of the usual sprite shadows. > reverted because of crash 
   - Added indiviudal layer setting to ui boxes, option to disable deceleration for steering, worked on letter boxing being broken > reverted because of crash.
+  - Encountering various crashes for some reason when using texture pipeline.
+  - all kinds of memory errors happening, and I have no idea why. Turning on pipeline rendering seems to be the root of it.
+
+11/18/2025
+  - Stability issues & crashing is fixed, but there are some quirks to work out that have been introduced into the rendering. (sometimes camera stops working, and entities no longer match their collision boxes (I need to know when that happens, but how?). Player still doesn't show up when using pipeline, only when 1 shader pass is added. Also player will sometimes render in completely the wrong position for some reason.)

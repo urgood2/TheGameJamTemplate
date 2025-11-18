@@ -28,31 +28,60 @@
 namespace layer
 {
     
+        
     // only use for (DrawLayerCommandsToSpecificCanvas)
     namespace render_stack_switch_internal
     {
         extern std::stack<RenderTexture2D> renderStack;
+        
+        // FIX #6: Stack depth validation
+        constexpr int MAX_RENDER_STACK_DEPTH = 16;
+        
+        // Forward declaration
+        inline void ForceClear();
 
         // Push a new render target, auto-ending the previous one if needed
         inline void Push(RenderTexture2D target)
         {
+            // FIX #6: Validate stack depth
+            if (renderStack.size() >= MAX_RENDER_STACK_DEPTH) {
+                SPDLOG_ERROR("Render stack overflow! Size: {}. Forcing clear.", renderStack.size());
+                ForceClear();
+                return;
+            }
+            
+            // FIX #10: Validate texture before pushing
+            if (target.id == 0) {
+                SPDLOG_ERROR("Attempted to push invalid render texture (id=0)");
+                return;
+            }
+            
             if (!renderStack.empty())
             {
                 // End the currently active texture mode
                 EndTextureMode();
             }
-            // SPDLOG_DEBUG("Ending previous render target {} and pushing new target {}", renderStack.empty() ? "none" : std::to_string(renderStack.top().id), target.id);
+            
             renderStack.push(target);
             BeginTextureMode(target);
+            
+            // Debug logging (can be disabled in production)
+            // SPDLOG_DEBUG("Pushed render target {} (stack depth: {})", target.id, renderStack.size());
         }
 
         // Pop the top render target and resume the previous one
         inline void Pop()
         {
-            assert(!renderStack.empty() && "Render stack underflow: Pop called without a matching Push!");
+            if (renderStack.empty()) {
+                SPDLOG_ERROR("Render stack underflow: Pop called without a matching Push!");
+                return;
+            }
 
             // End current texture mode
             EndTextureMode();
+            
+            // Get the id before popping for logging
+            // unsigned int poppedId = renderStack.top().id;
             renderStack.pop();
 
             // Resume the previous target
@@ -60,6 +89,8 @@ namespace layer
             {
                 BeginTextureMode(renderStack.top());
             }
+            
+            // SPDLOG_DEBUG("Popped render target {} (stack depth: {})", poppedId, renderStack.size());
         }
 
         // Peek current render target (optional utility)
@@ -69,10 +100,16 @@ namespace layer
             return &renderStack.top();
         }
 
-        // Check if we’re inside any render target
+        // Check if we're inside any render target
         inline bool IsActive()
         {
             return !renderStack.empty();
+        }
+        
+        // FIX #6: Get current stack depth
+        inline size_t GetDepth()
+        {
+            return renderStack.size();
         }
 
         // Clear the entire stack and end current mode — use with caution
@@ -84,7 +121,66 @@ namespace layer
             }
 
             while (!renderStack.empty()) renderStack.pop();
+            
+            SPDLOG_WARN("Render stack force cleared");
         }
+        
+        //------------------------------------------------------------------------------------
+        // FIX #2: RAII Guard for Render Stack (auto Push/Pop)
+        //------------------------------------------------------------------------------------
+        class RenderStackGuard {
+        private:
+            bool pushed = false;
+            
+        public:
+            RenderStackGuard() = default;
+            
+            // Push a render target and track it
+            bool push(RenderTexture2D& target) {
+                if (pushed) {
+                    SPDLOG_ERROR("RenderStackGuard: Already pushed!");
+                    return false;
+                }
+                
+                if (renderStack.size() >= MAX_RENDER_STACK_DEPTH) {
+                    SPDLOG_ERROR("RenderStackGuard: Stack overflow! Size: {}", renderStack.size());
+                    return false;
+                }
+                
+                if (target.id == 0) {
+                    SPDLOG_ERROR("RenderStackGuard: Invalid texture (id=0)");
+                    return false;
+                }
+                
+                Push(target);
+                pushed = true;
+                return true;
+            }
+            
+            // Manual pop if needed
+            void pop() {
+                if (pushed) {
+                    Pop();
+                    pushed = false;
+                }
+            }
+            
+            // RAII cleanup
+            ~RenderStackGuard() {
+                if (pushed) {
+                    Pop();
+                    pushed = false;
+                }
+            }
+            
+            // Non-copyable, non-movable
+            RenderStackGuard(const RenderStackGuard&) = delete;
+            RenderStackGuard& operator=(const RenderStackGuard&) = delete;
+            RenderStackGuard(RenderStackGuard&&) = delete;
+            RenderStackGuard& operator=(RenderStackGuard&&) = delete;
+            
+            bool isActive() const { return pushed; }
+        };
     }
     //------------------------------------------------------------------------------------
     // lua exposure

@@ -4181,6 +4181,8 @@ auto AddDrawTransformEntityWithAnimationWithPipeline(
 auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
                                                   entt::entity e) -> void {
 
+  SPDLOG_DEBUG("=== Pipeline Render START for entity {} ===", (int)e);
+  
   // FIX: Use CameraGuard to ensure camera is restored even on early returns
   camera_manager::CameraGuard cameraGuard;
   cameraGuard.disable();
@@ -4486,12 +4488,15 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // // 🔵 Save post-pass result - FIX #10: Use reference instead of copy
   RenderTexture2D* postPassRender = nullptr; // id 6 is now the result of all passes
   if (shader_pipeline::GetLastRenderTarget().id == 0) {
+    // No passes were executed
+    SPDLOG_DEBUG("Entity {}: No passes executed, GetLastRenderTarget().id == 0", (int)e);
     shader_pipeline::SetLastRenderTarget(
         shader_pipeline::front()); // if no passes, we use the front texture
     postPassRender = &shader_pipeline::front();
   } else {
     postPassRender = &shader_pipeline::GetLastRenderTarget(); // if there are passes, we use
                                                  // the last render target
+    SPDLOG_DEBUG("Entity {}: Passes executed, using last render target ID={}", (int)e, postPassRender->id);
   }
 
   // 🟡 Save post shader pass sprite result - FIX #10: Use reference instead of copy
@@ -4636,12 +4641,16 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   RenderTexture2D* toRender = nullptr;
   if (pipelineComp.overlayDraws.empty() == false) {
     toRender = &shader_pipeline::front(); //  in this case it's the overlay draw result
+    SPDLOG_DEBUG("Entity {}: toRender = front (overlay result), tex ID={}", (int)e, toRender->texture.id);
   } else if (pipelineComp.passes.empty() == false) {
     // if there are passes, we use the last render target
     toRender = &shader_pipeline::GetPostShaderPassRenderTextureCache();
+    SPDLOG_DEBUG("Entity {}: toRender = PostShaderPass cache, tex ID={}", (int)e, toRender->texture.id);
   } else {
-    // nothing?
-    toRender = &shader_pipeline::GetBaseRenderTextureCache();
+    // FIX: When no passes, postPassRender (front) was copied to PostShaderPass cache
+    // So we should use that, NOT the BaseSprite cache
+    toRender = &shader_pipeline::GetPostShaderPassRenderTextureCache();
+    SPDLOG_WARN("Entity {}: NO PASSES - using PostShaderPass cache (contains base sprite from front), tex ID={}", (int)e, toRender->texture.id);
   }
 
   if (globals::drawDebugInfo) {
@@ -4662,6 +4671,11 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   Vector2 drawPos = {transform.getVisualX() - pad,
                      transform.getVisualY() - pad}; // why subtract pad here?
+  
+  SPDLOG_DEBUG("Entity {}: Final draw at ({}, {}), renderSize={}x{}, transform.visual=({}, {}), pad={}", 
+      (int)e, drawPos.x, drawPos.y, renderWidth, renderHeight, 
+      transform.getVisualX(), transform.getVisualY(), pad);
+  
   shader_pipeline::SetLastRenderRect(
       {drawPos.x, drawPos.y, renderWidth,
        renderHeight}); // shouldn't this store the last dest rect that was drawn

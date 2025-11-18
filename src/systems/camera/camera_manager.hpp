@@ -139,24 +139,36 @@ namespace camera_manager {
             
             if (IsActive()) {
                 savedCamera = Current();
+                SPDLOG_DEBUG("CameraGuard: Disabling camera at ({}, {}), zoom={}, rotation={}", 
+                    savedCamera->offset.x, savedCamera->offset.y, savedCamera->zoom, savedCamera->rotation);
                 End();
                 wasActive = true;
+            } else {
+                SPDLOG_DEBUG("CameraGuard: No active camera to disable");
             }
         }
         
         /// Manually restore camera state
         void restore() {
             if (wasActive && savedCamera) {
+                SPDLOG_DEBUG("CameraGuard: Restoring camera at ({}, {}), zoom={}, rotation={}", 
+                    savedCamera->offset.x, savedCamera->offset.y, savedCamera->zoom, savedCamera->rotation);
                 Begin(*savedCamera);
                 wasActive = false;
                 savedCamera = nullptr;
+            } else if (wasActive) {
+                SPDLOG_WARN("CameraGuard: Cannot restore - savedCamera is null!");
             }
         }
         
         /// RAII cleanup - automatically restores camera
         ~CameraGuard() {
             if (wasActive && savedCamera) {
+                SPDLOG_DEBUG("CameraGuard: Destructor restoring camera at ({}, {})", 
+                    savedCamera->offset.x, savedCamera->offset.y);
                 Begin(*savedCamera);
+            } else if (wasActive) {
+                SPDLOG_ERROR("CameraGuard: Destructor - wasActive but savedCamera is null! Camera state corrupted!");
             }
         }
         

@@ -4503,7 +4503,10 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   // // 🔵 Save post-pass result
   RenderTexture2D postPassRender = {}; // id 6 is now the result of all passes
-  if (!shader_pipeline::GetLastRenderTarget()) {
+  if (pipelineComp.passes.empty()) {
+    // No shader passes - use the base sprite render directly
+    postPassRender = baseSpriteRender;
+  } else if (!shader_pipeline::GetLastRenderTarget()) {
     shader_pipeline::SetLastRenderTarget(
         shader_pipeline::front()); // if no passes, we use the front texture
     postPassRender = shader_pipeline::front();
@@ -4519,9 +4522,13 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   render_stack_switch_internal::Push(postProcessRender);
   ClearBackground({0, 0, 0, 0});
 
-  if (pipelineComp.passes.size() % 2 == 0)
+  if (pipelineComp.passes.empty()) {
+    // No shader passes - copy directly from base sprite render (content is at top of texture)
+    Rectangle sourceRect = {0.0f, 0.0f, renderWidth, renderHeight};
+    DrawTextureRec(baseSpriteRender.texture, sourceRect, {0, 0}, WHITE);
+  } else if (pipelineComp.passes.size() % 2 == 0) {
     DrawTexture(postPassRender.texture, 0, 0, WHITE);
-  else {
+  } else {
     Rectangle sourceRect = {0.0f,
                             (float)postPassRender.texture.height - renderHeight,
                             renderWidth, renderHeight};
@@ -4652,12 +4659,10 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   if (pipelineComp.overlayDraws.empty() == false) {
     toRender =
         shader_pipeline::front(); //  in this case it's the overlay draw result
-  } else if (pipelineComp.passes.empty() == false) {
-    // if there are passes, we use the last render target
-    toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
   } else {
-    // nothing?
-    toRender = shader_pipeline::GetBaseRenderTextureCache();
+    // if there are passes or no passes, we use the post-process render cache
+    // which contains either the shader results or the base sprite
+    toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
   }
 
   if (globals::drawDebugInfo) {
@@ -4689,7 +4694,11 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
                 renderWidth, renderHeight};
 
   // if we’ve done an odd number of flips, correct it exactly once:
-  if (pipelineComp.passes.size() % 2 == 0) {
+  if (pipelineComp.passes.empty()) {
+    // No passes - the texture is already correctly oriented
+    finalSourceRect.y = 0.0f;
+    finalSourceRect.height = renderHeight;
+  } else if (pipelineComp.passes.size() % 2 == 0) {
     finalSourceRect.y = (float)toRender.texture.height;
     finalSourceRect.height = -(float)renderHeight;
   } else {

@@ -4728,17 +4728,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
   // Translate(-origin.x, -origin.y);
   
-  PushMatrix();
-Translate(position.x, position.y);
-float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
-float visualScaleX = (transform.getVisualW() / baseWidth) * s;
-float visualScaleY = (transform.getVisualH() / baseHeight) * s;
-Scale(visualScaleX, visualScaleY);
-Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-Translate(-origin.x, -origin.y);
-
-
-  // shadow rendering first
+  // shadow rendering first (with rotation but world-space offset)
   {
     auto &node = registry.get<transform::GameObject>(e);
 
@@ -4747,7 +4737,7 @@ Translate(-origin.x, -origin.y);
       float heightFactor = 1.0f + node.shadowHeight.value_or(
                                       0.f); // Increase effect based on height
 
-      // Adjust displacement using shadow height
+      // Adjust displacement using shadow height (in world space)
       float shadowOffsetX =
           node.shadowDisplacement->x * baseExaggeration * heightFactor;
       float shadowOffsetY =
@@ -4756,16 +4746,28 @@ Translate(-origin.x, -origin.y);
       float shadowAlpha = 0.8f; // 0.0f to 1.0f
       Color shadowColor = Fade(BLACK, shadowAlpha);
 
-      // Translate to shadow position
-      Translate(-shadowOffsetX, shadowOffsetY);
-
-      // Draw shadow by rendering the same frame with a black tint and offset
+      // Draw shadow at world-space offset WITH rotation (shadow rotates with sprite)
+      PushMatrix();
+      Translate(position.x - shadowOffsetX, position.y + shadowOffsetY);
+      float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+      float visualScaleX = (transform.getVisualW() / baseWidth) * s;
+      float visualScaleY = (transform.getVisualH() / baseHeight) * s;
+      Scale(visualScaleX, visualScaleY);
+      Rotate(transform.getVisualRWithDynamicMotionAndXLeaning()); // Shadow rotates with sprite
+      Translate(-origin.x, -origin.y);
       DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, shadowColor);
-
-      // Reset translation to original position
-      Translate(shadowOffsetX, -shadowOffsetY);
+      PopMatrix();
     }
   }
+  
+  PushMatrix();
+Translate(position.x, position.y);
+float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+float visualScaleX = (transform.getVisualW() / baseWidth) * s;
+float visualScaleY = (transform.getVisualH() / baseHeight) * s;
+Scale(visualScaleX, visualScaleY);
+Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+Translate(-origin.x, -origin.y);
 
   DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, WHITE);
 

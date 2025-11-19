@@ -587,11 +587,7 @@ public:
      */
     void Update(float dt) {
         
-        
-        auto &offsetVisualX = registry.get<Spring>(springOffsetX).value;
-        auto &offsetVisualY = registry.get<Spring>(springOffsetY).value;
-        
-        // 1.5) noise‐based shakes
+        // 1.5) noise‐based shakes (calculate but don't apply yet)
         shakeOffsetX = shakeOffsetY = 0.0f;
         // X‐axis
         for(auto it = shakesX.begin(); it != shakesX.end();) {
@@ -607,9 +603,6 @@ public:
             if(!it->shaking) it = shakesY.erase(it);
             else ++it;
         }
-        // apply the jitter on top of whatever offset the springs have given us
-        offsetVisualX += shakeOffsetX;
-        offsetVisualY += shakeOffsetY;
 
         // 2) Handle flash timing
         if (flashing) {
@@ -712,8 +705,9 @@ public:
             cam.target.y = sy.value;
             cam.zoom     = sz.value;
             cam.rotation = sr.value;
-            cam.offset.x = sox.value;
-            cam.offset.y = soy.value;
+            // Apply shake offset on top of spring offset
+            cam.offset.x = sox.value + shakeOffsetX;
+            cam.offset.y = soy.value + shakeOffsetY;
         }
         
         

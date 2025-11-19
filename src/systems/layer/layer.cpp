@@ -4181,14 +4181,17 @@ auto AddDrawTransformEntityWithAnimationWithPipeline(
 auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
                                                   entt::entity e) -> void {
 
-  SPDLOG_DEBUG("=== Pipeline Render START for entity {} ===", (int)e);
-  
-  // FIX: Use CameraGuard to ensure camera is restored even on early returns
-  camera_manager::CameraGuard cameraGuard;
-  cameraGuard.disable();
+  // disable the camera if it exists
+  Camera2D *camera = nullptr;
+  if (camera_manager::IsActive()) {
+    camera = camera_manager::Current();
+    camera_manager::End();
+  }
 
-  // 1. Fetch animation frame and sprite
+  // 1. Fetch animation frame and sprite - use COPIES to avoid dangling pointers
+  Rectangle animationFrameData{};
   Rectangle *animationFrame = nullptr;
+  SpriteComponentASCII currentSpriteData{};
   SpriteComponentASCII *currentSprite = nullptr;
   bool flipX{false}, flipY{false};
 
@@ -4197,8 +4200,13 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   if (registry.any_of<AnimationQueueComponent>(e)) {
     auto &aqc = registry.get<AnimationQueueComponent>(e);
-    if (aqc.noDraw)
-      return;  // FIX: CameraGuard automatically restores camera here
+    if (aqc.noDraw) {
+      // Restore camera before early return to avoid state corruption
+      if (camera) {
+        camera_manager::Begin(*camera);
+      }
+      return;
+    }
 
     // compute the same renderScale as in your other overload:
     intrinsicScale =
@@ -4214,25 +4222,31 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
     if (aqc.animationQueue.empty()) {
       if (!aqc.defaultAnimation.animationList.empty()) {
-        animationFrame =
-            &aqc.defaultAnimation
+        // Copy data instead of storing pointers to avoid dangling references
+        animationFrameData =
+            aqc.defaultAnimation
                  .animationList[aqc.defaultAnimation.currentAnimIndex]
                  .first.spriteData.frame;
-        currentSprite =
-            &aqc.defaultAnimation
+        animationFrame = &animationFrameData;
+        currentSpriteData =
+            aqc.defaultAnimation
                  .animationList[aqc.defaultAnimation.currentAnimIndex]
                  .first;
+        currentSprite = &currentSpriteData;
         flipX = aqc.defaultAnimation.flippedHorizontally;
         flipY = aqc.defaultAnimation.flippedVertically;
       }
     } else {
       auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-      animationFrame =
-          &currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
+      // Copy data instead of storing pointers to avoid dangling references
+      animationFrameData =
+          currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
                .first.spriteData.frame;
-      currentSprite =
-          &currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
+      animationFrame = &animationFrameData;
+      currentSpriteData =
+          currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
                .first;
+      currentSprite = &currentSpriteData;
       flipX = currentAnimObject.flippedHorizontally;
       flipY = currentAnimObject.flippedVertically;
     }
@@ -4335,32 +4349,28 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   if (registry.any_of<transform::RenderImmediateCallback>(e)) {
     const auto& cb = registry.get<transform::RenderImmediateCallback>(e);
     if (cb.fn.valid()) {
-        // FIX #8: Use MatrixStackGuard for rlPushMatrix/rlPopMatrix
-        shader_pipeline::MatrixStackGuard rlMatrixGuard;
-        if (!rlMatrixGuard.push()) {
-            SPDLOG_ERROR("Failed to push RL matrix for RenderImmediateCallback");
-        } else {
-            // Move to padded draw area
-            rlTranslatef(drawOffset.x, drawOffset.y, 0);
+        rlPushMatrix();
 
-            // Center the local origin inside the image region
-            rlTranslatef(baseWidth * 0.5f, baseHeight * 0.5f, 0);
+        // Move to padded draw area
+        rlTranslatef(drawOffset.x, drawOffset.y, 0);
 
-            // Optional: flip Y if you still need upright drawing later
-            // rlTranslatef(0, baseHeight, 0);
-            // rlScalef(1, -1, 1);
+        // Center the local origin inside the image region
+        rlTranslatef(baseWidth * 0.5f, baseHeight * 0.5f, 0);
 
-            // Now (0,0) is at the image center
-            // DrawCircle(0, 0, 100, RED); // should render centered
-            // DrawGradientRectRoundedCentered(
-            //     0, 0,
-            //     baseWidth, baseHeight,
-            //     0.2f, 16,
-            //     RED, BLUE,
-            //     GREEN, YELLOW);
-            cb.fn(baseWidth, baseHeight);  // run Lua callback here if desired
-            // Guard automatically pops matrix
-        }
+        // Optional: flip Y if you still need upright drawing later
+        // rlTranslatef(0, baseHeight, 0);
+        // rlScalef(1, -1, 1);
+
+        // Now (0,0) is at the image center
+        // DrawCircle(0, 0, 100, RED); // should render centered
+        // DrawGradientRectRoundedCentered(
+        //     0, 0,
+        //     baseWidth, baseHeight,
+        //     0.2f, 16,
+        //     RED, BLUE,
+        //     GREEN, YELLOW);
+        cb.fn(baseWidth, baseHeight);  // run Lua callback here if desired
+        rlPopMatrix();
 
         usedImmediateCallback = true;
         if (cb.disableSpriteRendering)
@@ -4409,20 +4419,27 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   render_stack_switch_internal::Pop(); // done with id 6
 
 
-  // 🟡 Save base sprite result - FIX #10: Use reference instead of copy
-  RenderTexture2D& baseSpriteRender = shader_pipeline::GetBaseRenderTextureCache();
+  // 🟡 Save base sprite result
+  // RenderTexture2D baseSpriteRender =
+  //     shader_pipeline::GetBaseRenderTextureCache();
+  // render_stack_switch_internal::Push(baseSpriteRender);
+  // ClearBackground({0, 0, 0, 0});
+  // DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+  // render_stack_switch_internal::Pop();
+
+  RenderTexture2D baseSpriteRender =
+      shader_pipeline::GetBaseRenderTextureCache();
   layer::render_stack_switch_internal::Push(baseSpriteRender);
   ClearBackground({0, 0, 0, 0});
-  Rectangle sourceRect = {
+  Rectangle baseSpriteSourceRect = {
       0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
       renderWidth, renderHeight};
-  // FIX #4: Use SafeDrawTextureRec with validation
-  shader_pipeline::SafeDrawTextureRec(shader_pipeline::front(), sourceRect, {0, 0}, WHITE, "BaseSpriteCache");
+  DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   layer::render_stack_switch_internal::Pop();
 
   if (globals::drawDebugInfo) {
     // Draw
-    shader_pipeline::SafeDrawTextureRec(shader_pipeline::front(), sourceRect, {0, 0}, WHITE, "DebugBaseSpriteCache");
+    DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   }
 
   // 3. Apply shader passes
@@ -4471,8 +4488,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     Rectangle sourceRect = {
         0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
         renderWidth, renderHeight};
-    // FIX #4: Use SafeDrawTextureRec with validation
-    shader_pipeline::SafeDrawTextureRec(shader_pipeline::front(), sourceRect, {0, 0}, WHITE, pass.shaderName.c_str());
+    DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
 
     shader_pipeline::SetLastRenderRect(
         {0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
@@ -4485,34 +4501,31 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     shader_pipeline::SetLastRenderTarget(shader_pipeline::front());
   }
 
-  // // 🔵 Save post-pass result - FIX #10: Use reference instead of copy
-  RenderTexture2D* postPassRender = nullptr; // id 6 is now the result of all passes
-  if (shader_pipeline::GetLastRenderTarget().id == 0) {
-    // No passes were executed
-    SPDLOG_DEBUG("Entity {}: No passes executed, GetLastRenderTarget().id == 0", (int)e);
+  // // 🔵 Save post-pass result
+  RenderTexture2D postPassRender = {}; // id 6 is now the result of all passes
+  if (!shader_pipeline::GetLastRenderTarget()) {
     shader_pipeline::SetLastRenderTarget(
         shader_pipeline::front()); // if no passes, we use the front texture
-    postPassRender = &shader_pipeline::front();
+    postPassRender = shader_pipeline::front();
   } else {
-    postPassRender = &shader_pipeline::GetLastRenderTarget(); // if there are passes, we use
+    postPassRender =
+        *shader_pipeline::GetLastRenderTarget(); // if there are passes, we use
                                                  // the last render target
-    SPDLOG_DEBUG("Entity {}: Passes executed, using last render target ID={}", (int)e, postPassRender->id);
   }
 
-  // 🟡 Save post shader pass sprite result - FIX #10: Use reference instead of copy
-  RenderTexture2D& postProcessRender =
+  // 🟡 Save post shader pass sprite result
+  RenderTexture2D postProcessRender =
       shader_pipeline::GetPostShaderPassRenderTextureCache();
   render_stack_switch_internal::Push(postProcessRender);
   ClearBackground({0, 0, 0, 0});
 
   if (pipelineComp.passes.size() % 2 == 0)
-    DrawTexture(postPassRender->texture, 0, 0, WHITE);
+    DrawTexture(postPassRender.texture, 0, 0, WHITE);
   else {
     Rectangle sourceRect = {0.0f,
-                            (float)postPassRender->texture.height - renderHeight,
+                            (float)postPassRender.texture.height - renderHeight,
                             renderWidth, renderHeight};
-    // FIX #4: Use SafeDrawTextureRec with validation
-    shader_pipeline::SafeDrawTextureRec(*postPassRender, sourceRect, {0, 0}, WHITE, "PostProcessCache");
+    DrawTextureRec(postPassRender.texture, sourceRect, {0, 0}, WHITE);
   }
 
   // DrawTextureRec(postPassRender.texture,
@@ -4526,7 +4539,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   if (globals::drawDebugInfo) {
     // Draw
-    DrawTexture(postPassRender->texture, 0, 150, WHITE);
+    DrawTexture(postPassRender.texture, 0, 150, WHITE);
   }
 
   // DrawTexture(postPassRender.texture, 90, 30, WHITE);
@@ -4556,8 +4569,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       Rectangle sourceRect = {
           0.0f, (float)baseSpriteRender.texture.height - renderHeight,
           renderWidth, renderHeight};
-      // FIX #4: Use SafeDrawTextureRec with validation
-      shader_pipeline::SafeDrawTextureRec(baseSpriteRender, sourceRect, {0, 0}, WHITE, "OverlayBaseSprite");
+      DrawTextureRec(baseSpriteRender.texture, sourceRect, {0, 0}, WHITE);
       render_stack_switch_internal::Pop();
     } else {
       // if the first overlay is not a base sprite, we need to draw the post
@@ -4572,8 +4584,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       Rectangle sourceRect = {
           0.0f, (float)postProcessRender.texture.height - renderHeight,
           renderWidth, renderHeight};
-      // FIX #4: Use SafeDrawTextureRec with validation
-      shader_pipeline::SafeDrawTextureRec(postProcessRender, sourceRect, {0, 0}, WHITE, "OverlayPostProcess");
+      DrawTextureRec(postProcessRender.texture, sourceRect, {0, 0}, WHITE);
       render_stack_switch_internal::Pop();
     }
   }
@@ -4605,18 +4616,17 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     }
     TryApplyUniforms(shader, globals::globalShaderUniforms, overlay.shaderName);
 
-    RenderTexture2D& source =
+    RenderTexture2D &source =
         (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
             ? baseSpriteRender
-            : *postPassRender;
+            : postPassRender;
     // DrawTextureRec(source.texture,
     //                {0, 0, renderWidth * xFlipModifier,
     //                 -(float)renderHeight * yFlipModifier},
     //                {0, 0}, WHITE);
     Rectangle sourceRect = {0.0f, (float)source.texture.height - renderHeight,
                             renderWidth, renderHeight};
-    // FIX #4: Use SafeDrawTextureRec with validation
-    shader_pipeline::SafeDrawTextureRec(source, sourceRect, {0, 0}, WHITE, overlay.shaderName.c_str());
+    DrawTextureRec(source.texture, sourceRect, {0, 0}, WHITE);
 
     EndShaderMode();
     render_stack_switch_internal::Pop();
@@ -4638,85 +4648,74 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     // render_stack_switch_internal::Pop();
   }
 
-  RenderTexture2D* toRender = nullptr;
+  RenderTexture toRender{};
   if (pipelineComp.overlayDraws.empty() == false) {
-    toRender = &shader_pipeline::front(); //  in this case it's the overlay draw result
-    SPDLOG_DEBUG("Entity {}: toRender = front (overlay result), tex ID={}", (int)e, toRender->texture.id);
+    toRender =
+        shader_pipeline::front(); //  in this case it's the overlay draw result
   } else if (pipelineComp.passes.empty() == false) {
     // if there are passes, we use the last render target
-    toRender = &shader_pipeline::GetPostShaderPassRenderTextureCache();
-    SPDLOG_DEBUG("Entity {}: toRender = PostShaderPass cache, tex ID={}", (int)e, toRender->texture.id);
+    toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
   } else {
-    // FIX: When no passes, postPassRender (front) was copied to PostShaderPass cache
-    // So we should use that, NOT the BaseSprite cache
-    toRender = &shader_pipeline::GetPostShaderPassRenderTextureCache();
-    SPDLOG_WARN("Entity {}: NO PASSES - using PostShaderPass cache (contains base sprite from front), tex ID={}", (int)e, toRender->texture.id);
+    // nothing?
+    toRender = shader_pipeline::GetBaseRenderTextureCache();
   }
 
   if (globals::drawDebugInfo) {
     // Draw the final texture to the screen for debugging
-    DrawTexture(toRender->texture, 0, 300, WHITE);
-    DrawText(fmt::format("Final Render Texture: {}x{}", toRender->texture.width,
-                         toRender->texture.height)
+    DrawTexture(toRender.texture, 0, 300, WHITE);
+    DrawText(fmt::format("Final Render Texture: {}x{}", toRender.texture.width,
+                         toRender.texture.height)
                  .c_str(),
              10, 300, 20, WHITE);
   }
 
-  // FIX: Restore camera BEFORE final draw to screen (final draw is in world space!)
-  // The render texture was created in screen space, but now we draw it in world space
-  cameraGuard.restore();
+  // turn the camera back on if it was active (since we're rendering to the
+  // screen now, and to restore camera state in the command buffer)
+  if (camera) {
+    camera_manager::Begin(*camera);
+  }
 
   // 5. Final draw with transform
 
   Vector2 drawPos = {transform.getVisualX() - pad,
                      transform.getVisualY() - pad}; // why subtract pad here?
-  
-  SPDLOG_DEBUG("Entity {}: Final draw at ({}, {}), renderSize={}x{}, transform.visual=({}, {}), pad={}", 
-      (int)e, drawPos.x, drawPos.y, renderWidth, renderHeight, 
-      transform.getVisualX(), transform.getVisualY(), pad);
-  
   shader_pipeline::SetLastRenderRect(
       {drawPos.x, drawPos.y, renderWidth,
        renderHeight}); // shouldn't this store the last dest rect that was drawn
                        // on the last texture?
 
   // default (no flip)
-  sourceRect = {0.0f, (float)toRender->texture.height - renderHeight,
+  Rectangle finalSourceRect = {0.0f, (float)toRender.texture.height - renderHeight,
                 renderWidth, renderHeight};
 
   // if we’ve done an odd number of flips, correct it exactly once:
   if (pipelineComp.passes.size() % 2 == 0) {
-    sourceRect.y = (float)toRender->texture.height;
-    sourceRect.height = -(float)renderHeight;
+    finalSourceRect.y = (float)toRender.texture.height;
+    finalSourceRect.height = -(float)renderHeight;
   } else {
     // if we have an odd number of flips, we need to flip the Y coordinate
     // sourceRect.y      = (float)renderHeight;
     // sourceRect.height = (float)-renderHeight;
   }
 
-  // FIX: Use MatrixStackGuard instead of raw PushMatrix/PopMatrix
-  shader_pipeline::MatrixStackGuard matrixGuard;
-  if (!matrixGuard.push()) {
-    SPDLOG_ERROR("Failed to push matrix for entity {}", (int)e);
-    // FIX: CameraGuard automatically restores camera, no manual restore needed
-    return;
-  }
+  Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
+  Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};
+
+  // PushMatrix();
+  // Translate(position.x, position.y);
+  // Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+  //       transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+  // Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+  // Translate(-origin.x, -origin.y);
   
-  // FIX: Match the non-pipeline version's transform logic exactly
-  // Translate to center of the transform's visual bounds
-  Translate(transform.getVisualX() + transform.getVisualW() * 0.5f,
-            transform.getVisualY() + transform.getVisualH() * 0.5f);
-  
-  // Apply hover/dynamic scale and rotation
-  float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
-  Scale(s, s);
-  Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-  
-  // Translate back by half the visual size (to draw from top-left at origin)
-  Translate(-transform.getVisualW() * 0.5f, -transform.getVisualH() * 0.5f);
-  
-  // Now translate by -pad to account for padding in the render texture
-  Translate(-pad, -pad);
+  PushMatrix();
+Translate(position.x, position.y);
+float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+float visualScaleX = (transform.getVisualW() / baseWidth) * s;
+float visualScaleY = (transform.getVisualH() / baseHeight) * s;
+Scale(visualScaleX, visualScaleY);
+Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+Translate(-origin.x, -origin.y);
 
 
   // shadow rendering first
@@ -4741,16 +4740,14 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       Translate(-shadowOffsetX, shadowOffsetY);
 
       // Draw shadow by rendering the same frame with a black tint and offset
-      // FIX #4: Use SafeDrawTextureRec with validation
-      shader_pipeline::SafeDrawTextureRec(*toRender, sourceRect, {0, 0}, shadowColor, "Shadow");
+      DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, shadowColor);
 
       // Reset translation to original position
       Translate(shadowOffsetX, -shadowOffsetY);
     }
   }
 
-  // FIX #4: Use SafeDrawTextureRec with validation
-  shader_pipeline::SafeDrawTextureRec(*toRender, sourceRect, {0, 0}, WHITE, "FinalDraw");
+  DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, WHITE);
 
   // debug rect
   if (globals::drawDebugInfo) {
@@ -4792,12 +4789,14 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     }
   }
 
-  // FIX #8: MatrixStackGuard automatically pops matrix when it goes out of scope
-  // PopMatrix(); // <- Removed, guard handles this
+
+  PopMatrix();
 
   // draw the mini pipeline view + ALL rects
   // shader_pipeline::DebugDrawAllRects(10, 10);
 }
+
+
 
 //-----------------------------------------------------------------------------------
 // renderSliceOffscreen
@@ -4951,8 +4950,8 @@ void renderSliceOffscreenFromDrawList(
   // : front(); // TODO: this gets overwritten by the next overlay draw, so we
   // need to save it before that?
 
-  RenderTexture2D postPassRT = shader_pipeline::GetLastRenderTarget().id != 0
-                                   ? shader_pipeline::GetLastRenderTarget()
+  RenderTexture2D postPassRT = shader_pipeline::GetLastRenderTarget()
+                                   ? *shader_pipeline::GetLastRenderTarget()
                                    : shader_pipeline::front();
 
   auto postCache = shader_pipeline::

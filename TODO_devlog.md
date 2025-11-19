@@ -212,3 +212,6 @@
 11/18/2025
   - Stability issues & crashing is fixed, but there are some quirks to work out that have been introduced into the rendering. (sometimes camera stops working, and entities no longer match their collision boxes (I need to know when that happens, but how?). Player still doesn't show up when using pipeline, only when 1 shader pass is added. Also player will sometimes render in completely the wrong position for some reason.)
   - single pass issue also fixed, but the sprites render incorrectly position wise.
+
+11/19/2025 
+  - still stuck with shader pipeline bug/.

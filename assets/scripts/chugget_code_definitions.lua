@@ -1779,9 +1779,7 @@ shader_pipeline.ShaderOverlayDraw = {
     ---@type BlendMode
     blendMode = nil,  -- Blend mode for this overlay
     ---@type bool
-    enabled = nil,  -- Whether this overlay is enabled
-    ---@type bool
-    injectAtlasUniforms = nil  -- Whether to inject atlas uniforms
+    enabled = nil  -- Whether this overlay is enabled
 }
 
 
@@ -9125,11 +9123,11 @@ function shader_pipeline.ShaderPipelineUnload(...) end
 function shader_pipeline.ShaderPipelineInit(...) end
 
 ---
---- Resizes the pipeline's render textures if the new dimensions are different. Returns true on success.
+--- Resizes the pipeline's render textures if the new dimensions are different.
 ---
 ---@param newWidth integer
 ---@param newHeight integer
----@return boolean
+---@return nil
 function shader_pipeline.Resize(...) end
 
 ---
@@ -9163,7 +9161,7 @@ function shader_pipeline.SetLastRenderTarget(...) end
 ---
 --- Internal helper to retrieve the last used render target.
 ---
----@return RenderTexture2D
+---@return RenderTexture2D|nil
 function shader_pipeline.GetLastRenderTarget(...) end
 
 ---
@@ -9180,31 +9178,9 @@ function shader_pipeline.SetLastRenderRect(...) end
 function shader_pipeline.GetLastRenderRect(...) end
 
 ---
---- Safely draws a texture rectangle with bounds validation.
----
----@param texture RenderTexture2D
----@param sourceRect Rectangle
----@param pos Vector2
----@param tint Color
----@return nil
-function shader_pipeline.SafeDrawTextureRec(...) end
-
----
---- Returns the total memory usage in bytes of all pipeline textures.
----
----@return integer
-function shader_pipeline.GetMemoryUsage(...) end
-
----
---- Logs the current memory usage of the shader pipeline.
----
----@return nil
-function shader_pipeline.LogMemoryUsage(...) end
-
----
 ---
 ---@param src ShaderOverlayInputSource    # where the overlay samples from
----@param name string                      # your overlay's name
+---@param name string                      # your overlay’s name
 ---@param blend BlendMode?                 # optional blend mode (default BLEND_ALPHA)
 ---@return ShaderOverlayDraw               # the newly-added overlay draw
 

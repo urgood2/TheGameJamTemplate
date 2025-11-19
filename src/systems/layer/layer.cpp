@@ -4444,6 +4444,15 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   // 3. Apply shader passes
   int total = pipelineComp.passes.size();
+  
+  // debug point 
+  if (total == 0) {
+    
+      SPDLOG_DEBUG("Entity {} has no shader passes in its pipeline.", (int)e);
+  } else {
+      SPDLOG_DEBUG("Entity {} has {} shader passes in its pipeline.", (int)e, total);
+  }
+  
   int i = 0;
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
     bool lastPass = (++i == total);
@@ -4505,7 +4514,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   RenderTexture2D postPassRender = {}; // id 6 is now the result of all passes
   if (pipelineComp.passes.empty()) {
     // No shader passes - use the base sprite render directly
-    postPassRender = baseSpriteRender;
+    shader_pipeline::SetLastRenderTarget(baseSpriteRender);
+    postPassRender = *shader_pipeline::GetLastRenderTarget();
   } else if (!shader_pipeline::GetLastRenderTarget()) {
     shader_pipeline::SetLastRenderTarget(
         shader_pipeline::front()); // if no passes, we use the front texture
@@ -4523,8 +4533,10 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   ClearBackground({0, 0, 0, 0});
 
   if (pipelineComp.passes.empty()) {
-    // No shader passes - copy directly from base sprite render (content is at top of texture)
-    Rectangle sourceRect = {0.0f, 0.0f, renderWidth, renderHeight};
+    // No shader passes - treat like 1 pass (odd) for consistent behavior
+    Rectangle sourceRect = {0.0f,
+                            (float)baseSpriteRender.texture.height - renderHeight,
+                            renderWidth, renderHeight};
     DrawTextureRec(baseSpriteRender.texture, sourceRect, {0, 0}, WHITE);
   } else if (pipelineComp.passes.size() % 2 == 0) {
     DrawTexture(postPassRender.texture, 0, 0, WHITE);
@@ -4695,9 +4707,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   // if we’ve done an odd number of flips, correct it exactly once:
   if (pipelineComp.passes.empty()) {
-    // No passes - the texture is already correctly oriented
-    finalSourceRect.y = 0.0f;
-    finalSourceRect.height = renderHeight;
+    // No passes - treat like odd (1 pass) for consistency
+    // Already set correctly above (default finalSourceRect), no change needed
   } else if (pipelineComp.passes.size() % 2 == 0) {
     finalSourceRect.y = (float)toRender.texture.height;
     finalSourceRect.height = -(float)renderHeight;

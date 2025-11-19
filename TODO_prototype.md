@@ -155,6 +155,7 @@ end)
 - also need currency.
 
 # errors
+- there's a memory leak in the wasm version.
 - starry_tunnel shader not working.
 - Using 3d_skew shader on cards makes player invisible. why?
 - rendeirng background sometimes goes translucent. not sure why?

@@ -215,5 +215,5 @@
 
 11/19/2025 
   - still stuck with shader pipeline bug/.
-  - bug seems fixed, and shadows are rendering properly again. goddamn it.
+  - bug seems fixed, and shadows are rendering properly again. goddamn it. 
   

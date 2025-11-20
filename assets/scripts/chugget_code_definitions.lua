@@ -8098,6 +8098,27 @@ function physics.SetDamping(...) end
 function physics.SetGlobalDamping(...) end
 
 ---
+--- Enable/disable arrival deceleration logic.
+--- When true, SeekPoint ignores decel and moves full speed all the way.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param disable boolean
+---@return nil
+
+function physics.set_disable_arrival(...) end
+
+---
+--- Sets arrival deceleration radius (ignored if disableArrival=true).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param radius number @distance at which arrival deceleration begins
+---@return nil
+
+function physics.set_arrive_radius(...) end
+
+---
 --- Returns the body's position.
 ---
 ---@param world physics.PhysicsWorld
@@ -9740,6 +9761,14 @@ function ui.box.handleAlignment(...) end
 ---@param uiElementParent Entity
 ---@return nil
 function ui.box.BuildUIElementTree(...) end
+
+---
+--- Sets the draw layer for a UI box.
+---
+---@param uiBox Entity
+---@param name string
+---@return nil
+function ui.box.set_draw_layer(...) end
 
 ---
 --- Assigns state tags to all elements in a UI box.

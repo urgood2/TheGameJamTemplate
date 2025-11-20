@@ -152,7 +152,9 @@ namespace ui
             if (def.type == UITypeEnum::TEXT && config && config->text)
             {
                 float scale = config->scale.value_or(1.0f);
-                float fontSize = localization::getFontData().fontLoadedSize * scale * localization::getFontData().fontScale;
+                // Use custom fontSize if specified, otherwise use default
+                float baseFontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
+                float fontSize = baseFontSize * scale * localization::getFontData().fontScale;
                 auto [w, h] = MeasureTextEx(localization::getFontData().font, config->text->c_str(), fontSize, localization::getFontData().spacing);
                 if (config->verticalText.value_or(false))
                     std::swap(w, h);
@@ -1675,8 +1677,9 @@ namespace ui
             if (!uiConfig.language)
                 uiConfig.language = globals::language;
 
-            // TODO: respect font size from config
-            float fontSize = localization::getFontData().fontLoadedSize * scaleFactor * localization::getFontData().fontScale;
+            // Use custom fontSize if specified, otherwise use default
+            float baseFontSize = uiConfig.fontSize.has_value() ? uiConfig.fontSize.value() : localization::getFontData().fontLoadedSize;
+            float fontSize = baseFontSize * scaleFactor * localization::getFontData().fontScale;
             auto [measuredWidth, measuredHeight] = MeasureTextEx(localization::getFontData().font, uiConfig.text.value().c_str(), fontSize, localization::getFontData().spacing);
 
             calcCurrentNodeTransform.w = measuredWidth;
@@ -2462,6 +2465,9 @@ namespace ui
             if (elemComp.uiBox != uiBoxEntity) {
                 uiBoxEntity     = elemComp.uiBox;
                 drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+                if (auto* l = registry.try_get<UIBoxLayer>(uiBoxEntity)) {
+                    layerPtr = game::GetLayer(l->layerName);
+                }
             }
             
             //TODO: update with:drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex; if the uibox has changed.

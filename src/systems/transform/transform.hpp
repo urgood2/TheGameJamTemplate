@@ -146,6 +146,26 @@ namespace transform
 
         // If we provide a container, all nodes within that container are translated with that container as the reference frame.
         entt::entity container = entt::null; // Reference to the container entity
+        
+        
+        // ──────────────────────────────────────────────
+        // NEW SHADOW SYSTEM
+        // ──────────────────────────────────────────────
+        enum class ShadowMode {
+            SpriteBased,     // current rotating offset copy
+            GroundEllipse    // new non-rotating ellipse at feet
+        };
+
+        ShadowMode shadowMode = ShadowMode::GroundEllipse;
+
+        std::optional<float> groundShadowRadiusX;
+        std::optional<float> groundShadowRadiusY;
+
+        Color groundShadowColor = {0, 0, 0, 120}; // soft black default
+
+        float groundShadowYOffset = 0.0f;        // vertical offset
+        float groundShadowHeightFactor = 1.0f;   // scales with "height"
+
 
         std::optional<entt::entity> collisionTransform; // Reference to the transform entity that should be used for collision detection, if this particular entity should not be used
 

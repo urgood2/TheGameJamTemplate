@@ -771,6 +771,19 @@ namespace ui {
         
         box.set_function("BuildUIElementTree", &ui::box::BuildUIElementTree);
         rec.record_free_function({"ui", "box"}, {"BuildUIElementTree", "---@param registry registry\n---@param uiBoxEntity Entity\n---@param uiElementDef UIElementTemplateNode\n---@param uiElementParent Entity\n---@return nil", "Builds a UI tree from a template definition.", true, false});
+        
+                box.set_function("set_draw_layer", [&](entt::entity box, const std::string &name){
+            auto layer = game::GetLayer(name);
+            if (!layer) {
+                spdlog::error("Unknown layer '{}'", name);
+                return;
+            }
+            globals::registry.emplace_or_replace<ui::UIBoxLayer>(box, name);
+        });
+        
+        rec.record_free_function({"ui", "box"}, {"set_draw_layer", "---@param uiBox Entity\n---@param name string\n---@return nil", "Sets the draw layer for a UI box.", true, false});
+
+        
 
         // 2) Initialization & placement
         // box.set_function("Initialize", &ui::box::Initialize);

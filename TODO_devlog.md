@@ -221,4 +221,7 @@
   - Pretty bummed out, about life in general (when do I get to retire?) and about this code that's constantly miring me in bugs.
   - Added a physics mask to the player
   - Made sure screen shake works
+  - Added bottom shadows instead of drop shadows back in
+  - Added ui-box specific layer settings back in.
+  - Trimmed tooltips a little. Added font size option, but not working at the moment.
   

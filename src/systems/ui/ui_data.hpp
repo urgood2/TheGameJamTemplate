@@ -96,6 +96,12 @@ namespace ui
         bool isActive = false; // Whether this text input is currently active (focused for input)
     };
     
+        
+    struct UIBoxLayer {
+        std::string layerName = "sprites"; // name of the layer
+    };
+
+    
     struct TextInputHook {
         entt::entity hookedEntity = entt::null;
     };
@@ -199,6 +205,7 @@ namespace ui
         std::optional<Vector2> offset;                                             // Positional offset
         std::optional<float> scale{1.0f};                                                // UI scale, also applies to text (not sure if it does to size?)
         std::optional<float> textSpacing; // optional spacing parameter for text in UI elements
+        std::optional<float> fontSize; // Font size for text UI elements
         std::optional<bool> focusWithObject;                                       // Ensures that when an associated object (e.g., an entity, card, or UI element) gains focus, the UI element also becomes focused. Typically used when a UI element represents an object in the game and should highlight/select the object when focused. Updates the object_focus_timer property.
         std::optional<bool> refreshMovement;                                       // Signals that an object's movement needs to be recalculated, if this config is attached to an object in a UI element. Also makes it update every frame
         std::optional<bool> no_recalc, non_recalc;                                 // Prevents automatic recalculation of UI layout
@@ -386,6 +393,11 @@ namespace ui
 
         Builder& addTextSpacing(const float& textSpacing) {
             uiConfig.textSpacing = textSpacing;
+            return *this;
+        }
+
+        Builder& addFontSize(const float& fontSize) {
+            uiConfig.fontSize = fontSize;
             return *this;
         }
 

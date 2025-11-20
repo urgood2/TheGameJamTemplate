@@ -58,19 +58,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - highlight mod cards as well in the simulator. use the same color highlight for each cast block, to make it easier to see.
 - add an option to stop the ticking noise.
 
-- try develop branch of sol2. continue debugging
-- it looks like enabling shader pipiline on cards & enemies starts making memory unstable. why? memory issue? but i don't understand. upon pickup delete? but why?
-- when card skew is on, and player pipeline is on, but enemy pipeline isn't, there is no crash.
-- when card skew and enemy pipeline are both on, there is a crash when taking a pickup, but only sometimes? also, camera stops working here.
-- also, player sprite appears when scale changes to above 1, but vanishes again aat normal scale, when card skew is on. -> adding a single pass to it brings it back.
-- second cast block doesn't appear in the visualizer, only the first.
-- fix card shader making player shader vanish.
-- need mods to highlight as well, righ tnow only actions do.
 - after that, make it so cards which are above the wand total are marked with an X
 - cards which are not used should also be marked with an X 
-- camera sometimes stops working, and this messes with cursor collision.d 
-
-
 
 - add uibox layer specification back in without brekaing anything please.
 

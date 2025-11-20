@@ -649,11 +649,15 @@ namespace scripting {
         rec.record_property("", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
 
         // 4) expose your Layer pointers under a sub-table "game"
-        lua.create_named_table("game")[
-            "background"   ] = game::background;
-        lua["game"]["sprites"]       = game::sprites;
-        lua["game"]["ui_layer"]      = game::ui_layer;
-        lua["game"]["finalOutput"]   = game::finalOutput;
+        // lua.create_named_table("game")[
+        //     "background"   ] = game::background;
+        // lua["game"]["sprites"]       = game::sprites;
+        // lua["game"]["ui_layer"]      = game::ui_layer;
+        // lua["game"]["finalOutput"]   = game::finalOutput;
+        // lua["game"]["background"  ] = game::GetLayer("background");
+        // lua["game"]["sprites"]       = game::GetLayer("sprites");
+        // lua["game"]["ui_layer"]      = game::GetLayer("ui_layer");
+        // lua["game"]["finalOutput"]   = game::GetLayer("finalOutput");
     }
 
 

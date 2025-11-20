@@ -1719,7 +1719,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
     constexpr float kCap  = 0.72f;  // ~cap height relative to fontSize
     constexpr float kDesc = 0.22f;  // ~descent relative to fontSize
 
-    const float fontSize = fd.fontLoadedSize;
+    // Check if fontSize is specified in config, otherwise use default
+    const float fontSize = config->fontSize.has_value() ? config->fontSize.value() : fd.fontLoadedSize;
     const float invScale = (uiScale != 0.0f) ? 1.0f / uiScale : 1.0f;
     const float innerH   = transform->getActualH() * invScale;  // unscaled element height
 

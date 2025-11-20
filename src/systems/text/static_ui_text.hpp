@@ -231,6 +231,33 @@ namespace static_ui_text_system {
         return std::nullopt;
     }
 
+    inline std::optional<float>
+    getAttrFloat(const std::map<std::string, static_ui_text_system::TextSegmentArgumentType>& attrs,
+                 std::string_view key)
+    {
+        auto it = attrs.find(std::string(key));
+        if (it == attrs.end()) return std::nullopt;
+        
+        // Try float directly
+        if (std::holds_alternative<float>(it->second))
+            return std::get<float>(it->second);
+        
+        // Try int -> float conversion
+        if (std::holds_alternative<int>(it->second))
+            return static_cast<float>(std::get<int>(it->second));
+        
+        // Try string -> float conversion
+        if (std::holds_alternative<std::string>(it->second)) {
+            try {
+                return std::stof(std::get<std::string>(it->second));
+            } catch (...) {
+                return std::nullopt;
+            }
+        }
+        
+        return std::nullopt;
+    }
+
     // Accept both id= and elementID= (elementID kept for back-compat)
     inline std::optional<std::string>
     getExplicitId(const std::map<std::string, static_ui_text_system::TextSegmentArgumentType>& attrs)
@@ -400,6 +427,11 @@ namespace static_ui_text_system {
                 if (auto colorStr = getAttrString(segment.attributes, "color")) {
                     auto color = util::getColor(*colorStr);
                     textSegmentDef.config.color = color;
+                }
+
+                // fontSize override?
+                if (auto fontSize = getAttrFloat(segment.attributes, "fontSize")) {
+                    textSegmentDef.config.fontSize = *fontSize;
                 }
 
                 // assign id on the text node before any wrapping

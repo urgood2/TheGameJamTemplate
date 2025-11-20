@@ -1930,18 +1930,45 @@ function makeWandTooltip(wand_def)
     if not wand_def then
         wand_def = WandEngine.wand_defs[1]
     end
-
-    local text = "[id](background=red;color=pink) [" .. wand_def.id .. "](color=pink)\n" ..
-        "[type](background=gray;color=green) [" .. wand_def.type .. "](color=pink)\n" ..
-        "[cast block size](background=gray;color=green) [" .. wand_def.cast_block_size .. "](color=pink)\n" ..
-        "[cast delay](background=gray;color=green) [" .. (wand_def.cast_delay or "NONE") .. "](color=pink)\n" ..
-        "[recharge](background=gray;color=green) [" .. wand_def.recharge_time .. "](color=pink)\n" ..
-        "[spread](background=gray;color=green) [" .. (wand_def.spread_angle or "none") .. "](color=pink)\n" ..
-        "[shuffle](background=gray;color=green) [" .. (wand_def.shuffle and "on" or "off") .. "](color=pink)\n" ..
-        "[total slots](background=gray;color=green) [" .. (wand_def.total_card_slots or "N/A") .. "](color=pink)\n" ..
-        "[always casts](background=gray;color=green) [" ..
-        table.concat(wand_def.always_cast_cards, ", ") .. "](color=pink)"
-
+    
+    local globalFontSize = 10
+    
+    -- Helper function to check if value should be excluded
+    local function shouldExclude(value)
+        if value == nil then return true end
+        if value == -1 then return true end
+        if type(value) == "string" and (value == "N/A" or value == "NONE") then return true end
+        return false
+    end
+    
+    -- Helper function to add a line if value is not excluded
+    local function addLine(lines, label, value, valueFormatter)
+        if shouldExclude(value) then return end
+        local formattedValue = valueFormatter and valueFormatter(value) or tostring(value)
+        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" .. 
+            formattedValue .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+    end
+    
+    local lines = {}
+    
+    -- Always show ID
+    table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" .. 
+        wand_def.id .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+    
+    addLine(lines, "type", wand_def.type)
+    addLine(lines, "cast block size", wand_def.cast_block_size)
+    addLine(lines, "cast delay", wand_def.cast_delay)
+    addLine(lines, "recharge", wand_def.recharge_time)
+    addLine(lines, "spread", wand_def.spread_angle)
+    addLine(lines, "shuffle", wand_def.shuffle, function(v) return v and "on" or "off" end)
+    addLine(lines, "total slots", wand_def.total_card_slots)
+    
+    -- Handle always_cast_cards specially
+    if wand_def.always_cast_cards and #wand_def.always_cast_cards > 0 then
+        addLine(lines, "always casts", table.concat(wand_def.always_cast_cards, ", "))
+    end
+    
+    local text = table.concat(lines, "\n")
     local textDef = ui.definitions.getTextFromString(text)
 
     local v = dsl.vbox {
@@ -1960,6 +1987,7 @@ function makeWandTooltip(wand_def)
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
 
     ui.box.RenewAlignment(registry, boxID)
+    ui.box.set_draw_layer(boxID, "ui_layer")
 
     ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     remove_default_state_tag(boxID)
@@ -1971,30 +1999,51 @@ function makeCardTooltip(card_def)
     if not card_def then
         card_def = CardTemplates.ACTION_BASIC_PROJECTILE
     end
-
-    local text =
-        "[id](background=red;color=pink) [" .. (card_def.id or "N/A") .. "](color=pink)\n" ..
-        "[type](background=gray;color=green) [" .. (card_def.type or "N/A") .. "](color=pink)\n" ..
-        "[max uses](background=gray;color=green) [" .. (card_def.max_uses or "N/A") .. "](color=pink)\n" ..
-        "[mana cost](background=gray;color=green) [" .. (card_def.mana_cost or "N/A") .. "](color=pink)\n" ..
-        "[damage](background=gray;color=green) [" .. (card_def.damage or "N/A") .. "](color=pink)\n" ..
-        "[damage type](background=gray;color=green) [" .. (card_def.damage_type or "N/A") .. "](color=pink)\n" ..
-        "[radius of effect](background=gray;color=green) [" ..
-        (card_def.radius_of_effect or "N/A") .. "](color=pink)\n" ..
-        "[spread angle](background=gray;color=green) [" .. (card_def.spread_angle or "N/A") .. "](color=pink)\n" ..
-        "[projectile speed](background=gray;color=green) [" ..
-        (card_def.projectile_speed or "N/A") .. "](color=pink)\n" ..
-        "[lifetime](background=gray;color=green) [" .. (card_def.lifetime or "N/A") .. "](color=pink)\n" ..
-        "[cast delay](background=gray;color=green) [" .. (card_def.cast_delay or "N/A") .. "](color=pink)\n" ..
-        "[recharge](background=gray;color=green) [" .. (card_def.recharge_time or "N/A") .. "](color=pink)\n" ..
-        "[spread modifier](background=gray;color=green) [" .. (card_def.spread_modifier or "N/A") .. "](color=pink)\n" ..
-        "[speed modifier](background=gray;color=green) [" .. (card_def.speed_modifier or "N/A") .. "](color=pink)\n" ..
-        "[lifetime modifier](background=gray;color=green) [" ..
-        (card_def.lifetime_modifier or "N/A") .. "](color=pink)\n" ..
-        "[crit chance mod](background=gray;color=green) [" ..
-        (card_def.critical_hit_chance_modifier or "N/A") .. "](color=pink)\n" ..
-        "[weight](background=gray;color=green) [" .. (card_def.weight or "N/A") .. "](color=pink)"
-
+    
+    local globalFontSize = 10
+    
+    -- Helper function to check if value should be excluded
+    local function shouldExclude(value)
+        if value == nil then return true end
+        if value == -1 then return true end
+        if type(value) == "string" and value == "N/A" then return true end
+        if type(value) == "number" and value == 0 then return false end -- Keep 0 values
+        return false
+    end
+    
+    -- Helper function to add a line if value is not excluded
+    local function addLine(lines, label, value)
+        if shouldExclude(value) then return end
+        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" .. 
+            tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+    end
+    
+    local lines = {}
+    
+    -- Always show ID and type
+    if card_def.id then
+        table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" .. 
+            card_def.id .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+    end
+    
+    addLine(lines, "type", card_def.type)
+    addLine(lines, "max uses", card_def.max_uses)
+    addLine(lines, "mana cost", card_def.mana_cost)
+    addLine(lines, "damage", card_def.damage)
+    addLine(lines, "damage type", card_def.damage_type)
+    addLine(lines, "radius of effect", card_def.radius_of_effect)
+    addLine(lines, "spread angle", card_def.spread_angle)
+    addLine(lines, "projectile speed", card_def.projectile_speed)
+    addLine(lines, "lifetime", card_def.lifetime)
+    addLine(lines, "cast delay", card_def.cast_delay)
+    addLine(lines, "recharge", card_def.recharge_time)
+    addLine(lines, "spread modifier", card_def.spread_modifier)
+    addLine(lines, "speed modifier", card_def.speed_modifier)
+    addLine(lines, "lifetime modifier", card_def.lifetime_modifier)
+    addLine(lines, "crit chance mod", card_def.critical_hit_chance_modifier)
+    addLine(lines, "weight", card_def.weight)
+    
+    local text = table.concat(lines, "\n")
     local textDef = ui.definitions.getTextFromString(text)
 
     local v = dsl.vbox {
@@ -2015,6 +2064,7 @@ function makeCardTooltip(card_def)
 
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
 
+    ui.box.set_draw_layer(boxID, "ui_layer")
     ui.box.RenewAlignment(registry, boxID)
     -- ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     ui.box.ClearStateTagsFromUIBox(boxID) -- remove all state tags from sub entities and box

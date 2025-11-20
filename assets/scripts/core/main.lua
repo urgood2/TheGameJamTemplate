@@ -408,6 +408,9 @@ function initMainGame()
         end
     )
     
+    
+    require("test_projectiles")
+
 end
 
 function changeGameState(newState)

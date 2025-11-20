@@ -2581,9 +2581,9 @@ function showTooltip(titleText, bodyText)
 
   TextSystem.Functions.setText(titleEnt, titleText)
   TextSystem.Functions.clearAllEffects(titleEnt)            -- clear any previous effects
-  TextSystem.Functions.applyGlobalEffects(titleEnt, "slide;color=plum") -- apply the tooltip title effects
+  TextSystem.Functions.applyGlobalEffects(titleEnt, "slide;color=plum;fontSize=30") -- apply the tooltip title effects
   TextSystem.Functions.setText(bodyEnt, bodyText)
-  TextSystem.Functions.applyGlobalEffects(bodyEnt, "color=blue_midnight") -- apply the tooltip body effects
+  TextSystem.Functions.applyGlobalEffects(bodyEnt, "color=blue_midnight;fontSize=20") -- apply the tooltip body effects
 
   -- 2) re-calc the box layout to fit new text
   ui.box.RenewAlignment(registry, boxEnt)

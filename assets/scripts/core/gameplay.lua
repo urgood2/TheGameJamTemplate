@@ -3030,7 +3030,7 @@ function startPlanningPhase()
     input.set_context("planning-phase") -- set input context to planning phase.
 
     PhysicsManager.enable_step("world", false)
-    
+
     setLowPassTarget(1.0) -- low pass fileter on
 
     -- fadeOutMusic("planning-music", 0.3)
@@ -3038,6 +3038,12 @@ function startPlanningPhase()
     -- fadeOutMusic("action-music", 0.3)
     -- fadeOutMusic("shop-music", 0.3)
     -- fadeInMusic("planning-music", 0.6)
+
+    -- Reset camera immediately to center to fix intermittent camera positioning bug
+    local cam = camera.Get("world_camera")
+    if cam then
+        cam:SetActualTarget(globals.screenWidth() / 2, globals.screenHeight() / 2)
+    end
 
     transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
         { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
@@ -3055,13 +3061,19 @@ function startShopPhase()
     activate_state("default_state") -- just for defaults, keep them open
 
     PhysicsManager.enable_step("world", false)
-    
+
     setLowPassTarget(1.0) -- low pass fileter on
 
     -- fadeOutMusic("main-menu", 0.3)
     -- fadeOutMusic("action-music", 0.3)
     -- fadeOutMusic("planning-music", 0.3)
     -- fadeInMusic("shop-music", 0.6)
+
+    -- Reset camera immediately to center to fix intermittent camera positioning bug
+    local cam = camera.Get("world_camera")
+    if cam then
+        cam:SetActualTarget(globals.screenWidth() / 2, globals.screenHeight() / 2)
+    end
 
 
     -- debug

@@ -304,5 +304,86 @@
             "vertex": "web/item_glow_vertex.vs",
             "fragment": "web/item_glow_fragment.fs"
         }
+    },
+    "efficient_pixel_outline": {
+        "vertex": "efficient_pixel_outline_vertex.vs",
+        "fragment": "efficient_pixel_outline_fragment.fs",
+
+        "web": {
+            "vertex": "web/efficient_pixel_outline_vertex.vs",
+            "fragment": "web/efficient_pixel_outline_fragment.fs"
+        }
+    },
+    "atlas_outline": {
+        "vertex": "atlas_outline_vertex.vs",
+        "fragment": "atlas_outline_fragment.fs",
+
+        "web": {
+            "vertex": "web/atlas_outline_vertex.vs",
+            "fragment": "web/atlas_outline_fragment.fs"
+        }
+    },
+    "burn_2d": {
+        "vertex": "burn_2d_vertex.vs",
+        "fragment": "burn_2d_fragment.fs",
+
+        "web": {
+            "vertex": "web/burn_2d_vertex.vs",
+            "fragment": "web/burn_2d_fragment.fs"
+        }
+    },
+    "dissolve_burn_edge": {
+        "vertex": "dissolve_burn_edge_vertex.vs",
+        "fragment": "dissolve_burn_edge_fragment.fs",
+
+        "web": {
+            "vertex": "web/dissolve_burn_edge_vertex.vs",
+            "fragment": "web/dissolve_burn_edge_fragment.fs"
+        }
+    },
+    "drop_shadow": {
+        "vertex": "drop_shadow_vertex.vs",
+        "fragment": "drop_shadow_fragment.fs",
+
+        "web": {
+            "vertex": "web/drop_shadow_vertex.vs",
+            "fragment": "web/drop_shadow_fragment.fs"
+        }
+    },
+    "hologram": {
+        "vertex": "hologram_vertex.vs",
+        "fragment": "hologram_fragment.fs",
+
+        "web": {
+            "vertex": "web/hologram_vertex.vs",
+            "fragment": "web/hologram_fragment.fs"
+        }
+    },
+    "liquid_sphere": {
+        "vertex": "liquid_sphere_vertex.vs",
+        "fragment": "liquid_sphere_fragment.fs",
+
+        "web": {
+            "vertex": "web/liquid_sphere_vertex.vs",
+            "fragment": "web/liquid_sphere_fragment.fs"
+        }
+    },
+    "texture_liquid": {
+        "vertex": "texture_liquid_vertex.vs",
+        "fragment": "texture_liquid_fragment.fs",
+
+        "web": {
+            "vertex": "web/texture_liquid_vertex.vs",
+            "fragment": "web/texture_liquid_fragment.fs"
+        }
+    },
+    "pixel_perfect_dissolve": {
+        "vertex": "pixel_perfect_dissolve_vertex.vs",
+        "fragment": "pixel_perfect_dissolve_fragment.fs",
+
+        "web": {
+            "vertex": "web/pixel_perfect_dissolve_vertex.vs",
+            "fragment": "web/pixel_perfect_dissolve_fragment.fs"
+        }
     }
 }

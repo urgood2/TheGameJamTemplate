@@ -1281,7 +1281,7 @@ function ui_defs.generateTooltipUI()
     globals.ui.tooltipTitleText = tooltipTitleText.config.object
     local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("Sample tooltip body text") end,  -- initial text
-        30.0,                                 -- font size
+        20.0,                                 -- font size
         "fade"                       -- animation spec
     )
     registry:get(tooltipBodyText.config.object, TextSystem.Text).shadow_enabled = false -- disable shadow for the tooltip body text

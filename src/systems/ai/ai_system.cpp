@@ -628,6 +628,24 @@ namespace ai_system
         scripting::initLuaMasterState(masterStateLua, luaFiles);
     }
 
+    auto cleanup() -> void
+    {
+        // Clear all GOAP components before destroying the Lua state
+        auto view = globals::registry.view<GOAPComponent>();
+        for (auto entity : view)
+        {
+            globals::registry.remove<GOAPComponent>(entity);
+        }
+
+        // Properly close the Lua state to avoid crashes on exit
+        // The sol::state destructor will handle lua_close internally,
+        // but we need to ensure it happens before other cleanup
+        masterStateLua.collect_garbage();
+        masterStateLua = sol::state{}; // Reset to empty state
+
+        SPDLOG_DEBUG("AI system cleanup complete - Lua state closed");
+    }
+
     void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::string> &luaFiles)
     {
         for (const auto &entry : std::filesystem::directory_iterator(actionsDir))

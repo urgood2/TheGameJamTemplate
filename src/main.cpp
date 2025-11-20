@@ -452,6 +452,9 @@ int main(void)
     sound_system::Unload();
     shader_pipeline::ShaderPipelineUnload();
 
+    // Clean up Lua state before closing window to avoid crashes
+    ai_system::cleanup();
+
     // after your game loop is over, before you close the window
     rlImGuiShutdown(); // cleans up ImGui
 

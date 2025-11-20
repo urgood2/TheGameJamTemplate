@@ -34,6 +34,7 @@ namespace ai_system
     
     // init must be called after json configs are loaded
     extern auto init() -> void;
+    extern auto cleanup() -> void;
     extern void bind_ai_utilities(sol::state& lua);
     extern void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::string> &luaFiles);
     extern auto updateHumanAI(float deltaTime) -> void;

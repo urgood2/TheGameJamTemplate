@@ -220,12 +220,14 @@ namespace physics {
 /* -------------- Checking entity active state & physics state -------------- */
     
     inline bool is_entity_state_active(entt::registry& R, entt::entity e) {
+        // Check if entity is valid first
+        if (!R.valid(e)) return false;
+
         if (auto* tag = R.try_get<entity_gamestate_management::StateTag>(e)) {
             return entity_gamestate_management::isActiveState(*tag);
         }
-        // default: only update entities in DEFAULT_STATE
-        entity_gamestate_management::StateTag def{ entity_gamestate_management::DEFAULT_STATE_TAG };
-        return entity_gamestate_management::isActiveState(def);
+        // If no tag, assume entity is active (don't restrict by default)
+        return true;  // Changed from checking DEFAULT_STATE
     }
     
     static bool worldActive(PhysicsManager& PM, const std::string& worldName) {
@@ -241,24 +243,31 @@ namespace physics {
     {
         using namespace entity_gamestate_management;
 
-        // 1) Entity state gate
+        // 1) Validity check
+        if (!R.valid(e)) return false;
+
+        // 2) Entity state gate
         bool entityActive = [&]{
-            if (auto* t = R.try_get<StateTag>(e)) return active_states_instance().is_active(*t);
-            StateTag def{DEFAULT_STATE_TAG};
-            return active_states_instance().is_active(def);
+            if (auto* t = R.try_get<StateTag>(e)) {
+                return active_states_instance().is_active(*t);
+            }
+            // No tag = active by default
+            return true;
         }();
 
         if (!entityActive) return false;
 
-        // 2) Physics-world gate (only if this entity belongs to a physics world)
+        // 3) Physics-world gate (only if entity belongs to a physics world)
         if (auto* ref = R.try_get<PhysicsWorldRef>(e)) {
             if (auto* rec = PM.get(ref->name)) {
-            // If the world is bound to a state, only render when that state is active.
-            // Typically you’ll want: render only while the world is active.
-            return PhysicsManager::world_active(*rec);
+                // If world exists, check if it's active
+                return PhysicsManager::world_active(*rec);
             }
+            // If world doesn't exist, still render (fallback)
+            return true;
         }
-        // If no physics world, default to entity state only
+
+        // If no physics world, entity is active
         return true;
     }
     

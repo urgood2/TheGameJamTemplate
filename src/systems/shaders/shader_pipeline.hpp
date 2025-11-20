@@ -219,20 +219,24 @@ namespace shader_pipeline {
     }
 
     inline void ClearTextures(Color color = {0, 0, 0, 0}) {
+        // Force opaque background to prevent translucency issues
+        Color opaqueColor = color;
+        opaqueColor.a = 255;
+
         BeginTextureMode(ping);
-        ClearBackground(color);
+        ClearBackground(opaqueColor);
         EndTextureMode();
 
         BeginTextureMode(pong);
-        ClearBackground(color);
+        ClearBackground(opaqueColor);
         EndTextureMode();
-        
+
         BeginTextureMode(baseCache);
-        ClearBackground(color);
+        ClearBackground(opaqueColor);
         EndTextureMode();
-        
+
         BeginTextureMode(postPassCache);
-        ClearBackground(color);
+        ClearBackground(opaqueColor);
         EndTextureMode();
     }
 

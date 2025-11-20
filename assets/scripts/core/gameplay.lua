@@ -2848,6 +2848,20 @@ function initCombatSystem()
         maxVelocity = 10.0
         })
 
+    -- make springs for delayed indicator bars (white bars that show previous values)
+    expBarDelayedSpringEntity, expBarDelayedSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
+        target = 1.0,
+        smoothingFactor = 0.85,  -- slightly less smooth so it lags behind
+        preventOvershoot = false,
+        maxVelocity = 8.0
+        })
+    hpBarDelayedSpringEntity, hpBarDelayedSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
+        target = 1.0,
+        smoothingFactor = 0.85,  -- slightly less smooth so it lags behind
+        preventOvershoot = false,
+        maxVelocity = 8.0
+        })
+
     -- update combat system every frame / render health bars
     timer.run(
         function()
@@ -2874,9 +2888,17 @@ function initCombatSystem()
                 local playerXP = playerCombatInfo.xp or 0
                 local playerXPForNextLevel = CombatSystem.Game.Leveling.xp_to_next(ctx, playerCombatInfo,
                     playerCombatInfo.level or 1)
-                
+
                 local expBarSpringRef = spring.get(registry, expBarSpringEntity)
                 local hpBarSpringRef  = spring.get(registry, hpBarSpringEntity)
+                local expBarDelayedSpringRef = spring.get(registry, expBarDelayedSpringEntity)
+                local hpBarDelayedSpringRef  = spring.get(registry, hpBarDelayedSpringEntity)
+
+                -- Update delayed spring targets to current values (they will lerp toward them)
+                local hpPct = playerHealth / playerMaxHealth
+                local xpPct = math.min(playerXP / playerXPForNextLevel, 1.0)
+                spring.set_target(registry, hpBarDelayedSpringEntity, hpPct)
+                spring.set_target(registry, expBarDelayedSpringEntity, xpPct)
 
                 local screenCenterX = globals.screenWidth() * 0.5
 
@@ -2904,9 +2926,25 @@ function initCombatSystem()
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
 
                 ------------------------------------------------------------
+                -- HEALTH DELAYED INDICATOR (white bar showing previous value)
+                ------------------------------------------------------------
+                local hpDelayedPct = hpBarDelayedSpringRef.value or hpPct
+                local fillDelayedBaseWidth = baseHealthBarWidth * hpDelayedPct
+                local fillDelayedCenterX   = (healthBarX - healthBarWidth*0.5) + fillDelayedBaseWidth*0.5
+
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x     = fillDelayedCenterX
+                    c.y     = healthBarY + healthBarHeight * 0.5
+                    c.w     = fillDelayedBaseWidth
+                    c.h     = healthBarHeight
+                    c.rx    = 5
+                    c.ry    = 5
+                    c.color = util.getColor("white"):setAlpha(150)  -- semi-transparent white
+                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+
+                ------------------------------------------------------------
                 -- HEALTH FILL (scaled + anchored to fill center)
                 ------------------------------------------------------------
-                local hpPct    = playerHealth / playerMaxHealth
                 local hpScale  = hpBarSpringRef.value or 1.0
 
                 local fillBaseWidth = baseHealthBarWidth * hpPct
@@ -2922,7 +2960,7 @@ function initCombatSystem()
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("red")
-                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+                end, z_orders.background + 2, layer.DrawCommandSpace.Screen)
 
                 ------------------------------------------------------------
                 -- EXP BAR (container only — no scaling)
@@ -2948,9 +2986,25 @@ function initCombatSystem()
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
 
                 ------------------------------------------------------------
+                -- EXP DELAYED INDICATOR (white bar showing previous value)
+                ------------------------------------------------------------
+                local xpDelayedPct = expBarDelayedSpringRef.value or xpPct
+                local xpFillDelayedBaseWidth = baseExpBarWidth * xpDelayedPct
+                local xpFillDelayedCenterX   = (expBarX - expBarWidth*0.5) + xpFillDelayedBaseWidth*0.5
+
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x     = xpFillDelayedCenterX
+                    c.y     = expBarY + expBarHeight * 0.5
+                    c.w     = xpFillDelayedBaseWidth
+                    c.h     = expBarHeight
+                    c.rx    = 5
+                    c.ry    = 5
+                    c.color = util.getColor("white"):setAlpha(150)  -- semi-transparent white
+                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+
+                ------------------------------------------------------------
                 -- EXP FILL (scaled + anchored to fill center)
                 ------------------------------------------------------------
-                local xpPct    = math.min(playerXP / playerXPForNextLevel, 1.0)
                 local xpScale  = expBarSpringRef.value or 1.0
 
                 local xpFillBaseWidth = baseExpBarWidth * xpPct
@@ -2966,7 +3020,7 @@ function initCombatSystem()
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("yellow")
-                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+                end, z_orders.background + 2, layer.DrawCommandSpace.Screen)
     
                     
                     

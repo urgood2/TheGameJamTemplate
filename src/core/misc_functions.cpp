@@ -601,5 +601,45 @@ namespace game
             globalShaderUniforms.set("voucher_sheen", "time", static_cast<float>(main_loop::getTime()));
         });
 
+        // procedural_cyclic_slash shader
+        shaders::registerUniformUpdate("procedural_cyclic_slash", [](Shader &shader) {
+            globalShaderUniforms.set("procedural_cyclic_slash", "time", static_cast<float>(main_loop::getTime()));
+        });
+
+        // Animation defaults
+        globalShaderUniforms.set("procedural_cyclic_slash", "progress", 0.0f);
+        globalShaderUniforms.set("procedural_cyclic_slash", "derive_progress", -1.0f);  // -1.0 = use time (loop)
+        globalShaderUniforms.set("procedural_cyclic_slash", "ease_progress", 0.0f);     // 0.0 = no easing
+        globalShaderUniforms.set("procedural_cyclic_slash", "time_scale", 1.0f);
+        globalShaderUniforms.set("procedural_cyclic_slash", "anim_rot_amt", 1.0f);
+
+        // Shape defaults
+        globalShaderUniforms.set("procedural_cyclic_slash", "zoom", 0.6f);
+        globalShaderUniforms.set("procedural_cyclic_slash", "rotate_all", 0.0f);
+
+        // Coloring defaults
+        globalShaderUniforms.set("procedural_cyclic_slash", "emission_strength", 1.0f);
+        globalShaderUniforms.set("procedural_cyclic_slash", "mix_strength", 1.0f);
+
+        // top_down_shadows shader
+        globalShaderUniforms.set("top_down_shadows", "shadowAngle", 45.0f);
+        globalShaderUniforms.set("top_down_shadows", "wallHeight", 1.0f);
+        globalShaderUniforms.set("top_down_shadows", "floorStart", Vector2{0.0f, 7.0f});
+        globalShaderUniforms.set("top_down_shadows", "shadowColor", Vector4{0.0f, 0.0f, 0.0f, 0.4f});
+        globalShaderUniforms.set("top_down_shadows", "shadowCutoffStart", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("top_down_shadows", "shadowCutoffEnd", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("top_down_shadows", "shadowOffset", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("top_down_shadows", "maskWrap", 1.0f);  // 1.0 = wrap enabled
+        globalShaderUniforms.set("top_down_shadows", "wallDepth", 1.5f);
+        globalShaderUniforms.set("top_down_shadows", "sampleMult", 3);
+        globalShaderUniforms.set("top_down_shadows", "floorDepthAutoCutoff", 1.0f);  // 1.0 = enabled
+        globalShaderUniforms.set("top_down_shadows", "isTileMap", 0.0f);  // 0.0 = not tilemap
+        globalShaderUniforms.set("top_down_shadows", "tileSize", Vector2{0.0f, 0.0f});
+
+        // color_replacer shader
+        globalShaderUniforms.set("color_replacer", "sensitivity", 0.5f);
+        globalShaderUniforms.set("color_replacer", "material_type", 0);  // 0 = Steel
+        globalShaderUniforms.set("color_replacer", "import_new_color", Vector3{1.0f, 1.0f, 0.0f});  // Yellow default
+
     }
 }

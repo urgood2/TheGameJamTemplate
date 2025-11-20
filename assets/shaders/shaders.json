@@ -304,5 +304,32 @@
             "vertex": "web/item_glow_vertex.vs",
             "fragment": "web/item_glow_fragment.fs"
         }
+    },
+    "procedural_cyclic_slash": {
+        "vertex": "procedural_cyclic_slash_vertex.vs",
+        "fragment": "procedural_cyclic_slash_fragment.fs",
+
+        "web": {
+            "vertex": "web/procedural_cyclic_slash_vertex.vs",
+            "fragment": "web/procedural_cyclic_slash_fragment.fs"
+        }
+    },
+    "top_down_shadows": {
+        "vertex": "top_down_shadows_vertex.vs",
+        "fragment": "top_down_shadows_fragment.fs",
+
+        "web": {
+            "vertex": "web/top_down_shadows_vertex.vs",
+            "fragment": "web/top_down_shadows_fragment.fs"
+        }
+    },
+    "color_replacer": {
+        "vertex": "color_replacer_vertex.vs",
+        "fragment": "color_replacer_fragment.fs",
+
+        "web": {
+            "vertex": "web/color_replacer_vertex.vs",
+            "fragment": "web/color_replacer_fragment.fs"
+        }
     }
 }

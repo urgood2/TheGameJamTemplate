@@ -8,6 +8,7 @@ import re
 import sys
 import os
 import time
+import gzip
 from pathlib import Path
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -106,7 +107,13 @@ def download_shader(url, output_dir, delay=1.5):
         req = Request(url, headers=headers)
 
         with urlopen(req, timeout=15) as response:
-            html = response.read().decode('utf-8')
+            data = response.read()
+
+            # Check if response is gzip-compressed
+            if data[:2] == b'\x1f\x8b':  # gzip magic number
+                data = gzip.decompress(data)
+
+            html = data.decode('utf-8')
 
         # Extract shader code from HTML
         parser = ShaderCodeExtractor()

@@ -921,6 +921,10 @@ void exposeToLua(sol::state &lua) {
            &layer::CmdDrawGradientRectRoundedCentered::topRight, "bottomRight",
            &layer::CmdDrawGradientRectRoundedCentered::bottomRight, "bottomLeft",
            &layer::CmdDrawGradientRectRoundedCentered::bottomLeft)
+  BIND_CMD(DrawBatchedEntities, "registry",
+           &layer::CmdDrawBatchedEntities::registry, "entities",
+           &layer::CmdDrawBatchedEntities::entities, "autoOptimize",
+           &layer::CmdDrawBatchedEntities::autoOptimize)
 #undef BIND_CMD
 
   rec.add_type("layer.CmdBeginDrawing", true);
@@ -1158,6 +1162,13 @@ void exposeToLua(sol::state &lua) {
                       {"bottomRight", "Color", "Bottom-right color"});
   rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
                       {"bottomLeft", "Color", "Bottom-left color"});
+  rec.add_type("layer.CmdDrawBatchedEntities", true);
+  rec.record_property("layer.CmdDrawBatchedEntities",
+                      {"registry", "Registry", "The entity registry"});
+  rec.record_property("layer.CmdDrawBatchedEntities",
+                      {"entities", "Entity[]", "Array of entities to batch render"});
+  rec.record_property("layer.CmdDrawBatchedEntities",
+                      {"autoOptimize", "boolean", "Whether to automatically optimize shader batching (default: true)"});
   rec.add_type("layer.CmdDrawDashedLine", true);
   rec.record_property("layer.CmdDrawDashedLine",
                       {"start", "Vector2", "Start position"});
@@ -1665,6 +1676,7 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(DrawDashedLine)
   QUEUE_CMD(DrawGradientRectCentered)
   QUEUE_CMD(DrawGradientRectRoundedCentered)
+  QUEUE_CMD(DrawBatchedEntities)
 
 #undef QUEUE_CMD
 
@@ -2136,6 +2148,20 @@ cb.set_function("queueScopedTransformCompositeRender",
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawGradientRectRoundedCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueDrawBatchedEntities",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawBatchedEntities) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdDrawBatchedEntities into the layer draw list. This command batches multiple entities for optimized shader rendering, avoiding Lua execution during the render phase. The entities vector and registry are captured when queued and executed during rendering with automatic shader batching.)",
           .is_static = true,
           .is_overload = false});
 

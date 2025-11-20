@@ -140,7 +140,8 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawSpriteTopLeft>() { return DrawCommandType::DrawSpriteTopLeft; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawDashedCircle>() { return DrawCommandType::DrawDashedCircle; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawDashedRoundedRect>() { return DrawCommandType::DrawDashedRoundedRect; }
-        
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawBatchedEntities>() { return DrawCommandType::DrawBatchedEntities; }
+
         template <typename T>
         struct PoolBlockSize {
             static constexpr ::detail::index_t value = 128;
@@ -365,7 +366,8 @@ namespace layer
             CmdDrawSpriteTopLeft,
             CmdDrawDashedCircle,
             CmdDrawDashedRoundedRect,
-            CmdDrawDashedLine
+            CmdDrawDashedLine,
+            CmdDrawBatchedEntities
 
 
         >;

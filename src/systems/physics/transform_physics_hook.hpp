@@ -89,29 +89,69 @@ namespace physics {
     
     void SetBodyRotationLocked(entt::registry& R, entt::entity e, bool lock);
 
-    inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W) {
-        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e)) return;
+    inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W, float alpha = 1.0f)
+    {
+        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e))
+            return;
 
         auto& T   = R.get<transform::Transform>(e);
         auto& CC  = R.get<physics::ColliderComponent>(e);
         auto& cfg = R.get<PhysicsSyncConfig>(e);
 
-        const cpVect p = cpBodyGetPosition(CC.body.get());
-        const float a  = (float)cpBodyGetAngle(CC.body.get());
+        if (!CC.body) return;
+        cpBody* body = CC.body.get();
 
-        const Vector2 rl = { (float)p.x - T.getActualW() * 0.5f, (float)p.y - T.getActualH() * 0.5f };
+        // -------------------------------------------------------------------------
+        // CACHED PREVIOUS PHYSICS STATE (required for lerp)
+        // -------------------------------------------------------------------------
+        // Note: these fields can be added to ColliderComponent if not already present.
+        // Example:
+        //   Vector2 prevPos;
+        //   float   prevRot = 0.f;
+        //   Vector2 currPos;
+        //   float   currRot = 0.f;
+        //
+        // Update these in your physics step before and after cpSpaceStep().
+        // This function will then use them for interpolation.
+
+        const cpVect p = cpBodyGetPosition(body);
+        const float a  = (float)cpBodyGetAngle(body);
+
+        // Compute physics-space center (Chipmunk’s position is body center)
+        Vector2 currCenter = { (float)p.x, (float)p.y };
+        float currRot = a * RAD2DEG;
+
+        // Lerp if we have previous data (optional guard)
+        Vector2 displayCenter = currCenter;
+        float displayRot = currRot;
+
+        if (CC.prevPos.x != 0.0f || CC.prevPos.y != 0.0f || CC.prevRot != 0.0f) {
+            displayCenter.x = std::lerp(CC.prevPos.x, currCenter.x, alpha);
+            displayCenter.y = std::lerp(CC.prevPos.y, currCenter.y, alpha);
+            displayRot      = std::lerp(CC.prevRot, currRot, alpha);
+        }
+
+        // Store current positions for next frame
+        CC.prevPos = currCenter;
+        CC.prevRot = currRot;
+
+        // Offset to top-left (your engine uses actualX/Y as top-left)
+        const Vector2 rl = { displayCenter.x - T.getActualW() * 0.5f,
+                            displayCenter.y - T.getActualH() * 0.5f };
+
+        // Apply interpolated transform
         T.setActualX(rl.x);
         T.setActualY(rl.y);
 
         // ---- ROTATION HANDOFF ----
         if (cfg.rotMode == RotationSyncMode::PhysicsFree_TransformFollows) {
-            T.setActualRotation(a * RAD2DEG);
-        } else {
-            // Transform is authoritative → do NOT pull angle from physics
-            // Ensure body stays aligned next pre-step push.
+            // T.setActualRotation(displayRot);
+        }
+        else {
+            // Transform is authoritative → do NOT pull angle from physics.
         }
     }
-    
+
     inline void EnforceRotationPolicy(entt::registry& R, entt::entity e) {
         auto& cfg = R.get<PhysicsSyncConfig>(e);
         auto& CC  = R.get<physics::ColliderComponent>(e);
@@ -281,7 +321,6 @@ namespace physics {
     cpFloat mass = ci.sensor ? 0.1f : 1.0f;
     auto body = physics::MakeSharedBody(mass, /*moment*/INFINITY);
     physics::SetEntityToBody(body.get(), e);
-
     // Base size from ACTUAL W/H
     float base_w = std::max(1.f, T.getActualW());
     float base_h = std::max(1.f, T.getActualH());
@@ -290,10 +329,9 @@ namespace physics {
     const float w = std::max(1.f, base_w + 2.f * inflate_px);
     const float h = std::max(1.f, base_h + 2.f * inflate_px);
 
-    // Keep original center
-    const float cx = T.getActualX() + base_w * 0.5f;
-    const float cy = T.getActualY() + base_h * 0.5f;
-    
+    // Adjust center so inflated shape stays centered on original
+    const float cx = T.getActualX() + (base_w * 0.5f) - (inflate_px);
+    const float cy = T.getActualY() + (base_h * 0.5f) - (inflate_px);
     
     cpFloat moment = ComputeMoment(ci, mass, w, h);
     // If you must create body first, you can also set after:
@@ -405,6 +443,7 @@ namespace physics {
     auto body = physics::MakeSharedBody(mass, moment);
     physics::SetEntityToBody(body.get(), e);
 
+    
     cpBodySetPosition(body.get(), {T.getActualX() + w / 2, T.getActualY() + h / 2});
     cpBodySetAngle(body.get(), T.getActualRotation() * DEG2RAD);
 
@@ -474,6 +513,17 @@ namespace physics {
 
     rec->w->AddCollisionTag(ci.tag);
     rec->w->ApplyCollisionFilter(shape.get(), ci.tag);
+    
+    if (auto it = rec->w->_tagToCollisionType.find(ci.tag);
+    it != rec->w->_tagToCollisionType.end())
+    {
+        cpShapeSetCollisionType(shape.get(), it->second);
+    }
+    else
+    {
+        SPDLOG_WARN("CreatePhysicsForTransform: tag '{}' has no collisionType, defaulting to 0", ci.tag);
+    }
+
 }
 
 
@@ -557,79 +607,75 @@ namespace physics {
 /* --- Transform hooks to ensure syncing happens correctly on interaction --- */
 
     inline void OnStartDrag(entt::registry& R, entt::entity e) {
-        if (!R.valid(e)) return;
+    if (!R.valid(e)) return;
 
-        R.get<transform::GameObject>(e).state.isBeingDragged = true;
+    auto& GO = R.get<transform::GameObject>(e);
+    GO.state.isBeingDragged = true;
 
-        if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
-            auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
-            cfg.prevType = cpBodyGetType(cc->body.get());
+    if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
+        auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
 
-            cpBodySetVelocity(cc->body.get(), cpvzero);
-            cpBodySetAngularVelocity(cc->body.get(), 0.f);
-            cpBodySetType(cc->body.get(), CP_BODY_TYPE_KINEMATIC);
+        // Remember original type so we can restore later
+        cfg.prevType = cpBodyGetType(cc->body.get());
 
-            // While dragging: Transform is authoritative and we push its angle.
-            cfg.mode = PhysicsSyncMode::AuthoritativeTransform;
-            cfg.useVisualRotationWhenDragging = true;
-            cfg.pushAngleFromTransform = true;
+        // Stop all motion and freeze rotation
+        cpBodySetVelocity(cc->body.get(), cpvzero);
+        cpBodySetAngularVelocity(cc->body.get(), 0.f);
 
-            // Prevent physics from overwriting our transform angle during drag.
-            cfg.pullAngleFromPhysics = false;
-        }
+        // Make body kinematic for precise cursor control
+        cpBodySetType(cc->body.get(), CP_BODY_TYPE_KINEMATIC);
+
+        // Transform is authoritative while dragging
+        cfg.mode = PhysicsSyncMode::AuthoritativeTransform;
+        cfg.useVisualRotationWhenDragging = true;
+        cfg.pushAngleFromTransform = true;
+        cfg.pullAngleFromPhysics = false;
+
+        // Optional: lock rotation if TransformFixed
+        SetBodyRotationLocked(R, e,
+            cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows);
     }
+}
 
-    inline auto OnDrop(entt::registry& R, entt::entity e) -> void {
-        if (!R.valid(e)) return;
 
-        auto& GO = R.get<transform::GameObject>(e);
-        GO.state.isBeingDragged = false;
+    inline void OnDrop(entt::registry& R, entt::entity e) {
+    if (!R.valid(e)) return;
 
-        // return control to physics
-        if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
-            auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
+    auto& GO = R.get<transform::GameObject>(e);
+    GO.state.isBeingDragged = false;
 
-            // stop any residual kinematic velocity before switching back
-            cpBodySetVelocity(cc->body.get(), cpvzero);
-            cpBodySetAngularVelocity(cc->body.get(), 0.f);
+    if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
+        auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
 
-            // restore whatever the body type was pre-drag (usually DYNAMIC)
-            // cpBodySetType(cc->body.get(), cfg.prevType);
-            // FIXME: TESTING:
-            cpBodySetType(cc->body.get(), CP_BODY_TYPE_DYNAMIC);
-            // set mass and moment to nonzero
-            if (cpBodyGetType(cc->body.get()) == CP_BODY_TYPE_DYNAMIC) {
-                auto &T = R.get<transform::Transform>(e);
-                float w = T.getActualW(), h = T.getActualH();
-                cpFloat mass = (cpBodyGetMass(cc->body.get()) <= 0.0f) ? 1.0f : cpBodyGetMass(cc->body.get());
-                cpFloat moment = ComputeMoment(PhysicsCreateInfo{cc->shapeType, cc->tag, cc->isSensor, /*density*/1.0f}, mass, w, h);
-                cpBodySetMass(cc->body.get(), mass);
-                cpBodySetMoment(cc->body.get(), moment);
-            }
+        // Stop residual velocity from kinematic dragging
+        cpBodySetVelocity(cc->body.get(), cpvzero);
+        cpBodySetAngularVelocity(cc->body.get(), 0.f);
 
-            // now let physics be authoritative again; body -> Transform.actual post-step
+        // Restore the previous body type (don’t hardcode to dynamic)
+        cpBodySetType(cc->body.get(), cfg.prevType);
+
+        // If we were frozen or static, don't hand control to physics immediately
+        if (cfg.prevType == CP_BODY_TYPE_DYNAMIC) {
+            // Soft settle: follow visual for a few frames before re-entering physics
+            cfg.mode = PhysicsSyncMode::FollowVisual;
+            cfg.useKinematic = true;  // use kinematic follow for clean interpolation
+        } else {
+            // e.g. static or sensor — just restore
             cfg.mode = PhysicsSyncMode::AuthoritativePhysics;
+        }
 
-            // decide the rotation policy after drop
-            if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
-                // keep rotation locked
-                SetBodyRotationLocked(R, e, true);
-                // snap body angle to Transform once so it doesn’t drift
-                auto& T = R.get<transform::Transform>(e);
-                cpBodySetAngle(cc->body.get(), T.getActualRotation() * DEG2RAD);
-                cpBodySetAngularVelocity(cc->body.get(), 0.f);
-            } else {
-                // rotation should be free → ensure finite moment
-                SetBodyRotationLocked(R, e, false);
-            }
-
-
-            // optional: if you want one or two frames of visual-follow settle,
-            // you could briefly do:
-            //   cfg.mode = PhysicsSyncMode::FollowVisual; cfg.useKinematic = false;
-            // and it will auto-return to AuthoritativePhysics on settle.
+        // Rotation policy restoration
+        if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
+            SetBodyRotationLocked(R, e, true);
+            auto& T = R.get<transform::Transform>(e);
+            cpBodySetAngle(cc->body.get(), T.getActualRotation() * DEG2RAD);
+            cpBodySetAngularVelocity(cc->body.get(), 0.f);
+        } else {
+            SetBodyRotationLocked(R, e, false);
         }
     }
+}
+
     
 
 /* ------------------------ transform-dominant phase ------------------------ */
@@ -650,7 +696,7 @@ namespace physics {
 
     
 /* ------------------------ physics-dominant phase ------------------------- */
-    inline void ApplyAuthoritativePhysics(entt::registry& R, PhysicsManager& PM) {
+    inline void ApplyAuthoritativePhysics(entt::registry& R, PhysicsManager& PM, float alpha = 1.0f) {
         auto view = R.view<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig, PhysicsWorldRef>();
         for (auto e : view) {
             auto& cfg = view.get<PhysicsSyncConfig>(e);
@@ -658,7 +704,7 @@ namespace physics {
 
             auto& ref = view.get<PhysicsWorldRef>(e);
             if (auto* rec = PM.get(ref.name); rec && PhysicsManager::world_active(*rec)) {
-                BodyToTransform(R, e, *rec->w);
+                BodyToTransform(R, e, *rec->w, alpha);
             }
             EnforceRotationPolicy(R, e); // cheap, idempotent
         }

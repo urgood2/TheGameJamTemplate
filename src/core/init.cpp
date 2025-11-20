@@ -527,6 +527,7 @@ namespace init {
 
     auto loadSounds() -> void {
         InitAudioDevice();
+        SetAudioStreamBufferSizeDefault(4096);
     }
     
     // Iterate over all shapes stored in a ColliderComponent (main + extras).
@@ -587,7 +588,13 @@ namespace init {
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);
         
+
+        
         InitWindow(globals::screenWidth, globals::screenHeight, "Game");
+        
+        
+        // fixes mac input bug.
+        SetGamepadMappings(LoadFileText(util::getRawAssetPathNoUUID("gamecontrollerdb.txt").c_str()));
         
         
         // these methods cause crash when taskflow is used
@@ -615,7 +622,6 @@ namespace init {
     // This includes initializing the Lua state shared by all systems and calling name_gen::init().
     auto initSystems() -> void {
         ai_system::init();
-        graphics::init();
         shaders::loadShadersFromJSON("shaders/shaders.json");
         sound_system::LoadFromJSON(util::getRawAssetPathNoUUID("sounds/sounds.json"));
     }
@@ -708,8 +714,8 @@ namespace init {
      * @return void
      */
     auto loadConfigFileValues() -> void {
-        globals::screenWidth = globals::configJSON.at("render_data").at("screen").at("width").get<int>();
-        globals::screenHeight = globals::configJSON.at("render_data").at("screen").at("height").get<int>();
+        // globals::screenWidth = globals::configJSON.at("render_data").at("screen").at("width").get<int>();
+        // globals::screenHeight = globals::configJSON.at("render_data").at("screen").at("height").get<int>();
     }
 
 

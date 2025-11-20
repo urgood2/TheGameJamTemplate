@@ -9,7 +9,11 @@ env:
   ITCH_PROJECT: chugget/testing
 
 jobs:
+  # ───────────────────────────────
+  #  Native build (TEMPORARILY DISABLED)
+  # ───────────────────────────────
   build-native:
+    if: false          # <── DISABLE native job cleanly
     name: Build Native (Linux)
     runs-on: ubuntu-latest
 
@@ -19,11 +23,14 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          # sudo apt-get install -y build-essential cmake libx11-dev libasound2-dev libudev-dev
           sudo apt-get install -y \
               build-essential cmake \
               libx11-dev libasound2-dev libudev-dev \
-              libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev
+              libxrandr-dev libxi-dev libxinerama-dev libxcursor-dev \
+              libgl1-mesa-dev \
+              libgl-dev \
+              mesa-common-dev
+
       - name: Configure CMake
         run: |
           mkdir build && cd build
@@ -35,7 +42,7 @@ jobs:
       - name: Package native build
         run: |
           mkdir -p dist/native/linux
-          cp -R build/bin/* dist/native/linux/
+          cp build/* dist/native/linux/ || true
           cp -R assets dist/native/linux/
 
       - name: Upload native build (v4)
@@ -46,9 +53,16 @@ jobs:
           compression-level: 0
 
 
+  # ───────────────────────────────
+  #  Web build (ALWAYS RUNS)
+  # ───────────────────────────────
   build-web:
     name: Build Web (Emscripten WASM)
     runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.message, '[build]') ||
+      contains(github.event.head_commit.message, '[web]') ||
+      contains(github.event.head_commit.message, '#build')
 
     steps:
       - uses: actions/checkout@v3
@@ -56,8 +70,11 @@ jobs:
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: latest
+          version: 3.1.67
           actions-cache-folder: "emsdk-cache"
+
+      - name: Clean FetchContent deps
+        run: rm -rf build-web/_deps
 
       - name: Configure CMake (Web)
         run: |
@@ -85,19 +102,23 @@ jobs:
           compression-level: 0
 
 
+  # ───────────────────────────────
+  #  Publish JOB (only depends on WEB now)
+  # ───────────────────────────────
   publish:
     name: Publish to itch.io
-    needs: [ build-native, build-web ]
+    needs: [ build-web ]         # <── removed native dependency
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Download native build
-        uses: actions/download-artifact@v4
-        with:
-          name: native-linux
-          path: native
+      # Native disabled → skip download
+      # - name: Download native build
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: native-linux
+      #     path: native
 
       - name: Download web build
         uses: actions/download-artifact@v4
@@ -128,13 +149,12 @@ jobs:
             echo "version=build-${GITHUB_SHA}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Publish native build
-        run: |
-          butler push native \
-            ${{ env.ITCH_PROJECT }}:linux \
-            --userversion ${{ steps.version.outputs.version }}
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+      # Native publish disabled
+      # - name: Publish native build
+      #   run: |
+      #     butler push native \
+      #       ${{ env.ITCH_PROJECT }}:linux \
+      #       --userversion ${{ steps.version.outputs.version }}
 
       - name: Publish web build
         run: |

@@ -1,6 +1,6 @@
 #include <thread>
 #include <chrono>
-
+#include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 #include "scripting_system.hpp"
 
 #include "registry_bond.hpp"
@@ -13,6 +13,7 @@
 #include "systems/shaders/shader_system.hpp"
 #include "systems/text/textVer2.hpp"
 #include "components/components.hpp"
+
 
 // pass both the type and value of an argument to a function
 #define AUTO_ARG(x) decltype(x), x
@@ -48,9 +49,9 @@ namespace scripting
     {
         auto &script = registry.get<ScriptComponent>(entity);
         assert(script.self.valid());
-        script.hooks.update = script.self["update"];
+        script.hooks.update = script.self["update"]; // may not be valid if not defined
         script.hooks.on_collision = script.self["on_collision"];
-        assert(script.hooks.update.valid());
+        // assert(script.hooks.update.valid());
         assert(script.hooks.on_collision.valid());
 
         script.self["id"] = sol::readonly_property([entity]
@@ -90,56 +91,67 @@ namespace scripting
      */
     void script_system_update(entt::registry &registry, float delta_time)
     {
-        auto view = registry.view<ScriptComponent>();
-        for (auto entity : view)
-        {
-            auto &script = view.get<ScriptComponent>(entity);
-            // 1. Run normal update
-            if (script.hooks.update.valid()) {
-                sol::protected_function_result result = script.hooks.update(script.self, delta_time);
-                if (!result.valid()) {
-                    sol::error err = result;
-                    std::cerr << "[Script Error] update failed for entity " << int(entity) << ": " << err.what() << "\n";
-                }
-            }
+        ZONE_SCOPED("scripting::script_system_update");
+        static auto view = registry.view<ScriptComponent>();
+        // for (auto [entity, script] : view.each()) {
             
-            // 2. Process all coroutine tasks using a safe-swap pattern
-            auto& tasks = script.tasks;
-            if (tasks.empty()) {
-                continue;
-            }
+        //     ZONE_SCOPED("scripting::script_system_update - per entity");
+        //     {
+        //         ZONE_SCOPED("scripting::script_system_update - is active check");
+        //         // Filter only if tagged
+        //         if (auto *tag = registry.try_get<entity_gamestate_management::StateTag>(entity)) {
+        //             if (!entity_gamestate_management::active_states_instance().is_active(*tag))
+        //                 continue;
+        //         }
+        //     }
             
-            // Create a new vector to hold tasks that are still active for the next frame.
-            std::vector<sol::coroutine> next_tasks;
-            next_tasks.reserve(tasks.size());
+        //     // 1. Run normal update
+        //     try {
+        //         script.hooks.update(script.self, delta_time);
+        //     } catch (const sol::error& e) {
+        //         spdlog::error("[Script Error] Entity {}: {}", static_cast<uint32_t>(entity), e.what());
+        //     }
 
-            // Process each task from the current list.
-            for (auto& task : tasks) {
-                // Skip any tasks that might already be invalid.
-                if (!task.valid()) {
-                    continue;
-                }
+            
+        //     // FIXME: just removing tasks, we don't need this, and it's a performance hog.
+            
+        //     // // 2. Process all coroutine tasks using a safe-swap pattern
+        //     // auto& tasks = script.tasks;
+        //     // if (tasks.empty()) {
+        //     //     continue;
+        //     // }
+            
+        //     // // Create a new vector to hold tasks that are still active for the next frame.
+        //     // std::vector<sol::coroutine> next_tasks;
+        //     // next_tasks.reserve(tasks.size());
+
+        //     // // Process each task from the current list.
+        //     // for (auto& task : tasks) {
+        //     //     // Skip any tasks that might already be invalid.
+        //     //     if (!task.valid()) {
+        //     //         continue;
+        //     //     }
                 
-                // Resume any task that is not finished. This includes 'suspended' (new) and 'yielded' tasks.
-                sol::protected_function_result result = task(delta_time);
-                if (!result.valid()) {
-                    sol::error err = result;
-                    std::cerr << "[Coroutine Error] " << err.what() << "\n";
-                    // Do not add the failed task to the next_tasks list, effectively removing it.
-                    continue;
-                }
+        //     //     // Resume any task that is not finished. This includes 'suspended' (new) and 'yielded' tasks.
+        //     //     sol::protected_function_result result = task(delta_time);
+        //     //     if (!result.valid()) {
+        //     //         sol::error err = result;
+        //     //         std::cerr << "[Coroutine Error] " << err.what() << "\n";
+        //     //         // Do not add the failed task to the next_tasks list, effectively removing it.
+        //     //         continue;
+        //     //     }
 
-                // After running, if the task is still valid and not finished, keep it.
-                if (task.valid() && task.status() != sol::call_status::ok) {
-                    next_tasks.push_back(task);
-                }
-            }
+        //     //     // After running, if the task is still valid and not finished, keep it.
+        //     //     if (task.valid() && task.status() != sol::call_status::ok) {
+        //     //         next_tasks.push_back(task);
+        //     //     }
+        //     // }
 
-            // Replace the old task list with the new list of active tasks.
-            tasks = std::move(next_tasks);
+        //     // // Replace the old task list with the new list of active tasks.
+        //     // tasks = std::move(next_tasks);
                         
 
-        }
+        // }
     }
     
 

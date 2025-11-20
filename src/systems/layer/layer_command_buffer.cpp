@@ -1,6 +1,7 @@
 #include "layer_command_buffer.hpp"
 #include "layer.hpp"
 #include "systems/camera/camera_manager.hpp"
+#include "systems/layer/layer_optimized.hpp"
 
 namespace layer
 {
@@ -10,7 +11,17 @@ namespace layer
         const std::vector<DrawCommandV2>& GetCommandsSorted(const std::shared_ptr<Layer>& layer) {
             if (!layer->isSorted) {
                 std::stable_sort(layer->commands.begin(), layer->commands.end(), [](const DrawCommandV2& a, const DrawCommandV2& b) {
-                    return a.z < b.z;
+                    if (a.z != b.z) return a.z < b.z;
+                    // if (a.followAnchor && a.followAnchor == b.uniqueID) return false;
+                    // if (b.followAnchor && b.followAnchor == a.uniqueID) return true;
+                    if (a.type == DrawCommandType::ScopedTransformCompositeRender ||
+                    b.type == DrawCommandType::ScopedTransformCompositeRender)
+                        return true;
+                    
+                    return false;
+
+            
+                    // return a.uniqueID < b.uniqueID; // preserve queue order
                 });
                 layer->isSorted = true;
             }
@@ -33,6 +44,10 @@ namespace layer
                     DELETE_COMMAND(layer, AddPush, CmdAddPush)
                     DELETE_COMMAND(layer, AddPop, CmdAddPop)
                     DELETE_COMMAND(layer, PushMatrix, CmdPushMatrix)
+                    DELETE_COMMAND(layer, PushObjectTransformsToMatrix, CmdPushObjectTransformsToMatrix)
+                    DELETE_COMMAND(layer, ScopedTransformCompositeRender,
+                        CmdScopedTransformCompositeRender)
+                    
                     DELETE_COMMAND(layer, PopMatrix, CmdPopMatrix)
                     DELETE_COMMAND(layer, Circle, CmdDrawCircleFilled)
                     DELETE_COMMAND(layer, CircleLine, CmdDrawCircleLine)
@@ -71,6 +86,11 @@ namespace layer
                     DELETE_COMMAND(layer, RenderNPatchRect, CmdRenderNPatchRect)
                     DELETE_COMMAND(layer, Triangle, CmdDrawTriangle)
                     DELETE_COMMAND(layer, ClearStencilBuffer, CmdClearStencilBuffer)
+                    DELETE_COMMAND(layer, StencilOp, CmdStencilOp)
+                    DELETE_COMMAND(layer, RenderBatchFlush, CmdRenderBatchFlush)
+                    DELETE_COMMAND(layer, AtomicStencilMask, CmdAtomicStencilMask)
+                    DELETE_COMMAND(layer, ColorMask, CmdColorMask)
+                    DELETE_COMMAND(layer, StencilFunc, CmdStencilFunc)
                     DELETE_COMMAND(layer, BeginStencilMode, CmdBeginStencilMode)
                     DELETE_COMMAND(layer, EndStencilMode, CmdEndStencilMode)
                     DELETE_COMMAND(layer, BeginStencilMask, CmdBeginStencilMask)
@@ -86,6 +106,8 @@ namespace layer
                     DELETE_COMMAND(layer, DrawDashedCircle, CmdDrawDashedCircle)
                     DELETE_COMMAND(layer, DrawDashedRoundedRect, CmdDrawDashedRoundedRect)
                     DELETE_COMMAND(layer, DrawDashedLine, CmdDrawDashedLine)
+                    DELETE_COMMAND(layer, DrawGradientRectCentered, CmdDrawGradientRectCentered)
+                    DELETE_COMMAND(layer, DrawGradientRectRoundedCentered, CmdDrawGradientRectRoundedCentered)
                     default:
                         SPDLOG_ERROR("Unknown command type: {}", magic_enum::enum_name(cmd.type));
                         break;

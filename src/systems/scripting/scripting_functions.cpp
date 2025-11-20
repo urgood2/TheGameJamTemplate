@@ -5,6 +5,7 @@
 #include "core/globals.hpp"
 #include "raylib.h"
 #include "sol/sol.hpp"
+#include "sol_ImGui.h"
 #include "../ai/ai_system.hpp"
 #include "../event/event_system.hpp"
 #include "../tutorial/tutorial_system_v2.hpp"
@@ -26,15 +27,19 @@
 
 #include "../layer/layer.hpp"
 
+#include "spdlog/spdlog.h"
 #include "systems/anim_system.hpp"
 
 #include "systems/camera/camera_bindings.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
+#include "systems/input/controller_nav.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/physics/physics_lua_bindings.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
 #include "systems/text/static_ui_text.hpp"
 #include "util/utilities.hpp"
+
+#include "lua_hot_reload.hpp"
 
 #include "meta_helper.hpp"
 #include "registry_bond.hpp"
@@ -43,6 +48,10 @@
 
 #include "../../core/game.hpp"
 #include <functional>
+
+// #define TRACY_NO_CALLSTACK 1
+// #define TRACY_CALLSTACK 8 // fixed depth for callstack, fix lua errors.
+#include "third_party/tracy-master/public/tracy/TracyLua.hpp"
 
 
 
@@ -66,7 +75,10 @@ namespace scripting {
         auto& rec = BindingRecorder::instance();
         
         // basic lua state initialization
-        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, sol::lib::math, sol::lib::debug, sol::lib::io);
+        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, sol::lib::math, sol::lib::debug, sol::lib::io, sol::lib::bit32);
+        #if defined(LUAJIT_VERSION)
+        stateToInit.open_libraries(sol::lib::ffi, sol::lib::jit);
+        #endif
         
         std::string base1 = util::getRawAssetPathNoUUID("scripts/");
         std::string base2 = util::getRawAssetPathNoUUID("scripts/core");
@@ -88,9 +100,14 @@ namespace scripting {
             // pfr will contain things that went wrong, for either loading or executing the script
             // Can throw your own custom error
             // You can also just return it, and let the call-site handle the error if necessary.
+            SPDLOG_ERROR("Error setting lua path: {}", pfr.get<sol::error>().what());
             return pfr;
         });
         SPDLOG_DEBUG("Lua path set to: {}", lua_path_cmd);
+        
+        
+        
+        
         
         //---------------------------------------------------------
         // methods from ai_system.cpp. These can be called from lua,
@@ -142,12 +159,31 @@ namespace scripting {
         // add entt::null
         
         stateToInit["entt_null"] = static_cast<entt::entity>(entt::null);
-
+        
+        
+        // allow tracy support
+        // tracy::LuaRegister( stateToInit.lua_state() );
+        // lua_sethook(stateToInit, tracy::LuaHook, LUA_MASKCALL | LUA_MASKRET, 0);
+        
+        // dummy tracy table
+        // sol::table tracyTable = stateToInit.create_table();
+        // stateToInit["tracy"] = tracyTable;
+        // stateToInit["tracy"]["ZoneBeginNS"] = []() {
+        //     // dummy
+        // };
+        // stateToInit["tracy"]["ZoneEnd"] = []() {
+        //     // dummy
+        // };
 
         //---------------------------------------------------------
         // methods from event_system.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         event_system::exposeEventSystemToLua(stateToInit);
+        
+        //---------------------------------------------------------
+        // methods from controller_nav.cpp. These can be called from lua✅
+        //---------------------------------------------------------
+        controller_nav::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
         // methods from textVer2.cpp. These can be called from lua✅ 
@@ -202,7 +238,7 @@ namespace scripting {
         // ---------------------------------------------------------
         // methods from timer.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
-        timer::exposeToLua(stateToInit);
+        // timer::exposeToLua(stateToInit);
 
         
 
@@ -452,7 +488,11 @@ namespace scripting {
         // Also expose your globalShaderUniforms so Lua can call
         //   globalShaderUniforms.set(shaderName, uniformName, value)
 
+        // expose imgui to lua
+        sol_ImGui::Init(stateToInit);
         
+        // main loop settings
+        main_loop::exposeToLua(stateToInit);
         
         // ------------------------------------------------------
         // input functions
@@ -483,7 +523,8 @@ namespace scripting {
         
         // read all the script files and load them into the lua state
         for (auto &filename : scriptFilesToRead) {
-            stateToInit.script_file(filename);
+            // stateToInit.script_file(filename);
+            lua_hot_reload::track(filename);
             
             auto code_valid_result = stateToInit.script_file(filename, [](lua_State*, sol::protected_function_result pfr) {
                 // pfr will contain things that went wrong, for either loading or executing the script
@@ -495,6 +536,7 @@ namespace scripting {
             if (code_valid_result.valid() == false) {
                 SPDLOG_ERROR("Lua loading failed. Check script file for errors.");
                 SPDLOG_ERROR("Error: {}", code_valid_result.get<sol::error>().what());
+                throw std::runtime_error("Lua script file loading failed.");
             } else
             {
                 SPDLOG_DEBUG("Lua script file loading success.");
@@ -533,8 +575,8 @@ namespace scripting {
         // 2) simple bools / ints / floats
         lua["globals"]["isGamePaused"]  = &globals::isGamePaused;
         lua["globals"]["screenWipe"]    = &globals::screenWipe;
-        lua["globals"]["screenWidth"]   = [](){ return GetScreenWidth(); };
-        lua["globals"]["screenHeight"]  = [](){ return GetScreenHeight(); };
+        lua["globals"]["screenWidth"]   = [](){ return globals::VIRTUAL_WIDTH; };
+        lua["globals"]["screenHeight"]  = [](){ return globals::VIRTUAL_HEIGHT; };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
         
         lua["globals"]["inputState"] = &(globals::inputState);
@@ -575,14 +617,14 @@ namespace scripting {
         
         lua["GetTime"] = []() -> float {
             // Get the time elapsed since the last frame
-            return GetTime();
+            return main_loop::getTime();
         };
         
         lua["GetScreenWidth"] = []() -> int {
-            return GetScreenWidth();
+            return globals::VIRTUAL_WIDTH;
         };
         lua["GetScreenHeight"] = []() -> int {
-            return GetScreenHeight();
+            return globals::VIRTUAL_HEIGHT;
         };
         lua["GetWorldToScreen2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
             // Convert the position from world coordinates to screen coordinates
@@ -607,11 +649,15 @@ namespace scripting {
         rec.record_property("", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
 
         // 4) expose your Layer pointers under a sub-table "game"
-        lua.create_named_table("game")[
-            "background"   ] = game::background;
-        lua["game"]["sprites"]       = game::sprites;
-        lua["game"]["ui_layer"]      = game::ui_layer;
-        lua["game"]["finalOutput"]   = game::finalOutput;
+        // lua.create_named_table("game")[
+        //     "background"   ] = game::background;
+        // lua["game"]["sprites"]       = game::sprites;
+        // lua["game"]["ui_layer"]      = game::ui_layer;
+        // lua["game"]["finalOutput"]   = game::finalOutput;
+        // lua["game"]["background"  ] = game::GetLayer("background");
+        // lua["game"]["sprites"]       = game::GetLayer("sprites");
+        // lua["game"]["ui_layer"]      = game::GetLayer("ui_layer");
+        // lua["game"]["finalOutput"]   = game::GetLayer("finalOutput");
     }
 
 

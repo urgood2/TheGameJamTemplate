@@ -1,14 +1,45 @@
 cmake_minimum_required(VERSION 3.14)
+
+
+# set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1"
+#     CACHE PATH "Path to LuaJIT source directory" FORCE)
+
 project(raylib-cpp-cmake-template CXX C)
+
+if (PLATFORM STREQUAL "Web")
+    add_definitions(-DFMT_USE_CONSTEXPR=0)
+    add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_PARAMETERS=0)
+endif()
+
+
+
+
+
+option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
 
 # enable tracy (disable for web)
-option( TRACY_ENABLE "" OFF)
-add_definitions(-DTRACY_NO_CRASH_HANDLER)
+
+# Enable tracy only in non-release native builds
+if (NOT EMSCRIPTEN AND
+    NOT CMAKE_BUILD_TYPE MATCHES "Release" AND
+    NOT CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
+
+    message(STATUS "Tracy ENABLED for this build")
+    add_definitions(-DTRACY_ENABLED=1)
+    add_definitions(-DTRACY_NO_CRASH_HANDLER)
+    option( TRACY_ENABLE "" ON)
+
+else()
+    message(STATUS "Tracy DISABLED for this build")
+    add_definitions(-DTRACY_ENABLED=0)
+    option( TRACY_ENABLE "" OFF)
+endif()
+
 
 #set opengl version
 #enum_option(OPENGL_VERSION "OFF;4.3;3.3;2.1;1.1;ES 2.0;ES 3.0" "Force a specific OpenGL Version?")
@@ -38,7 +69,17 @@ endif()
 
 
 #spdlog
-set(SPDLOG_FMT_EXTERNAL ON)
+# set(SPDLOG_FMT_EXTERNAL ON)
+# set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+
+# set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
+# set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
+# set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
+# set(SPDLOG_BUILD_FMT OFF CACHE BOOL "" FORCE)
+ 
+
+
+
 #debug
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -98,12 +139,138 @@ add_git_dependency(
 #     v2.4.1
 # )
 
-# Add {fmt} library
-add_git_dependency(
-    fmt
-    https://github.com/fmtlib/fmt.git
-    10.2.1
-)
+# if (EMSCRIPTEN)
+#     message(WARNING "Forcing clean of cached fmt for Web build")
+#     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-src")
+#     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-build")
+# endif()
+
+
+# # Add {fmt} library
+# if (EMSCRIPTEN)
+#     # Use older fmt for Web compatibility
+#     set(FMT_VERSION 9.1.0)
+# else()
+#     # Use normal modern version for desktop
+#     set(FMT_VERSION 10.2.1)
+# endif()
+
+# if (EMSCRIPTEN)
+#     message(STATUS ">>> Cleaning cached fmt before re-fetching...")
+#     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-src")
+#     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/_deps/fmt-build")
+# endif()
+
+# # Force fmt to be header-only for Emscripten
+# if (EMSCRIPTEN)
+#     # set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+#     # set(FMT_DOC OFF CACHE BOOL "" FORCE)
+#     # set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+#     # set(FMT_OS OFF CACHE BOOL "" FORCE)
+# endif()
+
+# add_git_dependency(
+#     fmt
+#     https://github.com/fmtlib/fmt.git
+#     9.1.0
+# )
+
+# --- DEBUG: print fmt version ---
+# if (TARGET fmt)
+#     get_target_property(FMT_SOURCE_DIR fmt SOURCE_DIR)
+#     message(STATUS ">>> fmt SOURCE DIR = ${FMT_SOURCE_DIR}")
+
+#     file(READ "${FMT_SOURCE_DIR}/include/fmt/core.h" FMT_CORE)
+#     string(REGEX MATCH "FMT_VERSION [0-9]+" FMT_VERSION_LINE "${FMT_CORE}")
+#     message(STATUS ">>> Detected fmt version: ${FMT_VERSION_LINE}")
+# endif()
+
+
+
+# --- Force fmt to be header-only for Emscripten ---
+# if (EMSCRIPTEN)
+#     # # fmt tries to add its library target—stop it
+#     # set(FMT_ENABLE_TEST OFF CACHE BOOL "" FORCE)
+#     # set(FMT_DOC OFF CACHE BOOL "" FORCE)
+#     # set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+#     # set(FMT_OS OFF CACHE BOOL "" FORCE)
+
+#     # set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+#     # add_compile_definitions(FMT_HEADER_ONLY=1)
+#     # target_compile_definitions(fmt PRIVATE
+#     #     FMT_USE_CONSTEXPR=0
+#     #     FMT_USE_CONSTEVAL=0
+#     #     FMT_ENFORCE_COMPILE_STRING=0
+#     # )
+#     # add_definitions(-DFMT_CONSTEVAL=constexpr)
+#     # add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_ARGS=0)
+
+#     set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+#     target_compile_definitions(fmt PRIVATE
+#         FMT_USE_CONSTEXPR=0
+#         FMT_USE_CONSTEVAL=0
+#         FMT_CONSTEVAL=constexpr
+#         FMT_ENFORCE_COMPILE_STRING=0
+#         FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+#     )
+# endif()
+
+# --------------------------------------------------------------------
+# Local fmt (header-only recommended for Web)
+# --------------------------------------------------------------------
+# ============================================================
+# Local fmt (full repo)
+# ============================================================
+set(FMT_OS OFF CACHE BOOL "" FORCE)
+set(FMT_DOC OFF CACHE BOOL "" FORCE)
+set(FMT_TEST OFF CACHE BOOL "" FORCE)
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+
+# For Emscripten we MUST force header-only + disable constexpr
+# if(EMSCRIPTEN)
+# Force spdlog to use external fmt (header-only)
+set(SPDLOG_FMT_EXTERNAL      OFF CACHE BOOL "" FORCE)
+set(SPDLOG_FMT_EXTERNAL_HO   ON  CACHE BOOL "" FORCE)
+# endif()
+
+if(EMSCRIPTEN)
+    set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
+endif()
+
+# ─────────────────────────────────────────────────────────────
+# Force vendored fmt into safe header-only mode for Emscripten
+# ─────────────────────────────────────────────────────────────
+# if(EMSCRIPTEN)
+#     add_compile_definitions(
+#         FMT_HEADER_ONLY=1
+#         FMT_USE_CONSTEXPR=0
+#         FMT_USE_CONSTEVAL=0
+#         FMT_CONSTEVAL=constexpr
+#         FMT_ENFORCE_COMPILE_STRING=0
+#         FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+#     )
+# endif()
+
+add_subdirectory(src/third_party/fmt)
+
+if(EMSCRIPTEN)
+    # Remove fmt .cc sources
+    # set_target_properties(fmt PROPERTIES SOURCES "")
+endif()
+
+
+# Emscripten fixes (fmt 10+ constexpr bug)
+# if(EMSCRIPTEN)
+#     target_compile_definitions(fmt PUBLIC
+#         FMT_HEADER_ONLY=1
+#         FMT_USE_CONSTEXPR=0
+#         FMT_USE_CONSTEVAL=0
+#         FMT_CONSTEVAL=constexpr
+#         FMT_ENFORCE_COMPILE_STRING=0
+#         FMT_USE_NONTYPE_TEMPLATE_ARGS=0
+#     )
+# endif()
+
 
 # Add {nlohmann/json} library
 add_git_dependency(
@@ -195,22 +362,6 @@ add_git_dependency(
 )
 message(STATUS "glm_SOURCE_DIR: ${glm_SOURCE_DIR}")
 
-
-# Add {sol3} library
-add_git_dependency(
-    sol2
-    https://github.com/ThePhD/sol2.git
-    v3.3.0
-)
-message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
-
-#include lua
-add_git_dependency(
-    lua
-    "https://github.com/marovira/lua"
-    5.4.4
-)
-
 # add uuid
 # add_git_dependency(
 #     uuid_v4
@@ -233,22 +384,22 @@ add_git_dependency(
     v5.0.0
 )
 
-if (WIN32 OR EMSCRIPTEN)
-set(Boost_INCLUDE_DIR "D:/boost_1_81_0")
-set(Boost_LIBRARY_DIR "D:/boost_1_81_0/lib")
-find_package(Boost)
-# find_package(Boost REQUIRED regex) # header only libraries must not be added here
-elseif (APPLE)
-    # Adjust the paths if you have installed Boost in a different location
-    set(Boost_INCLUDE_DIR "/opt/homebrew/Cellar/boost/1.83.0/include")
-    set(Boost_LIBRARY_DIR "/opt/homebrew/Cellar/boost/1.83.0/lib")
-    find_package(Boost)
-else ()
-    # Adjust the paths if you have installed Boost in a different location
-    set(Boost_DEBUG 1)
-    find_package(Boost REQUIRED)
-    message(STATUS "BOOST DIR AND LIBS FOUND?:${Boost_FOUND}")
-endif()
+# if (WIN32 OR EMSCRIPTEN)
+# set(Boost_INCLUDE_DIR "D:/boost_1_81_0")
+# set(Boost_LIBRARY_DIR "D:/boost_1_81_0/lib")
+# find_package(Boost)
+# # find_package(Boost REQUIRED regex) # header only libraries must not be added here
+# elseif (APPLE)
+#     # Adjust the paths if you have installed Boost in a different location
+#     set(Boost_INCLUDE_DIR "/opt/homebrew/Cellar/boost/1.83.0/include")
+#     set(Boost_LIBRARY_DIR "/opt/homebrew/Cellar/boost/1.83.0/lib")
+#     find_package(Boost)
+# else ()
+#     # Adjust the paths if you have installed Boost in a different location
+#     set(Boost_DEBUG 1)
+#     find_package(Boost REQUIRED)
+#     message(STATUS "BOOST DIR AND LIBS FOUND?:${Boost_FOUND}")
+# endif()
 
 
 ##########################################################################################
@@ -298,8 +449,8 @@ target_include_directories(CommonSettings INTERFACE
     "${CMAKE_CURRENT_LIST_DIR}/include/taskflow-master/taskflow"
     "${poisson-disk-generator_SOURCE_DIR}"
     "${glm_SOURCE_DIR}"    
-    "${sol2_SOURCE_DIR}/include"
-    "${sol2_SOURCE_DIR}/include/sol"
+    # "${sol2_SOURCE_DIR}/include"
+    # "${sol2_SOURCE_DIR}/include/sol"
     # "${tweeny_SOURCE_DIR}"
     "${raygui_SOURCE_DIR}/src"
     "${PROJECT_INCLUDE}/spine"
@@ -317,8 +468,6 @@ target_link_libraries(CommonSettings INTERFACE
     # tweeny
     effolkronium_random
     EnTT::EnTT
-    lua::lua
-    sol2::sol2
     gpgoap
     chipmunk_static
     stduuid
@@ -335,6 +484,96 @@ if(NOT EMSCRIPTEN)
     )    
 endif()
 
+
+# ======================================================================
+# Sol2 + Lua / LuaJIT toggle goes HERE ↓↓↓
+# ======================================================================
+# add_git_dependency(
+#     sol2
+#     https://github.com/ThePhD/sol2.git
+#     v3.3.0
+# )
+# message(STATUS "sol2_SOURCE_DIR: ${sol2_SOURCE_DIR}")
+add_subdirectory(src/third_party/sol2)
+set(SOL2_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/third_party/sol2/include/" CACHE PATH "Path to sol2 source directory")
+
+# if (USE_LUAJIT)
+#     message(STATUS ">> Using LuaJIT as backend for Sol2")
+#     # https://github.com/zhaozg/luajit-cmake
+    
+#     # FetchContent_Declare(
+#     #     luajit
+#     #     GIT_REPOSITORY https://github.com/LuaJIT/LuaJIT.git
+#     #     GIT_TAG v2.1
+#     # )
+#     # FetchContent_MakeAvailable(luajit)
+
+#     # set(LUAJIT_INCLUDE_DIR "${luajit_SOURCE_DIR}/src")
+
+#     # add_library(LuaJIT STATIC IMPORTED GLOBAL)
+#     # if (WIN32)
+#     #     set_target_properties(LuaJIT PROPERTIES
+#     #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/lua51.lib"
+#     #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
+#     #     )
+#     # else()
+#     #     set_target_properties(LuaJIT PROPERTIES
+#     #         IMPORTED_LOCATION "${luajit_SOURCE_DIR}/src/libluajit.a"
+#     #         INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INCLUDE_DIR}
+#     #     )
+#     # endif()
+
+#     # target_include_directories(CommonSettings INTERFACE
+#     #     ${LUAJIT_INCLUDE_DIR}
+#     #     ${sol2_SOURCE_DIR}/include
+#     # )
+#     # set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1" CACHE PATH "Path to LuaJIT source directory")
+#     add_subdirectory("src/third_party/luajit-cmake-master")
+#     target_link_libraries(CommonSettings INTERFACE luajit::lib luajit::header)
+
+
+
+#     target_link_libraries(CommonSettings INTERFACE
+#         # LuaJIT
+#         sol2::sol2
+#     )
+    
+#     # Ensure LuaJIT headers are visible to everything using CommonSettings
+#     target_include_directories(CommonSettings INTERFACE
+#         "${LUAJIT_DIR}/src"
+#     )
+
+
+#     target_compile_definitions(CommonSettings INTERFACE
+#         SOL_LUAJIT=1
+#         LUAJIT_VERSION="2.1.0-beta3"
+#     )
+
+# else()
+    message(STATUS ">> Using standard Lua 5.4.4 as backend for Sol2")
+
+    add_git_dependency(
+        lua
+        "https://github.com/marovira/lua"
+        5.4.4
+    )
+
+    target_include_directories(CommonSettings INTERFACE
+        ${sol2_SOURCE_DIR}/include
+    )
+
+    target_link_libraries(CommonSettings INTERFACE
+        lua::lua
+        sol2::sol2
+    )
+
+    target_compile_definitions(CommonSettings INTERFACE
+        SOL_STD_OPTIONAL
+        LUA_VERSION="5.4.4"
+    )
+# endif()
+# ======================================================================
+
 # Declaring our executable
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
@@ -346,6 +585,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/fudge_pathfinding/util")
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/GPGOAP")
 
+
+# ------------------------------------------------------------
+# Build directory logic for native vs Emscripten
+# ------------------------------------------------------------
+if(EMSCRIPTEN)
+    # Emscripten uses a single output directory for everything
+    set(BUILD_DIR "${CMAKE_BINARY_DIR}" CACHE PATH "" FORCE)
+endif()
 
 # Add include directories for single-header dependencies
 # target_include_directories(${PROJECT_NAME} PUBLIC "${random_SOURCE_DIR}/include")
@@ -396,6 +643,9 @@ if(EMSCRIPTEN)
         if(FOUND EQUAL -1)
             # Create the destination directory first
             get_filename_component(DEST_DIR "${BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
+            message(STATUS "ASSET_FILE='${ASSET_FILE}'")
+            message(STATUS "SRC='${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}'")
+            message(STATUS "DST='${BUILD_DIR}/assets/${ASSET_FILE}'")
             add_custom_command(
                 TARGET copy_assets POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
@@ -521,8 +771,8 @@ add_custom_target(clean_all
 # now link the included prebuilt libraries
 # target_link_libraries(CommonSettings INTERFACE goap)
 # target_link_libraries(CommonSettings INTERFACE gpgoap)
-target_include_directories(CommonSettings INTERFACE ${Boost_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
+# target_include_directories(CommonSettings INTERFACE ${Boost_INCLUDE_DIRS})
+# target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 
@@ -530,8 +780,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 # Platform-specific settings for prebuilt libraries included with project
 
 # boost
-target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
+# target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+# target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
 
 
 ##########################################################################################
@@ -584,6 +834,9 @@ if(${PLATFORM} STREQUAL "Web")
 else()
     # your existing Debug / Release logic
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC
+            ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         target_compile_definitions(${PROJECT_NAME} PUBLIC
             ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
     else()

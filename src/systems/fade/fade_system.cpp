@@ -36,7 +36,7 @@ namespace fade_system {
     auto draw() -> void {
         if (fadeAlpha <= 0.0f) return;
 
-        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(fadeColor, fadeAlpha));
+        DrawRectangle(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT, Fade(fadeColor, fadeAlpha));
     }
 
     auto setFade(FadeState state, float seconds) -> void {

@@ -498,7 +498,7 @@ namespace shaders
 
     auto hotReloadShaders() -> void
     {
-        // ZoneScopedN("HotReloadShaders"); // custom label
+        ZONE_SCOPED("HotReloadShaders"); // custom label
         for (auto &[shaderName, shader] : loadedShaders)
         {
             // Retrieve shader paths from the map
@@ -604,7 +604,7 @@ namespace shaders
     // Update all shader uniforms
     auto updateAllShaderUniforms() -> void
     {
-        // ZoneScopedN("UpdateAllShaderUniforms"); // custom label
+        ZONE_SCOPED("UpdateAllShaderUniforms"); // custom label
         for (const auto &[shaderName, updateLambda] : uniformUpdateCallbacks)
         {
             if (loadedShaders.find(shaderName) != loadedShaders.end())
@@ -623,7 +623,7 @@ namespace shaders
     // Called every frame to update shader system
     auto update(float dt) -> void
     {
-        // ZoneScopedN("Shaders update");
+        ZONE_SCOPED("Shaders update");
 
         updateAllShaderUniforms();
         // FIXME: perforamnce intensive on windows, commenting out for now
@@ -737,7 +737,10 @@ namespace shaders
                                 ImGui::ColorEdit4(uniformName.c_str(), &value.x);
                             } else if constexpr (std::is_same_v<T, bool>) {
                                 ImGui::Checkbox(uniformName.c_str(), &value);
-                            }                          
+                            }                 
+                            else if constexpr (std::is_same_v<T, int>) {
+                                ImGui::DragInt(uniformName.c_str(), &value, 1);
+                            }
                             else if constexpr (std::is_same_v<T, Texture2D>) {
                                 ImGui::Text("%s: Texture2D (id: %d, size: %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
                                 // Optional preview

@@ -1,5 +1,10 @@
+#include "systems/ai/ai_system.hpp"
 #include "systems/input/input_functions.hpp"
+#include "systems/layer/layer.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
+#include "third_party/rlImGui/imgui.h"
+#include "third_party/rlImGui/imgui_internal.h"
+#include "third_party/rlImGui/rlImGui.h"
 #define RAYGUI_IMPLEMENTATION // needed to use raygui
 
 #define _WIN32_WINNT 0x0600
@@ -8,7 +13,6 @@
 #include "entt/entt.hpp" // ECS
 // #include "tweeny.h"      // tweening library
 
-// #include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
@@ -21,7 +25,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h" // or any library that uses Windows.h
 
-#include "util/common_headers.hpp" // common headers like json, spdlog, etc.
+#include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 
 #if defined(_WIN32) // raylib uses these names as function parameters
 #undef near
@@ -85,6 +89,9 @@ using json = nlohmann::json;
 #include "systems/scripting/scripting_system.hpp"
 #include "systems/fade/fade_system.hpp"
 #include "systems/palette/palette_quantizer.hpp"
+#include "systems/input/controller_nav.hpp"
+
+
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
@@ -126,7 +133,7 @@ void mainMenuStateGameLoop(float dt)
 
 void MainLoopFixedUpdateAbstraction(float dt)
 {
-    // // ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
+    ZONE_SCOPED("MainLoopFixedUpdateAbstraction"); // custom label
     
     updateSystems(dt);
 
@@ -153,8 +160,6 @@ void MainLoopFixedUpdateAbstraction(float dt)
     // finalize input state at end of frame
     input::finalizeUpdateAtEndOfFrame(globals::inputState, dt);
     
-    // physics post-update
-    globals::physicsManager->stepAllPostUpdate(dt);
 }
 
 
@@ -219,68 +224,115 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 
 
 }
+
+auto updatePhysics(float dt, float alpha) -> void
+{
+    main_loop::mainLoop.physicsTicks++;
+    {
+        ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
+        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    }
+    
+    {
+        ZONE_SCOPED("Physics Step All Worlds");
+        globals::physicsManager->stepAll(dt); // step all physics worlds
+    }
+    
+    {
+        ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
+        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager, alpha);
+    
+    
+        // physics post-update
+        globals::physicsManager->stepAllPostUpdate(dt);
+    }
+}
+
 // The main game loop function that runs until the application or window is closed.
 // The main game loop callback / blocking loop
 void RunGameLoop()
 {
-    // SPDLOG_DEBUG("RunGameLoop called");
-    // Store the initial time
+    // ---------- Initialization ----------
     float lastFrameTime = GetTime();
 
-    // Parameters for smoothing deltaTime
+    // Optional frame smoothing (helps even out jitter in GetFrameTime)
     const int frameSmoothingCount = 10;
     std::deque<float> frameTimes;
 
-    // Maximum updates per frame to avoid overcompensation
+    // Safety: limit how many fixed updates can run per frame
     const int maxUpdatesPerFrame = 5;
 
-    // Accurate FPS counter using real time
+    // FPS tracking
     int frameCounter = 0;
     double fpsLastTime = GetTime();
 
-    bool firstFrame = true;
-
 #ifndef __EMSCRIPTEN__
-    // On desktop, spin until window closes:
     while (!WindowShouldClose())
     {
+        ZONE_SCOPED("RunGameLoop"); // custom label
 #endif
+        {
+            ZONE_SCOPED("BeginDrawing/rlImGuiBegin call");
+            BeginDrawing();
+        
+
+#ifndef __EMSCRIPTEN__
+
+        if (globals::useImGUI)
+            rlImGuiBegin(); // Begin ImGui each frame (desktop only)
+#endif
+        }
 
         using namespace main_loop;
 
-        // Smooth deltaTime over the last few frames
-        float rawDeltaTime = std::max(GetFrameTime() * mainLoop.timescale, 0.001f); // minimum delta time of 1ms
+        // ---------- Step 1: Measure REAL frame time ----------
+        float rawDeltaTime = std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
+        mainLoop.rawDeltaTime = rawDeltaTime;
+
+        // Optional smoothing
         frameTimes.push_back(rawDeltaTime);
         if (frameTimes.size() > frameSmoothingCount)
-        {
             frameTimes.pop_front();
-        }
+
         float deltaTime = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
 
-        // save delta time for use in systems
-        mainLoop.smoothedDeltaTime = deltaTime;
-
-        // accumulate timers
+        // ---------- Step 2: Accumulate time ----------
         mainLoop.realtimeTimer += deltaTime;
-        if (!globals::isGamePaused) {
+        if (!globals::isGamePaused)
             mainLoop.totaltimeTimer += deltaTime;
-        }
 
-        // Accumulate lag for fixed timestep updates, capping it to avoid excessive updates
+        // Accumulate lag for fixed-step updates (real time, not scaled)
         mainLoop.lag = std::min(mainLoop.lag + deltaTime, mainLoop.rate * mainLoop.maxFrameSkip);
 
-        // Perform fixed-timestep updates
+        // ---------- Step 3: Fixed updates ----------
         int updatesPerformed = 0;
         while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
         {
-            MainLoopFixedUpdateAbstraction(mainLoop.rate);
+            ZONE_SCOPED("Physics Update Step"); // custom label
+            float scaledStep = mainLoop.rate * mainLoop.timescale;
+
+            // Split into two substeps for improved stability
+            const int substeps = 2;
+            float subDelta = scaledStep / substeps;
+            float alpha = mainLoop.lag / mainLoop.rate; // interpolation factor for lerping physics to transform
+
+
+            for (int i = 0; i < substeps; ++i)
+            {
+                updatePhysics(subDelta, alpha);
+            }
+
+            // SPDLOG_DEBUG("physics step ({} substeps) of {} ms each at time {}",
+            //             substeps, subDelta * 1000.0f, mainLoop.totaltimeTimer);
+
             mainLoop.lag -= mainLoop.rate;
             mainLoop.updates++;
             updatesPerformed++;
-            mainLoop.frame++; // increment frame counter
+            mainLoop.frame++;
         }
 
-        // Update the UPS (updates per second) counter
+
+        // ---------- Step 4: Update UPS counter ----------
         mainLoop.updateTimer += deltaTime;
         if (mainLoop.updateTimer >= 1.0f)
         {
@@ -289,10 +341,26 @@ void RunGameLoop()
             mainLoop.updateTimer = 0.0f;
         }
 
-        // Render
-        MainLoopRenderAbstraction(deltaTime);
+        // ---------- Step 5: Rendering ----------
+        // Optional interpolation factor (use for smooth rendering)
+        float alpha = mainLoop.lag / mainLoop.rate;
+        
+        float scaledStep = rawDeltaTime * mainLoop.timescale;
+        // ---------- Step 4.5: Fixed update (moved) ----------
+        {
+            
+            MainLoopFixedUpdateAbstraction(scaledStep);
+            // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
+        }
 
-        // Update FPS counter (accurate version)
+
+        // Pass alpha or deltaTime as appropriate to your renderer
+        MainLoopRenderAbstraction(alpha);
+
+        // Render-time timers (if you use time-scaled effects here, apply timescale manually)
+        timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
+
+        // ---------- Step 6: FPS counter ----------
         frameCounter++;
         double now = GetTime();
         if (now - fpsLastTime >= 1.0)
@@ -301,15 +369,28 @@ void RunGameLoop()
             frameCounter = 0;
             fpsLastTime = now;
         }
+        
+        {
+            ZONE_SCOPED("EndDrawing/rlImGuiEnd call");
+
+#ifndef __EMSCRIPTEN__
+        if (globals::useImGUI)
+            rlImGuiEnd();
+#endif
+            EndDrawing();
+        }
+        
+        mainLoop.renderFrame++; // ✅ Count this as one rendered frame
 
 #ifdef __EMSCRIPTEN__
-        // Under Emscripten, stop the browser loop if window is closed
-        // if (WindowShouldClose())
-        //     emscripten_cancel_main_loop();
+        // (No while loop on web)
 #else
-    }
+    } // while (!WindowShouldClose())
 #endif
 }
+
+
+
 int main(void)
 {
 
@@ -387,34 +468,72 @@ int main(void)
 /// @return
 auto updateSystems(float dt) -> void
 {
-    // // ZoneScopedN("UpdateSystems"); // custom label
-    updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
-    fade_system::update(dt); // update fade system
+    ZONE_SCOPED("UpdateSystems"); // custom label
     
-    input::Update(globals::registry, globals::inputState, dt);
-    globals::updateGlobalVariables();
-    sound_system::Update(dt); // update sound system
+    // clear layers
+    {
+        ZONE_SCOPED("layer::Begin");
+        layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
+    }
     
+    {
+        ZONE_SCOPED("Input System Update");
+        updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
+        fade_system::update(dt); // update fade system
+    }
     
-    physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    {
+        ZONE_SCOPED("Input System Update");
+        input::Update(globals::registry, globals::inputState, dt);
+    }
     
-    globals::physicsManager->stepAll(dt); // step all physics worlds
+    {
+        ZONE_SCOPED("Global Variables Update & sound");
+        globals::updateGlobalVariables();
+        // SPDLOG_DEBUG("Updating sound with dt of {}", main_loop::mainLoop.rawDeltaTime);
+        sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
+    }
     
-    physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    // {
+    //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
+    //     physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    // }
+    
+    // {
+    //     ZONE_SCOPED("Physics Step All Worlds");
+    //     globals::physicsManager->stepAll(dt); // step all physics worlds
+    // }
+    
+    // {
+    //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
+    //     physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    // }
     
     // systems
+    
     shaders::update(dt);
     timer::TimerSystem::update_timers(dt);
     spring::updateAllSprings(globals::registry, dt);
     animation_system::update(dt);
     transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
+    controller_nav::NavManager::instance().update(dt);
+    {
+        ZONE_SCOPED("EventQueueSystem::EventManager::update");
+        // update event queue
+        timer::EventQueueSystem::EventManager::update(dt);
+    }
     
-
-    // update event queue
-    timer::EventQueueSystem::EventManager::update(dt);
+    {
+        ZONE_SCOPED("scripting::monobehavior_system::update");
+        scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
+    }
+    {
+        ZONE_SCOPED("AI System Update");
+        ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
+    }
     
-    scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
-    ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
-    
-    ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
+    {
+        ZONE_SCOPED("ai_system::updateHumanAI");
+        ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
+    }
 }

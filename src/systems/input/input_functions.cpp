@@ -95,7 +95,7 @@ namespace input
         inputState.activeInputLocks["frame_lock_reset_next_frame"] = false;
         
         // always make container entity by default
-        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
+        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
         auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
         gameMapNode.debug.debugText = "Map Container";
 
@@ -148,20 +148,20 @@ namespace input
         if (mouseDetectDownFirstFrameLeft)
         { // this should only register first time the button is held down
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = globals::GetScaledMousePosition();
             EnqueueLeftMouseButtonPress(inputState, mousePos.x, mousePos.y);
         }
         if (mouseDetectDownFirstFrameRight)
         {
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = globals::GetScaledMousePosition();
             // TODO: right mouse handling isn't really configured, need to add
             EnqueRightMouseButtonPress(inputState, mousePos.x, mousePos.y);
         }
         if (mosueLeftDownCurrentFrame == false && mouseLeftDownLastFrame == true)
         { // release only for left button
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = globals::GetScaledMousePosition();
             ProcessLeftMouseButtonRelease(registry, inputState, mousePos.x, mousePos.y);
         }
 
@@ -226,9 +226,17 @@ namespace input
             float axisRightY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_Y);
             float axisLT = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_TRIGGER);
             float axisRT = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_TRIGGER);
-            if (abs(axisLeftX) > 0.2f || abs(axisLeftY) > 0.2f || abs(axisRightX) > 0.2f || abs(axisRightY) > 0.2f || abs(axisLT) > 0.2f || abs(axisRT) > 0.2f)
+            // printf("Gamepad name: %s\n", GetGamepadName(0));
+            // printf("Axis count: %d\n", GetGamepadAxisCount(0));
+            // SPDLOG_DEBUG("Axis movements: Lx={} Ly={} Rx={} Ry={} LT={} RT={}", axisLeftX, axisLeftY, axisRightX, axisRightY, axisLT, axisRT);
+            if (abs(axisLeftX) > 0.2f || abs(axisLeftY) > 0.2f || abs(axisRightX) > 0.2f || abs(axisRightY) > 0.2f || axisLT > -1.f || axisRT > -1.f)
             {
                 SetCurrentGamepad(inputState, GetGamepadName(0), 0);
+                
+                // SPDLOG_DEBUG("Axis movement detected! Lx={} Ly={}", axisLeftX, axisLeftY);
+                // SPDLOG_INFO("Axes: {}", GetGamepadAxisCount(0));
+
+                
                 ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_AXIS);
                 UpdateGamepadAxisInput(inputState, registry, dt);
             }
@@ -242,18 +250,63 @@ namespace input
         ProcessInputLocks(inputState, registry, dt);
 
         DeleteInvalidEntitiesFromInputRegistry(inputState, registry);
+        
+        
+    }
+    
+    auto DetectMouseActivity(InputState &state) -> InputDeviceInputCategory
+    {
+        Vector2 mousePos = globals::GetScaledMousePosition();
+
+        // Movement threshold (1px)
+        bool moved = std::fabs(mousePos.x - state.cursor_position.x) > 1.0f ||
+                    std::fabs(mousePos.y - state.cursor_position.y) > 1.0f;
+
+        // Buttons or wheel
+        bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) ||
+                    IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) ||
+                    GetMouseWheelMove() != 0.0f;
+
+        if (moved || clicked)
+        {
+            state.cursor_position = mousePos; // keep in sync
+            return InputDeviceInputCategory::MOUSE;
+        }
+
+        return InputDeviceInputCategory::NONE;
     }
 
     auto Update(entt::registry &registry, InputState &inputState, float dt) -> void
     {
-        // ZoneScopedN("Input system update");
+        ZONE_SCOPED("Input system update");
+        
+        auto mouseCategory = DetectMouseActivity(inputState);
+        auto gamepadCategory = UpdateGamepadAxisInput(inputState, registry, dt);
 
-        auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt);
+        // Choose which device takes precedence
+        InputDeviceInputCategory finalCategory = InputDeviceInputCategory::NONE;
+
+        if (mouseCategory != InputDeviceInputCategory::NONE)
+        {
+            finalCategory = mouseCategory;
+        }
+        else if (gamepadCategory != InputDeviceInputCategory::NONE)
+        {
+            finalCategory = gamepadCategory;
+        }
+        else
+        {
+            finalCategory = inputState.hid.last_type; // fallback to last known
+        }
+        
+        // SPDLOG_DEBUG("Final category is {}", magic_enum::enum_name(finalCategory));
+
+        // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt);
         auto &transform = registry.get<transform::Transform>(globals::cursor);
 
         handleRawInput(registry, inputState, dt);
 
-        ReconfigureInputDeviceInfo(inputState, inputCategory);
+        // ReconfigureInputDeviceInfo(inputState, finalCategory);
 
         // button/key updates
         PropagateButtonAndKeyUpdates(inputState, registry, dt);
@@ -287,7 +340,7 @@ namespace input
 
                     if (scr.offset != scr.prevOffset) {
                         // make bars visible for a bit
-                        scr.showUntilT = GetTime() + scr.showSeconds;
+                        scr.showUntilT = main_loop::getTime() + scr.showSeconds;
 
                         // push displacement to children (your existing pattern)
                         ui::box::TraverseUITreeBottomUp(
@@ -343,9 +396,40 @@ namespace input
         input::TickActionHolds(inputState, dt);
         input::DecayActions(inputState);
     }
+    
+    void stopHover(entt::registry &registry, entt::entity target)
+    {
+        if (!registry.valid(target)) return;
+        
+        // ❌ Don’t stop hover while dragging this entity
+        if (registry.any_of<transform::GameObject>(target))
+        {
+            auto &node = registry.get<transform::GameObject>(target);
+            if (node.state.isBeingDragged)
+                return;
+        }
+
+        if (registry.any_of<ui::UIElementComponent>(target))
+        {
+            ui::element::StopHover(registry, target);
+        }
+        else if (auto *node = registry.try_get<transform::GameObject>(target))
+        {
+            if (node->methods.onStopHover)
+                node->methods.onStopHover(registry, target);
+        }
+    }
+
 
     void propagateReleaseToGameObjects(input::InputState &inputState, entt::registry &registry)
     {
+        // explicit stop hover to ensure no hover stop is missed
+        if (inputState.prev_designated_hover_target != entt::null &&
+        inputState.current_designated_hover_target != inputState.prev_designated_hover_target)
+        {
+            // stopHover(registry, inputState.prev_designated_hover_target);
+        }
+
         if (inputState.cursor_released_on_handled == false && registry.valid(inputState.cursor_prev_dragging_target))
         {
             auto &releasedOnTargetNode = registry.get<transform::GameObject>(inputState.cursor_released_on_target);
@@ -360,7 +444,8 @@ namespace input
                     ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
                 }
                 else if (releasedOnTargetNode.methods.onStopHover)
-                    releasedOnTargetNode.methods.onStopHover(registry, inputState.cursor_released_on_target);
+                    // releasedOnTargetNode.methods.onStopHover(registry, inputState.cursor_released_on_target);
+                    ;
 
                 inputState.current_designated_hover_target = entt::null;
             }
@@ -441,7 +526,7 @@ namespace input
                         }
                         else if (prevHoverTargetNode.methods.onStopHover)
                         {
-                            prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
+                            // prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                         }
                     }
                 }
@@ -458,7 +543,7 @@ namespace input
                     }
                     else if (prevHoverTargetNode.methods.onStopHover)
                     {
-                        prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
+                        // prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                     }
                 }
             }
@@ -473,15 +558,17 @@ namespace input
                 if (registry.any_of<ui::UIElementComponent>(inputState.prev_designated_hover_target))
                 {
                     auto &uiElement = registry.get<ui::UIElementComponent>(inputState.prev_designated_hover_target);
-                    ui::element::StopHover(registry, inputState.prev_designated_hover_target);
+                    // ui::element::StopHover(registry, inputState.prev_designated_hover_target);
                 }
                 else if (prevHoverTargetNode.methods.onStopHover)
                 {
-                    prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
+                    // prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                 }
             }
         }
     }
+    
+    
 
     void propagateDragToGameObjects(entt::registry &registry, input::InputState &inputState)
     {
@@ -546,35 +633,33 @@ namespace input
         }
     }
 
-    void handleCursorHoverEvent(input::InputState &inputState, entt::registry &registry)
-    {
-        bool noTouchInputOrCursorIsDown = !inputState.hid.touch_enabled || inputState.is_cursor_down;
-        auto *cursorHoveringTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_hovering_target);
-        if (registry.valid(inputState.cursor_hovering_target) && cursorHoveringTargetNode->state.hoverEnabled && (noTouchInputOrCursorIsDown))
-        {
-            inputState.current_designated_hover_target = inputState.cursor_hovering_target;
+    void handleCursorHoverEvent(InputState &inputState, entt::registry &registry) {
+        // 🔒 Skip hover updates while dragging
+        if (registry.valid(inputState.cursor_dragging_target))
+            return;
+        
+    bool hasHover = registry.valid(inputState.cursor_hovering_target) || inputState.is_cursor_down;
+    entt::entity current = inputState.current_designated_hover_target;
+    entt::entity newHover = hasHover ? inputState.cursor_hovering_target : entt::null;
 
-            // reset prev hover
-            if (registry.valid(inputState.prev_designated_hover_target) && inputState.prev_designated_hover_target != inputState.current_designated_hover_target)
-            {
-                auto &prevHoverTargetNode = registry.get<transform::GameObject>(inputState.prev_designated_hover_target);
-                prevHoverTargetNode.state.isBeingHovered = false;
-            }
+    // 1. If new == old → just mark still hovered
+    if (newHover == current && newHover != entt::null) return;
 
-            auto &hoverTargetNode = registry.get<transform::GameObject>(inputState.current_designated_hover_target);
-            hoverTargetNode.state.isBeingHovered = true;
-            transform::SetClickOffset(&registry, inputState.current_designated_hover_target, inputState.cursor_hover_transform.value(), false);
-        }
+    // 2. If old exists and is different → stop old
+    if (registry.valid(current) && current != newHover)
+        stopHover(registry, current);
 
-        // reset hover target, there is no cursor hovering target or touch input is active
-        else if ((!registry.valid(inputState.cursor_hovering_target) || (inputState.hid.touch_enabled || !inputState.is_cursor_down)) && registry.valid(inputState.current_designated_hover_target))
-        {
-            auto &hoverTargetNode = registry.get<transform::GameObject>(inputState.current_designated_hover_target);
-            hoverTargetNode.state.isBeingHovered = false;
-            SPDLOG_DEBUG("Stop hovering over entity {}", static_cast<int>(inputState.current_designated_hover_target));
-            inputState.current_designated_hover_target = entt::null;
-        }
+    // 3. If new exists → start hover
+    if (registry.valid(newHover)) {
+        auto &node = registry.get<transform::GameObject>(newHover);
+        node.state.isBeingHovered = true;
+        if (node.methods.onHover) node.methods.onHover(registry, newHover);
     }
+
+    // 4. Update
+    inputState.current_designated_hover_target = newHover;
+}
+
 
     
 
@@ -677,6 +762,12 @@ namespace input
                 cursorDownTargetNode.state.isBeingDragged = true;
                 transform::SetClickOffset(&registry, inputState.cursor_down_target, inputState.cursor_down_position.value(), true);
                 inputState.cursor_dragging_target = inputState.cursor_down_target;
+                
+                // call onDrag if exists
+                if (cursorDownTargetNode.methods.onDrag)
+                {
+                    cursorDownTargetNode.methods.onDrag(registry, inputState.cursor_down_target);
+                }
             }
             // mark cursor down as handled
             inputState.cursor_down_handled = true;
@@ -908,58 +999,72 @@ namespace input
     // axis_cursor, axis, button, mouse, touch
     auto ReconfigureInputDeviceInfo(InputState &state, InputDeviceInputCategory category, const GamepadButton button) -> void
     {
-        // do nothing if NONE
-        if (category == InputDeviceInputCategory::NONE)
+        if (category == InputDeviceInputCategory::NONE || category == state.hid.last_type)
             return;
 
-        if (category == InputDeviceInputCategory::GAMEPAD_AXIS)
+
+        const bool isControllerInput =
+            category == InputDeviceInputCategory::GAMEPAD_AXIS ||
+            category == InputDeviceInputCategory::GAMEPAD_BUTTON ||
+            category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR;
+
+        const bool isMouseKeyboardTouch =
+            category == InputDeviceInputCategory::KEYBOARD ||
+            category == InputDeviceInputCategory::MOUSE ||
+            category == InputDeviceInputCategory::TOUCH;
+
+        //----------------------------------------------------------
+        // CONTROLLER INPUT: Enable controller mode persistently
+        //----------------------------------------------------------
+        if (isControllerInput)
         {
-            state.hid.controller_enabled = true;
-            state.hid.last_type = InputDeviceInputCategory::GAMEPAD_AXIS;
-        }
-        else if (category != state.hid.last_type)
-        {
-            // SPDLOG_DEBUG("Reconfiguring input device info to {}", magic_enum::enum_name(category));
-            state.hid.dpad_enabled = (category == InputDeviceInputCategory::GAMEPAD_BUTTON || (category == InputDeviceInputCategory::KEYBOARD));
-            state.hid.pointer_enabled = (category == InputDeviceInputCategory::MOUSE) || (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR) || (category == InputDeviceInputCategory::TOUCH);
-            state.hid.controller_enabled = (category == InputDeviceInputCategory::GAMEPAD_BUTTON) || (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
-            state.hid.mouse_enabled = (category == InputDeviceInputCategory::MOUSE) || (category == InputDeviceInputCategory::KEYBOARD);
-            state.hid.touch_enabled = (category == InputDeviceInputCategory::TOUCH);
-            state.hid.axis_cursor_enabled = (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
-
-            state.hid.last_type = category;
-
-            if (state.hid.mouse_enabled)
+            if (!state.hid.controller_enabled)
             {
-                // SPDLOG_DEBUG("Showing cursor");
-                ShowCursor();
-
-                // clear focus of all nodes (to make sure no lingering focus graphics remain)
-                auto view = globals::registry.view<transform::GameObject, ui::UIConfig>();
-                for (auto entity : view)
-                {
-                    auto &node = view.get<transform::GameObject>(entity);
-                    node.state.isBeingFocused = false;
-                }
-            }
-            else
-            {
-                // SPDLOG_DEBUG("Hiding cursor");
+                SPDLOG_DEBUG("Switching to controller input: {}", magic_enum::enum_name(category));
                 HideCursor();
             }
+
+            state.hid.controller_enabled = true;
+            state.hid.last_type = category;
+            state.hid.dpad_enabled = true;
+            state.hid.pointer_enabled = (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
+            state.hid.axis_cursor_enabled = (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
+            state.hid.mouse_enabled = false;
+            state.hid.touch_enabled = false;
+            return;
         }
-        if (state.hid.controller_enabled == false)
+
+        //----------------------------------------------------------
+        // MOUSE / KEYBOARD / TOUCH INPUT: Disable controller mode
+        //----------------------------------------------------------
+        if (isMouseKeyboardTouch && state.hid.controller_enabled)
         {
-            state.gamepad.console = "";
-            state.gamepad.object = "";
-            state.gamepad.mapping = "";
-            state.gamepad.name = "";
+            SPDLOG_DEBUG("Switching away from controller input to {}", magic_enum::enum_name(category));
+
+            state.hid.controller_enabled = false;
+            state.hid.last_type = category;
+            state.hid.dpad_enabled = (category == InputDeviceInputCategory::KEYBOARD);
+            state.hid.pointer_enabled = (category == InputDeviceInputCategory::MOUSE || category == InputDeviceInputCategory::TOUCH);
+            state.hid.mouse_enabled = (category == InputDeviceInputCategory::MOUSE);
+            state.hid.touch_enabled = (category == InputDeviceInputCategory::TOUCH);
+            state.hid.axis_cursor_enabled = false;
+
+            // clear controller metadata
+            state.gamepad.console.clear();
+            state.gamepad.object.clear();
+            state.gamepad.mapping.clear();
+            state.gamepad.name.clear();
+
+            // restore cursor
+            ShowCursor();
+
+            // unfocus UI
+            auto view = globals::registry.view<transform::GameObject, ui::UIConfig>();
+            for (auto entity : view)
+                view.get<transform::GameObject>(entity).state.isBeingFocused = false;
         }
-
-        // if NONE is passed,
-
-        // if controller is enabled,
     }
+
 
     auto UpdateUISprites(const std::string &console_type) -> void
     {
@@ -1033,12 +1138,15 @@ namespace input
                 // Update UI elements based on console type (e.g., sprites)
                 UpdateUISprites(state.gamepad.console);
             }
+            
+            state.gamepad.id = gamepadID;
+
         }
     }
 
     auto SetCurrentCursorPosition(entt::registry &registry, InputState &state) -> void
     {
-        if (state.hid.mouse_enabled || state.hid.touch_enabled)
+        if ((state.hid.mouse_enabled || state.hid.touch_enabled) && !state.hid.controller_enabled)
         {
             // TODO: document focus_interrupt, rename
             state.focus_interrupt = false;
@@ -1049,7 +1157,7 @@ namespace input
                 state.cursor_focused_target = entt::null;
             }
             // set cursor position to mouse position, derive cursor transform
-            state.cursor_position = GetMousePosition();
+            state.cursor_position = globals::GetScaledMousePosition();
 
             auto &transform = registry.get<transform::Transform>(globals::cursor);
             transform.setActualX(state.cursor_position.x);
@@ -1210,6 +1318,20 @@ namespace input
 
             return;
         }
+        
+        // Update from hardware mouse if mouse is active
+        if (state.hid.mouse_enabled)
+        {
+            Vector2 mousePos = globals::GetScaledMousePosition();
+            state.cursor_position = mousePos;
+
+            auto &transform = registry.get<transform::Transform>(globals::cursor);
+            transform.setActualX(mousePos.x);
+            transform.setActualY(mousePos.y);
+            transform.setVisualX(mousePos.x);
+            transform.setVisualY(mousePos.y);
+            return;
+        }
 
         if (state.cursor_focused_target != entt::null && registry.valid(state.cursor_focused_target))
         {
@@ -1263,9 +1385,9 @@ namespace input
     {
         InputDeviceInputCategory axisInterpretation = InputDeviceInputCategory::NONE;
 
-        // hack to ensure mouse state isn't written over
-        if (state.hid.controller_enabled == false)
-            axisInterpretation = InputDeviceInputCategory::MOUSE;
+        // // hack to ensure mouse state isn't written over
+        // if (state.hid.controller_enabled == false)
+        //     axisInterpretation = InputDeviceInputCategory::MOUSE;
 
         // Reset axis button states
         for (auto &[key, axisButton] : state.axis_buttons)
@@ -1462,18 +1584,19 @@ namespace input
             { // A button (xbox)
                 if (state.cursor_focused_target != entt::null)
                 {
-                    auto &focusedNode = registry.get<transform::GameObject>(state.cursor_focused_target);
-                    auto &focusedUIConfig = registry.get<ui::UIConfig>(state.cursor_focused_target);
-                    if (focusedUIConfig.focusArgs->type == "slider" &&
-                        !state.hid.mouse_enabled && !state.hid.axis_cursor_enabled)
-                    {
-                        // Do nothing
-                    }
-                    else
-                    {
-                        // Trigger left cursor press
-                        ProcessLeftMouseButtonPress(registry, state); // Trigger left cursor press
-                    }
+                    // FIXME: patching this out for now. 
+                    // auto &focusedNode = registry.get<transform::GameObject>(state.cursor_focused_target);
+                    // auto &focusedUIConfig = registry.get<ui::UIConfig>(state.cursor_focused_target);
+                    // if (focusedUIConfig.focusArgs->type == "slider" &&
+                    //     !state.hid.mouse_enabled && !state.hid.axis_cursor_enabled)
+                    // {
+                    //     // Do nothing
+                    // }
+                    // else
+                    // {
+                    //     // Trigger left cursor press
+                    //     ProcessLeftMouseButtonPress(registry, state); // Trigger left cursor press
+                    // }
                 }
                 else
                 {
@@ -1786,9 +1909,6 @@ namespace input
         // Use quadtree broad-phase + precise collision check
         auto entitiesAtCursor = transform::FindAllEntitiesAtPoint(cursor_trans, &camera_manager::Get("world_camera")->cam);
 
-        // Clear previous collision state
-        state.nodes_at_cursor.clear();
-        state.collision_list.clear();
         // remove component from all entities
         registry.view<CollisionAtCursorFlag>().each([&registry](entt::entity e)
                                                     { registry.remove<CollisionAtCursorFlag>(e); });
@@ -2159,6 +2279,19 @@ namespace input
     // focus only works for controller input, when focus interrupt is not enabled, and when the game is not paused, and the input isn't locked.
     void UpdateFocusForRelevantNodes(entt::registry &registry, InputState &state, std::optional<std::string> dir)
     {
+        
+        // -----------------------------------------------------------------------------
+        // Controller override integration
+        // -----------------------------------------------------------------------------
+        if (state.controllerNavOverride)
+        {
+            state.controllerNavOverride = false; // consume flag
+            if (registry.valid(state.cursor_focused_target)) {
+                auto &focused_node = registry.get<transform::GameObject>(state.cursor_focused_target);
+                focused_node.state.isBeingFocused = true;
+            }
+            return;
+        }
 
         state.cursor_prev_focused_target = state.cursor_focused_target;
 
@@ -2452,6 +2585,7 @@ namespace input
 
     bool CaptureFocusedInput(entt::registry &registry, InputState &state, const std::string inputType, GamepadButton button, float dt)
     {
+        return false; // temporarily disable
         bool ret = false;
         entt::entity focused = state.cursor_focused_target;
         bool externButton = false; // not d-pad
@@ -2753,7 +2887,9 @@ namespace input
     auto action_pressed (InputState &s, const std::string &a) -> bool  { return s.actions[a].pressed; }
     auto action_released(InputState &s, const std::string &a) -> bool  { return s.actions[a].released; }
     auto action_down    (InputState &s, const std::string &a) -> bool  { return s.actions[a].down; }
-    auto action_value   (InputState &s, const std::string &a) -> float { return s.actions[a].value; }
+    auto action_value   (InputState &s, const std::string &a) -> float { 
+        return s.actions[a].value; 
+    }
 
     auto start_rebind(InputState &s, const std::string &action, std::function<void(bool, ActionBinding)> cb) -> void {
         s.rebind_action = action;
@@ -2784,6 +2920,18 @@ namespace input
 
         // Sol2 binding for input::InputState struct
         auto &L = lua;
+        
+        L.new_usertype<HIDFlags>("HIDFlags",
+                                  sol::constructors<sol::types<>>(),
+                                  "last_type", &HIDFlags::last_type,
+                                  "dpad_enabled", &HIDFlags::dpad_enabled,
+                                  "pointer_enabled", &HIDFlags::pointer_enabled,
+                                  "touch_enabled", &HIDFlags::touch_enabled,
+                                  "controller_enabled", &HIDFlags::controller_enabled,
+                                  "mouse_enabled", &HIDFlags::mouse_enabled,
+                                  "axis_cursor_enabled", &HIDFlags::axis_cursor_enabled);
+        
+        
         auto inputStateType = L.new_usertype<input::InputState>("InputState",
                                           sol::no_constructor,
                                           // Cursor targets and interaction
@@ -2865,7 +3013,9 @@ namespace input
 
                                           // Cursor context & HID flags
                                           "cursor_context", &input::InputState::cursor_context,
-                                          "hid", &input::InputState::hid,
+                                          "hid", sol::property([](input::InputState &s) -> HIDFlags& {
+    return s.hid;
+}),
 
                                           // Gamepad config
                                           "gamepad", &input::InputState::gamepad,
@@ -3105,6 +3255,11 @@ namespace input
 
         auto in = lua.create_named_table("input");
 
+        // make function for testing if gamepad enabled
+        in.set_function("isGamepadEnabled", []() -> bool {
+            return globals::inputState.hid.controller_enabled;
+        });
+        
         // TODO: need to expose the enums too
 
         // Keyboard
@@ -3112,13 +3267,19 @@ namespace input
         in.set_function("isKeyPressed", &IsKeyPressed);
         in.set_function("isKeyReleased", &IsKeyReleased);
         in.set_function("isKeyUp", &IsKeyUp);
+        
+    
 
         // Mouse
         in.set_function("isMouseDown", &IsMouseButtonDown);
         in.set_function("isMousePressed", &IsMouseButtonPressed);
         in.set_function("isMouseReleased", &IsMouseButtonReleased);
-        in.set_function("getMousePos", &GetMousePosition);
+        in.set_function("getMousePos", &globals::GetScaledMousePosition);
         in.set_function("getMouseWheel", &GetMouseWheelMove);
+        
+        in.set_function("updateCursorFocus", []() {
+            UpdateCursor(globals::inputState, globals::registry);
+        });
 
         // Gamepad
         in.set_function("isPadConnected", &IsGamepadAvailable);
@@ -3537,7 +3698,14 @@ namespace input
                 cb(ok, out);
             });
         });
-
+        
+        rec.record_free_function(inputPath, MethodDef{
+            "updateCursorFocus",
+            "---@return nil",
+            "Update cursor focus based on current input state.",
+            /*is_static=*/true,
+            /*is_overload=*/false
+        });
 
         // Optional BindingRecorder docs
         

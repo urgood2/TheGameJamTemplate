@@ -126,6 +126,9 @@ PhysicsWorld::PhysicsWorld(entt::registry *registry, float meter,
                            float gravityX, float gravityY) {
   space = cpSpaceNew();
   cpSpaceSetUserData(space, this);
+  
+  cpSpaceSetCollisionSlop(space, 0.0f);
+
 
   cpSpaceSetGravity(space, cpv(gravityX, gravityY));
   cpSpaceSetIterations(space, 10);
@@ -166,7 +169,27 @@ PhysicsWorld::~PhysicsWorld() {
 
 }
 
+void CapturePostPhysicsPositions(entt::registry& R) {
+    R.view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
+        if (auto* body = CC.body.get()) {
+            CC.bodyPos = {static_cast<float>(cpBodyGetPosition(body).x),
+                          static_cast<float>(cpBodyGetPosition(body).y)};
+            CC.bodyRot = static_cast<float>(cpBodyGetAngle(body));
+        }
+    });
+}
+
+
 void PhysicsWorld::Update(float deltaTime) {
+  // Update interpolation cache before stepping
+  globals::registry.view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
+      if (auto* body = CC.body.get()) {
+          CC.prevPos = {static_cast<float>(cpBodyGetPosition(body).x),
+                        static_cast<float>(cpBodyGetPosition(body).y)};
+          CC.prevRot = static_cast<float>(cpBodyGetAngle(body));
+      }
+  });
+  
   cpSpaceStep(space, deltaTime);
 #ifndef NDEBUG
   cpSpaceEachShape(
@@ -177,6 +200,9 @@ void PhysicsWorld::Update(float deltaTime) {
       },
       nullptr);
 #endif
+  
+  // now update
+  CapturePostPhysicsPositions(*registry);
 }
 
 void PhysicsWorld::PostUpdate() {
@@ -205,10 +231,10 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
   cpShape *shapeA, *shapeB;
   cpArbiterGetShapes(arb, &shapeA, &shapeB);
 
-  SPDLOG_DEBUG("[Begin] A sensor? {}  B sensor? {}  A tag={}  B tag={}",
-               (int)cpShapeGetSensor(shapeA), (int)cpShapeGetSensor(shapeB),
-               GetTagFromCategory(cpShapeGetFilter(shapeA).categories),
-               GetTagFromCategory(cpShapeGetFilter(shapeB).categories));
+  // SPDLOG_DEBUG("[Begin] A sensor? {}  B sensor? {}  A tag={}  B tag={}",
+  //              (int)cpShapeGetSensor(shapeA), (int)cpShapeGetSensor(shapeB),
+  //              GetTagFromCategory(cpShapeGetFilter(shapeA).categories),
+  //              GetTagFromCategory(cpShapeGetFilter(shapeB).categories));
 
   bool isTriggerA = cpShapeGetSensor(shapeA);
   bool isTriggerB = cpShapeGetSensor(shapeB);
@@ -404,7 +430,25 @@ void PhysicsWorld::EnableCollisionBetween(
     masks.push_back(collisionTags[tag].category);
   }
   SPDLOG_DEBUG("Collision {} '{}' <-> {}", "enable", tag1, fmt::join(tags, ", "));
+  
+  auto pushFiltersFor = [&](const std::string &tag) {
+    if (!collisionTags.contains(tag)) return;
+    const int targetCategory = collisionTags[tag].category;
 
+    registry->view<ColliderComponent>().each([&](auto, auto &c) {
+        ForEachShape(c, [&](cpShape *s) {
+            const auto f = cpShapeGetFilter(s);
+            if ((int)f.categories == targetCategory) {
+                ApplyCollisionFilter(s, tag);
+                cpShapeSetCollisionType(s, _tagToCollisionType[tag]);
+            }
+        });
+    });
+};
+
+pushFiltersFor(tag1);
+for (const auto &t : tags)
+    pushFiltersFor(t);
 }
 
 void PhysicsWorld::DisableCollisionBetween(
@@ -417,6 +461,39 @@ void PhysicsWorld::DisableCollisionBetween(
   }
   SPDLOG_DEBUG("Collision {} '{}' x {}", "disable", tag1, fmt::join(tags, ", "));
 }
+
+void PhysicsWorld::RemovePhysics(entt::entity e, bool removeComponent) {
+    if (!registry->all_of<ColliderComponent>(e))
+        return;
+
+    auto &c = registry->get<ColliderComponent>(e);
+
+    // Remove all shapes from the space
+    if (c.shape) {
+        cpSpaceRemoveShape(space, c.shape.get());
+        c.shape.reset();
+    }
+
+    for (auto &s : c.extraShapes) {
+        if (s.shape)
+            cpSpaceRemoveShape(space, s.shape.get());
+    }
+    c.extraShapes.clear();
+
+    // Remove the body from the space
+    if (c.body) {
+        cpSpaceRemoveBody(space, c.body.get());
+        c.body.reset();
+    }
+
+    SPDLOG_DEBUG("RemovePhysics: entity={} physics removed", (uint32_t)e);
+
+    // Optionally remove the component entirely
+    if (removeComponent) {
+        registry->remove<ColliderComponent>(e);
+    }
+}
+
 
 void PhysicsWorld::EnableTriggerBetween(const std::string &a,
                                         const std::vector<std::string> &bs) {
@@ -784,21 +861,7 @@ void PhysicsWorld::PrintCollisionTags() {
   }
 }
 
-void PhysicsWorld::AddCollisionTag(const std::string &tag) {
-  if (collisionTags.find(tag) != collisionTags.end())
-    return;
 
-  int category = 1;
-  while (categoryToTag.contains(category))
-    category <<= 1;
-
-  collisionTags[tag] = {category, {}, {}};
-  triggerTags[tag] = {category, {}, {}};
-  categoryToTag[category] = tag;
-  _tagToCollisionType[tag] = _nextCollisionType++;
-
-  EnsureWildcardInstalled(_tagToCollisionType[tag]);
-}
 
 void PhysicsWorld::RemoveCollisionTag(const std::string &tag) {
   if (!collisionTags.contains(tag))
@@ -822,29 +885,54 @@ void PhysicsWorld::RemoveCollisionTag(const std::string &tag) {
 
 void PhysicsWorld::UpdateCollisionMasks(
     const std::string &tag, const std::vector<std::string> &collidableTags) {
-  if (!collisionTags.contains(tag))
-    return;
+  
+  auto it = collisionTags.find(tag);
+  if (it == collisionTags.end()) return;
 
-  collisionTags[tag].masks.clear();
+  auto &ct = it->second;
+  // ct.masks.clear();
+
   for (const auto &t : collidableTags) {
     if (collisionTags.contains(t))
-      collisionTags[tag].masks.push_back(collisionTags[t].category);
+      ct.masks.push_back(collisionTags[t].category);
   }
 
-  const int targetCategory = collisionTags[tag].category;
+  const int targetCategory = ct.category;
 
   registry->view<ColliderComponent>().each([&](auto, auto &c) {
-    ForEachShape(c, [&](cpShape *s) {
-      const auto f = cpShapeGetFilter(s);
-      if ((int)f.categories == targetCategory) {
-        ApplyCollisionFilter(s, tag);
-        cpShapeSetCollisionType(s, _tagToCollisionType[tag]);
-      }
-    });
-  });
-  
-  SPDLOG_DEBUG("Masks for '{}': [{}]", tag, fmt::join(collisionTags[tag].masks, ", "));
+    // Only update shapes that belong to this tag
+    if (c.tag != tag) return;
 
+    // --- Main shape ---
+    ForEachShape(c, [&](cpShape *s) {
+      ApplyCollisionFilter(s, tag);
+      cpShapeSetCollisionType(s, _tagToCollisionType[tag]);
+    });
+
+    // --- Extra shapes (if any) ---
+    for (auto &sub : c.extraShapes) {
+      const std::string &subTag = sub.tag.empty() ? tag : sub.tag;
+      ApplyCollisionFilter(sub.shape.get(), subTag);
+      cpShapeSetCollisionType(sub.shape.get(), _tagToCollisionType[subTag]);
+    }
+  });
+
+  SPDLOG_DEBUG("Masks for '{}': [{}]", tag,
+               fmt::join(ct.masks, ", "));
+}
+
+void PhysicsWorld::ReapplyAllFilters() {
+  registry->view<ColliderComponent>().each([&](auto, auto &c) {
+    const std::string &mainTag = c.tag;
+    ApplyCollisionFilter(c.shape.get(), mainTag);
+    cpShapeSetCollisionType(c.shape.get(), _tagToCollisionType[mainTag]);
+
+    for (auto &sub : c.extraShapes) {
+      const std::string &t = sub.tag.empty() ? mainTag : sub.tag;
+      ApplyCollisionFilter(sub.shape.get(), t);
+      cpShapeSetCollisionType(sub.shape.get(), _tagToCollisionType[t]);
+    }
+  });
 }
 
 void PhysicsWorld::ApplyCollisionFilter(cpShape *shape, const std::string &tag) {
@@ -861,15 +949,25 @@ void PhysicsWorld::ApplyCollisionFilter(cpShape *shape, const std::string &tag) 
   }
 
   cpShapeFilter filter = {
- 0,
- static_cast<cpBitmask>(ct.category),
- maskBits
+      0,
+      static_cast<cpBitmask>(ct.category),
+      maskBits
   };
   cpShapeSetFilter(shape, filter);
 
-  SPDLOG_TRACE("ApplyFilter shape={} tag='{}' cat={:#x} mask={:#x}",
+  // ✅ ALSO set the Chipmunk collision type here:
+  if (auto typeIt = _tagToCollisionType.find(tag);
+      typeIt != _tagToCollisionType.end()) {
+      cpShapeSetCollisionType(shape, typeIt->second);
+  } else {
+      SPDLOG_WARN("ApplyCollisionFilter: tag '{}' has no collisionType, defaulting to 0", tag);
+      cpShapeSetCollisionType(shape, 0);
+  }
+
+  SPDLOG_TRACE("ApplyFilter shape={} tag='{}' cat={:#x} mask={:#x} type={}",
                SID(shape), tag,
-               (unsigned)filter.categories, (unsigned)filter.mask);
+               (unsigned)filter.categories, (unsigned)filter.mask,
+               (int)cpShapeGetCollisionType(shape));
 }
 
 std::vector<RaycastHit> PhysicsWorld::Raycast(float x1, float y1, float x2,
@@ -1201,6 +1299,86 @@ void PhysicsWorld::ApplyForce(entt::entity entity, float forceX, float forceY) {
                                cpBodyGetPosition(collider.body.get()));
 }
 
+void PhysicsWorld::AddCollisionTag(const std::string &tag) {
+    // Already exists? nothing to do.
+    if (collisionTags.contains(tag))
+        return;
+
+    // --- 1. Allocate unique category bit ---
+    int category = 1;
+    while (categoryToTag.contains(category)) {
+        category <<= 1;
+        if (category == 0) {
+            SPDLOG_ERROR("AddCollisionTag: ran out of category bits!");
+            category = 1; // fallback
+            break;
+        }
+    }
+
+    // --- 2. Allocate a new unique collisionType ---
+    if (_nextCollisionType == 0)
+        _nextCollisionType = 1; // reserve 0 for default/invalid
+    cpCollisionType newType = _nextCollisionType++;
+
+    // --- 3. Store mappings ---
+    CollisionTag ct;
+    ct.category = category;
+    collisionTags[tag] = ct;
+    triggerTags[tag] = ct;
+
+    categoryToTag[category] = tag;
+    _tagToCollisionType[tag] = newType;
+    
+    // optional: retroactively apply type/filter to any existing shapes with this tag
+    registry->view<ColliderComponent>().each([&](auto, auto &c) {
+        if (c.tag != tag) return;
+        ForEachShape(c, [&](cpShape *s) {
+            ApplyCollisionFilter(s, tag);
+        });
+    });
+
+    // --- 4. Install wildcard handler (if you use wildcard behavior) ---
+    EnsureWildcardInstalled(newType);
+
+    SPDLOG_INFO("AddCollisionTag: '{}' -> category={:#x}, type={}",
+                tag, category, (int)newType);
+                
+                
+}
+
+void PhysicsWorld::RegisterPairBegin(const std::string& a, const std::string& b, sol::protected_function fn) {
+    cpCollisionType ta = TypeForTag(a);
+    cpCollisionType tb = TypeForTag(b);
+    // normalize key order
+    const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
+    _luaPairHandlers[key].begin = std::move(fn);
+    EnsurePairInstalled(ta, tb);
+    SPDLOG_INFO("[REGISTER BEGIN] '{}'={} '{}'={} key={}", a, (int)ta, b, (int)tb, key);
+}
+
+
+void PhysicsWorld::RegisterPairSeparate(const std::string& a,
+                                        const std::string& b,
+                                        sol::protected_function fn) {
+    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
+    _luaPairHandlers[PairKey(ta, tb)].separate = std::move(fn);
+    EnsurePairInstalled(ta, tb);
+}
+
+void PhysicsWorld::RegisterWildcardBegin(const std::string& tag,
+                                         sol::protected_function fn) {
+    cpCollisionType t = TypeForTag(tag);
+    _luaWildcardHandlers[t].begin = std::move(fn);
+    EnsureWildcardInstalled(t);
+}
+
+void PhysicsWorld::RegisterWildcardSeparate(const std::string& tag,
+                                            sol::protected_function fn) {
+    cpCollisionType t = TypeForTag(tag);
+    _luaWildcardHandlers[t].separate = std::move(fn);
+    EnsureWildcardInstalled(t);
+}
+
 void PhysicsWorld::RegisterPairPreSolve(const std::string &a,
                                         const std::string &b,
                                         sol::protected_function fn) {
@@ -1255,15 +1433,18 @@ void PhysicsWorld::EnsureWildcardInstalled(cpCollisionType t) {
 }
 
 void PhysicsWorld::EnsurePairInstalled(cpCollisionType ta, cpCollisionType tb) {
-  const uint64_t key = PairKey(ta, tb);
+  const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
   if (_installedPairs.count(key))
     return;
   cpCollisionHandler *h = cpSpaceAddCollisionHandler(space, ta, tb);
-  h->userData = this;
-  h->beginFunc = &PhysicsWorld::C_Begin;
-  h->preSolveFunc = &PhysicsWorld::C_PreSolve;
-  h->postSolveFunc = &PhysicsWorld::C_PostSolve;
-  h->separateFunc = &PhysicsWorld::C_Separate;
+  cpCollisionHandler *h2 = cpSpaceAddCollisionHandler(space, tb, ta);
+  for (cpCollisionHandler* hh : {h, h2}) {
+      hh->userData = this;
+      hh->beginFunc = &PhysicsWorld::C_Begin;
+      hh->preSolveFunc = &PhysicsWorld::C_PreSolve;
+      hh->postSolveFunc = &PhysicsWorld::C_PostSolve;
+      hh->separateFunc = &PhysicsWorld::C_Separate;
+  }
   _installedPairs.insert(key);
 }
 
@@ -1275,6 +1456,7 @@ void PhysicsWorld::C_Separate(cpArbiter *a, cpSpace *, void *d) {
 }
 
 cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
+  
 
   cpShape *shapeA, *shapeB;
   cpArbiterGetShapes(arb, &shapeA, &shapeB);
@@ -1286,6 +1468,8 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
   cpCollisionType ta = cpShapeGetCollisionType(sa);
   cpCollisionType tb = cpShapeGetCollisionType(sb);
   const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
+  
+  SPDLOG_INFO("[ON_BEGIN] ta={} tb={} key={}", (int)ta, (int)tb, key);
   
   LuaArbiter luaArb{arb};
 
@@ -1322,11 +1506,11 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
       accept = false;
   }
   
-  SPDLOG_DEBUG("Begin: sa={} sb={} ta={} tb={} tags=({}, {}) sensors=({}, {}) accept={}",
-             SID(sa), SID(sb), (int)ta, (int)tb,
-             TagOf(this, sa), TagOf(this, sb),
-             (int)cpShapeGetSensor(sa), (int)cpShapeGetSensor(sb),
-             accept);
+  // SPDLOG_DEBUG("Begin: sa={} sb={} ta={} tb={} tags=({}, {}) sensors=({}, {}) accept={}",
+  //            SID(sa), SID(sb), (int)ta, (int)tb,
+  //            TagOf(this, sa), TagOf(this, sb),
+  //            (int)cpShapeGetSensor(sa), (int)cpShapeGetSensor(sb),
+  //            accept);
 
   return accept ? cpTrue : cpFalse;
 }
@@ -1340,8 +1524,8 @@ void PhysicsWorld::OnSeparate(cpArbiter *arb) {
   cpCollisionType tb = cpShapeGetCollisionType(sb);
   const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
   
-  SPDLOG_DEBUG("Separate: sa={} sb={} ta={} tb={} tags=({}, {})",
-             SID(sa), SID(sb), (int)ta, (int)tb, TagOf(this, sa), TagOf(this, sb));
+  // SPDLOG_DEBUG("Separate: sa={} sb={} ta={} tb={} tags=({}, {})",
+  //            SID(sa), SID(sb), (int)ta, (int)tb, TagOf(this, sa), TagOf(this, sb));
 
   LuaArbiter luaArb{arb};
 
@@ -1394,6 +1578,11 @@ void PhysicsWorld::SetVelocity(entt::entity entity, float velocityX,
                                float velocityY) {
   auto &collider = registry->get<ColliderComponent>(entity);
   cpBodySetVelocity(collider.body.get(), cpv(velocityX, velocityY));
+}
+
+cpVect PhysicsWorld::GetVelocity(entt::entity entity) {
+  auto &collider = registry->get<ColliderComponent>(entity);
+  return cpBodyGetVelocity(collider.body.get());
 }
 
 void PhysicsWorld::Align(entt::entity entity,
@@ -1475,7 +1664,7 @@ void PhysicsWorld::AccelerateTowardMouse(entt::entity entity,
                                          float acceleration, float maxSpeed) {
   auto &collider = registry->get<ColliderComponent>(entity);
 
-  Vector2 mousePos = GetMousePosition();
+  Vector2 mousePos = globals::GetScaledMousePosition();
   cpVect currentPos = cpBodyGetPosition(collider.body.get());
   cpVect toMouse = cpv(mousePos.x - currentPos.x, mousePos.y - currentPos.y);
   float angle = atan2(toMouse.y, toMouse.x);
@@ -1536,7 +1725,7 @@ void PhysicsWorld::RotateTowardPoint(entt::entity entity, float targetX,
 void PhysicsWorld::RotateTowardMouse(entt::entity entity, float lerpValue) {
   auto &collider = registry->get<ColliderComponent>(entity);
 
-  Vector2 mousePos = GetMousePosition();
+  Vector2 mousePos = globals::GetScaledMousePosition();
   cpVect currentPos = cpBodyGetPosition(collider.body.get());
   float targetAngle =
       atan2(mousePos.y - currentPos.y, mousePos.x - currentPos.x);
@@ -1606,7 +1795,7 @@ void PhysicsWorld::MoveTowardPoint(entt::entity entity, float targetX,
 
 void PhysicsWorld::MoveTowardMouse(entt::entity entity, float speed,
                                    float maxTime) {
-  Vector2 mousePos = GetMousePosition();
+  Vector2 mousePos = globals::GetScaledMousePosition();
   MoveTowardPoint(entity, mousePos.x, mousePos.y, speed, maxTime);
 }
 
@@ -1879,6 +2068,8 @@ void PhysicsWorld::AddScreenBounds(float xMin, float yMin, float xMax,
   cpBody *staticBody = cpSpaceGetStaticBody(space);
   cpShapeFilter filter = CP_SHAPE_FILTER_ALL;
   cpCollisionType type = TypeForTag(collisionTag);
+  
+  
 
   auto makeWall = [&](float ax, float ay, float bx, float by) {
     cpShape *seg =

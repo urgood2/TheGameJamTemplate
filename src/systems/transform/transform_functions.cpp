@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
+#include "util/common_headers.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -21,7 +22,7 @@
 #include "systems/scripting/binding_recorder.hpp"
 
 #include "core/globals.hpp"
-#include "types.hpp"
+#include "sol/types.hpp"
 
 namespace transform
 {
@@ -136,7 +137,8 @@ namespace transform
         // emplace a collision filter component by default
         auto &collisionFilter = registry->emplace<collision::CollisionFilter>(e);
         
-        // default gamestate tag
+        // empty gamestate tag by default
+        // registry->emplace<entity_gamestate_management::StateTag>(e);
         entity_gamestate_management::assignDefaultStateTag(e);
 
         // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag
@@ -242,7 +244,7 @@ namespace transform
             };
         };
         
-        // ZoneScopedN("AlignToMaster");
+        ZONE_SCOPED("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
         auto &role = registry->get<InheritedProperties>(e);
         auto &transform = registry->get<Transform>(e);
@@ -415,7 +417,7 @@ namespace transform
         //     SPDLOG_DEBUG("MoveWithMaster called for entity {} (root)", (int)e);
         // }
         
-        // ZoneScopedN("MoveWithMaster");
+        ZONE_SCOPED("MoveWithMaster");
         Vector2 tempRotatedOffset{};
         Vector2 tempIntermediateOffsets{};
         float tempAngleCos = 0.0f;
@@ -891,7 +893,7 @@ namespace transform
     {
         auto registry = &globals::registry;
         
-        // ZoneScopedN("SyncPerfectlyToMaster");
+        ZONE_SCOPED("SyncPerfectlyToMaster");
 
         // copy all actual values from parent
         selfTransform.setActualX(parentTransform.getActualX());
@@ -932,7 +934,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         if (!selfTransform.dynamicMotion) // LATER: handle no updating if dynamicMotion is not active? Selective disabling for children, for example
             return;
 
-        if (dynamicMotion->endTime < GetTime())
+        if (dynamicMotion->endTime < main_loop::getTime())
         {
             // SPDLOG_DEBUG("Dynamic motion ended");
             dynamicMotion = std::nullopt;
@@ -940,15 +942,15 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
 
         auto amplitude = dynamicMotion->scaleAmount;
-        auto oscillation = sin(51.2 * (GetTime() - dynamicMotion->startTime));
-        float easing = pow(std::max(0.0, ((dynamicMotion->endTime - GetTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.8f);
+        auto oscillation = sin(51.2 * (main_loop::getTime() - dynamicMotion->startTime));
+        float easing = pow(std::max(0.0f, ((dynamicMotion->endTime - main_loop::getTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.8f);
 
         dynamicMotion->scale = amplitude * oscillation * easing;
 
         amplitude = dynamicMotion->rotationAmount;
-        oscillation = sin(46.3 * (GetTime() - dynamicMotion->startTime));
+        oscillation = sin(46.3 * (main_loop::getTime() - dynamicMotion->startTime));
         // Use a higher exponent for rotation, making it even snappier
-        easing = pow(std::max(0.0, ((dynamicMotion->endTime - GetTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.1f);
+        easing = pow(std::max(0.0f, ((dynamicMotion->endTime - main_loop::getTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.1f);
         dynamicMotion->rotation = amplitude * oscillation * easing;
     }
      
@@ -979,7 +981,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // SPDLOG_DEBUG("Injecting dynamic motion for entity {} with amount: {}, rotationAmount: {}", static_cast<int>(e), amount, rotationAmount);
         AssertThat(amount >= 0 && amount <= 1, Is().EqualTo(true));
         
-        float startTime = GetTime();
+        float startTime = main_loop::getTime();
         float endTime = startTime + 0.4f; // 0.4 seconds
 
         auto &selfTransform = registry->get<Transform>(e);
@@ -1071,7 +1073,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         if (offset)
         {
             // SPDLOG_DEBUG("AssignRole called for entity {} with offset x: {}, y: {}", static_cast<int>(e), offset->x, offset->y);
-            role.offset = offset.value();
+            // role.offset = offset.value();
+            //TODO testing
+            role.flags->extraAlignmentFinetuningOffset = offset.value();
         }
 
         role.master = parent;
@@ -1099,6 +1103,53 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
     }
     
+    void UpdateTransformMatrices(entt::registry& registry, entt::entity e)
+    {
+        ZONE_SCOPED("UpdateTransformMatrices(single)");
+
+        if (!registry.valid(e) || !registry.all_of<Transform>(e)) return;
+
+        auto &t = registry.get<Transform>(e);
+
+        const float cx = t.getVisualX() + t.getVisualW() * 0.5f;
+        const float cy = t.getVisualY() + t.getVisualH() * 0.5f;
+        const float s  = t.getVisualScaleWithHoverAndDynamicMotionReflected();
+        const float r  = (t.getVisualR() + t.rotationOffset) * DEG2RAD;
+        const float ox = t.getVisualW() * 0.5f;
+        const float oy = t.getVisualH() * 0.5f;
+
+        const float c  = cosf(r);
+        const float sn = sinf(r);
+
+        // Compose M = T(center) * R * S * T(-origin)
+        Matrix m;
+
+        m.m0  =  s * c;
+        m.m1  =  s * sn;
+        m.m2  =  0.0f;
+        m.m3  =  0.0f;
+
+        m.m4  = -s * sn;
+        m.m5  =  s * c;
+        m.m6  =  0.0f;
+        m.m7  =  0.0f;
+
+        m.m8  =  0.0f;
+        m.m9  =  0.0f;
+        m.m10 =  1.0f;
+        m.m11 =  0.0f;
+
+        // Final translation (same as T(center) * R * S * T(-origin))
+        m.m12 = cx + (-ox * s * c + oy * s * sn);
+        m.m13 = cy + (-ox * s * sn - oy * s * c);
+        m.m14 = 0.0f;
+        m.m15 = 1.0f;
+
+        t.cachedMatrix = m;
+        t.matrixDirty = false;
+    }
+
+    
     // // store in full-owning group for efficiency
     // static auto transformSpringGroup = globals::registry.group<Spring>();
     
@@ -1111,15 +1162,20 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto UpdateAllTransforms(entt::registry *registry, float dt) -> void
     {
-        // ZoneScopedN("Update all transforms");
+        ZONE_SCOPED("Update all transforms");
         
         // updateTransformCacheForAllTransforms();
         
-        static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>);
+        using namespace entity_gamestate_management;
+        
+        static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>, entt::exclude<InactiveTag>);
         
         group.each([dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
             UpdateTransform(e, dt, transform, role, node);
+            UpdateTransformMatrices(globals::registry, e);
         });
+        
+        
         
         
         // auto test = GetActualX(transformSpringGroup, registry->get<Transform>(globals::gameWorldContainerEntity));
@@ -1138,7 +1194,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     // };
     auto UpdateTransform(entt::entity e, float dt, Transform &transform, InheritedProperties &role, GameObject &node) -> void
     {
-        // ZoneScopedN("UpdateTransform");
+        ZONE_SCOPED("UpdateTransform");
         
         // if (globals::registry.any_of<ui::UIBoxComponent>(e))
         // {
@@ -1147,6 +1203,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         auto registry = &globals::registry;
 
+        //FIXME: commenting out for testing.
         if (transform.frameCalculation.lastUpdatedFrame >= main_loop::mainLoop.frame && transform.frameCalculation.alignmentChanged == false)
         {
             // SPDLOG_DEBUG("Transform already updated this frame");
@@ -1179,7 +1236,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (role.role_type == InheritedProperties::Type::RoleCarbonCopy)
         {
-            // ZoneScopedN("RoleCarbonCopy");
+            ZONE_SCOPED("RoleCarbonCopy");
             if (registry->valid(role.master))
             {
                 SyncPerfectlyToMaster(e, role.master, transform, role, *parentTransform, *parentRole);
@@ -1188,7 +1245,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::RoleInheritor)
         {
-            // ZoneScopedN("RoleInheritor");
+            ZONE_SCOPED("RoleInheritor");
             if (registry->valid(role.master) && e != role.master) // don't move with self please
             {
                 
@@ -1222,6 +1279,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                     node.debug.calculationsInProgress = true; 
 
                     MoveWithMaster(e, dt, transform, role, node);
+                    
+                    transform.markDirty(); // update matrix
                 }
             }
             
@@ -1229,7 +1288,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::PermanentAttachment)
         {
-            // ZoneScopedN("RolePermanentAttachment");
+            ZONE_SCOPED("RolePermanentAttachment");
             // ignore sync bonds
             
             if (registry->valid(role.master))
@@ -1281,7 +1340,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::RoleRoot)
         {
-            // ZoneScopedN("RoleRoot");
+            ZONE_SCOPED("RoleRoot");
             transform.frameCalculation.stationary = true;
             UpdateDynamicMotion(e, dt, transform);
             
@@ -1419,15 +1478,15 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         layer::DrawCommandSpace drawSpace = isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
         
-        // ZoneScopedN("DrawBoundingBoxAndDebugInfo");
+        ZONE_SCOPED("DrawBoundingBoxAndDebugInfo");
         // if (debugMode == false)
         //     return;
 
         auto &node = registry->get<GameObject>(e);
         node.state.isUnderOverlay = globals::under_overlay; // LATER: not sure why this is here. move elsewhere?
 
-        float currentScreenWidth = GetScreenWidth() * 1.0f;
-        float currentScreenHeight = GetScreenHeight() * 1.0f;
+        float currentScreenWidth = globals::VIRTUAL_WIDTH * 1.0f;
+        float currentScreenHeight = globals::VIRTUAL_HEIGHT * 1.0f;
 
         auto &transform = registry->get<Transform>(e);
         auto &role = registry->get<InheritedProperties>(e);
@@ -1479,7 +1538,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->y = y;
         }, 100, drawSpace);
 
-        auto scale = 1.0f;
+        auto scale = 2.0f;
         if (registry->any_of<ui::UIConfig>(e))
         {
             auto &uiConfig = registry->get<ui::UIConfig>(e);
@@ -1548,20 +1607,20 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             }, 100, drawSpace);
         }
 
-        float lineWidth = 1;
+        float lineWidth = 4;
         if (node.state.isBeingFocused)
         {
-            lineWidth = 3;
+            lineWidth = 6;
         }
 
-        Color lineColor = RED;
+        Color lineColor = YELLOW;
         if (node.state.isColliding)
         {
             lineColor = GREEN;
         }
         else
         {
-            lineColor = RED;
+            lineColor = YELLOW;
         }
 
         if (node.state.isBeingFocused)
@@ -1819,33 +1878,43 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // ——— 3) Sort by your existing layer/tree order ———
         struct OrderInfo {
             bool hasOrder = false;
+            
+            bool isScreen = false;
             entt::entity parentBox = entt::null;
-            int treeOrder  = 0;
-            int layerOrder = 0;
+            int treeOrder  = 0; // higher = front
+            int layerOrder = 0; // higher = front
         };
-        auto getInfo = [&](entt::entity e){
+        auto getInfo = [&](entt::entity e) {
             OrderInfo info;
-            auto &r = globals::registry;
+            auto& r = globals::registry;
             if (!r.valid(e)) return info;
-            if (!r.all_of<transform::GameObject, transform::InheritedProperties>(e))
-                return info;
 
-            // detect UI or world by presence of UIElementComponent
-            auto uiElem = r.try_get<ui::UIElementComponent>(e);
-            bool hasSortComp = r.any_of<transform::TreeOrderComponent, layer::LayerOrderComponent>(e);
-            if (!hasSortComp) return info;
+            info.isScreen = r.any_of<collision::ScreenSpaceCollisionMarker>(e)
+                        || r.any_of<ui::UIElementComponent>(e);
 
-            info.hasOrder = true;
-            if (uiElem) info.parentBox = uiElem->uiBox;
-            if (!r.valid(info.parentBox)) return info;
+            // Prefer entity's own z
+            if (auto loc = r.try_get<layer::LayerOrderComponent>(e))
+                { info.layerOrder = loc->zIndex; info.hasOrder = true; }
 
-            if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
-                info.treeOrder = toc->order;
-            if (auto loc = r.try_get<layer::LayerOrderComponent>(info.parentBox))
-                info.layerOrder = loc->zIndex;
+            // If it's a UI element, allow fallback to its parent box z
+            if (auto uiElem = r.try_get<ui::UIElementComponent>(e)) {
+                info.parentBox = uiElem->uiBox;
+                if (!info.hasOrder && r.valid(info.parentBox)) {
+                    if (auto locp = r.try_get<layer::LayerOrderComponent>(info.parentBox)) {
+                        info.layerOrder = locp->zIndex; info.hasOrder = true;
+                    }
+                }
+                if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
+                    info.treeOrder = toc->order; // higher in front? match your renderer
+            } else {
+                // world objects may also have TreeOrderComponent (use if you render by it)
+                if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
+                    info.treeOrder = toc->order;
+            }
 
             return info;
         };
+
 
         // cache OrderInfo for each hit
         std::unordered_map<entt::entity, OrderInfo> infoMap;
@@ -1855,23 +1924,22 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
 
         // final sort
-        std::sort(hits.begin(), hits.end(),
-            [&](entt::entity a, entt::entity b) {
-                auto &ia = infoMap[a];
-                auto &ib = infoMap[b];
+        std::sort(hits.begin(), hits.end(), [&](entt::entity a, entt::entity b){
+            const auto& ia = infoMap[a];
+            const auto& ib = infoMap[b];
 
-                // entities without any sorting info go last
-                if (ia.hasOrder != ib.hasOrder)
-                    return ia.hasOrder;
+            // 1) Screen (UI) over World
+            if (ia.isScreen != ib.isScreen) return ia.isScreen; // true first
 
-                // then by layerOrder
-                if (ia.layerOrder != ib.layerOrder)
-                    return ia.layerOrder < ib.layerOrder;
+            // 2) Higher z in front
+            if (ia.layerOrder != ib.layerOrder) return ia.layerOrder > ib.layerOrder;
 
-                // then by treeOrder
-                return ia.treeOrder < ib.treeOrder;
-            }
-        );
+            // 3) Higher tree order in front (match your renderer’s rule)
+            if (ia.treeOrder != ib.treeOrder)   return ia.treeOrder > ib.treeOrder;
+
+            // 4) Stable tiebreaker: entity id
+            return (uint32_t)a > (uint32_t)b;
+        });
 
         return hits;
     }
@@ -1995,7 +2063,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &transform = registry->get<Transform>(e);
         auto &role = registry->get<InheritedProperties>(e);
         auto &node = registry->get<GameObject>(e);
-
+        
+        if (registry->valid(node.container) == false || node.container == entt::null)
+        {
+            // SPDLOG_DEBUG("Entity {} has no valid container. Click offset not set.", static_cast<int>(e));
+            return;
+        }
         auto &containerTransform = registry->get<Transform>(node.container);
 
         tempOffsetPoint.x = point.x;
@@ -2347,17 +2420,26 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto RemoveEntity(entt::registry *registry, entt::entity e) -> void
     {
+        if (registry->valid(e) == false || e == entt::null)
+        {
+            return;
+        }
         auto &node = registry->get<GameObject>(e);
         auto &role = registry->get<InheritedProperties>(e);
 
         // node hierarchy is separate from transform parent/child hierarchy
-        if (node.children.size() > 0)
-        {
-            for (auto &entry : node.children)
-            {
-                RemoveEntity(registry, entry.second);
-            }
-        }
+        // Copy child list first to avoid iterator invalidation
+    std::vector<entt::entity> childrenCopy;
+    childrenCopy.reserve(node.children.size());
+    for (auto &entry : node.children)
+    {
+        childrenCopy.push_back(entry.second);
+    }
+
+    for (auto child : childrenCopy)
+    {
+        RemoveEntity(registry, child);
+    }
         // remove the node
         registry->destroy(e);
     }
@@ -2387,10 +2469,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             "actualR",  sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
             "visualH",  sol::property(&Transform::getVisualH, &Transform::setVisualH),
             "rotation", sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
-            "visualR",  &Transform::getVisualR,
+            "visualR",  sol::property(&Transform::getVisualR, &Transform::setVisualRotation),
             "visualRWithMotion", &Transform::getVisualRWithDynamicMotionAndXLeaning,
             "scale",    sol::property(&Transform::getActualScale, &Transform::setActualScale),
-            "visualS",  &Transform::getVisualScale,
+            "visualS",  sol::property(&Transform::getVisualScale, &Transform::setVisualScale),
             "visualSWithMotion", &Transform::getVisualScaleWithHoverAndDynamicMotionReflected,
             "xSpring", &Transform::getXSpring,
             "ySpring", &Transform::getYSpring,
@@ -2483,6 +2565,21 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         rec.record_property("AlignmentFlag", {"VERTICAL_CENTER", std::to_string(InheritedProperties::Alignment::VERTICAL_CENTER), "Align vertical centers."});
         rec.record_property("AlignmentFlag", {"VERTICAL_BOTTOM", std::to_string(InheritedProperties::Alignment::VERTICAL_BOTTOM), "Align bottom edges."});
         rec.record_property("AlignmentFlag", {"ALIGN_TO_INNER_EDGES", std::to_string(InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES), "Align to inner instead of outer edges."});
+        
+        auto& renderImmediate = rec.add_type("RenderImmediateCallback");
+        renderImmediate.doc = "Optional Lua-defined immediate draw override for entities. Allows custom drawing inside the entity's transform, optionally disabling the default sprite rendering.";
+
+        rec.record_property("RenderImmediateCallback", {"fn", "Lua function (width:number, height:number)", "The Lua drawing function. Called centered on the entity transform."});
+        rec.record_property("RenderImmediateCallback", {"disableSpriteRendering", "boolean", "If true, disables the default sprite or animation rendering for this entity."});
+
+        sol::table entity_tbl = lua.create_named_table("entity");
+        entity_tbl.set_function("set_draw_override",
+            sol::as_function([](entt::entity e, sol::protected_function fn, bool disableSprite) {
+                transform::RenderImmediateCallback cb;
+                cb.fn = std::move(fn);
+                cb.disableSpriteRendering = disableSprite;
+                globals::registry.emplace_or_replace<transform::RenderImmediateCallback>(e, std::move(cb));
+            }));
 
         // 2c) Alignment struct
         lua.new_usertype<InheritedProperties::Alignment>("Alignment",

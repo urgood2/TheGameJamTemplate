@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/globals.hpp"
 #include "util/common_headers.hpp"
 #include "systems/transform/transform_functions.hpp"
 
@@ -46,6 +47,7 @@ namespace game {
         if (ImGui::BeginTabBar("Debug variables")) {
             if (ImGui::BeginTabItem("Flags")) {
                 ImGui::Checkbox("Show Bounding Boxes & Debug Info", &globals::drawDebugInfo);
+                ImGui::Checkbox("Show physics debug draw", &globals::drawPhysicsDebug);
 
                 ImGui::Text("UI Scale:");
                 if (ImGui::BeginCombo("##uiScaleCombo", std::to_string(uiScales[currentScaleIndex]).c_str())) {

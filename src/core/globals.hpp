@@ -38,8 +38,8 @@
 #define JSON_DIAGNOSTICS 1
 #include <nlohmann/json.hpp>          // nlohmann JSON parsing
 #include <fmt/core.h>                 // https://github.com/fmtlib/fmt
-#include <boost/algorithm/string.hpp> // boost string
-#include <boost/tokenizer.hpp>        // string tokenizer
+// #include <boost/algorithm/string.hpp> // boost string
+// #include <boost/tokenizer.hpp>        // string tokenizer
 
 #include <iostream>
 #include <sstream>
@@ -98,6 +98,19 @@ class PhysicsManager;
 
 namespace globals
 {
+    
+    extern Vector2 GetScaledMousePosition();
+    
+    // Virtual design resolution (like SNKRX)
+    extern const int VIRTUAL_WIDTH;
+    extern const int VIRTUAL_HEIGHT; // steam deck resolution
+    
+    extern float finalRenderScale; // the final render scale to apply when drawing to the screen, updated each frame, letterbox adjusted
+    extern float finalLetterboxOffsetX; 
+    extern float finalLetterboxOffsetY;
+    
+    extern bool useImGUI; // set to true to use imGUI for debugging
+    
     extern std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
     
     extern std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
@@ -106,7 +119,7 @@ namespace globals
 
     extern float globalUIScaleFactor; // scale factor for UI elements
     
-    extern bool drawDebugInfo; // set to true to allow debug drawing of transforms
+    extern bool drawDebugInfo, drawPhysicsDebug; // set to true to allow debug drawing of transforms
     
     extern const float UI_PROGRESS_BAR_INSET_PIXELS; // inset for progress bar fill (the portion that fills the bar)
     
@@ -318,7 +331,7 @@ namespace globals
         float fontLoadedSize = 32.f;       // the size of the font when loaded
         float fontScale = 1.0f;            // the scale of the font when rendered
         float spacing = 1.0f;              // the horizontal spacing for the font
-        Vector2 fontRenderOffset = {2, 0}; // the offset of the font when rendered, applied to ensure text is centered correctly in ui, it is multiplied by scale when applied
+        Vector2 fontRenderOffset = {2, 5}; // the offset of the font when rendered, applied to ensure text is centered correctly in ui, it is multiplied by scale when applied
         // <— store your codepoint list if you ever need it later
         std::vector<int> codepoints;
     };

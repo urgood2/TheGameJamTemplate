@@ -1,6 +1,7 @@
 
 #include "registry_bond.hpp"
 
+#include "entt/entity/entity.hpp"
 #include "entt/entity/registry.hpp"
 #include "entt/entity/runtime_view.hpp"
 #include "meta_helper.hpp"
@@ -72,7 +73,10 @@ namespace scripting
             "create", [](entt::registry &self) { return self.create(); },
             "destroy",
             [](entt::registry &self, entt::entity entity) {
-                return self.destroy(entity);
+                if (self.valid(entity))
+                    return self.destroy(entity);
+                else
+                    return entt::to_version(entity);
             },
 
             // In open_registry, inside the entt::registry usertype

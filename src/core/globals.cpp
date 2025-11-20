@@ -33,6 +33,34 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
     
+    // Get mouse position scaled to virtual resolution so collision works regardless of window size
+    
+    Vector2 GetScaledMousePosition()
+    {
+        Vector2 m = GetMousePosition();
+
+        // Remove letterbox offset
+        m.x -= globals::finalLetterboxOffsetX;
+        m.y -= globals::finalLetterboxOffsetY;
+
+        // Undo uniform scale
+        m.x /= globals::finalRenderScale;
+        m.y /= globals::finalRenderScale;
+
+        return m;
+    }
+
+
+    
+    const int VIRTUAL_WIDTH = 1280;
+    const int VIRTUAL_HEIGHT = 800; // steam deck resolution
+    
+    float finalRenderScale = 0.f; // the final render scale to apply when drawing to the screen, updated each frame
+    float finalLetterboxOffsetX = 0.0f;
+    float finalLetterboxOffsetY = 0.0f;
+    
+    bool useImGUI = true; // set to true to use imGUI for debugging
+    
     std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
     
     std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
@@ -41,7 +69,7 @@ namespace globals {
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements
 
-    bool drawDebugInfo = false; // set to true to allow debug drawing of transforms
+    bool drawDebugInfo = false, drawPhysicsDebug = false; // set to true to allow debug drawing of transforms
     
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 
@@ -68,15 +96,17 @@ namespace globals {
     Font font{}, smallerFont{}, translationFont{};
 
     // screen dimensions
-    int screenWidth{1440}, screenHeight{900};
-    int gameWorldViewportWidth{800}, gameWorldViewportHeight{500};
+    int screenWidth{VIRTUAL_WIDTH}, screenHeight{VIRTUAL_HEIGHT};
+    int gameWorldViewportWidth{VIRTUAL_WIDTH}, gameWorldViewportHeight{VIRTUAL_HEIGHT};
 
     int worldWidth{}, worldHeight{}; // world dimensions
+    
+    
     
     // collision detection
     std::function<quadtree::Box<float>(entt::entity)> getBoxWorld = [](entt::entity e) -> quadtree::Box<float> {
         auto &transform = globals::registry.get<transform::Transform>(e);
-    
+        
         const float x = transform.getActualX();
         const float y = transform.getActualY();
         const float w = transform.getActualW();
@@ -100,8 +130,8 @@ namespace globals {
     };
     
     
-    quadtree::Box<float> uiBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the ui space bounds for the quadtree
-    quadtree::Box<float> worldBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the world bounds for the quadtree
+    quadtree::Box<float> uiBounds{-(float)globals::screenWidth, -(float)globals::screenHeight, (float)globals::screenWidth * 3, (float)globals::screenHeight * 3}; // Define the ui space bounds for the quadtree
+    quadtree::Box<float> worldBounds{-(float)globals::screenWidth, -(float)globals::screenHeight, (float)globals::screenWidth *3, (float)globals::screenHeight * 3}; // Define the world space bounds for the quadtree
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeWorld(worldBounds, getBoxWorld);
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeUI(worldBounds, getBoxWorld);
 
@@ -198,7 +228,7 @@ namespace globals {
     std::map<std::string, Color> colorsMap{};
 
     
-    float BASE_SHADOW_EXAGGERATION = 3.0f; 
+    float BASE_SHADOW_EXAGGERATION = 1.8f; 
 
     //TODO: document
     std::optional<int> REFRESH_FRAME_MASTER_CACHE{}; // used for transform calculations
@@ -252,7 +282,7 @@ namespace globals {
         // Update world mouse position
         //==============================================================================
         Vector2 mousePos = GetMousePosition();
-        Vector2 screenCenter = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        Vector2 screenCenter = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         
         // Adjust for zoom and screen center
         Vector2 zoomedPosition = {mousePos.x - screenCenter.x, mousePos.y - screenCenter.y};
@@ -271,6 +301,8 @@ namespace globals {
             rotatedPosition.y + camera2D.target.y
         };
         //==============================================================================
+        
+
     }
 
 

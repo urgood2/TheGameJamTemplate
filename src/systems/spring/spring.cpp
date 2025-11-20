@@ -1,22 +1,124 @@
 #include "spring.hpp"
 
+#include "spdlog/spdlog.h"
 #include "util/common_headers.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 
 // The arguments passed in are: the initial value of the spring, its stiffness and damping.
 namespace spring
 {
 
-    // updates all spring components in the registry
+   
+    //------------------------------------------------------------
+    // updateAllSprings – self-contained SIMD fast path
+    //------------------------------------------------------------
     auto updateAllSprings(entt::registry &registry, float deltaTime) -> void
     {
-        // ZoneScopedN("Update springs");
-        auto view = registry.view<Spring>();
+        ZONE_SCOPED("Update springs");
+        
+        // SPDLOG_INFO("Total springs: {}", registry.view<spring::Spring>().size());
+        // SPDLOG_INFO("Disabled springs: {}", registry.view<spring::SpringDisabledTag>().size());
+
+        // cap integration step size
+        constexpr float maxStep = 0.016f;
+        float effectiveDt = std::min(deltaTime, maxStep);
+        int steps = std::max(1, (int)std::ceil(deltaTime / maxStep));
+        float stepDt = deltaTime / (float)steps;
+
+        // collect view once
+        auto view = registry.view<Spring>(entt::exclude< entity_gamestate_management::InactiveTag, SpringDisabledTag>);
+        const size_t count = view.size_hint();
+        if (count == 0) return;
+
+        // Build dense SoA buffers once per frame
+        static std::vector<float> value, target, velocity, stiffness, damping;
+        if (value.capacity() < count) {
+            value.reserve(count);
+            target.reserve(count);
+            velocity.reserve(count);
+            stiffness.reserve(count);
+            damping.reserve(count);
+        }
+        value.resize(count, 0.f);
+
+        size_t i = 0;
         for (auto entity : view)
         {
-            auto &spring = view.get<Spring>(entity);
-            update(spring, deltaTime);
+            const auto &s = view.get<Spring>(entity);
+            value[i]     = s.value;
+            target[i]    = s.targetValue;
+            velocity[i]  = s.velocity;
+            stiffness[i] = s.stiffness;
+            damping[i]   = s.damping;
+            ++i;
+        }
+        
+        
+    // #if defined(__x86_64__) || defined(_M_X64)
+    //     const size_t step = 8;
+    //     const size_t aligned = count - (count % step);
+    //     for (int iter = 0; iter < steps; ++iter)
+    //     {
+    //         const __m256 vdt   = _mm256_set1_ps(stepDt);
+    //         const __m256 vneg1 = _mm256_set1_ps(-1.f);
+
+    //         size_t j = 0;
+    //         for (; j < aligned; j += step)
+    //         {
+    //             __m256 vVal = _mm256_loadu_ps(&value[j]);
+    //             __m256 vTar = _mm256_loadu_ps(&target[j]);
+    //             __m256 vVel = _mm256_loadu_ps(&velocity[j]);
+    //             __m256 vK   = _mm256_loadu_ps(&stiffness[j]);
+    //             __m256 vD   = _mm256_loadu_ps(&damping[j]);
+
+    //             __m256 vDiff = _mm256_sub_ps(vVal, vTar);
+    //             __m256 vA = _mm256_fmadd_ps(vD, vVel, _mm256_mul_ps(vK, vDiff));
+    //             vA = _mm256_mul_ps(vA, vneg1);
+    //             vA = _mm256_mul_ps(vA, vdt);
+
+    //             vVel = _mm256_add_ps(vVel, vA);
+    //             vVal = _mm256_fmadd_ps(vVel, vdt, vVal);
+
+    //             _mm256_storeu_ps(&velocity[j], vVel);
+    //             _mm256_storeu_ps(&value[j], vVal);
+    //         }
+
+    //         for (; j < count; ++j)
+    //         {
+    //             float a = -stiffness[j] * (value[j] - target[j]) - damping[j] * velocity[j];
+    //             velocity[j] += a * stepDt;
+    //             value[j] += velocity[j] * stepDt;
+    //         }
+    //     }
+    // #else
+    
+        // SPDLOG_INFO("Updating {} springs over {} steps of {} ms each", i, steps, stepDt * 1000.0f);
+
+        // generic scalar fallback (ARM, WASM)
+        for (int iter = 0; iter < steps; ++iter)
+        {
+            for (size_t j = 0; j < i; ++j)
+            {
+                float a = -stiffness[j] * (value[j] - target[j]) - damping[j] * velocity[j];
+                velocity[j] += a * stepDt;
+                value[j] += velocity[j] * stepDt;
+            }
+        }
+    // #endif
+
+        // write back to ECS
+        i = 0;
+        for (auto entity : view)
+        {
+            auto &s = view.get<Spring>(entity);
+            s.value = value[i];
+            s.velocity = velocity[i];
+            ++i;
         }
     }
+
+
+
 
     auto update(Spring &spring, float deltaTime) -> void
     {

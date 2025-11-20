@@ -1,4 +1,59 @@
 # Documentation
+- [ ] using 0 padding with ui will cause clipping issues.
+- [ ] blinking sprites
+```lua
+local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+    --                             rainComp.noDraw = not rainComp.noDraw
+```
+- [ ] using scoped transfrom render queing
+```lua
+command_buffer.queueScopedTransformCompositeRender(layers.sprites, entityA, function()
+    -- This text will render in A's local space
+    command_buffer.queueDrawText(layers.sprites, function(c)
+        c.text = "Entity A"
+        c.x = 0
+        c.y = 0
+        c.fontSize = 24
+        c.color = palette.snapToColorName("black")
+    end, z_orders.text, layer.DrawCommandSpace.World)
+
+    -- Nested transform under child entityB
+    command_buffer.queueScopedTransformCompositeRender(layers.sprites, entityB, function()
+        command_buffer.queueDrawRectangle(layers.sprites, function(c)
+            c.x = -10
+            c.y = -10
+            c.width = 20
+            c.height = 20
+            c.color = palette.snapToColorName("red")
+        end, z_orders.overlay, layer.DrawCommandSpace.World)
+    end, z_orders.overlay)
+end, z_orders.text)
+```
+- [ ] input.isGamepadEnabled()
+- [ ] note that adding update() to nodes in multiple entities will greatly slow down performance. better to use a timer or a system that processes multiple entities at once.
+- [ ] entity render override (replaces sprites but gets the shader functionality too)
+```cpp
+entity.set_draw_override(survivorEntity, function(w, h)
+    -- immediate render version of the same thing.
+    command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
+        local survivorT = registry:get(survivorEntity, Transform)
+
+        c.cx = 0 -- self centered
+        c.cy = 0
+        c.width = w
+        c.height = h
+        c.roundness = 0.5
+        c.segments = 8
+        c.topLeft = palette.snapToColorName("apricot_cream")
+        c.topRight = palette.snapToColorName("green")
+        c.bottomRight = palette.snapToColorName("green")
+        c.bottomLeft = palette.snapToColorName("apricot_cream")
+            
+        end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+    end, true) -- true disables sprite rendering
+
+```
+- [ ] Col() method for creating new colors
 - [ ] use uiboxcopmonent's onBoxResize callback to make ui elements responsive to box size changes and update alignment respective to the screen for instance
 - [ ] use optional watch field and abort hook to make goap actions interruptible/reactive to specific worldstate changes, refer to [this file](assets/scripts/ai/actions/dig_for_gold.lua)
 - [ ] document using shaders with ui elements (just use pipeline comp)

@@ -56,6 +56,20 @@ public:
         if (auto* n = nav_of(name)) n->dirty = true;
     }
     
+    void clearAllWorlds() {
+        for (auto& [h, rec] : worlds) {
+            rec.w->ClearLuaRefs();
+            rec.w.reset();
+        }
+        worlds.clear();
+    }
+    
+    void clearLuaRefsInAllWorlds() {
+        for (auto& [id, world] : worlds)
+            if (world.w) world.w->ClearLuaRefs();
+    }
+
+    
     void rebuildNavmeshFor(const std::string& worldName) {
         auto* rec = get(worldName);
         if (!rec || !rec->nav) return;

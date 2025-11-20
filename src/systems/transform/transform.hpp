@@ -29,6 +29,12 @@ namespace transform
         int layerOrder;               // zIndex of the parent box
     };
     
+    // used to replace traditional sprite rendering with a custom function from lua.
+    struct RenderImmediateCallback {
+        sol::protected_function fn;
+        bool disableSpriteRendering{true}; // disables normal image draw when true
+    };
+    
     
     // for ui elements, helps with collision ordering
     struct TreeOrderComponent {
@@ -140,6 +146,26 @@ namespace transform
 
         // If we provide a container, all nodes within that container are translated with that container as the reference frame.
         entt::entity container = entt::null; // Reference to the container entity
+        
+        
+        // ──────────────────────────────────────────────
+        // NEW SHADOW SYSTEM
+        // ──────────────────────────────────────────────
+        enum class ShadowMode {
+            SpriteBased,     // current rotating offset copy
+            GroundEllipse    // new non-rotating ellipse at feet
+        };
+
+        ShadowMode shadowMode = ShadowMode::GroundEllipse;
+
+        std::optional<float> groundShadowRadiusX;
+        std::optional<float> groundShadowRadiusY;
+
+        Color groundShadowColor = {0, 0, 0, 120}; // soft black default
+
+        float groundShadowYOffset = 0.0f;        // vertical offset
+        float groundShadowHeightFactor = 1.0f;   // scales with "height"
+
 
         std::optional<entt::entity> collisionTransform; // Reference to the transform entity that should be used for collision detection, if this particular entity should not be used
 
@@ -380,6 +406,7 @@ namespace transform
             }
         };
     };
+    
 
     // Auto-adds springs as entities to registry, which will be updated by the spring system automatically
     /**
@@ -388,6 +415,12 @@ namespace transform
     struct Transform
     {
         entt::entity self; // the entity this transform is attached to, for convenience
+        
+        // cached matrix for rendering optimizations
+        Matrix cachedMatrix;
+        bool matrixDirty = true;
+        void markDirty() { matrixDirty = true; }
+
         
         bool ignoreDynamicMotion = false; // set to true if the entity should not be affected by dynamic motion 
         bool ignoreXLeaning = false; // set to true if the entity should not be affected by x leaning (tilting based on velocity)

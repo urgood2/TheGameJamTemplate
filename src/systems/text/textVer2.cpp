@@ -1719,7 +1719,7 @@ namespace TextSystem
                                         );
                                     if (fired) {
                                         // update text created time to ensure pop-in animation is not blocked
-                                        text.createdTime = GetTime();
+                                        text.createdTime = main_loop::getTime();
                                     }
                                     break;
                                 }
@@ -1730,7 +1730,7 @@ namespace TextSystem
                                     );
                                     if (fired) {
                                         // update text created time to ensure pop-in animation is not blocked
-                                        text.createdTime = GetTime();
+                                        text.createdTime = main_loop::getTime();
                                     }
                                     else {
                                         // if not fired, block everything until they press
@@ -1764,7 +1764,7 @@ namespace TextSystem
                                         fired = true;
                                         
                                         // update text created time to ensure pop-in animation is not blocked
-                                        text.createdTime = GetTime();
+                                        text.createdTime = main_loop::getTime();
                                     }
                                     break;
                                 }
@@ -1784,7 +1784,7 @@ namespace TextSystem
                 // Apply Pop-in Animation
                 if (character.pop_in && character.pop_in < 1.0f)
                 {
-                    float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
+                    float elapsedTime = main_loop::getTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
                     if (elapsedTime > 0)
                     {
                         character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
@@ -1874,7 +1874,12 @@ namespace TextSystem
 
         void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug)
         {
-            // ZoneScopedN("TextSystem::renderText");
+            // respect screen/world space
+            bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(textEntity);
+            
+            layer::DrawCommandSpace drawSpace = isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
+            
+            ZONE_SCOPED("TextSystem::renderText");
             auto &text = globals::registry.get<Text>(textEntity);
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
             float renderScale = text.renderScale; // 🟡 Use renderScale
@@ -1882,35 +1887,35 @@ namespace TextSystem
             auto layerZIndex = layerOrder.zIndex;
 
 
-            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, layerZIndex);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, layerZIndex, drawSpace);
 
             // Apply entity-level transforms
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = textTransform.getVisualX() + textTransform.getVisualW() * 0.5f, y = textTransform.getVisualY() + textTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
                 cmd->x = x;
                 cmd->y = y;
-            }, layerZIndex);
+            }, layerZIndex, drawSpace);
                 
             if (text.applyTransformRotationAndScale)
             {
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = textTransform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = textTransform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
                     cmd->scaleX = scaleX;
                     cmd->scaleY = scaleY;
-                }, layerZIndex);
+                }, layerZIndex, drawSpace);
 
                 layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = textTransform.getVisualRWithDynamicMotionAndXLeaning()](layer::CmdRotate *cmd) {
                     cmd->angle = rotation;
-                }, layerZIndex);
+                }, layerZIndex, drawSpace);
             }
             
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -textTransform.getVisualW() * 0.5f, y = -textTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
                 cmd->x = x;
                 cmd->y = y;
-            }, layerZIndex);
+            }, layerZIndex, drawSpace);
 
 
             for (const auto &character : text.characters)
             {
-                // ZoneScopedN("TextSystem::renderText-render single character");
+                ZONE_SCOPED("TextSystem::renderText-render single character");
 
                 // if (character.isImage) 
                     // SPDLOG_DEBUG("Rendering image character: {} with size: {}x{}", character.value, character.size.x, character.size.y);
@@ -1938,14 +1943,14 @@ namespace TextSystem
                 static std::string utf8String;
                 // Convert the codepoint to UTF-8 string for rendering
                 {
-                    // ZoneScopedN("TextSystem::renderText-codepoint to utf/string conversion");
+                    ZONE_SCOPED("TextSystem::renderText-codepoint to utf/string conversion");
                     
                     utf8String = CodepointToString(character.overrideCodepoint.value_or(character.value));
                 }
                 
                 static Vector2 charSize = {0, 0};
                 {
-                    // ZoneScopedN("TextSystem::renderText-measure text size");
+                    ZONE_SCOPED("TextSystem::renderText-measure text size");
                     charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(), text.fontSize, 1.0f);
                     charSize.x *= text.renderScale;
                     charSize.y *= text.renderScale;
@@ -1983,25 +1988,25 @@ namespace TextSystem
                 }
                 
                 {
-                    // ZoneScopedN("TextSystem::renderText-apply transformations");
-                    layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, layerZIndex);
+                    ZONE_SCOPED("TextSystem::renderText-apply transformations");
+                    layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, layerZIndex, drawSpace);
 
                     // apply scaling that is centered on the character
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = charPosition.x + charSize.x * 0.5f, y = charPosition.y + charSize.y * 0.5f](layer::CmdTranslate *cmd) {
                         cmd->x = x;
                         cmd->y = y;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                     layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = finalScaleX, scaleY = finalScaleY](layer::CmdScale *cmd) {
                         cmd->scaleX = scaleX;
                         cmd->scaleY = scaleY;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                     layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = character.rotation](layer::CmdRotate *cmd) {
                         cmd->angle = rotation;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -charSize.x * 0.5f, y = -charSize.y * 0.5f](layer::CmdTranslate *cmd) {
                         cmd->x = x;
                         cmd->y = y;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                 }
 
                 
@@ -2009,7 +2014,7 @@ namespace TextSystem
                 // draw shadow based on shadow displacement
                 if (text.shadow_enabled)
                 {
-                    // ZoneScopedN("TextSystem::renderText-render shadow");
+                    ZONE_SCOPED("TextSystem::renderText-render shadow");
                     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
                     float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
@@ -2041,12 +2046,12 @@ namespace TextSystem
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowOffsetX, shadowOffsetY](layer::CmdTranslate *cmd) {
                         cmd->x = -shadowOffsetX;
                         cmd->y = shadowOffsetY;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
 
                     
 
                     if (character.isImage) {
-                        // ZoneScopedN("TextSystem::renderText-render image shadow");
+                        ZONE_SCOPED("TextSystem::renderText-render image shadow");
                         auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
                         auto sourceRect = spriteFrame.frame;
                         auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
@@ -2061,11 +2066,11 @@ namespace TextSystem
                             cmd->rotationCenter = {0, 0};
                             cmd->rotation = 0;
                             cmd->color = Fade(BLACK, text.globalAlpha * 0.7f);
-                        }, layerZIndex);
+                        }, layerZIndex, drawSpace);
                         
                     }
                     else {
-                        // ZoneScopedN("TextSystem::renderText-render text shadow");
+                        ZONE_SCOPED("TextSystem::renderText-render text shadow");
                         // Draw shadow 
                         
                         layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text, fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale](layer::CmdTextPro *cmd) {
@@ -2078,19 +2083,19 @@ namespace TextSystem
                             cmd->fontSize = fontSize * renderScale;
                             cmd->spacing = spacing;
                             cmd->color = Fade(BLACK, text.globalAlpha * 0.7f);
-                        }, layerZIndex);
+                        }, layerZIndex, drawSpace);
                     }
 
                     // Reset translation to original position
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowOffsetX, shadowOffsetY](layer::CmdTranslate *cmd) {
                         cmd->x = shadowOffsetX;
                         cmd->y = -shadowOffsetY;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                 }
 
                 // Render the character
                 if (character.isImage) {
-                    // ZoneScopedN("TextSystem::renderText-render image");
+                    ZONE_SCOPED("TextSystem::renderText-render image");
                     auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
                     auto sourceRect = spriteFrame.frame;
                     auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
@@ -2104,10 +2109,10 @@ namespace TextSystem
                         cmd->rotationCenter = {0, 0};
                         cmd->rotation = 0;
                         cmd->color = fgTint;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                 }
                 else {
-                    // ZoneScopedN("TextSystem::renderText-render text");
+                    ZONE_SCOPED("TextSystem::renderText-render text");
                     layer::QueueCommand<layer::CmdTextPro>(layerPtr, [fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale, color = Color{.r = character.color.r, .g = character.color.g, .b = character.color.b, .a = (unsigned char)(text.globalAlpha * character.color.a) }](layer::CmdTextPro *cmd) {
                         cmd->text = utf8String.c_str();
                         cmd->font = font;
@@ -2118,17 +2123,17 @@ namespace TextSystem
                         cmd->fontSize = fontSize * renderScale;
                         cmd->spacing = spacing;
                         cmd->color = color;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                 }
                 
                 if (debug && globals::drawDebugInfo) {
-                    // ZoneScopedN("TextSystem::renderText-debug info");
+                    ZONE_SCOPED("TextSystem::renderText-debug info");
                     // subtract finetuning offset
                     if (!character.isImage) {
                         layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -text.fontData.fontRenderOffset.x * finalScaleX * renderScale, y = -text.fontData.fontRenderOffset.y * finalScaleY * renderScale](layer::CmdTranslate *cmd) {
                             cmd->x = x;
                             cmd->y = y;
-                        }, layerZIndex);
+                        }, layerZIndex, drawSpace);
                     }
                     
                     
@@ -2140,10 +2145,10 @@ namespace TextSystem
                         cmd->size = charSize;
                         cmd->lineThickness = 1.0f;
                         cmd->color = BLUE;
-                    }, layerZIndex);
+                    }, layerZIndex, drawSpace);
                 }
                 
-                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, layerZIndex);
+                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, layerZIndex, drawSpace);
             }
 
             // Draw debug bounding box
@@ -2170,16 +2175,16 @@ namespace TextSystem
                     cmd->fontSize = 10;
                     cmd->spacing = 0;
                     cmd->color = GRAY;
-                }, layerZIndex);
+                }, layerZIndex, drawSpace);
             }
             
-            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, layerZIndex);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, layerZIndex, drawSpace);
             
         }
         
         void renderTextImmediate(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug)
         {
-            // ZoneScopedN("TextSystem::renderText");
+            ZONE_SCOPED("TextSystem::renderText");
             auto &text = globals::registry.get<Text>(textEntity);
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
             float renderScale = text.renderScale; // 🟡 Use renderScale
@@ -2215,7 +2220,7 @@ namespace TextSystem
 
             for (const auto &character : text.characters)
             {
-                // ZoneScopedN("TextSystem::renderText-render single character");
+                ZONE_SCOPED("TextSystem::renderText-render single character");
 
                 // if (character.isImage) 
                     // SPDLOG_DEBUG("Rendering image character: {} with size: {}x{}", character.value, character.size.x, character.size.y);
@@ -2243,14 +2248,14 @@ namespace TextSystem
                 static std::string utf8String;
                 // Convert the codepoint to UTF-8 string for rendering
                 {
-                    // ZoneScopedN("TextSystem::renderText-codepoint to utf/string conversion");
+                    ZONE_SCOPED("TextSystem::renderText-codepoint to utf/string conversion");
                     
                     utf8String = CodepointToString(character.overrideCodepoint.value_or(character.value));
                 }
                 
                 static Vector2 charSize = {0, 0};
                 {
-                    // ZoneScopedN("TextSystem::renderText-measure text size");
+                    ZONE_SCOPED("TextSystem::renderText-measure text size");
                     charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(), text.fontSize, 1.0f);
                     charSize.x *= text.renderScale;
                     charSize.y *= text.renderScale;
@@ -2288,7 +2293,7 @@ namespace TextSystem
                 }
                 
                 {
-                    // ZoneScopedN("TextSystem::renderText-apply transformations");
+                    ZONE_SCOPED("TextSystem::renderText-apply transformations");
                     layer::ImmediateCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, layerZIndex);
 
                     // apply scaling that is centered on the character
@@ -2314,7 +2319,7 @@ namespace TextSystem
                 // draw shadow based on shadow displacement
                 if (text.shadow_enabled)
                 {
-                    // ZoneScopedN("TextSystem::renderText-render shadow");
+                    ZONE_SCOPED("TextSystem::renderText-render shadow");
                     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
                     float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
@@ -2351,7 +2356,7 @@ namespace TextSystem
                     
 
                     if (character.isImage) {
-                        // ZoneScopedN("TextSystem::renderText-render image shadow");
+                        ZONE_SCOPED("TextSystem::renderText-render image shadow");
                         auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
                         auto sourceRect = spriteFrame.frame;
                         auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
@@ -2370,7 +2375,7 @@ namespace TextSystem
                         
                     }
                     else {
-                        // ZoneScopedN("TextSystem::renderText-render text shadow");
+                        ZONE_SCOPED("TextSystem::renderText-render text shadow");
                         // Draw shadow 
                         
                         layer::ImmediateCommand<layer::CmdTextPro>(layerPtr, [text, fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale](layer::CmdTextPro *cmd) {
@@ -2395,7 +2400,7 @@ namespace TextSystem
 
                 // Render the character
                 if (character.isImage) {
-                    // ZoneScopedN("TextSystem::renderText-render image");
+                    ZONE_SCOPED("TextSystem::renderText-render image");
                     auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
                     auto sourceRect = spriteFrame.frame;
                     auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
@@ -2412,7 +2417,7 @@ namespace TextSystem
                     }, layerZIndex);
                 }
                 else {
-                    // ZoneScopedN("TextSystem::renderText-render text");
+                    ZONE_SCOPED("TextSystem::renderText-render text");
                     layer::ImmediateCommand<layer::CmdTextPro>(layerPtr, [fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale, color = Color{.r = character.color.r, .g = character.color.g, .b = character.color.b, .a = (unsigned char)(text.globalAlpha * character.color.a) }](layer::CmdTextPro *cmd) {
                         cmd->text = utf8String.c_str();
                         cmd->font = font;
@@ -2427,7 +2432,7 @@ namespace TextSystem
                 }
                 
                 if (debug && globals::drawDebugInfo) {
-                    // ZoneScopedN("TextSystem::renderText-debug info");
+                    ZONE_SCOPED("TextSystem::renderText-debug info");
                     // subtract finetuning offset
                     if (!character.isImage) {
                         layer::ImmediateCommand<layer::CmdTranslate>(layerPtr, [x = -text.fontData.fontRenderOffset.x * finalScaleX * renderScale, y = -text.fontData.fontRenderOffset.y * finalScaleY * renderScale](layer::CmdTranslate *cmd) {

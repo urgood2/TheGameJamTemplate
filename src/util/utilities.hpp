@@ -109,7 +109,7 @@ namespace util {
 
 
 	extern auto getColorImVec(const string& colorName) -> ImVec4;
-	extern auto replaceAllTokensInString(const std::string& templateStr, const std::map<std::string, std::string>& tokens) -> std::string;
+	// extern auto replaceAllTokensInString(const std::string& templateStr, const std::map<std::string, std::string>& tokens) -> std::string;
 	extern auto surroundWithColorTags(const std::string& text, const std::string& color) -> std::string;
 	extern auto rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect, ImVec4 tintColor) -> void;
 	extern auto getTileCoordsAtMousePos() -> Vector2;
@@ -120,9 +120,9 @@ namespace util {
     extern auto drawColorCodedTextUnformatted(const std::string& text) -> void;
 
 	// text processing
-	extern auto processText(const std::string& input) -> TextLogEntry;
+	// extern auto processText(const std::string& input) -> TextLogEntry;
 
 	// test methods
-	extern auto convertCP437TextToJSON() -> void;
-	extern auto convertColorsFileToJSON() -> void;
+	// extern auto convertCP437TextToJSON() -> void;
+	// extern auto convertColorsFileToJSON() -> void;
 }

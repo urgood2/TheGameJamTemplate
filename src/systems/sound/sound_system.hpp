@@ -29,6 +29,9 @@ namespace sound_system {
         float       fadeDur    = 0.f;
         FadeState   fadeState  = None;
         SoundCallback onComplete = nullptr;
+        bool lowPassEnabled = false;
+        float lowPassGain = 1.0f; // 1.0 = no filter, lower = stronger filter
+
     };
     
     
@@ -47,6 +50,11 @@ namespace sound_system {
     void QueueMusic(const std::string& musicName, bool loop = false);
     void SetTrackVolume(const std::string& name, float vol);
     float GetTrackVolume(const std::string& name);
+    void ResetSoundSystem();
+    void PlayPlaylist(const std::vector<std::string>& names, bool loop) ;
+
+void ClearPlaylist();
+void StopAllMusic() ;
     
     // Fading and pausing
     auto FadeInMusic (const std::string &musicName, float duration) -> void;

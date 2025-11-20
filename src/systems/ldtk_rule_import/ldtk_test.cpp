@@ -153,8 +153,8 @@
 //             // REVIEW: cell counts must match map dimensions
 
 //             // taken from drawWorldMap
-//             auto center = GetScreenToWorld2D(Vector2{GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}, globals::camera);
-//             auto offset = Vector2{GetScreenWidth() / 2 * (1.0f / globals::camera.zoom), GetScreenHeight() / 2 * (1.0f / globals::camera.zoom)};
+//             auto center = GetScreenToWorld2D(Vector2{globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f}, globals::camera);
+//             auto offset = Vector2{globals::VIRTUAL_WIDTH / 2 * (1.0f / globals::camera.zoom), globals::VIRTUAL_HEIGHT / 2 * (1.0f / globals::camera.zoom)};
             
 //             auto topLeft = Vector2Subtract(center, offset);
 //             auto bottomRight = Vector2Add(center, offset);

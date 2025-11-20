@@ -225,7 +225,11 @@ std::string unify( const std::string &uri, std::vector<std::string> *tags = 0 ) 
     }
 
     // 11) remove lead separator
-    return &tmp[1];
+    if (tmp.size() > 1)
+        return tmp.substr(1);
+    else
+        return tmp;  // or ""
+
 }
 
 #ifdef UNIFY_BUILD_TESTS

@@ -13,6 +13,7 @@
 
 #include "third_party/objectpool-master/src/object_pool.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
+#include "third_party/spine_impl/spine_raylib.hpp"
 
 namespace layer
 {
@@ -42,6 +43,8 @@ namespace layer
     
     */
     
+    
+    
     // ===========================
     // Command Types
     // ===========================
@@ -60,6 +63,8 @@ namespace layer
         AddPop,
         PushMatrix,
         PopMatrix,
+        ScopedTransformCompositeRender,
+        PushObjectTransformsToMatrix,
         Circle,
         CircleLine,
         Rectangle,
@@ -100,6 +105,11 @@ namespace layer
         RenderUISliceFromDrawList, // for ui
         RenderUISelfImmediate, // for ui
         ClearStencilBuffer,
+        StencilOp,
+        RenderBatchFlush,
+        AtomicStencilMask,
+        ColorMask,
+        StencilFunc,
         BeginStencilMode,
         BeginStencilMask,
         EndStencilMode,
@@ -115,8 +125,30 @@ namespace layer
         DrawDashedCircle,
         DrawDashedRoundedRect,
         DrawDashedLine,
+        DrawGradientRectCentered,
+        DrawGradientRectRoundedCentered,
         
         Count // <--- always last
+    };
+    
+    // ===========================
+    // Draw Command Buffer
+    // ===========================
+    
+    enum class DrawCommandSpace {
+        World,
+        Screen
+    };
+
+    struct DrawCommandV2 {
+        DrawCommandType type;
+        void* data;
+        int z;
+        DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
+        
+        uint64_t uniqueID = 0; // For stable sorting
+        uint64_t followAnchor;   // 0 = none
+
     };
 
     // ===========================
@@ -181,6 +213,15 @@ namespace layer
     };
     struct CmdPopMatrix {
         bool dummy = false; // Placeholder
+    };
+    
+    struct CmdPushObjectTransformsToMatrix {
+        entt::entity entity;
+    };
+    
+    struct CmdScopedTransformCompositeRender {
+        entt::entity entity;
+        std::vector<DrawCommandV2> children;
     };
 
     struct CmdDrawCircleFilled {
@@ -400,6 +441,33 @@ namespace layer
         bool dummy = false; // Placeholder
     };
     
+    struct CmdColorMask {
+        bool red;
+        bool green;
+        bool blue;
+        bool alpha;
+    };
+    
+    struct CmdStencilFunc {
+        int func;
+        int ref;
+        unsigned int mask;
+    };
+    
+    struct CmdStencilOp {
+        int sfail;
+        int dpfail;
+        int dppass;
+    };
+    
+    struct CmdRenderBatchFlush {
+        bool dummy = false; // Placeholder
+    };
+    
+    struct CmdAtomicStencilMask {
+        unsigned int mask;
+    };
+    
     struct CmdEndStencilMode {
         bool dummy = false; // Placeholder
     };
@@ -503,22 +571,22 @@ namespace layer
         float thickness;
         Color color;
     };
-
-    // ===========================
-    // Draw Command Buffer
-    // ===========================
     
-    enum class DrawCommandSpace {
-        World,
-        Screen
+    struct CmdDrawGradientRectCentered {
+        float cx, cy;
+        float width, height;
+        Color topLeft, topRight, bottomRight, bottomLeft;
+    };
+    
+    struct CmdDrawGradientRectRoundedCentered {
+        float cx, cy;
+        float width, height;
+        float roundness;
+        int segments;
+        Color topLeft, topRight, bottomRight, bottomLeft;
     };
 
-    struct DrawCommandV2 {
-        DrawCommandType type;
-        void* data;
-        int z;
-        DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
-    };
+    
 
 
     // ===========================
@@ -551,6 +619,7 @@ namespace layer
     extern void ExecuteAddPop(std::shared_ptr<layer::Layer> layer, CmdAddPop* c);
     extern void ExecutePushMatrix(std::shared_ptr<layer::Layer> layer, CmdPushMatrix* c);
     extern void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c);
+    extern void ExecutePushObjectTransformsToMatrix(std::shared_ptr<layer::Layer> layer, CmdPushObjectTransformsToMatrix* c);
     extern void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c);
     extern void ExecuteCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c);
     extern void ExecuteRectangle(std::shared_ptr<layer::Layer> layer, CmdDrawRectangle* c);
@@ -570,6 +639,7 @@ namespace layer
     extern void ExecuteResetShader(std::shared_ptr<layer::Layer> layer, CmdResetShader* c);
     extern void ExecuteSetBlendMode(std::shared_ptr<layer::Layer> layer, CmdSetBlendMode* c);
     extern void ExecuteUnsetBlendMode(std::shared_ptr<layer::Layer> layer, CmdUnsetBlendMode* c);
+    extern void ExecuteScopedTransformCompositeRender(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRender* c);
     extern void ExecuteSendUniformFloat(std::shared_ptr<layer::Layer> layer, CmdSendUniformFloat* c);
     extern void ExecuteSendUniformInt(std::shared_ptr<layer::Layer> layer, CmdSendUniformInt* c);
     extern void ExecuteSendUniformVec2(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec2* c);
@@ -591,6 +661,11 @@ namespace layer
     
     extern void ExecuteClearStencilBuffer(std::shared_ptr<layer::Layer> layer, CmdClearStencilBuffer* c);
     extern void ExecuteBeginStencilMode(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMode* c);
+    extern void ExecuteStencilOp(std::shared_ptr<layer::Layer> layer, CmdStencilOp* c);
+    extern void ExecuteRenderBatchFlush(std::shared_ptr<layer::Layer> layer, CmdRenderBatchFlush* c);
+    extern void ExecuteAtomicStencilMask(std::shared_ptr<layer::Layer> layer, CmdAtomicStencilMask* c);
+    extern void ExecuteColorMask(std::shared_ptr<layer::Layer> layer, CmdColorMask* c);
+    extern void ExecuteStencilFunc(std::shared_ptr<layer::Layer> layer, CmdStencilFunc* c);
     extern void ExecuteEndStencilMode(std::shared_ptr<layer::Layer> layer, CmdEndStencilMode* c);
     extern void ExecuteBeginStencilMask(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMask* c);
     extern void ExecuteEndStencilMask(std::shared_ptr<layer::Layer> layer, CmdEndStencilMask* c);
@@ -605,6 +680,8 @@ namespace layer
     extern void ExecuteDrawDashedCircle(std::shared_ptr<layer::Layer> layer, CmdDrawDashedCircle* c);
     extern void ExecuteDrawDashedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawDashedRoundedRect* c);
     extern void ExecuteDrawDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c);
+    extern void ExecuteDrawGradientRectCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectCentered* c) ;
+    extern void ExecuteDrawGradientRectRoundedCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectRoundedCentered* c) ;
 
 
     // ===========================

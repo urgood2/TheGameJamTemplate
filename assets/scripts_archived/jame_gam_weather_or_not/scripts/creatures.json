@@ -1,0 +1,37 @@
+{
+    "creature_name": "Wolf",
+    "tags": [
+        "aggressive_to:deer",
+        "nocturnal",
+        "food_gatherer"
+    ],
+    "attributes": {
+        "health": 50,
+        "speed": 2,
+        "vision_range": 15
+    },
+    "actions": [
+        "hunt",
+        "howl",
+        "rest"
+    ],
+    "goal_selection_method": "random",
+    "updaters": [
+        "hunger_update",
+        "sleep_update"
+    ],
+    "initial_world_state": {
+        "enemyvisible": false,
+        "canfight": true,
+        "hungry": false,
+        "enemyalive": false,
+        "wandered": false
+    },
+    "initial_goal_state": {
+        "enemyalive": false,
+        "hungry": false,
+        "wandered": true
+    }
+}
+
+  

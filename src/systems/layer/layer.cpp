@@ -1,5 +1,18 @@
 #include "layer.hpp"
 
+#if defined(PLATFORM_WEB)
+#include "util/web_glad_shim.hpp"
+#endif
+
+#if defined(__EMSCRIPTEN__)
+    #define GL_GLEXT_PROTOTYPES
+    #include <GLES3/gl3.h>
+    #include <GLES2/gl2ext.h>
+#else
+    // #include <GL/gl.h>
+    // #include <GL/glext.h>
+#endif
+
 #include "raylib.h"
 #include <algorithm>
 #include <cmath>
@@ -13,6 +26,7 @@
 #include "core/globals.hpp"
 
 #include "core/init.hpp"
+#include "spdlog/spdlog.h"
 #include "systems/camera/camera_manager.hpp"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -38,12 +52,41 @@
 
 #include "systems/scripting/binding_recorder.hpp"
 
+
 namespace layer {
 // only use for (DrawLayerCommandsToSpecificCanvas)
 namespace render_stack_switch_internal {
 std::stack<RenderTexture2D> renderStack{};
 }
 } // namespace layer
+
+template <typename F>
+static void QueueScopedTransformCompositeRender(
+    std::shared_ptr<layer::Layer> layer,
+    entt::entity e,
+    int z,
+    layer::DrawCommandSpace space,
+    F&& buildChildren)
+{
+    static  std::array<std::vector<layer::DrawCommandV2>*, 8> s_commandStackArr;
+    static  int s_stackTop = 0;
+
+    auto* cmd = layer::layer_command_buffer::Add<layer::CmdScopedTransformCompositeRender>(layer, z, space);
+    cmd->entity = e;
+
+    // Pre-reserve a few children slots
+    cmd->children.reserve(8); // tweak this number based on your typical batch size
+
+    auto* prevList = layer->commands_ptr;
+    layer->commands_ptr = &cmd->children;
+
+    s_commandStackArr[s_stackTop++] = &cmd->children;
+    std::forward<F>(buildChildren)();
+    --s_stackTop;
+
+    layer->commands_ptr = prevList;
+}
+
 
 // Graphics namespace for rendering functions
 namespace layer {
@@ -57,6 +100,90 @@ void exposeToLua(sol::state &lua) {
   }
 
   auto &rec = BindingRecorder::instance();
+  
+  
+  // --- Rectangle binding -------------------------------------------------------
+  {
+        // 1) Usertype with constructors and fields
+        auto rectUT = lua.new_usertype<Rectangle>(
+        "Rectangle",
+        sol::no_constructor,
+        "x",      &Rectangle::x,
+        "y",      &Rectangle::y,
+        "width",  &Rectangle::width,
+        "height", &Rectangle::height,
+        // nice for debugging
+        sol::meta_function::to_string, [](const Rectangle& r) {
+            char buf[96];
+            std::snprintf(buf, sizeof(buf), "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)",
+                          r.x, r.y, r.width, r.height);
+            return std::string(buf);
+        }
+    );
+
+    // Attach a static Rectangle.new(...)
+    sol::table rectTbl = lua["Rectangle"];
+    rectTbl.set_function("new", sol::overload(
+        []() {
+            return Rectangle{0.f, 0.f, 0.f, 0.f};
+        },
+        [](float x, float y, float w, float h) {
+            return Rectangle{x, y, w, h};
+        },
+        [](sol::table t) {
+            Rectangle r{};
+            r.x      = t.get_or("x",      0.0f);
+            r.y      = t.get_or("y",      0.0f);
+            r.width  = t.get_or("width",  0.0f);
+            r.height = t.get_or("height", 0.0f);
+            return r;
+        }
+    ));
+
+
+    // 2) Optional utility methods (handy but lightweight)
+    rectUT.set_function("center", [](const Rectangle& r) {
+      return Vector2{ r.x + r.width * 0.5f, r.y + r.height * 0.5f };
+    });
+    rectUT.set_function("contains", [](const Rectangle& r, float px, float py) {
+      return (px >= r.x) && (py >= r.y) && (px <= r.x + r.width) && (py <= r.y + r.height);
+    });
+    rectUT.set_function("area", [](const Rectangle& r) {
+      return r.width * r.height;
+    });
+
+    // 3) Nice __tostring for debugging
+    rectUT[sol::meta_function::to_string] = [](const Rectangle& r) {
+      char buf[128];
+      std::snprintf(buf, sizeof(buf), "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)",
+                    r.x, r.y, r.width, r.height);
+      return std::string(buf);
+    };
+
+    // 4) Convenience free-function constructors:
+    //    Rect(x,y,w,h) and Rect{ x=..., y=..., width=..., height=... }
+    lua.set_function("Rect", sol::overload(
+        [](float x, float y, float w, float h) {
+          return Rectangle{ x, y, w, h };
+        },
+        [](sol::table t) {
+          Rectangle r{};
+          r.x      = t.get_or("x",      0.0f);
+          r.y      = t.get_or("y",      0.0f);
+          r.width  = t.get_or("width",  0.0f);
+          r.height = t.get_or("height", 0.0f);
+          return r;
+        }
+    ));
+
+    // 5) (Optional) Recorder entries for your BindingRecorder docs
+    rec.add_type("Rectangle", true).doc = "Raylib Rectangle (x,y,width,height)";
+    rec.record_property("Rectangle", {"x", "number", "Top-left X"});
+    rec.record_property("Rectangle", {"y", "number", "Top-left Y"});
+    rec.record_property("Rectangle", {"width", "number", "Width"});
+    rec.record_property("Rectangle", {"height", "number", "Height"});
+
+  }
 
   rec.add_type("layer").doc = "namespace for rendering & layer operations";
   rec.add_type("layer.LayerOrderComponent", true).doc =
@@ -164,6 +291,24 @@ void exposeToLua(sol::state &lua) {
                     "---@param height integer\n"
                     "---@return layer.Layer",
                     "Creates a layer with a main canvas of a specified size.");
+                    
+  rec.bind_function(lua, {"layer"}, "ExecuteScale",
+    &layer::Scale,
+    "---@param x number # Scale factor in X direction\n"
+    "---@param y number # Scale factor in Y direction\n"
+    "---@return nil",
+    "Applies scaling transformation to the current layer, immeidately (does not queue)."
+  );
+  
+  rec.bind_function(lua, {"layer"}, "ExecuteTranslate",
+    &layer::Translate,
+    "---@param x number # Translation in X direction\n"
+    "---@param y number # Translation in Y direction\n"
+    "---@return nil",
+    "Applies translation transformation to the current layer, immeidately (does not queue)."
+  );
+  
+
 
   rec.bind_function(lua, {"layer"}, "RemoveLayerFromCanvas",
                     &layer::RemoveLayerFromCanvas,
@@ -343,14 +488,22 @@ void exposeToLua(sol::state &lua) {
       "Rotate", layer::DrawCommandType::Rotate, "AddPush",
       layer::DrawCommandType::AddPush, "AddPop", layer::DrawCommandType::AddPop,
       "PushMatrix", layer::DrawCommandType::PushMatrix, "PopMatrix",
-      layer::DrawCommandType::PopMatrix, "DrawCircle",
+      layer::DrawCommandType::PopMatrix, 
+      "PushObjectTransformsToMatrix",
+      layer::DrawCommandType::PushObjectTransformsToMatrix,
+      "ScopedTransformCompositeRender",
+      layer::DrawCommandType::ScopedTransformCompositeRender,
+      "DrawCircle",
       layer::DrawCommandType::Circle, "DrawRectangle",
       layer::DrawCommandType::Rectangle, "DrawRectanglePro",
       layer::DrawCommandType::RectanglePro, "DrawRectangleLinesPro",
       layer::DrawCommandType::RectangleLinesPro, "DrawLine",
       layer::DrawCommandType::Line, "DrawDashedLine",
       layer::DrawCommandType::DashedLine, "DrawText",
-      layer::DrawCommandType::Text, "DrawTextCentered",
+      layer::DrawCommandType::Text, 
+      
+      
+      "DrawTextCentered",
       layer::DrawCommandType::DrawTextCentered, "TextPro",
       layer::DrawCommandType::TextPro, "DrawImage",
       layer::DrawCommandType::DrawImage, "TexturePro",
@@ -382,7 +535,11 @@ void exposeToLua(sol::state &lua) {
       layer::DrawCommandType::RenderRectVerticlesOutlineLayer, "DrawPolygon",
       layer::DrawCommandType::Polygon, "RenderNPatchRect",
       layer::DrawCommandType::RenderNPatchRect, "DrawTriangle",
-      layer::DrawCommandType::Triangle);
+      layer::DrawCommandType::Triangle, 
+      "DrawGradientRectCentered",
+      layer::DrawCommandType::DrawGradientRectCentered,
+      "DrawGradientRectRoundedCentered",
+      layer::DrawCommandType::DrawGradientRectRoundedCentered);
 
   // 1b) EmmyLua docs via BindingRecorder
   rec.add_type("layer.DrawCommandType").doc =
@@ -406,6 +563,14 @@ void exposeToLua(sol::state &lua) {
                       {"AddPop", "7", "Pop transform matrix"});
   rec.record_property("layer.DrawCommandType",
                       {"PushMatrix", "8", "Explicit push matrix command"});
+  rec.record_property(
+      "layer.DrawCommandType",
+      {"PushObjectTransformsToMatrix", "100",
+       "Push object's transform to matrix stack"});
+  rec.record_property(
+      "layer.DrawCommandType",
+      {"ScopedTransformCompositeRender", "101",
+       "Scoped transform for composite rendering"});
   rec.record_property("layer.DrawCommandType",
                       {"PopMatrix", "9", "Explicit pop matrix command"});
   rec.record_property("layer.DrawCommandType",
@@ -488,6 +653,12 @@ void exposeToLua(sol::state &lua) {
                       {"RenderNPatchRect", "44", "Draw a 9-patch rectangle"});
   rec.record_property("layer.DrawCommandType",
                       {"DrawTriangle", "45", "Draw a triangle"});
+  rec.record_property("layer.DrawCommandType",
+                      {"DrawGradientRectCentered", "46",
+                       "Draw a gradient rectangle centered"});
+  rec.record_property("layer.DrawCommandType",
+                      {"DrawGradientRectRoundedCentered", "47",
+                       "Draw a rounded gradient rectangle centered"});
 
 // Helper macro to reduce boilerplate
 #define BIND_CMD(name, ...)                                                    \
@@ -510,6 +681,11 @@ void exposeToLua(sol::state &lua) {
   BIND_CMD(AddPop, "dummy", &layer::CmdAddPop::dummy)
   BIND_CMD(PushMatrix, "dummy", &layer::CmdPushMatrix::dummy)
   BIND_CMD(PopMatrix, "dummy", &layer::CmdPopMatrix::dummy)
+  BIND_CMD(PushObjectTransformsToMatrix,
+           "entity", &layer::CmdPushObjectTransformsToMatrix::entity)
+  BIND_CMD(ScopedTransformCompositeRender,
+           "entity", &layer::CmdScopedTransformCompositeRender::entity,
+           "payload", &layer::CmdScopedTransformCompositeRender::children)
   BIND_CMD(DrawCircleFilled, "x", &layer::CmdDrawCircleFilled::x, "y",
            &layer::CmdDrawCircleFilled::y, "radius",
            &layer::CmdDrawCircleFilled::radius, "color",
@@ -640,6 +816,16 @@ void exposeToLua(sol::state &lua) {
            &layer::CmdDrawTriangle::p2, "p3", &layer::CmdDrawTriangle::p3,
            "color", &layer::CmdDrawTriangle::color)
   BIND_CMD(BeginStencilMode, "dummy", &layer::CmdBeginStencilMode::dummy)
+  BIND_CMD(StencilOp, "sfail", &layer::CmdStencilOp::sfail, "dpfail",
+           &layer::CmdStencilOp::dpfail, "dppass",
+           &layer::CmdStencilOp::dppass)
+  BIND_CMD(RenderBatchFlush, "dummy", &layer::CmdRenderBatchFlush::dummy)
+  BIND_CMD(AtomicStencilMask, "mask", &layer::CmdAtomicStencilMask::mask)
+  BIND_CMD(ColorMask, "r", &layer::CmdColorMask::red, "g",
+           &layer::CmdColorMask::green, "b", &layer::CmdColorMask::blue, "a",
+           &layer::CmdColorMask::alpha)
+  BIND_CMD(StencilFunc, "func", &layer::CmdStencilFunc::func, "ref",
+           &layer::CmdStencilFunc::ref, "mask", &layer::CmdStencilFunc::mask)
   BIND_CMD(EndStencilMode, "dummy", &layer::CmdEndStencilMode::dummy)
   BIND_CMD(ClearStencilBuffer, "dummy", &layer::CmdClearStencilBuffer::dummy)
   BIND_CMD(BeginStencilMask, "dummy", &layer::CmdBeginStencilMask::dummy)
@@ -715,7 +901,26 @@ void exposeToLua(sol::state &lua) {
            &layer::CmdDrawDashedLine::phase, "thickness",
            &layer::CmdDrawDashedLine::thickness, "color",
            &layer::CmdDrawDashedLine::color)
-
+  BIND_CMD(DrawGradientRectCentered, "cx",
+           &layer::CmdDrawGradientRectCentered::cx, "cy",
+           &layer::CmdDrawGradientRectCentered::cy, "width",
+           &layer::CmdDrawGradientRectCentered::width, "height",
+           &layer::CmdDrawGradientRectCentered::height, "topLeft",
+           &layer::CmdDrawGradientRectCentered::topLeft, "topRight",
+           &layer::CmdDrawGradientRectCentered::topRight, "bottomRight",
+           &layer::CmdDrawGradientRectCentered::bottomRight, "bottomLeft",
+           &layer::CmdDrawGradientRectCentered::bottomLeft)
+  BIND_CMD(DrawGradientRectRoundedCentered, "cx",
+           &layer::CmdDrawGradientRectRoundedCentered::cx, "cy",
+           &layer::CmdDrawGradientRectRoundedCentered::cy, "width",
+           &layer::CmdDrawGradientRectRoundedCentered::width, "height",
+           &layer::CmdDrawGradientRectRoundedCentered::height, "roundness",
+           &layer::CmdDrawGradientRectRoundedCentered::roundness, "segments",
+           &layer::CmdDrawGradientRectRoundedCentered::segments, "topLeft",
+           &layer::CmdDrawGradientRectRoundedCentered::topLeft, "topRight",
+           &layer::CmdDrawGradientRectRoundedCentered::topRight, "bottomRight",
+           &layer::CmdDrawGradientRectRoundedCentered::bottomRight, "bottomLeft",
+           &layer::CmdDrawGradientRectRoundedCentered::bottomLeft)
 #undef BIND_CMD
 
   rec.add_type("layer.CmdBeginDrawing", true);
@@ -739,7 +944,24 @@ void exposeToLua(sol::state &lua) {
   rec.add_type("layer.CmdTranslate", true);
   rec.record_property("layer.CmdTranslate", {"x", "number", "X offset"});
   rec.record_property("layer.CmdTranslate", {"y", "number", "Y offset"});
-
+  rec.add_type("layer.CmdRenderBatchFlush", true);
+  
+  rec.add_type("layer.CmdStencilOp", true);
+  rec.record_property("layer.CmdStencilOp", {"sfail", "number", "Stencil fail action"});
+  
+  rec.record_property("layer.CmdStencilOp", {"dpfail", "number", "Depth fail action"});
+  rec.record_property("layer.CmdStencilOp", {"dppass", "number", "Depth pass action"});
+  rec.add_type("layer.CmdAtomicStencilMask", true);
+  rec.record_property("layer.CmdAtomicStencilMask", {"mask", "number", "Stencil mask value"});
+  rec.add_type("layer.CmdColorMask", true);
+  rec.record_property("layer.CmdColorMask", {"r", "boolean", "Red channel"});
+  rec.record_property("layer.CmdColorMask", {"g", "boolean", "Green channel"});
+  rec.record_property("layer.CmdColorMask", {"b", "boolean", "Blue channel"});
+  rec.record_property("layer.CmdColorMask", {"a", "boolean", "Alpha channel"});
+  rec.add_type("layer.CmdStencilFunc", true);
+  rec.record_property("layer.CmdStencilFunc", {"func", "number", "Stencil function"});
+  rec.record_property("layer.CmdStencilFunc", {"ref", "number", "Reference value"});
+  rec.record_property("layer.CmdStencilFunc", {"mask", "number", "Mask value"});
   rec.add_type("layer.CmdBeginStencilMode", true);
   rec.record_property("layer.CmdBeginStencilMode",
                       {"dummy", "false", "Unused field"});
@@ -897,6 +1119,45 @@ void exposeToLua(sol::state &lua) {
                       {"thickness", "number", "Thickness of the dashes"});
   rec.record_property("layer.CmdDrawDashedRoundedRect",
                       {"color", "Color", "Color of the dashes"});
+                      
+  rec.add_type("layer.CmdDrawGradientRectCentered", true);
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"cx", "number", "Center X"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"cy", "number", "Center Y"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"width", "number", "Width"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"height", "number", "Height"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"topLeft", "Color", "Top-left color"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"topRight", "Color", "Top-right color"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"bottomRight", "Color", "Bottom-right color"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"bottomLeft", "Color", "Bottom-left color"});
+  rec.add_type("layer.CmdDrawGradientRectRoundedCentered", true);
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"cx", "number", "Center X"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"cy", "number", "Center Y"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"width", "number", "Width"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"height", "number", "Height"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"roundness", "number", "Corner roundness"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"segments", "number", "Number of segments for corners"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"topLeft", "Color", "Top-left color"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"topRight", "Color", "Top-right color"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"bottomRight", "Color", "Bottom-right color"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"bottomLeft", "Color", "Bottom-left color"});
   rec.add_type("layer.CmdDrawDashedLine", true);
   rec.record_property("layer.CmdDrawDashedLine",
                       {"start", "Vector2", "Start position"});
@@ -932,6 +1193,17 @@ void exposeToLua(sol::state &lua) {
   rec.record_property("layer.CmdPushMatrix",
                       {"dummy", "false", "Unused field"});
 
+  rec.add_type("layer.CmdPushObjectTransformsToMatrix", true);
+  rec.record_property("layer.CmdPushObjectTransformsToMatrix",
+                      {"entity", "Entity", "Entity to get transforms from"});
+                      
+  
+  rec.add_type("layer.CmdScopedTransformCompositeRender", true);
+  rec.record_property("layer.CmdScopedTransformCompositeRender",
+                      {"entity", "Entity", "Entity to get transforms from"});
+  rec.record_property("layer.CmdScopedTransformCompositeRender",
+                      {"payload", "vector", "Additional payload data"});
+                      
   rec.add_type("layer.CmdPopMatrix", true);
   rec.record_property("layer.CmdPopMatrix", {"dummy", "false", "Unused field"});
 
@@ -1247,7 +1519,22 @@ void exposeToLua(sol::state &lua) {
     cb = lua.create_table();
     layerTbl["command_buffer"] = cb;
   }
-
+  
+  
+                                  
+  cb.set_function(
+      "pushEntityTransformsToMatrix",
+      [](entt::registry &registry, entt::entity e,
+         std::shared_ptr<layer::Layer> layer, int zOrder) {
+        return pushEntityTransformsToMatrix(registry, e, layer, zOrder);
+      });
+  
+  rec.record_free_function({"command_buffer"}, {
+      "pushEntityTransformsToMatrix",
+      "function(registry: Registry, e: Entity, layer: Layer, zOrder: number): void",
+      "Pushes the transform components of an entity onto the layer's matrix stack as draw commands."
+  });
+      
   // 1) Make a DrawCommandSpace table
   sol::table drawSpace = layerTbl.create_named(
       "DrawCommandSpace", "World", DrawCommandSpace::World, "Screen",
@@ -1261,17 +1548,51 @@ void exposeToLua(sol::state &lua) {
 
   // Recorder: Top-level namespace
   rec.add_type("command_buffer");
-
+  
+  lua["GL_KEEP"] = GL_KEEP;
+  lua["GL_ZERO"] = GL_ZERO;
+  lua["GL_REPLACE"] = GL_REPLACE;
+  lua["GL_ALWAYS"] = GL_ALWAYS;
+  lua["GL_EQUAL"] = GL_EQUAL;
+  lua["GL_FALSE"] = GL_FALSE;
+  
+  
+  rec.add_type("GL_KEEP").doc = "OpenGL enum GL_KEEP";;
+  rec.add_type("GL_ZERO").doc = "OpenGL enum GL_ZERO";
+  rec.add_type("GL_REPLACE").doc = "OpenGL enum GL_REPLACE";
+  rec.add_type("GL_ALWAYS").doc = "OpenGL enum GL_ALWAYS";
+  rec.add_type("GL_EQUAL").doc = "OpenGL enum GL_EQUAL";
+  rec.add_type("GL_FALSE").doc = "OpenGL enum GL_FALSE";
 // 3) For each CmdXXX, expose a queueXXX helper
 //    Pattern: queueCmdName(layer, init_fn, z, space)
+// Replace your QUEUE_CMD impl with a guarded one:
 #define QUEUE_CMD(cmd)                                                         \
   cb.set_function(                                                             \
       "queue" #cmd,                                                            \
       [](std::shared_ptr<layer::Layer> lyr, sol::function init, int z,         \
          DrawCommandSpace space = DrawCommandSpace::Screen) {                  \
         return ::layer::QueueCommand<::layer::Cmd##cmd>(                       \
-            lyr, [&](::layer::Cmd##cmd *c) { init(c); }, z, space);            \
+            lyr,                                                               \
+            [&](::layer::Cmd##cmd *c) {                                        \
+              sol::protected_function pf(init);                                \
+              if (pf.valid()) {                                                \
+                sol::protected_function_result r = pf(c);                      \
+                if (!r.valid()) {                                              \
+                  sol::error e = r;                                            \
+                  std::fprintf(stderr, "[queue%s] init error: %s\n",           \
+                               #cmd, e.what());                                \
+                }                                                              \
+              } else {                                                         \
+                std::fprintf(stderr, "[queue%s] init is not a function\n",     \
+                               #cmd);                                          \
+              }                                                                \
+              /* Optional: dump a few fields for sanity */                     \
+              /* std::fprintf(stderr, "[queue%s] dashLen=%.2f gap=%.2f r=%.2f th=%.2f\n", \
+                               #cmd, c->dashLen, c->gapLen, c->radius, c->thickness); */ \
+            },                                                                 \
+            z, space);                                                         \
       });
+
 
   QUEUE_CMD(BeginDrawing)
   QUEUE_CMD(EndDrawing)
@@ -1283,7 +1604,10 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(AddPop)
   QUEUE_CMD(PushMatrix)
   QUEUE_CMD(PopMatrix)
+  QUEUE_CMD(PushObjectTransformsToMatrix)
+  QUEUE_CMD(ScopedTransformCompositeRender)
   QUEUE_CMD(DrawCircleFilled)
+  QUEUE_CMD(DrawCircleLine)
   QUEUE_CMD(DrawRectangle)
   QUEUE_CMD(DrawRectanglePro)
   QUEUE_CMD(DrawRectangleLinesPro)
@@ -1319,6 +1643,11 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(RenderNPatchRect)
   QUEUE_CMD(DrawTriangle)
   QUEUE_CMD(BeginStencilMode)
+  QUEUE_CMD(StencilOp)
+  QUEUE_CMD(RenderBatchFlush)
+  QUEUE_CMD(AtomicStencilMask)
+  QUEUE_CMD(ColorMask)
+  QUEUE_CMD(StencilFunc)
   QUEUE_CMD(EndStencilMode)
   QUEUE_CMD(ClearStencilBuffer)
   QUEUE_CMD(BeginStencilMask)
@@ -1334,8 +1663,136 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(DrawDashedCircle)
   QUEUE_CMD(DrawDashedRoundedRect)
   QUEUE_CMD(DrawDashedLine)
+  QUEUE_CMD(DrawGradientRectCentered)
+  QUEUE_CMD(DrawGradientRectRoundedCentered)
 
 #undef QUEUE_CMD
+
+
+// special case for scoped render. this allows queuing commands that draw to the local space of a specific transform without having to use direct execution.
+cb.set_function("queueScopedTransformCompositeRender",
+    [](std::shared_ptr<layer::Layer> lyr,
+       entt::entity e,
+       sol::function child_builder,
+       int z,
+       DrawCommandSpace space = DrawCommandSpace::World)
+    {
+        QueueScopedTransformCompositeRender(
+            lyr, e, z, space, [&]() {
+                sol::protected_function pf(child_builder);
+                if (pf.valid()) {
+                    sol::protected_function_result r = pf();
+                    if (!r.valid()) {
+                        sol::error err = r;
+                        std::fprintf(stderr,
+                            "[queueScopedTransformCompositeRender] child_builder error: %s\n",
+                            err.what());
+                    }
+                } else {
+                    std::fprintf(stderr,
+                        "[queueScopedTransformCompositeRender] invalid function\n");
+                }
+            });
+    });
+
+
+
+  // -----------------------------------------------------------------------------
+// Immediate versions (execute immediately instead of queuing)
+// -----------------------------------------------------------------------------
+#define EXEC_CMD(execFunc, cmdName)                                            \
+  cb.set_function(                                                            \
+      "execute" #cmdName,                                                     \
+      [](std::shared_ptr<layer::Layer> lyr, sol::function init) {             \
+        ::layer::Cmd##cmdName c{};                                            \
+        sol::protected_function pf(init);                                     \
+        if (pf.valid()) {                                                     \
+          sol::protected_function_result r = pf(&c);                          \
+          if (!r.valid()) {                                                   \
+            sol::error e = r;                                                 \
+            std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName, e.what()); \
+          }                                                                   \
+        }                                                                     \
+        ::layer::execFunc(lyr, &c);                                           \
+      });
+
+      // Circle & primitives
+  EXEC_CMD(ExecuteCircle, DrawCircleFilled)
+  EXEC_CMD(ExecuteCircleLine, DrawCircleLine)
+  EXEC_CMD(ExecuteRectangle, DrawRectangle)
+  EXEC_CMD(ExecuteRectanglePro, DrawRectanglePro)
+  EXEC_CMD(ExecuteRectangleLinesPro, DrawRectangleLinesPro)
+  EXEC_CMD(ExecuteLine, DrawLine)
+  EXEC_CMD(ExecuteDashedLine, DrawDashedLine)
+  EXEC_CMD(ExecuteText, DrawText)
+  EXEC_CMD(ExecuteTextCentered, DrawTextCentered)
+  EXEC_CMD(ExecuteTextPro, TextPro)
+  EXEC_CMD(ExecuteDrawImage, DrawImage)
+  EXEC_CMD(ExecuteTexturePro, TexturePro)
+  EXEC_CMD(ExecuteDrawEntityAnimation, DrawEntityAnimation)
+  EXEC_CMD(ExecuteDrawTransformEntityAnimation, DrawTransformEntityAnimation)
+  EXEC_CMD(ExecuteDrawTransformEntityAnimationPipeline, DrawTransformEntityAnimationPipeline)
+  EXEC_CMD(ExecuteSetShader, SetShader)
+  EXEC_CMD(ExecuteResetShader, ResetShader)
+  EXEC_CMD(ExecuteSetBlendMode, SetBlendMode)
+  EXEC_CMD(ExecuteUnsetBlendMode, UnsetBlendMode)
+  EXEC_CMD(ExecuteSendUniformFloat, SendUniformFloat)
+  EXEC_CMD(ExecuteSendUniformInt, SendUniformInt)
+  EXEC_CMD(ExecuteSendUniformVec2, SendUniformVec2)
+  EXEC_CMD(ExecuteSendUniformVec3, SendUniformVec3)
+  EXEC_CMD(ExecuteSendUniformVec4, SendUniformVec4)
+  EXEC_CMD(ExecuteSendUniformFloatArray, SendUniformFloatArray)
+  EXEC_CMD(ExecuteSendUniformIntArray, SendUniformIntArray)
+  EXEC_CMD(ExecuteVertex, Vertex)
+  EXEC_CMD(ExecuteBeginOpenGLMode, BeginOpenGLMode)
+  EXEC_CMD(ExecuteEndOpenGLMode, EndOpenGLMode)
+  EXEC_CMD(ExecuteSetColor, SetColor)
+  EXEC_CMD(ExecuteSetLineWidth, SetLineWidth)
+  EXEC_CMD(ExecuteSetTexture, SetTexture)
+  EXEC_CMD(ExecuteRenderRectVerticesFilledLayer, RenderRectVerticesFilledLayer)
+  EXEC_CMD(ExecuteRenderRectVerticesOutlineLayer, RenderRectVerticesOutlineLayer)
+  EXEC_CMD(ExecutePolygon, DrawPolygon)
+  EXEC_CMD(ExecuteRenderNPatchRect, RenderNPatchRect)
+  EXEC_CMD(ExecuteTriangle, DrawTriangle)
+
+  // Transform & stencil
+  EXEC_CMD(ExecuteTranslate, Translate)
+  EXEC_CMD(ExecuteScale, Scale)
+  EXEC_CMD(ExecuteRotate, Rotate)
+  EXEC_CMD(ExecuteAddPush, AddPush)
+  EXEC_CMD(ExecuteAddPop, AddPop)
+  EXEC_CMD(ExecutePushMatrix, PushMatrix)
+  EXEC_CMD(ExecutePopMatrix, PopMatrix)
+  EXEC_CMD(ExecutePushObjectTransformsToMatrix, PushObjectTransformsToMatrix)
+  EXEC_CMD(ExecuteScopedTransformCompositeRender, ScopedTransformCompositeRender)
+  EXEC_CMD(ExecuteClearStencilBuffer, ClearStencilBuffer)
+  EXEC_CMD(ExecuteBeginStencilMode, BeginStencilMode)
+  EXEC_CMD(ExecuteStencilOp, StencilOp)
+  EXEC_CMD(ExecuteRenderBatchFlush, RenderBatchFlush)
+  EXEC_CMD(ExecuteAtomicStencilMask, AtomicStencilMask)
+  EXEC_CMD(ExecuteColorMask, ColorMask)
+  EXEC_CMD(ExecuteStencilFunc, StencilFunc)
+  EXEC_CMD(ExecuteEndStencilMode, EndStencilMode)
+  EXEC_CMD(ExecuteBeginStencilMask, BeginStencilMask)
+  EXEC_CMD(ExecuteEndStencilMask, EndStencilMask)
+
+  // Advanced primitives
+  EXEC_CMD(ExecuteDrawCenteredEllipse, DrawCenteredEllipse)
+  EXEC_CMD(ExecuteDrawRoundedLine, DrawRoundedLine)
+  EXEC_CMD(ExecuteDrawPolyline, DrawPolyline)
+  EXEC_CMD(ExecuteDrawArc, DrawArc)
+  EXEC_CMD(ExecuteDrawTriangleEquilateral, DrawTriangleEquilateral)
+  EXEC_CMD(ExecuteDrawCenteredFilledRoundedRect, DrawCenteredFilledRoundedRect)
+  EXEC_CMD(ExecuteDrawSpriteCentered, DrawSpriteCentered)
+  EXEC_CMD(ExecuteDrawSpriteTopLeft, DrawSpriteTopLeft)
+  EXEC_CMD(ExecuteDrawDashedCircle, DrawDashedCircle)
+  EXEC_CMD(ExecuteDrawDashedRoundedRect, DrawDashedRoundedRect)
+  EXEC_CMD(ExecuteDrawDashedLine, DrawDashedLine)
+  EXEC_CMD(ExecuteDrawGradientRectCentered, DrawGradientRectCentered)
+  EXEC_CMD(ExecuteDrawGradientRectRoundedCentered, DrawGradientRectRoundedCentered)
+
+  #undef EXEC_CMD
+
 
   struct CmdBeginStencilMode {
     bool dummy = false; // Placeholder
@@ -1382,6 +1839,75 @@ void exposeToLua(sol::state &lua) {
         ---@return void)",
           .doc =
               R"(Queues a CmdClearStencilBuffer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueColorMask",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdColorMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdColorMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueStencilOp",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilOp) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdStencilOp into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueRenderBatchFlush",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderBatchFlush) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdRenderBatchFlush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueAtomicStencilMask",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAtomicStencilMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdAtomicStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false}); 
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueStencilFunc",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilFunc) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdStencilFunc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
   rec.record_free_function(
@@ -1584,6 +2110,34 @@ void exposeToLua(sol::state &lua) {
               R"(Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
+        
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueDrawGradientRectCentered",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdDrawGradientRectCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueDrawGradientRectRoundedCentered",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdDrawGradientRectRoundedCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
 
   rec.record_free_function(
       {"layer"},
@@ -1708,6 +2262,34 @@ void exposeToLua(sol::state &lua) {
         ---@return void)",
           .doc =
               R"(Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queuePushObjectTransformsToMatrix",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdPushObjectTransformsToMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix())",
+          .is_static = true,
+          .is_overload = false}); 
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueScopedTransformCompositeRender",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdScopedTransformCompositeRender into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix())",
           .is_static = true,
           .is_overload = false});
 
@@ -2322,7 +2904,7 @@ void AddDrawCommand(std::shared_ptr<Layer> layer, const std::string &type,
 }
 
 std::shared_ptr<Layer> CreateLayer() {
-  return CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+  return CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
 }
 
 void ResizeCanvasInLayer(std::shared_ptr<Layer> layer,
@@ -2330,8 +2912,8 @@ void ResizeCanvasInLayer(std::shared_ptr<Layer> layer,
   auto it = layer->canvases.find(canvasName);
   if (it != layer->canvases.end()) {
     UnloadRenderTexture(it->second); // Free the existing texture
-    it->second = LoadRenderTexture(
-        width, height); // Create a new one with the specified dimensions
+    // it->second = LoadRenderTexture(width, height); // Create a new one with the specified dimensions
+    it->second = LoadRenderTextureStencilEnabled(width, height); // Create a new one with the specified dimensions
   } else {
     // Handle error: Canvas does not exist
     SPDLOG_ERROR("Error: Canvas '{}' does not exist in the layer.", canvasName);
@@ -2341,7 +2923,9 @@ void ResizeCanvasInLayer(std::shared_ptr<Layer> layer,
 std::shared_ptr<Layer> CreateLayerWithSize(int width, int height) {
   auto layer = std::make_shared<Layer>();
   // Create a default "main" canvas with the specified size
-  RenderTexture2D mainCanvas = LoadRenderTexture(width, height);
+  // RenderTexture2D mainCanvas = LoadRenderTexture(width, height);
+  RenderTexture2D mainCanvas =
+      LoadRenderTextureStencilEnabled(width, height);
   layer->canvases["main"] = mainCanvas;
   layers.push_back(layer);
   return layer;
@@ -2365,7 +2949,7 @@ void ClearDrawCommands(std::shared_ptr<Layer> layer) {
 }
 
 void Begin() {
-  // ZoneScopedN("Layer Begin-clear commands");
+  ZONE_SCOPED("Layer Begin-clear commands");
   ClearAllDrawCommands();
 }
 
@@ -2389,13 +2973,16 @@ void UnloadAllLayers() {
 
 void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name,
                       int width, int height) {
-  RenderTexture2D canvas = LoadRenderTexture(width, height);
+  // RenderTexture2D canvas = LoadRenderTexture(width, height);
+  RenderTexture2D canvas =
+      LoadRenderTextureStencilEnabled(width, height);
   layer->canvases[name] = canvas;
 }
 
 void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name) {
   RenderTexture2D canvas =
-      LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+      // LoadRenderTexture(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+      LoadRenderTextureStencilEnabled(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
   layer->canvases[name] = canvas;
 }
 
@@ -2500,7 +3087,9 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
     // create it with same size as ping:
     auto &srcTex = layerPtr->canvases.at(ping);
     layerPtr->canvases[pong] =
-        LoadRenderTexture(srcTex.texture.width, srcTex.texture.height);
+        // LoadRenderTexture(srcTex.texture.width, srcTex.texture.height);
+        LoadRenderTextureStencilEnabled(srcTex.texture.width,
+                                        srcTex.texture.height);
   }
 
   // 3) Run the full-screen shader chain:
@@ -3059,6 +3648,341 @@ void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr,
                  {outerRec, progressOrFullBackground, cacheEntity, color}, z);
 }
 
+
+void DrawGradientRectCentered(
+    float cx, float cy,
+    float width, float height,
+    Color topLeft, Color topRight,
+    Color bottomRight, Color bottomLeft)
+{
+    float x = cx - width / 2.0f;
+    float y = cy - height / 2.0f;
+
+    rlBegin(RL_QUADS);
+        rlColor4ub(topLeft.r, topLeft.g, topLeft.b, topLeft.a);
+        rlVertex2f(x, y);
+
+        rlColor4ub(topRight.r, topRight.g, topRight.b, topRight.a);
+        rlVertex2f(x + width, y);
+
+        rlColor4ub(bottomRight.r, bottomRight.g, bottomRight.b, bottomRight.a);
+        rlVertex2f(x + width, y + height);
+
+        rlColor4ub(bottomLeft.r, bottomLeft.g, bottomLeft.b, bottomLeft.a);
+        rlVertex2f(x, y + height);
+    rlEnd();
+}
+
+void DrawRectangleRoundedGradientH(Rectangle rec, float roundnessLeft, float roundnessRight, int segments, Color left, Color right)
+{
+    // Neither side is rounded
+    if ((roundnessLeft <= 0.0f && roundnessRight <= 0.0f) || (rec.width < 1) || (rec.height < 1 ))
+    {
+        DrawRectangleGradientEx(rec, left, left, right, right);
+        return;
+    }
+
+    if (roundnessLeft  >= 1.0f) roundnessLeft  = 1.0f;
+    if (roundnessRight >= 1.0f) roundnessRight = 1.0f;
+
+    // Calculate corner radius both from right and left
+    float recSize = rec.width > rec.height ? rec.height : rec.width;
+    float radiusLeft  = (recSize*roundnessLeft)/2;
+    float radiusRight = (recSize*roundnessRight)/2;
+
+    if (radiusLeft <= 0.0f) radiusLeft = 0.0f;
+    if (radiusRight <= 0.0f) radiusRight = 0.0f;
+
+    if (radiusRight <= 0.0f && radiusLeft <= 0.0f) return;
+
+    float stepLength = 90.0f/(float)segments;
+
+    /*
+    Diagram Copied here for reference, original at 'DrawRectangleRounded()' source code
+
+          P0____________________P1
+          /|                    |\
+         /1|          2         |3\
+     P7 /__|____________________|__\ P2
+       |   |P8                P9|   |
+       | 8 |          9         | 4 |
+       | __|____________________|__ |
+     P6 \  |P11              P10|  / P3
+         \7|          6         |5/
+          \|____________________|/
+          P5                    P4
+    */
+
+    // Coordinates of the 12 points also apdated from `DrawRectangleRounded`
+    const Vector2 point[12] = {
+        // PO, P1, P2
+        {(float)rec.x + radiusLeft, rec.y}, {(float)(rec.x + rec.width) - radiusRight, rec.y}, { rec.x + rec.width, (float)rec.y + radiusRight },
+        // P3, P4
+        {rec.x + rec.width, (float)(rec.y + rec.height) - radiusRight}, {(float)(rec.x + rec.width) - radiusRight, rec.y + rec.height},
+        // P5, P6, P7
+        {(float)rec.x + radiusLeft, rec.y + rec.height}, { rec.x, (float)(rec.y + rec.height) - radiusLeft}, {rec.x, (float)rec.y + radiusLeft},
+        // P8, P9
+        {(float)rec.x + radiusLeft, (float)rec.y + radiusLeft}, {(float)(rec.x + rec.width) - radiusRight, (float)rec.y + radiusRight},
+        // P10, P11
+        {(float)(rec.x + rec.width) - radiusRight, (float)(rec.y + rec.height) - radiusRight}, {(float)rec.x + radiusLeft, (float)(rec.y + rec.height) - radiusLeft}
+    };
+
+    const Vector2 centers[4] = { point[8], point[9], point[10], point[11] };
+    const float angles[4] = { 180.0f, 270.0f, 0.0f, 90.0f };
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+    rlSetTexture(GetShapesTexture().id);
+    Rectangle shapeRect = GetShapesTextureRectangle();
+
+    rlBegin(RL_QUADS);
+        // Draw all the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
+        for (int k = 0; k < 4; ++k)
+        {
+            Color color;
+            float radius;
+            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
+            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
+            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
+            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
+            float angle = angles[k];
+            const Vector2 center = centers[k];
+
+            for (int i = 0; i < segments/2; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength*2))*radius, center.y + sinf(DEG2RAD*(angle + stepLength*2))*radius);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+
+                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+
+                angle += (stepLength*2);
+            }
+
+            // End one even segments
+            if ( segments % 2)
+            {
+                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+
+                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+            }
+        }
+
+        // Here we use the 'Diagram' to guide ourselves to which point receives what color
+        // By choosing the color correctly associated with a pointe the gradient effect
+        // will naturally come from OpenGL interpolation
+
+        // [2] Upper Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[0].x, point[0].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[1].x, point[1].y);
+
+        // [4] Left Rectangle
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[2].x, point[2].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[3].x, point[3].y);
+
+        // [6] Bottom Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[5].x, point[5].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[4].x, point[4].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+
+        // [8] left Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[7].x, point[7].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[6].x, point[6].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+
+        // [9] Middle Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+
+    rlEnd();
+    rlSetTexture(0);
+#else
+
+    // Here we use the 'Diagram' to guide ourselves to which point receives what color
+    // By choosing the color correctly associated with a pointe the gradient effect
+    // will naturally come from OpenGL interpolation
+    // But this time instead of Quad, we think in triangles
+
+    rlBegin(RL_TRIANGLES);
+        // Draw all of the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
+        for (int k = 0; k < 4; ++k)
+        {
+            Color color = { 0 };
+            float radius = 0.0f;
+            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
+            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
+            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
+            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
+
+            float angle = angles[k];
+            const Vector2 center = centers[k];
+
+            for (int i = 0; i < segments; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+                rlVertex2f(center.x, center.y);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+                angle += stepLength;
+            }
+        }
+
+        // [2] Upper Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[0].x, point[0].y);
+        rlVertex2f(point[8].x, point[8].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[1].x, point[1].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[0].x, point[0].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+
+        // [4] Right Rectangle
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[10].x, point[10].y);
+        rlVertex2f(point[3].x, point[3].y);
+        rlVertex2f(point[2].x, point[2].y);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[3].x, point[3].y);
+
+        // [6] Bottom Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[11].x, point[11].y);
+        rlVertex2f(point[5].x, point[5].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[4].x, point[4].y);
+        rlVertex2f(point[10].x, point[10].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[11].x, point[11].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[4].x, point[4].y);
+
+        // [8] Left Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[7].x, point[7].y);
+        rlVertex2f(point[6].x, point[6].y);
+        rlVertex2f(point[11].x, point[11].y);
+        rlVertex2f(point[8].x, point[8].y);
+        rlVertex2f(point[7].x, point[7].y);
+        rlVertex2f(point[11].x, point[11].y);
+
+        // [9] Middle Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[8].x, point[8].y);
+        rlVertex2f(point[11].x, point[11].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[10].x, point[10].y);
+        rlVertex2f(point[9].x, point[9].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[8].x, point[8].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[10].x, point[10].y);
+    rlEnd();
+#endif
+}
+
+
+
+
+
+void DrawGradientRectRoundedCentered(
+    float cx, float cy,
+    float width, float height,
+    float roundness,
+    int segments,
+    Color top,
+    Color bottom,
+    Color, Color) // unused last two color params, for signature compatibility
+{
+    if (width <= 0.0f || height <= 0.0f) return;
+
+    Rectangle rec = {
+        cx - width * 0.5f,
+        cy - height * 0.5f,
+        width,
+        height
+    };
+
+    rlPushMatrix();
+
+    // Move to center of rectangle before rotation
+    rlTranslatef(cx, cy, 0.0f);
+
+    // Rotate -90° CCW so horizontal gradient becomes vertical (top→bottom)
+    rlRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+
+    // Adjust rectangle to rotated coordinate system (centered again)
+    Rectangle rotated = {
+        -height * 0.5f,  // new x (since rotated)
+        -width * 0.5f,   // new y
+        height,          // swapped width/height
+        width
+    };
+
+    // Reuse existing horizontal version safely
+    DrawRectangleRoundedGradientH(rotated, roundness, roundness, segments, top, bottom);
+
+    rlPopMatrix();
+}
+
 void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr,
                                    const Rectangle outerRec,
                                    bool progressOrFullBackground,
@@ -3264,8 +4188,10 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     camera_manager::End();
   }
 
-  // 1. Fetch animation frame and sprite
+  // 1. Fetch animation frame and sprite - use COPIES to avoid dangling pointers
+  Rectangle animationFrameData{};
   Rectangle *animationFrame = nullptr;
+  SpriteComponentASCII currentSpriteData{};
   SpriteComponentASCII *currentSprite = nullptr;
   bool flipX{false}, flipY{false};
 
@@ -3274,8 +4200,13 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   if (registry.any_of<AnimationQueueComponent>(e)) {
     auto &aqc = registry.get<AnimationQueueComponent>(e);
-    if (aqc.noDraw)
+    if (aqc.noDraw) {
+      // Restore camera before early return to avoid state corruption
+      if (camera) {
+        camera_manager::Begin(*camera);
+      }
       return;
+    }
 
     // compute the same renderScale as in your other overload:
     intrinsicScale =
@@ -3291,25 +4222,31 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
     if (aqc.animationQueue.empty()) {
       if (!aqc.defaultAnimation.animationList.empty()) {
-        animationFrame =
-            &aqc.defaultAnimation
+        // Copy data instead of storing pointers to avoid dangling references
+        animationFrameData =
+            aqc.defaultAnimation
                  .animationList[aqc.defaultAnimation.currentAnimIndex]
                  .first.spriteData.frame;
-        currentSprite =
-            &aqc.defaultAnimation
+        animationFrame = &animationFrameData;
+        currentSpriteData =
+            aqc.defaultAnimation
                  .animationList[aqc.defaultAnimation.currentAnimIndex]
                  .first;
+        currentSprite = &currentSpriteData;
         flipX = aqc.defaultAnimation.flippedHorizontally;
         flipY = aqc.defaultAnimation.flippedVertically;
       }
     } else {
       auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-      animationFrame =
-          &currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
+      // Copy data instead of storing pointers to avoid dangling references
+      animationFrameData =
+          currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
                .first.spriteData.frame;
-      currentSprite =
-          &currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
+      animationFrame = &animationFrameData;
+      currentSpriteData =
+          currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
                .first;
+      currentSprite = &currentSpriteData;
       flipX = currentAnimObject.flippedHorizontally;
       flipY = currentAnimObject.flippedVertically;
     }
@@ -3404,19 +4341,57 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   Vector2 drawOffset = { pad, pad };
 
   bool usedLocalCallback = false;
+  
+  // DrawCircle(0, 0, 100, RED); // debug point at local origin
+
+  // 🟡 NEW: check for RenderImmediateCallback (Lua override)
+  bool usedImmediateCallback = false;
+  if (registry.any_of<transform::RenderImmediateCallback>(e)) {
+    const auto& cb = registry.get<transform::RenderImmediateCallback>(e);
+    if (cb.fn.valid()) {
+        rlPushMatrix();
+
+        // Move to padded draw area
+        rlTranslatef(drawOffset.x, drawOffset.y, 0);
+
+        // Center the local origin inside the image region
+        rlTranslatef(baseWidth * 0.5f, baseHeight * 0.5f, 0);
+
+        // Optional: flip Y if you still need upright drawing later
+        // rlTranslatef(0, baseHeight, 0);
+        // rlScalef(1, -1, 1);
+
+        // Now (0,0) is at the image center
+        // DrawCircle(0, 0, 100, RED); // should render centered
+        // DrawGradientRectRoundedCentered(
+        //     0, 0,
+        //     baseWidth, baseHeight,
+        //     0.2f, 16,
+        //     RED, BLUE,
+        //     GREEN, YELLOW);
+        cb.fn(baseWidth, baseHeight);  // run Lua callback here if desired
+        rlPopMatrix();
+
+        usedImmediateCallback = true;
+        if (cb.disableSpriteRendering)
+            usedLocalCallback = true;
+    }
+  }
+
   if (registry.any_of<transform::RenderLocalCallback>(e)) {
     const auto &cb = registry.get<transform::RenderLocalCallback>(e);
     if (cb.fn && !cb.afterPipeline) {
-      // Shift origin so callback sees (0,0) == top-left of *content* (inside pad)
       Translate(drawOffset.x, drawOffset.y);
-      cb.fn(baseWidth, baseHeight, /*isShadow=*/false);           // user draws shapes/sprites at local coords
+      cb.fn(baseWidth, baseHeight, /*isShadow=*/false);
+      
+      DrawCircle(0, 0, 100, RED); // debug point at local origin
       Translate(-drawOffset.x, -drawOffset.y);
       usedLocalCallback = true;
     }
   }
 
-  if (!usedLocalCallback) {
-    // Your original path (background/foreground sprite):
+  // existing sprite drawing logic only runs if no callback replaced it
+  if (!usedLocalCallback && !usedImmediateCallback) {
     if (drawBackground) {
       layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0,0}, 0, bgColor);
     }
@@ -3425,8 +4400,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       if (animationFrame) {
         layer::TexturePro(*spriteAtlas,
                           {animationFrame->x, animationFrame->y,
-                          animationFrame->width * xFlipModifier,
-                          animationFrame->height * -yFlipModifier},
+                           animationFrame->width * xFlipModifier,
+                           animationFrame->height * -yFlipModifier},
                           drawOffset.x, drawOffset.y,
                           {baseWidth * xFlipModifier, baseHeight * yFlipModifier},
                           {0, 0}, 0, fgColor);
@@ -3443,6 +4418,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   render_stack_switch_internal::Pop(); // done with id 6
 
+
   // 🟡 Save base sprite result
   // RenderTexture2D baseSpriteRender =
   //     shader_pipeline::GetBaseRenderTextureCache();
@@ -3455,19 +4431,21 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       shader_pipeline::GetBaseRenderTextureCache();
   layer::render_stack_switch_internal::Push(baseSpriteRender);
   ClearBackground({0, 0, 0, 0});
-  Rectangle sourceRect = {
+  Rectangle baseSpriteSourceRect = {
       0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
       renderWidth, renderHeight};
-  DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
+  DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   layer::render_stack_switch_internal::Pop();
 
   if (globals::drawDebugInfo) {
     // Draw
-    DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
+    DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   }
 
   // 3. Apply shader passes
   int total = pipelineComp.passes.size();
+
+  
   int i = 0;
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
     bool lastPass = (++i == total);
@@ -3527,7 +4505,11 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   // // 🔵 Save post-pass result
   RenderTexture2D postPassRender = {}; // id 6 is now the result of all passes
-  if (!shader_pipeline::GetLastRenderTarget()) {
+  if (pipelineComp.passes.empty()) {
+    // No shader passes - use the base sprite render directly
+    shader_pipeline::SetLastRenderTarget(baseSpriteRender);
+    postPassRender = *shader_pipeline::GetLastRenderTarget();
+  } else if (!shader_pipeline::GetLastRenderTarget()) {
     shader_pipeline::SetLastRenderTarget(
         shader_pipeline::front()); // if no passes, we use the front texture
     postPassRender = shader_pipeline::front();
@@ -3543,9 +4525,15 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   render_stack_switch_internal::Push(postProcessRender);
   ClearBackground({0, 0, 0, 0});
 
-  if (pipelineComp.passes.size() % 2 == 0)
+  if (pipelineComp.passes.empty()) {
+    // No shader passes - treat like 1 pass (odd) for consistent behavior
+    Rectangle sourceRect = {0.0f,
+                            (float)baseSpriteRender.texture.height - renderHeight,
+                            renderWidth, renderHeight};
+    DrawTextureRec(baseSpriteRender.texture, sourceRect, {0, 0}, WHITE);
+  } else if (pipelineComp.passes.size() % 2 == 0) {
     DrawTexture(postPassRender.texture, 0, 0, WHITE);
-  else {
+  } else {
     Rectangle sourceRect = {0.0f,
                             (float)postPassRender.texture.height - renderHeight,
                             renderWidth, renderHeight};
@@ -3676,12 +4664,10 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   if (pipelineComp.overlayDraws.empty() == false) {
     toRender =
         shader_pipeline::front(); //  in this case it's the overlay draw result
-  } else if (pipelineComp.passes.empty() == false) {
-    // if there are passes, we use the last render target
-    toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
   } else {
-    // nothing?
-    toRender = shader_pipeline::GetBaseRenderTextureCache();
+    // if there are passes or no passes, we use the post-process render cache
+    // which contains either the shader results or the base sprite
+    toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
   }
 
   if (globals::drawDebugInfo) {
@@ -3698,6 +4684,54 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   if (camera) {
     camera_manager::Begin(*camera);
   }
+  
+  
+  // ============================================================
+//               NEW GROUND ELLIPSE SHADOW BLOCK  (FIXED ANCHOR)
+// ============================================================
+if (registry.any_of<transform::GameObject>(e)) {
+    auto &node = registry.get<transform::GameObject>(e);
+
+    if (node.shadowDisplacement &&
+      node.shadowMode == transform::GameObject::ShadowMode::GroundEllipse) {
+
+        // ----- Correct anchor point -----
+        // Center horizontally, bottom vertically
+        float baseX = transform.getVisualX() + transform.getVisualW() * 0.5f;
+        float baseY = transform.getVisualY() + transform.getVisualH()
+                      + node.groundShadowYOffset;
+
+        // Compute visual scale
+        float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+
+        // Sprite size (pre-scale)
+        float spriteW = transform.getVisualW();
+        float spriteH = transform.getVisualH();
+
+        // Radii (auto or override)
+        float rx = node.groundShadowRadiusX.has_value()
+                     ? *node.groundShadowRadiusX
+                     : spriteW * 0.40f;
+
+        float ry = node.groundShadowRadiusY.has_value()
+                     ? *node.groundShadowRadiusY
+                     : spriteH * 0.15f;
+
+        // Apply scaling and height factor
+        rx *= s * node.groundShadowHeightFactor;
+        ry *= s * node.groundShadowHeightFactor;
+
+        if (node.groundShadowColor.a > 0 && rx > 0.1f && ry > 0.1f) {
+            rlPushMatrix();
+            rlTranslatef(baseX, baseY, 0.0f);
+            rlScalef(rx, ry, 1.0f);
+            DrawCircleV({0.0f, 0.0f}, 1.0f, node.groundShadowColor);
+            rlPopMatrix();
+        }
+    }
+}
+// ============================================================
+
 
   // 5. Final draw with transform
 
@@ -3709,13 +4743,16 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
                        // on the last texture?
 
   // default (no flip)
-  sourceRect = {0.0f, (float)toRender.texture.height - renderHeight,
+  Rectangle finalSourceRect = {0.0f, (float)toRender.texture.height - renderHeight,
                 renderWidth, renderHeight};
 
   // if we’ve done an odd number of flips, correct it exactly once:
-  if (pipelineComp.passes.size() % 2 == 0) {
-    sourceRect.y = (float)toRender.texture.height;
-    sourceRect.height = -(float)renderHeight;
+  if (pipelineComp.passes.empty()) {
+    // No passes - treat like odd (1 pass) for consistency
+    // Already set correctly above (default finalSourceRect), no change needed
+  } else if (pipelineComp.passes.size() % 2 == 0) {
+    finalSourceRect.y = (float)toRender.texture.height;
+    finalSourceRect.height = -(float)renderHeight;
   } else {
     // if we have an odd number of flips, we need to flip the Y coordinate
     // sourceRect.y      = (float)renderHeight;
@@ -3725,23 +4762,28 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};
 
-  PushMatrix();
-  Translate(position.x, position.y);
-  Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(),
-        transform.getVisualScaleWithHoverAndDynamicMotionReflected());
-  Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-  Translate(-origin.x, -origin.y);
-
-  // shadow rendering first
+  // PushMatrix();
+  // Translate(position.x, position.y);
+  // Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+  //       transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+  // Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+  // Translate(-origin.x, -origin.y);
+  
+  // shadow rendering first (with rotation but world-space offset)
+  // ============================================================
+  //        ORIGINAL SPRITE-BASED SHADOW (SpriteBased only)
+  // ============================================================
   {
-    auto &node = registry.get<transform::GameObject>(e);
+      auto &node = registry.get<transform::GameObject>(e);
 
-    if (node.shadowDisplacement) {
+      if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
+          node.shadowDisplacement)
+      {
       float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
       float heightFactor = 1.0f + node.shadowHeight.value_or(
                                       0.f); // Increase effect based on height
 
-      // Adjust displacement using shadow height
+      // Adjust displacement using shadow height (in world space)
       float shadowOffsetX =
           node.shadowDisplacement->x * baseExaggeration * heightFactor;
       float shadowOffsetY =
@@ -3750,18 +4792,30 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       float shadowAlpha = 0.8f; // 0.0f to 1.0f
       Color shadowColor = Fade(BLACK, shadowAlpha);
 
-      // Translate to shadow position
-      Translate(-shadowOffsetX, shadowOffsetY);
-
-      // Draw shadow by rendering the same frame with a black tint and offset
-      DrawTextureRec(toRender.texture, sourceRect, {0, 0}, shadowColor);
-
-      // Reset translation to original position
-      Translate(shadowOffsetX, -shadowOffsetY);
+      // Draw shadow at world-space offset WITH rotation (shadow rotates with sprite)
+      PushMatrix();
+      Translate(position.x - shadowOffsetX, position.y + shadowOffsetY);
+      float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+      float visualScaleX = (transform.getVisualW() / baseWidth) * s;
+      float visualScaleY = (transform.getVisualH() / baseHeight) * s;
+      Scale(visualScaleX, visualScaleY);
+      Rotate(transform.getVisualRWithDynamicMotionAndXLeaning()); // Shadow rotates with sprite
+      Translate(-origin.x, -origin.y);
+      DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, shadowColor);
+      PopMatrix();
     }
   }
+  
+  PushMatrix();
+Translate(position.x, position.y);
+float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+float visualScaleX = (transform.getVisualW() / baseWidth) * s;
+float visualScaleY = (transform.getVisualH() / baseHeight) * s;
+Scale(visualScaleX, visualScaleY);
+Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+Translate(-origin.x, -origin.y);
 
-  DrawTextureRec(toRender.texture, sourceRect, {0, 0}, WHITE);
+  DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, WHITE);
 
   // debug rect
   if (globals::drawDebugInfo) {
@@ -3809,6 +4863,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // draw the mini pipeline view + ALL rects
   // shader_pipeline::DebugDrawAllRects(10, 10);
 }
+
+
 
 //-----------------------------------------------------------------------------------
 // renderSliceOffscreen
@@ -4369,6 +5425,71 @@ auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x,
     layer::RectanglePro(x, y, {renderWidth, renderHeight}, {0, 0}, 0,
                         {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
   }
+}
+
+// Pushes the transform commands for an entity's transform component onto the
+// layer's command queue. remember to pair with a CmdPopMatrix!
+auto pushEntityTransformsToMatrix(entt::registry &registry,
+                                  entt::entity e,
+                                  std::shared_ptr<layer::Layer> layer,
+                                  int zOrder) -> void
+{
+    // Determine whether the entity renders in world or screen space.
+    bool isScreenSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+    layer::DrawCommandSpace drawSpace =
+        isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
+
+    // Retrieve the transform (and any needed springs)
+    auto &entityTransform = registry.get<transform::Transform>(e);
+
+    // --- Push Matrix ---
+    layer::QueueCommand<layer::CmdPushMatrix>(layer,
+        [](layer::CmdPushMatrix *cmd) {}, zOrder, drawSpace);
+
+    // --- Apply Translation: move to entity center ---
+    layer::QueueCommand<layer::CmdTranslate>(layer,
+        [x = entityTransform.getVisualX() + entityTransform.getVisualW() * 0.5f,
+         y = entityTransform.getVisualY() + entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        },
+        zOrder, drawSpace);
+
+    // --- Apply Scaling ---
+    layer::QueueCommand<layer::CmdScale>(layer,
+        [scaleX = entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+         scaleY = entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+            cmd->scaleX = scaleX;
+            cmd->scaleY = scaleY;
+        },
+        zOrder, drawSpace);
+
+    // --- Apply Rotation ---
+    layer::QueueCommand<layer::CmdRotate>(layer,
+        [rotation = entityTransform.getVisualR() + entityTransform.rotationOffset](layer::CmdRotate *cmd) {
+            cmd->angle = rotation;
+        },
+        zOrder, drawSpace);
+
+    // --- Translate back to local origin ---
+    layer::QueueCommand<layer::CmdTranslate>(layer,
+        [x = -entityTransform.getVisualW() * 0.5f,
+         y = -entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        },
+        zOrder, drawSpace);
+}
+
+auto pushEntityTransformsToMatrixImmediate(entt::registry& registry,
+                                           entt::entity e,
+                                           std::shared_ptr<layer::Layer> layer,
+                                           int zOrder) -> void
+{
+    auto& t = registry.get<transform::Transform>(e);
+
+    PushMatrix();
+    rlMultMatrixf(MatrixToFloat(t.cachedMatrix));
 }
 
 void Circle(float x, float y, float radius, const Color &color) {
@@ -5000,6 +6121,9 @@ void rectangle(float x, float y, float w, float h, std::optional<float> rx,
   const bool doStroke = lineWidth.has_value();
   const bool doFill = color.has_value() && !doStroke;
   Color C = color.value_or(defaultColor());
+  
+  //pprint color value
+  // SPDLOG_DEBUG("rectangle color: {} {} {} {}", C.r, C.g, C.b, C.a);
 
   if (rx.has_value() || ry.has_value()) {
     // Raylib uses [0..1] roundness proportion of min(width,height).
@@ -5226,25 +6350,24 @@ void rounded_line(float x1, float y1, float x2, float y2,
 void ellipse(float x, float y, float rx, float ry,
              std::optional<Color> color,
              std::optional<float> lineWidth) {
-  Color C = color.value_or(defaultColor());
-  if (lineWidth.has_value()) {
-    float t = std::max(1.0f, lineWidth.value());
-    // Draw a unit circle ring at origin, scale to rx/ry, then translate.
-    // This keeps to built-ins (DrawRing) and avoids manual tessellation.
-    rlPushMatrix();
-    rlTranslatef(x, y, 0.0f);
-    rlScalef(1.0f, ry / rx,
-             1.0f); // scale Y so a circle of radius rx becomes ellipse rx,ry
-    float inner = std::max(0.0f, rx - t * 0.5f);
-    float outer = rx + t * 0.5f;
-    DrawRing(Vector2{0, 0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
-    rlPopMatrix();
-  } else if (color.has_value()) {
-    DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
-  } else {
-    DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
-  }
+    Color C = color.value_or(defaultColor());
+    if (lineWidth.has_value()) {
+        float t = std::max(1.0f, lineWidth.value());
+        rlPushMatrix();
+        rlTranslatef(x, y, 0.0f);
+        rlScalef(1.0f, ry / rx, 1.0f);
+        float inner = std::max(0.0f, rx - t * 0.5f);
+        float outer = rx + t * 0.5f;
+        DrawRing(Vector2{0, 0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
+        rlDrawRenderBatchActive();   // <---- CRUCIAL
+        rlPopMatrix();
+    } else if (color.has_value()) {
+        DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
+    } else {
+        DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
+    }
 }
+
 
 // -- immediate sprite render
 auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,
@@ -5322,8 +6445,10 @@ auto DrawSpriteCentered(const std::string &spriteName, float x, float y,
   const Vector2 origin = {0.0f, 0.0f};
   DrawTexturePro(*tex, src, dst, origin, 0.0f, tint);
 }
+#if !defined(__EMSCRIPTEN__)
+  #include "external/glad.h"
+#endif
 
-#include "external/glad.h"
 #include "rlgl.h"
 
 // Stencil masks
@@ -5359,6 +6484,7 @@ void endStencilMask() {
   // Stop writing to stencil bits
   glStencilMask(0x00);
 
+
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
@@ -5366,5 +6492,67 @@ void endStencil() {
   rlDrawRenderBatchActive();
   glDisable(GL_STENCIL_TEST);
 }
+
+RenderTexture2D LoadRenderTextureStencilEnabled(int width, int height)
+{
+    RenderTexture2D target = { 0 };
+
+    target.id = rlLoadFramebuffer(); // Create framebuffer object
+    if (target.id <= 0)
+    {
+        TRACELOG(LOG_WARNING, "FBO: Framebuffer object cannot be created");
+        return target;
+    }
+
+    rlEnableFramebuffer(target.id);
+
+    // ------------------------------------------------------------
+    // COLOR ATTACHMENT (RGBA8)
+    // ------------------------------------------------------------
+    target.texture.id = rlLoadTexture(NULL, width, height,
+                                      PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
+    target.texture.width  = width;
+    target.texture.height = height;
+    target.texture.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+    target.texture.mipmaps = 1;
+
+    rlFramebufferAttach(target.id, target.texture.id,
+                        RL_ATTACHMENT_COLOR_CHANNEL0,
+                        RL_ATTACHMENT_TEXTURE2D, 0);
+
+    // ------------------------------------------------------------
+    // DEPTH + STENCIL RENDERBUFFER (GL_DEPTH24_STENCIL8)
+    // ------------------------------------------------------------
+    unsigned int depthStencilId = 0;
+    glGenRenderbuffers(1, &depthStencilId);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthStencilId);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+
+    // Attach same renderbuffer to both depth and stencil
+    rlFramebufferAttach(target.id, depthStencilId,
+                        RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
+    rlFramebufferAttach(target.id, depthStencilId,
+                        RL_ATTACHMENT_STENCIL, RL_ATTACHMENT_RENDERBUFFER, 0);
+
+    // Store metadata
+    target.depth.id = depthStencilId;
+    target.depth.width  = width;
+    target.depth.height = height;
+    target.depth.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8; // placeholder
+    target.depth.mipmaps = 1;
+
+    // ------------------------------------------------------------
+    // VALIDATION + CLEANUP
+    // ------------------------------------------------------------
+    if (rlFramebufferComplete(target.id))
+        TRACELOG(LOG_INFO, "FBO: [ID %i] Framebuffer with depth+stencil created successfully", target.id);
+    else
+        TRACELOG(LOG_WARNING, "FBO: [ID %i] Framebuffer is incomplete", target.id);
+
+    rlDisableFramebuffer();
+
+    return target;
+}
+
 
 } // namespace layer

@@ -1,12 +1,25 @@
 
 #include <memory>
 
+#if defined(PLATFORM_WEB)
+#include "util/web_glad_shim.hpp"
+#endif
+
+#if defined(__EMSCRIPTEN__)
+    #include <GLES3/gl3.h>
+    #include <GLES2/gl2ext.h>
+#else
+    // #include <GL/gl.h>
+    // #include <GL/glext.h>
+#endif
+
 #include "../util/utilities.hpp"
 
 #include "graphics.hpp"
 #include "globals.hpp"
 
-// #include "third_party/tracy-master/public/tracy/Tracy.hpp"
+#include "systems/input/controller_nav.hpp"
+
 
 #include "../components/components.hpp"
 #include "../components/graphics.hpp"
@@ -57,6 +70,9 @@
 #include "systems/composable_mechanics/bootstrap.hpp"
 #include "systems/composable_mechanics/ability.hpp"
 
+#include "systems/scripting/lua_hot_reload.hpp"
+#include "sol/types.hpp"
+
 using std::pair;
 
 #define SPINE_USE_STD_FUNCTION
@@ -99,6 +115,10 @@ using std::pair;
 
 
 
+
+#include "rlgl.h"
+
+
 // AsteroidManager *asteroidManager = nullptr;
 
 // example entity
@@ -126,14 +146,11 @@ float transitionShaderPositionVar = 0.f;
 namespace game
 {
     
+
+    
     std::vector<std::string> fullscreenShaders;
 
-    // make layers to draw to
-    std::shared_ptr<layer::Layer> background;  // background
-    std::shared_ptr<layer::Layer> sprites;     // sprites
-    std::shared_ptr<layer::Layer> ui_layer;    // ui
-    std::shared_ptr<layer::Layer> particles; 
-    std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
+    std::unordered_map<std::string, std::shared_ptr<layer::Layer>> s_layers{};
     
     std::string randomStringText{"HEY HEY!"
     };
@@ -402,6 +419,119 @@ namespace game
 
     } // namespace luaqt
 
+    // New: per-layer shader stacks
+    static std::unordered_map<std::string, std::vector<std::string>> s_layerShaders;
+
+    // ---- Layer shader API ----
+    inline void add_layer_shader(const std::string& layerName, const std::string& shaderName) {
+        auto& vec = s_layerShaders[layerName];
+        if (std::find(vec.begin(), vec.end(), shaderName) == vec.end())
+            vec.push_back(shaderName);
+    }
+
+    inline void remove_layer_shader(const std::string& layerName, const std::string& shaderName) {
+        auto it = s_layerShaders.find(layerName);
+        if (it == s_layerShaders.end()) return;
+
+        auto& vec = it->second;
+        vec.erase(std::remove(vec.begin(), vec.end(), shaderName), vec.end());
+        if (vec.empty()) s_layerShaders.erase(it);
+    }
+
+    inline void clear_layer_shaders(const std::string& layerName) {
+        s_layerShaders.erase(layerName);
+    }
+
+    // ============================================================
+    //  SHARED UNIFIED SHADER PIPELINE (ping-pong)
+    // ============================================================
+
+    inline void run_shader_pipeline(
+        std::shared_ptr<layer::Layer> layer,
+        const std::vector<std::string>& pipeline,
+        const std::string& mainCanvas = "main",
+        const std::string& tempCanvas = "render_double_buffer"
+    ) {
+        if (pipeline.empty()) return;
+
+        std::string src = mainCanvas;
+        std::string dst = tempCanvas;
+
+        for (const auto& shaderName : pipeline) {
+            layer::DrawCanvasOntoOtherLayerWithShader(
+                layer,
+                src,
+                layer,
+                dst,
+                0, 0, 0, 1, 1,
+                WHITE,
+                shaderName
+            );
+            std::swap(src, dst);
+        }
+
+        // Ensure result ends up back in mainCanvas
+        if (src != mainCanvas) {
+            layer::DrawCanvasOntoOtherLayer(
+                layer,
+                src,
+                layer,
+                mainCanvas,
+                0, 0, 0, 1, 1,
+                WHITE
+            );
+        }
+    }
+    
+    
+    
+/* --------------------------- reload game helper --------------------------- */
+    void resetLuaRefs()
+    {
+        luaMainInitFunc.reset();
+        luaMainUpdateFunc.reset();
+        luaMainDrawFunc.reset();
+        
+        luaMainDrawFunc = sol::lua_nil;
+        luaMainUpdateFunc = sol::lua_nil;
+        luaMainInitFunc = sol::lua_nil;
+    }
+
+    // contains what needs to be done to re-initialize main after a reset, includes init methods from main.cpp that go beyond baseline init
+    void reInitializeGame()
+    {
+        
+        timer::TimerSystem::clear_all_timers();
+        
+        globals::registry.view<transform::Transform>().each([](auto entity, auto &t){
+            transform::RemoveEntity(&globals::registry, entity);
+        });
+        
+        globals::registry.clear();
+        
+        // clear registry, timers, physics worlds, layers
+        globals::physicsManager->clearAllWorlds();
+        layer::UnloadAllLayers();
+        ClearLayers();
+        clear_layer_shaders("ui_layer");
+        clear_layer_shaders("sprites");
+        clear_layer_shaders("background");  
+        controller_nav::NavManager::instance().reset();
+        
+        // clear lua state and re-load
+        resetLuaRefs();
+        ai_system::masterStateLua = sol::state(); // reset lua state
+        ai_system::init();
+        
+        globals::quadtreeUI.clear();
+        globals::quadtreeWorld.clear();
+        
+        sound_system::ResetSoundSystem();
+    
+        input::Init(globals::inputState);
+        game::init();
+        
+    }
     
 /* ---------------- helpers for culling scroll pane elements ---------------- */
     static inline bool rectsOverlap(const Rectangle& a, const Rectangle& b) {
@@ -440,7 +570,7 @@ namespace game
         );
 
         // Populate the Quadtree Per Frame
-        globals::registry.view<transform::Transform, transform::GameObject, entity_gamestate_management::StateTag>(entt::exclude<collision::ScreenSpaceCollisionMarker>)
+        globals::registry.view<transform::Transform, transform::GameObject, entity_gamestate_management::StateTag>(entt::exclude<collision::ScreenSpaceCollisionMarker, entity_gamestate_management::InactiveTag>)
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag) {
                 if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
@@ -478,19 +608,19 @@ namespace game
             //     fA.mask, fA.category, fB.mask, fB.category);
 
 
-            if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
-                continue;
+            // if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+            //     continue;
 
             // A → B
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, b);
-            }
-            // B → A
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, a);
-            }
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, b);
+            // }
+            // // B → A
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, a);
+            // }
         }
         
         // -------------------------------------------------
@@ -510,8 +640,10 @@ namespace game
             globals::getBoxWorld
         );
         
+        // check how many have InactiveTag
+        // SPDLOG_DEBUG("Inactive tag in {} entities", globals::registry.view<entity_gamestate_management::InactiveTag>().size());
                 
-        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag>()
+        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag >(entt::exclude<entity_gamestate_management::InactiveTag>)
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag){
                 if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
@@ -571,25 +703,25 @@ namespace game
 
 
                 
-            if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
-                continue;
+            // if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+            //     continue;
 
-            // A → B
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, b);
-            }
-            // B → A
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, a);
-            }
+            // // A → B
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, b);
+            // }
+            // // B → A
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, a);
+            // }
         }
 
         // all entities intersecting a region
         
         // auto entitiesAtPoint = transform::FindAllEntitiesAtPoint(
-        //     GetMousePosition());
+        //     GetScaledMousePosition());
         
         // // SPDLOG_DEBUG("excluding cursor & background room entity from entities at point, showing in bottom to top order");
             
@@ -601,7 +733,7 @@ namespace game
         //     }
         //     // Entity e intersects with the query area
         //     // SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
-        //     //     (int)e, GetMousePosition().x, GetMousePosition().y);
+        //     //     (int)e, GetScaledMousePosition().x, GetScaledMousePosition().y);
         // }
         
         // Box<float> queryArea = globals::getBox(globals::cursor);
@@ -654,14 +786,50 @@ namespace game
         
         // lua["PhysicsManagerInstance"] = std::ref(*globals::physicsManager);
 
-        lua["layers"]["background"] = background;
-        lua["layers"]["sprites"] = sprites;
-        lua["layers"]["ui_layer"] = ui_layer;
-        lua["layers"]["finalOutput"] = finalOutput;
-        rec.record_property("layers", {"background", "Layer", "Layer for background elements."});
-        rec.record_property("layers", {"sprites", "Layer", "Layer for sprite elements."});
-        rec.record_property("layers", {"ui_layer", "Layer", "Layer for UI elements."});
-        rec.record_property("layers", {"finalOutput", "Layer", "Layer for final output, used for post-processing effects."});
+        for (auto &[name, layerPtr] : s_layers) {
+            lua["layers"][name] = layerPtr;
+            rec.record_property("layers", {name, "Layer", "Layer for " + name + " elements."});
+        }
+        
+        lua.set_function("GetLayer", &GetLayer);
+        rec.record_free_function({""}, {
+            "GetLayer",
+            "---@param name string",
+            "---@return Layer @ Gets the layer pointer by name.",
+            true, false
+        });
+        
+        
+        lua["SetFollowAnchorForEntity"] = sol::overload(
+            [](std::shared_ptr<layer::Layer> layer, entt::entity e) {
+                SetFollowAnchorForEntity(layer, e);
+            }
+        );
+        
+        lua.set_function("add_layer_shader", &game::add_layer_shader);
+        lua.set_function("remove_layer_shader", &game::remove_layer_shader);
+        lua.set_function("clear_layer_shaders", &game::clear_layer_shaders);
+
+        rec.record_free_function({""}, {
+            "add_layer_shader",
+            "---@param layer string @ \"background\" | \"sprites\" | \"ui\" | \"final\"",
+            "---@param shader string Adds a post-process shader to the given layer.",
+            true, false
+        });
+
+        rec.record_free_function({""}, {
+            "remove_layer_shader",
+            "---@param layer string",
+            "---@param shader string Removes a shader from that layer.",
+            true, false
+        });
+
+        rec.record_free_function({""}, {
+            "clear_layer_shaders",
+            "---@param layer string",
+            "Clears all shaders from the layer.",
+            true, false
+        });
     }
     
     std::shared_ptr<physics::PhysicsWorld> physicsWorld = nullptr;
@@ -738,8 +906,8 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
 // Generates (and returns) a Texture2D whose each texel encodes sampler->sample()
 // at the corresponding world‐space position under your Camera2D.
 Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) {
-    int w = GetScreenWidth();
-    int h = GetScreenHeight();
+    int w = globals::VIRTUAL_WIDTH;
+    int h = globals::VIRTUAL_HEIGHT;
 
     // Allocate a raw buffer for RGBA8 pixels
     Image img = {
@@ -777,8 +945,8 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
 }
 
     Texture2D GeneratePointCloudDensityTexture(PointCloudSampler* sampler, const Camera2D& camera) {
-        int w = GetScreenWidth();
-        int h = GetScreenHeight();
+        int w = globals::VIRTUAL_WIDTH;
+        int h = globals::VIRTUAL_HEIGHT;
 
         // Allocate RGBA8 buffer
         Image img = {
@@ -821,58 +989,58 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
     auto init() -> void
     {
         
-        // testing
-        auto textTestDef = static_ui_text_system::getTextFromString("[Hello here's a longer test\nNow test this](id=stringID;color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](id=imageID;color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
+        // // testing
+        // auto textTestDef = static_ui_text_system::getTextFromString("[Hello here's a longer test\nNow test this](id=stringID;color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](id=imageID;color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
         
-        // make new uiroot
+        // // make new uiroot
         
-        auto alertRoot = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::ROOT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addPadding(0.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(textTestDef)
-            .build();
+        // auto alertRoot = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::ROOT)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addPadding(0.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(textTestDef)
+        //     .build();
             
-        auto testTextBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
+        // auto testTextBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
         
-        auto rootUiTextBoxEntity = globals::registry.get<ui::UIBoxComponent>(testTextBox).uiRoot;
+        // auto rootUiTextBoxEntity = globals::registry.get<ui::UIBoxComponent>(testTextBox).uiRoot;
         
         
-        static_ui_text_system::TextUIHandle handle;
+        // static_ui_text_system::TextUIHandle handle;
         
-        auto traverseChildren = [](entt::registry& R, entt::entity e) -> std::vector<entt::entity> {
-            // Replace this with however you enumerate child UI nodes in your ECS.
-            // Example:
-            if (R.valid(e) && R.any_of<transform::GameObject>(e)) {
-                return R.get<transform::GameObject>(e).orderedChildren;
-            }
-            return {};
-        };
+        // auto traverseChildren = [](entt::registry& R, entt::entity e) -> std::vector<entt::entity> {
+        //     // Replace this with however you enumerate child UI nodes in your ECS.
+        //     // Example:
+        //     if (R.valid(e) && R.any_of<transform::GameObject>(e)) {
+        //         return R.get<transform::GameObject>(e).orderedChildren;
+        //     }
+        //     return {};
+        // };
 
         
-        buildIdMapFromRoot(globals::registry, rootUiTextBoxEntity.value(), handle, traverseChildren);
+        // buildIdMapFromRoot(globals::registry, rootUiTextBoxEntity.value(), handle, traverseChildren);
         
-        // Now you can O(1) fetch & mutate:
-        if (auto e = getTextNode(handle, "stringID"); e != entt::null) {
-            auto &cfg = globals::registry.get<ui::UIConfig>(e);
-            cfg.color = util::getColor("LIME");
-            // mark dirty if your layout/text system needs it
-        }
+        // // Now you can O(1) fetch & mutate:
+        // if (auto e = getTextNode(handle, "stringID"); e != entt::null) {
+        //     auto &cfg = globals::registry.get<ui::UIConfig>(e);
+        //     cfg.color = util::getColor("LIME");
+        //     // mark dirty if your layout/text system needs it
+        // }
         
-        // set camera to fill the screen
-        // globals::camera = {0};
-        // globals::camera.zoom = 1;
-        // globals::camera.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-        // globals::camera.rotation = 0;
-        // globals::camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // // set camera to fill the screen
+        // // globals::camera = {0};
+        // // globals::camera.zoom = 1;
+        // // globals::camera.target = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
+        // // globals::camera.rotation = 0;
+        // // globals::camera.offset = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         
         camera_manager::Create("world_camera", globals::registry);
         auto worldCamera = camera_manager::Get("world_camera");
-        worldCamera->SetActualOffset({GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f});
-        worldCamera->SetActualTarget({GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f});
+        worldCamera->SetActualOffset({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
+        worldCamera->SetActualTarget({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
         worldCamera->SetActualZoom(1.0f);
         worldCamera->SetActualRotation(0.0f);
 
@@ -884,20 +1052,35 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         ui::util::RegisterMeta();
 
         // create layer the size of the screen, with a main canvas the same size
-        background = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
-        sprites = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
-        ui_layer = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
-        finalOutput = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
-        layer::AddCanvasToLayer(finalOutput, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
+        RegisterLayer("background", layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
+        RegisterLayer("sprites",    layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
+        RegisterLayer("ui",         layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
+        RegisterLayer("final",      layer::CreateLayerWithSize(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
+
+        GetLayer("background")->backgroundColor = util::getColor("BLACK");
+        GetLayer("final")->backgroundColor = util::getColor("BLACK");
+
+        for (auto name : { "background", "sprites", "ui", "final" }) {
+            AddCanvasToLayer(GetLayer(name), "render_double_buffer",
+                            globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        }
 
         // set camera to fill the screen
         // globals::camera2D = {0};
         // globals::camera2D.zoom = 1;
-        // globals::camera2D.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // globals::camera2D.target = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         // globals::camera2D.rotation = 0;
-        // globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // globals::camera2D.offset = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
 
         exposeToLua(ai_system::masterStateLua); // so layer values will be saved after initialization
+        
+        // ai_system::masterStateLua.set_panic([](lua_State* L) -> int {
+        //     const char* msg = lua_tostring(L, -1);
+        //     luaL_traceback(L, L, msg, 1);
+        //     const char* fullTrace = lua_tostring(L, -1);
+        //     fprintf(stderr, "[LUAJIT PANIC]\n%s\n", fullTrace ? fullTrace : "(nil)");
+        //     return 0;
+        // });
 
 
         transform::registerDestroyListeners(globals::registry);
@@ -909,7 +1092,6 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         physicsWorld->AddCollisionTag(physics::DEFAULT_COLLISION_TAG); // default tag
         physicsWorld->AddCollisionTag("player");
-        physicsWorld->EnableCollisionBetween(physics::DEFAULT_COLLISION_TAG, {physics::DEFAULT_COLLISION_TAG, "player"});
         
         // add to physics manager
         globals::physicsManager->add("world", physicsWorld);
@@ -918,19 +1100,19 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         globals::physicsManager->enableDebugDraw("world", true);
         globals::physicsManager->enableStep("world", true);
         
-        // make test transform entity
-        entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 100, 100, 100, 100);
-        globals::registry.emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
+        // // make test transform entity
+        // entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 100, 100, 100, 100);
+        // globals::registry.emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
         
-        auto &gameObjectTest = globals::registry.get<transform::GameObject>(testTransformEntity);
-        gameObjectTest.state.collisionEnabled = true;
-        gameObjectTest.state.dragEnabled = true;
-        gameObjectTest.state.hoverEnabled = true;
+        // auto &gameObjectTest = globals::registry.get<transform::GameObject>(testTransformEntity);
+        // gameObjectTest.state.collisionEnabled = true;
+        // gameObjectTest.state.dragEnabled = true;
+        // gameObjectTest.state.hoverEnabled = true;
         
-        physics::PhysicsCreateInfo info{};
-        info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
+        // physics::PhysicsCreateInfo info{};
+        // info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
         
-        physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
+        // physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
         
         cpSpaceSetDamping(physicsWorld->space,0.1f); // global damping
         
@@ -939,26 +1121,26 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // second entity
         
-        entt::entity testEntity = globals::registry.create();
+        // entt::entity testEntity = globals::registry.create();
         
-        physicsWorld->AddCollider(testEntity, "player" /* default tag */, "rectangle", 50, 50, -1, -1, false);
+        // physicsWorld->AddCollider(testEntity, "player" /* default tag */, "rectangle", 50, 50, -1, -1, false);
         
-        physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
+        // physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
 
-        physicsWorld->AddScreenBounds(0, 0, GetScreenWidth(), GetScreenHeight());
+        // physicsWorld->AddScreenBounds(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
 
-        physicsWorld->SetDamping(testEntity, 3.5f);
-        physicsWorld->SetAngularDamping(testEntity, 3.0f);
-        physicsWorld->AddUprightSpring(testEntity, 4500.0f, 1500.0f);
-        physicsWorld->SetFriction(testEntity, 0.2f);
-        physicsWorld->CreateTopDownController(testEntity);
+        // physicsWorld->SetDamping(testEntity, 3.5f);
+        // physicsWorld->SetAngularDamping(testEntity, 3.0f);
+        // physicsWorld->AddUprightSpring(testEntity, 4500.0f, 1500.0f);
+        // physicsWorld->SetFriction(testEntity, 0.2f);
+        // physicsWorld->CreateTopDownController(testEntity);
         
         
         // Apply collision filter via your tag system
-        auto rec = globals::physicsManager->get("world");
-        // rec->w->AddCollisionTag("WORLD"); // default tag
-        auto shape = globals::registry.get<physics::ColliderComponent>(testEntity).shape;
-        rec->w->ApplyCollisionFilter(shape.get(), "WORLD" ); // default tag for testing
+        // auto rec = globals::physicsManager->get("world");
+        // // rec->w->AddCollisionTag("WORLD"); // default tag
+        // auto shape = globals::registry.get<physics::ColliderComponent>(testEntity).shape;
+        // rec->w->ApplyCollisionFilter(shape.get(), "WORLD" ); // default tag for testing
         
         // make world collide with world
         // rec->w->EnableCollisionBetween("WORLD", {"WORLD"});
@@ -968,9 +1150,9 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // try using ldtk
         
-        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("test_features.ldtk"));
-        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_TopDown_example.ldtk"));
-        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_2D_platformer_example.ldtk"));
+        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("test_features.ldtk"));
+        // // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_TopDown_example.ldtk"));
+        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_2D_platformer_example.ldtk"));
         
 
         // some things I can do:
@@ -1003,12 +1185,28 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
     auto update(float delta) -> void
     {
+        
+        
         // physicsWorld->Update(delta);
-        // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
+        // _tileCache->ensureRect(cpBBNew(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
         
         camera_manager::UpdateAll(delta);
         
         auto worldCamera = camera_manager::Get("world_camera");
+        
+        // mouse wheel for zoom
+        if (GetMouseWheelMove() > 0) {
+            // globals::camera.zoom += 0.1f;
+            worldCamera->SetActualZoom(worldCamera->GetActualZoom() + 0.1f);
+            if (worldCamera->GetActualZoom() > 3.0f)
+                worldCamera->SetActualZoom(3.0f);
+        }
+        else if (GetMouseWheelMove() < 0) {
+            // globals::camera.zoom -= 0.1f;
+            worldCamera->SetActualZoom(worldCamera->GetActualZoom() - 0.1f);
+            if (worldCamera->GetActualZoom() < 0.2f)
+                worldCamera->SetActualZoom(0.2f);
+        }
         
         // pan camera based on arrow keys
         if (IsKeyDown(KEY_LEFT)) {
@@ -1043,29 +1241,39 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // spring::pull(worldCamera->GetSpringRotation(), 100);
         }
         
-        if (IsKeyDown(KEY_S)) {
-            // shake camera
-            worldCamera->Shake(10, 2.0f);
+        if (IsKeyDown(KEY_PERIOD)) {
+            // show/hide imgui
+            globals::useImGUI = !globals::useImGUI;
         }
+        
+        if (IsKeyPressed(KEY_TAB)) {
+            // fullscreen toggle
+            ToggleFullscreen();
+        }
+        
+        // if (IsKeyDown(KEY_S)) {
+        //     // shake camera
+        //     worldCamera->Shake(10, 2.0f);
+        // }
         
         // random chance to set camera target to random location
         // if (Random::get<int>(0, 100) < 5) {
         //     worldCamera->SetActualTarget(
-        //         {Random::get<float>(0, GetScreenWidth()), worldCamera->GetActualTarget().y}
+        //         {Random::get<float>(0, globals::VIRTUAL_WIDTH), worldCamera->GetActualTarget().y}
         //     );
         // }
         
         //TODO: remove later
         
         // 1) On mouse‐down:
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            // physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
+        // if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        //     // physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
             
-            // top down controller movement
-            auto mousePosWorld = camera_manager::Get("world_camera")->GetMouseWorld();
-            cpBodySetPosition(physicsWorld->controlBody, cpv(mousePosWorld.x, mousePosWorld.y));
-            // cpBodySetPosition(controlBody, desiredTouchPos);
-        }
+        //     // top down controller movement
+        //     auto mousePosWorld = camera_manager::Get("world_camera")->GetMouseWorld();
+        //     cpBodySetPosition(physicsWorld->controlBody, cpv(mousePosWorld.x, mousePosWorld.y));
+        //     // cpBodySetPosition(controlBody, desiredTouchPos);
+        // }
             
         // 2) While dragging:
         // if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
@@ -1101,7 +1309,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
         //     });
         
-        // ZoneScopedN("game::update"); // custom label
+        ZONE_SCOPED("game::update"); // custom label
         if (gameStarted == false)
             gameStarted = true;
 
@@ -1120,13 +1328,16 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //     SPDLOG_DEBUG("UIBox {}: {}", (int)e, result);
         // }
             
-        layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
+        {
+            ZONE_SCOPED("z layers, particles, shaders update");
+            layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
 
-        particle::UpdateParticles(globals::registry, delta);
-        shaders::updateAllShaderUniforms();
+            particle::UpdateParticles(globals::registry, delta);
+            shaders::updateAllShaderUniforms();
+        }
         
         {
-            // ZoneScopedN("TextSystem::Update");
+            ZONE_SCOPED("TextSystem::Update");
             auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
             for (auto e : textView)
             {
@@ -1144,7 +1355,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //     ui::box::Move(globals::registry, e, f);
         // }
         {
-            // ZoneScopedN("Collison quadtree populate Update");
+            ZONE_SCOPED("Collison quadtree populate Update");
             initAndResolveCollisionEveryFrame();
         }
         
@@ -1160,7 +1371,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             //                                  transform::GameObject,
             //                                  transform::Transform>();
 
-            // ZoneScopedN("UIElement Update");
+            ZONE_SCOPED("UIElement Update");
             // static auto uiElementGroup = globals::registry.group
 
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
@@ -1180,15 +1391,20 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+        {
+            ZONE_SCOPED("lua gc step");
+            // lua garbage collection
+            ai_system::masterStateLua.step_gc(4); 
+        }
         
-        // lua garbage collection
-        ai_system::masterStateLua.step_gc(4); 
-        
-        // update lua main script
-        sol::protected_function_result result = luaMainUpdateFunc(delta);
-        if (!result.valid()) {
-            sol::error err = result;
-            spdlog::error("Lua update failed: {}", err.what());
+        {
+            ZONE_SCOPED("lua main update");
+            // update lua main script
+            sol::protected_function_result result = luaMainUpdateFunc(delta);
+            if (!result.valid()) {
+                sol::error err = result;
+                spdlog::error("Lua update failed: {}", err.what());
+            }
         }
         
         
@@ -1197,20 +1413,405 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
     
     }
     
+    
+    
+
+
+
+void DrawRectangleRoundedGradientH(Rectangle rec, float roundnessLeft, float roundnessRight, int segments, Color left, Color right)
+{
+    // Neither side is rounded
+    if ((roundnessLeft <= 0.0f && roundnessRight <= 0.0f) || (rec.width < 1) || (rec.height < 1 ))
+    {
+        DrawRectangleGradientEx(rec, left, left, right, right);
+        return;
+    }
+
+    if (roundnessLeft  >= 1.0f) roundnessLeft  = 1.0f;
+    if (roundnessRight >= 1.0f) roundnessRight = 1.0f;
+
+    // Calculate corner radius both from right and left
+    float recSize = rec.width > rec.height ? rec.height : rec.width;
+    float radiusLeft  = (recSize*roundnessLeft)/2;
+    float radiusRight = (recSize*roundnessRight)/2;
+
+    if (radiusLeft <= 0.0f) radiusLeft = 0.0f;
+    if (radiusRight <= 0.0f) radiusRight = 0.0f;
+
+    if (radiusRight <= 0.0f && radiusLeft <= 0.0f) return;
+
+    float stepLength = 90.0f/(float)segments;
+
+    /*
+    Diagram Copied here for reference, original at 'DrawRectangleRounded()' source code
+
+          P0____________________P1
+          /|                    |\
+         /1|          2         |3\
+     P7 /__|____________________|__\ P2
+       |   |P8                P9|   |
+       | 8 |          9         | 4 |
+       | __|____________________|__ |
+     P6 \  |P11              P10|  / P3
+         \7|          6         |5/
+          \|____________________|/
+          P5                    P4
+    */
+
+    // Coordinates of the 12 points also apdated from `DrawRectangleRounded`
+    const Vector2 point[12] = {
+        // PO, P1, P2
+        {(float)rec.x + radiusLeft, rec.y}, {(float)(rec.x + rec.width) - radiusRight, rec.y}, { rec.x + rec.width, (float)rec.y + radiusRight },
+        // P3, P4
+        {rec.x + rec.width, (float)(rec.y + rec.height) - radiusRight}, {(float)(rec.x + rec.width) - radiusRight, rec.y + rec.height},
+        // P5, P6, P7
+        {(float)rec.x + radiusLeft, rec.y + rec.height}, { rec.x, (float)(rec.y + rec.height) - radiusLeft}, {rec.x, (float)rec.y + radiusLeft},
+        // P8, P9
+        {(float)rec.x + radiusLeft, (float)rec.y + radiusLeft}, {(float)(rec.x + rec.width) - radiusRight, (float)rec.y + radiusRight},
+        // P10, P11
+        {(float)(rec.x + rec.width) - radiusRight, (float)(rec.y + rec.height) - radiusRight}, {(float)rec.x + radiusLeft, (float)(rec.y + rec.height) - radiusLeft}
+    };
+
+    const Vector2 centers[4] = { point[8], point[9], point[10], point[11] };
+    const float angles[4] = { 180.0f, 270.0f, 0.0f, 90.0f };
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+    rlSetTexture(GetShapesTexture().id);
+    Rectangle shapeRect = GetShapesTextureRectangle();
+
+    rlBegin(RL_QUADS);
+        // Draw all the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
+        for (int k = 0; k < 4; ++k)
+        {
+            Color color;
+            float radius;
+            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
+            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
+            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
+            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
+            float angle = angles[k];
+            const Vector2 center = centers[k];
+
+            for (int i = 0; i < segments/2; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength*2))*radius, center.y + sinf(DEG2RAD*(angle + stepLength*2))*radius);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+
+                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+
+                angle += (stepLength*2);
+            }
+
+            // End one even segments
+            if ( segments % 2)
+            {
+                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+
+                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+            }
+        }
+
+        // Here we use the 'Diagram' to guide ourselves to which point receives what color
+        // By choosing the color correctly associated with a pointe the gradient effect
+        // will naturally come from OpenGL interpolation
+
+        // [2] Upper Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[0].x, point[0].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[1].x, point[1].y);
+
+        // [4] Left Rectangle
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[2].x, point[2].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[3].x, point[3].y);
+
+        // [6] Bottom Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[5].x, point[5].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[4].x, point[4].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+
+        // [8] left Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[7].x, point[7].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[6].x, point[6].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+
+        // [9] Middle Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+
+    rlEnd();
+    rlSetTexture(0);
+#else
+
+    // Here we use the 'Diagram' to guide ourselves to which point receives what color
+    // By choosing the color correctly associated with a pointe the gradient effect
+    // will naturally come from OpenGL interpolation
+    // But this time instead of Quad, we think in triangles
+
+    rlBegin(RL_TRIANGLES);
+        // Draw all of the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
+        for (int k = 0; k < 4; ++k)
+        {
+            Color color = { 0 };
+            float radius = 0.0f;
+            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
+            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
+            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
+            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
+
+            float angle = angles[k];
+            const Vector2 center = centers[k];
+
+            for (int i = 0; i < segments; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+                rlVertex2f(center.x, center.y);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+                angle += stepLength;
+            }
+        }
+
+        // [2] Upper Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[0].x, point[0].y);
+        rlVertex2f(point[8].x, point[8].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[1].x, point[1].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[0].x, point[0].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+
+        // [4] Right Rectangle
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[10].x, point[10].y);
+        rlVertex2f(point[3].x, point[3].y);
+        rlVertex2f(point[2].x, point[2].y);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[3].x, point[3].y);
+
+        // [6] Bottom Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[11].x, point[11].y);
+        rlVertex2f(point[5].x, point[5].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[4].x, point[4].y);
+        rlVertex2f(point[10].x, point[10].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[11].x, point[11].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[4].x, point[4].y);
+
+        // [8] Left Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[7].x, point[7].y);
+        rlVertex2f(point[6].x, point[6].y);
+        rlVertex2f(point[11].x, point[11].y);
+        rlVertex2f(point[8].x, point[8].y);
+        rlVertex2f(point[7].x, point[7].y);
+        rlVertex2f(point[11].x, point[11].y);
+
+        // [9] Middle Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[8].x, point[8].y);
+        rlVertex2f(point[11].x, point[11].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[10].x, point[10].y);
+        rlVertex2f(point[9].x, point[9].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[8].x, point[8].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[10].x, point[10].y);
+    rlEnd();
+#endif
+}
+
+
+
+
+
+void DrawGradientRectRoundedCentered(
+    float cx, float cy,
+    float width, float height,
+    float roundness,
+    int segments,
+    Color top,
+    Color bottom,
+    Color, Color) // unused last two color params, for signature compatibility
+{
+    if (width <= 0.0f || height <= 0.0f) return;
+
+    Rectangle rec = {
+        cx - width * 0.5f,
+        cy - height * 0.5f,
+        width,
+        height
+    };
+
+    rlPushMatrix();
+
+    // Move to center of rectangle before rotation
+    rlTranslatef(cx, cy, 0.0f);
+
+    // Rotate -90° CCW so horizontal gradient becomes vertical (top→bottom)
+    rlRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+
+    // Adjust rectangle to rotated coordinate system (centered again)
+    Rectangle rotated = {
+        -height * 0.5f,  // new x (since rotated)
+        -width * 0.5f,   // new y
+        height,          // swapped width/height
+        width
+    };
+
+    // Reuse existing horizontal version safely
+    DrawRectangleRoundedGradientH(rotated, roundness, roundness, segments, top, bottom);
+
+    rlPopMatrix();
+}
+
+static std::unordered_map<entt::entity, uint64_t> s_drawAnchorByEntity;
+
+
+void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color color) {
+    
+    // DrawEllipse(400, 300, 100, 50, RED);
+    // --- 1. Begin stencil workflow ---
+    layer::beginStencil();
+
+    // --- 2. Begin outer mask (set stencil = 1) ---
+    layer::beginStencilMask();
+    // layer::Circle(center.x, center.y, outerR, color);
+    // layer::ellipse(center.x, center.y, innerR, innerR, color);
+    DrawEllipse(center.x, center.y, outerR, outerR, color);
+    rlDrawRenderBatchActive(); // ensure it's flushed before next stencil op
+    
+    // --- 3. Draw inner circle to erase stencil (set stencil = 0) ---
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    // layer::Circle(center.x, center.y, innerR, color);
+    // layer::ellipse(center.x, center.y, innerR, innerR, color);
+    DrawEllipse(center.x, center.y, innerR, innerR, color);
+    rlDrawRenderBatchActive(); // flush again before switching modes
+
+    // --- 4. End mask, draw visible ring only where stencil == 1 ---
+    layer::endStencilMask();
+    // DrawCircleV(center, outerR, color);
+    DrawEllipse(center.x, center.y, outerR, outerR, color);
+
+    // --- 5. Cleanup ---
+    layer::endStencil();
+}
+
 
     auto draw(float dt) -> void
     {
-        // ZoneScopedN("game::draw"); // custom label
-        layer::Begin(); // clear all commands, we add new ones every frame
+        ZONE_SCOPED("game::draw"); // custom label
+        
+        auto background = GetLayer("background");
+        auto sprites = GetLayer("sprites");
+        auto ui_layer = GetLayer("ui");
+        auto finalOutput = GetLayer("final");
+        
+        
+        // detect fullscreen
+        #ifdef __APPLE__
+        if (IsWindowFullscreen()) {
+            int expectedW = GetMonitorWidth(GetCurrentMonitor());
+            int expectedH = GetMonitorHeight(GetCurrentMonitor());
+
+            if (GetScreenWidth() != expectedW ||
+                GetScreenHeight() != expectedH)
+            {
+                SetWindowSize(expectedW, expectedH);
+            }
+        }
+        #endif
+        
+        // letterbox calculations
+        const int screenW = GetScreenWidth();
+        const int screenH = GetScreenHeight();
+
+        const float scaleX = static_cast<float>(screenW) / static_cast<float>(globals::VIRTUAL_WIDTH);
+        const float scaleY = static_cast<float>(screenH) / static_cast<float>(globals::VIRTUAL_HEIGHT);
+
+        // Uniform scale (letterbox)
+        const float scale   = std::min(scaleX, scaleY);
+        const float outW    = globals::VIRTUAL_WIDTH  * scale;
+        const float outH    = globals::VIRTUAL_HEIGHT * scale;
+        const float offsetX = (screenW - outW) * 0.5f;
+        const float offsetY = (screenH - outH) * 0.5f;
+        
+        // store the offests for letterbox
+        globals::finalLetterboxOffsetX = offsetX;
+        globals::finalLetterboxOffsetY = offsetY;
+        globals::finalRenderScale = scale;
 
         // set up layers (needs to happen every frame)
         
-        layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
-            cmd->color = util::getColor("brick_palette_red_resurrect");
-        });
         
         {
-            // ZoneScopedN("game::draw-lua draw main script");
+            ZONE_SCOPED("game::draw-lua draw main script");
             // update lua main script
             sol::protected_function_result result = luaMainDrawFunc(dt);
             if (!result.valid()) {
@@ -1224,7 +1825,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
 
         {
-            // ZoneScopedN("game::draw-UIElement Draw");
+            ZONE_SCOPED("game::draw-UIElement Draw");
             // debug draw ui elements (draw ui boxes, will auto-propogate to children)
             // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
             // for (auto e : viewUI)
@@ -1243,7 +1844,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
         // dynamic text
         {
-            // ZoneScopedN("Dynamic Text Draw");
+            ZONE_SCOPED("Dynamic Text Draw");
             auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : textView)
             {
@@ -1265,10 +1866,12 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
                     continue; // skip inactive entities
                 transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, sprites);
             }
-    
+            
+            
+            
 
         {
-            // ZoneScopedN("AnimatedSprite Draw");
+            ZONE_SCOPED("AnimatedSprite Draw");
             auto spriteView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : spriteView)
             {
@@ -1286,10 +1889,16 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
                 
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {
-                    layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
+                    auto cmd = layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
                     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                    
+                    // store the unique ID of the last draw command for this entity
+                    // s_drawAnchorByEntity[e] = sprites->commands_ptr->back().uniqueID;
+                    
+                    
+                    
                 }
                 else
                 {
@@ -1297,6 +1906,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
                         cmd->e = e;
                         cmd->registry = &globals::registry;
                     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                    
+                    // store the unique ID of the last draw command for this entity
+                    // s_drawAnchorByEntity[e] = sprites->commands_ptr->back().uniqueID;
+
                 }            
             }
         }
@@ -1331,12 +1944,12 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         // uiProfiler.Stop();
         
         {
-            // ZoneScopedN("Particle Draw");
+            ZONE_SCOPED("Particle Draw");
             particle::DrawParticles(globals::registry, sprites);
         }
         
         {
-            // ZoneScopedN("Tilemap draw");
+            ZONE_SCOPED("Tilemap draw");
             
             // ldtk_loader::DrawAllLayers("Everything");
             // ldtk_loader::DrawAllLayers("Background_image");
@@ -1346,35 +1959,61 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             // ldtk_loader::DrawAllLayers("World_Level_1");
             
-            ldtk_loader::DrawAllLayers(sprites, "Your_typical_2D_platformer");
+            // ldtk_loader::DrawAllLayers(sprites, "Your_typical_2D_platformer");
             // ldtk_loader::DrawAllLayers("Your_typical_2D_platformer");
         }
         
         
 
         {
-            // ZoneScopedN("LayerCommandsToCanvas Draw");
+            ZONE_SCOPED("LayerCommandsToCanvas Draw");
             {
-                // ZoneScopedN("background layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &worldCamera->cam);  // render the background layer commands to its main canvas
+                ZONE_SCOPED("background layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &worldCamera->cam);
+
+                if (auto it = game::s_layerShaders.find("background"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(background, it->second);
             }
             
             
             
             {
-                // ZoneScopedN("sprites layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &worldCamera->cam);     // render the sprite layer commands to its main canvas
+                ZONE_SCOPED("sprites layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &worldCamera->cam);
+
+                if (auto it = game::s_layerShaders.find("sprites"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(sprites, it->second);
             }
             
             {
-                
-                // ZoneScopedN("ui layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
+                ZONE_SCOPED("ui layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);
+
+                if (auto it = game::s_layerShaders.find("ui"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(ui_layer, it->second);
             }
+
             
             {
-                // ZoneScopedN("final output layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
+                ZONE_SCOPED("final output layer");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr);
+
+                // layer-specific final shaders (optional)
+                if (auto it = game::s_layerShaders.find("final"); it != game::s_layerShaders.end())
+                    game::run_shader_pipeline(finalOutput, it->second);
+
+                // global fullscreen shaders (your old system)
+                game::run_shader_pipeline(finalOutput, game::fullscreenShaders);
+
+                // final pass to screen (still uses CRT unless you later make it dynamic)
+                layer::DrawCanvasToCurrentRenderTargetWithTransform(
+                    finalOutput,
+                    "main",
+                    0, 0, 0,
+                    1, 1,
+                    WHITE,
+                    "crt"
+                );
             }
             
 
@@ -1386,7 +2025,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             
             
-            layer::Push(&worldCamera->cam);
+            // layer::Push(&worldCamera->cam);  
 
             
             // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
@@ -1395,13 +2034,18 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
             
             {
-                // ZoneScopedN("Draw canvases to other canvases with shaders");
-                // layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "outer_space_donuts_bg"); // render the background layer main canvas to the screen
+                ZONE_SCOPED("Draw canvases to other canvases with shaders");
+                // FIRST: Composite background (with its shaders applied)
+                layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main",
+                    0, 0, 0, 1, 1, WHITE);
+
 
                 
-                layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
                 
                 layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
+                
+                
+                layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
                 
 
 
@@ -1414,8 +2058,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         }
 
         
-        // debug memory leak
-        
         
         // layer::LogAllPoolStats(background);
         // layer::LogAllPoolStats(ui_layer);
@@ -1427,14 +2069,14 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(sprites, "flash", 0, 0, 0, 1, 1, WHITE);   // render the sprite layer flash canvas to the screen
 
         {
-            // ZoneScopedN("Final Output Draw to screen");
-            BeginDrawing();
+            ZONE_SCOPED("Final Output Draw to screen");
+            // BeginDrawing();
 
             // clear screen
             ClearBackground(BLACK);
             
             { // build final output layer
-                // ZoneScopedN("Draw canvas to render target (screen)");
+                ZONE_SCOPED("Draw canvas to render target (screen)");
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "crt"); // render the final output layer main canvas to the screen
                 
                 
@@ -1442,98 +2084,113 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             }
             
             {
-                std::string srcName = "main";
-                std::string dstName = "render_double_buffer";
+                ZONE_SCOPED("Final Output Draw to screen");
 
-                for (auto &shaderName : fullscreenShaders) {
-                    // draw src → dst through shaderName
-                    layer::DrawCanvasOntoOtherLayerWithShader(
-                        finalOutput,     // src layer
-                        srcName,         // src canvas
-                        finalOutput,     // dst layer (same)
-                        dstName,         // dst canvas
-                        0, 0, 0, 1, 1,   // x, y, rotation, scaleX, scaleY
-                        WHITE,
-                        shaderName
-                    );
+                ClearBackground(BLACK);
 
-                    // swap for next pass
-                    std::swap(srcName, dstName);
-                }
+                // 1) Run fullscreen shader pipeline on finalOutput (in virtual space)
+                game::run_shader_pipeline(finalOutput, game::fullscreenShaders);
 
-                // after the loop, `srcName` holds the fully-composited result.
-                // If it isn’t already “main”, copy it back with no shader:
-                if (srcName != "main") {
-                    layer::DrawCanvasOntoOtherLayer(
-                        finalOutput,
-                        srcName,
-                        finalOutput,
-                        "main",
-                        0, 0, 0, 1, 1,
-                        WHITE
-                    );
-                }
-                
-                // Now, `finalOutput` has the final composited result in its “main” canvas. Draw it to the screen:
+                // 2) Draw finalOutput.main → actual screen with letterboxing
+                // scale & offset from the top of draw()
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(
-                    finalOutput, "main", 
-                    0, 0, 0, 1, 1, WHITE, "crt"
+                    finalOutput,
+                    "main",
+                    offsetX,         // x on physical screen
+                    offsetY,         // y on physical screen
+                    0.0f,            // rotation
+                    scale,           // scaleX
+                    scale,           // scaleY
+                    WHITE,
+                    "crt"            // or "" if you want CRT only sometimes
                 );
+
+                // then your ImGui/debug, physics debug, fade_system, etc...
             }
             
             {
 #ifndef __EMSCRIPTEN__
-                // ZoneScopedN("Debug UI");
-                rlImGuiBegin(); // Required: starts ImGui frame
-
+            if (globals::useImGUI) {
+                ZONE_SCOPED("Debug UI");
                 shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
                 ShowDebugUI();
+                lua_hot_reload::draw_imgui(ai_system::masterStateLua);
+            }
 
-                rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+                
 #endif
             }
             
 
             // Display UPS and FPS
-            // DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
+            // 
+            
+            // draw rectangles indicating quad tree dimensions
+            if (globals::drawDebugInfo) {
+                DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
+                
+            }
             
             // -- draw physics world
             
-            camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
+            if (globals::drawDebugInfo) {
+                camera_manager::Begin(worldCamera->cam); // begin camera mode
+                DrawRectangle(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT, Fade(GREEN, 0.1f));
+                DrawText("Screen bounds", 5, 35, 20, GREEN);
+                
+                // bounds for ui quad tree
+                DrawRectangle(globals::uiBounds.left, globals::uiBounds.top, globals::uiBounds.width, globals::uiBounds.height, Fade(BLUE, 0.1f));
+                DrawText("UI QuadTree bounds", globals::uiBounds.left + 5, globals::uiBounds.top + 20, 20, BLUE);
+                
+                // bounds for world quad tree
+                DrawRectangle(globals::worldBounds.left, globals::worldBounds.top, globals::worldBounds.width, globals::worldBounds.height, Fade(RED, 0.1f));
+                DrawText("World QuadTree bounds", globals::worldBounds.left + 300, globals::worldBounds.top + 20, 20, RED);
+                
+                camera_manager::End(); // end camera mode 
+            }
             
             
-            
-            physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
-            physicsWorld->DebugDrawContacts();
-            
+            if (globals::drawPhysicsDebug) {
+                camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
+                
+                
+                physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
+                physicsWorld->DebugDrawContacts();
+                
+                
+                
 
-            camera_manager::End(); // end camera mode for the physics world
-            
-            // rect in the center   
-            DrawRectangleLines(
-                GetScreenWidth() / 2 - 100, 
-                GetScreenHeight() / 2 - 100, 
-                200, 200, 
-                RED
-            );
+                camera_manager::End(); // end camera mode for the physics world
+            }
             
             fade_system::draw();
             
+            // auto mousePos = globals::GetScaledMousePosition();
+            // DrawHollowCircleStencil({mousePos.x, mousePos.y}, 100, 50, YELLOW);
 
             {
-                // ZoneScopedN("EndDrawing call");
-                EndDrawing();
+                ZONE_SCOPED("EndDrawing call");
+                // EndDrawing();
             }
 
-            layer::Pop();
+            // layer::Pop();
 
-
-            layer::End();
         }
 
         // fade
+        
+        
     }
 
+    void SetFollowAnchorForEntity(std::shared_ptr<layer::Layer> layer, entt::entity e)
+    {
+        auto it = s_drawAnchorByEntity.find(e);
+        if (it == s_drawAnchorByEntity.end()) return;
+
+        auto& cmds = *layer->commands_ptr;
+        if (!cmds.empty())
+            cmds.back().followAnchor = it->second; // make the newest command follow the leader
+    }
 
     void unload() {
         // unload all layers
@@ -1541,6 +2198,11 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
         // unload all lua scripts
         ai_system::masterStateLua.collect_garbage();
+        
+        for (auto& [name, layerPtr] : s_layers) {
+            clear_layer_shaders(name);
+        }
+        ClearLayers();
         
         // destroy all entities
         globals::registry.clear(); // clear all entities in the registry

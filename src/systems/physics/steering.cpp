@@ -1,6 +1,8 @@
 #include "steering.hpp"
 
 #include "physics_world.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
+#include "systems/transform/transform.hpp"
 
 
 
@@ -92,92 +94,161 @@ namespace Steering {
     //--------------------------------------------
     // Frame update
     //--------------------------------------------
-    void Update(entt::registry& r, entt::entity e, float dt){
-        auto &s = r.get<SteerableComponent>(e);
-        if(!s.enabled) return;
+    void Update(entt::registry& r, entt::entity e, float dt) {
+    if (!r.any_of<SteerableComponent>(e))
+        return;
 
-        // Compose
-        s.steeringForce = cpvzero;
-        if(s.isSeeking)      s.steeringForce = cpvadd(s.steeringForce, s.seekForce);
-        if(s.isFleeing)      s.steeringForce = cpvadd(s.steeringForce, s.fleeForce);
-        if(s.isPursuing)     s.steeringForce = cpvadd(s.steeringForce, s.pursuitForce);
-        if(s.isEvading)      s.steeringForce = cpvadd(s.steeringForce, s.evadeForce);
-        if(s.isWandering)    s.steeringForce = cpvadd(s.steeringForce, s.wanderForce);
-        if(s.isPathFollowing)s.steeringForce = cpvadd(s.steeringForce, s.pathFollowForce);
-        if(s.isSeparating)   s.steeringForce = cpvadd(s.steeringForce, s.separationForce);
-        if(s.isAligning)     s.steeringForce = cpvadd(s.steeringForce, s.alignmentForce);
-        if(s.isCohesing)     s.steeringForce = cpvadd(s.steeringForce, s.cohesionForce);
+    auto& s = r.get<SteerableComponent>(e);
+    if (!s.enabled) return;
 
-        // Timed steering force (linear decay to 0 over duration)
-        if(s.timedForceTimeLeft > 0.f){
-            float k = s.timedForceTimeLeft / s.timedForceDuration; // 1..0
-            s.steeringForce = cpvadd(s.steeringForce, cpvmult(s.timedForce, k));
-            s.timedForceTimeLeft = std::max(0.f, s.timedForceTimeLeft - dt);
-        }
+    // --------------------------------------------------
+    // Combine steering forces
+    // --------------------------------------------------
+    s.steeringForce = cpvzero;
+    auto limit = [&](const cpVect& v) { return truncate(v, s.maxForce); };
 
-        s.steeringForce = truncate(s.steeringForce, s.maxForce);
+    if (s.isSeeking)       s.steeringForce = cpvadd(s.steeringForce, limit(s.seekForce));
+    if (s.isFleeing)       s.steeringForce = cpvadd(s.steeringForce, limit(s.fleeForce));
+    if (s.isPursuing)      s.steeringForce = cpvadd(s.steeringForce, limit(s.pursuitForce));
+    if (s.isEvading)       s.steeringForce = cpvadd(s.steeringForce, limit(s.evadeForce));
+    if (s.isWandering)     s.steeringForce = cpvadd(s.steeringForce, limit(s.wanderForce));
+    if (s.isPathFollowing) s.steeringForce = cpvadd(s.steeringForce, limit(s.pathFollowForce));
+    if (s.isSeparating)    s.steeringForce = cpvadd(s.steeringForce, limit(s.separationForce));
+    if (s.isAligning)      s.steeringForce = cpvadd(s.steeringForce, limit(s.alignmentForce));
+    if (s.isCohesing)      s.steeringForce = cpvadd(s.steeringForce, limit(s.cohesionForce));
 
-        // Reset flags
-        s.isSeeking=s.isFleeing=s.isPursuing=s.isEvading=false;
-        s.isWandering=s.isPathFollowing=false;
-        s.isSeparating=s.isAligning=s.isCohesing=false;
+    // Time-decaying steering force
+    // if (s.timedForceTimeLeft > 0.f) {
+    //     float k = s.timedForceTimeLeft / s.timedForceDuration;
+    //     s.steeringForce = cpvadd(s.steeringForce, cpvmult(s.timedForce, k));
+    //     s.timedForceTimeLeft = std::max(0.f, s.timedForceTimeLeft - dt);
+    // }
 
-        auto* body = get_cpBody(r, e);
-        if(!body) return;
+    // Final limit
+    s.steeringForce = truncate(s.steeringForce, s.maxForce);
 
-        // Apply force at CoM
-        cpBodyApplyForceAtLocalPoint(body, s.steeringForce, cpvzero);
+    // Reset one-frame flags (Lua clears these every frame)
+    s.isSeeking = s.isFleeing = s.isPursuing = s.isEvading = false;
+    s.isWandering = s.isPathFollowing = false;
+    s.isSeparating = s.isAligning = s.isCohesing = false;
 
-        // Timed impulse: apply per-frame impulse chunk
-        if(s.timedImpulseTimeLeft > 0.f){
-            float slice = std::min(dt, s.timedImpulseTimeLeft);
-            cpVect impulse = cpvmult(s.timedImpulsePerSec, slice);
-            cpBodyApplyImpulseAtLocalPoint(body, impulse, cpvzero);
-            s.timedImpulseTimeLeft = std::max(0.f, s.timedImpulseTimeLeft - dt);
-        }
+    cpBody* body = get_cpBody(r, e);
+    if (!body) return;
 
-        // Optional pre-step clamp
-        cpVect vel = cpBodyGetVelocity(body);
-        float v2 = cpvlengthsq(vel);
-        if(v2 > s.maxSpeed*s.maxSpeed){
-            cpBodySetVelocity(body, cpvmult(cpvnormalize(vel), s.maxSpeed));
-        }
-        if(v2 > 1e-6f){
-            s.heading = cpvnormalize(vel);
-            s.side    = cpvperp(s.heading);
-        }
+    // --------------------------------------------------
+    // Combine steering + applied forces
+    // --------------------------------------------------
+    cpVect totalForce = s.steeringForce;
+
+    // If there’s a manually applied steering force (ApplySteeringForce)
+    if (s.timedForceTimeLeft > 0.f) {
+        float k = s.timedForceTimeLeft / std::max(0.001f, s.timedForceDuration);
+        totalForce = cpvadd(totalForce, cpvmult(s.timedForce, k));
     }
+
+    totalForce = truncate(totalForce, s.maxForce);
+
+    // Apply force (Chipmunk already divides by mass)
+    cpBodyApplyForceAtLocalPoint(body, totalForce, cpvzero);
+
+    // --------------------------------------------------
+    // Apply steering impulse (ApplySteeringImpulse)
+    // --------------------------------------------------
+    if (s.timedImpulseTimeLeft > 0.f) {
+        float slice = std::min(dt, s.timedImpulseTimeLeft);
+        cpVect impulse = cpvmult(s.timedImpulsePerSec, slice);
+        cpBodyApplyImpulseAtLocalPoint(body, impulse, cpvzero);
+        s.timedImpulseTimeLeft = std::max(0.f, s.timedImpulseTimeLeft - slice);
+    }
+
+    // --------------------------------------------------
+    // Clamp velocity softly
+    // --------------------------------------------------
+    cpVect vel = cpBodyGetVelocity(body);
+    float speed = cpvlength(vel);
+    if (speed > s.maxSpeed) {
+        float blend = 0.5f + 0.5f * (s.maxSpeed / speed);
+        cpBodySetVelocity(body, cpvmult(vel, blend));
+    }
+
+    // --------------------------------------------------
+    // Update heading based on velocity
+    // --------------------------------------------------
+    vel = cpBodyGetVelocity(body);
+    if (cpvlengthsq(vel) > 1e-5f) {
+        s.heading = cpvnormalize(vel);
+        s.side    = cpvperp(s.heading);
+    }
+    
+     // --------------------------------------------------
+    // Smoothly rotate body to match heading (if moving)
+    // --------------------------------------------------
+    vel = cpBodyGetVelocity(body);
+    float speedSq = cpvlengthsq(vel);
+
+    // --------------------------------------------------
+    // Update heading for drawing / logic (not physics)
+    // --------------------------------------------------
+    if (speedSq > 1e-5f) {
+        s.heading = cpvnormalize(vel);
+        s.side    = cpvperp(s.heading);
+
+        // Just store visual angle if you want to draw rotation
+        auto visualAngle = atan2f(s.heading.y, s.heading.x) * (180.0f / M_PI);
+
+        
+        auto &transform = r.get<transform::Transform>(e);
+        transform.setActualRotation(visualAngle);
+    }
+
+}
+
 
     //--------------------------------------------
     // Behaviors
     //--------------------------------------------
 
     // Seek (Chipmunk coords)
+    // Seek (Chipmunk coords)
     void SeekPoint(entt::registry& r, entt::entity e,
-                        const cpVect& target,
-                        float deceleration,
-                        float weight) {
-        auto *body = get_cpBody(r, e);
+               const cpVect& target,
+               float deceleration,
+               float weight)
+    {
+        auto* body = get_cpBody(r, e);
         if (!body) return;
 
-        auto &s = r.get<SteerableComponent>(e);
+        auto& s = r.get<SteerableComponent>(e);
 
         cpVect pos = cpBodyGetPosition(body);
         cpVect toTarget = cpvsub(target, pos);
-        float  dist     = cpvlength(toTarget);
+        float dist = cpvlength(toTarget);
 
-        if (dist > 1e-5f) {
-            float speed   = std::min(dist / (deceleration * 0.08f), s.maxSpeed);
-            cpVect desired= cpvmult(toTarget, speed / dist);
-            cpVect vel    = cpBodyGetVelocity(body);
-
-            s.seekForce = cpvmult(cpvsub(desired, vel), s.turnMultiplier * weight);
-            s.isSeeking = true;
-        } else {
+        if (dist <= 1e-5f) {
             s.seekForce = cpvzero;
             s.isSeeking = false;
+            return;
         }
+
+        cpVect vel = cpBodyGetVelocity(body);
+        float speed;
+
+        if (s.disableArrival) {
+            // FULL SPEED, NO SLOWDOWN
+            speed = s.maxSpeed;
+        }
+        else {
+            // STANDARD ARRIVAL BEHAVIOR
+            float decelTweaker = 0.3f;
+            speed = dist / (deceleration * decelTweaker);
+            speed = std::min(speed, s.maxSpeed);
+        }
+
+        cpVect desired = cpvmult(toTarget, speed / dist);
+        s.seekForce = cpvmult(cpvsub(desired, vel), s.turnMultiplier * weight);
+        s.isSeeking = true;
     }
+
 
     // Separation (Chipmunk coords)
     void Separate(entt::registry& r, entt::entity e,
@@ -232,7 +303,7 @@ namespace Steering {
         auto rnd = []() -> float { return float(rand()) / float(RAND_MAX); };
         s.wanderTarget = cpvadd(s.wanderTarget,
                                 cpvmult(cpv(2.0f*rnd()-1.0f, 2.0f*rnd()-1.0f),
-                                        s.wanderJitter));
+                                        s.wanderJitter)); // scaled by dt
         s.wanderTarget = cpvnormalize(s.wanderTarget);
         s.wanderTarget = cpvmult(s.wanderTarget, s.wanderRadius);
 

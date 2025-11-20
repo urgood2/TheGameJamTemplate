@@ -1,5 +1,7 @@
 local Object = require("external/object")
 local task = require("task/task")
+local timer = require("core/timer")
+local entity_cache = require("core.entity_cache")
 
 local node = Object:extend()
 
@@ -7,22 +9,27 @@ local node = Object:extend()
 
 -- Called once, right after the component is attached.
 
+
+-- Table of all nodes with update() functions
+local updatables = {}
+
 function node:init(args) end
 
--- Called every frame by script_system_update()
-function node:update(dt)
-    print('node [#' .. self.id() .. '] update()', transform)
-    -- local transform = self.owner:get(self.id(), Transform)
+-- TODO: erasing this function for performance, re-add manually if needed
+-- Called every frame by script_system_update() if it exists.
+-- function node:update(dt)
+--     -- print('node [#' .. self.id() .. '] update()', transform)
+--     -- local transform = self.owner:get(self.id(), Transform)
     
-    -- coroutine task example
-    -- task.run_named_task("blinker", function()
-    --     print("start")
-    --     task.wait(1.0)
-    --     print("end")
-    --   end)
+--     -- coroutine task example
+--     -- task.run_named_task("blinker", function()
+--     --     print("start")
+--     --     task.wait(1.0)
+--     --     print("end")
+--     --   end)
     
-    print("tasks active:", task.count_tasks())
-end
+--     -- print("tasks active:", task.count_tasks(self))
+-- end
 
 -- Called just before the entity is destroyed
 function node:destroy()
@@ -37,6 +44,9 @@ function node:__call(args)
     for k, v in pairs(args) do obj[k] = v end
   end
   if obj.init then obj:init(args) end
+  if type(self.update) == "function" then
+    table.insert(updatables, obj)
+  end
   return obj
 end
 
@@ -105,6 +115,8 @@ function node:attach_ecs(opts)
   return self
 end
 
+
+
 -- Queue deletion when a condition is met.
 -- Usage:
 --   obj:destroy_when(function(self, eid) return ... end, {
@@ -133,8 +145,8 @@ function node:destroy_when(condition, opts)
   local timeout_handle = nil
 
   local function do_destroy()
-    if self._eid and (registry.valid and registry:valid(self._eid) or true) then
-      -- If your binding lacks registry:valid, the 'or true' makes this unconditional.
+    if self._eid and (registry.valid and entity_cache.valid(self._eid) or true) then
+      -- If your binding lacks entity_cache.valid, the 'or true' makes this unconditional.
       -- Remove that 'or true' if you have a working :valid.
       registry:destroy(self._eid)
       self._eid = nil
@@ -154,7 +166,7 @@ function node:destroy_when(condition, opts)
     -- Poll condition
     watcher_handle = timer.every(interval, function()
       -- If entity already gone, stop polling
-      if not self._eid or (registry.valid and not registry:valid(self._eid)) then
+      if not self._eid or (registry.valid and not entity_cache.valid(self._eid)) then
         if watcher_handle then timer.cancel(watcher_handle) watcher_handle = nil end
         if timeout_handle then timer.cancel(timeout_handle) timeout_handle = nil end
         return
@@ -169,7 +181,7 @@ function node:destroy_when(condition, opts)
         if grace > 0 then
           timer.after(grace, function()
             -- double-check still valid before final destroy
-            if self._eid and (not registry.valid or registry:valid(self._eid)) then
+            if self._eid and (not registry.valid or entity_cache.valid(self._eid)) then
               do_destroy()
             end
           end, tag, group)
@@ -194,6 +206,61 @@ function node:destroy_when(condition, opts)
   else
     self:run_custom_func(function()
       start_watcher()
+    end)
+  end
+
+  return self
+end
+
+
+-- Global update dispatcher (called once per frame from Lua main loop)
+function node.update_all(dt)
+    -- tracy.zoneBeginN("lua node.update_all")
+
+    -- 🔹 Step 1: localize lookups
+    local vfn = registry.valid            -- may be nil if not bound
+    local e_valid = entity_cache.valid    -- local upvalue avoids global lookup
+
+    -- 🔹 Step 2: in-place compaction instead of table.remove
+    local write = 1
+    local count = #updatables
+
+    for read = 1, count do
+        local obj = updatables[read]
+        local eid = obj._eid
+
+        -- 🔹 Validity check
+        -- comment the next line and uncomment the "no-validity" line below for optional Fix 4
+        if eid and (not vfn or e_valid(eid)) then
+    -- Keep the object even if inactive
+            updatables[write] = obj
+            write = write + 1
+
+            if entity_cache.active(eid) then
+                obj:update(dt)
+            end
+        end
+    end
+
+    -- trim any stale entries at the end
+    for i = write, count do
+        updatables[i] = nil
+    end
+
+    -- tracy.zoneEnd()
+end
+
+-- Adds a state tag to the node's entity (safe before/after attach)
+function node:addStateTag(tag)
+  assert(type(tag) == "string", "addStateTag(tag): tag must be a string")
+
+  -- If already attached, call immediately
+  if self._eid then
+    add_state_tag(self._eid, tag)
+  else
+    -- Otherwise queue it to run when attach_ecs() is called
+    self:run_custom_func(function(eid, self)
+      add_state_tag(eid, tag)
     end)
   end
 

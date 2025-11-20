@@ -5,6 +5,8 @@
 
 // The arguments passed in are: the initial value of the spring, its stiffness and damping.
 namespace spring {
+    
+    struct SpringDisabledTag {}; // tag to indicate spring is disabled for updates.
 
     struct Spring {
         float value{};
@@ -26,6 +28,18 @@ namespace spring {
         bool preventOvershoot = false;  // New flag to enforce non-overshooting behavior
         
         bool usingForTransforms = true; // If true, this spring is used for transforms and will use a different update logic
+        
+        // Adaptive update helpers
+        // --- adaptive update ---
+        float timeSinceUpdate = 0.f;
+        bool  asleep = false;          // true = skip until reactivated
+        float lastTargetValue = 0.f;   // for auto wake-up
+        float lastStiffness   = 0.f;
+        float lastDamping     = 0.f;
+        
+        
+        // Index in SoA pool
+        size_t poolIndex = SIZE_MAX;
 
     };
     

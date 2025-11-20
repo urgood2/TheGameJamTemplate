@@ -38,7 +38,7 @@ local palette = {}
 
 -- Keep handle to the usertype constructor provided by C++ binding
 --   Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-local ColorCtor = Color
+local ColorCtor = Col
 
 -- Internal state -------------------------------------------------------------
 local _active = {
@@ -202,12 +202,26 @@ function palette.snap(c)
   return nearest_swatch(c).color_user
 end
 
+--- Snap a named source color (resolved via util.getColor) to the nearest swatch.
+--- @param name string  -- source color name (as util.getColor expects)
+--- @return Color       -- Color usertype (snapped to active palette)
+function palette.snapToColorName(name)
+  assert(type(name) == "string" and #name > 0, "snapToColorName: name string required")
+  ensure_active()
+  local src = util.getColor(name)         -- returns Color usertype
+  return palette.snap(src)                -- reuse existing snapping
+end
+
+
 --- Build a ramp between two named swatches; N steps ≥ 2.
 --- Each step is snapped back to the palette (strict output). Returns {Color,...}.
 function palette.ramp_quantized(nameA, nameB, steps)
+  if (steps or 0) < 2 then 
+    return { palette.snapToColorName(nameA), palette.snapToColorName(nameB) }
+  end
   assert(steps and steps>=2, "steps >= 2 required")
-  local A = palette.color(nameA)
-  local B = palette.color(nameB)
+  local A = palette.snapToColorName(nameA)
+  local B = palette.snapToColorName(nameB)
   local _, Argb = to_user_and_rgb(A)
   local _, Brgb = to_user_and_rgb(B)
 

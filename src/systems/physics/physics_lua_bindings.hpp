@@ -1,11 +1,14 @@
 #pragma once
 
+#include "core/globals.hpp"
 #include "physics_manager.hpp"
 #include "physics_world.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
-#include <sol.hpp>
+#include "sol/sol.hpp"
 
 #include "steering.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "third_party/chipmunk/include/chipmunk/cpBody.h"
 
 namespace physics {
 
@@ -261,6 +264,16 @@ inline void expose_physics_to_lua(sol::state& lua) {
         physics_table.set_function("update_collision_masks_for", [tbl_to_strings](PhysicsWorld &W, const std::string &tag, sol::table collidable){
             W.UpdateCollisionMasks(tag, tbl_to_strings(collidable));
         });
+        
+        // ReapplyAllFilters()
+        rec.record_free_function(path, {
+            "reapply_all_filters",
+            "---@param world physics.PhysicsWorld",
+            "Re-applies collision filters to all shapes based on their current tags.", true, false
+        });
+        physics_table.set_function("reapply_all_filters", [](PhysicsWorld &W){
+            W.ReapplyAllFilters();
+        });
     }
 
 
@@ -503,7 +516,56 @@ inline void expose_physics_to_lua(sol::state& lua) {
         "Sets linear velocity on the entity's body.",
         true, false
     });
+    
+    lua["physics"]["IsSleeping"] = [](PhysicsWorld& W, entt::entity e) {
+        auto &collider = globals::registry.get<ColliderComponent>(e);
+        
+        return cpBodyIsSleeping(collider.body.get());
+         
+    };
+    
+    rec.record_free_function(path, {
+        "IsSleeping",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n"
+        "---@return boolean",
+        "Returns true if the entity's body is sleeping.",
+        true, false
+    });
+    
+    
     lua["physics"]["SetVelocity"] = &PhysicsWorld::SetVelocity;
+    
+    lua["physics"]["SetSleepTimeThreshold"] = [](PhysicsWorld& W, float t) {
+        cpSpaceSetSleepTimeThreshold(W.space, t);
+    };
+    rec.record_free_function(path, {
+        "SetSleepTimeThreshold",
+        "---@param world physics.PhysicsWorld\n---@param t number",
+        "Sets the cpSpace sleep time threshold.",
+        true, false
+    });
+    
+    lua["physics"]["GetSleepTimeThreshold"] = [](PhysicsWorld& W) {
+        return cpSpaceGetSleepTimeThreshold(W.space);
+    };
+    rec.record_free_function(path, {
+        "GetSleepTimeThreshold",
+        "---@param world physics.PhysicsWorld\n---@return number",
+        "Gets the cpSpace sleep time threshold.",
+        true, false
+    });
+    
+    //cpVect PhysicsWorld::GetVelocity(entt::entity entity)
+    rec.record_free_function(path, {
+        "GetVelocity",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return {x:number,y:number}",
+        "Returns the body's linear velocity.",
+        true, false
+    });
+    lua["physics"]["GetVelocity"] = [](PhysicsWorld& W, entt::entity e, sol::this_state s) {
+        auto v = W.GetVelocity(e);
+        return vec_to_lua(sol::state_view(s), v);
+    };
 
     rec.record_free_function(path, {
         "SetAngularVelocity",
@@ -560,6 +622,33 @@ inline void expose_physics_to_lua(sol::state& lua) {
         true, false
     });
     lua["physics"]["SetGlobalDamping"] = &PhysicsWorld::SetGlobalDamping;
+
+    
+    rec.bind_function(lua, path, "set_disable_arrival",
+    [](entt::registry& r, entt::entity e, bool disable) {
+        auto &s = r.get<SteerableComponent>(e);
+        s.disableArrival = disable;
+    },
+    "---@param r entt.registry&\n"
+    "---@param e entt.entity\n"
+    "---@param disable boolean\n"
+    "---@return nil\n",
+    "Enable/disable arrival deceleration logic.\n"
+    "When true, SeekPoint ignores decel and moves full speed all the way."
+);
+
+rec.bind_function(lua, path, "set_arrive_radius",
+    [](entt::registry& r, entt::entity e, float radius) {
+        auto &s = r.get<SteerableComponent>(e);
+        s.arriveRadius = radius;
+    },
+    "---@param r entt.registry&\n"
+    "---@param e entt.entity\n"
+    "---@param radius number @distance at which arrival deceleration begins\n"
+    "---@return nil\n",
+    "Sets arrival deceleration radius (ignored if disableArrival=true)."
+);
+
 
     rec.record_free_function(path, {
         "GetPosition",
@@ -651,6 +740,17 @@ inline void expose_physics_to_lua(sol::state& lua) {
         true, false
     });
     lua["physics"]["SetFixedRotation"] = &PhysicsWorld::SetFixedRotation;
+    
+    lua["physics"]["SetMoment"] = [](PhysicsWorld& W, entt::entity e, float moment) {
+        auto &collider = globals::registry.get<ColliderComponent>(e);
+        cpBodySetMoment(collider.body.get(), moment);
+    };
+    rec.record_free_function(path, {
+        "SetMoment",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param moment number",
+        "Sets the body's moment of inertia.",
+        true, false
+    });
 
     rec.record_free_function(path, {
         "SetBodyType",
@@ -747,8 +847,62 @@ inline void expose_physics_to_lua(sol::state& lua) {
             }
             return out;
         });
+        
+    rec.record_free_function(path, {
+        "clear_all_worlds",
+        "---@return nil",
+        "Clears all PhysicsWorld instances and their data (for shutdown) using the global physics manager.",
+        false, false
+    });
+    physics_table.set_function("clear_all_worlds", []() {
+        globals::physicsManager->clearAllWorlds();
+    });
 
-    // ---------- Lua collision handler registration ----------
+    // ---------- Lua collision handler registration (new ones) ----------
+    rec.record_free_function(path, {
+        "on_pair_begin",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "Registers a begin callback for the pair (tagA, tagB). Return false to reject contact.",
+        true, false
+    });
+    physics_table.set_function("on_pair_begin",
+        [](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {
+            W.RegisterPairBegin(a, b, std::move(fn));
+        });
+
+    rec.record_free_function(path, {
+        "on_pair_separate",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata)",
+        "Registers a separate callback for the pair (tagA, tagB).",
+        true, false
+    });
+    physics_table.set_function("on_pair_separate",
+        [](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {
+            W.RegisterPairSeparate(a, b, std::move(fn));
+        });
+
+    rec.record_free_function(path, {
+        "on_wildcard_begin",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "Registers a begin wildcard callback for a single tag (fires for any counterpart).",
+        true, false
+    });
+    physics_table.set_function("on_wildcard_begin",
+        [](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {
+            W.RegisterWildcardBegin(tag, std::move(fn));
+        });
+
+    rec.record_free_function(path, {
+        "on_wildcard_separate",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata)",
+        "Registers a separate wildcard callback for a single tag (fires for any counterpart).",
+        true, false
+    });
+    physics_table.set_function("on_wildcard_separate",
+        [](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {
+            W.RegisterWildcardSeparate(tag, std::move(fn));
+        });
+
     rec.record_free_function(path, {
         "on_pair_presolve",
         "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil",
@@ -1164,6 +1318,16 @@ inline void expose_physics_to_lua(sol::state& lua) {
                 (float)gearF.value_or(50000.0),
                 (float)gearB.value_or(1.2));
         });
+        
+    physics_table.set_function("remove_physics", [&](physics::PhysicsWorld& W, entt::entity e, bool remove_component) {
+        W.RemovePhysics(e, remove_component);
+    });
+    rec.record_free_function(path, {
+        "remove_physics",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param remove_component boolean|nil\n---@return nil",
+        "Removes physics body and shapes from the entity; optionally removes PhysicsComponent too.",
+        true, false
+    });
 
     rec.record_free_function(path, {
         "command_tank_to",
@@ -1349,6 +1513,17 @@ inline void expose_physics_to_lua(sol::state& lua) {
         [](physics::PhysicsWorld& W, double xMin, double yMin, double xMax, double yMax,
         double thickness, const std::string& tag){
             W.AddScreenBounds((float)xMin,(float)yMin,(float)xMax,(float)yMax,(float)thickness, tag);
+        });
+        
+    rec.record_free_function(path, {
+        "cull_entities_outside_bounds",
+        "---@param world physics.PhysicsWorld\n---@param xMin number\n---@param yMin number\n---@param xMax number\n---@param yMax number\n---@return nil",
+        "Destroys entities with bodies completely outside the given AABB.",
+        true, false
+    });
+    physics_table.set_function("cull_entities_outside_bounds",
+        [](physics::PhysicsWorld& W, double xMin, double yMin, double xMax, double yMax){
+            W.CullOutOfBoundsEntities((float)xMin,(float)yMin,(float)xMax,(float)yMax);
         });
 
     // Optional: tilemap colliders from bool grid (arr[x][y] = true)

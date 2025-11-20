@@ -771,6 +771,19 @@ namespace ui {
         
         box.set_function("BuildUIElementTree", &ui::box::BuildUIElementTree);
         rec.record_free_function({"ui", "box"}, {"BuildUIElementTree", "---@param registry registry\n---@param uiBoxEntity Entity\n---@param uiElementDef UIElementTemplateNode\n---@param uiElementParent Entity\n---@return nil", "Builds a UI tree from a template definition.", true, false});
+        
+                box.set_function("set_draw_layer", [&](entt::entity box, const std::string &name){
+            auto layer = game::GetLayer(name);
+            if (!layer) {
+                spdlog::error("Unknown layer '{}'", name);
+                return;
+            }
+            globals::registry.emplace_or_replace<ui::UIBoxLayer>(box, name);
+        });
+        
+        rec.record_free_function({"ui", "box"}, {"set_draw_layer", "---@param uiBox Entity\n---@param name string\n---@return nil", "Sets the draw layer for a UI box.", true, false});
+
+        
 
         // 2) Initialization & placement
         // box.set_function("Initialize", &ui::box::Initialize);
@@ -786,6 +799,21 @@ namespace ui {
             }
             return result;
         });
+        box.set_function("AssignStateTagsToUIBox", [](entt::entity uiBox, const std::string &stateName) -> void {
+            box::AssignStateTagsToUIBox(globals::registry, uiBox, stateName);
+        });
+        
+        rec.record_free_function({"ui", "box"}, {"AssignStateTagsToUIBox", "---@param registry registry\n---@param uiBox Entity\n---@param stateName string\n---@return nil", "Assigns state tags to all elements in a UI box.", true, false});
+         
+        box.set_function("AddStateTagToUIBox", [](entt::entity uiBox, const std::string &tagToAdd) -> void {
+            box::AddStateTagToUIBox(globals::registry, uiBox, tagToAdd);
+        });
+        rec.record_free_function({"ui", "box"}, {"AddStateTagToUIBox", "---@param uiBox Entity\n---@param tagToAdd string\n---@return nil", "Adds a state tag to all elements in a UI box.", true, false});
+        
+        box.set_function("ClearStateTagsFromUIBox", [](entt::entity uiBox) -> void {
+            box::ClearStateTagsFromUIBox(globals::registry, uiBox);
+        });
+        rec.record_free_function({"ui", "box"}, {"ClearStateTagsFromUIBox", "---@param uiBox Entity\n---@return nil", "Clears state tags from all elements in a UI box.", true, false});
         // box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) -> entt::entity {
         //     ui::TransformConfig config{};
         //     config.x = table["x"].get_or(0);

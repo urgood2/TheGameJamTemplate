@@ -53,8 +53,8 @@ using json = nlohmann::json;
 
 #include <string>
 
-#include <boost/regex.hpp> 
-#include <boost/algorithm/string/replace.hpp>
+// #include <boost/regex.hpp> 
+// #include <boost/algorithm/string/replace.hpp>
 
 using std::string;
 using json = nlohmann::json;
@@ -216,28 +216,28 @@ namespace util {
     ImTextCustomization textCustomization{};
 
     // draws a color coded string using ImGui::TextUnformatted
-    auto drawColorCodedTextUnformatted(const std::string& text) -> void {
-        textCustomization.Clear();
+    // auto drawColorCodedTextUnformatted(const std::string& text) -> void {
+    //     textCustomization.Clear();
 
-        auto entry = processText(text);
+    //     auto entry = processText(text);
 
-        // now draw
-        for (int i = 0; i < entry.colorRanges.size(); i++) {
-            auto start = entry.colorRanges[i].first;
-            auto end = entry.colorRanges[i].second;
-            auto color = entry.colors[i];
-            textCustomization.Range(entry.text.c_str() + start, entry.text.c_str() + end).TextColor(color);
-        }
+    //     // now draw
+    //     for (int i = 0; i < entry.colorRanges.size(); i++) {
+    //         auto start = entry.colorRanges[i].first;
+    //         auto end = entry.colorRanges[i].second;
+    //         auto color = entry.colors[i];
+    //         textCustomization.Range(entry.text.c_str() + start, entry.text.c_str() + end).TextColor(color);
+    //     }
 
-        //replace chars in the string that are ` with a random char
-        for (int i = 0; i < entry.text.size(); i++) {
-            if (entry.text[i] == '`') {
-                entry.text[i] = Random::get<char>('a', 'z');
-            }
-        }
+    //     //replace chars in the string that are ` with a random char
+    //     for (int i = 0; i < entry.text.size(); i++) {
+    //         if (entry.text[i] == '`') {
+    //             entry.text[i] = Random::get<char>('a', 'z');
+    //         }
+    //     }
 
-        ImGui::TextUnformatted(entry.text.c_str(), NULL, true, false, &textCustomization);
-    }
+    //     ImGui::TextUnformatted(entry.text.c_str(), NULL, true, false, &textCustomization);
+    // }
 
 
     // surrounds an entire string with color tags in the format [color:r:g:b]text[/color]
@@ -251,183 +251,183 @@ namespace util {
 
     // Interprets color tags in the input string and returns a TextLogEntry with the processed text and color information.
     // supports named colors as well
-    auto processText(const std::string& input) -> TextLogEntry {
-        // Modified regex to support both RGB format and named colors
-        boost::regex colorTagPattern(R"(\[color:(\d+:\d+:\d+|[a-zA-Z_]+)\](.*?)\[/color\])");
-        boost::sregex_iterator iter(input.begin(), input.end(), colorTagPattern);
-        boost::sregex_iterator end;
+    // auto processText(const std::string& input) -> TextLogEntry {
+    //     // Modified regex to support both RGB format and named colors
+    //     boost::regex colorTagPattern(R"(\[color:(\d+:\d+:\d+|[a-zA-Z_]+)\](.*?)\[/color\])");
+    //     boost::sregex_iterator iter(input.begin(), input.end(), colorTagPattern);
+    //     boost::sregex_iterator end;
 
-        TextLogEntry entry;
-        std::string processedText;
-        std::vector<std::pair<int, int>> ranges;
-        int currentPos = 0;
+    //     TextLogEntry entry;
+    //     std::string processedText;
+    //     std::vector<std::pair<int, int>> ranges;
+    //     int currentPos = 0;
 
-        while (iter != end) {
-            boost::smatch match = *iter;
-            // Append text leading up to the color tag
-            processedText += input.substr(currentPos, match.position() - currentPos);
+    //     while (iter != end) {
+    //         boost::smatch match = *iter;
+    //         // Append text leading up to the color tag
+    //         processedText += input.substr(currentPos, match.position() - currentPos);
 
-            // Calculate and store the range for the colored text
-            int start = processedText.length();
-            int end = start + match[2].str().length(); // match[2] is the text inside the color tags
-            ranges.push_back(std::make_pair(start, end));
+    //         // Calculate and store the range for the colored text
+    //         int start = processedText.length();
+    //         int end = start + match[2].str().length(); // match[2] is the text inside the color tags
+    //         ranges.push_back(std::make_pair(start, end));
 
-            // Append the colored text
-            processedText += match[2].str();
+    //         // Append the colored text
+    //         processedText += match[2].str();
 
-            // Check if it's an RGB color or a named color
-            std::string colorValue = match[1].str(); // match[1] is the color part (RGB or name)
-            if (colorValue.find(':') != std::string::npos) {
-                // RGB format detected, split the values
-                int r, g, b;
-                sscanf(colorValue.c_str(), "%d:%d:%d", &r, &g, &b);
-                entry.colors.push_back(ImColor(r, g, b));
-            } else {
-                // Named color detected, look it up in the map
-                entry.colors.push_back(getColorImVec(colorValue));
-            }
+    //         // Check if it's an RGB color or a named color
+    //         std::string colorValue = match[1].str(); // match[1] is the color part (RGB or name)
+    //         if (colorValue.find(':') != std::string::npos) {
+    //             // RGB format detected, split the values
+    //             int r, g, b;
+    //             sscanf(colorValue.c_str(), "%d:%d:%d", &r, &g, &b);
+    //             entry.colors.push_back(ImColor(r, g, b));
+    //         } else {
+    //             // Named color detected, look it up in the map
+    //             entry.colors.push_back(getColorImVec(colorValue));
+    //         }
 
-            // Update the current position in the input string
-            currentPos = match.position() + match.length();
-            ++iter;
-        }
+    //         // Update the current position in the input string
+    //         currentPos = match.position() + match.length();
+    //         ++iter;
+    //     }
 
-        // Append any remaining text after the last color tag
-        processedText += input.substr(currentPos);
+    //     // Append any remaining text after the last color tag
+    //     processedText += input.substr(currentPos);
 
-        entry.text = processedText;
-        entry.colorRanges = ranges;
+    //     entry.text = processedText;
+    //     entry.colorRanges = ranges;
 
-        return entry;
-    }
+    //     return entry;
+    // }
     
-    auto convertCP437TextToJSON() -> void {
-        std::ifstream input_stream(util::getRawAssetPathNoUUID("raws/cp437 temp"));
+    // auto convertCP437TextToJSON() -> void {
+    //     std::ifstream input_stream(util::getRawAssetPathNoUUID("raws/cp437 temp"));
         
-        // check stream status
-        if (!input_stream) std::cerr << "Can't open input file!";  
+    //     // check stream status
+    //     if (!input_stream) std::cerr << "Can't open input file!";  
         
-        vector<string> fileContents{};
+    //     vector<string> fileContents{};
         
-        string line;
+    //     string line;
         
-        while (std::getline(input_stream, line)) {
-            fileContents.push_back(line);
-        }
+    //     while (std::getline(input_stream, line)) {
+    //         fileContents.push_back(line);
+    //     }
         
-        // read through each line 
-        // tokenize by []:
-        // first three values are rgb
-        // last value, trimmed, is the name
+    //     // read through each line 
+    //     // tokenize by []:
+    //     // first three values are rgb
+    //     // last value, trimmed, is the name
         
-        nlohmann::ordered_json root{"[]"};
+    //     nlohmann::ordered_json root{"[]"};
         
-        int lineNo{0};
+    //     int lineNo{0};
         
         
-        for (string &line : fileContents) {
-            boost::trim(line);
+    //     for (string &line : fileContents) {
+    //         boost::trim(line);
             
-            if (line.empty()) {
-                lineNo++;
-                continue;
+    //         if (line.empty()) {
+    //             lineNo++;
+    //             continue;
                 
-            }
+    //         }
             
-            vector<string> result;
-            boost::split(result, line, boost::is_any_of("\t */,"), boost::token_compress_on);
+    //         vector<string> result;
+    //         boost::split(result, line, boost::is_any_of("\t */,"), boost::token_compress_on);
             
-            // line 44 is comma
-            // line 42 is *
-            // line 47 is /
+    //         // line 44 is comma
+    //         // line 42 is *
+    //         // line 47 is /
             
-            //     [ 
-            //         "sprite_number": ,
-            //         "char_cp437": ,
-            //         "codepoint"
-            //     ]
+    //         //     [ 
+    //         //         "sprite_number": ,
+    //         //         "char_cp437": ,
+    //         //         "codepoint"
+    //         //     ]
             
-            string char_cp437 = result.at(1);
-            boost::trim(char_cp437);
+    //         string char_cp437 = result.at(1);
+    //         boost::trim(char_cp437);
             
-            SPDLOG_DEBUG("Got tokens {}, {} for line \"{}\"", result.at(0), result.at(1), line);
+    //         SPDLOG_DEBUG("Got tokens {}, {} for line \"{}\"", result.at(0), result.at(1), line);
             
-            nlohmann::ordered_json charNode{};
-            charNode["sprite_number"] = lineNo;
-            charNode["char_cp437"] = char_cp437;
-            charNode["codepoint_UTF16"] = result.at(0);
+    //         nlohmann::ordered_json charNode{};
+    //         charNode["sprite_number"] = lineNo;
+    //         charNode["char_cp437"] = char_cp437;
+    //         charNode["codepoint_UTF16"] = result.at(0);
             
-            SPDLOG_DEBUG("Resulting cp437 node: {}", charNode.dump());
+    //         SPDLOG_DEBUG("Resulting cp437 node: {}", charNode.dump());
             
-            root.insert(root.end(), charNode);
+    //         root.insert(root.end(), charNode);
             
-            lineNo++;
-        }
-        std::ofstream o(util::getRawAssetPathNoUUID("raws/save_cp437.json"));
-        SPDLOG_DEBUG("Saving json: {}", root.dump());
-        o << std::setw(4) << root << std::endl;
-    }
+    //         lineNo++;
+    //     }
+    //     std::ofstream o(util::getRawAssetPathNoUUID("raws/save_cp437.json"));
+    //     SPDLOG_DEBUG("Saving json: {}", root.dump());
+    //     o << std::setw(4) << root << std::endl;
+    // }
 
-    auto convertColorsFileToJSON() -> void {
+    // auto convertColorsFileToJSON() -> void {
         
-        std::ifstream input_stream(util::getRawAssetPathNoUUID("raws/colors.txt"));
+    //     std::ifstream input_stream(util::getRawAssetPathNoUUID("raws/colors.txt"));
         
-        // check stream status
-        if (!input_stream) std::cerr << "Can't open input file!";  
+    //     // check stream status
+    //     if (!input_stream) std::cerr << "Can't open input file!";  
         
-        vector<string> fileContents{};
+    //     vector<string> fileContents{};
         
-        string line;
+    //     string line;
         
-        while (std::getline(input_stream, line)) {
-            fileContents.push_back(line);
-        }
+    //     while (std::getline(input_stream, line)) {
+    //         fileContents.push_back(line);
+    //     }
         
         
-        // read through each line 
-        // tokenize by []:
-        // first three values are rgb
-        // last value, trimmed, is the name
+    //     // read through each line 
+    //     // tokenize by []:
+    //     // first three values are rgb
+    //     // last value, trimmed, is the name
         
-        nlohmann::ordered_json root{"[]"};
+    //     nlohmann::ordered_json root{"[]"};
         
-        string family{"null"};
-        for (string &line : fileContents) {
-            boost::trim(line);
+    //     string family{"null"};
+    //     for (string &line : fileContents) {
+    //         boost::trim(line);
             
-            if (line.empty()) continue;
+    //         if (line.empty()) continue;
             
-            vector<string> result;
-            boost::split(result, line, boost::is_any_of("][:c"), boost::token_compress_on);
+    //         vector<string> result;
+    //         boost::split(result, line, boost::is_any_of("][:c"), boost::token_compress_on);
             
-            // ignore if line has only one token
-            if (result.size() <= 2) {
-                SPDLOG_DEBUG("Got family name {}", result.at(0));
-                family = result.at(0);
-                continue;
-            }
+    //         // ignore if line has only one token
+    //         if (result.size() <= 2) {
+    //             SPDLOG_DEBUG("Got family name {}", result.at(0));
+    //             family = result.at(0);
+    //             continue;
+    //         }
             
             
-            string name = result.at(4);
-            boost::trim(name);
+    //         string name = result.at(4);
+    //         boost::trim(name);
             
-            SPDLOG_DEBUG("Got tokens {}, {}, {}, and {} for line [{}]", result.at(1), result.at(2), result.at(3), name, line);
+    //         SPDLOG_DEBUG("Got tokens {}, {}, {}, and {} for line [{}]", result.at(1), result.at(2), result.at(3), name, line);
             
-            nlohmann::ordered_json colorNode{};
-            boost::to_upper(name);
-            colorNode["name"] = name;
-            colorNode["r"] = result.at(1);
-            colorNode["g"] = result.at(2);
-            colorNode["b"] = result.at(3);
-            colorNode["family"] = family;
+    //         nlohmann::ordered_json colorNode{};
+    //         boost::to_upper(name);
+    //         colorNode["name"] = name;
+    //         colorNode["r"] = result.at(1);
+    //         colorNode["g"] = result.at(2);
+    //         colorNode["b"] = result.at(3);
+    //         colorNode["family"] = family;
             
-            SPDLOG_DEBUG("Resulting color node: {}", colorNode.dump());
+    //         SPDLOG_DEBUG("Resulting color node: {}", colorNode.dump());
             
-            root.insert(root.end(), colorNode);
-        }
+    //         root.insert(root.end(), colorNode);
+    //     }
         
-        SPDLOG_DEBUG("Got color array: {}", root.dump());
-    }
+    //     SPDLOG_DEBUG("Got color array: {}", root.dump());
+    // }
 
 
 
@@ -442,16 +442,16 @@ namespace util {
 
     // Replaces all tokens in the given string with the corresponding values in the given map.
     // Token format: [tokenName], e.g., [ATTACKER_NAME], but do not include the brackets in the token map.
-    auto replaceAllTokensInString(const std::string& templateStr, const std::map<std::string, std::string>& tokens) -> std::string {
-        std::string result = templateStr;
-        for (const auto& token : tokens) {
-            std::string placeholder = token.first ;
-            // SPDLOG_DEBUG("Calling replace_all on [{}] with token {}", result, placeholder);
-            boost::replace_all(result, placeholder, token.second);
-            // SPDLOG_DEBUG("---Result after replace_all: [{}]", result);
-        }
-        return result;
-    }
+    // auto replaceAllTokensInString(const std::string& templateStr, const std::map<std::string, std::string>& tokens) -> std::string {
+    //     std::string result = templateStr;
+    //     for (const auto& token : tokens) {
+    //         std::string placeholder = token.first ;
+    //         // SPDLOG_DEBUG("Calling replace_all on [{}] with token {}", result, placeholder);
+    //         boost::replace_all(result, placeholder, token.second);
+    //         // SPDLOG_DEBUG("---Result after replace_all: [{}]", result);
+    //     }
+    //     return result;
+    // }
 
     /**
      * Returns a random synonym for the given word, using thesaurusJSON data.
@@ -476,7 +476,7 @@ namespace util {
     // Returns the tile coordinates of the mouse position in world space.
     // Uses the camera and the SpriteComponentASCII of the first tile in the map to calculate the tile coordinates.
     auto getTileCoordsAtMousePos() -> Vector2 {
-        // auto pos = GetScreenToWorld2D(GetMousePosition(), globals::camera);
+        // auto pos = GetScreenToWorld2D(GetScaledMousePosition(), globals::camera);
         
         // // translate to world space
         

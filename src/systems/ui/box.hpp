@@ -25,6 +25,7 @@
 namespace ui {
 
     namespace box {
+        auto AssignStateTagsToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &stateName) -> void;
         void AddTemplateToUIBox(entt::registry &registry,
                             entt::entity uiBoxEntity,
                             UIElementTemplateNode &templateDef,
@@ -40,6 +41,9 @@ namespace ui {
         auto TreeCalcSubNonContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                                      bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform) -> Vector2;
         // void ClampUsingMinDimensionsIfPresent(ui::UIConfig &uiConfig, ui::LocalTransform &calcCurrentNodeTransform);
+        auto SetTransformSpringsEnabledInUIBox(entt::registry &registry, entt::entity uiBox, bool enabled) -> void;
+        auto ClearStateTagsFromUIBox(entt::registry &registry, entt::entity uiBox) -> void;
+        auto AddStateTagToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &tagToAdd) -> void;
         void RenewAlignment(entt::registry &registry, entt::entity self);
         auto TreeCalcSubContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                 bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform, std::unordered_map<entt::entity, Vector2> &contentSizes) -> Vector2;

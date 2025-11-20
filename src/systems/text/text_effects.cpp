@@ -1,5 +1,6 @@
 #include "text_effects.hpp"
 #include "util/utilities.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 
 namespace TextSystem {
 
@@ -50,8 +51,8 @@ namespace TextSystem {
                 {
                     float shakeX = std::stof(args[0]);
                     float shakeY = std::stof(args[1]);
-                    character.offsets[effectName].x = sin(GetTime() * 10.0f + character.index * 5) * shakeX;
-                    character.offsets[effectName].y = cos(GetTime() * 10.0f + character.index * 5) * shakeY;
+                    character.offsets[effectName].x = sin(main_loop::getTime() * 10.0f + character.index * 5) * shakeX;
+                    character.offsets[effectName].y = cos(main_loop::getTime() * 10.0f + character.index * 5) * shakeY;
                     // spdlog::debug("Applying shake effect with arguments: x={}, y={}", shakeX, shakeY);
                 }
                 catch (const std::exception &)
@@ -88,7 +89,7 @@ namespace TextSystem {
                 spdlog::warn("Invalid pulse effect arguments; using defaults.");
             }
 
-            float time = GetTime() * pulseSpeed + character.index * stagger;
+            float time = main_loop::getTime() * pulseSpeed + character.index * stagger;
             float wave = (std::sin(time) + 1.0f) * 0.5f; // Normalize to 0–1
             character.scale = minScale + (maxScale - minScale) * wave;
         };
@@ -110,7 +111,7 @@ namespace TextSystem {
                 spdlog::warn("Invalid arguments for 'rotate' effect; using defaults.");
             }
 
-            character.rotation = std::sin(GetTime() * speed + character.index * 10.0f) * angle;
+            character.rotation = std::sin(main_loop::getTime() * speed + character.index * 10.0f) * angle;
         };
 
         effectFunctions["float"] = [](float dt, Character &character, const std::vector<std::string> &args)
@@ -139,7 +140,7 @@ namespace TextSystem {
                 character.offsets[effectName] = Vector2{0, 0};
             }
 
-            character.offsets[effectName].y = std::sin(GetTime() * speed + character.index * phaseOffsetPerChar) * amplitude;
+            character.offsets[effectName].y = std::sin(main_loop::getTime() * speed + character.index * phaseOffsetPerChar) * amplitude;
         };
 
         effectFunctions["bump"] = [](float dt, Character &character, const std::vector<std::string> &args)
@@ -178,7 +179,7 @@ namespace TextSystem {
             }
 
             // Time-based sine wave with optional character phase offset
-            float time = - GetTime() * speed + character.index * stagger;
+            float time = - main_loop::getTime() * speed + character.index * stagger;
             float wave = (std::sin(time) + 1.0f) * 0.5f; // Normalize sine to 0–1
 
             // Apply bump only when wave exceeds threshold (creates a snap/jump instead of a floaty sine)
@@ -208,7 +209,7 @@ namespace TextSystem {
             {
             }
 
-            character.rotation = std::sin(GetTime() * speed + character.index * stagger) * angle;
+            character.rotation = std::sin(main_loop::getTime() * speed + character.index * stagger) * angle;
         };
 
         // TODO: Make the rest of the effects, including pop-in. pop-out, etc.
@@ -219,7 +220,7 @@ namespace TextSystem {
             if (character.firstFrame)
             {
                 character.firstFrame = false;
-                character.createdTime = GetTime();
+                character.createdTime = main_loop::getTime();
             }
 
             float duration = 0.3f;           // How long the slide takes
@@ -244,7 +245,7 @@ namespace TextSystem {
 
             const char *effectName = "slide";
 
-            float timeAlive = static_cast<float>(GetTime()) - character.createdTime;
+            float timeAlive = static_cast<float>(main_loop::getTime()) - character.createdTime;
 
             // Apply stagger delay
             float timeOffset = character.index * stagger;
@@ -311,7 +312,7 @@ namespace TextSystem {
             if (character.firstFrame)
             {
                 character.firstFrame = false;
-                character.createdTime = GetTime();
+                character.createdTime = main_loop::getTime();
             }
 
             float duration = 0.3f;   // Total pop duration
@@ -333,7 +334,7 @@ namespace TextSystem {
 
             const char *effectName = "pop";
 
-            float timeAlive = static_cast<float>(GetTime()) - character.createdTime;
+            float timeAlive = static_cast<float>(main_loop::getTime()) - character.createdTime;
 
             // Staggered delay with capped index
             float timeOffset = character.index * stagger;
@@ -366,7 +367,7 @@ namespace TextSystem {
             if (character.firstFrame)
             {
                 character.firstFrame = false;
-                character.createdTime = GetTime();
+                character.createdTime = main_loop::getTime();
             }
 
             float speed = 1.0f;   // rotations per second
@@ -384,7 +385,7 @@ namespace TextSystem {
                 // Silently ignore parse errors
             }
 
-            float currentTime = GetTime();
+            float currentTime = main_loop::getTime();
             float startTime = character.createdTime + character.index * stagger;
 
             if (currentTime >= startTime)
@@ -449,7 +450,7 @@ namespace TextSystem {
             {
             }
 
-            float t = GetTime() * speed - character.index * stagger; // subtract to move left to right
+            float t = main_loop::getTime() * speed - character.index * stagger; // subtract to move left to right
             float normalized = (std::sin(t * frequency) + 1.0f) * 0.5f;
             float alpha = minAlpha + (maxAlpha - minAlpha) * normalized;
             character.color.a = static_cast<unsigned char>(alpha * 255.0f);
@@ -494,7 +495,7 @@ namespace TextSystem {
             }
 
             float indexOffset = (direction == "right") ? -character.index * stagger : character.index * stagger;
-            float t = GetTime() * speed + indexOffset;
+            float t = main_loop::getTime() * speed + indexOffset;
 
             float wave = (std::sin(t) + 1.0f) * 0.5f;
             float factor = wave;
@@ -550,7 +551,7 @@ namespace TextSystem {
             {
             }
 
-            float hue = fmodf((GetTime() * speed - character.index * stagger), 360.0f);
+            float hue = fmodf((main_loop::getTime() * speed - character.index * stagger), 360.0f);
 
             // Apply hue thresholding if set
             if (thresholdStep > 0.0f)
@@ -590,7 +591,7 @@ namespace TextSystem {
             if (maxScale < minScale)
                 std::swap(minScale, maxScale);
 
-            float t = GetTime() * speed + character.index * stagger;
+            float t = main_loop::getTime() * speed + character.index * stagger;
             float wave = (std::sin(t) + 1.0f) * 0.5f; // Normalize 0–1
             float scale = minScale + (maxScale - minScale) * wave;
 
@@ -640,11 +641,11 @@ namespace TextSystem {
             {
                 character.offsets[effectName] = Vector2{0, height};
                 character.customData[velKey] = height / duration;
-                character.customData[timeKey] = GetTime();
+                character.customData[timeKey] = main_loop::getTime();
             }
 
             float startTime = character.customData[timeKey] + stagger * character.index;
-            if (GetTime() < startTime)
+            if (main_loop::getTime() < startTime)
                 return; // Stagger delay not reached
 
             float &y = character.offsets[effectName].y;
@@ -688,7 +689,7 @@ namespace TextSystem {
             {
             }
 
-            float now = GetTime();
+            float now = main_loop::getTime();
             float elapsed = now - character.createdTime - character.index * stagger;
 
             if (elapsed < duration)

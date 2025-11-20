@@ -1,6 +1,7 @@
 -- easing.lua
 local PI = math.pi
-local sin, cos, sqrt, abs, pow = math.sin, math.cos, math.sqrt, math.abs, math.pow
+local sin, cos, sqrt, abs, pow = math.sin, math.cos, math.sqrt, math.abs, function (x, y) return x ^ y end
+    
 
 -- Fast, stable numeric derivative on [0,1]
 local function dE(E, t, eps)

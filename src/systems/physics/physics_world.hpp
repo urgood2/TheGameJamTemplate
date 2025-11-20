@@ -3,7 +3,7 @@
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk_private.h"
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk_structs.h"
 #include "entt/entt.hpp"
-#include "forward.hpp"
+#include "sol/forward.hpp"
 #include "physics_components.hpp"
 #include "raylib.h"
 #include "systems/layer/layer.hpp"
@@ -671,6 +671,10 @@ struct ColliderComponent {
     bool isSensor = false;
   };
   std::vector<SubShape> extraShapes;
+  
+  // Interpolation cache
+    Vector2 prevPos{}, bodyPos{};
+    float prevRot = 0.0f, bodyRot = 0.0f;
 };
 
 struct CollisionTag {
@@ -698,8 +702,15 @@ struct UFNode {
 
 class PhysicsWorld {
 public:
+
+
+  std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
+  cpCollisionType _nextCollisionType =
+      1; // Start from 1, as 0 is default in Chipmunk
+      
   // General Members
   entt::registry *registry;
+  cpBB worldBounds = cpBBNew(-3000, -3000, 3000, 3000); // default world AABB
   cpSpace *space;
   float meter; // REVIEW: unused
   // Internal state for mouse dragging
@@ -760,6 +771,56 @@ public:
   void PostUpdate();
   
   
+  
+  void ClearLuaRefs() {
+      for (auto& [key, handler] : _luaPairHandlers)
+          handler.ClearLuaRefs();
+      _luaPairHandlers.clear();
+  }
+
+  
+  
+  // culling
+  void CullOutOfBoundsEntities(float left, float bottom, float right, float top)
+  {
+      cpBB bounds = cpBBNew(left, bottom, right, top);
+
+      // 1. Collect all entities whose shapes are inside the given bounds
+      std::vector<entt::entity> inside;
+      cpSpaceBBQuery(
+          space,
+          bounds,
+          CP_SHAPE_FILTER_ALL,
+          [](cpShape* shape, void* data) {
+              auto* insideVec = static_cast<std::vector<entt::entity>*>(data);
+              if (void* ud = cpShapeGetUserData(shape)) {
+                  entt::entity e = static_cast<entt::entity>(reinterpret_cast<uintptr_t>(ud));
+                  if (e != entt::null)
+                      insideVec->push_back(e);
+              }
+          },
+          &inside
+      );
+
+      // 2. Build a quick lookup of entities still inside
+      std::unordered_set<entt::entity> insideSet(inside.begin(), inside.end());
+
+      // 3. Loop through all physics-enabled entities
+      auto view = registry->view<physics::ColliderComponent>();
+      for (auto e : view) {
+          auto& cc = view.get<physics::ColliderComponent>(e);
+          if (!cc.body || !cc.isDynamic)
+              continue;
+
+          if (!insideSet.contains(e)) {
+              RemovePhysics(e, /*removeComponent=*/true);
+              
+              registry->destroy(e); //  destroy the entity as well
+          }
+      }
+  }
+  
+  
 /* -------------------------- weights and crushing -------------------------- */
 
 
@@ -770,6 +831,8 @@ public:
     CrushMetrics CrushOn(entt::entity e, float dt) ;
     std::vector<entt::entity> TouchingEntities(entt::entity e);
 
+/* complete physics removal */
+  void RemovePhysics(entt::entity e, bool removeComponent);
 
 /* -------------------------------- tank demo ------------------------------- */
 
@@ -945,6 +1008,12 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
   void EnsurePairInstalled(cpCollisionType ta, cpCollisionType tb);
   
   void InstallDefaultBeginHandlersForAllTags();
+  
+  void RegisterPairBegin(const std::string& a, const std::string& b, sol::protected_function fn);
+  void RegisterPairSeparate(const std::string& a, const std::string& b, sol::protected_function fn);
+  void RegisterWildcardBegin(const std::string& tag, sol::protected_function fn);
+  void RegisterWildcardSeparate(const std::string& tag, sol::protected_function fn);
+
   // Pair registration
   void RegisterPairPreSolve(const std::string &a, const std::string &b,
                             sol::protected_function fn);
@@ -963,36 +1032,12 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
   cpBool OnBegin(cpArbiter* arb);   // returns cpTrue/False (Lua may veto)
   void  OnSeparate(cpArbiter* arb); 
             
-  // --- Pair (A,B) ---
-void RegisterPairBegin(const std::string& a, const std::string& b, sol::protected_function fn) {
-    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-    auto& H = _luaPairHandlers[PairKey(ta, tb)];
-    H.begin = std::move(fn);
-    EnsurePairInstalled(ta, tb);
-}
-void RegisterPairSeparate(const std::string& a, const std::string& b, sol::protected_function fn) {
-    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-    auto& H = _luaPairHandlers[PairKey(ta, tb)];
-    H.separate = std::move(fn);
-    EnsurePairInstalled(ta, tb);
-}
-
-// --- Wildcard (any with tag) ---
-void RegisterWildcardBegin(const std::string& tag, sol::protected_function fn) {
-    cpCollisionType t = TypeForTag(tag);
-    _luaWildcardHandlers[t].begin = std::move(fn);
-    EnsureWildcardInstalled(t);
-}
-void RegisterWildcardSeparate(const std::string& tag, sol::protected_function fn) {
-    cpCollisionType t = TypeForTag(tag);
-    _luaWildcardHandlers[t].separate = std::move(fn);
-    EnsureWildcardInstalled(t);
-}
   // Optional unregistration helpers if you want:
   void ClearPairHandlers(const std::string &a, const std::string &b);
   void ClearWildcardHandlers(const std::string &tag);
 
   // Collision Tag Management
+  void ReapplyAllFilters();
   std::string GetTagFromCategory(int category) const;
   void AddCollisionTag(const std::string &tag);
   void RemoveCollisionTag(const std::string &tag);
@@ -1353,6 +1398,7 @@ entt::entity AddOneWayPlatform(float x1, float y1,
   void SetDamping(entt::entity entity, float damping);
   void SetGlobalDamping(float damping);
   void SetVelocity(entt::entity entity, float velocityX, float velocityY);
+  cpVect GetVelocity(entt::entity entity) ;
   void SetAngularVelocity(entt::entity entity, float angularVelocity);
   void SetAngularDamping(entt::entity entity, float angularDamping);
   void SetRestitution(entt::entity entity, float restitution);
@@ -1463,6 +1509,17 @@ private:
     sol::protected_function pre_solve;  // optional
     sol::protected_function post_solve; // optional
     sol::protected_function separate;   // optional
+    
+    void ClearLuaRefs() {
+      begin.reset();
+      pre_solve.reset();
+      post_solve.reset();
+      separate.reset();
+        begin = sol::lua_nil;
+        pre_solve = sol::lua_nil;
+        post_solve = sol::lua_nil;
+        separate = sol::lua_nil;
+    }
   };
 
   struct LuaWildcardHandler {
@@ -1565,9 +1622,6 @@ private:
   /* -------------------------- other private members -------------------------
    */
 
-  std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
-  cpCollisionType _nextCollisionType =
-      1; // Start from 1, as 0 is default in Chipmunk
 
   // —— Union-Find state ——
   std::unordered_map<cpBody *, UFNode> _groupNodes;
@@ -1603,6 +1657,7 @@ InitPhysicsWorld(entt::registry *registry, float meter = 64.0f,
 
   return toReturn;
 }
+
 
 /* ---------------------------- Collision layers ---------------------------- */
 // Set all entities in an object layer to use a given physics tag and re-apply

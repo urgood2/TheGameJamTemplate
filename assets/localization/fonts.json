@@ -1,10 +1,10 @@
 {
   "en_us": {
-    "file":   "fonts/en/Nineteen Ninety Six.otf",
+    "file":   "fonts/en/Kenney Thick.ttf",
     "loadedSize": 25.0,
     "scale":  1.0,
-    "spacing": 1.2,
-    "offset": [2, 8],
+    "spacing": 1.0,
+    "offset": [0, 0],
     "ranges": [
       [32, 126]           
     ],

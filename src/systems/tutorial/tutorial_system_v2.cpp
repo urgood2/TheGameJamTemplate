@@ -469,10 +469,10 @@ namespace tutorial_system_v2 {
 
         // // reinitialize tweening data for the window
         // // TODO: these values should come from a script or json.
-        // float windowWidth = GetScreenWidth() * 0.7;
-        // float windowHeight = GetScreenHeight() * 0.5;
-        // float windowX = GetScreenWidth() / 2 - windowWidth / 2;
-        // float windowY = GetScreenHeight() / 2 - windowHeight / 2; // center window
+        // float windowWidth = globals::VIRTUAL_WIDTH * 0.7;
+        // float windowHeight = globals::VIRTUAL_HEIGHT * 0.5;
+        // float windowX = globals::VIRTUAL_WIDTH / 2 - windowWidth / 2;
+        // float windowY = globals::VIRTUAL_HEIGHT / 2 - windowHeight / 2; // center window
         // float windowStartY = windowY + 200; // slide from bottom
         // float windowAlphaStart = 0.0f; // start invisible
         // float tweenDuration = 1.0f; // 1 second tweening duration

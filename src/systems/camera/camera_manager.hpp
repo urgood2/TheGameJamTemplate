@@ -118,6 +118,72 @@ namespace camera_manager {
     inline bool      IsActive() { return s_active; }
     inline Camera2D* Current()  { return s_camera; }
 
+    //------------------------------------------------------------------------------------
+    // FIX: RAII Guard for Camera State Management
+    //------------------------------------------------------------------------------------
+    /// RAII guard that temporarily disables camera if it's active, then restores it
+    class CameraGuard {
+    private:
+        Camera2D savedCameraValue{}; // FIX: Store the actual Camera2D struct, not pointer
+        bool wasActive = false;
+        
+    public:
+        CameraGuard() = default;
+        
+        /// Disable camera if active, save state for restoration
+        void disable() {
+            if (wasActive) {
+                SPDLOG_WARN("CameraGuard: Already disabled!");
+                return;
+            }
+            
+            if (IsActive()) {
+                Camera2D* current = Current();
+                if (current) {
+                    // FIX: Copy the camera struct value, not just the pointer
+                    savedCameraValue = *current;
+                    SPDLOG_DEBUG("CameraGuard: Disabling camera at ({}, {}), zoom={}, rotation={}", 
+                        savedCameraValue.offset.x, savedCameraValue.offset.y, 
+                        savedCameraValue.zoom, savedCameraValue.rotation);
+                    End();
+                    wasActive = true;
+                } else {
+                    SPDLOG_ERROR("CameraGuard: IsActive() true but Current() returned null!");
+                }
+            } else {
+                SPDLOG_DEBUG("CameraGuard: No active camera to disable");
+            }
+        }
+        
+        /// Manually restore camera state
+        void restore() {
+            if (wasActive) {
+                SPDLOG_DEBUG("CameraGuard: Restoring camera at ({}, {}), zoom={}, rotation={}", 
+                    savedCameraValue.offset.x, savedCameraValue.offset.y, 
+                    savedCameraValue.zoom, savedCameraValue.rotation);
+                Begin(savedCameraValue);
+                wasActive = false;
+            }
+        }
+        
+        /// RAII cleanup - automatically restores camera
+        ~CameraGuard() {
+            if (wasActive) {
+                SPDLOG_DEBUG("CameraGuard: Destructor restoring camera at ({}, {})", 
+                    savedCameraValue.offset.x, savedCameraValue.offset.y);
+                Begin(savedCameraValue);
+            }
+        }
+        
+        // Non-copyable, non-movable
+        CameraGuard(const CameraGuard&) = delete;
+        CameraGuard& operator=(const CameraGuard&) = delete;
+        CameraGuard(CameraGuard&&) = delete;
+        CameraGuard& operator=(CameraGuard&&) = delete;
+        
+        bool isDisabled() const { return wasActive; }
+    };
+
     // ------------------------------------------------------------------
     // Overloads by camera name
     // ------------------------------------------------------------------

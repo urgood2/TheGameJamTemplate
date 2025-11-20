@@ -3,6 +3,7 @@
 #include <typeindex>
 #include <unordered_map>
 
+#include "systems/layer/layer_optimized.hpp"
 #include "util/common_headers.hpp"
 // #include "layer_optimized.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
@@ -58,6 +59,8 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdAddPush>() { return DrawCommandType::AddPush; }
         template<> inline DrawCommandType GetDrawCommandType<CmdAddPop>() { return DrawCommandType::AddPop; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPushMatrix>() { return DrawCommandType::PushMatrix; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdPushObjectTransformsToMatrix>() { return DrawCommandType::PushObjectTransformsToMatrix; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdScopedTransformCompositeRender>() { return DrawCommandType::ScopedTransformCompositeRender; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPopMatrix>() { return DrawCommandType::PopMatrix; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleFilled>() { return DrawCommandType::Circle; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleLine>() { return DrawCommandType::CircleLine; }
@@ -66,6 +69,8 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawRectangleLinesPro>() { return DrawCommandType::RectangleLinesPro; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawLine>() { return DrawCommandType::Line; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawDashedLine>() { return DrawCommandType::DashedLine; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawGradientRectCentered>() { return DrawCommandType::DrawGradientRectCentered; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawGradientRectRoundedCentered>() { return DrawCommandType::DrawGradientRectRoundedCentered; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawText>() { return DrawCommandType::Text; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawTextCentered>() { return DrawCommandType::DrawTextCentered; }
         template<> inline DrawCommandType GetDrawCommandType<CmdTextPro>() { return DrawCommandType::TextPro; }
@@ -116,6 +121,12 @@ namespace layer
         
         template<> inline DrawCommandType GetDrawCommandType<CmdClearStencilBuffer>() { return DrawCommandType::ClearStencilBuffer; }
         template<> inline DrawCommandType GetDrawCommandType<CmdBeginStencilMode>() { return DrawCommandType::BeginStencilMode; }
+        template<> inline DrawCommandType 
+        GetDrawCommandType<CmdStencilOp>() { return DrawCommandType::StencilOp; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdStencilFunc>() { return DrawCommandType::StencilFunc; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdRenderBatchFlush>() { return DrawCommandType::RenderBatchFlush; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdAtomicStencilMask>() { return DrawCommandType::AtomicStencilMask; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdColorMask>() { return DrawCommandType::ColorMask; }
         template<> inline DrawCommandType GetDrawCommandType<CmdEndStencilMode>() { return DrawCommandType::EndStencilMode; }
         template<> inline DrawCommandType GetDrawCommandType<CmdBeginStencilMask>() { return DrawCommandType::BeginStencilMask; }
         template<> inline DrawCommandType GetDrawCommandType<CmdEndStencilMask>() { return DrawCommandType::EndStencilMask; }
@@ -140,7 +151,8 @@ namespace layer
         struct PoolBlockSize<CmdVertex> {
             static constexpr ::detail::index_t value = 512;
         };
-
+        
+        static uint64_t gNextUniqueID = 1;
 
         template<typename T>
         T* AddExplicit(std::shared_ptr<Layer>& layer, DrawCommandType type, int z, DrawCommandSpace space) {
@@ -149,7 +161,10 @@ namespace layer
             assert(cmd && "Draw command allocation failed");
 
             // 2) Append to vector
-            layer->commands.push_back({ type, cmd, z, space });
+            layer->commands_ptr->push_back({ type, cmd, z, space });
+            auto& added = layer->commands_ptr->back();
+            added.uniqueID = gNextUniqueID++;
+
             if (z != 0) {
                 layer->isSorted = false;
             }
@@ -292,6 +307,8 @@ namespace layer
             CmdAddPop,
             CmdPushMatrix,
             CmdPopMatrix,
+            CmdPushObjectTransformsToMatrix,
+            CmdScopedTransformCompositeRender,
             CmdDrawCircleFilled,
             CmdDrawCircleLine,
             CmdDrawRectangle,
@@ -329,6 +346,11 @@ namespace layer
             CmdRenderNPatchRect,
             CmdDrawTriangle,
             CmdClearStencilBuffer,
+            CmdStencilOp,
+            CmdRenderBatchFlush,
+            CmdAtomicStencilMask,
+            CmdColorMask,
+            CmdStencilFunc,
             CmdBeginStencilMode,
             CmdEndStencilMode,
             CmdBeginStencilMask,

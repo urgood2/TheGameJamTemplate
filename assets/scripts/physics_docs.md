@@ -484,12 +484,19 @@ This section documents important caveats when working with the **`physics.Arbite
 Register Lua callbacks for **pair** or **wildcard** tags.
 
 ```lua
--- PreSolve: return false to reject contact; nil/true to accept
+-- Begin: return false to reject contact; true to accept
+physics.on_pair_begin(world, "player", "enemy", function(arb) return true end)
+
+
+-- PreSolve: return false to reject contact; nil/true to accept for frame
 physics.on_pair_presolve(world, "player", "enemy", function(arb) return true end)
 physics.on_pair_postsolve(world, "player", "enemy", function(arb) end)
 
 physics.on_wildcard_presolve(world, "projectile", function(arb) end)
 physics.on_wildcard_postsolve(world, "projectile", function(arb) end)
+
+-- OnSeparate
+physics.on_pair_separate(world, "player", "enemy", function(arb) end)
 
 -- Clear handlers
 physics.clear_pair_handlers(world, "player", "enemy")

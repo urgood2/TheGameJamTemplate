@@ -83,6 +83,12 @@ function Registry:clearPattern(p)
 	end
 end
 
+function Registry:exists(s)
+    local listeners = rawget(self, s)
+    return listeners ~= nil and next(listeners) ~= nil
+end
+
+
 -- instancing
 function Registry.new()
 	return setmetatable({}, Registry)

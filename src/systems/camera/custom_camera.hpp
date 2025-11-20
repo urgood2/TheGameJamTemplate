@@ -32,6 +32,7 @@
 #include "raylib.h"             // Raylib types and functions
 
 #include "spdlog/spdlog.h"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/spring/spring.hpp"                  // Spring component definition
 #include "systems/layer/layer.hpp"                    // Layer drawing abstraction
 #include "systems/layer/layer_command_buffer.hpp"     // Buffered draw commands
@@ -60,7 +61,7 @@ enum class FollowStyle {
 // Alias for spring component
 using Spring = spring::Spring;
 
-struct Shake {
+struct ShakeStruct {
     float amplitude;
     float duration;
     float frequency;
@@ -68,7 +69,7 @@ struct Shake {
     float elapsedTime = 0.0f;
     bool shaking     = true;
 
-    Shake(float amp, float dur, float freq)
+    ShakeStruct(float amp, float dur, float freq)
       : amplitude(amp)
       , duration(dur)
       , frequency(freq)
@@ -83,7 +84,9 @@ struct Shake {
 
     void Update(float dt) {
         if(!shaking) return;
-        elapsedTime += dt;
+        // elapsedTime += dt;
+        // let's used unscaled time for shake
+        elapsedTime += main_loop::mainLoop.rawDeltaTime;
         if(elapsedTime >= duration) shaking = false;
     }
 
@@ -146,7 +149,7 @@ public:
     /// max camera‐target offset speed (world units/sec)
     float maxOffsetX   = 200.0f,  maxOffsetY   =  200.0f;
     /// maximum tilt angle in degrees
-    float tiltAngle         = 360.f/256.f;  // ≈1.4°
+    float tiltAngle         = 0.5f;  // ≈1.4°
     /// how quickly to tilt toward max (per second)
     float tiltSpeed         =  8.0f;
     /// how quickly to recover back to 0° (per second)
@@ -161,7 +164,7 @@ public:
 
     
     // --- noise-based shake storage ---
-    std::vector<Shake> shakesX, shakesY;
+    std::vector<ShakeStruct> shakesX, shakesY;
     float shakeOffsetX = 0.0f, shakeOffsetY = 0.0f;
 
     // --- World bounds clamping ---
@@ -251,14 +254,15 @@ public:
         });
     }
     
-    // destructor: cleans up spring entities
+    // destructor: cleans up spring entities, if not already destroyed.
     ~GameCamera() {
-        registry.destroy(springTargetX);
-        registry.destroy(springTargetY);
-        registry.destroy(springZoom);
-        registry.destroy(springRot);
-        registry.destroy(springOffsetX);
-        registry.destroy(springOffsetY);
+        
+        if (registry.valid(springTargetX)) registry.destroy(springTargetX);
+        if (registry.valid(springTargetY)) registry.destroy(springTargetY);
+        if (registry.valid(springZoom))    registry.destroy(springZoom);
+        if (registry.valid(springRot))     registry.destroy(springRot);
+        if (registry.valid(springOffsetX)) registry.destroy(springOffsetX);
+        if (registry.valid(springOffsetY)) registry.destroy(springOffsetY);
     }
 
     // --- Public API ---
@@ -331,7 +335,7 @@ public:
      * @return World-space coordinates of the mouse cursor.
      */
     Vector2 GetMouseWorld() const {
-        return GetScreenToWorld2D(GetMousePosition(), cam);
+        return GetScreenToWorld2D(globals::GetScaledMousePosition(), cam);
     }
 
     /**
@@ -583,11 +587,7 @@ public:
      */
     void Update(float dt) {
         
-        
-        auto &offsetVisualX = registry.get<Spring>(springOffsetX).value;
-        auto &offsetVisualY = registry.get<Spring>(springOffsetY).value;
-        
-        // 1.5) noise‐based shakes
+        // 1.5) noise‐based shakes (calculate but don't apply yet)
         shakeOffsetX = shakeOffsetY = 0.0f;
         // X‐axis
         for(auto it = shakesX.begin(); it != shakesX.end();) {
@@ -603,9 +603,6 @@ public:
             if(!it->shaking) it = shakesY.erase(it);
             else ++it;
         }
-        // apply the jitter on top of whatever offset the springs have given us
-        offsetVisualX += shakeOffsetX;
-        offsetVisualY += shakeOffsetY;
 
         // 2) Handle flash timing
         if (flashing) {
@@ -631,8 +628,8 @@ public:
 
         // 4) Apply follow/deadzone logic
         if (style != FollowStyle::NONE && useDeadzone) {
-            float sw = (float)GetScreenWidth();
-            float sh = (float)GetScreenHeight();
+            float sw = (float)globals::VIRTUAL_WIDTH;
+            float sh = (float)globals::VIRTUAL_HEIGHT;
 
             switch (style) {
                 case FollowStyle::LOCKON: {
@@ -708,8 +705,9 @@ public:
             cam.target.y = sy.value;
             cam.zoom     = sz.value;
             cam.rotation = sr.value;
-            cam.offset.x = sox.value;
-            cam.offset.y = soy.value;
+            // Apply shake offset on top of spring offset
+            cam.offset.x = sox.value + shakeOffsetX;
+            cam.offset.y = soy.value + shakeOffsetY;
         }
         
         
@@ -723,8 +721,8 @@ public:
 
         // 5) Clamp within world bounds
         if (useBounds) {
-            float halfW = (float)GetScreenWidth()*0.5f / cam.zoom;
-            float halfH = (float)GetScreenHeight()*0.5f / cam.zoom;
+            float halfW = (float)globals::VIRTUAL_WIDTH*0.5f / cam.zoom;
+            float halfH = (float)globals::VIRTUAL_HEIGHT*0.5f / cam.zoom;
             cam.target.x = ClampF(cam.target.x, bounds.x + halfW, bounds.x + bounds.width - halfW);
             cam.target.y = ClampF(cam.target.y, bounds.y + halfH, bounds.y + bounds.height - halfH);
         }
@@ -746,10 +744,10 @@ private:
         if (flashing || fading) {
             layer::QueueCommand<layer::CmdDrawRectangle>(
                 overlayDrawLayer, [this](auto* cmd) {
-                    cmd->x = 0 + GetScreenWidth() / 2;   // center X
-                    cmd->y = 0 + GetScreenHeight() / 2;  // center Y
-                    cmd->width  = (float)GetScreenWidth();
-                    cmd->height = (float)GetScreenHeight();
+                    cmd->x = 0 + globals::VIRTUAL_WIDTH / 2;   // center X
+                    cmd->y = 0 + globals::VIRTUAL_HEIGHT / 2;  // center Y
+                    cmd->width  = (float)globals::VIRTUAL_WIDTH;
+                    cmd->height = (float)globals::VIRTUAL_HEIGHT;
                     cmd->color = flashColor;            // overlay color
                 }, 1000  // draw priority
             );

@@ -45,35 +45,53 @@ namespace localization
         return "";
     }
 
-    void loadFontData(const std::string &jsonPath) {
+    void loadFontData(const std::string &jsonPath)
+    {
         std::ifstream f(jsonPath);
-        json j; f >> j;
+        if (!f.is_open()) {
+            SPDLOG_ERROR("Failed to open font JSON file: {}", jsonPath);
+            return;
+        }
 
-        for (auto& [lang, fontJ] : j.items()) {
+        json j;
+        try {
+            f >> j;
+        } catch (const std::exception &e) {
+            SPDLOG_ERROR("Failed to parse font JSON '{}': {}", jsonPath, e.what());
+            return;
+        }
+
+        for (auto &[lang, fontJ] : j.items()) {
             globals::FontData fd;
-            // … copy loadedSize, scale, spacing, offset exactly as before …
 
-            // 1) Gather ranges from JSON (or fall back to ASCII)
+            // --- Copy JSON parameters (with defaults) ---
+            fd.fontLoadedSize = fontJ.value("loadedSize", 32.0f);
+            fd.fontScale      = fontJ.value("scale", 1.0f);
+            fd.spacing        = fontJ.value("spacing", 1.0f);
+
+            if (auto it = fontJ.find("offset"); it != fontJ.end() && it->is_array() && it->size() == 2) {
+                fd.fontRenderOffset = { (*it)[0].get<float>(), (*it)[1].get<float>() };
+            }
+
+            // --- Gather ranges (or fallback to ASCII) ---
             std::vector<std::pair<int,int>> ranges;
-            if (auto it = fontJ.find("ranges"); it != fontJ.end()) {
-                for (auto& pair : *it) {
-                    int lo = pair[0].get<int>();
-                    int hi = pair[1].get<int>();
-                    ranges.emplace_back(lo, hi);
+            if (auto it = fontJ.find("ranges"); it != fontJ.end() && it->is_array()) {
+                for (auto &pair : *it) {
+                    if (pair.is_array() && pair.size() == 2)
+                        ranges.emplace_back(pair[0].get<int>(), pair[1].get<int>());
                 }
             } else {
-                ranges.emplace_back(0x0020, 0x007E);
+                ranges.emplace_back(0x0020, 0x007E); // ASCII default
             }
 
-            // 2) Flatten into a single codepoint list
-            auto& cps = fd.codepoints;
-            for (auto [lo,hi] : ranges) {
-                for (int cp = lo; cp <= hi; ++cp) {
+            // --- Flatten into codepoint list ---
+            auto &cps = fd.codepoints;
+            for (auto [lo, hi] : ranges) {
+                for (int cp = lo; cp <= hi; ++cp)
                     cps.push_back(cp);
-                }
             }
 
-            // 3) Load with LoadFontEx
+            // --- Load font ---
             std::string file = util::getRawAssetPathNoUUID(fontJ["file"].get<std::string>());
             if (!file.empty()) {
                 fd.font = LoadFontEx(
@@ -82,9 +100,15 @@ namespace localization
                     cps.data(),
                     static_cast<int>(cps.size())
                 );
+
                 if (fd.font.texture.id == 0) {
                     SPDLOG_ERROR("Failed to LoadFontEx '{}' for '{}'", file, lang);
+                } else {
+                    SPDLOG_INFO("Loaded font '{}' ({} glyphs) for '{}'",
+                                file, cps.size(), lang);
                 }
+            } else {
+                SPDLOG_ERROR("Missing font file path for '{}'", lang);
             }
 
             languageFontData[lang] = std::move(fd);
@@ -176,6 +200,33 @@ namespace localization
         // 1) Bind the functions and record their metadata simultaneously.
         // The get_or_create_table logic is now handled inside bind_function.
 
+        struct FontData
+    {
+        Font font{};
+        float fontLoadedSize = 32.f;       // the size of the font when loaded
+        float fontScale = 1.0f;            // the scale of the font when rendered
+        float spacing = 1.0f;              // the horizontal spacing for the font
+        Vector2 fontRenderOffset = {2, 0}; // the offset of the font when rendered, applied to ensure text is centered correctly in ui, it is multiplied by scale when applied
+        // <— store your codepoint list if you ever need it later
+        std::vector<int> codepoints;
+    };
+        // bind fontdata type.
+        lua.new_usertype<Font>("Font",
+            "baseSize", &Font::baseSize,
+            "texture", &Font::texture,
+            "recs", &Font::recs
+        );
+        
+        lua.new_usertype<FontData>("FontData",
+            "font", &FontData::font,
+            "fontLoadedSize", &FontData::fontLoadedSize,
+            "fontScale", &FontData::fontScale,
+            "spacing", &FontData::spacing,
+            "fontRenderOffset", &FontData::fontRenderOffset,
+            "codepoints", &FontData::codepoints
+        );
+        rec.add_type("FontData").doc = "Structure containing font data for localization.";
+        
         rec.add_type("localization").doc = "namespace for localization functions";
 
         // loadLanguage
@@ -273,6 +324,29 @@ namespace localization
             "---@return FontData # A handle to the font data for the current language.",
             "Retrieves font data associated with the current language."
         );
+        
+        rec.bind_function(lua, path, "getFont", []() -> Font {
+            return localization::getFontData().font;
+        },
+            "---@return FontData # The font for the current language.\n",
+            "Gets the font data for the current language."
+        );
+        
+        rec.bind_function(lua, path, "getTextWidthWithCurrentFont",
+            [](const std::string& text, float fontSize, float spacing) -> float {
+                Font font = localization::getFontData().font;
+                if (font.baseSize <= 0) return 0.0f;
+
+                Vector2 size = MeasureTextEx(font, text.c_str(), fontSize, spacing);
+                return size.x;
+            },
+            "---@param text string # The text to measure.\n"
+            "---@param fontSize number # The font size to use when measuring.\n"
+            "---@param spacing number # The spacing between characters.\n"
+            "---@return number # The width of the text when rendered with the current language's font.\n",
+            "Gets the rendered width of a text string using the current language's font."
+        );
+
 
         // loadFontData
         rec.bind_function(lua, path, "loadFontData", &localization::loadFontData,

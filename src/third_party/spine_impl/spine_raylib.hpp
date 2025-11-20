@@ -177,8 +177,9 @@ extern void engine_drawMesh(Vertex* vertices, unsigned short* indices, size_t nu
 // int VERTEX_ORDER_NORMAL[] = {0, 1, 2, 4};
 // int VERTEX_ORDER_INVERSE[] = {4, 2, 1, 0};
 
+#if !defined(__EMSCRIPTEN__)
 #include "external/glad.h" 
-
+#endif
 
 
 

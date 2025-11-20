@@ -1,5 +1,18 @@
 #include "layer_optimized.hpp"
 
+#if defined(PLATFORM_WEB)
+#include "util/web_glad_shim.hpp"
+#endif
+
+#if defined(__EMSCRIPTEN__)
+    #define GL_GLEXT_PROTOTYPES
+    #include <GLES3/gl3.h>
+    #include <GLES2/gl2ext.h>
+#else
+    // #include <GL/gl.h>
+    // #include <GL/glext.h>
+#endif
+
 #include "layer.hpp"
 #include "core/globals.hpp"
 #include "raylib.h"
@@ -47,6 +60,22 @@ namespace layer
         PushMatrix();
     }
     
+    void ExecutePushObjectTransformsToMatrix(std::shared_ptr<layer::Layer> layer, CmdPushObjectTransformsToMatrix* c) {
+        layer::pushEntityTransformsToMatrix(globals::registry, c->entity, layer);
+    }
+    
+    void ExecuteScopedTransformCompositeRender(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRender* c) {
+        layer::pushEntityTransformsToMatrixImmediate(globals::registry, c->entity, layer);
+        // Execute child commands
+        for (auto& cmd : c->children) {
+            auto it = dispatcher.find(cmd.type);
+            if (it != dispatcher.end()) {
+                it->second(layer, cmd.data);
+            }
+        }
+        PopMatrix();
+    }
+    
     void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c) {
         PopMatrix();
     }
@@ -77,6 +106,26 @@ namespace layer
     
     void ExecuteDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c) {
         layer::DrawDashedLine(c->start, c->end, c->dashLength, c->gapLength, c->phase, c->thickness, c->color);
+    }
+    
+    void ExecuteDrawGradientRectCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectCentered* c) {
+        layer::DrawGradientRectCentered(
+            c->cx, c->cy,
+            c->width, c->height,
+            c->topLeft, c->topRight,
+            c->bottomRight, c->bottomLeft
+        );
+    }
+    
+    void ExecuteDrawGradientRectRoundedCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectRoundedCentered* c) {
+        layer::DrawGradientRectRoundedCentered(
+            c->cx, c->cy,
+            c->width, c->height,
+            c->roundness,
+            c->segments,
+            c->topLeft, c->topRight,
+            c->bottomRight, c->bottomLeft
+        );
     }
     
     void ExecuteText(std::shared_ptr<layer::Layer> layer, CmdDrawText* c) {
@@ -206,6 +255,21 @@ namespace layer
     void ExecuteBeginStencilMode(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMode* c) {
         beginStencil();
     }
+    void ExecuteStencilOp(std::shared_ptr<layer::Layer> layer, CmdStencilOp* c) {
+        glStencilOp(c->sfail, c->dpfail, c->dppass);
+    }
+    void ExecuteRenderBatchFlush(std::shared_ptr<layer::Layer> layer, CmdRenderBatchFlush* c) {
+        rlDrawRenderBatchActive();
+    }
+    void ExecuteAtomicStencilMask(std::shared_ptr<layer::Layer> layer, CmdAtomicStencilMask* c) {
+        glStencilMask(c->mask);
+    }
+    void ExecuteColorMask(std::shared_ptr<layer::Layer> layer, CmdColorMask* c) {
+        glColorMask(c->red, c->green, c->blue, c->alpha);
+    }
+    void ExecuteStencilFunc(std::shared_ptr<layer::Layer> layer, CmdStencilFunc* c) {
+        glStencilFunc(c->func, c->ref, c->mask);
+    }
     void ExecuteEndStencilMode(std::shared_ptr<layer::Layer> layer, CmdEndStencilMode* c) {
         endStencil();
     }
@@ -249,6 +313,7 @@ namespace layer
         DashedLine(c->start.x, c->start.y, c->end.x, c->end.y, c->dashLength, c->gapLength, c->color, c->thickness);
     }
     
+    
     // -------------------------------------------------------------------------------------
     // Command Registration Functions
     // -------------------------------------------------------------------------------------
@@ -284,6 +349,8 @@ namespace layer
         RegisterRenderer<CmdAddPop>(DrawCommandType::AddPop, ExecuteAddPop);
         RegisterRenderer<CmdPushMatrix>(DrawCommandType::PushMatrix, ExecutePushMatrix);
         RegisterRenderer<CmdPopMatrix>(DrawCommandType::PopMatrix, ExecutePopMatrix);
+        RegisterRenderer<CmdPushObjectTransformsToMatrix>(DrawCommandType::PushObjectTransformsToMatrix, ExecutePushObjectTransformsToMatrix);
+        RegisterRenderer<CmdScopedTransformCompositeRender>(DrawCommandType::ScopedTransformCompositeRender, ExecuteScopedTransformCompositeRender);
         RegisterRenderer<CmdDrawCircleFilled>(DrawCommandType::Circle, ExecuteCircle);
         RegisterRenderer<CmdDrawCircleLine>(DrawCommandType::CircleLine, ExecuteCircleLine);
         RegisterRenderer<CmdDrawRectangle>(DrawCommandType::Rectangle, ExecuteRectangle);
@@ -291,6 +358,8 @@ namespace layer
         RegisterRenderer<CmdDrawRectangleLinesPro>(DrawCommandType::RectangleLinesPro, ExecuteRectangleLinesPro);
         RegisterRenderer<CmdDrawLine>(DrawCommandType::Line, ExecuteLine);
         RegisterRenderer<CmdDrawDashedLine>(DrawCommandType::DashedLine, ExecuteDashedLine);
+        RegisterRenderer<CmdDrawGradientRectCentered>(DrawCommandType::DrawGradientRectCentered, ExecuteDrawGradientRectCentered);
+        RegisterRenderer<CmdDrawGradientRectRoundedCentered>(DrawCommandType::DrawGradientRectRoundedCentered, ExecuteDrawGradientRectRoundedCentered);
         RegisterRenderer<CmdDrawText>(DrawCommandType::Text, ExecuteText);
         RegisterRenderer<CmdDrawTextCentered>(DrawCommandType::DrawTextCentered, ExecuteTextCentered);
         RegisterRenderer<CmdTextPro>(DrawCommandType::TextPro, ExecuteTextPro);
@@ -322,6 +391,11 @@ namespace layer
         RegisterRenderer<CmdRenderNPatchRect>(DrawCommandType::RenderNPatchRect, ExecuteRenderNPatchRect);
         RegisterRenderer<CmdDrawTriangle>(DrawCommandType::Triangle, ExecuteTriangle);        
         RegisterRenderer<CmdClearStencilBuffer>(DrawCommandType::ClearStencilBuffer, ExecuteClearStencilBuffer);
+        RegisterRenderer<CmdStencilOp>(DrawCommandType::StencilOp, ExecuteStencilOp);
+        RegisterRenderer<CmdRenderBatchFlush>(DrawCommandType::RenderBatchFlush, ExecuteRenderBatchFlush);
+        RegisterRenderer<CmdAtomicStencilMask>(DrawCommandType::AtomicStencilMask, ExecuteAtomicStencilMask);
+        RegisterRenderer<CmdColorMask>(DrawCommandType::ColorMask, ExecuteColorMask);
+        RegisterRenderer<CmdStencilFunc>(DrawCommandType::StencilFunc, ExecuteStencilFunc);
         RegisterRenderer<CmdBeginStencilMode>(DrawCommandType::BeginStencilMode, ExecuteBeginStencilMode);
         RegisterRenderer<CmdEndStencilMode>(DrawCommandType::EndStencilMode, ExecuteEndStencilMode);
         RegisterRenderer<CmdBeginStencilMask>(DrawCommandType::BeginStencilMask, ExecuteBeginStencilMask);

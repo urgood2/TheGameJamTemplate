@@ -21,6 +21,10 @@ namespace sound_system {
     
     std::vector<MusicEntry> activeMusic;
     std::queue<std::pair<std::string,bool>> musicQueue; // legacy queue for “next” tracks
+    
+    std::vector<std::pair<std::string, bool>> playlist;
+    size_t currentIndex = 0;
+    bool loopPlaylist = false;
 
     std::map<std::string, std::string> musicFiles;
     float globalVolume = 1.0f; // global volume (0.0–1.0)
@@ -37,7 +41,121 @@ namespace sound_system {
     std::map<std::string, SoundCallback> soundCallbacks;
 
     FadeState fadeState = None;
+    
+    
+    static bool enableLowPassFilter = false;
+    static float lowpassL[2] = { 0.0f, 0.0f };
+    static const float cutoff = 70.0f / 44100.0f; // 70Hz
+    static const float k = cutoff / (cutoff + 0.1591549431f);
 
+    static float* delayBuffer = nullptr;
+    static unsigned int delayBufferSize = 0;
+    static unsigned int delayReadIndex = 2;
+    static unsigned int delayWriteIndex = 0;
+    static bool enableDelayEffect = false;
+    
+    // --- Low-pass filter state ---
+    static float lpfStrength = 0.0f;       // 0.0 = off, 1.0 = full
+    static float lpfTarget = 0.0f;         // target strength for smooth approach
+    static float lpfApproachSpeed = 1.5f;  // how quickly it approaches (Hz per second)
+    static float lowpassMemory[2] = { 0.0f, 0.0f };
+
+    static void AudioProcessEffectLPF(void* buffer, unsigned int frames)
+    {
+        float* buf = (float*)buffer;
+        // Base cutoff range: [70Hz..20000Hz]
+        // Convert to normalized [0..1] value (frequency / sampleRate)
+        const float minCut = 70.0f / 44100.0f;
+        const float maxCut = 20000.0f / 44100.0f;
+
+        // Compute effective cutoff and filter coefficient k
+        float cutoff = minCut + (maxCut - minCut) * (1.0f - lpfStrength);
+        float k = cutoff / (cutoff + 0.1591549431f);
+
+        for (unsigned int i = 0; i < frames * 2; i += 2)
+        {
+            float l = buf[i];
+            float r = buf[i + 1];
+
+            lowpassMemory[0] += k * (l - lowpassMemory[0]);
+            lowpassMemory[1] += k * (r - lowpassMemory[1]);
+
+            buf[i] = lowpassMemory[0];
+            buf[i + 1] = lowpassMemory[1];
+        }
+    }
+
+    static void AudioProcessEffectDelay(void* buffer, unsigned int frames) {
+        if (!delayBuffer) return;
+        float* buf = (float*)buffer;
+        for (unsigned int i = 0; i < frames * 2; i += 2) {
+            float lDelay = delayBuffer[delayReadIndex++];
+            float rDelay = delayBuffer[delayReadIndex++];
+            if (delayReadIndex >= delayBufferSize) delayReadIndex = 0;
+            buf[i] = 0.5f * buf[i] + 0.5f * lDelay;
+            buf[i + 1] = 0.5f * buf[i + 1] + 0.5f * rDelay;
+            delayBuffer[delayWriteIndex++] = buf[i];
+            delayBuffer[delayWriteIndex++] = buf[i + 1];
+            if (delayWriteIndex >= delayBufferSize) delayWriteIndex = 0;
+        }
+    }
+    
+    void InitAudioEffects() {
+        if (delayBuffer == nullptr) {
+            delayBufferSize = 48000 * 2; // 1 second delay (stereo)
+            delayBuffer = (float*)RL_CALLOC(delayBufferSize, sizeof(float));
+        }
+    }
+    
+    void ToggleLowPassFilter(bool enabled) {
+        enableLowPassFilter = enabled;
+        if (!activeMusic.empty()) {
+            auto& m = activeMusic.back(); // current track
+            if (enabled)
+                AttachAudioStreamProcessor(m.stream.stream, AudioProcessEffectLPF);
+            else
+                DetachAudioStreamProcessor(m.stream.stream, AudioProcessEffectLPF);
+        }
+    }
+
+    void ToggleDelayEffect(bool enabled) {
+        enableDelayEffect = enabled;
+        InitAudioEffects();
+        if (!activeMusic.empty()) {
+            auto& m = activeMusic.back();
+            if (enabled)
+                AttachAudioStreamProcessor(m.stream.stream, AudioProcessEffectDelay);
+            else
+                DetachAudioStreamProcessor(m.stream.stream, AudioProcessEffectDelay);
+        }
+    }
+
+    
+    void SetLowPassTarget(float strength) {
+        lpfTarget = std::clamp(strength, 0.0f, 1.0f);
+        if (!enableLowPassFilter && lpfTarget > 0.0f) {
+            enableLowPassFilter = true;
+            if (!activeMusic.empty()) {
+                auto& m = activeMusic.back();
+                AttachAudioStreamProcessor(m.stream.stream, AudioProcessEffectLPF);
+            }
+        } else if (enableLowPassFilter && lpfTarget <= 0.0f) {
+            lpfTarget = 0.0f;
+            if (!activeMusic.empty()) {
+                auto& m = activeMusic.back();
+                DetachAudioStreamProcessor(m.stream.stream, AudioProcessEffectLPF);
+            }
+            enableLowPassFilter = false;
+            lpfStrength = 0.0f;
+        }
+    }
+
+    void SetLowPassSpeed(float speed) {
+        lpfApproachSpeed = std::max(0.01f, speed);
+    }
+
+    
+    
     void ExposeToLua(sol::state &lua) {
 
         // BindingRecorder instance
@@ -77,6 +195,51 @@ namespace sound_system {
             "Plays a sound effect with custom pitch (no Lua callback).",
             true, false
         });
+        
+        lua.set_function("toggleLowPassFilter", &ToggleLowPassFilter);
+        rec.record_free_function({}, {
+            "toggleLowPassFilter",
+            "---@param enabled boolean # Enables or disables a low-pass filter on the current music.\n"
+            "---@return nil",
+            "Toggles a low-pass filter for the currently playing music.",
+            true, false
+        });
+
+        lua.set_function("toggleDelayEffect", &ToggleDelayEffect);
+        rec.record_free_function({}, {
+            "toggleDelayEffect",
+            "---@param enabled boolean # Enables or disables a delay effect on the current music.\n"
+            "---@return nil",
+            "Toggles a delay effect (echo) for the currently playing music.",
+            true, false
+        });
+        
+        lua.set_function("resetSoundSystem", &ResetSoundSystem);
+        rec.record_free_function({}, {
+            "resetSoundSystem", 
+            "---@return nil", 
+            "Resets the entire sound system, stopping all sounds and clearing loaded music (not sfx).", 
+            true, false
+        });
+        
+        
+        lua.set_function("setLowPassTarget", &SetLowPassTarget);
+        rec.record_free_function({}, {
+            "setLowPassTarget",
+            "---@param strength number # Target low-pass intensity (0.0 = off, 1.0 = max muffling)\n"
+            "---@return nil",
+            "Smoothly transitions the low-pass filter toward the specified intensity.",
+            true, false
+        });
+
+        lua.set_function("setLowPassSpeed", &SetLowPassSpeed);
+        rec.record_free_function({}, {
+            "setLowPassSpeed",
+            "---@param speed number # How fast the filter transitions per second.\n"
+            "---@return nil",
+            "Sets the speed at which the low-pass filter transitions between states.",
+            true, false
+        });
 
         lua.set_function("playMusic", &PlayMusic);
         rec.record_free_function({}, {
@@ -85,6 +248,54 @@ namespace sound_system {
             "---@param loop? boolean # If the music should loop. Defaults to false.\n"
             "---@return nil", 
             "Plays a music track.", 
+            true, false
+        });
+        
+        // Playlist management
+        lua.set_function("playPlaylist",
+            [](sol::table luaTracks, bool loop) {
+                std::vector<std::string> tracks;
+
+                // Defensive conversion: iterate numerically
+                for (std::size_t i = 1;; ++i) {
+                    sol::optional<std::string> value = luaTracks[i];
+                    if (!value)
+                        break;
+                    tracks.push_back(*value);
+                }
+
+                if (tracks.empty()) {
+                    SPDLOG_WARN("[SOUND] playPlaylist called with empty or invalid table");
+                    return;
+                }
+
+                sound_system::PlayPlaylist(tracks, loop);
+            }
+        );
+
+        rec.record_free_function({}, {
+            "playPlaylist",
+            "---@param tracks string[] # Ordered list of music track names to play.\n"
+            "---@param loop? boolean # Whether to loop the entire playlist. Defaults to false.\n"
+            "---@return nil",
+            "Starts playing a playlist of tracks sequentially, with optional looping.",
+            true, false
+        });
+
+
+        lua.set_function("clearPlaylist", &ClearPlaylist);
+        rec.record_free_function({}, {
+            "clearPlaylist",
+            "---@return nil",
+            "Stops and clears the current playlist (does not unload music assets).",
+            true, false
+        });
+
+        lua.set_function("stopAllMusic", &StopAllMusic);
+        rec.record_free_function({}, {
+            "stopAllMusic",
+            "---@return nil",
+            "Stops and removes all currently playing music tracks immediately.",
             true, false
         });
 
@@ -212,6 +423,29 @@ namespace sound_system {
         // lua.set_function("setSoundPitch", &SetSoundPitch);
         
     }
+
+    void PlayPlaylist(const std::vector<std::string>& names, bool loop) {
+    playlist.clear();
+    for (auto &n : names) playlist.emplace_back(n, false);
+    currentIndex = 0;
+    loopPlaylist = loop;
+    if (!playlist.empty())
+        PlayMusic(playlist.front().first, false);
+}
+
+void ClearPlaylist() {
+    playlist.clear();
+    currentIndex = 0;
+    loopPlaylist = false;
+}
+
+void StopAllMusic() {
+    for (auto &me : activeMusic) {
+        StopMusicStream(me.stream);
+        UnloadMusicStream(me.stream);
+    }
+    activeMusic.clear();
+}
 
     void LoadFromJSON(const std::string& filepath) {
         std::ifstream file;
@@ -369,6 +603,7 @@ namespace sound_system {
         PlayMusicStream(m);
         // Track this stream in our active list
         activeMusic.push_back({
+            .name       = musicName,
             .stream     = m,
             .loop       = false,
             .fadeTime   = 0.0f,
@@ -419,26 +654,40 @@ namespace sound_system {
 
     // Main update: advance streams, handle fades and completion
     void Update(float dt) {
+        static float musicUpdateAccum = 0.0f;
+        const float musicUpdateRate = 1.0f / 120.0f; // update 120 Hz no matter what
+
+        musicUpdateAccum += dt;
+
+        // Run UpdateMusicStream() as many times as needed to stay in sync
+        while (musicUpdateAccum >= musicUpdateRate) {
+            for (auto &me : activeMusic) {
+                UpdateMusicStream(me.stream);
+            }
+            musicUpdateAccum -= musicUpdateRate;
+        }
+
+        // ---- Existing fade + logic follows ----
         for (auto it = activeMusic.begin(); it != activeMusic.end();) {
             auto &me = *it;
-            UpdateMusicStream(me.stream);
 
-            // fading
+            // Fading
             if (me.fadeState != None) {
                 me.fadeTime += dt;
                 float t = std::clamp(me.fadeTime / me.fadeDur, 0.f, 1.f);
                 float target = me.volume * musicVolume * globalVolume;
-                float vol = (me.fadeState == FadeIn ? t : (1.f - t)) * target;
+                float vol = std::max(0.f, (me.fadeState == FadeIn ? t : (1.f - t)) * target);
                 SetMusicVolume(me.stream, vol);
                 if (t >= 1.f) {
                     if (me.fadeState == FadeOut) {
+                        SetMusicVolume(me.stream, 0.0f);
                         StopMusicStream(me.stream);
                     }
                     me.fadeState = None;
                 }
             }
 
-            // completion / looping
+            // Completion / looping logic ...
             bool playing = IsMusicStreamPlaying(me.stream);
             if (!playing && me.loop && me.fadeState == None) {
                 PlayMusicStream(me.stream);
@@ -446,19 +695,51 @@ namespace sound_system {
                 if (me.onComplete) me.onComplete();
                 UnloadMusicStream(me.stream);
                 it = activeMusic.erase(it);
+
+                if (!playlist.empty()) {
+                    currentIndex = (currentIndex + 1) % playlist.size();
+                    if (currentIndex == 0 && !loopPlaylist) {
+                        playlist.clear(); // stop
+                    } else {
+                        PlayMusic(playlist[currentIndex].first, false);
+                    }
+                }
                 continue;
             }
+
             ++it;
         }
 
-        // if no active streams, pop from legacy queue
+        // Legacy queue logic unchanged
         if (activeMusic.empty() && !musicQueue.empty()) {
             auto [nextName, nextLoop] = musicQueue.front();
             musicQueue.pop();
             PlayMusic(nextName, nextLoop);
         }
-    }
+        
+        // --- Low-pass smoothing ---
+        if (enableLowPassFilter) {
+            float diff = lpfTarget - lpfStrength;
+            float step = lpfApproachSpeed * dt;
+            if (fabs(diff) <= step) lpfStrength = lpfTarget;
+            else lpfStrength += (diff > 0 ? step : -step);
+        }
 
+    }
+    
+    // for resetting game state, rather than unloading completely
+    void ResetSoundSystem() {
+        // Clear active music streams
+        for (auto &me : activeMusic) {
+            UnloadMusicStream(me.stream);
+        }
+        activeMusic.clear();
+        // Clear sound callbacks
+        soundCallbacks.clear();
+        // Clear music queue
+        std::queue<std::pair<std::string,bool>> emptyQueue;
+        std::swap(musicQueue, emptyQueue);
+    }
 
     // Unload all active streams on shutdown
     void Unload() {
@@ -471,6 +752,10 @@ namespace sound_system {
             for (auto & [soundName, snd] : cat.sounds) {
                 UnloadSound(snd);
             }
+        }
+        if (delayBuffer) {
+            RL_FREE(delayBuffer);
+            delayBuffer = nullptr;
         }
     }
 

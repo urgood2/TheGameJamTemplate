@@ -215,12 +215,66 @@ function playSoundEffect(...) end
 function playSoundEffect(...) end
 
 ---
+--- Toggles a low-pass filter for the currently playing music.
+---
+---@param enabled boolean # Enables or disables a low-pass filter on the current music.
+---@return nil
+function toggleLowPassFilter(...) end
+
+---
+--- Toggles a delay effect (echo) for the currently playing music.
+---
+---@param enabled boolean # Enables or disables a delay effect on the current music.
+---@return nil
+function toggleDelayEffect(...) end
+
+---
+--- Resets the entire sound system, stopping all sounds and clearing loaded music (not sfx).
+---
+---@return nil
+function resetSoundSystem(...) end
+
+---
+--- Smoothly transitions the low-pass filter toward the specified intensity.
+---
+---@param strength number # Target low-pass intensity (0.0 = off, 1.0 = max muffling)
+---@return nil
+function setLowPassTarget(...) end
+
+---
+--- Sets the speed at which the low-pass filter transitions between states.
+---
+---@param speed number # How fast the filter transitions per second.
+---@return nil
+function setLowPassSpeed(...) end
+
+---
 --- Plays a music track.
 ---
 ---@param musicName string # The name of the music track to play.
 ---@param loop? boolean # If the music should loop. Defaults to false.
 ---@return nil
 function playMusic(...) end
+
+---
+--- Starts playing a playlist of tracks sequentially, with optional looping.
+---
+---@param tracks string[] # Ordered list of music track names to play.
+---@param loop? boolean # Whether to loop the entire playlist. Defaults to false.
+---@return nil
+function playPlaylist(...) end
+
+---
+--- Stops and clears the current playlist (does not unload music assets).
+---
+---@return nil
+function clearPlaylist(...) end
+
+---
+--- Stops and removes all currently playing music tracks immediately.
+---
+---@return nil
+function stopAllMusic(...) end
 
 ---
 --- Adds a music track to the queue to be played next.
@@ -512,6 +566,99 @@ function pauseGame(...) end
 function unpauseGame(...) end
 
 ---
+--- Recursively applies state effects to all elements in the specified UI box.
+---
+---@param uiBox Entity               # The UI box entity whose elements should have state effects applied
+---@return nil
+Recursively applies state effects to the given UI box and all its sub-elements based on their StateTag components and the global active states.
+function propagate_state_effects_to_ui_box(...) end
+
+---
+--- Removes the default state tag from the specified entity, if it exists.
+---
+---@param entity Entity             # The entity whose 'default_state' tag should be removed
+---@return nil
+Removes the `'default_state'` tag from the entity’s StateTag list, if present.
+function remove_default_state_tag(...) end
+
+---
+--- Checks whether any of the given tags or state names are active in the global ActiveStates instance.
+---
+---@overload fun(tag: StateTag): boolean
+---@overload fun(names: string[]): boolean
+---@return boolean
+Returns `true` if **any** of the given state tags or names are currently active.
+You can pass either a `StateTag` component or an array of strings.
+Example:
+```lua
+if hasAnyTag({ 'SHOP_STATE', 'PLANNING_STATE' }) then
+  print('At least one of these states is active.')
+end
+```
+function hasAnyTag(...) end
+
+---
+--- Checks whether all of the given tags or state names are active in the global ActiveStates instance.
+---
+---@overload fun(tag: StateTag): boolean
+---@overload fun(names: string[]): boolean
+---@return boolean
+Returns `true` if **all** of the given state tags or names are currently active.
+You can pass either a `StateTag` component or an array of strings.
+Example:
+```lua
+if hasAllTags({ 'ACTION_STATE', 'PLANNING_STATE' }) then
+  print('Both states are active at once.')
+end
+```
+function hasAllTags(...) end
+
+---
+--- Activates the given named state globally, using the shared ActiveStates instance.
+---
+---@param name string
+---@return nil
+Activates (enables) the given state name globally.
+Equivalent to `active_states:activate(name)` on the singleton instance.
+function activate_state(...) end
+
+---
+--- Checks whether the specified entity is active using the shared ActiveStates instance.
+---
+---@param entity Entity
+---@return boolean
+Checks whether the given entity is currently active based on its StateTag component and the global active states.
+Returns `true` if the entity's StateTag is active in the global ActiveStates set.
+function is_entity_active(...) end
+
+---
+--- Deactivates the given named state globally, using the shared ActiveStates instance.
+---
+---@param name string
+---@return nil
+Deactivates (disables) the given state name globally.
+Equivalent to `active_states:deactivate(name)` on the singleton instance.
+function deactivate_state(...) end
+
+---
+--- Clears all currently active global states in the shared ActiveStates instance.
+---
+---@return nil
+Clears **all** currently active global states.
+Equivalent to `active_states:clear()` on the singleton instance.
+function clear_states(...) end
+
+---
+--- Checks whether a state tag or state name is active in the global ActiveStates instance.
+---
+---@overload fun(tag: StateTag): boolean
+---@overload fun(name: string): boolean
+---@return boolean
+Checks whether a given state (by tag or name) is currently active.
+Returns `true` if the state exists in the global ActiveStates set.
+function is_state_active(...) end
+
+---
 --- Adds or replaces a StateTag component on the specified entity.
 ---
 ---@param entity Entity             # The entity to tag
@@ -520,9 +667,10 @@ function unpauseGame(...) end
 function add_state_tag(...) end
 
 ---
---- Removes the StateTag component from the specified entity.
+--- Removes a specific state tag from the StateTag component on the specified entity.
 ---
 ---@param entity Entity             # The entity from which to remove its state tag
+---@param name string               # The name of the state tag to remove
 ---@return nil
 function remove_state_tag(...) end
 
@@ -946,6 +1094,55 @@ ActionResult = {
 ---
 ---@class Entity
 Entity = {
+}
+
+
+---
+--- Userdata type for the controller navigation manager.
+Use the global `controller_nav` table for live access.
+---
+---@class NavManagerUD
+NavManagerUD = {
+    update = ,  -- ---@param dt number
+    validate = ,
+    debug_print_state = ,
+    create_group = ,  -- ---@param name string
+    add_entity = ,  -- ---@param group string
+---@param e entt.entity
+    remove_entity = ,  -- ---@param group string
+---@param e entt.entity
+    clear_group = ,  -- ---@param group string
+    set_active = ,  -- ---@param group string
+---@param active boolean
+    set_selected = ,  -- ---@param group string
+---@param index integer
+    get_selected = ,  -- ---@param group string
+---@return entt.entity|nil
+    set_entity_enabled = ,  -- ---@param e entt.entity
+---@param enabled boolean
+    is_entity_enabled = ,  -- ---@param e entt.entity
+---@return boolean
+    navigate = ,  -- ---@param group string
+---@param dir 'L'|'R'|'U'|'D'
+    select_current = ,  -- ---@param group string
+    create_layer = ,  -- ---@param name string
+    add_group_to_layer = ,  -- ---@param layer string
+---@param group string
+    set_active_layer = ,  -- ---@param name string
+    push_layer = ,  -- ---@param name string
+    pop_layer = ,
+    push_focus_group = ,  -- ---@param name string
+    pop_focus_group = ,
+    current_focus_group =   -- ---@return string
+}
+
+
+---
+--- Controller navigation system entry point.
+Manages layers, groups, and spatial/linear focus movement for UI and in-game entities.
+---
+---@class controller_nav
+controller_nav = {
 }
 
 
@@ -1609,6 +1806,22 @@ random_utils = {
 
 
 ---
+--- Raylib Rectangle (x,y,width,height)
+---
+---@class Rectangle
+Rectangle = {
+    ---@type number
+    x = nil,  -- Top-left X
+    ---@type number
+    y = nil,  -- Top-left Y
+    ---@type number
+    width = nil,  -- Width
+    ---@type number
+    height = nil  -- Height
+}
+
+
+---
 --- namespace for rendering & layer operations
 ---
 ---@class layer
@@ -1665,6 +1878,8 @@ layer.DrawCommandType = {
     AddPush = 6,  -- Push transform matrix
     AddPop = 7,  -- Pop transform matrix
     PushMatrix = 8,  -- Explicit push matrix command
+    PushObjectTransformsToMatrix = 100,  -- Push object's transform to matrix stack
+    ScopedTransformCompositeRender = 101,  -- Scoped transform for composite rendering
     PopMatrix = 9,  -- Explicit pop matrix command
     DrawCircle = 10,  -- Draw a filled circle
     DrawRectangle = 11,  -- Draw a filled rectangle
@@ -1701,7 +1916,9 @@ layer.DrawCommandType = {
     RenderRectVerticesOutlineLayer = 42,  -- Draw outlined rects from vertex list
     DrawPolygon = 43,  -- Draw a polygon
     RenderNPatchRect = 44,  -- Draw a 9-patch rectangle
-    DrawTriangle = 45  -- Draw a triangle
+    DrawTriangle = 45,  -- Draw a triangle
+    DrawGradientRectCentered = 46,  -- Draw a gradient rectangle centered
+    DrawGradientRectRoundedCentered = 47  -- Draw a rounded gradient rectangle centered
 }
 
 
@@ -1764,6 +1981,68 @@ layer.CmdTranslate = {
     x = nil,  -- X offset
     ---@type number
     y = nil  -- Y offset
+}
+
+
+---
+--- 
+---
+---@class layer.CmdRenderBatchFlush
+layer.CmdRenderBatchFlush = {
+}
+
+
+---
+--- 
+---
+---@class layer.CmdStencilOp
+layer.CmdStencilOp = {
+    ---@type number
+    sfail = nil,  -- Stencil fail action
+    ---@type number
+    dpfail = nil,  -- Depth fail action
+    ---@type number
+    dppass = nil  -- Depth pass action
+}
+
+
+---
+--- 
+---
+---@class layer.CmdAtomicStencilMask
+layer.CmdAtomicStencilMask = {
+    ---@type number
+    mask = nil  -- Stencil mask value
+}
+
+
+---
+--- 
+---
+---@class layer.CmdColorMask
+layer.CmdColorMask = {
+    ---@type boolean
+    r = nil,  -- Red channel
+    ---@type boolean
+    g = nil,  -- Green channel
+    ---@type boolean
+    b = nil,  -- Blue channel
+    ---@type boolean
+    a = nil  -- Alpha channel
+}
+
+
+---
+--- 
+---
+---@class layer.CmdStencilFunc
+layer.CmdStencilFunc = {
+    ---@type number
+    func = nil,  -- Stencil function
+    ---@type number
+    ref = nil,  -- Reference value
+    ---@type number
+    mask = nil  -- Mask value
 }
 
 
@@ -2030,6 +2309,58 @@ layer.CmdDrawDashedRoundedRect = {
 ---
 --- 
 ---
+---@class layer.CmdDrawGradientRectCentered
+layer.CmdDrawGradientRectCentered = {
+    ---@type number
+    cx = nil,  -- Center X
+    ---@type number
+    cy = nil,  -- Center Y
+    ---@type number
+    width = nil,  -- Width
+    ---@type number
+    height = nil,  -- Height
+    ---@type Color
+    topLeft = nil,  -- Top-left color
+    ---@type Color
+    topRight = nil,  -- Top-right color
+    ---@type Color
+    bottomRight = nil,  -- Bottom-right color
+    ---@type Color
+    bottomLeft = nil  -- Bottom-left color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawGradientRectRoundedCentered
+layer.CmdDrawGradientRectRoundedCentered = {
+    ---@type number
+    cx = nil,  -- Center X
+    ---@type number
+    cy = nil,  -- Center Y
+    ---@type number
+    width = nil,  -- Width
+    ---@type number
+    height = nil,  -- Height
+    ---@type number
+    roundness = nil,  -- Corner roundness
+    ---@type number
+    segments = nil,  -- Number of segments for corners
+    ---@type Color
+    topLeft = nil,  -- Top-left color
+    ---@type Color
+    topRight = nil,  -- Top-right color
+    ---@type Color
+    bottomRight = nil,  -- Bottom-right color
+    ---@type Color
+    bottomLeft = nil  -- Bottom-left color
+}
+
+
+---
+--- 
+---
 ---@class layer.CmdDrawDashedLine
 layer.CmdDrawDashedLine = {
     ---@type Vector2
@@ -2114,6 +2445,28 @@ layer.CmdAddPop = {
 layer.CmdPushMatrix = {
     ---@type false
     dummy = nil  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdPushObjectTransformsToMatrix
+layer.CmdPushObjectTransformsToMatrix = {
+    ---@type Entity
+    entity = nil  -- Entity to get transforms from
+}
+
+
+---
+--- 
+---
+---@class layer.CmdScopedTransformCompositeRender
+layer.CmdScopedTransformCompositeRender = {
+    ---@type Entity
+    entity = nil,  -- Entity to get transforms from
+    ---@type vector
+    payload = nil  -- Additional payload data
 }
 
 
@@ -2718,6 +3071,54 @@ command_buffer = {
 
 
 ---
+--- OpenGL enum GL_KEEP
+---
+---@class GL_KEEP
+GL_KEEP = {
+}
+
+
+---
+--- OpenGL enum GL_ZERO
+---
+---@class GL_ZERO
+GL_ZERO = {
+}
+
+
+---
+--- OpenGL enum GL_REPLACE
+---
+---@class GL_REPLACE
+GL_REPLACE = {
+}
+
+
+---
+--- OpenGL enum GL_ALWAYS
+---
+---@class GL_ALWAYS
+GL_ALWAYS = {
+}
+
+
+---
+--- OpenGL enum GL_EQUAL
+---
+---@class GL_EQUAL
+GL_EQUAL = {
+}
+
+
+---
+--- OpenGL enum GL_FALSE
+---
+---@class GL_FALSE
+GL_FALSE = {
+}
+
+
+---
 --- Manages shaders, their uniforms, and rendering modes.
 ---
 ---@class shaders
@@ -2786,338 +3187,19 @@ function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
 
 
 ---
+--- Structure containing font data for localization.
+---
+---@class FontData
+FontData = {
+}
+
+
+---
 --- namespace for localization functions
 ---
 ---@class localization
 localization = {
 }
-
-
----
---- A system for creating, managing, and updating timers.
----
----@class timer
-timer = {
-}
-
-
----
---- Mathematical utility functions for timers.
----
----@class timer.math
-timer.math = {
-}
-
-
----
---- Specifies the behavior of a timer.
----
----@class timer.TimerType
-timer.TimerType = {
-    RUN = 0,  -- Runs once immediately.
-    AFTER = 1,  -- Runs once after a delay.
-    COOLDOWN = 2,  -- A resettable one-shot timer.
-    EVERY = 3,  -- Runs repeatedly at an interval.
-    EVERY_STEP = 4,  -- Runs repeatedly every N frames.
-    FOR = 5,  -- Runs every frame for a duration.
-    TWEEN = 6  -- Interpolates a value over a duration.
-}
-
-
----
---- A system for managing and processing sequential and timed events.
----
----@class EventQueueSystem
-EventQueueSystem = {
-}
-
-
----
---- Collection of easing functions for tweening.
----
----@class EventQueueSystem.EaseType
-EventQueueSystem.EaseType = {
-    LERP = 0,  -- Linear interpolation.
-    ELASTIC_IN = 1,  -- Elastic in.
-    ELASTIC_OUT = 2,  -- Elastic out.
-    QUAD_IN = 3,  -- Quadratic in.
-    QUAD_OUT = 4  -- Quadratic out.
-}
-
-
----
---- Defines when an event in the queue should be triggered.
----
----@class EventQueueSystem.TriggerType
-EventQueueSystem.TriggerType = {
-    IMMEDIATE = 0,  -- Triggers immediately.
-    AFTER = 1,  -- Triggers after a delay.
-    BEFORE = 2,  -- Triggers before a delay.
-    EASE = 3,  -- Triggers as part of an ease/tween.
-    CONDITION = 4  -- Triggers when a condition is met.
-}
-
-
----
---- Defines which clock an event timer uses.
----
----@class EventQueueSystem.TimerType
-EventQueueSystem.TimerType = {
-    REAL_TIME = 0,  -- Uses the real-world clock, unaffected by game pause.
-    TOTAL_TIME_EXCLUDING_PAUSE = 1  -- Uses the game clock, which may be paused.
-}
-
-
----
---- Data for an easing/tweening operation.
----
----@class EventQueueSystem.EaseData
-EventQueueSystem.EaseData = {
-    ---@type EventQueueSystem.EaseType
-    type = nil,  -- The easing function to use.
-    ---@type number
-    startValue = nil,  -- The starting value of the tween.
-    ---@type number
-    endValue = nil,  -- The ending value of the tween.
-    ---@type number
-    startTime = nil,  -- The start time of the tween.
-    ---@type number
-    endTime = nil,  -- The end time of the tween.
-    ---@type fun(value:number)
-    setValueCallback = nil,  -- Callback to apply the tweened value.
-    ---@type fun():number
-    getValueCallback = nil  -- Callback to get the current value.
-}
-
-
----
---- A condition that must be met for an event to trigger.
----
----@class EventQueueSystem.ConditionData
-EventQueueSystem.ConditionData = {
-    ---@type fun():boolean
-    check = nil  -- A function that returns true when the condition is met.
-}
-
-
----
---- A single event in the event queue.
----
----@class EventQueueSystem.Event
-EventQueueSystem.Event = {
-    ---@type EventQueueSystem.TriggerType
-    eventTrigger = nil,  -- When the event should trigger.
-    ---@type boolean
-    blocksQueue = nil,  -- If true, no other events will process until this one completes.
-    ---@type boolean
-    canBeBlocked = nil,  -- If true, this event can be blocked by another.
-    ---@type boolean
-    complete = nil,  -- True if the event has finished processing.
-    ---@type boolean
-    timerStarted = nil,  -- Internal flag for timed events.
-    ---@type number
-    delaySeconds = nil,  -- The delay in seconds for 'AFTER' triggers.
-    ---@type boolean
-    retainAfterCompletion = nil,  -- If true, the event remains in the queue after completion.
-    ---@type boolean
-    createdWhilePaused = nil,  -- If true, the event was created while the game was paused.
-    ---@type function
-    func = nil,  -- The callback function to execute.
-    ---@type EventQueueSystem.TimerType
-    timerType = nil,  -- The clock type to use for this event's timer.
-    ---@type number
-    time = nil,  -- Internal time tracking for the event.
-    ---@type EventQueueSystem.EaseData
-    ease = nil,  -- Easing data for tweening events.
-    ---@type EventQueueSystem.ConditionData
-    condition = nil,  -- Condition data for conditional events.
-    ---@type string
-    tag = nil,  -- An optional tag for finding the event later.
-    ---@type string
-    debugID = nil,  -- A debug identifier for the event.
-    ---@type boolean
-    deleteNextCycleImmediately = nil  -- If true, deletes the event on the next update cycle.
-}
-
-
----
---- A builder for creating EaseData objects.
----
----@class EventQueueSystem.EaseDataBuilder
-EventQueueSystem.EaseDataBuilder = {
-}
-
----
---- Sets the ease type.
----
----@param type EventQueueSystem.EaseType
----@return EventQueueSystem.EaseDataBuilder
-function EventQueueSystem.EaseDataBuilder:Type(...) end
-
----
---- Sets the starting value.
----
----@param value number
----@return EventQueueSystem.EaseDataBuilder
-function EventQueueSystem.EaseDataBuilder:StartValue(...) end
-
----
---- Sets the ending value.
----
----@param value number
----@return EventQueueSystem.EaseDataBuilder
-function EventQueueSystem.EaseDataBuilder:EndValue(...) end
-
----
---- Sets the start time.
----
----@param time number
----@return EventQueueSystem.EaseDataBuilder
-function EventQueueSystem.EaseDataBuilder:StartTime(...) end
-
----
---- Sets the end time.
----
----@param time number
----@return EventQueueSystem.EaseDataBuilder
-function EventQueueSystem.EaseDataBuilder:EndTime(...) end
-
----
---- Sets the 'set value' callback.
----
----@param cb fun(value:number)
----@return EventQueueSystem.EaseDataBuilder
-function EventQueueSystem.EaseDataBuilder:SetCallback(...) end
-
----
---- Sets the 'get value' callback.
----
----@param cb fun():number
----@return EventQueueSystem.EaseDataBuilder
-function EventQueueSystem.EaseDataBuilder:GetCallback(...) end
-
----
---- Builds the final EaseData object.
----
----@return EventQueueSystem.EaseData
-function EventQueueSystem.EaseDataBuilder:Build(...) end
-
-
----
---- A builder for creating and queuing events.
----
----@class EventQueueSystem.EventBuilder
-EventQueueSystem.EventBuilder = {
-}
-
----
---- Sets the event trigger type.
----
----@param type EventQueueSystem.TriggerType
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:Trigger(...) end
-
----
---- Sets if the event blocks the queue.
----
----@param blocks boolean
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:BlocksQueue(...) end
-
----
---- Sets if the event can be blocked.
----
----@param can_be_blocked boolean
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:CanBeBlocked(...) end
-
----
---- Sets the delay for an 'AFTER' trigger.
----
----@param seconds number
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:Delay(...) end
-
----
---- Sets the main callback function.
----
----@param cb function
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:Func(...) end
-
----
---- Attaches ease data to the event.
----
----@param easeData EventQueueSystem.EaseData
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:Ease(...) end
-
----
---- Attaches a condition to the event.
----
----@param condData EventQueueSystem.ConditionData
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:Condition(...) end
-
----
---- Assigns a string tag to the event.
----
----@param tag string
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:Tag(...) end
-
----
---- Assigns a debug ID to the event.
----
----@param id string
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:DebugID(...) end
-
----
---- Sets if the event is kept after completion.
----
----@param retain boolean
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:RetainAfterCompletion(...) end
-
----
---- Marks the event as created while paused.
----
----@param was_paused boolean
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:CreatedWhilePaused(...) end
-
----
---- Sets the timer clock type for the event.
----
----@param type EventQueueSystem.TimerType
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:TimerType(...) end
-
----
---- Starts the timer immediately.
----
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:StartTimer(...) end
-
----
---- Flags the event for deletion on the next cycle.
----
----@param delete_next boolean
----@return EventQueueSystem.EventBuilder
-function EventQueueSystem.EventBuilder:DeleteNextCycleImmediately(...) end
-
----
---- Builds the final Event object.
----
----@return EventQueueSystem.Event
-function EventQueueSystem.EventBuilder:Build(...) end
-
----
---- Builds the event and adds it directly to the queue.
----
----@return nil
-function EventQueueSystem.EventBuilder:AddToQueue(...) end
 
 
 ---
@@ -3270,6 +3352,16 @@ AlignmentFlag = {
     VERTICAL_CENTER = 16,  -- Align vertical centers.
     VERTICAL_BOTTOM = 32,  -- Align bottom edges.
     ALIGN_TO_INNER_EDGES = 64  -- Align to inner instead of outer edges.
+}
+
+
+---
+--- Optional Lua-defined immediate draw override for entities. Allows custom drawing inside the entity's transform, optionally disabling the default sprite rendering.
+---
+---@class RenderImmediateCallback
+RenderImmediateCallback = {
+    fn = Lua function (width:number, height:number),  -- The Lua drawing function. Called centered on the entity transform.
+    disableSpriteRendering = boolean  -- If true, disables the default sprite or animation rendering for this entity.
 }
 
 
@@ -4759,6 +4851,18 @@ spring = {
 function spring:make(...) end
 
 ---
+--- Get existing Spring on entity, or create and attach if missing.
+---
+---Spring get_or_make(Registry, entity, number value, number k, number d, table? opts)
+function spring:get_or_make(...) end
+
+---
+--- Get existing Spring on entity; errors if missing.
+---
+---Spring get(Registry, entity)
+function spring:get(...) end
+
+---
 --- Attach or replace Spring on an existing entity.
 ---
 ---Spring attach(Registry, entity, number value, number k, number d, table? opts)
@@ -5419,6 +5523,28 @@ function GameCamera:Update(...) end
 
 
 ---
+--- Holds timing, frame rate, and delta-time state for the main game loop.
+---
+---@class MainLoopData
+MainLoopData = {
+    smoothedDeltaTime = float,  -- Smoothed delta time for the current frame.
+    realtimeTimer = float,  -- Real-time timer since game start (unscaled).
+    totaltimeTimer = float,  -- Total accumulated in-game time excluding pauses.
+    timescale = float,  -- Scaling factor applied to delta time (1.0 = normal speed).
+    rate = float,  -- Fixed timestep in seconds (default 1/60).
+    lag = float,  -- Accumulated lag between fixed updates.
+    maxFrameSkip = float,  -- Maximum number of fixed updates processed per frame.
+    frame = int,  -- Frame counter since start of the game.
+    framerate = float,  -- Target rendering frame rate.
+    sleepTime = float,  -- Sleep duration per frame to prevent CPU hogging.
+    updates = int,  -- Number of logic updates in the current second.
+    renderedUPS = int,  -- Smoothed updates per second (running average).
+    renderedFPS = int,  -- Smoothed frames per second (running average).
+    updateTimer = float  -- Timer used to compute UPS over time.
+}
+
+
+---
 --- 
 ---
 ---@class InputState
@@ -5837,37 +5963,6 @@ function add_fullscreen_shader(...) end
 function remove_fullscreen_shader(...) end
 
 ---
---- Adds a pre-built event to the queue.
----
----@param event EventQueueSystem.Event
----@param queue? string # Optional: The name of the queue to add to (defaults to 'base').
----@param front? boolean # Optional: If true, adds the event to the front of the queue.
----@return nil
-function EventQueueSystem.add_event(...) end
-
----
---- Finds an active event by its tag.
----
----@param tag string # The tag of the event to find.
----@param queue? string # Optional: The specific queue to search in. Searches all if omitted.
----@return EventQueueSystem.Event|nil
-function EventQueueSystem.get_event_by_tag(...) end
-
----
---- Removes all events from one or all queues.
----
----@param queue? string # Optional: The queue to clear. Clears all if omitted.
----@return nil
-function EventQueueSystem.clear_queue(...) end
-
----
---- Updates the event queue, processing active events.
----
----@param forced? boolean # Optional: If true, forces an update step.
----@return nil
-function EventQueueSystem.update(...) end
-
----
 --- Return the PhysicsWorld registered under name, or nil if missing.
 ---
 ---@param name string
@@ -6128,6 +6223,14 @@ function TextSystem.Functions.resetTextScaleAndLayout(...) end
 function TextSystem.Functions.setText(...) end
 
 ---
+---
+---@param e entt.entity # Target entity
+---@param flip boolean # Whether to flip horizontally
+---@return nil
+Flips all animations for the entity horizontally
+function animation_system.set_horizontal_flip(...) end
+
+---
 --- Advances all animations by dt
 ---
 ---@param dt number # Delta time in seconds
@@ -6185,6 +6288,22 @@ function animation_system.replaceAnimatedObjectOnEntity(...) end
         ---@return nil
         
 function animation_system.setupAnimatedObjectOnEntity(...) end
+
+---
+---
+---@param e entt.entity
+---@param flipH boolean
+---@param flipV boolean
+---@return nil
+Sets the horizontal/vertical flip flags on all animations of an entity
+function animation_system.set_flip(...) end
+
+---
+---
+---@param e entt.entity
+---@return nil
+Toggles horizontal flip for the entity's current animation
+function animation_system.toggle_flip(...) end
 
 ---
 --- Creates a still animation from a sprite UUID
@@ -6336,6 +6455,107 @@ function collision.setCollisionMask(...) end
 function collision.resetCollisionCategory(...) end
 
 ---
+--- Pushes the transform components of an entity onto the layer's matrix stack as draw commands.
+---
+function(registry: Registry, e: Entity, layer: Layer, zOrder: number): void
+function command_buffer.pushEntityTransformsToMatrix(...) end
+
+---
+--- Create a navigation group.
+---
+---@param name string
+function controller_nav.create_group(...) end
+
+---
+--- Create a navigation layer.
+---
+---@param name string
+function controller_nav.create_layer(...) end
+
+---
+--- Attach an existing group to a layer.
+---
+---@param layer string
+---@param group string
+function controller_nav.add_group_to_layer(...) end
+
+---
+--- Navigate within or across groups.
+---
+---@param group string
+---@param dir 'L'|'R'|'U'|'D'
+function controller_nav.navigate(...) end
+
+---
+--- Trigger the select callback for the currently focused entity.
+---
+---@param group string
+function controller_nav.select_current(...) end
+
+---
+--- Enable or disable a specific entity for navigation.
+---
+---@param e entt.entity
+---@param enabled boolean
+function controller_nav.set_entity_enabled(...) end
+
+---
+--- Print debug info on groups/layers.
+---
+function controller_nav.debug_print_state(...) end
+
+---
+--- Validate layer/group configuration.
+---
+function controller_nav.validate(...) end
+
+---
+--- Return the currently focused group.
+---
+---@return string
+function controller_nav.current_focus_group(...) end
+
+---
+--- Set Lua callbacks for a specific navigation group.
+---
+---@param group string
+---@param tbl table {on_focus:function|nil, on_unfocus:function|nil, on_select:function|nil}
+function controller_nav.set_group_callbacks(...) end
+
+---
+--- Link a group's navigation directions to other groups.
+---
+---@param from string
+---@param dirs table {up:string|nil, down:string|nil, left:string|nil, right:string|nil}
+function controller_nav.link_groups(...) end
+
+---
+--- Toggle navigation mode for the group.
+---
+---@param group string
+---@param mode 'spatial'|'linear'
+function controller_nav.set_group_mode(...) end
+
+---
+--- Enable or disable wrap-around navigation.
+---
+---@param group string
+---@param wrap boolean
+function controller_nav.set_wrap(...) end
+
+---
+--- Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.
+---
+---@param e entt.entity
+function controller_nav.focus_entity(...) end
+
+---
+--- Update cursor focus based on current input state.
+---
+---@return nil
+function input.updateCursorFocus(...) end
+
+---
 --- Bind an action to a device code with a trigger.
 ---
 ---@param action string
@@ -6420,6 +6640,22 @@ function layer.CreateLayer(...) end
 ---@param height integer
 ---@return layer.Layer
 function layer.CreateLayerWithSize(...) end
+
+---
+--- Applies scaling transformation to the current layer, immeidately (does not queue).
+---
+---@param x number # Scale factor in X direction
+---@param y number # Scale factor in Y direction
+---@return nil
+function layer.ExecuteScale(...) end
+
+---
+--- Applies translation transformation to the current layer, immeidately (does not queue).
+---
+---@param x number # Translation in X direction
+---@param y number # Translation in Y direction
+---@return nil
+function layer.ExecuteTranslate(...) end
 
 ---
 --- Removes a layer and unloads its canvases.
@@ -6613,6 +6849,56 @@ function layer.queueBeginDrawing(...) end
 function layer.queueClearStencilBuffer(...) end
 
 ---
+--- Queues a CmdColorMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdColorMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueColorMask(...) end
+
+---
+--- Queues a CmdStencilOp into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilOp) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueStencilOp(...) end
+
+---
+--- Queues a CmdRenderBatchFlush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderBatchFlush) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueRenderBatchFlush(...) end
+
+---
+--- Queues a CmdAtomicStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAtomicStencilMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueAtomicStencilMask(...) end
+
+---
+--- Queues a CmdStencilFunc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdStencilFunc) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueStencilFunc(...) end
+
+---
 --- Queues a CmdBeginStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
@@ -6763,6 +7049,26 @@ function layer.queueDrawDashedRoundedRect(...) end
 function layer.queueDrawDashedLine(...) end
 
 ---
+--- Queues a CmdDrawGradientRectCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawGradientRectCentered(...) end
+
+---
+--- Queues a CmdDrawGradientRectRoundedCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawGradientRectRoundedCentered(...) end
+
+---
 --- Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
@@ -6851,6 +7157,26 @@ function layer.queueAddPush(...) end
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueAddPop(...) end
+
+---
+--- Queues a CmdPushObjectTransformsToMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix()
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queuePushObjectTransformsToMatrix(...) end
+
+---
+--- Queues a CmdScopedTransformCompositeRender into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix()
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueScopedTransformCompositeRender(...) end
 
 ---
 --- Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -7282,6 +7608,14 @@ function layer_order_system.putAOverB(...) end
 function layer_order_system.updateLayerZIndexesAsNecessary(...) end
 
 ---
+---
+---@param registry registry
+---@param e Entity
+---@return integer zIndex
+Returns the current zIndex of the given entity, assigning one if missing.
+function layer_order_system.getZIndex(...) end
+
+---
 --- Resets the global Z-index counter back to zero.
 ---
 ---@return nil
@@ -7339,6 +7673,23 @@ function localization.getRaw(...) end
 ---
 ---@return FontData # A handle to the font data for the current language.
 function localization.getFontData(...) end
+
+---
+--- Gets the font data for the current language.
+---
+---@return FontData # The font for the current language.
+
+function localization.getFont(...) end
+
+---
+--- Gets the rendered width of a text string using the current language's font.
+---
+---@param text string # The text to measure.
+---@param fontSize number # The font size to use when measuring.
+---@param spacing number # The spacing between characters.
+---@return number # The width of the text when rendered with the current language's font.
+
+function localization.getTextWidthWithCurrentFont(...) end
 
 ---
 --- Loads font data from the specified path.
@@ -7402,30 +7753,33 @@ function particle.WipeTagged(...) end
 function particle.CreateParticleEmitter(...) end
 
 ---
---- Creates a Particle from Lua, applies optional animation & tag.
+--- Creates a Particle from Lua, applies optional animation, sprite, color tinting, and tag.
 ---
 ---@param location Vector2                        # world-space spawn position
 ---@param size     Vector2                        # initial width/height of the particle
 ---@param opts     table?                         # optional config table with any of:
- -- renderType        ParticleRenderType        # TEXTURE, RECTANGLE_LINE, RECTANGLE_FILLED, etc.
- -- velocity          Vector2                   # initial (vx,vy)
- -- rotation          number                    # starting rotation in degrees
- -- rotationSpeed     number                    # degrees/sec
- -- scale             number                    # uniform scale multiplier
- -- lifespan          number                    # seconds until auto-destroy (≤0 = infinite)
- -- age               number                    # initial age in seconds
- -- color             Color                     # immediately applied tint
- -- gravity           number                    # downward acceleration per second
- -- acceleration      number                    # acceleration along velocity vector
- -- startColor        Color                     # tint at birth
- -- endColor          Color                     # tint at death
- -- onUpdateCallback  function(particle,dt)      # run each frame
- -- shadow            boolean                   # draw or disable shadow (default = true)
+ -- renderType        ParticleRenderType         # TEXTURE, RECTANGLE_LINE, RECTANGLE_FILLED, etc.
+ -- velocity          Vector2                    # initial (vx,vy)
+ -- rotation          number                     # starting rotation in degrees
+ -- rotationSpeed     number                     # degrees/sec
+ -- scale             number                     # uniform scale multiplier
+ -- lifespan          number                     # seconds until auto-destroy (≤0 = infinite)
+ -- age               number                     # initial age in seconds
+ -- color             Color                      # immediately applied tint
+ -- gravity           number                     # downward acceleration per second
+ -- acceleration      number                     # acceleration along velocity vector
+ -- startColor        Color                      # tint at birth
+ -- endColor          Color                      # tint at death
+ -- onUpdateCallback  function(particle,dt)       # run each frame
+ -- shadow            boolean                    # draw or disable shadow (default = true)
 ---@param animCfg  table?                         # optional animation config:
- -- loop              boolean                   # whether to loop the animation
- -- animationName     string                    # which animation to play
----@param tag      string?                        # optional string tag to attach to this particle
----@return entt::entity                            # the newly created particle entity
+ -- loop              boolean                    # whether to loop the animation
+ -- animationName     string                     # animation name or sprite UUID
+ -- useSpriteNotAnimation boolean                # use a single static sprite instead of animation
+ -- fg                Color?                     # optional foreground tint override
+ -- bg                Color?                     # optional background tint override
+---@param tag      string?                        # optional tag to attach to the particle
+---@return entt::entity                            # newly created particle entity
 function particle.CreateParticle(...) end
 
 ---
@@ -7506,6 +7860,12 @@ function physics.disable_trigger_between(...) end
 ---@param tag string
 ---@param collidable_tags string[]
 function physics.update_collision_masks_for(...) end
+
+---
+--- Re-applies collision filters to all shapes based on their current tags.
+---
+---@param world physics.PhysicsWorld
+function physics.reapply_all_filters(...) end
 
 ---
 --- Converts a lightuserdata (internally an entity id) to entt.entity.
@@ -7651,6 +8011,36 @@ function physics.get_shape_bb(...) end
 function physics.SetVelocity(...) end
 
 ---
+--- Returns true if the entity's body is sleeping.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return boolean
+function physics.IsSleeping(...) end
+
+---
+--- Sets the cpSpace sleep time threshold.
+---
+---@param world physics.PhysicsWorld
+---@param t number
+function physics.SetSleepTimeThreshold(...) end
+
+---
+--- Gets the cpSpace sleep time threshold.
+---
+---@param world physics.PhysicsWorld
+---@return number
+function physics.GetSleepTimeThreshold(...) end
+
+---
+--- Returns the body's linear velocity.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return {x:number,y:number}
+function physics.GetVelocity(...) end
+
+---
 --- Sets angular velocity on the entity's body.
 ---
 ---@param world physics.PhysicsWorld
@@ -7706,6 +8096,27 @@ function physics.SetDamping(...) end
 ---@param world physics.PhysicsWorld
 ---@param damping number
 function physics.SetGlobalDamping(...) end
+
+---
+--- Enable/disable arrival deceleration logic.
+--- When true, SeekPoint ignores decel and moves full speed all the way.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param disable boolean
+---@return nil
+
+function physics.set_disable_arrival(...) end
+
+---
+--- Sets arrival deceleration radius (ignored if disableArrival=true).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param radius number @distance at which arrival deceleration begins
+---@return nil
+
+function physics.set_arrive_radius(...) end
 
 ---
 --- Returns the body's position.
@@ -7797,6 +8208,14 @@ function physics.SetBullet(...) end
 function physics.SetFixedRotation(...) end
 
 ---
+--- Sets the body's moment of inertia.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param moment number
+function physics.SetMoment(...) end
+
+---
 --- Switch the Chipmunk body type for the entity.
 ---
 ---@param world physics.PhysicsWorld
@@ -7859,6 +8278,46 @@ function physics.arb_set_ptr(...) end
 ---@param key string
 ---@return lightuserdata|nil
 function physics.arb_get_ptr(...) end
+
+---
+--- Clears all PhysicsWorld instances and their data (for shutdown) using the global physics manager.
+---
+---@return nil
+function physics.clear_all_worlds(...) end
+
+---
+--- Registers a begin callback for the pair (tagA, tagB). Return false to reject contact.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB string
+---@param fn fun(arb:lightuserdata):boolean|nil
+function physics.on_pair_begin(...) end
+
+---
+--- Registers a separate callback for the pair (tagA, tagB).
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB string
+---@param fn fun(arb:lightuserdata)
+function physics.on_pair_separate(...) end
+
+---
+--- Registers a begin wildcard callback for a single tag (fires for any counterpart).
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+---@param fn fun(arb:lightuserdata):boolean|nil
+function physics.on_wildcard_begin(...) end
+
+---
+--- Registers a separate wildcard callback for a single tag (fires for any counterpart).
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+---@param fn fun(arb:lightuserdata)
+function physics.on_wildcard_separate(...) end
 
 ---
 --- Registers a pre-solve callback for the pair (tagA, tagB). Return false to reject contact.
@@ -8097,6 +8556,15 @@ function physics.create_topdown_controller(...) end
 function physics.enable_tank_controller(...) end
 
 ---
+--- Removes physics body and shapes from the entity; optionally removes PhysicsComponent too.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param remove_component boolean|nil
+---@return nil
+function physics.remove_physics(...) end
+
+---
 --- Sets the tank's target point.
 ---
 ---@param world physics.PhysicsWorld
@@ -8248,6 +8716,17 @@ function physics.add_bar_segment(...) end
 ---@param tag string
 ---@return nil
 function physics.add_screen_bounds(...) end
+
+---
+--- Destroys entities with bodies completely outside the given AABB.
+---
+---@param world physics.PhysicsWorld
+---@param xMin number
+---@param yMin number
+---@param xMax number
+---@param yMax number
+---@return nil
+function physics.cull_entities_outside_bounds(...) end
 
 ---
 --- Generates static segments following the outline of solid cells.
@@ -9007,289 +9486,6 @@ function steering.apply_force(...) end
 function steering.apply_impulse(...) end
 
 ---
---- Cancels and destroys an active timer.
----
----@param timerHandle integer # The handle of the timer to cancel.
----@return nil
-function timer.cancel(...) end
-
----
---- Gets the current invocation count for an 'every' timer.
----
----@param timerHandle integer # The handle of an 'every' timer.
----@return integer|nil # The current invocation count, or nil if not found.
-function timer.get_every_index(...) end
-
----
---- Resets a timer's elapsed time, such as for a 'cooldown'.
----
----@param timerHandle integer # The handle of the timer to reset.
----@return nil
-function timer.reset(...) end
-
----
---- Gets the configured delay time for a timer.
----
----@param timerHandle integer # The handle of the timer.
----@return number|nil # The timer's current delay, or nil if not found.
-function timer.get_delay(...) end
-
----
---- Sets the global speed multiplier for all timers.
----
----@param multiplier number # The new global speed multiplier.
----@return nil
-function timer.set_multiplier(...) end
-
----
---- Gets the global timer speed multiplier.
----
----@return number
-function timer.get_multiplier(...) end
-
----
---- Gets the elapsed time for a 'for' timer.
----
----@param timerHandle integer # The handle of a 'for' timer.
----@return number|nil # The normalized elapsed time (0.0 to 1.0), or nil if not found.
-function timer.get_for_elapsed(...) end
-
----
---- Returns the timer object's elapsed time and its configured delay.
----
----@param timerHandle integer # The handle of the timer.
----@return number, number # Returns two values: the elapsed time and the total delay. Returns a single nil if not found.
-function timer.get_timer_and_delay(...) end
-
----
---- Updates all active timers, should be called once per frame.
----
----@param dt number # Delta time.
----@return nil
-function timer.update(...) end
-
----
---- Creates a timer that runs an action once immediately.
----
----@param action fun()
----@param after? fun()
----@param tag? string
----@param group? string # Optional group to assign this timer to.
----@return integer # timerHandle
-function timer.run(...) end
-
----
---- Creates a timer that runs an action once after a delay.
----
----@param delay number|{number, number} # A fixed delay or a {min, max} range in seconds.
----@param action fun()
----@param tag? string
----@param group? string # Optional group to assign this timer to.
----@return integer # timerHandle
-function timer.after(...) end
-
----
---- Creates a resettable timer that fires an action when a condition is met after a cooldown.
----
----@param delay number|{number, number} # Cooldown duration in seconds or a {min, max} range.
----@param condition fun():boolean # A function that must return true for the action to fire.
----@param action fun()
----@param times? integer # Number of times to run. 0 for infinite.
----@param after? fun()
----@param tag? string
----@param group? string # Optional group to assign this timer to.
----@return integer # timerHandle
-function timer.cooldown(...) end
-
----
---- Creates a timer that runs an action repeatedly at a given interval.
----
----@param interval number|{number, number} # Interval in seconds or a {min, max} range.
----@param action fun()
----@param times? integer # Number of times to run. 0 for infinite.
----@param immediate? boolean # If true, the action runs immediately on creation.
----@param after? fun()
----@param tag? string
----@param group? string # Optional group to assign this timer to.
----@return integer # timerHandle
-function timer.every(...) end
-
----
---- Creates a timer that runs for a set number of steps, interpolating the delay between a start and end value.
----
----@param start_delay number
----@param end_delay number
----@param times integer # Total number of steps.
----@param action fun()
----@param immediate? boolean
----@param step_method? fun(t:number):number # Easing function for delay interpolation.
----@param after? fun()
----@param tag? string
----@param group? string # Optional group to assign this timer to.
----@return integer # timerHandle
-function timer.every_step(...) end
-
----
---- Creates a timer that runs an action every frame for a set duration, passing delta time to the action.
----
----@param duration number|{number, number} # Total duration in seconds or a {min, max} range.
----@param action fun(dt:number)
----@param after? fun()
----@param tag? string
----@param group? string # Optional group to assign this timer to.
----@return integer # timerHandle
-function timer.for_time(...) end
-
----
---- Creates a timer that interpolates a value towards a target over a duration.
----
----@param duration number|{number, number} # Duration of the tween in seconds or a {min, max} range.
----@param getter fun():number # Function to get the current value.
----@param setter fun(value:number) # Function to set the new value.
----@param target_value number # The final value for the tween.
----@param easing_method? fun(t:number):number # Optional easing function (0.0-1.0).
----@param after? fun()
----@param tag? string
----@param group? string # Optional group to assign this timer to.
----@return integer # timerHandle
-function timer.tween(...) end
-
----
---- Tween multiple numeric fields on a Lua table with a single timer (progress 0→1). Captures start values at creation; one tag/after for the whole batch. Default easing: linear.
----
----@param duration number|{number, number} # Seconds or {min,max} range (randomized at start).
----@param target table # Table/object whose numeric fields will be tweened.
----@param source table<string, number> # Map of field -> target value (e.g., { sx=0, sy=0 }).
----@param method? fun(t:number):number # Easing function; default is linear (t).
----@param after? fun() # Called once when all fields reach targets.
----@param tag? string # Cancels existing tweens with the same tag.
----@param group? string # Optional group bucket for management.
----@return integer # timerHandle
-function timer.tween(...) end
-
----
---- Tween multiple engine-backed values (get/set pairs) with a single timer. Each track defines get(), set(v), to, and optional from. Captures starts at creation; one tag/after for the whole batch. Default easing: linear.
----
----@param duration number|{number, number} # Seconds or {min,max} range (randomized at start).
----@param tracks { {get:fun():number, set:fun(value:number), to:number, from?:number}[] }|table # Array-like table of descriptors.
----@param method? fun(t:number):number # Easing function; default is linear (t).
----@param after? fun() # Called once when all tracks reach targets.
----@param tag? string # Cancels existing tweens with the same tag.
----@param group? string # Optional group bucket for management.
----@return integer # timerHandle
-function timer.tween(...) end
-
----
---- Pauses the timer with the given tag.
----
----@param tag string # The tag/handle of the timer to pause.
----@return nil
-function timer.pause(...) end
-
----
---- Resumes a previously paused timer.
----
----@param tag string # The tag/handle of the timer to resume.
----@return nil
-function timer.resume(...) end
-
----
---- Cancels (removes) all timers in the specified group.
----
----@param group string # The name of the timer group to cancel.
----@return nil
-function timer.kill_group(...) end
-
----
---- Pauses all timers in the specified group.
----
----@param group string # The name of the timer group to pause.
----@return nil
-function timer.pause_group(...) end
-
----
---- Resumes all timers in the specified group.
----
----@param group string # The name of the timer group to resume.
----@return nil
-function timer.resume_group(...) end
-
----
---- Cancels and destroys an active timer.
----
----@param timerHandle integer # The handle of the timer to cancel.
----@return nil
-function timer.cancel(...) end
-
----
---- Gets the current invocation count for an 'every' timer.
----
----@param timerHandle integer # The handle of an 'every' timer.
----@return integer|nil # The current invocation count, or nil if not found.
-function timer.get_every_index(...) end
-
----
---- Resets a timer's elapsed time, such as for a 'cooldown'.
----
----@param timerHandle integer # The handle of the timer to reset.
----@return nil
-function timer.reset(...) end
-
----
---- Gets the configured delay time for a timer.
----
----@param timerHandle integer # The handle of the timer.
----@return number|nil # The timer's current delay, or nil if not found.
-function timer.get_delay(...) end
-
----
---- Sets the global speed multiplier for all timers.
----
----@param multiplier number # The new global speed multiplier.
----@return nil
-function timer.set_multiplier(...) end
-
----
---- Gets the global timer speed multiplier.
----
----@return number
-function timer.get_multiplier(...) end
-
----
---- Gets the elapsed time for a 'for' timer.
----
----@param timerHandle integer # The handle of a 'for' timer.
----@return number|nil # The normalized elapsed time (0.0 to 1.0), or nil if not found.
-function timer.get_for_elapsed(...) end
-
----
---- Returns the timer object's elapsed time and its configured delay.
----
----@param timerHandle integer # The handle of the timer.
----@return number, number # Returns two values: the elapsed time and the total delay. Returns a single nil if not found.
-function timer.get_timer_and_delay(...) end
-
----
---- Re-maps a number from one range to another.
----
----@param value number
----@param from1 number
----@param to1 number
----@param from2 number
----@param to2 number
----@return number
-function timer.math.remap(...) end
-
----
---- Linearly interpolates between two points.
----
----@param a number
----@param b number
----@param t number
----@return number
-function timer.math.lerp(...) end
-
----
 --- Install or replace a local render callback on an entity.
 --- Positional overload.
 ---
@@ -9565,6 +9761,38 @@ function ui.box.handleAlignment(...) end
 ---@param uiElementParent Entity
 ---@return nil
 function ui.box.BuildUIElementTree(...) end
+
+---
+--- Sets the draw layer for a UI box.
+---
+---@param uiBox Entity
+---@param name string
+---@return nil
+function ui.box.set_draw_layer(...) end
+
+---
+--- Assigns state tags to all elements in a UI box.
+---
+---@param registry registry
+---@param uiBox Entity
+---@param stateName string
+---@return nil
+function ui.box.AssignStateTagsToUIBox(...) end
+
+---
+--- Adds a state tag to all elements in a UI box.
+---
+---@param uiBox Entity
+---@param tagToAdd string
+---@return nil
+function ui.box.AddStateTagToUIBox(...) end
+
+---
+--- Clears state tags from all elements in a UI box.
+---
+---@param uiBox Entity
+---@return nil
+function ui.box.ClearStateTagsFromUIBox(...) end
 
 ---
 --- Initializes a new UI box from a definition.

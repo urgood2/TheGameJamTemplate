@@ -3,9 +3,9 @@
 #include <tuple>
 
 #include "core/globals.hpp"
-#include "forward.hpp"
+#include "sol/forward.hpp"
 #include "systems/localization/localization.hpp"
-#include "types.hpp"
+#include "sol/types.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 #include "systems/text/textVer2.hpp"
@@ -63,8 +63,9 @@ namespace ui_defs
         auto configBuilder = ui::UIConfig::Builder::create()
             .addColor(WHITE)
             .addText(text)
+            .addPadding(1)
             .addShadow(true)
-            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
+            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
 
         if (refEntity && refComponent && refValue) {
             configBuilder.addRefEntity(*refEntity)
@@ -371,9 +372,8 @@ namespace ui_defs
             .addConfig(
                 ui::UIConfig::Builder::create()
                     // .addColor(WHITE)
-                    .addPadding(0.0f)
-                    .addMaxWidth(300.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .addPadding(1.0f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build());
         
         for (auto &rowDef : textRowDefs) {
@@ -499,7 +499,7 @@ namespace ui_defs
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
             
             // set value based on sin of time, 0 < value < 1
-            progressValueExample = (std::sin(GetTime()) + 1.f) / 2.f;
+            progressValueExample = (std::sin(main_loop::getTime()) + 1.f) / 2.f;
             
         });
         auto progressBar = ui::UIElementTemplateNode::Builder::create()
@@ -533,7 +533,7 @@ namespace ui_defs
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
             
             // set value based on sin of time, 0 < value < 1
-            progressValueExample9Patch = (std::sin(GetTime()) + 1.f) / 2.f;
+            progressValueExample9Patch = (std::sin(main_loop::getTime()) + 1.f) / 2.f;
             
         });
         

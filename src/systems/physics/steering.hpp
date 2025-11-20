@@ -24,8 +24,8 @@ struct BodyComponent { // OPTIONAL legacy support
 struct SteerableComponent {
   bool enabled = false;
   float mass = 1.0f;
-  float maxSpeed = 100.0f;
-  float maxForce = 2000.0f;
+  float maxSpeed = 4000.0f;
+  float maxForce = 4000.0f;
   float maxTurnRate = 2.0f * float(M_PI);
   float turnMultiplier = 2.0f;
 
@@ -59,6 +59,11 @@ struct SteerableComponent {
   std::vector<cpVect> path;
   int pathIndex = 0;
   float pathArriveRadius = 16.f;
+  
+    
+  bool disableArrival = false;     // NEW — if true, Seek won't slow down near target
+  float arriveRadius = 0.0f;       // optional: only used if disableArrival == false, for deceleration in Seek
+
 };
 
 namespace Steering {

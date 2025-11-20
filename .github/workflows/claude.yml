@@ -19,9 +19,9 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write  # Changed from read to write to allow git operations
+      pull-requests: write  # Changed from read to write to allow PR creation/updates
+      issues: write  # Changed from read to write to allow issue comments
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
@@ -43,6 +43,7 @@ jobs:
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
           # prompt: 'Update the pull request description to include a summary of changes.'
 
-          # Allow WebFetch for godotshaders.com domain
-          claude_args: '--allowed-tools WebFetch(godotshaders.com)'
+          # Allow WebFetch for all domains (remove domain restrictions)
+          # If you want to restrict to specific domains, use: '--allowed-tools WebFetch'
+          # Note: WebFetch is enabled by default in claude-code-action
 

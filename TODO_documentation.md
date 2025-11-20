@@ -91,9 +91,12 @@ testCamera:move(400,400)
 ```
 - [ ] Collision mask usage in lua
 ```lua
--- make this entity “player” and only collide with “enemy” or “powerup”
-setCollisionCategory(me, "player")
-setCollisionMask(me, "enemy", "powerup")
+-- make this entity "player" and only collide with "enemy" or "powerup"
+collision.setCollisionCategory(me, "player")
+collision.setCollisionMask(me, "enemy", "powerup")
+
+-- Note: setCollisionCategory ADDS to existing categories (bitwise OR)
+-- To REPLACE all categories, use: collision.resetCollisionCategory(me, "player")
 ```
 - [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
 - [ ] 
@@ -110,8 +113,14 @@ And now the rest…
 
 ```lua
 
--- create custom collider entity which is always, underneath, a transform. But it should have custom types like (circle) which will decide how the collision system resolves the collision
-local collider = create_collider_for_entity(e, Colliders.TRANSFORM, {offsetX = 0, offsetY = 50, width = 50, height = 50})
+-- create custom collider entity which is always, underneath, a transform
+-- Available options: offsetX, offsetY, width, height, rotation, scale, alignment, alignOffset
+local collider = collision.create_collider_for_entity(e, {
+    offsetX = 0,
+    offsetY = 50,
+    width = 50,
+    height = 50
+})
 
 -- give it a ScriptComponent with an onCollision method
 local ColliderLogic = {

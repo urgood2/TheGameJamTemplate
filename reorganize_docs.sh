@@ -29,7 +29,6 @@ mkdir -p docs/tools
 mkdir -p docs/project-management/todos
 mkdir -p docs/project-management/design
 mkdir -p docs/project-management/game-jams
-mkdir -p docs/project-management/game-jams/jame_gam_weather_or_not
 
 echo "✓ Directory structure created"
 echo ""

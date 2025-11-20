@@ -79,6 +79,7 @@ combat_context = nil
 -- some entities
 
 survivorEntity = nil
+survivorMaskEntity = nil
 boards = {}
 cards = {}
 inventory_board_id = nil
@@ -758,8 +759,8 @@ function createNewCard(id, x, y, gameStateToApply)
     -- local roleComp = component_cache.get(cardScript.labelEntity, InheritedProperties)
     -- roleComp.flags = AlignmentFlag.VERTICAL_CENTER | AlignmentFlag.HORIZONTAL_CENTER
 
-    local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
-    shaderPipelineComp:addPass("3d_skew")
+    -- local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
+    -- shaderPipelineComp:addPass("3d_skew")
 
 
     -- make draggable and set some callbacks in the transform system
@@ -1678,7 +1679,7 @@ function setUpLogicTimers()
     timer.run(
         function()
             -- bail if not in action state
-            -- if not is_state_active(ACTION_STATE) then return end
+            if not is_state_active(PLANNING_STATE) then return end
 
             for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
                 if triggerBoardID and triggerBoardID ~= entt_null and entity_cache.valid(triggerBoardID) then
@@ -1729,31 +1730,38 @@ function setUpLogicTimers()
                                         
                                         local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
                                         
-                                        local firstCast = true
                                         local pitchToUse = 0.7
+                                        local castSequenceID = tostring(actionBoardID) .. "_" .. tostring(os.clock()) .. "_" .. tostring(math.random(1000000))
                                         
                                         -- inspect the cast blocks. for each block, pulse the corresponding cards.
-                                        for i, castBlock in ipairs(simulatedResult.blocks) do
-                                            log_debug(" - cast block", i, "type:", castBlock.type)
+                                        for blockIdx, castBlock in ipairs(simulatedResult.blocks) do
+                                            log_debug(" - cast block", blockIdx, "type:", castBlock.type)
                                             
-                                            local castDelay = firstCast and 0.1 or castBlock.total_cast_delay
-                                            
-                                            timer.after(
-                                                castDelay,
-                                                function()
-                                                    for _, card in ipairs(castBlock.cards) do
-                                                        log_debug("   - card in block:", card.cardID)
+                                            -- Use card_delays for precise timing
+                                            for cardIdx, delayInfo in ipairs(castBlock.card_delays) do
+                                                local card = delayInfo.card
+                                                local cumulativeDelay = delayInfo.cumulative_delay / 1000.0  -- Convert ms to seconds
+                                                local timerTag = "cast_block_" .. castSequenceID .. "_block" .. blockIdx .. "_card" .. cardIdx
+                                                
+                                                timer.after(
+                                                    cumulativeDelay,
+                                                    function()
+                                                        log_debug("   - Firing card:", card.cardID, "at", cumulativeDelay, "seconds")
                                                         local cardTransform = component_cache.get(card:handle(), Transform)
-                                                        cardTransform.visualS = 1.5
-                                                        playSoundEffect("effects", "planning_card_activation", 0.8 + math.random() * 0.4 + pitchToUse)
-                                                        pitchToUse = pitchToUse + 0.05
-                                                        
-                                                        -- pulse the card
-                                                        addPulseEffectBehindCard(card:handle(), util.getColor("red"), util.getColor("black"))
-                                                    end
-                                                end
-                                            )
-                                            firstCast = false
+                                                        if cardTransform then
+                                                            cardTransform.visualS = 1.5
+                                                            playSoundEffect("effects", "planning_card_activation", 
+                                                                0.8 + math.random() * 0.4 + pitchToUse)
+                                                            pitchToUse = pitchToUse + 0.05
+                                                            
+                                                            -- pulse the card
+                                                            addPulseEffectBehindCard(card:handle(), 
+                                                                util.getColor("red"), util.getColor("black"))
+                                                        end
+                                                    end,
+                                                    timerTag
+                                                )
+                                            end
                                             
                                             -- TODO: use total_cast_delay and total_recharge_time to determine wand visual activation.
                                         end
@@ -3070,6 +3078,116 @@ local function get_mag_items(world, player, radius)
     return result
 end
 
+function createJointedMask(parentEntity, worldName)
+    local world = PhysicsManager.get_world(worldName)
+    
+    -- Create mask entity with physics
+    local maskEntity = animation_system.createAnimatedObjectWithTransform(
+        "b6813.png",
+        true
+    )
+    
+    -- Position at parent's head
+    local parentT = component_cache.get(parentEntity, Transform)
+    local maskT = component_cache.get(maskEntity, Transform)
+    
+    local headOffsetY = -parentT.actualH * 0.3
+    maskT.actualX = parentT.actualX + parentT.actualW / 2 - maskT.actualW / 2
+    maskT.actualY = parentT.actualY + headOffsetY
+    maskT.visualX = maskT.actualX
+    maskT.visualY = maskT.actualY
+    
+    -- Give mask physics (dynamic body)
+    physics.create_physics_for_transform(
+        registry,
+        physics_manager_instance,
+        maskEntity,
+        worldName,
+        {
+            shape = "rectangle",
+            tag = "mask",
+            sensor = false,
+            density = 0.1  -- Light weight
+        }
+    )
+    
+    physics.SetBodyType(world, maskEntity, "dynamic")
+    
+    -- Disable collision between mask and player
+    -- physics.enable_trigger_between(world, "mask", "player")
+    
+    -- Option 1: PIVOT JOINT (simple hinge)
+    -- Mask rotates freely around attachment point
+    local pivotJoint = physics.add_pivot_joint_world(
+        world,
+        parentEntity,
+        maskEntity,
+        {x = maskT.actualX + maskT.actualW / 2, y = maskT.actualY + maskT.actualH / 2}  -- Attach at mask's initial position
+    )
+    
+    physics.SetMoment(world, maskEntity, 0.1) -- VERY IMPORTANT
+    
+    -- Make joint strong but allow some flex
+    -- physics.set_constraint_limits(world, pivotJoint, 10000, nil)  -- maxForce
+    
+    -- Option 2: DAMPED SPRING (bouncy attachment)
+    -- Uncomment to use instead of pivot:
+    -- local spring = physics.add_damped_spring(
+    --     world,
+    --     parentEntity,
+    --     {x = 0, y = headOffsetY},  -- Anchor on parent (local coords)
+    --     maskEntity,
+    --     {x = 0, y = 0},            -- Anchor on mask (center)
+    --     0,                         -- Rest length (0 = tight)
+    --     500,                       -- Stiffness
+    --     10                         -- Damping
+    -- )
+    
+    -- Option 3: SLIDE JOINT (constrained distance)
+    -- Allows mask to slide within min/max range:
+    -- local slideJoint = physics.add_slide_joint(
+    --     world,
+    --     parentEntity,
+    --     {x = 0, y = headOffsetY},
+    --     maskEntity,
+    --     {x = 0, y = 0},
+    --     0,     -- Min distance
+    --     10     -- Max distance (can stretch up to 10 units)
+    -- )
+    
+    -- Add rotary spring to keep mask mostly upright
+    local rotarySpring = physics.add_damped_rotary_spring(
+        world,
+        parentEntity,
+        maskEntity,
+        0,      -- Rest angle (upright)
+        6000,     -- Stiffness (lower = more floppy)
+        5       -- Damping
+    )
+    
+    
+    physics.set_sync_mode(registry, maskEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
+    
+    -- don't know why this is necessary, but set the rotation of the transform to match physics body
+    timer.run(
+        function()
+            if not entity_cache.valid(maskEntity) then return end
+
+            local bodyAngle = physics.GetAngle(world, maskEntity)
+            local t = component_cache.get(maskEntity, Transform)
+            t.actualR = math.deg(bodyAngle)
+        end
+    )
+    
+    -- Add some angular damping for smoother rotation
+    -- physics.SetDamping(world, maskEntity, 0.3)
+    
+    -- Layer above player
+    layer_order_system.assignZIndexToEntity(maskEntity, z_orders.player_char + 1)
+    
+    return maskEntity
+end
+
 
 function initSurvivorEntity()
     local world = PhysicsManager.get_world("world")
@@ -3152,6 +3270,9 @@ function initSurvivorEntity()
 
     -- give shader pipeline comp for later use
     local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+    
+    -- give mask
+    survivorMaskEntity =  createJointedMask(survivorEntity, "world")
 
 
     physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", { "player", "enemy" }) -- enemy>player and enemy>enemy
@@ -3283,7 +3404,7 @@ function initSurvivorEntity()
         -- shake camera
         local cam = camera.Get("world_camera")
         if cam then
-            cam:Shake(5.0, 0.35, 100.0)
+            cam:Shake(15.0, 0.5, 60)
         end
 
         -- -- remove after a short delay
@@ -3778,6 +3899,18 @@ function initActionPhase()
                 end
 
 
+                
+                local maskEntity = survivorMaskEntity
+                    
+                -- Apply rotational impulse (torque) to make mask spin
+                local torqueStrength = 3000 -- Adjust this value to control rotation speed
+                -- physics.ApplyTorque(world, maskEntity, torqueStrength)
+                
+                physics.ApplyAngularImpulse(world, maskEntity, moveDir.x * torqueStrength)
+                
+                -- Optional: Apply linear impulse too for more dramatic effect
+                -- local MASK_IMPULSE = 100
+                -- physics.ApplyImpulse(world, maskEntity, moveDir.x * MASK_IMPULSE, moveDir.y * MASK_IMPULSE)
 
                 -- add impulse in the direction it's going
                 -- timer that resets damping after a short delay. (SetDamping)

@@ -713,6 +713,17 @@ inline void expose_physics_to_lua(sol::state& lua) {
         true, false
     });
     lua["physics"]["SetFixedRotation"] = &PhysicsWorld::SetFixedRotation;
+    
+    lua["physics"]["SetMoment"] = [](PhysicsWorld& W, entt::entity e, float moment) {
+        auto &collider = globals::registry.get<ColliderComponent>(e);
+        cpBodySetMoment(collider.body.get(), moment);
+    };
+    rec.record_free_function(path, {
+        "SetMoment",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param moment number",
+        "Sets the body's moment of inertia.",
+        true, false
+    });
 
     rec.record_free_function(path, {
         "SetBodyType",

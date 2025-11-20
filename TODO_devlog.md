@@ -217,3 +217,8 @@
   - still stuck with shader pipeline bug/.
   - bug seems fixed, and shadows are rendering properly again. goddamn it. 
   
+11/20/2025
+  - Pretty bummed out, about life in general (when do I get to retire?) and about this code that's constantly miring me in bugs.
+  - Added a physics mask to the player
+  - Made sure screen shake works
+  

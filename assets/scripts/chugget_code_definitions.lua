@@ -8187,6 +8187,14 @@ function physics.SetBullet(...) end
 function physics.SetFixedRotation(...) end
 
 ---
+--- Sets the body's moment of inertia.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param moment number
+function physics.SetMoment(...) end
+
+---
 --- Switch the Chipmunk body type for the entity.
 ---
 ---@param world physics.PhysicsWorld

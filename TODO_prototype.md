@@ -53,6 +53,11 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
     
 # programming side
+- indicate card isn't being applied if it goes beyond card max count.
+- don't allow more than one trigger to be applied to a trigger area.
+- highlight mod cards as well in the simulator. use the same color highlight for each cast block, to make it easier to see.
+- add an option to stop the ticking noise.
+
 - try develop branch of sol2. continue debugging
 - it looks like enabling shader pipiline on cards & enemies starts making memory unstable. why? memory issue? but i don't understand. upon pickup delete? but why?
 - when card skew is on, and player pipeline is on, but enemy pipeline isn't, there is no crash.
@@ -186,6 +191,7 @@ end)
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
 
 # performance considerations
+- Consider making a draw command injector and hand-coding shader start/end for pipeline instead of using pipeline as it stands if there are many sprites (like skew for cards) this will prevent texture ping-pong.
 - Use luajit. It doesn't work ATM. (doens't work for web anyway, skip?)
 - make timers state-sensitive by using cached games state, with optional parameter when creating timer to indicate this.
 - Continue profiling.

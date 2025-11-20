@@ -4444,14 +4444,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   // 3. Apply shader passes
   int total = pipelineComp.passes.size();
-  
-  // debug point 
-  if (total == 0) {
-    
-      SPDLOG_DEBUG("Entity {} has no shader passes in its pipeline.", (int)e);
-  } else {
-      SPDLOG_DEBUG("Entity {} has {} shader passes in its pipeline.", (int)e, total);
-  }
+
   
   int i = 0;
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {

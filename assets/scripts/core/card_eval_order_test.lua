@@ -1122,7 +1122,7 @@ end
 -- Simulate Noita-like cast block division, with trigger/timer behavior
 
 --==============================================================
--- ✅ simulate_wand (modifier inheritance + global modifier persistence)
+-- [OK] simulate_wand (modifier inheritance + global modifier persistence)
 --==============================================================
 local function simulate_wand(wand, card_pool)
     print("\n=== Simulating " .. wand.id .. " ===")
@@ -1136,7 +1136,7 @@ local function simulate_wand(wand, card_pool)
     end
 
     ----------------------------------------------------------------------
-    -- 🔹 Step 1. Build Card Lookup
+    -- [+] Step 1. Build Card Lookup
     ----------------------------------------------------------------------
     local card_lookup = {}
     for _, card in ipairs(card_pool) do
@@ -1145,7 +1145,7 @@ local function simulate_wand(wand, card_pool)
     end
 
     ----------------------------------------------------------------------
-    -- 🔹 Step 2. Build Deck (store card tables directly)
+    -- [+] Step 2. Build Deck (store card tables directly)
     ----------------------------------------------------------------------
     local deck = {}
     local max_cards = math.min(wand.total_card_slots, #card_pool)
@@ -1172,7 +1172,7 @@ local function simulate_wand(wand, card_pool)
     print(string.rep("-", 60))
 
     ----------------------------------------------------------------------
-    -- 🔹 Step 3. Calculate Weight / Overload
+    -- [+] Step 3. Calculate Weight / Overload
     ----------------------------------------------------------------------
     local total_weight = 0
     for _, card in ipairs(deck) do
@@ -1185,12 +1185,12 @@ local function simulate_wand(wand, card_pool)
         overload_ratio = 1.0 + (excess / wand.mana_max) * 0.5
 
         print(string.format(
-            "⚠️ Wand overloaded: weight %.1f / %.1f → +%.0f%% cast/recharge delay",
+            "[!] Wand overloaded: weight %.1f / %.1f > +%.0f%% cast/recharge delay",
             total_weight, wand.mana_max, (overload_ratio - 1.0) * 100
         ))
     else
         print(string.format(
-            "✅ Wand within weight limit: weight %.1f / %.1f",
+            "[OK] Wand within weight limit: weight %.1f / %.1f",
             total_weight, wand.mana_max or total_weight
         ))
     end
@@ -1198,18 +1198,18 @@ local function simulate_wand(wand, card_pool)
     print(string.rep("-", 60))
 
     ----------------------------------------------------------------------
-    -- 🔹 Step 4. Utility Functions
+    -- [+] Step 4. Utility Functions
     ----------------------------------------------------------------------
     local function readable_card_id(card)
         return string.format("%s:%s", card.card_id, card:handle())
     end
 
     ----------------------------------------------------------------------
-    -- 🔹 Step 5. Global Modifier Setup
+    -- [+] Step 5. Global Modifier Setup
     ----------------------------------------------------------------------
     local global_active_modifiers = {}
 
-    -- 🧩 Initialize global always-cast modifiers once per wand
+    -- [MODS] Initialize global always-cast modifiers once per wand
     local global_always_modifiers = {}
     if wand.always_cast_cards and #wand.always_cast_cards > 0 then
         for _, always_id in ipairs(wand.always_cast_cards) do
@@ -1221,10 +1221,10 @@ local function simulate_wand(wand, card_pool)
                     persistent_until_chain_end = true,
                 }
 
-                print(string.format("  🔹 [ALWAYS CAST INIT] '%s' ×%d", always_id, mod.remaining))
+                print(string.format("  [+] [ALWAYS CAST INIT] '%s' x%d", always_id, mod.remaining))
                 table.insert(global_always_modifiers, mod)
             else
-                print(string.format("  ⚠️ Missing always-cast card '%s'", always_id))
+                print(string.format("  [!] Missing always-cast card '%s'", always_id))
             end
         end
     end
@@ -1264,12 +1264,12 @@ local function simulate_wand(wand, card_pool)
     local function apply_modifiers(indent, modifiers, card)
         for j = #modifiers, 1, -1 do
             local m = modifiers[j]
-            print(string.format("%s     ↳ under modifier '%s' (%d left)",
+            print(string.format("%s     |-> under modifier '%s' (%d left)",
                 indent, readable_card_id(m.card), m.remaining - 1))
 
             m.remaining = m.remaining - 1
             if m.remaining <= 0 then
-                print(string.format("%s     🔸 [MOD EXHAUSTED] '%s' (persists=%s)",
+                print(string.format("%s     [-] [MOD EXHAUSTED] '%s' (persists=%s)",
                     indent, readable_card_id(m.card),
                     tostring(m.persistent_until_chain_end)))
                 if not m.persistent_until_chain_end then
@@ -1293,8 +1293,8 @@ local function simulate_wand(wand, card_pool)
             and string.format("+%dms timer", trigger_card.timer_ms)
             or "on collision"
 
-        print(string.format("%s     ↳ Spawning sub-cast (%s)", indent, label))
-        print(string.format("%s     └─── [RECURSION TREE] Enter sub-cast (Depth %d → %d)",
+        print(string.format("%s     |-> Spawning sub-cast (%s)", indent, label))
+        print(string.format("%s     └─── [RECURSION TREE] Enter sub-cast (Depth %d -> %d)",
             indent, depth, depth + 1))
 
         -- Inherit modifiers (minus global duplicates)
@@ -1311,7 +1311,7 @@ local function simulate_wand(wand, card_pool)
         -- Recurse
         local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1, true)
         print(string.format("%s     └─── [RECURSION TREE] Exit sub-cast (Back to Depth %d)", indent, depth))
-        print(string.format("%s     🔚 Ending block after trigger '%s' (no further actions in this block)",
+        print(string.format("%s     [END] Ending block after trigger '%s' (no further actions in this block)",
             indent, readable_card_id(trigger_card)))
 
         return sub_block, new_i
@@ -1326,17 +1326,17 @@ local function simulate_wand(wand, card_pool)
             return i, target_actions
         end
 
-        print(string.format("%s  🔸 [ALWAYS CAST EXEC] running %d always-cast cards at start",
+        print(string.format("%s  [-] [ALWAYS CAST EXEC] running %d always-cast cards at start",
             indent, #wand.always_cast_cards))
 
         for _, always_id in ipairs(wand.always_cast_cards) do
             local acard = card_lookup[always_id]
             if not acard then
-                print(string.format("%s    ⚠️ Missing always-cast card '%s'", indent, always_id))
+                print(string.format("%s    [!] Missing always-cast card '%s'", indent, always_id))
                 goto continue
             end
 
-            print(string.format("%s    • Executing always-cast '%s'", indent, readable_card_id(acard)))
+            print(string.format("%s    * Executing always-cast '%s'", indent, readable_card_id(acard)))
 
             if acard.type == "modifier" then
                 -- Modifier adds multicast
@@ -1346,7 +1346,7 @@ local function simulate_wand(wand, card_pool)
                     persistent_until_chain_end = true,
                 }
 
-                print(string.format("%s      🔹 [ALWAYS MOD OPEN] '%s' ×%d",
+                print(string.format("%s      [+] [ALWAYS MOD OPEN] '%s' x%d",
                     indent, readable_card_id(acard), mod.remaining))
 
                 table.insert(modifiers, mod)
@@ -1356,11 +1356,11 @@ local function simulate_wand(wand, card_pool)
                 if (acard.multicast_count or 1) > 1 then
                     local extra = (acard.multicast_count - 1)
                     target_actions = target_actions + extra
-                    print(string.format("%s     ⏩ Expanded block target to %d due to multicast (%+d)",
+                    print(string.format("%s     =>> Expanded block target to %d due to multicast (%+d)",
                         indent, target_actions, extra))
                 end
             elseif acard.type == "action" then
-                print(string.format("%s      🔹 [ALWAYS ACTION] '%s'", indent, readable_card_id(acard)))
+                print(string.format("%s      [+] [ALWAYS ACTION] '%s'", indent, readable_card_id(acard)))
                 table.insert(block.cards, acard)
 
                 block.total_cast_delay = block.total_cast_delay + (acard.cast_delay or 0)
@@ -1403,7 +1403,7 @@ local function simulate_wand(wand, card_pool)
                 persistent_until_chain_end = true,
             }
 
-            print(string.format("%s  🔹 [MOD OPEN] '%s' ×%d",
+            print(string.format("%s  [+] [MOD OPEN] '%s' x%d",
                 indent, readable_card_id(card), mod.remaining))
 
             table.insert(modifiers, mod)
@@ -1412,7 +1412,7 @@ local function simulate_wand(wand, card_pool)
             if (card.multicast_count or 1) > 1 then
                 local extra = (card.multicast_count - 1)
                 target_actions = target_actions + extra
-                print(string.format("%s     ⏩ Expanded block target to %d due to multicast (%+d)",
+                print(string.format("%s     =>> Expanded block target to %d due to multicast (%+d)",
                     indent, target_actions, extra))
             end
         elseif card.type == "action" then
@@ -1421,10 +1421,22 @@ local function simulate_wand(wand, card_pool)
             
             actions_collected = actions_collected + 1
             table.insert(block.cards, card)
-            block.total_cast_delay = block.total_cast_delay + (card.cast_delay or 0)
+            
+            -- Add cast delay BEFORE updating total
+            local cardCastDelay = card.cast_delay or 0
+            
+            -- Record cumulative delay for this card
+            table.insert(block.card_delays, {
+                card = card,
+                card_index = actions_collected,
+                individual_delay = cardCastDelay,
+                cumulative_delay = block.total_cast_delay + cardCastDelay,  -- Delay up to and including this card
+            })
+            
+            block.total_cast_delay = block.total_cast_delay + cardCastDelay
             block.total_recharge   = block.total_recharge + (card.recharge_time or 0)
 
-            print(string.format("%s  🔹 Action '%s' (%d/%d actions filled)",
+            print(string.format("%s  [+] Action '%s' (%d/%d actions filled)",
                 indent, readable_card_id(card), actions_collected, target_actions))
 
             apply_modifiers(indent, modifiers, card)
@@ -1453,7 +1465,7 @@ local function simulate_wand(wand, card_pool)
     local function finalize_modifiers(indent, block, modifiers)
         for _, m in ipairs(modifiers) do
             table.insert(block.remaining_modifiers, { card = m.card, remaining = m.remaining })
-            print(string.format("%s  🔸 [FORCE CLOSE MOD] '%s' (%d unfilled)",
+            print(string.format("%s  [-] [FORCE CLOSE MOD] '%s' (%d unfilled)",
                 indent, readable_card_id(m.card), m.remaining))
         end
     end
@@ -1476,6 +1488,7 @@ local function simulate_wand(wand, card_pool)
             total_cast_delay = 0,
             total_recharge = 0,
             target_override = sub_block_override,
+            card_delays = {},  -- Track cumulative delay after each card
         }
 
         ------------------------------------------------------------
@@ -1504,7 +1517,7 @@ local function simulate_wand(wand, card_pool)
         ------------------------------------------------------------
         -- Begin deck evaluation loop
         ------------------------------------------------------------
-        print(string.format("%s[Depth %d] ➤ Building cast block starting at %d (target %d actions)",
+        print(string.format("%s[Depth %d] >>> Building cast block starting at %d (target %d actions)",
             indent, depth, start_index, target_actions))
 
         while actions_collected < target_actions and safety < #deck * 4 do
@@ -1526,23 +1539,23 @@ local function simulate_wand(wand, card_pool)
             if count > 0 then
                 local limit = card.revisit_limit or 0
                 if limit == 0 then
-                    print(string.format("%s  ⚠️ Card '%s' already used %d×; halting (no revisit).", indent,
+                    print(string.format("%s  [!] Card '%s' already used %dx; halting (no revisit).", indent,
                         readable_card_id(card), count))
                     break
                 elseif limit > 0 and count >= limit then
-                    print(string.format("%s  ⚠️ Card '%s' revisit limit reached (%d).", indent, readable_card_id(card),
+                    print(string.format("%s  [!] Card '%s' revisit limit reached (%d).", indent, readable_card_id(card),
                         limit))
                     break
                 else
-                    print(string.format("%s  ↻ Revisiting card '%s' (%d/%s)",
+                    print(string.format("%s  [REV] Revisiting card '%s' (%d/%s)",
                         indent, readable_card_id(card), count + 1,
-                        (limit == -1 and "∞" or tostring(limit))))
+                        (limit == -1 and "INF" or tostring(limit))))
                 end
             end
             visited_cards[card] = count + 1
 
             if card.allow_recursion and card.recursion_depth and depth > card.recursion_depth then
-                print(string.format("%s  ⚠️ Card '%s' recursion depth limit reached (%d).",
+                print(string.format("%s  [!] Card '%s' recursion depth limit reached (%d).",
                     indent, readable_card_id(card), card.recursion_depth))
                 break
             end
@@ -1564,7 +1577,7 @@ local function simulate_wand(wand, card_pool)
         -- Finalize
         ------------------------------------------------------------
         finalize_modifiers(indent, block, modifiers)
-        print(string.format("%s  ✅ Finished block (%d/%d actions) at depth %d",
+        print(string.format("%s  [OK] Finished block (%d/%d actions) at depth %d",
             indent, #block.cards, target_actions, depth))
 
         return block, i, block.total_cast_delay, block.total_recharge
@@ -1579,7 +1592,7 @@ local function simulate_wand(wand, card_pool)
         local desc = readable_card_id(c)
 
         if c.type == "modifier" then
-            desc = desc .. string.format(" (modifier ×%d)", c.multicast_count or 1)
+            desc = desc .. string.format(" (modifier x%d)", c.multicast_count or 1)
         elseif c.type == "action" then
             desc = desc .. " (action)"
             if c.timer_ms then
@@ -1592,7 +1605,7 @@ local function simulate_wand(wand, card_pool)
         local base_delay = wand.cast_delay or 0
         local total_delay = (base_delay + (c.cast_delay or 0)) * overload_ratio
 
-        return string.format("%s — cast_delay +%dms (total %.1fms w/ overload)",
+        return string.format("%s - cast_delay +%dms (total %.1fms w/ overload)",
             desc, c.cast_delay or 0, total_delay)
     end
 
@@ -1602,7 +1615,7 @@ local function simulate_wand(wand, card_pool)
         if modifiers and #modifiers > 0 then
             print(indent .. string.format("  %s %d", header, #modifiers))
             for _, m in ipairs(modifiers) do
-                print(string.format("%s    • '%s' (%d %s)",
+                print(string.format("%s    * '%s' (%d %s)",
                     indent, m.card.card_id, m.remaining, suffix))
             end
         end
@@ -1626,18 +1639,18 @@ local function simulate_wand(wand, card_pool)
         if label then print(indent .. label) end
 
         -- Modifiers (start and end state)
-        print_modifiers(indent, block.applied_modifiers, "🧩 Applied modifiers at block start:", "left at start")
-        print_modifiers(indent, block.remaining_modifiers, "🌀 Remaining modifiers after cast:", "left after")
+        print_modifiers(indent, block.applied_modifiers, "[MODS] Applied modifiers at block start:", "left at start")
+        print_modifiers(indent, block.remaining_modifiers, "[REM] Remaining modifiers after cast:", "left after")
 
         -- Cards and sub-blocks
         for _, c in ipairs(block.cards) do
-            print(indent .. "  • " .. describe_card(c))
+            print(indent .. "  * " .. describe_card(c))
 
             local child = find_child_for_card(block, c)
             if child then
                 local lbl = child.delay
-                    and string.format("⏱ After %dms:", child.delay)
-                    or "⚡ On Collision:"
+                    and string.format("[TIME] After %dms:", child.delay)
+                    or "[COLL] On Collision:"
                 print(indent .. "  " .. lbl)
                 print_block(child.block, depth + 1)
             end
@@ -1661,8 +1674,8 @@ local function simulate_wand(wand, card_pool)
 
         print(line)
         print(string.format("Wand '%s' Execution Complete", wand.id))
-        print(string.format("→ Total Cast Delay: %.1f ms", total_cast_delay))
-        print(string.format("→ Total Recharge Time: %.1f ms", total_recharge_time))
+        print(string.format("-> Total Cast Delay: %.1f ms", total_cast_delay))
+        print(string.format("-> Total Recharge Time: %.1f ms", total_recharge_time))
         print(string.rep("=", 60))
     end
 
@@ -1693,16 +1706,28 @@ local function simulate_wand(wand, card_pool)
         local blocks = {}
         local total_cast_delay, total_recharge_time = 0, 0
         local i = 1
+        local safety = 0
+        local max_iterations = #deck * 2  -- Prevent infinite loops
 
         local base_cast_delay = wand.cast_delay or 0
         local base_recharge_time = wand.recharge_time or 0
 
-        while i <= #deck do
+        while i <= #deck and safety < max_iterations do
+            safety = safety + 1
+            
             local block, next_i, c_delay, c_recharge = build_cast_block(i)
-            table.insert(blocks, block)
+            
+            -- Only add block if it actually cast any cards
+            if #block.cards > 0 then
+                table.insert(blocks, block)
+                total_cast_delay  = total_cast_delay  + (base_cast_delay  + c_delay) * overload_ratio
+                total_recharge_time = total_recharge_time + (base_recharge_time + c_recharge) * overload_ratio
+            end
 
-            total_cast_delay  = total_cast_delay  + (base_cast_delay  + c_delay) * overload_ratio
-            total_recharge_time = total_recharge_time + (base_recharge_time + c_recharge) * overload_ratio
+            -- If we didn't advance past the current card, we're stuck - break out
+            if next_i == i then
+                break
+            end
 
             i = next_i
         end

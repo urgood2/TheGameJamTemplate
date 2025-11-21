@@ -2848,16 +2848,16 @@ function initCombatSystem()
         maxVelocity = 10.0
         })
 
-    -- make springs for delayed indicator bars (white bars that show previous values)
+    -- make springs for delayed indicator bars (white bars that catch up)
     expBarDelayedSpringEntity, expBarDelayedSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
         target = 1.0,
-        smoothingFactor = 0.85,  -- slightly less smooth so it lags behind
+        smoothingFactor = 0.85,
         preventOvershoot = false,
         maxVelocity = 8.0
         })
     hpBarDelayedSpringEntity, hpBarDelayedSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
         target = 1.0,
-        smoothingFactor = 0.85,  -- slightly less smooth so it lags behind
+        smoothingFactor = 0.85,
         preventOvershoot = false,
         maxVelocity = 8.0
         })
@@ -2894,9 +2894,10 @@ function initCombatSystem()
                 local expBarDelayedSpringRef = spring.get(registry, expBarDelayedSpringEntity)
                 local hpBarDelayedSpringRef  = spring.get(registry, hpBarDelayedSpringEntity)
 
-                -- Update delayed spring targets to current values (they will lerp toward them)
                 local hpPct = playerHealth / playerMaxHealth
                 local xpPct = math.min(playerXP / playerXPForNextLevel, 1.0)
+
+                -- Both delayed springs always lerp toward current value
                 spring.set_target(registry, hpBarDelayedSpringEntity, hpPct)
                 spring.set_target(registry, expBarDelayedSpringEntity, xpPct)
 
@@ -2926,36 +2927,40 @@ function initCombatSystem()
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
 
                 ------------------------------------------------------------
-                -- HEALTH DELAYED INDICATOR (white bar showing previous value)
+                -- HEALTH BARS: Two bars - main (red) and delayed (white)
+                -- Decrease: red moves to new value, white (behind) catches up
+                -- Increase: red stays at old value (via delayed spring), white shows new value behind
+                -- White bar always rendered behind red bar
                 ------------------------------------------------------------
                 local hpDelayedPct = hpBarDelayedSpringRef.value or hpPct
-                local fillDelayedBaseWidth = baseHealthBarWidth * hpDelayedPct
-                local fillDelayedCenterX   = (healthBarX - healthBarWidth*0.5) + fillDelayedBaseWidth*0.5
+
+                -- White bar shows: max of current and delayed (so it's always the "bigger" reference)
+                local hpWhitePct = math.max(hpPct, hpDelayedPct)
+                -- Red bar shows: min of current and delayed (so it's always the "smaller" or actual)
+                local hpRedPct = math.min(hpPct, hpDelayedPct)
+
+                -- White bar (behind) - shows the larger value
+                local fillWhiteWidth = baseHealthBarWidth * hpWhitePct
+                local fillWhiteCenterX = (healthBarX - healthBarWidth*0.5) + fillWhiteWidth*0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = fillDelayedCenterX
+                    c.x     = fillWhiteCenterX
                     c.y     = healthBarY + healthBarHeight * 0.5
-                    c.w     = fillDelayedBaseWidth
+                    c.w     = fillWhiteWidth
                     c.h     = healthBarHeight
                     c.rx    = 5
                     c.ry    = 5
-                    c.color = util.getColor("white"):setAlpha(150)  -- semi-transparent white
+                    c.color = util.getColor("white"):setAlpha(200)
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
-                ------------------------------------------------------------
-                -- HEALTH FILL (scaled + anchored to fill center)
-                ------------------------------------------------------------
-                local hpScale  = hpBarSpringRef.value or 1.0
-
-                local fillBaseWidth = baseHealthBarWidth * hpPct
-                local fillCenterX   = (healthBarX - healthBarWidth*0.5) + fillBaseWidth*0.5
-
-                local scaledFillWidth = fillBaseWidth * hpScale
+                -- Red bar (front) - shows the smaller/current value
+                local fillRedWidth = baseHealthBarWidth * hpRedPct
+                local fillRedCenterX = (healthBarX - healthBarWidth*0.5) + fillRedWidth*0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = fillCenterX            -- stays fixed
+                    c.x     = fillRedCenterX
                     c.y     = healthBarY + healthBarHeight * 0.5
-                    c.w     = scaledFillWidth        -- only this changes
+                    c.w     = fillRedWidth
                     c.h     = healthBarHeight
                     c.rx    = 5
                     c.ry    = 5
@@ -2986,36 +2991,38 @@ function initCombatSystem()
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
 
                 ------------------------------------------------------------
-                -- EXP DELAYED INDICATOR (white bar showing previous value)
+                -- EXP BARS: Two bars - main (yellow) and delayed (white)
+                -- Same logic as HP bars
                 ------------------------------------------------------------
                 local xpDelayedPct = expBarDelayedSpringRef.value or xpPct
-                local xpFillDelayedBaseWidth = baseExpBarWidth * xpDelayedPct
-                local xpFillDelayedCenterX   = (expBarX - expBarWidth*0.5) + xpFillDelayedBaseWidth*0.5
+
+                -- White bar shows: max of current and delayed
+                local xpWhitePct = math.max(xpPct, xpDelayedPct)
+                -- Yellow bar shows: min of current and delayed
+                local xpYellowPct = math.min(xpPct, xpDelayedPct)
+
+                -- White bar (behind) - shows the larger value
+                local xpFillWhiteWidth = baseExpBarWidth * xpWhitePct
+                local xpFillWhiteCenterX = (expBarX - expBarWidth*0.5) + xpFillWhiteWidth*0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = xpFillDelayedCenterX
+                    c.x     = xpFillWhiteCenterX
                     c.y     = expBarY + expBarHeight * 0.5
-                    c.w     = xpFillDelayedBaseWidth
+                    c.w     = xpFillWhiteWidth
                     c.h     = expBarHeight
                     c.rx    = 5
                     c.ry    = 5
-                    c.color = util.getColor("white"):setAlpha(150)  -- semi-transparent white
+                    c.color = util.getColor("white"):setAlpha(200)
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
-                ------------------------------------------------------------
-                -- EXP FILL (scaled + anchored to fill center)
-                ------------------------------------------------------------
-                local xpScale  = expBarSpringRef.value or 1.0
-
-                local xpFillBaseWidth = baseExpBarWidth * xpPct
-                local xpFillCenterX   = (expBarX - expBarWidth*0.5) + xpFillBaseWidth*0.5
-
-                local xpScaledFillWidth = xpFillBaseWidth * xpScale
+                -- Yellow bar (front) - shows the smaller/current value
+                local xpFillYellowWidth = baseExpBarWidth * xpYellowPct
+                local xpFillYellowCenterX = (expBarX - expBarWidth*0.5) + xpFillYellowWidth*0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = xpFillCenterX
+                    c.x     = xpFillYellowCenterX
                     c.y     = expBarY + expBarHeight * 0.5
-                    c.w     = xpScaledFillWidth
+                    c.w     = xpFillYellowWidth
                     c.h     = expBarHeight
                     c.rx    = 5
                     c.ry    = 5

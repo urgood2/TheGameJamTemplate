@@ -1664,8 +1664,12 @@ function setUpLogicTimers()
             playerCombatTable)
             
         -- pull player hp spring
-        local hpBarSpringRef  = spring.get(registry, hpBarSpringEntity)
-        hpBarSpringRef:pull(1.5)
+        if hpBarScaleSpringEntity and entity_cache.valid(hpBarScaleSpringEntity) then
+            local hpBarSpringRef = spring.get(registry, hpBarScaleSpringEntity)
+            if hpBarSpringRef then
+                hpBarSpringRef:pull(0.15, 120.0, 14.0)
+            end
+        end
     end
     
     if signal.exists("on_bump_enemy") == false then
@@ -2834,33 +2838,45 @@ function initCombatSystem()
         signal.emit("player_level_up")
     end)
     
-    -- make springs for exp bar and hp bar size.
-    expBarSpringEntity, expBarSpringRef = spring.make(registry, 0.0, 120.0, 14.0, {
+    -- make springs for exp bar and hp bar SCALE (for undulation effect)
+    expBarScaleSpringEntity, expBarScaleSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
         target = 1.0,
         smoothingFactor = 0.9,
         preventOvershoot = false,
         maxVelocity = 10.0
         })
-    hpBarSpringEntity, hpBarSpringRef = spring.make(registry, 0.0, 120.0, 14.0, {
+    hpBarScaleSpringEntity, hpBarScaleSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
         target = 1.0,
         smoothingFactor = 0.9,
         preventOvershoot = false,
         maxVelocity = 10.0
         })
 
+    -- make springs for the main XP bar value (smooth lerping)
+    expBarMainSpringEntity, expBarMainSpringRef = spring.make(registry, 0.0, 60.0, 8.0, {
+        target = 0.0,
+        smoothingFactor = 0.85,
+        preventOvershoot = false,
+        maxVelocity = 8.0
+        })
+
     -- make springs for delayed indicator bars (white bars that catch up)
-    expBarDelayedSpringEntity, expBarDelayedSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
+    expBarDelayedSpringEntity, expBarDelayedSpringRef = spring.make(registry, 1.0, 60.0, 8.0, {
         target = 1.0,
         smoothingFactor = 0.85,
         preventOvershoot = false,
         maxVelocity = 8.0
         })
-    hpBarDelayedSpringEntity, hpBarDelayedSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
+    hpBarDelayedSpringEntity, hpBarDelayedSpringRef = spring.make(registry, 1.0, 60.0, 8.0, {
         target = 1.0,
         smoothingFactor = 0.85,
         preventOvershoot = false,
         maxVelocity = 8.0
         })
+
+    -- Track previous values for change detection
+    local prevHpPct = 1.0
+    local prevXpPct = 0.0
 
     -- update combat system every frame / render health bars
     timer.run(
@@ -2889,17 +2905,72 @@ function initCombatSystem()
                 local playerXPForNextLevel = CombatSystem.Game.Leveling.xp_to_next(ctx, playerCombatInfo,
                     playerCombatInfo.level or 1)
 
-                local expBarSpringRef = spring.get(registry, expBarSpringEntity)
-                local hpBarSpringRef  = spring.get(registry, hpBarSpringEntity)
-                local expBarDelayedSpringRef = spring.get(registry, expBarDelayedSpringEntity)
-                local hpBarDelayedSpringRef  = spring.get(registry, hpBarDelayedSpringEntity)
-
                 local hpPct = playerHealth / playerMaxHealth
                 local xpPct = math.min(playerXP / playerXPForNextLevel, 1.0)
 
-                -- Both delayed springs always lerp toward current value
-                spring.set_target(registry, hpBarDelayedSpringEntity, hpPct)
-                spring.set_target(registry, expBarDelayedSpringEntity, xpPct)
+                ------------------------------------------------------------
+                -- CHANGE DETECTION & SPRING UPDATES
+                ------------------------------------------------------------
+                local hpChanged = math.abs(hpPct - prevHpPct) > 0.001
+                local xpChanged = math.abs(xpPct - prevXpPct) > 0.001
+
+                if hpChanged then
+                    -- Fetch scale spring ref
+                    local hpBarScaleSpringRef = spring.get(registry, hpBarScaleSpringEntity)
+                    local hpBarDelayedSpringRef = spring.get(registry, hpBarDelayedSpringEntity)
+                    
+                    -- Trigger scale pulse for undulation
+                    hpBarScaleSpringRef.value = 1.15
+                    hpBarScaleSpringRef.targetValue = 1.0
+
+                    if hpPct < prevHpPct then
+                        -- HP decreased: delayed spring lerps down from old to new
+                        hpBarDelayedSpringRef.targetValue = hpPct
+                    else
+                        -- HP increased: delayed spring jumps to new value
+                        hpBarDelayedSpringRef.value = hpPct
+                        hpBarDelayedSpringRef.targetValue = hpPct
+                    end
+                    prevHpPct = hpPct
+                end
+
+                if xpChanged then
+                    -- Fetch scale spring ref
+                    local expBarScaleSpringRef = spring.get(registry, expBarScaleSpringEntity)
+                    local expBarMainSpringRef = spring.get(registry, expBarMainSpringEntity)
+                    local expBarDelayedSpringRef = spring.get(registry, expBarDelayedSpringEntity)
+                    
+                    -- Trigger scale pulse for undulation
+                    expBarScaleSpringRef.value = 1.15
+                    expBarScaleSpringRef.targetValue = 1.0
+
+                    if xpPct < prevXpPct then
+                        -- XP decreased (level up): main bar jumps to 0, white bar lerps down
+                        expBarMainSpringRef.value = xpPct
+                        expBarMainSpringRef.targetValue = xpPct
+                        expBarDelayedSpringRef.targetValue = xpPct
+                    else
+                        -- XP increased: white bar jumps to new value, yellow bar lerps up
+                        expBarDelayedSpringRef.value = xpPct
+                        expBarDelayedSpringRef.targetValue = xpPct
+                        expBarMainSpringRef.targetValue = xpPct
+                    end
+                    prevXpPct = xpPct
+                end
+
+                -- Fetch spring refs for rendering
+                local hpBarScaleSpringRef = spring.get(registry, hpBarScaleSpringEntity)
+                local expBarScaleSpringRef = spring.get(registry, expBarScaleSpringEntity)
+                local hpBarDelayedSpringRef = spring.get(registry, hpBarDelayedSpringEntity)
+                local expBarDelayedSpringRef = spring.get(registry, expBarDelayedSpringEntity)
+                local expBarMainSpringRef = spring.get(registry, expBarMainSpringEntity)
+
+                -- Get current spring values
+                local hpScale = hpBarScaleSpringRef.value or 1.0
+                local xpScale = expBarScaleSpringRef.value or 1.0
+                local hpDelayedSpringVal = hpBarDelayedSpringRef.value or hpPct
+                local xpDelayedSpringVal = expBarDelayedSpringRef.value or xpPct
+                local xpMainSpringVal = expBarMainSpringRef.value or xpPct
 
                 local screenCenterX = globals.screenWidth() * 0.5
 
@@ -2929,10 +3000,10 @@ function initCombatSystem()
                 ------------------------------------------------------------
                 -- HEALTH BARS: Two bars - main (red) and delayed (white)
                 -- Decrease: red moves to new value, white (behind) catches up
-                -- Increase: red stays at old value (via delayed spring), white shows new value behind
+                -- Increase: white jumps to new value, red catches up
                 -- White bar always rendered behind red bar
                 ------------------------------------------------------------
-                local hpDelayedPct = hpBarDelayedSpringRef.value or hpPct
+                local hpDelayedPct = hpDelayedSpringVal
 
                 -- White bar shows: max of current and delayed (so it's always the "bigger" reference)
                 local hpWhitePct = math.max(hpPct, hpDelayedPct)
@@ -2947,7 +3018,7 @@ function initCombatSystem()
                     c.x     = fillWhiteCenterX
                     c.y     = healthBarY + healthBarHeight * 0.5
                     c.w     = fillWhiteWidth
-                    c.h     = healthBarHeight
+                    c.h     = healthBarHeight * hpScale
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("white"):setAlpha(200)
@@ -2961,7 +3032,7 @@ function initCombatSystem()
                     c.x     = fillRedCenterX
                     c.y     = healthBarY + healthBarHeight * 0.5
                     c.w     = fillRedWidth
-                    c.h     = healthBarHeight
+                    c.h     = healthBarHeight * hpScale
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("red")
@@ -2992,14 +3063,13 @@ function initCombatSystem()
 
                 ------------------------------------------------------------
                 -- EXP BARS: Two bars - main (yellow) and delayed (white)
-                -- Same logic as HP bars
+                -- Yellow bar uses main spring (smooth lerp), white bar shows buffer
                 ------------------------------------------------------------
-                local xpDelayedPct = expBarDelayedSpringRef.value or xpPct
+                local xpDelayedPct = xpDelayedSpringVal
+                local xpYellowPct = xpMainSpringVal
 
-                -- White bar shows: max of current and delayed
-                local xpWhitePct = math.max(xpPct, xpDelayedPct)
-                -- Yellow bar shows: min of current and delayed
-                local xpYellowPct = math.min(xpPct, xpDelayedPct)
+                -- White bar shows: max of main and delayed (buffer)
+                local xpWhitePct = math.max(xpYellowPct, xpDelayedPct)
 
                 -- White bar (behind) - shows the larger value
                 local xpFillWhiteWidth = baseExpBarWidth * xpWhitePct
@@ -3009,13 +3079,13 @@ function initCombatSystem()
                     c.x     = xpFillWhiteCenterX
                     c.y     = expBarY + expBarHeight * 0.5
                     c.w     = xpFillWhiteWidth
-                    c.h     = expBarHeight
+                    c.h     = expBarHeight * xpScale
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("white"):setAlpha(200)
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
-                -- Yellow bar (front) - shows the smaller/current value
+                -- Yellow bar (front) - shows the main spring value (smooth lerp)
                 local xpFillYellowWidth = baseExpBarWidth * xpYellowPct
                 local xpFillYellowCenterX = (expBarX - expBarWidth*0.5) + xpFillYellowWidth*0.5
 
@@ -3023,7 +3093,7 @@ function initCombatSystem()
                     c.x     = xpFillYellowCenterX
                     c.y     = expBarY + expBarHeight * 0.5
                     c.w     = xpFillYellowWidth
-                    c.h     = expBarHeight
+                    c.h     = expBarHeight * xpScale
                     c.rx    = 5
                     c.ry    = 5
                     c.color = util.getColor("yellow")
@@ -3695,8 +3765,12 @@ function initSurvivorEntity()
         CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 50) -- grant 20 exp per pickup
 
         -- tug the exp bar spring
-        local expBarSpringRef = spring.get(registry, expBarSpringEntity)
-        expBarSpringRef:pull(1.2)
+        if expBarScaleSpringEntity and entity_cache.valid(expBarScaleSpringEntity) then
+            local expBarSpringRef = spring.get(registry, expBarScaleSpringEntity)
+            if expBarSpringRef then
+                expBarSpringRef:pull(0.15, 120.0, 14.0)
+            end
+        end
         
         local playerT = component_cache.get(survivorEntity, Transform)
         if playerT then

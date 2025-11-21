@@ -1459,7 +1459,8 @@ namespace ui
                     //     cmd->spacing = spacing;
                     //     cmd->color = shadowColor;
                     // }, zIndex);
-                    layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, localization::getFontData().fontLoadedSize, spacing, shadowColor);
+                    float fontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
+                    layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, fontSize, spacing, shadowColor);
                     
                     // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
                 }
@@ -1521,7 +1522,8 @@ namespace ui
             //     cmd->spacing = spacing;
             //     cmd->color = renderColor;
             // }, zIndex);
-            layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, localization::getFontData().fontLoadedSize, spacing, renderColor);
+            float fontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
+            layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, fontSize, spacing, renderColor);
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();

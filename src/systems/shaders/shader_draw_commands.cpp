@@ -129,7 +129,7 @@ void executeEntityPipelineWithCommands(
         }
 
         // Determine source texture based on input source
-        RenderTexture2D& source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
+        RenderTexture2D source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
             ? shader_pipeline::GetBaseRenderTextureCache()
             : shader_pipeline::GetPostShaderPassRenderTextureCache();
 

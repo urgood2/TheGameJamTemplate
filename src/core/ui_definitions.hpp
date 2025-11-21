@@ -326,6 +326,14 @@ namespace ui_defs
 
                     textSegmentDef.config.color = color;
                 }
+                if (segment.attributes.find("fontSize") != segment.attributes.end()) {
+                    auto fontSizeString = std::get<std::string>(segment.attributes["fontSize"]);
+                    try {
+                        textSegmentDef.config.fontSize = std::stof(fontSizeString);
+                    } catch (...) {
+                        // ignore invalid fontSize
+                    }
+                }
                 if (segment.attributes.find("background") != segment.attributes.end()) {
                     auto backgroundString = std::get<std::string>(segment.attributes["background"]);
 

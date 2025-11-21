@@ -2361,6 +2361,20 @@ layer.CmdDrawGradientRectRoundedCentered = {
 ---
 --- 
 ---
+---@class layer.CmdDrawBatchedEntities
+layer.CmdDrawBatchedEntities = {
+    ---@type Registry
+    registry = nil,  -- The entity registry
+    ---@type Entity[]
+    entities = nil,  -- Array of entities to batch render
+    ---@type boolean
+    autoOptimize = nil  -- Whether to automatically optimize shader batching (default: true)
+}
+
+
+---
+--- 
+---
 ---@class layer.CmdDrawDashedLine
 layer.CmdDrawDashedLine = {
     ---@type Vector2
@@ -3184,6 +3198,102 @@ function shaders.ShaderUniformComponent:getSet(...) end
 ---@param shaderName string # The name of the shader configuration to apply.
 ---@param entity Entity # The entity to source dynamic uniform values from.
 function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
+
+
+---
+--- Draw command batching system for optimized shader rendering.
+---
+---@class shader_draw_commands
+shader_draw_commands = {
+}
+
+
+---
+--- Types of draw commands that can be batched.
+---
+---@class shader_draw_commands.DrawCommandType
+shader_draw_commands.DrawCommandType = {
+}
+
+
+---
+--- Manages a batch of draw commands for optimized rendering.
+---
+---@class shader_draw_commands.DrawCommandBatch
+shader_draw_commands.DrawCommandBatch = {
+}
+
+---
+--- Start recording draw commands into the batch.
+---
+---@return nil
+function shader_draw_commands.DrawCommandBatch:beginRecording(...) end
+
+---
+--- Stop recording draw commands.
+---
+---@return nil
+function shader_draw_commands.DrawCommandBatch:endRecording(...) end
+
+---
+--- Check if currently recording commands.
+---
+---@return boolean
+function shader_draw_commands.DrawCommandBatch:recording(...) end
+
+---
+--- Add a command to begin using a shader.
+---
+---@param shaderName string
+---@return nil
+function shader_draw_commands.DrawCommandBatch:addBeginShader(...) end
+
+---
+--- Add a command to end the current shader.
+---
+---@return nil
+function shader_draw_commands.DrawCommandBatch:addEndShader(...) end
+
+---
+--- Add a command to draw a texture.
+---
+---@param texture Texture2D
+---@param sourceRect Rectangle
+---@param position Vector2
+---@param tint? Color
+---@return nil
+function shader_draw_commands.DrawCommandBatch:addDrawTexture(...) end
+
+---
+--- Add a custom command function to execute.
+---
+---@param func fun()
+---@return nil
+function shader_draw_commands.DrawCommandBatch:addCustomCommand(...) end
+
+---
+--- Execute all recorded commands in order.
+---
+---@return nil
+function shader_draw_commands.DrawCommandBatch:execute(...) end
+
+---
+--- Optimize command order to minimize shader state changes.
+---
+---@return nil
+function shader_draw_commands.DrawCommandBatch:optimize(...) end
+
+---
+--- Clear all commands from the batch.
+---
+---@return nil
+function shader_draw_commands.DrawCommandBatch:clear(...) end
+
+---
+--- Get the number of commands in the batch.
+---
+---@return integer
+function shader_draw_commands.DrawCommandBatch:size(...) end
 
 
 ---
@@ -7073,6 +7183,16 @@ function layer.queueDrawGradientRectCentered(...) end
 function layer.queueDrawGradientRectRoundedCentered(...) end
 
 ---
+--- Queues a CmdDrawBatchedEntities into the layer draw list. This command batches multiple entities for optimized shader rendering, avoiding Lua execution during the render phase. The entities vector and registry are captured when queued and executed during rendering with automatic shader batching.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawBatchedEntities) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawBatchedEntities(...) end
+
+---
 --- Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
@@ -9140,6 +9260,16 @@ function random_utils.random_weighted_pick_vec2(...) end
 ---@param weights number[] # A table of corresponding weights.
 ---@return Entity
 function random_utils.random_weighted_pick_entity(...) end
+
+---
+--- Execute an entity's shader pipeline using draw command batching.
+---
+---@param registry Registry
+---@param entity Entity
+---@param batch DrawCommandBatch
+---@param autoOptimize? boolean
+---@return nil
+function shader_draw_commands.executeEntityPipelineWithCommands(...) end
 
 ---
 --- Unloads the pipeline's internal render textures.

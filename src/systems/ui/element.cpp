@@ -1401,10 +1401,10 @@ namespace ui
             }
         }
         // is it text?
-        if (config->uiType == UITypeEnum::TEXT && config->scale)
+        if (config->uiType == UITypeEnum::TEXT)
         {
             ZONE_SCOPED("UI Element: Text Logic");
-            float rawScale = config->scale.value() * localization::getFontData().fontScale;
+            float rawScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * localization::getFontData().fontLoadedSize * 0.04f * scaleFactor;
             float textParallaxSY = node->shadowDisplacement->y * localization::getFontData().fontLoadedSize * -0.03f * scaleFactor;
@@ -2037,10 +2037,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // }
         }
         // is it text?
-        if (config->uiType == UITypeEnum::TEXT && config->scale)
+        if (config->uiType == UITypeEnum::TEXT)
         {
             ZONE_SCOPED("UI Element: Text Logic");
-            float rawScale = config->scale.value() * localization::getFontData().fontScale;
+            float rawScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * localization::getFontData().fontLoadedSize * 0.04f * scaleFactor;
             float textParallaxSY = node->shadowDisplacement->y * localization::getFontData().fontLoadedSize * -0.03f * scaleFactor;

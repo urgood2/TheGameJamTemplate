@@ -292,7 +292,7 @@ namespace scripting
             });
             rec.record_method("entt.registry", {
                 "clear",
-                "---@overload fun(component_type: ComponentType):void",
+                "(self, component_type: ComponentType):void",
                 "Removes all components of a given type from all entities.",
                 false, true // This is the overload
             });

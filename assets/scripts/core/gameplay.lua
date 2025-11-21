@@ -685,6 +685,50 @@ function createNewCard(id, x, y, gameStateToApply)
                                 log_debug("Card", eid, "is being dragged, forcing z to", zToUse, "from",
                                     layer_order_system.getZIndex(eid))
                             end
+                            
+                            -- check if card is over capacity on its board
+                            local isOverCapacity = false
+                            if cardScript.currentBoardEntity and entity_cache.valid(cardScript.currentBoardEntity) then
+                                -- skip capacity check for inventory boards
+                                local isInventoryBoard = (cardScript.currentBoardEntity == inventory_board_id or 
+                                                         cardScript.currentBoardEntity == trigger_inventory_board_id)
+                                
+                                if not isInventoryBoard then
+                                    local board = boards[cardScript.currentBoardEntity]
+                                    if board and board.cards then
+                                        -- find the index of this card in the board
+                                        local cardIndex = nil
+                                        for i, cardEid in ipairs(board.cards) do
+                                            if cardEid == eid then
+                                                cardIndex = i
+                                                break
+                                            end
+                                        end
+                                        
+                                        if cardIndex then
+                                            -- determine max capacity based on board type
+                                            local maxCapacity = 1 -- default for trigger boards
+                                            
+                                            -- check if this is an action board by looking through board_sets
+                                            for _, boardSet in ipairs(board_sets) do
+                                                if boardSet.action_board_id == cardScript.currentBoardEntity then
+                                                    -- this is an action board, get capacity from wand def
+                                                    if boardSet.wandDef and boardSet.wandDef.total_card_slots then
+                                                        maxCapacity = boardSet.wandDef.total_card_slots
+                                                    end
+                                                    break
+                                                end
+                                            end
+                                            
+                                            -- card is over capacity if its index exceeds max capacity
+                                            if cardIndex > maxCapacity then
+                                                isOverCapacity = true
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            
                             -- slightly above the card sprite
                             command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()
                                 -- draw debug label.
@@ -696,6 +740,35 @@ function createNewCard(id, x, y, gameStateToApply)
                                     c.color = colorToUse
                                     c.fontSize = 20.0
                                 end, zToUse, layer.DrawCommandSpace.World) -- z order on the inside here doesn't matter much.
+
+                                -- if over capacity, draw red X
+                                if isOverCapacity then
+                                    local xSize = math.min(t.actualW, t.actualH) * 0.6
+                                    local centerX = t.actualW * 0.5
+                                    local centerY = t.actualH * 0.5
+                                    local thickness = 8
+                                    local xColor = util.getColor("red")
+                                    
+                                    -- draw diagonal line from top-left to bottom-right
+                                    command_buffer.queueDrawLine(layers.sprites, function(c)
+                                        c.x1 = centerX - xSize * 0.5
+                                        c.y1 = centerY - xSize * 0.5
+                                        c.x2 = centerX + xSize * 0.5
+                                        c.y2 = centerY + xSize * 0.5
+                                        c.color = xColor
+                                        c.lineWidth = thickness
+                                    end, zToUse + 2, layer.DrawCommandSpace.World)
+                                    
+                                    -- draw diagonal line from top-right to bottom-left
+                                    command_buffer.queueDrawLine(layers.sprites, function(c)
+                                        c.x1 = centerX + xSize * 0.5
+                                        c.y1 = centerY - xSize * 0.5
+                                        c.x2 = centerX - xSize * 0.5
+                                        c.y2 = centerY + xSize * 0.5
+                                        c.color = xColor
+                                        c.lineWidth = thickness
+                                    end, zToUse + 2, layer.DrawCommandSpace.World)
+                                end
 
                                 -- if it's controller_focused_entity, draw moving dashed outline
                                 if eid == controller_focused_entity then

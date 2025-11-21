@@ -340,7 +340,7 @@ void exposeToLua(sol::state &lua) {
   rec.bind_function(lua, {"layer"}, "AddCanvasToLayer",
                     static_cast<void (*)(LPtr, const std::string &, int, int)>(
                         &layer::AddCanvasToLayer),
-                    "---@overload fun(layer: layer.Layer, canvasName: string, "
+                    "(layer: layer.Layer, canvasName: string, "
                     "width: integer, height: integer):nil",
                     "Adds a canvas of a specific size to the layer.",
                     /*is_overload=*/true);
@@ -1531,7 +1531,11 @@ void exposeToLua(sol::state &lua) {
   
   rec.record_free_function({"command_buffer"}, {
       "pushEntityTransformsToMatrix",
-      "function(registry: Registry, e: Entity, layer: Layer, zOrder: number): void",
+      "---@param registry Registry\n"
+      "---@param e Entity\n"
+      "---@param layer Layer\n"
+      "---@param zOrder number\n"
+      "---@return void",
       "Pushes the transform components of an entity onto the layer's matrix stack as draw commands."
   });
       

@@ -395,7 +395,7 @@ function log_debug(...) end
 --- Logs an error message associated with an entity.
 ---
 ---@param entity Entity # The entity to associate the error with.
----@param message string # The error message.
+---@param message string # The error message. Can be variadic arguments.
 ---@return nil
 function log_error(...) end
 

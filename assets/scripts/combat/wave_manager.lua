@@ -126,7 +126,7 @@ end
 ]]
 function WaveManager:start_next_wave()
     if self.wave_in_progress then
-        log_warn("[WaveManager] Cannot start next wave - wave already in progress")
+        log_debug("[WaveManager] Cannot start next wave - wave already in progress")
         return false
     end
 

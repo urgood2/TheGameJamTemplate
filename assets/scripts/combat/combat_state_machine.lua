@@ -389,7 +389,7 @@ end
 ]]
 function CombatStateMachine:progress_to_next_wave()
     if self.current_state ~= self.States.INTERMISSION then
-        log_warn("[CombatStateMachine] Cannot progress - not in intermission")
+        log_debug("[CombatStateMachine] Cannot progress - not in intermission")
         return false
     end
 
@@ -524,7 +524,7 @@ end
 function CombatStateMachine:retry_wave()
     if self.current_state ~= self.States.DEFEAT and
        self.current_state ~= self.States.GAME_OVER then
-        log_warn("[CombatStateMachine] Cannot retry - not in defeat/game over state")
+        log_debug("[CombatStateMachine] Cannot retry - not in defeat/game over state")
         return false
     end
 

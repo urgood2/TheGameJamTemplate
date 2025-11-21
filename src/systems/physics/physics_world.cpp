@@ -917,8 +917,8 @@ void PhysicsWorld::UpdateCollisionMasks(
     }
   });
 
-  SPDLOG_DEBUG("Masks for '{}': [{}]", tag,
-               fmt::join(ct.masks, ", "));
+  // SPDLOG_DEBUG("Masks for '{}': [{}]", tag,
+  //              fmt::join(ct.masks, ", "));
 }
 
 void PhysicsWorld::ReapplyAllFilters() {
@@ -1469,7 +1469,7 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
   cpCollisionType tb = cpShapeGetCollisionType(sb);
   const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
   
-  SPDLOG_INFO("[ON_BEGIN] ta={} tb={} key={}", (int)ta, (int)tb, key);
+  // SPDLOG_INFO("[ON_BEGIN] ta={} tb={} key={}", (int)ta, (int)tb, key);
   
   LuaArbiter luaArb{arb};
 

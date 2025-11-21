@@ -340,14 +340,48 @@ namespace scripting {
             "Logs a general debug message.", true, true});
 
 
-        stateToInit.set_function("log_error", sol::overload(
-            static_cast<void(*)(entt::entity, std::string)>(&luaErrorLogWrapper),
-            static_cast<void(*)(std::string)>(&luaErrorLogWrapperNoEntity)
-        ));
+        stateToInit.set_function("log_error",
+        [](sol::this_state ts, sol::variadic_args va) {
+            sol::state_view L{ts};
+            std::ostringstream oss;
+
+            // Check if first arg is an entity
+            auto it = va.begin();
+            bool hasEntity = false;
+            entt::entity e = entt::null;
+            if (it != va.end() && it->get_type() == sol::type::number) {
+            // Sol2 represents entt::entity as integer
+            e = static_cast<entt::entity>(it->as<int>());
+            hasEntity = true;
+            ++it;
+            }
+
+            // Concatenate the rest
+            bool first = true;
+            for (; it != va.end(); ++it) {
+            if (!first) oss << ' ';
+            first = false;
+
+            // Convert any Lua value to string via tostring()
+            sol::object obj = *it;
+            sol::function tostr = L["tostring"];
+            std::string s = tostr(obj);
+            oss << s;
+            }
+
+            // Dispatch to the correct backend
+            if (hasEntity) {
+            luaErrorLogWrapper(e, oss.str());
+            } else {
+            luaErrorLogWrapperNoEntity(oss.str());
+            }
+        }
+        );
+
         // Main signature
         rec.record_free_function({}, {"log_error",
             "---@param entity Entity # The entity to associate the error with.\n"
-            "---@param message string # The error message.\n"
+            "---@param message string # The error message. Can be variadic arguments.\n"
             "---@return nil",
             "Logs an error message associated with an entity.", true, false});
         // Overload for no entity

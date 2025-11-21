@@ -38,7 +38,7 @@ MAIN ACTION EXECUTION
 --- @return table|nil Result of action execution (e.g., spawned entities)
 function WandActions.execute(actionCard, modifiers, context)
     if not actionCard or actionCard.type ~= "action" then
-        log_warn("WandActions.execute: invalid action card")
+        log_debug("WandActions.execute: invalid action card")
         return nil
     end
 
@@ -58,7 +58,7 @@ function WandActions.execute(actionCard, modifiers, context)
     elseif actionType == "meta" then
         return WandActions.executeMetaAction(actionCard, modifiers, context)
     else
-        log_warn("WandActions.execute: unknown action type", actionType)
+        log_debug("WandActions.execute: unknown action type", actionType)
         return nil
     end
 end

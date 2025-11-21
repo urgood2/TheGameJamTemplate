@@ -177,7 +177,7 @@ function CombatLoopIntegration:setup_event_listeners()
     local bus = self.combat_context.bus
 
     if not bus then
-        log_warn("[CombatLoopIntegration] No event bus available")
+        log_debug("[CombatLoopIntegration] No event bus available")
         return
     end
 

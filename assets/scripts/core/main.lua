@@ -409,7 +409,7 @@ function initMainGame()
     )
     
     
-    require("test_projectiles")
+    ProjectileSystemTest = require("test_projectiles")
 
 end
 
@@ -428,7 +428,7 @@ end
 
 
 
-
+ProjectileSystemTest = nil
   
 -- Main function to initialize the game. Called at the start of the game.
 function main.init()
@@ -566,6 +566,8 @@ function main.update(dt)
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
+    
+    ProjectileSystemTest.update(dt)
     
     -- tracy.zoneEnd()
     

@@ -146,14 +146,12 @@ function BoardType:update(dt)
                 local relativeIndex = i - selectedIndex
                 if relativeIndex < 0 then
                     -- Move left side cards farther left
-                    local leftCount = selectedIndex - 1
-                    local leftStep = spreadAmount / math_max(1, leftCount)
-                    x = x - leftStep * (leftCount - math_abs(relativeIndex) + 1)
+                    -- Use a simpler linear offset based on distance from selected
+                    x = x - spreadAmount * 0.5
                 elseif relativeIndex > 0 then
                     -- Move right side cards farther right
-                    local rightCount = n - selectedIndex
-                    local rightStep = spreadAmount / math_max(1, rightCount)
-                    x = x + rightStep * (rightCount - math_abs(relativeIndex) + 1)
+                    -- Use a simpler linear offset based on distance from selected
+                    x = x + spreadAmount * 0.5
                 end
             end
 

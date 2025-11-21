@@ -180,7 +180,7 @@ function CombatLoopTest.start_test_combat()
     end
 
     if CombatLoopTest.test_running then
-        log_warn("[CombatLoopTest] Combat test already running")
+        log_debug("[CombatLoopTest] Combat test already running")
         return false
     end
 

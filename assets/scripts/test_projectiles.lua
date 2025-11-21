@@ -27,7 +27,7 @@ function ProjectileSystemTest.init()
     print("[✓] Core dependencies loaded")
 
     -- Load ProjectileSystem
-    local success, ProjectileSystem = pcall(require, "assets.scripts.combat.projectile_system")
+    local success, ProjectileSystem = pcall(require, "combat.projectile_system")
 
     if not success then
         print("[✗] FAILED to load ProjectileSystem module")
@@ -44,12 +44,17 @@ function ProjectileSystemTest.init()
     ProjectileSystemTest.entity_cache = entity_cache
 
     -- Initialize the projectile system
-    local initSuccess = pcall(function()
+    local initSuccess, initError = pcall(function()
         ProjectileSystem.init()
     end)
 
     if not initSuccess then
         print("[✗] FAILED to initialize ProjectileSystem")
+        print("Error details:", initError)
+        print("\nThis is likely due to:")
+        print("  1. Physics world not initialized (globals.physicsWorld)")
+        print("  2. Physics module not available")
+        print("  3. Timer module missing physics step function")
         return false
     end
 
@@ -110,6 +115,7 @@ function ProjectileSystemTest.testBasicProjectile()
 
     local ProjectileSystem = ProjectileSystemTest.ProjectileSystem
     local entity_cache = ProjectileSystemTest.entity_cache
+    local component_cache = ProjectileSystemTest.component_cache
 
     local success, projectileId = pcall(function()
         return ProjectileSystem.spawn({
@@ -118,7 +124,7 @@ function ProjectileSystemTest.testBasicProjectile()
             baseSpeed = 300,
             damage = 10,
             owner = nil,
-            lifetime = 3.0,
+            lifetime = 10,
             movementType = "straight",
             collisionBehavior = "destroy",
             size = 16
@@ -131,6 +137,36 @@ function ProjectileSystemTest.testBasicProjectile()
         print("    Position: (400, 300)")
         print("    Direction: Right (0°)")
         print("    Speed: 300")
+
+        -- DEBUG: Check projectile state
+        print("\n[DEBUG] Projectile details:")
+
+        -- Check if entity has transform
+        local transform = component_cache.get(projectileId, Transform)
+        if transform then
+            print("    Transform: x=", transform.actualX, "y=", transform.actualY)
+            print("    Size: w=", transform.actualW, "h=", transform.actualH)
+        else
+            print("    [!] No transform component found")
+        end
+
+        local scriptTable = getScriptTableFromEntityID(projectileId)
+        if scriptTable then
+            print("    Script Table found")
+            -- projectileData
+            if scriptTable.projectileBehavior then
+                print("    Projectile Behavior:", scriptTable.projectileBehavior)
+            else
+                print("    [!] No projectileBehavior in script table")
+            end
+        end
+        -- Check active projectiles count
+        local count = 0
+        for _ in pairs(ProjectileSystem.active_projectiles) do
+            count = count + 1
+        end
+        print("    Active projectiles:", count)
+
         ProjectileSystemTest.testResults.basicProjectile = true
     else
         print("[✗] FAILED to spawn basic projectile")
@@ -162,7 +198,7 @@ function ProjectileSystemTest.testMultipleProjectiles()
                 angle = angle,
                 baseSpeed = 250,
                 damage = 8,
-                lifetime = 4.0,
+                lifetime = 10,
                 movementType = "straight",
                 collisionBehavior = "destroy",
                 size = 12
@@ -196,12 +232,6 @@ function ProjectileSystemTest.testHomingProjectile()
     -- Create a dummy target entity
     local targetEntity = registry:create()
 
-    -- Try to get Transform component
-    local Transform = component_cache.Transform or Transform
-    if not Transform then
-        print("[!] Warning: Transform component not available, using globals")
-    end
-
     local success, result = pcall(function()
         -- Add transform to target
         local targetTransform = component_cache.get(targetEntity, Transform)
@@ -217,7 +247,7 @@ function ProjectileSystemTest.testHomingProjectile()
             position = {x = 200, y = 300},
             baseSpeed = 200,
             damage = 15,
-            lifetime = 5.0,
+            lifetime = 10,
             movementType = "homing",
             homingTarget = targetEntity,
             homingStrength = 2.0,
@@ -254,7 +284,7 @@ function ProjectileSystemTest.testArcProjectile()
             angle = math.pi / 4,  -- 45 degrees up
             baseSpeed = 400,
             damage = 20,
-            lifetime = 5.0,
+            lifetime = 10,
             movementType = "arc",
             gravityScale = 1.0,
             collisionBehavior = "destroy",
@@ -314,11 +344,50 @@ function ProjectileSystemTest.printResults()
     print("  • Projectiles should disappear after lifetime expires")
 end
 
+-- Update function (call this from main loop if not using physics step timer)
+function ProjectileSystemTest.update(dt)
+    if ProjectileSystemTest.ProjectileSystem then
+        if not ProjectileSystemTest.ProjectileSystem.use_physics_step_timer then
+            ProjectileSystemTest.ProjectileSystem.update(dt)
+        end
+
+        -- Debug: Print active projectile positions every second
+        if not ProjectileSystemTest.lastDebugTime then
+            ProjectileSystemTest.lastDebugTime = 0
+        end
+
+        ProjectileSystemTest.lastDebugTime = ProjectileSystemTest.lastDebugTime + dt
+
+        if ProjectileSystemTest.lastDebugTime >= 1.0 then
+            ProjectileSystemTest.lastDebugTime = 0
+
+            local count = 0
+            for entity, _ in pairs(ProjectileSystemTest.ProjectileSystem.active_projectiles) do
+                count = count + 1
+                if ProjectileSystemTest.component_cache then
+                    local transform = ProjectileSystemTest.component_cache.get(entity, Transform)
+                    if transform then
+                        print(string.format("[DEBUG] Projectile %d at (%.1f, %.1f)", entity, transform.actualX, transform.actualY))
+                    end
+                end
+            end
+
+            if count > 0 then
+                print(string.format("[DEBUG] Total active projectiles: %d", count))
+            end
+        end
+    end
+end
+
 -- Auto-initialize if run directly
 if not ProjectileSystemTest.initialized then
     local success = ProjectileSystemTest.init()
     if not success then
         print("\n❌ Projectile system test initialization FAILED")
+    else
+        print("\n✅ Projectile system test initialized successfully")
+        print("\nIMPORTANT: If using manual updates, add this to your main loop:")
+        print("  ProjectileSystemTest.update(dt)")
     end
 end
 

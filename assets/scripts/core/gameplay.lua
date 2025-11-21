@@ -4516,9 +4516,6 @@ function initActionPhase()
                 info
             )
 
-            -- disable deceleration so pickups don't slow down when moving toward player
-            physics.SetBullet(world, expPickupEntity, true)
-
             physics.enable_collision_between_many(PhysicsManager.get_world("world"), "pickup", { "player" })
             physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "pickup" })
             physics.update_collision_masks_for(PhysicsManager.get_world("world"), "pickup", { "player" })

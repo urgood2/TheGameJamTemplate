@@ -54,7 +54,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 - I need to continue with "testing_checklist." starting with projectile system.
-
+- got to also test the new batching queue system.
 
 - indicate card isn't being applied if it goes beyond card max count.
 - don't allow more than one trigger to be applied to a trigger area.

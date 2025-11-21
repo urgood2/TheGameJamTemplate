@@ -429,6 +429,8 @@
         "web": {
             "vertex": "web/efficient_pixel_outlines_vertex.vs",
             "fragment": "web/efficient_pixel_outlines_fragment.fs"
+        }
+    },
     "drop_shadow": {
         "vertex": "drop_shadow_vertex.vs",
         "fragment": "drop_shadow_fragment.fs",
@@ -490,6 +492,8 @@
         "web": {
             "vertex": "web/radial_shine_highlight_vertex.vs",
             "fragment": "web/radial_shine_highlight_fragment.fs"
+        }
+    },
     "efficient_pixel_outline": {
         "vertex": "efficient_pixel_outline_vertex.vs",
         "fragment": "efficient_pixel_outline_fragment.fs",

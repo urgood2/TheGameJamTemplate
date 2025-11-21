@@ -194,7 +194,7 @@ function displayIndicatorAroundEntity(...) end
 ---
 --- Displays a visual indicator of a specific type around the entity.
 ---
----@overload fun(entity: Entity, indicatorTypeID: string):nil
+(entity: Entity, indicatorTypeID: string):nil
 function displayIndicatorAroundEntity(...) end
 
 ---
@@ -388,7 +388,7 @@ function log_debug(...) end
 ---
 --- Logs a general debug message.
 ---
----@overload fun(message: string):nil
+(message: string):nil
 function log_debug(...) end
 
 ---
@@ -402,7 +402,7 @@ function log_error(...) end
 ---
 --- Logs a general error message.
 ---
----@overload fun(message: string):nil
+(message: string):nil
 function log_error(...) end
 
 ---
@@ -827,7 +827,7 @@ function entt.registry:clear(...) end
 ---
 --- Removes all components of a given type from all entities.
 ---
----@overload fun---@overload fun(component_type: ComponentType):void
+---@overload fun(self, component_type: ComponentType):void
 function entt.registry:clear(...) end
 
 ---
@@ -6457,7 +6457,11 @@ function collision.resetCollisionCategory(...) end
 ---
 --- Pushes the transform components of an entity onto the layer's matrix stack as draw commands.
 ---
-function(registry: Registry, e: Entity, layer: Layer, zOrder: number): void
+---@param registry Registry
+---@param e Entity
+---@param layer Layer
+---@param zOrder number
+---@return void
 function command_buffer.pushEntityTransformsToMatrix(...) end
 
 ---
@@ -6685,7 +6689,7 @@ function layer.AddCanvasToLayer(...) end
 ---
 --- Adds a canvas of a specific size to the layer.
 ---
----@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil
+(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil
 function layer.AddCanvasToLayer(...) end
 
 ---

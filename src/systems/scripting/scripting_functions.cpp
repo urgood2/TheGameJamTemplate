@@ -336,7 +336,7 @@ namespace scripting {
             "Logs a debug message associated with an entity.", true, false});
         // Overload for no entity
         rec.record_free_function({}, {"log_debug",
-            "---@overload fun(message: string):nil", // Correct overload syntax
+            "(message: string):nil",
             "Logs a general debug message.", true, true});
 
 
@@ -386,7 +386,7 @@ namespace scripting {
             "Logs an error message associated with an entity.", true, false});
         // Overload for no entity
         rec.record_free_function({}, {"log_error",
-            "---@overload fun(message: string):nil", // Correct overload syntax
+            "(message: string):nil",
             "Logs a general error message.", true, true});
 
 

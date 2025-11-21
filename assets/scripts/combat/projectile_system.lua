@@ -404,21 +404,21 @@ function ProjectileSystem.updateInternal(dt)
     -- Update all active projectiles
     local toRemove = {}
 
-    for entity, _ in pairs(ProjectileSystem.active_projectiles) do
-        if not entity_cache.valid(entity) then
-            toRemove[#toRemove + 1] = entity
-        else
-            local shouldDestroy = ProjectileSystem.updateProjectile(entity, dt)
-            if shouldDestroy then
-                toRemove[#toRemove + 1] = entity
-            end
-        end
-    end
+    -- for entity, _ in pairs(ProjectileSystem.active_projectiles) do
+    --     if not entity_cache.valid(entity) then
+    --         toRemove[#toRemove + 1] = entity
+    --     else
+    --         local shouldDestroy = ProjectileSystem.updateProjectile(entity, dt)
+    --         if shouldDestroy then
+    --             toRemove[#toRemove + 1] = entity
+    --         end
+    --     end
+    -- end
 
-    -- Remove destroyed projectiles
-    for _, entity in ipairs(toRemove) do
-        ProjectileSystem.destroy(entity)
-    end
+    -- -- Remove destroyed projectiles
+    -- for _, entity in ipairs(toRemove) do
+    --     ProjectileSystem.destroy(entity)
+    -- end
 end
 
 --- Public update function (for manual updates when not using physics step timer)

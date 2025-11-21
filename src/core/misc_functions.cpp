@@ -601,6 +601,55 @@ namespace game
             globalShaderUniforms.set("voucher_sheen", "time", static_cast<float>(main_loop::getTime()));
         });
 
+        // Screen shaders - drop_shadow
+        globalShaderUniforms.set("drop_shadow", "background_color", Vector4{0.0f, 0.0f, 0.0f, 0.0f}); // transparent background
+        globalShaderUniforms.set("drop_shadow", "shadow_color", Vector4{0.0f, 0.0f, 0.0f, 0.5f}); // semi-transparent black shadow
+        globalShaderUniforms.set("drop_shadow", "offset_in_pixels", Vector2{5.0f, 5.0f}); // shadow offset
+        globalShaderUniforms.set("drop_shadow", "screen_pixel_size", Vector2{1.0f / globals::VIRTUAL_WIDTH, 1.0f / globals::VIRTUAL_HEIGHT});
+
+        // Screen shaders - chromatic_aberration
+        globalShaderUniforms.set("chromatic_aberration", "r_displacement", Vector2{3.0f, 0.0f});
+        globalShaderUniforms.set("chromatic_aberration", "g_displacement", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("chromatic_aberration", "b_displacement", Vector2{-3.0f, 0.0f});
+        globalShaderUniforms.set("chromatic_aberration", "height", 0.7f);
+        globalShaderUniforms.set("chromatic_aberration", "width", 0.5f);
+        globalShaderUniforms.set("chromatic_aberration", "fade", 0.7f);
+        globalShaderUniforms.set("chromatic_aberration", "screen_pixel_size", Vector2{1.0f / globals::VIRTUAL_WIDTH, 1.0f / globals::VIRTUAL_HEIGHT});
+
+        // Screen shaders - darkened_blur
+        globalShaderUniforms.set("darkened_blur", "lod", 5.0f); // blur level (mipmap LOD)
+        globalShaderUniforms.set("darkened_blur", "mix_percentage", 0.3f); // how much to darken (0.0 = no darkening, 1.0 = black)
+
+        // Screen shaders - custom_2d_light
+        globalShaderUniforms.set("custom_2d_light", "light_color", Vector3{255.0f, 255.0f, 255.0f}); // white light
+        globalShaderUniforms.set("custom_2d_light", "brightness", 0.5f);
+        globalShaderUniforms.set("custom_2d_light", "attenuation_strength", 0.5f);
+        globalShaderUniforms.set("custom_2d_light", "intensity", 1.0f);
+        globalShaderUniforms.set("custom_2d_light", "max_brightness", 1.0f);
+
+        // Screen shaders - palette_shader
+        globalShaderUniforms.set("palette_shader", "palette_size", 16); // number of colors in palette
+
+        // Screen shaders - perspective_warp
+        globalShaderUniforms.set("perspective_warp", "topleft", Vector2{0.01f, 0.0f});
+        globalShaderUniforms.set("perspective_warp", "topright", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("perspective_warp", "bottomleft", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("perspective_warp", "bottomright", Vector2{0.0f, 0.0f});
+
+        // Screen shaders - radial_shine_highlight
+        globalShaderUniforms.set("radial_shine_highlight", "spread", 0.5f);
+        globalShaderUniforms.set("radial_shine_highlight", "cutoff", 0.1f);
+        globalShaderUniforms.set("radial_shine_highlight", "size", 1.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "speed", 1.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "ray1_density", 8.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "ray2_density", 30.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "ray2_intensity", 0.3f);
+        globalShaderUniforms.set("radial_shine_highlight", "core_intensity", 2.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "seed", 5.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "hdr", 0); // false
+        shaders::registerUniformUpdate("radial_shine_highlight", [](Shader &shader) {
+            globalShaderUniforms.set("radial_shine_highlight", "time", static_cast<float>(main_loop::getTime()));
+        });
         // ========== NEW SHADERS FROM GODOT CONVERSION ==========
 
         // efficient_pixel_outline - Pixel-perfect outlines (4-way/8-way)

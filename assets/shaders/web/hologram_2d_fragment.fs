@@ -1,33 +1,31 @@
 #version 300 es
 precision mediump float;
 
+// Input vertex attributes (from vertex shader)
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
+// Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
-
-// Sprite atlas uniforms
-uniform vec4 uGridRect;
-uniform vec2 uImageSize;
-
-// Effect uniforms
+uniform float time;
 uniform vec4 baseColor;
 uniform float speed;
 uniform vec4 linesColor;
 uniform float linesColorIntensity;
 uniform sampler2D hologramTexture;
 uniform vec2 hologramTextureTiling;
-uniform float iTime;
 
+// Output fragment color
 out vec4 finalColor;
 
 vec2 tilingAndOffset(vec2 uv, vec2 tiling, vec2 offset) {
     return mod(uv * tiling + offset, 1.0);
 }
 
-void main() {
-    vec2 offset = vec2(iTime * speed / 100.0);
+void main()
+{
+    vec2 offset = vec2(time * speed / 100.0);
     vec2 tiling = tilingAndOffset(fragTexCoord, hologramTextureTiling, offset);
 
     vec4 noise = texture(hologramTexture, tiling);

@@ -748,6 +748,218 @@ namespace game
             globalShaderUniforms.set("voucher_sheen", "time", static_cast<float>(main_loop::getTime()));
         });
 
+        // discrete_clouds
+        shaders::registerUniformUpdate("discrete_clouds", [](Shader &shader) {
+            globalShaderUniforms.set("discrete_clouds", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("discrete_clouds", "bottom_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("discrete_clouds", "top_color", Vector4{0.0f, 0.0f, 0.0f, 1.0f});
+        globalShaderUniforms.set("discrete_clouds", "layer_count", 20);
+        globalShaderUniforms.set("discrete_clouds", "time_scale", 0.2f);
+        globalShaderUniforms.set("discrete_clouds", "base_intensity", 0.5f);
+        globalShaderUniforms.set("discrete_clouds", "size", 0.1f);
+
+        // bounding_battle_bg
+        shaders::registerUniformUpdate("bounding_battle_bg", [](Shader &shader) {
+            globalShaderUniforms.set("bounding_battle_bg", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("bounding_battle_bg", "snes_transparency", false);
+        globalShaderUniforms.set("bounding_battle_bg", "gba_transparency", false);
+        globalShaderUniforms.set("bounding_battle_bg", "horizontal_scan_line", false);
+        globalShaderUniforms.set("bounding_battle_bg", "vertical_scan_line", false);
+        globalShaderUniforms.set("bounding_battle_bg", "enable_palette_cycling", false);
+        globalShaderUniforms.set("bounding_battle_bg", "sprite_scroll_direction", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("bounding_battle_bg", "sprite_scroll_speed", 0.01f);
+        globalShaderUniforms.set("bounding_battle_bg", "gba_transparency_scroll_direction", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("bounding_battle_bg", "gba_transparency_scroll_speed", 0.01f);
+        globalShaderUniforms.set("bounding_battle_bg", "gba_transparency_value", 0.5f);
+        globalShaderUniforms.set("bounding_battle_bg", "horizontal_wave_amplitude", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "horizontal_wave_frequency", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "horizontal_wave_speed", 1.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "vertical_wave_amplitude", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "vertical_wave_frequency", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "vertical_wave_speed", 1.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "horizontal_deform_amplitude", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "horizontal_deform_frequency", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "horizontal_deform_speed", 1.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "vertical_deform_amplitude", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "vertical_deform_frequency", 0.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "vertical_deform_speed", 1.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "width", 640.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "height", 480.0f);
+        globalShaderUniforms.set("bounding_battle_bg", "palette_cycling_speed", 0.1f);
+
+        // wobbly
+        shaders::registerUniformUpdate("wobbly", [](Shader &shader) {
+            globalShaderUniforms.set("wobbly", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("wobbly", "alpha_tresh", 0.8f);
+        globalShaderUniforms.set("wobbly", "shrink", 2.0f);
+        globalShaderUniforms.set("wobbly", "offset_mul", 2.0f);
+        globalShaderUniforms.set("wobbly", "coff_angle", 0.0f);
+        globalShaderUniforms.set("wobbly", "coff_mul", 0.5f);
+        globalShaderUniforms.set("wobbly", "coff_std", 0.2f);
+        globalShaderUniforms.set("wobbly", "amp1", 0.125f);
+        globalShaderUniforms.set("wobbly", "freq1", 4.0f);
+        globalShaderUniforms.set("wobbly", "speed1", 5.0f);
+        globalShaderUniforms.set("wobbly", "amp2", 0.125f);
+        globalShaderUniforms.set("wobbly", "freq2", 9.0f);
+        globalShaderUniforms.set("wobbly", "speed2", 1.46f);
+
+        // bounce_wave
+        shaders::registerUniformUpdate("bounce_wave", [](Shader &shader) {
+            globalShaderUniforms.set("bounce_wave", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("bounce_wave", "amplitude", 0.05f);
+        globalShaderUniforms.set("bounce_wave", "frequency", 10.0f);
+        globalShaderUniforms.set("bounce_wave", "speed", 2.0f);
+        globalShaderUniforms.set("bounce_wave", "quantization", 8.0f);
+
+        // infinite_scrolling_texture
+        shaders::registerUniformUpdate("infinite_scrolling_texture", [](Shader &shader) {
+            globalShaderUniforms.set("infinite_scrolling_texture", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("infinite_scrolling_texture", "scroll_speed", 0.1f);
+        globalShaderUniforms.set("infinite_scrolling_texture", "angle", 0.0f);
+        globalShaderUniforms.set("infinite_scrolling_texture", "pixel_perfect", true);
+
+        // rain_snow
+        shaders::registerUniformUpdate("rain_snow", [](Shader &shader) {
+            globalShaderUniforms.set("rain_snow", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("rain_snow", "rain_amount", 500.0f);
+        globalShaderUniforms.set("rain_snow", "near_rain_length", 0.3f);
+        globalShaderUniforms.set("rain_snow", "far_rain_length", 0.1f);
+        globalShaderUniforms.set("rain_snow", "near_rain_width", 0.5f);
+        globalShaderUniforms.set("rain_snow", "far_rain_width", 0.3f);
+        globalShaderUniforms.set("rain_snow", "near_rain_transparency", 1.0f);
+        globalShaderUniforms.set("rain_snow", "far_rain_transparency", 0.5f);
+        globalShaderUniforms.set("rain_snow", "rain_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("rain_snow", "base_rain_speed", 0.3f);
+        globalShaderUniforms.set("rain_snow", "additional_rain_speed_range", 0.3f);
+
+        // pixel_art_gradient
+        globalShaderUniforms.set("pixel_art_gradient", "grid_size", 16.0f);
+        globalShaderUniforms.set("pixel_art_gradient", "smooth_size", 8.0f);
+
+        // extensible_color_palette
+        globalShaderUniforms.set("extensible_color_palette", "u_size", 8);
+        globalShaderUniforms.set("extensible_color_palette", "u_use_lerp", true);
+        globalShaderUniforms.set("extensible_color_palette", "u_add_source_colors", false);
+        globalShaderUniforms.set("extensible_color_palette", "u_add_greyscale_colors", false);
+
+        // dissolve_burn
+        shaders::registerUniformUpdate("dissolve_burn", [](Shader &shader) {
+            globalShaderUniforms.set("dissolve_burn", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("dissolve_burn", "burn_color", Vector4{1.0f, 0.7f, 0.0f, 1.0f});
+        globalShaderUniforms.set("dissolve_burn", "burn_size", 0.1f);
+        globalShaderUniforms.set("dissolve_burn", "dissolve_amount", 0.0f);
+
+        // hologram_2d
+        shaders::registerUniformUpdate("hologram_2d", [](Shader &shader) {
+            globalShaderUniforms.set("hologram_2d", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("hologram_2d", "scan_line_amount", 1.0f);
+        globalShaderUniforms.set("hologram_2d", "warp_amount", 0.1f);
+
+        // wobbly_grid
+        shaders::registerUniformUpdate("wobbly_grid", [](Shader &shader) {
+            globalShaderUniforms.set("wobbly_grid", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("wobbly_grid", "amplitude", 10.0f);
+        globalShaderUniforms.set("wobbly_grid", "frequency", 5.0f);
+        globalShaderUniforms.set("wobbly_grid", "speed", 2.0f);
+
+        // radial_shine_2d
+        shaders::registerUniformUpdate("radial_shine_2d", [](Shader &shader) {
+            globalShaderUniforms.set("radial_shine_2d", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("radial_shine_2d", "center", Vector2{0.5f, 0.5f});
+        globalShaderUniforms.set("radial_shine_2d", "shine_speed", 1.0f);
+        globalShaderUniforms.set("radial_shine_2d", "shine_width", 0.1f);
+        globalShaderUniforms.set("radial_shine_2d", "shine_strength", 1.0f);
+
+        // fireworks_2d
+        shaders::registerUniformUpdate("fireworks_2d", [](Shader &shader) {
+            globalShaderUniforms.set("fireworks_2d", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("fireworks_2d", "particle_count", 100);
+        globalShaderUniforms.set("fireworks_2d", "explosion_radius", 0.3f);
+
+        // efficient_pixel_outlines
+        globalShaderUniforms.set("efficient_pixel_outlines", "outline_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("efficient_pixel_outlines", "outline_thickness", 1.0f);
+        globalShaderUniforms.set("efficient_pixel_outlines", "use_8_directions", false);
+
+        // pixel_perfect_dissolve
+        shaders::registerUniformUpdate("pixel_perfect_dissolve", [](Shader &shader) {
+            globalShaderUniforms.set("pixel_perfect_dissolve", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("pixel_perfect_dissolve", "dissolve_amount", 0.0f);
+        globalShaderUniforms.set("pixel_perfect_dissolve", "pixel_size", 1.0f);
+
+        // random_displacement
+        shaders::registerUniformUpdate("random_displacement", [](Shader &shader) {
+            globalShaderUniforms.set("random_displacement", "time", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("random_displacement", "displacement_amount", 5.0f);
+        globalShaderUniforms.set("random_displacement", "speed", 1.0f);
+
+        // atlas_outline
+        globalShaderUniforms.set("atlas_outline", "outline_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("atlas_outline", "outline_thickness", 1.0f);
+        globalShaderUniforms.set("atlas_outline", "uGridRect", Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("atlas_outline", "uImageSize", Vector2{64.0f, 64.0f});
+        // Screen shaders - drop_shadow
+        globalShaderUniforms.set("drop_shadow", "background_color", Vector4{0.0f, 0.0f, 0.0f, 0.0f}); // transparent background
+        globalShaderUniforms.set("drop_shadow", "shadow_color", Vector4{0.0f, 0.0f, 0.0f, 0.5f}); // semi-transparent black shadow
+        globalShaderUniforms.set("drop_shadow", "offset_in_pixels", Vector2{5.0f, 5.0f}); // shadow offset
+        globalShaderUniforms.set("drop_shadow", "screen_pixel_size", Vector2{1.0f / globals::VIRTUAL_WIDTH, 1.0f / globals::VIRTUAL_HEIGHT});
+
+        // Screen shaders - chromatic_aberration
+        globalShaderUniforms.set("chromatic_aberration", "r_displacement", Vector2{3.0f, 0.0f});
+        globalShaderUniforms.set("chromatic_aberration", "g_displacement", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("chromatic_aberration", "b_displacement", Vector2{-3.0f, 0.0f});
+        globalShaderUniforms.set("chromatic_aberration", "height", 0.7f);
+        globalShaderUniforms.set("chromatic_aberration", "width", 0.5f);
+        globalShaderUniforms.set("chromatic_aberration", "fade", 0.7f);
+        globalShaderUniforms.set("chromatic_aberration", "screen_pixel_size", Vector2{1.0f / globals::VIRTUAL_WIDTH, 1.0f / globals::VIRTUAL_HEIGHT});
+
+        // Screen shaders - darkened_blur
+        globalShaderUniforms.set("darkened_blur", "lod", 5.0f); // blur level (mipmap LOD)
+        globalShaderUniforms.set("darkened_blur", "mix_percentage", 0.3f); // how much to darken (0.0 = no darkening, 1.0 = black)
+
+        // Screen shaders - custom_2d_light
+        globalShaderUniforms.set("custom_2d_light", "light_color", Vector3{255.0f, 255.0f, 255.0f}); // white light
+        globalShaderUniforms.set("custom_2d_light", "brightness", 0.5f);
+        globalShaderUniforms.set("custom_2d_light", "attenuation_strength", 0.5f);
+        globalShaderUniforms.set("custom_2d_light", "intensity", 1.0f);
+        globalShaderUniforms.set("custom_2d_light", "max_brightness", 1.0f);
+
+        // Screen shaders - palette_shader
+        globalShaderUniforms.set("palette_shader", "palette_size", 16); // number of colors in palette
+
+        // Screen shaders - perspective_warp
+        globalShaderUniforms.set("perspective_warp", "topleft", Vector2{0.01f, 0.0f});
+        globalShaderUniforms.set("perspective_warp", "topright", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("perspective_warp", "bottomleft", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("perspective_warp", "bottomright", Vector2{0.0f, 0.0f});
+
+        // Screen shaders - radial_shine_highlight
+        globalShaderUniforms.set("radial_shine_highlight", "spread", 0.5f);
+        globalShaderUniforms.set("radial_shine_highlight", "cutoff", 0.1f);
+        globalShaderUniforms.set("radial_shine_highlight", "size", 1.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "speed", 1.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "ray1_density", 8.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "ray2_density", 30.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "ray2_intensity", 0.3f);
+        globalShaderUniforms.set("radial_shine_highlight", "core_intensity", 2.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "seed", 5.0f);
+        globalShaderUniforms.set("radial_shine_highlight", "hdr", 0); // false
+        shaders::registerUniformUpdate("radial_shine_highlight", [](Shader &shader) {
+            globalShaderUniforms.set("radial_shine_highlight", "time", static_cast<float>(main_loop::getTime()));
+        });
         // ========== NEW SHADERS FROM GODOT CONVERSION ==========
 
         // efficient_pixel_outline - Pixel-perfect outlines (4-way/8-way)

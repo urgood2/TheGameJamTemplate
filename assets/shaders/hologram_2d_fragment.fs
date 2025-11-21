@@ -1,32 +1,30 @@
 #version 330
 
+// Input vertex attributes (from vertex shader)
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
+// Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
-
-// Sprite atlas uniforms
-uniform vec4 uGridRect;
-uniform vec2 uImageSize;
-
-// Effect uniforms
-uniform vec4 baseColor = vec4(0.3058, 0.835, 0.960, 1.0);
-uniform float speed = 0.5;
-uniform vec4 linesColor = vec4(0.633232, 0.910156, 0.555693, 1.0);
-uniform float linesColorIntensity = 5.0;
+uniform float time;
+uniform vec4 baseColor;
+uniform float speed;
+uniform vec4 linesColor;
+uniform float linesColorIntensity;
 uniform sampler2D hologramTexture;
-uniform vec2 hologramTextureTiling = vec2(1.0, 5.0);
-uniform float iTime;
+uniform vec2 hologramTextureTiling;
 
+// Output fragment color
 out vec4 finalColor;
 
 vec2 tilingAndOffset(vec2 uv, vec2 tiling, vec2 offset) {
     return mod(uv * tiling + offset, 1.0);
 }
 
-void main() {
-    vec2 offset = vec2(iTime * speed / 100.0);
+void main()
+{
+    vec2 offset = vec2(time * speed / 100.0);
     vec2 tiling = tilingAndOffset(fragTexCoord, hologramTextureTiling, offset);
 
     vec4 noise = texture(hologramTexture, tiling);

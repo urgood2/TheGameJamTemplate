@@ -44,6 +44,15 @@ namespace static_ui_text_system {
         Vector2 position;
     };
 
+    // Helper function to trim whitespace
+    inline std::string trim(const std::string& s) {
+        auto start = s.find_first_not_of(" \t\r\n");
+        if (start == std::string::npos) return ""; // all spaces
+
+        auto end = s.find_last_not_of(" \t\r\n");
+        return s.substr(start, end - start + 1);
+    }
+
     // Helper function to parse attributes inside (color=red;background=blue)
     inline std::map<std::string, TextSegmentArgumentType> parseAttributes(const std::string& attributeString) {
         std::map<std::string, TextSegmentArgumentType> attributes;
@@ -54,21 +63,13 @@ namespace static_ui_text_system {
         for (auto it = words_begin; it != words_end; ++it) {
             std::smatch match = *it;
             std::string key = match[1].str();
-            std::string value = match[2].str();
-            
+            std::string value = trim(match[2].str());  // Trim whitespace from value
+
             // For now treat all values as string; you could improve by type inferring (int, float, Color)
             attributes[key] = value;
         }
 
         return attributes;
-    }
-
-    inline std::string trim(const std::string& s) {
-        auto start = s.find_first_not_of(" \t\r\n");
-        if (start == std::string::npos) return ""; // all spaces
-    
-        auto end = s.find_last_not_of(" \t\r\n");
-        return s.substr(start, end - start + 1);
     }
     
     inline auto getNewTextEntry(std::string text, std::optional<entt::entity> refEntity = std::nullopt, std::optional<std::string> refComponent = std::nullopt, std::optional<std::string> refValue = std::nullopt) -> ui::UIElementTemplateNode {

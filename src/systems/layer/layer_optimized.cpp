@@ -20,6 +20,7 @@
 
 #include "systems/ui/ui_data.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
+#include "systems/shaders/shader_draw_commands.hpp"
 
 namespace layer
 {
@@ -312,8 +313,31 @@ namespace layer
     void ExecuteDrawDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c) {
         DashedLine(c->start.x, c->start.y, c->end.x, c->end.y, c->dashLength, c->gapLength, c->color, c->thickness);
     }
-    
-    
+
+    void ExecuteDrawBatchedEntities(std::shared_ptr<layer::Layer> layer, CmdDrawBatchedEntities* c) {
+        // Create a batch and execute all entities through it
+        shader_draw_commands::DrawCommandBatch batch;
+        batch.beginRecording();
+
+        for (entt::entity entity : c->entities) {
+            shader_draw_commands::executeEntityPipelineWithCommands(
+                *c->registry,
+                entity,
+                batch,
+                false  // Don't auto-optimize yet, we'll do it once at the end
+            );
+        }
+
+        batch.endRecording();
+
+        if (c->autoOptimize) {
+            batch.optimize();
+        }
+
+        batch.execute();
+    }
+
+
     // -------------------------------------------------------------------------------------
     // Command Registration Functions
     // -------------------------------------------------------------------------------------
@@ -411,6 +435,7 @@ namespace layer
         RegisterRenderer<CmdDrawDashedCircle>(DrawCommandType::DrawDashedCircle, ExecuteDrawDashedCircle);
         RegisterRenderer<CmdDrawDashedRoundedRect>(DrawCommandType::DrawDashedRoundedRect, ExecuteDrawDashedRoundedRect);
         RegisterRenderer<CmdDrawDashedLine>(DrawCommandType::DrawDashedLine, ExecuteDrawDashedLine);
+        RegisterRenderer<CmdDrawBatchedEntities>(DrawCommandType::DrawBatchedEntities, ExecuteDrawBatchedEntities);
 
     }
 }

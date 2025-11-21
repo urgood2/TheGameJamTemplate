@@ -108,6 +108,7 @@ namespace layer
                     DELETE_COMMAND(layer, DrawDashedLine, CmdDrawDashedLine)
                     DELETE_COMMAND(layer, DrawGradientRectCentered, CmdDrawGradientRectCentered)
                     DELETE_COMMAND(layer, DrawGradientRectRoundedCentered, CmdDrawGradientRectRoundedCentered)
+                    DELETE_COMMAND(layer, DrawBatchedEntities, CmdDrawBatchedEntities)
                     default:
                         SPDLOG_ERROR("Unknown command type: {}", magic_enum::enum_name(cmd.type));
                         break;

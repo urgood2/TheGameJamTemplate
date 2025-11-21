@@ -16,6 +16,7 @@
 #include "../text/textVer2.hpp"
 #include "../shaders/shader_system.hpp"
 #include "../shaders/shader_pipeline.hpp"
+#include "../shaders/shader_draw_commands.hpp"
 #include "../localization/localization.hpp"
 #include "../particles/particle.hpp"
 #include "../random/random.hpp"
@@ -226,12 +227,17 @@ namespace scripting {
         layer::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from shader_system.cpp. These can be called from lua✅ 
+        // methods from shader_system.cpp. These can be called from lua✅
         //---------------------------------------------------------
         shaders::exposeToLua(stateToInit);
 
+        //---------------------------------------------------------
+        // methods from shader_draw_commands.cpp. These can be called from lua✅
+        //---------------------------------------------------------
+        shader_draw_commands::exposeToLua(stateToInit);
+
         // ---------------------------------------------------------
-        // methods from localization.cpp. These can be called from lua✅ 
+        // methods from localization.cpp. These can be called from lua✅
         //---------------------------------------------------------
         localization::exposeToLua(stateToInit);
 

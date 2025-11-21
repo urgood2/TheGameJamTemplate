@@ -157,8 +157,9 @@ namespace scripting {
         
         
         // add entt::null
-        
+
         stateToInit["entt_null"] = static_cast<entt::entity>(entt::null);
+        rec.record_property("", {"entt_null", "Entity", "Represents a null/invalid entity constant."});
         
         
         // allow tracy support
@@ -569,7 +570,8 @@ namespace scripting {
         lua.set_function("OpenURL", [](const std::string &url) {
             OpenURL(url.c_str());
         });
-        
+        rec.record_free_function({}, {"OpenURL", "---@param url string\n---@return nil", "Opens a URL in the default browser.", true, false});
+
         lua["globals"].get_or_create<sol::table>();
 
         // 2) simple bools / ints / floats
@@ -578,8 +580,15 @@ namespace scripting {
         lua["globals"]["screenWidth"]   = [](){ return globals::VIRTUAL_WIDTH; };
         lua["globals"]["screenHeight"]  = [](){ return globals::VIRTUAL_HEIGHT; };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
-        
+
         lua["globals"]["inputState"] = &(globals::inputState);
+
+        rec.record_property("globals", {"isGamePaused", "boolean", "Whether the game is currently paused."});
+        rec.record_property("globals", {"screenWipe", "boolean", "Whether a screen wipe effect is active."});
+        rec.record_property("globals", {"screenWidth", "function", "Function that returns the virtual screen width."});
+        rec.record_property("globals", {"screenHeight", "function", "Function that returns the virtual screen height."});
+        rec.record_property("globals", {"currentGameState", "string", "The current game state identifier."});
+        rec.record_property("globals", {"inputState", "InputState", "The global input state object."});
         
         /*
                 Camera2D, defines position/orientation in 2d space
@@ -614,26 +623,35 @@ namespace scripting {
             // Get the time elapsed since the last frame
             return main_loop::mainLoop.smoothedDeltaTime;
         };
-        
+        rec.record_free_function({}, {"GetFrameTime", "---@return number", "Returns the smoothed delta time (time elapsed since last frame) in seconds.", true, false});
+
         lua["GetTime"] = []() -> float {
             // Get the time elapsed since the last frame
             return main_loop::getTime();
         };
-        
+        rec.record_free_function({}, {"GetTime", "---@return number", "Returns the total elapsed time since the application started in seconds.", true, false});
+
         lua["GetScreenWidth"] = []() -> int {
             return globals::VIRTUAL_WIDTH;
         };
+        rec.record_free_function({}, {"GetScreenWidth", "---@return integer", "Returns the virtual screen width in pixels.", true, false});
+
         lua["GetScreenHeight"] = []() -> int {
             return globals::VIRTUAL_HEIGHT;
         };
+        rec.record_free_function({}, {"GetScreenHeight", "---@return integer", "Returns the virtual screen height in pixels.", true, false});
+
         lua["GetWorldToScreen2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
             // Convert the position from world coordinates to screen coordinates
             return GetWorldToScreen2D(position, camera);
         };
+        rec.record_free_function({}, {"GetWorldToScreen2D", "---@param position Vector2\n---@param camera Camera2D\n---@return Vector2", "Converts a position from world coordinates to screen coordinates using the given camera.", true, false});
+
         lua["GetScreenToWorld2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
             // Convert the position from screen coordinates to world coordinates
             return GetScreenToWorld2D(position, camera);
         };
+        rec.record_free_function({}, {"GetScreenToWorld2D", "---@param position Vector2\n---@param camera Camera2D\n---@return Vector2", "Converts a position from screen coordinates to world coordinates using the given camera.", true, false});
         
         rec.record_property("globals", {"camera", "nil", "Camera2D object used for rendering the game world."});
 
@@ -641,12 +659,16 @@ namespace scripting {
         lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {
             return globals::gameWorldContainerEntity;
         };
+        rec.record_property("globals", {"gameWorldContainerEntity", "function", "Function that returns the root entity for the game world container."});
+
         lua["globals"]["cursor"]                   = []() -> entt::entity {
             return globals::cursor;
         };
+        rec.record_property("globals", {"cursor", "function", "Function that returns the cursor entity."});
+
         lua["globalShaderUniforms"] = std::ref(globals::globalShaderUniforms);
-        
-        rec.record_property("", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
+
+        rec.record_property("", {"globalShaderUniforms", "ShaderUniformComponent", "Global ShaderUniformComponent object, used to set shader uniforms globally."});
 
         // 4) expose your Layer pointers under a sub-table "game"
         // lua.create_named_table("game")[

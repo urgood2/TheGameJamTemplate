@@ -197,7 +197,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         });
         rec.record_method("GameCamera", MethodDef{
             "End",
-            "(layer:Layer):nil",
+            "---@overload fun(self, layer:Layer):nil",
             "End 2D mode, then draw an overlay using the given Layer.",
             false, true
         });
@@ -224,7 +224,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         });
         rec.record_method("GameCamera", MethodDef{
             "Move",
-            "(delta:Vector2):nil",
+            "---@overload fun(self, delta:Vector2):nil",
             "Nudge the camera target by a vector.",
             false, true
         });
@@ -265,7 +265,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         });
         rec.record_method("GameCamera", MethodDef{
             "SetFollowLead",
-            "(x:number, y:number):nil",
+            "---@overload fun(self, x:number, y:number):nil",
             "Lead the camera by components.",
             false, true
         });
@@ -360,7 +360,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         });
         rec.record_method("GameCamera", MethodDef{
             "SetActualOffset",
-            "(x:number, y:number):nil",
+            "---@overload fun(self, x:number, y:number):nil",
             "Set spring-target offset by components.",
             false, true
         });
@@ -373,7 +373,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         });
         rec.record_method("GameCamera", MethodDef{
             "SetVisualOffset",
-            "(x:number, y:number):nil",
+            "---@overload fun(self, x:number, y:number):nil",
             "Set immediate offset by components.",
             false, true
         });
@@ -400,7 +400,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         });
         rec.record_method("GameCamera", MethodDef{
             "SetActualTarget",
-            "(x:number, y:number):nil",
+            "---@overload fun(self, x:number, y:number):nil",
             "Set spring-target position by components.",
             false, true
         });
@@ -412,7 +412,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         });
         rec.record_method("GameCamera", MethodDef{
             "SetVisualTarget",
-            "(x:number, y:number):nil",
+            "---@overload fun(self, x:number, y:number):nil",
             "Set immediate position by components.",
             false, true
         });

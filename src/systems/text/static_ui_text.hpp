@@ -77,6 +77,7 @@ namespace static_ui_text_system {
             .addColor(WHITE)
             .addText(text)
             .addShadow(true)
+            .addScale(1.0f) // Required for TEXT rendering path in element.cpp
             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
 
         if (refEntity && refComponent && refValue) {

@@ -2084,18 +2084,19 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         cmd->scaleY = scale;
                     }, zIndex);
                     
-                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, shadowColor](layer::CmdTextPro *cmd) {
+                    float shadowFontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
+                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, shadowColor, shadowFontSize](layer::CmdTextPro *cmd) {
                         cmd->text = text.c_str();
                         cmd->font = font;
                         cmd->x = textX;
                         cmd->y = textY;
                         cmd->origin = {0, 0};
                         cmd->rotation = 0;
-                        cmd->fontSize = localization::getFontData().fontLoadedSize;
+                        cmd->fontSize = shadowFontSize;
                         cmd->spacing = spacing;
                         cmd->color = shadowColor;
                     }, zIndex);
-                    
+
                     // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
                 }
 
@@ -2124,7 +2125,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             {
                 renderColor = globals::uiTextInactive;
             }
-            
+
             //REVIEW: bugfixing, commenting out
             // float textX = localization::getFontData().fontRenderOffset.x * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             // float textY = localization::getFontData().fontRenderOffset.y * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
@@ -2138,15 +2139,16 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             }, zIndex);
 
             float spacing = config->textSpacing.value_or(localization::getFontData().spacing);
-            
-            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, renderColor](layer::CmdTextPro *cmd) {
+
+            float fontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
+            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
                 cmd->text = text.c_str();
                 cmd->font = font;
                 cmd->x = textX;
                 cmd->y = textY;
                 cmd->origin = {0, 0};
                 cmd->rotation = 0;
-                cmd->fontSize = localization::getFontData().fontLoadedSize;
+                cmd->fontSize = fontSize;
                 cmd->spacing = spacing;
                 cmd->color = renderColor;
             }, zIndex);

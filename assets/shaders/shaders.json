@@ -323,24 +323,6 @@
             "fragment": "web/atlas_outline_fragment.fs"
         }
     },
-    "pixel_perfect_dissolving": {
-        "vertex": "pixel_perfect_dissolving_vertex.vs",
-        "fragment": "pixel_perfect_dissolving_fragment.fs",
-
-        "web": {
-            "vertex": "web/pixel_perfect_dissolving_vertex.vs",
-            "fragment": "web/pixel_perfect_dissolving_fragment.fs"
-        }
-    },
-    "dissolve_with_burn_edge": {
-        "vertex": "dissolve_with_burn_edge_vertex.vs",
-        "fragment": "dissolve_with_burn_edge_fragment.fs",
-
-        "web": {
-            "vertex": "web/dissolve_with_burn_edge_vertex.vs",
-            "fragment": "web/dissolve_with_burn_edge_fragment.fs"
-        }
-    },
     "burn_2d": {
         "vertex": "burn_2d_vertex.vs",
         "fragment": "burn_2d_fragment.fs",
@@ -350,112 +332,58 @@
             "fragment": "web/burn_2d_fragment.fs"
         }
     },
-    "hologram_2d": {
-        "vertex": "hologram_2d_vertex.vs",
-        "fragment": "hologram_2d_fragment.fs",
+    "dissolve_burn_edge": {
+        "vertex": "dissolve_burn_edge_vertex.vs",
+        "fragment": "dissolve_burn_edge_fragment.fs",
 
         "web": {
-            "vertex": "web/hologram_2d_vertex.vs",
-            "fragment": "web/hologram_2d_fragment.fs"
+            "vertex": "web/dissolve_burn_edge_vertex.vs",
+            "fragment": "web/dissolve_burn_edge_fragment.fs"
         }
     },
-    "liquid_effects": {
-        "vertex": "liquid_effects_vertex.vs",
-        "fragment": "liquid_effects_fragment.fs",
+    "drop_shadow": {
+        "vertex": "drop_shadow_vertex.vs",
+        "fragment": "drop_shadow_fragment.fs",
 
         "web": {
-            "vertex": "web/liquid_effects_vertex.vs",
-            "fragment": "web/liquid_effects_fragment.fs"
+            "vertex": "web/drop_shadow_vertex.vs",
+            "fragment": "web/drop_shadow_fragment.fs"
         }
     },
-    "liquid_fill_sphere": {
-        "vertex": "liquid_fill_sphere_vertex.vs",
-        "fragment": "liquid_fill_sphere_fragment.fs",
+    "hologram": {
+        "vertex": "hologram_vertex.vs",
+        "fragment": "hologram_fragment.fs",
 
         "web": {
-            "vertex": "web/liquid_fill_sphere_vertex.vs",
-            "fragment": "web/liquid_fill_sphere_fragment.fs"
+            "vertex": "web/hologram_vertex.vs",
+            "fragment": "web/hologram_fragment.fs"
         }
     },
-    "pixel_art_trail": {
-        "vertex": "pixel_art_trail_vertex.vs",
-        "fragment": "pixel_art_trail_fragment.fs",
+    "liquid_sphere": {
+        "vertex": "liquid_sphere_vertex.vs",
+        "fragment": "liquid_sphere_fragment.fs",
 
         "web": {
-            "vertex": "web/pixel_art_trail_vertex.vs",
-            "fragment": "web/pixel_art_trail_fragment.fs"
+            "vertex": "web/liquid_sphere_vertex.vs",
+            "fragment": "web/liquid_sphere_fragment.fs"
         }
     },
-    "animated_dotted_outline": {
-        "vertex": "animated_dotted_outline_vertex.vs",
-        "fragment": "animated_dotted_outline_fragment.fs",
+    "texture_liquid": {
+        "vertex": "texture_liquid_vertex.vs",
+        "fragment": "texture_liquid_fragment.fs",
 
         "web": {
-            "vertex": "web/animated_dotted_outline_vertex.vs",
-            "fragment": "web/animated_dotted_outline_fragment.fs"
+            "vertex": "web/texture_liquid_vertex.vs",
+            "fragment": "web/texture_liquid_fragment.fs"
         }
     },
-    "colorful_outline": {
-        "vertex": "colorful_outline_vertex.vs",
-        "fragment": "colorful_outline_fragment.fs",
+    "pixel_perfect_dissolve": {
+        "vertex": "pixel_perfect_dissolve_vertex.vs",
+        "fragment": "pixel_perfect_dissolve_fragment.fs",
 
         "web": {
-            "vertex": "web/colorful_outline_vertex.vs",
-            "fragment": "web/colorful_outline_fragment.fs"
-        }
-    },
-    "dynamic_glow": {
-        "vertex": "dynamic_glow_vertex.vs",
-        "fragment": "dynamic_glow_fragment.fs",
-
-        "web": {
-            "vertex": "web/dynamic_glow_vertex.vs",
-            "fragment": "web/dynamic_glow_fragment.fs"
-        }
-    },
-    "wobbly": {
-        "vertex": "wobbly_vertex.vs",
-        "fragment": "wobbly_fragment.fs",
-
-        "web": {
-            "vertex": "web/wobbly_vertex.vs",
-            "fragment": "web/wobbly_fragment.fs"
-        }
-    },
-    "bounce_wave": {
-        "vertex": "bounce_wave_vertex.vs",
-        "fragment": "bounce_wave_fragment.fs",
-
-        "web": {
-            "vertex": "web/bounce_wave_vertex.vs",
-            "fragment": "web/bounce_wave_fragment.fs"
-        }
-    },
-    "radial_fire_2d": {
-        "vertex": "radial_fire_2d_vertex.vs",
-        "fragment": "radial_fire_2d_fragment.fs",
-
-        "web": {
-            "vertex": "web/radial_fire_2d_vertex.vs",
-            "fragment": "web/radial_fire_2d_fragment.fs"
-        }
-    },
-    "radial_shine_2d": {
-        "vertex": "radial_shine_2d_vertex.vs",
-        "fragment": "radial_shine_2d_fragment.fs",
-
-        "web": {
-            "vertex": "web/radial_shine_2d_vertex.vs",
-            "fragment": "web/radial_shine_2d_fragment.fs"
-        }
-    },
-    "holographic_card": {
-        "vertex": "holographic_card_vertex.vs",
-        "fragment": "holographic_card_fragment.fs",
-
-        "web": {
-            "vertex": "web/holographic_card_vertex.vs",
-            "fragment": "web/holographic_card_fragment.fs"
+            "vertex": "web/pixel_perfect_dissolve_vertex.vs",
+            "fragment": "web/pixel_perfect_dissolve_fragment.fs"
         }
     }
 }

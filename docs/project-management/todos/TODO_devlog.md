@@ -225,3 +225,8 @@
   - Added ui-box specific layer settings back in.
   - Trimmed tooltips a little. Added font size option, but not working at the moment.
   
+11/21/2025
+  - started using claude code for faster workflow.
+  - projectile system, needs soem work.
+  - mass-converted some shaders I was planning to add.
+  - fixed some nagging bugs.

@@ -129,7 +129,7 @@ function WandTriggers.register(wandId, triggerDef, executor)
         registration.healthThreshold = triggerDef.healthThreshold or 0.3  -- 30%
 
     else
-        log_warn("WandTriggers.register: unknown trigger type", triggerType)
+        log_debug("WandTriggers.register: unknown trigger type", triggerType)
     end
 
     WandTriggers.registrations[wandId] = registration

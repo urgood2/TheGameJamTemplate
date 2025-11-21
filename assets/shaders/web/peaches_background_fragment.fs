@@ -8,26 +8,26 @@ uniform float iTime;
 uniform vec2 resolution;
 
 // === Customizable parameters ===
-uniform float blob_count ;
-uniform float blob_spacing 1;
-uniform float shape_amplitude ;
-uniform float wave_strength ;
-uniform float highlight_gain ;
-uniform float noise_strength ;
+uniform float blob_count;
+uniform float blob_spacing;
+uniform float shape_amplitude;
+uniform float wave_strength;
+uniform float highlight_gain;
+uniform float noise_strength;
 uniform float radial_falloff;
-uniform float cl_shift ;
+uniform float cl_shift;
 uniform float distortion_strength;
 uniform float edge_softness_min;
 uniform float edge_softness_max;
 uniform vec3 colorTint;
-uniform float pixel_size;     // Set to > 1.0 to enable pixelation (e.g., 4.0, 8.0)
-uniform float pixel_enable;   // 1.0 = on, 0.0 = off
-uniform vec2 blob_offset;  // (x, y) offset in UV space
-uniform float movement_randomness; // 0.0 = none, 1.0+ = lots
+uniform float pixel_size;
+uniform float pixel_enable;
+uniform vec2 blob_offset;
+uniform float movement_randomness;
 
 // === New uniforms ===
 uniform float hue_shift;
-uniform float blob_color_blend; // blend strength between baseColor and per-blob color
+uniform float blob_color_blend;
 
 out vec4 finalColor;
 

@@ -53,6 +53,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
     
 # programming side
+- I need to continue with "testing_checklist." starting with projectile system.
+
+
 - indicate card isn't being applied if it goes beyond card max count.
 - don't allow more than one trigger to be applied to a trigger area.
 - highlight mod cards as well in the simulator. use the same color highlight for each cast block, to make it easier to see.

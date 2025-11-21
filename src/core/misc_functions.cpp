@@ -601,5 +601,67 @@ namespace game
             globalShaderUniforms.set("voucher_sheen", "time", static_cast<float>(main_loop::getTime()));
         });
 
+        // ========== NEW SHADERS FROM GODOT CONVERSION ==========
+
+        // efficient_pixel_outline - Pixel-perfect outlines (4-way/8-way)
+        globalShaderUniforms.set("efficient_pixel_outline", "outlineColor", Vector4{0.0f, 0.0f, 0.0f, 1.0f});
+        globalShaderUniforms.set("efficient_pixel_outline", "outlineType", 2); // 0=none, 1=4-way, 2=8-way
+        globalShaderUniforms.set("efficient_pixel_outline", "thickness", 1.0f);
+
+        // atlas_outline - Atlas-aware outlines for sprite regions
+        globalShaderUniforms.set("atlas_outline", "outlineWidth", 1.0f);
+        globalShaderUniforms.set("atlas_outline", "outlineColor", Vector4{0.0f, 0.0f, 0.0f, 1.0f});
+        globalShaderUniforms.set("atlas_outline", "uGridRect", Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("atlas_outline", "uImageSize", Vector2{1.0f, 1.0f});
+
+        // burn_2d - Burn/dissolve effect with ash colors
+        shaders::registerUniformUpdate("burn_2d", [](Shader &shader) {
+            globalShaderUniforms.set("burn_2d", "iTime", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("burn_2d", "burnSize", 1.0f);
+        globalShaderUniforms.set("burn_2d", "burnColor1", Vector4{1.0f, 0.7f, 0.0f, 1.0f}); // Orange
+        globalShaderUniforms.set("burn_2d", "burnColor2", Vector4{0.5f, 0.0f, 0.0f, 1.0f}); // Dark red
+        globalShaderUniforms.set("burn_2d", "burnColor3", Vector4{0.1f, 0.1f, 0.1f, 1.0f}); // Ash
+
+        // dissolve_burn_edge - Simple dissolve with burn edge
+        globalShaderUniforms.set("dissolve_burn_edge", "burnSize", 1.3f);
+        globalShaderUniforms.set("dissolve_burn_edge", "progress", 0.0f);
+
+        // drop_shadow - Drop shadow effect
+        globalShaderUniforms.set("drop_shadow", "shadowOffset", Vector2{5.0f, 5.0f});
+        globalShaderUniforms.set("drop_shadow", "shadowColor", Vector4{0.0f, 0.0f, 0.0f, 0.5f});
+        globalShaderUniforms.set("drop_shadow", "shadowSoftness", 1.0f);
+
+        // hologram - Hologram visual effect
+        shaders::registerUniformUpdate("hologram", [](Shader &shader) {
+            globalShaderUniforms.set("hologram", "iTime", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("hologram", "strength", 0.5f);
+        globalShaderUniforms.set("hologram", "frequency", 10.0f);
+
+        // liquid_sphere - Liquid-filled sphere with waves
+        shaders::registerUniformUpdate("liquid_sphere", [](Shader &shader) {
+            globalShaderUniforms.set("liquid_sphere", "iTime", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("liquid_sphere", "liquidLevel", 0.5f);
+        globalShaderUniforms.set("liquid_sphere", "waveAmplitude", 0.1f);
+        globalShaderUniforms.set("liquid_sphere", "waveFrequency", 5.0f);
+        globalShaderUniforms.set("liquid_sphere", "liquidColor", Vector4{0.2f, 0.6f, 0.8f, 0.7f});
+
+        // texture_liquid - Dual-wave water fill effect
+        shaders::registerUniformUpdate("texture_liquid", [](Shader &shader) {
+            globalShaderUniforms.set("texture_liquid", "iTime", static_cast<float>(main_loop::getTime()));
+        });
+        globalShaderUniforms.set("texture_liquid", "waterColor1", Vector4{0.2f, 0.6f, 0.8f, 0.5f});
+        globalShaderUniforms.set("texture_liquid", "waterColor2", Vector4{0.1f, 0.5f, 0.7f, 0.4f});
+        globalShaderUniforms.set("texture_liquid", "waterLevelPercentage", 0.0f);
+        globalShaderUniforms.set("texture_liquid", "waveFrequency1", 10.0f);
+        globalShaderUniforms.set("texture_liquid", "waveAmplitude1", 0.05f);
+        globalShaderUniforms.set("texture_liquid", "waveFrequency2", 15.0f);
+        globalShaderUniforms.set("texture_liquid", "waveAmplitude2", 0.03f);
+
+        // pixel_perfect_dissolve - Resolution-independent dissolve
+        globalShaderUniforms.set("pixel_perfect_dissolve", "sensitivity", 0.5f);
+
     }
 }

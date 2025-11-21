@@ -127,7 +127,8 @@ namespace layer
         DrawDashedLine,
         DrawGradientRectCentered,
         DrawGradientRectRoundedCentered,
-        
+        DrawBatchedEntities,
+
         Count // <--- always last
     };
     
@@ -586,7 +587,13 @@ namespace layer
         Color topLeft, topRight, bottomRight, bottomLeft;
     };
 
-    
+    struct CmdDrawBatchedEntities {
+        entt::registry* registry;
+        std::vector<entt::entity> entities;
+        bool autoOptimize = true;
+    };
+
+
 
 
     // ===========================
@@ -682,6 +689,7 @@ namespace layer
     extern void ExecuteDrawDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c);
     extern void ExecuteDrawGradientRectCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectCentered* c) ;
     extern void ExecuteDrawGradientRectRoundedCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectRoundedCentered* c) ;
+    extern void ExecuteDrawBatchedEntities(std::shared_ptr<layer::Layer> layer, CmdDrawBatchedEntities* c);
 
 
     // ===========================

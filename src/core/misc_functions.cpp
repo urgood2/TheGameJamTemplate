@@ -365,7 +365,154 @@ namespace game
         globalShaderUniforms.set("item_glow", "spread", 1.0f);
         globalShaderUniforms.set("item_glow", "pulse_speed", 1.0f);
 
-        
+        // efficient_pixel_outline
+        globalShaderUniforms.set("efficient_pixel_outline", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("efficient_pixel_outline", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("efficient_pixel_outline", "outlineColor", Vector4{0.0f, 0.0f, 0.0f, 1.0f});
+        globalShaderUniforms.set("efficient_pixel_outline", "outlineType", 2);
+        globalShaderUniforms.set("efficient_pixel_outline", "thickness", 1.0f);
+
+        // atlas_outline
+        globalShaderUniforms.set("atlas_outline", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("atlas_outline", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("atlas_outline", "outlineWidth", 1.0f);
+        globalShaderUniforms.set("atlas_outline", "outlineColor", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
+
+        // pixel_perfect_dissolving
+        shaders::registerUniformUpdate("pixel_perfect_dissolving", [](Shader &shader) {
+            globalShaderUniforms.set("pixel_perfect_dissolving", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("pixel_perfect_dissolving", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("pixel_perfect_dissolving", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("pixel_perfect_dissolving", "sensitivity", 0.5f);
+
+        // dissolve_with_burn_edge
+        globalShaderUniforms.set("dissolve_with_burn_edge", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("dissolve_with_burn_edge", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("dissolve_with_burn_edge", "burn_size", 0.5f);
+        globalShaderUniforms.set("dissolve_with_burn_edge", "burn_color", Vector4{1.0f, 0.5f, 0.0f, 1.0f});
+        globalShaderUniforms.set("dissolve_with_burn_edge", "dissolve_amount", 0.0f);
+
+        // burn_2d
+        shaders::registerUniformUpdate("burn_2d", [](Shader &shader) {
+            globalShaderUniforms.set("burn_2d", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("burn_2d", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("burn_2d", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("burn_2d", "ashColor", Vector4{0.2f, 0.2f, 0.2f, 1.0f});
+        globalShaderUniforms.set("burn_2d", "burnColor", Vector4{1.0f, 0.3f, 0.0f, 1.0f});
+        globalShaderUniforms.set("burn_2d", "proBurnColor", Vector4{1.0f, 1.0f, 0.0f, 1.0f});
+        globalShaderUniforms.set("burn_2d", "burn_amount", 0.0f);
+
+        // hologram_2d
+        shaders::registerUniformUpdate("hologram_2d", [](Shader &shader) {
+            globalShaderUniforms.set("hologram_2d", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("hologram_2d", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("hologram_2d", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("hologram_2d", "strength", 0.3f);
+        globalShaderUniforms.set("hologram_2d", "offset", 0.1f);
+
+        // liquid_effects
+        shaders::registerUniformUpdate("liquid_effects", [](Shader &shader) {
+            globalShaderUniforms.set("liquid_effects", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("liquid_effects", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("liquid_effects", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("liquid_effects", "amplitude", 0.05f);
+        globalShaderUniforms.set("liquid_effects", "frequency", 10.0f);
+        globalShaderUniforms.set("liquid_effects", "speed", 2.0f);
+
+        // liquid_fill_sphere
+        shaders::registerUniformUpdate("liquid_fill_sphere", [](Shader &shader) {
+            globalShaderUniforms.set("liquid_fill_sphere", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("liquid_fill_sphere", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("liquid_fill_sphere", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("liquid_fill_sphere", "fill_amount", 0.5f);
+        globalShaderUniforms.set("liquid_fill_sphere", "liquid_color", Vector4{0.0f, 0.5f, 1.0f, 0.8f});
+
+        // pixel_art_trail
+        shaders::registerUniformUpdate("pixel_art_trail", [](Shader &shader) {
+            globalShaderUniforms.set("pixel_art_trail", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("pixel_art_trail", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("pixel_art_trail", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("pixel_art_trail", "trail_length", 5.0f);
+        globalShaderUniforms.set("pixel_art_trail", "trail_color", Vector4{1.0f, 1.0f, 1.0f, 0.5f});
+
+        // animated_dotted_outline
+        shaders::registerUniformUpdate("animated_dotted_outline", [](Shader &shader) {
+            globalShaderUniforms.set("animated_dotted_outline", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("animated_dotted_outline", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("animated_dotted_outline", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("animated_dotted_outline", "line_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("animated_dotted_outline", "line_thickness", 1.0f);
+        globalShaderUniforms.set("animated_dotted_outline", "frequency", 10.0f);
+
+        // colorful_outline
+        globalShaderUniforms.set("colorful_outline", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("colorful_outline", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("colorful_outline", "intensity", 50);
+        globalShaderUniforms.set("colorful_outline", "precision", 0.01f);
+        globalShaderUniforms.set("colorful_outline", "outline_color", Vector4{1.0f, 0.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("colorful_outline", "outline_color_2", Vector4{0.0f, 1.0f, 1.0f, 1.0f});
+
+        // dynamic_glow
+        shaders::registerUniformUpdate("dynamic_glow", [](Shader &shader) {
+            globalShaderUniforms.set("dynamic_glow", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("dynamic_glow", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("dynamic_glow", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("dynamic_glow", "glow_strength", 2.0f);
+        globalShaderUniforms.set("dynamic_glow", "glow_color", Vector4{1.0f, 0.5f, 0.0f, 1.0f});
+
+        // wobbly
+        shaders::registerUniformUpdate("wobbly", [](Shader &shader) {
+            globalShaderUniforms.set("wobbly", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("wobbly", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("wobbly", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("wobbly", "amplitude", 0.02f);
+        globalShaderUniforms.set("wobbly", "frequency", 5.0f);
+
+        // bounce_wave
+        shaders::registerUniformUpdate("bounce_wave", [](Shader &shader) {
+            globalShaderUniforms.set("bounce_wave", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("bounce_wave", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("bounce_wave", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("bounce_wave", "amplitude", 10.0f);
+        globalShaderUniforms.set("bounce_wave", "frequency", 5.0f);
+
+        // radial_fire_2d
+        shaders::registerUniformUpdate("radial_fire_2d", [](Shader &shader) {
+            globalShaderUniforms.set("radial_fire_2d", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("radial_fire_2d", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("radial_fire_2d", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("radial_fire_2d", "fire_intensity", 1.0f);
+
+        // radial_shine_2d
+        shaders::registerUniformUpdate("radial_shine_2d", [](Shader &shader) {
+            globalShaderUniforms.set("radial_shine_2d", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("radial_shine_2d", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("radial_shine_2d", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("radial_shine_2d", "shine_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set("radial_shine_2d", "shine_strength", 1.0f);
+
+        // holographic_card
+        shaders::registerUniformUpdate("holographic_card", [](Shader &shader) {
+            globalShaderUniforms.set("holographic_card", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("holographic_card", "uGridRect", Vector4{0,0,1,1});
+        globalShaderUniforms.set("holographic_card", "uImageSize", Vector2{(float)screenWidth,(float)screenHeight});
+        globalShaderUniforms.set("holographic_card", "rotation", 0.0f);
+        globalShaderUniforms.set("holographic_card", "perspective_strength", 0.3f);
+
+
 
         // pseudo 3d skew
     shaders::registerUniformUpdate("3d_skew", [](Shader &shader)

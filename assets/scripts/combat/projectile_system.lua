@@ -12,7 +12,6 @@ Features:
 - Damage integration with combat system
 - Event hooks for spawn/hit/destroy
 - Modifier support for wand system integration
-- Projectile pooling for performance
 
 Architecture:
 - Uses existing ECS (EnTT registry)
@@ -25,12 +24,16 @@ Architecture:
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
+local signal = require("external.hump.signal")
+local Node = require("monobehavior.behavior_script_v2")
+
+---@diagnostic disable: undefined-global
+-- Suppress warnings for runtime globals (registry, physics_manager)
 
 -- Module table
 local ProjectileSystem = {}
 
--- Projectile pool for reuse
-ProjectileSystem.pool = {}
+-- Active projectiles tracking
 ProjectileSystem.active_projectiles = {}
 ProjectileSystem.next_projectile_id = 1
 
@@ -173,44 +176,49 @@ function ProjectileSystem.spawn(params)
         return entt_null
     end
 
-    -- Try to get from pool first (performance optimization)
-    local entity = ProjectileSystem.getFromPool()
-    if entity == entt_null then
-        -- Create new entity
-        entity = registry:create()
+    -- Create new entity with transform
+    local entity = create_transform_entity()
+
+    -- Add default state tag so projectile renders
+    if add_default_state_tag then
+        add_default_state_tag(entity)
     end
 
     -- Increment projectile ID
     ProjectileSystem.next_projectile_id = ProjectileSystem.next_projectile_id + 1
 
-    -- Create transform component
-    local transform = component_cache.get_or_emplace(entity, Transform)
-    transform.actualX = params.position.x
-    transform.actualY = params.position.y
-    transform.actualW = (params.size or 8) * (params.sizeMultiplier or 1.0)
-    transform.actualH = (params.size or 8) * (params.sizeMultiplier or 1.0)
-    transform.actualR = params.rotation or 0
+    -- Set transform properties
+    local transform = component_cache.get(entity, Transform)
+    if transform then
+        transform.actualX = params.position.x
+        transform.actualY = params.position.y
+        transform.actualW = (params.size or 8) * (params.sizeMultiplier or 1.0)
+        transform.actualH = (params.size or 8) * (params.sizeMultiplier or 1.0)
+        transform.actualR = params.rotation or 0
 
-    -- Create visual representation (animated sprite or simple sprite)
-    if params.sprite then
+        -- Create visual representation
+        local spriteToUse = params.sprite or "b1761.png"
         animation_system.setupAnimatedObjectOnEntity(
             entity,
-            params.sprite,
-            params.looping or false,
-            nil, -- no shader pass by default
+            spriteToUse,
+            true,  -- use animation
+            nil,   -- no custom offset
             params.shadow or false
         )
 
-        if params.size then
-            animation_system.resizeAnimationObjectsInEntityToFit(
-                entity,
-                transform.actualW,
-                transform.actualH
-            )
-        end
+        -- Resize to fit transform
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            entity,
+            transform.actualW,
+            transform.actualH
+        )
+    else
+        log_error("Failed to get Transform component for projectile entity")
+        registry:destroy(entity)
+        return entt_null
     end
 
-    -- Attach projectile components
+    -- Create projectile components
     local projectileData = ProjectileSystem.createProjectileData(params)
     local projectileBehavior = ProjectileSystem.createProjectileBehavior(params)
     local projectileLifetime = ProjectileSystem.createProjectileLifetime({
@@ -220,15 +228,17 @@ function ProjectileSystem.spawn(params)
         maxHits = params.maxHits
     })
 
-    -- Store components on entity (using table attachment)
-    if not registry:has(entity, GameObject) then
-        registry:emplace(entity, GameObject)
-    end
+    -- Initialize script table and store data BEFORE attach_ecs
+    local ProjectileType = Node:extend()
+    local projectileScript = ProjectileType {}
 
-    local gameObj = component_cache.get(entity, GameObject)
-    gameObj.projectileData = projectileData
-    gameObj.projectileBehavior = projectileBehavior
-    gameObj.projectileLifetime = projectileLifetime
+    -- Assign data to script table first
+    projectileScript.projectileData = projectileData
+    projectileScript.projectileBehavior = projectileBehavior
+    projectileScript.projectileLifetime = projectileLifetime
+
+    -- NOW attach to entity (must be after data assignment)
+    projectileScript:attach_ecs { create_new = false, existing_entity = entity }
 
     -- Setup physics body for projectile
     if params.usePhysics ~= false then
@@ -236,7 +246,8 @@ function ProjectileSystem.spawn(params)
     end
 
     -- Calculate initial velocity based on movement type
-    ProjectileSystem.initializeMovement(entity, params)
+    -- Pass projectileScript directly instead of relying on getScriptTableFromEntityID
+    ProjectileSystem.initializeMovement(entity, params, projectileScript)
 
     -- Add to active projectiles tracking
     ProjectileSystem.active_projectiles[entity] = true
@@ -248,8 +259,7 @@ function ProjectileSystem.spawn(params)
 
     -- Emit spawn event for wand system
     if params.emitEvents ~= false then
-        publishLuaEvent("projectile_spawned", {
-            entity = entity,
+        signal.emit("projectile_spawned", entity, {
             owner = params.owner,
             position = params.position,
             projectileType = params.projectileType or "default"
@@ -264,97 +274,75 @@ end
 -- Setup Chipmunk2D physics for projectile
 function ProjectileSystem.setupPhysics(entity, params)
     -- Check if physics world is available
-    if not physics or not globals.physicsWorld then
-        log_warn("Physics world not available, projectile will not have collision")
+    local world = PhysicsManager.get_world("world")
+    if not physics or not world then
+        log_debug("Physics world not available, projectile will not have collision")
         return
     end
-
-    local world = globals.physicsWorld
     local transform = component_cache.get(entity, Transform)
 
-    -- Create physics body (dynamic body that moves)
-    physics.create_physics_for_transform(world, entity, "dynamic")
-
-    -- Add collider shape based on projectile shape type
+    -- Determine shape and config
     local shapeType = params.shapeType or "circle"
     local isSensor = (params.collisionBehavior == ProjectileSystem.CollisionBehavior.PASS_THROUGH)
 
-    if shapeType == "circle" then
-        local radius = (params.size or 8) / 2
-        physics.AddCollider(world, entity, ProjectileSystem.COLLISION_CATEGORY,
-            "circle", radius, 0, 0, 0, isSensor)
-    elseif shapeType == "rectangle" then
-        local w = transform.actualW
-        local h = transform.actualH
-        physics.AddCollider(world, entity, ProjectileSystem.COLLISION_CATEGORY,
-            "rectangle", w, h, 0, 0, isSensor)
+    -- Create physics body using correct signature
+    local config = {
+        shape = shapeType,
+        tag = ProjectileSystem.COLLISION_CATEGORY,
+        sensor = isSensor,
+        density = params.density or 1.0
+    }
+
+    -- Use globals that are available in the runtime environment
+    physics.create_physics_for_transform(
+        registry, -- global
+        physics_manager_instance, -- global
+        entity,
+        "world",
+        config
+    )
+
+    -- Set additional physics properties
+    -- Make it a bullet for high-speed collision detection
+    physics.SetBullet(world, entity, true)
+
+    -- Set friction and restitution
+    physics.SetFriction(world, entity, params.friction or 0.0)
+    physics.SetRestitution(world, entity, params.restitution or 0.5)
+
+    -- Disable rotation if needed
+    if params.fixedRotation ~= false then
+        physics.SetFixedRotation(world, entity, true)
     end
 
-    -- Set physics properties
-    local body = physics.GetBodyFromEntity(world, entity)
-    if body then
-        -- Make it a bullet for high-speed collision detection
-        physics.SetBodyType(body, "dynamic")
-        physics.SetBullet(body, true)
+    -- Note: Gravity is set globally per world, not per-entity
+    -- Arc projectiles will use the world's gravity automatically
 
-        -- Set friction and restitution
-        physics.SetFriction(world, entity, params.friction or 0.0)
-        physics.SetRestitution(world, entity, params.restitution or 0.5)
+    -- Configure physics sync: Make physics authoritative for projectiles (matches gameplay.lua)
+    physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
 
-        -- Disable rotation if needed
-        if params.fixedRotation ~= false then
-            physics.SetFixedRotation(body, true)
-        end
-
-        -- Set gravity scale
-        local behavior = component_cache.get(entity, GameObject).projectileBehavior
-        if behavior.gravityScale then
-            physics.SetGravityScale(body, behavior.gravityScale)
-        end
-    end
-
-    -- Configure physics sync: Make physics authoritative for projectiles
-    -- This ensures smooth integration with your existing physics-transform sync system
-    if registry and registry.emplace then
-        local PhysicsSyncConfig = {
-            -- Physics is authoritative (physics drives transform)
-            mode = "AuthoritativePhysics",  -- PhysicsSyncMode.AuthoritativePhysics
-
-            -- Pull position from physics to transform
-            pullPositionFromPhysics = true,
-
-            -- Rotation handling: Use visual rotation for sprite facing
-            rotMode = "TransformFixed_PhysicsFollows",  -- We set visualR, physics rotation locked
-            pullAngleFromPhysics = false,  -- Don't pull rotation from physics
-            useVisualRotationWhenDragging = false,  -- Projectiles can't be dragged
-
-            -- Interpolation for smooth rendering
-            useInterpolation = true,
-
-            -- Not kinematic (dynamic body)
-            useKinematic = false,
-        }
-
-        -- Try to set the sync config (compatible with your physics hook system)
-        -- Note: This may need adjustment based on your exact PhysicsSyncConfig component structure
-        if registry.try_get then
-            local success = pcall(function()
-                registry:emplace(entity, "PhysicsSyncConfig", PhysicsSyncConfig)
-            end)
-            if not success then
-                log_debug("PhysicsSyncConfig not available, projectile will use default sync")
-            end
-        end
-    end
+    -- Setup collision masks for this projectile entity
+    -- Enable collisions between projectile and enemy tags
+    physics.enable_collision_between_many(world, ProjectileSystem.COLLISION_CATEGORY, { "enemy" })
+    physics.enable_collision_between_many(world, "enemy", { ProjectileSystem.COLLISION_CATEGORY })
+    physics.update_collision_masks_for(world, ProjectileSystem.COLLISION_CATEGORY, { "enemy" })
+    physics.update_collision_masks_for(world, "enemy", { ProjectileSystem.COLLISION_CATEGORY })
 
     -- Setup collision callback
     ProjectileSystem.setupCollisionCallback(entity)
 end
 
 -- Initialize movement based on movement type
-function ProjectileSystem.initializeMovement(entity, params)
-    local gameObj = component_cache.get(entity, GameObject)
-    local behavior = gameObj.projectileBehavior
+function ProjectileSystem.initializeMovement(entity, params, projectileScript)
+    -- Use provided script or retrieve it (for backward compatibility)
+    projectileScript = projectileScript or getScriptTableFromEntityID(entity)
+
+    if not projectileScript then
+        log_error("initializeMovement: No script table found for entity " .. tostring(entity))
+        return
+    end
+
+    local behavior = projectileScript.projectileBehavior
     local transform = component_cache.get(entity, Transform)
 
     if behavior.movementType == ProjectileSystem.MovementType.STRAIGHT then
@@ -373,8 +361,9 @@ function ProjectileSystem.initializeMovement(entity, params)
         end
 
         -- Apply velocity to physics body if present
-        if physics and globals.physicsWorld then
-            physics.SetVelocity(globals.physicsWorld, entity, behavior.velocity.x, behavior.velocity.y)
+        local world = PhysicsManager.get_world("world")
+        if physics and world then
+            physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
         end
 
     elseif behavior.movementType == ProjectileSystem.MovementType.HOMING then
@@ -415,21 +404,21 @@ function ProjectileSystem.updateInternal(dt)
     -- Update all active projectiles
     local toRemove = {}
 
-    for entity, _ in pairs(ProjectileSystem.active_projectiles) do
-        if not entity_cache.valid(entity) then
-            toRemove[#toRemove + 1] = entity
-        else
-            local shouldDestroy = ProjectileSystem.updateProjectile(entity, dt)
-            if shouldDestroy then
-                toRemove[#toRemove + 1] = entity
-            end
-        end
-    end
+    -- for entity, _ in pairs(ProjectileSystem.active_projectiles) do
+    --     if not entity_cache.valid(entity) then
+    --         toRemove[#toRemove + 1] = entity
+    --     else
+    --         local shouldDestroy = ProjectileSystem.updateProjectile(entity, dt)
+    --         if shouldDestroy then
+    --             toRemove[#toRemove + 1] = entity
+    --         end
+    --     end
+    -- end
 
-    -- Remove destroyed projectiles
-    for _, entity in ipairs(toRemove) do
-        ProjectileSystem.destroy(entity)
-    end
+    -- -- Remove destroyed projectiles
+    -- for _, entity in ipairs(toRemove) do
+    --     ProjectileSystem.destroy(entity)
+    -- end
 end
 
 --- Public update function (for manual updates when not using physics step timer)
@@ -447,12 +436,12 @@ end
 -- Update individual projectile
 -- Returns: true if should be destroyed
 function ProjectileSystem.updateProjectile(entity, dt)
-    local gameObj = component_cache.get(entity, GameObject)
-    if not gameObj then return true end
+    local projectileScript = getScriptTableFromEntityID(entity)
+    if not projectileScript then return true end
 
-    local data = gameObj.projectileData
-    local behavior = gameObj.projectileBehavior
-    local lifetime = gameObj.projectileLifetime
+    local data = projectileScript.projectileData
+    local behavior = projectileScript.projectileBehavior
+    local lifetime = projectileScript.projectileLifetime
     local transform = component_cache.get(entity, Transform)
 
     if not data or not behavior or not lifetime then return true end
@@ -519,9 +508,10 @@ MOVEMENT PATTERNS
 function ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior)
     -- Physics-driven: Let Chipmunk2D handle movement via velocity
     -- Rotation is updated to face direction for visual purposes only
-    if physics and globals.physicsWorld then
+    local world = PhysicsManager.get_world("world")
+    if physics and world then
         -- Sync velocity from physics (in case physics modified it)
-        local vx, vy = physics.GetVelocity(globals.physicsWorld, entity)
+        local vx, vy = physics.GetVelocity(world, entity)
         behavior.velocity.x = vx
         behavior.velocity.y = vy
 
@@ -543,6 +533,9 @@ function ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior
 end
 
 function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
+    -- Get physics world once at function start
+    local world = PhysicsManager.get_world("world")
+
     -- Check if target is valid
     if not behavior.homingTarget or not entity_cache.valid(behavior.homingTarget) then
         -- Fall back to straight movement
@@ -576,8 +569,8 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
 
         -- Get current velocity from physics (authoritative)
         local currentVelX, currentVelY = behavior.velocity.x, behavior.velocity.y
-        if physics and globals.physicsWorld then
-            currentVelX, currentVelY = physics.GetVelocity(globals.physicsWorld, entity)
+        if physics and world then
+            currentVelX, currentVelY = physics.GetVelocity(world, entity)
         end
 
         local currentSpeed = math.sqrt(currentVelX * currentVelX + currentVelY * currentVelY)
@@ -599,8 +592,8 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
         behavior.velocity.y = desiredVelY
 
         -- Apply velocity to physics (physics-driven)
-        if physics and globals.physicsWorld then
-            physics.SetVelocity(globals.physicsWorld, entity, desiredVelX, desiredVelY)
+        if physics and world then
+            physics.SetVelocity(world, entity, desiredVelX, desiredVelY)
 
             -- Update visual rotation to face direction
             if desiredVelX ~= 0 or desiredVelY ~= 0 then
@@ -614,8 +607,8 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
         end
     else
         -- Target reached or very close, maintain current velocity
-        if physics and globals.physicsWorld then
-            local vx, vy = physics.GetVelocity(globals.physicsWorld, entity)
+        if physics and world then
+            local vx, vy = physics.GetVelocity(world, entity)
             if vx ~= 0 or vy ~= 0 then
                 transform.visualR = math.atan2(vy, vx)
             end
@@ -624,6 +617,9 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
 end
 
 function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior)
+    -- Get physics world once at function start
+    local world = PhysicsManager.get_world("world")
+
     -- Update orbit angle
     behavior.orbitAngle = behavior.orbitAngle + behavior.orbitSpeed * dt
 
@@ -635,7 +631,7 @@ function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior)
     local targetY = centerY + math.sin(behavior.orbitAngle) * behavior.orbitRadius
 
     -- Physics-driven: Calculate velocity to reach target position
-    if physics and globals.physicsWorld then
+    if physics and world then
         -- Get current position from transform (updated by physics sync)
         local currentX = transform.actualX + transform.actualW / 2
         local currentY = transform.actualY + transform.actualH / 2
@@ -645,7 +641,7 @@ function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior)
         local velocityY = (targetY - currentY) / dt
 
         -- Apply velocity to physics body
-        physics.SetVelocity(globals.physicsWorld, entity, velocityX, velocityY)
+        physics.SetVelocity(world, entity, velocityX, velocityY)
 
         -- Update visual rotation to face tangent direction
         transform.visualR = behavior.orbitAngle + math.pi / 2
@@ -658,10 +654,13 @@ function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior)
 end
 
 function ProjectileSystem.updateArcMovement(entity, dt, transform, behavior)
+    -- Get physics world once at function start
+    local world = PhysicsManager.get_world("world")
+
     -- Physics-driven: Chipmunk2D handles gravity automatically
-    if physics and globals.physicsWorld then
+    if physics and world then
         -- Sync velocity from physics (gravity is applied by Chipmunk2D)
-        local vx, vy = physics.GetVelocity(globals.physicsWorld, entity)
+        local vx, vy = physics.GetVelocity(world, entity)
         behavior.velocity.x = vx
         behavior.velocity.y = vy
 
@@ -718,12 +717,12 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
         return
     end
 
-    local gameObj = component_cache.get(projectileEntity, GameObject)
-    if not gameObj or not gameObj.projectileData then return end
+    local projectileScript = getScriptTableFromEntityID(projectileEntity)
+    if not projectileScript or not projectileScript.projectileData then return end
 
-    local data = gameObj.projectileData
-    local behavior = gameObj.projectileBehavior
-    local lifetime = gameObj.projectileLifetime
+    local data = projectileScript.projectileData
+    local behavior = projectileScript.projectileBehavior
+    local lifetime = projectileScript.projectileLifetime
 
     -- Check if already hit this entity (for piercing)
     if data.hitEntities[otherEntity] then
@@ -743,8 +742,7 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     end
 
     -- Emit hit event
-    publishLuaEvent("projectile_hit", {
-        projectile = projectileEntity,
+    signal.emit("projectile_hit", projectileEntity, {
         target = otherEntity,
         owner = data.owner,
         damage = data.damage * data.damageMultiplier
@@ -816,17 +814,18 @@ function ProjectileSystem.handleBounce(projectileEntity, otherEntity, behavior)
     behavior.velocity.y = -behavior.velocity.y * behavior.bounceDampening
 
     -- Apply to physics
-    if physics and globals.physicsWorld then
-        physics.SetVelocity(globals.physicsWorld, projectileEntity,
+    local world = PhysicsManager.get_world("world")
+    if physics and world then
+        physics.SetVelocity(world, projectileEntity,
             behavior.velocity.x, behavior.velocity.y)
     end
 
     -- Check max bounces
     if behavior.bounceCount >= behavior.maxBounces then
-        local gameObj = component_cache.get(projectileEntity, GameObject)
-        if gameObj and gameObj.projectileLifetime then
-            gameObj.projectileLifetime.shouldDespawn = true
-            gameObj.projectileLifetime.despawnReason = "bounce_depleted"
+        local projectileScript = getScriptTableFromEntityID(projectileEntity)
+        if projectileScript and projectileScript.projectileLifetime then
+            projectileScript.projectileLifetime.shouldDespawn = true
+            projectileScript.projectileLifetime.despawnReason = "bounce_depleted"
         end
     end
 end
@@ -843,8 +842,7 @@ function ProjectileSystem.handleExplosion(projectileEntity, data, behavior)
     -- This requires spatial query system
 
     -- Emit explosion event
-    publishLuaEvent("projectile_exploded", {
-        projectile = projectileEntity,
+    signal.emit("projectile_exploded", projectileEntity, {
         position = {x = transform.actualX, y = transform.actualY},
         radius = explosionRadius,
         damage = explosionDamage,
@@ -879,9 +877,9 @@ PROJECTILE DESTRUCTION & POOLING
 function ProjectileSystem.destroy(entity)
     if not entity_cache.valid(entity) then return end
 
-    local gameObj = component_cache.get(entity, GameObject)
-    if gameObj and gameObj.projectileData then
-        local data = gameObj.projectileData
+    local projectileScript = getScriptTableFromEntityID(entity)
+    if projectileScript and projectileScript.projectileData then
+        local data = projectileScript.projectileData
 
         -- Call onDestroy callback
         if data.onDestroyCallback then
@@ -889,63 +887,19 @@ function ProjectileSystem.destroy(entity)
         end
 
         -- Emit destroy event
-        publishLuaEvent("projectile_destroyed", {
-            projectile = entity,
+        signal.emit("projectile_destroyed", entity, {
             owner = data.owner,
-            reason = gameObj.projectileLifetime and gameObj.projectileLifetime.despawnReason
+            reason = projectileScript.projectileLifetime and projectileScript.projectileLifetime.despawnReason
         })
     end
 
     -- Remove from active projectiles
     ProjectileSystem.active_projectiles[entity] = nil
 
-    -- Return to pool or destroy
-    if ProjectileSystem.shouldPool(entity) then
-        ProjectileSystem.returnToPool(entity)
-    else
-        registry:destroy(entity)
-    end
+    -- Simply destroy the entity
+    registry:destroy(entity)
 
     log_debug("Destroyed projectile", entity)
-end
-
--- Check if projectile should be pooled
-function ProjectileSystem.shouldPool(entity)
-    -- Pool if we have space (max 50 pooled projectiles)
-    return #ProjectileSystem.pool < 50
-end
-
--- Return projectile to pool for reuse
-function ProjectileSystem.returnToPool(entity)
-    -- Clean up components but keep entity alive
-    local gameObj = component_cache.get(entity, GameObject)
-    if gameObj then
-        gameObj.projectileData = nil
-        gameObj.projectileBehavior = nil
-        gameObj.projectileLifetime = nil
-    end
-
-    -- Remove physics
-    if physics and globals.physicsWorld then
-        physics.DestroyPhysicsForEntity(globals.physicsWorld, entity)
-    end
-
-    -- Hide visually
-    local transform = component_cache.get(entity, Transform)
-    if transform then
-        transform.actualX = -10000
-        transform.actualY = -10000
-    end
-
-    table.insert(ProjectileSystem.pool, entity)
-end
-
--- Get projectile from pool
-function ProjectileSystem.getFromPool()
-    if #ProjectileSystem.pool > 0 then
-        return table.remove(ProjectileSystem.pool)
-    end
-    return entt_null
 end
 
 --[[
@@ -1011,39 +965,36 @@ INITIALIZATION
 
 -- Initialize projectile system
 function ProjectileSystem.init()
-    -- Setup collision category for projectiles
-    if physics and globals.physicsWorld then
-        local world = globals.physicsWorld
-
-        -- Add projectile collision category
-        physics.set_collision_tags(world, {
-            ProjectileSystem.COLLISION_CATEGORY,
-            "player", "enemy", "terrain", "obstacle"
-        })
-
-        -- Enable collision between projectiles and enemies
-        physics.enable_collision_between(world, ProjectileSystem.COLLISION_CATEGORY, "enemy")
-
-        -- Disable collision between projectiles
-        physics.disable_collision_between(world, ProjectileSystem.COLLISION_CATEGORY,
-            ProjectileSystem.COLLISION_CATEGORY)
-
-        log_debug("Projectile system initialized with physics")
-    end
+    -- Track last physics tick time for dt calculation
+    ProjectileSystem._lastUpdateTime = os.clock()
 
     -- Register projectile update on physics step timer
     if ProjectileSystem.use_physics_step_timer and timer then
-        -- Use physics_step tag so this runs synchronously with physics updates
-        ProjectileSystem.physics_step_timer_id = timer.every_physics_step(function(dt)
-            ProjectileSystem.updateInternal(dt)
-        end, "projectile_update")
+        -- Check if timer has every_physics_step function
+        if timer.every_physics_step then
+            -- Use physics_step tag so this runs synchronously with physics updates
+            -- Note: timer.every_physics_step callbacks do NOT receive dt parameter
+            timer.every_physics_step(function()
+                -- Calculate dt based on time since last update
+                local now = os.clock()
+                local dt = now - ProjectileSystem._lastUpdateTime
+                ProjectileSystem._lastUpdateTime = now
 
-        log_info("ProjectileSystem registered with physics step timer")
+                ProjectileSystem.updateInternal(dt)
+            end, "projectile_update")
+
+            log_debug("ProjectileSystem registered with physics step timer")
+        else
+            -- Fallback: Use regular timer if every_physics_step doesn't exist
+            log_debug("timer.every_physics_step() not available, falling back to manual updates")
+            ProjectileSystem.use_physics_step_timer = false
+            log_debug("ProjectileSystem will use manual update() calls")
+        end
     else
-        log_info("ProjectileSystem will use manual update() calls")
+        log_debug("ProjectileSystem will use manual update() calls")
     end
 
-    log_info("ProjectileSystem initialized")
+    log_debug("ProjectileSystem initialized")
 end
 
 -- Clean up all projectiles
@@ -1062,9 +1013,8 @@ function ProjectileSystem.cleanup()
     end
 
     ProjectileSystem.active_projectiles = {}
-    ProjectileSystem.pool = {}
 
-    log_info("ProjectileSystem cleaned up")
+    log_debug("ProjectileSystem cleaned up")
 end
 
 return ProjectileSystem

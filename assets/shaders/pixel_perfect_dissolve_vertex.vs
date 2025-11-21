@@ -15,7 +15,10 @@ out vec4 fragColor;
 
 void main()
 {
+    // Send vertex attributes to fragment shader
     fragTexCoord = vertexTexCoord;
     fragColor = vertexColor;
-    gl_Position = mvp * vec4(vertexPosition, 1.0);
+
+    // Calculate final vertex position
+    gl_Position = mvp*vec4(vertexPosition, 1.0);
 }

@@ -8,6 +8,8 @@ in vec4 fragColor;
 // Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
+
+// Dissolve uniforms
 uniform float sensitivity;
 
 // Output fragment color
@@ -20,18 +22,18 @@ float random(vec2 uv) {
 void main()
 {
     // Get size of texture in pixels
-    float size_x = float(textureSize(texture0, 0).x);
-    float size_y = float(textureSize(texture0, 0).y);
+    ivec2 texSize = textureSize(texture0, 0);
+    float sizeX = float(texSize.x);
+    float sizeY = float(texSize.y);
 
     vec4 pixelColor = texture(texture0, fragTexCoord);
 
     // Create a new "UV" which remaps every UV value to a snapped pixel value
-    vec2 UVr = vec2(floor(fragTexCoord.x * size_x) / size_x, floor(fragTexCoord.y * size_y) / size_y);
+    vec2 UVr = vec2(floor(fragTexCoord.x * sizeX) / sizeX, floor(fragTexCoord.y * sizeY) / sizeY);
 
     // Determine whether pixel should be visible or not
     float visible = step(sensitivity, random(UVr));
 
     // Draw the pixel, or not depending on if it is visible or not
-    finalColor = vec4(pixelColor.r, pixelColor.g, pixelColor.b, min(visible, pixelColor.a));
-    finalColor *= colDiffuse * fragColor;
+    finalColor = vec4(pixelColor.rgb, min(visible, pixelColor.a)) * colDiffuse * fragColor;
 }

@@ -72,7 +72,7 @@ A projectile that tracks and follows a target
 
 function ProjectileExamples.spawnHomingMissile(x, y, targetEntity, owner)
     if not targetEntity or targetEntity == entt_null then
-        log_warn("No valid target for homing missile")
+        log_debug("No valid target for homing missile")
         return entt_null
     end
 

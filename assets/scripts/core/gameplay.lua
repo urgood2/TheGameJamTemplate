@@ -4453,7 +4453,7 @@ function initActionPhase()
 
 
             -- give it physics
-            local info = { shape = "rectangle", tag = "pickup", sensor = false, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"
+            local info = { shape = "rectangle", tag = "pickup", sensor = true, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"
 
             physics.create_physics_for_transform(registry,
                 physics_manager_instance, -- global instance
@@ -4461,6 +4461,9 @@ function initActionPhase()
                 "world",                  -- physics world identifier
                 info
             )
+
+            -- disable deceleration so pickups don't slow down when moving toward player
+            physics.SetBullet(world, expPickupEntity, true)
 
             physics.enable_collision_between_many(PhysicsManager.get_world("world"), "pickup", { "player" })
             physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "pickup" })

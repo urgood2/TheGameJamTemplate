@@ -304,5 +304,68 @@
             "vertex": "web/item_glow_vertex.vs",
             "fragment": "web/item_glow_fragment.fs"
         }
+    },
+    "drop_shadow": {
+        "vertex": "drop_shadow_vertex.vs",
+        "fragment": "drop_shadow_fragment.fs",
+
+        "web": {
+            "vertex": "web/drop_shadow_vertex.vs",
+            "fragment": "web/drop_shadow_fragment.fs"
+        }
+    },
+    "chromatic_aberration": {
+        "vertex": "chromatic_aberration_vertex.vs",
+        "fragment": "chromatic_aberration_fragment.fs",
+
+        "web": {
+            "vertex": "web/chromatic_aberration_vertex.vs",
+            "fragment": "web/chromatic_aberration_fragment.fs"
+        }
+    },
+    "darkened_blur": {
+        "vertex": "darkened_blur_vertex.vs",
+        "fragment": "darkened_blur_fragment.fs",
+
+        "web": {
+            "vertex": "web/darkened_blur_vertex.vs",
+            "fragment": "web/darkened_blur_fragment.fs"
+        }
+    },
+    "custom_2d_light": {
+        "vertex": "custom_2d_light_vertex.vs",
+        "fragment": "custom_2d_light_fragment.fs",
+
+        "web": {
+            "vertex": "web/custom_2d_light_vertex.vs",
+            "fragment": "web/custom_2d_light_fragment.fs"
+        }
+    },
+    "palette_shader": {
+        "vertex": "palette_shader_vertex.vs",
+        "fragment": "palette_shader_fragment.fs",
+
+        "web": {
+            "vertex": "web/palette_shader_vertex.vs",
+            "fragment": "web/palette_shader_fragment.fs"
+        }
+    },
+    "perspective_warp": {
+        "vertex": "perspective_warp_vertex.vs",
+        "fragment": "perspective_warp_fragment.fs",
+
+        "web": {
+            "vertex": "web/perspective_warp_vertex.vs",
+            "fragment": "web/perspective_warp_fragment.fs"
+        }
+    },
+    "radial_shine_highlight": {
+        "vertex": "radial_shine_highlight_vertex.vs",
+        "fragment": "radial_shine_highlight_fragment.fs",
+
+        "web": {
+            "vertex": "web/radial_shine_highlight_vertex.vs",
+            "fragment": "web/radial_shine_highlight_fragment.fs"
+        }
     }
 }

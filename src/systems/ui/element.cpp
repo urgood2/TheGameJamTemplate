@@ -84,7 +84,7 @@ namespace ui
             
             // change active text input on click
             node.methods.onClick = [entity](entt::registry &reg, entt::entity) {
-                globals::inputState.activeTextInput = entity;
+                globals::getInputState().activeTextInput = entity;
                 SPDLOG_DEBUG("Set active text input to {}", static_cast<int>(entity));
             };
             
@@ -360,11 +360,11 @@ namespace ui
         {
             if (uiConfig->focusArgs->button)
             {
-                input::AddNodeToInputRegistry(registry, globals::inputState, uiConfig->button_UIE.value_or(entity), uiConfig->focusArgs->button.value());
+                input::AddNodeToInputRegistry(registry, globals::getInputState(), uiConfig->button_UIE.value_or(entity), uiConfig->focusArgs->button.value());
             }
             if (uiConfig->focusArgs->snap_to)
             {
-                input::SnapToNode(registry, globals::inputState, entity);
+                input::SnapToNode(registry, globals::getInputState(), entity);
             }
             if (uiConfig->focusArgs->redirect_focus_to)
             {
@@ -1389,7 +1389,7 @@ namespace ui
             node->layerDisplacement->y = parentLayerY;
 
             // This code applies a parallax effect to the button when it is clicked, hovered, or dragged while the cursor is down. The button moves slightly in the direction of its shadow displacement, giving a depth effect, and it resets parallaxDist to avoid continuous movement.
-            if (config->buttonCallback && ((state->last_clicked && state->last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f) || ((config->buttonCallback && (node->state.isBeingHovered || node->state.isBeingDragged)))) && globals::inputState.is_cursor_down)
+            if (config->buttonCallback && ((state->last_clicked && state->last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f) || ((config->buttonCallback && (node->state.isBeingHovered || node->state.isBeingDragged)))) && globals::getInputState().is_cursor_down)
             {
 
                 node->layerDisplacement->x -= parallaxDist * node->shadowDisplacement->x;
@@ -1817,7 +1817,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         }
 
         // highlighted button outline (only when mouse not active)
-        if (node->state.isBeingFocused && globals::inputState.hid.mouse_enabled == false && IsCursorHidden() == true)
+        if (node->state.isBeingFocused && globals::getInputState().hid.mouse_enabled == false && IsCursorHidden() == true)
         {
             state->focus_timer = state->focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
             float lw = 50.0f * std::pow(std::max(0.0f, (state->focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
@@ -2016,7 +2016,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             node->layerDisplacement->y = parentLayerY;
 
             // This code applies a parallax effect to the button when it is clicked, hovered, or dragged while the cursor is down. The button moves slightly in the direction of its shadow displacement, giving a depth effect, and it resets parallaxDist to avoid continuous movement.
-            if (config->buttonCallback && ((state->last_clicked && state->last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f) || ((config->buttonCallback && (node->state.isBeingHovered || node->state.isBeingDragged)))) && globals::inputState.is_cursor_down)
+            if (config->buttonCallback && ((state->last_clicked && state->last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f) || ((config->buttonCallback && (node->state.isBeingHovered || node->state.isBeingDragged)))) && globals::getInputState().is_cursor_down)
             {
 
                 node->layerDisplacement->x -= parallaxDist * node->shadowDisplacement->x;
@@ -2514,7 +2514,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         }
 
         // highlighted button outline (only when mouse not active)
-        if (node->state.isBeingFocused && globals::inputState.hid.mouse_enabled == false && IsCursorHidden() == true)
+        if (node->state.isBeingFocused && globals::getInputState().hid.mouse_enabled == false && IsCursorHidden() == true)
         {
             state->focus_timer = state->focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
             float lw = 50.0f * std::pow(std::max(0.0f, (state->focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
@@ -2788,7 +2788,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // Remove a layer from the overlay menu stack
             if (uiConfig->id && *uiConfig->id == "overlay_menu_back_button")
             { // TODO: replace with whatever button name gets rid of overlay menu
-                input::ModifyCurrentCursorContextLayer(registry, globals::inputState, -1);
+                input::ModifyCurrentCursorContextLayer(registry, globals::getInputState(), -1);
                 globals::noModCursorStack = true;
             }
 
@@ -2894,9 +2894,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         }
 
         // Step 2: Reset text input hook if this is the active one
-        if (globals::inputState.text_input_hook && globals::inputState.text_input_hook.value() == entity)
+        if (globals::getInputState().text_input_hook && globals::getInputState().text_input_hook.value() == entity)
         {
-            globals::inputState.text_input_hook.reset();
+            globals::getInputState().text_input_hook.reset();
         }
 
         // Step 3: Recursively remove all children
@@ -2956,7 +2956,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         }
 
         // Step 3: Handle Detailed Tooltip (Only If Pointer is Active)
-        auto &controller = globals::inputState;
+        auto &controller = globals::getInputState();
         if (uiConfig->detailedTooltip && controller.hid.pointer_enabled)
         {
 

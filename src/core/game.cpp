@@ -528,7 +528,7 @@ namespace game
         
         sound_system::ResetSoundSystem();
     
-        input::Init(globals::inputState);
+        input::Init(globals::getInputState(), globals::registry, globals::g_ctx);
         game::init();
         
     }

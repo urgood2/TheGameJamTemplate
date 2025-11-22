@@ -2,6 +2,7 @@
 #include "spdlog/spdlog.h"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/input_functions.hpp"
+#include "core/engine_context.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "sol/types.hpp"
 
@@ -565,12 +566,12 @@ void exposeToLua(sol::state& lua) {
 
         // Navigation
         "navigate", [](NavManager* self, const string& group, const string& dir) {
-            auto& reg = globals::registry;
-            auto& state = globals::inputState;
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
+            auto& state = globals::getInputState();
             self->navigate(reg, state, group, dir);
         },
         "select_current", [](NavManager* self, const string& group) {
-            auto& reg = globals::registry;
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
             self->select_current(reg, group);
         },
 
@@ -651,9 +652,14 @@ void exposeToLua(sol::state& lua) {
     nav.set_function("create_layer",        [&](const string& n){ NM.create_layer(n); });
     nav.set_function("add_group_to_layer",  [&](const string& l, const string& g){ NM.add_group_to_layer(l, g); });
     nav.set_function("navigate",            [&](const string& g, const string& d){ 
-        NM.navigate(globals::registry, globals::inputState, g, d);
+        auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
+        auto& state = globals::getInputState();
+        NM.navigate(reg, state, g, d); 
     });
-    nav.set_function("select_current",      [&](const string& g){ NM.select_current(globals::registry, g); });
+    nav.set_function("select_current",      [&](const string& g){ 
+        auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
+        NM.select_current(reg, g); 
+    });
     nav.set_function("set_entity_enabled",  [&](entt::entity e, bool enabled){ NM.set_entity_enabled(e, enabled); });
     nav.set_function("debug_print_state",   [&]{ NM.debug_print_state(); });
     nav.set_function("validate",            [&]{ NM.validate(); });
@@ -726,7 +732,11 @@ void exposeToLua(sol::state& lua) {
     rec.record_free_function({"controller_nav"},
         {"set_wrap", "---@param group string\n---@param wrap boolean", "Enable or disable wrap-around navigation.", true, false});
         
-    nav.set_function("focus_entity", [&](entt::entity e) { globals::inputState.cursor_focused_target = e; }); rec.record_free_function({"controller_nav"}, {"focus_entity", "---@param e entt.entity", "Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.", true, false});
+    nav.set_function("focus_entity", [&](entt::entity e) { 
+        auto& state = globals::getInputState();
+        state.cursor_focused_target = e; 
+    }); 
+    rec.record_free_function({"controller_nav"}, {"focus_entity", "---@param e entt.entity", "Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.", true, false});
         
         
 
@@ -736,6 +746,3 @@ void exposeToLua(sol::state& lua) {
 
 
 } // namespace controller_nav
-
-
-

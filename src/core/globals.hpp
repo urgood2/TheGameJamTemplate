@@ -78,6 +78,10 @@ namespace input
     struct InputState;
 }
 
+namespace globals {
+    input::InputState& getInputState();
+}
+
 namespace transform
 {
     struct MasterCacheEntry;

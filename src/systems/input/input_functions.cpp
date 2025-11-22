@@ -43,7 +43,7 @@ namespace input
         if (globals::g_ctx && globals::g_ctx->inputState) {
             return *globals::g_ctx->inputState;
         }
-        return globals::inputState;
+        return globals::getInputState();
     }
 
     static entt::registry& resolveRegistry() {
@@ -97,7 +97,7 @@ namespace input
     
 
     // Initializes the controller
-    auto Init(InputState &inputState) -> void
+    auto Init(InputState &inputState, entt::registry &registry, EngineContext* ctx) -> void
     {
         // make new
         inputState = InputState{};
@@ -110,16 +110,20 @@ namespace input
         inputState.activeInputLocks["frame_lock_reset_next_frame"] = false;
         
         // always make container entity by default
-        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
-        auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
+        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&registry, 0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+        auto &gameMapNode = registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
         gameMapNode.debug.debugText = "Map Container";
 
         // create cursor
-        globals::cursor = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 10, 10);
+        globals::cursor = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, 10, 10);
         // screen space
-        globals::registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(globals::cursor);
-        auto &cursorNode = globals::registry.get<transform::GameObject>(globals::cursor);
+        registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(globals::cursor);
+        auto &cursorNode = registry.get<transform::GameObject>(globals::cursor);
         cursorNode.debug.debugText = "Cursor";
+
+        if (ctx) {
+            ctx->inputState = &inputState;
+        }
     }
 
     auto PollInput(entt::registry &registry, InputState &inputState, float dt) -> void
@@ -291,8 +295,9 @@ namespace input
         return InputDeviceInputCategory::NONE;
     }
 
-    auto Update(entt::registry &registry, InputState &inputState, float dt) -> void
+    auto Update(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void
     {
+        (void)ctx; // context reserved for future routing; registry/inputState already resolved by caller
         ZONE_SCOPED("Input system update");
         
         auto mouseCategory = DetectMouseActivity(inputState);
@@ -1074,7 +1079,8 @@ namespace input
             ShowCursor();
 
             // unfocus UI
-            auto view = globals::registry.view<transform::GameObject, ui::UIConfig>();
+            auto& reg = resolveRegistry();
+            auto view = reg.view<transform::GameObject, ui::UIConfig>();
             for (auto entity : view)
                 view.get<transform::GameObject>(entity).state.isBeingFocused = false;
         }

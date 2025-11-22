@@ -619,7 +619,8 @@ namespace scripting {
         lua["globals"]["screenHeight"]  = [](){ return globals::VIRTUAL_HEIGHT; };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
         
-        lua["globals"]["inputState"] = &(globals::inputState);
+        auto& inputStateRef = globals::getInputState();
+        lua["globals"]["inputState"] = &inputStateRef;
         
         /*
                 Camera2D, defines position/orientation in 2d space

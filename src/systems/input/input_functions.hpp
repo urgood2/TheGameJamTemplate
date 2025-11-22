@@ -21,13 +21,15 @@
 
 using namespace snowhouse; // assert
 
+struct EngineContext;
+
 namespace input
 {
     auto exposeToLua(sol::state &lua) -> void;
 
     // Controller Initialization
-    auto Init(InputState &inputState) -> void;
-    auto Update(entt::registry &registry, InputState &inputState, float dt) -> void;
+    auto Init(InputState &inputState, entt::registry &registry, EngineContext* ctx = nullptr) -> void;
+    auto Update(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx = nullptr) -> void;
 
     void hoverDragSimultaneousCheck(entt::registry &registry, input::InputState &inputState);
 

@@ -159,7 +159,7 @@ void MainLoopFixedUpdateAbstraction(float dt)
     }
     
     // finalize input state at end of frame
-    input::finalizeUpdateAtEndOfFrame(globals::inputState, dt);
+    input::finalizeUpdateAtEndOfFrame(globals::getInputState(), dt);
     
 }
 
@@ -414,14 +414,14 @@ int main(void)
     main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
     
 
-    input::Init(globals::inputState);
+    input::Init(globals::getInputState(), globals::registry, globals::g_ctx);
 
     game::init();
     
     
     //gamepad connected? just connect gamepad 0
     if (IsGamepadAvailable(0)) {
-        input::SetCurrentGamepad(globals::inputState, GetGamepadName(0), 0);
+        input::SetCurrentGamepad(globals::getInputState(), GetGamepadName(0), 0);
     }
     
     // --------------------------------------------------------------------------------------
@@ -491,7 +491,7 @@ auto updateSystems(float dt) -> void
     
     {
         ZONE_SCOPED("Input System Update");
-        input::Update(globals::registry, globals::inputState, dt);
+        input::Update(globals::registry, globals::getInputState(), dt, globals::g_ctx);
     }
     
     {

@@ -367,6 +367,8 @@ namespace globals
     // ECS registry
     extern entt::registry registry;
 
+    // Accessors that respect EngineContext when available.
+    entt::registry& getRegistry();
     // extern Camera2D camera2D;
 
     extern void updateGlobalVariables();

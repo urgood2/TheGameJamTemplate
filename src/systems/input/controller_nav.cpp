@@ -652,12 +652,12 @@ void exposeToLua(sol::state& lua) {
     nav.set_function("create_layer",        [&](const string& n){ NM.create_layer(n); });
     nav.set_function("add_group_to_layer",  [&](const string& l, const string& g){ NM.add_group_to_layer(l, g); });
     nav.set_function("navigate",            [&](const string& g, const string& d){ 
-        auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
+        auto& reg = globals::getRegistry();
         auto& state = globals::getInputState();
         NM.navigate(reg, state, g, d); 
     });
     nav.set_function("select_current",      [&](const string& g){ 
-        auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
+        auto& reg = globals::getRegistry();
         NM.select_current(reg, g); 
     });
     nav.set_function("set_entity_enabled",  [&](entt::entity e, bool enabled){ NM.set_entity_enabled(e, enabled); });

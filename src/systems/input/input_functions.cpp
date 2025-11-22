@@ -47,10 +47,7 @@ namespace input
     }
 
     static entt::registry& resolveRegistry() {
-        if (globals::g_ctx) {
-            return globals::g_ctx->registry;
-        }
-        return globals::registry;
+        return globals::getRegistry();
     }
 
     void HandleTextInput(ui::TextInput &input) {

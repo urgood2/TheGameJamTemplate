@@ -288,6 +288,13 @@ namespace globals {
     Vector2 worldMousePosition = {0,0};
     Camera2D camera2D = {0};
 
+    entt::registry& getRegistry() {
+        if (g_ctx) {
+            return g_ctx->registry;
+        }
+        return registry;
+    }
+
     input::InputState& getInputState() {
         if (g_ctx && g_ctx->inputState) {
             return *g_ctx->inputState;

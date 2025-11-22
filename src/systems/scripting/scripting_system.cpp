@@ -13,6 +13,7 @@
 #include "systems/shaders/shader_system.hpp"
 #include "systems/text/textVer2.hpp"
 #include "components/components.hpp"
+#include "core/engine_context.hpp"
 
 
 // pass both the type and value of an argument to a function
@@ -359,7 +360,7 @@ namespace scripting
          * @param registry The ECS registry.
          * @param lua The Lua state to set up.
          */
-        auto init(entt::registry &registry, sol::state &lua) -> void
+        auto init(entt::registry &registry, sol::state &lua, EngineContext* ctx) -> void
         {
             //  call register_meta_component<Component>(); for all components that need to be usable within script with registry
             register_meta_component<ScriptComponent>();
@@ -395,8 +396,11 @@ namespace scripting
             registry.on_destroy<ScriptComponent>().connect<&release_script>();
             
             // 2. Create a global variable in Lua named "registry" and
-            //    point it directly to your C++ globals::getRegistry() instance.
-            lua["registry"] = std::ref(globals::getRegistry());
+            //    point it directly to the active registry instance.
+            lua["registry"] = std::ref(registry);
+            if (ctx) {
+                lua["ctx"] = std::ref(*ctx);
+            }
         
             /*
             When Lua does:

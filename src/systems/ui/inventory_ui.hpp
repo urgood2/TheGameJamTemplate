@@ -36,7 +36,7 @@ namespace ui {
         auto areaWidth = columns * cellW + (columns + 1) * padding;
         auto areaHeight = rows * cellH + (rows + 1) * padding;  
         
-        auto newAreaEntity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, areaWidth, areaHeight);
+        auto newAreaEntity = transform::CreateOrEmplace(&registry, globals::getGameWorldContainer(), 0, 0, areaWidth, areaHeight);
         
         auto &inventoryGrid = registry.emplace<InventoryGrid>(newAreaEntity);
         inventoryGrid.columns = columns;

@@ -7,6 +7,8 @@
 
 #include "shader_system.hpp"
 
+struct EngineContext;
+
 #include "systems/scripting/binding_recorder.hpp"
 
 namespace shader_pipeline {
@@ -159,9 +161,6 @@ namespace shader_pipeline {
     }
 
     inline void DebugDrawAllRects(int screenX = 0, int screenY = 0) {
-        // 1) draw the whole front() canvas in the corner
-        (screenX, screenY);
-
         // 2) overlay each recorded rect with a distinct color
         const Color colors[] = { RED, GREEN, BLUE, YELLOW, MAGENTA, GRAY };
         for (size_t i = 0; i < debugRects.size(); ++i) {
@@ -270,7 +269,7 @@ namespace shader_pipeline {
         return lastRenderRect;
     }
 
-    inline void exposeToLua(sol::state& lua) {
+    inline void exposeToLua(sol::state& lua, EngineContext* ctx = nullptr) {
 
         // 1) Create top-level table
         sol::table sp = lua.create_named_table("shader_pipeline");

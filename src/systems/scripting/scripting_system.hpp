@@ -16,6 +16,8 @@
 // pass both the type and value of an argument to a function
 #define AUTO_ARG(x) decltype(x), x
 
+struct EngineContext;
+
 namespace scripting
 {
 
@@ -133,7 +135,7 @@ namespace scripting
          * @param registry The ECS registry.
          * @param lua The Lua state to set up.
          */
-        extern auto init(entt::registry &registry, sol::state &lua) -> void;
+        extern auto init(entt::registry &registry, sol::state &lua, EngineContext* ctx = nullptr) -> void;
 
         /**
          * @brief Updates all Lua scripts each frame.

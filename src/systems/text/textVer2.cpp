@@ -39,20 +39,10 @@ namespace TextSystem
 
     // Prefer context-backed atlas textures with legacy fallback.
     static Texture2D resolveAtlasTexture(const std::string& atlasUUID) {
-        Texture2D atlas{};
-        if (globals::g_ctx) {
-            auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
-            if (it != globals::g_ctx->textureAtlas.end()) {
-                atlas = it->second;
-            }
+        if (auto* tex = getAtlasTexture(atlasUUID)) {
+            return *tex;
         }
-        if (atlas.id == 0) {
-            auto it = globals::textureAtlasMap.find(atlasUUID);
-            if (it != globals::textureAtlasMap.end()) {
-                atlas = it->second;
-            }
-        }
-        return atlas;
+        return Texture2D{};
     }
 
     auto exposeToLua(sol::state &lua) -> void {
@@ -516,7 +506,7 @@ namespace TextSystem
         // automatically runs parseText() on the given text configuration and returns a transform-enabled entity
         auto createTextEntity(const Text &text, float x, float y, sol::optional<sol::table> waitersOpt) -> entt::entity
         {
-            auto entity = transform::CreateOrEmplace(&globals::getRegistry(), globals::gameWorldContainerEntity, x, y, 1, 1);
+            auto entity = transform::CreateOrEmplace(&globals::getRegistry(), globals::getGameWorldContainer(), x, y, 1, 1);
             auto &transform = globals::getRegistry().get<transform::Transform>(entity);
             auto &gameObject = globals::getRegistry().get<transform::GameObject>(entity);
             auto &textComp = globals::getRegistry().emplace<Text>(entity, text);
@@ -1655,7 +1645,7 @@ namespace TextSystem
         void updateText(entt::entity textEntity, float dt)
         {
             
-            auto &gameWorldTransform = globals::getRegistry().get<transform::Transform>(globals::gameWorldContainerEntity);
+            auto &gameWorldTransform = globals::getRegistry().get<transform::Transform>(globals::getGameWorldContainer());
             auto &textTransform = globals::getRegistry().get<transform::Transform>(textEntity);
 
             auto &text = globals::getRegistry().get<Text>(textEntity);

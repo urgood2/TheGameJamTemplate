@@ -492,6 +492,7 @@ namespace util {
         
         
         // return pos;
+        return Vector2{0.0f, 0.0f}; // TODO: implement once tile picking is re-enabled
     }
 
 
@@ -517,20 +518,19 @@ namespace util {
     Color getColor(std::string colorName_or_uuid, ::EngineContext* ctx) {
         const auto key = uuid::add(colorName_or_uuid);
 
-        ::EngineContext* effectiveCtx = ctx ? ctx : globals::g_ctx;
-        if (effectiveCtx) {
-            auto it = effectiveCtx->colors.find(key);
-            if (it != effectiveCtx->colors.end()) {
+        if (ctx) {
+            auto it = ctx->colors.find(key);
+            if (it != ctx->colors.end()) {
                 return it->second;
             }
         }
 
-        auto it = globals::colorsMap.find(key);
-        if (it != globals::colorsMap.end()) {
+        auto& colorsMap = globals::getColorsMap();
+        if (auto it = colorsMap.find(key); it != colorsMap.end()) {
             return it->second;
         }
 
-        return globals::colorsMap[key];
+        return colorsMap[key];
     }
 
     auto toUnsignedChar(string value) -> unsigned char {

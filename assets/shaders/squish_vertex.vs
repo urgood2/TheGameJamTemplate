@@ -18,8 +18,8 @@ uniform vec2 up_right;
 uniform vec2 down_right;
 uniform vec2 down_left;
 uniform vec2 plane_size;
-uniform float squish_x = 0.1;
-uniform float squish_y = 0.1;
+uniform float squish_x;
+uniform float squish_y;
 
 
 mat3 perspective_transform(vec2[4] poly) {

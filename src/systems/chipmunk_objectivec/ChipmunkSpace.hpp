@@ -60,6 +60,7 @@ public:
     explicit ChipmunkSpace(cpSpace* space)
     : _space(space)
     , _staticBody(ChipmunkBody::BodyFromCPBody(cpSpaceGetStaticBody(space)))
+    , _ownsStaticBody(false)
     {}
     ChipmunkSpace();
     virtual ~ChipmunkSpace();
@@ -171,6 +172,7 @@ public:
 protected:
     cpSpace* _space;
     ChipmunkBody* _staticBody;
+    bool _ownsStaticBody{false};
     std::set<ChipmunkObject*> _children;
     
     std::vector<HandlerContext> _handlers;
@@ -185,4 +187,3 @@ public:
     void setThreads(size_t n);
     void step(cpFloat dt) override;
 };
-

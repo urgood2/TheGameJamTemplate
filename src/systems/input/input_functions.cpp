@@ -107,15 +107,15 @@ namespace input
         inputState.activeInputLocks["frame_lock_reset_next_frame"] = false;
         
         // always make container entity by default
-        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&registry, 0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
-        auto &gameMapNode = registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
+        globals::setGameWorldContainer(transform::CreateGameWorldContainerEntity(&registry, 0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
+        auto &gameMapNode = registry.get<transform::GameObject>(globals::getGameWorldContainer());
         gameMapNode.debug.debugText = "Map Container";
 
         // create cursor
-        globals::cursor = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, 10, 10);
+        globals::setCursorEntity(transform::CreateOrEmplace(&registry, globals::getGameWorldContainer(), 0, 0, 10, 10));
         // screen space
-        registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(globals::cursor);
-        auto &cursorNode = registry.get<transform::GameObject>(globals::cursor);
+        registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(globals::getCursorEntity());
+        auto &cursorNode = registry.get<transform::GameObject>(globals::getCursorEntity());
         cursorNode.debug.debugText = "Cursor";
 
         if (ctx) {
@@ -318,8 +318,12 @@ namespace input
         
         // SPDLOG_DEBUG("Final category is {}", magic_enum::enum_name(finalCategory));
 
+        if (finalCategory != InputDeviceInputCategory::NONE) {
+            ReconfigureInputDeviceInfo(inputState, finalCategory);
+        }
+
         // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt);
-        auto &transform = registry.get<transform::Transform>(globals::cursor);
+        auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
 
         handleRawInput(registry, inputState, dt);
 
@@ -862,12 +866,12 @@ namespace input
         // set mouse cursor image to be only visible when relevant
         if (inputState.hid.pointer_enabled && !(inputState.hid.mouse_enabled || inputState.hid.touch_enabled) && (inputState.focus_interrupt == false))
         {
-            auto &node = registry.get<transform::GameObject>(globals::cursor);
+            auto &node = registry.get<transform::GameObject>(globals::getCursorEntity());
             node.state.visible = true;
         }
         else
         {
-            auto &node = registry.get<transform::GameObject>(globals::cursor);
+            auto &node = registry.get<transform::GameObject>(globals::getCursorEntity());
             node.state.visible = false;
         }
 
@@ -1006,7 +1010,7 @@ namespace input
 
         if (!inputState.overlay_menu_active_timer)
             inputState.overlay_menu_active_timer = 0.0f;
-        if (registry.valid(globals::overlayMenu))
+        if (registry.valid(globals::getOverlayMenu()))
             inputState.overlay_menu_active_timer = inputState.overlay_menu_active_timer.value() + dt;
         else
             inputState.overlay_menu_active_timer = 0.0f;
@@ -1177,7 +1181,7 @@ namespace input
             // set cursor position to mouse position, derive cursor transform
             state.cursor_position = globals::getScaledMousePositionCached();
 
-            auto &transform = registry.get<transform::Transform>(globals::cursor);
+            auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
             transform.setActualX(state.cursor_position.x);
             transform.setActualY(state.cursor_position.y);
             transform.setVisualX(state.cursor_position.x);
@@ -1210,13 +1214,13 @@ namespace input
         }
 
         // Add the new node to the front of the list
-        NodeData newNodeData = {.node = node, .menu = registry.valid(globals::overlayMenu) || globals::isGamePaused}; // there is an overlay menu that exists for the game, or the game is currently paused (paused menu). That means this node should be treated as a menu item.
+        NodeData newNodeData = {.node = node, .menu = registry.valid(globals::getOverlayMenu()) || globals::isGamePaused}; // there is an overlay menu that exists for the game, or the game is currently paused (paused menu). That means this node should be treated as a menu item.
         state.button_registry[button].insert(state.button_registry[button].begin(), newNodeData);
     }
 
     auto ProcessInputRegistry(InputState &state, entt::registry &registry) -> void
     {
-        auto &roomTransform = registry.get<transform::Transform>(globals::gameWorldContainerEntity);
+        auto &roomTransform = registry.get<transform::Transform>(globals::getGameWorldContainer());
         Rectangle roomBounds = {0, 0, roomTransform.getActualW(), roomTransform.getActualH()};
         bool overlayMenuActive = globals::under_overlay;
 
@@ -1328,7 +1332,7 @@ namespace input
             state.cursor_position.x = hardSetT->x;
             state.cursor_position.y = hardSetT->y;
 
-            auto &transform = registry.get<transform::Transform>(globals::cursor);
+            auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
             transform.setActualX(hardSetT->x);
             transform.setActualY(hardSetT->y);
             transform.setVisualX(hardSetT->x);
@@ -1343,7 +1347,7 @@ namespace input
             Vector2 mousePos = globals::getScaledMousePositionCached();
             state.cursor_position = mousePos;
 
-            auto &transform = registry.get<transform::Transform>(globals::cursor);
+            auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
             transform.setActualX(mousePos.x);
             transform.setActualY(mousePos.y);
             transform.setVisualX(mousePos.x);
@@ -1358,7 +1362,7 @@ namespace input
             state.cursor_position = transform::GetCursorOnFocus(&registry, state.cursor_focused_target);
 
             // Update game-world coordinates
-            auto &transform = registry.get<transform::Transform>(globals::cursor);
+            auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
             transform.setActualX(state.cursor_position.x);
             transform.setActualY(state.cursor_position.y);
             transform.setVisualX(state.cursor_position.x);
@@ -1438,7 +1442,7 @@ namespace input
                 l_stick_y += (l_stick_y > 0 ? -0.1f : 0.0f) + (l_stick_y < 0 ? 0.1f : 0.0f);
 
                 // Modify the cursor position based on left stick values
-                auto &transform = registry.get<transform::Transform>(globals::cursor);
+                auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
                 transform.setActualX(transform.getActualX() + l_stick_x * dt * state.axis_cursor_speed);
                 transform.setActualY(transform.getActualY() + l_stick_y * dt * state.axis_cursor_speed);
 
@@ -1487,7 +1491,7 @@ namespace input
                 r_stick_y = r_stick_y + (r_stick_y > 0 ? -deadzone : 0) + (r_stick_y < 0 ? deadzone : 0);
 
                 // Modify the cursor position based on right stick values
-                auto &transform = registry.get<transform::Transform>(globals::cursor);
+                auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
                 transform.setActualX(transform.getActualX() + r_stick_x * dt * state.axis_cursor_speed);
                 transform.setActualY(transform.getActualY() + r_stick_y * dt * state.axis_cursor_speed);
 
@@ -1934,7 +1938,7 @@ namespace input
         // Iterate through the precise collision results
         for (entt::entity e : entitiesAtCursor)
         {
-            if (e == globals::gameWorldContainerEntity || e == globals::cursor)
+            if (e == globals::getGameWorldContainer() || e == globals::getCursorEntity())
                 continue; // skip container
 
             auto &node = registry.get<transform::GameObject>(e);
@@ -1963,7 +1967,7 @@ namespace input
 
         for (auto entity : allTransformViewExcludeCursorCollision)
         {
-            if (entity == globals::gameWorldContainerEntity || entity == globals::cursor)
+            if (entity == globals::getGameWorldContainer() || entity == globals::getCursorEntity())
                 continue; // skip container
 
             auto node = registry.try_get<transform::GameObject>(entity);
@@ -1982,7 +1986,7 @@ namespace input
         {
             state.cursor_hover_transform = Vector2{0.0f, 0.0f};
         }
-        auto &cursorTransform = registry.get<transform::Transform>(globals::cursor);
+        auto &cursorTransform = registry.get<transform::Transform>(globals::getCursorEntity());
 
         state.cursor_hover_transform->x = cursorTransform.getActualX();
         state.cursor_hover_transform->y = cursorTransform.getActualY();
@@ -1998,7 +2002,7 @@ namespace input
             state.activeInputLocks["frame"] ||
             state.coyote_focus)
         {
-            state.cursor_hovering_target = globals::gameWorldContainerEntity;
+            state.cursor_hovering_target = globals::getGameWorldContainer();
             return;
         }
 
@@ -2041,7 +2045,7 @@ namespace input
 
         // Fallback to the ROOM if no valid hover target is found
         if (!registry.valid(state.cursor_hovering_target) || (registry.valid(state.cursor_dragging_target) && !state.hid.touch_enabled))
-            state.cursor_hovering_target = globals::gameWorldContainerEntity;
+            state.cursor_hovering_target = globals::getGameWorldContainer();
 
         // If the target has changed, mark hover as not handled
         if (state.cursor_hovering_target != state.cursor_prev_hovering_target)
@@ -2159,7 +2163,7 @@ namespace input
         if (!registry.valid(state.cursor_down_target))
         {
             SPDLOG_DEBUG("No valid target found, falling back to ROOM");
-            state.cursor_down_target = globals::gameWorldContainerEntity;
+            state.cursor_down_target = globals::getGameWorldContainer();
         }
         
         input::DispatchRaw(state, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/true, /*value*/0.f);
@@ -2204,7 +2208,7 @@ namespace input
         {
 
             // Fallback to ROOM if no valid target
-            state.cursor_up_target = globals::gameWorldContainerEntity;
+            state.cursor_up_target = globals::getGameWorldContainer();
             SPDLOG_DEBUG("No valid target found, falling back to ROOM");
         }
         
@@ -2224,8 +2228,8 @@ namespace input
         auto &transform = registry.get<transform::Transform>(entity);
         auto &uiConfig = registry.get<ui::UIConfig>(entity);
 
-        auto &roomNode = registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
-        auto &roomTransform = registry.get<transform::Transform>(globals::gameWorldContainerEntity);
+        auto &roomNode = registry.get<transform::GameObject>(globals::getGameWorldContainer());
+        auto &roomTransform = registry.get<transform::Transform>(globals::getGameWorldContainer());
 
         // If the node is outside the room's height bounds, it's not focusable
         if (transform.getActualY() > roomTransform.getActualY() + roomTransform.getActualH() + 3)
@@ -2413,8 +2417,8 @@ namespace input
                 }
                 else
                 {
-                    auto &roomTransform = registry.get<transform::Transform>(globals::gameWorldContainerEntity);
-                    auto &cursorTransform = registry.get<transform::Transform>(globals::cursor);
+                    auto &roomTransform = registry.get<transform::Transform>(globals::getGameWorldContainer());
+                    auto &cursorTransform = registry.get<transform::Transform>(globals::getCursorEntity());
                     state.focus_cursor_pos = {cursorTransform.getActualX() - roomTransform.getActualX(), cursorTransform.getActualY() - roomTransform.getActualY()};
 
                     // If a node is already focused, use its center point as the reference position.
@@ -2439,7 +2443,7 @@ namespace input
                         if (hover_node.state.focusEnabled)
                         {
                             auto hover_pos = transform::GetCursorOnFocus(&registry, state.current_designated_hover_target); // Function to determine hover position
-                            auto &roomTransform = registry.get<transform::Transform>(globals::gameWorldContainerEntity);
+                            auto &roomTransform = registry.get<transform::Transform>(globals::getGameWorldContainer());
                             state.focus_cursor_pos = {
                                 (hover_pos.x - roomTransform.getActualX()),
                                 (hover_pos.y - roomTransform.getActualY())};
@@ -2660,7 +2664,7 @@ namespace input
         {
             if (button == GAMEPAD_BUTTON_LEFT_TRIGGER_1 || button == GAMEPAD_BUTTON_RIGHT_TRIGGER_1)
             {
-                focused = ui::box::GetUIEByID(registry, globals::overlayMenu, "tab_shoulders").value_or(entt::null);
+                focused = ui::box::GetUIEByID(registry, globals::getOverlayMenu(), "tab_shoulders").value_or(entt::null);
                 externButton = true;
             }
         }
@@ -2933,8 +2937,9 @@ namespace input
     }
 
     
-    auto exposeToLua(sol::state &lua) -> void
+    auto exposeToLua(sol::state &lua, EngineContext* ctx) -> void
     {
+        (void)ctx; // currently unused; kept for context-aware expansion
 
         // Sol2 binding for input::InputState struct
         auto &L = lua;

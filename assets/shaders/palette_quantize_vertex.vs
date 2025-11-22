@@ -1,5 +1,5 @@
+#version 330 core
 // palette_quantize.vs
-#version 330
 
 // ——————————————————————————————————————————————————————————————————————
 // Inputs (match Raylib default locations)

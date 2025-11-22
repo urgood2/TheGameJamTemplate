@@ -1,5 +1,7 @@
 # Timer & EventQueueSystem — Lua API Reference
 
+> **Current status:** the timer/EventQueueSystem bindings are not registered because `timer::exposeToLua` is commented out in `src/systems/scripting/scripting_functions.cpp`. Keep this file for future re‑enablement, but do not rely on these APIs in the current build.
+
 > Production‑ready reference for the timer module and EventQueueSystem bindings created in `exposeToLua(sol::state& lua)`.
 
 * **Host**: C++ (Sol2) → Lua

@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // Input vertex attributes (from vertex shader)
 in vec2 fragTexCoord;
 in vec4 fragColor;

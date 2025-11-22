@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Gradation - Radial
 // Applies a radial gradient overlay
 

@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -12,15 +11,15 @@ uniform vec2 uImageSize;
 
 // Effect uniforms
 uniform sampler2D noise_tex;
-uniform vec4 root_color = vec4(1.0, 0.75, 0.3, 1.0);
-uniform vec4 tip_color = vec4(1.0, 0.03, 0.001, 1.0);
-uniform float poster_color = 6.0;
-uniform float fire_alpha = 1.0;
-uniform vec2 fire_speed = vec2(0.015, 0.5);
-uniform float fire_aperture = 0.22;
-uniform float vignette_radius = 0.25;
-uniform float vignette_falloff = 0.25;
-uniform float noise_influence = 1.0;
+uniform vec4 root_color;
+uniform vec4 tip_color;
+uniform float poster_color;
+uniform float fire_alpha;
+uniform vec2 fire_speed;
+uniform float fire_aperture;
+uniform float vignette_radius;
+uniform float vignette_falloff;
+uniform float noise_influence;
 uniform float iTime;
 
 out vec4 finalColor;

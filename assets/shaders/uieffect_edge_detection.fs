@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Sampling - Edge Detection
 // Detects edges using Sobel operator on luminance or alpha
 

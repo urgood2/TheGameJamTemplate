@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Edge - Plain
 // Adds a colored edge/outline to sprites
 

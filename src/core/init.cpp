@@ -24,21 +24,9 @@
 namespace init {
 
     // Prefer context-backed atlas textures when available, with legacy fallback.
-    static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
-        if (globals::g_ctx) {
-            auto ctxIt = globals::g_ctx->textureAtlas.find(atlasUUID);
-            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
-                return &ctxIt->second;
-            }
-        }
-
-        auto legacyIt = globals::textureAtlasMap.find(atlasUUID);
-        if (legacyIt != globals::textureAtlasMap.end()) {
-            return &legacyIt->second;
-        }
-
-        return nullptr;
-    }
+static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
+    return getAtlasTexture(atlasUUID);
+}
     
     void scanAssetsFolderAndAddAllPaths()
     {
@@ -115,35 +103,21 @@ namespace init {
 
         jsonStream.close();
 
-        jsonStream.open(util::getRawAssetPathNoUUID("raws/colors.json"));
-        globals::colorsJSON = json::parse(jsonStream);
+        auto assignJson = [&](const std::string& path, json& target, json* ctxSlot) {
+            jsonStream.open(path);
+            target = json::parse(jsonStream);
+            jsonStream.close();
+            if (ctxSlot && globals::g_ctx) {
+                *ctxSlot = target;
+            }
+        };
 
-        jsonStream.close();
-
-        jsonStream.open(util::getRawAssetPathNoUUID("graphics/animations.json"));
-        globals::animationsJSON = json::parse(jsonStream);
-
-        jsonStream.close();
-        
-        jsonStream.open(util::getRawAssetPathNoUUID("config.json"));
-        globals::configJSON = json::parse(jsonStream);
-        
-        jsonStream.close();
-
-        jsonStream.open(util::getRawAssetPathNoUUID("scripts/scripting_config.json"));
-        globals::aiConfigJSON = json::parse(jsonStream);
-        
-        jsonStream.close();
-
-        jsonStream.open(util::getRawAssetPathNoUUID("scripts/ai_worldstate.json"));
-        globals::aiWorldstateJSON = json::parse(jsonStream);
-        
-        jsonStream.close();
-
-        jsonStream.open(util::getRawAssetPathNoUUID("scripts/ai_actions.json"));
-        globals::aiActionsJSON = json::parse(jsonStream);
-        
-        jsonStream.close();
+        assignJson(util::getRawAssetPathNoUUID("raws/colors.json"), globals::colorsJSON, globals::g_ctx ? &globals::g_ctx->colorsJson : nullptr);
+        assignJson(util::getRawAssetPathNoUUID("graphics/animations.json"), globals::animationsJSON, globals::g_ctx ? &globals::g_ctx->animationsJson : nullptr);
+        assignJson(util::getRawAssetPathNoUUID("config.json"), globals::configJSON, globals::g_ctx ? &globals::g_ctx->configJson : nullptr);
+        assignJson(util::getRawAssetPathNoUUID("scripts/scripting_config.json"), globals::aiConfigJSON, globals::g_ctx ? &globals::g_ctx->aiConfigJson : nullptr);
+        assignJson(util::getRawAssetPathNoUUID("scripts/ai_worldstate.json"), globals::aiWorldstateJSON, globals::g_ctx ? &globals::g_ctx->aiWorldstateJson : nullptr);
+        assignJson(util::getRawAssetPathNoUUID("scripts/ai_actions.json"), globals::aiActionsJSON, globals::g_ctx ? &globals::g_ctx->aiActionsJson : nullptr);
 
         {
             namespace fs = std::filesystem;
@@ -152,6 +126,7 @@ namespace init {
                 jsonStream.open(uiStringsPath);
                 globals::uiStringsJSON = json::parse(jsonStream);
                 jsonStream.close();
+                if (globals::g_ctx) globals::g_ctx->uiStringsJson = globals::uiStringsJSON;
             }
         }
 
@@ -162,18 +137,8 @@ namespace init {
                 jsonStream.open(ninePatchPath);
                 globals::ninePatchJSON = json::parse(jsonStream);
                 jsonStream.close();
+                if (globals::g_ctx) globals::g_ctx->ninePatchJson = globals::ninePatchJSON;
             }
-        }
-
-        if (globals::g_ctx) {
-            globals::g_ctx->configJson       = globals::configJSON;
-            globals::g_ctx->colorsJson       = globals::colorsJSON;
-            globals::g_ctx->animationsJson   = globals::animationsJSON;
-            globals::g_ctx->uiStringsJson    = globals::uiStringsJSON;
-            globals::g_ctx->aiConfigJson     = globals::aiConfigJSON;
-            globals::g_ctx->aiActionsJson    = globals::aiActionsJSON;
-            globals::g_ctx->aiWorldstateJson = globals::aiWorldstateJSON;
-            globals::g_ctx->ninePatchJson    = globals::ninePatchJSON;
         }
 
 
@@ -260,17 +225,15 @@ namespace init {
 
             }
 
-            globals::animationsMap[ac.id] = ac;
-        }
-
-        if (globals::g_ctx) {
-            globals::g_ctx->animations = globals::animationsMap;
+            globals::getAnimationsMap()[ac.id] = ac;
         }
     }
 
     void loadColorsFromJSON()
     {
-        for (auto &color : globals::colorsJSON)
+        auto& colorsJson = globals::getColorsJson();
+        auto& colorsMap = globals::getColorsMap();
+        for (auto &color : colorsJson)
         {
             // change to uuid
             auto colorName = std::string(color.at("name").get<string>());
@@ -292,16 +255,12 @@ namespace init {
             c.b = b;
             c.a = a;
 
-            globals::colorsMap[uuuid] = c;
+            colorsMap[uuuid] = c;
 
             // B) Append the "auto_generated_uuid" field
             color["auto_generated_uuid"] = uuuid;
 
             // SPDLOG_DEBUG("Loaded color {} with values r: {} g: {} b: {}", colorName, r, g, b);
-        }
-
-        if (globals::g_ctx) {
-            globals::g_ctx->colors = globals::colorsMap;
         }
 
         auto filePath = util::getRawAssetPathNoUUID("raws/colors.json");
@@ -312,7 +271,7 @@ namespace init {
             return;
         }
         // Pretty-print with an indentation of 4 spaces
-        outFile << globals::colorsJSON.dump(4);
+        outFile << colorsJson.dump(4);
         outFile.close();
 
         SPDLOG_INFO("Updated colors JSON saved to '{}'.", filePath);
@@ -381,11 +340,7 @@ namespace init {
                     data.frame.height = cp437Sprite.at("frame").at("h").get<int>();
                     data.atlasUUID    = atlasUUID;
 
-                    globals::spriteDrawFrames[filename] = data;
-                }
-
-                if (globals::g_ctx) {
-                    globals::g_ctx->spriteFrames = globals::spriteDrawFrames;
+                    globals::getSpriteFrameMap()[filename] = data;
                 }
 
                 // Overwrite the updated JSON with UUIDs
@@ -450,11 +405,12 @@ namespace init {
             }
         }
 
-        if (globals::animationsMap.find(key) == globals::animationsMap.end()) {
+        auto& animations = globals::getAnimationsMap();
+        if (animations.find(key) == animations.end()) {
             SPDLOG_ERROR("Animation with UUID or identifier '{}' not found in animationsMap", uuid_or_raw_identifier);
         }
-        AssertThat(globals::animationsMap.find(key) != globals::animationsMap.end(), IsTrue());
-        return globals::animationsMap[key];
+        AssertThat(animations.find(key) != animations.end(), IsTrue());
+        return animations[key];
     }
     
     
@@ -471,8 +427,9 @@ namespace init {
             }
         }
 
-        AssertThat(globals::uiStringsJSON.find(key) != globals::uiStringsJSON.end(), IsTrue());
-        return globals::uiStringsJSON[key];
+        auto& uiStrings = globals::getUiStringsJson();
+        AssertThat(uiStrings.find(key) != uiStrings.end(), IsTrue());
+        return uiStrings[key];
     }
 
     globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier, EngineContext* ctx) {
@@ -487,11 +444,12 @@ namespace init {
             }
         }
 
-        if (globals::spriteDrawFrames.find(key) == globals::spriteDrawFrames.end()) {
+        auto& spriteFrames = globals::getSpriteFrameMap();
+        if (spriteFrames.find(key) == spriteFrames.end()) {
             SPDLOG_ERROR("Sprite frame with UUID or identifier '{}' not found in spriteDrawFrames", uuid_or_raw_identifier);
         }
-        AssertThat(globals::spriteDrawFrames.find(key) != globals::spriteDrawFrames.end(), IsTrue());
-        return globals::spriteDrawFrames[key];
+        AssertThat(spriteFrames.find(key) != spriteFrames.end(), IsTrue());
+        return spriteFrames[key];
     }
 
     /**
@@ -503,7 +461,7 @@ namespace init {
         // before your game loop
         // rlImGuiSetup(true); 	// sets up ImGui with ether a dark or light default theme
         
-        const json& configJsonRef = (globals::g_ctx) ? globals::g_ctx->configJson : globals::configJSON;
+        const json& configJsonRef = globals::getConfigJson();
         std::string englishFontName = configJsonRef.at("fonts").at("en");
         std::string translationFontName = configJsonRef.at("fonts").at("ko"); // FIXME: hardcoded rn, should be in config file
         int defaultSize = configJsonRef.at("fonts").at("default_size").get<int>() + 10;
@@ -595,18 +553,14 @@ namespace init {
                 SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
 
                 // Store in atlas map
-                globals::textureAtlasMap[uuid] = tex;
+                globals::getTextureAtlasMap()[uuid] = tex;
 
                 SPDLOG_INFO("Loaded texture '{}' as UUID '{}'", pngFilename, uuid);
             }
         }
 
-        if (globals::g_ctx) {
-            globals::g_ctx->textureAtlas = globals::textureAtlasMap;
-        }
-
         // iterate through every animation object and populate the texture map with the atlas textures
-        for (auto& animation : globals::animationsMap) {
+        for (auto& animation : globals::getAnimationsMap()) {
             auto& anim = animation.second;
             for (auto& frame : anim.animationList) {
                 auto& spriteData = frame.first.spriteData;
@@ -709,7 +663,7 @@ namespace init {
         rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
         initGUI();
         loadTextures();
-        // load animations map (spriteFrames and colorsMap must be initialized before this part)
+        // load animations map (spriteFrames and colors must be initialized before this part)
         loadAnimationsFromJSON();
         //InitAudioDevice(); done in audioManager
         loadSounds();
@@ -753,7 +707,7 @@ namespace init {
             localization::loadFontData(util::getRawAssetPathNoUUID("localization/fonts.json"));
 
             // moved over from next task to see if this helps with crash
-            Random::seed(globals::configJSON.at("seed").get<unsigned>());
+            Random::seed(globals::getConfigJson().at("seed").get<unsigned>());
             // initWorld(worldGenCurrentStep); 
             globals::loadingStateIndex++;
         // }

@@ -3,6 +3,8 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <functional>
 
 #include "entt/entt.hpp"
 #include "raylib.h"
@@ -38,6 +40,8 @@ struct EngineContext {
     std::map<std::string, AnimationObject> animations;
     std::map<std::string, globals::SpriteFrameData> spriteFrames;
     std::map<std::string, Color> colors;
+    std::unordered_map<std::string, std::vector<entt::entity>> globalUIInstances;
+    std::unordered_map<std::string, std::function<void()>> buttonCallbacks;
     input::InputState* inputState{nullptr}; // non-owning, mirrors legacy globals
     AudioContext* audio{nullptr}; // non-owning placeholder for audio state
     json configJson{};
@@ -53,6 +57,9 @@ struct EngineContext {
     GameState currentGameState{GameState::LOADING_SCREEN};
     Vector2 worldMousePosition{0.0f, 0.0f};
     Vector2 scaledMousePosition{0.0f, 0.0f};
+    entt::entity cursor{entt::null};
+    entt::entity overlayMenu{entt::null};
+    entt::entity gameWorldContainerEntity{entt::null};
 
     explicit EngineContext(EngineConfig cfg);
     ~EngineContext();
@@ -67,3 +74,18 @@ private:
 };
 
 std::unique_ptr<EngineContext> createEngineContext(const std::string& configPath);
+
+// Helper: prefer context atlas, fall back to legacy globals.
+inline Texture2D* getAtlasTexture(const std::string& atlasUUID) {
+    if (globals::g_ctx) {
+        auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
+        if (it != globals::g_ctx->textureAtlas.end()) {
+            return &it->second;
+        }
+    }
+    auto legacyIt = globals::textureAtlasMap.find(atlasUUID);
+    if (legacyIt != globals::textureAtlasMap.end()) {
+        return &legacyIt->second;
+    }
+    return nullptr;
+}

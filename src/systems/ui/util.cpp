@@ -172,7 +172,7 @@ namespace ui
     // store the ui entity in a global list (which may or may not be necessary)
     void util::AddInstanceToRegistry(entt::registry &registry, entt::entity entity, const std::string &instanceType)
     {
-        // globals::globalUIInstanceMap[instanceType].push_back(entity);
+        // globals::getGlobalUIInstanceMap()[instanceType].push_back(entity);
     }
 
     // Function to calculate a small selection triangle

@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Tone - Grayscale
 // Converts the texture to grayscale with adjustable intensity
 

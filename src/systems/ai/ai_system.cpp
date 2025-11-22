@@ -159,30 +159,8 @@ namespace ai_system
      */
      void goap_actionplanner_clear_memory(actionplanner_t *ap)
      {
-         // 1) Free all atom‐name strings
-         for (int i = 0; i < ap->numatoms; ++i)
-         {
-             if (ap->atm_names[i] != nullptr)
-             {
-                 free(ap->atm_names[i]);          // ✅ free the allocated char*
-                 ap->atm_names[i] = nullptr;
-             }
-         }
-         ap->numatoms = 0;
-     
-         // 2) Free all action‐name strings and clear their world‐states
-         for (int i = 0; i < ap->numactions; ++i)
-         {
-             if (ap->act_names[i] != nullptr)
-             {
-                 free(ap->act_names[i]);          // ✅ free the allocated char*
-                 ap->act_names[i] = nullptr;
-             }
-             ap->act_costs[i] = 0;
-             goap_worldstate_clear(&ap->act_pre[i]);
-             goap_worldstate_clear(&ap->act_pst[i]);
-         }
-         ap->numactions = 0;
+         // Delegate to library clear so atom/action name allocations are freed.
+         goap_actionplanner_clear(ap);
      }
 
     /**
@@ -596,7 +574,7 @@ namespace ai_system
         // SPDLOG_DEBUG("ai_system::init() called - doing nothing (goap inits on individual basis)");
 
         // get value of ai_tick_rate_seconds from config json and store it in aiUpdateTickInSeconds
-        aiUpdateTickInSeconds = globals::configJSON["global_tick_settings"]["ai_tick_rate_seconds"];
+        aiUpdateTickInSeconds = globals::getConfigJson()["global_tick_settings"]["ai_tick_rate_seconds"];
 
         // globals::getRegistry().on_construct<GOAPComponent>().connect<&onGOAPComponentCreated>();
         globals::getRegistry().on_destroy<GOAPComponent>().connect<&onGOAPComponentDestroyed>();
@@ -604,15 +582,15 @@ namespace ai_system
         // ------------------------------------------------------
         // methods for entt registry access & monobehavior
         // ------------------------------------------------------
-        scripting::monobehavior_system::init(globals::getRegistry(), masterStateLua);
+        scripting::monobehavior_system::init(globals::getRegistry(), masterStateLua, globals::g_ctx);
         scripting::monobehavior_system::generateBindingsToLua(masterStateLua);
 
         // read in master lua state
 
-        std::string tutorialDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["tutorialDirectory"].get<std::string>()));
-        std::string coreDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["coreDirectory"].get<std::string>()));
-        std::string monoBehaviorDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["monoBehaviorDirectory"].get<std::string>()));
-        std::string taskDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["taskDirectory"].get<std::string>()));
+        std::string tutorialDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::getAiConfigJson()["tutorialDirectory"].get<std::string>()));
+        std::string coreDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::getAiConfigJson()["coreDirectory"].get<std::string>()));
+        std::string monoBehaviorDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::getAiConfigJson()["monoBehaviorDirectory"].get<std::string>()));
+        std::string taskDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::getAiConfigJson()["taskDirectory"].get<std::string>()));
         std::string aiInitDir = util::getRawAssetPathNoUUID("scripts/ai");
 
         std::vector<std::string> luaFiles{};
@@ -1057,7 +1035,7 @@ namespace ai_system
                              {
                                  auto e = transform::CreateOrEmplace(
                                      &globals::getRegistry(),
-                                     globals::gameWorldContainerEntity,
+                                     globals::getGameWorldContainer(),
                                      0, 0, 50, 50);
                                  globals::getRegistry().emplace<GOAPComponent>(e);
                                  initGOAPComponent(e, type, sol::nullopt);
@@ -1067,7 +1045,7 @@ namespace ai_system
                              {
                                  auto e = transform::CreateOrEmplace(
                                      &globals::getRegistry(),
-                                     globals::gameWorldContainerEntity,
+                                     globals::getGameWorldContainer(),
                                      0, 0, 50, 50);
                                  globals::getRegistry().emplace<GOAPComponent>(e);
                                  initGOAPComponent(e, type, overrides);
@@ -1079,7 +1057,7 @@ namespace ai_system
                          {
                              auto e = transform::CreateOrEmplace(
                                  &globals::getRegistry(),
-                                 globals::gameWorldContainerEntity,
+                                globals::getGameWorldContainer(),
                                  0, 0, 50, 50);
                              globals::getRegistry().emplace<GOAPComponent>(e);
                              initGOAPComponent(e, type, overrides);

@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Tone - Posterize
 // Reduces the number of colors to create a poster-like effect
 

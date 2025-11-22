@@ -64,19 +64,26 @@ static int idx_for_actionname( actionplanner_t* ap, const char* actionname )
  */
 void goap_actionplanner_clear( actionplanner_t* ap )
 {
-	ap->numatoms = 0;   // Reset the number of atoms
-	ap->numactions = 0; // Reset the number of actions
-	for ( int i=0; i<MAXATOMS; ++i ) 
-	{
-		ap->atm_names[ i ] = 0; // Reset all atom names
-	}
-	for ( int i=0; i<MAXACTIONS; ++i )
-	{
-		ap->act_names[ i ] = 0;      // Reset all action names
-		ap->act_costs[ i ] = 0;      // Reset all action costs
-		goap_worldstate_clear( ap->act_pre+i ); // Clear preconditions for the action
-		goap_worldstate_clear( ap->act_pst+i ); // Clear postconditions for the action
-	}
+    // Free all atom names
+    for (int i = 0; i < ap->numatoms; ++i) {
+        if (ap->atm_names[i]) {
+            free(ap->atm_names[i]);
+            ap->atm_names[i] = NULL;
+        }
+    }
+    ap->numatoms = 0;   // Reset the number of atoms
+
+    // Free all action names and clear state
+    for (int i = 0; i < ap->numactions; ++i) {
+        if (ap->act_names[i]) {
+            free(ap->act_names[i]);
+            ap->act_names[i] = NULL;
+        }
+        ap->act_costs[i] = 0;      // Reset all action costs
+        goap_worldstate_clear(ap->act_pre + i); // Clear preconditions for the action
+        goap_worldstate_clear(ap->act_pst + i); // Clear postconditions for the action
+    }
+    ap->numactions = 0; // Reset the number of actions
 }
 
 /*
@@ -274,4 +281,3 @@ int goap_get_possible_state_transitions( actionplanner_t const* ap, worldstate_t
 	}
 	return writer; // Return the number of possible transitions found
 }
-

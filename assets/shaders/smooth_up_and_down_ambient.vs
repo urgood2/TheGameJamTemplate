@@ -1,13 +1,12 @@
 #version 330 core
-
 in vec3 vertexPosition;  // Vertex position attribute for 2D
 in vec2 vertexTexCoord;  // Texture coordinate attribute 
 in vec4 vertexColor;
 
 uniform mat4 mvp;        // Model-View-Projection matrix
 uniform float iTime;      // Time value for animation
-uniform float amplitude = 2; // Amplitude of the up-and-down motion
-uniform float frequency = 2; // how fast the bobbing happens
+uniform float amplitude; // Amplitude of the up-and-down motion
+uniform float frequency; // how fast the bobbing happens
 
 out vec2 fragTexCoord;
 out vec4 fragColor;

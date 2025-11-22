@@ -1,6 +1,8 @@
 #version 300 es
 precision mediump float;
 
+precision mediump float;
+
 // a background I really liked, just attach a generic vertex shader file and it should work.
 
 in vec2 fragTexCoord;

@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -11,15 +10,15 @@ uniform vec4 uGridRect;
 uniform vec2 uImageSize;
 
 // Effect uniforms
-uniform vec2 frame_coords = vec2(0.0, 0.0);
-uniform vec2 nb_frames = vec2(0.0, 0.0);
-uniform vec2 velocity = vec2(0.0, 0.0);
-uniform float velocity_max = 300.0;
-uniform float trail_size = 6.0;
-uniform float alpha_start = 0.8;
-uniform float alpha_tail = 0.2;
-uniform float alpha_factor = 1.2;
-uniform float noise_margin = 0.68;
+uniform vec2 frame_coords;
+uniform vec2 nb_frames;
+uniform vec2 velocity;
+uniform float velocity_max;
+uniform float trail_size;
+uniform float alpha_start;
+uniform float alpha_tail;
+uniform float alpha_factor;
+uniform float noise_margin;
 uniform sampler2D noise;
 
 out vec4 finalColor;

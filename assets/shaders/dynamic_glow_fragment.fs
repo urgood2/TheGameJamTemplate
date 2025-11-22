@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -11,20 +10,20 @@ uniform vec4 uGridRect;
 uniform vec2 uImageSize;
 
 // Effect uniforms
-uniform float fireball_scale_y = 1.0;
-uniform float glow_scale_y = 1.0;
-uniform float glow_strength = 1.0;
-uniform float glow_intensity = 0.0;
+uniform float fireball_scale_y;
+uniform float glow_scale_y;
+uniform float glow_strength;
+uniform float glow_intensity;
 uniform sampler2D noise;
 uniform sampler2D noise2;
 uniform sampler2D colo_curve;
-uniform int pixel_size = 1;
-uniform vec2 glow_position = vec2(0.5, 0.5);
-uniform vec2 glow_size = vec2(0.2, 0.2);
-uniform bool pulsate = false;
-uniform float pulsation_speed = 1.0;
-uniform float glow_intensity_start = 0.75;
-uniform float glow_intensity_stop = 1.0;
+uniform int pixel_size;
+uniform vec2 glow_position;
+uniform vec2 glow_size;
+uniform bool pulsate;
+uniform float pulsation_speed;
+uniform float glow_intensity_start;
+uniform float glow_intensity_stop;
 uniform float iTime;
 
 out vec4 finalColor;

@@ -122,6 +122,15 @@ std::shared_ptr<cpShape> MakeSharedShape(cpBody *body, cpFloat width,
                                   [](cpShape *shape) { cpShapeFree(shape); });
 }
 
+static void RemoveAndFreeBody(cpSpace* space, cpBody*& body) {
+  if (!body) return;
+  if (cpBodyGetSpace(body)) {
+    cpSpaceRemoveBody(space, body);
+  }
+  cpBodyFree(body);
+  body = nullptr;
+}
+
 PhysicsWorld::PhysicsWorld(entt::registry *registry, float meter,
                            float gravityX, float gravityY) {
   space = cpSpaceNew();
@@ -155,11 +164,8 @@ PhysicsWorld::~PhysicsWorld() {
       cpConstraintFree(mouseJoint);
       mouseJoint = nullptr;
     }
-    if (controlBody) {
-      cpSpaceRemoveBody(space, controlBody);
-      cpBodyFree(controlBody);
-      controlBody = nullptr;
-    }
+    RemoveAndFreeBody(space, controlBody);
+    RemoveAndFreeBody(space, mouseBody);
 
     cpSpaceFree(space);
     space = nullptr;

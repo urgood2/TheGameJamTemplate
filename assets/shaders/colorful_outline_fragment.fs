@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 in vec2 o;
@@ -13,13 +12,13 @@ uniform vec4 uGridRect;
 uniform vec2 uImageSize;
 
 // Effect uniforms
-uniform int intensity = 50;
-uniform float precision = 0.01;
-uniform bool flipColors = false;
-uniform vec4 outline_color = vec4(1.0);
-uniform vec4 outline_color_2 = vec4(1.0);
-uniform bool use_outline_uv = false;
-uniform bool useTexture = false;
+uniform int intensity;
+uniform float precision;
+uniform bool flipColors;
+uniform vec4 outline_color;
+uniform vec4 outline_color_2;
+uniform bool use_outline_uv;
+uniform bool useTexture;
 uniform sampler2D outlineTexture;
 
 out vec4 finalColor;

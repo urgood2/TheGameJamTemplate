@@ -1,5 +1,4 @@
 #version 330 core
-
 // raylib provided uniforms
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -7,12 +6,12 @@ uniform vec4 colDiffuse;
 uniform sampler2D texture0;       // Base texture
 
 // custom uniforms here
-uniform vec4 highlightColor = vec4(1, 1, 1, 1);
-uniform float frequency = 0.35;
-uniform float highlightSpeed = 5;
-uniform float highlightWidth = 25.0;
+uniform vec4 highlightColor;
+uniform float frequency;
+uniform float highlightSpeed;
+uniform float highlightWidth;
 uniform float iTime;              // Time passed from the application
-uniform vec2 screenResolution = vec2(800, 600);    // Screen resolution passed as a uniform
+uniform vec2 screenResolution;    // Screen resolution passed as a uniform
 
 out vec4 finalColor;
 

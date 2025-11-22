@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Blur - Fast (5x5 kernel)
 // Fast Gaussian blur using a 5x5 kernel
 

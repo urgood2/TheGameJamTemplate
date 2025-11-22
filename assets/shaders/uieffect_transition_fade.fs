@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Transition - Fade
 // Simple fade in/out transition
 

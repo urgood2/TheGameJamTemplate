@@ -1,5 +1,4 @@
 #version 330 core
-
 in vec3 vertexPosition;  // Vertex position attribute
 in vec3 vertexNormal;    // Vertex normal attribute
 

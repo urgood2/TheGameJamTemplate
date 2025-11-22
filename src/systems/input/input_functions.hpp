@@ -25,7 +25,7 @@ struct EngineContext;
 
 namespace input
 {
-    auto exposeToLua(sol::state &lua) -> void;
+    auto exposeToLua(sol::state &lua, EngineContext* ctx = globals::g_ctx) -> void;
 
     // Controller Initialization
     auto Init(InputState &inputState, entt::registry &registry, EngineContext* ctx = nullptr) -> void;

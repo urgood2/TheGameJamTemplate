@@ -375,7 +375,7 @@ namespace transform
         transform.getXSpring().targetValue = parentTransform.getVisualX() + rotatedOffset.x;
         transform.getYSpring().targetValue = parentTransform.getVisualY() + rotatedOffset.y;
 
-        if (role.master == globals::gameWorldContainerEntity)
+        if (role.master == globals::getGameWorldContainer())
             // SPDLOG_DEBUG("Aligning to master (game world) at values: x: {}, y: {}", transform.getXSpring().targetValue, transform.getYSpring().targetValue);
 
         //TODO: now where are these offsets used?
@@ -820,7 +820,7 @@ namespace transform
         toReturn.offset = Vector2{0, 0};
         
 
-        if (selfRole.master == globals::gameWorldContainerEntity || selfRole.role_type == InheritedProperties::Type::RoleRoot || selfRole.master == selfEntity)
+        if (selfRole.master == globals::getGameWorldContainer() || selfRole.role_type == InheritedProperties::Type::RoleRoot || selfRole.master == selfEntity)
         {
             // SPDLOG_DEBUG("NO PARENT for entity {}: storing null parentTransform and parentRole",
             //             static_cast<int>(selfEntity));
@@ -1017,11 +1017,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     auto UpdateParallaxCalculations(entt::registry *registry, entt::entity e) -> void
     {
 
-        if (!registry->valid(globals::gameWorldContainerEntity))
+        if (!registry->valid(globals::getGameWorldContainer()))
         {
             return;
         }
-        auto &gameWorldTransform = registry->get<Transform>(globals::gameWorldContainerEntity);
+        auto &gameWorldTransform = registry->get<Transform>(globals::getGameWorldContainer());
 
         auto &node = registry->get<GameObject>(e);
         auto &transform = registry->get<Transform>(e);
@@ -1844,7 +1844,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             for (auto e : uiCands)
             {
                 // cursor is never in the UI quadtree, but if you store it for some reason:
-                if (e == globals::cursor) continue;
+                if (e == globals::getCursorEntity()) continue;
 
                 // precise, rotated‐AABB / SAT test in screen‐space
                 if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, mouseScreen))
@@ -1868,7 +1868,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             {
                 // again, cursor is not in quadtreeWorld
                 // but if you ever put it there, you can skip it:
-                if (e == globals::cursor) continue;
+                if (e == globals::getCursorEntity()) continue;
 
                 if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, mouseWorld))
                     hits.push_back(e);
@@ -2035,7 +2035,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         for (auto it = results.rbegin(); it != results.rend(); ++it) {
             entt::entity e = *it;
     
-            if (e == globals::cursor) continue;
+            if (e == globals::getCursorEntity()) continue;
     
             if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, point)) {
                 return e; // First topmost entity that matches
@@ -2116,7 +2116,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         auto &myContainerTransform = registry->get<Transform>(node.container);
 
-        auto &cursorTransform = registry->get<Transform>(globals::cursor);
+        auto &cursorTransform = registry->get<Transform>(globals::getCursorEntity());
 
         Vector2 dragCursorTransform{};
         Vector2 dragCursorTranslation{};
@@ -2444,19 +2444,19 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         registry->destroy(e);
     }
     
-    auto exposeToLua(sol::state &lua) -> void {
+auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
         // BindingRecorder instance
         auto& rec = BindingRecorder::instance();
 
         //=========================================================
         // Part 1: Transform Component
         //=========================================================
-        lua.new_usertype<Transform>("Transform",
-            sol::constructors<Transform()>(),
-            "updateCachedValues", sol::overload(
-                static_cast<void(Transform::*)(bool)>(&Transform::updateCachedValues),
-                static_cast<void(Transform::*)(const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, bool)>(&Transform::updateCachedValues)
-            ),
+    lua.new_usertype<Transform>("Transform",
+        sol::constructors<Transform()>(),
+        "updateCachedValues", sol::overload(
+            static_cast<void(Transform::*)(bool)>(&Transform::updateCachedValues),
+            static_cast<void(Transform::*)(const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, bool)>(&Transform::updateCachedValues)
+        ),
             "ignoreDynamicMotion", &Transform::ignoreDynamicMotion,
             "ignoreXLeaning", &Transform::ignoreXLeaning,
             "actualX",  sol::property(&Transform::getActualX, &Transform::setActualX),
@@ -2998,7 +2998,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
     lua.set_function("create_transform_entity", 
         []() {
-            return transform::CreateOrEmplace(&globals::getRegistry(), globals::gameWorldContainerEntity, 0.0f, 0.0f, 1.0f, 1.0f);
+            return transform::CreateOrEmplace(&globals::getRegistry(), globals::getGameWorldContainer(), 0.0f, 0.0f, 1.0f, 1.0f);
         }
     );
     rec.record_free_function({""}, {"create_transform_entity", "---@return Entity", "Creates a new transform entity with default parameters.", true, false});

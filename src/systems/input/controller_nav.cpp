@@ -535,7 +535,8 @@ void NavManager::reset() {
     groupCooldowns.clear();
 }
 
-void exposeToLua(sol::state& lua) {
+void exposeToLua(sol::state& lua, EngineContext* ctx) {
+    (void)ctx; // placeholder for future context-aware bindings
     using std::string;
     auto& rec = BindingRecorder::instance();
     using controller_nav::NavManager;

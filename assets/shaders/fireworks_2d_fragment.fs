@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 #define TAU 6.28318530718
 #define PI 3.14159265359
 

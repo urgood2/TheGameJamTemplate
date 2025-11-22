@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Gradation - Linear
 // Applies a linear gradient overlay
 

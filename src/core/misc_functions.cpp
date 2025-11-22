@@ -83,17 +83,8 @@ namespace game
         auto frame = init::getSpriteFrame("tile-grid-boundary.png", globals::g_ctx);
         auto atlasID =  frame.atlasUUID;
         Texture2D atlas{};
-        if (globals::g_ctx) {
-            auto ctxIt = globals::g_ctx->textureAtlas.find(atlasID);
-            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
-                atlas = ctxIt->second;
-            }
-        }
-        if (atlas.id == 0) {
-            auto legacyIt = globals::textureAtlasMap.find(atlasID);
-            if (legacyIt != globals::textureAtlasMap.end()) {
-                atlas = legacyIt->second;
-            }
+        if (auto* tex = getAtlasTexture(atlasID)) {
+            atlas = *tex;
         }
         if (atlas.id == 0) {
             SPDLOG_ERROR("Texture atlas '{}' not found for tile grid overlay", atlasID);

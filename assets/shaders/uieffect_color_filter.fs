@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Color Filter
 // Applies various color blend modes: multiply, additive, subtractive, replace
 

@@ -8,6 +8,8 @@
 
 #include "core/globals.hpp"
 
+struct EngineContext;
+
 // event for before method and after method, configuration determines whether 
 // default methods are called or not.
 namespace transform
@@ -271,7 +273,7 @@ namespace transform
 
     auto setJiggleOnHover(entt::registry *registry, entt::entity e, float jiggleAmount) -> void;
     
-    extern auto exposeToLua(sol::state &lua) -> void;
+    extern auto exposeToLua(sol::state &lua, EngineContext* ctx = nullptr) -> void;
     
 
 } // namespace transform

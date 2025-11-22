@@ -1,5 +1,5 @@
-// polychrome_dissolve.fs
 #version 330 core
+// polychrome_dissolve.fs
 precision mediump float;
 
 in vec2 fragTexCoord;

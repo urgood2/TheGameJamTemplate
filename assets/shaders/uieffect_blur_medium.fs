@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Blur - Medium (9x9 kernel)
 // Medium quality Gaussian blur using a 9x9 kernel
 

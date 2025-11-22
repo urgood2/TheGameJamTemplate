@@ -41,10 +41,13 @@ ChipmunkSpace::ChipmunkSpace() {
     _staticBody = new ChipmunkBody(0.0f, 0.0f);
     _staticBody->setType(CP_BODY_TYPE_STATIC);
     cpSpaceSetStaticBody(_space, _staticBody->body());
+    _ownsStaticBody = true;
 }
 
 ChipmunkSpace::~ChipmunkSpace() {
-    delete _staticBody;
+    if (_ownsStaticBody) {
+        delete _staticBody;
+    }
     cpSpaceFree(_space);
 }
 
@@ -331,7 +334,16 @@ void ChipmunkSpace::reindexShapesForBody(ChipmunkBody* body) { cpSpaceReindexSha
 void ChipmunkSpace::step(cpFloat dt) { cpSpaceStep(_space, dt); }
 
 // HastySpace
-ChipmunkHastySpace::ChipmunkHastySpace() { _space = cpHastySpaceNew(); cpSpaceSetUserData(_space, this); _staticBody = new ChipmunkBody(0.0f,0.0f); cpSpaceSetStaticBody(_space,_staticBody->body()); }
-ChipmunkHastySpace::~ChipmunkHastySpace() { delete _staticBody; cpHastySpaceFree(_space); }
+ChipmunkHastySpace::ChipmunkHastySpace() {
+    _space = cpHastySpaceNew();
+    cpSpaceSetUserData(_space, this);
+    _staticBody = new ChipmunkBody(0.0f,0.0f);
+    _ownsStaticBody = true;
+    cpSpaceSetStaticBody(_space,_staticBody->body());
+}
+ChipmunkHastySpace::~ChipmunkHastySpace() {
+    if (_ownsStaticBody) delete _staticBody;
+    cpHastySpaceFree(_space);
+}
 size_t ChipmunkHastySpace::threads() const { return cpHastySpaceGetThreads(_space); } void ChipmunkHastySpace::setThreads(size_t n) { cpHastySpaceSetThreads(_space,n); }
 void ChipmunkHastySpace::step(cpFloat dt) { cpHastySpaceStep(_space, dt); }

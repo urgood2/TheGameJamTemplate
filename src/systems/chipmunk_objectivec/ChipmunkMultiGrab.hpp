@@ -151,8 +151,6 @@ Grab::Grab(MultiGrab* owner,
         }
     }
 
-    // Store constraint handles for cleanup
-    _objects.push_back(this); // include self if managing deletion
     // Add all to space
     for(auto c : _objects) {
         owner->_space->constraints().push_back(static_cast<ChipmunkConstraint*>(c));

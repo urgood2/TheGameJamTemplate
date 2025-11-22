@@ -1,6 +1,8 @@
 #version 300 es
 precision mediump float;
 
+precision mediump float;
+
 // Source: https://godotshaders.com/shader/perspective-warp-skew-shader
 // Converted from Godot to Raylib
 

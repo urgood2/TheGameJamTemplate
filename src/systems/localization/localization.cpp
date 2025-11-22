@@ -116,11 +116,12 @@ namespace localization
     }
 
     const globals::FontData& getFontData() {
+        static const globals::FontData empty{};
         if (auto it = languageFontData.find(currentLang); it != languageFontData.end())
             return it->second;
         if (auto it2 = languageFontData.find(fallbackLang); it2 != languageFontData.end())
             return it2->second;
-        return globals::FontData{};
+        return empty;
     }
 
     // ==========================
@@ -191,7 +192,7 @@ namespace localization
         return "[MISSING: " + key + "]";
     }
 
-    void exposeToLua(sol::state &lua) {
+    void exposeToLua(sol::state &lua, EngineContext* ctx) {
       
 
         auto& rec = BindingRecorder::instance();
@@ -236,7 +237,7 @@ namespace localization
             "---@return nil",
             "Loads a language file for the given language code from a specific path."
         );
-
+        
         // setFallbackLanguage
         rec.bind_function(lua, path, "setFallbackLanguage", &localization::setFallbackLanguage,
             "---@param languageCode string # The language code to use as a fallback (e.g., 'en_US').\n"

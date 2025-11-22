@@ -84,6 +84,7 @@ namespace ui_defs
     {
         
         // make a row
+        return ui::UIElementTemplateNode{};
     }
     
     //TODO: use get_value_callback and onStringContentUpdatedViaCallback to update text, not reflection. It's just easier

@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Tone - Sepia
 // Applies a sepia tone effect with adjustable intensity
 

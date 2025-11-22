@@ -1,5 +1,4 @@
 #version 330 core
-
 uniform vec4 outlineColor;  // Color of the outline
 
 out vec4 finalColor;

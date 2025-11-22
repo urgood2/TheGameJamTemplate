@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -11,12 +10,12 @@ uniform vec4 uGridRect;
 uniform vec2 uImageSize;
 
 // Effect uniforms
-uniform vec4 color = vec4(1.0);
-uniform float inner_stroke_thickness = 1.0;
-uniform float inner_stroke_opacity = 1.0;
-uniform float inside_opacity = 0.0;
-uniform float frequency = 8.0;
-uniform float phase_speed = 1.0;
+uniform vec4 color;
+uniform float inner_stroke_thickness;
+uniform float inner_stroke_opacity;
+uniform float inside_opacity;
+uniform float frequency;
+uniform float phase_speed;
 uniform float iTime;
 
 out vec4 finalColor;

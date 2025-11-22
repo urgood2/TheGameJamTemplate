@@ -1,5 +1,5 @@
-// negative_dissolve.fs
 #version 330 core
+// negative_dissolve.fs
 precision mediump float;
 
 in vec2 fragTexCoord;

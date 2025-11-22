@@ -1,5 +1,4 @@
 #version 330 core
-
 in vec2 fragTexCoord; // Received texture coordinates from vertex shader
 
 out vec4 finalColor; // Final color output

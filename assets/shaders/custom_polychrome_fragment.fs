@@ -21,11 +21,11 @@ uniform vec2  polychrome;       // .x = base hue phase, .y = hue drift speed
 uniform float time;
 
 // add these uniforms up top:
-uniform float circleFreq = 1.3;     // controls spacing of rings
-uniform float noiseScale = 2.5;     // scale of the 2D noise sampling
-uniform float noiseAmp = 1;       // how much the noise perturbs the radius
-uniform float noiseSpeed = 0.01;     // how fast the noise field drifts
-uniform vec2 noisePan = vec2(0, 1);    // e.g. in [−1..1] UV units or noise units
+uniform float circleFreq;     // controls spacing of rings
+uniform float noiseScale;     // scale of the 2D noise sampling
+uniform float noiseAmp;       // how much the noise perturbs the radius
+uniform float noiseSpeed;     // how fast the noise field drifts
+uniform vec2 noisePan;    // e.g. in [−1..1] UV units or noise units
 
 
 //────────────────────────────────────────────────────────

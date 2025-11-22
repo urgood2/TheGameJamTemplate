@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Transition - Burn
 // Burn transition effect with ember-like edges
 

@@ -413,7 +413,7 @@ namespace tutorial_system_v2 {
             tutorialPath,
             "displayIndicatorAroundEntity",
             static_cast<void(*)(entt::entity, std::string)>(&displayIndicatorAroundEntity),
-            "(entity: Entity, indicatorTypeID: string):nil",
+            "---@overload fun(entity: Entity, indicatorTypeID: string):nil",
             "Displays a visual indicator of a specific type around the entity.",
             /*is_overload=*/true // This is the overload
         );

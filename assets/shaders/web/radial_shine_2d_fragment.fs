@@ -1,6 +1,8 @@
 #version 300 es
 precision mediump float;
 
+precision mediump float;
+
 #define PI 3.14159265359
 
 // Input vertex attributes (from vertex shader)

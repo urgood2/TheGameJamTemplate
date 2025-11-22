@@ -5,7 +5,7 @@ in vec2 vertexTexCoord;  // 2D texture coordinate attribute
 
 uniform mat4 mvp;        // Model-View-Projection matrix
 uniform float iTime;      // Current time for animation
-uniform float appearTime = 2; // Duration for the appearance animation
+uniform float appearTime; // Duration for the appearance animation
 
 out vec2 fragTexCoord;
 

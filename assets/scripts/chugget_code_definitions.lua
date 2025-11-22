@@ -191,10 +191,7 @@ function fadeInScreen(...) end
 ---@return nil
 function displayIndicatorAroundEntity(...) end
 
----
---- Displays a visual indicator of a specific type around the entity.
----
-(entity: Entity, indicatorTypeID: string):nil
+---@overload fun(entity: Entity, indicatorTypeID: string):nil
 function displayIndicatorAroundEntity(...) end
 
 ---
@@ -385,10 +382,7 @@ function setEntityAlias(...) end
 ---@return nil
 function log_debug(...) end
 
----
---- Logs a general debug message.
----
-(message: string):nil
+---@overload fun(message: string):nil
 function log_debug(...) end
 
 ---
@@ -399,10 +393,7 @@ function log_debug(...) end
 ---@return nil
 function log_error(...) end
 
----
---- Logs a general error message.
----
-(message: string):nil
+---@overload fun(message: string):nil
 function log_error(...) end
 
 ---
@@ -6796,10 +6787,7 @@ function layer.ResizeCanvasInLayer(...) end
 ---@return nil
 function layer.AddCanvasToLayer(...) end
 
----
---- Adds a canvas of a specific size to the layer.
----
-(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil
+---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil
 function layer.AddCanvasToLayer(...) end
 
 ---
@@ -10546,4 +10534,3 @@ function util.getRandomSynonymFor(...) end
 ---@param value string # The string to convert.
 ---@return integer
 function util.toUnsignedChar(...) end
-

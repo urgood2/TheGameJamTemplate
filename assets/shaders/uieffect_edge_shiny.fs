@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // UIEffect: Edge - Shiny
 // Adds an animated shiny edge effect that rotates around the sprite
 

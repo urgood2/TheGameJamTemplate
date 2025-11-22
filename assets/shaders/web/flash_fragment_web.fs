@@ -1,6 +1,8 @@
 #version 300 es
 precision mediump float;
 
+precision mediump float;
+
 in vec2 fragTexCoord; // Texture coordinates from the vertex shader
 in vec4 fragColor;    // Fragment color from the vertex shader
 

@@ -1,5 +1,4 @@
 #version 330 core
-
 // interpolated inputs
 in vec2 fragTexCoord;
 in vec4 fragColor;

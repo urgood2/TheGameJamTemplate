@@ -1,5 +1,7 @@
-// negative_shine.fs
 #version 300 es
+precision mediump float;
+
+// negative_shine.fs
 precision mediump float;
 
 in vec2 fragTexCoord;

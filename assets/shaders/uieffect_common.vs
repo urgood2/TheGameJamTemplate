@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // Common vertex shader for UI effects
 // Input vertex attributes
 in vec3 vertexPosition;

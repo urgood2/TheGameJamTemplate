@@ -16,6 +16,8 @@
 #include "sol/sol.hpp"
 #include "entt/fwd.hpp"
 
+struct EngineContext;
+
 namespace random_utils {
     using RandomEngine = effolkronium::random_static;
 
@@ -150,7 +152,7 @@ namespace random_utils {
     }
 
     
-    inline void exposeToLua(sol::state &lua) {
+    inline void exposeToLua(sol::state &lua, EngineContext* ctx = nullptr) {
         // BindingRecorder instance
         auto& rec = BindingRecorder::instance();
 

@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -11,7 +10,7 @@ uniform vec4 uGridRect;
 uniform vec2 uImageSize;
 
 // Effect uniforms
-uniform float sensitivity = 0.5;
+uniform float sensitivity;
 
 out vec4 finalColor;
 

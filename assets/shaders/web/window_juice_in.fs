@@ -1,4 +1,5 @@
 #version 300 es
+precision mediump float;
 
 in vec2 fragTexCoord;
 uniform sampler2D texture0;  // Main texture

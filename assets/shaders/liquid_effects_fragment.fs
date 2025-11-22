@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -11,13 +10,13 @@ uniform vec4 uGridRect;
 uniform vec2 uImageSize;
 
 // Effect uniforms
-uniform vec4 water_color_1 = vec4(0.2, 0.6, 0.8, 0.5);
-uniform vec4 water_color_2 = vec4(0.1, 0.5, 0.7, 0.4);
-uniform float water_level_percentage = 0.0;
-uniform float wave_frequency_1 = 10.0;
-uniform float wave_amplitude_1 = 0.05;
-uniform float wave_frequency_2 = 15.0;
-uniform float wave_amplitude_2 = 0.03;
+uniform vec4 water_color_1;
+uniform vec4 water_color_2;
+uniform float water_level_percentage;
+uniform float wave_frequency_1;
+uniform float wave_amplitude_1;
+uniform float wave_frequency_2;
+uniform float wave_amplitude_2;
 uniform float iTime;
 
 out vec4 finalColor;

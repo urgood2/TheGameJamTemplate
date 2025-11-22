@@ -185,7 +185,7 @@ namespace scripting {
         //---------------------------------------------------------
         // methods from controller_nav.cpp. These can be called from lua✅
         //---------------------------------------------------------
-        controller_nav::exposeToLua(stateToInit);
+        controller_nav::exposeToLua(stateToInit, ctx);
 
         //---------------------------------------------------------
         // methods from textVer2.cpp. These can be called from lua✅ 
@@ -200,7 +200,7 @@ namespace scripting {
         //------------------------------------------------------
         // methods from broad_phase.hpp. These can be called from lua ✅
         //------------------------------------------------------
-        collision::exposeToLua(stateToInit);
+        collision::exposeToLua(stateToInit, ctx);
 
         // ------------------------------------------------------
         // methods from tutorial_system_v2.cpp. These can be called from lua ✅
@@ -215,22 +215,22 @@ namespace scripting {
         //---------------------------------------------------------
         // methods from shader_pipeline.cpp. These can be called from lua✅ TODO: type registration not done properly
         //---------------------------------------------------------
-        shader_pipeline::exposeToLua(stateToInit);
+        shader_pipeline::exposeToLua(stateToInit, ctx);
 
         //---------------------------------------------------------
         // methods from random.cpp. These can be called from lua✅
         //---------------------------------------------------------
-        random_utils::exposeToLua(stateToInit);
+        random_utils::exposeToLua(stateToInit, ctx);
 
         //---------------------------------------------------------
         // methods from system/layer folder. These can be called from lua✅ 
         //---------------------------------------------------------
-        layer::exposeToLua(stateToInit);
+        layer::exposeToLua(stateToInit, ctx);
 
         //---------------------------------------------------------
         // methods from shader_system.cpp. These can be called from lua✅
         //---------------------------------------------------------
-        shaders::exposeToLua(stateToInit);
+        shaders::exposeToLua(stateToInit, ctx);
 
         //---------------------------------------------------------
         // methods from shader_draw_commands.cpp. These can be called from lua✅
@@ -240,7 +240,7 @@ namespace scripting {
         // ---------------------------------------------------------
         // methods from localization.cpp. These can be called from lua✅
         //---------------------------------------------------------
-        localization::exposeToLua(stateToInit);
+        localization::exposeToLua(stateToInit, ctx);
 
         // ---------------------------------------------------------
         // methods from timer.cpp. These can be called from lua✅ 
@@ -264,7 +264,7 @@ namespace scripting {
         //---------------------------------------------------------
         // methods and data from transform system. These can be called from lua ✅
         //---------------------------------------------------------
-        transform::exposeToLua(stateToInit);
+        transform::exposeToLua(stateToInit, ctx);
         
         //---------------------------------------------------------
         // methods from ui system. These can be called from lua ✅
@@ -343,7 +343,7 @@ namespace scripting {
             "Logs a debug message associated with an entity.", true, false});
         // Overload for no entity
         rec.record_free_function({}, {"log_debug",
-            "(message: string):nil",
+            "---@overload fun(message: string):nil",
             "Logs a general debug message.", true, true});
 
 
@@ -393,7 +393,7 @@ namespace scripting {
             "Logs an error message associated with an entity.", true, false});
         // Overload for no entity
         rec.record_free_function({}, {"log_error",
-            "(message: string):nil",
+            "---@overload fun(message: string):nil",
             "Logs a general error message.", true, true});
 
 
@@ -538,7 +538,7 @@ namespace scripting {
         // ------------------------------------------------------
         // input functions
         // ------------------------------------------------------
-        input::exposeToLua(stateToInit);
+        input::exposeToLua(stateToInit, ctx);
         
         // -------------------------------------------------------
         // layer order functions
@@ -681,10 +681,10 @@ namespace scripting {
 
         // 3) entt::entity
         lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {
-            return globals::gameWorldContainerEntity;
+            return globals::getGameWorldContainer();
         };
         lua["globals"]["cursor"]                   = []() -> entt::entity {
-            return globals::cursor;
+            return globals::getCursorEntity();
         };
         lua["globalShaderUniforms"] = std::ref(globals::globalShaderUniforms);
         

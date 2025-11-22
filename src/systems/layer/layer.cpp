@@ -91,7 +91,7 @@ static void QueueScopedTransformCompositeRender(
 
 // Graphics namespace for rendering functions
 namespace layer {
-void exposeToLua(sol::state &lua) {
+void exposeToLua(sol::state &lua, EngineContext* ctx) {
 
   sol::state_view luaView{lua};
   auto layerTbl = luaView["layer"].get_or_create<sol::table>();
@@ -341,8 +341,7 @@ void exposeToLua(sol::state &lua) {
   rec.bind_function(lua, {"layer"}, "AddCanvasToLayer",
                     static_cast<void (*)(LPtr, const std::string &, int, int)>(
                         &layer::AddCanvasToLayer),
-                    "(layer: layer.Layer, canvasName: string, "
-                    "width: integer, height: integer):nil",
+                    "---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil",
                     "Adds a canvas of a specific size to the layer.",
                     /*is_overload=*/true);
 
@@ -1564,6 +1563,106 @@ void exposeToLua(sol::state &lua) {
 
   // Recorder: Top-level namespace
   rec.add_type("command_buffer");
+
+  // Record the command_buffer queue/execute helpers (they live under the
+  // command_buffer table in Lua).
+  const std::vector<std::string> commandBufferCmds = {
+      "BeginDrawing",
+      "EndDrawing",
+      "ClearBackground",
+      "Translate",
+      "Scale",
+      "Rotate",
+      "AddPush",
+      "AddPop",
+      "PushMatrix",
+      "PopMatrix",
+      "PushObjectTransformsToMatrix",
+      "ScopedTransformCompositeRender",
+      "DrawCircleFilled",
+      "DrawCircleLine",
+      "DrawRectangle",
+      "DrawRectanglePro",
+      "DrawRectangleLinesPro",
+      "DrawLine",
+      "DrawText",
+      "DrawTextCentered",
+      "TextPro",
+      "DrawImage",
+      "TexturePro",
+      "DrawEntityAnimation",
+      "DrawTransformEntityAnimation",
+      "DrawTransformEntityAnimationPipeline",
+      "SetShader",
+      "ResetShader",
+      "SetBlendMode",
+      "UnsetBlendMode",
+      "SendUniformFloat",
+      "SendUniformInt",
+      "SendUniformVec2",
+      "SendUniformVec3",
+      "SendUniformVec4",
+      "SendUniformFloatArray",
+      "SendUniformIntArray",
+      "Vertex",
+      "BeginOpenGLMode",
+      "EndOpenGLMode",
+      "SetColor",
+      "SetLineWidth",
+      "SetTexture",
+      "RenderRectVerticesFilledLayer",
+      "RenderRectVerticesOutlineLayer",
+      "DrawPolygon",
+      "RenderNPatchRect",
+      "DrawTriangle",
+      "BeginStencilMode",
+      "StencilOp",
+      "RenderBatchFlush",
+      "AtomicStencilMask",
+      "ColorMask",
+      "StencilFunc",
+      "EndStencilMode",
+      "ClearStencilBuffer",
+      "BeginStencilMask",
+      "EndStencilMask",
+      "DrawCenteredEllipse",
+      "DrawRoundedLine",
+      "DrawPolyline",
+      "DrawArc",
+      "DrawTriangleEquilateral",
+      "DrawCenteredFilledRoundedRect",
+      "DrawSpriteCentered",
+      "DrawSpriteTopLeft",
+      "DrawDashedCircle",
+      "DrawDashedRoundedRect",
+      "DrawDashedLine",
+      "DrawGradientRectCentered",
+      "DrawGradientRectRoundedCentered",
+      "DrawBatchedEntities"};
+
+  for (const auto &cmd : commandBufferCmds) {
+    rec.record_free_function(
+        {"command_buffer"},
+        {"queue" + cmd,
+         "---@param layer Layer\n"
+         "---@param init_fn fun(c: layer.Cmd" + cmd + ")\n"
+         "---@param z integer\n"
+         "---@param renderSpace? layer.DrawCommandSpace\n"
+         "---@return void",
+         "Queues layer.Cmd" + cmd +
+             " into a layer via command_buffer (World or Screen space).",
+         true, false});
+
+    rec.record_free_function(
+        {"command_buffer"},
+        {"execute" + cmd,
+         "---@param layer Layer\n"
+         "---@param init_fn fun(c: layer.Cmd" + cmd + ")\n"
+         "---@return void",
+         "Executes layer.Cmd" + cmd +
+             " immediately (bypasses the command queue).",
+         true, false});
+  }
   
   lua["GL_KEEP"] = GL_KEEP;
   lua["GL_ZERO"] = GL_ZERO;
@@ -6402,19 +6501,7 @@ void ellipse(float x, float y, float rx, float ry,
 
 // -- immediate sprite render
 static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
-    if (globals::g_ctx) {
-        auto ctxIt = globals::g_ctx->textureAtlas.find(atlasUUID);
-        if (ctxIt != globals::g_ctx->textureAtlas.end()) {
-            return &ctxIt->second;
-        }
-    }
-
-    auto legacyIt = globals::textureAtlasMap.find(atlasUUID);
-    if (legacyIt != globals::textureAtlasMap.end()) {
-        return &legacyIt->second;
-    }
-
-    return nullptr;
+    return getAtlasTexture(atlasUUID);
 }
 
 auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,

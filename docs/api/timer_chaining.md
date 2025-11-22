@@ -1,5 +1,7 @@
 # TimerChain Reference
 
+> **Heads up:** timer bindings are currently disabled (`timer::exposeToLua` is commented out in `src/systems/scripting/scripting_functions.cpp`). Keep these recipes for when the binding is restored; they are not runnable in the current build.
+
 Fluent, chainable API for Lua timer sequences. Helps you build precise, maintainable timelines of timed actions.
 
 ---

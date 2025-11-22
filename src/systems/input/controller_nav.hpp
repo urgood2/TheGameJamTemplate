@@ -122,6 +122,6 @@ struct NavManager {
     void debug_print_state() const;
 };
 
-    extern void exposeToLua(sol::state& lua);
+    extern void exposeToLua(sol::state& lua, EngineContext* ctx = globals::g_ctx);
 
 } // namespace controller_nav

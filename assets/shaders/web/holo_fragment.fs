@@ -1,5 +1,7 @@
-// foil_dissolve.fs (Raylib GLSL 330 version)
 #version 300 es
+precision mediump float;
+
+// foil_dissolve.fs (Raylib GLSL 330 version)
 precision mediump float;
 
 in vec2 fragTexCoord;

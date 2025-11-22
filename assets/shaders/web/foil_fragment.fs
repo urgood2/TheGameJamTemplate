@@ -1,5 +1,7 @@
-// foil_dissolve.fs
 #version 300 es
+precision mediump float;
+
+// foil_dissolve.fs
 precision mediump float;
 
 in vec2 fragTexCoord;

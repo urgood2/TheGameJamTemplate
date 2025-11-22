@@ -15,6 +15,8 @@
 
 #include "sol/sol.hpp"
 
+struct EngineContext;
+
 using ShaderUniformValue = std::variant<
     float,
     Vector2,
@@ -291,5 +293,5 @@ namespace shaders
 
     extern void ShowShaderEditorUI(ShaderUniformComponent &component);
 
-    extern auto exposeToLua(sol::state &lua) -> void;
+    extern auto exposeToLua(sol::state &lua, EngineContext* ctx = nullptr) -> void;
 }

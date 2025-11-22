@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -12,9 +11,9 @@ uniform vec2 uImageSize;
 
 // Effect uniforms
 uniform sampler2D dissolve_texture;
-uniform float dissolve_value = 0.0;
-uniform float burn_size = 0.1;
-uniform vec4 burn_color = vec4(1.0, 0.5, 0.0, 1.0);
+uniform float dissolve_value;
+uniform float burn_size;
+uniform vec4 burn_color;
 
 out vec4 finalColor;
 

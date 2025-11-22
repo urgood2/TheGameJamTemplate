@@ -1845,7 +1845,7 @@ namespace ui
             return;
 
         // If this is the overlay menu, refresh alerts
-        if (entity == globals::overlayMenu)
+        if (entity == globals::getOverlayMenu())
         {
             globals::shouldRefreshAlerts = true;
         }
@@ -1856,7 +1856,7 @@ namespace ui
 
         // Remove entity from global registry
         auto instanceType = registry.get<UIConfig>(entity).instanceType.value_or("UIBOX");
-        auto &instanceList = globals::globalUIInstanceMap[instanceType];
+        auto &instanceList = globals::getGlobalUIInstanceMap()[instanceType];
 
         auto it = std::find(instanceList.begin(), instanceList.end(), entity);
         if (it != instanceList.end())

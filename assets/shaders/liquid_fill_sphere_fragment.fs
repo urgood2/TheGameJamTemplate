@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -11,16 +10,16 @@ uniform vec4 uGridRect;
 uniform vec2 uImageSize;
 
 // Effect uniforms
-uniform vec3 backFillColour = vec3(0.62, 1.00, 1.00);
-uniform vec3 frontFillInnerColour = vec3(0.35, 1.00, 1.00);
-uniform vec3 frontFillOuterColour = vec3(0.00, 0.35, 1.00);
-uniform vec3 ringColour = vec3(0.00, 0.16, 0.13);
-uniform vec3 fresnelColour = vec3(0.00, 0.88, 1.00);
-uniform vec3 innerRingGlowColour = vec3(0.00, 1.00, 1.00);
-uniform vec4 fillcolour = vec4(1.0);
-uniform float ringWidth = 0.15;
-uniform float innerCircleRadiusOffset = 0.0;
-uniform float fill_value = 0.25;
+uniform vec3 backFillColour;
+uniform vec3 frontFillInnerColour;
+uniform vec3 frontFillOuterColour;
+uniform vec3 ringColour;
+uniform vec3 fresnelColour;
+uniform vec3 innerRingGlowColour;
+uniform vec4 fillcolour;
+uniform float ringWidth;
+uniform float innerCircleRadiusOffset;
+uniform float fill_value;
 uniform float iTime;
 
 out vec4 finalColor;

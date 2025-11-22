@@ -177,6 +177,7 @@ namespace globals
 
     // store loaded animation data mapped to animation id
     extern std::map<std::string, AnimationObject> animationsMap;
+    std::map<std::string, AnimationObject>& getAnimationsMap();
 
     // show mouse current status
     extern bool isMouseDragStarted;
@@ -216,9 +217,18 @@ namespace globals
 
     // Global vector to hold all loaded textures
     extern std::map<string, Texture2D> textureAtlasMap;
+    std::map<std::string, Texture2D>& getTextureAtlasMap();
 
     // game config
     extern json configJSON;
+    json& getConfigJson();
+    json& getColorsJson();
+    json& getUiStringsJson();
+    json& getAnimationsJson();
+    json& getAiConfigJson();
+    json& getAiActionsJson();
+    json& getAiWorldstateJson();
+    json& getNinePatchJson();
 
     // game camera
     // extern Camera2D camera;
@@ -234,6 +244,7 @@ namespace globals
 
     // map sprite number to sprite draw rect (source)
     extern std::map<std::string, SpriteFrameData> spriteDrawFrames; 
+    std::map<std::string, SpriteFrameData>& getSpriteFrameMap();
 
     // map sprite number to CP437 char and UTF codepoint, vice versa
 
@@ -245,10 +256,9 @@ namespace globals
     extern std::map<string, json> environmentTilesMap;
 
     // map color name to color
-    extern std::map<string, Color> colorsMap;
-
-    // ---------- old variables from prev, project (to be deletecd)
-
+    extern std::map<std::string, Color> colors;
+    std::map<std::string, Color>& getColorsMap();
+    
     // true if forced branching dialogue choices have been displayed and we're waiting for player input
     extern bool awaitingInputForForcedBranchingDialogue;
     // contains a list of dialogue choice IDs (for json array node) that are currently viable. The json information used will be from the current map location
@@ -367,6 +377,16 @@ namespace globals
     
     // ECS registry
     extern entt::registry registry;
+
+    // Helpers to bridge cursor entity while migrating to EngineContext.
+    entt::entity getCursorEntity();
+    void setCursorEntity(entt::entity e);
+    entt::entity getOverlayMenu();
+    void setOverlayMenu(entt::entity e);
+    entt::entity getGameWorldContainer();
+    void setGameWorldContainer(entt::entity e);
+    std::unordered_map<std::string, std::vector<entt::entity>>& getGlobalUIInstanceMap();
+    std::unordered_map<std::string, std::function<void()>>& getButtonCallbacks();
 
     // Accessors that respect EngineContext when available.
     entt::registry& getRegistry();

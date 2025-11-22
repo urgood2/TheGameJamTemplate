@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 // Raylib default inputs
 in vec3 vertexPosition;
 in vec2 vertexTexCoord;

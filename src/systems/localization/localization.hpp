@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include "sol/sol.hpp"
 
+struct EngineContext;
+
 /**
 
 Example usage:
@@ -63,7 +65,7 @@ namespace localization
   // Localization System API
   // ==========================
 
-  extern void exposeToLua(sol::state &lua);
+  extern void exposeToLua(sol::state &lua, EngineContext* ctx = nullptr);
 
   extern void loadLanguage(const std::string &langCode, const std::string &path);
   extern void setFallbackLanguage(const std::string &langCode);

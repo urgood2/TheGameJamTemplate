@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 #define PI 3.14159265359
 
 // Input vertex attributes (from vertex shader)

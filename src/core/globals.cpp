@@ -37,6 +37,18 @@ namespace globals {
     EngineContext* g_ctx = nullptr;
     static AudioContext g_audioContext{};
 
+    template <typename T>
+    static T& resolveCtxOrLegacy(T& legacy, T EngineContext::*member) {
+        if (g_ctx) {
+            auto& slot = g_ctx->*member;
+            if (slot.empty() && !legacy.empty()) {
+                slot = legacy;
+            }
+            return slot;
+        }
+        return legacy;
+    }
+
     void setEngineContext(EngineContext* ctx) {
         g_ctx = ctx;
         if (g_ctx) {
@@ -54,13 +66,19 @@ namespace globals {
     {
         Vector2 m = GetMousePosition();
 
+        // Avoid division by zero before render scale is initialized.
+        float scale = globals::finalRenderScale;
+        if (scale <= 0.0f) {
+            scale = 1.0f;
+        }
+
         // Remove letterbox offset
         m.x -= globals::finalLetterboxOffsetX;
         m.y -= globals::finalLetterboxOffsetY;
 
         // Undo uniform scale
-        m.x /= globals::finalRenderScale;
-        m.y /= globals::finalRenderScale;
+        m.x /= scale;
+        m.y /= scale;
 
         if (g_ctx) {
             g_ctx->scaledMousePosition = m;
@@ -69,9 +87,7 @@ namespace globals {
     }
 
     Vector2 getScaledMousePositionCached() {
-        if (g_ctx) {
-            return g_ctx->scaledMousePosition;
-        }
+        // Always compute to keep both legacy globals and context in sync.
         return GetScaledMousePosition();
     }
 
@@ -250,7 +266,7 @@ namespace globals {
 
     // contains raw color data from colors.json, mapped to raw color names from the same file. 
     // use resources::getColor to get a color from this map with either raw name or uuid
-    std::map<std::string, Color> colorsMap{};
+    std::map<std::string, Color> colors{};
 
     
     float BASE_SHADOW_EXAGGERATION = 1.8f; 
@@ -299,6 +315,102 @@ namespace globals {
 
     // the main entity registry for the ECS
     entt::registry registry{};
+
+    json& getConfigJson() {
+        return resolveCtxOrLegacy(configJSON, &EngineContext::configJson);
+    }
+
+    json& getColorsJson() {
+        return resolveCtxOrLegacy(colorsJSON, &EngineContext::colorsJson);
+    }
+
+    json& getUiStringsJson() {
+        return resolveCtxOrLegacy(uiStringsJSON, &EngineContext::uiStringsJson);
+    }
+
+    json& getAnimationsJson() {
+        return resolveCtxOrLegacy(animationsJSON, &EngineContext::animationsJson);
+    }
+
+    json& getAiConfigJson() {
+        return resolveCtxOrLegacy(aiConfigJSON, &EngineContext::aiConfigJson);
+    }
+
+    json& getAiActionsJson() {
+        return resolveCtxOrLegacy(aiActionsJSON, &EngineContext::aiActionsJson);
+    }
+
+    json& getAiWorldstateJson() {
+        return resolveCtxOrLegacy(aiWorldstateJSON, &EngineContext::aiWorldstateJson);
+    }
+
+    json& getNinePatchJson() {
+        return resolveCtxOrLegacy(ninePatchJSON, &EngineContext::ninePatchJson);
+    }
+
+    std::map<std::string, Texture2D>& getTextureAtlasMap() {
+        return resolveCtxOrLegacy(textureAtlasMap, &EngineContext::textureAtlas);
+    }
+
+    std::map<std::string, AnimationObject>& getAnimationsMap() {
+        return resolveCtxOrLegacy(animationsMap, &EngineContext::animations);
+    }
+
+    std::map<std::string, SpriteFrameData>& getSpriteFrameMap() {
+        return resolveCtxOrLegacy(spriteDrawFrames, &EngineContext::spriteFrames);
+    }
+
+    std::map<std::string, Color>& getColorsMap() {
+        return resolveCtxOrLegacy(colors, &EngineContext::colors);
+    }
+
+    entt::entity getCursorEntity() {
+        if (g_ctx) {
+            return g_ctx->cursor;
+        }
+        return cursor;
+    }
+
+    void setCursorEntity(entt::entity e) {
+        cursor = e;
+        if (g_ctx) {
+            g_ctx->cursor = e;
+        }
+    }
+
+    entt::entity getOverlayMenu() {
+        if (g_ctx) return g_ctx->overlayMenu;
+        return overlayMenu;
+    }
+
+    void setOverlayMenu(entt::entity e) {
+        overlayMenu = e;
+        if (g_ctx) g_ctx->overlayMenu = e;
+    }
+
+    entt::entity getGameWorldContainer() {
+        if (g_ctx) return g_ctx->gameWorldContainerEntity;
+        return gameWorldContainerEntity;
+    }
+
+    void setGameWorldContainer(entt::entity e) {
+        gameWorldContainerEntity = e;
+        if (g_ctx) g_ctx->gameWorldContainerEntity = e;
+    }
+
+    std::unordered_map<std::string, std::vector<entt::entity>>& getGlobalUIInstanceMap() {
+        if (g_ctx) {
+            return g_ctx->globalUIInstances;
+        }
+        return globalUIInstanceMap;
+    }
+
+    std::unordered_map<std::string, std::function<void()>>& getButtonCallbacks() {
+        if (g_ctx) {
+            return g_ctx->buttonCallbacks;
+        }
+        return buttonCallbacks;
+    }
 
     Vector2 worldMousePosition = {0,0};
     Camera2D camera2D = {0};

@@ -74,19 +74,7 @@ namespace nine_patch {
         }
 
         // Pull the atlas texture (context-first, legacy fallback)
-        const Texture2D* atlasTexPtr = nullptr;
-        if (globals::g_ctx) {
-            auto it = globals::g_ctx->textureAtlas.find(atlas);
-            if (it != globals::g_ctx->textureAtlas.end()) {
-                atlasTexPtr = &it->second;
-            }
-        }
-        if (!atlasTexPtr) {
-            auto it = globals::textureAtlasMap.find(atlas);
-            if (it != globals::textureAtlasMap.end()) {
-                atlasTexPtr = &it->second;
-            }
-        }
+        const Texture2D* atlasTexPtr = getAtlasTexture(atlas);
         if (!atlasTexPtr) {
             spdlog::error("BakeNinePatchFromSprites: atlas texture '{}' not found.", atlas);
             return std::nullopt;
@@ -309,11 +297,6 @@ namespace nine_patch {
             rlEnd();
         };
 
-        // Source pixel sizes for each band (in source image)
-        const float srcTopH    = T;
-        const float srcBottomH = B;
-        const float srcLeftW   = L;
-        const float srcRightW  = R;
         const float srcCenterW = (srcW - L - R);
         const float srcCenterH = (srcH - T - B);
 

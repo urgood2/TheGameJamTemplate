@@ -102,13 +102,13 @@ namespace collision {
         
         // A) make it “transformable”:
         auto e = transform::CreateOrEmplace(&globals::getRegistry(),
-                                        globals::gameWorldContainerEntity,
+                                        globals::getGameWorldContainer(),
                                         /*x*/0,/*y*/0,
                                         /*w*/1,/*h*/1,
                                         std::nullopt);
         // B) mark it collidable:
         auto &go = globals::getRegistry().get<transform::GameObject>(e);
-        go.container        = globals::gameWorldContainerEntity;
+        go.container        = globals::getGameWorldContainer();
         go.state.collisionEnabled = true;
         
         auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
@@ -260,7 +260,7 @@ namespace collision {
         return obbIntersect(obbA, obbB);
     }
 
-    inline void exposeToLua(sol::state &lua) {
+    inline void exposeToLua(sol::state &lua, EngineContext* ctx = nullptr) {
         auto& rec = BindingRecorder::instance();
         const std::vector<std::string> path = {"collision"};
     

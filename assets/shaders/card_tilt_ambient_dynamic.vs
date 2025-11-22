@@ -1,5 +1,4 @@
 #version 330 core
-
 // Input uniforms from Raylib
 uniform vec2 mouse_screen_pos; // Mouse position in screen space
 uniform float screen_scale;     // Screen scaling factor (for high-DPI awareness)

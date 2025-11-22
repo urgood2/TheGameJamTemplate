@@ -1,11 +1,11 @@
-// fragment.fs
 #version 330 core
+// fragment.fs
 
 in  vec2 fragTexCoord;
 in  vec4 fragColor;
 
-uniform vec4 uGridRect = vec4(0,20,90,90);   // (x, y, width, height) in pixels within the atlas
-uniform vec2 uImageSize = vec2(90,90);  // (atlasWidth, atlasHeight)
+uniform vec4 uGridRect;   // (x, y, width, height) in pixels within the atlas
+uniform vec2 uImageSize;  // (atlasWidth, atlasHeight)
 
 uniform sampler2D texture0;
 uniform vec4     colDiffuse;   // Raylib’s tint

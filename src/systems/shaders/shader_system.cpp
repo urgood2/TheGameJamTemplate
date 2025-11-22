@@ -26,7 +26,7 @@ using json = nlohmann::json;
 
 namespace shaders
 {
-    auto exposeToLua(sol::state& lua) -> void {
+    auto exposeToLua(sol::state& lua, EngineContext* ctx) -> void {
         
 
         // BindingRecorder instance
@@ -124,6 +124,7 @@ namespace shaders
             "Gets a uniform's value by its name."
         });
 
+        
         // --- ShaderUniformComponent ---
 
         // 3a) Bind with sol2 (as you provided)

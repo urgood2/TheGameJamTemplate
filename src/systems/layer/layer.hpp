@@ -185,7 +185,7 @@ namespace layer
     //------------------------------------------------------------------------------------
     // lua exposure
     //------------------------------------------------------------------------------------
-    extern void exposeToLua(sol::state &lua);
+    extern void exposeToLua(sol::state &lua, EngineContext* ctx = nullptr);
 
     //------------------------------------------------------------------------------------
     // Data Structures Definition

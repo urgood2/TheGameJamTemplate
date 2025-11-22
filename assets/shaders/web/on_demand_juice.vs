@@ -1,4 +1,4 @@
-#version 330 core
+#version 300 es
 
 in vec2 vertexPosition;  // Vertex position attribute for 2D
 in vec2 vertexTexCoord;  // Vertex texture coordinate attribute

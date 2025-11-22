@@ -31,7 +31,7 @@ namespace ui
         UITypeEnum type,
         std::optional<UIConfig> config)
     {
-        entt::entity entity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, 0, 0); // values are set up in set_values
+        entt::entity entity = transform::CreateOrEmplace(&registry, globals::getGameWorldContainer(), 0, 0, 0, 0); // values are set up in set_values
         
         // ui element should be screen space by default
         registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
@@ -166,7 +166,7 @@ namespace ui
         {
             if (transform == nullptr)
             {
-                transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, transformReference.x, transformReference.y, transformReference.w, transformReference.h, entity);
+                transform::CreateOrEmplace(&registry, globals::getGameWorldContainer(), transformReference.x, transformReference.y, transformReference.w, transformReference.h, entity);
             }
             else {
                 transform->setActualX(transformReference.x);

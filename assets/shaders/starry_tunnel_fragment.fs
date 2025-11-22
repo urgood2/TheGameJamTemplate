@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -28,7 +27,7 @@ uniform bool iswhite;
 uniform bool isdarktotransparent;
 uniform bool bemask;
 
-uniform int debugMode = 0;     // ⬅ NEW! choose mode 0–5
+uniform int debugMode;     // ⬅ NEW! choose mode 0–5
 
 out vec4 finalColor;
 

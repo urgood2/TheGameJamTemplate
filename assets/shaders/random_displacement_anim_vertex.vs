@@ -1,5 +1,5 @@
-// vertex.vs
 #version 330 core
+// vertex.vs
 
 // ——————————————————————————————————————————————————————————————————————
 // Inputs (match Raylib default locations)

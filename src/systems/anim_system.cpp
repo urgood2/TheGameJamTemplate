@@ -23,19 +23,7 @@
 namespace animation_system {
 
     static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
-        if (globals::g_ctx) {
-            auto ctxIt = globals::g_ctx->textureAtlas.find(atlasUUID);
-            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
-                return &ctxIt->second;
-            }
-        }
-
-        auto legacyIt = globals::textureAtlasMap.find(atlasUUID);
-        if (legacyIt != globals::textureAtlasMap.end()) {
-            return &legacyIt->second;
-        }
-
-        return nullptr;
+        return getAtlasTexture(atlasUUID);
     }
     
     void setHorizontalFlip(entt::entity e, bool flip)
@@ -338,7 +326,7 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     */
     auto createAnimatedObjectWithTransform (std::string defaultAnimationIDorSpriteUUID, bool generateNewAnimFromSprite, int x, int y, std::function<void(entt::entity)> shaderPassConfig, bool shadowEnabled) ->  entt::entity {
         auto e = globals::getRegistry().create();
-        transform::CreateOrEmplace(&globals::getRegistry(), globals::gameWorldContainerEntity, x, y, 0, 0, e);
+        transform::CreateOrEmplace(&globals::getRegistry(), globals::getGameWorldContainer(), x, y, 0, 0, e);
         auto &transform = globals::getRegistry().get<transform::Transform>(e);
         auto &animQueue = globals::getRegistry().emplace<AnimationQueueComponent>(e);
         if (generateNewAnimFromSprite) {

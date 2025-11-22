@@ -1,5 +1,4 @@
-#version 330
-
+#version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -23,7 +22,7 @@ uniform int   Praticle_num;
 uniform float Range;
 uniform float speed;
 uniform float gravity;
-uniform int   TimeStep = 1;
+uniform int   TimeStep;
 
 uniform float ShneyMagnitude;
 

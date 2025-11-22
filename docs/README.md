@@ -11,11 +11,11 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 ## API Documentation
 
 ### Core Lua APIs
-- **[Complete Lua API Reference](api/lua_api_reference.md)** - Comprehensive API covering all engine features
+- **[Lua Scripting Reference](api/lua_api_reference.md)** - Current bindings by system, sourced from generated `chugget_code_definitions.lua`
 - [Camera System](api/lua_camera_docs.md) - Camera controls, follow modes, effects
 - [Physics System](api/physics_docs.md) - Physics, collision, steering behaviors
 - [Particle System](api/particles_doc.md) - Particle creation and emitters
-- [Timer System](api/timer_docs.md) - Timer utilities and chaining
+- [Timer System](api/timer_docs.md) - Timer utilities and chaining (**bindings currently disabled; see doc header**)
 - [Transform Local Rendering](api/transform_local_render_callback_doc.md) - Local-space rendering
 
 ### Specialized APIs

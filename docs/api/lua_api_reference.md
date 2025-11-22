@@ -1,525 +1,365 @@
-# Complete Lua API Reference
+# Lua Scripting Reference (Current Bindings)
 
-This comprehensive reference documents all Lua APIs exposed by the Game Jam Template engine. It consolidates previously undocumented features and provides working examples for all systems.
+Single-source reference for all Lua APIs exposed by the engine. Everything here is derived from the live bindings in `src/systems/scripting/scripting_functions.cpp` and the generated hints in `assets/scripts/chugget_code_definitions.lua`.
 
-> **Cross-References**: For detailed guides on specific systems, see:
-> - [Camera System](lua_camera_docs.md) - Full camera API with examples
-> - [Physics System](physics_docs.md) - Complete physics and collision guide
-> - [Particle System](particles_doc.md) - Particle creation and effects
-> - [Timer System](timer_docs.md) - Timer utilities and chaining
+**Binding status**
+- Timer/EventQueueSystem bindings are **disabled** (`timer::exposeToLua` commented). Use scheduler/coroutines until re-enabled.
+- `chugget_code_definitions.lua` is the signature source of truth; regenerate after adding bindings.
 
 ---
 
 ## Table of Contents
-
-1. [UI & Rendering](#ui--rendering)
-2. [Animation & Sprites](#animation--sprites)
-3. [Camera System](#camera-system)
-4. [Input System](#input-system)
-5. [Collision System](#collision-system)
-6. [Particle System](#particle-system)
-7. [Entity Management](#entity-management)
-8. [Text System](#text-system)
-9. [Shader System](#shader-system)
-10. [Performance Considerations](#performance-considerations)
-
----
-
-## UI & Rendering
-
-### Scoped Transform Rendering
-
-Render drawing commands in the local space of an entity's transform. Supports nesting for hierarchical rendering.
-
-```lua
-command_buffer.queueScopedTransformCompositeRender(layers.sprites, entityA, function()
-    -- This text will render in entityA's local space
-    command_buffer.queueDrawText(layers.sprites, function(c)
-        c.text = "Entity A"
-        c.x = 0        -- relative to entityA
-        c.y = 0
-        c.fontSize = 24
-        c.color = palette.snapToColorName("black")
-    end, z_orders.text, layer.DrawCommandSpace.World)
-
-    -- Nested transform under child entityB
-    command_buffer.queueScopedTransformCompositeRender(layers.sprites, entityB, function()
-        command_buffer.queueDrawRectangle(layers.sprites, function(c)
-            c.x = -10   -- relative to entityB, which is relative to entityA
-            c.y = -10
-            c.width = 20
-            c.height = 20
-            c.color = palette.snapToColorName("red")
-        end, z_orders.overlay, layer.DrawCommandSpace.World)
-    end, z_orders.overlay)
-end, z_orders.text)
-```
-
-**See also**: [Transform Local Render Callback Documentation](transform_local_render_callback_doc.md)
-
-### UI Padding Warning
-
-⚠️ **Warning**: Using 0 padding with UI elements will cause clipping issues. Always use at least 1-2 pixels of padding.
-
-```lua
--- BAD: Will cause clipping
-ui.box.new({
-    padding = 0,  -- ❌ Causes clipping
-    -- ...
-})
-
--- GOOD: Prevents clipping
-ui.box.new({
-    padding = 2,  -- ✅ Safe
-    -- ...
-})
-```
-
-### Layer Z-Index Management
-
-Assign z-index values to entities for precise rendering order control.
-
-```lua
--- Assign a z-index to an entity
-layer_order_system.assignZIndexToEntity(
-    dragDropboxUIBOX,  -- entity to assign z-index to
-    0                  -- z-index value (lower = render first)
-)
-
--- Apply layer order components to a UI box
-ui.box.AssignLayerOrderComponents(
-    registry,          -- registry to use
-    dragDropboxUIBOX   -- ui box to assign layer order components to
-)
-```
-
-### Draw Command Spaces
-
-Control whether drawing commands respect camera transforms or use screen space.
-
-```lua
--- World space - affected by camera
-command_buffer.queueDrawText(layers.sprites, function(c)
-    c.text = "World Space"
-    c.x = 100
-    c.y = 100
-end, z_orders.text, layer.DrawCommandSpace.World)
-
--- Screen space - fixed to screen, ignores camera
-command_buffer.queueDrawText(layers.ui, function(c)
-    c.text = "Screen Space UI"
-    c.x = 10
-    c.y = 10
-end, z_orders.text, layer.DrawCommandSpace.Screen)
-```
-
-### Color Creation
-
-Create custom colors using the `Col()` function.
-
-```lua
--- Create a custom color (RGBA)
-local myColor = Col(255, 128, 64, 255)
-
--- With alpha
-local transparentRed = Col(255, 0, 0, 128)
-```
-
-### UI Responsive Layout
-
-Use `UIBoxComponent`'s `onBoxResize` callback to make UI elements responsive to size changes.
-
-```lua
-local box = ui.box.new({
-    -- ... other properties ...
-
-    onBoxResize = function(box, newWidth, newHeight)
-        -- Update child elements based on new size
-        -- e.g., center elements, adjust alignment
-        local centerX = newWidth / 2
-        local centerY = newHeight / 2
-        -- Update positions...
-    end
-})
-```
+1) [Setup & Globals](#setup--globals)  
+1.5) [Quick Module Map](#quick-module-map)  
+2) [Events & Tutorials](#events--tutorials)  
+3) [Sound & Music](#sound--music)  
+4) [Game State, AI, Logging](#game-state-ai-logging)  
+5) [Input & Controller Navigation](#input--controller-navigation)  
+6) [Transforms, Alignment, Camera](#transforms-alignment-camera)  
+7) [UI & Layout](#ui--layout)  
+8) [Text & Localization](#text--localization)  
+9) [Rendering & Command Buffer](#rendering--command-buffer)  
+10) [Shaders & Pipeline](#shaders--pipeline)  
+11) [Particles & Random](#particles--random)  
+12) [Physics, Steering, Collision](#physics-steering-collision)  
+13) [Quadtree](#quadtree)  
+14) [Disabled/Not Bound](#disablednot-bound)  
 
 ---
 
-## Animation & Sprites
+## Setup & Globals
+- Script path is expanded to include `assets/scripts/**` by `initLuaMasterState`.
+- Globals: `globals.isGamePaused`, `globals.screenWipe`, `globals.screenWidth/Height`, `globals.inputState`, `globals.camera` (temporary), `globals.gameWorldContainerEntity`, `globals.cursor`, `globalShaderUniforms`.
+- Frame utilities: `GetFrameTime()`, `GetTime()`, `GetWorldToScreen2D(pos, cam)`, `GetScreenToWorld2D(pos, cam)`, `GetScreenWidth()`, `GetScreenHeight()`.
+- Fullscreen shaders: `add_fullscreen_shader(name)`, `remove_fullscreen_shader(name)`.
+- Registry helpers: `entt.registry` (`create/destroy/has/get/emplace/remove/add_script/runtime_view/clear/orphan`) and `ScriptComponent:add_task/count_tasks`.
+- Entity aliases: `getEntityByAlias(alias)`, `setEntityAlias(alias, entity)`.
+- ECS linking: components you emplace in Lua are the same C++ types (see `chugget_code_definitions.lua` for type IDs); scripts typically grab components via `registry:get(entity, ComponentType)` and mutate fields directly.
+- Object helpers: the lightweight class helper in `assets/scripts/external/object.lua` is documented at `docs/external/object.md`.
+- **Ordering nuance:** create/initialize your Lua object first (setting fields, methods, timers), then call `:attach_ecs{}` so queued `run_custom_func` calls and state tags run against a real entity. Avoid mutating `self._eid` before attach; `behavior_script_v2` defers queued work until the entity exists.
 
-### Blinking/Flashing Sprites
+## Quick Module Map
+- **Core engine bindings:** `entt`, `transform`, `camera`, `layer`, `command_buffer`, `physics`, `steering`, `particle`, `shaders`, `shader_pipeline`, `shader_draw_commands`, `localization`, `controller_nav`, `layer_order_system`, `ui.*`, `TextSystem`.
+- **Scripting patterns:** MonoBehavior base (`monobehavior/behavior_script_v2.lua`), Lua timer (`core/timer.lua`), coroutine/task (`task/task.lua`), helper lookups (`core/component_cache.lua`, `core/entity_cache.lua`), `getScriptTableFromEntityID` in `util/util.lua`.
+- **Gameplay DSL:** UI sugar in `ui/ui_syntax_sugar.lua`, wand/cards in `core/card_eval_order_test.lua`, combat scripts under `assets/scripts/combat/`.
+- **External libs:** `lume`, `knife.chain`, `hump.signal`, `grid`, `graph`, `forma` utils, `object`.
 
-Toggle sprite visibility by modifying the `noDraw` property.
-
+**Example: basic startup hooks**
 ```lua
-local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
-
--- Toggle visibility (creates blinking effect)
-rainComp.noDraw = not rainComp.noDraw
-
--- Or use timer for automatic blinking
-timer.every(0.5, function()
-    rainComp.noDraw = not rainComp.noDraw
-end)
-```
-
-### Entity Render Override
-
-Replace sprite rendering with custom draw commands while preserving shader functionality.
-
-```lua
--- Set custom render function (replaces sprite)
-entity.set_draw_override(survivorEntity, function(w, h)
-    -- w, h = entity's width and height
-    -- immediate render version using gradient rectangle
-    command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
-        c.cx = 0  -- self-centered
-        c.cy = 0
-        c.width = w
-        c.height = h
-        c.roundness = 0.5
-        c.segments = 8
-        c.topLeft = palette.snapToColorName("apricot_cream")
-        c.topRight = palette.snapToColorName("green")
-        c.bottomRight = palette.snapToColorName("green")
-        c.bottomLeft = palette.snapToColorName("apricot_cream")
-    end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
-end, true)  -- true = disable sprite rendering
-```
-
----
-
-## Camera System
-
-### Camera Creation and Usage
-
-⚠️ **Note**: `camera.new()` doesn't actually create a new camera - it binds to the global camera.
-
-```lua
--- Create camera with damped smoothing
-local testCamera = camera.new(
-    0,    -- x position
-    0,    -- y position
-    1,    -- zoom
-    0,    -- rotation
-    camera.smooth.damped(0.1)  -- damping factor
-)
-
--- Move camera
-testCamera:move(400, 400)
-```
-
-For comprehensive camera documentation including follow styles, shake effects, and advanced features, see [Camera System Documentation](lua_camera_docs.md).
-
-**Quick Tip**: Use `camera_smooth_pan_to()` from `core/camera_utils.lua` to smoothly pan the camera to a target position over time.
-
----
-
-## Input System
-
-### Gamepad Detection
-
-Check if a gamepad is currently enabled/connected.
-
-```lua
-if input.isGamepadEnabled() then
-    -- Use gamepad input
-    local moveX = input.getGamepadAxis(0, GAMEPAD_AXIS_LEFT_X)
-else
-    -- Fall back to keyboard
-    local moveX = (input.isKeyDown(KEY_D) and 1 or 0) - (input.isKeyDown(KEY_A) and 1 or 0)
+function _init()
+  globals.isGamePaused = false
+  setEntityAlias("player", registry:create())
 end
 ```
 
----
+## Events & Tutorials
+- C++ events: `subscribeToCppEvent('player_jumped'|'player_died', fn)`, `publishCppEvent(eventType, payload)`, `resetListenersForCppEvent`, `clearAllListeners`.
+- Lua events: `subscribeToLuaEvent(event, fn)`, `publishLuaEvent(event, table)`, `publishLuaEventNoArgs(event)`, `resetListenersForLuaEvent`, `getEventOccurred(event) -> occurred, payload`, `setEventOccurred(event, bool)`.
+- Tutorials: `setTutorialModeActive`, `resetTutorialSystem`, `showTutorialWindow`, `showTutorialWindowWithOptions`, `startTutorial`, `lockControls`, `unlockControls`, `addGameAnnouncement`, `registerTutorialToEvent`, `displayIndicatorAroundEntity(entity[, indicatorTypeID])`.
+- More: `docs/guides/examples/list_of_defined_events.md` lists predefined Lua events; tutorial flow is described in `docs/systems/tutorial/tutorial_system_v2.md` (if present).
 
-## Collision System
-
-### Collision Categories and Masks
-
-Set up which entities can collide with each other using category/mask system.
-
+**Example: listen for a Lua event once**
 ```lua
--- Make this entity a "player" that only collides with "enemy" or "powerup"
-collision.setCollisionCategory(me, "player")
-collision.setCollisionMask(me, "enemy", "powerup")
-
--- ⚠️ Note: setCollisionCategory ADDS to existing categories (bitwise OR)
--- To REPLACE all categories, use:
-collision.resetCollisionCategory(me, "player")
+local function onLoot(data)
+  print("Looted", data.item_name)
+  resetListenersForLuaEvent("loot_drop")
+end
+subscribeToLuaEvent("loot_drop", onLoot)
 ```
 
-### Custom Colliders with Callbacks
-
-Create custom collision entities with event callbacks.
-
+**Example: ECS object + event**  
+Gameplay scripts often create ECS entities and publish events together:
 ```lua
--- Create custom collider entity
-local collider = collision.create_collider_for_entity(e, {
-    offsetX = 0,
-    offsetY = 50,
-    width = 50,
-    height = 50
+local e = registry:create()
+registry:emplace(e, Transform, { x = 0, y = 0, w = 16, h = 16 })
+setEntityAlias("pickup_" .. e, e)
+publishLuaEvent("spawned_pickup", { entity = e })
+```
+
+## Sound & Music
+- Effects: `playSoundEffect(category, soundName[, pitch])`.
+- Filters: `toggleLowPassFilter(enabled)`, `toggleDelayEffect(enabled)`, `setLowPassTarget(strength)`, `setLowPassSpeed(speed)`.
+- Music/playlist: `playMusic(name[, loop])`, `playPlaylist(tracks, loop)`, `queueMusic`, `clearPlaylist`, `stopAllMusic`.
+- Volume/pitch: `setTrackVolume`, `getTrackVolume`, `setVolume`, `setMusicVolume`, `setCategoryVolume`, `setSoundPitch`, `fadeInMusic`, `fadeOutMusic`, `pauseMusic`, `resumeMusic`, `resetSoundSystem`.
+- More: see `docs/systems/sound/` (if present) or the bindings in `src/systems/sound/sound_system.cpp` for parameter details.
+
+**Example: simple playlist**
+```lua
+playPlaylist({"title_theme", "level_theme"}, true)
+setMusicVolume(0.7)
+```
+
+## Game State, AI, Logging
+- Logging: `log_debug([entity], ...)`, `log_error([entity], ...)`.
+- GOAP world state: `setCurrentWorldStateValue/getCurrentWorldStateValue/clearCurrentWorldState`, and goal variants.
+- Blackboard: `set/getBlackboardFloat|Vector2|Bool|Int|String`, `blackboardContains`.
+- Pause/input helpers: `isKeyPressed(keyName)`, `pauseGame()`, `unpauseGame()`.
+- Entity state tags: `activate_state`, `deactivate_state`, `clear_states`, `is_state_active`, `hasAnyTag/hasAllTags`, `add_state_tag`, `remove_state_tag`, `clear_state_tags`, `propagate_state_effects_to_ui_box`, `remove_default_state_tag`, `is_entity_active`.
+- AI table: `pause_ai_system`, `resume_ai_system`, `get_entity_ai_def`, `set_worldstate/goal`, `patch_worldstate/goal`, `get_blackboard`, `create_ai_entity`, `force_interrupt`, `list_lua_files`.
+- Scheduler: `size`, `empty`, `clear`, `attach`, `update`, `abort`.
+- More: AI system overview in `docs/systems/ai-behavior/AI_README.md`; entity state tags in `docs/systems/core/entity_state_management_doc.md`.
+
+**Example: mark a GOAP fact**
+```lua
+local e = getEntityByAlias("player")
+setCurrentWorldStateValue(e, "has_weapon", true)
+```
+
+## Input & Controller Navigation
+- Input state: `globals.inputState` with enums `KeyboardKey`, `MouseButton`, `GamepadButton`, etc.
+- Controller navigation: `controller_nav.create_group/layer`, `add_group_to_layer`, `navigate`, `select_current`, `set_entity_enabled`, `set_group_callbacks`, `current_focus_group`, `debug_print_state`, `validate`.
+- More: `docs/systems/advanced/controller_navigation.md` for patterns and pitfalls.
+
+**Example: gamepad navigate**
+```lua
+controller_nav.create_group("main_menu")
+controller_nav.add_group_to_layer("main_menu", "menus")
+controller_nav.navigate("menus", "down")
+```
+
+## Transforms, Alignment, Camera
+- Transform helpers: `transform.install_local_callback/remove_local_callback/has_local_callback/get_local_callback_info/set_local_callback_size/set_local_callback_after_pipeline`, `get_space/is_screen_space/set_space`, creation/hierarchy (`CreateOrEmplace`, `CreateGameWorldContainerEntity`, `AlignToMaster`, `AssignRole`, `MoveWithMaster`, `GetMaster`, `SyncPerfectlyToMaster`, `ConfigureAlignment`, `UpdateTransformSmoothingFactors`), motion (`InjectDynamicMotion`, `InjectDynamicMotionDefault`, `setJiggleOnHover`), queries (`FindTopEntityAtPoint`, `FindAllEntitiesAtPoint`, `DrawBoundingBoxAndDebugInfo`, `RemoveEntity`).
+- Alignment flags: `Alignment` bitflags; builder `InheritedPropertiesBuilder:addRoleType/addMaster/addOffset/addLocationBond/addSizeBond/addRotationBond/addScaleBond/addAlignment/addAlignmentOffset/build`.
+- Camera: `camera.Create/Exists/Remove/Get/Update/UpdateAll/Begin/End/with`; `GameCamera` methods for Move/Follow, smoothing, zoom/rotation/offset getters/setters, shake/flash/fade, deadzone.
+- More: camera specifics in `docs/api/lua_camera_docs.md`; transform local rendering in `docs/api/transform_local_render_callback_doc.md`.
+
+**Example: render override in local space**
+```lua
+transform.install_local_callback(e, function(c)
+  c.no_recalc = true
+  c.fn = function(w, h)
+    command_buffer.executeDrawRectangle(layers.sprites, function(cmd)
+      cmd.x, cmd.y, cmd.width, cmd.height = -w/2, -h/2, w, h
+    end)
+  end
+end)
+```
+
+## UI & Layout
+- Types: `UITypeEnum`, `UIElementComponent`, `UIBoxComponent`, `UIState`, `Tooltip`, `FocusArgs`, `SliderComponent`, `InventoryGridTileComponent`, `UIStylingType`.
+- Builders: `UIConfigBuilder.create(...):addId/.../addNPatchSourceTexture/build`; `UIElementTemplateNodeBuilder.create(...):addType/addConfig/addChild/addChildren/build`.
+- UI box helpers (`ui.box`): `Initialize`, `BuildUIElementTree`, `AddTemplateToUIBox`, `AssignStateTagsToUIBox/AddStateTagToUIBox/ClearStateTagsFromUIBox`, `set_draw_layer`, `placeUIElementsRecursively`, `placeNonContainerUIE`, `CalcTreeSizes`, `TreeCalcSubContainer/NonContainer`, `ClampDimensionsToMinimumsIfPresent`, `RenewAlignment`, `AssignLayerOrderComponents`, `Move/Drag/Recalculate`, `GetUIEByID`, `RemoveGroup/GetGroup/Remove`, `drawAllBoxes`, `buildUIBoxDrawList`.
+- Layer ordering: `layer_order_system.assignZIndexToEntity`, `setToTopZIndex`, `putAOverB`, `updateLayerZIndexesAsNecessary`, `getZIndex`, `resetRunningZIndex`.
+- More: UI system docs in `docs/systems/ui/` and the static text system in `docs/systems/text-ui/static_ui_text_system_doc.md`.
+
+**Example: build a button with a template**
+```lua
+local btn = UIElementTemplateNodeBuilder
+  .create()
+  :addType(UITypeEnum.TEXT)
+  :addConfig(UIConfigBuilder.create()
+    :addText("Play")
+    :addPadding(8)
+    :addButtonCallback(function() publishLuaEvent("play_clicked", {}) end)
+    :build())
+  :build()
+
+local box = ui.box.Initialize(registry, {x=0,y=0,w=200,h=60}, btn)
+```
+
+**Example: gameplay UI link (HP bar)**  
+From `assets/scripts/core/entity_factory.lua`:
+```lua
+local rootDef = UIElementTemplateNodeBuilder
+  .create()
+  :addType(UITypeEnum.TEXT)
+  :addConfig(UIConfigBuilder.create()
+    :addId("hp_text")
+    :addText(function()
+      return localization.get("ui.colonistHPText", {
+        hp = math.floor(getBlackboardFloat(colonist, "health")),
+        maxHp = getBlackboardFloat(colonist, "max_health")
+      })
+    end)
+    :build())
+  :build()
+
+globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef)
+ui.box.AssignLayerOrderComponents(registry, globals.ui.colonist_ui[colonist].hp_ui_box)
+layer_order_system.assignZIndexToEntity(globals.ui.colonist_ui[colonist].hp_ui_box, z_orders.ui_overlay)
+```
+
+**Example: controller nav binding (from `assets/scripts/core/gameplay.lua`)**
+```lua
+controller_nav.create_layer("planning-input-layer")
+controller_nav.create_group("planning-phase")
+controller_nav.add_group_to_layer("planning-input-layer", "planning-phase")
+controller_nav.set_group_callbacks("planning-phase", {
+  on_select = function(eid) controller_focused_entity = eid end,
 })
-
--- Define collision logic with callbacks
-local ColliderLogic = {
-    -- Custom data
-    speed = 150,  -- pixels / second
-    hp = 10,
-
-    -- Called once after component is attached
-    init = function(self)
-        print("Collider initialized")
-    end,
-
-    -- Called every frame
-    update = function(self, dt)
-        -- Update logic
-    end,
-
-    -- Called when collision occurs
-    on_collision = function(self, other)
-        print("Collided with entity:", other)
-        self.hp = self.hp - 5
-        if self.hp <= 0 then
-            registry:destroy(self.entity)
-        end
-    end,
-
-    -- Called before entity is destroyed
-    destroy = function(self)
-        print("Collider destroyed")
-    end
-}
-
--- Attach script to collider entity
-registry:add_script(collider, ColliderLogic)
+controller_nav.navigate("planning-phase", "U")
 ```
 
-For complete physics and collision documentation, see [Physics System Documentation](physics_docs.md).
+## Text & Localization
+- Text system: `TextSystem.Text`/`Character` accessors and `TextSystem.Builders.TextBuilder:setRawText/setFontData/setOnFinishedEffect/setFontSize/setWrapWidth/setAlignment/setWrapMode/setCreatedTime/setPopInEnabled/build`.
+- Static UI text system: exposed via `static_ui_text_system` (see `docs/systems/text-ui/static_ui_text_system_doc.md`) for registering/drawing static text.
+- Localization: `localization.loadLanguage(pathOrKey)`, `setFallbackLanguage(key)`, `getCurrentLanguage()`, `get(key)`; `localization.language` holds active key.
+- More: `docs/api/particles_doc.md` for text effects interplay with particles, and `docs/systems/text-ui/static_ui_text_system_doc.md` for usage patterns.
 
----
+**Example: localized label**
+```lua
+localization.loadLanguage("en")
+local label = localization.get("menu.play")
+```
 
-## Particle System
+## Rendering & Command Buffer
+- The `command_buffer` table queues draw commands for a `Layer`, or executes them immediately.
+- Queue: `command_buffer.queue<CmdName>(layer, init_fn, z, renderSpace?)` where `<CmdName>` matches a `layer.Cmd*` struct (e.g., `DrawRectangle`, `DrawText`, `SetShader`, `BeginOpenGLMode`, `DrawSpriteCentered`, etc.).
+- Immediate: `command_buffer.execute<CmdName>(layer, init_fn)` executes without queuing.
+- Scoped transform: `command_buffer.queueScopedTransformCompositeRender(layer, entity, fn, z, renderSpace?)`.
+- Matrix helper: `command_buffer.pushEntityTransformsToMatrix(registry, entity, layer, zOrder)`.
+- More: draw batching overview in `BATCHED_ENTITY_RENDERING.md` and `DRAW_COMMAND_BATCH_TESTING_GUIDE.md`.
 
-### Textured Particles with Animation
+**Example: queue a rounded rect with world-space z**
+```lua
+command_buffer.queueDrawGradientRectRoundedCentered(
+  layers.sprites,
+  function(c)
+    c.cx, c.cy = 0, 0
+    c.width, c.height = 64, 24
+    c.roundness, c.segments = 0.2, 8
+  end,
+  z_orders.ui,
+  layer.DrawCommandSpace.World
+)
+```
 
-Create particles that use texture animation.
+## Shaders & Pipeline
+- Shader uniforms: `shaders.ShaderUniformComponent`/`ShaderUniformSet` (`set/get/registerEntityUniformCallback/applyToShaderForEntity`).
+- Shader pipeline: `shader_pipeline` tables for `ShaderPass`, `OverlayInputSource`, `ShaderOverlayDraw`, `ShaderPipelineComponent`; helpers like `ShaderPipelineInit/Resize/ClearTextures/Swap/DebugDrawFront`.
+- Batched shader commands: `shader_draw_commands.DrawCommandBatch` (`beginRecording/endRecording/addBeginShader/addEndShader/addDrawTexture/addCustomCommand/execute/optimize/clear/size`).
+- Fullscreen shader helpers: `add_fullscreen_shader/remove_fullscreen_shader`.
+- More: pipeline internals in `DRAW_COMMAND_OPTIMIZATION.md` and `docs/guides/shaders/` for shader patterns.
 
+**Example: set a global uniform**
+```lua
+globalShaderUniforms.set("crt", "intensity", 0.5)
+```
+
+## Particles & Random
+- Particles: `particle.CreateParticle`, `CreateParticleEmitter`, `AttachEmitter`, `EmitParticles`, `WipeTagged`, `WipeAll`; enums `ParticleRenderType`, `RenderSpace`, `ParticleAnimationConfig`.
+- Random: `random_utils.set_seed/random_bool/random_float/random_int/random_normal/random_sign/random_uid/random_angle/random_biased/random_delay`.
+- More: `docs/api/particles_doc.md` for detailed particle examples.
+
+**Example: burst emitter**
+```lua
+local em = particle.CreateParticleEmitter("smoke", {x=0,y=0})
+particle.EmitParticles(em, 10)
+```
+
+**Example: particle from gameplay (combat cleanup)**
 ```lua
 particle.CreateParticle(
-    Vec2(x, y),                    -- spawn position
-    Vec2(initialSize, initialSize), -- particle size
-    {
-        renderType = particle.ParticleRenderType.RECTANGLE_FILLED,
-        velocity = Vec2(vx, vy),
-        acceleration = 0,           -- no gravity
-        lifespan = seconds,
-        startColor = util.getColor("WHITE"),
-        endColor = util.getColor("WHITE"),
-        rotationSpeed = rotationSpeed,
-        onUpdateCallback = function(comp, dt)
-            -- Custom update logic per particle
-        end,
-    },
-    {
-        loop = true,
-        animationName = "idle_animation"
-    }  -- animation config
+  {
+    renderType = particle.ParticleRenderType.RECTANGLE_FILLED,
+    color = {r=255,g=255,b=255,a=255},
+    x = transform.actualX + (transform.actualW or 0) * 0.5,
+    y = transform.actualY + (transform.actualH or 0) * 0.5,
+    size = 4,
+    lifeTime = 0.5,
+  }
 )
 ```
 
-For comprehensive particle system documentation, see [Particle System Documentation](particles_doc.md).
+## Physics, Steering, Collision
+- Physics masks/tags: `physics.set_collision_tags`, `enable/disable_collision_between` (single or `_many`), `enable/disable_trigger_between` (single or `_many`), `update_collision_masks_for`.
+- Steering: `steering.make_steerable`, `seek_point`, `flee_point`, `wander`, `separate`, `align`, `cohesion`, `pursuit`, `evade`, `set_path`.
+- Broad-phase collision: `collision.create_collider_for_entity`, `CheckCollisionBetweenTransforms`, `setCollisionCategory`, `setCollisionMask`, `resetCollisionCategory`; enums `ColliderType`, `CollisionFilter`.
 
----
-
-## Entity Management
-
-### State Tags
-
-Use state tags to exclude entities from rendering, collision, or updates.
-
+**Example: simple steering**
 ```lua
--- Add state tag to disable systems for entity
-entity.addStateTag(myEntity, "disabled")
-
--- Remove state tag to re-enable
-entity.removeStateTag(myEntity, "disabled")
-
--- Common state tags:
--- - "disabled" - excludes from all systems
--- - "no_render" - excludes from rendering
--- - "no_collision" - excludes from collision
--- - "no_update" - excludes from update systems
+steering.make_steerable(e)
+steering.seek_point(e, {x=100,y=80})
 ```
 
-**See also**: [Entity State Management Documentation](../systems/core/entity_state_management_doc.md)
-
-### Script Component Optimization
-
-Use the script component's `self` table for efficient blackboard storage instead of repeatedly accessing the component.
-
+**Example: projectile physics (from `assets/scripts/combat/projectile_system.lua`)**
 ```lua
--- SLOW: Accessing component every time
-local function update(self, dt)
-    local comp = get_script_component(myEntity)
-    comp.someField = comp.someField + 1  -- Component lookup overhead
+physics.create_physics_for_transform(world, entity, transform, physics.Shape.Circle, params.radius or 4)
+physics.SetBullet(world, entity, true)
+physics.set_collision_tags(world, entity, ProjectileSystem.COLLISION_CATEGORY)
+physics.enable_collision_between_many(world, ProjectileSystem.COLLISION_CATEGORY, { "enemy" })
+```
+
+## Utility Libraries (external/)
+- `external/lume.lua`: general-purpose FP/data helpers (`lume.map`, `filter`, `reduce`, `shuffle`, `weights`, `vector`, etc.). Loaded in `core/main.lua` as `lume = require("external.lume")`.
+- `external/knife/chain.lua`: chainable middleware; create with `local chain = require("external.knife.chain")` then `chain(fn1)(fn2)()(args)` to run a pipeline with optional async `continue`.
+- `external/hump/signal.lua`: event emitter (`signal.register`, `signal.emit`, `signal.clear`), used in gameplay; see upstream docs or file header.
+- `external/grid.lua`: simple 2D grid class (`Grid(w,h,fill)`, `:get/:set`, `:apply`, `:for_all`, `:find`); useful for tile/state boards.
+- `external/graph.lua`: adjacency-list graph with helpers (`add_node`, `add_edge`, `for_all_nodes/edges`, `get_node_neighbors`, Floyd-Warshall precompute).
+- `external/forma/**`: BSP/geometry utilities (see `docs/external/forma_README.md`) for procedural layout.
+- `external/object.lua`: lightweight class/OOP helper (documented in `docs/external/object.md`), used by MonoBehavior scripts.
+- `external/knife/*`, `external/forma/utils/*`: keep to their README/comment headers for niche utilities.
+- `assets/scripts/util/util.lua`: gameplay helpers (camera smoothing, particle helpers, beam effects). Useful functions include `camera_smooth_pan_to`, `particle.spawnRadialParticles`, `spawnImageBurst`, `spawnRing`, `spawnRectAreaParticles`, `spawnDirectionalCone`, and `makePulsingBeam` (beam node using command_buffer + tweening).
+
+**Example: using hump.signal**
+```lua
+local signal = require("external.hump.signal")
+signal.register("card_drawn")
+signal.addListener("card_drawn", function(card) print("Drew", card) end)
+signal.emit("card_drawn", "fire_basic_bolt")
+```
+
+**Example: using knife.chain**
+```lua
+local chain = require("external.knife.chain")
+local pipeline = chain(
+  function(continue, ctx) ctx.log = {"start"}; continue(ctx) end,
+  function(continue, ctx) table.insert(ctx.log, "middle"); continue(ctx) end,
+  function(_, ctx) table.insert(ctx.log, "end") end
+)
+pipeline()({}) -- runs the chain with an empty context
+```
+
+**Example: grid helpers**
+```lua
+local Grid = require("external.grid")
+local g = Grid(3, 3, 0)
+g:set(2, 2, 1)
+g:apply(function(grid, i, j) print(i, j, grid:get(i, j)) end)
+```
+
+**Example: util.lua camera + particles + beam**
+```lua
+camera_smooth_pan_to("main", 100, 200, { increments = 4, interval = 0.01 })
+particle.spawnRing(0, 0, 12, 0.8, 40, { colors = { util.getColor("CYAN") } })
+makePulsingBeam(player_entity, target_entity, { duration = 0.6, color = util.getColor("magenta") })
+```
+
+**Example: MonoBehavior lifecycle (from `monobehavior/behavior_script_v2.lua`)**
+```lua
+local Node = require("monobehavior.behavior_script_v2")
+
+local Spinner = Node:extend()
+function Spinner:init(args)
+  self.speed = args.speed or 1
+end
+function Spinner:update(dt)
+  local t = registry:get(self:handle(), Transform)
+  t.visualR = t.visualR + dt * self.speed
 end
 
--- FAST: Use self table directly
-local function update(self, dt)
-    self.someField = self.someField + 1  -- Direct table access
-end
-
--- Access self fields from script component
-local comp = get_script_component(myEntity)
-print(comp.self.someField)  -- Read from blackboard
+Spinner {}:attach_ecs({ create_new = true })
 ```
 
-### entt_null Binding
-
-The `entt::null` constant is bound to Lua for invalid entity checks.
-
+**Example: Lua-only timer chain (from `core/gameplay.lua` transitions)**
 ```lua
-local entity = findEntityByName("player")
+timer.after(duration * 0.7, function()
+  timer.tween_fields(duration * 0.3, self, { radius = 0 }, Easing.inOutCubic.f, nil, "transition_circle_shrink", "ui")
+end, "transition_circle_shrink_delay", "ui")
+```
+## Quadtree
+- `quadtree.box`, `WorldQuadtree:add/remove/query/find_all_intersections/get_bounds/clear`.
 
-if entity == entt_null then
-    print("Entity not found")
-else
-    -- Use entity
+**Example: query overlaps**
+```lua
+for _, hit in ipairs(globals.quadtreeWorld:query(quadtree.box(0,0,32,32))) do
+  print("Hit", hit.entity)
 end
 ```
 
----
-
-## Text System
-
-### Dynamic Text with Wait Commands
-
-Create text with interactive wait points that pause until input.
-
-⚠️ **Critical**: Text implementation requires arguments in **exact order** and **exact count** as documented.
-
-```lua
-local dialogue = [[
-<typing,speed=0.05>
-Hello, brave hero! <wait=key,id=KEY_ENTER>
-Press ENTER to continue…
-<wait=mouse,id=MOUSE_BUTTON_LEFT>
-Or click to proceed.
-<wait=lua,id=myCustomCallback>
-And now the rest…
-]]
-
--- Define Lua callback for custom wait condition
-function myCustomCallback()
-    -- Return true when wait should end
-    return player.readyToContinue
-end
-```
-
-**Available wait types**:
-- `<wait=key,id=KEY_*>` - Wait for keyboard key
-- `<wait=mouse,id=MOUSE_BUTTON_*>` - Wait for mouse button
-- `<wait=lua,id=callbackName>` - Wait for Lua function to return true
+## Disabled/Not Bound
+- Timer/EventQueueSystem: see `docs/api/timer_docs.md` and `timer_chaining.md` for future reference; not exposed until `timer::exposeToLua` is re-enabled. The gameplay scripts use the Lua-only timer in `assets/scripts/core/timer.lua` instead.
 
 ---
 
-## Shader System
-
-### Using Shaders with UI Elements
-
-Apply custom shaders to UI elements using the pipeline component.
-
-```lua
--- Add pipeline component to apply shader
-local uiBox = ui.box.new({
-    -- ... other properties ...
-})
-
--- Attach shader pipeline
-local pipeline = registry:get_or_emplace(uiBox, PipelineComponent)
-pipeline.shaderName = "my_custom_shader"
-```
-
-### Layer Post-Processing Limitations
-
-⚠️ **Warning**: Background and final output layers don't work with layer post-processing since they are overwritten. Use fullscreen shaders instead.
-
-```lua
--- BAD: Won't work on background layer
-layer.setPostProcessShader(layers.background, "blur")  -- ❌
-
--- GOOD: Use fullscreen shader instead
-command_buffer.queueFullscreenShader("blur", layers.background)  -- ✅
-```
-
----
-
-## Performance Considerations
-
-### Node Update Performance
-
-⚠️ **Warning**: Adding `update()` callbacks to nodes in multiple entities will greatly slow down performance.
-
-```lua
--- SLOW: update() called for every entity
-local Node = {
-    update = function(self, dt)
-        -- This is expensive when used in many entities!
-    end
-}
-
--- BETTER: Use a system that processes multiple entities at once
-local function updateAllNodes(dt)
-    local view = registry:view(NodeComponent)
-    for entity in view:each() do
-        -- Process all nodes in one system
-    end
-end
-
--- OR: Use a timer for infrequent updates
-timer.every(0.5, function()
-    -- Update less frequently
-end)
-```
-
-### Script Component Blackboard
-
-Store frequently accessed data in the script component's `self` table for better performance (see [Script Component Optimization](#script-component-optimization)).
-
----
-
-## Additional Documentation
-
-### Undocumented Features (In Progress)
-
-The following features exist but need detailed documentation:
-
-- **Global PhysicsManagerInstance** - Accessible from Lua
-- **exposeGlobalsToLua** - System for exposing C++ globals with lua doc bindings
-- **entity_gamestate_management** - Entity lifecycle management across game states
-- **UI instantiation** - How to instantiate UI in place within existing windows
-- **UI builder children method** - Takes Lua table for child elements
-
-### GOAP AI System
-
-For interruptible/reactive GOAP actions, use the optional `watch` field and `abort` hook. See [Dig for Gold Action](../../assets/scripts/ai/actions/dig_for_gold.lua) for reference.
-
----
-
-## See Also
-
-- [Camera System](lua_camera_docs.md) - Comprehensive camera API
-- [Physics System](physics_docs.md) - Complete physics and collision guide
-- [Particle System](particles_doc.md) - Particle effects and emitters
-- [Timer System](timer_docs.md) - Timer utilities
-- [Entity State Management](../systems/core/entity_state_management_doc.md) - State tags
-- [Transform Local Rendering](transform_local_render_callback_doc.md) - Local-space rendering
-
----
-
-**Last Updated**: 2025-11-20
-
-**Note**: This document consolidates content from `TODO_documentation.md` and has been verified against the current codebase. All code examples are tested and accurate.
+When adding new bindings: register in `initLuaMasterState`, record with `BindingRecorder`, regenerate `assets/scripts/chugget_code_definitions.lua`, and update examples here.

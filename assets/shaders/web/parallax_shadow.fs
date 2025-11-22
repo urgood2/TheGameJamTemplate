@@ -1,6 +1,8 @@
 #version 300 es
 precision mediump float;
 
+precision mediump float;
+
 // Inputs from vertex shader
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -24,8 +26,8 @@ uniform float uMax;
 uniform float vMin;
 uniform float vMax;
 
-uniform bool debug = false;               // Debug mode flag
-uniform vec4 debugColor = vec4(1, 0, 0, 0.3); // Color for the debug border
+uniform bool debug;               // Debug mode flag
+uniform vec4 debugColor; // Color for the debug border
 
 // Output fragment color
 out vec4 finalColor;

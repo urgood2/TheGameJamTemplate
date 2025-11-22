@@ -45,6 +45,7 @@ using json = nlohmann::json;
 #include "../components/components.hpp"
 #include "../components/graphics.hpp"
 #include "../core/globals.hpp" // global variables
+#include "../core/engine_context.hpp"
 
 #include "systems/uuid/uuid.hpp" // uuid
 #include "raylib.h"
@@ -114,7 +115,9 @@ namespace util {
             true, false
         });
 
-        util_tbl.set_function("getColor",                &util::getColor);
+        util_tbl.set_function("getColor", [](const std::string& name) {
+            return util::getColor(name);
+        });
         rec.record_free_function({"util"}, {
             "getColor",
             "---@param colorName string # The name of the color (e.g., \"red\").\n"
@@ -504,16 +507,31 @@ namespace util {
     }
 
     // color name should be from colors.json
-    auto getColorImVec(const string& colorName) -> ImVec4 {
-        auto c = getColor(colorName);
+    auto getColorImVec(const string& colorName, ::EngineContext* ctx) -> ImVec4 {
+        auto c = getColor(colorName, ctx);
         return ImVec4(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f);
     }
 
     // color name from colors.json
     // Note that this method is not case sensitive - all names are converted to uppercase
-    Color getColor(std::string colorName_or_uuid) {
-    return globals::colorsMap[uuid::add(colorName_or_uuid)];
-}
+    Color getColor(std::string colorName_or_uuid, ::EngineContext* ctx) {
+        const auto key = uuid::add(colorName_or_uuid);
+
+        ::EngineContext* effectiveCtx = ctx ? ctx : globals::g_ctx;
+        if (effectiveCtx) {
+            auto it = effectiveCtx->colors.find(key);
+            if (it != effectiveCtx->colors.end()) {
+                return it->second;
+            }
+        }
+
+        auto it = globals::colorsMap.find(key);
+        if (it != globals::colorsMap.end()) {
+            return it->second;
+        }
+
+        return globals::colorsMap[key];
+    }
 
     auto toUnsignedChar(string value) -> unsigned char {
         

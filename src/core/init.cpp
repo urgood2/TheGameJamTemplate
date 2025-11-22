@@ -1,6 +1,7 @@
 #include "init.hpp"
 #include "graphics.hpp"
 #include "globals.hpp"
+#include "engine_context.hpp"
 #include "../components/components.hpp"
 #include "../util/utilities.hpp"
 #include "systems/physics/physics_components.hpp"
@@ -242,6 +243,10 @@ namespace init {
             // SPDLOG_DEBUG("Loaded color {} with values r: {} g: {} b: {}", colorName, r, g, b);
         }
 
+        if (globals::g_ctx) {
+            globals::g_ctx->colors = globals::colorsMap;
+        }
+
         auto filePath = util::getRawAssetPathNoUUID("raws/colors.json");
         std::ofstream outFile(filePath);
         if (!outFile.is_open())
@@ -320,6 +325,10 @@ namespace init {
                     data.atlasUUID    = atlasUUID;
 
                     globals::spriteDrawFrames[filename] = data;
+                }
+
+                if (globals::g_ctx) {
+                    globals::g_ctx->spriteFrames = globals::spriteDrawFrames;
                 }
 
                 // Overwrite the updated JSON with UUIDs
@@ -506,6 +515,10 @@ namespace init {
 
                 SPDLOG_INFO("Loaded texture '{}' as UUID '{}'", pngFilename, uuid);
             }
+        }
+
+        if (globals::g_ctx) {
+            globals::g_ctx->textureAtlas = globals::textureAtlasMap;
         }
 
         // iterate through every animation object and populate the texture map with the atlas textures

@@ -89,6 +89,8 @@ namespace util {
     };
 #endif
 
+struct EngineContext;
+
 	struct TextLogEntry {
         std::string text;
         std::vector<ImColor> colors; // each color corresponds to a substring in the text
@@ -99,16 +101,16 @@ namespace util {
     // expose relevant functions to lua
     extern auto exposeToLua(sol::state &lua) -> void;
 	
-	// convenience methods
-	extern auto getRawAssetPathNoUUID(const string assetName) -> string;
-	extern auto getColor(string colorName) -> Color;
+    // convenience methods
+    extern auto getRawAssetPathNoUUID(const string assetName) -> string;
+    extern auto getColor(string colorName, ::EngineContext* ctx = nullptr) -> Color;
     extern std::string getAssetPathUUIDVersion(const std::string path_uuid_or_raw_identifier);
-	extern auto raylibColorToImVec(const Color &c) -> ImVec4;
-	extern auto getRandomSynonymFor(const string &word) -> string;
-	extern auto toUnsignedChar(string value) -> unsigned char;
+    extern auto raylibColorToImVec(const Color &c) -> ImVec4;
+    extern auto getRandomSynonymFor(const string &word) -> string;
+    extern auto toUnsignedChar(string value) -> unsigned char;
 
 
-	extern auto getColorImVec(const string& colorName) -> ImVec4;
+    extern auto getColorImVec(const string& colorName, ::EngineContext* ctx = nullptr) -> ImVec4;
 	// extern auto replaceAllTokensInString(const std::string& templateStr, const std::map<std::string, std::string>& tokens) -> std::string;
 	extern auto surroundWithColorTags(const std::string& text, const std::string& color) -> std::string;
 	extern auto rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect, ImVec4 tintColor) -> void;

@@ -14,6 +14,15 @@
 **Estimated Effort:** 2-3 weeks  
 **Risk Level:** High (touches entire codebase)  
 
+#### Detailed Step 1 Task List
+- **Design scope:** Map current globals; decide minimal EngineContext fields (registry, lua, physics, resource maps, current state, mouse position).
+- **Create scaffolding:** Add `engine_context.hpp/cpp` with constructor, factory, move-only semantics, and lightweight defaults; avoid heavy init inside ctor.
+- **Bridge globals:** Add `globals::g_ctx` and `setEngineContext` to support parallel use; keep all legacy globals intact.
+- **Initialize in main/init:** Instantiate context early, assign `g_ctx`, and (optionally) mirror initial values back into globals without removing any.
+- **Migration staging:** Pick low-risk utilities (color, texture atlas) to accept `EngineContext&` while still syncing legacy globals for compatibility.
+- **Testing/validation:** Ensure builds succeed after wiring; add a smoke check (e.g., context creation) before migrating heavier systems.
+- **Documentation:** Record migration expectations and temporary compatibility rules in comments or dev notes to avoid regressions during rollout.
+
 #### Current Problem
 - 200+ extern variables in `globals.hpp` create massive coupling
 - Every system depends on every other system through globals

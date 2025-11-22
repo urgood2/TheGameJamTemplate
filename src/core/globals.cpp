@@ -33,6 +33,12 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
     
+    EngineContext* g_ctx = nullptr;
+
+    void setEngineContext(EngineContext* ctx) {
+        g_ctx = ctx;
+    }
+
     // Get mouse position scaled to virtual resolution so collision works regardless of window size
     
     Vector2 GetScaledMousePosition()

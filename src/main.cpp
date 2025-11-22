@@ -47,6 +47,7 @@
 #include "core/game.hpp"
 #include "core/gui.hpp"
 #include "core/globals.hpp"
+#include "core/engine_context.hpp"
 
 #include "util/utilities.hpp" // global utilty methods
 
@@ -397,6 +398,9 @@ int main(void)
     // --------------------------------------------------------------------------------------
     // game init
     // --------------------------------------------------------------------------------------
+
+    auto engineCtx = createEngineContext("config.json");
+    globals::setEngineContext(engineCtx.get());
 
     init::base_init();
     

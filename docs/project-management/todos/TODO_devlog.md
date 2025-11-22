@@ -230,3 +230,7 @@
   - projectile system, needs soem work.
   - mass-converted some shaders I was planning to add.
   - fixed some nagging bugs.
+  
+11/22/2025
+  - Code refactoring work, I had some IRL work so not much done today.
+  - Banned from Claude Code. Not sure why, petitioned.

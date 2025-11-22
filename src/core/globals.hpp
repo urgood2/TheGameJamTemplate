@@ -95,10 +95,14 @@ namespace layer
 }
 
 class PhysicsManager;
+struct EngineContext;
 
 namespace globals
 {
     
+    extern EngineContext* g_ctx; // bridge pointer to the new EngineContext (incremental migration)
+    void setEngineContext(EngineContext* ctx);
+
     extern Vector2 GetScaledMousePosition();
     
     // Virtual design resolution (like SNKRX)

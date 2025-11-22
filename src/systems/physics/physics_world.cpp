@@ -122,18 +122,19 @@ std::shared_ptr<cpShape> MakeSharedShape(cpBody *body, cpFloat width,
                                   [](cpShape *shape) { cpShapeFree(shape); });
 }
 
-static void RemoveAndFreeBody(cpSpace* space, cpBody*& body) {
-  if (!body) return;
-  if (cpBodyGetSpace(body)) {
-    cpSpaceRemoveBody(space, body);
+static void RemoveBody(cpSpace *space, physics::BodyPtr &bodyOwner) {
+  if (!bodyOwner)
+    return;
+  if (cpBodyGetSpace(bodyOwner.get())) {
+    cpSpaceRemoveBody(space, bodyOwner.get());
   }
-  cpBodyFree(body);
-  body = nullptr;
+  bodyOwner.reset();
 }
 
 PhysicsWorld::PhysicsWorld(entt::registry *registry, float meter,
                            float gravityX, float gravityY) {
-  space = cpSpaceNew();
+  spaceOwner.reset(cpSpaceNew());
+  space = spaceOwner.get();
   cpSpaceSetUserData(space, this);
   
   cpSpaceSetCollisionSlop(space, 0.0f);
@@ -159,19 +160,25 @@ PhysicsWorld::~PhysicsWorld() {
         cpSpaceRemoveBody(space, c.body.get());
     });
 
-    if (mouseJoint) {
-      cpSpaceRemoveConstraint(space, mouseJoint);
-      cpConstraintFree(mouseJoint);
-      mouseJoint = nullptr;
+    if (mouseJointOwner) {
+      cpSpaceRemoveConstraint(space, mouseJointOwner.get());
+      mouseJointOwner.reset();
     }
-    RemoveAndFreeBody(space, controlBody);
-    RemoveAndFreeBody(space, mouseBody);
+    for (auto &c : ownedConstraints) {
+      if (c && cpConstraintGetSpace(c.get())) {
+        cpSpaceRemoveConstraint(space, c.get());
+      }
+      c.reset();
+    }
+    ownedConstraints.clear();
+    RemoveBody(space, controlBodyOwner);
+    RemoveBody(space, mouseBodyOwner);
 
-    cpSpaceFree(space);
+    spaceOwner.reset();
     space = nullptr;
   }
   SPDLOG_INFO("PhysicsWorld shutdown: removed all dynamic bodies/shapes; mouseJoint? {} controlBody? {}",
-            mouseJoint ? "yes":"no", controlBody ? "yes":"no");
+            mouseJointOwner ? "yes":"no", controlBodyOwner ? "yes":"no");
 
 }
 
@@ -2044,8 +2051,8 @@ void PhysicsWorld::SetBodyVelocity(entt::entity e, float vx, float vy) {
 void PhysicsWorld::AddUprightSpring(entt::entity e, float stiffness,
                                     float damping) {
   auto &c = registry->get<ColliderComponent>(e);
-  cpConstraint *spring = cpDampedRotarySpringNew(
-      cpSpaceGetStaticBody(space), c.body.get(), 0.0f, stiffness, damping);
+  auto spring = TrackConstraint(cpDampedRotarySpringNew(
+      cpSpaceGetStaticBody(space), c.body.get(), 0.0f, stiffness, damping));
   cpSpaceAddConstraint(space, spring);
   
   
@@ -2099,15 +2106,15 @@ void PhysicsWorld::AddScreenBounds(float xMin, float yMin, float xMax,
 }
 
 void PhysicsWorld::StartMouseDrag(float x, float y) {
-  if (mouseJoint)
+  if (mouseJointOwner)
     return;
   EndMouseDrag();
 
-  if (!mouseBody) {
-    mouseBody = cpBodyNewStatic();
-    SpaceAddBodySafe(space, mouseBody);
+  if (!mouseBodyOwner) {
+    mouseBodyOwner.reset(cpBodyNewStatic());
+    SpaceAddBodySafe(space, mouseBodyOwner.get());
   }
-  cpBodySetPosition(mouseBody, cpv(x, y));
+  cpBodySetPosition(mouseBodyOwner.get(), cpv(x, y));
 
   draggedEntity = PointQuery(x, y);
   if (draggedEntity == entt::null)
@@ -2116,23 +2123,23 @@ void PhysicsWorld::StartMouseDrag(float x, float y) {
   auto &c = registry->get<ColliderComponent>(draggedEntity);
 
   cpVect worldPt = cpv(x, y);
-  cpVect anchorA = cpBodyWorldToLocal(mouseBody, worldPt);
+  cpVect anchorA = cpBodyWorldToLocal(mouseBodyOwner.get(), worldPt);
   cpVect anchorB = cpBodyWorldToLocal(c.body.get(), worldPt);
 
-  mouseJoint = cpPivotJointNew2(mouseBody, c.body.get(), anchorA, anchorB);
-  SpaceAddConstraintSafe(space, mouseJoint);
+  mouseJointOwner.reset(cpPivotJointNew2(mouseBodyOwner.get(), c.body.get(), anchorA, anchorB));
+  SpaceAddConstraintSafe(space, mouseJointOwner.get());
 }
 
 void PhysicsWorld::UpdateMouseDrag(float x, float y) {
-  if (mouseBody) {
-    cpBodySetPosition(mouseBody, cpv(x, y));
+  if (mouseBodyOwner) {
+    cpBodySetPosition(mouseBodyOwner.get(), cpv(x, y));
   }
 }
 
 void PhysicsWorld::EndMouseDrag() {
-  if (mouseJoint) {
-    SpaceRemoveConstraintSafe(space, mouseJoint,true);
-    mouseJoint = nullptr;
+  if (mouseJointOwner) {
+    SpaceRemoveConstraintSafe(space, mouseJointOwner.get(), true);
+    mouseJointOwner.reset();
   }
   draggedEntity = entt::null;
 }
@@ -2193,14 +2200,14 @@ void PhysicsWorld::CreateTilemapColliders(
 
 void PhysicsWorld::CreateTopDownController(entt::entity entity, float maxBias,
                                            float maxForce) {
-  if (!controlBody) {
-    controlBody = cpBodyNewStatic();
-    cpSpaceAddBody(space, controlBody);
+  if (!controlBodyOwner) {
+    controlBodyOwner.reset(cpBodyNewStatic());
+    cpSpaceAddBody(space, controlBodyOwner.get());
   }
 
   auto &col = registry->get<ColliderComponent>(entity);
   cpConstraint *joint =
-      cpPivotJointNew2(controlBody, col.body.get(), cpvzero, cpvzero);
+      cpPivotJointNew2(controlBodyOwner.get(), col.body.get(), cpvzero, cpvzero);
   cpConstraintSetMaxBias(joint, maxBias);
   cpConstraintSetMaxForce(joint, maxForce);
   cpSpaceAddConstraint(space, joint);

@@ -43,6 +43,10 @@ namespace event_system {
     // Map to handle C++ listeners for Lua-defined events
     extern std::unordered_map<std::string, std::vector<std::function<void(sol::table)>>> cppEventListenersToLuaEvents;
 
+    // Event tracking state
+    extern std::unordered_map<std::string, bool> eventOccurredMap;
+    extern std::unordered_map<std::string, sol::table> eventOccurredPayloadMap;
+
     // Subscribe to C++ events using lambdas. 
 
     /**
@@ -76,6 +80,8 @@ namespace event_system {
         emitter.clear();
         luaEventListeners.clear();  // Also clear Lua-defined event listeners
         cppEventListenersToLuaEvents.clear();  // Clear C++ listeners for Lua-defined events
+        eventOccurredMap.clear();
+        eventOccurredPayloadMap.clear();
     }
     
     extern void initializeEventMap(sol::state& lua);

@@ -8,6 +8,7 @@
 #include "raylib.h"
 #include "systems/layer/layer.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
+#include "chipmunk_raii.hpp"
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -711,13 +712,15 @@ public:
   // General Members
   entt::registry *registry;
   cpBB worldBounds = cpBBNew(-3000, -3000, 3000, 3000); // default world AABB
+  physics::SpacePtr spaceOwner;
   cpSpace *space;
   float meter; // REVIEW: unused
   // Internal state for mouse dragging
-  cpBody *mouseBody = nullptr;        // a static body to attach the mouse joint
-  cpConstraint *mouseJoint = nullptr; // the active pivot joint
+  physics::BodyPtr mouseBodyOwner;    // a static body to attach the mouse joint
+  physics::ConstraintPtr mouseJointOwner; // the active pivot joint
   entt::entity draggedEntity = entt::null; // which entity is being dragged
-  cpBody *controlBody = nullptr;           // for your player/controller joint
+  physics::BodyPtr controlBodyOwner;       // for your player/controller joint
+  std::vector<physics::ConstraintPtr> ownedConstraints; // constraints we own/cleanup
   // TODO: isolate the above into the collision component later
 
   /**
@@ -1500,6 +1503,10 @@ entt::entity AddOneWayPlatform(float x1, float y1,
   }
 
 private:
+  cpConstraint *TrackConstraint(cpConstraint *c) {
+    ownedConstraints.emplace_back(c);
+    return c;
+  }
     std::unordered_map<cpCollisionType, FluidConfig> _fluidByType;
 
   /* --------------- collision handling post-solve and pre-solve --------------

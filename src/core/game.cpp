@@ -502,6 +502,7 @@ namespace game
     {
         
         timer::TimerSystem::clear_all_timers();
+        event_system::ClearAllListeners(); // drop Lua callbacks before nuking the Lua state
         
         globals::getRegistry().view<transform::Transform>().each([](auto entity, auto &t){
             transform::RemoveEntity(&globals::getRegistry(), entity);

@@ -34,3 +34,8 @@ test:
 	cmake -B build -DENABLE_UNIT_TESTS=ON
 	cmake --build build --target unit_tests
 	./build/unit_tests --gtest_color=yes
+
+test-asan:
+	cmake -B build-asan -DENABLE_UNIT_TESTS=ON -DENABLE_ASAN=ON -DCMAKE_BUILD_TYPE=Debug
+	cmake --build build-asan --target unit_tests
+	./build-asan/tests/unit_tests --gtest_color=yes

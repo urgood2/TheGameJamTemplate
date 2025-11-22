@@ -168,6 +168,11 @@ static inline bfield_t build_watch_mask(const actionplanner_t& ap, sol::table ac
 
 struct GOAPComponent
 {
+    GOAPComponent()
+    {
+        goap_actionplanner_clear(&ap);
+    }
+
     actionplanner_t ap;
     worldstate_t cached_current_state; // for keeping track of the current state & any changes made to it
     worldstate_t current_state;
@@ -191,6 +196,11 @@ struct GOAPComponent
     
     // New field to store the current action's update() coroutine
     sol::coroutine currentUpdateCoroutine;
+
+    ~GOAPComponent()
+    {
+        goap_actionplanner_clear(&ap);
+    }
 };
 
 // --------------------------------------------------------
@@ -267,5 +277,3 @@ struct InfoComponent
 struct VFXComponent
 {
 };
-
-

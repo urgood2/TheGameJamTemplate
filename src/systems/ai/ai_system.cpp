@@ -615,6 +615,10 @@ namespace ai_system
             globals::getRegistry().remove<GOAPComponent>(entity);
         }
 
+        // Drop all event listeners before the Lua state is torn down to avoid
+        // dangling sol::function handles pointing at a dead lua_State.
+        event_system::ClearAllListeners();
+
         // Properly close the Lua state to avoid crashes on exit
         // The sol::state destructor will handle lua_close internally,
         // but we need to ensure it happens before other cleanup

@@ -883,8 +883,8 @@ namespace transform
 
         // 2) If we have a world ref and a live world, detach via that world (preferred).
         if (auto* ref = globals::getRegistry().try_get<PhysicsWorldRef>(entity)) {
-            if (globals::physicsManager) {
-                if (auto* wr = globals::physicsManager->get(ref->name)) {
+            if (globals::getPhysicsManager()) {
+                if (auto* wr = globals::getPhysicsManager()->get(ref->name)) {
                     // Preferred: use the world’s own method (it knows its cpSpace)
                     wr->w->DetachPhysicsComponent(entity);
                     return;

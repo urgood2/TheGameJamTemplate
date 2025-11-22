@@ -257,10 +257,10 @@ namespace shaders
         //                         imageSize.y }
         // );
         
-        globals::globalShaderUniforms.set(shaderName, "uImageSize",
+        globals::getGlobalShaderUniforms().set(shaderName, "uImageSize",
             imageSize);
         // which grid sprite
-        globals::globalShaderUniforms.set(shaderName, "uGridRect",
+        globals::getGlobalShaderUniforms().set(shaderName, "uGridRect",
             Vector4{ gridRect.x,
                                         gridRect.y,
                                         gridRect.width,

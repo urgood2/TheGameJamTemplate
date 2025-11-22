@@ -25,26 +25,26 @@ namespace game
         // register frame‐time‐dependent uniforms
         shaders::registerUniformUpdate("custom_polychrome", [](Shader &sh) {
             // if you ever need to animate waveSpeed or time, update here
-            globalShaderUniforms.set("custom_polychrome", "time",    (float)main_loop::getTime());
+        globals::getGlobalShaderUniforms().set("custom_polychrome", "time",    (float)main_loop::getTime());
         });
 
         // one‐time defaults
-        globalShaderUniforms.set("custom_polychrome", "stripeFreq",  0.3f);
-        globalShaderUniforms.set("custom_polychrome", "waveFreq",    2.0f);
-        globalShaderUniforms.set("custom_polychrome", "waveAmp",     0.4f);
-        globalShaderUniforms.set("custom_polychrome", "waveSpeed",   0.1f);
-        globalShaderUniforms.set("custom_polychrome", "stripeWidth", 1.0f);
-        globalShaderUniforms.set("custom_polychrome", "polychrome",  Vector2{0.0f, 0.1f});
+        globals::getGlobalShaderUniforms().set("custom_polychrome", "stripeFreq",  0.3f);
+        globals::getGlobalShaderUniforms().set("custom_polychrome", "waveFreq",    2.0f);
+        globals::getGlobalShaderUniforms().set("custom_polychrome", "waveAmp",     0.4f);
+        globals::getGlobalShaderUniforms().set("custom_polychrome", "waveSpeed",   0.1f);
+        globals::getGlobalShaderUniforms().set("custom_polychrome", "stripeWidth", 1.0f);
+        globals::getGlobalShaderUniforms().set("custom_polychrome", "polychrome",  Vector2{0.0f, 0.1f});
         
         
         // spotlight shader
         // one‐time defaults
         // update on every frame in case of resize
-        globalShaderUniforms.set("spotlight", "screen_width",  static_cast<float>(globals::VIRTUAL_WIDTH));
-        globalShaderUniforms.set("spotlight", "screen_height", static_cast<float>(globals::VIRTUAL_HEIGHT));
-        globalShaderUniforms.set("spotlight", "circle_size",      0.5f);
-        globalShaderUniforms.set("spotlight", "feather",          0.05f);
-        globalShaderUniforms.set("spotlight", "circle_position",  Vector2{0.5f, 0.5f});
+        globals::getGlobalShaderUniforms().set("spotlight", "screen_width",  static_cast<float>(globals::VIRTUAL_WIDTH));
+        globals::getGlobalShaderUniforms().set("spotlight", "screen_height", static_cast<float>(globals::VIRTUAL_HEIGHT));
+        globals::getGlobalShaderUniforms().set("spotlight", "circle_size",      0.5f);
+        globals::getGlobalShaderUniforms().set("spotlight", "feather",          0.05f);
+        globals::getGlobalShaderUniforms().set("spotlight", "circle_position",  Vector2{0.5f, 0.5f});
         
         
         // palette shader
@@ -58,21 +58,21 @@ namespace game
 
 
         // one-time defaults
-        globalShaderUniforms.set("random_displacement_anim", "interval",   0.5f);
-        globalShaderUniforms.set("random_displacement_anim", "timeDelay",  1.4f);
-        globalShaderUniforms.set("random_displacement_anim", "intensityX", 4.0f);
-        globalShaderUniforms.set("random_displacement_anim", "intensityY", 4.0f);
-        globalShaderUniforms.set("random_displacement_anim", "seed",       42.0f);
+        globals::getGlobalShaderUniforms().set("random_displacement_anim", "interval",   0.5f);
+        globals::getGlobalShaderUniforms().set("random_displacement_anim", "timeDelay",  1.4f);
+        globals::getGlobalShaderUniforms().set("random_displacement_anim", "intensityX", 4.0f);
+        globals::getGlobalShaderUniforms().set("random_displacement_anim", "intensityY", 4.0f);
+        globals::getGlobalShaderUniforms().set("random_displacement_anim", "seed",       42.0f);
 
         // every frame, drive the time
         shaders::registerUniformUpdate("random_displacement_anim", [](Shader &shader) {
-            globalShaderUniforms.set("random_displacement_anim", "iTime", (float)main_loop::getTime());
+            globals::getGlobalShaderUniforms().set("random_displacement_anim", "iTime", (float)main_loop::getTime());
         });
 
         
-        globalShaderUniforms.set("pixelate_image", "texSize",
-            Vector2{ (float)globals::screenWidth, (float)globals::screenHeight });
-        globalShaderUniforms.set("pixelate_image", "pixelRatio",
+        globals::getGlobalShaderUniforms().set("pixelate_image", "texSize",
+            Vector2{ (float)globals::getScreenWidth(), (float)globals::getScreenHeight() });
+        globals::getGlobalShaderUniforms().set("pixelate_image", "pixelRatio",
             0.9f);
 
 
@@ -114,17 +114,17 @@ namespace game
 
         
         // atlas dims
-        globalShaderUniforms.set("tile_grid_overlay", "uImageSize",
+        globals::getGlobalShaderUniforms().set("tile_grid_overlay", "uImageSize",
             Vector2{ float(atlas.width), float(atlas.height) });
         // which grid sprite
-        globalShaderUniforms.set("tile_grid_overlay", "uGridRect",
+        globals::getGlobalShaderUniforms().set("tile_grid_overlay", "uGridRect",
                     Vector4{ gridX, gridY, gridW, gridH });
 
         // grid parameters
-        globalShaderUniforms.set("tile_grid_overlay", "scale",             scale);
-        globalShaderUniforms.set("tile_grid_overlay", "base_opacity",      0.0f);
-        globalShaderUniforms.set("tile_grid_overlay", "highlight_opacity", 0.4f);
-        globalShaderUniforms.set("tile_grid_overlay", "distance_scaling",  100.0f);
+        globals::getGlobalShaderUniforms().set("tile_grid_overlay", "scale",             scale);
+        globals::getGlobalShaderUniforms().set("tile_grid_overlay", "base_opacity",      0.0f);
+        globals::getGlobalShaderUniforms().set("tile_grid_overlay", "highlight_opacity", 0.4f);
+        globals::getGlobalShaderUniforms().set("tile_grid_overlay", "distance_scaling",  100.0f);
 
         // outer space
 

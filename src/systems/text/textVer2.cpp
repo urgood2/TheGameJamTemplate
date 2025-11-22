@@ -2024,7 +2024,7 @@ namespace TextSystem
                 if (text.shadow_enabled)
                 {
                     ZONE_SCOPED("TextSystem::renderText-render shadow");
-                    float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                    float baseExaggeration = globals::getBaseShadowExaggeration();
                     float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
                     float rawScale = text.renderScale;
@@ -2329,7 +2329,7 @@ namespace TextSystem
                 if (text.shadow_enabled)
                 {
                     ZONE_SCOPED("TextSystem::renderText-render shadow");
-                    float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                    float baseExaggeration = globals::getBaseShadowExaggeration();
                     float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
                     float rawScale = text.renderScale;

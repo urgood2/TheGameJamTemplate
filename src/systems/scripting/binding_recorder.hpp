@@ -5,6 +5,7 @@
 #include <map>
 #include <mutex>
 #include <fstream>
+#include <sstream>
 #include <utility>
 #include <sol/sol.hpp>
 #include <spdlog/spdlog.h>
@@ -157,6 +158,24 @@ public:
         out << "---\n";
     }
 
+    static void write_signature_block(std::ostream& out, const std::string& sig) {
+        std::istringstream ss(sig);
+        std::string line;
+        while (std::getline(ss, line)) {
+            auto first = line.find_first_not_of(" \t");
+            std::string trimmed = (first == std::string::npos) ? "" : line.substr(first);
+            if (trimmed.empty()) {
+                out << "\n";
+                continue;
+            }
+            if (trimmed.rfind("---@", 0) != 0 && trimmed.rfind("---", 0) != 0) {
+                out << "--- " << trimmed << "\n";
+            } else {
+                out << trimmed << "\n";
+            }
+        }
+    }
+
 
     void dump_lua_defs(const std::string& path) const {
         std::lock_guard<std::mutex> lock(mtx_);
@@ -172,12 +191,13 @@ public:
 
         for (auto& m : free_functions_) {
             write_doc_block(out, m.doc);
-            out << m.signature << "\n";
+            write_signature_block(out, m.signature);
             out << "function " << m.name << "(...) end\n\n";
         }
 
         for (auto& t : types_) {
-            out << "\n---\n--- " << t.doc << "\n---\n";
+            out << "\n";
+            write_doc_block(out, t.doc);
             out << "---@class " << t.name;
             if (!t.base_classes.empty()) {
                 out << ":" << t.base_classes.front();
@@ -211,7 +231,8 @@ public:
                 out << t.name << " = {\n";
                 for (size_t i = 0; i < t.properties.size(); ++i) {
                     auto& prop = t.properties[i];
-                    out << "    " << prop.name << " = " << prop.value;
+                    const bool hasValue = !prop.value.empty();
+                    out << "    " << prop.name << " = " << (hasValue ? prop.value : "nil");
                     // ← add comma only if _not_ the last entry
                     if (i + 1 < t.properties.size()) out << ",";
                     if (!prop.doc.empty()) out << "  -- " << prop.doc;
@@ -223,7 +244,7 @@ public:
             for (auto& m : t.methods) {
                 write_doc_block(out, m.doc);
                 if (m.is_overload) out << "---@overload fun" << m.signature << "\n";
-                else out << m.signature << "\n";
+                else write_signature_block(out, m.signature);
 
                 out << "function " << t.name
                     << (m.is_static ? "." : ":") << m.name << "(...) end\n\n";
@@ -288,7 +309,7 @@ private:
 
         for (const auto& m : node.functions) {
             write_doc_block(out, m.doc);
-            if (!m.signature.empty()) out << m.signature << "\n";
+            if (!m.signature.empty()) write_signature_block(out, m.signature);
             out << "function " << (full.empty() ? "" : full + ".")
                 << m.name << "(...) end\n\n";
         }

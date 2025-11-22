@@ -614,8 +614,8 @@ namespace scripting {
         lua["globals"].get_or_create<sol::table>();
 
         // 2) simple bools / ints / floats
-        lua["globals"]["isGamePaused"]  = &globals::isGamePaused;
-        lua["globals"]["screenWipe"]    = &globals::screenWipe;
+        lua["globals"]["isGamePaused"]  = &globals::getIsGamePaused();
+        lua["globals"]["screenWipe"]    = &globals::getScreenWipe();
         lua["globals"]["screenWidth"]   = [](){ return globals::VIRTUAL_WIDTH; };
         lua["globals"]["screenHeight"]  = [](){ return globals::VIRTUAL_HEIGHT; };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
@@ -686,7 +686,7 @@ namespace scripting {
         lua["globals"]["cursor"]                   = []() -> entt::entity {
             return globals::getCursorEntity();
         };
-        lua["globalShaderUniforms"] = std::ref(globals::globalShaderUniforms);
+        lua["globalShaderUniforms"] = std::ref(globals::getGlobalShaderUniforms());
         
         rec.record_property("", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
 

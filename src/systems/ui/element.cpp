@@ -840,7 +840,7 @@ namespace ui
         AssertThat(node, Is().Not().EqualTo(nullptr));
         AssertThat(transform, Is().Not().EqualTo(nullptr));
 
-        float padding = uiConfig->padding.value_or(globals::uiPadding);
+        float padding = uiConfig->padding.value_or(globals::getUiPadding());
         float max_w = 0.f, max_h = 0.f;
 
         // If no children or `no_fill` is true, return current size
@@ -1072,7 +1072,7 @@ namespace ui
             AssertThat(node, Is().Not().EqualTo(nullptr));
             AssertThat(transform, Is().Not().EqualTo(nullptr));
 
-            float padding = config->padding.value_or(globals::uiPadding);
+            float padding = config->padding.value_or(globals::getUiPadding());
 
             //TODO: this should probably only be added to the offsets once every tree?
             float uiBoxOffsetX = (uiBoxOffset.has_value() && isRoot) ? uiBoxOffset->x : 0;
@@ -1441,7 +1441,7 @@ namespace ui
                     float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
                     float spacing = config->textSpacing.value_or(localization::getFontData().spacing);   
 
-                    float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::globalUIScaleFactor;
+                    float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
                     // layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                     //     cmd->scaleX = scale;
                     //     cmd->scaleY = scale;
@@ -1502,7 +1502,7 @@ namespace ui
             // float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             float textX = localization::getFontData().fontRenderOffset.x;
             float textY = localization::getFontData().fontRenderOffset.y;
-            float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::globalUIScaleFactor;
+            float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
             // layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
             //     cmd->scaleX = scale;
             //     cmd->scaleY = scale;
@@ -1702,7 +1702,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     // Font & knobs (match TEXT path)
     auto& fd        = localization::getFontData();
-    const float uiScale   = config->scale.value_or(1.0f) * fd.fontScale * globals::globalUIScaleFactor;
+    const float uiScale   = config->scale.value_or(1.0f) * fd.fontScale * globals::getGlobalUIScaleFactor();
     const float spacing   = config->textSpacing.value_or(fd.spacing);
     Color renderColor     = BLACK;
 
@@ -1841,9 +1841,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (config->chosen.value_or(false))
         {
             // triangle floats above the object, slightly bobbing with sine
-            float TRIANGLE_DISTANCE = 10.f * globals::globalUIScaleFactor;
-            float TRIANGLE_HEIGHT = 25.f * globals::globalUIScaleFactor;
-            float TRIANGLE_WIDTH = 25.f * globals::globalUIScaleFactor;
+            float TRIANGLE_DISTANCE = 10.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_HEIGHT = 25.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_WIDTH = 25.f * globals::getGlobalUIScaleFactor();
             auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
 
             auto centerX = actualX + actualW * 0.5f;
@@ -2078,7 +2078,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                     float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
                     float spacing = config->textSpacing.value_or(localization::getFontData().spacing);   
 
-                    float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::globalUIScaleFactor;
+                    float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
                     layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                         cmd->scaleX = scale;
                         cmd->scaleY = scale;
@@ -2131,7 +2131,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             float textX = localization::getFontData().fontRenderOffset.x;
             float textY = localization::getFontData().fontRenderOffset.y;
-            float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::globalUIScaleFactor;
+            float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
             layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                 cmd->scaleX = scale;
                 cmd->scaleY = scale;
@@ -2371,7 +2371,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             // Reuse same font + knobs you used for TEXT
             auto &fontData   = localization::getFontData();
-            float scale      = config->scale.value_or(1.0f) * fontData.fontScale * globals::globalUIScaleFactor;
+            float scale      = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
             float spacing    = config->textSpacing.value_or(fontData.spacing);
             Color renderColor = config->color.value();
             bool buttonActive = true; // same convention as above TEXT block
@@ -2538,9 +2538,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (config->chosen.value_or(false))
         {
             // triangle floats above the object, slightly bobbing with sine
-            float TRIANGLE_DISTANCE = 10.f * globals::globalUIScaleFactor;
-            float TRIANGLE_HEIGHT = 25.f * globals::globalUIScaleFactor;
-            float TRIANGLE_WIDTH = 25.f * globals::globalUIScaleFactor;
+            float TRIANGLE_DISTANCE = 10.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_HEIGHT = 25.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_WIDTH = 25.f * globals::getGlobalUIScaleFactor();
             auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
 
             auto centerX = actualX + actualW * 0.5f;

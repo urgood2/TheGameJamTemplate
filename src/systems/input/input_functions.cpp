@@ -939,7 +939,7 @@ namespace input
 
     void PropagateButtonAndKeyUpdates(input::InputState &inputState, entt::registry &registry, float dt)
     {
-        if (globals::screenWipe == false)
+        if (globals::getScreenWipe() == false)
         { // no input handling during screen transitions
 
             // keyboard keys
@@ -981,7 +981,7 @@ namespace input
     void ProcessInputLocks(input::InputState &inputState, entt::registry &registry, float dt)
     {
         inputState.inputLocked = false;
-        if (globals::screenWipe)
+        if (globals::getScreenWipe())
         {
             inputState.activeInputLocks["wipe"] = true;
         }
@@ -1214,7 +1214,7 @@ namespace input
         }
 
         // Add the new node to the front of the list
-        NodeData newNodeData = {.node = node, .menu = registry.valid(globals::getOverlayMenu()) || globals::isGamePaused}; // there is an overlay menu that exists for the game, or the game is currently paused (paused menu). That means this node should be treated as a menu item.
+        NodeData newNodeData = {.node = node, .menu = registry.valid(globals::getOverlayMenu()) || globals::getIsGamePaused()}; // there is an overlay menu that exists for the game, or the game is currently paused (paused menu). That means this node should be treated as a menu item.
         state.button_registry[button].insert(state.button_registry[button].begin(), newNodeData);
     }
 
@@ -1222,7 +1222,7 @@ namespace input
     {
         auto &roomTransform = registry.get<transform::Transform>(globals::getGameWorldContainer());
         Rectangle roomBounds = {0, 0, roomTransform.getActualW(), roomTransform.getActualH()};
-        bool overlayMenuActive = globals::under_overlay;
+        bool overlayMenuActive = globals::getUnderOverlay();
 
         for (auto &[button, entities] : state.button_registry)
         {
@@ -1582,7 +1582,7 @@ namespace input
         }
 
         // Check input lock conditions
-        if ((state.inputLocked && !globals::isGamePaused) || state.activeInputLocks["frame"] || state.frame_buttonpress)
+        if ((state.inputLocked && !globals::getIsGamePaused()) || state.activeInputLocks["frame"] || state.frame_buttonpress)
             return;
         state.frame_buttonpress = true;
 
@@ -1642,7 +1642,7 @@ namespace input
     auto HeldButtonUpdate(entt::registry &registry, InputState &state, const GamepadButton button, float dt) -> void
     {
         // Ignore input if the system is locked or already processed
-        if ((state.inputLocked && !globals::isGamePaused) || state.activeInputLocks["frame"] || state.frame_buttonpress)
+        if ((state.inputLocked && !globals::getIsGamePaused()) || state.activeInputLocks["frame"] || state.frame_buttonpress)
             return;
         state.frame_buttonpress = true;
 
@@ -1810,7 +1810,7 @@ namespace input
         }
 
         // Exit if locks or frame restrictions are active
-        if ((state.inputLocked && !globals::isGamePaused) || state.activeInputLocks["frame"] || state.frame_buttonpress)
+        if ((state.inputLocked && !globals::getIsGamePaused()) || state.activeInputLocks["frame"] || state.frame_buttonpress)
             return;
         state.frame_buttonpress = true;
         state.heldKeyDurations[normalizedKey] = 0;
@@ -1833,7 +1833,7 @@ namespace input
     void KeyboardKeyHoldUpdate(InputState &state, KeyboardKey key, float dt)
     {
         // Exit early if locked or certain conditions are met
-        if ((state.inputLocked && !globals::isGamePaused) || state.activeInputLocks["frame"] || state.frame_buttonpress)
+        if ((state.inputLocked && !globals::getIsGamePaused()) || state.activeInputLocks["frame"] || state.frame_buttonpress)
         {
             return;
         }
@@ -1842,7 +1842,7 @@ namespace input
         if (state.heldKeyDurations.find(key) != state.heldKeyDurations.end())
         {
             // Handle the "R" key specifically
-            if (key == KEY_R && !globals::isGamePaused)
+            if (key == KEY_R && !globals::getIsGamePaused())
             {
                 // If the key has been held for more than 0.7 seconds
                 if (state.heldKeyDurations[key] > 0.7f)
@@ -1864,7 +1864,7 @@ namespace input
     void KeyboardKeyReleasedUpdate(InputState &state, KeyboardKey key, float dt)
     {
         // Exit early if locked, paused, or certain frame conditions are met
-        if ((state.inputLocked && !globals::isGamePaused) || state.activeInputLocks["frame"] || state.frame_buttonpress)
+        if ((state.inputLocked && !globals::getIsGamePaused()) || state.activeInputLocks["frame"] || state.frame_buttonpress)
         {
             return;
         }
@@ -1873,7 +1873,7 @@ namespace input
         state.frame_buttonpress = true;
 
         // Toggle debug mode if "A" is released while "G" is held, and not in release mode
-        if (key == KEY_A && state.keysHeldThisFrame[KEY_G] && !globals::releaseMode)
+        if (key == KEY_A && state.keysHeldThisFrame[KEY_G] && !globals::getReleaseMode())
         {
             // example way to toggle debug tools
         }
@@ -1998,7 +1998,7 @@ namespace input
 
         // Handle early return conditions
         if (state.focus_interrupt ||
-            (state.inputLocked && (!globals::isGamePaused || globals::screenWipe)) ||
+            (state.inputLocked && (!globals::getIsGamePaused() || globals::getScreenWipe())) ||
             state.activeInputLocks["frame"] ||
             state.coyote_focus)
         {
@@ -2079,7 +2079,7 @@ namespace input
         }
 
         // Handle right cursor press logic when the game is not paused and an object is highlighted, for example
-        if (!globals::isGamePaused && state.cursor_focused_target != entt::null)
+        if (!globals::getIsGamePaused() && state.cursor_focused_target != entt::null)
         {
         }
     }
@@ -2094,7 +2094,7 @@ namespace input
             y = state.cursor_position.y;
 
         // Return early if locked or frame conditions prevent processing
-        if ((state.inputLocked && (!globals::isGamePaused || globals::screenWipe)) || state.activeInputLocks["frame"])
+        if ((state.inputLocked && (!globals::getIsGamePaused() || globals::getScreenWipe())) || state.activeInputLocks["frame"])
         {
             return;
         }
@@ -2179,7 +2179,7 @@ namespace input
             y = state.cursor_position.y;
 
         // Return early if locked or frame conditions prevent processing
-        if ((state.inputLocked && (!globals::isGamePaused || globals::screenWipe)) || state.activeInputLocks["frame"])
+        if ((state.inputLocked && (!globals::getIsGamePaused() || globals::getScreenWipe())) || state.activeInputLocks["frame"])
         {
             return;
         }
@@ -2243,7 +2243,7 @@ namespace input
 
         if (registry.valid(entity) && !node.state.isUnderOverlay &&
             ((node.state.hoverEnabled && !registry.valid(state.cursor_dragging_target)) || (state.cursor_dragging_target == entity)) &&
-            ((node.ignoresPause && globals::isGamePaused) || (!node.ignoresPause && !globals::isGamePaused)) &&
+            ((node.ignoresPause && globals::getIsGamePaused()) || (!node.ignoresPause && !globals::getIsGamePaused())) &&
             node.state.visible && finalCondition)
         {
 
@@ -2318,7 +2318,7 @@ namespace input
         state.cursor_prev_focused_target = state.cursor_focused_target;
 
         if (!state.hid.controller_enabled || state.focus_interrupt ||
-            (state.inputLocked && (!globals::isGamePaused || globals::screenWipe)))
+            (state.inputLocked && (!globals::getIsGamePaused() || globals::getScreenWipe())))
         {
             if (registry.valid(state.cursor_focused_target))
             {

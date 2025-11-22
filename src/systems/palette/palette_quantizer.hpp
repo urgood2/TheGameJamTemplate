@@ -37,7 +37,7 @@ inline bool setPaletteTexture(const std::string &shaderName, const std::string &
     SetTextureFilter(paletteTex, TEXTURE_FILTER_POINT);
 
     // Upload to shader uniforms
-    globals::globalShaderUniforms.set(shaderName, "palette", paletteTex);
+    globals::getGlobalShaderUniforms().set(shaderName, "palette", paletteTex);
 
     return true;
 }

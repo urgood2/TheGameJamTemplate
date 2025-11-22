@@ -117,24 +117,36 @@ namespace globals
     extern float finalRenderScale; // the final render scale to apply when drawing to the screen, updated each frame, letterbox adjusted
     extern float finalLetterboxOffsetX; 
     extern float finalLetterboxOffsetY;
+    float& getFinalRenderScale();
+    float& getLetterboxOffsetX();
+    float& getLetterboxOffsetY();
+    void setFinalRenderScale(float v);
+    void setLetterboxOffsetX(float v);
+    void setLetterboxOffsetY(float v);
     
     extern bool useImGUI; // set to true to use imGUI for debugging
+    bool& getUseImGUI();
     
     extern std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
+    std::shared_ptr<PhysicsManager>& getPhysicsManagerPtr();
+    PhysicsManager* getPhysicsManager();
     
     extern std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
     
     extern std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap;
 
     extern float globalUIScaleFactor; // scale factor for UI elements
+    float& getGlobalUIScaleFactor();
     
     extern bool drawDebugInfo, drawPhysicsDebug; // set to true to allow debug drawing of transforms
     
     extern const float UI_PROGRESS_BAR_INSET_PIXELS; // inset for progress bar fill (the portion that fills the bar)
     
     extern shaders::ShaderUniformComponent globalShaderUniforms; // keep track of shader uniforms;
+    shaders::ShaderUniformComponent& getGlobalShaderUniforms();
 
     extern GameState currentGameState;
+    GameState& getCurrentGameState();
 
     //---------------------------------------------------------
     // constants
@@ -142,6 +154,10 @@ namespace globals
     extern int gameWorldViewportWidth, gameWorldViewportHeight;
     extern const float FONT_SIZE;
     extern string gameTitle;
+    int& getScreenWidth();
+    int& getScreenHeight();
+    int& getGameWorldViewportWidth();
+    int& getGameWorldViewportHeight();
 
     //---------------------------------------------------------
     // imGUI variables
@@ -188,6 +204,8 @@ namespace globals
     extern bool showObserverWindow;
 
     extern int worldWidth, worldHeight;
+    int& getWorldWidth();
+    int& getWorldHeight();
 
     // font for the ui (IMGUI)
     extern ImFont *uiFont12;
@@ -200,6 +218,7 @@ namespace globals
 
     // for pathfinding version of map
     extern vector<double> pathfindingMatrix;
+    std::vector<double>& getPathfindingMatrix();
 
     // clicked entity
     extern entt::entity clickedEntity;
@@ -235,6 +254,10 @@ namespace globals
     extern float cameraDamping, cameraStiffness;
     extern Vector2 cameraVelocity;
     extern Vector2 nextCameraTarget; // keep track of desired next camera target position
+    float& getCameraDamping();
+    float& getCameraStiffness();
+    Vector2& getCameraVelocity();
+    Vector2& getNextCameraTarget();
 
     struct SpriteFrameData
     {
@@ -302,6 +325,9 @@ namespace globals
     extern entt::entity G_ROOM;      // entity that is a moveable representing the map
     extern float G_COLLISION_BUFFER; // Buffer for collision detection from lua //TODO: move to globals later
     extern int G_TILESIZE;           // TODO: used by movable, not sure how it is used
+    float& getTimerReal();
+    float& getTimerTotal();
+    long& getFramesMove();
 
     extern bool reduced_motion;
 
@@ -311,6 +337,8 @@ namespace globals
 
     extern std::vector<std::vector<bool>> globalVisibilityMap;
     extern bool useLineOfSight;
+    std::vector<std::vector<bool>>& getGlobalVisibilityMap();
+    bool& getUseLineOfSight();
 
     extern sol::state lua; // for events
 
@@ -319,6 +347,7 @@ namespace globals
     extern layer::Layer backgroundLayer, gameLayer, uiLayer;
 
     extern float BASE_SHADOW_EXAGGERATION; // multiplied to shadow offsets
+    float& getBaseShadowExaggeration();
 
     extern std::optional<int> REFRESH_FRAME_MASTER_CACHE;
 
@@ -356,6 +385,7 @@ namespace globals
     };
 
     extern float uiPadding;
+    float& getUiPadding();
 
     extern input::InputState inputState;
 
@@ -364,14 +394,18 @@ namespace globals
     extern std::string language; // the current language for the game
 
     extern bool under_overlay; // set to true when an ui overlay is active
+    bool& getUnderOverlay();
 
     extern float vibration; // vibration strength for controllers
 
     extern bool releaseMode; // set to true to disable debug features
+    bool& getReleaseMode();
 
     extern bool isGamePaused;
+    bool& getIsGamePaused();
 
     extern bool screenWipe; // true when the screen is being wiped (transitioning between scenes)
+    bool& getScreenWipe();
 
     extern entt::entity gameWorldContainerEntity; // entity representing the entire game world (usually the size of the screen)
     

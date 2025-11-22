@@ -652,7 +652,7 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
         
 
         
-        InitWindow(globals::screenWidth, globals::screenHeight, "Game");
+        InitWindow(globals::getScreenWidth(), globals::getScreenHeight(), "Game");
         
         
         // fixes mac input bug.

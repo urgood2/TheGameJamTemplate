@@ -3141,7 +3141,7 @@ void DrawCanvasOntoOtherLayerWithShader(
     BeginShaderMode(shader);
 
     // texture uniforms need to be set after beginShaderMode
-    shaders::TryApplyUniforms(shader, globals::globalShaderUniforms,
+    shaders::TryApplyUniforms(shader, globals::getGlobalShaderUniforms(),
                               shaderName);
   }
 
@@ -4252,7 +4252,7 @@ void DrawCanvasToCurrentRenderTargetWithTransform(
     BeginShaderMode(shader);
 
     // texture uniforms need to be set after beginShaderMode
-    shaders::TryApplyUniforms(shader, globals::globalShaderUniforms,
+    shaders::TryApplyUniforms(shader, globals::getGlobalShaderUniforms(),
                               shaderName);
   }
 
@@ -4283,7 +4283,7 @@ void DrawCanvasToCurrentRenderTargetWithDestRect(
     BeginShaderMode(shader);
 
     // texture uniforms need to be set after beginShaderMode
-    shaders::TryApplyUniforms(shader, globals::globalShaderUniforms,
+    shaders::TryApplyUniforms(shader, globals::getGlobalShaderUniforms(),
                               shaderName);
   }
 
@@ -4593,7 +4593,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     BeginShaderMode(shader);
     if (pass.injectAtlasUniforms) {
       injectAtlasUniforms(
-          globals::globalShaderUniforms, pass.shaderName,
+          globals::getGlobalShaderUniforms(), pass.shaderName,
           {0, 0, (float)renderWidth, (float)renderHeight},
           Vector2{
               (float)renderWidth,
@@ -4612,7 +4612,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     //  injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName,
     //  srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
 
-    TryApplyUniforms(shader, globals::globalShaderUniforms, pass.shaderName);
+    TryApplyUniforms(shader, globals::getGlobalShaderUniforms(), pass.shaderName);
     // DrawTextureRec(shader_pipeline::front().texture,
     //                {0, 0, (float)renderWidth * xFlipModifier,
     //                 (float)-renderHeight * yFlipModifier},
@@ -4748,7 +4748,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       overlay.customPrePassFunction();
     if (overlay.injectAtlasUniforms) {
       injectAtlasUniforms(
-          globals::globalShaderUniforms, overlay.shaderName,
+          globals::getGlobalShaderUniforms(), overlay.shaderName,
           {0, 0, (float)renderWidth, (float)renderHeight},
           Vector2{
               (float)renderWidth,
@@ -4756,7 +4756,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
                   renderHeight}); // FIXME: not sure why, but it only works when
                                   // I do this instead of the full texture size
     }
-    TryApplyUniforms(shader, globals::globalShaderUniforms, overlay.shaderName);
+    TryApplyUniforms(shader, globals::getGlobalShaderUniforms(), overlay.shaderName);
 
     RenderTexture2D &source =
         (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
@@ -4909,7 +4909,7 @@ if (registry.any_of<transform::GameObject>(e)) {
       if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
           node.shadowDisplacement)
       {
-      float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+      float baseExaggeration = globals::getBaseShadowExaggeration();
       float heightFactor = 1.0f + node.shadowHeight.value_or(
                                       0.f); // Increase effect based on height
 
@@ -4967,7 +4967,7 @@ Translate(-origin.x, -origin.y);
       if (registry.any_of<transform::GameObject>(e)) {
         auto &node = registry.get<transform::GameObject>(e);
         if (node.shadowDisplacement) {
-          const float baseEx = globals::BASE_SHADOW_EXAGGERATION;
+          const float baseEx = globals::getBaseShadowExaggeration();
           const float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
           const float shX = node.shadowDisplacement->x * baseEx * hFact;
           const float shY = node.shadowDisplacement->y * baseEx * hFact;
@@ -5372,7 +5372,7 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
       if (registry.any_of<transform::GameObject>(e)) {
         auto &node = registry.get<transform::GameObject>(e);
         if (node.shadowDisplacement) {
-          float baseEx = globals::BASE_SHADOW_EXAGGERATION;
+          float baseEx = globals::getBaseShadowExaggeration();
           float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
           float shX = node.shadowDisplacement->x * baseEx * hFact;
           float shY = node.shadowDisplacement->y * baseEx * hFact;
@@ -5398,7 +5398,7 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
       if (registry.any_of<transform::GameObject>(e)) {
         auto &node = registry.get<transform::GameObject>(e);
         if (node.shadowDisplacement) {
-          float baseEx = globals::BASE_SHADOW_EXAGGERATION;
+          float baseEx = globals::getBaseShadowExaggeration();
           float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
           float shX = node.shadowDisplacement->x * baseEx * hFact;
           float shY = node.shadowDisplacement->y * baseEx * hFact;
@@ -5517,7 +5517,7 @@ auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x,
   if (animationFrame) {
 
     if (node.shadowDisplacement) {
-      float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+      float baseExaggeration = globals::getBaseShadowExaggeration();
       float heightFactor = 1.0f + node.shadowHeight.value_or(
                                       0.f); // Increase effect based on height
 

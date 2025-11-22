@@ -104,8 +104,8 @@ auto updateSystems(float dt) -> void;
 
 auto updateTimers(float dt) -> void
 {
-    globals::G_TIMER_REAL += dt;
-    globals::G_TIMER_TOTAL += dt;
+    globals::getTimerReal() += dt;
+    globals::getTimerTotal() += dt;
 }
 
 
@@ -128,7 +128,7 @@ void mainMenuStateGameLoop(float dt)
 {
     
     // FIXME: just set game to main game state for now
-    globals::currentGameState = GameState::MAIN_GAME;
+    globals::getCurrentGameState() = GameState::MAIN_GAME;
     // show main menu here
 }
 
@@ -139,7 +139,7 @@ void MainLoopFixedUpdateAbstraction(float dt)
     updateSystems(dt);
 
     // this switch statement handles only update logic, rendering is handled in the mainloopRenderAbstraction function
-    switch (globals::currentGameState)
+    switch (globals::getCurrentGameState())
     {
     case GameState::MAIN_MENU:
         // show main menu
@@ -154,7 +154,7 @@ void MainLoopFixedUpdateAbstraction(float dt)
         mainGameStateGameLoop(dt);
         break;
     default:
-        globals::currentGameState = GameState::MAIN_MENU;
+        globals::getCurrentGameState() = GameState::MAIN_MENU;
         break;
     }
     
@@ -202,7 +202,7 @@ auto gameOverScreenGameLoopRender(float dt) -> void
 auto MainLoopRenderAbstraction(float dt) -> void {
     
     
-    switch (globals::currentGameState)
+    switch (globals::getCurrentGameState())
     {
     case GameState::MAIN_MENU:
         mainMenuStateGameLoopRender(dt); 
@@ -231,21 +231,21 @@ auto updatePhysics(float dt, float alpha) -> void
     main_loop::mainLoop.physicsTicks++;
     {
         ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
-        physics::ApplyAuthoritativeTransform(globals::getRegistry(), *globals::physicsManager);
+        if (globals::getPhysicsManager()) physics::ApplyAuthoritativeTransform(globals::getRegistry(), *globals::getPhysicsManager());
     }
     
     {
         ZONE_SCOPED("Physics Step All Worlds");
-        globals::physicsManager->stepAll(dt); // step all physics worlds
+        if (globals::getPhysicsManager()) globals::getPhysicsManager()->stepAll(dt); // step all physics worlds
     }
     
     {
         ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
-        physics::ApplyAuthoritativePhysics(globals::getRegistry(), *globals::physicsManager, alpha);
+        if (globals::getPhysicsManager()) physics::ApplyAuthoritativePhysics(globals::getRegistry(), *globals::getPhysicsManager(), alpha);
     
     
         // physics post-update
-        globals::physicsManager->stepAllPostUpdate(dt);
+        if (globals::getPhysicsManager()) globals::getPhysicsManager()->stepAllPostUpdate(dt);
     }
 }
 
@@ -279,7 +279,7 @@ void RunGameLoop()
 
 #ifndef __EMSCRIPTEN__
 
-        if (globals::useImGUI)
+        if (globals::getUseImGUI())
             rlImGuiBegin(); // Begin ImGui each frame (desktop only)
 #endif
         }
@@ -299,7 +299,7 @@ void RunGameLoop()
 
         // ---------- Step 2: Accumulate time ----------
         mainLoop.realtimeTimer += deltaTime;
-        if (!globals::isGamePaused)
+        if (!globals::getIsGamePaused())
             mainLoop.totaltimeTimer += deltaTime;
 
         // Accumulate lag for fixed-step updates (real time, not scaled)
@@ -375,7 +375,7 @@ void RunGameLoop()
             ZONE_SCOPED("EndDrawing/rlImGuiEnd call");
 
 #ifndef __EMSCRIPTEN__
-        if (globals::useImGUI)
+        if (globals::getUseImGUI())
             rlImGuiEnd();
 #endif
             EndDrawing();

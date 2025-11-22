@@ -583,7 +583,7 @@ namespace ui
         const auto visualR = transform.getVisualRWithDynamicMotionAndXLeaning();
         const auto rotationOffset = transform.rotationOffset;
         // shadow
-        float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        float baseExaggeration = globals::getBaseShadowExaggeration();
         float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
 
         // Adjust displacement using shadow height
@@ -720,7 +720,7 @@ namespace ui
         const auto visualR = transform.getVisualRWithDynamicMotionAndXLeaning();
         const auto rotationOffset = transform.rotationOffset;
         // shadow
-        float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        float baseExaggeration = globals::getBaseShadowExaggeration();
         float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
 
         // Adjust displacement using shadow height
@@ -939,7 +939,7 @@ namespace ui
             return;
 
         // shadow
-        float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        float baseExaggeration = globals::getBaseShadowExaggeration();
         float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
 
         // Adjust displacement using shadow height
@@ -1352,7 +1352,7 @@ namespace ui
             return;
 
         // shadow
-        float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        float baseExaggeration = globals::getBaseShadowExaggeration();
         float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
 
         // Adjust displacement using shadow height

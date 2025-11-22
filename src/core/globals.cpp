@@ -99,22 +99,38 @@ namespace globals {
     float finalRenderScale = 0.f; // the final render scale to apply when drawing to the screen, updated each frame
     float finalLetterboxOffsetX = 0.0f;
     float finalLetterboxOffsetY = 0.0f;
+    float& getFinalRenderScale() { return finalRenderScale; }
+    float& getLetterboxOffsetX() { return finalLetterboxOffsetX; }
+    float& getLetterboxOffsetY() { return finalLetterboxOffsetY; }
+    void setFinalRenderScale(float v) { finalRenderScale = v; }
+    void setLetterboxOffsetX(float v) { finalLetterboxOffsetX = v; }
+    void setLetterboxOffsetY(float v) { finalLetterboxOffsetY = v; }
     
     bool useImGUI = true; // set to true to use imGUI for debugging
+    bool& getUseImGUI() { return useImGUI; }
     
     std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
+    std::shared_ptr<PhysicsManager>& getPhysicsManagerPtr() {
+        if (g_ctx && g_ctx->physicsManager) return g_ctx->physicsManager;
+        return physicsManager;
+    }
+    PhysicsManager* getPhysicsManager() {
+        return getPhysicsManagerPtr().get();
+    }
     
     std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
 
     std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap{};
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements
+    float& getGlobalUIScaleFactor() { return globalUIScaleFactor; }
 
     bool drawDebugInfo = false, drawPhysicsDebug = false; // set to true to allow debug drawing of transforms
     
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
+    shaders::ShaderUniformComponent& getGlobalShaderUniforms() { return globalShaderUniforms; }
 
     std::map<std::string, SpriteFrameData> spriteDrawFrames; 
 
@@ -139,8 +155,14 @@ namespace globals {
     // screen dimensions
     int screenWidth{VIRTUAL_WIDTH}, screenHeight{VIRTUAL_HEIGHT};
     int gameWorldViewportWidth{VIRTUAL_WIDTH}, gameWorldViewportHeight{VIRTUAL_HEIGHT};
+    int& getScreenWidth() { return screenWidth; }
+    int& getScreenHeight() { return screenHeight; }
+    int& getGameWorldViewportWidth() { return gameWorldViewportWidth; }
+    int& getGameWorldViewportHeight() { return gameWorldViewportHeight; }
 
     int worldWidth{}, worldHeight{}; // world dimensions
+    int& getWorldWidth() { return worldWidth; }
+    int& getWorldHeight() { return worldHeight; }
     
     
     
@@ -171,8 +193,8 @@ namespace globals {
     };
     
     
-    quadtree::Box<float> uiBounds{-(float)globals::screenWidth, -(float)globals::screenHeight, (float)globals::screenWidth * 3, (float)globals::screenHeight * 3}; // Define the ui space bounds for the quadtree
-    quadtree::Box<float> worldBounds{-(float)globals::screenWidth, -(float)globals::screenHeight, (float)globals::screenWidth *3, (float)globals::screenHeight * 3}; // Define the world space bounds for the quadtree
+    quadtree::Box<float> uiBounds{-(float)getScreenWidth(), -(float)getScreenHeight(), (float)getScreenWidth() * 3, (float)getScreenHeight() * 3}; // Define the ui space bounds for the quadtree
+    quadtree::Box<float> worldBounds{-(float)getScreenWidth(), -(float)getScreenHeight(), (float)getScreenWidth() *3, (float)getScreenHeight() * 3}; // Define the world space bounds for the quadtree
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeWorld(worldBounds, getBoxWorld);
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeUI(worldBounds, getBoxWorld);
 
@@ -184,6 +206,10 @@ namespace globals {
     float cameraDamping{.4f}, cameraStiffness{0.99f};
     Vector2 cameraVelocity{0,0};
     Vector2 nextCameraTarget{0,0}; // keep track of desired next camera target position
+    float& getCameraDamping() { return cameraDamping; }
+    float& getCameraStiffness() { return cameraStiffness; }
+    Vector2& getCameraVelocity() { return cameraVelocity; }
+    Vector2& getNextCameraTarget() { return nextCameraTarget; }
 
     //TODO make a map of names to all available sprites
     //TODO how to mesh this with animations?
@@ -209,6 +235,7 @@ namespace globals {
 
     // game state
     GameState currentGameState{GameState::LOADING_SCREEN};
+    GameState& getCurrentGameState() { return currentGameState; }
 
     // show mouse current status
     bool isMouseDragStarted{false};
@@ -233,6 +260,7 @@ namespace globals {
     // pathfinding version of map
     // TODO event-based updating
     vector<double> pathfindingMatrix{};
+    std::vector<double>& getPathfindingMatrix() { return pathfindingMatrix; }
     // std::shared_ptr<fudge::JumpPointMap<double>> pathfindingMap{};
     // TODO init pathfinding map
     // TODO make pathfinding behavior tree subtree
@@ -244,6 +272,9 @@ namespace globals {
     entt::entity G_ROOM = entt::null; // entity that is a moveable representing the map
     float G_COLLISION_BUFFER = 0.05f; // Buffer for collision detection from lua //TODO: move to globals later
     int G_TILESIZE = 16; // TODO: used by movable, not sure how it is used
+    float& getTimerReal() { return G_TIMER_REAL; }
+    float& getTimerTotal() { return G_TIMER_TOTAL; }
+    long& getFramesMove() { return G_FRAMES_MOVE; }
 
     // motion reduction setting (for animations,text,smoothing etc.)
     bool reduced_motion = false;
@@ -254,6 +285,8 @@ namespace globals {
     // for line of sight
     std::vector<std::vector<bool>> globalVisibilityMap{};
     bool useLineOfSight{false};
+    std::vector<std::vector<bool>>& getGlobalVisibilityMap() { return globalVisibilityMap; }
+    bool& getUseLineOfSight() { return useLineOfSight; }
 
     sol::state lua; // for events
 
@@ -270,6 +303,7 @@ namespace globals {
 
     
     float BASE_SHADOW_EXAGGERATION = 1.8f; 
+    float& getBaseShadowExaggeration() { return BASE_SHADOW_EXAGGERATION; }
 
     //TODO: document
     std::optional<int> REFRESH_FRAME_MASTER_CACHE{}; // used for transform calculations
@@ -288,6 +322,7 @@ namespace globals {
 
     
     float uiPadding = 4.0f; // padding for UI elements
+    float& getUiPadding() { return uiPadding; }
     
     input::InputState inputState{};
     
@@ -302,14 +337,18 @@ namespace globals {
     std::string language{"en"}; // the current language for the game
 
     bool under_overlay{false}; // set to true when an ui overlay is active
+    bool& getUnderOverlay() { return under_overlay; }
 
     float vibration{0.0f}; // vibration strength for controllers
 
     bool releaseMode = false; // set to true to disable debug features
+    bool& getReleaseMode() { return releaseMode; }
     
     bool isGamePaused = false; // self-explanatory
+    bool& getIsGamePaused() { return isGamePaused; }
 
     bool screenWipe = false; // true when the screen is being wiped (transitioning between scenes). Set this to true during transitions to prevent input.
+    bool& getScreenWipe() { return screenWipe; }
 
     entt::entity gameWorldContainerEntity;
 

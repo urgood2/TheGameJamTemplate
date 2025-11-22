@@ -15,12 +15,12 @@
 **Risk Level:** High (touches entire codebase)  
 
 **Progress (ongoing incremental rollout):**
-- EngineContext scaffolded with registry, lua, physics ptr, resource caches, mouse positions, and audio placeholder; `createEngineContext` wired and `globals::g_ctx` bridge in place.
-- Globals bridge updated: context caches mouse positions, physics ptr, and tracks audio device init; scaled mouse helper cached.
-- Callers increasingly prefer context-aware accessors: `getRegistry`, `getInputState`, and cached mouse helpers used in input, physics, LOS, state-tag management, gui indicator, etc.
-- Physics interpolation and Lua bindings now rely on context/registry refs instead of raw globals.
-- Audio placeholder tracks device initialization; more wiring pending when real audio state is available.
-- Build remains green after each incremental batch (warnings unchanged).
+- EngineContext scaffolded with registry, lua, physics ptr, resource caches, mouse positions, audio placeholder; `createEngineContext` wired and `globals::g_ctx` bridge in place.
+- Globals bridged: context caches mouse positions/scaled mouse, physics ptr, audio placeholder; nearly all data maps (configs/colors/UI strings/animations/AI JSON/nine-patch, atlas/spriteFrames/animations, colors) now use EngineContext-backed getters.
+- Runtime state bridged: cursor/overlay/world container, global UI maps, camera params, world size, UI scale/padding, render/letterbox scale, timers, pause/useImGUI flags, shader uniforms, LOS visibility map.
+- Callers updated to access via getters: input, transform, text, layers/shaders, misc utilities, LOS, main loop timers/game state/physics manager, shader systems, UI layout.
+- Memory-safety tweak retained (Chipmunk static body ownership guard); cursor bug fixed (HID reapply each frame).
+- Build remains green after each batch; warnings intentionally left for later cleanup.
 
 #### Detailed Step 1 Task List
 - **Design scope:** Map current globals; decide minimal EngineContext fields (registry, lua, physics, resource maps, current state, mouse position).

@@ -191,6 +191,9 @@ function fadeInScreen(...) end
 ---@return nil
 function displayIndicatorAroundEntity(...) end
 
+---
+--- Displays a visual indicator of a specific type around the entity.
+---
 ---@overload fun(entity: Entity, indicatorTypeID: string):nil
 function displayIndicatorAroundEntity(...) end
 
@@ -382,6 +385,9 @@ function setEntityAlias(...) end
 ---@return nil
 function log_debug(...) end
 
+---
+--- Logs a general debug message.
+---
 ---@overload fun(message: string):nil
 function log_debug(...) end
 
@@ -393,6 +399,9 @@ function log_debug(...) end
 ---@return nil
 function log_error(...) end
 
+---
+--- Logs a general error message.
+---
 ---@overload fun(message: string):nil
 function log_error(...) end
 
@@ -6566,6 +6575,1302 @@ function collision.resetCollisionCategory(...) end
 function command_buffer.pushEntityTransformsToMatrix(...) end
 
 ---
+--- Queues layer.CmdBeginDrawing into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginDrawing)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueBeginDrawing(...) end
+
+---
+--- Executes layer.CmdBeginDrawing immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginDrawing)
+---@return void
+function command_buffer.executeBeginDrawing(...) end
+
+---
+--- Queues layer.CmdEndDrawing into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndDrawing)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueEndDrawing(...) end
+
+---
+--- Executes layer.CmdEndDrawing immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndDrawing)
+---@return void
+function command_buffer.executeEndDrawing(...) end
+
+---
+--- Queues layer.CmdClearBackground into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdClearBackground)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueClearBackground(...) end
+
+---
+--- Executes layer.CmdClearBackground immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdClearBackground)
+---@return void
+function command_buffer.executeClearBackground(...) end
+
+---
+--- Queues layer.CmdTranslate into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdTranslate)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueTranslate(...) end
+
+---
+--- Executes layer.CmdTranslate immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdTranslate)
+---@return void
+function command_buffer.executeTranslate(...) end
+
+---
+--- Queues layer.CmdScale into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdScale)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueScale(...) end
+
+---
+--- Executes layer.CmdScale immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdScale)
+---@return void
+function command_buffer.executeScale(...) end
+
+---
+--- Queues layer.CmdRotate into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRotate)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueRotate(...) end
+
+---
+--- Executes layer.CmdRotate immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRotate)
+---@return void
+function command_buffer.executeRotate(...) end
+
+---
+--- Queues layer.CmdAddPush into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdAddPush)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueAddPush(...) end
+
+---
+--- Executes layer.CmdAddPush immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdAddPush)
+---@return void
+function command_buffer.executeAddPush(...) end
+
+---
+--- Queues layer.CmdAddPop into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdAddPop)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueAddPop(...) end
+
+---
+--- Executes layer.CmdAddPop immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdAddPop)
+---@return void
+function command_buffer.executeAddPop(...) end
+
+---
+--- Queues layer.CmdPushMatrix into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdPushMatrix)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queuePushMatrix(...) end
+
+---
+--- Executes layer.CmdPushMatrix immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdPushMatrix)
+---@return void
+function command_buffer.executePushMatrix(...) end
+
+---
+--- Queues layer.CmdPopMatrix into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdPopMatrix)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queuePopMatrix(...) end
+
+---
+--- Executes layer.CmdPopMatrix immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdPopMatrix)
+---@return void
+function command_buffer.executePopMatrix(...) end
+
+---
+--- Queues layer.CmdPushObjectTransformsToMatrix into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queuePushObjectTransformsToMatrix(...) end
+
+---
+--- Executes layer.CmdPushObjectTransformsToMatrix immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix)
+---@return void
+function command_buffer.executePushObjectTransformsToMatrix(...) end
+
+---
+--- Queues layer.CmdScopedTransformCompositeRender into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueScopedTransformCompositeRender(...) end
+
+---
+--- Executes layer.CmdScopedTransformCompositeRender immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender)
+---@return void
+function command_buffer.executeScopedTransformCompositeRender(...) end
+
+---
+--- Queues layer.CmdDrawCircleFilled into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCircleFilled)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawCircleFilled(...) end
+
+---
+--- Executes layer.CmdDrawCircleFilled immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCircleFilled)
+---@return void
+function command_buffer.executeDrawCircleFilled(...) end
+
+---
+--- Queues layer.CmdDrawCircleLine into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCircleLine)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawCircleLine(...) end
+
+---
+--- Executes layer.CmdDrawCircleLine immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCircleLine)
+---@return void
+function command_buffer.executeDrawCircleLine(...) end
+
+---
+--- Queues layer.CmdDrawRectangle into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRectangle)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawRectangle(...) end
+
+---
+--- Executes layer.CmdDrawRectangle immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRectangle)
+---@return void
+function command_buffer.executeDrawRectangle(...) end
+
+---
+--- Queues layer.CmdDrawRectanglePro into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRectanglePro)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawRectanglePro(...) end
+
+---
+--- Executes layer.CmdDrawRectanglePro immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRectanglePro)
+---@return void
+function command_buffer.executeDrawRectanglePro(...) end
+
+---
+--- Queues layer.CmdDrawRectangleLinesPro into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawRectangleLinesPro(...) end
+
+---
+--- Executes layer.CmdDrawRectangleLinesPro immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro)
+---@return void
+function command_buffer.executeDrawRectangleLinesPro(...) end
+
+---
+--- Queues layer.CmdDrawLine into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawLine)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawLine(...) end
+
+---
+--- Executes layer.CmdDrawLine immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawLine)
+---@return void
+function command_buffer.executeDrawLine(...) end
+
+---
+--- Queues layer.CmdDrawText into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawText)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawText(...) end
+
+---
+--- Executes layer.CmdDrawText immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawText)
+---@return void
+function command_buffer.executeDrawText(...) end
+
+---
+--- Queues layer.CmdDrawTextCentered into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTextCentered)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawTextCentered(...) end
+
+---
+--- Executes layer.CmdDrawTextCentered immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTextCentered)
+---@return void
+function command_buffer.executeDrawTextCentered(...) end
+
+---
+--- Queues layer.CmdTextPro into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdTextPro)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueTextPro(...) end
+
+---
+--- Executes layer.CmdTextPro immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdTextPro)
+---@return void
+function command_buffer.executeTextPro(...) end
+
+---
+--- Queues layer.CmdDrawImage into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawImage)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawImage(...) end
+
+---
+--- Executes layer.CmdDrawImage immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawImage)
+---@return void
+function command_buffer.executeDrawImage(...) end
+
+---
+--- Queues layer.CmdTexturePro into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdTexturePro)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueTexturePro(...) end
+
+---
+--- Executes layer.CmdTexturePro immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdTexturePro)
+---@return void
+function command_buffer.executeTexturePro(...) end
+
+---
+--- Queues layer.CmdDrawEntityAnimation into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawEntityAnimation)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawEntityAnimation(...) end
+
+---
+--- Executes layer.CmdDrawEntityAnimation immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawEntityAnimation)
+---@return void
+function command_buffer.executeDrawEntityAnimation(...) end
+
+---
+--- Queues layer.CmdDrawTransformEntityAnimation into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawTransformEntityAnimation(...) end
+
+---
+--- Executes layer.CmdDrawTransformEntityAnimation immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation)
+---@return void
+function command_buffer.executeDrawTransformEntityAnimation(...) end
+
+---
+--- Queues layer.CmdDrawTransformEntityAnimationPipeline into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawTransformEntityAnimationPipeline(...) end
+
+---
+--- Executes layer.CmdDrawTransformEntityAnimationPipeline immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline)
+---@return void
+function command_buffer.executeDrawTransformEntityAnimationPipeline(...) end
+
+---
+--- Queues layer.CmdSetShader into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetShader)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSetShader(...) end
+
+---
+--- Executes layer.CmdSetShader immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetShader)
+---@return void
+function command_buffer.executeSetShader(...) end
+
+---
+--- Queues layer.CmdResetShader into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdResetShader)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueResetShader(...) end
+
+---
+--- Executes layer.CmdResetShader immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdResetShader)
+---@return void
+function command_buffer.executeResetShader(...) end
+
+---
+--- Queues layer.CmdSetBlendMode into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetBlendMode)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSetBlendMode(...) end
+
+---
+--- Executes layer.CmdSetBlendMode immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetBlendMode)
+---@return void
+function command_buffer.executeSetBlendMode(...) end
+
+---
+--- Queues layer.CmdUnsetBlendMode into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdUnsetBlendMode)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueUnsetBlendMode(...) end
+
+---
+--- Executes layer.CmdUnsetBlendMode immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdUnsetBlendMode)
+---@return void
+function command_buffer.executeUnsetBlendMode(...) end
+
+---
+--- Queues layer.CmdSendUniformFloat into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformFloat)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSendUniformFloat(...) end
+
+---
+--- Executes layer.CmdSendUniformFloat immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformFloat)
+---@return void
+function command_buffer.executeSendUniformFloat(...) end
+
+---
+--- Queues layer.CmdSendUniformInt into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformInt)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSendUniformInt(...) end
+
+---
+--- Executes layer.CmdSendUniformInt immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformInt)
+---@return void
+function command_buffer.executeSendUniformInt(...) end
+
+---
+--- Queues layer.CmdSendUniformVec2 into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformVec2)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSendUniformVec2(...) end
+
+---
+--- Executes layer.CmdSendUniformVec2 immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformVec2)
+---@return void
+function command_buffer.executeSendUniformVec2(...) end
+
+---
+--- Queues layer.CmdSendUniformVec3 into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformVec3)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSendUniformVec3(...) end
+
+---
+--- Executes layer.CmdSendUniformVec3 immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformVec3)
+---@return void
+function command_buffer.executeSendUniformVec3(...) end
+
+---
+--- Queues layer.CmdSendUniformVec4 into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformVec4)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSendUniformVec4(...) end
+
+---
+--- Executes layer.CmdSendUniformVec4 immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformVec4)
+---@return void
+function command_buffer.executeSendUniformVec4(...) end
+
+---
+--- Queues layer.CmdSendUniformFloatArray into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformFloatArray)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSendUniformFloatArray(...) end
+
+---
+--- Executes layer.CmdSendUniformFloatArray immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformFloatArray)
+---@return void
+function command_buffer.executeSendUniformFloatArray(...) end
+
+---
+--- Queues layer.CmdSendUniformIntArray into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformIntArray)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSendUniformIntArray(...) end
+
+---
+--- Executes layer.CmdSendUniformIntArray immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSendUniformIntArray)
+---@return void
+function command_buffer.executeSendUniformIntArray(...) end
+
+---
+--- Queues layer.CmdVertex into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdVertex)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueVertex(...) end
+
+---
+--- Executes layer.CmdVertex immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdVertex)
+---@return void
+function command_buffer.executeVertex(...) end
+
+---
+--- Queues layer.CmdBeginOpenGLMode into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginOpenGLMode)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueBeginOpenGLMode(...) end
+
+---
+--- Executes layer.CmdBeginOpenGLMode immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginOpenGLMode)
+---@return void
+function command_buffer.executeBeginOpenGLMode(...) end
+
+---
+--- Queues layer.CmdEndOpenGLMode into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndOpenGLMode)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueEndOpenGLMode(...) end
+
+---
+--- Executes layer.CmdEndOpenGLMode immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndOpenGLMode)
+---@return void
+function command_buffer.executeEndOpenGLMode(...) end
+
+---
+--- Queues layer.CmdSetColor into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetColor)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSetColor(...) end
+
+---
+--- Executes layer.CmdSetColor immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetColor)
+---@return void
+function command_buffer.executeSetColor(...) end
+
+---
+--- Queues layer.CmdSetLineWidth into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetLineWidth)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSetLineWidth(...) end
+
+---
+--- Executes layer.CmdSetLineWidth immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetLineWidth)
+---@return void
+function command_buffer.executeSetLineWidth(...) end
+
+---
+--- Queues layer.CmdSetTexture into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetTexture)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueSetTexture(...) end
+
+---
+--- Executes layer.CmdSetTexture immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdSetTexture)
+---@return void
+function command_buffer.executeSetTexture(...) end
+
+---
+--- Queues layer.CmdRenderRectVerticesFilledLayer into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueRenderRectVerticesFilledLayer(...) end
+
+---
+--- Executes layer.CmdRenderRectVerticesFilledLayer immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer)
+---@return void
+function command_buffer.executeRenderRectVerticesFilledLayer(...) end
+
+---
+--- Queues layer.CmdRenderRectVerticesOutlineLayer into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueRenderRectVerticesOutlineLayer(...) end
+
+---
+--- Executes layer.CmdRenderRectVerticesOutlineLayer immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer)
+---@return void
+function command_buffer.executeRenderRectVerticesOutlineLayer(...) end
+
+---
+--- Queues layer.CmdDrawPolygon into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawPolygon)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawPolygon(...) end
+
+---
+--- Executes layer.CmdDrawPolygon immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawPolygon)
+---@return void
+function command_buffer.executeDrawPolygon(...) end
+
+---
+--- Queues layer.CmdRenderNPatchRect into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderNPatchRect)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueRenderNPatchRect(...) end
+
+---
+--- Executes layer.CmdRenderNPatchRect immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderNPatchRect)
+---@return void
+function command_buffer.executeRenderNPatchRect(...) end
+
+---
+--- Queues layer.CmdDrawTriangle into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTriangle)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawTriangle(...) end
+
+---
+--- Executes layer.CmdDrawTriangle immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTriangle)
+---@return void
+function command_buffer.executeDrawTriangle(...) end
+
+---
+--- Queues layer.CmdBeginStencilMode into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginStencilMode)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueBeginStencilMode(...) end
+
+---
+--- Executes layer.CmdBeginStencilMode immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginStencilMode)
+---@return void
+function command_buffer.executeBeginStencilMode(...) end
+
+---
+--- Queues layer.CmdStencilOp into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdStencilOp)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueStencilOp(...) end
+
+---
+--- Executes layer.CmdStencilOp immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdStencilOp)
+---@return void
+function command_buffer.executeStencilOp(...) end
+
+---
+--- Queues layer.CmdRenderBatchFlush into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderBatchFlush)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueRenderBatchFlush(...) end
+
+---
+--- Executes layer.CmdRenderBatchFlush immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdRenderBatchFlush)
+---@return void
+function command_buffer.executeRenderBatchFlush(...) end
+
+---
+--- Queues layer.CmdAtomicStencilMask into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdAtomicStencilMask)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueAtomicStencilMask(...) end
+
+---
+--- Executes layer.CmdAtomicStencilMask immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdAtomicStencilMask)
+---@return void
+function command_buffer.executeAtomicStencilMask(...) end
+
+---
+--- Queues layer.CmdColorMask into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdColorMask)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueColorMask(...) end
+
+---
+--- Executes layer.CmdColorMask immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdColorMask)
+---@return void
+function command_buffer.executeColorMask(...) end
+
+---
+--- Queues layer.CmdStencilFunc into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdStencilFunc)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueStencilFunc(...) end
+
+---
+--- Executes layer.CmdStencilFunc immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdStencilFunc)
+---@return void
+function command_buffer.executeStencilFunc(...) end
+
+---
+--- Queues layer.CmdEndStencilMode into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndStencilMode)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueEndStencilMode(...) end
+
+---
+--- Executes layer.CmdEndStencilMode immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndStencilMode)
+---@return void
+function command_buffer.executeEndStencilMode(...) end
+
+---
+--- Queues layer.CmdClearStencilBuffer into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdClearStencilBuffer)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueClearStencilBuffer(...) end
+
+---
+--- Executes layer.CmdClearStencilBuffer immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdClearStencilBuffer)
+---@return void
+function command_buffer.executeClearStencilBuffer(...) end
+
+---
+--- Queues layer.CmdBeginStencilMask into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginStencilMask)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueBeginStencilMask(...) end
+
+---
+--- Executes layer.CmdBeginStencilMask immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdBeginStencilMask)
+---@return void
+function command_buffer.executeBeginStencilMask(...) end
+
+---
+--- Queues layer.CmdEndStencilMask into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndStencilMask)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueEndStencilMask(...) end
+
+---
+--- Executes layer.CmdEndStencilMask immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdEndStencilMask)
+---@return void
+function command_buffer.executeEndStencilMask(...) end
+
+---
+--- Queues layer.CmdDrawCenteredEllipse into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCenteredEllipse)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawCenteredEllipse(...) end
+
+---
+--- Executes layer.CmdDrawCenteredEllipse immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCenteredEllipse)
+---@return void
+function command_buffer.executeDrawCenteredEllipse(...) end
+
+---
+--- Queues layer.CmdDrawRoundedLine into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRoundedLine)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawRoundedLine(...) end
+
+---
+--- Executes layer.CmdDrawRoundedLine immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawRoundedLine)
+---@return void
+function command_buffer.executeDrawRoundedLine(...) end
+
+---
+--- Queues layer.CmdDrawPolyline into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawPolyline)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawPolyline(...) end
+
+---
+--- Executes layer.CmdDrawPolyline immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawPolyline)
+---@return void
+function command_buffer.executeDrawPolyline(...) end
+
+---
+--- Queues layer.CmdDrawArc into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawArc)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawArc(...) end
+
+---
+--- Executes layer.CmdDrawArc immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawArc)
+---@return void
+function command_buffer.executeDrawArc(...) end
+
+---
+--- Queues layer.CmdDrawTriangleEquilateral into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTriangleEquilateral)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawTriangleEquilateral(...) end
+
+---
+--- Executes layer.CmdDrawTriangleEquilateral immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawTriangleEquilateral)
+---@return void
+function command_buffer.executeDrawTriangleEquilateral(...) end
+
+---
+--- Queues layer.CmdDrawCenteredFilledRoundedRect into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCenteredFilledRoundedRect)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawCenteredFilledRoundedRect(...) end
+
+---
+--- Executes layer.CmdDrawCenteredFilledRoundedRect immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawCenteredFilledRoundedRect)
+---@return void
+function command_buffer.executeDrawCenteredFilledRoundedRect(...) end
+
+---
+--- Queues layer.CmdDrawSpriteCentered into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawSpriteCentered)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawSpriteCentered(...) end
+
+---
+--- Executes layer.CmdDrawSpriteCentered immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawSpriteCentered)
+---@return void
+function command_buffer.executeDrawSpriteCentered(...) end
+
+---
+--- Queues layer.CmdDrawSpriteTopLeft into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawSpriteTopLeft)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawSpriteTopLeft(...) end
+
+---
+--- Executes layer.CmdDrawSpriteTopLeft immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawSpriteTopLeft)
+---@return void
+function command_buffer.executeDrawSpriteTopLeft(...) end
+
+---
+--- Queues layer.CmdDrawDashedCircle into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawDashedCircle)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawDashedCircle(...) end
+
+---
+--- Executes layer.CmdDrawDashedCircle immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawDashedCircle)
+---@return void
+function command_buffer.executeDrawDashedCircle(...) end
+
+---
+--- Queues layer.CmdDrawDashedRoundedRect into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawDashedRoundedRect)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawDashedRoundedRect(...) end
+
+---
+--- Executes layer.CmdDrawDashedRoundedRect immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawDashedRoundedRect)
+---@return void
+function command_buffer.executeDrawDashedRoundedRect(...) end
+
+---
+--- Queues layer.CmdDrawDashedLine into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawDashedLine)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawDashedLine(...) end
+
+---
+--- Executes layer.CmdDrawDashedLine immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawDashedLine)
+---@return void
+function command_buffer.executeDrawDashedLine(...) end
+
+---
+--- Queues layer.CmdDrawGradientRectCentered into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawGradientRectCentered)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawGradientRectCentered(...) end
+
+---
+--- Executes layer.CmdDrawGradientRectCentered immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawGradientRectCentered)
+---@return void
+function command_buffer.executeDrawGradientRectCentered(...) end
+
+---
+--- Queues layer.CmdDrawGradientRectRoundedCentered into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawGradientRectRoundedCentered(...) end
+
+---
+--- Executes layer.CmdDrawGradientRectRoundedCentered immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered)
+---@return void
+function command_buffer.executeDrawGradientRectRoundedCentered(...) end
+
+---
+--- Queues layer.CmdDrawBatchedEntities into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawBatchedEntities)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawBatchedEntities(...) end
+
+---
+--- Executes layer.CmdDrawBatchedEntities immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawBatchedEntities)
+---@return void
+function command_buffer.executeDrawBatchedEntities(...) end
+
+---
 --- Create a navigation group.
 ---
 ---@param name string
@@ -6787,6 +8092,9 @@ function layer.ResizeCanvasInLayer(...) end
 ---@return nil
 function layer.AddCanvasToLayer(...) end
 
+---
+--- Adds a canvas of a specific size to the layer.
+---
 ---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil
 function layer.AddCanvasToLayer(...) end
 
@@ -10534,3 +11842,4 @@ function util.getRandomSynonymFor(...) end
 ---@param value string # The string to convert.
 ---@return integer
 function util.toUnsignedChar(...) end
+

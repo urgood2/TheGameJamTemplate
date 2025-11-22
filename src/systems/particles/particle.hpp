@@ -404,7 +404,7 @@ inline void DrawParticles(entt::registry &registry,
     // half-alpha black
 
     if (gameObject.shadowDisplacement) {
-      float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+      float baseExaggeration = globals::getBaseShadowExaggeration();
       float heightFactor = 1.0f + gameObject.shadowHeight.value_or(
                                       0.f); // Increase effect based on height
 
@@ -438,7 +438,7 @@ inline void DrawParticles(entt::registry &registry,
 
     // --- 1. DRAW SHADOW PASS ---
     if (gameObject.shadowDisplacement) {
-      float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+      float baseExaggeration = globals::getBaseShadowExaggeration();
       float heightFactor = 1.0f + gameObject.shadowHeight.value_or(0.f);
       float shadowDisplacementX =
           gameObject.shadowDisplacement->x * baseExaggeration * heightFactor;

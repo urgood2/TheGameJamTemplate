@@ -22,12 +22,12 @@
 auto initLineOfSight() -> void {
     auto& registry = globals::getRegistry();
     // init visibility map
-    globals::globalVisibilityMap = std::vector<std::vector<bool>>(globals::worldWidth, std::vector<bool>(globals::worldHeight, false));
+    globals::getGlobalVisibilityMap() = std::vector<std::vector<bool>>(globals::getWorldWidth(), std::vector<bool>(globals::getWorldHeight(), false));
 
     // init visibility functions
     los::MyVisibility::ActionSetVisible actionSetVisible = [&](int x, int y) {
-        if (x >= 0 && x < globals::worldWidth && y >= 0 && y < globals::worldHeight) {
-            globals::globalVisibilityMap[x][y] = true; // Mark the tile as visible
+        if (x >= 0 && x < globals::getWorldWidth() && y >= 0 && y < globals::getWorldHeight()) {
+            globals::getGlobalVisibilityMap()[x][y] = true; // Mark the tile as visible
         }
     };
 
@@ -35,7 +35,7 @@ auto initLineOfSight() -> void {
         auto& registry = globals::getRegistry();
 
         // check if x or y is out of bounds
-        if (x < 0 || x >= globals::worldWidth || y < 0 || y >= globals::worldHeight) {
+        if (x < 0 || x >= globals::getWorldWidth() || y < 0 || y >= globals::getWorldHeight()) {
             return true;
         }
         // check if the tile and anything on the tile blocks light

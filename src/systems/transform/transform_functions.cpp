@@ -118,7 +118,7 @@ namespace transform
 
         auto &node = registry->emplace<GameObject>(e);
         node.container = container;
-        if (globals::isGamePaused)
+        if (globals::getIsGamePaused())
         {
             node.ignoresPause = true; // created on pause, so ignore pause
         }
@@ -1216,7 +1216,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         transform.frameCalculation.lastUpdatedFrame = main_loop::mainLoop.frame; // save frame counter
 
         //FIXME: this is a hacky fix
-        // if (node.ignoresPause == false && globals::isGamePaused)
+        // if (node.ignoresPause == false && globals::getIsGamePaused())
         // {
         //     return; // don't move if paused
         // }
@@ -1483,7 +1483,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         //     return;
 
         auto &node = registry->get<GameObject>(e);
-        node.state.isUnderOverlay = globals::under_overlay; // LATER: not sure why this is here. move elsewhere?
+        node.state.isUnderOverlay = globals::getUnderOverlay(); // LATER: not sure why this is here. move elsewhere?
 
         float currentScreenWidth = globals::VIRTUAL_WIDTH * 1.0f;
         float currentScreenHeight = globals::VIRTUAL_HEIGHT * 1.0f;

@@ -7,11 +7,14 @@
 
 #include "anim_system.hpp"
 #include "../core/globals.hpp"
+#include "../core/engine_context.hpp"
 #include "../components/graphics.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
 #include "systems/uuid/uuid.hpp"
 #include "core/init.hpp"
+
+#include "spdlog/spdlog.h"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -299,11 +302,20 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
         frame.spriteUUID = uuid::add(spriteUUID);
         // using namespace snowhouse;
         // AssertThat(::init::getSpriteFrame(frame.spriteUUID).frame.width, IsGreaterThan(0));
-        frame.spriteData.frame = init::getSpriteFrame(frame.spriteUUID).frame;
+        const auto spriteFrameData = init::getSpriteFrame(frame.spriteUUID, globals::g_ctx);
+        frame.spriteData.frame = spriteFrameData.frame;
         //TODO: need to load in the atlas to the texturemap
-        auto atlasUUID = init::getSpriteFrame(frame.spriteUUID).atlasUUID;
-        frame.spriteData.texture = &globals::textureAtlasMap.at(atlasUUID);
-        frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(init::getSpriteFrame(frame.spriteUUID));
+        auto atlasUUID = spriteFrameData.atlasUUID;
+        if (globals::g_ctx) {
+            auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
+            if (it != globals::g_ctx->textureAtlas.end()) {
+                frame.spriteData.texture = &it->second;
+            }
+        }
+        if (frame.spriteData.texture == nullptr) {
+            frame.spriteData.texture = &globals::textureAtlasMap.at(atlasUUID);
+        }
+        frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(spriteFrameData);
 
         ao.animationList.emplace_back(frame, DEFAULT_DURATION);
         
@@ -573,7 +585,7 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
         // get id, use it to fetch the source rect and texture
         
         NPatchInfo nPatchInfo = {};
-        auto frame = init::getSpriteFrame(uuid_or_raw_identifier);
+        auto frame = init::getSpriteFrame(uuid_or_raw_identifier, globals::g_ctx);
         
         nPatchInfo.source = frame.frame;
         
@@ -584,7 +596,25 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
         nPatchInfo.bottom = nPatchInfo.source.height * 0.5f - 2;
         nPatchInfo.layout = NPatchLayout::NPATCH_NINE_PATCH; // classic 9 patch layout
         
-        return std::make_tuple(nPatchInfo, globals::textureAtlasMap.at(frame.atlasUUID));
+        Texture2D texture{};
+        if (globals::g_ctx) {
+            auto ctxIt = globals::g_ctx->textureAtlas.find(frame.atlasUUID);
+            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
+                texture = ctxIt->second;
+            }
+        }
+        if (texture.id == 0) {
+            auto legacyIt = globals::textureAtlasMap.find(frame.atlasUUID);
+            if (legacyIt != globals::textureAtlasMap.end()) {
+                texture = legacyIt->second;
+            }
+        }
+
+        if (texture.id == 0) {
+            SPDLOG_ERROR("Texture atlas '{}' not found for nine-patch '{}'", frame.atlasUUID, uuid_or_raw_identifier);
+        }
+
+        return std::make_tuple(nPatchInfo, texture);
     }
 
     auto update(float delta) -> void {

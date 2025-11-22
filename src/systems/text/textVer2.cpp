@@ -24,6 +24,7 @@
 #include "systems/collision/broad_phase.hpp"
 
 #include "core/init.hpp"
+#include "core/engine_context.hpp"
 
 #include "../../core/globals.hpp"
 
@@ -1183,7 +1184,7 @@ namespace TextSystem
                     // scaling for image
                     //TODO: fetch the sprite size, scale it down to fit the text heigth
                     float maxFontHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale;
-                    auto spriteFrame = init::getSpriteFrame(uuid);
+                    auto spriteFrame = init::getSpriteFrame(uuid, globals::g_ctx);
                     auto desiredImageHeight = maxFontHeight * scale;
                     auto desiredImageWidth = spriteFrame.frame.width * (desiredImageHeight / spriteFrame.frame.height);
                     
@@ -2052,9 +2053,14 @@ namespace TextSystem
 
                     if (character.isImage) {
                         ZONE_SCOPED("TextSystem::renderText-render image shadow");
-                        auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
+                        auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                         auto sourceRect = spriteFrame.frame;
-                        auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
+                        Texture2D atlasTexture{};
+                        if (globals::g_ctx) {
+                            atlasTexture = globals::g_ctx->textureAtlas.at(spriteFrame.atlasUUID);
+                        } else {
+                            atlasTexture = globals::textureAtlasMap.at(spriteFrame.atlasUUID);
+                        }
                         auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                         
                         layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [text, atlasTexture, sourceRect, destRect](layer::CmdTexturePro *cmd) {
@@ -2096,9 +2102,18 @@ namespace TextSystem
                 // Render the character
                 if (character.isImage) {
                     ZONE_SCOPED("TextSystem::renderText-render image");
-                    auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
+                    auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                     auto sourceRect = spriteFrame.frame;
-                    auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
+                    Texture2D atlasTexture{};
+                    if (globals::g_ctx) {
+                        auto it = globals::g_ctx->textureAtlas.find(spriteFrame.atlasUUID);
+                        if (it != globals::g_ctx->textureAtlas.end()) {
+                            atlasTexture = it->second;
+                        }
+                    }
+                    if (atlasTexture.id == 0) {
+                        atlasTexture = globals::textureAtlasMap.at(spriteFrame.atlasUUID);
+                    }
                     auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                     layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect, fgTint = Color{.r = character.fgTint.r, .g = character.fgTint.g, .b = character.fgTint.b, .a = (unsigned char)(text.globalAlpha * character.fgTint.a) }](layer::CmdTexturePro *cmd) {
                         cmd->texture = atlasTexture;
@@ -2357,9 +2372,18 @@ namespace TextSystem
 
                     if (character.isImage) {
                         ZONE_SCOPED("TextSystem::renderText-render image shadow");
-                        auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
+                        auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                         auto sourceRect = spriteFrame.frame;
-                        auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
+                        Texture2D atlasTexture{};
+                        if (globals::g_ctx) {
+                            auto it = globals::g_ctx->textureAtlas.find(spriteFrame.atlasUUID);
+                            if (it != globals::g_ctx->textureAtlas.end()) {
+                                atlasTexture = it->second;
+                            }
+                        }
+                        if (atlasTexture.id == 0) {
+                            atlasTexture = globals::textureAtlasMap.at(spriteFrame.atlasUUID);
+                        }
                         auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                         
                         layer::ImmediateCommand<layer::CmdTexturePro>(layerPtr, [text, atlasTexture, sourceRect, destRect](layer::CmdTexturePro *cmd) {
@@ -2401,7 +2425,7 @@ namespace TextSystem
                 // Render the character
                 if (character.isImage) {
                     ZONE_SCOPED("TextSystem::renderText-render image");
-                    auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
+                    auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                     auto sourceRect = spriteFrame.frame;
                     auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
                     auto destRect = Rectangle{0, 0, character.size.x, character.size.y};

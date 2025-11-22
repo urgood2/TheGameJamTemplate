@@ -28,6 +28,14 @@ struct EngineContext {
     std::map<std::string, AnimationObject> animations;
     std::map<std::string, globals::SpriteFrameData> spriteFrames;
     std::map<std::string, Color> colors;
+    json configJson{};
+    json colorsJson{};
+    json uiStringsJson{};
+    json animationsJson{};
+    json aiConfigJson{};
+    json aiActionsJson{};
+    json aiWorldstateJson{};
+    json ninePatchJson{};
 
     // Mutable state
     GameState currentGameState{GameState::LOADING_SCREEN};
@@ -39,7 +47,7 @@ struct EngineContext {
     EngineContext(const EngineContext&) = delete;
     EngineContext& operator=(const EngineContext&) = delete;
     EngineContext(EngineContext&&) = default;
-    EngineContext& operator=(EngineContext&&) = default;
+    EngineContext& operator=(EngineContext&&) = delete;
 
 private:
     const EngineConfig config;

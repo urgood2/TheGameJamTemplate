@@ -2,6 +2,7 @@
 
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
+#include "core/engine_context.hpp"
 #include "core/globals.hpp"
 #include "core/game.hpp"
 #include "core/init.hpp"
@@ -77,17 +78,31 @@ namespace game
 
         
         const int TILE_SIZE = 64; // size of a tile in pixels, temporary, used for tile grid overlay
-
         
-        auto frame = init::getSpriteFrame("tile-grid-boundary.png");
+        
+        auto frame = init::getSpriteFrame("tile-grid-boundary.png", globals::g_ctx);
         auto atlasID =  frame.atlasUUID;
-        auto atlas = globals::textureAtlasMap.at(atlasID);
+        Texture2D atlas{};
+        if (globals::g_ctx) {
+            auto ctxIt = globals::g_ctx->textureAtlas.find(atlasID);
+            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
+                atlas = ctxIt->second;
+            }
+        }
+        if (atlas.id == 0) {
+            auto legacyIt = globals::textureAtlasMap.find(atlasID);
+            if (legacyIt != globals::textureAtlasMap.end()) {
+                atlas = legacyIt->second;
+            }
+        }
+        if (atlas.id == 0) {
+            SPDLOG_ERROR("Texture atlas '{}' not found for tile grid overlay", atlasID);
+            return;
+        }
         auto gridX = frame.frame.x;
         auto gridY = frame.frame.y;
         auto gridW = frame.frame.width;
         auto gridH = frame.frame.height;
-        
-        atlas = globals::textureAtlasMap.at(atlasID);
         
         // tile grid overlay
         shaders::registerUniformUpdate("tile_grid_overlay", [atlas](Shader &s) {            

@@ -23,6 +23,7 @@
 #include <variant>
 #include <vector>
 
+#include "core/engine_context.hpp"
 #include "core/globals.hpp"
 
 #include "core/init.hpp"
@@ -6400,6 +6401,22 @@ void ellipse(float x, float y, float rx, float ry,
 
 
 // -- immediate sprite render
+static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
+    if (globals::g_ctx) {
+        auto ctxIt = globals::g_ctx->textureAtlas.find(atlasUUID);
+        if (ctxIt != globals::g_ctx->textureAtlas.end()) {
+            return &ctxIt->second;
+        }
+    }
+
+    auto legacyIt = globals::textureAtlasMap.find(atlasUUID);
+    if (legacyIt != globals::textureAtlasMap.end()) {
+        return &legacyIt->second;
+    }
+
+    return nullptr;
+}
+
 auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,
                        std::optional<float> dstW,
                        std::optional<float> dstH,
@@ -6407,16 +6424,15 @@ auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,
   // Resolve atlas frame + texture
   const auto spriteId = uuid::add(spriteName);
   const auto &sfd =
-      init::getSpriteFrame(spriteId); // expects .frame and .atlasUUID
+      init::getSpriteFrame(spriteId, globals::g_ctx); // expects .frame and .atlasUUID
 
-  auto it = globals::textureAtlasMap.find(sfd.atlasUUID);
-  if (it == globals::textureAtlasMap.end()) {
+  Texture2D* tex = resolveAtlasTexture(sfd.atlasUUID);
+  if (!tex) {
     // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'",
     // spriteName.c_str());
     return;
   }
 
-  Texture2D *tex = &it->second;
   const Rectangle src = sfd.frame;
 
   // Destination size (native if not provided). Keep aspect if only one is set.
@@ -6442,21 +6458,20 @@ auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,
 auto DrawSpriteCentered(const std::string &spriteName, float x, float y,
                         std::optional<float> dstW,
                         std::optional<float> dstH,
-                        Color tint) -> void {
+                       Color tint) -> void {
   // Resolve atlas frame + texture
   const auto spriteId = uuid::add(spriteName);
   const auto &sfd = init::getSpriteFrame(
-      spriteId); // expect: has .frame (Rectangle) and .atlasUUID
+      spriteId, globals::g_ctx); // expect: has .frame (Rectangle) and .atlasUUID
 
-  auto it = globals::textureAtlasMap.find(sfd.atlasUUID);
-  if (it == globals::textureAtlasMap.end()) {
+  Texture2D* tex = resolveAtlasTexture(sfd.atlasUUID);
+  if (!tex) {
     // TODO: replace with your logging/error path
     // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'",
     // spriteName.c_str());
     return;
   }
 
-  Texture2D *tex = &it->second;
   const Rectangle src = sfd.frame; // sub-rect in the atlas
 
   // Determine destination size

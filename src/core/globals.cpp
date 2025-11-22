@@ -2,6 +2,7 @@
 #include "globals.hpp" // global variables
 
 #include "../components/graphics.hpp"
+#include "engine_context.hpp"
 
 #include "../core/gui.hpp"
 
@@ -307,6 +308,10 @@ namespace globals {
             rotatedPosition.y + camera2D.target.y
         };
         //==============================================================================
+
+        if (g_ctx) {
+            g_ctx->worldMousePosition = worldMousePosition;
+        }
         
 
     }

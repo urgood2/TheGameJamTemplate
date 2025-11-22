@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <optional>
+#include "core/engine_context.hpp"
 #include <utility>
 #include "raylib.h"
 #include "spdlog/spdlog.h"
@@ -52,15 +53,15 @@ namespace nine_patch {
         }
 
         // Fetch frames
-        const globals::SpriteFrameData F_tl = init::getSpriteFrame(names.tl);
-        const globals::SpriteFrameData F_t  = init::getSpriteFrame(names.t);
-        const globals::SpriteFrameData F_tr = init::getSpriteFrame(names.tr);
-        const globals::SpriteFrameData F_l  = init::getSpriteFrame(names.l);
-        const globals::SpriteFrameData F_c  = init::getSpriteFrame(names.c);
-        const globals::SpriteFrameData F_r  = init::getSpriteFrame(names.r);
-        const globals::SpriteFrameData F_bl = init::getSpriteFrame(names.bl);
-        const globals::SpriteFrameData F_b  = init::getSpriteFrame(names.b);
-        const globals::SpriteFrameData F_br = init::getSpriteFrame(names.br);
+        const globals::SpriteFrameData F_tl = init::getSpriteFrame(names.tl, globals::g_ctx);
+        const globals::SpriteFrameData F_t  = init::getSpriteFrame(names.t, globals::g_ctx);
+        const globals::SpriteFrameData F_tr = init::getSpriteFrame(names.tr, globals::g_ctx);
+        const globals::SpriteFrameData F_l  = init::getSpriteFrame(names.l, globals::g_ctx);
+        const globals::SpriteFrameData F_c  = init::getSpriteFrame(names.c, globals::g_ctx);
+        const globals::SpriteFrameData F_r  = init::getSpriteFrame(names.r, globals::g_ctx);
+        const globals::SpriteFrameData F_bl = init::getSpriteFrame(names.bl, globals::g_ctx);
+        const globals::SpriteFrameData F_b  = init::getSpriteFrame(names.b, globals::g_ctx);
+        const globals::SpriteFrameData F_br = init::getSpriteFrame(names.br, globals::g_ctx);
 
         // Validate atlas consistency
         const std::string atlas = F_tl.atlasUUID;
@@ -73,11 +74,22 @@ namespace nine_patch {
         }
 
         // Pull the atlas texture
-        if (globals::textureAtlasMap.find(atlas) == globals::textureAtlasMap.end()) {
-            spdlog::error("BakeNinePatchFromSprites: atlas texture '{}' not found.", atlas);
-            return std::nullopt;
+        const Texture2D* atlasTexPtr = nullptr;
+        if (globals::g_ctx) {
+            auto it = globals::g_ctx->textureAtlas.find(atlas);
+            if (it != globals::g_ctx->textureAtlas.end()) {
+                atlasTexPtr = &it->second;
+            }
         }
-        const Texture2D& atlasTex = globals::textureAtlasMap.at(atlas);
+        if (!atlasTexPtr) {
+            auto it = globals::textureAtlasMap.find(atlas);
+            if (it == globals::textureAtlasMap.end()) {
+                spdlog::error("BakeNinePatchFromSprites: atlas texture '{}' not found.", atlas);
+                return std::nullopt;
+            }
+            atlasTexPtr = &it->second;
+        }
+        const Texture2D& atlasTex = *atlasTexPtr;
 
         // Derive border thicknesses from corners (authoritative)
         const float leftW   = F_tl.frame.width;

@@ -128,6 +128,37 @@ namespace init {
         
         jsonStream.close();
 
+        {
+            namespace fs = std::filesystem;
+            const auto uiStringsPath = util::getRawAssetPathNoUUID("raws/ui_strings.json");
+            if (fs::exists(uiStringsPath) && fs::file_size(uiStringsPath) > 0) {
+                jsonStream.open(uiStringsPath);
+                globals::uiStringsJSON = json::parse(jsonStream);
+                jsonStream.close();
+            }
+        }
+
+        {
+            namespace fs = std::filesystem;
+            const auto ninePatchPath = util::getRawAssetPathNoUUID("raws/9patch.json");
+            if (fs::exists(ninePatchPath) && fs::file_size(ninePatchPath) > 0) {
+                jsonStream.open(ninePatchPath);
+                globals::ninePatchJSON = json::parse(jsonStream);
+                jsonStream.close();
+            }
+        }
+
+        if (globals::g_ctx) {
+            globals::g_ctx->configJson       = globals::configJSON;
+            globals::g_ctx->colorsJson       = globals::colorsJSON;
+            globals::g_ctx->animationsJson   = globals::animationsJSON;
+            globals::g_ctx->uiStringsJson    = globals::uiStringsJSON;
+            globals::g_ctx->aiConfigJson     = globals::aiConfigJSON;
+            globals::g_ctx->aiActionsJson    = globals::aiActionsJSON;
+            globals::g_ctx->aiWorldstateJson = globals::aiWorldstateJSON;
+            globals::g_ctx->ninePatchJson    = globals::ninePatchJSON;
+        }
+
 
         // create map for fast draw access of sprites
         // map filename to frame rectangle
@@ -208,6 +239,10 @@ namespace init {
             }
 
             globals::animationsMap[ac.id] = ac;
+        }
+
+        if (globals::g_ctx) {
+            globals::g_ctx->animations = globals::animationsMap;
         }
     }
 
@@ -382,33 +417,60 @@ namespace init {
 
 
 
-    AnimationObject getAnimationObject(std::string uuid_or_raw_identifier) {
+    AnimationObject getAnimationObject(std::string uuid_or_raw_identifier, EngineContext* ctx) {
         using namespace snowhouse;
-        if (globals::animationsMap.find(uuid::lookup(uuid_or_raw_identifier)) == globals::animationsMap.end()) {
+        const auto key = uuid::lookup(uuid_or_raw_identifier);
+
+        EngineContext* effectiveCtx = ctx ? ctx : globals::g_ctx;
+        if (effectiveCtx) {
+            auto it = effectiveCtx->animations.find(key);
+            if (it != effectiveCtx->animations.end()) {
+                return it->second;
+            }
+        }
+
+        if (globals::animationsMap.find(key) == globals::animationsMap.end()) {
             SPDLOG_ERROR("Animation with UUID or identifier '{}' not found in animationsMap", uuid_or_raw_identifier);
         }
-        AssertThat(globals::animationsMap.find(uuid::lookup(uuid_or_raw_identifier)) != globals::animationsMap.end(), IsTrue());
-        
-        return globals::animationsMap[uuid::lookup(uuid_or_raw_identifier)]; 
+        AssertThat(globals::animationsMap.find(key) != globals::animationsMap.end(), IsTrue());
+        return globals::animationsMap[key];
     }
     
     
 
-    std::string getUIString(std::string uuid_or_raw_identifier) {
+    std::string getUIString(std::string uuid_or_raw_identifier, EngineContext* ctx) {
         using namespace snowhouse;
-        AssertThat(globals::uiStringsJSON.find(uuid::lookup(uuid_or_raw_identifier)) != globals::uiStringsJSON.end(), IsTrue());
-        return globals::uiStringsJSON[uuid::lookup(uuid_or_raw_identifier)];
+        const auto key = uuid::lookup(uuid_or_raw_identifier);
+
+        EngineContext* effectiveCtx = ctx ? ctx : globals::g_ctx;
+        if (effectiveCtx) {
+            auto it = effectiveCtx->uiStringsJson.find(key);
+            if (it != effectiveCtx->uiStringsJson.end()) {
+                return it->get<std::string>();
+            }
+        }
+
+        AssertThat(globals::uiStringsJSON.find(key) != globals::uiStringsJSON.end(), IsTrue());
+        return globals::uiStringsJSON[key];
     }
 
-    globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier) {
+    globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier, EngineContext* ctx) {
         using namespace snowhouse;
-        auto test = uuid::lookup(uuid_or_raw_identifier);
-        
-        if (globals::spriteDrawFrames.find(uuid::lookup(uuid_or_raw_identifier)) == globals::spriteDrawFrames.end()) {
+        const auto key = uuid::lookup(uuid_or_raw_identifier);
+
+        EngineContext* effectiveCtx = ctx ? ctx : globals::g_ctx;
+        if (effectiveCtx) {
+            auto it = effectiveCtx->spriteFrames.find(key);
+            if (it != effectiveCtx->spriteFrames.end()) {
+                return it->second;
+            }
+        }
+
+        if (globals::spriteDrawFrames.find(key) == globals::spriteDrawFrames.end()) {
             SPDLOG_ERROR("Sprite frame with UUID or identifier '{}' not found in spriteDrawFrames", uuid_or_raw_identifier);
         }
-        AssertThat(globals::spriteDrawFrames.find(uuid::lookup(uuid_or_raw_identifier)) != globals::spriteDrawFrames.end(), IsTrue());
-        return globals::spriteDrawFrames[uuid::lookup(uuid_or_raw_identifier)];
+        AssertThat(globals::spriteDrawFrames.find(key) != globals::spriteDrawFrames.end(), IsTrue());
+        return globals::spriteDrawFrames[key];
     }
 
     /**
@@ -420,9 +482,10 @@ namespace init {
         // before your game loop
         // rlImGuiSetup(true); 	// sets up ImGui with ether a dark or light default theme
         
-        std::string englishFontName = globals::configJSON.at("fonts").at("en");
-        std::string translationFontName = globals::configJSON.at("fonts").at("ko"); // FIXME: hardcoded rn, should be in config file
-        int defaultSize = globals::configJSON.at("fonts").at("default_size").get<int>() + 10;
+        const json& configJsonRef = (globals::g_ctx) ? globals::g_ctx->configJson : globals::configJSON;
+        std::string englishFontName = configJsonRef.at("fonts").at("en");
+        std::string translationFontName = configJsonRef.at("fonts").at("ko"); // FIXME: hardcoded rn, should be in config file
+        int defaultSize = configJsonRef.at("fonts").at("default_size").get<int>() + 10;
 
         //FIXME: config should make clear what is used for ui and what is used for game
         //FIXME: this hardcodes korean, should change this later to read from config file

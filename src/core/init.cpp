@@ -630,6 +630,9 @@ namespace init {
     auto loadSounds() -> void {
         InitAudioDevice();
         SetAudioStreamBufferSizeDefault(4096);
+        if (globals::g_ctx && globals::g_ctx->audio) {
+            globals::g_ctx->audio->deviceInitialized = true;
+        }
     }
     
     // Iterate over all shapes stored in a ColliderComponent (main + extras).
@@ -683,10 +686,13 @@ namespace init {
         // in general, loadConfigFileValues() should be called before any pertinent values are used
         
         // load physics manager
-        globals::physicsManager = std::make_shared<PhysicsManager>(globals::registry);
+        globals::physicsManager = std::make_shared<PhysicsManager>(globals::getRegistry());
+        if (globals::g_ctx) {
+            globals::g_ctx->physicsManager = globals::physicsManager;
+        }
         
         // set up physics component destruction
-        globals::registry.on_destroy<physics::ColliderComponent>().connect<&onColliderDestroyed>();
+        globals::getRegistry().on_destroy<physics::ColliderComponent>().connect<&onColliderDestroyed>();
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);
         

@@ -99,8 +99,8 @@
 //         // applies the world tile's colors to the LDTK tile
 //         auto drawLDTKTileWithWorldContext(entt::entity tile, uint8_t opacity,  Vector2& origin, Vector2& position, Rectangle sourceRect, Rectangle targetRect, Texture2D& atlas) -> void {
 //             // get tile comp's sprite component
-//             auto &sc = globals::registry.get<SpriteComponentASCII>(tile);
-//             auto &lc = globals::registry.get<LocationComponent>(tile);
+//             auto &sc = globals::getRegistry().get<SpriteComponentASCII>(tile);
+//             auto &lc = globals::getRegistry().get<LocationComponent>(tile);
 
 //             // see if the tile in which the entity stands has visibility. Otherwise, return
 //             if (graphics::isTileVisible((int)lc.x, (int)lc.y) == false && globals::useLineOfSight == true) return;
@@ -162,7 +162,7 @@
 //             const int pad = 1;
             
 //             // assume every tile has same size
-//             SpriteComponentASCII &sc = globals::registry.get<SpriteComponentASCII>(globals::map[0][0]);
+//             SpriteComponentASCII &sc = globals::getRegistry().get<SpriteComponentASCII>(globals::map[0][0]);
 //             const Rectangle &tileSizeRect = sc.spriteData.frame;
             
 //             int left = (int) topLeft.x;
@@ -231,7 +231,7 @@
 //                         auto &tiles = tileGrid(cellX, cellY);
 //                         uint8_t tileIdx = tiles.size() - 1;
 
-//                         auto &tileComp = globals::registry.get<TileComponent>(globals::map[cellX][cellY]); // reference the tile on the world map
+//                         auto &tileComp = globals::getRegistry().get<TileComponent>(globals::map[cellX][cellY]); // reference the tile on the world map
 
 //                         // is there a task doer on this tile?
 //                         bool isTaskDoerOnTile = tileComp.taskDoingEntitiesOnTile.size() > 0;
@@ -253,12 +253,12 @@
 //                                 // SPDLOG_DEBUG("More than one entity on tile. Displaying transition.");
 //                                 // first check that transition object is valid
 //                                 auto &taskDoer = tileComp.taskDoingEntitiesOnTile.at(tileComp.taskDoingEntityDrawIndex);
-//                                 if (globals::registry.valid(tileComp.taskDoingEntityTransition) == false) {
+//                                 if (globals::getRegistry().valid(tileComp.taskDoingEntityTransition) == false) {
 //                                     // create a new one
-//                                     tileComp.taskDoingEntityTransition = globals::registry.create();
+//                                     tileComp.taskDoingEntityTransition = globals::getRegistry().create();
 //                                 }
 //                                 // set up transition animation queue component to run once, then disable itself
-//                                 auto &animQTransition = globals::registry.get<AnimationQueueComponent>(tileComp.taskDoingEntityTransition);
+//                                 auto &animQTransition = globals::getRegistry().get<AnimationQueueComponent>(tileComp.taskDoingEntityTransition);
 //                                 animQTransition.enabled = true;
 //                                 animQTransition.defaultAnimation = globals::animationsMap["transition_for_showing_multiple_entities"];
 //                                 animQTransition.animationQueue.push_back(globals::animationsMap["transition_for_showing_multiple_entities"]);
@@ -356,7 +356,7 @@
 //                         }
 
 //                         //REVIEW: so presumably, layers should be safe to ignore, so use the color of the tile at hand for everything
-//                         SpriteComponentASCII &sc = globals::registry.get<SpriteComponentASCII>(globals::map[cellX][cellY]);
+//                         SpriteComponentASCII &sc = globals::getRegistry().get<SpriteComponentASCII>(globals::map[cellX][cellY]);
 //                         Color fg = sc.fgColor;
 //                         Color bg = sc.bgColor;
 //                         if (sc.noForegroundColor) fg = BLANK;
@@ -464,7 +464,7 @@
 //             for (int j = 0; j < globals::map.size(); j++) {
 //                 // intGrid.push_back(Random::get<int>(0, 3));
 //                 // is there a stone wall on the tile?
-//                 TileComponent &tile = globals::registry.get<TileComponent>(globals::map[j][i]);
+//                 TileComponent &tile = globals::getRegistry().get<TileComponent>(globals::map[j][i]);
                 
 //                 bool isStoneWall = false;
 //                 // check entities on tile for stone wall

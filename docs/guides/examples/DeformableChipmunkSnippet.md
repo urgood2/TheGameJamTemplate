@@ -4,9 +4,9 @@
 ```cpp
 
 // init physics
-    physicsWorld = physics::InitPhysicsWorld(&globals::registry, 64.0f, 0.0f, 0.f);
+    physicsWorld = physics::InitPhysicsWorld(&globals::getRegistry(), 64.0f, 0.0f, 0.f);
     
-    entt::entity testEntity = globals::registry.create();
+    entt::entity testEntity = globals::getRegistry().create();
     
     physicsWorld->AddCollider(testEntity, "player", "rectangle", 50, 50, -1, -1, false);
     

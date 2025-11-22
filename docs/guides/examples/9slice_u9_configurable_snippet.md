@@ -14,6 +14,6 @@
         .addChild(uiTest)
         .build();
         
-    auto testBox = ui::box::Initialize(globals::registry, {.x = 800, .y = 600}, testRoot, ui::UIConfig{});
+    auto testBox = ui::box::Initialize(globals::getRegistry(), {.x = 800, .y = 600}, testRoot, ui::UIConfig{});
         
 ```

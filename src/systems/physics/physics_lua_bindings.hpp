@@ -6,6 +6,8 @@
 #include "systems/physics/transform_physics_hook.hpp"
 #include "sol/sol.hpp"
 
+#include "core/engine_context.hpp"
+
 #include "steering.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "third_party/chipmunk/include/chipmunk/cpBody.h"
@@ -46,9 +48,10 @@ inline sol::table vec_to_lua(sol::state_view L, const cpVect& v) {
 }
 
 // ---- Expose physics to Lua --------------------------------------------------
-inline void expose_physics_to_lua(sol::state& lua) {
+inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals::g_ctx) {
     auto& rec = BindingRecorder::instance();
     const std::vector<std::string> path = {"physics"};
+    entt::registry* defaultRegistry = ctx ? &ctx->registry : &globals::getRegistry();
 
     // ---------- Types ----------
     rec.add_type("physics").doc =
@@ -517,8 +520,9 @@ inline void expose_physics_to_lua(sol::state& lua) {
         true, false
     });
     
-    lua["physics"]["IsSleeping"] = [](PhysicsWorld& W, entt::entity e) {
-        auto &collider = globals::registry.get<ColliderComponent>(e);
+    lua["physics"]["IsSleeping"] = [defaultRegistry](PhysicsWorld& W, entt::entity e) {
+        auto& registryRef = W.registry ? *W.registry : *defaultRegistry;
+        auto &collider = registryRef.get<ColliderComponent>(e);
         
         return cpBodyIsSleeping(collider.body.get());
          
@@ -741,8 +745,9 @@ rec.bind_function(lua, path, "set_arrive_radius",
     });
     lua["physics"]["SetFixedRotation"] = &PhysicsWorld::SetFixedRotation;
     
-    lua["physics"]["SetMoment"] = [](PhysicsWorld& W, entt::entity e, float moment) {
-        auto &collider = globals::registry.get<ColliderComponent>(e);
+    lua["physics"]["SetMoment"] = [defaultRegistry](PhysicsWorld& W, entt::entity e, float moment) {
+        auto& registryRef = W.registry ? *W.registry : *defaultRegistry;
+        auto &collider = registryRef.get<ColliderComponent>(e);
         cpBodySetMoment(collider.body.get(), moment);
     };
     rec.record_free_function(path, {
@@ -1824,7 +1829,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
 
 
-inline void expose_steering_to_lua(sol::state& lua) {
+inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals::g_ctx) {
     auto& rec = BindingRecorder::instance();
     const std::vector<std::string> path = {"steering"};
 

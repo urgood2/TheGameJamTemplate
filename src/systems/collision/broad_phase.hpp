@@ -101,30 +101,30 @@ namespace collision {
 
         
         // A) make it “transformable”:
-        auto e = transform::CreateOrEmplace(&globals::registry,
+        auto e = transform::CreateOrEmplace(&globals::getRegistry(),
                                         globals::gameWorldContainerEntity,
                                         /*x*/0,/*y*/0,
                                         /*w*/1,/*h*/1,
                                         std::nullopt);
         // B) mark it collidable:
-        auto &go = globals::registry.get<transform::GameObject>(e);
+        auto &go = globals::getRegistry().get<transform::GameObject>(e);
         go.container        = globals::gameWorldContainerEntity;
         go.state.collisionEnabled = true;
         
-        auto &role = globals::registry.get<transform::InheritedProperties>(e);
+        auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
         // C) set the alignment flags:
         role.flags->alignment = alignment;
         // C) set the alignment offsets:
         role.flags->extraAlignmentFinetuningOffset = Vector2{alignOffX, alignOffY};
         
         // link your hierarchy using assignRole (or InheritedProperties):
-        transform::AssignRole(&globals::registry, e, transform::InheritedProperties::Type::PermanentAttachment, master, std::nullopt, std::nullopt, std::nullopt, std::nullopt, Vector2{ox, oy});
+        transform::AssignRole(&globals::getRegistry(), e, transform::InheritedProperties::Type::PermanentAttachment, master, std::nullopt, std::nullopt, std::nullopt, std::nullopt, Vector2{ox, oy});
 
         // D) add a default ColliderComponent:
-        auto  &c = globals::registry.emplace<ColliderComponent>(e);
+        auto  &c = globals::getRegistry().emplace<ColliderComponent>(e);
         c.type = ColliderType::AABB; // unused, we use transforms for collision
         
-        auto &transform = globals::registry.get<transform::Transform>(e);
+        auto &transform = globals::getRegistry().get<transform::Transform>(e);
         // E) set the transform properties:
         transform.setActualW(w);
         transform.setActualH(h);
@@ -331,7 +331,7 @@ namespace collision {
         //    → ORs the category bit in; leaves existing bits intact
         rec.bind_function(lua, path, "setCollisionCategory",
             [&](entt::entity e, const std::string &tag){
-                auto &f = globals::registry.get<collision::CollisionFilter>(e);
+                auto &f = globals::getRegistry().get<collision::CollisionFilter>(e);
                 f.category |= collision::getTagBit(tag);
             },
             "---@param e entt.entity               # Entity whose filter to modify\n"
@@ -343,7 +343,7 @@ namespace collision {
         //    → replaces the mask entirely with the OR of all provided tags
         rec.bind_function(lua, path, "setCollisionMask",
             [&](entt::entity e, sol::variadic_args args){
-                auto &f = globals::registry.get<collision::CollisionFilter>(e);
+                auto &f = globals::getRegistry().get<collision::CollisionFilter>(e);
                 f.mask = 0u;
                 for (auto v : args) {
                     std::string tag = v;
@@ -358,7 +358,7 @@ namespace collision {
         // 4) Optional: helper to *replace* category bits (clear then OR) if you want exclusivity
         rec.bind_function(lua, path, "resetCollisionCategory",
             [&](entt::entity e, const std::string &tag){
-                auto &f = globals::registry.get<collision::CollisionFilter>(e);
+                auto &f = globals::getRegistry().get<collision::CollisionFilter>(e);
                 f.category  = collision::getTagBit(tag);
             },
             "---@param e entt.entity               # Entity whose filter to reset\n"

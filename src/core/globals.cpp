@@ -35,11 +35,16 @@ using Random = effolkronium::random_static; // get base random alias which is au
 namespace globals {
     
     EngineContext* g_ctx = nullptr;
+    static AudioContext g_audioContext{};
 
     void setEngineContext(EngineContext* ctx) {
         g_ctx = ctx;
         if (g_ctx) {
             g_ctx->inputState = &inputState;
+            g_ctx->physicsManager = physicsManager;
+            g_ctx->worldMousePosition = {0.0f, 0.0f};
+            g_ctx->scaledMousePosition = {0.0f, 0.0f};
+            g_ctx->audio = &g_audioContext;
         }
     }
 
@@ -57,7 +62,17 @@ namespace globals {
         m.x /= globals::finalRenderScale;
         m.y /= globals::finalRenderScale;
 
+        if (g_ctx) {
+            g_ctx->scaledMousePosition = m;
+        }
         return m;
+    }
+
+    Vector2 getScaledMousePositionCached() {
+        if (g_ctx) {
+            return g_ctx->scaledMousePosition;
+        }
+        return GetScaledMousePosition();
     }
 
 
@@ -115,7 +130,7 @@ namespace globals {
     
     // collision detection
     std::function<quadtree::Box<float>(entt::entity)> getBoxWorld = [](entt::entity e) -> quadtree::Box<float> {
-        auto &transform = globals::registry.get<transform::Transform>(e);
+        auto &transform = globals::getRegistry().get<transform::Transform>(e);
         
         const float x = transform.getActualX();
         const float y = transform.getActualY();
@@ -336,6 +351,9 @@ namespace globals {
 
 
     Vector2 getWorldMousePosition() {
+        if (g_ctx) {
+            return g_ctx->worldMousePosition;
+        }
         return worldMousePosition;
     }
 }

@@ -25,7 +25,7 @@ Use the built-in default traversal (no callbacks needed):
 
 ```cpp
 TextUIHandleLua handle;
-buildIdMapFromRootDefault(globals::registry, rootEntity, handle);
+buildIdMapFromRootDefault(globals::getRegistry(), rootEntity, handle);
 ```
 
 This depth-first scans from `rootEntity`, collects all nodes with `UIConfig.id`, and fills `handle.idMap`.

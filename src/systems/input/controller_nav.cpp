@@ -566,12 +566,12 @@ void exposeToLua(sol::state& lua) {
 
         // Navigation
         "navigate", [](NavManager* self, const string& group, const string& dir) {
-            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry();
             auto& state = globals::getInputState();
             self->navigate(reg, state, group, dir);
         },
         "select_current", [](NavManager* self, const string& group) {
-            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::registry;
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry();
             self->select_current(reg, group);
         },
 

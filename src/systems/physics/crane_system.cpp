@@ -1,6 +1,8 @@
 // CraneSystem.cpp (snippet)
 #include "crane_system.hpp"
 #include "physics_world.hpp" // your class
+#include "core/engine_context.hpp"
+#include "core/globals.hpp"
 #include <raylib.h>          // for mouse input if desired
 
 static void AttachHook_PostStep(cpSpace* space, cpBody* hook, void* crateBodyVoid) {
@@ -96,11 +98,11 @@ void InitCrane(physics::PhysicsWorld& pw, CraneState& s) {
   cpSpaceSetDamping(space, 0.8);
 }
 
-void UpdateCrane(physics::PhysicsWorld& pw, CraneState& s, double dt) {
+void UpdateCrane(physics::PhysicsWorld& pw, CraneState& s, double dt, EngineContext* ctx) {
   cpSpace* space = pw.space;
 
   // Mouse drives target:
-  Vector2 m = globals::GetScaledMousePosition();
+  const Vector2 m = ctx ? ctx->scaledMousePosition : globals::getScaledMousePositionCached();
   // 1) “Servo” the dolly by moving pivot’s AnchorA along rail:
   cpPivotJointSetAnchorA(s.dollyServo, cpv(m.x, 100));
 
@@ -120,4 +122,8 @@ void UpdateCrane(physics::PhysicsWorld& pw, CraneState& s, double dt) {
   // storing to a global or by using a wrapper that has access to `s`.
 
   cpSpaceStep(space, dt);
+}
+
+void UpdateCrane(physics::PhysicsWorld& pw, CraneState& s, double dt) {
+  UpdateCrane(pw, s, dt, globals::g_ctx);
 }

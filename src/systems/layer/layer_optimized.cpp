@@ -62,11 +62,11 @@ namespace layer
     }
     
     void ExecutePushObjectTransformsToMatrix(std::shared_ptr<layer::Layer> layer, CmdPushObjectTransformsToMatrix* c) {
-        layer::pushEntityTransformsToMatrix(globals::registry, c->entity, layer);
+        layer::pushEntityTransformsToMatrix(globals::getRegistry(), c->entity, layer);
     }
     
     void ExecuteScopedTransformCompositeRender(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRender* c) {
-        layer::pushEntityTransformsToMatrixImmediate(globals::registry, c->entity, layer);
+        layer::pushEntityTransformsToMatrixImmediate(globals::getRegistry(), c->entity, layer);
         // Execute child commands
         for (auto& cmd : c->children) {
             auto it = dispatcher.find(cmd.type);
@@ -356,7 +356,7 @@ namespace layer
             EndScissorMode(); 
         });
         RegisterRenderer<CmdRenderUISliceFromDrawList>(DrawCommandType::RenderUISliceFromDrawList, [](std::shared_ptr<layer::Layer> layer, CmdRenderUISliceFromDrawList* c) { 
-            renderSliceOffscreenFromDrawList(globals::registry, c->drawList, c->startIndex, c->endIndex, layer, c->pad); 
+            renderSliceOffscreenFromDrawList(globals::getRegistry(), c->drawList, c->startIndex, c->endIndex, layer, c->pad); 
         });
         RegisterRenderer<CmdRenderUISelfImmediate>(DrawCommandType::RenderUISelfImmediate, [](std::shared_ptr<layer::Layer> layer, CmdRenderUISelfImmediate* c) { 
             auto &uiElementComp = ui::globalUIGroup.get<ui::UIElementComponent>(c->entity);

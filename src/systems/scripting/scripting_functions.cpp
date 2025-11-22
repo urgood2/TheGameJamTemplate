@@ -28,6 +28,7 @@
 
 #include "../layer/layer.hpp"
 
+#include "core/engine_context.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/anim_system.hpp"
 
@@ -70,7 +71,7 @@ namespace scripting {
      * Master lua state initialization function - the master state contains all the bindings for running the ai system from the lua side
      * ------------------------------------------------------
      */
-    auto initLuaMasterState(sol::state& stateToInit, const std::vector<std::string> scriptFilesToRead) -> void {
+    auto initLuaMasterState(sol::state& stateToInit, const std::vector<std::string> scriptFilesToRead, EngineContext* ctx) -> void {
         
         
         auto& rec = BindingRecorder::instance();
@@ -461,7 +462,7 @@ namespace scripting {
         rec.record_free_function({}, {"getBlackboardBool", "---@param entity Entity\n---@param key string\n---@return boolean", "Gets a boolean value from an entity's blackboard.", true, false});
         
         stateToInit.set_function("blackboardContains", [] (entt::entity entity, const std::string& key) {
-            auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+            auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
             return blackboard.contains(key);
         });
         rec.record_free_function({}, {"blackboardContains", "---@param entity Entity\n---@param key string\n---@return boolean", "Checks if the blackboard contains a specific key.", true, false});
@@ -516,8 +517,8 @@ namespace scripting {
         // ------------------------------------------------------
         // lua physics bindings
         // ------------------------------------------------------
-        physics::expose_physics_to_lua(stateToInit);   
-        physics::expose_steering_to_lua(stateToInit);
+        physics::expose_physics_to_lua(stateToInit, ctx);   
+        physics::expose_steering_to_lua(stateToInit, ctx);
         physics::expose_physics_manager_to_lua(stateToInit, *globals::physicsManager);
         
         // ------------------------------------------------------
@@ -751,7 +752,7 @@ namespace scripting {
             SPDLOG_ERROR("Cannot set alias for null entity");
             return;
         }
-        if (globals::registry.valid(entity) == false) {
+        if (globals::getRegistry().valid(entity) == false) {
             SPDLOG_ERROR("Cannot set alias for invalid entity");
             return;
         }
@@ -800,13 +801,13 @@ namespace scripting {
      */
 
     auto setCurrentWorldStateValue(entt::entity entity, std::string key, bool value) -> void {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
         goap_worldstate_set(&goapComponent.ap, &goapComponent.current_state, key.c_str(), value);
         SPDLOG_DEBUG("{}: Setting current world state \"{}\" to {}", static_cast<int>(entity), key, value);
     }
 
     auto getCurrentWorldStateValue(entt::entity entity, std::string key) -> bool {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
         bool value = false;
         bool successful = ai_system::goap_worldstate_get(&goapComponent.ap, goapComponent.current_state, key.c_str(), &value);
         if (!successful) {
@@ -816,7 +817,7 @@ namespace scripting {
     }
 
     auto clearCurrentWorldState(entt::entity entity) -> void {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
         goap_worldstate_clear( &goapComponent.current_state);
         SPDLOG_DEBUG("{}: Cleared current world state", static_cast<int>(entity));
     }
@@ -830,13 +831,13 @@ namespace scripting {
      */
 
     auto setGoalWorldStateValue(entt::entity entity, std::string key, bool value) -> void {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
         goap_worldstate_set(&goapComponent.ap, &goapComponent.goal, key.c_str(), value);
         SPDLOG_DEBUG("{}: Setting goal world state \"{}\" to {}", static_cast<int>(entity), key, value);
     }
 
     auto getGoalWorldStateValue(entt::entity entity, std::string key) -> bool {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
         bool value = false;
         bool successful = ai_system::goap_worldstate_get(&goapComponent.ap, goapComponent.current_state, key.c_str(), &value);
         if (!successful) {
@@ -846,7 +847,7 @@ namespace scripting {
     }
 
     auto clearGoalWorldState(entt::entity entity) -> void {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
         goap_worldstate_clear(&goapComponent.goal);
         SPDLOG_DEBUG("{}: Cleared goal world state", static_cast<int>(entity));
     }
@@ -858,21 +859,21 @@ namespace scripting {
      */
      
     auto setBlackBoardVector2(entt::entity entity, std::string key, Vector2 valueToSet) -> void {
-        if (!globals::registry.valid(entity) || entity == entt::null) { 
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) { 
             SPDLOG_ERROR("Entity {} is not valid, cannot set blackboard vector2", static_cast<int>(entity));
             return;
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
         // SPDLOG_DEBUG("{}: Setting blackboard vector2 \"{}\" to ({}, {})", static_cast<int>(entity), key, valueToSet.x, valueToSet.y);
     }
     
     auto getBlackBoardVector2(entt::entity entity, std::string key) -> std::optional<Vector2> {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot get blackboard vector2", static_cast<int>(entity));
             return Vector2{0.f, 0.f}; // or some other default value
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         
         if (!blackboard.contains(key)) {
             return std::nullopt;
@@ -884,22 +885,22 @@ namespace scripting {
     }
 
     auto setBlackboardFloat(entt::entity entity, std::string key, float valueToSet) -> void {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot set blackboard float", static_cast<int>(entity));
             return;
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
         
         // SPDLOG_DEBUG("{}: Setting blackboard float \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardFloat(entt::entity entity, std::string key) -> std::optional<float> {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot get blackboard float", static_cast<int>(entity));
             return -1.f; // or some other default value
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         
         if (!blackboard.contains(key)) {
             return std::nullopt;
@@ -911,21 +912,21 @@ namespace scripting {
     }
 
     auto setBlackboardBool(entt::entity entity, std::string key, bool valueToSet) -> void {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot set blackboard bool", static_cast<int>(entity));
             return;
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
         // SPDLOG_DEBUG("{}: Setting blackboard bool \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardBool(entt::entity entity, std::string key) -> std::optional<bool> {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot get blackboard bool", static_cast<int>(entity));
             return false; // or some other default value
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         if (!blackboard.contains(key)) {
             return std::nullopt;
         }
@@ -935,21 +936,21 @@ namespace scripting {
     }
 
     auto setBlackboardInt(entt::entity entity, std::string key, int valueToSet) -> void {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot set blackboard int", static_cast<int>(entity));
             return;
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
         // SPDLOG_DEBUG("{}: Setting blackboard int \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardInt(entt::entity entity, std::string key) -> std::optional<int> {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot get blackboard int", static_cast<int>(entity));
             return -1; // or some other default value
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         
         if (!blackboard.contains(key)) {
             return std::nullopt;
@@ -960,21 +961,21 @@ namespace scripting {
     }
 
     auto setBlackboardString(entt::entity entity, std::string key, std::string valueToSet) -> void {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot set blackboard string", static_cast<int>(entity));
             return;
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
         // SPDLOG_DEBUG("{}: Setting blackboard string \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardString(entt::entity entity, std::string key) -> std::optional<std::string> {
-        if (!globals::registry.valid(entity) || entity == entt::null) {
+        if (!globals::getRegistry().valid(entity) || entity == entt::null) {
             SPDLOG_ERROR("Entity {} is not valid, cannot get blackboard string", static_cast<int>(entity));
             return ""; // or some other default value
         }
-        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto& blackboard = globals::getRegistry().get<GOAPComponent>(entity).blackboard;
         
         if (!blackboard.contains(key)) {
             return std::nullopt;

@@ -231,7 +231,7 @@ auto updatePhysics(float dt, float alpha) -> void
     main_loop::mainLoop.physicsTicks++;
     {
         ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
-        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+        physics::ApplyAuthoritativeTransform(globals::getRegistry(), *globals::physicsManager);
     }
     
     {
@@ -241,7 +241,7 @@ auto updatePhysics(float dt, float alpha) -> void
     
     {
         ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
-        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager, alpha);
+        physics::ApplyAuthoritativePhysics(globals::getRegistry(), *globals::physicsManager, alpha);
     
     
         // physics post-update
@@ -414,7 +414,7 @@ int main(void)
     main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
     
 
-    input::Init(globals::getInputState(), globals::registry, globals::g_ctx);
+    input::Init(globals::getInputState(), globals::getRegistry(), globals::g_ctx);
 
     game::init();
     
@@ -491,7 +491,7 @@ auto updateSystems(float dt) -> void
     
     {
         ZONE_SCOPED("Input System Update");
-        input::Update(globals::registry, globals::getInputState(), dt, globals::g_ctx);
+        input::Update(globals::getRegistry(), globals::getInputState(), dt, globals::g_ctx);
     }
     
     {
@@ -503,7 +503,7 @@ auto updateSystems(float dt) -> void
     
     // {
     //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
-    //     physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    //     physics::ApplyAuthoritativeTransform(globals::getRegistry(), *globals::physicsManager);
     // }
     
     // {
@@ -513,16 +513,16 @@ auto updateSystems(float dt) -> void
     
     // {
     //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
-    //     physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    //     physics::ApplyAuthoritativePhysics(globals::getRegistry(), *globals::physicsManager);
     // }
     
     // systems
     
     shaders::update(dt);
     timer::TimerSystem::update_timers(dt);
-    spring::updateAllSprings(globals::registry, dt);
+    spring::updateAllSprings(globals::getRegistry(), dt);
     animation_system::update(dt);
-    transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
+    transform::ExecuteCallsForTransformMethod<void>(globals::getRegistry(), entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::getRegistry(), dt);
     controller_nav::NavManager::instance().update(dt);
     {
         ZONE_SCOPED("EventQueueSystem::EventManager::update");
@@ -532,7 +532,7 @@ auto updateSystems(float dt) -> void
     
     {
         ZONE_SCOPED("scripting::monobehavior_system::update");
-        scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
+        scripting::monobehavior_system::update(globals::getRegistry(), dt); // update all monobehavior scripts in the registry
     }
     {
         ZONE_SCOPED("AI System Update");

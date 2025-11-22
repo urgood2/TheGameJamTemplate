@@ -4021,7 +4021,7 @@ void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr,
                                    const Color color) {
 
   auto &cache =
-      globals::registry.get<ui::RoundedRectangleVerticesCache>(cacheEntity);
+      globals::getRegistry().get<ui::RoundedRectangleVerticesCache>(cacheEntity);
 
   auto &outerVertices = progressOrFullBackground
                             ? cache.outerVerticesProgressReflected
@@ -4076,7 +4076,7 @@ void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr,
                                      const Color color, bool useFullVertices) {
 
   auto &cache =
-      globals::registry.get<ui::RoundedRectangleVerticesCache>(cacheEntity);
+      globals::getRegistry().get<ui::RoundedRectangleVerticesCache>(cacheEntity);
   auto &innerVertices = (useFullVertices)
                             ? cache.innerVerticesFullRect
                             : cache.innerVerticesProgressReflected;

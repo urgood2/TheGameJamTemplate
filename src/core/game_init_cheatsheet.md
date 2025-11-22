@@ -5,16 +5,16 @@ This cheatsheet summarizes the core architectural patterns and programming techn
 
 The foundation of your game architecture. Instead of complex object hierarchies, game objects are simple `entt::entity` IDs, and their data and behavior are defined by attaching modular `components`.
 
-* **Global Registry**: A single, global `entt::registry` instance (`globals::registry`) acts as the central database for all entities and components.
+* **Global Registry**: A single, global `entt::registry` instance (`globals::getRegistry()`) acts as the central database for all entities and components.
 * **Entity Creation**: New game objects are created as simple, empty handles.
     ```cpp
     // Creates a new entity ID.
-    player = globals::registry.create();
+    player = globals::getRegistry().create();
     ```
 * **Component Attachment**: Data is attached to entities using `emplace`. The component is default-constructed, and its properties are set immediately after. This is a common and flexible pattern.
     ```cpp
     // Add a component to an entity.
-    auto& node = globals::registry.emplace<transform::GameObject>(transformEntity);
+    auto& node = globals::getRegistry().emplace<transform::GameObject>(transformEntity);
     // Set properties on the new component.
     node.debug.debugText = "Parent";
     node.state.dragEnabled = true;
@@ -63,7 +63,7 @@ Your UI is built using a highly structured, hierarchical, and data-driven approa
 * **Initialization from Template**: A complete UI hierarchy is instantiated in the world from a root template node. This creates all the necessary entities and components.
     ```cpp
     // Create a live UI box in the world from a template definition.
-    uiBox = ui::box::Initialize(globals::registry, {.w=200, .h=200}, uiTestRootDef, ...);
+    uiBox = ui::box::Initialize(globals::getRegistry(), {.w=200, .h=200}, uiTestRootDef, ...);
     ```
 
 ---
@@ -75,7 +75,7 @@ Game objects are positioned in a parent-child hierarchy (a scene graph) to allow
 * **Assigning Roles**: The `transform::AssignRole` function establishes a link between a child and a master entity, defining how properties like location and rotation are synchronized.
     ```cpp
     // Make 'childEntity' a permanent attachment to 'transformEntity'.
-    transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, ...);
+    transform::AssignRole(&globals::getRegistry(), childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, ...);
     ```
 * **Alignment Flags**: The layout of children relative to their parent is controlled with bitmask flags, allowing for precise and complex arrangements (e.g., align to the parent's right edge and vertical center).
     ```cpp
@@ -109,7 +109,7 @@ For efficient collision detection, you use a quadtree to spatially partition the
     ```cpp
     // In your main update loop...
     globals::quadtree.clear();
-    globals::registry.view<transform::Transform>().each([&](entt::entity e, ...) {
+    globals::getRegistry().view<transform::Transform>().each([&](entt::entity e, ...) {
         globals::quadtree.add(e);
     });
     ```
@@ -131,7 +131,7 @@ Your engine supports a rich text system that parses special tags within strings 
     OnUIScaleChanged = []() {
         // ... get UI root component ...
         SPDLOG_DEBUG("UI Scale changed to: {}", globals::globalUIScaleFactor);
-        ui::box::RenewAlignment(globals::registry, uiBox);
+        ui::box::RenewAlignment(globals::getRegistry(), uiBox);
     };
     ```
 
@@ -147,7 +147,7 @@ Entities are more than just a single component. A typical game object is compose
     player2 = animation_system::createAnimatedObjectWithTransform("...");
 
     // 2. Get the GameObject component to configure its state.
-    auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
+    auto &playerNode2 = globals::getRegistry().get<transform::GameObject>(player2);
     playerNode2.debug.debugText = "Player (untethered)";
     playerNode2.state.dragEnabled = true;
     playerNode2.state.hoverEnabled = true;
@@ -173,7 +173,7 @@ Your engine can generate complex visual effects through a procedural particle sy
             .color    = random_utils::random_element<Color>({RED, GREEN, BLUE})
         };
         // Create the particle instance in the world.
-        particle::CreateParticle(globals::registry, GetMousePosition(), ...);
+        particle::CreateParticle(globals::getRegistry(), GetMousePosition(), ...);
     });
     ```
 
@@ -197,7 +197,7 @@ Complex visual effects are achieved by attaching a `ShaderPipelineComponent` to 
 * **Attaching the Pipeline**: The configured passes are added to the entity's `ShaderPipelineComponent`. The rendering system then automatically executes this pipeline.
     ```cpp
     // Create the pipeline component on the entity.
-    auto &shaderPipeline = globals::registry.emplace<shader_pipeline::ShaderPipelineComponent>(e);
+    auto &shaderPipeline = globals::getRegistry().emplace<shader_pipeline::ShaderPipelineComponent>(e);
     // Add the configured passes.
     shaderPipeline.passes.push_back(pass);
     shaderPipeline.passes.push_back(pass2);
@@ -302,8 +302,8 @@ The `onStringContentUpdatedViaCallback` is a hook that fires whenever the text c
     // This function will run automatically whenever the text content changes.
     text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
         // Get the text's parent/master entity.
-        auto& role = globals::registry.get<transform::InheritedProperties>(textEntity);
-        auto& masterTransform = globals::registry.get<transform::Transform>(role.master);
+        auto& role = globals::getRegistry().get<transform::InheritedProperties>(textEntity);
+        auto& masterTransform = globals::getRegistry().get<transform::Transform>(role.master);
 
         // Automatically resize the text to fit its container.
         TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());

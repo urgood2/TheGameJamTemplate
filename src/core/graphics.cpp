@@ -22,18 +22,18 @@ namespace graphics {
     * 
     * @param camera The camera to center on the entity.
     * @param entity The entity to center the camera on.
-    * @param globals::registry The globals::registry containing the entity's components.
+    * @param globals::getRegistry() The globals::getRegistry() containing the entity's components.
     */
     void centerCameraOnEntity( entt::entity entity) {
         // return if no animation queue component or location component
-        if (globals::registry.any_of<AnimationQueueComponent>(entity) == false) {
+        if (globals::getRegistry().any_of<AnimationQueueComponent>(entity) == false) {
             return;
         }
-        if (globals::registry.any_of<LocationComponent>(entity) == false) {
+        if (globals::getRegistry().any_of<LocationComponent>(entity) == false) {
             return;
         }
-        AnimationQueueComponent &aqc = globals::registry.get<AnimationQueueComponent>(entity);
-        LocationComponent &lc = globals::registry.get<LocationComponent>(entity);
+        AnimationQueueComponent &aqc = globals::getRegistry().get<AnimationQueueComponent>(entity);
+        LocationComponent &lc = globals::getRegistry().get<LocationComponent>(entity);
 
         // if there is a sprite component, center the camera on the sprite
         float width=0, height=0;
@@ -101,14 +101,14 @@ namespace graphics {
     // Returns: void
     auto drawSpriteComponentASCII(entt::entity e) -> void {
         
-        if (globals::registry.any_of<LocationComponent>(e) == false) {
+        if (globals::getRegistry().any_of<LocationComponent>(e) == false) {
             // just add one
             SPDLOG_ERROR("Entity {} does not have a location component. Cannot draw.", static_cast<int>(e));
             return;
         }
         
         // see if the tile in which the entity stands has visibility. Otherwise, return
-        LocationComponent &lc = globals::registry.get<LocationComponent>(e);
+        LocationComponent &lc = globals::getRegistry().get<LocationComponent>(e);
         if (isTileVisible((int)lc.x, (int)lc.y) == false) return;
         
         SpriteComponentASCII *sc = nullptr;
@@ -117,8 +117,8 @@ namespace graphics {
         
         
         // does the entity have a animation queue component? 
-        if (globals::registry.any_of<AnimationQueueComponent>(e)) {
-            auto &aqc = globals::registry.get<AnimationQueueComponent>(e);
+        if (globals::getRegistry().any_of<AnimationQueueComponent>(e)) {
+            auto &aqc = globals::getRegistry().get<AnimationQueueComponent>(e);
 
             auto debugSize = aqc.defaultAnimation.animationList.size();
             
@@ -132,8 +132,8 @@ namespace graphics {
                 sc = &currentAnimObject.animationList.at(currentAnimObject.currentAnimIndex).first;
             }
         }
-        else if (globals::registry.any_of<SpriteComponentASCII>(e) == true) {
-            sc = &globals::registry.get<SpriteComponentASCII>(e);
+        else if (globals::getRegistry().any_of<SpriteComponentASCII>(e) == true) {
+            sc = &globals::getRegistry().get<SpriteComponentASCII>(e);
         }  
         else {
             // no sprite or animation. Nothing to draw.
@@ -148,15 +148,15 @@ namespace graphics {
         
         
         float entityX, entityY;
-        if (globals::registry.any_of<TweenedLocationComponent>(e)) {
-            // auto &tlc = globals::registry.get<TweenedLocationComponent>(e);
+        if (globals::getRegistry().any_of<TweenedLocationComponent>(e)) {
+            // auto &tlc = globals::getRegistry().get<TweenedLocationComponent>(e);
             // auto &tween = tlc.locationTween.peek();
             // entityX = tween.at(0);
             // entityY = tween.at(1);
             
             // debug section ----------------
         
-            // if (globals::registry.any_of<TaskDoerComponent>(e)) {
+            // if (globals::getRegistry().any_of<TaskDoerComponent>(e)) {
             //     // print out location of test human
             //     // SPDLOG_DEBUG("[Render debug] Test human {} location: ({}, {}). Tweening progress {}", static_cast<int>(e), entityX, entityY, tlc.locationTween.progress());
                 
@@ -211,13 +211,13 @@ namespace graphics {
     auto drawEntityAtArbitraryLocation(entt::entity entity, Vector2 location) -> void {
         // draw entity at arbitrary location
 
-        if (globals::registry.any_of<LocationComponent>(entity) == false) {
+        if (globals::getRegistry().any_of<LocationComponent>(entity) == false) {
             // just add one
             SPDLOG_ERROR("Entity {} does not have a location component. Adding one arbitrarily with default value of 0, 0.", static_cast<int>(entity));
-            globals::registry.emplace<LocationComponent>(entity, 0.0f, 0.0f);
+            globals::getRegistry().emplace<LocationComponent>(entity, 0.0f, 0.0f);
         }
 
-        auto &loc = globals::registry.get<LocationComponent>(entity);
+        auto &loc = globals::getRegistry().get<LocationComponent>(entity);
 
         Vector2 formerLocation = Vector2{loc.x, loc.y};
 

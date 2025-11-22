@@ -164,20 +164,20 @@ namespace input
         if (mouseDetectDownFirstFrameLeft)
         { // this should only register first time the button is held down
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = globals::GetScaledMousePosition();
+            Vector2 mousePos = globals::getScaledMousePositionCached();
             EnqueueLeftMouseButtonPress(inputState, mousePos.x, mousePos.y);
         }
         if (mouseDetectDownFirstFrameRight)
         {
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = globals::GetScaledMousePosition();
+            Vector2 mousePos = globals::getScaledMousePositionCached();
             // TODO: right mouse handling isn't really configured, need to add
             EnqueRightMouseButtonPress(inputState, mousePos.x, mousePos.y);
         }
         if (mosueLeftDownCurrentFrame == false && mouseLeftDownLastFrame == true)
         { // release only for left button
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = globals::GetScaledMousePosition();
+            Vector2 mousePos = globals::getScaledMousePositionCached();
             ProcessLeftMouseButtonRelease(registry, inputState, mousePos.x, mousePos.y);
         }
 
@@ -272,7 +272,7 @@ namespace input
     
     auto DetectMouseActivity(InputState &state) -> InputDeviceInputCategory
     {
-        Vector2 mousePos = globals::GetScaledMousePosition();
+        Vector2 mousePos = globals::getScaledMousePositionCached();
 
         // Movement threshold (1px)
         bool moved = std::fabs(mousePos.x - state.cursor_position.x) > 1.0f ||
@@ -1175,7 +1175,7 @@ namespace input
                 state.cursor_focused_target = entt::null;
             }
             // set cursor position to mouse position, derive cursor transform
-            state.cursor_position = globals::GetScaledMousePosition();
+            state.cursor_position = globals::getScaledMousePositionCached();
 
             auto &transform = registry.get<transform::Transform>(globals::cursor);
             transform.setActualX(state.cursor_position.x);
@@ -1340,7 +1340,7 @@ namespace input
         // Update from hardware mouse if mouse is active
         if (state.hid.mouse_enabled)
         {
-            Vector2 mousePos = globals::GetScaledMousePosition();
+            Vector2 mousePos = globals::getScaledMousePositionCached();
             state.cursor_position = mousePos;
 
             auto &transform = registry.get<transform::Transform>(globals::cursor);
@@ -3292,7 +3292,7 @@ namespace input
         in.set_function("isMouseDown", &IsMouseButtonDown);
         in.set_function("isMousePressed", &IsMouseButtonPressed);
         in.set_function("isMouseReleased", &IsMouseButtonReleased);
-        in.set_function("getMousePos", &globals::GetScaledMousePosition);
+        in.set_function("getMousePos", &globals::getScaledMousePositionCached);
         in.set_function("getMouseWheel", &GetMouseWheelMove);
         
         in.set_function("updateCursorFocus", []() {

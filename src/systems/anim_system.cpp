@@ -40,10 +40,10 @@ namespace animation_system {
     
     void setHorizontalFlip(entt::entity e, bool flip)
     {
-        if (!globals::registry.any_of<AnimationQueueComponent>(e))
+        if (!globals::getRegistry().any_of<AnimationQueueComponent>(e))
             return;
 
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
 
         // Apply to default animation
         animQueue.defaultAnimation.flippedHorizontally = flip;
@@ -56,10 +56,10 @@ namespace animation_system {
     
     void flipAnimation(entt::entity e, bool horizontal, bool vertical)
     {
-        if (!globals::registry.any_of<AnimationQueueComponent>(e))
+        if (!globals::getRegistry().any_of<AnimationQueueComponent>(e))
             return;
 
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
 
         // flip default animation
         animQueue.defaultAnimation.flippedHorizontally = horizontal;
@@ -80,9 +80,9 @@ namespace animation_system {
 
     void toggleAnimationFlip(entt::entity e)
     {
-        if (!globals::registry.any_of<AnimationQueueComponent>(e))
+        if (!globals::getRegistry().any_of<AnimationQueueComponent>(e))
             return;
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
         auto &anim = animQueue.defaultAnimation;
         anim.flippedHorizontally = !anim.flippedHorizontally;
     }
@@ -337,10 +337,10 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
         for generateNewAnimFromSprite, please set only to true if the provided uuid is not for an animation (animations.json), but for a sprite from the sprite sheet
     */
     auto createAnimatedObjectWithTransform (std::string defaultAnimationIDorSpriteUUID, bool generateNewAnimFromSprite, int x, int y, std::function<void(entt::entity)> shaderPassConfig, bool shadowEnabled) ->  entt::entity {
-        auto e = globals::registry.create();
-        transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 0, 0, e);
-        auto &transform = globals::registry.get<transform::Transform>(e);
-        auto &animQueue = globals::registry.emplace<AnimationQueueComponent>(e);
+        auto e = globals::getRegistry().create();
+        transform::CreateOrEmplace(&globals::getRegistry(), globals::gameWorldContainerEntity, x, y, 0, 0, e);
+        auto &transform = globals::getRegistry().get<transform::Transform>(e);
+        auto &animQueue = globals::getRegistry().emplace<AnimationQueueComponent>(e);
         if (generateNewAnimFromSprite) {
             // create a new animation object from the sprite UUID
             animQueue.defaultAnimation = createStillAnimationFromSpriteUUID(defaultAnimationIDorSpriteUUID, std::nullopt, std::nullopt);
@@ -350,7 +350,7 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
             animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationIDorSpriteUUID);
         }
 
-        auto &gameObject = globals::registry.get<transform::GameObject>(e);
+        auto &gameObject = globals::getRegistry().get<transform::GameObject>(e);
 
         if (!shadowEnabled) {
             gameObject.shadowDisplacement.reset();
@@ -376,8 +376,8 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     ) -> void
     {
         // --- ASSUME: `e` already has a transform::Transform attached ---
-        auto &registry  = globals::registry;
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &registry  = globals::getRegistry();
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
         auto &gameObject = registry.get<transform::GameObject>(e);
         auto &transform = registry.get<transform::Transform>(e);
         
@@ -417,7 +417,7 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     ) -> void
     {
         // --- ASSUME: `e` already has a transform::Transform attached ---
-        auto &registry  = globals::registry;
+        auto &registry  = globals::getRegistry();
         auto &transform = registry.get<transform::Transform>(e);
 
         // 1) attach animation queue
@@ -458,8 +458,8 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     }
     
     auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth, float targetHeight) -> void {
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
-        auto &transform = globals::registry.get<transform::Transform>(e);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
+        auto &transform = globals::getRegistry().get<transform::Transform>(e);
         
         // get the scale factor which will fit the target width and height
         float scaleX = targetWidth / transform.getActualW();
@@ -478,7 +478,7 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     }
     
     auto setFGColorForAllAnimationObjects(entt::entity e, Color fgColor) -> void {
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
         
         // set the foreground color for all animation objects
         for (auto &animObject : animQueue.animationQueue) {
@@ -494,10 +494,10 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     }
     
     void resetAnimationUIRenderScale(entt::entity e) {
-        if (!globals::registry.any_of<AnimationQueueComponent>(e)) {
+        if (!globals::getRegistry().any_of<AnimationQueueComponent>(e)) {
             return;
         }
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
         for (auto &animObject : animQueue.animationQueue) {
             animObject.uiRenderScale = 1.0f;
         }
@@ -506,8 +506,8 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
         }
         
         // calc intrinsic size, set to transform
-        auto &transform = globals::registry.get<transform::Transform>(e);
-        auto &role = globals::registry.get<transform::InheritedProperties>(e);
+        auto &transform = globals::getRegistry().get<transform::Transform>(e);
+        auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
         auto &firstFrame = animQueue.defaultAnimation.animationList.at(0).first;
         float rawWidth = firstFrame.spriteFrame->frame.width;
         float rawHeight = firstFrame.spriteFrame->frame.height;
@@ -526,9 +526,9 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
     // uses default animation object for size calculations
     void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
     {
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
-        auto &transform = globals::registry.get<transform::Transform>(e);
-        auto &role = globals::registry.get<transform::InheritedProperties>(e);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
+        auto &transform = globals::getRegistry().get<transform::Transform>(e);
+        auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
 
         using namespace snowhouse;
         AssertThat(animQueue.defaultAnimation.animationList.size(), IsGreaterThan(0));
@@ -618,10 +618,10 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
 
     auto update(float delta) -> void {
         ZONE_SCOPED("Update animation system");
-        auto view = globals::registry.view<AnimationQueueComponent>();
+        auto view = globals::getRegistry().view<AnimationQueueComponent>();
     
         for (auto &e : view) {
-            auto &ac = globals::registry.get<AnimationQueueComponent>(e);
+            auto &ac = globals::getRegistry().get<AnimationQueueComponent>(e);
     
             // only update if enabled
             if (!ac.enabled) {

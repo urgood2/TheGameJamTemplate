@@ -294,7 +294,7 @@ layer.queueDrawBatchedEntities(
 
 1. **Entity Validity**: Entities must be valid when the command executes (render phase). Don't destroy entities between queueing and rendering.
 
-2. **Registry Lifetime**: The registry pointer must remain valid. Use `globals::registry` or ensure custom registry lifetime.
+2. **Registry Lifetime**: The registry pointer must remain valid. Use `globals::getRegistry()` or ensure custom registry lifetime.
 
 3. **Shader Pipeline Required**: Entities must have `ShaderPipelineComponent` and `AnimationQueueComponent`.
 

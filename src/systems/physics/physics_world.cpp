@@ -182,7 +182,8 @@ void CapturePostPhysicsPositions(entt::registry& R) {
 
 void PhysicsWorld::Update(float deltaTime) {
   // Update interpolation cache before stepping
-  globals::registry.view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
+  auto& registryRef = *registry;
+  registryRef.view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
       if (auto* body = CC.body.get()) {
           CC.prevPos = {static_cast<float>(cpBodyGetPosition(body).x),
                         static_cast<float>(cpBodyGetPosition(body).y)};
@@ -1135,7 +1136,7 @@ bool PhysicsWorld::RemoveShapeAt(entt::entity e, size_t index) {
 }
 
 void SetSensor(entt::entity e, bool isSensor) {
-  auto &c = globals::registry.get<ColliderComponent>(e);
+  auto &c = globals::getRegistry().get<ColliderComponent>(e);
   if (c.shape) {
     cpShapeSetSensor(c.shape.get(), isSensor);
 
@@ -1664,7 +1665,7 @@ void PhysicsWorld::AccelerateTowardMouse(entt::entity entity,
                                          float acceleration, float maxSpeed) {
   auto &collider = registry->get<ColliderComponent>(entity);
 
-  Vector2 mousePos = globals::GetScaledMousePosition();
+  Vector2 mousePos = globals::getScaledMousePositionCached();
   cpVect currentPos = cpBodyGetPosition(collider.body.get());
   cpVect toMouse = cpv(mousePos.x - currentPos.x, mousePos.y - currentPos.y);
   float angle = atan2(toMouse.y, toMouse.x);
@@ -1725,7 +1726,7 @@ void PhysicsWorld::RotateTowardPoint(entt::entity entity, float targetX,
 void PhysicsWorld::RotateTowardMouse(entt::entity entity, float lerpValue) {
   auto &collider = registry->get<ColliderComponent>(entity);
 
-  Vector2 mousePos = globals::GetScaledMousePosition();
+  Vector2 mousePos = globals::getScaledMousePositionCached();
   cpVect currentPos = cpBodyGetPosition(collider.body.get());
   float targetAngle =
       atan2(mousePos.y - currentPos.y, mousePos.x - currentPos.x);
@@ -1795,7 +1796,7 @@ void PhysicsWorld::MoveTowardPoint(entt::entity entity, float targetX,
 
 void PhysicsWorld::MoveTowardMouse(entt::entity entity, float speed,
                                    float maxTime) {
-  Vector2 mousePos = globals::GetScaledMousePosition();
+  Vector2 mousePos = globals::getScaledMousePositionCached();
   MoveTowardPoint(entity, mousePos.x, mousePos.y, speed, maxTime);
 }
 

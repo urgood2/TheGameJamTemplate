@@ -108,6 +108,7 @@ namespace globals
     void setEngineContext(EngineContext* ctx);
 
     extern Vector2 GetScaledMousePosition();
+    extern Vector2 getScaledMousePositionCached();
     
     // Virtual design resolution (like SNKRX)
     extern const int VIRTUAL_WIDTH;

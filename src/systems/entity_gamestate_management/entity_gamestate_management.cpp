@@ -110,17 +110,19 @@ bool hasAllTagNames(const std::vector<std::string>& tags) {
 // Entity tag helpers
 //-----------------------------------------------------------------------------
 void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name) {
-    globals::registry.emplace_or_replace<StateTag>(entity, name);
-    applyStateEffectsToEntity(globals::registry, entity);
+    auto& registry = globals::getRegistry();
+    registry.emplace_or_replace<StateTag>(entity, name);
+    applyStateEffectsToEntity(registry, entity);
 }
 
 void assignDefaultStateTag(entt::entity entity) {
-    globals::registry.emplace_or_replace<StateTag>(entity, DEFAULT_STATE_TAG);
-    applyStateEffectsToEntity(globals::registry, entity);
+    auto& registry = globals::getRegistry();
+    registry.emplace_or_replace<StateTag>(entity, DEFAULT_STATE_TAG);
+    applyStateEffectsToEntity(registry, entity);
 }
 
 bool isEntityActive(entt::entity entity) {
-    auto &registry = globals::registry;
+    auto &registry = globals::getRegistry();
     if (!registry.all_of<StateTag>(entity)) return false;
     const auto &tag = registry.get<StateTag>(entity);
     return is_active(tag);
@@ -131,23 +133,26 @@ bool isEntityActive(entt::entity entity) {
 //-----------------------------------------------------------------------------
 void activate_state(std::string_view s) { 
     active_states_instance().activate(std::string{s}); 
-    auto view = globals::registry.view<StateTag>();
+    auto& registry = globals::getRegistry();
+    auto view = registry.view<StateTag>();
     for (auto entity : view)
-        applyStateEffectsToEntity(globals::registry, entity);
+        applyStateEffectsToEntity(registry, entity);
 }
 
 void deactivate_state(std::string_view s) { 
     active_states_instance().deactivate(std::string{s}); 
-    auto view = globals::registry.view<StateTag>();
+    auto& registry = globals::getRegistry();
+    auto view = registry.view<StateTag>();
     for (auto entity : view)
-        applyStateEffectsToEntity(globals::registry, entity);
+        applyStateEffectsToEntity(registry, entity);
 }
 
 void clear_states() { 
     active_states_instance().clear(); 
-    auto view = globals::registry.view<StateTag>();
+    auto& registry = globals::getRegistry();
+    auto view = registry.view<StateTag>();
     for (auto entity : view)
-        applyStateEffectsToEntity(globals::registry, entity);
+        applyStateEffectsToEntity(registry, entity);
 }
 
 bool is_state_active(const StateTag &t) { 
@@ -284,7 +289,7 @@ void PropagateStateEffectsToUIBox(entt::registry &registry, entt::entity uiBox)
 // Lua exposure
 //-----------------------------------------------------------------------------
 void exposeToLua(sol::state &lua) {
-    auto &registry = globals::registry;
+    auto &registry = globals::getRegistry();
     auto &active_states = active_states_instance();
 
     lua.set_function("add_state_tag", [&registry](entt::entity e, const std::string &name) {

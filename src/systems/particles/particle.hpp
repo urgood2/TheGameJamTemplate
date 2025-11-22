@@ -126,7 +126,7 @@ inline entt::entity CreateParticle(
     std::optional<ParticleAnimationConfig> animationConfig = std::nullopt,
     const std::string &tag = "" //<— new parameter
 ) {
-  auto particle = transform::CreateOrEmplace(&globals::registry,
+  auto particle = transform::CreateOrEmplace(&globals::getRegistry(),
                                              globals::gameWorldContainerEntity,
                                              location.x, location.y, 0, 0);
   auto &transform = registry.get<transform::Transform>(particle);
@@ -160,7 +160,7 @@ inline entt::entity CreateParticle(
   particleComp.acceleration = particleData.acceleration.value_or(0.0f);
 
   if (animationConfig) {
-    auto &anim = factory::emplaceAnimationQueue(globals::registry, particle);
+    auto &anim = factory::emplaceAnimationQueue(globals::getRegistry(), particle);
 
     if (animationConfig->useSpriteNotAnimation) {
       anim.defaultAnimation =
@@ -180,7 +180,7 @@ inline entt::entity CreateParticle(
           init::getAnimationObject(animationConfig->animationName));
       anim.onAnimationQueueCompleteCallback = [particle]() {
         SPDLOG_DEBUG("Removing particle entity");
-        transform::RemoveEntity(&globals::registry, particle);
+        transform::RemoveEntity(&globals::getRegistry(), particle);
       };
       anim.useCallbackOnAnimationQueueComplete = true;
     }
@@ -798,7 +798,7 @@ inline void DrawParticles(entt::registry &registry,
             layerPtr,
             [entity = entity](layer::CmdDrawEntityAnimation *cmd) {
               cmd->e = entity;
-              cmd->registry = &globals::registry;
+              cmd->registry = &globals::getRegistry();
               cmd->x = 0;
               cmd->y = 0;
             },
@@ -996,18 +996,18 @@ inline void DrawParticles(entt::registry &registry,
 
 // destroys every live particle
 inline void WipeAll() {
-  auto view = globals::registry.view<Particle>();
+  auto view = globals::getRegistry().view<Particle>();
   for (auto e : view) {
-    globals::registry.destroy(e);
+    globals::getRegistry().destroy(e);
   }
 }
 
 // destroys only those particles whose ParticleTag.name == tag
 inline void WipeTagged(const std::string &tag) {
-  auto view = globals::registry.view<Particle, ParticleTag>();
+  auto view = globals::getRegistry().view<Particle, ParticleTag>();
   for (auto [e, p, t] : view.each()) {
     if (t.name == tag) {
-      globals::registry.destroy(e);
+      globals::getRegistry().destroy(e);
     }
   }
 }
@@ -1511,7 +1511,7 @@ inline void exposeToLua(sol::state &lua) {
           e.defaultSpace = particle::RenderSpace::Screen;
       }
     }
-    return CreateParticleEmitter(globals::registry, location, e);
+    return CreateParticleEmitter(globals::getRegistry(), location, e);
   };
 
   // clone whatever function is passed in to the main Lua state, so we won't
@@ -1547,7 +1547,7 @@ inline void exposeToLua(sol::state &lua) {
       offset = std::nullopt;
     }
 
-    transform::AssignRole(&globals::registry, emitterEntity,
+    transform::AssignRole(&globals::getRegistry(), emitterEntity,
                           transform::InheritedProperties::Type::RoleInheritor,
                           targetEntity,
                           transform::InheritedProperties::Sync::Strong,
@@ -1684,11 +1684,11 @@ inline void exposeToLua(sol::state &lua) {
     }
 
     // Create the particle
-    auto e = CreateParticle(globals::registry, location, size, p, cfg,
+    auto e = CreateParticle(globals::getRegistry(), location, size, p, cfg,
                             tag.value_or(""));
 
     // Disable shadow if requested
-    auto &gameObject = globals::registry.get<transform::GameObject>(e);
+    auto &gameObject = globals::getRegistry().get<transform::GameObject>(e);
     if (!shadow)
       gameObject.shadowDisplacement.reset();
 

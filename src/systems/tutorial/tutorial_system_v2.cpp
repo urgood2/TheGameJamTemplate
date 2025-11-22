@@ -524,18 +524,18 @@ namespace tutorial_system_v2 {
         }
 
         // get location of entity
-        if (globals::registry.any_of<LocationComponent>(entity) == false) {
+        if (globals::getRegistry().any_of<LocationComponent>(entity) == false) {
             SPDLOG_ERROR("Entity {} does not have a location component. Cannot display arrow.", static_cast<int>(entity));
             return;
         }
 
-        if (globals::registry.any_of<AnimationQueueComponent>(entity) == false) {
+        if (globals::getRegistry().any_of<AnimationQueueComponent>(entity) == false) {
             SPDLOG_ERROR("Entity {} does not have an animation queue component. Cannot display arrow.", static_cast<int>(entity));
             return;
         }
 
-        auto &loc = globals::registry.get<LocationComponent>(entity);
-        auto &animComp = globals::registry.get<AnimationQueueComponent>(entity);
+        auto &loc = globals::getRegistry().get<LocationComponent>(entity);
+        auto &animComp = globals::getRegistry().get<AnimationQueueComponent>(entity);
 
         float renderX = loc.x * 32; //FIXME: this 32 value should probably be offloaded to a json file, global tile size
         float renderY = loc.y * 32;
@@ -562,7 +562,7 @@ namespace tutorial_system_v2 {
             .height = spriteH + ninePatchData.top + ninePatchData.bottom
         };
 
-        auto &nPatchComp = globals::registry.emplace_or_replace<NinePatchComponent>(entity);
+        auto &nPatchComp = globals::getRegistry().emplace_or_replace<NinePatchComponent>(entity);
         nPatchComp.nPatchInfo = nPatchInfo;
         nPatchComp.destRect = destRect;
         nPatchComp.texture = ninePatchData.texture;
@@ -598,7 +598,7 @@ namespace tutorial_system_v2 {
 
     // only works if the entity has a location component
     auto moveCameraToEntity(entt::entity entity) -> void {
-        if (globals::registry.any_of<LocationComponent>(entity) == false) {
+        if (globals::getRegistry().any_of<LocationComponent>(entity) == false) {
             SPDLOG_ERROR("Entity {} does not have a location component. Cannot move camera to entity.", static_cast<int>(entity));
             return;
         }

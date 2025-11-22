@@ -14,6 +14,14 @@
 **Estimated Effort:** 2-3 weeks  
 **Risk Level:** High (touches entire codebase)  
 
+**Progress (ongoing incremental rollout):**
+- EngineContext scaffolded with registry, lua, physics ptr, resource caches, mouse positions, and audio placeholder; `createEngineContext` wired and `globals::g_ctx` bridge in place.
+- Globals bridge updated: context caches mouse positions, physics ptr, and tracks audio device init; scaled mouse helper cached.
+- Callers increasingly prefer context-aware accessors: `getRegistry`, `getInputState`, and cached mouse helpers used in input, physics, LOS, state-tag management, gui indicator, etc.
+- Physics interpolation and Lua bindings now rely on context/registry refs instead of raw globals.
+- Audio placeholder tracks device initialization; more wiring pending when real audio state is available.
+- Build remains green after each incremental batch (warnings unchanged).
+
 #### Detailed Step 1 Task List
 - **Design scope:** Map current globals; decide minimal EngineContext fields (registry, lua, physics, resource maps, current state, mouse position).
 - **Create scaffolding:** Add `engine_context.hpp/cpp` with constructor, factory, move-only semantics, and lightweight defaults; avoid heavy init inside ctor.
@@ -85,7 +93,7 @@
    g_ctx = ctx.get();
    
    // Sync legacy globals from context
-   globals::registry = &ctx->registry;
+   globals::getRegistry() = &ctx->registry;
    globals::lua = &ctx->lua;
    // etc...
    ```

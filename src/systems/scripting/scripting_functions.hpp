@@ -8,10 +8,13 @@
 // * 5. Profit
 
 #include "sol/sol.hpp"
+#include "core/globals.hpp"
 #include "entt/fwd.hpp"
 #include <vector>
 #include <string>
 #include "raylib.h"
+
+struct EngineContext;
 
 namespace scripting {
 
@@ -21,7 +24,7 @@ namespace scripting {
      * ------------------------------------------------------
      */
 
-    extern auto initLuaMasterState(sol::state & stateToInit, std::vector<std::string> filenames) -> void;
+    extern auto initLuaMasterState(sol::state & stateToInit, std::vector<std::string> filenames, EngineContext* ctx = globals::g_ctx) -> void;
     extern auto exposeGlobalsToLua(sol::state &lua) -> void;
 
     /**

@@ -410,7 +410,7 @@ namespace transform
     
     auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> void
     {
-        auto registry = &globals::registry;
+        auto registry = &globals::getRegistry();
 
         // if (registry->any_of<ui::UIConfig>(e) && registry->get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
         // {
@@ -450,7 +450,7 @@ namespace transform
         //FIXME: parent != selfRole.master after the lambda below. why?
         static auto fillParentTransformAndRole = [](entt::entity parent, Transform *&parentTransform, InheritedProperties *&parentRole)
         {
-            auto &registry = globals::registry;
+            auto &registry = globals::getRegistry();
             auto it = globals::getMasterCacheEntityToParentCompMap.find(parent);
 
             if (it != globals::getMasterCacheEntityToParentCompMap.end())
@@ -839,9 +839,9 @@ namespace transform
         }
 
         // Recurse to parent
-        parentTransformStorage = globals::registry.try_get<Transform>(selfRole.master);
-        parentRoleStorage = globals::registry.try_get<InheritedProperties>(selfRole.master);
-        auto parentNode = globals::registry.try_get<GameObject>(selfRole.master);
+        parentTransformStorage = globals::getRegistry().try_get<Transform>(selfRole.master);
+        parentRoleStorage = globals::getRegistry().try_get<InheritedProperties>(selfRole.master);
+        auto parentNode = globals::getRegistry().try_get<GameObject>(selfRole.master);
         
         if (!parentTransformStorage || !parentRoleStorage || !parentNode)
         {
@@ -891,7 +891,7 @@ namespace transform
 
     auto SyncPerfectlyToMaster(entt::entity e, entt::entity parent, Transform &selfTransform, InheritedProperties &selfRole, Transform &parentTransform, InheritedProperties &parentRole) -> void
     {
-        auto registry = &globals::registry;
+        auto registry = &globals::getRegistry();
         
         ZONE_SCOPED("SyncPerfectlyToMaster");
 
@@ -1151,7 +1151,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     
     // // store in full-owning group for efficiency
-    // static auto transformSpringGroup = globals::registry.group<Spring>();
+    // static auto transformSpringGroup = globals::getRegistry().group<Spring>();
     
     // auto GetActualX(decltype(transformSpringGroup) &group, Transform &transform) -> float
     // {
@@ -1172,7 +1172,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         group.each([dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
             UpdateTransform(e, dt, transform, role, node);
-            UpdateTransformMatrices(globals::registry, e);
+            UpdateTransformMatrices(globals::getRegistry(), e);
         });
         
         
@@ -1196,12 +1196,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     {
         ZONE_SCOPED("UpdateTransform");
         
-        // if (globals::registry.any_of<ui::UIBoxComponent>(e))
+        // if (globals::getRegistry().any_of<ui::UIBoxComponent>(e))
         // {
         //     SPDLOG_DEBUG("UpdateTransform called for UIBoxComponent entity {}", static_cast<int>(e));
         // }
         
-        auto registry = &globals::registry;
+        auto registry = &globals::getRegistry();
 
         //FIXME: commenting out for testing.
         if (transform.frameCalculation.lastUpdatedFrame >= main_loop::mainLoop.frame && transform.frameCalculation.alignmentChanged == false)
@@ -1417,19 +1417,19 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     // Call this  method every update loop to keep transform values updated.
     void updateTransformCacheForAllTransforms() {
         
-        auto view = globals::registry.view<Transform>();
+        auto view = globals::getRegistry().view<Transform>();
         
         // owning group of springs
         
         for (auto e : view) {
-            auto &transform = globals::registry.get<Transform>(e);
+            auto &transform = globals::getRegistry().get<Transform>(e);
             
-            auto &springX = globals::registry.get<Spring>(transform.x);
-            auto &springY = globals::registry.get<Spring>(transform.y);
-            auto &springW = globals::registry.get<Spring>(transform.w);
-            auto &springH = globals::registry.get<Spring>(transform.h);
-            auto &springR = globals::registry.get<Spring>(transform.r);
-            auto &springS = globals::registry.get<Spring>(transform.s);
+            auto &springX = globals::getRegistry().get<Spring>(transform.x);
+            auto &springY = globals::getRegistry().get<Spring>(transform.y);
+            auto &springW = globals::getRegistry().get<Spring>(transform.w);
+            auto &springH = globals::getRegistry().get<Spring>(transform.h);
+            auto &springR = globals::getRegistry().get<Spring>(transform.r);
+            auto &springS = globals::getRegistry().get<Spring>(transform.s);
             
             transform.cachedActualX = springX.targetValue;
             transform.cachedActualY = springY.targetValue;
@@ -1449,9 +1449,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             
             // cachedVisualSWithHoverAndDynamicMotionReflected
             float base = transform.cachedVisualS;
-            if (globals::registry.any_of<GameObject>(e))
+            if (globals::getRegistry().any_of<GameObject>(e))
             {
-                auto &gameObj = globals::registry.get<GameObject>(e);
+                auto &gameObj = globals::getRegistry().get<GameObject>(e);
                 if (gameObj.state.isBeingHovered && gameObj.state.enlargeOnHover)
                 {
                     base *= 1.f + COLLISION_BUFFER_ON_HOVER_PERCENTAGE; // increase scale when hovered
@@ -1847,7 +1847,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 if (e == globals::cursor) continue;
 
                 // precise, rotated‐AABB / SAT test in screen‐space
-                if (transform::CheckCollisionWithPoint(&globals::registry, e, mouseScreen))
+                if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, mouseScreen))
                     hits.push_back(e);
             }
         }
@@ -1870,7 +1870,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 // but if you ever put it there, you can skip it:
                 if (e == globals::cursor) continue;
 
-                if (transform::CheckCollisionWithPoint(&globals::registry, e, mouseWorld))
+                if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, mouseWorld))
                     hits.push_back(e);
             }
         }
@@ -1886,7 +1886,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         };
         auto getInfo = [&](entt::entity e) {
             OrderInfo info;
-            auto& r = globals::registry;
+            auto& r = globals::getRegistry();
             if (!r.valid(e)) return info;
 
             info.isScreen = r.any_of<collision::ScreenSpaceCollisionMarker>(e)
@@ -2021,12 +2021,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
         // Sort by layer order (topmost last)
         std::sort(results.begin(), results.end(), [](entt::entity a, entt::entity b) {
-            bool hasA = globals::registry.any_of<layer::LayerOrderComponent>(a);
-            bool hasB = globals::registry.any_of<layer::LayerOrderComponent>(b);
+            bool hasA = globals::getRegistry().any_of<layer::LayerOrderComponent>(a);
+            bool hasB = globals::getRegistry().any_of<layer::LayerOrderComponent>(b);
     
             if (hasA && hasB) {
-                return globals::registry.get<layer::LayerOrderComponent>(a).zIndex <
-                       globals::registry.get<layer::LayerOrderComponent>(b).zIndex;
+                return globals::getRegistry().get<layer::LayerOrderComponent>(a).zIndex <
+                       globals::getRegistry().get<layer::LayerOrderComponent>(b).zIndex;
             }
             return hasA < hasB; // Entities without LayerOrderComponent go first
         });
@@ -2037,7 +2037,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
             if (e == globals::cursor) continue;
     
-            if (transform::CheckCollisionWithPoint(&globals::registry, e, point)) {
+            if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, point)) {
                 return e; // First topmost entity that matches
             }
         }
@@ -2578,7 +2578,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 transform::RenderImmediateCallback cb;
                 cb.fn = std::move(fn);
                 cb.disableSpriteRendering = disableSprite;
-                globals::registry.emplace_or_replace<transform::RenderImmediateCallback>(e, std::move(cb));
+                globals::getRegistry().emplace_or_replace<transform::RenderImmediateCallback>(e, std::move(cb));
             }));
 
         // 2c) Alignment struct
@@ -2939,7 +2939,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     // --- get_space ---
     transform_tbl.set_function("get_space", [](entt::entity e) {
-        return globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e)
+        return globals::getRegistry().any_of<collision::ScreenSpaceCollisionMarker>(e)
             ? std::string("screen")
             : std::string("world");
     });
@@ -2955,7 +2955,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     // --- is_screen_space ---
     transform_tbl.set_function("is_screen_space", [](entt::entity e) {
-        return globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+        return globals::getRegistry().any_of<collision::ScreenSpaceCollisionMarker>(e);
     });
     rec.record_free_function(
         {"transform"},
@@ -2969,10 +2969,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     // --- set_space ---
     transform_tbl.set_function("set_space", [](entt::entity e, const std::string& space, sol::optional<bool> /*convert*/) {
         if (space == "screen") {
-            globals::registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(e);
+            globals::getRegistry().emplace_or_replace<collision::ScreenSpaceCollisionMarker>(e);
         } else if (space == "world") {
-            if (globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e))
-                globals::registry.remove<collision::ScreenSpaceCollisionMarker>(e);
+            if (globals::getRegistry().any_of<collision::ScreenSpaceCollisionMarker>(e))
+                globals::getRegistry().remove<collision::ScreenSpaceCollisionMarker>(e);
         }
         // `convert` is ignored here — no coordinate conversion in this minimal version
     });
@@ -2998,7 +2998,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
     lua.set_function("create_transform_entity", 
         []() {
-            return transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0.0f, 0.0f, 1.0f, 1.0f);
+            return transform::CreateOrEmplace(&globals::getRegistry(), globals::gameWorldContainerEntity, 0.0f, 0.0f, 1.0f, 1.0f);
         }
     );
     rec.record_free_function({""}, {"create_transform_entity", "---@return Entity", "Creates a new transform entity with default parameters.", true, false});
@@ -3012,12 +3012,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
     transform_tbl.set_function("InjectDynamicMotion", 
         [](entt::entity e, float amount, float rotationAmount) {
-            transform::InjectDynamicMotion(&globals::registry, e, amount, rotationAmount);
+            transform::InjectDynamicMotion(&globals::getRegistry(), e, amount, rotationAmount);
         }
     );
     transform_tbl.set_function("InjectDynamicMotionDefault", 
         [](entt::entity e) {
-            transform::InjectDynamicMotion(&globals::registry, e, 1.0f, 0.0f);
+            transform::InjectDynamicMotion(&globals::getRegistry(), e, 1.0f, 0.0f);
         }
     );
     rec.record_free_function({"transform"}, {"InjectDynamicMotion", "---@param e Entity\n---@param amount number\n---@param rotationAmount number\n---@return nil", "Injects dynamic motion into a transform's springs.", true, false});

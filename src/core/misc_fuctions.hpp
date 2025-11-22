@@ -14,9 +14,9 @@ namespace game {
     
     inline void centerInventoryItemOnTargetUI(entt::entity itemEntity, entt::entity targetUIElement)
     {
-        auto &itemTransform = globals::registry.get<transform::Transform>(itemEntity);
-        auto &itemRole = globals::registry.get<transform::InheritedProperties>(itemEntity);
-        auto &targetTransform = globals::registry.get<transform::Transform>(targetUIElement);
+        auto &itemTransform = globals::getRegistry().get<transform::Transform>(itemEntity);
+        auto &itemRole = globals::getRegistry().get<transform::InheritedProperties>(itemEntity);
+        auto &targetTransform = globals::getRegistry().get<transform::Transform>(targetUIElement);
         
         float targetWidth = targetTransform.getActualW();
         float targetHeight = targetTransform.getActualH();

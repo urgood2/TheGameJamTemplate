@@ -1306,29 +1306,29 @@ namespace ui
 
     void box::placeNonContainerUIE(transform::InheritedProperties &role, ui::LocalTransform &runningTransform, entt::entity uiElement, ui::UITypeEnum parentType, ui::UIState &uiState, ui::UIConfig &uiConfig)
     {
-        auto object = globals::registry.get<UIConfig>(uiElement).object.value_or(entt::null);
+        auto object = globals::getRegistry().get<UIConfig>(uiElement).object.value_or(entt::null);
         // REVIEW: why is the ui element checked? shouldn't the object be checked?
-        //  if (globals::registry.any_of<TextSystem::Text>(uiElement))
+        //  if (globals::getRegistry().any_of<TextSystem::Text>(uiElement))
         //  {
         //      // debug
         //      SPDLOG_DEBUG("Placing text entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
         //     // also apply to text object TODO: apply later to other object ui entities
-        //     auto object = globals::registry.get<UIConfig>(uiElement).object.value();
-        //     auto &textRole = globals::registry.get<transform::InheritedProperties>(object);
-        //     auto &textTransform = globals::registry.get<transform::Transform>(object);
+        //     auto object = globals::getRegistry().get<UIConfig>(uiElement).object.value();
+        //     auto &textRole = globals::getRegistry().get<transform::InheritedProperties>(object);
+        //     auto &textTransform = globals::getRegistry().get<transform::Transform>(object);
 
         //     textRole.offset = {runningTransform.x, runningTransform.y};
         // }
-        // else if (object != entt::null && globals::registry.any_of<AnimationQueueComponent>(object))
+        // else if (object != entt::null && globals::getRegistry().any_of<AnimationQueueComponent>(object))
         // {
         //     // debug
         //     SPDLOG_DEBUG("Placing animated entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
         //     // also apply to animated object TODO: apply later to other object ui entities
-        //     auto object = globals::registry.get<UIConfig>(uiElement).object.value();
-        //     auto &animationRole = globals::registry.get<transform::InheritedProperties>(object);
-        //     auto &animationTransform = globals::registry.get<transform::Transform>(object);
+        //     auto object = globals::getRegistry().get<UIConfig>(uiElement).object.value();
+        //     auto &animationRole = globals::getRegistry().get<transform::InheritedProperties>(object);
+        //     auto &animationTransform = globals::getRegistry().get<transform::Transform>(object);
 
         //     animationRole.offset = {runningTransform.x, runningTransform.y};
         // }
@@ -1714,9 +1714,9 @@ namespace ui
             {
                 auto object = uiConfig.object.value();
                 // text, animated, or inventory grid object.
-                // if (globals::registry.any_of<TextSystem::Text>(object) || globals::registry.any_of<AnimationQueueComponent>(object) || globals::registry.any_of<InventoryGrid>(object))
+                // if (globals::getRegistry().any_of<TextSystem::Text>(object) || globals::getRegistry().any_of<AnimationQueueComponent>(object) || globals::getRegistry().any_of<InventoryGrid>(object))
                 // {
-                auto &objectTransform = globals::registry.get<transform::Transform>(object);
+                auto &objectTransform = globals::getRegistry().get<transform::Transform>(object);
                 calcCurrentNodeTransform.w = objectTransform.getActualW();
                 calcCurrentNodeTransform.h = objectTransform.getActualH();
                 // }
@@ -2443,7 +2443,7 @@ namespace ui
             // It contains the five components we need to draw any UI element.
             uiGroupInitialized = true;
 
-            globalUIGroup = globals::registry.group<
+            globalUIGroup = globals::getRegistry().group<
                 UIElementComponent,
                 UIConfig,
                 UIState,
@@ -3018,7 +3018,7 @@ namespace ui
         AssertThat(uiBox, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
 
-        auto layerOrderComp = globals::registry.try_get<layer::LayerOrderComponent>(self);
+        auto layerOrderComp = globals::getRegistry().try_get<layer::LayerOrderComponent>(self);
 
         std::string result = fmt::format(" \n| UIBox | - ID: {} [entt-{}] w/h: {}/{} UIElement children: {} | LOC({},{}) OFF({},{}) OFF_ALN({},{}) {} LayerOrder: {}",
                                          uiConfig->id.value_or("N/A"),

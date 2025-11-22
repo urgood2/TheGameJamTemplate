@@ -177,7 +177,7 @@ namespace scripting
             // Global function to get ScriptComponent from entity ID
             lua["get_script_component"] = [&](uint32_t entity_id) -> ScriptComponent& {
                 entt::entity ent = static_cast<entt::entity>(entity_id);
-                return globals::registry.get<ScriptComponent>(ent);
+                return globals::getRegistry().get<ScriptComponent>(ent);
             };
             
             rec.add_type("entt");
@@ -395,8 +395,8 @@ namespace scripting
             registry.on_destroy<ScriptComponent>().connect<&release_script>();
             
             // 2. Create a global variable in Lua named "registry" and
-            //    point it directly to your C++ globals::registry instance.
-            lua["registry"] = std::ref(globals::registry);
+            //    point it directly to your C++ globals::getRegistry() instance.
+            lua["registry"] = std::ref(globals::getRegistry());
         
             /*
             When Lua does:

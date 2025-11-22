@@ -14,7 +14,7 @@ namespace transform
 {
     extern inline auto InitializeSystem() -> void {
         // Initialize the transform system here if needed
-        transform::registerDestroyListeners(globals::registry);
+        transform::registerDestroyListeners(globals::getRegistry());
     }
 
     extern std::unordered_map<TransformMethod, std::any> transformFunctionsDefault, hooksToCallBeforeDefault, hooksToCallAfterDefault;

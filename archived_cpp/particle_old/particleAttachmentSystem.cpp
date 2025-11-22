@@ -24,7 +24,7 @@ namespace particle_attachment_system {
      */
     //FIXME: needs to be updated to fit current map system.
     auto update(float dt) -> void {
-        auto view = globals::registry.view<component::ParticleAttachmentComponent>();
+        auto view = globals::getRegistry().view<component::ParticleAttachmentComponent>();
         for (auto entity : view) {
             auto &comp = view.get<component::ParticleAttachmentComponent>(entity);
 
@@ -32,7 +32,7 @@ namespace particle_attachment_system {
             
             // is the lifetime over and should it be removed?
             if (comp.removeOnLifetimeEnd && particle_system::getEmitterData(comp.emitterIndex).lifetime <= 0) {
-                removeEmitter(globals::registry, entity);
+                removeEmitter(globals::getRegistry(), entity);
                 // spdlog::debug("Removing emitter from entity {} on lifetime end", static_cast<int>(entity));
                 continue;
             }
@@ -75,12 +75,12 @@ namespace particle_attachment_system {
      */
     auto resetEmitter(entt::entity entity) -> void {
         
-        if (!globals::registry.any_of<component::ParticleAttachmentComponent>(entity)) {
+        if (!globals::getRegistry().any_of<component::ParticleAttachmentComponent>(entity)) {
             spdlog::error("Entity does not have a particle attachment component");
             return;
         }
 
-        auto &comp = globals::registry.get<component::ParticleAttachmentComponent>(entity);
+        auto &comp = globals::getRegistry().get<component::ParticleAttachmentComponent>(entity);
 
         // spdlog::debug("Resetting emitter data for entity {}", static_cast<int>(entity));
 
@@ -94,12 +94,12 @@ namespace particle_attachment_system {
      * @param entity The entity whose particle emitter lifetime should be reset.
      */
     auto resetEmitterLifetime(entt::entity entity) -> void {
-        if (!globals::registry.any_of<component::ParticleAttachmentComponent>(entity)) {
+        if (!globals::getRegistry().any_of<component::ParticleAttachmentComponent>(entity)) {
             spdlog::error("Entity does not have a particle attachment component");
             return;
         }
 
-        auto &comp = globals::registry.get<component::ParticleAttachmentComponent>(entity);
+        auto &comp = globals::getRegistry().get<component::ParticleAttachmentComponent>(entity);
 
         spdlog::debug("Resetting emitter lifetime for entity {} at index {}", static_cast<int>(entity), comp.emitterIndex);
         
@@ -108,12 +108,12 @@ namespace particle_attachment_system {
 
     auto resetEmitterEmissionRate(entt::entity entity) -> void {
         #ifndef __EMSCRIPTEN__
-        if (!globals::registry.any_of<component::ParticleAttachmentComponent>(entity)) {
+        if (!globals::getRegistry().any_of<component::ParticleAttachmentComponent>(entity)) {
             spdlog::error("Entity does not have a particle attachment component");
             return;
         }
 
-        auto &comp = globals::registry.get<component::ParticleAttachmentComponent>(entity);
+        auto &comp = globals::getRegistry().get<component::ParticleAttachmentComponent>(entity);
 
         // spdlog::debug("Resetting emitter emission rate for entity {}", static_cast<int>(entity));
 

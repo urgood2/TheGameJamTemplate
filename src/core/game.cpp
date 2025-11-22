@@ -503,11 +503,11 @@ namespace game
         
         timer::TimerSystem::clear_all_timers();
         
-        globals::registry.view<transform::Transform>().each([](auto entity, auto &t){
-            transform::RemoveEntity(&globals::registry, entity);
+        globals::getRegistry().view<transform::Transform>().each([](auto entity, auto &t){
+            transform::RemoveEntity(&globals::getRegistry(), entity);
         });
         
-        globals::registry.clear();
+        globals::getRegistry().clear();
         
         // clear registry, timers, physics worlds, layers
         globals::physicsManager->clearAllWorlds();
@@ -528,7 +528,7 @@ namespace game
         
         sound_system::ResetSoundSystem();
     
-        input::Init(globals::getInputState(), globals::registry, globals::g_ctx);
+        input::Init(globals::getInputState(), globals::getRegistry(), globals::g_ctx);
         game::init();
         
     }
@@ -570,7 +570,7 @@ namespace game
         );
 
         // Populate the Quadtree Per Frame
-        globals::registry.view<transform::Transform, transform::GameObject, entity_gamestate_management::StateTag>(entt::exclude<collision::ScreenSpaceCollisionMarker, entity_gamestate_management::InactiveTag>)
+        globals::getRegistry().view<transform::Transform, transform::GameObject, entity_gamestate_management::StateTag>(entt::exclude<collision::ScreenSpaceCollisionMarker, entity_gamestate_management::InactiveTag>)
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag) {
                 if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
@@ -587,11 +587,11 @@ namespace game
         // Deduplicate & normalize the pairs
         auto pairs = dedupePairs(raw);
 
-        auto collisionFilterView = globals::registry.view<collision::CollisionFilter>();
+        auto collisionFilterView = globals::getRegistry().view<collision::CollisionFilter>();
 
         // Single pass: notify each entity exactly once per partner
         for (auto [a,b] : pairs) {
-            if (!globals::registry.valid(a) || !globals::registry.valid(b))
+            if (!globals::getRegistry().valid(a) || !globals::getRegistry().valid(b))
                 continue;
             
             auto &fA = collisionFilterView.get<collision::CollisionFilter>(a);
@@ -608,16 +608,16 @@ namespace game
             //     fA.mask, fA.category, fB.mask, fB.category);
 
 
-            // if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+            // if (collision::CheckCollisionBetweenTransforms(&globals::getRegistry(), a, b) == false) 
             //     continue;
 
             // A → B
-            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+            // if (auto *sc = globals::getRegistry().try_get<scripting::ScriptComponent>(a)) {
             //     if (sc->hooks.on_collision.valid())
             //         sc->hooks.on_collision(sc->self, b);
             // }
             // // B → A
-            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+            // if (auto *sc = globals::getRegistry().try_get<scripting::ScriptComponent>(b)) {
             //     if (sc->hooks.on_collision.valid())
             //         sc->hooks.on_collision(sc->self, a);
             // }
@@ -641,9 +641,9 @@ namespace game
         );
         
         // check how many have InactiveTag
-        // SPDLOG_DEBUG("Inactive tag in {} entities", globals::registry.view<entity_gamestate_management::InactiveTag>().size());
+        // SPDLOG_DEBUG("Inactive tag in {} entities", globals::getRegistry().view<entity_gamestate_management::InactiveTag>().size());
                 
-        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag >(entt::exclude<entity_gamestate_management::InactiveTag>)
+        globals::getRegistry().view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag >(entt::exclude<entity_gamestate_management::InactiveTag>)
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag){
                 if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
@@ -654,12 +654,12 @@ namespace game
                 // If it belongs under a pane, test visibility against pane viewport,
                 // accounting for scroll offset
                 bool include = true;
-                auto paneRef = globals::registry.try_get<ui::UIPaneParentRef>(e);
+                auto paneRef = globals::getRegistry().try_get<ui::UIPaneParentRef>(e);
                 bool isInScrollPane = paneRef != nullptr;
                 if (paneRef) {
-                    if (paneRef->pane != entt::null && globals::registry.valid(paneRef->pane)) {
-                        const auto &scr = globals::registry.get<ui::UIScrollComponent>(paneRef->pane);
-                        Rectangle paneR = paneViewport(globals::registry, paneRef->pane);
+                    if (paneRef->pane != entt::null && globals::getRegistry().valid(paneRef->pane)) {
+                        const auto &scr = globals::getRegistry().get<ui::UIScrollComponent>(paneRef->pane);
+                        Rectangle paneR = paneViewport(globals::getRegistry(), paneRef->pane);
 
                         // shift the element by negative scroll to match render position
                         Rectangle eltR{ box.left,
@@ -685,7 +685,7 @@ namespace game
 
         // Single pass: notify each entity exactly once per partner
         for (auto [a,b] : pairsUI) {
-            if (!globals::registry.valid(a) || !globals::registry.valid(b))
+            if (!globals::getRegistry().valid(a) || !globals::getRegistry().valid(b))
                 continue;
             
             auto &fA = collisionFilterView.get<collision::CollisionFilter>(a);
@@ -703,16 +703,16 @@ namespace game
 
 
                 
-            // if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+            // if (collision::CheckCollisionBetweenTransforms(&globals::getRegistry(), a, b) == false) 
             //     continue;
 
             // // A → B
-            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+            // if (auto *sc = globals::getRegistry().try_get<scripting::ScriptComponent>(a)) {
             //     if (sc->hooks.on_collision.valid())
             //         sc->hooks.on_collision(sc->self, b);
             // }
             // // B → A
-            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+            // if (auto *sc = globals::getRegistry().try_get<scripting::ScriptComponent>(b)) {
             //     if (sc->hooks.on_collision.valid())
             //         sc->hooks.on_collision(sc->self, a);
             // }
@@ -746,8 +746,8 @@ namespace game
         
         // // sort results by layer order
         // std::sort(results.begin(), results.end(), [](entt::entity a, entt::entity b) {
-        //     if (globals::registry.any_of<layer::LayerOrderComponent>(a) && globals::registry.any_of<layer::LayerOrderComponent>(b)) {
-        //         return globals::registry.get<layer::LayerOrderComponent>(a).zIndex < globals::registry.get<layer::LayerOrderComponent>(b).zIndex;
+        //     if (globals::getRegistry().any_of<layer::LayerOrderComponent>(a) && globals::getRegistry().any_of<layer::LayerOrderComponent>(b)) {
+        //         return globals::getRegistry().get<layer::LayerOrderComponent>(a).zIndex < globals::getRegistry().get<layer::LayerOrderComponent>(b).zIndex;
         //     }
         //     return false; // if either entity does not have LayerOrderComponent, do not sort
         // });
@@ -762,7 +762,7 @@ namespace game
         //         continue;
         //     }
             
-        //     if (!transform::CheckCollisionWithPoint(&globals::registry, e, point)) return;
+        //     if (!transform::CheckCollisionWithPoint(&globals::getRegistry(), e, point)) return;
             
         //     // Entity e intersects with the query area
         //     SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
@@ -1004,9 +1004,9 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         //     .addChild(textTestDef)
         //     .build();
             
-        // auto testTextBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
+        // auto testTextBox = ui::box::Initialize(globals::getRegistry(), {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
         
-        // auto rootUiTextBoxEntity = globals::registry.get<ui::UIBoxComponent>(testTextBox).uiRoot;
+        // auto rootUiTextBoxEntity = globals::getRegistry().get<ui::UIBoxComponent>(testTextBox).uiRoot;
         
         
         // static_ui_text_system::TextUIHandle handle;
@@ -1021,11 +1021,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // };
 
         
-        // buildIdMapFromRoot(globals::registry, rootUiTextBoxEntity.value(), handle, traverseChildren);
+        // buildIdMapFromRoot(globals::getRegistry(), rootUiTextBoxEntity.value(), handle, traverseChildren);
         
         // // Now you can O(1) fetch & mutate:
         // if (auto e = getTextNode(handle, "stringID"); e != entt::null) {
-        //     auto &cfg = globals::registry.get<ui::UIConfig>(e);
+        //     auto &cfg = globals::getRegistry().get<ui::UIConfig>(e);
         //     cfg.color = util::getColor("LIME");
         //     // mark dirty if your layout/text system needs it
         // }
@@ -1037,7 +1037,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // // globals::camera.rotation = 0;
         // // globals::camera.offset = {globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f};
         
-        camera_manager::Create("world_camera", globals::registry);
+        camera_manager::Create("world_camera", globals::getRegistry());
         auto worldCamera = camera_manager::Get("world_camera");
         worldCamera->SetActualOffset({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
         worldCamera->SetActualTarget({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
@@ -1083,12 +1083,12 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // });
 
 
-        transform::registerDestroyListeners(globals::registry);
+        transform::registerDestroyListeners(globals::getRegistry());
 
         SetUpShaderUniforms();
         
         // init physics
-        physicsWorld = physics::InitPhysicsWorld(&globals::registry, 64.0f, 0.0f, 0.f);
+        physicsWorld = physics::InitPhysicsWorld(&globals::getRegistry(), 64.0f, 0.0f, 0.f);
         
         physicsWorld->AddCollisionTag(physics::DEFAULT_COLLISION_TAG); // default tag
         physicsWorld->AddCollisionTag("player");
@@ -1101,10 +1101,10 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         globals::physicsManager->enableStep("world", true);
         
         // // make test transform entity
-        // entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 100, 100, 100, 100);
-        // globals::registry.emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
+        // entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::getRegistry(), globals::gameWorldContainerEntity, 100, 100, 100, 100);
+        // globals::getRegistry().emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
         
-        // auto &gameObjectTest = globals::registry.get<transform::GameObject>(testTransformEntity);
+        // auto &gameObjectTest = globals::getRegistry().get<transform::GameObject>(testTransformEntity);
         // gameObjectTest.state.collisionEnabled = true;
         // gameObjectTest.state.dragEnabled = true;
         // gameObjectTest.state.hoverEnabled = true;
@@ -1112,7 +1112,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // physics::PhysicsCreateInfo info{};
         // info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
         
-        // physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
+        // physics::CreatePhysicsForTransform(globals::getRegistry(), *globals::physicsManager, testTransformEntity, info);
         
         cpSpaceSetDamping(physicsWorld->space,0.1f); // global damping
         
@@ -1121,7 +1121,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // second entity
         
-        // entt::entity testEntity = globals::registry.create();
+        // entt::entity testEntity = globals::getRegistry().create();
         
         // physicsWorld->AddCollider(testEntity, "player" /* default tag */, "rectangle", 50, 50, -1, -1, false);
         
@@ -1139,7 +1139,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // Apply collision filter via your tag system
         // auto rec = globals::physicsManager->get("world");
         // // rec->w->AddCollisionTag("WORLD"); // default tag
-        // auto shape = globals::registry.get<physics::ColliderComponent>(testEntity).shape;
+        // auto shape = globals::getRegistry().get<physics::ColliderComponent>(testEntity).shape;
         // rec->w->ApplyCollisionFilter(shape.get(), "WORLD" ); // default tag for testing
         
         // make world collide with world
@@ -1289,24 +1289,24 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         globals::g_springCache.clear();
         
         // tag all objects attached to UI so we don't have to check later
-        // globals::registry.clear<ui::ObjectAttachedToUITag>();
-        // globals::registry.view<TextSystem::Text>()
+        // globals::getRegistry().clear<ui::ObjectAttachedToUITag>();
+        // globals::getRegistry().view<TextSystem::Text>()
         //     .each([](entt::entity e, TextSystem::Text &text) {
         //         // attach tag
-        //         if (globals::registry.valid(e) == false) return; // skip invalid entities
-        //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+        //         if (globals::getRegistry().valid(e) == false) return; // skip invalid entities
+        //         globals::getRegistry().emplace_or_replace<ui::ObjectAttachedToUITag>(e);
         //     });
-        // globals::registry.view<AnimationQueueComponent>()
+        // globals::getRegistry().view<AnimationQueueComponent>()
         //     .each([](entt::entity e, AnimationQueueComponent &anim) {
-        //         if (globals::registry.valid(e) == false) return; // skip invalid entities
+        //         if (globals::getRegistry().valid(e) == false) return; // skip invalid entities
         //         // attach tag
-        //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+        //         globals::getRegistry().emplace_or_replace<ui::ObjectAttachedToUITag>(e);
         //     });
-        // globals::registry.view<ui::InventoryGrid>()
+        // globals::getRegistry().view<ui::InventoryGrid>()
         //     .each([](entt::entity e, ui::InventoryGrid &inv) {
         //         // attach tag
-        //         if (globals::registry.valid(e) == false) return; // skip invalid entities
-        //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+        //         if (globals::getRegistry().valid(e) == false) return; // skip invalid entities
+        //         globals::getRegistry().emplace_or_replace<ui::ObjectAttachedToUITag>(e);
         //     });
         
         ZONE_SCOPED("game::update"); // custom label
@@ -1321,10 +1321,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
         // TODO: anything that ha s
 
-        // auto viewUIBox = globals::registry.view<ui::UIBoxComponent>();
+        // auto viewUIBox = globals::getRegistry().view<ui::UIBoxComponent>();
         // for (auto e : viewUIBox)
         // {
-        //     auto result = ui::box::DebugPrint(globals::registry, e);
+        //     auto result = ui::box::DebugPrint(globals::getRegistry(), e);
         //     SPDLOG_DEBUG("UIBox {}: {}", (int)e, result);
         // }
             
@@ -1332,27 +1332,27 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             ZONE_SCOPED("z layers, particles, shaders update");
             layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
 
-            particle::UpdateParticles(globals::registry, delta);
+            particle::UpdateParticles(globals::getRegistry(), delta);
             shaders::updateAllShaderUniforms();
         }
         
         {
             ZONE_SCOPED("TextSystem::Update");
-            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
+            auto textView = globals::getRegistry().view<TextSystem::Text, entity_gamestate_management::StateTag>();
             for (auto e : textView)
             {
                 // check if the entity is active
-                if (!entity_gamestate_management::active_states_instance().is_active(globals::registry.get<entity_gamestate_management::StateTag>(e)))
+                if (!entity_gamestate_management::active_states_instance().is_active(globals::getRegistry().get<entity_gamestate_management::StateTag>(e)))
                     continue; // skip inactive entities
                 TextSystem::Functions::updateText(e, delta);
             }
         }
 
         // update ui components
-        // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
+        // auto viewUI = globals::getRegistry().view<ui::UIBoxComponent>();
         // for (auto e : viewUI)
         // {
-        //     ui::box::Move(globals::registry, e, f);
+        //     ui::box::Move(globals::getRegistry(), e, f);
         // }
         {
             ZONE_SCOPED("Collison quadtree populate Update");
@@ -1372,25 +1372,25 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             //                                  transform::Transform>();
 
             ZONE_SCOPED("UIElement Update");
-            // static auto uiElementGroup = globals::registry.group
+            // static auto uiElementGroup = globals::getRegistry().group
 
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
                 // check if the entity is active
-                if (!entity_gamestate_management::active_states_instance().is_active(globals::registry.get<entity_gamestate_management::StateTag>(e)))
+                if (!entity_gamestate_management::active_states_instance().is_active(globals::getRegistry().get<entity_gamestate_management::StateTag>(e)))
                     return ;; // skip inactive entities
                 // update the UI element
-                ui::element::Update(globals::registry, e, delta, &uiConfig, &transform, &uiElement, &node);
+                ui::element::Update(globals::getRegistry(), e, delta, &uiConfig, &transform, &uiElement, &node);
             });
-            // auto viewUIElement = globals::registry.view<ui::UIElementComponent>();
+            // auto viewUIElement = globals::getRegistry().view<ui::UIElementComponent>();
             // for (auto e : viewUIElement)
             // {
-            //     ui::element::Update(globals::registry, e, delta);
+            //     ui::element::Update(globals::getRegistry(), e, delta);
             // }
         }
         
         
 
-        // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+        // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::getRegistry(), uiBox, 0));
         {
             ZONE_SCOPED("lua gc step");
             // lua garbage collection
@@ -1827,13 +1827,13 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         {
             ZONE_SCOPED("game::draw-UIElement Draw");
             // debug draw ui elements (draw ui boxes, will auto-propogate to children)
-            // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
+            // auto viewUI = globals::getRegistry().view<ui::UIBoxComponent>();
             // for (auto e : viewUI)
             // {
-            //     ui::box::Draw(ui_layer, globals::registry, e);
+            //     ui::box::Draw(ui_layer, globals::getRegistry(), e);
             // }
-            // ui::box::drawAllBoxes(globals::registry, sprites);
-            ui::box::drawAllBoxesShaderEnabled(globals::registry, sprites);
+            // ui::box::drawAllBoxes(globals::getRegistry(), sprites);
+            ui::box::drawAllBoxesShaderEnabled(globals::getRegistry(), sprites);
 
             // for each ui box, print debug info
             
@@ -1845,7 +1845,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         // dynamic text
         {
             ZONE_SCOPED("Dynamic Text Draw");
-            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
+            auto textView = globals::getRegistry().view<TextSystem::Text, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : textView)
             {
                 // check if the entity is active
@@ -1857,14 +1857,14 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         
         // do transform debug drawing
         
-        auto view = globals::registry.view<transform::Transform, entity_gamestate_management::StateTag>();
+        auto view = globals::getRegistry().view<transform::Transform, entity_gamestate_management::StateTag>();
         if (globals::drawDebugInfo)
             for (auto e : view)
             {
                 // check if the entity is active
                 if (!entity_gamestate_management::active_states_instance().is_active(view.get<entity_gamestate_management::StateTag>(e)))
                     continue; // skip inactive entities
-                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, sprites);
+                transform::DrawBoundingBoxAndDebugInfo(&globals::getRegistry(), e, sprites);
             }
             
             
@@ -1872,26 +1872,26 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
         {
             ZONE_SCOPED("AnimatedSprite Draw");
-            auto spriteView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
+            auto spriteView = globals::getRegistry().view<AnimationQueueComponent, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : spriteView)
             {
                 // check if the entity is active
                 if (!entity_gamestate_management::active_states_instance().is_active(spriteView.get<entity_gamestate_management::StateTag>(e)))
                     continue; // skip inactive entities
-                auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
+                auto *layerOrder = globals::getRegistry().try_get<layer::LayerOrderComponent>(e);
                 auto zIndex = layerOrder ? layerOrder->zIndex : 0;
-                bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+                bool isScreenSpace = globals::getRegistry().any_of<collision::ScreenSpaceCollisionMarker>(e);
                 
                 if (!isScreenSpace)
                 {
                     // SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
                 }
                 
-                if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
+                if (globals::getRegistry().any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {
                     auto cmd = layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
                         cmd->e = e;
-                        cmd->registry = &globals::registry;
+                        cmd->registry = &globals::getRegistry();
                     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                     
                     // store the unique ID of the last draw command for this entity
@@ -1904,7 +1904,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
                 {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(sprites, [e](auto* cmd) {
                         cmd->e = e;
-                        cmd->registry = &globals::registry;
+                        cmd->registry = &globals::getRegistry();
                     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                     
                     // store the unique ID of the last draw command for this entity
@@ -1916,7 +1916,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         
         {
             // Entities that DO NOT have AnimationQueueComponent, but DO have the local render callback
-            auto cbView = globals::registry.view<transform::RenderLocalCallback, entity_gamestate_management::StateTag>(
+            auto cbView = globals::getRegistry().view<transform::RenderLocalCallback, entity_gamestate_management::StateTag>(
                 entt::exclude<ui::ObjectAttachedToUITag, AnimationQueueComponent>);
 
             for (auto e : cbView) {
@@ -1924,17 +1924,17 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
                         .is_active(cbView.get<entity_gamestate_management::StateTag>(e)))
                     continue;
 
-                auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
+                auto *layerOrder = globals::getRegistry().try_get<layer::LayerOrderComponent>(e);
                 const int zIndex = layerOrder ? layerOrder->zIndex : 0;
-                const bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+                const bool isScreenSpace = globals::getRegistry().any_of<collision::ScreenSpaceCollisionMarker>(e);
 
-                if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e)) {
+                if (globals::getRegistry().any_of<shader_pipeline::ShaderPipelineComponent>(e)) {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(
-                        sprites, [e](auto* cmd){ cmd->e = e; cmd->registry = &globals::registry; },
+                        sprites, [e](auto* cmd){ cmd->e = e; cmd->registry = &globals::getRegistry(); },
                         zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                 } else {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(
-                        sprites, [e](auto* cmd){ cmd->e = e; cmd->registry = &globals::registry; },
+                        sprites, [e](auto* cmd){ cmd->e = e; cmd->registry = &globals::getRegistry(); },
                         zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                 }
             }
@@ -1945,7 +1945,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         
         {
             ZONE_SCOPED("Particle Draw");
-            particle::DrawParticles(globals::registry, sprites);
+            particle::DrawParticles(globals::getRegistry(), sprites);
         }
         
         {
@@ -2205,7 +2205,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         ClearLayers();
         
         // destroy all entities
-        globals::registry.clear(); // clear all entities in the registry
+        globals::getRegistry().clear(); // clear all entities in the registry
     }
 
 }

@@ -836,7 +836,7 @@ namespace transform
 
         Transform()
         {
-            this->registry = &globals::registry;
+            this->registry = &globals::getRegistry();
 
             x = registry->create();
             y = registry->create();
@@ -879,10 +879,10 @@ namespace transform
         }
         
         // 1) If there’s no collider, nothing else to do.
-        if (!globals::registry.any_of<physics::ColliderComponent>(entity)) return;
+        if (!globals::getRegistry().any_of<physics::ColliderComponent>(entity)) return;
 
         // 2) If we have a world ref and a live world, detach via that world (preferred).
-        if (auto* ref = globals::registry.try_get<PhysicsWorldRef>(entity)) {
+        if (auto* ref = globals::getRegistry().try_get<PhysicsWorldRef>(entity)) {
             if (globals::physicsManager) {
                 if (auto* wr = globals::physicsManager->get(ref->name)) {
                     // Preferred: use the world’s own method (it knows its cpSpace)
@@ -893,7 +893,7 @@ namespace transform
         }
 
         // 3) Fallback if no world ref or world not found.
-        physics::PhysicsWorld::DetachPhysicsComponentFallback(globals::registry, entity);
+        physics::PhysicsWorld::DetachPhysicsComponentFallback(globals::getRegistry(), entity);
 
     }
 

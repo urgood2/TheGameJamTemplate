@@ -516,11 +516,11 @@ namespace TextSystem
         // automatically runs parseText() on the given text configuration and returns a transform-enabled entity
         auto createTextEntity(const Text &text, float x, float y, sol::optional<sol::table> waitersOpt) -> entt::entity
         {
-            auto entity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 1, 1);
-            auto &transform = globals::registry.get<transform::Transform>(entity);
-            auto &gameObject = globals::registry.get<transform::GameObject>(entity);
-            auto &textComp = globals::registry.emplace<Text>(entity, text);
-            auto &layerOrder = globals::registry.emplace<layer::LayerOrderComponent>(entity);
+            auto entity = transform::CreateOrEmplace(&globals::getRegistry(), globals::gameWorldContainerEntity, x, y, 1, 1);
+            auto &transform = globals::getRegistry().get<transform::Transform>(entity);
+            auto &gameObject = globals::getRegistry().get<transform::GameObject>(entity);
+            auto &textComp = globals::getRegistry().emplace<Text>(entity, text);
+            auto &layerOrder = globals::getRegistry().emplace<layer::LayerOrderComponent>(entity);
 
             // update the text if there is a callback
             if (textComp.get_value_callback)
@@ -548,7 +548,7 @@ namespace TextSystem
             
             
             // 2) stash any lua callbacks into your Text component
-            auto &txtComp = globals::registry.get<Text>(entity);
+            auto &txtComp = globals::getRegistry().get<Text>(entity);
             if (waitersOpt) {
                 sol::table tbl = *waitersOpt;
                 for (auto &kv : tbl) {
@@ -627,9 +627,9 @@ namespace TextSystem
         // the centering is done by modifying the offset of the transform
         void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
         {
-            auto &transform = globals::registry.get<transform::Transform>(textEntity);
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+            auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &role = globals::getRegistry().get<transform::InheritedProperties>(textEntity);
             
             auto [width, height] = calculateBoundingBox(textEntity);
             
@@ -679,9 +679,9 @@ namespace TextSystem
          */
         void setTextScaleAndRecenter(entt::entity textEntity, float renderScale, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
         {
-            auto &transform = globals::registry.get<transform::Transform>(textEntity);
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+            auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &role = globals::getRegistry().get<transform::InheritedProperties>(textEntity);
 
             // Set the new scale
             text.renderScale = renderScale;
@@ -722,9 +722,9 @@ namespace TextSystem
          */
         void resetTextScaleAndLayout(entt::entity textEntity)
         {
-            auto &transform = globals::registry.get<transform::Transform>(textEntity);
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+            auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &role = globals::getRegistry().get<transform::InheritedProperties>(textEntity);
 
             // Reset render scale to default
             text.renderScale = 1.0f;
@@ -747,7 +747,7 @@ namespace TextSystem
                                   float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
                                   float &currentLineWidth, std::vector<float> &lineWidths, int index, int &lineNumber)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
             
             int utf8Size = 0;
             const char *utf8Char = CodepointToUTF8(codepoint, &utf8Size);
@@ -797,7 +797,7 @@ namespace TextSystem
 
         void adjustAlignment(entt::entity textEntity, const std::vector<float> &lineWidths)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
             
             float scaledWrapWidth = text.wrapWidth / text.renderScale;
             
@@ -908,7 +908,7 @@ namespace TextSystem
             float &currentLineWidth, std::vector<float> &lineWidths,
             int index, int &lineNumber)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
 
             // Scale image size based on render scale and imageScale
             float scaledWidth = width * scale * text.renderScale;
@@ -998,10 +998,10 @@ namespace TextSystem
 
         auto deleteCharacters(entt::entity textEntity)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
             // for (auto &character : text.characters)
             // {
-            //     globals::registry.destroy(character);
+            //     globals::getRegistry().destroy(character);
             // }
             text.characters.clear();
         }
@@ -1011,8 +1011,8 @@ namespace TextSystem
             // if characters are not cleared, delete them
             deleteCharacters(textEntity);
 
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
 
             // float effectiveWrapWidth = text.wrapEnabled ? text.wrapWidth : std::numeric_limits<float>::max();
             float effectiveWrapWidth = text.wrapEnabled ? text.wrapWidth : std::numeric_limits<float>::max();
@@ -1430,8 +1430,8 @@ namespace TextSystem
 
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
             Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
 
             float effectiveWrapWidth = text.wrapEnabled ? text.wrapWidth : std::numeric_limits<float>::max();
@@ -1638,7 +1638,7 @@ namespace TextSystem
         
         void setText(entt::entity textEntity, const std::string &text)
         {
-            auto &textComponent = globals::registry.get<Text>(textEntity);
+            auto &textComponent = globals::getRegistry().get<Text>(textEntity);
             textComponent.rawText = text;
             textComponent.renderScale = 1.0f;
             
@@ -1655,10 +1655,10 @@ namespace TextSystem
         void updateText(entt::entity textEntity, float dt)
         {
             
-            auto &gameWorldTransform = globals::registry.get<transform::Transform>(globals::gameWorldContainerEntity);
-            auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
+            auto &gameWorldTransform = globals::getRegistry().get<transform::Transform>(globals::gameWorldContainerEntity);
+            auto &textTransform = globals::getRegistry().get<transform::Transform>(textEntity);
 
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
             // spdlog::debug("Updating text with delta time: {}", dt);
 
             // check value from lamdba function if there is one
@@ -1851,8 +1851,8 @@ namespace TextSystem
         //TODO: probably sync transform dimensions to this
         Vector2 calculateBoundingBox (entt::entity textEntity) {
 
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
 
             // Calculate the bounding box dimensions
             float minX = std::numeric_limits<float>::max();
@@ -1894,15 +1894,15 @@ namespace TextSystem
         void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug)
         {
             // respect screen/world space
-            bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(textEntity);
+            bool isScreenSpace = globals::getRegistry().any_of<collision::ScreenSpaceCollisionMarker>(textEntity);
             
             layer::DrawCommandSpace drawSpace = isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
             
             ZONE_SCOPED("TextSystem::renderText");
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &textTransform = globals::getRegistry().get<transform::Transform>(textEntity);
             float renderScale = text.renderScale; // 🟡 Use renderScale
-            auto &layerOrder = globals::registry.get<layer::LayerOrderComponent>(textEntity);
+            auto &layerOrder = globals::getRegistry().get<layer::LayerOrderComponent>(textEntity);
             auto layerZIndex = layerOrder.zIndex;
 
 
@@ -2173,7 +2173,7 @@ namespace TextSystem
             // Draw debug bounding box
             if (debug && globals::drawDebugInfo)
             {
-                auto &transform = globals::registry.get<transform::Transform>(textEntity);
+                auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
                 
                 // Calculate the bounding box dimensions
                 auto [width, height] = calculateBoundingBox(textEntity);
@@ -2204,10 +2204,10 @@ namespace TextSystem
         void renderTextImmediate(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug)
         {
             ZONE_SCOPED("TextSystem::renderText");
-            auto &text = globals::registry.get<Text>(textEntity);
-            auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
+            auto &textTransform = globals::getRegistry().get<transform::Transform>(textEntity);
             float renderScale = text.renderScale; // 🟡 Use renderScale
-            auto &layerOrder = globals::registry.get<layer::LayerOrderComponent>(textEntity);
+            auto &layerOrder = globals::getRegistry().get<layer::LayerOrderComponent>(textEntity);
             auto layerZIndex = layerOrder.zIndex;
 
 
@@ -2478,7 +2478,7 @@ namespace TextSystem
             // Draw debug bounding box
             if (debug && globals::drawDebugInfo)
             {
-                auto &transform = globals::registry.get<transform::Transform>(textEntity);
+                auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
                 
                 // Calculate the bounding box dimensions
                 auto [width, height] = calculateBoundingBox(textEntity);
@@ -2508,7 +2508,7 @@ namespace TextSystem
 
         void clearAllEffects(entt::entity textEntity)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
             for (auto &character : text.characters)
             {
 
@@ -2527,7 +2527,7 @@ namespace TextSystem
 
         void applyGlobalEffects(entt::entity textEntity, const std::string &effectString)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
             ParsedEffectArguments parsedArguments = splitEffects(effectString);
 
             for (auto &character : text.characters)
@@ -2550,7 +2550,7 @@ namespace TextSystem
 
         void debugPrintText(entt::entity textEntity)
         {
-            auto &text = globals::registry.get<Text>(textEntity);
+            auto &text = globals::getRegistry().get<Text>(textEntity);
             SPDLOG_DEBUG("Text Entity: {}", static_cast<int>(textEntity));
             SPDLOG_DEBUG("\tText: {}", text.rawText);
             SPDLOG_DEBUG("\tFont: {}", text.fontData.font.baseSize);

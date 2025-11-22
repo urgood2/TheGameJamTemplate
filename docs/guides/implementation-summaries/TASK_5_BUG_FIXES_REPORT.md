@@ -51,7 +51,7 @@ if (CC.bodyPos.x != 0.0f || CC.bodyPos.y != 0.0f) {  // Use bodyPos instead
 
 void PhysicsWorld::Update(float deltaTime) {
   // CAPTURE PRE-STEP STATE (NEW)
-  globals::registry.view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
+  globals::getRegistry().view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
       if (auto* body = CC.body.get()) {
           CC.prevPos = CC.bodyPos;  // Save previous frame's post-step as this frame's pre-step
           CC.prevRot = CC.bodyRot;

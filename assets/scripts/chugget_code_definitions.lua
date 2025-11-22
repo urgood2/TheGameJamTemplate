@@ -7709,7 +7709,6 @@ function layer.Layer.clearPostProcessShaders(...) end
 ---
 --- Assigns the given entity the current top Z-index and increments the counter.
 ---
----@param registry registry
 ---@param e Entity
 ---@param incrementIndexAfterwards boolean Defaults to true
 ---@return nil
@@ -7718,7 +7717,6 @@ function layer_order_system.setToTopZIndex(...) end
 ---
 --- Ensures entity a’s zIndex is at least one above b’s.
 ---
----@param registry registry
 ---@param a Entity The entity to move above b
 ---@param b Entity The reference entity
 ---@return nil
@@ -7727,13 +7725,11 @@ function layer_order_system.putAOverB(...) end
 ---
 --- Walks all UIBoxComponents without a LayerOrderComponent and pushes them to the top Z-stack.
 ---
----@param registry registry
 ---@return nil
 function layer_order_system.updateLayerZIndexesAsNecessary(...) end
 
 ---
 ---
----@param registry registry
 ---@param e Entity
 ---@return integer zIndex
 Returns the current zIndex of the given entity, assigning one if missing.
@@ -7748,7 +7744,6 @@ function layer_order_system.resetRunningZIndex(...) end
 ---
 --- Force-sets an entity’s zIndex to the given value.
 ---
----@param registry registry
 ---@param e Entity
 ---@param zIndex number The exact zIndex to assign
 ---@return nil

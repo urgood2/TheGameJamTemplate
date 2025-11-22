@@ -16,6 +16,11 @@ namespace input {
     struct InputState;
 }
 
+// Placeholder for future audio system state; currently mirrors legacy globals once wired.
+struct AudioContext {
+    bool deviceInitialized{false};
+};
+
 // A minimal EngineContext to begin migrating away from globals.
 struct EngineConfig {
     std::string configPath;
@@ -34,6 +39,7 @@ struct EngineContext {
     std::map<std::string, globals::SpriteFrameData> spriteFrames;
     std::map<std::string, Color> colors;
     input::InputState* inputState{nullptr}; // non-owning, mirrors legacy globals
+    AudioContext* audio{nullptr}; // non-owning placeholder for audio state
     json configJson{};
     json colorsJson{};
     json uiStringsJson{};
@@ -46,6 +52,7 @@ struct EngineContext {
     // Mutable state
     GameState currentGameState{GameState::LOADING_SCREEN};
     Vector2 worldMousePosition{0.0f, 0.0f};
+    Vector2 scaledMousePosition{0.0f, 0.0f};
 
     explicit EngineContext(EngineConfig cfg);
     ~EngineContext();

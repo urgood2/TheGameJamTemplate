@@ -107,7 +107,7 @@ namespace game
         // tile grid overlay
         shaders::registerUniformUpdate("tile_grid_overlay", [atlas](Shader &s) {            
             globalShaderUniforms.set("tile_grid_overlay", "mouse_position",
-                                     GetScaledMousePosition());   
+                                    getScaledMousePositionCached());   
             
             globalShaderUniforms.set("tile_grid_overlay", "atlas", atlas);  
             
@@ -533,7 +533,7 @@ namespace game
     shaders::registerUniformUpdate("3d_skew", [](Shader &shader)
                                        {
         globalShaderUniforms.set("3d_skew", "iTime", static_cast<float>(main_loop::getTime()));
-        globalShaderUniforms.set("3d_skew", "mouse_screen_pos", GetScaledMousePosition());
+        globalShaderUniforms.set("3d_skew", "mouse_screen_pos", getScaledMousePositionCached());
         globalShaderUniforms.set("3d_skew", "resolution", Vector2{
             static_cast<float>(globals::VIRTUAL_WIDTH),
             static_cast<float>(globals::VIRTUAL_HEIGHT)

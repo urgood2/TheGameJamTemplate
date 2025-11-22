@@ -66,7 +66,7 @@ namespace ai_system
      * invokes the first action’s `start` callback so that execution can begin on the very next frame.
      *
      * @pre
-     *   - `globals::registry` must contain a valid `GOAPComponent` for entity `e`.
+     *   - `globals::getRegistry()` must contain a valid `GOAPComponent` for entity `e`.
      *   - `masterStateLua` must already have been populated via `require`-ing each action’s Lua file,
      *     so that `masterStateLua[actionName]` returns a table with keys `"start"`, `"update"`, and `"finish"`.
      *
@@ -97,7 +97,7 @@ namespace ai_system
      * @example
      * @code{.cpp}
      * // After replanning:
-     * auto &goapComp = globals::registry.get<GOAPComponent>(myEntity);
+     * auto &goapComp = globals::getRegistry().get<GOAPComponent>(myEntity);
      * replan(myEntity);  // fills goapComp.plan[] and goapComp.planSize
      * fill_action_queue_based_on_plan(myEntity,
      *                                  goapComp.plan,
@@ -107,7 +107,7 @@ namespace ai_system
      */
     void fill_action_queue_based_on_plan(entt::entity e, const char **plan, int planSize)
     {
-        auto &cmp = globals::registry.get<GOAPComponent>(e);
+        auto &cmp = globals::getRegistry().get<GOAPComponent>(e);
 
         while (!cmp.actionQueue.empty())
             cmp.actionQueue.pop();
@@ -360,7 +360,7 @@ namespace ai_system
      */
     auto runBlackboardInitFunction(entt::entity entity, const std::string &identifier) -> void
     {
-        auto &goapStruct = globals::registry.get<GOAPComponent>(entity);
+        auto &goapStruct = globals::getRegistry().get<GOAPComponent>(entity);
         goapStruct.blackboard.clear();
 
         // 1) Grab the lua table you populated in ai.init.lua
@@ -465,7 +465,7 @@ namespace ai_system
                            const std::string &type,
                            sol::optional<sol::table> overrides /*may be nil*/)
     {
-        auto &goap = globals::registry.get<GOAPComponent>(entity);
+        auto &goap = globals::getRegistry().get<GOAPComponent>(entity);
 
         // look up prototype
         sol::table types = masterStateLua["ai"]["entity_types"];
@@ -508,7 +508,7 @@ namespace ai_system
 
     // void initGOAPComponent(entt::entity entity, const std::string& type)
     // {
-    //     auto& goap = globals::registry.get<GOAPComponent>(entity);
+    //     auto& goap = globals::getRegistry().get<GOAPComponent>(entity);
 
     //     // 1) look up the prototype
     //     sol::table types = masterStateLua["ai"]["entity_types"];
@@ -569,11 +569,11 @@ namespace ai_system
         SPDLOG_DEBUG("Resetting all GOAP components and reinitializing them.");
         // iterate over all entities with GOAPComponent and reset them
         std::vector<entt::entity> entitiesWithGOAP{};
-        auto view = globals::registry.view<GOAPComponent>();
+        auto view = globals::getRegistry().view<GOAPComponent>();
         for (auto entity : view)
         {
             // remove the goap component
-            globals::registry.remove<GOAPComponent>(entity);
+            globals::getRegistry().remove<GOAPComponent>(entity);
             entitiesWithGOAP.push_back(entity);
         }
 
@@ -584,7 +584,7 @@ namespace ai_system
         // re-init all the goap components
         for (auto entity : entitiesWithGOAP)
         {
-            globals::registry.emplace<GOAPComponent>(entity);
+            globals::getRegistry().emplace<GOAPComponent>(entity);
         }
 
         event_system::Publish<LuaStateResetEvent>({&masterStateLua}); // this will update any other systems that need the master lua state
@@ -598,13 +598,13 @@ namespace ai_system
         // get value of ai_tick_rate_seconds from config json and store it in aiUpdateTickInSeconds
         aiUpdateTickInSeconds = globals::configJSON["global_tick_settings"]["ai_tick_rate_seconds"];
 
-        // globals::registry.on_construct<GOAPComponent>().connect<&onGOAPComponentCreated>();
-        globals::registry.on_destroy<GOAPComponent>().connect<&onGOAPComponentDestroyed>();
+        // globals::getRegistry().on_construct<GOAPComponent>().connect<&onGOAPComponentCreated>();
+        globals::getRegistry().on_destroy<GOAPComponent>().connect<&onGOAPComponentDestroyed>();
 
         // ------------------------------------------------------
         // methods for entt registry access & monobehavior
         // ------------------------------------------------------
-        scripting::monobehavior_system::init(globals::registry, masterStateLua);
+        scripting::monobehavior_system::init(globals::getRegistry(), masterStateLua);
         scripting::monobehavior_system::generateBindingsToLua(masterStateLua);
 
         // read in master lua state
@@ -625,16 +625,16 @@ namespace ai_system
         getLuaFilesFromDirectory(aiInitDir, luaFiles);
 
         // run default initialization function
-        scripting::initLuaMasterState(masterStateLua, luaFiles);
+        scripting::initLuaMasterState(masterStateLua, luaFiles, globals::g_ctx);
     }
 
     auto cleanup() -> void
     {
         // Clear all GOAP components before destroying the Lua state
-        auto view = globals::registry.view<GOAPComponent>();
+        auto view = globals::getRegistry().view<GOAPComponent>();
         for (auto entity : view)
         {
-            globals::registry.remove<GOAPComponent>(entity);
+            globals::getRegistry().remove<GOAPComponent>(entity);
         }
 
         // Properly close the Lua state to avoid crashes on exit
@@ -692,7 +692,7 @@ namespace ai_system
      */
     void handle_no_plan(entt::entity entity)
     {
-        auto &goapStruct = globals::registry.get<GOAPComponent>(entity);
+        auto &goapStruct = globals::getRegistry().get<GOAPComponent>(entity);
 
         // Implement your strategy for when no plan can be found
 
@@ -739,7 +739,7 @@ namespace ai_system
 
     void select_goal(entt::entity entity)
     {
-        auto &goap = globals::registry.get<GOAPComponent>(entity);
+        auto &goap = globals::getRegistry().get<GOAPComponent>(entity);
         auto type = goap.type;
 
         sol::table goals = goap.def["goal_selectors"];
@@ -787,7 +787,7 @@ namespace ai_system
      */
     std::optional<Action::Result> run_action_queue(entt::entity entity, float deltaTime)
     {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
 
         if (goapComponent.actionQueue.empty())
         {
@@ -914,7 +914,7 @@ namespace ai_system
     // LATER: This should also be triggered (with replan) by events that interrupt the entities, after world state is also updated. When  an entity is interrupted, it should wait for a bit before replanning, for instance
     void on_interrupt(entt::entity entity)
     {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
+        auto &goapComponent = globals::getRegistry().get<GOAPComponent>(entity);
 
         if (!goapComponent.actionQueue.empty()) {
             Action& cur = goapComponent.actionQueue.front();
@@ -951,7 +951,7 @@ namespace ai_system
         ai.set_function(
         "get_entity_ai_def",
         [](entt::entity e) -> sol::table {
-            auto &cmp = globals::registry.get<GOAPComponent>(e);
+            auto &cmp = globals::getRegistry().get<GOAPComponent>(e);
             return cmp.def;
         }
         );
@@ -982,14 +982,14 @@ namespace ai_system
         // 2) Move each binding into ai:
         ai.set_function("set_worldstate", [](entt::entity e, std::string key, bool value)
                         {
-            auto& goap = globals::registry.get<GOAPComponent>(e);
+            auto& goap = globals::getRegistry().get<GOAPComponent>(e);
             goap_worldstate_set(&goap.ap, &goap.current_state, key.c_str(), value); });
         
         // 3. Expose a getter for a single world-state flag:
         ai.set_function("get_worldstate",
             // we need to capture lua state in order to return sol::nil on error
             [&](sol::this_state L, entt::entity e, const std::string & key) -> sol::object {
-            auto &goap = globals::registry.get<GOAPComponent>(e);
+            auto &goap = globals::getRegistry().get<GOAPComponent>(e);
             bool value = false;
             bool ok = goap_worldstate_get(&goap.ap,
                                             goap.current_state,
@@ -1006,7 +1006,7 @@ namespace ai_system
 
         ai.set_function("set_goal", [](entt::entity e, sol::table goal)
                         {
-            auto& goap = globals::registry.get<GOAPComponent>(e);
+            auto& goap = globals::getRegistry().get<GOAPComponent>(e);
             goap_worldstate_clear(&goap.goal);
             for (auto& [k, v] : goal)
                 goap_worldstate_set(&goap.ap, &goap.goal,
@@ -1015,14 +1015,14 @@ namespace ai_system
         // patch a single world‐state flag, without clearing anything else
         ai.set_function("patch_worldstate", [](entt::entity e, const std::string &key, bool value)
                         {
-            auto& goap = globals::registry.get<GOAPComponent>(e);
+            auto& goap = globals::getRegistry().get<GOAPComponent>(e);
             // this will only set that one bit
             goap_worldstate_set(&goap.ap, &goap.current_state, key.c_str(), value); });
 
         // patch multiple goal flags, without clearing the whole goal first
         ai.set_function("patch_goal", [](entt::entity e, sol::table tbl)
                         {
-            auto& goap = globals::registry.get<GOAPComponent>(e);
+            auto& goap = globals::getRegistry().get<GOAPComponent>(e);
             // leave existing goal bits alone, just set these ones
             for (auto& [k, v] : tbl) {
                 std::string key = k.as<std::string>();
@@ -1049,27 +1049,27 @@ namespace ai_system
                                      "isEmpty", &Blackboard::isEmpty);
 
         ai.set_function("get_blackboard", [](entt::entity e) -> Blackboard &
-                        { return globals::registry.get<GOAPComponent>(e).blackboard; });
+                        { return globals::getRegistry().get<GOAPComponent>(e).blackboard; });
 
         lua.set_function("create_ai_entity",
                          sol::overload(
                              [&](const std::string &type)
                              {
                                  auto e = transform::CreateOrEmplace(
-                                     &globals::registry,
+                                     &globals::getRegistry(),
                                      globals::gameWorldContainerEntity,
                                      0, 0, 50, 50);
-                                 globals::registry.emplace<GOAPComponent>(e);
+                                 globals::getRegistry().emplace<GOAPComponent>(e);
                                  initGOAPComponent(e, type, sol::nullopt);
                                  return e;
                              },
                              [&](const std::string &type, sol::table overrides)
                              {
                                  auto e = transform::CreateOrEmplace(
-                                     &globals::registry,
+                                     &globals::getRegistry(),
                                      globals::gameWorldContainerEntity,
                                      0, 0, 50, 50);
-                                 globals::registry.emplace<GOAPComponent>(e);
+                                 globals::getRegistry().emplace<GOAPComponent>(e);
                                  initGOAPComponent(e, type, overrides);
                                  return e;
                              }));
@@ -1078,10 +1078,10 @@ namespace ai_system
                          [&](const std::string &type, sol::table overrides)
                          {
                              auto e = transform::CreateOrEmplace(
-                                 &globals::registry,
+                                 &globals::getRegistry(),
                                  globals::gameWorldContainerEntity,
                                  0, 0, 50, 50);
-                             globals::registry.emplace<GOAPComponent>(e);
+                             globals::getRegistry().emplace<GOAPComponent>(e);
                              initGOAPComponent(e, type, overrides);
                              return e;
                          });
@@ -1183,7 +1183,7 @@ namespace ai_system
             resetGOAPAndLuaStateRequested = false;
         }
 
-        auto &goapStruct = globals::registry.get<GOAPComponent>(entity);
+        auto &goapStruct = globals::getRegistry().get<GOAPComponent>(entity);
 
         // Execute the current action and check if it succeeded
         bool plan_is_running_valid = execute_current_action(entity);
@@ -1370,7 +1370,7 @@ namespace ai_system
      */
     void replan(entt::entity entity)
     {
-        auto &goapStruct = globals::registry.get<GOAPComponent>(entity);
+        auto &goapStruct = globals::getRegistry().get<GOAPComponent>(entity);
 
         goapStruct.planSize = globals::MAX_ACTIONS;
         goapStruct.planCost = astar_plan(&goapStruct.ap, goapStruct.current_state, goapStruct.goal, goapStruct.plan, goapStruct.states, &goapStruct.planSize);
@@ -1445,7 +1445,7 @@ namespace ai_system
         aiUpdateTickTotal = 0.0f;
 
         // get all humans
-        auto view = globals::registry.view<GOAPComponent>();
+        auto view = globals::getRegistry().view<GOAPComponent>();
 
         for (auto entity : view)
         {

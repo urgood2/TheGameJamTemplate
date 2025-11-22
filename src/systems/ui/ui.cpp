@@ -778,7 +778,7 @@ namespace ui {
                 spdlog::error("Unknown layer '{}'", name);
                 return;
             }
-            globals::registry.emplace_or_replace<ui::UIBoxLayer>(box, name);
+            globals::getRegistry().emplace_or_replace<ui::UIBoxLayer>(box, name);
         });
         
         rec.record_free_function({"ui", "box"}, {"set_draw_layer", "---@param uiBox Entity\n---@param name string\n---@return nil", "Sets the draw layer for a UI box.", true, false});
@@ -792,35 +792,35 @@ namespace ui {
             ui::TransformConfig config{};
             config.x = table["x"].get_or(0);
             config.y = table["y"].get_or(0);
-            auto result = ui::box::Initialize(globals::registry, config, temp, ui::UIConfig{});
+            auto result = ui::box::Initialize(globals::getRegistry(), config, temp, ui::UIConfig{});
             SPDLOG_DEBUG("Initialized UI box {} with config: x={}, y={}", static_cast<uint32_t>(result), config.x, config.y);
-            if (globals::registry.any_of<ui::UIBoxComponent>(result)) {
+            if (globals::getRegistry().any_of<ui::UIBoxComponent>(result)) {
                 SPDLOG_DEBUG("UI box {} has UIBoxComponent", static_cast<uint32_t>(result));
             }
             return result;
         });
         box.set_function("AssignStateTagsToUIBox", [](entt::entity uiBox, const std::string &stateName) -> void {
-            box::AssignStateTagsToUIBox(globals::registry, uiBox, stateName);
+            box::AssignStateTagsToUIBox(globals::getRegistry(), uiBox, stateName);
         });
         
         rec.record_free_function({"ui", "box"}, {"AssignStateTagsToUIBox", "---@param registry registry\n---@param uiBox Entity\n---@param stateName string\n---@return nil", "Assigns state tags to all elements in a UI box.", true, false});
          
         box.set_function("AddStateTagToUIBox", [](entt::entity uiBox, const std::string &tagToAdd) -> void {
-            box::AddStateTagToUIBox(globals::registry, uiBox, tagToAdd);
+            box::AddStateTagToUIBox(globals::getRegistry(), uiBox, tagToAdd);
         });
         rec.record_free_function({"ui", "box"}, {"AddStateTagToUIBox", "---@param uiBox Entity\n---@param tagToAdd string\n---@return nil", "Adds a state tag to all elements in a UI box.", true, false});
         
         box.set_function("ClearStateTagsFromUIBox", [](entt::entity uiBox) -> void {
-            box::ClearStateTagsFromUIBox(globals::registry, uiBox);
+            box::ClearStateTagsFromUIBox(globals::getRegistry(), uiBox);
         });
         rec.record_free_function({"ui", "box"}, {"ClearStateTagsFromUIBox", "---@param uiBox Entity\n---@return nil", "Clears state tags from all elements in a UI box.", true, false});
         // box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) -> entt::entity {
         //     ui::TransformConfig config{};
         //     config.x = table["x"].get_or(0);
         //     config.y = table["y"].get_or(0);
-        //     auto result = ui::box::Initialize(globals::registry, config, temp, ui::UIConfig{});
+        //     auto result = ui::box::Initialize(globals::getRegistry(), config, temp, ui::UIConfig{});
         //     SPDLOG_DEBUG("Initialized UI box {} with config: x={}, y={}", static_cast<uint32_t>(result), config.x, config.y);
-        //     if (globals::registry.any_of<ui::UIBoxComponent>(result)) {
+        //     if (globals::getRegistry().any_of<ui::UIBoxComponent>(result)) {
         //         SPDLOG_DEBUG("UI box {} has UIBoxComponent", static_cast<uint32_t>(result));
         //     }
         //     return result;

@@ -105,11 +105,11 @@ namespace ui_defs
         // resize when text is updated (applies to ui)
         textData.onStringContentUpdatedOrChangedViaCallback = [](entt::entity textEntity) {
             // get master
-            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+            auto &role = globals::getRegistry().get<transform::InheritedProperties>(textEntity);
 
-            if (!globals::registry.valid(role.master)) return;
+            if (!globals::getRegistry().valid(role.master)) return;
 
-            auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
+            auto &masterTransform = globals::getRegistry().get<transform::Transform>(role.master);
             
             TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
         };
@@ -234,7 +234,7 @@ namespace ui_defs
                     
                     // now create a static animation object with uuid
                     auto imageObject = animation_system::createAnimatedObjectWithTransform(uuid, true, 0, 0);
-                    auto &gameObjectComp = globals::registry.get<transform::GameObject>(imageObject);
+                    auto &gameObjectComp = globals::getRegistry().get<transform::GameObject>(imageObject);
                     if (shadow == false) gameObjectComp.shadowDisplacement.reset();
                     
                     std::optional<std::string> elementID{std::nullopt};
@@ -282,7 +282,7 @@ namespace ui_defs
                     auto imageObject = animation_system::createAnimatedObjectWithTransform(uuid, false, 0, 0);
                     
                     
-                    auto &gameObjectComp = globals::registry.get<transform::GameObject>(imageObject);
+                    auto &gameObjectComp = globals::getRegistry().get<transform::GameObject>(imageObject);
                     if (shadow == false) gameObjectComp.shadowDisplacement.reset();
                     
                     // add to an object node
@@ -397,7 +397,7 @@ namespace ui_defs
         auto dividerAnimRight = animation_system::createAnimatedObjectWithTransform(dividerToUse, true, 0, 0);
         auto codedTextDef = getTextFromString(text);
         auto dividerAnimLeft = animation_system::createAnimatedObjectWithTransform(dividerToUse, true, 0, 0);
-        auto &animQueue = globals::registry.get<AnimationQueueComponent>(dividerAnimRight);
+        auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(dividerAnimRight);
         animQueue.defaultAnimation.flippedHorizontally = true; // flip the right divider
 
         //TODO: disable shadow on dividers
@@ -450,14 +450,14 @@ namespace ui_defs
     
     inline auto moveInventoryItemToNewTile(entt::entity released, entt::entity releasedOn) -> void
     {
-        auto &uiConfigOnReleased = globals::registry.get<ui::UIConfig>(releasedOn);
+        auto &uiConfigOnReleased = globals::getRegistry().get<ui::UIConfig>(releasedOn);
         uiConfigOnReleased.color = globals::uiInventoryOccupied;
         
-        transform::AssignRole(&globals::registry, released, transform::InheritedProperties::Type::RoleInheritor, releasedOn, std::nullopt, std::nullopt, transform::InheritedProperties::Sync::Weak);
+        transform::AssignRole(&globals::getRegistry(), released, transform::InheritedProperties::Type::RoleInheritor, releasedOn, std::nullopt, std::nullopt, transform::InheritedProperties::Sync::Weak);
 
         game::centerInventoryItemOnTargetUI(released, releasedOn);
         
-        auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(releasedOn);
+        auto &inventoryTile = globals::getRegistry().get<ui::InventoryGridTileComponent>(releasedOn);
         inventoryTile.item = released;
     }
 
@@ -488,7 +488,7 @@ namespace ui_defs
                     .addButtonCallback([checkboxImage]()
                                     { SPDLOG_DEBUG("Button callback triggered"); 
                                         // disable image
-                                        auto &aqc = globals::registry.get<AnimationQueueComponent>(checkboxImage);
+                                        auto &aqc = globals::getRegistry().get<AnimationQueueComponent>(checkboxImage);
                                         
                                         aqc.noDraw = !aqc.noDraw;
                                     })
@@ -636,7 +636,7 @@ namespace ui_defs
         auto controllerPipImage = wrapEntityInsideObjectElement(anim);
         animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI(anim, 30.f, 30.f);
         // disable shadow
-        auto &gameObjectComp = globals::registry.get<transform::GameObject>(anim);
+        auto &gameObjectComp = globals::getRegistry().get<transform::GameObject>(anim);
         gameObjectComp.shadowDisplacement.reset();
         
         auto controllerPipContainer = ui::UIElementTemplateNode::Builder::create()
@@ -719,7 +719,7 @@ namespace ui_defs
         //             .addInitFunc([](entt::registry* registry, entt::entity e)
         //             { 
         //                 SPDLOG_DEBUG("Slider init called for entity {}", (int)e);
-        //                 auto &gameObject = globals::registry.get<transform::GameObject>(e);
+        //                 auto &gameObject = globals::getRegistry().get<transform::GameObject>(e);
         //                 gameObject.state.dragEnabled = true;
         //                 gameObject.state.collisionEnabled = true;
         //                 gameObject.state.clickEnabled = true;
@@ -735,8 +735,8 @@ namespace ui_defs
         //                 if (globals::inputState.cursor_dragging_target != e) return;
                         
         //                 // get mouse cursor position, compare to slider position
-        //                 auto &sliderTransform = globals::registry.get<transform::Transform>(e);
-        //                 auto &cursorTransform = globals::registry.get<transform::Transform>(globals::cursor);
+        //                 auto &sliderTransform = globals::getRegistry().get<transform::Transform>(e);
+        //                 auto &cursorTransform = globals::getRegistry().get<transform::Transform>(globals::cursor);
                         
         //                 // clamp x value between 0 and slider width
         //                 auto sliderWidth = sliderTransform.getActualW();
@@ -754,7 +754,7 @@ namespace ui_defs
         //                 if (progressValue < 0.01f) progressValue = 0.01f;
                         
         //                 // set the progress value
-        //                 auto &uiConfig = globals::registry.get<ui::UIConfig>(e);
+        //                 auto &uiConfig = globals::getRegistry().get<ui::UIConfig>(e);
                         
         //                 // SPDLOG_DEBUG("Slider value: {}", progressValue);
                         
@@ -929,9 +929,9 @@ namespace ui_defs
         //     .addChild(alertRow)
         //     .build();
             
-        // alertBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
+        // alertBox = ui::box::Initialize(globals::getRegistry(), {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
         
-        // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, alertBox, 0));
+        // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::getRegistry(), alertBox, 0));
         
         // ======================================
         // ======================================
@@ -1051,7 +1051,7 @@ namespace ui_defs
         //     .addChild(keyboardContainer.build())
         //     .build();
             
-        // keyboardUIBox = ui::box::Initialize(globals::registry, {.x = 100, .y = 200}, keyboardRoot, ui::UIConfig{});
+        // keyboardUIBox = ui::box::Initialize(globals::getRegistry(), {.x = 100, .y = 200}, keyboardRoot, ui::UIConfig{});
 
         // ======================================
         // ======================================
@@ -1132,7 +1132,7 @@ namespace ui_defs
         //     .addChild(tooltipRow)
         //     .build();
             
-        // tooltipBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, tooltipRoot);
+        // tooltipBox = ui::box::Initialize(globals::getRegistry(), {.x = 500, .y = 500}, tooltipRoot);
 
         // ======================================
         // ======================================
@@ -1184,7 +1184,7 @@ namespace ui_defs
         //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
         //             .build())
         //     .build();
-        // // highlightBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, highlightRoot);
+        // // highlightBox = ui::box::Initialize(globals::getRegistry(), {.x = 500, .y = 500}, highlightRoot);
         
         // ======================================
         // ======================================
@@ -1208,11 +1208,11 @@ namespace ui_defs
         //                 {
         //                     // set the size of the grid rect to be 60 x 60
                             
-        //                     auto &transform = globals::registry.get<transform::Transform>(e);
+        //                     auto &transform = globals::getRegistry().get<transform::Transform>(e);
         //                     transform.setActualW(60.f);
         //                     transform.setActualH(60.f);
                             
-        //                     auto &role = globals::registry.get<transform::InheritedProperties>(e);
+        //                     auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
         //                     role.offset->x = 0;
         //                     role.offset->y = 0;
                             
@@ -1220,7 +1220,7 @@ namespace ui_defs
         //             .addOnUIResizeFunc([](entt::registry* registry, entt::entity e)
         //             {
         //                 // renew centering 
-        //                 auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
+        //                 auto &inventoryTile = globals::getRegistry().get<ui::InventoryGridTileComponent>(e);
                         
         //                 if (!inventoryTile.item) return;
                         
@@ -1230,13 +1230,13 @@ namespace ui_defs
         //             })
         //             .addInitFunc([](entt::registry* registry, entt::entity e)
         //             { 
-        //                 if (!globals::registry.any_of<ui::InventoryGridTileComponent>(e)) {
-        //                     globals::registry.emplace<ui::InventoryGridTileComponent>(e);   
+        //                 if (!globals::getRegistry().any_of<ui::InventoryGridTileComponent>(e)) {
+        //                     globals::getRegistry().emplace<ui::InventoryGridTileComponent>(e);   
         //                 }
                         
-        //                 auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
+        //                 auto &inventoryTile = globals::getRegistry().get<ui::InventoryGridTileComponent>(e);
                         
-        //                 auto &gameObjectComp = globals::registry.get<transform::GameObject>(e);
+        //                 auto &gameObjectComp = globals::getRegistry().get<transform::GameObject>(e);
         //                 gameObjectComp.state.triggerOnReleaseEnabled = true;
         //                 gameObjectComp.state.collisionEnabled = true;
         //                 // gameObjectComp.state.hoverEnabled = true;
@@ -1259,12 +1259,12 @@ namespace ui_defs
         //                     auto prevParent = roleReleased.master;
                             
                             
-        //                     if (globals::registry.valid(prevParent))
+        //                     if (globals::getRegistry().valid(prevParent))
         //                     {
-        //                         auto &uiConfig = globals::registry.get<ui::UIConfig>(prevParent);
+        //                         auto &uiConfig = globals::getRegistry().get<ui::UIConfig>(prevParent);
         //                         uiConfig.color = globals::uiInventoryEmpty;
                                 
-        //                         auto &prevInventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(prevParent);
+        //                         auto &prevInventoryTile = globals::getRegistry().get<ui::InventoryGridTileComponent>(prevParent);
                                 
         //                         // if current tile is occupied, then switch the items
         //                         //TODO: handle cases where something already exists in the inventory tile
@@ -1438,7 +1438,7 @@ namespace ui_defs
                     entity.config.initFunc = [getter = clone_to_main(localizedStringGetter)](entt::registry* registry, entt::entity e) {
                         localization::onLanguageChanged([getter, e](const std::string& newLang) {
                             // get the object inside the config component
-                            auto &config = globals::registry.get<ui::UIConfig>(e);
+                            auto &config = globals::getRegistry().get<ui::UIConfig>(e);
                             auto textEntity = config.object.value();
                             
                             // Call the Lua function to get the localized text

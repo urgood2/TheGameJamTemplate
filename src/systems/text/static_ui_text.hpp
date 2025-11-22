@@ -370,7 +370,7 @@ namespace static_ui_text_system {
 
                     // now create a static animation object with uuid
                     auto imageObject = animation_system::createAnimatedObjectWithTransform(uuid, true, 0, 0);
-                    auto &gameObjectComp = globals::registry.get<transform::GameObject>(imageObject);
+                    auto &gameObjectComp = globals::getRegistry().get<transform::GameObject>(imageObject);
                     if (!shadow) gameObjectComp.shadowDisplacement.reset();
 
                     auto imageDef = ui::UIElementTemplateNode::Builder::create()
@@ -400,7 +400,7 @@ namespace static_ui_text_system {
                     auto fgColor = util::getColor(fgColorString);
 
                     auto animObject = animation_system::createAnimatedObjectWithTransform(uuid, false, 0, 0);
-                    auto &gameObjectComp = globals::registry.get<transform::GameObject>(animObject);
+                    auto &gameObjectComp = globals::getRegistry().get<transform::GameObject>(animObject);
                     if (!shadow) gameObjectComp.shadowDisplacement.reset();
 
                     auto animDef = ui::UIElementTemplateNode::Builder::create()
@@ -588,7 +588,7 @@ namespace static_ui_text_system {
         text.set_function("buildIdMapDefault",
             [](entt::entity root) {
                 TextUIHandleLua handle;
-                buildIdMapFromRootDefault(globals::registry, root, handle);
+                buildIdMapFromRootDefault(globals::getRegistry(), root, handle);
                 return handle;
             });
         rec.record_free_function(
@@ -640,9 +640,9 @@ namespace static_ui_text_system {
         text.set_function("setColor",
             [](TextUIHandleLua& handle, const std::string& id, const std::string& colorName) {
                 auto e = handle.get(id);
-                if (e == entt::null || !globals::registry.valid(e) || !globals::registry.any_of<ui::UIConfig>(e))
+                if (e == entt::null || !globals::getRegistry().valid(e) || !globals::getRegistry().any_of<ui::UIConfig>(e))
                     return false;
-                auto& cfg = globals::registry.get<ui::UIConfig>(e);
+                auto& cfg = globals::getRegistry().get<ui::UIConfig>(e);
                 cfg.color = util::getColor(colorName);
                 return true;
             });

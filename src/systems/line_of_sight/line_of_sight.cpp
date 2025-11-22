@@ -20,6 +20,7 @@
  * Updates to visibility are seemingly done with myVisibility->Compute.
  */
 auto initLineOfSight() -> void {
+    auto& registry = globals::getRegistry();
     // init visibility map
     globals::globalVisibilityMap = std::vector<std::vector<bool>>(globals::worldWidth, std::vector<bool>(globals::worldHeight, false));
 
@@ -31,19 +32,20 @@ auto initLineOfSight() -> void {
     };
 
     los::MyVisibility::FuncBlocksLight blocksLight = [&](int x, int y) {
+        auto& registry = globals::getRegistry();
 
         // check if x or y is out of bounds
         if (x < 0 || x >= globals::worldWidth || y < 0 || y >= globals::worldHeight) {
             return true;
         }
         // check if the tile and anything on the tile blocks light
-        auto &tileComp = globals::registry.get<TileComponent>(globals::map[x][y]);
+        auto &tileComp = registry.get<TileComponent>(globals::map[x][y]);
         if (tileComp.blocksLight) {
             return true;
         }
         for (auto entity : tileComp.entitiesOnTile) {
-            if (globals::registry.any_of<BlocksLightComponent>(entity)) {
-                auto &lightComp = globals::registry.get<BlocksLightComponent>(entity);
+            if (registry.any_of<BlocksLightComponent>(entity)) {
+                auto &lightComp = registry.get<BlocksLightComponent>(entity);
                 if (lightComp.blocksLight) {
                     return true;
                 }
@@ -59,7 +61,7 @@ auto initLineOfSight() -> void {
     myVisibility = std::make_shared<los::MyVisibility>(los::MyVisibility(blocksLight, actionSetVisible, getDistance));
 
     // initial update for visibility map
-    auto visView = globals::registry.view<HasVisionComponent, LocationComponent>();
+    auto visView = registry.view<HasVisionComponent, LocationComponent>();
     for (auto entity : visView) {
         auto &loc = visView.get<LocationComponent>(entity);
         auto &visionComp = visView.get<HasVisionComponent>(entity);

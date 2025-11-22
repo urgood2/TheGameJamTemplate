@@ -906,7 +906,7 @@ namespace ui
             ZONE_SCOPED("ui::util::DrawSteppedRoundedRectangle full regen");
             //  regenerate full cache
             emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
-            rectCache = globals::registry.try_get<RoundedRectangleVerticesCache>(entity);
+            rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
         }
         else if (needClipRegen)
         {
@@ -1319,7 +1319,7 @@ namespace ui
             ZONE_SCOPED("ui::util::DrawSteppedRoundedRectangle full regen");
             //  regenerate full cache
             emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
-            rectCache = globals::registry.try_get<RoundedRectangleVerticesCache>(entity);
+            rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
         }
         else if (needClipRegen)
         {

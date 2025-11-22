@@ -73,7 +73,7 @@ namespace nine_patch {
             return std::nullopt;
         }
 
-        // Pull the atlas texture
+        // Pull the atlas texture (context-first, legacy fallback)
         const Texture2D* atlasTexPtr = nullptr;
         if (globals::g_ctx) {
             auto it = globals::g_ctx->textureAtlas.find(atlas);
@@ -83,11 +83,13 @@ namespace nine_patch {
         }
         if (!atlasTexPtr) {
             auto it = globals::textureAtlasMap.find(atlas);
-            if (it == globals::textureAtlasMap.end()) {
-                spdlog::error("BakeNinePatchFromSprites: atlas texture '{}' not found.", atlas);
-                return std::nullopt;
+            if (it != globals::textureAtlasMap.end()) {
+                atlasTexPtr = &it->second;
             }
-            atlasTexPtr = &it->second;
+        }
+        if (!atlasTexPtr) {
+            spdlog::error("BakeNinePatchFromSprites: atlas texture '{}' not found.", atlas);
+            return std::nullopt;
         }
         const Texture2D& atlasTex = *atlasTexPtr;
 

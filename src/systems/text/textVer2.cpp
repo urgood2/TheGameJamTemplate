@@ -37,6 +37,24 @@
 namespace TextSystem
 {
 
+    // Prefer context-backed atlas textures with legacy fallback.
+    static Texture2D resolveAtlasTexture(const std::string& atlasUUID) {
+        Texture2D atlas{};
+        if (globals::g_ctx) {
+            auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
+            if (it != globals::g_ctx->textureAtlas.end()) {
+                atlas = it->second;
+            }
+        }
+        if (atlas.id == 0) {
+            auto it = globals::textureAtlasMap.find(atlasUUID);
+            if (it != globals::textureAtlasMap.end()) {
+                atlas = it->second;
+            }
+        }
+        return atlas;
+    }
+
     auto exposeToLua(sol::state &lua) -> void {
         auto& rec = BindingRecorder::instance();
 
@@ -2055,12 +2073,7 @@ namespace TextSystem
                         ZONE_SCOPED("TextSystem::renderText-render image shadow");
                         auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                         auto sourceRect = spriteFrame.frame;
-                        Texture2D atlasTexture{};
-                        if (globals::g_ctx) {
-                            atlasTexture = globals::g_ctx->textureAtlas.at(spriteFrame.atlasUUID);
-                        } else {
-                            atlasTexture = globals::textureAtlasMap.at(spriteFrame.atlasUUID);
-                        }
+                        Texture2D atlasTexture = resolveAtlasTexture(spriteFrame.atlasUUID);
                         auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                         
                         layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [text, atlasTexture, sourceRect, destRect](layer::CmdTexturePro *cmd) {
@@ -2104,16 +2117,7 @@ namespace TextSystem
                     ZONE_SCOPED("TextSystem::renderText-render image");
                     auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                     auto sourceRect = spriteFrame.frame;
-                    Texture2D atlasTexture{};
-                    if (globals::g_ctx) {
-                        auto it = globals::g_ctx->textureAtlas.find(spriteFrame.atlasUUID);
-                        if (it != globals::g_ctx->textureAtlas.end()) {
-                            atlasTexture = it->second;
-                        }
-                    }
-                    if (atlasTexture.id == 0) {
-                        atlasTexture = globals::textureAtlasMap.at(spriteFrame.atlasUUID);
-                    }
+                    Texture2D atlasTexture = resolveAtlasTexture(spriteFrame.atlasUUID);
                     auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                     layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect, fgTint = Color{.r = character.fgTint.r, .g = character.fgTint.g, .b = character.fgTint.b, .a = (unsigned char)(text.globalAlpha * character.fgTint.a) }](layer::CmdTexturePro *cmd) {
                         cmd->texture = atlasTexture;
@@ -2374,16 +2378,7 @@ namespace TextSystem
                         ZONE_SCOPED("TextSystem::renderText-render image shadow");
                         auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                         auto sourceRect = spriteFrame.frame;
-                        Texture2D atlasTexture{};
-                        if (globals::g_ctx) {
-                            auto it = globals::g_ctx->textureAtlas.find(spriteFrame.atlasUUID);
-                            if (it != globals::g_ctx->textureAtlas.end()) {
-                                atlasTexture = it->second;
-                            }
-                        }
-                        if (atlasTexture.id == 0) {
-                            atlasTexture = globals::textureAtlasMap.at(spriteFrame.atlasUUID);
-                        }
+                        Texture2D atlasTexture = resolveAtlasTexture(spriteFrame.atlasUUID);
                         auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                         
                         layer::ImmediateCommand<layer::CmdTexturePro>(layerPtr, [text, atlasTexture, sourceRect, destRect](layer::CmdTexturePro *cmd) {
@@ -2427,7 +2422,7 @@ namespace TextSystem
                     ZONE_SCOPED("TextSystem::renderText-render image");
                     auto spriteFrame = init::getSpriteFrame(character.spriteUUID, globals::g_ctx);
                     auto sourceRect = spriteFrame.frame;
-                    auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
+                    auto atlasTexture = resolveAtlasTexture(spriteFrame.atlasUUID);
                     auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                     layer::ImmediateCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect, fgTint = Color{.r = character.fgTint.r, .g = character.fgTint.g, .b = character.fgTint.b, .a = (unsigned char)(text.globalAlpha * character.fgTint.a) }](layer::CmdTexturePro *cmd) {
                         cmd->texture = atlasTexture;

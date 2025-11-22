@@ -38,6 +38,9 @@ namespace globals {
 
     void setEngineContext(EngineContext* ctx) {
         g_ctx = ctx;
+        if (g_ctx) {
+            g_ctx->inputState = &inputState;
+        }
     }
 
     // Get mouse position scaled to virtual resolution so collision works regardless of window size

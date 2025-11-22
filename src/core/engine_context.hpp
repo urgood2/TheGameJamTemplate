@@ -9,7 +9,12 @@
 #include "sol/sol.hpp"
 
 #include "core/globals.hpp"
+#include "core/globals.hpp"
 #include "components/graphics.hpp"
+
+namespace input {
+    struct InputState;
+}
 
 // A minimal EngineContext to begin migrating away from globals.
 struct EngineConfig {
@@ -28,6 +33,7 @@ struct EngineContext {
     std::map<std::string, AnimationObject> animations;
     std::map<std::string, globals::SpriteFrameData> spriteFrames;
     std::map<std::string, Color> colors;
+    input::InputState* inputState{nullptr}; // non-owning, mirrors legacy globals
     json configJson{};
     json colorsJson{};
     json uiStringsJson{};

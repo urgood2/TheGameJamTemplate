@@ -21,6 +21,22 @@
 #include "sol/sol.hpp"
 
 namespace animation_system {
+
+    static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
+        if (globals::g_ctx) {
+            auto ctxIt = globals::g_ctx->textureAtlas.find(atlasUUID);
+            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
+                return &ctxIt->second;
+            }
+        }
+
+        auto legacyIt = globals::textureAtlasMap.find(atlasUUID);
+        if (legacyIt != globals::textureAtlasMap.end()) {
+            return &legacyIt->second;
+        }
+
+        return nullptr;
+    }
     
     void setHorizontalFlip(entt::entity e, bool flip)
     {
@@ -306,14 +322,9 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
         frame.spriteData.frame = spriteFrameData.frame;
         //TODO: need to load in the atlas to the texturemap
         auto atlasUUID = spriteFrameData.atlasUUID;
-        if (globals::g_ctx) {
-            auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
-            if (it != globals::g_ctx->textureAtlas.end()) {
-                frame.spriteData.texture = &it->second;
-            }
-        }
+        frame.spriteData.texture = resolveAtlasTexture(atlasUUID);
         if (frame.spriteData.texture == nullptr) {
-            frame.spriteData.texture = &globals::textureAtlasMap.at(atlasUUID);
+            SPDLOG_ERROR("Texture atlas '{}' not found for sprite '{}'", atlasUUID, spriteUUID);
         }
         frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(spriteFrameData);
 
@@ -596,25 +607,13 @@ rec.bind_function(lua, {"animation_system"}, "toggle_flip",
         nPatchInfo.bottom = nPatchInfo.source.height * 0.5f - 2;
         nPatchInfo.layout = NPatchLayout::NPATCH_NINE_PATCH; // classic 9 patch layout
         
-        Texture2D texture{};
-        if (globals::g_ctx) {
-            auto ctxIt = globals::g_ctx->textureAtlas.find(frame.atlasUUID);
-            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
-                texture = ctxIt->second;
-            }
-        }
-        if (texture.id == 0) {
-            auto legacyIt = globals::textureAtlasMap.find(frame.atlasUUID);
-            if (legacyIt != globals::textureAtlasMap.end()) {
-                texture = legacyIt->second;
-            }
-        }
+        Texture2D* texture = resolveAtlasTexture(frame.atlasUUID);
 
-        if (texture.id == 0) {
+        if (texture == nullptr || texture->id == 0) {
             SPDLOG_ERROR("Texture atlas '{}' not found for nine-patch '{}'", frame.atlasUUID, uuid_or_raw_identifier);
         }
 
-        return std::make_tuple(nPatchInfo, texture);
+        return std::make_tuple(nPatchInfo, texture ? *texture : Texture2D{});
     }
 
     auto update(float delta) -> void {

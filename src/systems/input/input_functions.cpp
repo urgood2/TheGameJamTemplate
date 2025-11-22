@@ -22,6 +22,7 @@
 #include "systems/scripting/binding_recorder.hpp"
 #include "systems/timer/timer.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
+#include "core/engine_context.hpp"
 
 #include "raylib.h"
 #include "raymath.h"
@@ -37,6 +38,20 @@ using namespace snowhouse; // assert
 // TODO: cursor stacks also need to be tested after ui
 namespace input
 {
+    // Resolve input state and registry, preferring the EngineContext when available.
+    static InputState& resolveInputState() {
+        if (globals::g_ctx && globals::g_ctx->inputState) {
+            return *globals::g_ctx->inputState;
+        }
+        return globals::inputState;
+    }
+
+    static entt::registry& resolveRegistry() {
+        if (globals::g_ctx) {
+            return globals::g_ctx->registry;
+        }
+        return globals::registry;
+    }
 
     void HandleTextInput(ui::TextInput &input) {
         // Process all characters pressed this frame
@@ -3257,7 +3272,7 @@ namespace input
 
         // make function for testing if gamepad enabled
         in.set_function("isGamepadEnabled", []() -> bool {
-            return globals::inputState.hid.controller_enabled;
+            return resolveInputState().hid.controller_enabled;
         });
         
         // TODO: need to expose the enums too
@@ -3278,7 +3293,9 @@ namespace input
         in.set_function("getMouseWheel", &GetMouseWheelMove);
         
         in.set_function("updateCursorFocus", []() {
-            UpdateCursor(globals::inputState, globals::registry);
+            auto& state = resolveInputState();
+            auto& reg = resolveRegistry();
+            UpdateCursor(state, reg);
         });
 
         // Gamepad
@@ -3633,7 +3650,7 @@ namespace input
                    
         // input.bind(actionName, { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", threshold=0.5, modifiers={...}, context="gameplay" })
         in.set_function("bind", [](const std::string &action, sol::table t) {
-            auto &s = globals::inputState;
+            auto &s = resolveInputState();
             ActionBinding b;
             b.device = to_device(t.get_or<std::string>("device", "keyboard"));
             b.trigger = to_trigger(t.get_or<std::string>("trigger", "Pressed"));
@@ -3659,21 +3676,23 @@ namespace input
         });
 
         in.set_function("clear", [](const std::string &action) {
-            input::clear_action(globals::inputState, action);
+            auto& state = resolveInputState();
+            input::clear_action(state, action);
         });
 
-        in.set_function("action_pressed",  [](const std::string &a){ return input::action_pressed (globals::inputState, a); });
-        in.set_function("action_released", [](const std::string &a){ return input::action_released(globals::inputState, a); });
-        in.set_function("action_down",     [](const std::string &a){ return input::action_down    (globals::inputState, a); });
-        in.set_function("action_value",    [](const std::string &a){ return input::action_value   (globals::inputState, a); });
+        in.set_function("action_pressed",  [](const std::string &a){ auto& s = resolveInputState(); return input::action_pressed (s, a); });
+        in.set_function("action_released", [](const std::string &a){ auto& s = resolveInputState(); return input::action_released(s, a); });
+        in.set_function("action_down",     [](const std::string &a){ auto& s = resolveInputState(); return input::action_down    (s, a); });
+        in.set_function("action_value",    [](const std::string &a){ auto& s = resolveInputState(); return input::action_value   (s, a); });
 
         in.set_function("set_context", [](const std::string &ctx){
-            input::set_context(globals::inputState, ctx);
+            auto& s = resolveInputState();
+            input::set_context(s, ctx);
         });
 
         // input.start_rebind("Jump", function(ok, binding) ... end)
         in.set_function("start_rebind", [](const std::string &action, sol::function cb) {
-            auto &s = globals::inputState;
+            auto &s = resolveInputState();
             input::start_rebind(s, action, [cb](bool ok, const ActionBinding &b) {
                 lua_State* L = cb.lua_state();        // raw lua_State*
                 sol::state_view sv(L);                // wrap it

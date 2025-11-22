@@ -22,6 +22,23 @@
 #include <chrono>
 
 namespace init {
+
+    // Prefer context-backed atlas textures when available, with legacy fallback.
+    static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
+        if (globals::g_ctx) {
+            auto ctxIt = globals::g_ctx->textureAtlas.find(atlasUUID);
+            if (ctxIt != globals::g_ctx->textureAtlas.end()) {
+                return &ctxIt->second;
+            }
+        }
+
+        auto legacyIt = globals::textureAtlasMap.find(atlasUUID);
+        if (legacyIt != globals::textureAtlasMap.end()) {
+            return &legacyIt->second;
+        }
+
+        return nullptr;
+    }
     
     void scanAssetsFolderAndAddAllPaths()
     {
@@ -225,12 +242,17 @@ namespace init {
                 frame.spriteUUID = frameData.at("sprite_UUID");
 
                 using namespace snowhouse;
-                AssertThat(getSpriteFrame(frame.spriteUUID).frame.width, IsGreaterThan(0));
-                frame.spriteData.frame = getSpriteFrame(frame.spriteUUID).frame;
+                const auto spriteFrameData = getSpriteFrame(frame.spriteUUID, globals::g_ctx);
+                AssertThat(spriteFrameData.frame.width, IsGreaterThan(0));
+                frame.spriteData.frame = spriteFrameData.frame;
                 //TODO: need to load in the atlas to the texturemap
-                auto atlasUUID = getSpriteFrame(frame.spriteUUID).atlasUUID;
-                frame.spriteData.texture = &globals::textureAtlasMap.at(atlasUUID);
-                frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(getSpriteFrame(frame.spriteUUID));
+                auto atlasUUID = spriteFrameData.atlasUUID;
+                if (auto* tex = resolveAtlasTexture(atlasUUID)) {
+                    frame.spriteData.texture = tex;
+                } else {
+                    SPDLOG_ERROR("Texture atlas '{}' not found while loading animation frame '{}'", atlasUUID, frame.spriteUUID);
+                }
+                frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(spriteFrameData);
 
                 double duration = frameData.at("duration_seconds");
 
@@ -384,12 +406,11 @@ namespace init {
 
     Texture2D retrieveNotAtlasTexture(string refrence) {
         using namespace snowhouse;
-        //AssertThat(textureAtlasMap.contains(refrence), IsTrue());
-        if(!globals::textureAtlasMap.contains(refrence)) {
-            SPDLOG_ERROR("Texture {} not found in textureAtlasMap", refrence);
-            return {};
+        if (auto* tex = resolveAtlasTexture(refrence)) {
+            return *tex;
         }
-        return globals::textureAtlasMap[refrence];
+        SPDLOG_ERROR("Texture {} not found in atlas maps", refrence);
+        return {};
     }
 
     /**
@@ -591,7 +612,12 @@ namespace init {
                 auto& spriteData = frame.first.spriteData;
                 if (spriteData.texture == nullptr) {
                     // Load the texture using the UUID
-                    spriteData.texture = &globals::textureAtlasMap[frame.first.spriteFrame->atlasUUID];
+                    auto* tex = resolveAtlasTexture(frame.first.spriteFrame->atlasUUID);
+                    if (tex == nullptr) {
+                        SPDLOG_ERROR("Texture atlas '{}' not found when populating animation textures", frame.first.spriteFrame->atlasUUID);
+                        continue;
+                    }
+                    spriteData.texture = tex;
                     spriteData.frame = frame.first.spriteFrame->frame; // set the frame to the spriteFrame data 
                     //FIXME: we are using both spriteData and spriteFrame, need to phase out one of them
                 }

@@ -788,34 +788,28 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 # Add tests
 ##########################################################################################
 
-# Enable testing
-enable_testing()
+option(ENABLE_UNIT_TESTS "Enable unit tests" ON)
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
-# # Option to enable/disable tests
-option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
+if(ENABLE_UNIT_TESTS)
+    enable_testing()
+    include(GoogleTest)
 
-if(ENABLE_UNIT_TESTS AND NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-    # Create a function to add unit tests
-    function(add_unit_test test_name)
-        add_executable(${test_name} ${ARGN})
-        target_link_libraries(${test_name} PRIVATE Catch2::Catch2WithMain CommonSettings)
-        target_compile_definitions(${test_name} PRIVATE ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
-        add_test(NAME ${test_name} COMMAND ${test_name} -s -a)
-    endfunction()
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+    )
+    FetchContent_MakeAvailable(googletest)
 
-    file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
-
-    # Exclude src/main.cpp
-    list(REMOVE_ITEM TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
-
-    # Add unit tests
-    # add_unit_test(unit-tests tests/TestInputSystem.cpp ${TEST_SOURCES})
-    # add_unit_test(unit-test-timer tests/TestTimer.cpp ${TEST_SOURCES})
-
-    # You can add more unit tests by calling the function
-    # add_unit_test(another-test tests/another_test.cpp)
+    add_subdirectory(tests)
 endif()
 
+if(ENABLE_ASAN)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
 
 
 ##########################################################################################

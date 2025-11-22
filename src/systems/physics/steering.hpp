@@ -6,7 +6,9 @@
 #include <third_party/chipmunk/include/chipmunk/chipmunk.h>
 #include <vector>
 
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
+#endif
 
 // Forward decl to avoid heavy includes
 namespace physics {

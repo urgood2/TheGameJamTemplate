@@ -35,7 +35,9 @@
 
 #include "gui.hpp"
 
+#ifndef JSON_DIAGNOSTICS
 #define JSON_DIAGNOSTICS 1
+#endif
 #include <nlohmann/json.hpp>          // nlohmann JSON parsing
 #include <fmt/core.h>                 // https://github.com/fmtlib/fmt
 // #include <boost/algorithm/string.hpp> // boost string

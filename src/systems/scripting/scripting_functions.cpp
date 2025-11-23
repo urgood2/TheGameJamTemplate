@@ -27,6 +27,8 @@
 #include "binding_recorder.hpp"
 
 #include "../layer/layer.hpp"
+#include "core/init.hpp"
+#include "systems/palette/palette_quantizer.hpp"
 
 #include "core/engine_context.hpp"
 #include "spdlog/spdlog.h"
@@ -689,6 +691,53 @@ namespace scripting {
         lua["globalShaderUniforms"] = std::ref(globals::getGlobalShaderUniforms());
         
         rec.record_property("", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
+
+        // Sprite frame + atlas helper for Lua (used by shader uniform setup)
+        rec.bind_function(lua, {}, "getSpriteFrameTextureInfo",
+            [&lua](const std::string& identifier) -> sol::optional<sol::table> {
+                auto frame = init::getSpriteFrame(identifier, globals::g_ctx);
+                Texture2D* atlasTex = getAtlasTexture(frame.atlasUUID);
+                if (!atlasTex) {
+                    SPDLOG_ERROR("getSpriteFrameTextureInfo: atlas '{}' not found for '{}'", frame.atlasUUID, identifier);
+                    return sol::nullopt;
+                }
+
+                sol::state_view sv(lua.lua_state());
+                sol::table t = sv.create_table();
+                t["atlas"] = *atlasTex;
+                t["atlasUUID"] = frame.atlasUUID;
+                t["frame"] = sv.create_table_with(
+                    "x", frame.frame.x,
+                    "y", frame.frame.y,
+                    "width", frame.frame.width,
+                    "height", frame.frame.height);
+                t["gridRect"] = Vector4{frame.frame.x, frame.frame.y, frame.frame.width, frame.frame.height};
+                t["imageSize"] = Vector2{static_cast<float>(atlasTex->width), static_cast<float>(atlasTex->height)};
+                return t;
+            },
+            R"lua(
+        ---@param identifier string # Sprite UUID or raw identifier (e.g., filename)
+        ---@return table|nil # { atlas=Texture2D, atlasUUID=string, frame={x,y,width,height}, gridRect=Vector4, imageSize=Vector2 } or nil on failure
+        )lua",
+            "Fetches atlas texture + frame metadata for a sprite identifier.");
+
+        // Palette loader for shader uniforms
+        rec.bind_function(lua, {}, "setPaletteTexture",
+            [](const std::string& shaderName, const std::string& filePath) -> bool {
+                // Try resolving relative paths via the asset helper first.
+                const std::string resolved = util::getRawAssetPathNoUUID(filePath);
+                if (palette_quantizer::setPaletteTexture(shaderName, resolved)) {
+                    return true;
+                }
+                // Fallback: use the provided path directly (e.g., already absolute).
+                return palette_quantizer::setPaletteTexture(shaderName, filePath);
+            },
+            R"lua(
+        ---@param shaderName string # Name of the shader to receive the palette uniform
+        ---@param filePath string   # Asset-relative or absolute path to the palette image
+        ---@return boolean          # true if loaded and applied, false otherwise
+        )lua",
+            "Loads a palette texture from disk and uploads it to the shader's 'palette' uniform with point filtering.");
 
         // 4) expose your Layer pointers under a sub-table "game"
         // lua.create_named_table("game")[

@@ -120,3 +120,21 @@ Actionable roadmap to ship a playable demo to itch.io + Steam. Timebox is ~10–
 - Community handling: pinned “bugs & feedback” thread and a short FAQ; prepare template replies for common issues.
 - Legal/attribution: verify licenses for music/SFX/fonts; include credits; add a short demo disclaimer/EULA.
 - Launch checklist: test with Steam overlay on/off, offline mode, no-controller plugged; if shipping web, verify memory cap and mobile fail-fast messaging.  
+
+### Owner/Date Tracker (prefilled target weeks)
+| Item | Owner | Due (Target Week) | Status |
+| --- | --- | --- | --- |
+| Nightly build + smoke test script | You | End of Week 2 (Phase 1) |  |
+| In-game bug report link | You | Mid Week 3 (Phase 2) |  |
+| Lightweight analytics events | You | End of Week 4 (Phase 2) |  |
+| Store pages drafted (Steam/itch) | You | End of Week 5 (Phase 3) |  |
+| QA with 3–5 friends | You | Week 7 (Phase 4 start) |  |
+| Launch checklist dry run | You | Week 9 (pre-freeze) |  |
+
+### In-Game Bug Report & Logging Checklist
+- [ ] Add bug button/menu item linking to mailto/URL; prefill subject with build tag + platform.
+- [ ] Include log path on screen when bug form opens; optionally add “copy logs” button.
+- [ ] Capture: build tag, platform, GPU/CPU, run seed/ID, wave number, wand loadout hash, controller vs. KB/mouse.
+- [ ] Console overlay toggle: shows last 50 log lines + errors; keep it non-blocking in release.
+- [ ] Log rotation: cap log size and keep last N files; avoid PII; include timestamps.
+- [ ] Crash/fatal handler: write last message + stack (if available) and seed; reopen game to a “sorry” screen with log location.  

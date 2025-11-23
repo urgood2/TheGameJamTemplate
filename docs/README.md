@@ -5,6 +5,7 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 ## Quick Start
 
 - [Main README](../README.md) - Project overview and setup
+- [Changelog](../CHANGELOG.md) - Recent changes and history
 - [Tracy Profiling](../USING_TRACY.md) - Performance profiling guide
 - [Lua Debugging](assets/DEBUGGING_LUA.md) - Debug your Lua scripts
 

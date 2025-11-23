@@ -38,6 +38,19 @@ using namespace snowhouse; // assert
 // TODO: cursor stacks also need to be tested after ui
 namespace input
 {
+    // Hide/show cursor only when a window exists (tests may run headless).
+    static void SafeHideCursor()
+    {
+        if (IsWindowReady())
+            HideCursor();
+    }
+
+    static void SafeShowCursor()
+    {
+        if (IsWindowReady())
+            ShowCursor();
+    }
+
     // Resolve input state and registry, preferring the EngineContext when available.
     static InputState& resolveInputState() {
         if (globals::g_ctx && globals::g_ctx->inputState) {
@@ -1042,7 +1055,7 @@ namespace input
             if (!state.hid.controller_enabled)
             {
                 SPDLOG_DEBUG("Switching to controller input: {}", magic_enum::enum_name(category));
-                HideCursor();
+                SafeHideCursor();
             }
 
             state.hid.controller_enabled = true;
@@ -1077,7 +1090,7 @@ namespace input
             state.gamepad.name.clear();
 
             // restore cursor
-            ShowCursor();
+            SafeShowCursor();
 
             // unfocus UI
             auto& reg = resolveRegistry();

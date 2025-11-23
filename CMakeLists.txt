@@ -789,7 +789,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 ##########################################################################################
 
 option(ENABLE_UNIT_TESTS "Enable unit tests" ON)
-option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+option(ENABLE_ASAN "Enable AddressSanitizer" ON)
 
 if(ENABLE_UNIT_TESTS)
     enable_testing()
@@ -804,6 +804,13 @@ if(ENABLE_UNIT_TESTS)
     FetchContent_MakeAvailable(googletest)
 
     add_subdirectory(tests)
+
+    # Convenience target to run tests (useful for ASAN builds)
+    add_custom_target(run-tests
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS unit_tests
+        COMMENT "Running unit test suite")
 endif()
 
 if(ENABLE_ASAN)

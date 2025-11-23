@@ -17,6 +17,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/util/utilities.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_function_data.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/physics/physics_world.cpp
 )
 

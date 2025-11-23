@@ -1,5 +1,7 @@
 # Game Jam Template
 
+![Tests](https://github.com/urgood2/TheGameJamTemplate/actions/workflows/tests.yml/badge.svg?branch=master)
+
 A C++20 + Lua game-jam scaffold built on Raylib. It comes with a fast render pipeline, battle-ready combat systems, card/ability tooling, UI/layout helpers, shader pipelines (native + WebGL), and profiling/debug utilities so you can iterate quickly.
 
 ## Highlights

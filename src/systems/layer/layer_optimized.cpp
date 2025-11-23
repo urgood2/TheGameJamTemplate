@@ -24,7 +24,7 @@
 
 namespace layer
 {
-    std::array<RenderFunc, kDrawCommandCount> dispatcher{};
+    std::unordered_map<DrawCommandType, RenderFunc> dispatcher{};
     
     // -------------------------------------------------------------------------------------
     // Command Execution Functions
@@ -69,10 +69,9 @@ namespace layer
         layer::pushEntityTransformsToMatrixImmediate(globals::getRegistry(), c->entity, layer);
         // Execute child commands
         for (auto& cmd : c->children) {
-            if (auto fn = GetRenderer(cmd.type)) {
-                if (*fn) {
-                    (*fn)(layer, cmd.data);
-                }
+            auto it = dispatcher.find(cmd.type);
+            if (it != dispatcher.end()) {
+                it->second(layer, cmd.data);
             }
         }
         PopMatrix();

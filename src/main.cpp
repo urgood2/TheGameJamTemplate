@@ -26,6 +26,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h" // or any library that uses Windows.h
 
 #include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
+#include "util/crash_reporter.hpp"
 
 #if defined(_WIN32) // raylib uses these names as function parameters
 #undef near
@@ -280,6 +281,16 @@ void RunGameLoop()
 
         using namespace main_loop;
 
+        if (crash_reporter::IsEnabled() && IsKeyPressed(KEY_F10)) {
+            auto report = crash_reporter::CaptureReport("Manual capture (F10)");
+            auto path = crash_reporter::PersistReport(report);
+            if (path) {
+                SPDLOG_INFO("Manual crash report saved to {}", *path);
+            } else {
+                SPDLOG_WARN("Manual crash report captured but persistence is disabled or failed.");
+            }
+        }
+
         // ---------- Step 1: Measure REAL frame time ----------
         float rawDeltaTime = std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
         mainLoop.rawDeltaTime = rawDeltaTime;
@@ -392,10 +403,20 @@ int main(void)
     // game init
     // --------------------------------------------------------------------------------------
 
+    crash_reporter::Config crashConfig{};
+#if defined(__EMSCRIPTEN__)
+    crashConfig.enable_file_output = false;
+#else
+    crashConfig.enable_browser_download = false;
+#endif
+    crashConfig.build_id = CRASH_REPORT_BUILD_ID;
+    crash_reporter::Init(crashConfig);
+
     auto engineCtx = createEngineContext("config.json");
     globals::setEngineContext(engineCtx.get());
 
     init::base_init();
+    crash_reporter::AttachSinkToLogger(spdlog::default_logger());
     
     layer::InitDispatcher();
 

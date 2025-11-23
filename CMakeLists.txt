@@ -148,6 +148,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 # set(CMAKE_BUILD_TYPE Debug)
 
+set(CRASH_REPORT_BUILD_ID "${PROJECT_VERSION}" CACHE STRING "Build identifier attached to crash reports")
 # enable tracy (disable for web)
 
 # Enable tracy only when requested (default OFF) and not on Web.
@@ -1019,6 +1020,7 @@ endif()
 ##########################################################################################
 
 add_definitions( -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} )
+add_definitions(-DCRASH_REPORT_BUILD_ID="${CRASH_REPORT_BUILD_ID}")
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_STD_OPTIONAL) # Enable std::optional support in sol2 to prevent errors
 

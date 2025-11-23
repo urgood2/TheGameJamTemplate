@@ -5,9 +5,37 @@
 local shader_uniforms = {}
 
 -- Simple constructors to mimic the C++ Vector2/3/4 usage.
-local function Vector2(t) return t end
-local function Vector3(t) return t end
-local function Vector4(t) return t end
+-- Delegate to the engine-provided global constructors so we get real userdata,
+-- but still accept plain tables in case we ever call these before globals are set.
+local function Vector2(val, y)
+    if _G.Vector2 then
+        return _G.Vector2(val, y)
+    end
+    if type(val) == "table" then
+        return { x = val.x or val[1] or 0.0, y = val.y or val[2] or 0.0 }
+    end
+    return { x = val or 0.0, y = y or 0.0 }
+end
+
+local function Vector3(val, y, z)
+    if _G.Vector3 then
+        return _G.Vector3(val, y, z)
+    end
+    if type(val) == "table" then
+        return { x = val.x or val[1] or 0.0, y = val.y or val[2] or 0.0, z = val.z or val[3] or 0.0 }
+    end
+    return { x = val or 0.0, y = y or 0.0, z = z or 0.0 }
+end
+
+local function Vector4(val, y, z, w)
+    if _G.Vector4 then
+        return _G.Vector4(val, y, z, w)
+    end
+    if type(val) == "table" then
+        return { x = val.x or val[1] or 0.0, y = val.y or val[2] or 0.0, z = val.z or val[3] or 0.0, w = val.w or val[4] or 0.0 }
+    end
+    return { x = val or 0.0, y = y or 0.0, z = z or 0.0, w = w or 0.0 }
+end
 
 -- Approximate normalized Raylib colors (0-1) to replace ColorNormalize.
 local COLOR_BLUE_N    = { x = 0.0,       y = 121/255, z = 241/255, w = 1.0 }
@@ -18,13 +46,16 @@ local COLOR_RED_N     = { x = 230/255,   y = 41/255,  z = 55/255,  w = 1.0 }
 local COLOR_ORANGE_N  = { x = 255/255,   y = 161/255, z = 0.0,     w = 1.0 }
 
 local function normalize_value(value)
+    if type(value) == "userdata" then
+        return value
+    end
     if type(value) == "table" then
         if value.x and value.y and value.z and value.w then
-            return Vector4(value.x, value.y, value.z, value.w)
+            return Vector4(value)
         elseif value.x and value.y and value.z then
-            return Vector3(value.x, value.y, value.z)
+            return Vector3(value)
         elseif value.x and value.y then
-            return Vector2(value.x, value.y)
+            return Vector2(value)
         end
     end
     return value

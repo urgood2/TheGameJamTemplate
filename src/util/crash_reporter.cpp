@@ -1,0 +1,379 @@
+#include "crash_reporter.hpp"
+
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <csignal>
+#include <cstdlib>
+#include <exception>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <mutex>
+#include <sstream>
+#include <thread>
+
+#include "spdlog/details/os.h"
+#include "spdlog/sinks/base_sink.h"
+#include "spdlog/spdlog.h"
+
+#include <nlohmann/json.hpp>
+
+#if defined(__APPLE__) || defined(__linux__)
+#include <execinfo.h>
+#endif
+
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+#include <emscripten/stack.h>
+#endif
+
+namespace crash_reporter {
+namespace {
+
+using json = nlohmann::json;
+
+template <typename Mutex>
+class RingBufferSink : public spdlog::sinks::base_sink<Mutex> {
+public:
+    explicit RingBufferSink(size_t max_entries) : max_entries_(max_entries) {}
+
+    std::vector<LogEntry> snapshot() {
+        std::lock_guard<Mutex> lock(this->mutex_);
+        return buffer_;
+    }
+
+protected:
+    void sink_it_(const spdlog::details::log_msg& msg) override {
+        spdlog::memory_buf_t formatted;
+        this->formatter_->format(msg, formatted);
+
+        LogEntry entry;
+        entry.timestamp = format_log_time(msg.time);
+        const auto level_view = spdlog::level::to_string_view(msg.level);
+        entry.level.assign(level_view.data(), level_view.size());
+        entry.message.assign(formatted.data(), formatted.size());
+
+        std::lock_guard<Mutex> lock(this->mutex_);
+        buffer_.push_back(std::move(entry));
+        if (buffer_.size() > max_entries_) {
+            const auto overflow = buffer_.size() - max_entries_;
+            buffer_.erase(buffer_.begin(), buffer_.begin() + static_cast<std::ptrdiff_t>(overflow));
+        }
+    }
+
+    void flush_() override {}
+
+private:
+    static std::string format_log_time(const spdlog::log_clock::time_point& tp) {
+        const auto tt = spdlog::log_clock::to_time_t(tp);
+        const std::tm tm_time = spdlog::details::os::localtime(tt);
+        char buffer[32];
+        if (std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &tm_time)) {
+            return buffer;
+        }
+        return "unknown";
+    }
+
+    std::vector<LogEntry> buffer_;
+    size_t max_entries_;
+};
+
+using RingSink = RingBufferSink<std::mutex>;
+
+struct State {
+    Config config{};
+    std::shared_ptr<RingSink> sink;
+    std::string last_json;
+    std::atomic<bool> handling_fatal{false};
+    std::terminate_handler previous_terminate{nullptr};
+    bool initialized{false};
+};
+
+State& state() {
+    static State s;
+    return s;
+}
+
+std::string format_timestamp(const std::chrono::system_clock::time_point& tp) {
+    const auto tt = std::chrono::system_clock::to_time_t(tp);
+    const std::tm tm_time = spdlog::details::os::localtime(tt);
+    char buffer[32];
+    if (std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &tm_time)) {
+        return buffer;
+    }
+    return "unknown";
+}
+
+std::string make_report_id(const std::chrono::system_clock::time_point& tp) {
+    const auto tt = std::chrono::system_clock::to_time_t(tp);
+    const std::tm tm_time = spdlog::details::os::localtime(tt);
+    char buffer[32];
+    if (std::strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S", &tm_time)) {
+        std::ostringstream oss;
+        oss << buffer;
+        return oss.str();
+    }
+    return "report";
+}
+
+std::string detect_platform() {
+#if defined(__EMSCRIPTEN__)
+    return "Web/Emscripten";
+#elif defined(_WIN32)
+    return "Windows";
+#elif defined(__APPLE__)
+    return "macOS";
+#elif defined(__linux__)
+    return "Linux";
+#else
+    return "Unknown";
+#endif
+}
+
+std::string detect_build_type() {
+#if defined(NDEBUG)
+    return "Release";
+#else
+    return "Debug";
+#endif
+}
+
+std::vector<std::string> capture_stacktrace(bool include_stack) {
+    if (!include_stack) {
+        return {};
+    }
+
+#if defined(__EMSCRIPTEN__)
+    std::string trace = emscripten_get_callstack(EM_LOG_DEMANGLE | EM_LOG_C_STACK | EM_LOG_JS_STACK);
+    std::vector<std::string> frames;
+    std::istringstream stream(trace);
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (!line.empty()) {
+            frames.push_back(line);
+        }
+    }
+    return frames;
+#elif defined(__APPLE__) || defined(__linux__)
+    constexpr int kMaxFrames = 64;
+    void* buffer[kMaxFrames];
+    int count = ::backtrace(buffer, kMaxFrames);
+    char** symbols = ::backtrace_symbols(buffer, count);
+
+    std::vector<std::string> frames;
+    if (symbols) {
+        for (int i = 0; i < count; ++i) {
+            frames.emplace_back(symbols[i]);
+        }
+        std::free(symbols);
+    }
+    return frames;
+#else
+    return { "Stack trace capture not available on this platform." };
+#endif
+}
+
+std::string thread_id_as_string() {
+    std::ostringstream oss;
+    oss << std::this_thread::get_id();
+    return oss.str();
+}
+
+#if defined(__EMSCRIPTEN__)
+void trigger_web_download(const std::string& content, const std::string& filename) {
+    EM_ASM(
+        {
+            const data = UTF8ToString($0);
+            const name = UTF8ToString($1);
+            const blob = new Blob([data], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        },
+        content.c_str(), filename.c_str());
+}
+#endif
+
+std::optional<std::string> persist_report_internal(const Report& report) {
+    auto& s = state();
+    s.last_json = SerializeReport(report);
+
+#if defined(__EMSCRIPTEN__)
+    if (s.config.enable_browser_download) {
+        const std::string filename = "crash_report_" + report.id + ".json";
+        trigger_web_download(s.last_json, filename);
+        return filename;
+    }
+#endif
+
+    if (!s.config.enable_file_output) {
+        return std::nullopt;
+    }
+
+    try {
+        std::filesystem::path out_dir = s.config.output_dir.empty() ? std::filesystem::path{"crash_reports"} : std::filesystem::path{s.config.output_dir};
+        std::filesystem::create_directories(out_dir);
+        std::filesystem::path file_path = out_dir / ("crash_report_" + report.id + ".json");
+        std::ofstream out(file_path);
+        out << s.last_json;
+        out.close();
+        return file_path.string();
+    } catch (const std::exception& e) {
+        SPDLOG_ERROR("Failed to write crash report: {}", e.what());
+        return std::nullopt;
+    }
+}
+
+void handle_fatal(const std::string& reason) {
+    auto& s = state();
+    if (!s.config.enabled) {
+        return;
+    }
+    if (s.handling_fatal.exchange(true)) {
+        return;
+    }
+
+    try {
+        auto report = CaptureReport(reason, true);
+        const auto path = persist_report_internal(report);
+        if (path) {
+            SPDLOG_CRITICAL("Crash report captured: {}", *path);
+        } else {
+            SPDLOG_CRITICAL("Crash report captured (no file path available).");
+        }
+    } catch (...) {
+        SPDLOG_CRITICAL("Crash reporter failed while handling fatal event.");
+    }
+}
+
+void terminate_handler() {
+    std::string reason = "std::terminate";
+    if (auto exc = std::current_exception()) {
+        try {
+            std::rethrow_exception(exc);
+        } catch (const std::exception& e) {
+            reason = std::string("Unhandled exception: ") + e.what();
+        } catch (...) {
+            reason = "Unhandled unknown exception";
+        }
+    }
+
+    handle_fatal(reason);
+    std::_Exit(1);
+}
+
+void signal_handler(int signum) {
+    handle_fatal("Signal " + std::to_string(signum));
+    std::_Exit(128 + signum);
+}
+
+} // namespace
+
+void Init(const Config& config) {
+    auto& s = state();
+    s.config = config;
+#if defined(__EMSCRIPTEN__)
+    s.config.enable_file_output = false;
+#endif
+
+    if (!s.config.enabled) {
+        s.initialized = false;
+        return;
+    }
+
+    if (!s.sink) {
+        s.sink = std::make_shared<RingSink>(s.config.max_log_entries);
+    }
+    AttachSinkToLogger(spdlog::default_logger());
+
+    s.previous_terminate = std::set_terminate(terminate_handler);
+
+#if !defined(__EMSCRIPTEN__)
+    std::signal(SIGABRT, signal_handler);
+    std::signal(SIGSEGV, signal_handler);
+    std::signal(SIGILL, signal_handler);
+    std::signal(SIGFPE, signal_handler);
+#endif
+
+    s.initialized = true;
+}
+
+bool IsEnabled() {
+    return state().initialized && state().config.enabled;
+}
+
+void AttachSinkToLogger(const std::shared_ptr<spdlog::logger>& logger) {
+    auto& s = state();
+    if (!logger || !s.sink) {
+        return;
+    }
+
+    auto& sinks = logger->sinks();
+    const auto sink_ptr = s.sink.get();
+    const bool already_attached = std::any_of(sinks.begin(), sinks.end(), [sink_ptr](const auto& sink) {
+        return sink.get() == sink_ptr;
+    });
+
+    if (!already_attached) {
+        sinks.push_back(s.sink);
+    }
+}
+
+Report CaptureReport(const std::string& reason, bool include_stacktrace) {
+    auto now = std::chrono::system_clock::now();
+    Report report;
+    report.id = make_report_id(now);
+    report.timestamp = format_timestamp(now);
+    report.reason = reason;
+    report.build_id = state().config.build_id.empty() ? "dev-local" : state().config.build_id;
+    report.build_type = detect_build_type();
+    report.platform = detect_platform();
+    report.thread_id = thread_id_as_string();
+    report.stacktrace = capture_stacktrace(include_stacktrace);
+
+    if (state().sink) {
+        report.logs = state().sink->snapshot();
+    }
+
+    return report;
+}
+
+std::string SerializeReport(const Report& report) {
+    json j;
+    j["id"] = report.id;
+    j["timestamp"] = report.timestamp;
+    j["reason"] = report.reason;
+    j["build_id"] = report.build_id;
+    j["build_type"] = report.build_type;
+    j["platform"] = report.platform;
+    j["thread_id"] = report.thread_id;
+    j["stacktrace"] = report.stacktrace;
+
+    auto& logs = j["logs"] = json::array();
+    for (const auto& entry : report.logs) {
+        logs.push_back({
+            {"timestamp", entry.timestamp},
+            {"level", entry.level},
+            {"message", entry.message},
+        });
+    }
+
+    state().last_json = j.dump(2);
+    return state().last_json;
+}
+
+std::optional<std::string> PersistReport(const Report& report) {
+    return persist_report_internal(report);
+}
+
+const std::string& LastSerializedReport() {
+    return state().last_json;
+}
+
+} // namespace crash_reporter

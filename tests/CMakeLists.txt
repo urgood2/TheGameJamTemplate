@@ -10,6 +10,7 @@ add_executable(unit_tests
     unit/test_shader_system.cpp
     unit/test_binding_recorder.cpp
     helpers/test_stubs.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/core/engine_context.cpp
     ${CMAKE_SOURCE_DIR}/src/core/globals.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/uuid/uuid.cpp

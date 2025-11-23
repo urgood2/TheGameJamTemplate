@@ -8,6 +8,7 @@
 #include "../systems/spring/spring.hpp"
 #include "../util/utilities.hpp"
 #include "game.hpp"
+#include "../util/crash_reporter.hpp"
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 
@@ -74,10 +75,11 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
         auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 
         // Create a logger with both sinks
-        spdlog::logger logger("combined", {stdout_sink, csys_sink});
+        auto combined_logger = std::make_shared<spdlog::logger>("combined", spdlog::sinks_init_list{stdout_sink, csys_sink});
+        crash_reporter::AttachSinkToLogger(combined_logger);
 
         // Set the global logger
-        spdlog::set_default_logger(std::make_shared<spdlog::logger>(logger));
+        spdlog::set_default_logger(combined_logger);
 
         // Set the log level (optional)
         spdlog::set_level(spdlog::level::trace); // Log everything

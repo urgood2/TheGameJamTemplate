@@ -26,6 +26,17 @@ using ShaderUniformValue = std::variant<
     Texture2D,
     int
     >;
+
+struct ShaderApiHooks {
+    Shader (*load_shader)(const char* vsPath, const char* fsPath);
+    void (*unload_shader)(Shader shader);
+    int (*get_location)(Shader shader, const char* uniformName);
+    void (*set_value)(Shader shader, int loc, const void* value, int type);
+    void (*set_value_texture)(Shader shader, int loc, Texture2D texture);
+    void (*begin_mode)(Shader shader);
+    void (*end_mode)();
+    unsigned int (*get_default_shader_id)();
+};
 // #include "third_party/rlImGui/imgui.h"
 // #include "third_party/rlImGui/imgui_internal.h"
 
@@ -75,6 +86,10 @@ inline void print_uniform_value(const ShaderUniformValue &uv)
 namespace shaders
 {
 
+    void SetShaderApiHooks(const ShaderApiHooks& hooks);
+    void ResetShaderApiHooks();
+    const ShaderApiHooks& GetShaderApiHooks();
+
     template <typename T>
     struct always_false : std::false_type
     {
@@ -123,6 +138,10 @@ namespace shaders
     };
 
     extern auto ApplyUniformsToShader(Shader shader, const ShaderUniformSet &set) -> void;
+
+    extern std::unordered_map<std::string, Shader> loadedShaders;
+    extern std::unordered_map<std::string, std::pair<std::string, std::string>> shaderPaths;
+    extern std::unordered_map<std::string, std::pair<long, long>> shaderFileModificationTimes;
 
     // attach this to a sprite entity, for example
     /**

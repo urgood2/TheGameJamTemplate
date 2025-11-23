@@ -42,6 +42,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 
 # stat ideas
+- if shader uniforms thing still doesn't work, delay it to later and just use cpp versino for now. we need to do gameplay.
+- everything casts via triggers. artifacts hold triggers, and so do wands. artifacts should have more far-reaching or global effects, while wands mostly do projectile and other in game actions. 
+- what actions matter? dash, touching enemy, killing enemy... put together a list of triggers we can use, and let's arrive at three stats we can boil them down to. then we will tie the attack, defense, attack speed, and other stats that we will be allowing the player to upgrade upon level up.
 - triggers and actions as part of a bigger wand (item? artifact?) that you can move around and replace? maybe  a deck that can be clicked to expand it (for better ux.) decks could have fixed triggers & sometimes always casts (or shuffle) and variations in max card slot size, cast block size, cast speed, wand cooldown,  etc to make things more interesting.
 - Maybe give wand equip requirements? triggers as well?
 - Some basic stats:

@@ -4,18 +4,10 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <optional>
+#include <functional>
 
-// Redirect shader operations to controllable stubs before pulling in the implementation.
-#define LoadShader TestLoadShader
-#define UnloadShader TestUnloadShader
-#define GetShaderLocation TestGetShaderLocation
-#define SetShaderValue TestSetShaderValue
-#define SetShaderValueTexture TestSetShaderValueTexture
-#define rlGetShaderIdDefault TestRlGetShaderIdDefault
-#define BeginShaderMode TestBeginShaderMode
-#define EndShaderMode TestEndShaderMode
-
-#include "systems/shaders/shader_system.cpp"
+#include "systems/shaders/shader_system.hpp"
 
 namespace
 {
@@ -97,6 +89,36 @@ unsigned int TestRlGetShaderIdDefault()
 void TestBeginShaderMode(Shader) {}
 void TestEndShaderMode() {}
 
+void InstallShaderTestHooks()
+{
+    shaders::SetShaderApiHooks({
+        TestLoadShader,
+        TestUnloadShader,
+        TestGetShaderLocation,
+        TestSetShaderValue,
+        TestSetShaderValueTexture,
+        TestBeginShaderMode,
+        TestEndShaderMode,
+        TestRlGetShaderIdDefault});
+}
+
+struct ShaderSystemTest : ::testing::Test
+{
+    void SetUp() override
+    {
+        ShaderStubStats::Reset();
+        InstallShaderTestHooks();
+    }
+
+    void TearDown() override
+    {
+        shaders::ResetShaderApiHooks();
+        shaders::loadedShaders.clear();
+        shaders::shaderPaths.clear();
+        shaders::shaderFileModificationTimes.clear();
+    }
+};
+
 // ImGui UI helpers used by ShowShaderEditorUI; provide no-op stubs.
 namespace ImGui
 {
@@ -122,7 +144,7 @@ namespace ImGui
     void Text(const char *, ...) {}
 } // namespace ImGui
 
-TEST(ShaderUniformSet, StoresAndRetrievesUniforms)
+TEST_F(ShaderSystemTest, ShaderUniformSetStoresAndRetrievesUniforms)
 {
     shaders::ShaderUniformSet set;
 
@@ -142,9 +164,8 @@ TEST(ShaderUniformSet, StoresAndRetrievesUniforms)
     EXPECT_EQ(set.get("missingUniform"), nullptr);
 }
 
-TEST(ShaderSystem, ApplyUniformsInvokesSetters)
+TEST_F(ShaderSystemTest, ApplyUniformsInvokesSetters)
 {
-    ShaderStubStats::Reset();
     shaders::ShaderUniformSet set;
     set.set("uValue", 5.0f);
 
@@ -156,9 +177,8 @@ TEST(ShaderSystem, ApplyUniformsInvokesSetters)
     EXPECT_EQ(ShaderStubStats::lastUniformName, "uValue");
 }
 
-TEST(ShaderSystem, HotReloadsWhenTimestampChanges)
+TEST_F(ShaderSystemTest, HotReloadsWhenTimestampChanges)
 {
-    ShaderStubStats::Reset();
     shaders::shaderPaths.clear();
     shaders::shaderFileModificationTimes.clear();
     shaders::loadedShaders.clear();
@@ -180,9 +200,8 @@ TEST(ShaderSystem, HotReloadsWhenTimestampChanges)
     EXPECT_EQ(shaders::shaderFileModificationTimes["basic"], expectedTimes);
 }
 
-TEST(ShaderSystem, SkipsReloadWhenUnchanged)
+TEST_F(ShaderSystemTest, SkipsReloadWhenUnchanged)
 {
-    ShaderStubStats::Reset();
     shaders::shaderPaths.clear();
     shaders::shaderFileModificationTimes.clear();
     shaders::loadedShaders.clear();

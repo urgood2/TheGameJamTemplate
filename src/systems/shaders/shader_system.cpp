@@ -26,6 +26,33 @@ using json = nlohmann::json;
 
 namespace shaders
 {
+    namespace {
+        ShaderApiHooks makeDefaultHooks() {
+            return ShaderApiHooks{
+                ::LoadShader,
+                ::UnloadShader,
+                ::GetShaderLocation,
+                ::SetShaderValue,
+                ::SetShaderValueTexture,
+                ::BeginShaderMode,
+                ::EndShaderMode,
+                ::rlGetShaderIdDefault};
+        }
+
+        ShaderApiHooks g_shaderApi = makeDefaultHooks();
+    } // namespace
+
+    void SetShaderApiHooks(const ShaderApiHooks& hooks) {
+        g_shaderApi = hooks;
+    }
+
+    void ResetShaderApiHooks() {
+        g_shaderApi = makeDefaultHooks();
+    }
+
+    const ShaderApiHooks& GetShaderApiHooks() {
+        return g_shaderApi;
+    }
     auto exposeToLua(sol::state& lua, EngineContext* ctx) -> void {
         
 
@@ -332,16 +359,16 @@ namespace shaders
     }
 
     // Map to store loaded shaders, keyed by their name
-    static std::unordered_map<std::string, Shader> loadedShaders;
+    std::unordered_map<std::string, Shader> loadedShaders;
 
     // Map to track last modification times for shaders
-    static std::unordered_map<std::string, std::pair<long, long>> shaderFileModificationTimes;
+    std::unordered_map<std::string, std::pair<long, long>> shaderFileModificationTimes;
 
     // Map to store uniform update lambdas for shaders
     static std::unordered_map<std::string, std::function<void(Shader &)>> uniformUpdateCallbacks;
 
     // map to store vertex and fragment shader paths
-    static std::unordered_map<std::string, std::pair<std::string, std::string>> shaderPaths;
+    std::unordered_map<std::string, std::pair<std::string, std::string>> shaderPaths;
 
     bool shaderEnabledOverride = false;
 
@@ -349,7 +376,7 @@ namespace shaders
     {
         for (const auto &[name, value] : set.uniforms)
         {
-            int loc = GetShaderLocation(shader, name.c_str());
+            int loc = g_shaderApi.get_location(shader, name.c_str());
             
             if (loc < 0) {
                 // SPDLOG_WARN("Shader uniform '{}' not found in shader ID {}. Skipping.", name, shader.id);
@@ -362,21 +389,21 @@ namespace shaders
             {
                 using T = std::decay_t<decltype(val)>;
                 if constexpr (std::is_same_v<T, float>) {
-                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_FLOAT);
+                    g_shaderApi.set_value(shader, loc, &val, SHADER_UNIFORM_FLOAT);
                 } else if constexpr (std::is_same_v<T, int>) {
-                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_INT);
+                    g_shaderApi.set_value(shader, loc, &val, SHADER_UNIFORM_INT);
                 } else if constexpr (std::is_same_v<T, Vector2>) {
                     // SPDLOG_DEBUG("Setting Vector2 uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
-                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC2);
+                    g_shaderApi.set_value(shader, loc, &val, SHADER_UNIFORM_VEC2);
                 } else if constexpr (std::is_same_v<T, Vector3>) {
-                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC3);
+                    g_shaderApi.set_value(shader, loc, &val, SHADER_UNIFORM_VEC3);
                 } else if constexpr (std::is_same_v<T, Vector4>) {
                     // SPDLOG_DEBUG("Setting Vector4 uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
-                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC4);
+                    g_shaderApi.set_value(shader, loc, &val, SHADER_UNIFORM_VEC4);
                 } else if constexpr (std::is_same_v<T, Texture2D>) {
                     // SPDLOG_DEBUG("Setting texture uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
                     // Bind a Texture2D to the sampler uniform slot
-                    SetShaderValueTexture(shader, loc, val);
+                    g_shaderApi.set_value_texture(shader, loc, val);
                 }
             }, value);
         }
@@ -450,17 +477,17 @@ namespace shaders
             Shader shader;
             if (!vertexPath.empty() && !fragmentPath.empty())
             {
-                shader = LoadShader(vertexPath.c_str(), fragmentPath.c_str());
+                shader = g_shaderApi.load_shader(vertexPath.c_str(), fragmentPath.c_str());
                 shaderPaths[shaderName] = {vertexPath, fragmentPath};
             }
             else if (!vertexPath.empty())
             {
-                shader = LoadShader(vertexPath.c_str(), nullptr);
+                shader = g_shaderApi.load_shader(vertexPath.c_str(), nullptr);
                 shaderPaths[shaderName] = {vertexPath, ""};
             }
             else if (!fragmentPath.empty())
             {
-                shader = LoadShader(nullptr, fragmentPath.c_str());
+                shader = g_shaderApi.load_shader(nullptr, fragmentPath.c_str());
                 shaderPaths[shaderName] = {"", fragmentPath};
             }
             else
@@ -531,13 +558,13 @@ namespace shaders
                 SPDLOG_INFO("Shader {} modified. Reloading...", shaderName);
 
                 // Reload the shader
-                Shader updatedShader = LoadShader(
+                Shader updatedShader = g_shaderApi.load_shader(
                     vertexPath.empty() ? nullptr : vertexPath.c_str(),
                     fragmentPath.empty() ? nullptr : fragmentPath.c_str());
 
-                if (updatedShader.id != rlGetShaderIdDefault())
+                if (updatedShader.id != g_shaderApi.get_default_shader_id())
                 {
-                    UnloadShader(shader);
+                    g_shaderApi.unload_shader(shader);
                     shader = updatedShader;
 
                     // Update modification times
@@ -567,7 +594,7 @@ namespace shaders
             return;
         }
 
-        BeginShaderMode(loadedShaders[shaderName]);
+        g_shaderApi.begin_mode(loadedShaders[shaderName]);
     }
 
     // Unset shader mode
@@ -577,7 +604,7 @@ namespace shaders
         {
             return;
         }
-        EndShaderMode();
+        g_shaderApi.end_mode();
     }
 
     auto getShader(std::string shaderName) -> Shader
@@ -671,7 +698,7 @@ namespace shaders
     {
         for (auto &[name, shader] : loadedShaders)
         {
-            UnloadShader(shader);
+            g_shaderApi.unload_shader(shader);
             SPDLOG_INFO("Unloaded shader: {}", name);
         }
         loadedShaders.clear();

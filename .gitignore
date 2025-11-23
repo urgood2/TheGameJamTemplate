@@ -72,6 +72,7 @@ compile_commands.json
 *apk*
 android.*
 
+build-tests/
 build-test/
 build-skip/
 build-debug-ninja/

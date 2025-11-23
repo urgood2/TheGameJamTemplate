@@ -1086,8 +1086,6 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
 
         transform::registerDestroyListeners(globals::getRegistry());
 
-        SetUpShaderUniforms();
-        
         // init physics
         physicsWorld = physics::InitPhysicsWorld(&globals::getRegistry(), 64.0f, 0.0f, 0.f);
         

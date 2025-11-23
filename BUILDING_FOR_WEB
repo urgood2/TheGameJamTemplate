@@ -1,14 +1,22 @@
-* Use [build-web] or #build in commit message to trigger web build github action.
+Web build quick-start
+- Default web output dir is `build-emc` (override with `-DWEB_BUILD_DIR=/path`).
+- Configure: `emcmake cmake -B build-emc -DPLATFORM=Web ..`
+- Build: `cmake --build build-emc` (or `ninja -C build-emc`)
+- Sync assets: `cmake --build build-emc --target copy_assets` (runs automatically in the Windows helper targets).
+- Use `[build-web]` or `#build` in a commit message to trigger the GitHub Action web build.
+- The helper targets (`configure_web_build`, `compile_web_build`, `rename_to_index`, `inject_web_patch`, `gzip_assets`, `zip_web_build`, `push_web_build`) are now available on macOS/Linux too; set `EMSDK_PATH` to your `emsdk` root if it isn't auto-detected.
 
+Windows helper targets (require emsdk on PATH)
+- `configure_web_build` (runs emcmake + cmake in `WEB_BUILD_DIR`)
+- `compile_web_build` (runs emmake + make/ninja)
+- `rename_to_index`, `inject_web_patch`, `gzip_assets`, `zip_web_build`, `push_web_build`
 
-- If you get errors about sol2, use this; https://github.com/ThePhD/sol2/commit/d805d027e0a0a7222e936926139f06e23828ce9f#diff-6ed9c3214abb954282e4aa199723b4fbbb89c19ac8cc296534b817fae46e818dR2195
+Compatibility checklist
+- `ASSETS_PATH` is forced to `/assets/` under Emscripten; keep runtime asset references relative to that root.
+- Web shell is `src/minshell.html`; linker flags preload `/assets` and request WebGL2/ES3.
+- Shader JSON supports `"web"` overrides in `shader_system.cpp`; prefer that for platform-specific shader variants.
+- Main loop uses `emscripten_set_main_loop`; avoid blocking loops and large stack allocations (stack bumped in CMake).
+- Keep asset filenames simple (no parentheses) to avoid packaging quirks, and prefer gzip-friendly formats where possible.
 
-```cpp
-            *this = nullopt;
- 			new (static_cast<void*>(this)) optional(std::in_place, std::forward<Args>(args)...);
- 			return **this;
-```
-
-- Also, make sure assets don't have parenthesis in their names, emscripten hates that.
-
-- Also make sure that build-emc directory exists.
+Troubleshooting
+- If you hit the sol2 optional bug under emscripten, patch per https://github.com/ThePhD/sol2/commit/d805d027e0a0a7222e936926139f06e23828ce9f#diff-6ed9c3214abb954282e4aa199723b4fbbb89c19ac8cc296534b817fae46e818dR2195

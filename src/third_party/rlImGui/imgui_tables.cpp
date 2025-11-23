@@ -1310,7 +1310,7 @@ void ImGui::TableUpdateBorders(ImGuiTable* table)
         if ((hovered && g.HoveredIdTimer > TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER) || held)
         {
             table->HoveredColumnBorder = (ImGuiTableColumnIdx)column_n;
-            SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
         }
     }
 }

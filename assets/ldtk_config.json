@@ -1,0 +1,9 @@
+{
+  "project_path": "world.ldtk",
+  "asset_dir": "assets",
+  "collider_layers": [
+    "TileLayer"
+  ],
+  "entity_prefabs": {
+  }
+}

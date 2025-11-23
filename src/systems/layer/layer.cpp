@@ -3299,9 +3299,12 @@ void DrawLayerCommandsToSpecificCanvasOptimizedVersion(
       // magic_enum::enum_name(command.type));
     }
 
-    auto it = dispatcher.find(command.type);
-    if (it != dispatcher.end()) {
-      it->second(layer, command.data);
+    if (auto fn = GetRenderer(command.type)) {
+      if (*fn) {
+        (*fn)(layer, command.data);
+      } else {
+        SPDLOG_ERROR("Draw command has no renderer registered");
+      }
     } else {
       SPDLOG_ERROR("Unhandled draw command type {}");
     }
@@ -4453,14 +4456,19 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       shader_pipeline::width < (int)renderWidth ||
       shader_pipeline::height < (int)renderHeight) {
 
-    // shader_pipeline::ShaderPipelineInit(renderWidth, renderHeight);
-
-    auto newW = std::max(shader_pipeline::width, (int)renderWidth);
-    auto newH = std::max(shader_pipeline::height, (int)renderHeight);
-    shader_pipeline::ShaderPipelineUnload();
-    shader_pipeline::ShaderPipelineInit(newW, newH);
-    SPDLOG_DEBUG("ShaderPipelineInit called with new size: {}x{}",
-                 shader_pipeline::width, shader_pipeline::height);
+    // Grow render targets with headroom to avoid frequent reallocations
+    int growW =
+        shader_pipeline::width > 0 ? shader_pipeline::width * 2 : (int)renderWidth;
+    int growH =
+        shader_pipeline::height > 0 ? shader_pipeline::height * 2 : (int)renderHeight;
+    auto newW = std::max({shader_pipeline::width, (int)renderWidth, growW});
+    auto newH = std::max({shader_pipeline::height, (int)renderHeight, growH});
+    if (newW != shader_pipeline::width || newH != shader_pipeline::height) {
+      shader_pipeline::ShaderPipelineUnload();
+      shader_pipeline::ShaderPipelineInit(newW, newH);
+      SPDLOG_DEBUG("ShaderPipelineInit called with new size: {}x{}",
+                   shader_pipeline::width, shader_pipeline::height);
+    }
   }
 
   // 2. Draw base sprite to front() (no transforms) = id 6
@@ -4513,8 +4521,10 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     if (cb.fn && !cb.afterPipeline) {
       Translate(drawOffset.x, drawOffset.y);
       cb.fn(baseWidth, baseHeight, /*isShadow=*/false);
-      
-      DrawCircle(0, 0, 100, RED); // debug point at local origin
+
+      if (globals::drawDebugInfo) {
+        DrawCircle(0, 0, 100, RED); // debug point at local origin
+      }
       Translate(-drawOffset.x, -drawOffset.y);
       usedLocalCallback = true;
     }
@@ -4549,142 +4559,118 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   render_stack_switch_internal::Pop(); // done with id 6
 
 
-  // 🟡 Save base sprite result
-  // RenderTexture2D baseSpriteRender =
-  //     shader_pipeline::GetBaseRenderTextureCache();
-  // render_stack_switch_internal::Push(baseSpriteRender);
-  // ClearBackground({0, 0, 0, 0});
-  // DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
-  // render_stack_switch_internal::Pop();
+  bool hasPasses = !pipelineComp.passes.empty();
+  bool hasOverlays = !pipelineComp.overlayDraws.empty();
+  bool needBaseSpriteCache = !hasPasses || hasOverlays;
+  bool skipPipelineWork = !hasPasses && !hasOverlays;
 
-  RenderTexture2D baseSpriteRender =
-      shader_pipeline::GetBaseRenderTextureCache();
-  layer::render_stack_switch_internal::Push(baseSpriteRender);
-  ClearBackground({0, 0, 0, 0});
-  Rectangle baseSpriteSourceRect = {
-      0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
-      renderWidth, renderHeight};
-  DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
-  layer::render_stack_switch_internal::Pop();
+  RenderTexture toRender{};
 
-  if (globals::drawDebugInfo) {
-    // Draw
-    DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
-  }
+  if (!skipPipelineWork) {
+    RenderTexture2D baseSpriteRender{};
 
-  // 3. Apply shader passes
-  int total = pipelineComp.passes.size();
+    if (needBaseSpriteCache) {
+      baseSpriteRender = shader_pipeline::GetBaseRenderTextureCache();
+      layer::render_stack_switch_internal::Push(baseSpriteRender);
+      ClearBackground({0, 0, 0, 0});
+      Rectangle baseSpriteSourceRect = {
+          0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
+          renderWidth, renderHeight};
+      DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect,
+                     {0, 0}, WHITE);
+      layer::render_stack_switch_internal::Pop();
 
-  
-  int i = 0;
-  for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
-    bool lastPass = (++i == total);
-
-    if (!pass.enabled)
-      continue;
-
-    Shader shader = shaders::getShader(pass.shaderName);
-    if (!shader.id) {
-      SPDLOG_WARN("Shader {} not found for entity {}", pass.shaderName, (int)e);
-      continue; // skip if shader is not found
+      if (globals::drawDebugInfo) {
+        DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect,
+                       {0, 0}, WHITE);
+      }
     }
-    render_stack_switch_internal::Push(shader_pipeline::back());
+
+    // 3. Apply shader passes
+    int total = pipelineComp.passes.size();
+
+    int i = 0;
+    for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
+      bool lastPass = (++i == total);
+
+      if (!pass.enabled)
+        continue;
+
+      Shader shader = shaders::getShader(pass.shaderName);
+      if (!shader.id) {
+        SPDLOG_WARN("Shader {} not found for entity {}", pass.shaderName, (int)e);
+        continue; // skip if shader is not found
+      }
+      render_stack_switch_internal::Push(shader_pipeline::back());
+      ClearBackground({0, 0, 0, 0});
+      BeginShaderMode(shader);
+      if (pass.injectAtlasUniforms) {
+        injectAtlasUniforms(
+            globals::getGlobalShaderUniforms(), pass.shaderName,
+            {0, 0, (float)renderWidth, (float)renderHeight},
+            Vector2{(float)renderWidth, (float)renderHeight});
+      }
+
+      if (pass.customPrePassFunction)
+        pass.customPrePassFunction();
+
+      TryApplyUniforms(shader, globals::getGlobalShaderUniforms(), pass.shaderName);
+      Rectangle sourceRect = {
+          0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
+          renderWidth, renderHeight};
+      DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
+
+      shader_pipeline::SetLastRenderRect(
+          {0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
+      shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
+
+      EndShaderMode();
+      render_stack_switch_internal::Pop();
+      shader_pipeline::Swap();
+
+      shader_pipeline::SetLastRenderTarget(shader_pipeline::front());
+    }
+
+    // // 🔵 Save post-pass result
+    RenderTexture2D postPassRender = {}; // id 6 is now the result of all passes
+    if (pipelineComp.passes.empty()) {
+      // No shader passes - use the base sprite render directly
+      shader_pipeline::SetLastRenderTarget(baseSpriteRender);
+      postPassRender = *shader_pipeline::GetLastRenderTarget();
+    } else if (!shader_pipeline::GetLastRenderTarget()) {
+      shader_pipeline::SetLastRenderTarget(
+          shader_pipeline::front()); // if no passes, we use the front texture
+      postPassRender = shader_pipeline::front();
+    } else {
+      postPassRender = *shader_pipeline::GetLastRenderTarget();
+    }
+
+    // 🟡 Save post shader pass sprite result
+    RenderTexture2D postProcessRender =
+        shader_pipeline::GetPostShaderPassRenderTextureCache();
+    render_stack_switch_internal::Push(postProcessRender);
     ClearBackground({0, 0, 0, 0});
-    BeginShaderMode(shader);
-    if (pass.injectAtlasUniforms) {
-      injectAtlasUniforms(
-          globals::getGlobalShaderUniforms(), pass.shaderName,
-          {0, 0, (float)renderWidth, (float)renderHeight},
-          Vector2{
-              (float)renderWidth,
-              (float)
-                  renderHeight}); // FIXME: not sure why, but it only works when
-                                  // I do this instead of the full texture size
 
-      // float drawnH = frameHeight*renderScale + pad*2.f;
-      // globals::globalShaderUniforms.set(pass.shaderName, "uTransformHeight",
-      //     transform.getVisualH());
+    if (pipelineComp.passes.empty()) {
+      // No shader passes - treat like 1 pass (odd) for consistent behavior
+      Rectangle sourceRect = {
+          0.0f, (float)baseSpriteRender.texture.height - renderHeight,
+          renderWidth, renderHeight};
+      DrawTextureRec(baseSpriteRender.texture, sourceRect, {0, 0}, WHITE);
+    } else if (pipelineComp.passes.size() % 2 == 0) {
+      DrawTexture(postPassRender.texture, 0, 0, WHITE);
+    } else {
+      Rectangle sourceRect = {0.0f,
+                              (float)postPassRender.texture.height - renderHeight,
+                              renderWidth, renderHeight};
+      DrawTextureRec(postPassRender.texture, sourceRect, {0, 0}, WHITE);
     }
 
-    if (pass.customPrePassFunction)
-      pass.customPrePassFunction();
-    // TODO: auto inject sprite atlas texture dims and sprite rect here
-    //  injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName,
-    //  srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
-
-    TryApplyUniforms(shader, globals::getGlobalShaderUniforms(), pass.shaderName);
-    // DrawTextureRec(shader_pipeline::front().texture,
-    //                {0, 0, (float)renderWidth * xFlipModifier,
-    //                 (float)-renderHeight * yFlipModifier},
-    //                {0, 0}, WHITE); // invert Y
-    Rectangle sourceRect = {
-        0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
-        renderWidth, renderHeight};
-    DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
-
-    shader_pipeline::SetLastRenderRect(
-        {0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
-    shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
-
-    EndShaderMode();
     render_stack_switch_internal::Pop();
-    shader_pipeline::Swap();
 
-    shader_pipeline::SetLastRenderTarget(shader_pipeline::front());
-  }
-
-  // // 🔵 Save post-pass result
-  RenderTexture2D postPassRender = {}; // id 6 is now the result of all passes
-  if (pipelineComp.passes.empty()) {
-    // No shader passes - use the base sprite render directly
-    shader_pipeline::SetLastRenderTarget(baseSpriteRender);
-    postPassRender = *shader_pipeline::GetLastRenderTarget();
-  } else if (!shader_pipeline::GetLastRenderTarget()) {
-    shader_pipeline::SetLastRenderTarget(
-        shader_pipeline::front()); // if no passes, we use the front texture
-    postPassRender = shader_pipeline::front();
-  } else {
-    postPassRender =
-        *shader_pipeline::GetLastRenderTarget(); // if there are passes, we use
-                                                 // the last render target
-  }
-
-  // 🟡 Save post shader pass sprite result
-  RenderTexture2D postProcessRender =
-      shader_pipeline::GetPostShaderPassRenderTextureCache();
-  render_stack_switch_internal::Push(postProcessRender);
-  ClearBackground({0, 0, 0, 0});
-
-  if (pipelineComp.passes.empty()) {
-    // No shader passes - treat like 1 pass (odd) for consistent behavior
-    Rectangle sourceRect = {0.0f,
-                            (float)baseSpriteRender.texture.height - renderHeight,
-                            renderWidth, renderHeight};
-    DrawTextureRec(baseSpriteRender.texture, sourceRect, {0, 0}, WHITE);
-  } else if (pipelineComp.passes.size() % 2 == 0) {
-    DrawTexture(postPassRender.texture, 0, 0, WHITE);
-  } else {
-    Rectangle sourceRect = {0.0f,
-                            (float)postPassRender.texture.height - renderHeight,
-                            renderWidth, renderHeight};
-    DrawTextureRec(postPassRender.texture, sourceRect, {0, 0}, WHITE);
-  }
-
-  // DrawTextureRec(postPassRender.texture,
-  // 			{ 0.0f,
-  // 				(float)postPassRender.texture.height,
-  // 				renderWidth,
-  // 				-renderHeight },
-  // 			{0,0},
-  // 			WHITE);
-  render_stack_switch_internal::Pop();
-
-  if (globals::drawDebugInfo) {
-    // Draw
-    DrawTexture(postPassRender.texture, 0, 150, WHITE);
-  }
-
-  // DrawTexture(postPassRender.texture, 90, 30, WHITE);
+    if (globals::drawDebugInfo) {
+      DrawTexture(postPassRender.texture, 0, 150, WHITE);
+    }
 
   bool internalFlipFlagForShaderPipeline =
       true; // FIXME: testing
@@ -4780,24 +4766,20 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
         {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier});
     // shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
 
-    shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
-
-    // render_stack_switch_internal::Push(shader_pipeline::front());
-    // BeginBlendMode((int)overlay.blendMode);
-    // DrawTextureRec(shader_pipeline::back().texture, {0, 0, renderWidth *
-    // xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
-    // EndBlendMode();
-    // render_stack_switch_internal::Pop();
+    // No need to update last render target here; overlays end the pipeline.
   }
 
-  RenderTexture toRender{};
-  if (pipelineComp.overlayDraws.empty() == false) {
-    toRender =
-        shader_pipeline::front(); //  in this case it's the overlay draw result
+    if (pipelineComp.overlayDraws.empty() == false) {
+      toRender =
+          shader_pipeline::front(); //  in this case it's the overlay draw result
+    } else {
+      // if there are passes or no passes, we use the post-process render cache
+      // which contains either the shader results or the base sprite
+      toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
+    }
   } else {
-    // if there are passes or no passes, we use the post-process render cache
-    // which contains either the shader results or the base sprite
-    toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
+    // No passes and no overlays; front already has the base sprite.
+    toRender = shader_pipeline::front();
   }
 
   if (globals::drawDebugInfo) {

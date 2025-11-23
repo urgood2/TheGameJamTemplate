@@ -15,6 +15,7 @@ local TimerChain = require("core.timer_chain")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
+local shader_uniforms = require("core.shader_uniforms")
 -- local bit = require("bit") -- LuaJIT's bit library
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
@@ -437,6 +438,9 @@ function main.init()
     if PROFILE_ENABLED then
         profile.start()
     end
+
+    -- Initialize shader uniforms in Lua (migrating from C++).
+    shader_uniforms.init()
 
     
     -- register color palette "RESURRECT-64"

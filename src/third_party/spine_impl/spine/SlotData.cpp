@@ -40,7 +40,7 @@ SlotData::SlotData(int index, const String &name, BoneData &boneData) : _index(i
 																		_darkColor(0, 0, 0, 0),
 																		_hasDarkColor(false),
 																		_attachmentName(),
-																		_blendMode(BlendMode_Normal),
+																		_blendMode(spine::BlendMode_Normal),
 																		_visible(true) {
 	assert(_index >= 0);
 	assert(_name.length() > 0);
@@ -58,11 +58,11 @@ BoneData &SlotData::getBoneData() {
 	return _boneData;
 }
 
-Color &SlotData::getColor() {
+spine::Color &SlotData::getColor() {
 	return _color;
 }
 
-Color &SlotData::getDarkColor() {
+spine::Color &SlotData::getDarkColor() {
 	return _darkColor;
 }
 
@@ -82,11 +82,11 @@ void SlotData::setAttachmentName(const String &inValue) {
 	_attachmentName = inValue;
 }
 
-BlendMode SlotData::getBlendMode() {
+spine::BlendMode SlotData::getBlendMode() {
 	return _blendMode;
 }
 
-void SlotData::setBlendMode(BlendMode inValue) {
+void SlotData::setBlendMode(spine::BlendMode inValue) {
 	_blendMode = inValue;
 }
 

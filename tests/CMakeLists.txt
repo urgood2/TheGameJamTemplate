@@ -25,6 +25,10 @@ target_include_directories(unit_tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.16")
+    target_precompile_headers(unit_tests PRIVATE "${CMAKE_SOURCE_DIR}/src/util/common_headers.hpp")
+endif()
+
 target_compile_definitions(unit_tests PRIVATE
     ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets/"
 )

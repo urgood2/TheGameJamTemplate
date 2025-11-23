@@ -1,14 +1,104 @@
 cmake_minimum_required(VERSION 3.14)
 
+# Some third-party dependencies still declare very old cmake_minimum_required()
+# values. Force CMake to allow configuring them even though compatibility modes
+# below 3.5 have been removed in newer CMake releases.
+if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
+
+# Ensure ccache has a writable temp directory before the first compiler probe runs.
+if(NOT DEFINED ENV{CCACHE_TEMPDIR})
+    set(_repo_ccache_tmp "${CMAKE_SOURCE_DIR}/.ccache/tmp")
+    file(MAKE_DIRECTORY "${_repo_ccache_tmp}")
+    set(ENV{CCACHE_TEMPDIR} "${_repo_ccache_tmp}")
+endif()
 
 # set(LUAJIT_DIR "${CMAKE_SOURCE_DIR}/src/third_party/LuaJIT-2.1"
 #     CACHE PATH "Path to LuaJIT source directory" FORCE)
 
 project(raylib-cpp-cmake-template CXX C)
 
-if (PLATFORM STREQUAL "Web")
+# Legacy compatibility: allow old -DPLATFORM=Native/Web to keep working by
+# copying it into the new sentinel variable before we override PLATFORM for raylib.
+if(DEFINED PLATFORM AND NOT DEFINED GAME_PLATFORM)
+    if(PLATFORM STREQUAL "Native" OR PLATFORM STREQUAL "Web")
+        set(GAME_PLATFORM "${PLATFORM}")
+    endif()
+endif()
+
+# Normalize the high-level platform toggle we use throughout the project. We keep
+# the choices simple (Native/Web) and later translate to the concrete raylib
+# platform strings (Desktop/Web/...).
+set(GAME_PLATFORM "${GAME_PLATFORM}" CACHE STRING "Target platform (Native/Web)")
+set_property(CACHE GAME_PLATFORM PROPERTY STRINGS "Native" "Web")
+if(NOT DEFINED GAME_PLATFORM OR GAME_PLATFORM STREQUAL "")
+    if(EMSCRIPTEN)
+        set(GAME_PLATFORM "Web" CACHE STRING "Target platform (Native/Web)" FORCE)
+    else()
+        set(GAME_PLATFORM "Native" CACHE STRING "Target platform (Native/Web)" FORCE)
+    endif()
+elseif(EMSCRIPTEN AND NOT GAME_PLATFORM STREQUAL "Web")
+    # emcmake should always force the Web sentinel
+    set(GAME_PLATFORM "Web" CACHE STRING "Target platform (Native/Web)" FORCE)
+endif()
+
+# Map to raylib's expected PLATFORM strings so FetchContent builds configure
+# cleanly. Desktop is the default native target.
+if(GAME_PLATFORM STREQUAL "Web")
+    set(_raylib_platform "Web")
+else()
+    set(_raylib_platform "Desktop")
+endif()
+set(PLATFORM "${_raylib_platform}" CACHE STRING "Raylib platform selector" FORCE)
+
+if (GAME_PLATFORM STREQUAL "Web")
     add_definitions(-DFMT_USE_CONSTEXPR=0)
     add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_PARAMETERS=0)
+endif()
+
+option(TRACY_ENABLE "Enable Tracy profiler instrumentation" OFF)
+option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
+
+# Prefer compiler cache when available to speed up rebuilds.
+find_program(CCACHE_PROGRAM ccache)
+if (CCACHE_PROGRAM)
+    message(STATUS "ccache detected: enabling compiler launcher")
+    set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+
+    # Default to existing env var, otherwise keep cache local to the repo.
+    set(_default_ccache_dir "$ENV{CCACHE_DIR}")
+    if (NOT _default_ccache_dir)
+        set(_default_ccache_dir "${CMAKE_SOURCE_DIR}/.ccache")
+    endif()
+
+    set(CCACHE_DIR "${_default_ccache_dir}" CACHE PATH "Optional ccache directory (leave empty to use default)")
+    if (CCACHE_DIR)
+        file(MAKE_DIRECTORY "${CCACHE_DIR}")
+        file(MAKE_DIRECTORY "${CCACHE_DIR}/tmp")
+        set(ENV{CCACHE_DIR} "${CCACHE_DIR}")
+        set(ENV{CCACHE_TEMPDIR} "${CCACHE_DIR}/tmp")
+        message(STATUS "ccache CCACHE_DIR set to '${CCACHE_DIR}'")
+    endif()
+
+    # Honor an existing config path if present, otherwise leave empty to use ccache defaults.
+    set(_default_ccache_config "$ENV{CCACHE_CONFIGPATH}")
+    if (NOT _default_ccache_config AND EXISTS "${CMAKE_SOURCE_DIR}/.ccache/ccache.conf")
+        set(_default_ccache_config "${CMAKE_SOURCE_DIR}/.ccache/ccache.conf")
+    endif()
+    set(CCACHE_CONFIGPATH "${_default_ccache_config}" CACHE FILEPATH "Optional ccache.conf path (leave empty to use default search)")
+    if (CCACHE_CONFIGPATH)
+        set(ENV{CCACHE_CONFIGPATH} "${CCACHE_CONFIGPATH}")
+        message(STATUS "ccache CCACHE_CONFIGPATH set to '${CCACHE_CONFIGPATH}'")
+    endif()
+
+    add_custom_target(ccache_stats
+        COMMAND ${CCACHE_PROGRAM} -s
+        COMMENT "Show ccache statistics"
+    )
+else()
+    message(STATUS "ccache not found; builds will run without a compiler cache")
 endif()
 
 
@@ -16,6 +106,27 @@ endif()
 
 
 option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
+option(SKIP_ASSET_SCAN "Skip recursive asset scan at startup (can also set env SKIP_ASSET_SCAN=1)" OFF)
+option(SKIP_UUID_DUMP "Skip writing auto-generated all_uuids.json (can also set env SKIP_UUID_DUMP=1)" OFF)
+
+# ------------------------------------------------------------------
+# Dev ergonomics:
+#   - Set environment variable SKIP_ASSET_SCAN=1 to skip recursive asset walk at startup.
+#   - Set environment variable SKIP_UUID_DUMP=1 to skip writing all_uuids.json.
+# ------------------------------------------------------------------
+
+# propagate CMake options to code defaults (env vars still override at runtime)
+if (SKIP_ASSET_SCAN)
+    add_compile_definitions(SKIP_ASSET_SCAN_DEFAULT=1)
+else()
+    add_compile_definitions(SKIP_ASSET_SCAN_DEFAULT=0)
+endif()
+
+if (SKIP_UUID_DUMP)
+    add_compile_definitions(SKIP_UUID_DUMP_DEFAULT=1)
+else()
+    add_compile_definitions(SKIP_UUID_DUMP_DEFAULT=0)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,20 +135,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # enable tracy (disable for web)
 
-# Enable tracy only in non-release native builds
-if (NOT EMSCRIPTEN AND
-    NOT CMAKE_BUILD_TYPE MATCHES "Release" AND
-    NOT CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
-
+# Enable tracy only when requested (default OFF) and not on Web.
+if (NOT EMSCRIPTEN AND TRACY_ENABLE)
     message(STATUS "Tracy ENABLED for this build")
     add_definitions(-DTRACY_ENABLED=1)
     add_definitions(-DTRACY_NO_CRASH_HANDLER)
-    option( TRACY_ENABLE "" ON)
-
 else()
     message(STATUS "Tracy DISABLED for this build")
     add_definitions(-DTRACY_ENABLED=0)
-    option( TRACY_ENABLE "" OFF)
 endif()
 
 
@@ -49,7 +154,7 @@ if (EMSCRIPTEN)
     add_definitions(-DSOKOL_GLES3)
     set(BUILD_DEMOS OFF)
     set(INSTALL_DEMOS OFF)
-elseif()
+else()
     set(OPENGL_VERSION "3.3") #apple uses 4.1, which is not supported 
 endif()
 
@@ -408,7 +513,7 @@ add_git_dependency(
 # Add the src subdirectory
 add_subdirectory("src/third_party/GPGOAP")
 add_subdirectory("src/third_party/chipmunk")
-if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN AND TRACY_ENABLE)
     add_subdirectory("src/third_party/tracy-master")
 endif()
 add_subdirectory("src/third_party/objectpool-master")
@@ -422,13 +527,30 @@ add_subdirectory("src/third_party/objectpool-master")
 # Define PROJECT_SOURCES as a list of all source files
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
 
-# Exclude files in src/third_party/tracy-master
-foreach(file ${PROJECT_SOURCES})
-    if(file MATCHES "/src/third_party/tracy-master")
-        list(REMOVE_ITEM PROJECT_SOURCES ${file})
+# Exclude third_party code that is built as separate libraries
+list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/third_party/(tracy-master|chipmunk|GPGOAP|objectpool-master|fmt|sol2|luajit-cmake-master|LuaJIT-2.1)/")
+if(NOT EMSCRIPTEN AND TRACY_ENABLE)
+    list(APPEND PROJECT_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/TracyClient.cpp")
+endif()
+# Pull in objectpool implementation directly (the bundled CMake project doesn't produce a library target).
+set(OBJECTPOOL_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/third_party/objectpool-master/src/object_pool.cpp")
+list(APPEND PROJECT_SOURCES ${OBJECTPOOL_SOURCES})
+
+# Avoid pulling heavy precompiled headers into the Spine runtime sources; they don't
+# benefit much and can introduce name clashes with raylib types (e.g. Color/BlendMode).
+file(GLOB_RECURSE SPINE_IMPL_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/third_party/spine_impl/*.cpp")
+if(SPINE_IMPL_SOURCES)
+    set_source_files_properties(${SPINE_IMPL_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+    if(ENABLE_UNITY_BUILD)
+        set_source_files_properties(${SPINE_IMPL_SOURCES} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
     endif()
-endforeach()
-list(APPEND PROJECT_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/TracyClient.cpp")
+endif()
+if(OBJECTPOOL_SOURCES)
+    set_source_files_properties(${OBJECTPOOL_SOURCES} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+    if(ENABLE_UNITY_BUILD)
+        set_source_files_properties(${OBJECTPOOL_SOURCES} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
+    endif()
+endif()
 
 
 # Define PROJECT_INCLUDE to be the path to the include directory of the project
@@ -442,7 +564,7 @@ target_include_directories(CommonSettings INTERFACE
     ${PROJECT_SOURCE_DIR}
     "${PROJECT_INCLUDE}/fudge_pathfinding"
     "${PROJECT_INCLUDE}/fudge_pathfinding/util"
-    "${PROJECT_INCLUDE}/GPGOAP",
+    "${PROJECT_INCLUDE}/GPGOAP"
     "${random_SOURCE_DIR}/include"
     "${entt_SOURCE_DIR}/single_include"
     "${magic_enum_SOURCE_DIR}/include"
@@ -474,8 +596,11 @@ target_link_libraries(CommonSettings INTERFACE
     snowhouse
     # LDtkLoader
 )
+target_compile_definitions(CommonSettings INTERFACE
+    IMGUI_DEFINE_MATH_OPERATORS
+)
 
-if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN AND TRACY_ENABLE)
     target_include_directories(CommonSettings INTERFACE
         "third_party/tracy-master/public"
     )
@@ -580,6 +705,16 @@ target_sources(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_INCLUDE})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.16")
+    # Speed up compiles by precompiling our shared heavy header.
+    target_precompile_headers(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/src/util/common_headers.hpp")
+endif()
+if (ENABLE_UNITY_BUILD AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.16")
+    set_property(TARGET ${PROJECT_NAME} PROPERTY UNITY_BUILD ON)
+    message(STATUS "Unity build ENABLED for target ${PROJECT_NAME}")
+elseif(ENABLE_UNITY_BUILD)
+    message(WARNING "Unity build requested but requires CMake >= 3.16; ignoring.")
+endif()
 # target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_INCLUDE}/spine") #removed for now - not sure if needed
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/fudge_pathfinding")
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/fudge_pathfinding/util")
@@ -587,48 +722,20 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
 
 
 # ------------------------------------------------------------
-# Build directory logic for native vs Emscripten
+# Web build helpers (shared)
 # ------------------------------------------------------------
 if(EMSCRIPTEN)
-    # Emscripten uses a single output directory for everything
-    set(BUILD_DIR "${CMAKE_BINARY_DIR}" CACHE PATH "" FORCE)
-endif()
+    # Keep a configurable output dir for emscripten builds.
+    set(WEB_BUILD_DIR "${WEB_BUILD_DIR}" CACHE PATH "Output directory for Emscripten builds")
+    if(NOT WEB_BUILD_DIR)
+        set(WEB_BUILD_DIR "${CMAKE_SOURCE_DIR}/build-emc" CACHE PATH "Output directory for Emscripten builds" FORCE)
+    endif()
 
-# Add include directories for single-header dependencies
-# target_include_directories(${PROJECT_NAME} PUBLIC "${random_SOURCE_DIR}/include")
-# target_include_directories(${PROJECT_NAME} PUBLIC "${entt_SOURCE_DIR}/single_include")
-# target_include_directories(${PROJECT_NAME} PUBLIC "${magic_enum_SOURCE_DIR}/include")
-# # target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include/taskflow-master/taskflow")
-# # target_include_directories(${PROJECT_NAME} PUBLIC "${poisson-disk-generator_SOURCE_DIR}")
-# target_include_directories(${PROJECT_NAME} PUBLIC "${glm_SOURCE_DIR}")
-# target_include_directories(${PROJECT_NAME} PUBLIC "${sol2_SOURCE_DIR}/include")
-# target_include_directories(${PROJECT_NAME} PUBLIC "${sol2_SOURCE_DIR}/include/sol")
+    # Copy assets into the web output tree to match expected /assets layout.
+    add_custom_target(copy_assets
+        COMMENT "Copying asset files to web build directory"
+    )
 
-##########################################################################################
-# Add custom commands for web build, zipping, and publishing with Butler
-##########################################################################################
-
-# Set project and output paths 
-set(EMSDK_PATH "D:/emsdk")  # Replace with your emsdk installation path
-set(EMSCRIPTEN_PATH "${EMSDK_PATH}/upstream/emscripten")
-set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build-emc")
-set(WEB_OUT "${BUILD_DIR}/index.html")
-set(WEB_ZIP "${CMAKE_SOURCE_DIR}/${PROJECT_NAME}_web.zip")
-
-# Target to activate emsdk
-add_custom_target(activate_emsdk
-    COMMAND ${CMAKE_COMMAND} -E echo "Activating emsdk latest..."
-    COMMAND emsdk activate latest --permanent
-    COMMENT "Activating latest emsdk"
-)
-
-add_custom_target(copy_assets ALL
-    COMMENT "Copying asset files to build directory"
-)
-
-if(EMSCRIPTEN)
-    # Only add copy logic when EMSCRIPTEN is true
-    set(EXCLUDED_DIR ${CMAKE_SOURCE_DIR}/assets/graphics/pre-packing-files_globbed)
     file(GLOB_RECURSE ASSET_FILES RELATIVE ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets/*)
 
     foreach(ASSET_FILE ${ASSET_FILES})
@@ -641,114 +748,164 @@ if(EMSCRIPTEN)
         # Skip the excluded directory
         string(FIND "${ASSET_FILE}" "graphics/pre-packing-files_globbed" FOUND)
         if(FOUND EQUAL -1)
-            # Create the destination directory first
-            get_filename_component(DEST_DIR "${BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
-            message(STATUS "ASSET_FILE='${ASSET_FILE}'")
-            message(STATUS "SRC='${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}'")
-            message(STATUS "DST='${BUILD_DIR}/assets/${ASSET_FILE}'")
+            get_filename_component(DEST_DIR "${WEB_BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
             add_custom_command(
                 TARGET copy_assets POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
                 COMMAND ${CMAKE_COMMAND} -E copy
                         "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
-                        "${BUILD_DIR}/assets/${ASSET_FILE}"
+                        "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
             )
         endif()
     endforeach()
 endif()
 
+##########################################################################################
+# Add custom commands for web build, zipping, and publishing with Butler (cross-platform)
+##########################################################################################
+if(EMSCRIPTEN)
+    # Allow overriding the emsdk root; pick sensible defaults per platform.
+    if(NOT EMSDK_PATH)
+        if(DEFINED ENV{EMSDK} AND NOT "$ENV{EMSDK}" STREQUAL "")
+            set(EMSDK_PATH "$ENV{EMSDK}" CACHE PATH "Path to your emsdk installation" FORCE)
+        elseif(WIN32)
+            set(EMSDK_PATH "D:/emsdk" CACHE PATH "Path to your emsdk installation" FORCE)
+        else()
+            set(EMSDK_PATH "$ENV{HOME}/emsdk" CACHE PATH "Path to your emsdk installation" FORCE)
+        endif()
+    endif()
 
-# Target to configure CMake with Emscripten
-add_custom_target(configure_web_build
-    DEPENDS activate_emsdk copy_assets
-    COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. 
-        -DPLATFORM=Web 
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1"
-        -DCMAKE_EXECUTABLE_SUFFIX=\".html\" 
-    WORKING_DIRECTORY ${BUILD_DIR}
-    COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"
-)
+    set(EMSCRIPTEN_PATH "${EMSDK_PATH}/upstream/emscripten")
+    set(WEB_OUTPUT_HTML "${WEB_BUILD_DIR}/index.html")
+    set(WEB_ZIP "${CMAKE_SOURCE_DIR}/${PROJECT_NAME}_web.zip")
 
-# COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3 -s -sFULL_ES3 -s MIN_WEBGL_VERSION=2 -sNO_DISABLE_EXCEPTION_CATCHING=1" -DCMAKE_EXECUTABLE_SUFFIX=".html"
+    # OS-specific helpers
+    if(WIN32)
+        set(_emsdk_env_cmd "call \"${EMSDK_PATH}/emsdk_env.bat\" &&")
+        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake.bat\"")
+        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake.bat\"")
+        set(_inject_cmd
+            powershell -ExecutionPolicy Bypass -NoProfile -File "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.ps1" `
+                -HtmlPath "${WEB_OUTPUT_HTML}" `
+                -SnippetPath "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html"
+        )
+        set(_shell_prefix cmd /C)
+    else()
+        set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
+        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
+        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
+        set(_inject_cmd
+            ${CMAKE_COMMAND} -DHTML_PATH="${WEB_OUTPUT_HTML}" -DSNIPPET_PATH="${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html" -P "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.cmake"
+        )
+        set(_shell_prefix bash -lc)
+    endif()
 
-# Target to compile the web build
-add_custom_target(compile_web_build
-    DEPENDS configure_web_build
-    COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emmake.bat make
-    WORKING_DIRECTORY ${BUILD_DIR}
-    COMMENT "Compiling web build with Emscripten"
-)
+    set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1")
+    set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\\\"${_emscripten_link_flags}\\\" -DCMAKE_EXECUTABLE_SUFFIX=.html")
 
-# Target to rename the output HTML to index.html
-add_custom_target(rename_to_index
-    DEPENDS compile_web_build
-    COMMAND ${CMAKE_COMMAND} -E copy ${BUILD_DIR}/${PROJECT_NAME}.html ${WEB_OUT}
-    COMMENT "Renaming output HTML file to index.html"
-)
+    # Target to activate emsdk
+    add_custom_target(activate_emsdk
+        COMMAND ${CMAKE_COMMAND} -E echo "Activating emsdk latest..."
+        COMMAND ${_shell_prefix} "${_emsdk_env_cmd} emsdk activate latest --permanent"
+        COMMENT "Activating latest emsdk"
+    )
 
-# Inject snippet into <head> of index.html
-set(INJECT_SNIPPET_PATH "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html")
-set(INJECT_SCRIPT_PATH "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.ps1")
+    # Target to configure CMake with Emscripten
+    add_custom_target(configure_web_build
+        DEPENDS activate_emsdk copy_assets
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${WEB_BUILD_DIR}"
+        COMMAND ${_shell_prefix} "${_emsdk_env_cmd} ${_emcmake_cmd} cmake .. ${_configure_args}"
+        WORKING_DIRECTORY ${WEB_BUILD_DIR}
+        COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"
+    )
 
-add_custom_target(inject_web_patch
-    DEPENDS rename_to_index
-    COMMAND ${CMAKE_COMMAND} -E echo "Injecting custom HTML snippet into <head>..."
-    COMMAND powershell -ExecutionPolicy Bypass -NoProfile -File "${INJECT_SCRIPT_PATH}" `
-        -HtmlPath "${WEB_OUT}" `
-        -SnippetPath "${INJECT_SNIPPET_PATH}"
-    COMMENT "Patch index.html with custom <script> logic"
-)
+    # Target to compile the web build
+    add_custom_target(compile_web_build
+        DEPENDS configure_web_build
+        COMMAND ${_shell_prefix} "${_emsdk_env_cmd} cmake --build ."
+        WORKING_DIRECTORY ${WEB_BUILD_DIR}
+        COMMENT "Compiling web build with Emscripten"
+    )
 
-set(WASM_FILE "${BUILD_DIR}/${PROJECT_NAME}.wasm")
-set(DATA_FILE "${BUILD_DIR}/${PROJECT_NAME}.data")
-set(JS_FILE "${BUILD_DIR}/${PROJECT_NAME}.js")
+    # Target to rename the output HTML to index.html
+    add_custom_target(rename_to_index
+        DEPENDS compile_web_build
+        COMMAND ${CMAKE_COMMAND} -E copy ${WEB_BUILD_DIR}/${PROJECT_NAME}.html ${WEB_OUTPUT_HTML}
+        COMMENT "Renaming output HTML file to index.html"
+    )
 
-add_custom_target(gzip_assets
-    DEPENDS inject_web_patch
-    COMMAND ${CMAKE_COMMAND} -E echo "Gzipping WASM and DATA files..."
-    COMMAND ${CMAKE_COMMAND} -E copy ${WASM_FILE} ${WASM_FILE}.orig
-    COMMAND ${CMAKE_COMMAND} -E copy ${DATA_FILE} ${DATA_FILE}.orig
-    COMMAND ${CMAKE_COMMAND} -E echo "Trying: ${GZIP_EXE} -kf ${WASM_FILE}"
-    COMMAND ${GZIP_EXE} -kf ${WASM_FILE}
-    COMMAND ${GZIP_EXE} -kf ${DATA_FILE}
-    COMMENT "Gzipping .wasm and .data files"
-) 
+    # Inject snippet into <head> of index.html
+    add_custom_target(inject_web_patch
+        DEPENDS rename_to_index
+        COMMAND ${CMAKE_COMMAND} -E echo "Injecting custom HTML snippet into <head>..."
+        COMMAND ${_inject_cmd}
+        COMMENT "Patch index.html with custom <script> logic"
+    )
 
-# Set up the target to zip without the parent folder
-add_custom_target(zip_web_build
-    DEPENDS gzip_assets
-    COMMAND ${CMAKE_COMMAND} -E tar "cf" ${WEB_ZIP} --format=zip index.html ${WASM_FILE}.gz ${DATA_FILE}.gz ${JS_FILE} assets
-    # COMMAND ${CMAKE_COMMAND} -E tar "cf" ${WEB_ZIP} --format=zip index.html ${WASM_FILE} ${DATA_FILE} ${JS_FILE} assets
-    WORKING_DIRECTORY ${BUILD_DIR}
-    COMMENT "Zipping web build for distribution"
-)
+    set(WASM_FILE "${WEB_BUILD_DIR}/${PROJECT_NAME}.wasm")
+    set(DATA_FILE "${WEB_BUILD_DIR}/${PROJECT_NAME}.data")
+    set(JS_FILE "${WEB_BUILD_DIR}/${PROJECT_NAME}.js")
 
-set(BUTLER_PATH "D:/butler-windows-amd64")  
+    # Custom target to clean only web-specific output files
+    add_custom_target(clean_web_build
+        COMMAND ${CMAKE_COMMAND} -E remove
+            ${WEB_BUILD_DIR}/index.html
+            ${WEB_BUILD_DIR}/${PROJECT_NAME}.html
+            ${WEB_BUILD_DIR}/${PROJECT_NAME}.js
+            ${WEB_BUILD_DIR}/${PROJECT_NAME}.wasm
+            ${WEB_BUILD_DIR}/${PROJECT_NAME}.data
+        COMMENT "Cleaning web-specific output files (HTML, JS, WASM, etc.)"
+    )
 
-# Publish directly to itch.io (you will need to install and login to butler)
-add_custom_target(push_web_build
-    DEPENDS clean_web_build  zip_web_build
-    COMMAND ${BUTLER_PATH}/butler push ${WEB_ZIP} ${ITCH_USER}/${ITCH_PAGE}:web --userversion ${PROJECT_VERSION}
-    COMMENT "Publishing web build to Itch.io with Butler"
-)
+    if(NOT GZIP_EXE)
+        find_program(GZIP_EXE gzip)
+    endif()
 
-# Custom target to clean only web-specific output files
-add_custom_target(clean_web_build
-    COMMAND ${CMAKE_COMMAND} -E remove
-        ${BUILD_DIR}/index.html
-        ${BUILD_DIR}/${PROJECT_NAME}.html
-        ${BUILD_DIR}/${PROJECT_NAME}.js
-        ${BUILD_DIR}/${PROJECT_NAME}.wasm
-        ${BUILD_DIR}/${PROJECT_NAME}.data
-    COMMENT "Cleaning web-specific output files (HTML, JS, WASM, etc.)"
-)
+    if(GZIP_EXE)
+        add_custom_target(gzip_assets
+            DEPENDS inject_web_patch
+            COMMAND ${CMAKE_COMMAND} -E echo "Gzipping WASM and DATA files..."
+            COMMAND ${CMAKE_COMMAND} -E copy ${WASM_FILE} ${WASM_FILE}.orig
+            COMMAND ${CMAKE_COMMAND} -E copy ${DATA_FILE} ${DATA_FILE}.orig
+            COMMAND ${CMAKE_COMMAND} -E echo "Trying: ${GZIP_EXE} -kf ${WASM_FILE}"
+            COMMAND ${GZIP_EXE} -kf ${WASM_FILE}
+            COMMAND ${GZIP_EXE} -kf ${DATA_FILE}
+            COMMENT "Gzipping .wasm and .data files"
+        ) 
 
-# Add clean_web_build as a dependency of the standard clean target
-add_custom_target(clean_all
-    DEPENDS clean_web_build
-    COMMENT "Cleaning all build files, including web-specific files"
-)
+        # Set up the target to zip without the parent folder
+        add_custom_target(zip_web_build
+            DEPENDS gzip_assets
+            COMMAND ${CMAKE_COMMAND} -E tar "cf" ${WEB_ZIP} --format=zip index.html ${WASM_FILE}.gz ${DATA_FILE}.gz ${JS_FILE} assets
+            WORKING_DIRECTORY ${WEB_BUILD_DIR}
+            COMMENT "Zipping web build for distribution"
+        )
+
+        set(BUTLER_PATH "D:/butler-windows-amd64" CACHE STRING "Path to itch.io butler executable or directory")
+        if(IS_DIRECTORY "${BUTLER_PATH}")
+            set(_BUTLER_EXE "${BUTLER_PATH}/butler")
+        elseif(BUTLER_PATH)
+            set(_BUTLER_EXE "${BUTLER_PATH}")
+        else()
+            set(_BUTLER_EXE "butler")
+        endif()
+
+        # Publish directly to itch.io (you will need to install and login to butler)
+        add_custom_target(push_web_build
+            DEPENDS clean_web_build zip_web_build
+            COMMAND ${_BUTLER_EXE} push ${WEB_ZIP} ${ITCH_USER}/${ITCH_PAGE}:web --userversion ${PROJECT_VERSION}
+            COMMENT "Publishing web build to Itch.io with Butler"
+        )
+    else()
+        message(WARNING "GZIP_EXE not found; gzip_assets and zip_web_build helper targets will be skipped.")
+    endif()
+
+    # Add clean_web_build as a dependency of the standard clean target
+    add_custom_target(clean_all
+        DEPENDS clean_web_build
+        COMMENT "Cleaning all build files, including web-specific files"
+    )
+endif()
 
 ##########################################################################################
 # Testing : delete later
@@ -788,8 +945,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 # Add tests
 ##########################################################################################
 
-option(ENABLE_UNIT_TESTS "Enable unit tests" ON)
-option(ENABLE_ASAN "Enable AddressSanitizer" ON)
+option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 if(ENABLE_UNIT_TESTS)
     enable_testing()
@@ -827,8 +984,7 @@ add_definitions( -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_STD_OPTIONAL) # Enable std::optional support in sol2 to prevent errors
 
-# at the top of CMakeLists.txt
-if(${PLATFORM} STREQUAL "Web")
+if(EMSCRIPTEN)
     message(STATUS "Detected Emscripten; forcing ASSETS_PATH=\"/assets/\"")
     target_compile_definitions(${PROJECT_NAME} PUBLIC
         ASSETS_PATH=\"/assets/\")
@@ -850,14 +1006,12 @@ endif()
 # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wswitch")
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
 
-if (${PLATFORM} STREQUAL "Web")
+if (EMSCRIPTEN)
     # Tell Emscripten to build an .html file.
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Os")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -Os -Wall -s TOTAL_MEMORY=512MB -s FORCE_FILESYSTEM=1 --preload-file assets/ --shell-file ../src/minshell.html")
-    set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so that you can directly open it.
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -Os -Wall -s TOTAL_MEMORY=512MB -s FORCE_FILESYSTEM=1 --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="/assets/") # Set the asset path macro in release mode to a relative path that assumes the assets folder is in the same directory as the game executable
 endif()
 
 

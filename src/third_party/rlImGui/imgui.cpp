@@ -15884,7 +15884,7 @@ void ImGui::UpdateDebugToolItemPicker()
         return;
 
     const ImGuiID hovered_id = g.HoveredIdPreviousFrame;
-    SetMouseCursor(ImGuiMouseCursor_Hand);
+    ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
     if (IsKeyPressed(ImGuiKey_Escape))
         g.DebugItemPickerActive = false;
     const bool change_mapping = g.IO.KeyMods == (ImGuiMod_Ctrl | ImGuiMod_Shift);

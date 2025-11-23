@@ -9,6 +9,12 @@ namespace ldtk_loader {
         std::string assetDirectory{};
         RenderTexture2D renderTexture{};
         std::unordered_map<std::string, TilesetData> tilesetCache{};
+        ProjectConfig activeConfig{};
+        bool hasActiveProject{false};
+        entt::registry* registry{nullptr};
+        EntitySpawnFn entitySpawner{};
+        std::string activeLevel{};
+        std::string activePhysicsWorld{};
     }
 }
 

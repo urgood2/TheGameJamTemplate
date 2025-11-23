@@ -1,0 +1,63 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev libpulse-dev libx11-dev libxext-dev libxrandr-dev \
+            libxi-dev libxinerama-dev libxcursor-dev libglu1-mesa-dev libgl1-mesa-dev \
+            libdrm-dev libgbm-dev libxkbcommon-dev
+
+      - name: Configure
+        run: cmake -B build -DENABLE_UNIT_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build and run tests
+        run: cmake --build build --target run-tests
+
+  asan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev libpulse-dev libx11-dev libxext-dev libxrandr-dev \
+            libxi-dev libxinerama-dev libxcursor-dev libglu1-mesa-dev libgl1-mesa-dev \
+            libdrm-dev libgbm-dev libxkbcommon-dev
+
+      - name: Configure (ASAN)
+        env:
+          CFLAGS: "-fsanitize=address -fno-omit-frame-pointer"
+          CXXFLAGS: "-fsanitize=address -fno-omit-frame-pointer"
+        run: |
+          cmake -B build-asan \
+            -DENABLE_UNIT_TESTS=ON \
+            -DENABLE_ASAN=ON \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="${CFLAGS}" \
+            -DCMAKE_CXX_FLAGS="${CXXFLAGS}"
+
+      - name: Build and run tests (ASAN)
+        env:
+          ASAN_OPTIONS: detect_leaks=1
+        run: cmake --build build-asan --target run-tests

@@ -20,6 +20,10 @@
 #include "../systems/physics/physics_manager.hpp"
 
 #include <chrono>
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
+#include <unordered_set>
 
 namespace init {
 
@@ -28,8 +32,30 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
     return getAtlasTexture(atlasUUID);
 }
     
+    namespace {
+#ifndef SKIP_ASSET_SCAN_DEFAULT
+#define SKIP_ASSET_SCAN_DEFAULT 0
+#endif
+#ifndef SKIP_UUID_DUMP_DEFAULT
+#define SKIP_UUID_DUMP_DEFAULT 0
+#endif
+        bool envFlagSet(const char* name) {
+            if (const char* v = std::getenv(name)) {
+                std::string val = v;
+                std::transform(val.begin(), val.end(), val.begin(), ::tolower);
+                return (val == "1" || val == "true" || val == "yes");
+            }
+            return false;
+        }
+    }
+
     void scanAssetsFolderAndAddAllPaths()
     {
+        const bool skipScan = (SKIP_ASSET_SCAN_DEFAULT != 0) || envFlagSet("SKIP_ASSET_SCAN");
+        if (skipScan) {
+            SPDLOG_INFO("Skipping asset scan ({}).", (SKIP_ASSET_SCAN_DEFAULT != 0) ? "CMake default" : "env SKIP_ASSET_SCAN");
+            return;
+        }
     #ifdef __EMSCRIPTEN__
         auto folderPath = "assets";
     #else
@@ -66,23 +92,22 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
             SPDLOG_ERROR("Error: {}", e.what());
         }
 
-        // add every subpath to uuids
-        for (const auto &pathStr : subpaths)
-        {
-            uuid::add(pathStr);
-        }
-        
+        std::unordered_set<std::string> seenPaths;
+        std::unordered_set<std::string> seenFilenames;
+
         for (const auto& pathStr : subpaths)
         {
-            // Add full path
-            uuid::add(pathStr);
+            if (seenPaths.insert(pathStr).second) {
+                uuid::add(pathStr);
+            }
 
-            // Also add just the filename if it exists and is not a directory
             std::filesystem::path fsPath(pathStr);
             if (std::filesystem::is_regular_file(fsPath))
             {
                 auto filename = fsPath.filename().string(); // e.g., "enemy.png"
-                uuid::add(filename);
+                if (seenFilenames.insert(filename).second) {
+                    uuid::add(filename);
+                }
             }
         }
     }
@@ -151,8 +176,13 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
 
         
 
-        // dump uuids to a file for debugging & reference
-        uuid::dump_to_json(util::getRawAssetPathNoUUID("all_uuids.json #auto_generated #verified.json"));
+        // dump uuids to a file for debugging & reference (dev builds only)
+        const bool skipDump = (SKIP_UUID_DUMP_DEFAULT != 0) || envFlagSet("SKIP_UUID_DUMP") || globals::getReleaseMode();
+        if (!skipDump) {
+            uuid::dump_to_json(util::getRawAssetPathNoUUID("all_uuids.json #auto_generated #verified.json"));
+        } else {
+            SPDLOG_INFO("Skipping UUID dump ({}).", (SKIP_UUID_DUMP_DEFAULT != 0) ? "CMake default" : (globals::getReleaseMode() ? "release mode" : "env SKIP_UUID_DUMP"));
+        }
     }
 
     void loadAnimationsFromJSON()

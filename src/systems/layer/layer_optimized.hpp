@@ -7,7 +7,7 @@
 
 #include <optional>
 #include <vector>
-#include <unordered_map>
+#include <array>
 #include <string>
 #include <functional> 
 
@@ -131,6 +131,8 @@ namespace layer
 
         Count // <--- always last
     };
+    constexpr std::size_t kDrawCommandCount = static_cast<std::size_t>(DrawCommandType::Count);
+    static_assert(static_cast<std::size_t>(DrawCommandType::Count) == kDrawCommandCount, "DrawCommandType::Count must remain last and contiguous.");
     
     // ===========================
     // Draw Command Buffer
@@ -600,11 +602,23 @@ namespace layer
     // Dispatcher System
     // ===========================
     using RenderFunc = std::function<void(std::shared_ptr<layer::Layer>, void*)>;
-    extern std::unordered_map<DrawCommandType, RenderFunc> dispatcher;
+    extern std::array<RenderFunc, kDrawCommandCount> dispatcher;
+
+    inline std::size_t ToIndex(DrawCommandType type) {
+        return static_cast<std::size_t>(type);
+    }
+
+    inline RenderFunc* GetRenderer(DrawCommandType type) {
+        const auto idx = ToIndex(type);
+        if (idx >= dispatcher.size()) return nullptr;
+        return &dispatcher[idx];
+    }
 
     template<typename T>
     inline void RegisterRenderer(DrawCommandType type, void(*func)(std::shared_ptr<layer::Layer>, T*)) {
-        dispatcher[type] = [func](std::shared_ptr<layer::Layer> layer, void* data) {
+        const auto idx = ToIndex(type);
+        if (idx >= dispatcher.size()) return;
+        dispatcher[idx] = [func](std::shared_ptr<layer::Layer> layer, void* data) {
             func(layer, static_cast<T*>(data));
         };
     }

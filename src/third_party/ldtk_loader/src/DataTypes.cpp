@@ -4,23 +4,21 @@
 
 #include <utility>
 
-using namespace ldtk;
-
-Color::Color(unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha) :
+ldtk::Color::Color(unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha) :
 r(red&0xffu),
 g(green&0xffu),
 b(blue&0xffu),
 a(alpha&0xffu)
 {}
 
-Color::Color(int hex) :
-Color((hex>>16)&0xff, (hex>>8)&0xff, hex&0xff)
+ldtk::Color::Color(int hex) :
+    Color((hex>>16)&0xff, (hex>>8)&0xff, hex&0xff)
 {}
 
-Color::Color(const std::string& hex) :
-Color(std::stoul(hex.substr(1, 2), nullptr, 16),
-      std::stoul(hex.substr(3, 2), nullptr, 16),
-      std::stoul(hex.substr(5, 2), nullptr, 16))
+ldtk::Color::Color(const std::string& hex) :
+    Color(std::stoul(hex.substr(1, 2), nullptr, 16),
+          std::stoul(hex.substr(3, 2), nullptr, 16),
+          std::stoul(hex.substr(5, 2), nullptr, 16))
 {}
 
 auto ldtk::operator==(const Color& lhs, const Color& rhs) -> bool {
@@ -29,7 +27,7 @@ auto ldtk::operator==(const Color& lhs, const Color& rhs) -> bool {
 
 }
 
-const IntGridValue IntGridValue::None{-1, "", Color()};
+const ldtk::IntGridValue ldtk::IntGridValue::None{-1, "", ldtk::Color()};
 
 ldtk::FilePath::FilePath(const std::string& str) {
     this->assign(str);
@@ -57,10 +55,10 @@ auto ldtk::FilePath::extension() const -> std::string {
     return f.substr(i+1);
 }
 
-IID::IID(std::string  iid): m_iid(std::move(iid))
+ldtk::IID::IID(std::string  iid): m_iid(std::move(iid))
 {}
 
-auto IID::str() const -> const std::string& {
+auto ldtk::IID::str() const -> const std::string& {
     return m_iid;
 }
 
@@ -68,14 +66,14 @@ auto ldtk::operator==(const IID& lhs, const IID& rhs) -> bool {
     return lhs.str() == rhs.str();
 }
 
-EntityRef::EntityRef(IID ent, IID  layer, IID level, IID world) :
+ldtk::EntityRef::EntityRef(IID ent, IID  layer, IID level, IID world) :
 entity_iid(std::move(ent)),
 layer_iid(std::move(layer)),
 level_iid(std::move(level)),
 world_iid(std::move(world))
 {}
 
-auto EntityRef::operator->() const -> const Entity* {
+auto ldtk::EntityRef::operator->() const -> const Entity* {
     return ref;
 }
 

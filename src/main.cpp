@@ -32,12 +32,8 @@
 #undef far
 #endif
 
-#if defined(PLATFORM_WEB)
+#if defined(PLATFORM_WEB) || defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
-#endif
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
 #endif
 
 #include "effolkronium/random.hpp"   // https://github.com/effolkronium/random
@@ -185,10 +181,8 @@ auto loadingScreenStateGameLoopRender(float dt) -> void
 {
     // show loading screen
 
-    BeginDrawing();
     ClearBackground(RAYWHITE);
     DrawText("Loading...", 20, 20, 40, LIGHTGRAY);
-    EndDrawing();
 }
 
 auto gameOverScreenGameLoopRender(float dt) -> void
@@ -296,6 +290,7 @@ void RunGameLoop()
             frameTimes.pop_front();
 
         float deltaTime = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
+        mainLoop.smoothedDeltaTime = deltaTime;
 
         // ---------- Step 2: Accumulate time ----------
         mainLoop.realtimeTimer += deltaTime;
@@ -303,7 +298,8 @@ void RunGameLoop()
             mainLoop.totaltimeTimer += deltaTime;
 
         // Accumulate lag for fixed-step updates (real time, not scaled)
-        mainLoop.lag = std::min(mainLoop.lag + deltaTime, mainLoop.rate * mainLoop.maxFrameSkip);
+        const float lagDelta = globals::getIsGamePaused() ? 0.0f : deltaTime;
+        mainLoop.lag = std::min(mainLoop.lag + lagDelta, mainLoop.rate * mainLoop.maxFrameSkip);
 
         // ---------- Step 3: Fixed updates ----------
         int updatesPerformed = 0;
@@ -343,9 +339,6 @@ void RunGameLoop()
         }
 
         // ---------- Step 5: Rendering ----------
-        // Optional interpolation factor (use for smooth rendering)
-        float alpha = mainLoop.lag / mainLoop.rate;
-        
         float scaledStep = rawDeltaTime * mainLoop.timescale;
         // ---------- Step 4.5: Fixed update (moved) ----------
         {
@@ -355,8 +348,8 @@ void RunGameLoop()
         }
 
 
-        // Pass alpha or deltaTime as appropriate to your renderer
-        MainLoopRenderAbstraction(alpha);
+        // Pass real render deltaTime to renderer
+        MainLoopRenderAbstraction(scaledStep);
 
         // Render-time timers (if you use time-scaled effects here, apply timescale manually)
         timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
@@ -406,12 +399,12 @@ int main(void)
     
     layer::InitDispatcher();
 
+    main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
     SetTargetFPS(main_loop::mainLoop.framerate); 
 
     SetExitKey(-1);
 
     init::startInit();
-    main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
     
 
     input::Init(globals::getInputState(), globals::getRegistry(), globals::g_ctx);

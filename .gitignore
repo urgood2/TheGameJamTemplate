@@ -72,6 +72,10 @@ compile_commands.json
 *apk*
 android.*
 
+build-test/
+build-skip/
+build-debug-ninja/
+.ccache/
 build-asan/
 /web_build
 /desktop_build

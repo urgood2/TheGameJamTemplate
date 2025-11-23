@@ -37,6 +37,7 @@
 #include "systems/camera/camera_bindings.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/controller_nav.hpp"
+#include "systems/ldtk_loader/ldtk_combined.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/physics/physics_lua_bindings.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
@@ -260,6 +261,91 @@ namespace scripting {
         // methods from utilities.cpp. These can be called from lua✅
         //---------------------------------------------------------
         util::exposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // LDtk helpers (config-driven, entity iteration)
+        //---------------------------------------------------------
+        {
+            sol::table ldtk = stateToInit.create_table();
+
+            ldtk.set_function("load_config", [](const std::string& cfgPath) {
+                // cfgPath is relative to assets/ (same convention as other loaders)
+                ldtk_loader::ReloadProject(cfgPath);
+                ldtk_loader::SetRegistry(globals::getRegistry());
+            });
+
+            ldtk.set_function("spawn_entities", [](const std::string& levelName, sol::function cb) {
+                ldtk_loader::SetRegistry(globals::getRegistry());
+                ldtk_loader::ForEachEntity(levelName, [cb](const ldtk_loader::EntitySpawnInfo& info) {
+                    if (cb.valid()) {
+                        cb(info.name, info.position.x, info.position.y, info.layer, info.grid.x, info.grid.y);
+                    }
+                });
+            });
+
+            ldtk.set_function("prefab_for", [](const std::string& entityName) {
+                return ldtk_loader::PrefabForEntity(entityName);
+            });
+
+            ldtk.set_function("set_spawner", [](sol::function fn) {
+                static sol::function stored;
+                stored = fn;
+                ldtk_loader::SetEntitySpawner([fn](const ldtk::Entity& ent, entt::registry& /*R*/) {
+                    if (!fn.valid()) return;
+                    const auto pos  = ent.getPosition();
+                    const auto grid = ent.getGridPosition();
+                    const auto& tags = ent.getTags();
+                    fn(ent.getName(), (float)pos.x, (float)pos.y, ent.layer->getName(), grid.x, grid.y, sol::as_table(tags));
+                });
+                ldtk_loader::SetRegistry(globals::getRegistry());
+            });
+
+            ldtk.set_function("each_intgrid", [](const std::string& levelName, const std::string& layerName, sol::function cb) {
+                ldtk_loader::ForEachIntGrid(levelName, layerName, [cb](int x, int y, int value) {
+                    if (cb.valid()) cb(x, y, value);
+                });
+            });
+
+            ldtk.set_function("collider_layers", []() {
+                return ldtk_loader::ColliderLayers();
+            });
+
+            ldtk.set_function("build_colliders", [](const std::string& levelName, const std::string& worldName, sol::optional<std::string> tag) {
+                ldtk_loader::BuildCollidersForLevel(levelName, worldName, tag.value_or("WORLD"));
+            });
+
+            ldtk.set_function("clear_colliders", [](const std::string& levelName, const std::string& worldName) {
+                ldtk_loader::ClearCollidersForLevel(levelName, worldName);
+            });
+
+            ldtk.set_function("set_active_level", [](const std::string& levelName, const std::string& worldName,
+                                                     sol::optional<bool> rebuildColliders,
+                                                     sol::optional<bool> spawnEntities,
+                                                     sol::optional<std::string> tag) {
+                ldtk_loader::SetActiveLevel(
+                    levelName,
+                    worldName,
+                    rebuildColliders.value_or(true),
+                    spawnEntities.value_or(true),
+                    tag.value_or("WORLD"));
+            });
+
+            ldtk.set_function("active_level", []() { return ldtk_loader::GetActiveLevel(); });
+            ldtk.set_function("has_active_level", []() { return ldtk_loader::HasActiveLevel(); });
+
+            stateToInit["ldtk"] = ldtk;
+            rec.record_property("ldtk", {"load_config", "", "Load and bind an LDtk project via JSON config (project_path, asset_dir, collider_layers, entity_prefabs)."});
+            rec.record_property("ldtk", {"spawn_entities", "", "Iterate entities in a level and invoke the provided Lua callback."});
+            rec.record_property("ldtk", {"each_intgrid", "", "Iterate intgrid values in a level layer."});
+            rec.record_property("ldtk", {"prefab_for", "", "Look up a prefab id for an LDtk entity name from config."});
+            rec.record_property("ldtk", {"collider_layers", "", "List collider layers declared in the active LDtk config."});
+            rec.record_property("ldtk", {"build_colliders", "", "Generate static colliders for the configured collider layers into a physics world."});
+            rec.record_property("ldtk", {"clear_colliders", "", "Remove generated colliders for a level from a physics world."});
+            rec.record_property("ldtk", {"set_spawner", "", "Register a Lua callback invoked per LDtk entity (name, px, py, layer, gx, gy, tagsTable)."});
+            rec.record_property("ldtk", {"set_active_level", "", "Set the active LDtk level, optionally rebuilding colliders and spawning entities."});
+            rec.record_property("ldtk", {"active_level", "", "Returns the current active LDtk level name (or empty)." });
+            rec.record_property("ldtk", {"has_active_level", "", "True if an active LDtk level is set."});
+        }
 
 
         

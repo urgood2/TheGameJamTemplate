@@ -29,7 +29,7 @@ using json = nlohmann::json;
 	#undef far
 #endif
 
-#if defined(PLATFORM_WEB)
+#if defined(PLATFORM_WEB) || defined(__EMSCRIPTEN__)
     #include <emscripten/emscripten.h>
 #endif
 

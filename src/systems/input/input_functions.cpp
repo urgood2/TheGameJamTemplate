@@ -3525,7 +3525,6 @@ namespace input
         ENUM_PROP(KEY_RIGHT_ALT);
         ENUM_PROP(KEY_RIGHT_SUPER);
         ENUM_PROP(KEY_KB_MENU);
-        KEY_NULL; // duplicate safe
 #undef ENUM_PROP
 
         // 3) MouseButton enum

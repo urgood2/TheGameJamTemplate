@@ -20,9 +20,9 @@ namespace main_loop
             mainLoop.framerate = 120;
         }
         
-        // if (ups.has_value())
-        //     mainLoop.rate = 1.0f / ups.value();
-        // else
-        //     mainLoop.rate = 1.0f / 60.0f; // Fixed timestep (60 updates per second)
+        if (ups.has_value())
+            mainLoop.rate = 1.0f / ups.value();
+        else
+            mainLoop.rate = 1.0f / 60.0f; // Fixed timestep (60 updates per second)
     }
 } // namespace main_loop

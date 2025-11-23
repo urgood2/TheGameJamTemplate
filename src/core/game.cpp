@@ -1951,17 +1951,15 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         
         {
             ZONE_SCOPED("Tilemap draw");
-            
-            // ldtk_loader::DrawAllLayers("Everything");
-            // ldtk_loader::DrawAllLayers("Background_image");
-            // ldtk_loader::DrawAllLayers("Tiles_and_intgrid");
-            // ldtk_loader::DrawAllLayers("Autolayer");
-            
-            
-            // ldtk_loader::DrawAllLayers("World_Level_1");
-            
-            // ldtk_loader::DrawAllLayers(sprites, "Your_typical_2D_platformer");
-            // ldtk_loader::DrawAllLayers("Your_typical_2D_platformer");
+            if (ldtk_loader::HasActiveProject() && ldtk_loader::HasActiveLevel() && worldCamera) {
+                // simple camera-based culling rectangle (pad to avoid pop-in)
+                Rectangle view = ldtk_loader::CameraViewRect(
+                    worldCamera->cam,
+                    (float)globals::VIRTUAL_WIDTH,
+                    (float)globals::VIRTUAL_HEIGHT,
+                    64.0f);
+                ldtk_loader::DrawAllLayers(sprites, ldtk_loader::GetActiveLevel(), 1.0f, 0, &view);
+            }
         }
         
         

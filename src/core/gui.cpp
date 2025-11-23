@@ -299,17 +299,6 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
         DrawTextureNPatch(ninePatchData.texture, nPatchInfo, destRect, {0, 0}, 0.0f, WHITE);
     }
 
-    // Overloading the + operator for ImVec2
-    inline ImVec2 operator+(const ImVec2 &lhs, const ImVec2 &rhs)
-    {
-        return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
-    }
-
-    inline ImVec2 operator-(const ImVec2 &lhs, const ImVec2 &rhs)
-    {
-        return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y);
-    }
-
     void drawNinePatchUIIndicator(std::string ninepatchName, Rectangle boundingRect, float padding, float alpha, ImVec4 fgColor, ImVec4 bgColor)
     {
         ImDrawList *drawList = ImGui::GetForegroundDrawList();

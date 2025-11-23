@@ -265,9 +265,12 @@ namespace layer
         init(&tmp);
 
         auto type = layer::layer_command_buffer::GetDrawCommandType<T>();
-        auto it = dispatcher.find(type);
-        if (it != dispatcher.end()) {
-            it->second(layer, static_cast<void*>(&tmp));
+        if (auto fn = GetRenderer(type)) {
+            if (*fn) {
+                (*fn)(layer, static_cast<void*>(&tmp));
+            } else {
+                SPDLOG_ERROR("Draw command has no renderer registered");
+            }
         } else {
             SPDLOG_ERROR("Unhandled draw command type {}", magic_enum::enum_name(type));
         }

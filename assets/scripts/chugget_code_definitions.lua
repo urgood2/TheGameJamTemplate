@@ -297,7 +297,6 @@ function setTrackVolume(...) end
 ---
 ---@param name string # The name of the music track.
 ---@return number # The current volume level for this track (0.0 to 1.0).
-
 function getTrackVolume(...) end
 
 ---
@@ -570,7 +569,7 @@ function unpauseGame(...) end
 ---
 ---@param uiBox Entity               # The UI box entity whose elements should have state effects applied
 ---@return nil
-Recursively applies state effects to the given UI box and all its sub-elements based on their StateTag components and the global active states.
+--- Recursively applies state effects to the given UI box and all its sub-elements based on their StateTag components and the global active states.
 function propagate_state_effects_to_ui_box(...) end
 
 ---
@@ -578,7 +577,7 @@ function propagate_state_effects_to_ui_box(...) end
 ---
 ---@param entity Entity             # The entity whose 'default_state' tag should be removed
 ---@return nil
-Removes the `'default_state'` tag from the entity’s StateTag list, if present.
+--- Removes the `'default_state'` tag from the entity’s StateTag list, if present.
 function remove_default_state_tag(...) end
 
 ---
@@ -587,14 +586,14 @@ function remove_default_state_tag(...) end
 ---@overload fun(tag: StateTag): boolean
 ---@overload fun(names: string[]): boolean
 ---@return boolean
-Returns `true` if **any** of the given state tags or names are currently active.
-You can pass either a `StateTag` component or an array of strings.
-Example:
-```lua
-if hasAnyTag({ 'SHOP_STATE', 'PLANNING_STATE' }) then
-  print('At least one of these states is active.')
-end
-```
+--- Returns `true` if **any** of the given state tags or names are currently active.
+--- You can pass either a `StateTag` component or an array of strings.
+--- Example:
+--- ```lua
+--- if hasAnyTag({ 'SHOP_STATE', 'PLANNING_STATE' }) then
+--- print('At least one of these states is active.')
+--- end
+--- ```
 function hasAnyTag(...) end
 
 ---
@@ -603,14 +602,14 @@ function hasAnyTag(...) end
 ---@overload fun(tag: StateTag): boolean
 ---@overload fun(names: string[]): boolean
 ---@return boolean
-Returns `true` if **all** of the given state tags or names are currently active.
-You can pass either a `StateTag` component or an array of strings.
-Example:
-```lua
-if hasAllTags({ 'ACTION_STATE', 'PLANNING_STATE' }) then
-  print('Both states are active at once.')
-end
-```
+--- Returns `true` if **all** of the given state tags or names are currently active.
+--- You can pass either a `StateTag` component or an array of strings.
+--- Example:
+--- ```lua
+--- if hasAllTags({ 'ACTION_STATE', 'PLANNING_STATE' }) then
+--- print('Both states are active at once.')
+--- end
+--- ```
 function hasAllTags(...) end
 
 ---
@@ -618,8 +617,8 @@ function hasAllTags(...) end
 ---
 ---@param name string
 ---@return nil
-Activates (enables) the given state name globally.
-Equivalent to `active_states:activate(name)` on the singleton instance.
+--- Activates (enables) the given state name globally.
+--- Equivalent to `active_states:activate(name)` on the singleton instance.
 function activate_state(...) end
 
 ---
@@ -627,8 +626,8 @@ function activate_state(...) end
 ---
 ---@param entity Entity
 ---@return boolean
-Checks whether the given entity is currently active based on its StateTag component and the global active states.
-Returns `true` if the entity's StateTag is active in the global ActiveStates set.
+--- Checks whether the given entity is currently active based on its StateTag component and the global active states.
+--- Returns `true` if the entity's StateTag is active in the global ActiveStates set.
 function is_entity_active(...) end
 
 ---
@@ -636,16 +635,16 @@ function is_entity_active(...) end
 ---
 ---@param name string
 ---@return nil
-Deactivates (disables) the given state name globally.
-Equivalent to `active_states:deactivate(name)` on the singleton instance.
+--- Deactivates (disables) the given state name globally.
+--- Equivalent to `active_states:deactivate(name)` on the singleton instance.
 function deactivate_state(...) end
 
 ---
 --- Clears all currently active global states in the shared ActiveStates instance.
 ---
 ---@return nil
-Clears **all** currently active global states.
-Equivalent to `active_states:clear()` on the singleton instance.
+--- Clears **all** currently active global states.
+--- Equivalent to `active_states:clear()` on the singleton instance.
 function clear_states(...) end
 
 ---
@@ -654,8 +653,8 @@ function clear_states(...) end
 ---@overload fun(tag: StateTag): boolean
 ---@overload fun(name: string): boolean
 ---@return boolean
-Checks whether a given state (by tag or name) is currently active.
-Returns `true` if the state exists in the global ActiveStates set.
+--- Checks whether a given state (by tag or name) is currently active.
+--- Returns `true` if the state exists in the global ActiveStates set.
 function is_state_active(...) end
 
 ---
@@ -681,9 +680,27 @@ function remove_state_tag(...) end
 ---@return nil
 function clear_state_tags(...) end
 
+---
+--- Fetches atlas texture + frame metadata for a sprite identifier.
+---
+
+---@param identifier string # Sprite UUID or raw identifier (e.g., filename)
+---@return table|nil # { atlas=Texture2D, atlasUUID=string, frame={x,y,width,height}, gridRect=Vector4, imageSize=Vector2 } or nil on failure
+
+function getSpriteFrameTextureInfo(...) end
 
 ---
---- 
+--- Loads a palette texture from disk and uploads it to the shader's 'palette' uniform with point filtering.
+---
+
+---@param shaderName string # Name of the shader to receive the palette uniform
+---@param filePath string   # Asset-relative or absolute path to the palette image
+---@return boolean          # true if loaded and applied, false otherwise
+
+function setPaletteTexture(...) end
+
+
+---
 ---
 ---@class entt
 entt = {
@@ -876,7 +893,6 @@ function ScriptComponent:count_tasks(...) end
 
 
 ---
---- 
 ---
 ---@class ai
 ai = {
@@ -1058,7 +1074,6 @@ function scheduler:clear(...) end
 ---
 ---@param process table # The Lua table representing the process.
 ---@param ... table # Optional child processes to chain.
-
 function scheduler:attach(...) end
 
 ---
@@ -1066,7 +1081,6 @@ function scheduler:attach(...) end
 ---
 ---@param delta_time number # The time elapsed since the last update.
 ---@param data any # Optional data to pass to the process.
-
 function scheduler:update(...) end
 
 ---
@@ -1074,7 +1088,6 @@ function scheduler:update(...) end
 ---
 ---@overload fun():void
 ---@overload fun(terminate: boolean):void
-
 function scheduler:abort(...) end
 
 
@@ -1099,47 +1112,47 @@ Entity = {
 
 ---
 --- Userdata type for the controller navigation manager.
-Use the global `controller_nav` table for live access.
+--- Use the global `controller_nav` table for live access.
 ---
 ---@class NavManagerUD
 NavManagerUD = {
-    update = ,  -- ---@param dt number
-    validate = ,
-    debug_print_state = ,
-    create_group = ,  -- ---@param name string
-    add_entity = ,  -- ---@param group string
+    update = nil,  -- ---@param dt number
+    validate = nil,
+    debug_print_state = nil,
+    create_group = nil,  -- ---@param name string
+    add_entity = nil,  -- ---@param group string
 ---@param e entt.entity
-    remove_entity = ,  -- ---@param group string
+    remove_entity = nil,  -- ---@param group string
 ---@param e entt.entity
-    clear_group = ,  -- ---@param group string
-    set_active = ,  -- ---@param group string
+    clear_group = nil,  -- ---@param group string
+    set_active = nil,  -- ---@param group string
 ---@param active boolean
-    set_selected = ,  -- ---@param group string
+    set_selected = nil,  -- ---@param group string
 ---@param index integer
-    get_selected = ,  -- ---@param group string
+    get_selected = nil,  -- ---@param group string
 ---@return entt.entity|nil
-    set_entity_enabled = ,  -- ---@param e entt.entity
+    set_entity_enabled = nil,  -- ---@param e entt.entity
 ---@param enabled boolean
-    is_entity_enabled = ,  -- ---@param e entt.entity
+    is_entity_enabled = nil,  -- ---@param e entt.entity
 ---@return boolean
-    navigate = ,  -- ---@param group string
+    navigate = nil,  -- ---@param group string
 ---@param dir 'L'|'R'|'U'|'D'
-    select_current = ,  -- ---@param group string
-    create_layer = ,  -- ---@param name string
-    add_group_to_layer = ,  -- ---@param layer string
+    select_current = nil,  -- ---@param group string
+    create_layer = nil,  -- ---@param name string
+    add_group_to_layer = nil,  -- ---@param layer string
 ---@param group string
-    set_active_layer = ,  -- ---@param name string
-    push_layer = ,  -- ---@param name string
-    pop_layer = ,
-    push_focus_group = ,  -- ---@param name string
-    pop_focus_group = ,
-    current_focus_group =   -- ---@return string
+    set_active_layer = nil,  -- ---@param name string
+    push_layer = nil,  -- ---@param name string
+    pop_layer = nil,
+    push_focus_group = nil,  -- ---@param name string
+    pop_focus_group = nil,
+    current_focus_group = nil  -- ---@return string
 }
 
 
 ---
 --- Controller navigation system entry point.
-Manages layers, groups, and spatial/linear focus movement for UI and in-game entities.
+--- Manages layers, groups, and spatial/linear focus movement for UI and in-game entities.
 ---
 ---@class controller_nav
 controller_nav = {
@@ -1520,7 +1533,6 @@ TextSystem.TextWrapMode = {
 
 
 ---
---- 
 ---
 ---@class TextSystem.Builders
 TextSystem.Builders = {
@@ -1631,9 +1643,9 @@ ColliderType = {
 
 ---
 --- Component holding two 32-bit bitmasks:
--- category = which tag-bits this collider *is*
---- mask     = which category-bits this collider *collides with*
---Default ctor sets both to 0xFFFFFFFF (collide with everything).
+--- -- category = which tag-bits this collider *is*
+--- --- mask     = which category-bits this collider *collides with*
+--- --Default ctor sets both to 0xFFFFFFFF (collide with everything).
 ---
 ---@class CollisionFilter
 CollisionFilter = {
@@ -1643,7 +1655,6 @@ CollisionFilter = {
 
 
 ---
---- 
 ---
 ---@class particle
 particle = {
@@ -1710,7 +1721,6 @@ particle.ParticleAnimationConfig = {
 
 
 ---
---- 
 ---
 ---@class Vector2
 Vector2 = {
@@ -1720,7 +1730,6 @@ Vector2 = {
 
 
 ---
---- 
 ---
 ---@class Color
 Color = {
@@ -1923,7 +1932,6 @@ layer.DrawCommandType = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdBeginDrawing
 layer.CmdBeginDrawing = {
@@ -1933,7 +1941,6 @@ layer.CmdBeginDrawing = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdEndDrawing
 layer.CmdEndDrawing = {
@@ -1943,7 +1950,6 @@ layer.CmdEndDrawing = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdClearBackground
 layer.CmdClearBackground = {
@@ -1953,7 +1959,6 @@ layer.CmdClearBackground = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdBeginScissorMode
 layer.CmdBeginScissorMode = {
@@ -1963,7 +1968,6 @@ layer.CmdBeginScissorMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdEndScissorMode
 layer.CmdEndScissorMode = {
@@ -1973,7 +1977,6 @@ layer.CmdEndScissorMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdTranslate
 layer.CmdTranslate = {
@@ -1985,7 +1988,6 @@ layer.CmdTranslate = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdRenderBatchFlush
 layer.CmdRenderBatchFlush = {
@@ -1993,7 +1995,6 @@ layer.CmdRenderBatchFlush = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdStencilOp
 layer.CmdStencilOp = {
@@ -2007,7 +2008,6 @@ layer.CmdStencilOp = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdAtomicStencilMask
 layer.CmdAtomicStencilMask = {
@@ -2017,7 +2017,6 @@ layer.CmdAtomicStencilMask = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdColorMask
 layer.CmdColorMask = {
@@ -2033,7 +2032,6 @@ layer.CmdColorMask = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdStencilFunc
 layer.CmdStencilFunc = {
@@ -2047,7 +2045,6 @@ layer.CmdStencilFunc = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdBeginStencilMode
 layer.CmdBeginStencilMode = {
@@ -2057,7 +2054,6 @@ layer.CmdBeginStencilMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdEndStencilMode
 layer.CmdEndStencilMode = {
@@ -2067,7 +2063,6 @@ layer.CmdEndStencilMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdClearStencilBuffer
 layer.CmdClearStencilBuffer = {
@@ -2077,7 +2072,6 @@ layer.CmdClearStencilBuffer = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdBeginStencilMask
 layer.CmdBeginStencilMask = {
@@ -2087,7 +2081,6 @@ layer.CmdBeginStencilMask = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdEndStencilMask
 layer.CmdEndStencilMask = {
@@ -2097,7 +2090,6 @@ layer.CmdEndStencilMask = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawCenteredEllipse
 layer.CmdDrawCenteredEllipse = {
@@ -2117,7 +2109,6 @@ layer.CmdDrawCenteredEllipse = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawRoundedLine
 layer.CmdDrawRoundedLine = {
@@ -2137,7 +2128,6 @@ layer.CmdDrawRoundedLine = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawPolyline
 layer.CmdDrawPolyline = {
@@ -2151,7 +2141,6 @@ layer.CmdDrawPolyline = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawArc
 layer.CmdDrawArc = {
@@ -2177,7 +2166,6 @@ layer.CmdDrawArc = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawTriangleEquilateral
 layer.CmdDrawTriangleEquilateral = {
@@ -2195,7 +2183,6 @@ layer.CmdDrawTriangleEquilateral = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawCenteredFilledRoundedRect
 layer.CmdDrawCenteredFilledRoundedRect = {
@@ -2219,7 +2206,6 @@ layer.CmdDrawCenteredFilledRoundedRect = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawSpriteCentered
 layer.CmdDrawSpriteCentered = {
@@ -2239,7 +2225,6 @@ layer.CmdDrawSpriteCentered = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawSpriteTopLeft
 layer.CmdDrawSpriteTopLeft = {
@@ -2259,7 +2244,6 @@ layer.CmdDrawSpriteTopLeft = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawDashedCircle
 layer.CmdDrawDashedCircle = {
@@ -2283,7 +2267,6 @@ layer.CmdDrawDashedCircle = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawDashedRoundedRect
 layer.CmdDrawDashedRoundedRect = {
@@ -2307,7 +2290,6 @@ layer.CmdDrawDashedRoundedRect = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawGradientRectCentered
 layer.CmdDrawGradientRectCentered = {
@@ -2331,7 +2313,6 @@ layer.CmdDrawGradientRectCentered = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawGradientRectRoundedCentered
 layer.CmdDrawGradientRectRoundedCentered = {
@@ -2359,7 +2340,6 @@ layer.CmdDrawGradientRectRoundedCentered = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawBatchedEntities
 layer.CmdDrawBatchedEntities = {
@@ -2373,7 +2353,6 @@ layer.CmdDrawBatchedEntities = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawDashedLine
 layer.CmdDrawDashedLine = {
@@ -2411,7 +2390,6 @@ layer.CmdDrawDashedLine = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdScale
 layer.CmdScale = {
@@ -2423,7 +2401,6 @@ layer.CmdScale = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdRotate
 layer.CmdRotate = {
@@ -2433,7 +2410,6 @@ layer.CmdRotate = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdAddPush
 layer.CmdAddPush = {
@@ -2443,7 +2419,6 @@ layer.CmdAddPush = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdAddPop
 layer.CmdAddPop = {
@@ -2453,7 +2428,6 @@ layer.CmdAddPop = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdPushMatrix
 layer.CmdPushMatrix = {
@@ -2463,7 +2437,6 @@ layer.CmdPushMatrix = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdPushObjectTransformsToMatrix
 layer.CmdPushObjectTransformsToMatrix = {
@@ -2473,7 +2446,6 @@ layer.CmdPushObjectTransformsToMatrix = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdScopedTransformCompositeRender
 layer.CmdScopedTransformCompositeRender = {
@@ -2485,7 +2457,6 @@ layer.CmdScopedTransformCompositeRender = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdPopMatrix
 layer.CmdPopMatrix = {
@@ -2495,7 +2466,6 @@ layer.CmdPopMatrix = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawCircleFilled
 layer.CmdDrawCircleFilled = {
@@ -2511,7 +2481,6 @@ layer.CmdDrawCircleFilled = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawCircleLine
 layer.CmdDrawCircleLine = {
@@ -2535,7 +2504,6 @@ layer.CmdDrawCircleLine = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawRectangle
 layer.CmdDrawRectangle = {
@@ -2555,7 +2523,6 @@ layer.CmdDrawRectangle = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawRectanglePro
 layer.CmdDrawRectanglePro = {
@@ -2575,7 +2542,6 @@ layer.CmdDrawRectanglePro = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawRectangleLinesPro
 layer.CmdDrawRectangleLinesPro = {
@@ -2593,7 +2559,6 @@ layer.CmdDrawRectangleLinesPro = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawLine
 layer.CmdDrawLine = {
@@ -2613,7 +2578,6 @@ layer.CmdDrawLine = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawDashedLine
 layer.CmdDrawDashedLine = {
@@ -2621,7 +2585,6 @@ layer.CmdDrawDashedLine = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawText
 layer.CmdDrawText = {
@@ -2641,7 +2604,6 @@ layer.CmdDrawText = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawTextCentered
 layer.CmdDrawTextCentered = {
@@ -2661,7 +2623,6 @@ layer.CmdDrawTextCentered = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdTextPro
 layer.CmdTextPro = {
@@ -2687,7 +2648,6 @@ layer.CmdTextPro = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawImage
 layer.CmdDrawImage = {
@@ -2709,7 +2669,6 @@ layer.CmdDrawImage = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdTexturePro
 layer.CmdTexturePro = {
@@ -2733,7 +2692,6 @@ layer.CmdTexturePro = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawEntityAnimation
 layer.CmdDrawEntityAnimation = {
@@ -2749,7 +2707,6 @@ layer.CmdDrawEntityAnimation = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawTransformEntityAnimation
 layer.CmdDrawTransformEntityAnimation = {
@@ -2761,7 +2718,6 @@ layer.CmdDrawTransformEntityAnimation = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawTransformEntityAnimationPipeline
 layer.CmdDrawTransformEntityAnimationPipeline = {
@@ -2773,7 +2729,6 @@ layer.CmdDrawTransformEntityAnimationPipeline = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSetShader
 layer.CmdSetShader = {
@@ -2783,7 +2738,6 @@ layer.CmdSetShader = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdResetShader
 layer.CmdResetShader = {
@@ -2791,7 +2745,6 @@ layer.CmdResetShader = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSetBlendMode
 layer.CmdSetBlendMode = {
@@ -2801,7 +2754,6 @@ layer.CmdSetBlendMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdUnsetBlendMode
 layer.CmdUnsetBlendMode = {
@@ -2811,7 +2763,6 @@ layer.CmdUnsetBlendMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSendUniformFloat
 layer.CmdSendUniformFloat = {
@@ -2825,7 +2776,6 @@ layer.CmdSendUniformFloat = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSendUniformInt
 layer.CmdSendUniformInt = {
@@ -2839,7 +2789,6 @@ layer.CmdSendUniformInt = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSendUniformVec2
 layer.CmdSendUniformVec2 = {
@@ -2853,7 +2802,6 @@ layer.CmdSendUniformVec2 = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSendUniformVec3
 layer.CmdSendUniformVec3 = {
@@ -2867,7 +2815,6 @@ layer.CmdSendUniformVec3 = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSendUniformVec4
 layer.CmdSendUniformVec4 = {
@@ -2881,7 +2828,6 @@ layer.CmdSendUniformVec4 = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSendUniformFloatArray
 layer.CmdSendUniformFloatArray = {
@@ -2895,7 +2841,6 @@ layer.CmdSendUniformFloatArray = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSendUniformIntArray
 layer.CmdSendUniformIntArray = {
@@ -2909,7 +2854,6 @@ layer.CmdSendUniformIntArray = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdVertex
 layer.CmdVertex = {
@@ -2921,7 +2865,6 @@ layer.CmdVertex = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdBeginOpenGLMode
 layer.CmdBeginOpenGLMode = {
@@ -2931,7 +2874,6 @@ layer.CmdBeginOpenGLMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdEndOpenGLMode
 layer.CmdEndOpenGLMode = {
@@ -2941,7 +2883,6 @@ layer.CmdEndOpenGLMode = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSetColor
 layer.CmdSetColor = {
@@ -2951,7 +2892,6 @@ layer.CmdSetColor = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSetLineWidth
 layer.CmdSetLineWidth = {
@@ -2961,7 +2901,6 @@ layer.CmdSetLineWidth = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdSetTexture
 layer.CmdSetTexture = {
@@ -2971,7 +2910,6 @@ layer.CmdSetTexture = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdRenderRectVerticesFilledLayer
 layer.CmdRenderRectVerticesFilledLayer = {
@@ -2987,7 +2925,6 @@ layer.CmdRenderRectVerticesFilledLayer = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdRenderRectVerticesOutlineLayer
 layer.CmdRenderRectVerticesOutlineLayer = {
@@ -3001,7 +2938,6 @@ layer.CmdRenderRectVerticesOutlineLayer = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawPolygon
 layer.CmdDrawPolygon = {
@@ -3015,7 +2951,6 @@ layer.CmdDrawPolygon = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdRenderNPatchRect
 layer.CmdRenderNPatchRect = {
@@ -3035,7 +2970,6 @@ layer.CmdRenderNPatchRect = {
 
 
 ---
---- 
 ---
 ---@class layer.CmdDrawTriangle
 layer.CmdDrawTriangle = {
@@ -3065,7 +2999,6 @@ layer.DrawCommandV2 = {
 
 
 ---
---- 
 ---
 ---@class layer.DrawCommandSpace
 layer.DrawCommandSpace = {
@@ -3077,7 +3010,6 @@ layer.DrawCommandSpace = {
 
 
 ---
---- 
 ---
 ---@class command_buffer
 command_buffer = {
@@ -4940,7 +4872,6 @@ ui.box = {
 
 
 ---
---- 
 ---
 ---@class ui.definitions
 ui.definitions = {
@@ -5053,7 +4984,6 @@ function Spring:snap_to_target(...) end
 
 
 ---
---- 
 ---
 ---@class WorldQuadtree
 WorldQuadtree = {
@@ -5100,7 +5030,6 @@ function WorldQuadtree:get_bounds(...) end
 
 
 ---
---- 
 ---
 ---@class Box
 Box = {
@@ -5112,7 +5041,6 @@ Box = {
 
 
 ---
---- 
 ---
 ---@class quadtree
 quadtree = {
@@ -5128,7 +5056,6 @@ function quadtree:box(...) end
 
 
 ---
---- 
 ---
 ---@class ui.text
 ui.text = {
@@ -5136,7 +5063,6 @@ ui.text = {
 
 
 ---
---- 
 ---
 ---@class TextUIHandle
 TextUIHandle = {
@@ -5156,10 +5082,10 @@ physics = {
 
 ---
 --- Result of a raycast. Fields:
-- shape: lightuserdata @ cpShape*
-- point: {x:number, y:number}
-- normal: {x:number, y:number}
-- fraction: number (0..1) distance fraction along the segment
+--- - shape: lightuserdata @ cpShape*
+--- - point: {x:number, y:number}
+--- - normal: {x:number, y:number}
+--- - fraction: number (0..1) distance fraction along the segment
 ---
 ---@class physics.RaycastHit
 physics.RaycastHit = {
@@ -5168,8 +5094,8 @@ physics.RaycastHit = {
 
 ---
 --- Collision event with contact info. Fields:
-- objectA, objectB: lightuserdata (internally mapped to entt.entity)
-- x1, y1 (point on A), x2, y2 (point on B), nx, ny (contact normal)
+--- - objectA, objectB: lightuserdata (internally mapped to entt.entity)
+--- - x1, y1 (point on A), x2, y2 (point on B), nx, ny (contact normal)
 ---
 ---@class physics.CollisionEvent
 physics.CollisionEvent = {
@@ -5178,7 +5104,7 @@ physics.CollisionEvent = {
 
 ---
 --- Enum of supported collider shapes:
-- Rectangle, Circle, Polygon, Chain
+--- - Rectangle, Circle, Polygon, Chain
 ---
 ---@class physics.ColliderShapeType
 physics.ColliderShapeType = {
@@ -5187,7 +5113,7 @@ physics.ColliderShapeType = {
 
 ---
 --- Owns a Chipmunk cpSpace, manages collision/trigger tags, and buffers of collision/trigger events.
-Construct with (registry*, meter:number, gravityX:number, gravityY:number). Call Update(dt) each frame and PostUpdate() after consuming event buffers.
+--- Construct with (registry*, meter:number, gravityX:number, gravityY:number). Call Update(dt) each frame and PostUpdate() after consuming event buffers.
 ---
 ---@class physics.PhysicsWorld
 physics.PhysicsWorld = {
@@ -5196,10 +5122,10 @@ physics.PhysicsWorld = {
 
 ---
 --- Enum:
-- AuthoritativePhysics
-- AuthoritativeTransform
-- FollowVisual
-- FrozenWhileDesynced
+--- - AuthoritativePhysics
+--- - AuthoritativeTransform
+--- - FollowVisual
+--- - FrozenWhileDesynced
 ---
 ---@class physics.PhysicsSyncMode
 physics.PhysicsSyncMode = {
@@ -5208,8 +5134,8 @@ physics.PhysicsSyncMode = {
 
 ---
 --- Enum:
-- TransformFixed_PhysicsFollows (lock body rotation; Transform angle is authority)
-- PhysicsFree_TransformFollows (body rotates; Transform copies body angle)
+--- - TransformFixed_PhysicsFollows (lock body rotation; Transform angle is authority)
+--- - PhysicsFree_TransformFollows (body rotates; Transform copies body angle)
 ---
 ---@class physics.RotationSyncMode
 physics.RotationSyncMode = {
@@ -5218,16 +5144,16 @@ physics.RotationSyncMode = {
 
 ---
 --- --- Wrapper over cpArbiter* passed to collision callbacks.
---- Fields/methods:
---- ptr: lightuserdata (arbiter pointer)
---- entities(): returns {entityA, entityB}
---- tags(world): returns {tagA, tagB}
---- normal: {x,y}
---- total_impulse: {x,y}
---- total_impulse_length: number
---- is_first_contact(): boolean
---- is_removal(): boolean
---- set_friction(f), set_elasticity(e), set_surface_velocity(vx,vy), ignore()  (preSolve only)
+--- --- Fields/methods:
+--- --- ptr: lightuserdata (arbiter pointer)
+--- --- entities(): returns {entityA, entityB}
+--- --- tags(world): returns {tagA, tagB}
+--- --- normal: {x,y}
+--- --- total_impulse: {x,y}
+--- --- total_impulse_length: number
+--- --- is_first_contact(): boolean
+--- --- is_removal(): boolean
+--- --- set_friction(f), set_elasticity(e), set_surface_velocity(vx,vy), ignore()  (preSolve only)
 ---
 ---@class physics.Arbiter
 physics.Arbiter = {
@@ -5244,45 +5170,45 @@ steering = {
 
 ---
 --- Actual userdata type for the PhysicsManager class. Use the global `physics_manager` to access the live instance.
-Methods mirror the helpers on the `PhysicsManager` table.
+--- Methods mirror the helpers on the `PhysicsManager` table.
 ---
 ---@class PhysicsManagerUD
 PhysicsManagerUD = {
-    get_world = ,  -- ---@param name string
+    get_world = nil,  -- ---@param name string
 ---@return PhysicsWorld|nil
-    has_world = ,  -- ---@param name string
+    has_world = nil,  -- ---@param name string
 ---@return boolean
-    is_world_active = ,  -- ---@param name string
+    is_world_active = nil,  -- ---@param name string
 ---@return boolean
-    add_world = ,  -- ---@param name string
+    add_world = nil,  -- ---@param name string
 ---@param world PhysicsWorld
 ---@param bindsToState string|nil
-    enable_step = ,  -- ---@param name string
+    enable_step = nil,  -- ---@param name string
 ---@param on boolean
-    enable_debug_draw = ,  -- ---@param name string
+    enable_debug_draw = nil,  -- ---@param name string
 ---@param on boolean
-    step_all = ,  -- ---@param dt number
-    draw_all = ,
-    move_entity_to_world = ,  -- ---@param e entt.entity
+    step_all = nil,  -- ---@param dt number
+    draw_all = nil,
+    move_entity_to_world = nil,  -- ---@param e entt.entity
 ---@param dst string
-    get_nav_config = ,  -- ---@param world string
+    get_nav_config = nil,  -- ---@param world string
 ---@return table { default_inflate_px: integer }
-    set_nav_config = ,  -- ---@param world string
+    set_nav_config = nil,  -- ---@param world string
 ---@param cfg table { default_inflate_px: integer|nil }
-    mark_navmesh_dirty = ,  -- ---@param world string
-    rebuild_navmesh = ,  -- ---@param world string
-    find_path = ,  -- ---@param world string
+    mark_navmesh_dirty = nil,  -- ---@param world string
+    rebuild_navmesh = nil,  -- ---@param world string
+    find_path = nil,  -- ---@param world string
 ---@param sx number
 ---@param sy number
 ---@param dx number
 ---@param dy number
 ---@return table<number,{x:integer,y:integer}>
-    vision_fan = ,  -- ---@param world string
+    vision_fan = nil,  -- ---@param world string
 ---@param sx number
 ---@param sy number
 ---@param radius number
 ---@return table<number,{x:integer,y:integer}>
-    set_nav_obstacle =   -- ---@param e entt.entity
+    set_nav_obstacle = nil  -- ---@param e entt.entity
 ---@param include boolean
 }
 
@@ -5319,7 +5245,7 @@ camera.FollowStyle = {
 
 ---
 --- Smooth 2D camera with springs, follow modes, bounds, shake, and flash/fade.
-Actual* setters target the spring (smoothed) values; Visual* setters apply immediately.
+--- Actual* setters target the spring (smoothed) values; Visual* setters apply immediately.
 ---
 ---@class GameCamera
 GameCamera = {
@@ -5655,7 +5581,6 @@ MainLoopData = {
 
 
 ---
---- 
 ---
 ---@class InputState
 InputState = {
@@ -5791,7 +5716,6 @@ InputState = {
 
 
 ---
---- 
 ---
 ---@class KeyboardKey
 KeyboardKey = {
@@ -5896,7 +5820,6 @@ KeyboardKey = {
 
 
 ---
---- 
 ---
 ---@class MouseButton
 MouseButton = {
@@ -5911,7 +5834,6 @@ MouseButton = {
 
 
 ---
---- 
 ---
 ---@class GamepadButton
 GamepadButton = {
@@ -5937,7 +5859,6 @@ GamepadButton = {
 
 
 ---
---- 
 ---
 ---@class GamepadAxis
 GamepadAxis = {
@@ -5951,7 +5872,6 @@ GamepadAxis = {
 
 
 ---
---- 
 ---
 ---@class InputDeviceInputCategory
 InputDeviceInputCategory = {
@@ -5965,7 +5885,6 @@ InputDeviceInputCategory = {
 
 
 ---
---- 
 ---
 ---@class AxisButtonState
 AxisButtonState = {
@@ -5975,7 +5894,6 @@ AxisButtonState = {
 
 
 ---
---- 
 ---
 ---@class NodeData
 NodeData = {
@@ -5987,7 +5905,6 @@ NodeData = {
 
 
 ---
---- 
 ---
 ---@class SnapTarget
 SnapTarget = {
@@ -5998,7 +5915,6 @@ SnapTarget = {
 
 
 ---
---- 
 ---
 ---@class CursorContext::CursorLayer
 CursorContext::CursorLayer = {
@@ -6009,7 +5925,6 @@ CursorContext::CursorLayer = {
 
 
 ---
---- 
 ---
 ---@class CursorContext
 CursorContext = {
@@ -6021,7 +5936,6 @@ CursorContext = {
 
 
 ---
---- 
 ---
 ---@class GamepadState
 GamepadState = {
@@ -6039,7 +5953,6 @@ GamepadState = {
 
 
 ---
---- 
 ---
 ---@class HIDFlags
 HIDFlags = {
@@ -6062,14 +5975,12 @@ function create_transform_entity(...) end
 --- Adds a fullscreen shader to the game.
 ---
 ---@param shaderName string
-
 function add_fullscreen_shader(...) end
 
 ---
 --- Removes a fullscreen shader from the game.
 ---
 ---@param shaderName string
-
 function remove_fullscreen_shader(...) end
 
 ---
@@ -6221,7 +6132,6 @@ function TextSystem.Functions.splitEffects(...) end
 ---@param y number                            # The initial y-position.
 ---@param[opt] waiters table<string,function> # Optional map of wait-callbacks by alias.
 ---@return Entity                             # The newly created text entity.
-
 function TextSystem.Functions.createTextEntity(...) end
 
 ---
@@ -6337,7 +6247,7 @@ function TextSystem.Functions.setText(...) end
 ---@param e entt.entity # Target entity
 ---@param flip boolean # Whether to flip horizontally
 ---@return nil
-Flips all animations for the entity horizontally
+--- Flips all animations for the entity horizontally
 function animation_system.set_horizontal_flip(...) end
 
 ---
@@ -6360,7 +6270,7 @@ function animation_system.getNinepatchUIBorderInfo(...) end
 ---
 ---@param e entt.entity # Target entity
 ---@param fgColor Color # Foreground color to set
-Sets the foreground color for all animation objects in an entity
+--- Sets the foreground color for all animation objects in an entity
 function animation_system.setFGColorForAllAnimationObjects(...) end
 
 ---
@@ -6390,13 +6300,13 @@ function animation_system.replaceAnimatedObjectOnEntity(...) end
 --- Configures an existing entity with Transform, AnimationQueueComponent, and optional shader‐pass + shadow settings
 ---
 
-        ---@param e entt.entity                        # The existing entity to configure
-        ---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID
-        ---@param generateNewAnimFromSprite boolean?    # Create a new anim from sprite? Default false
-        ---@param shaderPassConfigFunc fun(entt.entity)? # Optional shader setup callback
-        ---@param shadowEnabled boolean?                # Enable shadow? Default true
-        ---@return nil
-        
+---@param e entt.entity                        # The existing entity to configure
+---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID
+---@param generateNewAnimFromSprite boolean?    # Create a new anim from sprite? Default false
+---@param shaderPassConfigFunc fun(entt.entity)? # Optional shader setup callback
+---@param shadowEnabled boolean?                # Enable shadow? Default true
+---@return nil
+
 function animation_system.setupAnimatedObjectOnEntity(...) end
 
 ---
@@ -6405,14 +6315,14 @@ function animation_system.setupAnimatedObjectOnEntity(...) end
 ---@param flipH boolean
 ---@param flipV boolean
 ---@return nil
-Sets the horizontal/vertical flip flags on all animations of an entity
+--- Sets the horizontal/vertical flip flags on all animations of an entity
 function animation_system.set_flip(...) end
 
 ---
 ---
 ---@param e entt.entity
 ---@return nil
-Toggles horizontal flip for the entity's current animation
+--- Toggles horizontal flip for the entity's current animation
 function animation_system.toggle_flip(...) end
 
 ---
@@ -6464,59 +6374,59 @@ function animation_system.resizeAnimationObjectToFit(...) end
 ---
 ---@param name string               # Unique camera name
 ---@param registry entt.registry*   # Pointer to your ECS registry
-Create or overwrite a named GameCamera.
+--- Create or overwrite a named GameCamera.
 function camera.Create(...) end
 
 ---
 ---
 ---@param name string
 ---@return boolean
-Check whether a named camera exists.
+--- Check whether a named camera exists.
 function camera.Exists(...) end
 
 ---
 ---
 ---@param name string
-Remove (destroy) a named camera.
+--- Remove (destroy) a named camera.
 function camera.Remove(...) end
 
 ---
 ---
 ---@param name string
 ---@return GameCamera  # Borrowed pointer (owned by manager)
-Fetch a camera by name.
+--- Fetch a camera by name.
 function camera.Get(...) end
 
 ---
 ---
 ---@param name string
 ---@param dt number
-Update a single camera.
+--- Update a single camera.
 function camera.Update(...) end
 
 ---
 ---
 ---@param dt number
-Update all cameras.
+--- Update all cameras.
 function camera.UpdateAll(...) end
 
 ---
 ---
 ---@overload fun(name:string)
 ---@overload fun(cam:Camera2D*)
-Enter 2D mode with a named camera (or raw Camera2D).
+--- Enter 2D mode with a named camera (or raw Camera2D).
 function camera.Begin(...) end
 
 ---
 ---
-End the current camera (handles nesting).
+--- End the current camera (handles nesting).
 function camera.End(...) end
 
 ---
 ---
 ---@param name string
 ---@param fn fun()
-Run fn inside Begin/End for the named camera.
+--- Run fn inside Begin/End for the named camera.
 function camera.with(...) end
 
 ---
@@ -6527,8 +6437,8 @@ function camera.with(...) end
 ---@param master entt.entity               # Parent entity to attach collider to
 ---@param type collision.ColliderType       # Shape of the new collider
 ---@param t table                           # Config table:
-                                          #   offsetX?, offsetY?, width?, height?, rotation?, scale?
-                                          #   alignment? (bitmask), alignOffset { x?, y? }
+--- #   offsetX?, offsetY?, width?, height?, rotation?, scale?
+--- #   alignment? (bitmask), alignOffset { x?, y? }
 ---@return entt.entity                      # Newly created collider entity
 function collision.create_collider_for_entity(...) end
 
@@ -8242,764 +8152,764 @@ function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
 --- Queues a CmdBeginDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdBeginDrawing) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdBeginDrawing) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueBeginDrawing(...) end
 
 ---
 --- Queues a CmdClearStencilBuffer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdClearStencilBuffer) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdClearStencilBuffer) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueClearStencilBuffer(...) end
 
 ---
 --- Queues a CmdColorMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdColorMask) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdColorMask) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueColorMask(...) end
 
 ---
 --- Queues a CmdStencilOp into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdStencilOp) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdStencilOp) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueStencilOp(...) end
 
 ---
 --- Queues a CmdRenderBatchFlush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdRenderBatchFlush) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdRenderBatchFlush) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueRenderBatchFlush(...) end
 
 ---
 --- Queues a CmdAtomicStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdAtomicStencilMask) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdAtomicStencilMask) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueAtomicStencilMask(...) end
 
 ---
 --- Queues a CmdStencilFunc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdStencilFunc) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdStencilFunc) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueStencilFunc(...) end
 
 ---
 --- Queues a CmdBeginStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdBeginStencilMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdBeginStencilMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueBeginStencilMode(...) end
 
 ---
 --- Queues a CmdEndStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdEndStencilMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdEndStencilMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueEndStencilMode(...) end
 
 ---
 --- Queues a CmdBeginStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdBeginStencilMask) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdBeginStencilMask) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueBeginStencilMask(...) end
 
 ---
 --- Queues a CmdEndStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdEndStencilMask) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdEndStencilMask) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueEndStencilMask(...) end
 
 ---
 --- Queues a CmdDrawCenteredEllipse into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawCenteredEllipse) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawCenteredEllipse) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawCenteredEllipse(...) end
 
 ---
 --- Queues a CmdDrawRoundedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawRoundedLine) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawRoundedLine) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawRoundedLine(...) end
 
 ---
 --- Queues a CmdDrawPolyline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawPolyline) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawPolyline) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawPolyline(...) end
 
 ---
 --- Queues a CmdDrawArc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawArc) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawArc) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawArc(...) end
 
 ---
 --- Queues a CmdDrawTriangleEquilateral into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawTriangleEquilateral) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawTriangleEquilateral) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawTriangleEquilateral(...) end
 
 ---
 --- Queues a CmdDrawCenteredFilledRoundedRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawCenteredFilledRoundedRect) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawCenteredFilledRoundedRect) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawCenteredFilledRoundedRect(...) end
 
 ---
 --- Queues a CmdDrawSpriteCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawSpriteCentered) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawSpriteCentered) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawSpriteCentered(...) end
 
 ---
 --- Queues a CmdDrawSpriteTopLeft into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawSpriteTopLeft) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawSpriteTopLeft) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawSpriteTopLeft(...) end
 
 ---
 --- Queues a CmdDrawDashedCircle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawDashedCircle) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawDashedCircle) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawDashedCircle(...) end
 
 ---
 --- Queues a CmdDrawDashedRoundedRect into the layer draw list. Executes init    _fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawDashedRoundedRect) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawDashedRoundedRect) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawDashedRoundedRect(...) end
 
 ---
 --- Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawDashedLine(...) end
 
 ---
 --- Queues a CmdDrawGradientRectCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawGradientRectCentered) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawGradientRectCentered) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawGradientRectCentered(...) end
 
 ---
 --- Queues a CmdDrawGradientRectRoundedCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawGradientRectRoundedCentered(...) end
 
 ---
 --- Queues a CmdDrawBatchedEntities into the layer draw list. This command batches multiple entities for optimized shader rendering, avoiding Lua execution during the render phase. The entities vector and registry are captured when queued and executed during rendering with automatic shader batching.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawBatchedEntities) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawBatchedEntities) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawBatchedEntities(...) end
 
 ---
 --- Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdEndDrawing) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdEndDrawing) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueEndDrawing(...) end
 
 ---
 --- Queues a CmdClearBackground into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdClearBackground) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdClearBackground) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueClearBackground(...) end
 
 ---
 --- Queues a CmdBeginScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdBeginScissorMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdBeginScissorMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueBeginScissorMode(...) end
 
 ---
 --- Queues a CmdEndScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdEndScissorMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdEndScissorMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueEndScissorMode(...) end
 
 ---
 --- Queues a CmdTranslate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdTranslate) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdTranslate) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueTranslate(...) end
 
 ---
 --- Queues a CmdScale into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdScale) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdScale) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueScale(...) end
 
 ---
 --- Queues a CmdRotate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdRotate) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdRotate) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueRotate(...) end
 
 ---
 --- Queues a CmdAddPush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdAddPush) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdAddPush) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueAddPush(...) end
 
 ---
 --- Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdAddPop) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdAddPop) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueAddPop(...) end
 
 ---
 --- Queues a CmdPushObjectTransformsToMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix()
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queuePushObjectTransformsToMatrix(...) end
 
 ---
 --- Queues a CmdScopedTransformCompositeRender into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix()
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueScopedTransformCompositeRender(...) end
 
 ---
 --- Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdPushMatrix) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdPushMatrix) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queuePushMatrix(...) end
 
 ---
 --- Queues a CmdPopMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdPopMatrix) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdPopMatrix) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queuePopMatrix(...) end
 
 ---
 --- Queues a CmdDrawCircleFilled into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawCircleFilled) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawCircleFilled) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawCircle(...) end
 
 ---
 --- Queues a CmdDrawRectangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawRectangle) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawRectangle) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawRectangle(...) end
 
 ---
 --- Queues a CmdDrawRectanglePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawRectanglePro) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawRectanglePro) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawRectanglePro(...) end
 
 ---
 --- Queues a CmdDrawRectangleLinesPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawRectangleLinesPro(...) end
 
 ---
 --- Queues a CmdDrawLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawLine) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawLine) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawLine(...) end
 
 ---
 --- Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawDashedLine(...) end
 
 ---
 --- Queues a CmdDrawText into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawText) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawText) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawText(...) end
 
 ---
 --- Queues a CmdDrawTextCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawTextCentered) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawTextCentered) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawTextCentered(...) end
 
 ---
 --- Queues a CmdTextPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdTextPro) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdTextPro) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueTextPro(...) end
 
 ---
 --- Queues a CmdDrawImage into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawImage) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawImage) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawImage(...) end
 
 ---
 --- Queues a CmdTexturePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdTexturePro) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdTexturePro) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueTexturePro(...) end
 
 ---
 --- Queues a CmdDrawEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawEntityAnimation) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawEntityAnimation) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawEntityAnimation(...) end
 
 ---
 --- Queues a CmdDrawTransformEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawTransformEntityAnimation(...) end
 
 ---
 --- Queues a CmdDrawTransformEntityAnimationPipeline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawTransformEntityAnimationPipeline(...) end
 
 ---
 --- Queues a CmdSetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSetShader) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSetShader) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSetShader(...) end
 
 ---
 --- Queues a CmdResetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdResetShader) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdResetShader) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueResetShader(...) end
 
 ---
 --- Queues a CmdSetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSetBlendMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSetBlendMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSetBlendMode(...) end
 
 ---
 --- Queues a CmdUnsetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdUnsetBlendMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdUnsetBlendMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueUnsetBlendMode(...) end
 
 ---
 --- Queues a CmdSendUniformFloat into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSendUniformFloat) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSendUniformFloat) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSendUniformFloat(...) end
 
 ---
 --- Queues a CmdSendUniformInt into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSendUniformInt) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSendUniformInt) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSendUniformInt(...) end
 
 ---
 --- Queues a CmdSendUniformVec2 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSendUniformVec2) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSendUniformVec2) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSendUniformVec2(...) end
 
 ---
 --- Queues a CmdSendUniformVec3 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSendUniformVec3) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSendUniformVec3) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSendUniformVec3(...) end
 
 ---
 --- Queues a CmdSendUniformVec4 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSendUniformVec4) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSendUniformVec4) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSendUniformVec4(...) end
 
 ---
 --- Queues a CmdSendUniformFloatArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSendUniformFloatArray) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSendUniformFloatArray) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSendUniformFloatArray(...) end
 
 ---
 --- Queues a CmdSendUniformIntArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSendUniformIntArray) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSendUniformIntArray) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSendUniformIntArray(...) end
 
 ---
 --- Queues a CmdVertex into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdVertex) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdVertex) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueVertex(...) end
 
 ---
 --- Queues a CmdBeginOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdBeginOpenGLMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdBeginOpenGLMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueBeginOpenGLMode(...) end
 
 ---
 --- Queues a CmdEndOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdEndOpenGLMode) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdEndOpenGLMode) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueEndOpenGLMode(...) end
 
 ---
 --- Queues a CmdSetColor into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSetColor) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSetColor) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSetColor(...) end
 
 ---
 --- Queues a CmdSetLineWidth into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSetLineWidth) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSetLineWidth) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSetLineWidth(...) end
 
 ---
 --- Queues a CmdSetTexture into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdSetTexture) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdSetTexture) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueSetTexture(...) end
 
 ---
 --- Queues a CmdRenderRectVerticesFilledLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueRenderRectVerticesFilledLayer(...) end
 
 ---
 --- Queues a CmdRenderRectVerticesOutlineLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueRenderRectVerticesOutlineLayer(...) end
 
 ---
 --- Queues a CmdDrawPolygon into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawPolygon) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawPolygon) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawPolygon(...) end
 
 ---
 --- Queues a CmdRenderNPatchRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdRenderNPatchRect) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdRenderNPatchRect) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueRenderNPatchRect(...) end
 
 ---
 --- Queues a CmdDrawTriangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawTriangle) # Function to initialize the command
-        ---@param z number # Z-order depth to queue at
-        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
-        ---@return void
+---@param init_fn fun(c: layer.CmdDrawTriangle) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
 function layer.queueDrawTriangle(...) end
 
 ---
 --- Removes a post-process shader from the layer by name.
 ---
 ---@param layer Layer # Target layer
-        ---@param shader_name string # Name of the shader to remove
-        ---@return void
+---@param shader_name string # Name of the shader to remove
+---@return void
 function layer.Layer.removePostProcessShader(...) end
 
 ---
 --- Adds a post-process shader to the layer.
 ---
 ---@param layer Layer # Target layer
-        ---@param shader_name string # Name of the shader to add
-        ---@param shader Shader # Shader instance to add
-        ---@return void
+---@param shader_name string # Name of the shader to add
+---@param shader Shader # Shader instance to add
+---@return void
 function layer.Layer.addPostProcessShader(...) end
 
 ---
 --- Removes all post-process shaders from the layer.
 ---
 ---@param layer Layer # Target layer
-        ---@return void
+---@return void
 function layer.Layer.clearPostProcessShaders(...) end
 
 ---
@@ -9028,7 +8938,7 @@ function layer_order_system.updateLayerZIndexesAsNecessary(...) end
 ---
 ---@param e Entity
 ---@return integer zIndex
-Returns the current zIndex of the given entity, assigning one if missing.
+--- Returns the current zIndex of the given entity, assigning one if missing.
 function layer_order_system.getZIndex(...) end
 
 ---
@@ -9073,7 +8983,6 @@ function localization.getCurrentLanguage(...) end
 ---@param key string                 # Localization key
 ---@param args table<string,any>?    # Optional named formatting args
 ---@return string                    # Localized & formatted text
-
 function localization.get(...) end
 
 ---
@@ -9093,7 +9002,6 @@ function localization.getFontData(...) end
 --- Gets the font data for the current language.
 ---
 ---@return FontData # The font for the current language.
-
 function localization.getFont(...) end
 
 ---
@@ -9103,7 +9011,6 @@ function localization.getFont(...) end
 ---@param fontSize number # The font size to use when measuring.
 ---@param spacing number # The spacing between characters.
 ---@return number # The width of the text when rendered with the current language's font.
-
 function localization.getTextWidthWithCurrentFont(...) end
 
 ---
@@ -9173,26 +9080,26 @@ function particle.CreateParticleEmitter(...) end
 ---@param location Vector2                        # world-space spawn position
 ---@param size     Vector2                        # initial width/height of the particle
 ---@param opts     table?                         # optional config table with any of:
- -- renderType        ParticleRenderType         # TEXTURE, RECTANGLE_LINE, RECTANGLE_FILLED, etc.
- -- velocity          Vector2                    # initial (vx,vy)
- -- rotation          number                     # starting rotation in degrees
- -- rotationSpeed     number                     # degrees/sec
- -- scale             number                     # uniform scale multiplier
- -- lifespan          number                     # seconds until auto-destroy (≤0 = infinite)
- -- age               number                     # initial age in seconds
- -- color             Color                      # immediately applied tint
- -- gravity           number                     # downward acceleration per second
- -- acceleration      number                     # acceleration along velocity vector
- -- startColor        Color                      # tint at birth
- -- endColor          Color                      # tint at death
- -- onUpdateCallback  function(particle,dt)       # run each frame
- -- shadow            boolean                    # draw or disable shadow (default = true)
+--- -- renderType        ParticleRenderType         # TEXTURE, RECTANGLE_LINE, RECTANGLE_FILLED, etc.
+--- -- velocity          Vector2                    # initial (vx,vy)
+--- -- rotation          number                     # starting rotation in degrees
+--- -- rotationSpeed     number                     # degrees/sec
+--- -- scale             number                     # uniform scale multiplier
+--- -- lifespan          number                     # seconds until auto-destroy (≤0 = infinite)
+--- -- age               number                     # initial age in seconds
+--- -- color             Color                      # immediately applied tint
+--- -- gravity           number                     # downward acceleration per second
+--- -- acceleration      number                     # acceleration along velocity vector
+--- -- startColor        Color                      # tint at birth
+--- -- endColor          Color                      # tint at death
+--- -- onUpdateCallback  function(particle,dt)       # run each frame
+--- -- shadow            boolean                    # draw or disable shadow (default = true)
 ---@param animCfg  table?                         # optional animation config:
- -- loop              boolean                    # whether to loop the animation
- -- animationName     string                     # animation name or sprite UUID
- -- useSpriteNotAnimation boolean                # use a single static sprite instead of animation
- -- fg                Color?                     # optional foreground tint override
- -- bg                Color?                     # optional background tint override
+--- -- loop              boolean                    # whether to loop the animation
+--- -- animationName     string                     # animation name or sprite UUID
+--- -- useSpriteNotAnimation boolean                # use a single static sprite instead of animation
+--- -- fg                Color?                     # optional foreground tint override
+--- -- bg                Color?                     # optional background tint override
 ---@param tag      string?                        # optional tag to attach to the particle
 ---@return entt::entity                            # newly created particle entity
 function particle.CreateParticle(...) end
@@ -9520,7 +9427,6 @@ function physics.SetGlobalDamping(...) end
 ---@param e entt.entity
 ---@param disable boolean
 ---@return nil
-
 function physics.set_disable_arrival(...) end
 
 ---
@@ -9530,7 +9436,6 @@ function physics.set_disable_arrival(...) end
 ---@param e entt.entity
 ---@param radius number @distance at which arrival deceleration begins
 ---@return nil
-
 function physics.set_arrive_radius(...) end
 
 ---
@@ -10637,7 +10542,6 @@ function shader_pipeline.GetLastRenderRect(...) end
 ---@param name string                      # your overlay’s name
 ---@param blend BlendMode?                 # optional blend mode (default BLEND_ALPHA)
 ---@return ShaderOverlayDraw               # the newly-added overlay draw
-
 function shader_pipeline.ShaderPipelineComponent.addOverlay(...) end
 
 ---
@@ -10775,11 +10679,11 @@ function shaders.ShowShaderEditorUI(...) end
 --- If the component has a uniform set registered under shaderName, applies those uniforms to shader
 ---
 
-        ---@param shader Shader                    # The target Shader handle
-        ---@param component ShaderUniformComponent # Holds named uniform‐sets
-        ---@param shaderName string                 # Key of the uniform set to apply
-        ---@return nil
-        
+---@param shader Shader                    # The target Shader handle
+---@param component ShaderUniformComponent # Holds named uniform‐sets
+---@param shaderName string                 # Key of the uniform set to apply
+---@return nil
+
 function shaders.TryApplyUniforms(...) end
 
 ---
@@ -11342,10 +11246,10 @@ function ui.box.GetUIEByID(...) end
 --- Gets a UI element by its ID, searching globally.
 ---
 
-        ---@param registry registry
-        ---@param id string
-        ---@return Entity|nil
-        
+---@param registry registry
+---@param id string
+---@return Entity|nil
+
 function ui.box.GetUIEByID(...) end
 
 ---
@@ -11483,31 +11387,31 @@ function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
 --- Create a static text‐entry node, with optional entity/component/value refs.
 ---
 
-        ---@overload fun(text:string):UIElementTemplateNode
-        ---@overload fun(text:string, refEntity:Entity):UIElementTemplateNode
-        ---@overload fun(text:string, refEntity:Entity, refComponent:string):UIElementTemplateNode
-        ---@param text string
-        ---@param refEntity? Entity
-        ---@param refComponent? string
-        ---@param refValue? string
-        ---@return UIElementTemplateNode
-        
+---@overload fun(text:string):UIElementTemplateNode
+---@overload fun(text:string, refEntity:Entity):UIElementTemplateNode
+---@overload fun(text:string, refEntity:Entity, refComponent:string):UIElementTemplateNode
+---@param text string
+---@param refEntity? Entity
+---@param refComponent? string
+---@param refValue? string
+---@return UIElementTemplateNode
+
 function ui.definitions.getNewTextEntry(...) end
 
 ---
 --- Create a text‐entry node with dynamic effects (wrapping, pulse, etc.) and optional refs.
 ---
 
-        ---@param localizedStringGetter fun(langCode:string):string
-        ---@param fontSize number
-        ---@param textEffect? string
-        ---@param updateOnLanguageChange? boolean, defaults to true
-        ---@param wrapWidth? number
-        ---@param refEntity? Entity
-        ---@param refComponent? string
-        ---@param refValue? string
-        ---@return UIElementTemplateNode
-        
+---@param localizedStringGetter fun(langCode:string):string
+---@param fontSize number
+---@param textEffect? string
+---@param updateOnLanguageChange? boolean, defaults to true
+---@param wrapWidth? number
+---@param refEntity? Entity
+---@param refComponent? string
+---@param refValue? string
+---@return UIElementTemplateNode
+
 function ui.definitions.getNewDynamicTextEntry(...) end
 
 ---
@@ -11756,9 +11660,9 @@ function ui.element.BuildUIDrawList(...) end
 --- Build an id→entity map starting at root, using transform::GameObject.orderedChildren by default.
 ---
 
-        ---@param root Entity
-        ---@return TextUIHandle
-        
+---@param root Entity
+---@return TextUIHandle
+
 function ui.text.buildIdMapDefault(...) end
 
 ---
@@ -11787,11 +11691,11 @@ function ui.text.size(...) end
 --- Convenience: set UIConfig.color by id.
 ---
 
-    ---@param handle TextUIHandle
-    ---@param id string
-    ---@param colorName string
-    ---@return boolean  -- false if id/entity not found
-    
+---@param handle TextUIHandle
+---@param id string
+---@param colorName string
+---@return boolean  -- false if id/entity not found
+
 function ui.text.setColor(...) end
 
 ---

@@ -84,6 +84,7 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 - [Task 4 Combat Loop Report](guides/implementation-summaries/TASK_4_COMBAT_LOOP_REPORT.md) - Combat task report
 - [Task 5 Bug Fixes Report](guides/implementation-summaries/TASK_5_BUG_FIXES_REPORT.md) - Bug fix task
 - [Wand Execution Report](guides/implementation-summaries/WAND_EXECUTION_REPORT.md) - Wand implementation
+- [LDtk Integration Notes](guides/implementation-summaries/LDTK_INTEGRATION_NOTES.md) - LDtk config/Lua/collider flow
 
 ## External Libraries
 

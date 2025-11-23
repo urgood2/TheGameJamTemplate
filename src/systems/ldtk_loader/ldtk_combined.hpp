@@ -8,12 +8,21 @@
 #include "third_party/ldtkimport/include/ldtkimport/LdtkDefFile.hpp"
 #include "third_party/ldtkimport/include/ldtkimport/Level.h"
 #include "util/utilities.hpp"
+#include "entt/entt.hpp"
 #include <raylib.h>
+#include "core/globals.hpp"
+#include "systems/physics/physics_manager.hpp"
+#include "systems/physics/physics_world.hpp"
+#include "systems/physics/physics_components.hpp"
 #include <string>
 #include <unordered_map>
 #include <memory>
 #include <queue>
 #include <ostream>
+#include <functional>
+#include <fstream>
+#include <stdexcept>
+#include <vector>
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/layer/layer_order_system.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -29,7 +38,26 @@ namespace internal_loader {
     extern RenderTexture2D renderTexture;
     struct TilesetData { Texture2D texture; };
     extern std::unordered_map<std::string, TilesetData> tilesetCache;
+
+    struct ProjectConfig {
+        std::string projectPath;
+        std::string assetDir;
+        std::vector<std::string> colliderLayers;
+        std::unordered_map<std::string, std::string> entityPrefabs;
+    };
+
+    // Optional hooks to external systems
+    extern ProjectConfig activeConfig;
+    extern bool hasActiveProject;
+    extern entt::registry* registry;
+    using EntitySpawnFn = std::function<void(const ldtk::Entity&, entt::registry&)>;
+    extern EntitySpawnFn entitySpawner;
+    extern std::string activeLevel;
+    extern std::string activePhysicsWorld;
 }
+
+// Forward decls
+inline void Unload();
 
 inline void SetAssetDirectory(const std::string& dir) {
     internal_loader::assetDirectory = dir;
@@ -41,6 +69,80 @@ inline void InitRenderTexture(int width, int height) {
     auto& rt = internal_loader::renderTexture;
     if (rt.texture.id) UnloadRenderTexture(rt);
     rt = LoadRenderTexture(width, height);
+}
+
+// ---------------------- Config-driven loading ----------------------
+inline internal_loader::ProjectConfig LoadConfig(const std::string& path) {
+    std::ifstream f(path);
+    if (!f.is_open()) {
+        throw std::runtime_error("LDtk config not found at " + path);
+    }
+    json j;
+    f >> j;
+    internal_loader::ProjectConfig cfg{};
+    cfg.projectPath  = j.value("project_path", "");
+    cfg.assetDir     = j.value("asset_dir", "");
+    if (j.contains("collider_layers") && j["collider_layers"].is_array()) {
+        for (const auto& v : j["collider_layers"]) cfg.colliderLayers.push_back(v.get<std::string>());
+    }
+    if (j.contains("entity_prefabs") && j["entity_prefabs"].is_object()) {
+        for (auto it = j["entity_prefabs"].begin(); it != j["entity_prefabs"].end(); ++it) {
+            cfg.entityPrefabs[it.key()] = it.value().get<std::string>();
+        }
+    }
+    if (cfg.projectPath.empty()) {
+        throw std::runtime_error("LDtk config missing required field project_path");
+    }
+    return cfg;
+}
+
+inline void SetRegistry(entt::registry& R) {
+    internal_loader::registry = &R;
+}
+
+inline void SetEntitySpawner(internal_loader::EntitySpawnFn fn) {
+    internal_loader::entitySpawner = std::move(fn);
+}
+
+inline const internal_loader::ProjectConfig& GetActiveConfig() {
+    return internal_loader::activeConfig;
+}
+
+inline std::string PrefabForEntity(const std::string& entityName) {
+    auto it = internal_loader::activeConfig.entityPrefabs.find(entityName);
+    return (it == internal_loader::activeConfig.entityPrefabs.end()) ? std::string{} : it->second;
+}
+
+inline const std::vector<std::string>& ColliderLayers() {
+    return internal_loader::activeConfig.colliderLayers;
+}
+
+inline physics::PhysicsWorld* GetPhysicsWorld(const std::string& name) {
+    if (!globals::physicsManager) return nullptr;
+    auto* rec = globals::physicsManager->get(name);
+    return rec ? rec->w.get() : nullptr;
+}
+
+inline bool HasActiveProject() { return internal_loader::hasActiveProject; }
+inline bool HasActiveLevel() { return !internal_loader::activeLevel.empty(); }
+inline const std::string& GetActiveLevel() { return internal_loader::activeLevel; }
+inline const std::string& GetActivePhysicsWorld() { return internal_loader::activePhysicsWorld; }
+
+inline void LoadProjectFromConfig(const std::string& configPathRaw) {
+    const std::string cfgPath = util::getRawAssetPathNoUUID(configPathRaw);
+    internal_loader::activeConfig = LoadConfig(cfgPath);
+    internal_loader::hasActiveProject = true;
+
+    if (!internal_loader::activeConfig.assetDir.empty()) {
+        SetAssetDirectory(internal_loader::activeConfig.assetDir);
+    }
+    const std::string projPath = util::getRawAssetPathNoUUID(internal_loader::activeConfig.projectPath);
+    LoadProject(projPath);
+}
+
+inline void ReloadProject(const std::string& configPathRaw) {
+    Unload();
+    LoadProjectFromConfig(configPathRaw);
 }
 inline void PreloadTileset(const std::string& relPath) {
     std::string full = internal_loader::assetDirectory.empty()
@@ -139,7 +241,9 @@ inline void DrawLevelBackground(std::shared_ptr<layer::Layer> layerPtr,
     const int sch = (int)std::ceil (CLIP.height);
     // BeginScissorMode(scx, scy, scw, sch);
     layer::QueueCommand<layer::CmdBeginScissorMode>(
-        layerPtr, [](layer::CmdBeginScissorMode*){}, renderZLevel, layer::DrawCommandSpace::World
+        layerPtr, [scx, scy, scw, sch](layer::CmdBeginScissorMode* cmd){
+            cmd->area = Rectangle{(float)scx, (float)scy, (float)scw, (float)sch};
+        }, renderZLevel, layer::DrawCommandSpace::World
     );
 
     if (hasComputed) {
@@ -199,10 +303,19 @@ inline void DrawLevelBackground(std::shared_ptr<layer::Layer> layerPtr,
 
         for (float y = CLIP.y; y < CLIP.y + CLIP.height; y += tileH) {
             for (float x = CLIP.x; x < CLIP.x + CLIP.width;  x += tileW) {
-                DrawTexturePro(tex, src, Rectangle{ x, y, tileW, tileH }, Vector2{0,0}, 0.0f, WHITE);
+                Rectangle dst{ x, y, tileW, tileH };
+                layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, src, dst](layer::CmdTexturePro *cmd) {
+                    cmd->texture = tex;
+                    cmd->source = src;
+                    cmd->offsetX = dst.x;
+                    cmd->offsetY = dst.y;
+                    cmd->size = {dst.width, dst.height};
+                    cmd->rotationCenter = {0, 0};
+                    cmd->rotation = 0;
+                    cmd->color = WHITE;
+                }, renderZLevel, layer::DrawCommandSpace::World);
             }
         }
-        // EndScissorMode();
         layer::QueueCommand<layer::CmdEndScissorMode>(
         layerPtr, [](layer::CmdEndScissorMode*){}, renderZLevel, layer::DrawCommandSpace::World
     );
@@ -217,16 +330,40 @@ inline void DrawLevelBackground(std::shared_ptr<layer::Layer> layerPtr,
     const float levelPX = (float)w * pivot.x, levelPY = (float)h * pivot.y;
     const float imgPX   = sw * pivot.x,       imgPY   = sh * pivot.y;
     Rectangle dst{ levelPX - imgPX, levelPY - imgPY, sw, sh };
-    DrawTexturePro(tex, src, dst, Vector2{0,0}, 0.0f, WHITE);
-
-    // EndScissorMode();
+    layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, src, dst](layer::CmdTexturePro *cmd) {
+        cmd->texture = tex;
+        cmd->source = src;
+        cmd->offsetX = dst.x;
+        cmd->offsetY = dst.y;
+        cmd->size = {dst.width, dst.height};
+        cmd->rotationCenter = {0, 0};
+        cmd->rotation = 0;
+        cmd->color = WHITE;
+    }, renderZLevel, layer::DrawCommandSpace::World);
     
     layer::QueueCommand<layer::CmdEndScissorMode>(
         layerPtr, [](layer::CmdEndScissorMode*){}, renderZLevel, layer::DrawCommandSpace::World
     );
 }
 
-inline void DrawLayer(std::shared_ptr<layer::Layer> layerPtr, const std::string& levelName, const std::string& layerName, float scale = 1.0f, const int renderZLevel = 0) {
+inline bool RectsOverlap(const Rectangle& a, const Rectangle& b) {
+    return !(a.x > b.x + b.width || a.x + a.width < b.x ||
+             a.y > b.y + b.height || a.y + a.height < b.y);
+}
+
+struct EntitySpawnInfo {
+    std::string name;
+    std::string layer;
+    Vector2 position; // pixels
+    ldtk::IntPoint grid;    // grid coords
+};
+
+struct LDTKColliderTag {
+    std::string level;
+    std::string layer;
+};
+
+inline void DrawLayer(std::shared_ptr<layer::Layer> layerPtr, const std::string& levelName, const std::string& layerName, float scale = 1.0f, const int renderZLevel = 0, const Rectangle* viewOpt = nullptr) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
     const auto& layer = level.getLayer(layerName);
@@ -254,6 +391,11 @@ inline void DrawLayer(std::shared_ptr<layer::Layer> layerPtr, const std::string&
 
         Vector2   pos = { (float)p.x, (float)p.y };
         Rectangle src = { (float)tr.x, (float)tr.y, (float)tr.width, (float)tr.height };
+
+        Rectangle dstRect{pos.x, pos.y, src.width, src.height};
+        if (viewOpt && !RectsOverlap(dstRect, *viewOpt)) {
+            continue;
+        }
 
         // Flip by negating source dims ONLY; do NOT move pos.
         if (tile.flipX) src.width  = -src.width;
@@ -292,7 +434,7 @@ inline void DrawLayer(std::shared_ptr<layer::Layer> layerPtr, const std::string&
 
 
 
-inline void DrawAllLayers(std::shared_ptr<layer::Layer> layerPtr, const std::string& levelName, float scale = 1.0f, const int renderZLevel = 0) {
+inline void DrawAllLayers(std::shared_ptr<layer::Layer> layerPtr, const std::string& levelName, float scale = 1.0f, const int renderZLevel = 0, const Rectangle* viewOpt = nullptr) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
 
@@ -306,9 +448,196 @@ inline void DrawAllLayers(std::shared_ptr<layer::Layer> layerPtr, const std::str
         // if (it->getName() == "Collisions")
         
         // if (it->getName() == "Wall_tops")
-        DrawLayer(layerPtr, levelName, it->getName(), scale, renderZLevel);
+        DrawLayer(layerPtr, levelName, it->getName(), scale, renderZLevel, viewOpt);
     }
 }
+
+inline void ForEachEntity(const std::string& levelName, const std::function<void(const EntitySpawnInfo&)>& fn) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            EntitySpawnInfo info;
+            info.name   = ent.getName();
+            info.layer  = layer.getName();
+            info.position = { (float)ent.getPosition().x, (float)ent.getPosition().y };
+            info.grid   = ent.getGridPosition();
+            fn(info);
+        }
+    }
+}
+
+inline void SpawnEntities(const std::string& levelName) {
+    if (!internal_loader::entitySpawner || !internal_loader::registry) return;
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            internal_loader::entitySpawner(ent, *internal_loader::registry);
+        }
+    }
+}
+
+inline void ForEachIntGrid(const std::string& levelName,
+                           const std::string& layerName,
+                           const std::function<void(int x, int y, int value)>& fn) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+    const auto& layer = level.getLayer(layerName);
+    const int w = layer.getGridSize().x;
+    const int h = layer.getGridSize().y;
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            const auto& val = layer.getIntGridVal(x, y);
+            fn(x, y, val.value);
+        }
+    }
+}
+
+// -------------------- Physics helpers --------------------
+inline void ClearCollidersForLevel(const std::string& levelName, physics::PhysicsWorld& world) {
+    auto* R = internal_loader::registry;
+    if (!R) return;
+    auto view = R->view<LDTKColliderTag, physics::ColliderComponent>();
+    std::vector<entt::entity> toDelete;
+    for (auto e : view) {
+        const auto& tag = view.get<LDTKColliderTag>(e);
+        if (tag.level != levelName) continue;
+        toDelete.push_back(e);
+    }
+    for (auto e : toDelete) {
+        world.ClearAllShapes(e);
+        R->destroy(e);
+    }
+}
+
+inline void ClearCollidersForLevel(const std::string& levelName, const std::string& worldName) {
+    if (auto* world = GetPhysicsWorld(worldName)) {
+        ClearCollidersForLevel(levelName, *world);
+        if (globals::physicsManager) {
+            globals::physicsManager->markNavmeshDirty(worldName);
+        }
+    }
+}
+
+inline void BuildCollidersForLevel(const std::string& levelName,
+                                   physics::PhysicsWorld& world,
+                                   const std::string& worldName,
+                                   const std::string& physicsTag = "WORLD") {
+    auto* R = internal_loader::registry;
+    if (!R) {
+        spdlog::warn("LDtk BuildCollidersForLevel: registry not set");
+        return;
+    }
+    const auto& cfg = internal_loader::activeConfig;
+    const auto& lworld = internal_loader::project.getWorld();
+    const auto& level = lworld.getLevel(levelName);
+
+    ClearCollidersForLevel(levelName, world);
+
+    for (const auto& layerName : cfg.colliderLayers) {
+        const ldtk::Layer* target = nullptr;
+        for (const auto& l : level.allLayers()) {
+            if (l.getName() == layerName) { target = &l; break; }
+        }
+        if (!target) {
+            spdlog::warn("LDtk collider layer '{}' not found in level '{}'", layerName, levelName);
+            continue;
+        }
+        const auto& layer = *target;
+        const int cell = layer.getCellSize();
+        const auto offset = layer.getOffset();
+        const auto grid = layer.getGridSize();
+
+        // Only IntGrid for now; treat non-zero as solid
+        if (layer.getType() != ldtk::LayerType::IntGrid) continue;
+
+        for (int y = 0; y < grid.y; ++y) {
+            int x = 0;
+            while (x < grid.x) {
+                const int val = layer.getIntGridVal(x, y).value;
+                if (val == 0) { ++x; continue; }
+
+                int runStart = x;
+                int runEnd = x;
+                while (runEnd + 1 < grid.x && layer.getIntGridVal(runEnd + 1, y).value != 0) {
+                    ++runEnd;
+                }
+                const int runLen = (runEnd - runStart) + 1;
+
+                float w = (float)(runLen * cell);
+                float h = (float)cell;
+                float cx = (float)offset.x + runStart * cell + w * 0.5f;
+                float cy = (float)offset.y + y * cell + h * 0.5f;
+
+                entt::entity e = R->create();
+                R->emplace<PhysicsWorldRef>(e, worldName);
+                R->emplace<PhysicsLayer>(e, physicsTag);
+                R->emplace<LDTKColliderTag>(e, LDTKColliderTag{levelName, layerName});
+
+                world.AddCollider(e, physicsTag, "rectangle", w, h, -1, -1, false);
+                world.SetBodyPosition(e, cx, cy);
+
+                x = runEnd + 1;
+            }
+        }
+    }
+
+    if (globals::physicsManager) {
+        globals::physicsManager->markNavmeshDirty(worldName);
+    }
+}
+
+inline void BuildCollidersForLevel(const std::string& levelName,
+                                   const std::string& worldName,
+                                   const std::string& physicsTag = "WORLD") {
+    if (auto* world = GetPhysicsWorld(worldName)) {
+        BuildCollidersForLevel(levelName, *world, worldName, physicsTag);
+    }
+}
+
+inline void SpawnEntitiesForLevel(const std::string& levelName) {
+    if (!internal_loader::entitySpawner || !internal_loader::registry) {
+        spdlog::warn("LDtk SpawnEntitiesForLevel: spawner or registry not set");
+        return;
+    }
+    SpawnEntities(levelName);
+}
+
+inline Rectangle CameraViewRect(const Camera2D& cam, float viewportW, float viewportH, float padding = 0.0f) {
+    const float zoom = (cam.zoom == 0.0f) ? 1.0f : cam.zoom;
+    const float w = viewportW / zoom + padding * 2.0f;
+    const float h = viewportH / zoom + padding * 2.0f;
+    return Rectangle{
+        cam.target.x - w * 0.5f,
+        cam.target.y - h * 0.5f,
+        w,
+        h
+    };
+}
+
+inline void SetActiveLevel(const std::string& levelName,
+                           const std::string& worldName,
+                           bool rebuildColliders = true,
+                           bool spawnEntities = true,
+                           const std::string& physicsTag = "WORLD") {
+    if (!internal_loader::registry) {
+        spdlog::warn("LDtk SetActiveLevel: registry not set, call ldtk.load_config first");
+        return;
+    }
+    if (HasActiveLevel() && !internal_loader::activePhysicsWorld.empty()) {
+        ClearCollidersForLevel(internal_loader::activeLevel, internal_loader::activePhysicsWorld);
+    }
+    internal_loader::activeLevel = levelName;
+    internal_loader::activePhysicsWorld = worldName;
+    if (rebuildColliders) {
+        BuildCollidersForLevel(levelName, worldName, physicsTag);
+    }
+    if (spawnEntities) {
+        SpawnEntitiesForLevel(levelName);
+    }
+}
+
 inline void Unload() {
     for (auto& kv : internal_loader::tilesetCache) {
         UnloadTexture(kv.second.texture);
@@ -316,6 +645,10 @@ inline void Unload() {
     internal_loader::tilesetCache.clear();
     auto& rt = internal_loader::renderTexture;
     if (rt.texture.id) UnloadRenderTexture(rt);
+    internal_loader::hasActiveProject = false;
+    internal_loader::activeConfig = internal_loader::ProjectConfig{};
+    internal_loader::activeLevel.clear();
+    internal_loader::activePhysicsWorld.clear();
 }
 inline size_t GetCachedTilesetCount() {
     return internal_loader::tilesetCache.size();

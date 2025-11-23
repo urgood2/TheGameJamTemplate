@@ -50,7 +50,7 @@ SkeletonRenderer::SkeletonRenderer() : _allocator(4096), _worldVertices(), _quad
 SkeletonRenderer::~SkeletonRenderer() {
 }
 
-static RenderCommand *createRenderCommand(BlockAllocator &allocator, int numVertices, int32_t numIndices, BlendMode blendMode, void *texture) {
+static RenderCommand *createRenderCommand(BlockAllocator &allocator, int numVertices, int32_t numIndices, spine::BlendMode blendMode, void *texture) {
 	RenderCommand *cmd = allocator.allocate<RenderCommand>(1);
 	cmd->positions = allocator.allocate<float>(numVertices << 1);
 	cmd->uvs = allocator.allocate<float>(numVertices << 1);
@@ -163,7 +163,7 @@ RenderCommand *SkeletonRenderer::render(Skeleton &skeleton) {
 		Vector<float> *uvs;
 		Vector<unsigned short> *indices;
 		int32_t indicesCount;
-		Color *attachmentColor;
+		spine::Color *attachmentColor;
 		void *texture;
 
 		if (attachment->getRTTI().isExactly(RegionAttachment::rtti)) {
@@ -216,7 +216,7 @@ RenderCommand *SkeletonRenderer::render(Skeleton &skeleton) {
 		uint32_t color = (a << 24) | (r << 16) | (g << 8) | b;
 		uint32_t darkColor = 0xff000000;
 		if (slot.hasDarkColor()) {
-			Color &slotDarkColor = slot.getDarkColor();
+			spine::Color &slotDarkColor = slot.getDarkColor();
 			darkColor = 0xff000000 | (static_cast<uint8_t>(slotDarkColor.r * 255) << 16) | (static_cast<uint8_t>(slotDarkColor.g * 255) << 8) | static_cast<uint8_t>(slotDarkColor.b * 255);
 		}
 

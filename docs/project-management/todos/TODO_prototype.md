@@ -53,6 +53,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
     
 # programming side
+- nothing rendring, check past commit and command buffer change.
+- continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
+
 - I need to continue with "testing_checklist." starting with projectile system.
 - got to also test the new batching queue system.
 - issue error on closing via x again.

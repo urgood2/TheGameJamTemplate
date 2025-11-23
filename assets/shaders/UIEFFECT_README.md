@@ -33,6 +33,11 @@ Reduces the number of colors to create a poster-like effect.
 - **Uniforms**:
   - `float intensity`: Effect intensity (0.0 = subtle/48 levels, 1.0 = extreme/4 levels)
 
+#### `uieffect_tone_retro.fs`
+Applies a Game Boy–style retro palette ramp based on luminance.
+- **Uniforms**:
+  - `float intensity`: Effect intensity (0.0 = no effect, 1.0 = full retro palette)
+
 ---
 
 ### 2. Color Filters
@@ -77,6 +82,13 @@ Creates a pixelated/mosaic effect by snapping UVs to a grid.
 - **Uniforms**:
   - `float intensity`: Pixelation intensity (0.0 = no effect, 1.0 = very pixelated)
   - `vec2 texelSize`: Size of one texel
+
+#### `uieffect_rgb_shift.fs`
+Offsets individual color channels to create a chromatic aberration effect.
+- **Uniforms**:
+  - `float intensity`: Shift strength (0.0 = none)
+  - `vec2 texelSize`: Size of one texel
+  - `vec2 shiftDir`: Direction of the shift (defaults to X axis)
 
 #### `uieffect_edge_detection.fs`
 Detects edges using the Sobel operator.
@@ -126,6 +138,33 @@ Burn transition with ember-like edges that move upward.
   - `vec4 edgeColor`: Color of the burn edge (typically orange/red)
   - `vec4 uvMask`: UV bounds
 
+#### `uieffect_transition_shiny.fs`
+Dissolve-style transition with a squared falloff for a shiny band.
+- **Uniforms**:
+  - `sampler2D transitionTex`: Pattern/gradient texture
+  - `float transitionRate`: Transition progress (0.0-1.0)
+  - `float transitionWidth`: Width of the shiny band
+  - `float softness`: Edge softness (0.0-1.0)
+  - `vec4 edgeColor`: Color used for the shiny band
+
+#### `uieffect_transition_pattern.fs`
+Pattern-based reveal that blends in a secondary color based on a range mask.
+- **Uniforms**:
+  - `sampler2D transitionTex`: Pattern mask texture
+  - `float transitionRate`: Transition progress (0.0-1.0)
+  - `vec2 transitionRange`: Range for the pattern ramp (min, max)
+  - `int patternReverse`: If non-zero, invert the mask logic
+  - `int patternArea`: 0 = full, 1 = edge bias, 2 = interior bias
+  - `vec4 patternColor`: Color applied to the patterned region
+
+#### `uieffect_transition_blaze.fs`
+Fire-like transition driven by a gradient lookup.
+- **Uniforms**:
+  - `sampler2D transitionTex`: Source mask texture
+  - `sampler2D transitionGradientTex`: Gradient ramp texture
+  - `float transitionRate`: Transition progress (0.0-1.0)
+  - `float transitionWidth`: Width of the blaze front
+
 ---
 
 ### 5. Edge Effects
@@ -174,7 +213,53 @@ Applies a radial gradient from center to edges.
 
 ---
 
-### 7. Common Vertex Shader
+### 7. Detail / Masking Effects
+Overlay a secondary texture with multiple blend modes.
+
+#### `uieffect_detail_filter.fs`
+Flexible detail overlay supporting masking, multiply, additive, subtractive, replace, and multiply-additive modes.
+- **Uniforms**:
+  - `float detailIntensity`: 0 disables the effect
+  - `vec4 detailColor`: Tint applied to the detail texture
+  - `vec2 detailThreshold`: Used for masking mode
+  - `int detailMode`: 0 masking, 1 multiply, 2 additive, 3 subtractive, 4 replace, 5 multiply-additive
+  - `vec2 detailTexScale`: UV scale for the detail texture
+  - `vec2 detailTexOffset`: UV offset
+  - `vec2 detailTexSpeed`: UV scroll speed
+  - `float iTime`: Time value for scrolling
+
+---
+
+### 8. Target Filters
+Apply an overlay only where pixels match a hue or luminance range.
+
+#### `uieffect_target_filter.fs`
+Selective overlay based on hue or luminance proximity.
+- **Uniforms**:
+  - `int targetMode`: 0 none, 1 hue, 2 luminance
+  - `vec4 targetColor`: Reference color
+  - `float targetRange`: Acceptance range
+  - `float targetSoftness`: Edge softness
+  - `vec4 overlayColor`: Overlay color (alpha controls strength)
+  - `float targetIntensity`: Blend strength
+
+---
+
+### 9. Shadow Effects
+Create soft drop shadows using blurred alpha.
+
+#### `uieffect_shadow_blur.fs`
+Blurs the source alpha and tints it to create a soft shadow.
+- **Uniforms**:
+  - `float intensity`: Blur strength (0 = off)
+  - `vec2 texelSize`: 1.0 / texture size
+  - `vec2 shadowOffset`: UV offset for the shadow
+  - `vec4 shadowColor`: Shadow tint
+  - `float shadowAlpha`: Additional shadow alpha scale
+
+---
+
+### 10. Common Vertex Shader
 
 #### `uieffect_common.vs`
 A shared vertex shader that works with all the fragment shaders above. It passes through texture coordinates, colors, and vertex positions.
@@ -247,17 +332,7 @@ EndShaderMode();
 
 ## Missing Features
 
-The following Unity UIEffect features were not converted:
-- **Retro tone**: Specific retro color palette effect
-- **RGB Shift**: Chromatic aberration effect
-- **Shiny transition**: Shiny band transition effect
-- **Blaze transition**: Fire/flame-like transition
-- **Pattern transition**: Complex pattern-based transitions
-- **Detail/masking**: Texture overlay effects
-- **Target filters**: HSV/luminance-based selective filtering
-- **Shadow blur**: Blur specifically for drop shadows
-
-These can be added later if needed.
+All key Unity UIEffect features have been covered in the modular set above. If you need additional variants or tighter parity with specific Unity keywords, we can add them.
 
 ## Credits
 

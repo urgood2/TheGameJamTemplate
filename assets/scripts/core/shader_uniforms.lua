@@ -4,8 +4,34 @@
 
 local shader_uniforms = {}
 
+-- Simple constructors to mimic the C++ Vector2/3/4 usage.
+local function Vector2(t) return t end
+local function Vector3(t) return t end
+local function Vector4(t) return t end
+
+-- Approximate normalized Raylib colors (0-1) to replace ColorNormalize.
+local COLOR_BLUE_N    = { x = 0.0,       y = 121/255, z = 241/255, w = 1.0 }
+local COLOR_PURPLE_N  = { x = 200/255,   y = 122/255, z = 255/255, w = 1.0 }
+local COLOR_SKYBLUE_N = { x = 102/255,   y = 191/255, z = 255/255, w = 1.0 }
+local COLOR_PINK_N    = { x = 255/255,   y = 109/255, z = 194/255, w = 1.0 }
+local COLOR_RED_N     = { x = 230/255,   y = 41/255,  z = 55/255,  w = 1.0 }
+local COLOR_ORANGE_N  = { x = 255/255,   y = 161/255, z = 0.0,     w = 1.0 }
+
+local function normalize_value(value)
+    if type(value) == "table" then
+        if value.x and value.y and value.z and value.w then
+            return Vector4(value.x, value.y, value.z, value.w)
+        elseif value.x and value.y and value.z then
+            return Vector3(value.x, value.y, value.z)
+        elseif value.x and value.y then
+            return Vector2(value.x, value.y)
+        end
+    end
+    return value
+end
+
 local set = function(shader, name, value)
-    globalShaderUniforms:set(shader, name, value)
+    globalShaderUniforms:set(shader, name, normalize_value(value))
 end
 
 local register = function(shader, fn)
@@ -388,8 +414,8 @@ local function init_static_defaults()
     set("holo", "texture_details", Vector4{ x = 0.0, y = 0.0, z = 64.0, w = 64.0 })
     set("holo", "image_details", Vector2{ x = 64.0, y = 64.0 })
     set("holo", "holo", Vector2{ x = 1.2, y = 0.8 })
-    set("holo", "burn_colour_1", ColorNormalize(BLUE))
-    set("holo", "burn_colour_2", ColorNormalize(PURPLE))
+    set("holo", "burn_colour_1", COLOR_BLUE_N)
+    set("holo", "burn_colour_2", COLOR_PURPLE_N)
     set("holo", "shadow", 0.0)
     set("holo", "mouse_screen_pos", Vector2{ x = 0.0, y = 0.0 })
     set("holo", "hovering", 0.0)
@@ -409,8 +435,8 @@ local function init_static_defaults()
     set("negative_shine", "texture_details", Vector4{ x = 0.0, y = 0.0, z = 64.0, w = 64.0 })
     set("negative_shine", "image_details", Vector2{ x = 64.0, y = 64.0 })
     set("negative_shine", "negative_shine", Vector2{ x = 1.0, y = 1.0 })
-    set("negative_shine", "burn_colour_1", ColorNormalize(SKYBLUE))
-    set("negative_shine", "burn_colour_2", ColorNormalize(PINK))
+    set("negative_shine", "burn_colour_1", COLOR_SKYBLUE_N)
+    set("negative_shine", "burn_colour_2", COLOR_PINK_N)
     set("negative_shine", "shadow", 0.0)
     set("negative_shine", "mouse_screen_pos", Vector2{ x = 0.0, y = 0.0 })
     set("negative_shine", "hovering", 0.0)
@@ -421,8 +447,8 @@ local function init_static_defaults()
     set("negative", "image_details", Vector2{ x = 64.0, y = 64.0 })
     set("negative", "negative", Vector2{ x = 1.0, y = 1.0 })
     set("negative", "dissolve", 0.0)
-    set("negative", "burn_colour_1", ColorNormalize(RED))
-    set("negative", "burn_colour_2", ColorNormalize(ORANGE))
+    set("negative", "burn_colour_1", COLOR_RED_N)
+    set("negative", "burn_colour_2", COLOR_ORANGE_N)
     set("negative", "shadow", 0.0)
     set("negative", "mouse_screen_pos", Vector2{ x = 0.0, y = 0.0 })
     set("negative", "hovering", 0.0)
@@ -450,8 +476,8 @@ local function init_static_defaults()
     set("voucher_sheen", "texture_details", Vector4{ x = 0.0, y = 0.0, z = 64.0, w = 64.0 })
     set("voucher_sheen", "image_details", Vector2{ x = 64.0, y = 64.0 })
     set("voucher_sheen", "shadow", false)
-    set("voucher_sheen", "burn_colour_1", ColorNormalize(BLUE))
-    set("voucher_sheen", "burn_colour_2", ColorNormalize(PURPLE))
+    set("voucher_sheen", "burn_colour_1", COLOR_BLUE_N)
+    set("voucher_sheen", "burn_colour_2", COLOR_PURPLE_N)
 
     -- discrete_clouds
     set("discrete_clouds", "bottom_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })

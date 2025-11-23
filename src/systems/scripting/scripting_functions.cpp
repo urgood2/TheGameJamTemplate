@@ -710,6 +710,38 @@ namespace scripting {
         
         auto& inputStateRef = globals::getInputState();
         lua["globals"]["inputState"] = &inputStateRef;
+
+        // Lightweight constructors for Raylib vector types (accept table {x=,y=} or positional floats).
+        lua.set_function("Vector2", [](sol::object a, sol::object b) -> Vector2 {
+            if (a.is<sol::table>()) {
+                auto t = a.as<sol::table>();
+                return Vector2{ t.get_or("x", 0.0f), t.get_or("y", 0.0f) };
+            }
+            float x = a.is<float>() ? a.as<float>() : 0.0f;
+            float y = b.is<float>() ? b.as<float>() : 0.0f;
+            return Vector2{ x, y };
+        });
+        lua.set_function("Vector3", [](sol::object a, sol::object b, sol::object c) -> Vector3 {
+            if (a.is<sol::table>()) {
+                auto t = a.as<sol::table>();
+                return Vector3{ t.get_or("x", 0.0f), t.get_or("y", 0.0f), t.get_or("z", 0.0f) };
+            }
+            float x = a.is<float>() ? a.as<float>() : 0.0f;
+            float y = b.is<float>() ? b.as<float>() : 0.0f;
+            float z = c.is<float>() ? c.as<float>() : 0.0f;
+            return Vector3{ x, y, z };
+        });
+        lua.set_function("Vector4", [](sol::object a, sol::object b, sol::object c, sol::object d) -> Vector4 {
+            if (a.is<sol::table>()) {
+                auto t = a.as<sol::table>();
+                return Vector4{ t.get_or("x", 0.0f), t.get_or("y", 0.0f), t.get_or("z", 0.0f), t.get_or("w", 0.0f) };
+            }
+            float x = a.is<float>() ? a.as<float>() : 0.0f;
+            float y = b.is<float>() ? b.as<float>() : 0.0f;
+            float z = c.is<float>() ? c.as<float>() : 0.0f;
+            float w = d.is<float>() ? d.as<float>() : 0.0f;
+            return Vector4{ x, y, z, w };
+        });
         
         /*
                 Camera2D, defines position/orientation in 2d space

@@ -64,8 +64,6 @@ option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
 find_program(CCACHE_PROGRAM ccache)
 if (CCACHE_PROGRAM)
     message(STATUS "ccache detected: enabling compiler launcher")
-    set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
 
     # Default to existing env var, otherwise keep cache local to the repo.
     set(_default_ccache_dir "$ENV{CCACHE_DIR}")
@@ -91,6 +89,23 @@ if (CCACHE_PROGRAM)
     if (CCACHE_CONFIGPATH)
         set(ENV{CCACHE_CONFIGPATH} "${CCACHE_CONFIGPATH}")
         message(STATUS "ccache CCACHE_CONFIGPATH set to '${CCACHE_CONFIGPATH}'")
+    endif()
+
+    # Wrap launcher with explicit env so builds honor the repo-local cache even
+    # when the outer shell doesn't export CCACHE_* variables.
+    set(_ccache_env)
+    if (CCACHE_DIR)
+        list(APPEND _ccache_env "CCACHE_DIR=${CCACHE_DIR}" "CCACHE_TEMPDIR=${CCACHE_DIR}/tmp")
+    endif()
+    if (CCACHE_CONFIGPATH)
+        list(APPEND _ccache_env "CCACHE_CONFIGPATH=${CCACHE_CONFIGPATH}")
+    endif()
+    if (_ccache_env)
+        set(CMAKE_C_COMPILER_LAUNCHER   ${CMAKE_COMMAND} -E env ${_ccache_env} ${CCACHE_PROGRAM})
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CMAKE_COMMAND} -E env ${_ccache_env} ${CCACHE_PROGRAM})
+    else()
+        set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
     endif()
 
     add_custom_target(ccache_stats
@@ -524,8 +539,31 @@ add_subdirectory("src/third_party/objectpool-master")
 ##########################################################################################
 
 # Adding our source files
-# Define PROJECT_SOURCES as a list of all source files
-file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
+# Define PROJECT_SOURCES as a list of all source files. Keep globbing automatic while
+# skipping vendor/build trees that generate huge glob checks (e.g. tracy profiler cache).
+file(GLOB PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
+set(_project_glob_excludes
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/chipmunk"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/fmt"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/GPGOAP"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/luajit-cmake-master"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/LuaJIT-2.1"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/objectpool-master"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/sol2"
+    "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master"
+)
+file(GLOB _src_subdirs LIST_DIRECTORIES true "${CMAKE_CURRENT_LIST_DIR}/src/*")
+foreach(_src_dir IN LISTS _src_subdirs)
+    if(NOT IS_DIRECTORY "${_src_dir}")
+        continue()
+    endif()
+    list(FIND _project_glob_excludes "${_src_dir}" _excluded_idx)
+    if(_excluded_idx EQUAL -1)
+        file(GLOB_RECURSE _globbed CONFIGURE_DEPENDS "${_src_dir}/*.cpp")
+        list(APPEND PROJECT_SOURCES ${_globbed})
+    endif()
+endforeach()
+list(REMOVE_DUPLICATES PROJECT_SOURCES)
 
 # Exclude third_party code that is built as separate libraries
 list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/third_party/(tracy-master|chipmunk|GPGOAP|objectpool-master|fmt|sol2|luajit-cmake-master|LuaJIT-2.1)/")

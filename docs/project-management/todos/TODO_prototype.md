@@ -53,6 +53,12 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
     
 # programming side
+- emphasize getting "wide' gameplay depth from a small set of changes/implementations, this is my core game design facet. Put that in a central doc somehwere.
+- brainstorm how best to visualize the execution order of the cards to the player. 
+- should they be cards? at all?
+- bounce the current visuals off the ai to get initial ffedback.
+- need to figure out how to process the cast blocks, and ensure they contain all necessary information I would need to ceonceivably implement the individual behaviors of each projectile/cast. 
+
 - nothing rendring, check past commit and command buffer change.
 - continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
 

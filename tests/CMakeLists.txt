@@ -12,6 +12,7 @@ add_executable(unit_tests
     unit/test_error_handling.cpp
     unit/test_config_validation.cpp
     unit/test_sound_system.cpp
+    unit/test_text_waiters.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/sound/sound_system.cpp

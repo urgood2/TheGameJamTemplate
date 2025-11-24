@@ -92,19 +92,23 @@ Result<T, std::string> loadWithRetry(std::function<Result<T, std::string>()> loa
 // Safe Lua call wrapper returning Result instead of throwing.
 template <typename... Args>
 auto safeLuaCall(sol::state& lua, const std::string& fnName, Args&&... args)
-    -> Result<sol::object, std::string>
+    -> Result<sol::protected_function_result, std::string>
 {
     try {
         sol::protected_function fn = lua[fnName];
-        auto res = fn(std::forward<Args>(args)...);
+        if (!fn.valid()) {
+            return Result<sol::protected_function_result, std::string>(
+                "Lua function '" + fnName + "' is not callable");
+        }
+
+        sol::protected_function_result res = fn(std::forward<Args>(args)...);
         if (!res.valid()) {
             sol::error err = res;
-            return Result<sol::object, std::string>(err.what());
+            return Result<sol::protected_function_result, std::string>(err.what());
         }
-        sol::object obj = res;
-        return Result<sol::object, std::string>(std::move(obj));
+        return Result<sol::protected_function_result, std::string>(std::move(res));
     } catch (const std::exception& e) {
-        return Result<sol::object, std::string>(e.what());
+        return Result<sol::protected_function_result, std::string>(e.what());
     }
 }
 

@@ -636,6 +636,28 @@ void PhysicsWorld::SetCollisionTags(const std::vector<std::string> &tags) {
   }
 }
 
+auto PhysicsWorld::DebugTagList() const -> std::string {
+  std::string list;
+  for (auto it = _tagToCollisionType.begin(); it != _tagToCollisionType.end();
+       ++it) {
+    if (!list.empty())
+      list += ", ";
+    list += it->first;
+  }
+  if (list.empty())
+    list = "<none>";
+  return list;
+}
+
+auto PhysicsWorld::TryTypeForTag(const std::string &tag, const char *ctx) const
+    -> std::optional<cpCollisionType> {
+  if (auto it = _tagToCollisionType.find(tag); it != _tagToCollisionType.end())
+    return it->second;
+  SPDLOG_ERROR("{}: unknown collision tag '{}' (registered: {})",
+               ctx ? ctx : "TypeForTag", tag, DebugTagList());
+  return std::nullopt;
+}
+
 std::string PhysicsWorld::GetTagFromCategory(int category) const {
   for (const auto &[tag, collisionTag] : collisionTags) {
     if (collisionTag.category == category) {
@@ -1390,77 +1412,102 @@ void PhysicsWorld::AddCollisionTag(const std::string &tag) {
 
 void PhysicsWorld::RegisterPairBegin(const std::string &a, const std::string &b,
                                      sol::protected_function fn) {
-  cpCollisionType ta = TypeForTag(a);
-  cpCollisionType tb = TypeForTag(b);
+  auto ta = TryTypeForTag(a, "on_pair_begin");
+  auto tb = TryTypeForTag(b, "on_pair_begin");
+  if (!ta || !tb)
+    return;
   // normalize key order
-  const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
+  const uint64_t key = PairKey(std::min(*ta, *tb), std::max(*ta, *tb));
   _luaPairHandlers[key].begin = std::move(fn);
-  EnsurePairInstalled(ta, tb);
-  SPDLOG_INFO("[REGISTER BEGIN] '{}'={} '{}'={} key={}", a, (int)ta, b, (int)tb,
+  EnsurePairInstalled(*ta, *tb);
+  SPDLOG_INFO("[REGISTER BEGIN] '{}'={} '{}'={} key={}", a, (int)*ta, b,
+              (int)*tb,
               key);
 }
 
 void PhysicsWorld::RegisterPairSeparate(const std::string &a,
                                         const std::string &b,
                                         sol::protected_function fn) {
-  cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-  _luaPairHandlers[PairKey(ta, tb)].separate = std::move(fn);
-  EnsurePairInstalled(ta, tb);
+  auto ta = TryTypeForTag(a, "on_pair_separate");
+  auto tb = TryTypeForTag(b, "on_pair_separate");
+  if (!ta || !tb)
+    return;
+  _luaPairHandlers[PairKey(*ta, *tb)].separate = std::move(fn);
+  EnsurePairInstalled(*ta, *tb);
 }
 
 void PhysicsWorld::RegisterWildcardBegin(const std::string &tag,
                                          sol::protected_function fn) {
-  cpCollisionType t = TypeForTag(tag);
-  _luaWildcardHandlers[t].begin = std::move(fn);
-  EnsureWildcardInstalled(t);
+  auto t = TryTypeForTag(tag, "on_wildcard_begin");
+  if (!t)
+    return;
+  _luaWildcardHandlers[*t].begin = std::move(fn);
+  EnsureWildcardInstalled(*t);
 }
 
 void PhysicsWorld::RegisterWildcardSeparate(const std::string &tag,
                                             sol::protected_function fn) {
-  cpCollisionType t = TypeForTag(tag);
-  _luaWildcardHandlers[t].separate = std::move(fn);
-  EnsureWildcardInstalled(t);
+  auto t = TryTypeForTag(tag, "on_wildcard_separate");
+  if (!t)
+    return;
+  _luaWildcardHandlers[*t].separate = std::move(fn);
+  EnsureWildcardInstalled(*t);
 }
 
 void PhysicsWorld::RegisterPairPreSolve(const std::string &a,
                                         const std::string &b,
                                         sol::protected_function fn) {
-  cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-  _luaPairHandlers[PairKey(ta, tb)].pre_solve = std::move(fn);
-  EnsurePairInstalled(ta, tb);
+  auto ta = TryTypeForTag(a, "on_pair_presolve");
+  auto tb = TryTypeForTag(b, "on_pair_presolve");
+  if (!ta || !tb)
+    return;
+  _luaPairHandlers[PairKey(*ta, *tb)].pre_solve = std::move(fn);
+  EnsurePairInstalled(*ta, *tb);
 }
 
 void PhysicsWorld::RegisterPairPostSolve(const std::string &a,
                                          const std::string &b,
                                          sol::protected_function fn) {
-  cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-  _luaPairHandlers[PairKey(ta, tb)].post_solve = std::move(fn);
-  EnsurePairInstalled(ta, tb);
+  auto ta = TryTypeForTag(a, "on_pair_postsolve");
+  auto tb = TryTypeForTag(b, "on_pair_postsolve");
+  if (!ta || !tb)
+    return;
+  _luaPairHandlers[PairKey(*ta, *tb)].post_solve = std::move(fn);
+  EnsurePairInstalled(*ta, *tb);
 }
 
 void PhysicsWorld::RegisterWildcardPreSolve(const std::string &tag,
                                             sol::protected_function fn) {
-  cpCollisionType t = TypeForTag(tag);
-  _luaWildcardHandlers[t].pre_solve = std::move(fn);
-  EnsureWildcardInstalled(t);
+  auto t = TryTypeForTag(tag, "on_wildcard_presolve");
+  if (!t)
+    return;
+  _luaWildcardHandlers[*t].pre_solve = std::move(fn);
+  EnsureWildcardInstalled(*t);
 }
 
 void PhysicsWorld::RegisterWildcardPostSolve(const std::string &tag,
                                              sol::protected_function fn) {
-  cpCollisionType t = TypeForTag(tag);
-  _luaWildcardHandlers[t].post_solve = std::move(fn);
-  EnsureWildcardInstalled(t);
+  auto t = TryTypeForTag(tag, "on_wildcard_postsolve");
+  if (!t)
+    return;
+  _luaWildcardHandlers[*t].post_solve = std::move(fn);
+  EnsureWildcardInstalled(*t);
 }
 
 void PhysicsWorld::ClearPairHandlers(const std::string &a,
                                      const std::string &b) {
-  cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-  _luaPairHandlers.erase(PairKey(ta, tb));
+  auto ta = TryTypeForTag(a, "clear_pair_handlers");
+  auto tb = TryTypeForTag(b, "clear_pair_handlers");
+  if (!ta || !tb)
+    return;
+  _luaPairHandlers.erase(PairKey(*ta, *tb));
 }
 
 void PhysicsWorld::ClearWildcardHandlers(const std::string &tag) {
-  cpCollisionType t = TypeForTag(tag);
-  _luaWildcardHandlers.erase(t);
+  auto t = TryTypeForTag(tag, "clear_wildcard_handlers");
+  if (!t)
+    return;
+  _luaWildcardHandlers.erase(*t);
 }
 
 void PhysicsWorld::EnsureWildcardInstalled(cpCollisionType t) {

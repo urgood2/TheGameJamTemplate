@@ -10,6 +10,7 @@
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "chipmunk_raii.hpp"
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -1481,6 +1482,10 @@ entt::entity AddOneWayPlatform(float x1, float y1,
       return it2->second;
     return 0; // or assert
   }
+
+  auto TryTypeForTag(const std::string &tag, const char *ctx) const
+      -> std::optional<cpCollisionType>;
+  auto DebugTagList() const -> std::string;
 
   /* -------------------- free body / shape usage from lua: -------------------
    */

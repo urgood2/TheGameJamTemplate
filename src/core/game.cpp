@@ -1059,19 +1059,8 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
             bus.subscribe<events::UIButtonActivated>([](const events::UIButtonActivated& ev) {
                 globals::setLastUIButtonActivated(ev.element);
                 SPDLOG_DEBUG("UI button activated on entity {} via button {}", static_cast<int>(ev.element), ev.button);
-                auto& registry = globals::getRegistry();
-                if (registry.valid(ev.element) && registry.any_of<ui::UIConfig>(ev.element)) {
-                    auto& cfg = registry.get<ui::UIConfig>(ev.element);
-                    if (cfg.buttonCallback) {
-                        try {
-                            (*cfg.buttonCallback)();
-                        } catch (const std::exception& e) {
-                            SPDLOG_ERROR("UI button callback threw: {}", e.what());
-                        } catch (...) {
-                            SPDLOG_ERROR("UI button callback threw unknown exception");
-                        }
-                    }
-                }
+                // Do not call the callback here; the UI click path already invokes it.
+                // This event is for telemetry/observers only to avoid double‑invoking actions.
             });
             bus.subscribe<events::LoadingStageStarted>([](const events::LoadingStageStarted& ev) {
                 globals::setLastLoadingStage(ev.stageId, true);

@@ -736,6 +736,12 @@ auto initLuaMasterState(sol::state &stateToInit,
   // sol::table ai_module = stateToInit.require("ai.init");
 
   // read all the script files and load them into the lua state
+  stateToInit.set_function("safe_script_file",
+                           [](const std::string &path, sol::this_state s) {
+                             sol::state_view lua(s);
+                             return lua.script_file(path);
+                           });
+
   for (auto &filename : scriptFilesToRead) {
     // stateToInit.script_file(filename);
     lua_hot_reload::track(filename);
@@ -743,12 +749,15 @@ auto initLuaMasterState(sol::state &stateToInit,
     auto code_valid_result =
         util::safeLuaCall(stateToInit, "safe_script_file", filename);
     SPDLOG_DEBUG("Loading file {}...", filename);
-    if (code_valid_result.isErr() || !code_valid_result.value().valid()) {
-      const char *errMsg =
-          code_valid_result.isErr()
-              ? code_valid_result.error().c_str()
-              : code_valid_result.value().as<sol::error>().what();
-      SPDLOG_ERROR("Lua loading failed: {}", errMsg);
+    if (code_valid_result.isErr()) {
+      SPDLOG_ERROR("Lua loading failed: {}", code_valid_result.error());
+      throw std::runtime_error("Lua script file loading failed.");
+    }
+
+    auto &load_result = code_valid_result.value();
+    if (!load_result.valid()) {
+      sol::error err = load_result;
+      SPDLOG_ERROR("Lua loading failed: {}", err.what());
       throw std::runtime_error("Lua script file loading failed.");
     } else {
       SPDLOG_DEBUG("Lua script file loading success.");

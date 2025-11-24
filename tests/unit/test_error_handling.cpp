@@ -16,7 +16,22 @@ TEST(ErrorHandling, SafeLuaCallByNameSucceeds) {
     auto result = util::safeLuaCall(lua, "add", 2, 3);
 
     ASSERT_TRUE(result.isOk());
-    EXPECT_EQ(result.value().as<int>(), 5);
+    auto& callResult = result.value();
+    ASSERT_TRUE(callResult.valid());
+    EXPECT_EQ(callResult.get<int>(), 5);
+}
+
+TEST(ErrorHandling, SafeLuaCallByNameHandlesVoidReturn) {
+    sol::state lua;
+    lua.open_libraries(sol::lib::base);
+    lua.set_function("noop", []() {});
+
+    auto result = util::safeLuaCall(lua, "noop");
+
+    ASSERT_TRUE(result.isOk());
+    auto& callResult = result.value();
+    EXPECT_TRUE(callResult.valid());
+    EXPECT_EQ(callResult.return_count(), 0);
 }
 
 TEST(ErrorHandling, SafeLuaCallByNameFailsForMissingFunction) {

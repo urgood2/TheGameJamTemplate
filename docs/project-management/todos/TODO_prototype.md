@@ -63,6 +63,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- probably want to 
 - brainstorm how best to visualize the execution order of the cards to the player. 
 - need to figure out how to process the cast blocks, and ensure they contain all necessary information I would need to ceonceivably implement the individual behaviors of each projectile/cast. 
 

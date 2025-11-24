@@ -47,7 +47,7 @@ just build-web            # requires emsdk in PATH and copies assets into build-
 - Full docs index: `docs/README.md`
 - Architecture overview: `docs/guides/SYSTEM_ARCHITECTURE.md`
 - C++ documentation standards: `docs/guides/DOCUMENTATION_STANDARDS.md`
-- Error handling policy and Lua boundary coverage: `docs/guides/ERROR_HANDLING_POLICY.md` (see tests in `tests/unit/test_sound_system.cpp` and `tests/unit/test_text_waiters.cpp`)
+- Error handling policy and Lua boundary coverage: `docs/guides/ERROR_HANDLING_POLICY.md` (see tests in `tests/unit/test_sound_system.cpp`, `tests/unit/test_text_waiters.cpp`, and controller nav focus/select tests in `tests/unit/test_controller_nav.cpp`)
 - Changelog: `CHANGELOG.md`
 - Profiling: `USING_TRACY.md`
 - Draw-command/shader batching: `BATCHED_ENTITY_RENDERING.md`, `DRAW_COMMAND_OPTIMIZATION.md`

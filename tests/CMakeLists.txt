@@ -12,6 +12,7 @@ add_executable(unit_tests
     unit/test_error_handling.cpp
     unit/test_config_validation.cpp
     unit/test_sound_system.cpp
+    unit/test_controller_nav.cpp
     unit/test_text_waiters.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
@@ -24,6 +25,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_function_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/physics/physics_world.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp
 )
 
 target_include_directories(unit_tests PRIVATE

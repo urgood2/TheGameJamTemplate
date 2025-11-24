@@ -10,6 +10,7 @@ Generated from commit history (initial commit 2025-03-26 → latest 2025-11-23).
 - Web build reliability and virtual-resolution support improvements; optional Tracy at compile time.
 - Documentation reorganization and comprehensive doc index/API reference.
 - Error-handling sweep: wrapped remaining Lua entry points (`safeLuaCall` across AI start/finish/abort hooks, timers, nav callbacks, camera.with, layer queue/exec, physics collisions, text waiters), guarded sound loading, and added regression tests/docs for the safety helpers.
+- Expanded error-handling coverage: nav focus/select now tested for group/global precedence and Lua errors; sound config loader rejects malformed JSON and bad types; policy doc updated.
 
 ## 2025-10
 - Major card-system overhaul: trigger/action/modifier boards, always-cast flow, Noita-style wand logic, stacking/unstacking, z-order and collision fixes, and refactored card creation/selection.

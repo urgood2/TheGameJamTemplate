@@ -30,3 +30,68 @@ TEST(SoundSystem, LoadFromJSONSkipsMissingSoundFiles) {
     // Ensure missing sound file does not throw; logging should happen inside.
     ASSERT_NO_THROW({ sound_system::LoadFromJSON(tmpPath.string()); });
 }
+
+// Fail-fast on invalid JSON
+TEST(SoundSystem, LoadFromJSONThrowsOnInvalidJson) {
+    const auto tmpPath = std::filesystem::temp_directory_path() / "test_invalid_sound.json";
+    {
+        std::ofstream out(tmpPath);
+        out << "{ this is not json ";
+    }
+    EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
+}
+
+// Fail-fast when required keys are missing
+TEST(SoundSystem, LoadFromJSONThrowsWhenMusicVolumeMissing) {
+    const char* jsonText = R"({
+        "categories": { }
+    })";
+    const auto tmpPath = std::filesystem::temp_directory_path() / "test_missing_music_volume.json";
+    {
+        std::ofstream out(tmpPath);
+        out << jsonText;
+    }
+    EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
+}
+
+TEST(SoundSystem, LoadFromJSONThrowsWhenCategoriesMissing) {
+    const char* jsonText = R"({
+        "music_volume": 0.3
+    })";
+    const auto tmpPath = std::filesystem::temp_directory_path() / "test_missing_categories.json";
+    {
+        std::ofstream out(tmpPath);
+        out << jsonText;
+    }
+    EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
+}
+
+TEST(SoundSystem, LoadFromJSONThrowsWhenMusicVolumeTypeInvalid) {
+    const char* jsonText = R"({
+        "music_volume": "loud",
+        "categories": { "ui": { "sounds": {} } }
+    })";
+    const auto tmpPath = std::filesystem::temp_directory_path() / "test_music_volume_type_invalid.json";
+    {
+        std::ofstream out(tmpPath);
+        out << jsonText;
+    }
+    EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
+}
+
+TEST(SoundSystem, LoadFromJSONThrowsWhenSoundPathTypeInvalid) {
+    const char* jsonText = R"({
+        "music_volume": 0.3,
+        "categories": {
+            "ui": {
+                "sounds": { "click": 123 }
+            }
+        }
+    })";
+    const auto tmpPath = std::filesystem::temp_directory_path() / "test_sound_path_type_invalid.json";
+    {
+        std::ofstream out(tmpPath);
+        out << jsonText;
+    }
+    EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
+}

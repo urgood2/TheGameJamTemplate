@@ -417,7 +417,6 @@ int main(void)
 
     init::base_init();
     crash_reporter::AttachSinkToLogger(spdlog::default_logger());
-    
     layer::InitDispatcher();
 
     main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups

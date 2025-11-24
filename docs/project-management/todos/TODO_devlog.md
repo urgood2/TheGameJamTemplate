@@ -234,3 +234,8 @@
 11/22/2025
   - Code refactoring work, I had some IRL work so not much done today.
   - Banned from Claude Code. Not sure why, petitioned.
+  
+11/23-24/2025
+  - More refactoring. Started using Codex instead.
+  - Globals, general updates to code structure, docs, etc.
+  - Still ongoing, but I should be basically set to focus on gameplay again starting tomorrow. It's not perfect, but will it ever be?

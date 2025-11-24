@@ -54,7 +54,7 @@ protected:
         entry.level.assign(level_view.data(), level_view.size());
         entry.message.assign(formatted.data(), formatted.size());
 
-        std::lock_guard<Mutex> lock(this->mutex_);
+        // base_sink already holds mutex_ while calling sink_it_, so don't lock again.
         buffer_.push_back(std::move(entry));
         if (buffer_.size() > max_entries_) {
             const auto overflow = buffer_.size() - max_entries_;

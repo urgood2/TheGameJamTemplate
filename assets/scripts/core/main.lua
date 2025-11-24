@@ -440,7 +440,11 @@ function main.init()
     end
 
     -- Initialize shader uniforms in Lua (migrating from C++).
-    shader_uniforms.init()
+    if globalShaderUniforms then
+        shader_uniforms.init()
+    else
+        log_warn("shader_uniforms.init skipped: globalShaderUniforms not ready")
+    end
 
     
     -- register color palette "RESURRECT-64"

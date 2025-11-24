@@ -8,6 +8,7 @@ local Easing = require("util.easing")
 local CombatSystem = require("combat.combat_system")
 require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
+local WandExecutor = require("wand.wand_executor")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
@@ -574,6 +575,31 @@ function setUpCardAndWandStatDisplay()
                             currentY = startY
                             currentX = currentX + columnWidth
                         end
+                    end
+                end
+
+                -- Overheat Visualization
+                if WandExecutor and WandExecutor.wandStates then
+                    local wandState = WandExecutor.wandStates[currentWandDef.id]
+                    if wandState and wandState.currentMana < 0 then
+                        command_buffer.queueDrawText(layers.sprites, function(c)
+                            c.text = localization.get("ui.wand_overheat")
+                            c.font = localization.getFont()
+                            c.x = currentX
+                            c.y = currentY + lineHeight
+                            c.color = util.getColor("RED")
+                            c.fontSize = STAT_FONT_SIZE * 1.5
+                        end, z_orders.card_text, layer.DrawCommandSpace.World)
+                        
+                        -- Draw deficit
+                        command_buffer.queueDrawText(layers.sprites, function(c)
+                            c.text = localization.get("ui.wand_flux_deficit", { amount = string.format("%.1f", math.abs(wandState.currentMana)) })
+                            c.font = localization.getFont()
+                            c.x = currentX
+                            c.y = currentY + lineHeight * 2.5
+                            c.color = util.getColor("ORANGE")
+                            c.fontSize = STAT_FONT_SIZE
+                        end, z_orders.card_text, layer.DrawCommandSpace.World)
                     end
                 end
             end

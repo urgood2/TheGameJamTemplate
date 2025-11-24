@@ -276,17 +276,38 @@ function WandExecutor.execute(wandId, triggerType)
     end
 
     -- Execute cast blocks sequentially
-    local success = WandExecutor.executeCastBlocks(evaluationResult.blocks, context, state)
+    local success, totalCastDelay = WandExecutor.executeCastBlocks(evaluationResult.blocks, context, state)
 
     if success then
-        -- Apply cooldown
-        local totalCooldown = (evaluationResult.total_cast_delay or 0) / 1000  -- convert ms to seconds
-        totalCooldown = totalCooldown + (activeWand.definition.recharge_time or 0) / 1000
+        -- Apply recharge time (only once, after all blocks)
+        local rechargeTime = (activeWand.definition.recharge_time or 0) / 1000
+
+        -- Apply Player CDR to recharge time
+        if context.playerStats and context.playerStats.get then
+            local cdr = context.playerStats:get("cooldown_reduction") or 0
+            if cdr > 0 then
+                rechargeTime = rechargeTime * (1.0 - cdr / 100)
+            end
+        end
+
+        -- Total cooldown = accumulated cast delay + recharge time
+        local totalCooldown = totalCastDelay + rechargeTime
 
         state.cooldownRemaining = totalCooldown
         state.lastCastTime = os.clock()
 
-        print("[WandExecutor] Executed wand", wandId, "- cooldown:", totalCooldown, "seconds")
+        -- Store last execution state for debugging/telemetry
+        state.lastExecutionState = {
+            timestamp = os.clock(),
+            totalManaSpent = context.cumulative.manaSpent,
+            totalProjectiles = context.cumulative.projectileCount,
+            totalCastDelay = totalCastDelay * 1000,  -- Convert back to ms for logging
+            totalRecharge = activeWand.definition.recharge_time,
+            blocksExecuted = #evaluationResult.blocks
+        }
+
+        print(string.format("[WandExecutor] Executed wand %s - total delay: %.3fs, recharge: %.3fs, cooldown: %.3fs", 
+            wandId, totalCastDelay, rechargeTime, totalCooldown))
     end
 
     return success
@@ -328,14 +349,20 @@ CAST BLOCK EXECUTION
 --- @param context table Execution context
 --- @param state table Wand state
 --- @return boolean Success
+--- @return number Total cast delay accumulated (in seconds)
 function WandExecutor.executeCastBlocks(blocks, context, state)
+    local totalCastDelay = 0  -- Accumulate cast delay across all blocks
+    
     for blockIndex, block in ipairs(blocks) do
-        local success = WandExecutor.executeCastBlock(block, context, state, blockIndex)
+        local success, blockCastDelay = WandExecutor.executeCastBlock(block, context, state, blockIndex)
 
         if not success then
             print("[WandExecutor] Warning: Cast block", blockIndex, "failed")
-            return false
+            return false, totalCastDelay
         end
+
+        -- Accumulate cast delay
+        totalCastDelay = totalCastDelay + blockCastDelay
 
         -- Apply cast delay between blocks
         if blockIndex < #blocks then
@@ -344,7 +371,7 @@ function WandExecutor.executeCastBlocks(blocks, context, state)
         end
     end
 
-    return true
+    return true, totalCastDelay
 end
 
 --- Executes a single cast block
@@ -353,6 +380,7 @@ end
 --- @param state table Wand state
 --- @param blockIndex number Block index
 --- @return boolean Success
+--- @return number Cast delay for this block (in seconds, with overheat applied)
 function WandExecutor.executeCastBlock(block, context, state, blockIndex)
     -- Aggregate modifiers from this block
     local modifierCards = {}
@@ -362,22 +390,34 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
 
     local modifiers = WandModifiers.aggregate(modifierCards)
 
+    -- Merge player stats into modifiers
+    if context.playerStats then
+        WandModifiers.mergePlayerStats(modifiers, context.playerStats)
+    end
+
+    -- Consume Modifier Mana (once per block)
+    local modifierManaCost = modifiers.manaCost or 0
+    if modifierManaCost > 0 then
+        -- Overheat Mechanic: Allow casting even if insufficient mana
+        -- We just track the deficit/usage.
+        state.currentMana = state.currentMana - modifierManaCost
+        context.cumulative.manaSpent = context.cumulative.manaSpent + modifierManaCost
+    end
+
     -- Execute each action card in the block
     for cardIndex, actionCard in ipairs(block.cards) do
         if actionCard.type == "action" then
-            -- Check mana cost
+            -- Check mana cost (Overheat: Allow negative mana)
             local manaCost = actionCard.mana_cost or 0
-            if state.currentMana < manaCost then
-                print("[WandExecutor] Insufficient mana for action:", actionCard.card_id)
-                return false
-            end
-
+            
             -- Execute action
             local result = WandActions.execute(actionCard, modifiers, context)
 
             if result then
-                -- Consume mana
+                -- Consume mana (allow negative)
                 state.currentMana = state.currentMana - manaCost
+                context.cumulative.manaSpent = context.cumulative.manaSpent + manaCost
+                context.cumulative.projectileCount = context.cumulative.projectileCount + 1
 
                 -- Handle sub-casts (timer, collision triggers)
                 WandExecutor.handleSubCasts(block, actionCard, modifiers, context, cardIndex)
@@ -387,7 +427,32 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
         end
     end
 
-    return true
+    -- Calculate cast delay for this block
+    local blockCastDelay = (block.total_cast_delay or 0) / 1000  -- Convert ms to seconds
+    
+    -- Apply player cast speed to this block's delay
+    if context.playerStats and context.playerStats.get then
+        local castSpeed = context.playerStats:get("cast_speed") or 0
+        if castSpeed > 0 then
+            blockCastDelay = blockCastDelay / (1.0 + castSpeed / 100)
+        end
+    end
+    
+    -- Apply Overheat Penalty to this block's cast delay
+    if state.currentMana < 0 then
+        local deficit = math.abs(state.currentMana)
+        local maxFlux = context.wandDefinition.mana_max or 100
+        local overloadRatio = deficit / maxFlux
+        local penaltyFactor = 5.0
+        
+        local cooldownMultiplier = 1.0 + (overloadRatio * penaltyFactor)
+        blockCastDelay = blockCastDelay * cooldownMultiplier
+        
+        print(string.format("[WandExecutor] Block %d Overheat! Deficit: %.1f, Ratio: %.2f, Mult: %.2f, BlockDelay: %.3fs", 
+            blockIndex, deficit, overloadRatio, cooldownMultiplier, blockCastDelay))
+    end
+
+    return true, blockCastDelay
 end
 
 --- Handles sub-casts for actions with triggers
@@ -442,6 +507,11 @@ function WandExecutor.executeSubCast(subBlock, context, inheritedModifiers)
 
     local modifiers = WandModifiers.aggregate(modifierCards)
 
+    -- Merge player stats into modifiers (inherited from context)
+    if context.playerStats then
+        WandModifiers.mergePlayerStats(modifiers, context.playerStats)
+    end
+
     -- Execute actions in sub-cast block
     for _, actionCard in ipairs(subBlock.cards) do
         if actionCard.type == "action" then
@@ -468,6 +538,19 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
     local playerPos = WandExecutor.getPlayerPosition(playerEntity)
     local playerAngle = WandExecutor.getPlayerFacingAngle(playerEntity)
 
+    -- Fetch player stats (mock or real)
+    local playerStats = {
+        damage_mult = 1.0,
+        speed_mult = 1.0,
+        -- Add other defaults or fetch from component
+    }
+    
+    -- TODO: Fetch actual stats from player entity components
+    if playerEntity and component_cache and component_cache.get then
+        -- Example: local stats = component_cache.get(playerEntity, "PlayerStats")
+        -- if stats then ... end
+    end
+
     return {
         wandId = wandId,
         wandState = state,
@@ -476,8 +559,15 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
         playerEntity = playerEntity,
         playerPosition = playerPos,
         playerAngle = playerAngle,
+        playerStats = playerStats,
 
         timestamp = os.clock(),
+
+        -- Cumulative tracking for this execution
+        cumulative = {
+            manaSpent = 0,
+            projectileCount = 0,
+        },
 
         -- Helper functions
         getPlayerPosition = function()

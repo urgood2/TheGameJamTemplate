@@ -11,9 +11,6 @@
 		"trigger_inventory_area": "Your Triggers",
 		"tooltip_wand_button": "Card Set Info",
 		"loading_transition_text": "Loading...",
-		
-		
-		
 		"tutorial_duplicate": "Hey there! Let me teach you the ropes with\na quick tutorial. Drag & drop a colonist\ninto the window on the left side to\nduplicate it. This will spawn clones,\neach with a specific function.",
 		"tutorial_game_goal": "Your goal is to survive the acid rains and\nradioactive snows by using the clones you\ncreate. You must keep colonists alive, and\nkeep your gold balance above 0, to keep\nplaying. You may want to build some colonist\nhomes to help with gold production.",
 		"tutorial_advanced": "As you progress, you will be able to buy\nrelics from the end-of-day shop.\nThey will help your colonists survive the\nharsh weather. Note that the weather will\nonly get worse as you progress.",
@@ -90,7 +87,7 @@
 		"colonistHPText": "HP: {hp}/{maxHp}",
 		"cost_text": "{cost}",
 		"next_tutorial_text": "Next",
-		"shop_close" : "Close and resume",
+		"shop_close": "Close and resume",
 		"new_day_text": "A new day has arrived!",
 		"basic_umbrella_name": "Basic Umbrella",
 		"basic_umbrella_desc": "1 damage reduction in a weather event.",
@@ -111,8 +108,6 @@
 		"storm_on_way_weather": "[Storm on the way](background=blue)",
 		"unknown_weather": "[Unknown](background=red)",
 		"drizzle_weather": "[Drizzle](background=blue)",
-		
-		
 		"switch_language": "Switch Language",
 		"achievements_button": "Achievements",
 		"alert_button_text": "Alert on top right corner",
@@ -249,6 +244,8 @@
 		"whale_dust_1000_tooltip_title": "Dust Snuffer",
 		"whale_song_gatherer_desc": "Collects Whale Songs from Whales.\nProduces a new resource: Song Essence,\nwhich is required for creating chips",
 		"whale_song_gatherer_name": "Whale Song Gatherer",
-		"whale_title": "Whale"
+		"whale_title": "Whale",
+		"wand_overheat": "OVERHEAT!",
+		"wand_flux_deficit": "Flux Deficit: {amount}"
 	}
 }

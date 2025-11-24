@@ -114,6 +114,12 @@ function WandModifiers.createAggregate()
 
         -- Stored modifier cards for on-hit processing
         modifierCards = {},
+
+        -- Snapshot of player stats
+        statsSnapshot = {},
+
+        -- Total mana cost of modifiers
+        manaCost = 0,
     }
 end
 
@@ -169,6 +175,9 @@ end
 --- @param card table Modifier card definition
 function WandModifiers.applyCardToAggregate(agg, card)
     if not card then return end
+
+    -- Sum mana cost
+    agg.manaCost = agg.manaCost + (card.mana_cost or 0)
 
     -- Damage modifiers
     if card.damage_modifier and card.damage_modifier ~= 0 then
@@ -282,6 +291,56 @@ function WandModifiers.applyCardToAggregate(agg, card)
     -- Teleport cast
     if card.teleport_cast_from_enemy then
         agg.teleportCastFromEnemy = true
+    end
+end
+
+--- Merges player stats into the modifier aggregate
+--- @param agg table Modifier aggregate
+--- @param playerStats table Player stats object (from combat_system.lua)
+function WandModifiers.mergePlayerStats(agg, playerStats)
+    if not playerStats or not playerStats.get then return end
+
+    -- Snapshot relevant stats
+    -- We snapshot them here so we don't need to keep the full playerStats object around
+    -- and to ensure consistency during the cast block execution.
+    
+    local snapshot = agg.statsSnapshot
+    
+    -- Global damage modifiers
+    snapshot.all_damage_pct = playerStats:get("all_damage_pct")
+    snapshot.crit_damage_pct = playerStats:get("crit_damage_pct")
+    
+    -- Speed modifiers
+    snapshot.cast_speed = playerStats:get("cast_speed")
+    snapshot.attack_speed = playerStats:get("attack_speed")
+    
+    -- Resource modifiers
+    snapshot.skill_energy_cost_reduction = playerStats:get("skill_energy_cost_reduction")
+    
+    -- Damage type modifiers
+    -- We assume a standard set of damage types, or we could iterate if we had the list
+    local damageTypes = {
+        "physical", "fire", "cold", "lightning", "poison", 
+        "vitality", "aether", "chaos", "holy", "arcane", "void"
+    }
+    
+    for _, dt in ipairs(damageTypes) do
+        snapshot[dt .. "_damage_pct"] = playerStats:get(dt .. "_modifier_pct")
+    end
+    
+    -- Apply global modifiers to aggregate fields immediately where appropriate
+    
+    -- Cast Speed -> Speed Multiplier? 
+    -- Usually cast speed affects the rate of fire, not projectile speed.
+    -- Projectile speed might be a separate stat, but for now let's leave projectile speed untouched by cast_speed.
+    
+    -- Crit Chance (if available in stats, usually offensive_ability drives this in GD-like systems)
+    -- But if there's a direct crit_chance stat:
+    -- agg.critChanceBonus = agg.critChanceBonus + playerStats:get("crit_chance")
+    
+    -- Mana Cost (Energy Cost)
+    if snapshot.skill_energy_cost_reduction > 0 then
+        agg.manaCostMultiplier = (agg.manaCostMultiplier or 1.0) * (1.0 - snapshot.skill_energy_cost_reduction / 100)
     end
 end
 
@@ -418,8 +477,14 @@ function WandModifiers.applyToAction(actionCard, modifiers)
     local modified = {}
 
     -- Damage: base + bonus, then multiply
+    -- Apply player stats: (Base + Bonus) * (1 + Total% / 100) * Multiplier
     local baseDamage = actionCard.damage or 0
-    modified.damage = (baseDamage + modifiers.damageBonus) * modifiers.damageMultiplier
+    local damageType = actionCard.damage_type or "physical"
+    
+    local stats = modifiers.statsSnapshot
+    local playerDamagePct = (stats.all_damage_pct or 0) + (stats[damageType .. "_damage_pct"] or 0)
+    
+    modified.damage = (baseDamage + modifiers.damageBonus) * (1.0 + playerDamagePct / 100) * modifiers.damageMultiplier
 
     -- Speed: base + card's speed modifier, then apply aggregate multiplier
     local baseSpeed = actionCard.projectile_speed or 300

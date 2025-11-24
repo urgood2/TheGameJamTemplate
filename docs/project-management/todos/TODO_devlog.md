@@ -239,3 +239,4 @@
   - More refactoring. Started using Codex instead.
   - Globals, general updates to code structure, docs, etc.
   - Still ongoing, but I should be basically set to focus on gameplay again starting tomorrow. It's not perfect, but will it ever be?
+  - Got some basic systems done for gameplay I'll need to test.

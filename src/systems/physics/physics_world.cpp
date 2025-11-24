@@ -227,8 +227,8 @@ void PhysicsWorld::Update(float deltaTime) {
 
 void PhysicsWorld::PostUpdate() {
   // Process deferred collision events
-  for (const auto &[key, events] : collisionEnter) {
-    for (const auto &event : events) {
+  for (const auto &[key, eventList] : collisionEnter) {
+    for (const auto &event : eventList) {
       entt::entity entityA =
           static_cast<entt::entity>(reinterpret_cast<uintptr_t>(event.objectA));
       entt::entity entityB =
@@ -239,8 +239,8 @@ void PhysicsWorld::PostUpdate() {
     }
   }
 
-  for (const auto &[key, events] : collisionExit) {
-    for (const auto &event : events) {
+  for (const auto &[key, eventList] : collisionExit) {
+    for (const auto &event : eventList) {
       entt::entity entityA =
           static_cast<entt::entity>(reinterpret_cast<uintptr_t>(event.objectA));
       entt::entity entityB =

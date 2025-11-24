@@ -80,6 +80,18 @@ TEST(ErrorHandling, SafeLuaCallHandlesNilFunctionGracefully) {
     EXPECT_TRUE(result.isErr());
 }
 
+TEST(ErrorHandling, TryWithLogReturnsValueOnSuccess) {
+    auto result = util::tryWithLog([]() { return 7; }, "tryWithLog success");
+    ASSERT_TRUE(result.isOk());
+    EXPECT_EQ(result.value(), 7);
+}
+
+TEST(ErrorHandling, TryWithLogCatchesStdException) {
+    auto result = util::tryWithLog([]() -> int { throw std::runtime_error("boom"); }, "tryWithLog throws");
+    ASSERT_TRUE(result.isErr());
+    EXPECT_NE(result.error().find("boom"), std::string::npos);
+}
+
 TEST(ErrorHandling, LoadWithRetrySucceedsAfterRetry) {
     int attempts = 0;
     auto loader = [&]() -> util::Result<int, std::string> {

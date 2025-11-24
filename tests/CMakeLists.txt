@@ -9,6 +9,8 @@ add_executable(unit_tests
     unit/test_physics_manager.cpp
     unit/test_shader_system.cpp
     unit/test_binding_recorder.cpp
+    unit/test_error_handling.cpp
+    unit/test_config_validation.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/core/engine_context.cpp

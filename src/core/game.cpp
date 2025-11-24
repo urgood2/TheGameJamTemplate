@@ -7,13 +7,14 @@
 
 #if defined(__EMSCRIPTEN__)
     #include <GLES3/gl3.h>
-    #include <GLES2/gl2ext.h>
+#include <GLES2/gl2ext.h>
 #else
     // #include <GL/gl.h>
     // #include <GL/glext.h>
 #endif
 
 #include "../util/utilities.hpp"
+#include "../util/error_handling.hpp"
 
 #include "graphics.hpp"
 #include "globals.hpp"
@@ -1169,11 +1170,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         luaMainInitFunc = ai_system::masterStateLua["main"]["init"];
         luaMainUpdateFunc = ai_system::masterStateLua["main"]["update"];
         luaMainDrawFunc = ai_system::masterStateLua["main"]["draw"];
-        
-        sol::protected_function_result result = luaMainInitFunc();
-        if (!result.valid()) {
-            sol::error err = result;
-            spdlog::error("Lua init failed: {}", err.what());
+
+        auto initResult = util::safeLuaCall(luaMainInitFunc, "lua main.init");
+        if (initResult.isErr()) {
+            spdlog::error("Lua init failed: {}", initResult.error());
             assert(false);
         }
         
@@ -1399,10 +1399,9 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         {
             ZONE_SCOPED("lua main update");
             // update lua main script
-            sol::protected_function_result result = luaMainUpdateFunc(delta);
-            if (!result.valid()) {
-                sol::error err = result;
-                spdlog::error("Lua update failed: {}", err.what());
+            auto luaUpdateResult = util::safeLuaCall(luaMainUpdateFunc, "lua main.update", delta);
+            if (luaUpdateResult.isErr()) {
+                spdlog::error("Lua update failed: {}", luaUpdateResult.error());
             }
         }
         
@@ -1812,10 +1811,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         {
             ZONE_SCOPED("game::draw-lua draw main script");
             // update lua main script
-            sol::protected_function_result result = luaMainDrawFunc(dt);
-            if (!result.valid()) {
-                sol::error err = result;
-                spdlog::error("Lua draw failed: {}", err.what());
+            auto luaDrawResult = util::safeLuaCall(luaMainDrawFunc, "lua main.draw", dt);
+            if (luaDrawResult.isErr()) {
+                spdlog::error("Lua draw failed: {}", luaDrawResult.error());
             }
         }
         

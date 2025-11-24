@@ -1690,16 +1690,15 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
             lyr,                                                               \
             [&](::layer::Cmd##cmd *c) {                                        \
               sol::protected_function pf(init);                                \
-              if (pf.valid()) {                                                \
-                sol::protected_function_result r = pf(c);                      \
-                if (!r.valid()) {                                              \
-                  sol::error e = r;                                            \
-                  std::fprintf(stderr, "[queue%s] init error: %s\n",           \
-                               #cmd, e.what());                                \
-                }                                                              \
-              } else {                                                         \
+              if (!pf.valid()) {                                               \
                 std::fprintf(stderr, "[queue%s] init is not a function\n",     \
                                #cmd);                                          \
+                return;                                                        \
+              }                                                                \
+              auto result = util::safeLuaCall(pf, std::string("queue") + #cmd, c); \
+              if (result.isErr()) {                                            \
+                std::fprintf(stderr, "[queue%s] init error: %s\n", #cmd,       \
+                             result.error().c_str());                          \
               }                                                                \
               /* Optional: dump a few fields for sanity */                     \
               /* std::fprintf(stderr, "[queue%s] dashLen=%.2f gap=%.2f r=%.2f th=%.2f\n", \

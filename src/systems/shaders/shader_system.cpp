@@ -13,6 +13,7 @@
 // #include "third_party/rlImGui/imgui_internal.h"
 
 #include "../../util/utilities.hpp"
+#include "../../util/error_handling.hpp"
 #include "util/common_headers.hpp"
 
 #include "sol/sol.hpp"
@@ -442,6 +443,25 @@ namespace shaders
             return;
         }
 
+        auto loadShaderSafe = [&](const std::string& shaderNameLabel,
+                                  const char* vsPath,
+                                  const char* fsPath) -> util::Result<Shader, std::string> {
+            auto ctxLabel = std::string("shader_load:") + shaderNameLabel;
+            auto res = util::tryWithLog([&]() {
+                return g_shaderApi.load_shader(vsPath, fsPath);
+            }, ctxLabel);
+            if (res.isErr()) {
+                return res;
+            }
+            if (res.value().id == 0) {
+                std::string message = "Shader id==0 for vs=";
+                message += vsPath ? vsPath : "<null>";
+                message += " fs=";
+                message += fsPath ? fsPath : "<null>";
+                return util::Result<Shader, std::string>(std::move(message));
+            }
+            return res;
+        };
 
         for (const auto &[shaderName, shaderPathsJSON] : shaderData.items())
         {
@@ -478,26 +498,23 @@ namespace shaders
             }
 
             Shader shader;
-            if (!vertexPath.empty() && !fragmentPath.empty())
-            {
-                shader = g_shaderApi.load_shader(vertexPath.c_str(), fragmentPath.c_str());
-                shaderPaths[shaderName] = {vertexPath, fragmentPath};
-            }
-            else if (!vertexPath.empty())
-            {
-                shader = g_shaderApi.load_shader(vertexPath.c_str(), nullptr);
-                shaderPaths[shaderName] = {vertexPath, ""};
-            }
-            else if (!fragmentPath.empty())
-            {
-                shader = g_shaderApi.load_shader(nullptr, fragmentPath.c_str());
-                shaderPaths[shaderName] = {"", fragmentPath};
-            }
-            else
+            if (vertexPath.empty() && fragmentPath.empty())
             {
                 SPDLOG_WARN("Shader {} has no valid paths. Skipping.", shaderName);
                 continue;
             }
+
+            const char* vsPtr = vertexPath.empty() ? nullptr : vertexPath.c_str();
+            const char* fsPtr = fragmentPath.empty() ? nullptr : fragmentPath.c_str();
+
+            auto shaderResult = loadShaderSafe(shaderName, vsPtr, fsPtr);
+            if (shaderResult.isErr()) {
+                SPDLOG_ERROR("[shader] {}: {}", shaderName, shaderResult.error());
+                continue;
+            }
+
+            shader = shaderResult.value();
+            shaderPaths[shaderName] = {vertexPath, fragmentPath};
 
             loadedShaders[shaderName] = shader;
 

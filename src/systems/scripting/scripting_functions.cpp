@@ -655,19 +655,15 @@ namespace scripting {
             // stateToInit.script_file(filename);
             lua_hot_reload::track(filename);
             
-            auto code_valid_result = stateToInit.script_file(filename, [](lua_State*, sol::protected_function_result pfr) {
-                // pfr will contain things that went wrong, for either loading or executing the script
-                // Can throw your own custom error
-                // You can also just return it, and let the call-site handle the error if necessary.
-                return pfr;
-            });
+            auto code_valid_result = util::safeLuaCall(stateToInit, "safe_script_file", filename);
             SPDLOG_DEBUG("Loading file {}...", filename);
-            if (code_valid_result.valid() == false) {
-                SPDLOG_ERROR("Lua loading failed. Check script file for errors.");
-                SPDLOG_ERROR("Error: {}", code_valid_result.get<sol::error>().what());
+            if (code_valid_result.isErr() || !code_valid_result.value().valid()) {
+                const char* errMsg = code_valid_result.isErr()
+                    ? code_valid_result.error().c_str()
+                    : code_valid_result.value().get<sol::error>().what();
+                SPDLOG_ERROR("Lua loading failed: {}", errMsg);
                 throw std::runtime_error("Lua script file loading failed.");
-            } else
-            {
+            } else {
                 SPDLOG_DEBUG("Lua script file loading success.");
             }
         }

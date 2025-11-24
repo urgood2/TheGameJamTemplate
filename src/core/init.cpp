@@ -4,6 +4,7 @@
 #include "engine_context.hpp"
 #include "../components/components.hpp"
 #include "../util/utilities.hpp"
+#include "../util/error_handling.hpp"
 #include "systems/physics/physics_components.hpp"
 #include "systems/physics/physics_manager.hpp"
 #include "systems/physics/physics_world.hpp"
@@ -129,9 +130,22 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
         jsonStream.close();
 
         auto assignJson = [&](const std::string& path, json& target, json* ctxSlot) {
-            jsonStream.open(path);
-            target = json::parse(jsonStream);
-            jsonStream.close();
+            auto loadResult = util::tryWithLog([&]() -> json {
+                jsonStream.open(path);
+                if (!jsonStream.is_open()) {
+                    throw std::runtime_error("failed to open json: " + path);
+                }
+                json parsed = json::parse(jsonStream);
+                jsonStream.close();
+                return parsed;
+            }, std::string("json:load:") + path);
+
+            if (loadResult.isErr()) {
+                SPDLOG_ERROR("[json] {}", loadResult.error());
+                return;
+            }
+
+            target = std::move(loadResult.value());
             if (ctxSlot && globals::g_ctx) {
                 *ctxSlot = target;
             }
@@ -577,9 +591,21 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
                 // Register and get UUID
                 std::string uuid = uuid::add(pngFilename);
 
-                // Load texture
-                Texture2D tex = LoadTexture(path.string().c_str());
-                
+                // Load texture with guard
+                const auto texResult = util::tryWithLog(
+                    [&]() { return LoadTexture(path.string().c_str()); },
+                    std::string("asset:loadTexture:") + pngFilename);
+                if (texResult.isErr()) {
+                    SPDLOG_ERROR("[asset] Failed to load '{}': {}", pngFilename, texResult.error());
+                    continue;
+                }
+
+                Texture2D tex = texResult.value();
+                if (tex.id == 0) {
+                    SPDLOG_ERROR("[asset] Texture '{}' returned id==0", pngFilename);
+                    continue;
+                }
+
                 SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
 
                 // Store in atlas map
@@ -612,8 +638,16 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
     }
 
     auto loadSounds() -> void {
-        InitAudioDevice();
-        SetAudioStreamBufferSizeDefault(4096);
+        auto audioInit = util::tryWithLog([&]() {
+            InitAudioDevice();
+            SetAudioStreamBufferSizeDefault(4096);
+        }, "audio:init");
+
+        if (audioInit.isErr()) {
+            SPDLOG_ERROR("[audio] init failed: {}", audioInit.error());
+            return;
+        }
+
         if (globals::g_ctx && globals::g_ctx->audio) {
             globals::g_ctx->audio->deviceInitialized = true;
         }
@@ -806,8 +840,27 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
      * @return void
      */
     auto loadConfigFileValues() -> void {
-        // globals::screenWidth = globals::configJSON.at("render_data").at("screen").at("width").get<int>();
-        // globals::screenHeight = globals::configJSON.at("render_data").at("screen").at("height").get<int>();
+        auto requireField = [](const json& j, std::initializer_list<const char*> keys) -> util::Result<const json*, std::string> {
+            const json* cur = &j;
+            for (auto* k : keys) {
+                if (!cur->contains(k)) {
+                    return util::Result<const json*, std::string>(std::string("missing config field: ") + k);
+                }
+                cur = &cur->at(k);
+            }
+            return util::Result<const json*, std::string>(cur);
+        };
+
+        auto widthField  = requireField(globals::configJSON, {"render_data","screen","width"});
+        auto heightField = requireField(globals::configJSON, {"render_data","screen","height"});
+
+        if (widthField.isErr() || heightField.isErr()) {
+            SPDLOG_ERROR("[config] {}", widthField.isErr() ? widthField.error() : heightField.error());
+            return;
+        }
+
+        globals::screenWidth  = widthField.value()->get<int>();
+        globals::screenHeight = heightField.value()->get<int>();
     }
 
 

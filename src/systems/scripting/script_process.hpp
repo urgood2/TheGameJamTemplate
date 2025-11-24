@@ -5,6 +5,7 @@
 #include "entt/process/scheduler.hpp"
 #include "sol/sol.hpp"
 #include "sol/state_view.hpp"
+#include "util/error_handling.hpp"
 
 // -------------------------------------------------------
 // Script Process Class - for task management & chaining w/ lua coroutines
@@ -78,16 +79,15 @@ namespace scripting
                     return succeed();
 
                 // **only** pass the number into the coroutine now:
-                sol::protected_function_result result = m_coroutine(dt.count());
+                auto result = util::safeLuaCall(m_coroutine, "script_process coroutine", dt.count());
 
-                if (!result.valid())
+                if (result.isErr())
                 {
-                    sol::error err = result;
-                    SPDLOG_ERROR("Coroutine error: {}", err.what());
+                    SPDLOG_ERROR("Coroutine error: {}", result.error());
                     return fail();
                 }
 
-                if (result.status() == sol::call_status::ok)
+                if (result.value().status() == sol::call_status::ok)
                 {
                     m_coroutine_done = true;
                     return succeed();

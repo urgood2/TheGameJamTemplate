@@ -139,20 +139,12 @@ wrap_timer_action(sol::function action) {
         
         // dump_lua_state(L);
 
-        sol::protected_function_result result;
-        if (dt.has_value()) {
-            // SPDLOG_DEBUG("   -> calling Lua with dt");
-            result = protectedAction(*dt);
-            // SPDLOG_DEBUG("   -> returned from Lua dt-call");
-        } else {
-            // SPDLOG_DEBUG("   -> calling Lua with NO args");
-            result = protectedAction();
-            // SPDLOG_DEBUG("   -> returned from Lua no-arg call");
-        }
+        auto luaResult = dt.has_value()
+            ? util::safeLuaCall(protectedAction, "timer_action(dt)", *dt)
+            : util::safeLuaCall(protectedAction, "timer_action()",  );
 
-        if (!result.valid()) {
-            sol::error err = result;
-            SPDLOG_ERROR("Timer action failed: {}", err.what());
+        if (luaResult.isErr()) {
+            SPDLOG_ERROR("Timer action failed: {}", luaResult.error());
             std::abort();
         }
 

@@ -7,6 +7,7 @@
 #include "systems/physics/physics_components.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_unsafe.h"
 #include "util/common_headers.hpp"
+#include "util/error_handling.hpp"
 #include <algorithm>
 #include <memory>
 #include <raylib.h>
@@ -769,49 +770,39 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter *arb) {
   LuaArbiter luaArb{arb};
   if (auto it = _luaPairHandlers.find(key); it != _luaPairHandlers.end()) {
     if (it->second.pre_solve.valid()) {
-      sol::protected_function_result r = it->second.pre_solve(luaArb);
-      if (!r.valid()) {
-        sol::error err = r;
-        SPDLOG_ERROR("pair pre_solve: {}", err.what());
+      auto r = util::safeLuaCall(it->second.pre_solve, "physics pre_solve pair", luaArb);
+      if (r.isErr()) {
+        SPDLOG_ERROR("pair pre_solve: {}", r.error());
         throw;
-        return cpTrue;
       }
-      if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean)
-        return r.get<bool>();
+      if (r.value().return_count() > 0 && r.value().get_type(0) == sol::type::boolean)
+        return r.value().get<bool>();
       return cpTrue;
     }
   }
   if (auto wi = _luaWildcardHandlers.find(ta);
       wi != _luaWildcardHandlers.end()) {
     if (wi->second.pre_solve.valid()) {
-      auto r = wi->second.pre_solve(luaArb);
-
-      if (!r.valid()) {
-        sol::error err = r;
-        SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)ta, err.what());
+      auto r = util::safeLuaCall(wi->second.pre_solve, "physics pre_solve wildcardA", luaArb);
+      if (r.isErr()) {
+        SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)ta, r.error());
         throw;
-        return cpTrue;
       }
-      if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean)
-        return r.get<bool>();
+      if (r.value().return_count() > 0 && r.value().get_type(0) == sol::type::boolean)
+        return r.value().get<bool>();
       return cpTrue;
     }
   }
   if (auto wi = _luaWildcardHandlers.find(tb);
       wi != _luaWildcardHandlers.end()) {
     if (wi->second.pre_solve.valid()) {
-      SPDLOG_TRACE("PreSolve Lua: pairKey={} -> returned={}", (unsigned long long)key,
-             (r.return_count()>0 && r.get_type(0)==sol::type::boolean) ? (r.get<bool>()?"true":"false") : "none");
-
-      auto r = wi->second.pre_solve(luaArb);
-      if (!r.valid()) {
-        sol::error err = r;
-        SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)tb, err.what());
+      auto r = util::safeLuaCall(wi->second.pre_solve, "physics pre_solve wildcardB", luaArb);
+      if (r.isErr()) {
+        SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)tb, r.error());
         throw;
-        return cpTrue;
       }
-      if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean)
-        return r.get<bool>();
+      if (r.value().return_count() > 0 && r.value().get_type(0) == sol::type::boolean)
+        return r.value().get<bool>();
       return cpTrue;
     }
   }
@@ -833,10 +824,9 @@ void PhysicsWorld::OnPostSolve(cpArbiter *arb) {
 
   auto call = [&](sol::protected_function &fn) {
     if (fn.valid()) {
-      auto r = fn(luaArb);
-      if (!r.valid()) {
-        sol::error err = r;
-        SPDLOG_ERROR("post_solve: {}", err.what());
+      auto r = util::safeLuaCall(fn, "physics post_solve", luaArb);
+      if (r.isErr()) {
+        SPDLOG_ERROR("post_solve: {}", r.error());
         throw;
       }
     }

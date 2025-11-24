@@ -2,6 +2,7 @@
 #include "nlohmann/json.hpp"
 
 #include "../../util/utilities.hpp"
+#include "util/error_handling.hpp"
 
 #include "sol/sol.hpp"
 

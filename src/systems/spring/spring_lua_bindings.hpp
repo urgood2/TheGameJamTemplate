@@ -5,6 +5,7 @@
 #include "entt/entt.hpp"
 #include "systems/scripting/binding_recorder.hpp" // your recorder
 #include <tuple>
+#include "util/error_handling.hpp"
 
 namespace bind {
 
@@ -93,9 +94,9 @@ inline void bind_spring(sol::state& lua) {
                 sol::function f = *easing;
                 ef = [f](double x) -> double {
                     sol::protected_function pf = f;
-                    sol::protected_function_result r = pf(x);
-                    if (!r.valid()) return x; // fallback
-                    return r.get<double>();
+                    auto r = util::safeLuaCall(pf, "spring animate_to_time easing", x);
+                    if (r.isErr()) return x; // fallback
+                    return r.value().get<double>();
                 };
             }
             spring::animateToTargetWithTime(s, target, time_to_target, ef,

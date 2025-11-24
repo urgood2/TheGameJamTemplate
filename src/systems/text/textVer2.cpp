@@ -33,6 +33,7 @@
 #include "systems/scripting/binding_recorder.hpp"
 
 #include "sol/sol.hpp"
+#include "util/error_handling.hpp"
 
 namespace TextSystem
 {
@@ -1754,10 +1755,15 @@ namespace TextSystem
                                     auto &co = text.luaWaiters.at(alias);
                                     if (!co.valid() ||
                                         co.status() != sol::call_status::yielded) {
-                                    // either never created, or already completed — bail out
+                                    // either never created, or already completed - bail out
                                     return;
                                     }
-                                    sol::protected_function_result result = co();
+                                    auto callResult = util::tryWithLog([&]() { return co(); }, "text lua wait coroutine");
+                                    if (callResult.isErr()) {
+                                        spdlog::error("Coroutine error: {}", callResult.error());
+                                        std::abort();
+                                    }
+                                    sol::protected_function_result result = callResult.value();
                                     if (!result.valid()) {
                                         sol::error err = result;
                                         spdlog::error("Coroutine error: {}", err.what());

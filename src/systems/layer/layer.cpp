@@ -37,6 +37,7 @@
 #include "systems/ui/element.hpp"
 #include "systems/ui/ui_data.hpp"
 #include "systems/uuid/uuid.hpp"
+#include "util/error_handling.hpp"
 
 #include "systems/layer/layer_command_buffer_data.hpp"
 #include "systems/transform/transform_functions.hpp"
@@ -1796,12 +1797,11 @@ cb.set_function("queueScopedTransformCompositeRender",
             lyr, e, z, space, [&]() {
                 sol::protected_function pf(child_builder);
                 if (pf.valid()) {
-                    sol::protected_function_result r = pf();
-                    if (!r.valid()) {
-                        sol::error err = r;
+                    auto r = util::safeLuaCall(pf, "queueScopedTransformCompositeRender");
+                    if (r.isErr()) {
                         std::fprintf(stderr,
                             "[queueScopedTransformCompositeRender] child_builder error: %s\n",
-                            err.what());
+                            r.error().c_str());
                     }
                 } else {
                     std::fprintf(stderr,
@@ -1822,10 +1822,9 @@ cb.set_function("queueScopedTransformCompositeRender",
         ::layer::Cmd##cmdName c{};                                            \
         sol::protected_function pf(init);                                     \
         if (pf.valid()) {                                                     \
-          sol::protected_function_result r = pf(&c);                          \
-          if (!r.valid()) {                                                   \
-            sol::error e = r;                                                 \
-            std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName, e.what()); \
+          auto r = util::safeLuaCall(pf, std::string("execute") + #cmdName, &c); \
+          if (r.isErr()) {                                                   \
+            std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName, r.error().c_str()); \
           }                                                                   \
         }                                                                     \
         ::layer::execFunc(lyr, &c);                                           \

@@ -3,6 +3,7 @@
 #include <sol/sol.hpp>
 #include "camera_manager.hpp"   // the file you posted
 #include "systems/scripting/binding_recorder.hpp"
+#include "util/error_handling.hpp"
 // assumes raylib types (Vector2, Rectangle, Color) + entt::registry* are already exposed or passable
 
 namespace camera_bindings {
@@ -538,11 +539,10 @@ lua.new_usertype<GameCamera>("GameCamera",
             camera_manager::Begin(name);
             // ensure End() even if fn errors
             sol::protected_function pfn = fn;
-            sol::protected_function_result r = pfn();
+            auto r = util::safeLuaCall(pfn, "camera.with callback");
             camera_manager::End();
-            if (!r.valid()) {
-                sol::error err = r;
-                throw std::runtime_error(std::string("camera.with callback error: ") + err.what());
+            if (r.isErr()) {
+                throw std::runtime_error(std::string("camera.with callback error: ") + r.error());
             }
         },
         "---@param name string\n---@param fn fun()\nRun fn inside Begin/End for the named camera.");

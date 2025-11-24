@@ -18,6 +18,7 @@
 #include "../shaders/shader_pipeline.hpp"
 #include "../shaders/shader_draw_commands.hpp"
 #include "../localization/localization.hpp"
+#include "util/error_handling.hpp"
 #include "../particles/particle.hpp"
 #include "../random/random.hpp"
 #include "../timer/timer.hpp"
@@ -1234,15 +1235,14 @@ namespace scripting {
         }
     
         // 4) Call it, catching any Lua errors
-        sol::protected_function_result result = pfg();
-        if (!result.valid()) {
-            sol::error err = result;
-            spdlog::error("Error running print_filtered_globals: {}", err.what());
+        auto result = util::safeLuaCall(pfg, "print_filtered_globals");
+        if (result.isErr()) {
+            spdlog::error("Error running print_filtered_globals: {}", result.error());
             return;
         }
     
         // 5) Extract the returned string
-        std::string capture = result;
+        std::string capture = result.value().get<std::string>();
         // (if you want to preserve your old hook, you could still munge `capture` here)
     
         // 6) Write it out

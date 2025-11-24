@@ -29,6 +29,7 @@
 #include <filesystem>
 
 #include "../../util/common_headers.hpp"
+#include "util/error_handling.hpp"
 
 namespace ai_system
 {
@@ -146,7 +147,10 @@ namespace ai_system
         }
 
         if (!cmp.actionQueue.empty()) {
-            cmp.actionQueue.front().start(e);
+            auto startResult = util::safeLuaCall(cmp.actionQueue.front().start, "ai action start", e);
+            if (startResult.isErr()) {
+                SPDLOG_ERROR("AI start() failed: {}", startResult.error());
+            }
             cmp.actionQueue.front().is_running = true;
         }
     }
@@ -374,11 +378,10 @@ namespace ai_system
         }
 
         // 4) Call it
-        sol::protected_function_result result = func(entity);
-        if (!result.valid())
+        auto result = util::safeLuaCall(func, std::string("ai blackboard init:") + identifier, entity);
+        if (result.isErr())
         {
-            sol::error err = result;
-            SPDLOG_ERROR("Error in blackboard init '{}': {}", identifier, err.what());
+            SPDLOG_ERROR("Error in blackboard init '{}': {}", identifier, result.error());
         }
     }
 
@@ -732,10 +735,10 @@ namespace ai_system
             return;
         }
 
-        sol::protected_function_result result = func(entity);
-        if (!result.valid())
+        auto result = util::safeLuaCall(func, "ai goal selection", entity);
+        if (result.isErr())
         {
-            SPDLOG_ERROR("Goal selection failed: {}", result.get<sol::error>().what());
+            SPDLOG_ERROR("Goal selection failed: {}", result.error());
             return;
         }
 
@@ -837,7 +840,10 @@ namespace ai_system
         {
             // SPDLOG_DEBUG("Action {} completed, calling start() on next action", goapComponent.plan[goapComponent.current_action]);
 
-            currentAction.finish(entity);
+            auto finishResult = util::safeLuaCall(currentAction.finish, "ai action finish", entity);
+            if (finishResult.isErr()) {
+                SPDLOG_ERROR("AI finish() failed: {}", finishResult.error());
+            }
             goapComponent.actionQueue.pop();
 
             // Reset retries on success
@@ -859,7 +865,10 @@ namespace ai_system
             // run next action start if available
             if (!goapComponent.actionQueue.empty())
             {
-                goapComponent.actionQueue.front().start(entity);
+                auto startResult = util::safeLuaCall(goapComponent.actionQueue.front().start, "ai action start", entity);
+                if (startResult.isErr()) {
+                    SPDLOG_ERROR("AI start() failed: {}", startResult.error());
+                }
                 goapComponent.actionQueue.front().is_running = true;
             }
             else
@@ -901,9 +910,9 @@ namespace ai_system
         if (!goapComponent.actionQueue.empty()) {
             Action& cur = goapComponent.actionQueue.front();
             if (cur.abort.valid()) {
-                sol::protected_function_result ar = cur.abort(entity, "interrupt");
-                if (!ar.valid()) {
-                    SPDLOG_ERROR("abort() error during interrupt: {}", ar.get<sol::error>().what());
+                auto ar = util::safeLuaCall(cur.abort, "ai abort interrupt", entity, "interrupt");
+                if (ar.isErr()) {
+                    SPDLOG_ERROR("abort() error during interrupt: {}", ar.error());
                 }
             }
         }
@@ -1206,9 +1215,9 @@ namespace ai_system
                     // Optional: call the per-action abort hook BEFORE dropping the plan
                     if (cur.abort.valid()) {
                         SPDLOG_DEBUG("Invoking abort() for action '{}' on entity {}", cur.name, (int)entity);
-                        sol::protected_function_result ar = cur.abort(entity, "worldstate_changed");
-                        if (!ar.valid()) {
-                            SPDLOG_ERROR("abort() error: {}", ar.get<sol::error>().what());
+                        auto ar = util::safeLuaCall(cur.abort, "ai abort worldstate_changed", entity, "worldstate_changed");
+                        if (ar.isErr()) {
+                            SPDLOG_ERROR("abort() error: {}", ar.error());
                         }
                     }
                 }
@@ -1286,11 +1295,10 @@ namespace ai_system
             if (!v.is<sol::function>())
                 continue;
             sol::protected_function f = v;
-            sol::protected_function_result result = f(entity, aiUpdateTickInSeconds);
-            if (!result.valid())
+            auto result = util::safeLuaCall(f, std::string("ai worldstate updater:") + k.as<std::string>(), entity, aiUpdateTickInSeconds);
+            if (result.isErr())
             {
-                sol::error err = result;
-                SPDLOG_ERROR("Error in worldstate updater '{}': {}", k.as<std::string>(), err.what());
+                SPDLOG_ERROR("Error in worldstate updater '{}': {}", k.as<std::string>(), result.error());
             }
         }
     }

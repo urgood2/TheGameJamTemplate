@@ -1480,15 +1480,14 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
   auto call = [&](sol::protected_function &fn) -> std::optional<bool> {
     if (!fn.valid())
       return std::nullopt;
-    sol::protected_function_result r = fn(luaArb);
-    if (!r.valid()) {
-      sol::error err = r;
-      SPDLOG_ERROR("begin: {}", err.what());
+    auto r = util::safeLuaCall(fn, "physics begin", luaArb);
+    if (r.isErr()) {
+      SPDLOG_ERROR("begin: {}", r.error());
       throw;
       return std::nullopt;
     }
-    if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean) {
-      return r.get<bool>();
+    if (r.value().return_count() > 0 && r.value().get_type(0) == sol::type::boolean) {
+      return r.value().get<bool>();
     }
     return std::nullopt;
   };
@@ -1536,10 +1535,9 @@ void PhysicsWorld::OnSeparate(cpArbiter *arb) {
   auto call = [&](sol::protected_function &fn) {
     if (!fn.valid())
       return;
-    auto r = fn(luaArb);
-    if (!r.valid()) {
-      sol::error err = r;
-      SPDLOG_ERROR("separate: {}", err.what());
+    auto r = util::safeLuaCall(fn, "physics separate", luaArb);
+    if (r.isErr()) {
+      SPDLOG_ERROR("separate: {}", r.error());
       throw;
     }
   };

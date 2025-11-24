@@ -69,9 +69,9 @@ Lightweight guidance for adding guardrails during the EngineContext migration.
   ```
 
 ## Helper Usage (live code)
-- Asset loading: textures (`init.cpp`) and shaders (`shader_system.cpp`) use `tryWithLog`/`Result` to log and skip bad loads (guarding `id==0`).
+- Asset loading: textures (`init.cpp`) and shaders (`shader_system.cpp`) use `tryWithLog`/`Result` to log and skip bad loads (guarding `id==0`); sound loading is guarded the same way.
 - Audio init: wrapped with `tryWithLog` to log and exit cleanly if device setup fails.
-- Lua calls: `safeLuaCall` wraps `main.init/update/draw` and timer actions; errors are logged instead of crashing silently.
+- Lua calls: `safeLuaCall` wraps `main.init/update/draw`, AI action start/finish/abort hooks, timer callbacks, controller nav focus/select hooks, `camera.with` callbacks, layer queue/execute init lambdas, physics collision callbacks, script coroutines, and text wait coroutines; errors are logged with context instead of failing silently.
 
 ## Lua Boundary
 - Wrap C++->Lua calls; catch `sol::error` and log script name + function + message.

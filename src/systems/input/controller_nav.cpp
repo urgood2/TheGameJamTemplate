@@ -5,6 +5,7 @@
 #include "core/engine_context.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "sol/types.hpp"
+#include "util/error_handling.hpp"
 
 namespace controller_nav {
 
@@ -473,10 +474,9 @@ void NavManager::notify_focus(entt::entity prev, entt::entity next, entt::regist
 
     auto fire = [&](sol::protected_function fn, entt::entity e, const char* label){
         if (fn.valid()) {
-            auto r = fn(e);
-            if (!r.valid()) {
-                sol::error err = r;
-                SPDLOG_ERROR("[Lua] {} error: {}", label, err.what());
+            auto r = util::safeLuaCall(fn, label, e);
+            if (r.isErr()) {
+                SPDLOG_ERROR("[Lua] {} error: {}", label, r.error());
             }
         }
     };
@@ -501,15 +501,15 @@ void NavManager::notify_select(entt::entity selected, entt::registry& reg) {
     for (auto& [name, g] : groups) {
         if (std::find(g.entries.begin(), g.entries.end(), selected) != g.entries.end()) {
             if (g.callbacks.on_select.valid()) {
-                auto r = g.callbacks.on_select(selected);
-                if (!r.valid()) SPDLOG_ERROR("[Lua] on_nav_select error (group)");
+                auto r = util::safeLuaCall(g.callbacks.on_select, "on_nav_select (group)", selected);
+                if (r.isErr()) SPDLOG_ERROR("[Lua] on_nav_select error (group): {}", r.error());
                 return;
             }
         }
     }
     if (globalCB.on_select.valid()) {
-        auto r = globalCB.on_select(selected);
-        if (!r.valid()) SPDLOG_ERROR("[Lua] on_nav_select error (global)");
+        auto r = util::safeLuaCall(globalCB.on_select, "on_nav_select (global)", selected);
+        if (r.isErr()) SPDLOG_ERROR("[Lua] on_nav_select error (global): {}", r.error());
     }
 }
 

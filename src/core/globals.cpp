@@ -3,6 +3,7 @@
 
 #include "../components/graphics.hpp"
 #include "engine_context.hpp"
+#include "events.hpp"
 
 #include "../core/gui.hpp"
 
@@ -36,6 +37,24 @@ namespace globals {
     
     EngineContext* g_ctx = nullptr;
     static AudioContext g_audioContext{};
+    static event_bus::EventBus g_fallbackEventBus{};
+
+    // Mouse/cursor tracking mirrored into EngineContext when present.
+    Vector2 worldMousePosition = {0,0};
+    Camera2D camera2D = {0};
+    Vector2 lastMouseClick{0.0f, 0.0f};
+    int lastMouseButton{-1};
+    bool hasLastClickFlag{false};
+    entt::entity lastMouseClickTarget{entt::null};
+    bool hasLastMouseClickTargetFlag{false};
+    entt::entity lastCollisionA{entt::null};
+    entt::entity lastCollisionB{entt::null};
+    entt::entity lastUIFocus{entt::null};
+    entt::entity lastUIButtonActivated{entt::null};
+    std::string lastLoadingStage{};
+    bool lastLoadingStageSuccess{true};
+    static std::deque<CollisionNote> collisionLog;
+    constexpr size_t kCollisionLogMax = 32;
 
     template <typename T>
     static T& resolveCtxOrLegacy(T& legacy, T EngineContext::*member) {
@@ -51,12 +70,48 @@ namespace globals {
 
     void setEngineContext(EngineContext* ctx) {
         g_ctx = ctx;
-        if (g_ctx) {
-            g_ctx->inputState = &inputState;
-            g_ctx->physicsManager = physicsManager;
-            g_ctx->worldMousePosition = {0.0f, 0.0f};
-            g_ctx->scaledMousePosition = {0.0f, 0.0f};
+    if (g_ctx) {
+        g_ctx->inputState = &inputState;
+        g_ctx->physicsManager = physicsManager;
+        g_ctx->worldMousePosition = {0.0f, 0.0f};
+        g_ctx->scaledMousePosition = {0.0f, 0.0f};
             g_ctx->audio = &g_audioContext;
+            g_ctx->currentGameState = currentGameState;
+            g_ctx->isGamePaused = isGamePaused;
+            g_ctx->useImGUI = useImGUI;
+            g_ctx->finalRenderScale = finalRenderScale;
+            g_ctx->finalLetterboxOffsetX = finalLetterboxOffsetX;
+            g_ctx->finalLetterboxOffsetY = finalLetterboxOffsetY;
+            g_ctx->globalUIScaleFactor = globalUIScaleFactor;
+            g_ctx->uiPadding = uiPadding;
+            g_ctx->settings = settings;
+            g_ctx->cameraDamping = cameraDamping;
+            g_ctx->cameraStiffness = cameraStiffness;
+            g_ctx->cameraVelocity = cameraVelocity;
+            g_ctx->nextCameraTarget = nextCameraTarget;
+            g_ctx->worldWidth = worldWidth;
+            g_ctx->worldHeight = worldHeight;
+            g_ctx->shaderUniforms = globalShaderUniforms;
+            g_ctx->visibilityMap = globalVisibilityMap;
+            g_ctx->useLineOfSight = useLineOfSight;
+            g_ctx->timerReal = G_TIMER_REAL;
+            g_ctx->timerTotal = G_TIMER_TOTAL;
+        g_ctx->framesMove = G_FRAMES_MOVE;
+        g_ctx->drawDebugInfo = drawDebugInfo;
+        g_ctx->drawPhysicsDebug = drawPhysicsDebug;
+        g_ctx->releaseMode = releaseMode;
+        g_ctx->lastMouseClickTarget = lastMouseClickTarget;
+        g_ctx->hasLastMouseClickTarget = hasLastMouseClickTargetFlag;
+        g_ctx->lastMouseClick = lastMouseClick;
+        g_ctx->lastMouseButton = lastMouseButton;
+        g_ctx->hasLastMouseClick = hasLastClickFlag;
+            g_ctx->lastCollisionA = lastCollisionA;
+            g_ctx->lastCollisionB = lastCollisionB;
+            g_ctx->lastUIFocus = lastUIFocus;
+            g_ctx->lastUIButtonActivated = lastUIButtonActivated;
+            g_ctx->lastLoadingStage = lastLoadingStage;
+            g_ctx->lastLoadingStageSuccess = lastLoadingStageSuccess;
+            // collision log is intentionally kept local; not mirroring to ctx to avoid copies.
         }
     }
 
@@ -67,14 +122,14 @@ namespace globals {
         Vector2 m = GetMousePosition();
 
         // Avoid division by zero before render scale is initialized.
-        float scale = globals::finalRenderScale;
+        float scale = getFinalRenderScale();
         if (scale <= 0.0f) {
             scale = 1.0f;
         }
 
         // Remove letterbox offset
-        m.x -= globals::finalLetterboxOffsetX;
-        m.y -= globals::finalLetterboxOffsetY;
+        m.x -= getLetterboxOffsetX();
+        m.y -= getLetterboxOffsetY();
 
         // Undo uniform scale
         m.x /= scale;
@@ -99,15 +154,40 @@ namespace globals {
     float finalRenderScale = 0.f; // the final render scale to apply when drawing to the screen, updated each frame
     float finalLetterboxOffsetX = 0.0f;
     float finalLetterboxOffsetY = 0.0f;
-    float& getFinalRenderScale() { return finalRenderScale; }
-    float& getLetterboxOffsetX() { return finalLetterboxOffsetX; }
-    float& getLetterboxOffsetY() { return finalLetterboxOffsetY; }
-    void setFinalRenderScale(float v) { finalRenderScale = v; }
-    void setLetterboxOffsetX(float v) { finalLetterboxOffsetX = v; }
-    void setLetterboxOffsetY(float v) { finalLetterboxOffsetY = v; }
+    float& getFinalRenderScale() { 
+        if (g_ctx) return g_ctx->finalRenderScale;
+        return finalRenderScale; 
+    }
+    float& getLetterboxOffsetX() { 
+        if (g_ctx) return g_ctx->finalLetterboxOffsetX;
+        return finalLetterboxOffsetX; 
+    }
+    float& getLetterboxOffsetY() { 
+        if (g_ctx) return g_ctx->finalLetterboxOffsetY;
+        return finalLetterboxOffsetY; 
+    }
+    void setFinalRenderScale(float v) { 
+        finalRenderScale = v; 
+        if (g_ctx) g_ctx->finalRenderScale = v;
+    }
+    void setLetterboxOffsetX(float v) { 
+        finalLetterboxOffsetX = v; 
+        if (g_ctx) g_ctx->finalLetterboxOffsetX = v;
+    }
+    void setLetterboxOffsetY(float v) { 
+        finalLetterboxOffsetY = v; 
+        if (g_ctx) g_ctx->finalLetterboxOffsetY = v;
+    }
     
     bool useImGUI = true; // set to true to use imGUI for debugging
-    bool& getUseImGUI() { return useImGUI; }
+    bool& getUseImGUI() { 
+        if (g_ctx) return g_ctx->useImGUI;
+        return useImGUI; 
+    }
+    void setUseImGUI(bool v) {
+        useImGUI = v;
+        if (g_ctx) g_ctx->useImGUI = v;
+    }
     
     std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
     std::shared_ptr<PhysicsManager>& getPhysicsManagerPtr() {
@@ -123,14 +203,33 @@ namespace globals {
     std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap{};
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements
-    float& getGlobalUIScaleFactor() { return globalUIScaleFactor; }
+    float& getGlobalUIScaleFactor() { 
+        if (g_ctx) return g_ctx->globalUIScaleFactor;
+        return globalUIScaleFactor; 
+    }
+    void setGlobalUIScaleFactor(float v) {
+        globalUIScaleFactor = v;
+        if (g_ctx) g_ctx->globalUIScaleFactor = v;
+        getEventBus().publish(events::UIScaleChanged{v});
+    }
 
     bool drawDebugInfo = false, drawPhysicsDebug = false; // set to true to allow debug drawing of transforms
+    void setDrawDebugInfo(bool v) {
+        drawDebugInfo = v;
+        if (g_ctx) g_ctx->drawDebugInfo = v;
+    }
+    void setDrawPhysicsDebug(bool v) {
+        drawPhysicsDebug = v;
+        if (g_ctx) g_ctx->drawPhysicsDebug = v;
+    }
     
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
-    shaders::ShaderUniformComponent& getGlobalShaderUniforms() { return globalShaderUniforms; }
+    shaders::ShaderUniformComponent& getGlobalShaderUniforms() { 
+        if (g_ctx) return g_ctx->shaderUniforms;
+        return globalShaderUniforms; 
+    }
 
     std::map<std::string, SpriteFrameData> spriteDrawFrames; 
 
@@ -161,8 +260,14 @@ namespace globals {
     int& getGameWorldViewportHeight() { return gameWorldViewportHeight; }
 
     int worldWidth{}, worldHeight{}; // world dimensions
-    int& getWorldWidth() { return worldWidth; }
-    int& getWorldHeight() { return worldHeight; }
+    int& getWorldWidth() { 
+        if (g_ctx) return g_ctx->worldWidth;
+        return worldWidth; 
+    }
+    int& getWorldHeight() { 
+        if (g_ctx) return g_ctx->worldHeight;
+        return worldHeight; 
+    }
     
     
     
@@ -206,10 +311,22 @@ namespace globals {
     float cameraDamping{.4f}, cameraStiffness{0.99f};
     Vector2 cameraVelocity{0,0};
     Vector2 nextCameraTarget{0,0}; // keep track of desired next camera target position
-    float& getCameraDamping() { return cameraDamping; }
-    float& getCameraStiffness() { return cameraStiffness; }
-    Vector2& getCameraVelocity() { return cameraVelocity; }
-    Vector2& getNextCameraTarget() { return nextCameraTarget; }
+    float& getCameraDamping() { 
+        if (g_ctx) return g_ctx->cameraDamping;
+        return cameraDamping; 
+    }
+    float& getCameraStiffness() { 
+        if (g_ctx) return g_ctx->cameraStiffness;
+        return cameraStiffness; 
+    }
+    Vector2& getCameraVelocity() { 
+        if (g_ctx) return g_ctx->cameraVelocity;
+        return cameraVelocity; 
+    }
+    Vector2& getNextCameraTarget() { 
+        if (g_ctx) return g_ctx->nextCameraTarget;
+        return nextCameraTarget; 
+    }
 
     //TODO make a map of names to all available sprites
     //TODO how to mesh this with animations?
@@ -235,7 +352,22 @@ namespace globals {
 
     // game state
     GameState currentGameState{GameState::LOADING_SCREEN};
-    GameState& getCurrentGameState() { return currentGameState; }
+    GameState& getCurrentGameState() { 
+        if (g_ctx) return g_ctx->currentGameState;
+        return currentGameState; 
+    }
+
+    void setCurrentGameState(GameState state) {
+        auto old = getCurrentGameState();
+        if (old == state) {
+            return;
+        }
+        currentGameState = state;
+        if (g_ctx) {
+            g_ctx->currentGameState = state;
+        }
+        getEventBus().publish(events::GameStateChanged{old, state});
+    }
 
     // show mouse current status
     bool isMouseDragStarted{false};
@@ -272,9 +404,18 @@ namespace globals {
     entt::entity G_ROOM = entt::null; // entity that is a moveable representing the map
     float G_COLLISION_BUFFER = 0.05f; // Buffer for collision detection from lua //TODO: move to globals later
     int G_TILESIZE = 16; // TODO: used by movable, not sure how it is used
-    float& getTimerReal() { return G_TIMER_REAL; }
-    float& getTimerTotal() { return G_TIMER_TOTAL; }
-    long& getFramesMove() { return G_FRAMES_MOVE; }
+    float& getTimerReal() { 
+        if (g_ctx) return g_ctx->timerReal;
+        return G_TIMER_REAL; 
+    }
+    float& getTimerTotal() { 
+        if (g_ctx) return g_ctx->timerTotal;
+        return G_TIMER_TOTAL; 
+    }
+    long& getFramesMove() { 
+        if (g_ctx) return g_ctx->framesMove;
+        return G_FRAMES_MOVE; 
+    }
 
     // motion reduction setting (for animations,text,smoothing etc.)
     bool reduced_motion = false;
@@ -285,8 +426,14 @@ namespace globals {
     // for line of sight
     std::vector<std::vector<bool>> globalVisibilityMap{};
     bool useLineOfSight{false};
-    std::vector<std::vector<bool>>& getGlobalVisibilityMap() { return globalVisibilityMap; }
-    bool& getUseLineOfSight() { return useLineOfSight; }
+    std::vector<std::vector<bool>>& getGlobalVisibilityMap() { 
+        if (g_ctx) return g_ctx->visibilityMap;
+        return globalVisibilityMap; 
+    }
+    bool& getUseLineOfSight() { 
+        if (g_ctx) return g_ctx->useLineOfSight;
+        return useLineOfSight; 
+    }
 
     sol::state lua; // for events
 
@@ -319,10 +466,17 @@ namespace globals {
     std::optional<bool> noModCursorStack;
  
     Settings settings{};
+    Settings& getSettings() {
+        if (g_ctx) return g_ctx->settings;
+        return settings;
+    }
 
-    
+
     float uiPadding = 4.0f; // padding for UI elements
-    float& getUiPadding() { return uiPadding; }
+    float& getUiPadding() { 
+        if (g_ctx) return g_ctx->uiPadding;
+        return uiPadding; 
+    }
     
     input::InputState inputState{};
     
@@ -342,10 +496,24 @@ namespace globals {
     float vibration{0.0f}; // vibration strength for controllers
 
     bool releaseMode = false; // set to true to disable debug features
-    bool& getReleaseMode() { return releaseMode; }
+    bool& getReleaseMode() { 
+        if (g_ctx) return g_ctx->releaseMode;
+        return releaseMode; 
+    }
+    void setReleaseMode(bool v) {
+        releaseMode = v;
+        if (g_ctx) g_ctx->releaseMode = v;
+    }
     
     bool isGamePaused = false; // self-explanatory
-    bool& getIsGamePaused() { return isGamePaused; }
+    bool& getIsGamePaused() { 
+        if (g_ctx) return g_ctx->isGamePaused;
+        return isGamePaused; 
+    }
+    void setIsGamePaused(bool v) {
+        isGamePaused = v;
+        if (g_ctx) g_ctx->isGamePaused = v;
+    }
 
     bool screenWipe = false; // true when the screen is being wiped (transitioning between scenes). Set this to true during transitions to prevent input.
     bool& getScreenWipe() { return screenWipe; }
@@ -451,14 +619,18 @@ namespace globals {
         return buttonCallbacks;
     }
 
-    Vector2 worldMousePosition = {0,0};
-    Camera2D camera2D = {0};
-
     entt::registry& getRegistry() {
         if (g_ctx) {
             return g_ctx->registry;
         }
         return registry;
+    }
+
+    event_bus::EventBus& getEventBus() {
+        if (g_ctx) {
+            return g_ctx->eventBus;
+        }
+        return g_fallbackEventBus;
     }
 
     input::InputState& getInputState() {
@@ -506,5 +678,120 @@ namespace globals {
             return g_ctx->worldMousePosition;
         }
         return worldMousePosition;
+    }
+
+    void recordMouseClick(Vector2 pos, int button) {
+        recordMouseClick(pos, button, entt::null);
+    }
+
+    void recordMouseClick(Vector2 pos, int button, entt::entity target) {
+        lastMouseClick = pos;
+        lastMouseButton = button;
+        hasLastClickFlag = true;
+        if (target != entt::null) {
+            lastMouseClickTarget = target;
+            hasLastMouseClickTargetFlag = true;
+        }
+        if (g_ctx) {
+            g_ctx->lastMouseClick = pos;
+            g_ctx->lastMouseButton = button;
+            g_ctx->hasLastMouseClick = true;
+            if (target != entt::null) {
+                g_ctx->lastMouseClickTarget = target;
+                g_ctx->hasLastMouseClickTarget = true;
+            }
+        }
+    }
+
+    bool hasLastMouseClick() {
+        if (g_ctx) return g_ctx->hasLastMouseClick;
+        return hasLastClickFlag;
+    }
+
+    Vector2 getLastMouseClickPosition() {
+        if (g_ctx && g_ctx->hasLastMouseClick) return g_ctx->lastMouseClick;
+        return lastMouseClick;
+    }
+
+    int getLastMouseClickButton() {
+        if (g_ctx && g_ctx->hasLastMouseClick) return g_ctx->lastMouseButton;
+        return lastMouseButton;
+    }
+
+    entt::entity getLastMouseClickTarget() {
+        if (g_ctx && g_ctx->hasLastMouseClickTarget) return g_ctx->lastMouseClickTarget;
+        if (hasLastMouseClickTargetFlag) return lastMouseClickTarget;
+        return entt::null;
+    }
+
+    entt::entity getLastCollisionA() {
+        if (g_ctx && g_ctx->lastCollisionA != entt::null) return g_ctx->lastCollisionA;
+        return lastCollisionA;
+    }
+
+    entt::entity getLastCollisionB() {
+        if (g_ctx && g_ctx->lastCollisionB != entt::null) return g_ctx->lastCollisionB;
+        return lastCollisionB;
+    }
+
+    void setLastCollision(entt::entity a, entt::entity b) {
+        lastCollisionA = a;
+        lastCollisionB = b;
+        if (g_ctx) {
+            g_ctx->lastCollisionA = a;
+            g_ctx->lastCollisionB = b;
+        }
+    }
+
+    entt::entity getLastUIFocus() {
+        if (g_ctx && g_ctx->lastUIFocus != entt::null) return g_ctx->lastUIFocus;
+        return lastUIFocus;
+    }
+
+    void setLastUIFocus(entt::entity e) {
+        lastUIFocus = e;
+        if (g_ctx) g_ctx->lastUIFocus = e;
+    }
+
+    entt::entity getLastUIButtonActivated() {
+        if (g_ctx && g_ctx->lastUIButtonActivated != entt::null) return g_ctx->lastUIButtonActivated;
+        return lastUIButtonActivated;
+    }
+
+    void setLastUIButtonActivated(entt::entity e) {
+        lastUIButtonActivated = e;
+        if (g_ctx) g_ctx->lastUIButtonActivated = e;
+    }
+
+    const std::string& getLastLoadingStage() {
+        if (g_ctx && !g_ctx->lastLoadingStage.empty()) return g_ctx->lastLoadingStage;
+        return lastLoadingStage;
+    }
+
+    bool getLastLoadingStageSuccess() {
+        if (g_ctx) return g_ctx->lastLoadingStageSuccess;
+        return lastLoadingStageSuccess;
+    }
+
+    void setLastLoadingStage(const std::string& stageId, bool success) {
+        lastLoadingStage = stageId;
+        lastLoadingStageSuccess = success;
+        if (g_ctx) {
+            g_ctx->lastLoadingStage = stageId;
+            g_ctx->lastLoadingStageSuccess = success;
+        }
+    }
+
+    const std::vector<CollisionNote>& getCollisionLog() {
+        static std::vector<CollisionNote> cache;
+        cache.assign(collisionLog.begin(), collisionLog.end());
+        return cache;
+    }
+
+    void pushCollisionLog(const CollisionNote& note) {
+        if (collisionLog.size() >= kCollisionLogMax) {
+            collisionLog.pop_front();
+        }
+        collisionLog.push_back(note);
     }
 }

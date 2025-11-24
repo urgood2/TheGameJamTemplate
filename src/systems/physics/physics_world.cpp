@@ -5,6 +5,8 @@
 #include "../../third_party/chipmunk/include/chipmunk/cpPolyline.h"
 #include "spdlog/spdlog.h"
 #include "systems/physics/physics_components.hpp"
+#include "core/events.hpp"
+#include "core/globals.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_unsafe.h"
 #include "util/common_headers.hpp"
 #include <algorithm>
@@ -305,7 +307,7 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
       (filterB.categories & filterA.mask) == 0)
     return;
 
-  CollisionEvent event = {dataA, dataB};
+  CollisionEvent event = {dataA, dataB, 0, 0, 0, 0, 0, 0};
   cpContactPointSet contactPoints = cpArbiterGetContactPointSet(arb);
   cpVect normal = cpArbiterGetNormal(arb);
 
@@ -324,6 +326,9 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
 
   collisionEnter[key].push_back(event);
   collisionActive[key].push_back(event);
+  globals::getEventBus().publish(
+      events::CollisionStarted{entityA, entityB, Vector2{event.x1, event.y1}});
+  globals::recordMouseClick({event.x1, event.y1}, -1, entityA); // track for diagnostics/selection
 
   if (registry->all_of<ColliderComponent>(entityA))
     registry->get<ColliderComponent>(entityA).collisionEnter.push_back(event);
@@ -433,6 +438,9 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
             [dataA](const CollisionEvent &e) { return e.objectB == dataA; }),
         colliderB.collisionActive.end());
   }
+
+  globals::getEventBus().publish(
+      events::CollisionEnded{entityA, entityB});
 
   StickySeparate(arb);
 }

@@ -88,6 +88,7 @@ using json = nlohmann::json;
 #include "systems/fade/fade_system.hpp"
 #include "systems/palette/palette_quantizer.hpp"
 #include "systems/input/controller_nav.hpp"
+#include "core/events.hpp"
 
 
 
@@ -125,7 +126,7 @@ void mainMenuStateGameLoop(float dt)
 {
     
     // FIXME: just set game to main game state for now
-    globals::getCurrentGameState() = GameState::MAIN_GAME;
+    globals::setCurrentGameState(GameState::MAIN_GAME);
     // show main menu here
 }
 
@@ -151,7 +152,7 @@ void MainLoopFixedUpdateAbstraction(float dt)
         mainGameStateGameLoop(dt);
         break;
     default:
-        globals::getCurrentGameState() = GameState::MAIN_MENU;
+        globals::setCurrentGameState(GameState::MAIN_MENU);
         break;
     }
     

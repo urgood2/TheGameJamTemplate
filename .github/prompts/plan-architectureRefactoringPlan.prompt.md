@@ -990,6 +990,13 @@ inline ErrorReporter g_errorReporter;
 **Estimated Effort:** 2-3 weeks  
 **Risk Level:** Medium (architectural changes)  
 
+**Progress (initial event-bus rollout):**
+- `EventBus` implemented header-only (deferred queue, exception-safe dispatch); owned by `EngineContext` with `globals::getEventBus()` bridging to `g_ctx` or a fallback instance.
+- Core events defined (UI focus/button/scale, loading stage start/complete, `EntityCreated/Destroyed`, `MouseClicked`, `KeyPressed`, `GameStateChanged`, `AssetLoaded/Failed`, `CollisionStarted/Ended`) covering UI, lifecycle, input, asset, and physics signals.
+- Input polling now publishes `KeyPressed`/`MouseClicked` via the bus and resolves `InputState` through `EngineContext` when present for incremental migration.
+- Physics collision callbacks publish bus events for collision start/end while still populating collider component vectors for compatibility.
+- UI/loading events added plus consumers: UI focus/button activation tracked in globals, loading stage events feed loading status, UIScale change invokes UI reflow hook, and collision events still captured for debug; deferred-dispatch tests live for the bus. Next focus is richer physics/gameplay consumers and UI nav/gamepad events.
+
 #### Current Problems
 - Circular dependencies through globals
 - Every system can access every other system
@@ -1130,6 +1137,31 @@ struct AssetLoaded : event_bus::Event {
 
 struct AssetLoadFailed : event_bus::Event {
     std::string assetId;
+    std::string error;
+};
+
+// UI events
+struct UIElementFocused : event_bus::Event {
+    entt::entity element{entt::null};
+};
+
+struct UIButtonActivated : event_bus::Event {
+    entt::entity element{entt::null};
+    int button{MOUSE_LEFT_BUTTON};
+};
+
+struct UIScaleChanged : event_bus::Event {
+    float scale{1.0f};
+};
+
+// Loading/progress events
+struct LoadingStageStarted : event_bus::Event {
+    std::string stageId;
+};
+
+struct LoadingStageCompleted : event_bus::Event {
+    std::string stageId;
+    bool success{true};
     std::string error;
 };
 
@@ -1367,10 +1399,11 @@ TEST(AudioSystem, PlaySound) {
 ```
 
 #### Success Metrics
-- [ ] Event bus implemented and tested
-- [ ] At least 10 core events defined
-- [ ] Input system migrated to events
-- [ ] Physics system migrated to events
+- [x] Event bus implemented (tests in place)
+- [x] Event bus tested (unit coverage incl. deferred dispatch)
+- [x] At least 10 core events defined (now 13 incl. UI and loading)
+- [ ] Input system migrated to events (keyboard/mouse + UI focus/button publishing; gamepad/UI navigation subscribers still pending)
+- [ ] Physics system migrated to events (collision publishing done; consumers/subscribers pending)
 - [ ] At least 2 system interfaces created
 - [ ] Architecture documentation complete
 - [ ] System coupling reduced measurably (use tool like `include-what-you-use`)

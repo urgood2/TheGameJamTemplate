@@ -1689,9 +1689,9 @@ wrap_timer_action(sol::function action) {
             // Deferred queues for events added during processing
             std::map<std::string, std::vector<Event>> deferred_queues;
 
-            float queue_timer = globals::G_TIMER_REAL;
+            float queue_timer = globals::getTimerReal();
             float queue_dt = 1.0f / 60.0f; // 60 FPS
-            float queue_last_processed = globals::G_TIMER_REAL;
+            float queue_last_processed = globals::getTimerReal();
 
             // Flag to indicate if events are being processed
             bool processing_events = false;
@@ -1837,7 +1837,7 @@ wrap_timer_action(sol::function action) {
             void init_event(Event &event)
             {
                 event.timerTypeToUse = event.createdWhileGamePaused ? TimerType::REAL_TIME : TimerType::TOTAL_TIME_EXCLUDING_PAUSE;
-                event.time = (event.timerTypeToUse == TimerType::REAL_TIME) ? globals::G_TIMER_REAL : globals::G_TIMER_TOTAL;
+                event.time = (event.timerTypeToUse == TimerType::REAL_TIME) ? globals::getTimerReal() : globals::getTimerTotal();
 
                 if (event.eventTrigger == TriggerType::EASE)
                 {
@@ -1892,7 +1892,7 @@ wrap_timer_action(sol::function action) {
 
             float getTimer(Event &event)
             {
-                return (event.timerTypeToUse == TimerType::REAL_TIME) ? globals::G_TIMER_REAL : globals::G_TIMER_TOTAL;
+                return (event.timerTypeToUse == TimerType::REAL_TIME) ? globals::getTimerReal() : globals::getTimerTotal();
             }
 
             // Function to handle an individual event
@@ -1913,7 +1913,7 @@ wrap_timer_action(sol::function action) {
                 if (!event.timerStarted)
                 {
                     // SPDLOG_DEBUG("Starting timer for event at time: {}", getTimer(event));
-                    event.time = (event.timerTypeToUse == TimerType::REAL_TIME) ? globals::G_TIMER_REAL : globals::G_TIMER_TOTAL;
+                    event.time = (event.timerTypeToUse == TimerType::REAL_TIME) ? globals::getTimerReal() : globals::getTimerTotal();
                     event.timerStarted = true;
                 }
 
@@ -2094,7 +2094,7 @@ wrap_timer_action(sol::function action) {
             void update(bool forced)
             {
                 ZONE_SCOPED("Update event queue");
-                queue_timer = globals::G_TIMER_REAL;
+                queue_timer = globals::getTimerReal();
 
                 if (queue_timer >= queue_last_processed + queue_dt || forced)
                 {

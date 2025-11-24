@@ -1411,7 +1411,7 @@ namespace ui
             
             //TODO: if scale is smaller, make the shadow height smaller too
 
-            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::settings.shadowsOn);
+            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
 
             if (drawShadow)
             {
@@ -1432,7 +1432,7 @@ namespace ui
                     // }, zIndex);
                     layer::Rotate(-PI / 2);
                 }
-                if ((config->shadow || (config->button_UIE && buttonActive)) && globals::settings.shadowsOn)
+                if ((config->shadow || (config->button_UIE && buttonActive)) && globals::getSettings().shadowsOn)
                 {
                     Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
 
@@ -1534,7 +1534,7 @@ namespace ui
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
-            if (config->shadow && globals::settings.shadowsOn)
+            if (config->shadow && globals::getSettings().shadowsOn)
             {
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
                 if (config->shadowColor)
@@ -1713,7 +1713,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
     const float textParallaxSY = node->shadowDisplacement->y * fd.fontLoadedSize * -0.03f * scaleFactor;
 
     const bool drawShadow = (config->button_UIE && true) ||
-                            (!config->button_UIE && config->shadow && globals::settings.shadowsOn);
+                            (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
 
     // ---- Vertical centering (unscaled space) --------------------------------
     // We center the glyph box (cap + descent) inside the element height.
@@ -1854,7 +1854,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             Vector2 p2 = {centerX - TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-left
             Vector2 p3 = {centerX + TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-right
 
-            if (config->shadow && globals::settings.shadowsOn)
+            if (config->shadow && globals::getSettings().shadowsOn)
             {
                 constexpr auto FLAT_SHADOW_AMOUNT = 3.f;
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
@@ -2047,7 +2047,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             
             //TODO: if scale is smaller, make the shadow height smaller too
 
-            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::settings.shadowsOn);
+            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
 
             if (drawShadow)
             {
@@ -2069,7 +2069,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         cmd->angle = rotation;
                     }, zIndex);
                 }
-                if ((config->shadow || (config->button_UIE && buttonActive)) && globals::settings.shadowsOn)
+                if ((config->shadow || (config->button_UIE && buttonActive)) && globals::getSettings().shadowsOn)
                 {
                     Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
 
@@ -2158,7 +2158,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             ZONE_SCOPED("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
-            if (config->shadow && globals::settings.shadowsOn)
+            if (config->shadow && globals::getSettings().shadowsOn)
             {
                 // layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
                     
@@ -2380,7 +2380,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 renderColor = globals::uiTextInactive;
 
             // Shadow logic identical to TEXT (with parallax derived from the node's shadow)
-            bool drawShadow = ((config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::settings.shadowsOn));
+            bool drawShadow = ((config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn));
             float rawScale = config->scale.value_or(1.0f) * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
             float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
@@ -2551,7 +2551,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             Vector2 p2 = {centerX - TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-left
             Vector2 p3 = {centerX + TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-right
 
-            if (config->shadow && globals::settings.shadowsOn)
+            if (config->shadow && globals::getSettings().shadowsOn)
             {
                 constexpr auto FLAT_SHADOW_AMOUNT = 3.f;
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};

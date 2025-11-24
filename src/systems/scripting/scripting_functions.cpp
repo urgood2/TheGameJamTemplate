@@ -706,7 +706,7 @@ namespace scripting {
         lua["globals"]["screenWipe"]    = &globals::getScreenWipe();
         lua["globals"]["screenWidth"]   = [](){ return globals::VIRTUAL_WIDTH; };
         lua["globals"]["screenHeight"]  = [](){ return globals::VIRTUAL_HEIGHT; };
-        lua["globals"]["currentGameState"] = &globals::currentGameState;
+        lua["globals"]["currentGameState"] = &globals::getCurrentGameState();
         
         auto& inputStateRef = globals::getInputState();
         lua["globals"]["inputState"] = &inputStateRef;

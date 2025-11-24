@@ -2,6 +2,7 @@
 #include "graphics.hpp"
 #include "globals.hpp"
 #include "engine_context.hpp"
+#include "events.hpp"
 #include "../components/components.hpp"
 #include "../util/utilities.hpp"
 #include "systems/physics/physics_components.hpp"
@@ -115,148 +116,166 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
     // Loads JSON data from various files and initializes game data structures.
     auto loadJSONData() -> void
     {
+        auto& bus = globals::getEventBus();
+        bus.publish(events::LoadingStageStarted{"load_json_data"});
 
-        // get language setting from config file
-        // configuration file
-        std::ifstream jsonStream{};
+        try {
+            // get language setting from config file
+            // configuration file
+            std::ifstream jsonStream{};
 
-        //TODO: add all asset folder items to uuids
+            //TODO: add all asset folder items to uuids
 
-        // auto path  = util::getAssetPathUUIDVersion("localization/ui_strings.json");
-        // jsonStream.open(util::getAssetPathUUIDVersion("localization/ui_strings.json"));
-        // globals::uiStringsJSON = json::parse(jsonStream);
+            // auto path  = util::getAssetPathUUIDVersion("localization/ui_strings.json");
+            // jsonStream.open(util::getAssetPathUUIDVersion("localization/ui_strings.json"));
+            // globals::uiStringsJSON = json::parse(jsonStream);
 
-        jsonStream.close();
-
-        auto assignJson = [&](const std::string& path, json& target, json* ctxSlot) {
-            jsonStream.open(path);
-            target = json::parse(jsonStream);
             jsonStream.close();
-            if (ctxSlot && globals::g_ctx) {
-                *ctxSlot = target;
-            }
-        };
 
-        assignJson(util::getRawAssetPathNoUUID("raws/colors.json"), globals::colorsJSON, globals::g_ctx ? &globals::g_ctx->colorsJson : nullptr);
-        assignJson(util::getRawAssetPathNoUUID("graphics/animations.json"), globals::animationsJSON, globals::g_ctx ? &globals::g_ctx->animationsJson : nullptr);
-        assignJson(util::getRawAssetPathNoUUID("config.json"), globals::configJSON, globals::g_ctx ? &globals::g_ctx->configJson : nullptr);
-        assignJson(util::getRawAssetPathNoUUID("scripts/scripting_config.json"), globals::aiConfigJSON, globals::g_ctx ? &globals::g_ctx->aiConfigJson : nullptr);
-        assignJson(util::getRawAssetPathNoUUID("scripts/ai_worldstate.json"), globals::aiWorldstateJSON, globals::g_ctx ? &globals::g_ctx->aiWorldstateJson : nullptr);
-        assignJson(util::getRawAssetPathNoUUID("scripts/ai_actions.json"), globals::aiActionsJSON, globals::g_ctx ? &globals::g_ctx->aiActionsJson : nullptr);
-
-        {
-            namespace fs = std::filesystem;
-            const auto uiStringsPath = util::getRawAssetPathNoUUID("raws/ui_strings.json");
-            if (fs::exists(uiStringsPath) && fs::file_size(uiStringsPath) > 0) {
-                jsonStream.open(uiStringsPath);
-                globals::uiStringsJSON = json::parse(jsonStream);
+            auto assignJson = [&](const std::string& path, json& target, json* ctxSlot) {
+                jsonStream.open(path);
+                target = json::parse(jsonStream);
                 jsonStream.close();
-                if (globals::g_ctx) globals::g_ctx->uiStringsJson = globals::uiStringsJSON;
+                if (ctxSlot && globals::g_ctx) {
+                    *ctxSlot = target;
+                }
+            };
+
+            assignJson(util::getRawAssetPathNoUUID("raws/colors.json"), globals::colorsJSON, globals::g_ctx ? &globals::g_ctx->colorsJson : nullptr);
+            assignJson(util::getRawAssetPathNoUUID("graphics/animations.json"), globals::animationsJSON, globals::g_ctx ? &globals::g_ctx->animationsJson : nullptr);
+            assignJson(util::getRawAssetPathNoUUID("config.json"), globals::configJSON, globals::g_ctx ? &globals::g_ctx->configJson : nullptr);
+            assignJson(util::getRawAssetPathNoUUID("scripts/scripting_config.json"), globals::aiConfigJSON, globals::g_ctx ? &globals::g_ctx->aiConfigJson : nullptr);
+            assignJson(util::getRawAssetPathNoUUID("scripts/ai_worldstate.json"), globals::aiWorldstateJSON, globals::g_ctx ? &globals::g_ctx->aiWorldstateJson : nullptr);
+            assignJson(util::getRawAssetPathNoUUID("scripts/ai_actions.json"), globals::aiActionsJSON, globals::g_ctx ? &globals::g_ctx->aiActionsJson : nullptr);
+
+            {
+                namespace fs = std::filesystem;
+                const auto uiStringsPath = util::getRawAssetPathNoUUID("raws/ui_strings.json");
+                if (fs::exists(uiStringsPath) && fs::file_size(uiStringsPath) > 0) {
+                    jsonStream.open(uiStringsPath);
+                    globals::uiStringsJSON = json::parse(jsonStream);
+                    jsonStream.close();
+                    if (globals::g_ctx) globals::g_ctx->uiStringsJson = globals::uiStringsJSON;
+                }
             }
-        }
 
-        {
-            namespace fs = std::filesystem;
-            const auto ninePatchPath = util::getRawAssetPathNoUUID("raws/9patch.json");
-            if (fs::exists(ninePatchPath) && fs::file_size(ninePatchPath) > 0) {
-                jsonStream.open(ninePatchPath);
-                globals::ninePatchJSON = json::parse(jsonStream);
-                jsonStream.close();
-                if (globals::g_ctx) globals::g_ctx->ninePatchJson = globals::ninePatchJSON;
+            {
+                namespace fs = std::filesystem;
+                const auto ninePatchPath = util::getRawAssetPathNoUUID("raws/9patch.json");
+                if (fs::exists(ninePatchPath) && fs::file_size(ninePatchPath) > 0) {
+                    jsonStream.open(ninePatchPath);
+                    globals::ninePatchJSON = json::parse(jsonStream);
+                    jsonStream.close();
+                    if (globals::g_ctx) globals::g_ctx->ninePatchJson = globals::ninePatchJSON;
+                }
             }
+
+
+            // create map for fast draw access of sprites
+            // map filename to frame rectangle
+
+            loadInSpriteFramesFromJSON();
+
+            loadColorsFromJSON();
+
+
+
+            // dump uuids to a file for debugging & reference (dev builds only)
+            const bool skipDump = (SKIP_UUID_DUMP_DEFAULT != 0) || envFlagSet("SKIP_UUID_DUMP") || globals::getReleaseMode();
+            if (!skipDump) {
+                uuid::dump_to_json(util::getRawAssetPathNoUUID("all_uuids.json #auto_generated #verified.json"));
+            } else {
+                SPDLOG_INFO("Skipping UUID dump ({}).", (SKIP_UUID_DUMP_DEFAULT != 0) ? "CMake default" : (globals::getReleaseMode() ? "release mode" : "env SKIP_UUID_DUMP"));
+            }
+        } catch (const std::exception& e) {
+            bus.publish(events::LoadingStageCompleted{"load_json_data", false, e.what()});
+            throw;
         }
 
-
-        // create map for fast draw access of sprites
-        // map filename to frame rectangle
-
-        loadInSpriteFramesFromJSON();
-
-        loadColorsFromJSON();
-
-        
-
-        // dump uuids to a file for debugging & reference (dev builds only)
-        const bool skipDump = (SKIP_UUID_DUMP_DEFAULT != 0) || envFlagSet("SKIP_UUID_DUMP") || globals::getReleaseMode();
-        if (!skipDump) {
-            uuid::dump_to_json(util::getRawAssetPathNoUUID("all_uuids.json #auto_generated #verified.json"));
-        } else {
-            SPDLOG_INFO("Skipping UUID dump ({}).", (SKIP_UUID_DUMP_DEFAULT != 0) ? "CMake default" : (globals::getReleaseMode() ? "release mode" : "env SKIP_UUID_DUMP"));
-        }
+        bus.publish(events::LoadingStageCompleted{"load_json_data", true, {}});
     }
 
     void loadAnimationsFromJSON()
     {
-        for (auto &animation : globals::animationsJSON.items())
-        {
-
-            SPDLOG_DEBUG("Starting load animation {} with UUID: {}", animation.key(), uuid::add(animation.key()));
-            AnimationObject ac{};
-
-            // use uuid for animation id
-            auto uuid = uuid::add(animation.key());
-
-            ac.id = animation.key();
-            ac.uuid = uuid;
-            ac.currentAnimIndex = 0;
-
-            for (auto &frameData : animation.value().at("frames"))
+        auto& bus = globals::getEventBus();
+        bus.publish(events::LoadingStageStarted{"load_animations"});
+        try {
+            for (auto &animation : globals::animationsJSON.items())
             {
-                // skip char_cp437 reading for now (utf8 issues)
-                uuid::add("NONE"); // for color value NONE
 
-                SpriteComponentASCII frame{};
+                SPDLOG_DEBUG("Starting load animation {} with UUID: {}", animation.key(), uuid::add(animation.key()));
+                AnimationObject ac{};
 
-                string colorNameStringFG = frameData.at("fg_color").get<string>();
-                string colorNameStringBG = frameData.at("bg_color").get<string>();
+                // use uuid for animation id
+                auto uuid = uuid::add(animation.key());
 
-                colorNameStringFG = uuid::lookup(colorNameStringFG);
-                colorNameStringBG = uuid::lookup(colorNameStringBG);
+                ac.id = animation.key();
+                ac.uuid = uuid;
+                ac.currentAnimIndex = 0;
 
-                if (colorNameStringBG == uuid::lookup("NONE"))
+                for (auto &frameData : animation.value().at("frames"))
                 {
-                    frame.noBackgroundColor = true;
+                    // skip char_cp437 reading for now (utf8 issues)
+                    uuid::add("NONE"); // for color value NONE
+
+                    SpriteComponentASCII frame{};
+
+                    string colorNameStringFG = frameData.at("fg_color").get<string>();
+                    string colorNameStringBG = frameData.at("bg_color").get<string>();
+
+                    colorNameStringFG = uuid::lookup(colorNameStringFG);
+                    colorNameStringBG = uuid::lookup(colorNameStringBG);
+
+                    if (colorNameStringBG == uuid::lookup("NONE"))
+                    {
+                        frame.noBackgroundColor = true;
+                    }
+                    else
+                    {
+                        frame.bgColor = util::getColor(colorNameStringBG);
+                    }
+
+                    if (colorNameStringFG == uuid::lookup("NONE"))
+                    {
+                        // frame.noForegroundColor = false;
+                        frame.fgColor = WHITE; // just retain original sprite color
+                    }
+                    else
+                    {
+                        frame.fgColor = util::getColor(colorNameStringFG);
+                    }
+
+                    frame.fgColor = util::getColor(frameData.at("fg_color"));
+                    frame.bgColor = util::getColor(frameData.at("bg_color"));
+                    frame.spriteUUID = frameData.at("sprite_UUID");
+
+                    using namespace snowhouse;
+                    const auto spriteFrameData = getSpriteFrame(frame.spriteUUID, globals::g_ctx);
+                    AssertThat(spriteFrameData.frame.width, IsGreaterThan(0));
+                    frame.spriteData.frame = spriteFrameData.frame;
+                    //TODO: need to load in the atlas to the texturemap
+                    auto atlasUUID = spriteFrameData.atlasUUID;
+                    if (auto* tex = resolveAtlasTexture(atlasUUID)) {
+                        frame.spriteData.texture = tex;
+                    } else {
+                        SPDLOG_ERROR("Texture atlas '{}' not found while loading animation frame '{}'", atlasUUID, frame.spriteUUID);
+                    }
+                    frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(spriteFrameData);
+
+                    double duration = frameData.at("duration_seconds");
+
+                    ac.animationList.emplace_back(frame, duration);
+
                 }
-                else
-                {
-                    frame.bgColor = util::getColor(colorNameStringBG);
-                }
 
-                if (colorNameStringFG == uuid::lookup("NONE"))
-                {
-                    // frame.noForegroundColor = false;
-                    frame.fgColor = WHITE; // just retain original sprite color
-                }
-                else
-                {
-                    frame.fgColor = util::getColor(colorNameStringFG);
-                }
-
-                frame.fgColor = util::getColor(frameData.at("fg_color"));
-                frame.bgColor = util::getColor(frameData.at("bg_color"));
-                frame.spriteUUID = frameData.at("sprite_UUID");
-
-                using namespace snowhouse;
-                const auto spriteFrameData = getSpriteFrame(frame.spriteUUID, globals::g_ctx);
-                AssertThat(spriteFrameData.frame.width, IsGreaterThan(0));
-                frame.spriteData.frame = spriteFrameData.frame;
-                //TODO: need to load in the atlas to the texturemap
-                auto atlasUUID = spriteFrameData.atlasUUID;
-                if (auto* tex = resolveAtlasTexture(atlasUUID)) {
-                    frame.spriteData.texture = tex;
-                } else {
-                    SPDLOG_ERROR("Texture atlas '{}' not found while loading animation frame '{}'", atlasUUID, frame.spriteUUID);
-                }
-                frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(spriteFrameData);
-
-                double duration = frameData.at("duration_seconds");
-
-                ac.animationList.emplace_back(frame, duration);
-
+                globals::getAnimationsMap()[ac.id] = ac;
             }
-
-            globals::getAnimationsMap()[ac.id] = ac;
+        } catch (const std::exception& e) {
+            bus.publish(events::LoadingStageCompleted{"load_animations", false, e.what()});
+            throw;
         }
+
+        bus.publish(events::LoadingStageCompleted{"load_animations", true, {}});
     }
 
     void loadColorsFromJSON()
@@ -565,6 +584,9 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
      */
     auto loadTextures() -> void {
         namespace fs = std::filesystem;
+        auto& bus = globals::getEventBus();
+        bus.publish(events::LoadingStageStarted{"load_textures"});
+        try {
         const std::string graphicsDir = util::getRawAssetPathNoUUID("graphics/");
 
         for (const auto& entry : fs::directory_iterator(graphicsDir)) {
@@ -608,15 +630,28 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
             }
         }
         
+        } catch (const std::exception& e) {
+            bus.publish(events::LoadingStageCompleted{"load_textures", false, e.what()});
+            throw;
+        }
+        bus.publish(events::LoadingStageCompleted{"load_textures", true, {}});
         
     }
 
     auto loadSounds() -> void {
+        auto& bus = globals::getEventBus();
+        bus.publish(events::LoadingStageStarted{"load_sounds"});
+        try {
         InitAudioDevice();
         SetAudioStreamBufferSizeDefault(4096);
         if (globals::g_ctx && globals::g_ctx->audio) {
             globals::g_ctx->audio->deviceInitialized = true;
         }
+        } catch (const std::exception& e) {
+            bus.publish(events::LoadingStageCompleted{"load_sounds", false, e.what()});
+            throw;
+        }
+        bus.publish(events::LoadingStageCompleted{"load_sounds", true, {}});
     }
     
     // Iterate over all shapes stored in a ColliderComponent (main + extras).
@@ -754,7 +789,7 @@ static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
         // }
 
         SPDLOG_DEBUG("Loading finished.");
-        globals::currentGameState = GameState::MAIN_MENU;
+        globals::setCurrentGameState(GameState::MAIN_MENU);
     }
 
     // Function to save the UUID map to a file

@@ -29,6 +29,7 @@
 #include "../systems/anim_system.hpp"
 #include "../systems/collision/Quadtree.h"
 #include "../systems/localization/localization.hpp"
+#include "event_bus.hpp"
 
 
 #include "third_party/rlImGui/imgui.h" // raylib imGUI binding
@@ -128,6 +129,7 @@ namespace globals
     
     extern bool useImGUI; // set to true to use imGUI for debugging
     bool& getUseImGUI();
+    void setUseImGUI(bool v);
     
     extern std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
     std::shared_ptr<PhysicsManager>& getPhysicsManagerPtr();
@@ -139,8 +141,11 @@ namespace globals
 
     extern float globalUIScaleFactor; // scale factor for UI elements
     float& getGlobalUIScaleFactor();
+    void setGlobalUIScaleFactor(float v);
     
     extern bool drawDebugInfo, drawPhysicsDebug; // set to true to allow debug drawing of transforms
+    void setDrawDebugInfo(bool v);
+    void setDrawPhysicsDebug(bool v);
     
     extern const float UI_PROGRESS_BAR_INSET_PIXELS; // inset for progress bar fill (the portion that fills the bar)
     
@@ -372,8 +377,10 @@ namespace globals
     };
 
     
-
+    
     extern Settings settings;
+    Settings& getSettings();
+    void setCurrentGameState(GameState state);
 
     struct FontData
     {
@@ -402,9 +409,10 @@ namespace globals
 
     extern bool releaseMode; // set to true to disable debug features
     bool& getReleaseMode();
-
+    
     extern bool isGamePaused;
     bool& getIsGamePaused();
+    void setIsGamePaused(bool v);
 
     extern bool screenWipe; // true when the screen is being wiped (transitioning between scenes)
     bool& getScreenWipe();
@@ -413,6 +421,8 @@ namespace globals
     
     // ECS registry
     extern entt::registry registry;
+
+    event_bus::EventBus& getEventBus();
 
     // Helpers to bridge cursor entity while migrating to EngineContext.
     entt::entity getCursorEntity();
@@ -430,4 +440,33 @@ namespace globals
 
     extern void updateGlobalVariables();
     extern Vector2 getWorldMousePosition();
+
+    void setReleaseMode(bool v);
+    void recordMouseClick(Vector2 pos, int button);
+    bool hasLastMouseClick();
+    Vector2 getLastMouseClickPosition();
+    int getLastMouseClickButton();
+    void recordMouseClick(Vector2 pos, int button, entt::entity target);
+    entt::entity getLastMouseClickTarget();
+    entt::entity getLastCollisionA();
+    entt::entity getLastCollisionB();
+    void setLastCollision(entt::entity a, entt::entity b);
+    entt::entity getLastUIFocus();
+    void setLastUIFocus(entt::entity e);
+    entt::entity getLastUIButtonActivated();
+    void setLastUIButtonActivated(entt::entity e);
+    const std::string& getLastLoadingStage();
+    bool getLastLoadingStageSuccess();
+    void setLastLoadingStage(const std::string& stageId, bool success);
+
+    struct CollisionNote {
+        entt::entity a{entt::null};
+        entt::entity b{entt::null};
+        bool began{true};
+        Vector2 point{0.0f, 0.0f};
+        double timestamp{0.0};
+    };
+
+    const std::vector<CollisionNote>& getCollisionLog();
+    void pushCollisionLog(const CollisionNote& note);
 }

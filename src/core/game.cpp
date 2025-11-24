@@ -38,6 +38,8 @@
 #include "../systems/shaders/shader_system.hpp"
 #include "../systems/shaders/shader_pipeline.hpp"
 #include "../systems/event/event_system.hpp"
+#include "misc_fuctions.hpp"
+#include "systems/ui/ui_data.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/text/textVer2.hpp"
 #include "../systems/text/static_ui_text.hpp"
@@ -48,6 +50,8 @@
 #include "../systems/collision/Quadtree.h"
 #include "../systems/scripting/scripting_functions.hpp"
 #include "../systems/scripting/scripting_system.hpp"
+#include "core/events.hpp"
+#include "systems/transform/transform_functions.hpp"
 #include "../systems/ai/ai_system.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/camera/camera_manager.hpp"
@@ -989,6 +993,126 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
     // specific to a game project
     auto init() -> void
     {
+        static bool subscriptionsInstalled = false;
+        if (!subscriptionsInstalled) {
+            subscriptionsInstalled = true;
+            auto& bus = globals::getEventBus();
+            bus.subscribe<events::MouseClicked>([](const events::MouseClicked& ev) {
+                entt::entity target = ev.target;
+                if (target == entt::null) {
+                    auto& state = globals::getInputState();
+                    auto& registry = globals::getRegistry();
+                    if (registry.valid(state.current_designated_hover_target)) {
+                        target = state.current_designated_hover_target;
+                    } else if (registry.valid(state.cursor_focused_target)) {
+                        target = state.cursor_focused_target;
+                    }
+                }
+                globals::recordMouseClick(ev.position, ev.button, target);
+                // Invoke click handler if the target is clickable.
+                if (target != entt::null) {
+                    auto& registry = globals::getRegistry();
+                    if (registry.valid(target) && registry.any_of<transform::GameObject>(target)) {
+                        auto& node = registry.get<transform::GameObject>(target);
+                        if (node.state.clickEnabled) {
+                            transform::HandleClick(&registry, target);
+                        }
+                    }
+                }
+                // Update cursor overlay for tile picking/debug visualization.
+                globals::getGlobalShaderUniforms().set("tile_grid_overlay", "mouse_position",
+                    Vector2{ev.position.x / globals::VIRTUAL_WIDTH, ev.position.y / globals::VIRTUAL_HEIGHT});
+            });
+            bus.subscribe<events::GameStateChanged>([](const events::GameStateChanged& ev) {
+                SPDLOG_INFO("Game state changed: {} -> {}", (int)ev.oldState, (int)ev.newState);
+            });
+            bus.subscribe<events::KeyPressed>([](const events::KeyPressed& ev) {
+                if (ev.keyCode == KEY_P) {
+                    globals::setIsGamePaused(!globals::getIsGamePaused());
+                    SPDLOG_INFO("Pause toggled via event bus: {}", globals::getIsGamePaused());
+                } else if (ev.keyCode == KEY_F1) {
+                    globals::setUseImGUI(!globals::getUseImGUI());
+                    SPDLOG_INFO("ImGui toggled via event bus: {}", globals::getUseImGUI());
+                } else if (ev.keyCode == KEY_F2) {
+                    globals::setReleaseMode(!globals::getReleaseMode());
+                    SPDLOG_INFO("Release mode toggled via event bus: {}", globals::getReleaseMode());
+                } else if (ev.keyCode == KEY_F3) {
+                    globals::setDrawDebugInfo(!globals::drawDebugInfo);
+                    SPDLOG_INFO("Debug draw toggled via event bus: {}", globals::drawDebugInfo);
+                } else if (ev.keyCode == KEY_F4) {
+                    globals::setDrawPhysicsDebug(!globals::drawPhysicsDebug);
+                    SPDLOG_INFO("Physics debug toggled via event bus: {}", globals::drawPhysicsDebug);
+                }
+            });
+            bus.subscribe<events::UIScaleChanged>([](const events::UIScaleChanged& ev) {
+                game::OnUIScaleChanged();
+            });
+            bus.subscribe<events::UIElementFocused>([](const events::UIElementFocused& ev) {
+                globals::setLastUIFocus(ev.element);
+                if (ev.element != entt::null) {
+                    SPDLOG_DEBUG("UI focus changed to entity {}", static_cast<int>(ev.element));
+                } else {
+                    SPDLOG_DEBUG("UI focus cleared");
+                }
+            });
+            bus.subscribe<events::UIButtonActivated>([](const events::UIButtonActivated& ev) {
+                globals::setLastUIButtonActivated(ev.element);
+                SPDLOG_DEBUG("UI button activated on entity {} via button {}", static_cast<int>(ev.element), ev.button);
+                auto& registry = globals::getRegistry();
+                if (registry.valid(ev.element) && registry.any_of<ui::UIConfig>(ev.element)) {
+                    auto& cfg = registry.get<ui::UIConfig>(ev.element);
+                    if (cfg.buttonCallback) {
+                        try {
+                            (*cfg.buttonCallback)();
+                        } catch (const std::exception& e) {
+                            SPDLOG_ERROR("UI button callback threw: {}", e.what());
+                        } catch (...) {
+                            SPDLOG_ERROR("UI button callback threw unknown exception");
+                        }
+                    }
+                }
+            });
+            bus.subscribe<events::LoadingStageStarted>([](const events::LoadingStageStarted& ev) {
+                globals::setLastLoadingStage(ev.stageId, true);
+                globals::worldGenCurrentStep = ev.stageId;
+                globals::loadingStages[globals::loadingStateIndex++] = ev.stageId + " (start)";
+                SPDLOG_INFO("Loading stage started: {}", ev.stageId);
+            });
+            bus.subscribe<events::LoadingStageCompleted>([](const events::LoadingStageCompleted& ev) {
+                globals::setLastLoadingStage(ev.stageId, ev.success);
+                globals::worldGenCurrentStep = ev.stageId;
+                std::string msg = ev.stageId + (ev.success ? " (done)" : " (failed: " + ev.error + ")");
+                globals::loadingStages[globals::loadingStateIndex++] = msg;
+                globals::getGlobalShaderUniforms().set("loading_progress", "stage",
+                    Vector2{static_cast<float>(globals::loadingStateIndex), ev.success ? 1.0f : 0.0f});
+                SPDLOG_INFO("Loading stage completed: {} (success={}, error='{}')", ev.stageId, ev.success, ev.error);
+            });
+            bus.subscribe<events::CollisionStarted>([](const events::CollisionStarted& ev) {
+                // Update a debug uniform so shaders can react to collisions (e.g., flash).
+                globals::getGlobalShaderUniforms().set("collision_flash", "last_hit",
+                    Vector2{(float)entt::to_integral(ev.entityA), (float)entt::to_integral(ev.entityB)});
+                globals::setLastCollision(ev.entityA, ev.entityB);
+                // Provide immediate haptic feedback for collisions.
+                globals::vibration = std::min(1.0f, globals::vibration + 0.5f);
+                globals::pushCollisionLog(globals::CollisionNote{
+                    ev.entityA,
+                    ev.entityB,
+                    true,
+                    ev.point,
+                    main_loop::mainLoop.totaltimeTimer
+                });
+            });
+            bus.subscribe<events::CollisionEnded>([](const events::CollisionEnded& ev) {
+                globals::setLastCollision(ev.entityA, ev.entityB);
+                globals::pushCollisionLog(globals::CollisionNote{
+                    ev.entityA,
+                    ev.entityB,
+                    false,
+                    Vector2{0.0f, 0.0f},
+                    main_loop::mainLoop.totaltimeTimer
+                });
+            });
+        }
         
         // // testing
         // auto textTestDef = static_ui_text_system::getTextFromString("[Hello here's a longer test\nNow test this](id=stringID;color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](id=imageID;color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
@@ -1242,7 +1366,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         
         if (IsKeyDown(KEY_PERIOD)) {
             // show/hide imgui
-            globals::useImGUI = !globals::useImGUI;
+            globals::setUseImGUI(!globals::getUseImGUI());
         }
         
         if (IsKeyPressed(KEY_TAB)) {
@@ -1802,9 +1926,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         const float offsetY = (screenH - outH) * 0.5f;
         
         // store the offests for letterbox
-        globals::finalLetterboxOffsetX = offsetX;
-        globals::finalLetterboxOffsetY = offsetY;
-        globals::finalRenderScale = scale;
+        globals::setLetterboxOffsetX(offsetX);
+        globals::setLetterboxOffsetY(offsetY);
+        globals::setFinalRenderScale(scale);
 
         // set up layers (needs to happen every frame)
         
@@ -2107,9 +2231,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
             {
 #ifndef __EMSCRIPTEN__
-            if (globals::useImGUI) {
+            if (globals::getUseImGUI()) {
                 ZONE_SCOPED("Debug UI");
-                shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
+                shaders::ShowShaderEditorUI(globals::getGlobalShaderUniforms());
                 ShowDebugUI();
                 lua_hot_reload::draw_imgui(ai_system::masterStateLua);
             }

@@ -23,6 +23,7 @@
 #include "systems/timer/timer.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
 #include "core/engine_context.hpp"
+#include "core/events.hpp"
 
 #include "raylib.h"
 #include "raymath.h"
@@ -138,20 +139,30 @@ namespace input
 
     auto PollInput(entt::registry &registry, InputState &inputState, float dt) -> void
     {
+        auto& bus = globals::getEventBus();
 
         // keyboard input polling
         // ---------------- Keyboard Input ----------------
+        static std::vector<bool> keyDownLastFrame(KEY_KP_EQUAL + 1, false);
         for (int key = 0; key <= KEY_KP_EQUAL; key++)
         {
             if (IsKeyDown(key))
             {
                 ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::KEYBOARD);
                 ProcessKeyboardKeyDown(inputState, (KeyboardKey)key);
+                if (!keyDownLastFrame[key]) {
+                    keyDownLastFrame[key] = true;
+                    const bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+                    const bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+                    const bool alt = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT);
+                    bus.publish(events::KeyPressed{key, shift, ctrl, alt});
+                }
             }
             if (IsKeyReleased(key))
             {
                 ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::KEYBOARD);
                 ProcessKeyboardKeyRelease(inputState, (KeyboardKey)key);
+                keyDownLastFrame[key] = false;
             }
         }
 
@@ -179,6 +190,7 @@ namespace input
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
             Vector2 mousePos = globals::getScaledMousePositionCached();
             EnqueueLeftMouseButtonPress(inputState, mousePos.x, mousePos.y);
+            bus.publish(events::MouseClicked{mousePos, MOUSE_LEFT_BUTTON});
         }
         if (mouseDetectDownFirstFrameRight)
         {
@@ -186,6 +198,7 @@ namespace input
             Vector2 mousePos = globals::getScaledMousePositionCached();
             // TODO: right mouse handling isn't really configured, need to add
             EnqueRightMouseButtonPress(inputState, mousePos.x, mousePos.y);
+            bus.publish(events::MouseClicked{mousePos, MOUSE_RIGHT_BUTTON});
         }
         if (mosueLeftDownCurrentFrame == false && mouseLeftDownLastFrame == true)
         { // release only for left button
@@ -2185,6 +2198,7 @@ namespace input
     // called by update() function
     void ProcessLeftMouseButtonRelease(entt::registry &registry, InputState &state, float x, float y)
     {
+        auto& bus = globals::getEventBus();
         // Default to current cursor position if x or y is not provided
         if (x < 0.0f)
             x = state.cursor_position.x;
@@ -2226,6 +2240,19 @@ namespace input
         }
         
         input::DispatchRaw(state, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/false, /*value*/0.f);
+
+        // Publish the click event with resolved target for systems that listen via the bus.
+        bus.publish(events::MouseClicked{
+            {x, y},
+            MOUSE_LEFT_BUTTON,
+            state.cursor_up_target
+        });
+
+        // Notify UI subscribers when a UI element was activated via mouse.
+        if (registry.valid(state.cursor_up_target) &&
+            registry.any_of<ui::UIElementComponent>(state.cursor_up_target)) {
+            bus.publish(events::UIButtonActivated{state.cursor_up_target, MOUSE_LEFT_BUTTON});
+        }
     }
 
     bool IsNodeFocusable(entt::registry &registry, InputState &state, entt::entity entity)
@@ -2314,6 +2341,8 @@ namespace input
     // focus only works for controller input, when focus interrupt is not enabled, and when the game is not paused, and the input isn't locked.
     void UpdateFocusForRelevantNodes(entt::registry &registry, InputState &state, std::optional<std::string> dir)
     {
+        auto& bus = globals::getEventBus();
+        const entt::entity prevFocused = state.cursor_focused_target;
         
         // -----------------------------------------------------------------------------
         // Controller override integration
@@ -2338,6 +2367,9 @@ namespace input
                 registry.get<transform::GameObject>(state.cursor_focused_target).state.isBeingFocused = false;
             }
             state.cursor_focused_target = entt::null;
+            if (state.cursor_focused_target != prevFocused) {
+                bus.publish(events::UIElementFocused{state.cursor_focused_target});
+            }
             return;
         }
 
@@ -2615,6 +2647,10 @@ namespace input
         {
             auto &focused_node = registry.get<transform::GameObject>(state.cursor_focused_target);
             focused_node.state.isBeingFocused = true;
+        }
+
+        if (state.cursor_focused_target != prevFocused) {
+            bus.publish(events::UIElementFocused{state.cursor_focused_target});
         }
     }
 

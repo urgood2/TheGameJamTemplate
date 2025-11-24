@@ -5121,11 +5121,11 @@ void renderSliceOffscreenFromDrawList(
     ClearBackground({0, 0, 0, 0});
     BeginShaderMode(sh);
     if (pass.injectAtlasUniforms)
-      injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName,
+      injectAtlasUniforms(globals::getGlobalShaderUniforms(), pass.shaderName,
                           {0, 0, renderW, renderH}, {renderW, renderH});
     if (pass.customPrePassFunction)
       pass.customPrePassFunction();
-    TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
+    TryApplyUniforms(sh, globals::getGlobalShaderUniforms(), pass.shaderName);
     Rectangle sourceRect = {
         0.0f, // x
         (float)shader_pipeline::front().texture.height -
@@ -5199,11 +5199,11 @@ void renderSliceOffscreenFromDrawList(
     layer::render_stack_switch_internal::Push(shader_pipeline::front());
     BeginShaderMode(sh);
     if (ov.injectAtlasUniforms)
-      injectAtlasUniforms(globals::globalShaderUniforms, ov.shaderName,
+      injectAtlasUniforms(globals::getGlobalShaderUniforms(), ov.shaderName,
                           {0, 0, renderW, renderH}, {renderW, renderH});
     if (ov.customPrePassFunction)
       ov.customPrePassFunction();
-    TryApplyUniforms(sh, globals::globalShaderUniforms, ov.shaderName);
+    TryApplyUniforms(sh, globals::getGlobalShaderUniforms(), ov.shaderName);
     RenderTexture2D &src =
         (ov.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
             ? baseRT

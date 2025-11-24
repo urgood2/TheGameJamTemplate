@@ -5,14 +5,16 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <vector>
 
 #include "entt/entt.hpp"
 #include "raylib.h"
 #include "sol/sol.hpp"
 
-#include "core/globals.hpp"
+#include "core/event_bus.hpp"
 #include "core/globals.hpp"
 #include "components/graphics.hpp"
+#include "systems/shaders/shader_system.hpp"
 
 namespace input {
     struct InputState;
@@ -34,6 +36,7 @@ struct EngineContext {
     sol::state lua;
 
     std::shared_ptr<PhysicsManager> physicsManager{};
+    event_bus::EventBus eventBus;
 
     // Resource caches (owned)
     std::map<std::string, Texture2D> textureAtlas;
@@ -55,8 +58,42 @@ struct EngineContext {
 
     // Mutable state
     GameState currentGameState{GameState::LOADING_SCREEN};
+    bool isGamePaused{false};
+    bool useImGUI{true};
+    bool drawDebugInfo{false};
+    bool drawPhysicsDebug{false};
+    bool releaseMode{false};
+    float finalRenderScale{0.0f};
+    float finalLetterboxOffsetX{0.0f};
+    float finalLetterboxOffsetY{0.0f};
+    float globalUIScaleFactor{1.0f};
+    float uiPadding{4.0f};
+    globals::Settings settings{};
+    float cameraDamping{0.4f};
+    float cameraStiffness{0.99f};
+    Vector2 cameraVelocity{0.0f, 0.0f};
+    Vector2 nextCameraTarget{0.0f, 0.0f};
+    int worldWidth{0};
+    int worldHeight{0};
+    shaders::ShaderUniformComponent shaderUniforms{};
+    std::vector<std::vector<bool>> visibilityMap{};
+    bool useLineOfSight{false};
+    float timerReal{0.0f};
+    float timerTotal{0.0f};
+    long framesMove{0};
     Vector2 worldMousePosition{0.0f, 0.0f};
     Vector2 scaledMousePosition{0.0f, 0.0f};
+    Vector2 lastMouseClick{0.0f, 0.0f};
+    int lastMouseButton{-1};
+    bool hasLastMouseClick{false};
+    entt::entity lastMouseClickTarget{entt::null};
+    bool hasLastMouseClickTarget{false};
+    entt::entity lastCollisionA{entt::null};
+    entt::entity lastCollisionB{entt::null};
+    entt::entity lastUIFocus{entt::null};
+    entt::entity lastUIButtonActivated{entt::null};
+    std::string lastLoadingStage{};
+    bool lastLoadingStageSuccess{true};
     entt::entity cursor{entt::null};
     entt::entity overlayMenu{entt::null};
     entt::entity gameWorldContainerEntity{entt::null};

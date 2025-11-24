@@ -20,10 +20,69 @@ Lightweight guidance for adding guardrails during the EngineContext migration.
 - When disabling a feature (e.g., post-process shader), log once and continue.
 - Propagate context: functions taking `EngineContext&` should not reach for globals during recovery.
 
+## Exception + Result Patterns
+- Exception types (C++): `EngineException`, `AssetLoadException`, `ConfigException`, `PhysicsException` (derive from `std::runtime_error`).
+- Result wrapper (recoverable paths):
+  ```cpp
+  template<typename T, typename E = std::string>
+  class Result {
+      std::variant<T, E> data;
+      bool ok;
+  public:
+      Result(T v) : data(std::move(v)), ok(true) {}
+      Result(E e) : data(std::move(e)), ok(false) {}
+      bool isOk() const { return ok; }
+      bool isErr() const { return !ok; }
+      T&& valueOrThrow() {
+          if (!ok) throw std::runtime_error(std::get<E>(data));
+          return std::move(std::get<T>(data));
+      }
+      T valueOr(T def) const { return ok ? std::get<T>(data) : def; }
+      const E& error() const { return std::get<E>(data); }
+  };
+  ```
+- Logging helper:
+  ```cpp
+  template<typename Fn>
+  auto tryWithLog(Fn&& fn, std::string ctx)
+      -> Result<decltype(fn()), std::string> {
+      try { return Result(fn()); }
+      catch (const std::exception& e) {
+          SPDLOG_ERROR("[{}] {}", ctx, e.what());
+          return Result<decltype(fn()), std::string>(e.what());
+      }
+  }
+  ```
+- Retry helper:
+  ```cpp
+  template<typename T>
+  Result<T, std::string> loadWithRetry(std::function<Result<T>()> loader,
+                                       int maxRetries = 3,
+                                       std::chrono::milliseconds delay = 100ms) {
+      for (int i = 0; i < maxRetries; ++i) {
+          if (auto r = loader(); r.isOk()) return r;
+          SPDLOG_WARN("retry {}/{}", i + 1, maxRetries);
+          std::this_thread::sleep_for(delay);
+      }
+      return loader(); // final attempt
+  }
+  ```
+
 ## Lua Boundary
 - Wrap C++->Lua calls; catch `sol::error` and log script name + function + message.
 - Provide safe stubs for missing Lua functions when reasonable; otherwise bubble failure.
 - Never swallow errors during init; during runtime, log and degrade gracefully where safe.
+- Example wrapper:
+  ```cpp
+  template<typename... Args>
+  auto safeLuaCall(sol::state& lua, const std::string& fn, Args&&... args)
+      -> Result<sol::object, std::string> {
+      sol::protected_function f = lua[fn];
+      auto res = f(std::forward<Args>(args)...);
+      if (!res.valid()) return Result<sol::object, std::string>(sol::error(res).what());
+      return Result<sol::object, std::string>(res);
+  }
+  ```
 
 ## Asset Loading
 - Required asset missing: log + fail init; surface message to caller/test.
@@ -34,6 +93,7 @@ Lightweight guidance for adding guardrails during the EngineContext migration.
 - Add unit tests for Result-returning functions; assert both success and failure paths.
 - Add a smoke test that fails if required assets/configs are missing.
 - In tests, prefer injecting mock/fallback assets via EngineContext rather than touching globals.
+- Add config validation tests for required fields (e.g., `screenWidth`, `fonts`).
 
 ## Logging Levels
 - `LOG_ERROR`: crashes or undefined behavior if ignored.
@@ -43,3 +103,4 @@ Lightweight guidance for adding guardrails during the EngineContext migration.
 ## Ownership & Lifetimes
 - If recovery requires freeing/reallocating resources, document the owner; avoid raw-pointer escape hatches without comments.
 - Do not retry by recreating EngineContext mid-frame; tear down and reinit instead.
+- If recovery frees and reallocates GPU/physics objects, state ownership and thread expectations inline.

@@ -140,9 +140,9 @@ entt::entity alertUIBox{entt::null};
 entt::entity testInventory{entt::null};
 
 // lua function handles
-sol::function luaMainInitFunc;
-sol::function luaMainUpdateFunc;
-sol::function luaMainDrawFunc;
+sol::protected_function luaMainInitFunc;
+sol::protected_function luaMainUpdateFunc;
+sol::protected_function luaMainDrawFunc;
 
 
 float transitionShaderPositionVar = 0.f;
@@ -1294,10 +1294,15 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         luaMainUpdateFunc = ai_system::masterStateLua["main"]["update"];
         luaMainDrawFunc = ai_system::masterStateLua["main"]["draw"];
         
-        sol::protected_function_result result = luaMainInitFunc();
-        if (!result.valid()) {
-            sol::error err = result;
-            spdlog::error("Lua init failed: {}", err.what());
+        if (luaMainInitFunc.valid()) {
+            sol::protected_function_result result = luaMainInitFunc();
+            if (!result.valid()) {
+                sol::error err = result;
+                spdlog::error("Lua init failed: {}", err.what());
+                assert(false);
+            }
+        } else {
+            spdlog::error("Lua init function missing on master state");
             assert(false);
         }
         
@@ -1523,10 +1528,14 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         {
             ZONE_SCOPED("lua main update");
             // update lua main script
-            sol::protected_function_result result = luaMainUpdateFunc(delta);
-            if (!result.valid()) {
-                sol::error err = result;
-                spdlog::error("Lua update failed: {}", err.what());
+            if (luaMainUpdateFunc.valid()) {
+                sol::protected_function_result result = luaMainUpdateFunc(delta);
+                if (!result.valid()) {
+                    sol::error err = result;
+                    spdlog::error("Lua update failed: {}", err.what());
+                }
+            } else {
+                spdlog::error("Lua update function missing on master state");
             }
         }
         
@@ -1936,10 +1945,14 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         {
             ZONE_SCOPED("game::draw-lua draw main script");
             // update lua main script
-            sol::protected_function_result result = luaMainDrawFunc(dt);
-            if (!result.valid()) {
-                sol::error err = result;
-                spdlog::error("Lua draw failed: {}", err.what());
+            if (luaMainDrawFunc.valid()) {
+                sol::protected_function_result result = luaMainDrawFunc(dt);
+                if (!result.valid()) {
+                    sol::error err = result;
+                    spdlog::error("Lua draw failed: {}", err.what());
+                }
+            } else {
+                spdlog::error("Lua draw function missing on master state");
             }
         }
         

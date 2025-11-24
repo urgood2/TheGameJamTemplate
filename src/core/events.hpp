@@ -88,12 +88,19 @@ struct UIScaleChanged : public event_bus::Event {
 // Loading/progress
 struct LoadingStageStarted : public event_bus::Event {
     std::string stageId{};
+
+    LoadingStageStarted() = default;
+    explicit LoadingStageStarted(std::string id) : stageId(std::move(id)) {}
 };
 
 struct LoadingStageCompleted : public event_bus::Event {
     std::string stageId{};
     bool success{true};
     std::string error{};
+
+    LoadingStageCompleted() = default;
+    LoadingStageCompleted(std::string id, bool ok, std::string err = {})
+        : stageId(std::move(id)), success(ok), error(std::move(err)) {}
 };
 
 // Physics

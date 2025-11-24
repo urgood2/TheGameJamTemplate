@@ -35,6 +35,7 @@ namespace game {
     extern void SetFollowAnchorForEntity(std::shared_ptr<layer::Layer> layer, entt::entity e);
 
     extern void unload();
+    extern void resetLuaRefs();
 
     extern std::unordered_map<std::string, std::shared_ptr<layer::Layer>> s_layers;
 

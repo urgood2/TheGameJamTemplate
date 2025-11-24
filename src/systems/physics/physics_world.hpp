@@ -1061,6 +1061,16 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
     if (!cc)
       return;
 
+    // Remove any extra shapes first so the body can be safely detached.
+    for (auto &sub : cc->extraShapes) {
+      if (auto *s = sub.shape.get()) {
+        if (auto *sp = cpShapeGetSpace(s))
+          cpSpaceRemoveShape(sp, s);
+        cpShapeSetUserData(s, nullptr);
+      }
+    }
+    cc->extraShapes.clear();
+
     if (auto *s = cc->shape.get()) {
       if (auto *sp = cpShapeGetSpace(s))
         cpSpaceRemoveShape(sp, s);
@@ -1077,14 +1087,27 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
 
   void DetachPhysicsComponent(entt::entity e) {
     auto &cc = registry->get<physics::ColliderComponent>(e);
-    if (auto *s = cc.shape.get())
+
+    // Remove any extra shapes first so the body can be safely detached.
+    for (auto &sub : cc.extraShapes) {
+      if (auto *s = sub.shape.get()) {
+        if (auto *sp = cpShapeGetSpace(s))
+          cpSpaceRemoveShape(sp, s);
+        cpShapeSetUserData(s, nullptr);
+      }
+    }
+    cc.extraShapes.clear();
+
+    if (auto *s = cc.shape.get()) {
       if (auto *sp = cpShapeGetSpace(s))
         cpSpaceRemoveShape(sp, s);
-    if (auto *b = cc.body.get())
+      cpShapeSetUserData(s, nullptr);
+    }
+    if (auto *b = cc.body.get()) {
       if (auto *sp = cpBodyGetSpace(b))
         cpSpaceRemoveBody(sp, b);
-    cpShapeSetUserData(cc.shape.get(), nullptr);
-    cpBodySetUserData(cc.body.get(), nullptr);
+      cpBodySetUserData(b, nullptr);
+    }
     registry->remove<physics::ColliderComponent>(e);
   }
 

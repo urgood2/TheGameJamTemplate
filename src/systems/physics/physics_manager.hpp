@@ -234,10 +234,18 @@ public:
             // remove from old
             cpSpaceRemoveShape(srcSpace, cc.shape.get());
             cpSpaceRemoveBody (srcSpace, cc.body.get());
+            for (auto& sub : cc.extraShapes) {
+                if (auto* s = sub.shape.get())
+                    cpSpaceRemoveShape(srcSpace, s);
+            }
         }
         // add to new
         cpSpaceAddBody (dstRec->w->space, cc.body.get());
         cpSpaceAddShape(dstRec->w->space, cc.shape.get());
+        for (auto& sub : cc.extraShapes) {
+            if (auto* s = sub.shape.get())
+                cpSpaceAddShape(dstRec->w->space, s);
+        }
 
         R.emplace_or_replace<PhysicsWorldRef>(e, dst);
     }

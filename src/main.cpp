@@ -89,6 +89,7 @@ using json = nlohmann::json;
 #include "systems/palette/palette_quantizer.hpp"
 #include "systems/input/controller_nav.hpp"
 #include "core/events.hpp"
+#include "systems/event/event_system.hpp"
 
 
 
@@ -469,6 +470,12 @@ int main(void)
     shaders::unloadShaders();
     sound_system::Unload();
     shader_pipeline::ShaderPipelineUnload();
+
+    // Drop Lua-owned callbacks/handles before tearing down the Lua state.
+    timer::TimerSystem::clear_all_timers();
+    event_system::ClearAllListeners();
+    game::resetLuaRefs();
+    globals::getRegistry().clear();
 
     // Clean up Lua state before closing window to avoid crashes
     ai_system::cleanup();

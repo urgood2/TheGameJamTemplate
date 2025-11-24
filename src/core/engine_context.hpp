@@ -44,6 +44,8 @@ struct EngineContext {
     std::unordered_map<std::string, std::function<void()>> buttonCallbacks;
     input::InputState* inputState{nullptr}; // non-owning, mirrors legacy globals
     AudioContext* audio{nullptr}; // non-owning placeholder for audio state
+    float uiScaleFactor{1.0f};
+    float baseShadowExaggeration{1.8f};
     json configJson{};
     json colorsJson{};
     json uiStringsJson{};

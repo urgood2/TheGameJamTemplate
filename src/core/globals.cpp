@@ -57,6 +57,8 @@ namespace globals {
             g_ctx->worldMousePosition = {0.0f, 0.0f};
             g_ctx->scaledMousePosition = {0.0f, 0.0f};
             g_ctx->audio = &g_audioContext;
+            g_ctx->uiScaleFactor = globalUIScaleFactor;
+            g_ctx->baseShadowExaggeration = BASE_SHADOW_EXAGGERATION;
         }
     }
 
@@ -123,7 +125,10 @@ namespace globals {
     std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap{};
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements
-    float& getGlobalUIScaleFactor() { return globalUIScaleFactor; }
+    float& getGlobalUIScaleFactor() {
+        if (g_ctx) return g_ctx->uiScaleFactor;
+        return globalUIScaleFactor;
+    }
 
     bool drawDebugInfo = false, drawPhysicsDebug = false; // set to true to allow debug drawing of transforms
     
@@ -303,7 +308,10 @@ namespace globals {
 
     
     float BASE_SHADOW_EXAGGERATION = 1.8f; 
-    float& getBaseShadowExaggeration() { return BASE_SHADOW_EXAGGERATION; }
+    float& getBaseShadowExaggeration() {
+        if (g_ctx) return g_ctx->baseShadowExaggeration;
+        return BASE_SHADOW_EXAGGERATION;
+    }
 
     //TODO: document
     std::optional<int> REFRESH_FRAME_MASTER_CACHE{}; // used for transform calculations

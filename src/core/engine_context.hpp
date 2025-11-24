@@ -16,6 +16,10 @@
 #include "components/graphics.hpp"
 #include "systems/shaders/shader_system.hpp"
 
+namespace shaders {
+    struct ShaderUniformComponent;
+}
+
 namespace input {
     struct InputState;
 }
@@ -47,6 +51,10 @@ struct EngineContext {
     std::unordered_map<std::string, std::function<void()>> buttonCallbacks;
     input::InputState* inputState{nullptr}; // non-owning, mirrors legacy globals
     AudioContext* audio{nullptr}; // non-owning placeholder for audio state
+    float uiScaleFactor{1.0f};
+    float baseShadowExaggeration{1.8f};
+    shaders::ShaderUniformComponent* shaderUniformsPtr{nullptr}; // optional alias to global or owned
+    std::unique_ptr<shaders::ShaderUniformComponent> shaderUniformsOwned{};
     json configJson{};
     json colorsJson{};
     json uiStringsJson{};

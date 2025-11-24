@@ -7,13 +7,14 @@
 
 #if defined(__EMSCRIPTEN__)
     #include <GLES3/gl3.h>
-    #include <GLES2/gl2ext.h>
+#include <GLES2/gl2ext.h>
 #else
     // #include <GL/gl.h>
     // #include <GL/glext.h>
 #endif
 
 #include "../util/utilities.hpp"
+#include "../util/error_handling.hpp"
 
 #include "graphics.hpp"
 #include "globals.hpp"
@@ -1293,16 +1294,15 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         luaMainInitFunc = ai_system::masterStateLua["main"]["init"];
         luaMainUpdateFunc = ai_system::masterStateLua["main"]["update"];
         luaMainDrawFunc = ai_system::masterStateLua["main"]["draw"];
-        
-        if (luaMainInitFunc.valid()) {
-            sol::protected_function_result result = luaMainInitFunc();
-            if (!result.valid()) {
-                sol::error err = result;
-                spdlog::error("Lua init failed: {}", err.what());
-                assert(false);
-            }
-        } else {
+
+        if (!luaMainInitFunc.valid()) {
             spdlog::error("Lua init function missing on master state");
+            assert(false);
+        }
+
+        auto initResult = util::safeLuaCall(luaMainInitFunc, "lua main.init");
+        if (initResult.isErr()) {
+            spdlog::error("Lua init failed: {}", initResult.error());
             assert(false);
         }
         
@@ -1529,10 +1529,9 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             ZONE_SCOPED("lua main update");
             // update lua main script
             if (luaMainUpdateFunc.valid()) {
-                sol::protected_function_result result = luaMainUpdateFunc(delta);
-                if (!result.valid()) {
-                    sol::error err = result;
-                    spdlog::error("Lua update failed: {}", err.what());
+                auto luaUpdateResult = util::safeLuaCall(luaMainUpdateFunc, "lua main.update", delta);
+                if (luaUpdateResult.isErr()) {
+                    spdlog::error("Lua update failed: {}", luaUpdateResult.error());
                 }
             } else {
                 spdlog::error("Lua update function missing on master state");
@@ -1946,10 +1945,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             ZONE_SCOPED("game::draw-lua draw main script");
             // update lua main script
             if (luaMainDrawFunc.valid()) {
-                sol::protected_function_result result = luaMainDrawFunc(dt);
-                if (!result.valid()) {
-                    sol::error err = result;
-                    spdlog::error("Lua draw failed: {}", err.what());
+                auto luaDrawResult = util::safeLuaCall(luaMainDrawFunc, "lua main.draw", dt);
+                if (luaDrawResult.isErr()) {
+                    spdlog::error("Lua draw failed: {}", luaDrawResult.error());
                 }
             } else {
                 spdlog::error("Lua draw function missing on master state");
@@ -1994,7 +1992,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         // do transform debug drawing
         
         auto view = globals::getRegistry().view<transform::Transform, entity_gamestate_management::StateTag>();
-        if (globals::drawDebugInfo)
+        if (globals::getDrawDebugInfo())
             for (auto e : view)
             {
                 // check if the entity is active
@@ -2260,14 +2258,14 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             // 
             
             // draw rectangles indicating quad tree dimensions
-            if (globals::drawDebugInfo) {
+            if (globals::getDrawDebugInfo()) {
                 DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
                 
             }
             
             // -- draw physics world
             
-            if (globals::drawDebugInfo) {
+            if (globals::getDrawDebugInfo()) {
                 camera_manager::Begin(worldCamera->cam); // begin camera mode
                 DrawRectangle(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT, Fade(GREEN, 0.1f));
                 DrawText("Screen bounds", 5, 35, 20, GREEN);
@@ -2284,7 +2282,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             }
             
             
-            if (globals::drawPhysicsDebug) {
+            if (globals::getDrawPhysicsDebug()) {
                 camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
                 
                 

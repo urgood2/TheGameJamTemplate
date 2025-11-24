@@ -144,6 +144,8 @@ namespace globals
     void setGlobalUIScaleFactor(float v);
     
     extern bool drawDebugInfo, drawPhysicsDebug; // set to true to allow debug drawing of transforms
+    bool& getDrawDebugInfo();
+    bool& getDrawPhysicsDebug();
     void setDrawDebugInfo(bool v);
     void setDrawPhysicsDebug(bool v);
     

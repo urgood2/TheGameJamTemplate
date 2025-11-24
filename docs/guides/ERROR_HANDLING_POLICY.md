@@ -68,6 +68,12 @@ Lightweight guidance for adding guardrails during the EngineContext migration.
   }
   ```
 
+## Helper Usage (live code)
+- Asset loading: textures (`init.cpp`) and shaders (`shader_system.cpp`) use `tryWithLog`/`Result` to log and skip bad loads (guarding `id==0`); sound loading is guarded the same way.
+- Audio init: wrapped with `tryWithLog` to log and exit cleanly if device setup fails.
+- Lua calls: `safeLuaCall` wraps `main.init/update/draw`, AI action start/finish/abort hooks, timer callbacks, controller nav focus/select hooks, `camera.with` callbacks, layer queue/execute init lambdas, physics collision callbacks, script coroutines, and text wait coroutines; errors are logged with context instead of failing silently.
+- Controller navigation: group/global select callbacks prefer group handlers; both focus and select callbacks are wrapped in `safeLuaCall` and have regression tests.
+
 ## Lua Boundary
 - Wrap C++->Lua calls; catch `sol::error` and log script name + function + message.
 - Provide safe stubs for missing Lua functions when reasonable; otherwise bubble failure.
@@ -94,6 +100,7 @@ Lightweight guidance for adding guardrails during the EngineContext migration.
 - Add a smoke test that fails if required assets/configs are missing.
 - In tests, prefer injecting mock/fallback assets via EngineContext rather than touching globals.
 - Add config validation tests for required fields (e.g., `screenWidth`, `fonts`).
+- Coverage to keep: `safeLuaCall` focus/select in controller nav, sound config loader rejecting malformed JSON/types, tryWithLog success/failure paths.
 
 ## Logging Levels
 - `LOG_ERROR`: crashes or undefined behavior if ignored.

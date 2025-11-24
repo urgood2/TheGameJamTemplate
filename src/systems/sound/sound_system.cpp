@@ -2,6 +2,7 @@
 #include "nlohmann/json.hpp"
 
 #include "../../util/utilities.hpp"
+#include "util/error_handling.hpp"
 
 #include "sol/sol.hpp"
 
@@ -467,7 +468,13 @@ void StopAllMusic() {
                     std::string soundName = sound.key();
                     std::string filePath = sound.value().get<std::string>();
                     filePath = util::getRawAssetPathNoUUID("sounds/" + filePath);
-                    categories[categoryName].sounds[soundName] = LoadSound(filePath.c_str());
+                    auto soundResult = util::tryWithLog([&]() { return LoadSound(filePath.c_str()); },
+                                                        std::string("audio:load:") + soundName);
+                    if (soundResult.isErr() || soundResult.value().frameCount == 0) {
+                        SPDLOG_ERROR("[SOUND] Failed to load sound: {} from {}", soundName, filePath);
+                        continue;
+                    }
+                    categories[categoryName].sounds[soundName] = soundResult.value();
                     SPDLOG_DEBUG("[SOUND] Loaded sound: {} from {}", soundName, filePath);
                 }
             }

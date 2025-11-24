@@ -37,6 +37,7 @@
 #include "systems/ui/element.hpp"
 #include "systems/ui/ui_data.hpp"
 #include "systems/uuid/uuid.hpp"
+#include "util/error_handling.hpp"
 
 #include "systems/layer/layer_command_buffer_data.hpp"
 #include "systems/transform/transform_functions.hpp"
@@ -1690,16 +1691,15 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
             lyr,                                                               \
             [&](::layer::Cmd##cmd *c) {                                        \
               sol::protected_function pf(init);                                \
-              if (pf.valid()) {                                                \
-                sol::protected_function_result r = pf(c);                      \
-                if (!r.valid()) {                                              \
-                  sol::error e = r;                                            \
-                  std::fprintf(stderr, "[queue%s] init error: %s\n",           \
-                               #cmd, e.what());                                \
-                }                                                              \
-              } else {                                                         \
+              if (!pf.valid()) {                                               \
                 std::fprintf(stderr, "[queue%s] init is not a function\n",     \
                                #cmd);                                          \
+                return;                                                        \
+              }                                                                \
+              auto result = util::safeLuaCall(pf, std::string("queue") + #cmd, c); \
+              if (result.isErr()) {                                            \
+                std::fprintf(stderr, "[queue%s] init error: %s\n", #cmd,       \
+                             result.error().c_str());                          \
               }                                                                \
               /* Optional: dump a few fields for sanity */                     \
               /* std::fprintf(stderr, "[queue%s] dashLen=%.2f gap=%.2f r=%.2f th=%.2f\n", \
@@ -1797,12 +1797,11 @@ cb.set_function("queueScopedTransformCompositeRender",
             lyr, e, z, space, [&]() {
                 sol::protected_function pf(child_builder);
                 if (pf.valid()) {
-                    sol::protected_function_result r = pf();
-                    if (!r.valid()) {
-                        sol::error err = r;
+                    auto r = util::safeLuaCall(pf, "queueScopedTransformCompositeRender");
+                    if (r.isErr()) {
                         std::fprintf(stderr,
                             "[queueScopedTransformCompositeRender] child_builder error: %s\n",
-                            err.what());
+                            r.error().c_str());
                     }
                 } else {
                     std::fprintf(stderr,
@@ -1823,10 +1822,9 @@ cb.set_function("queueScopedTransformCompositeRender",
         ::layer::Cmd##cmdName c{};                                            \
         sol::protected_function pf(init);                                     \
         if (pf.valid()) {                                                     \
-          sol::protected_function_result r = pf(&c);                          \
-          if (!r.valid()) {                                                   \
-            sol::error e = r;                                                 \
-            std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName, e.what()); \
+          auto r = util::safeLuaCall(pf, std::string("execute") + #cmdName, &c); \
+          if (r.isErr()) {                                                   \
+            std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName, r.error().c_str()); \
           }                                                                   \
         }                                                                     \
         ::layer::execFunc(lyr, &c);                                           \
@@ -4567,7 +4565,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   layer::render_stack_switch_internal::Pop();
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // Draw
     DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   }
@@ -4679,7 +4677,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // 			WHITE);
   render_stack_switch_internal::Pop();
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // Draw
     DrawTexture(postPassRender.texture, 0, 150, WHITE);
   }
@@ -4800,7 +4798,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
   }
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // Draw the final texture to the screen for debugging
     DrawTexture(toRender.texture, 0, 300, WHITE);
     DrawText(fmt::format("Final Render Texture: {}x{}", toRender.texture.width,
@@ -4948,7 +4946,7 @@ Translate(-origin.x, -origin.y);
   DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, WHITE);
 
   // debug rect
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // DrawRectangleLines(-pad, -pad, (int)shader_pipeline::width,
     // (int)shader_pipeline::height, RED); DrawText(fmt::format("SHADER
     // PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 15, WHITE);
@@ -5159,7 +5157,7 @@ void renderSliceOffscreenFromDrawList(
   DrawTexture(postPassRT.texture, 0, 0, WHITE);
   layer::render_stack_switch_internal::Pop(); // also y-flipped
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // DrawTexture(postPassRT.texture, 0, 0, WHITE);
 
     // DrawRectangle(0, 0, postPassRT.texture.width, postPassRT.texture.height,

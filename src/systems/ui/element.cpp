@@ -2636,7 +2636,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         
         //TODO: enable this back later
 
-        if (globals::drawDebugInfo)
+        if (globals::getDrawDebugInfo())
             transform::DrawBoundingBoxAndDebugInfo(&globals::getRegistry(), entity, layerPtr);
     }
     

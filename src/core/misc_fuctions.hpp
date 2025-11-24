@@ -48,11 +48,11 @@ namespace game {
 
         if (ImGui::BeginTabBar("Debug variables")) {
             if (ImGui::BeginTabItem("Flags")) {
-                bool debugDraw = globals::drawDebugInfo;
+                bool debugDraw = globals::getDrawDebugInfo();
                 if (ImGui::Checkbox("Show Bounding Boxes & Debug Info", &debugDraw)) {
                     globals::setDrawDebugInfo(debugDraw);
                 }
-                bool physicsDebug = globals::drawPhysicsDebug;
+                bool physicsDebug = globals::getDrawPhysicsDebug();
                 if (ImGui::Checkbox("Show physics debug draw", &physicsDebug)) {
                     globals::setDrawPhysicsDebug(physicsDebug);
                 }
@@ -73,6 +73,7 @@ namespace game {
                 if (currentScaleIndex != previousScaleIndex) {
                     previousScaleIndex = currentScaleIndex;
                     globals::setGlobalUIScaleFactor(uiScales[currentScaleIndex]);
+                    OnUIScaleChanged(); // ✅ Call your method here
                 }
 
                 ImGui::EndTabItem();

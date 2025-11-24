@@ -11,8 +11,14 @@ add_executable(unit_tests
     unit/test_binding_recorder.cpp
     unit/test_event_bus.cpp
     unit/test_collision_log.cpp
+    unit/test_error_handling.cpp
+    unit/test_config_validation.cpp
+    unit/test_sound_system.cpp
+    unit/test_controller_nav.cpp
+    unit/test_text_waiters.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/sound/sound_system.cpp
     ${CMAKE_SOURCE_DIR}/src/core/engine_context.cpp
     ${CMAKE_SOURCE_DIR}/src/core/globals.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/uuid/uuid.cpp
@@ -21,6 +27,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_function_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/physics/physics_world.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp
 )
 
 target_include_directories(unit_tests PRIVATE

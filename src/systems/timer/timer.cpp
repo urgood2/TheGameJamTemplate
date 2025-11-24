@@ -4,6 +4,7 @@
 #include "util/common_headers.hpp"
 #include "../../core/globals.hpp"
 #include "../../core/game.hpp"
+#include "util/error_handling.hpp"
 
 #include "systems/ai/ai_system.hpp"
 #include "systems/scripting/binding_recorder.hpp"
@@ -28,13 +29,13 @@ wrap_condition(sol::function f) {
     }
     sol::protected_function pf(std::move(f));
     return [pf=std::move(pf)]() mutable {
-        auto r = pf();
-        if (!r.valid()) {
-            sol::error err = r; SPDLOG_ERROR("Timer condition failed: {}", err.what());
+        auto r = util::safeLuaCall(pf, "timer condition");
+        if (r.isErr()) {
+            SPDLOG_ERROR("Timer condition failed: {}", r.error());
             std::abort();
             return false;
         }
-        return r.get<bool>();
+        return r.value().get<bool>();
     };
 }
 
@@ -45,21 +46,21 @@ wrap_ff(sol::function f) {
     }
     sol::protected_function pf(std::move(f));
     return [pf=std::move(pf)](float x) mutable {
-        auto r = pf(x);
-        if (!r.valid()) {
-            sol::error err = r; SPDLOG_ERROR("Timer float→float failed: {}", err.what());
+        auto r = util::safeLuaCall(pf, "timer float->float", x);
+        if (r.isErr()) {
+            SPDLOG_ERROR("Timer float→float failed: {}", r.error());
             std::abort();
             return 0.f;
         }
-        return r.get<float>();
+        return r.value().get<float>();
     };
 }
     
     // for use with after() functions optionally provided in timer functions
     static std::function<void()>
 wrap_noarg_callback(sol::function luaFunc) {
-    
-    
+
+
     if (!luaFunc.valid()) {
         return []() {};  // Return a no-op function if the Lua function is invalid
     }
@@ -68,10 +69,9 @@ wrap_noarg_callback(sol::function luaFunc) {
 
     // Return a zero-arg std::function that calls the protected function
     return [protectedFn = std::move(protectedFn)]() mutable {
-        sol::protected_function_result result = protectedFn();
-        if (!result.valid()) {
-            sol::error err = result;
-            SPDLOG_ERROR("Lua callback failed: {}", err.what());
+        auto result = util::safeLuaCall(protectedFn, "timer callback");
+        if (result.isErr()) {
+            SPDLOG_ERROR("Lua callback failed: {}", result.error());
             std::abort();
         }
     };
@@ -139,20 +139,12 @@ wrap_timer_action(sol::function action) {
         
         // dump_lua_state(L);
 
-        sol::protected_function_result result;
-        if (dt.has_value()) {
-            // SPDLOG_DEBUG("   -> calling Lua with dt");
-            result = protectedAction(*dt);
-            // SPDLOG_DEBUG("   -> returned from Lua dt-call");
-        } else {
-            // SPDLOG_DEBUG("   -> calling Lua with NO args");
-            result = protectedAction();
-            // SPDLOG_DEBUG("   -> returned from Lua no-arg call");
-        }
+        auto luaResult = dt.has_value()
+            ? util::safeLuaCall(protectedAction, "timer_action(dt)", *dt)
+            : util::safeLuaCall(protectedAction, "timer_action()",  );
 
-        if (!result.valid()) {
-            sol::error err = result;
-            SPDLOG_ERROR("Timer action failed: {}", err.what());
+        if (luaResult.isErr()) {
+            SPDLOG_ERROR("Timer action failed: {}", luaResult.error());
             std::abort();
         }
 

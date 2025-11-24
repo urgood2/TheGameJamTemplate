@@ -1,0 +1,116 @@
+#pragma once
+
+#include <chrono>
+#include <functional>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <utility>
+#include <variant>
+
+#include "spdlog/spdlog.h"
+
+#include "sol/sol.hpp"
+
+namespace util {
+
+// Lightweight Result wrapper for recoverable paths.
+template <typename T, typename E = std::string>
+class Result {
+public:
+    Result(T value) : data_(std::move(value)), ok_(true) {}
+    Result(E error) : data_(std::move(error)), ok_(false) {}
+
+    bool isOk() const { return ok_; }
+    bool isErr() const { return !ok_; }
+
+    T& value() { return std::get<T>(data_); }
+    const T& value() const { return std::get<T>(data_); }
+
+    const E& error() const { return std::get<E>(data_); }
+
+    T valueOr(T fallback) const { return ok_ ? std::get<T>(data_) : std::move(fallback); }
+
+    T valueOrThrow() const {
+        if (!ok_) {
+            throw std::runtime_error(std::get<E>(data_));
+        }
+        return std::get<T>(data_);
+    }
+
+private:
+    std::variant<T, E> data_;
+    bool ok_;
+};
+
+// Guard a callable with logging; returns Result instead of throwing.
+template <typename Fn>
+auto tryWithLog(Fn&& fn, std::string_view context)
+    -> Result<decltype(fn()), std::string>
+{
+    try {
+        return Result<decltype(fn()), std::string>(fn());
+    } catch (const std::exception& e) {
+        SPDLOG_ERROR("[{}] {}", context, e.what());
+        return Result<decltype(fn()), std::string>(std::string(e.what()));
+    } catch (...) {
+        SPDLOG_ERROR("[{}] unknown exception", context);
+        return Result<decltype(fn()), std::string>("unknown exception");
+    }
+}
+
+// Retry helper for loaders that return Result.
+template <typename T>
+Result<T, std::string> loadWithRetry(std::function<Result<T, std::string>()> loader,
+                                     int maxRetries = 3,
+                                     std::chrono::milliseconds delay = std::chrono::milliseconds(100)) {
+    for (int attempt = 0; attempt < maxRetries; ++attempt) {
+        auto result = loader();
+        if (result.isOk()) {
+            return result;
+        }
+        SPDLOG_WARN("retry {}/{} failed: {}", attempt + 1, maxRetries, result.error());
+        std::this_thread::sleep_for(delay);
+    }
+    return loader(); // final attempt (propagate whatever it returns)
+}
+
+// Safe Lua call wrapper returning Result instead of throwing.
+template <typename... Args>
+auto safeLuaCall(sol::state& lua, const std::string& fnName, Args&&... args)
+    -> Result<sol::object, std::string>
+{
+    try {
+        sol::protected_function fn = lua[fnName];
+        auto res = fn(std::forward<Args>(args)...);
+        if (!res.valid()) {
+            sol::error err = res;
+            return Result<sol::object, std::string>(err.what());
+        }
+        sol::object obj = res;
+        return Result<sol::object, std::string>(std::move(obj));
+    } catch (const std::exception& e) {
+        return Result<sol::object, std::string>(e.what());
+    }
+}
+
+// Safe call for already-fetched Lua functions (protected_function or sol::function).
+template <typename LuaFn, typename... Args>
+auto safeLuaCall(LuaFn&& fn, const std::string& ctx, Args&&... args)
+    -> Result<sol::protected_function_result, std::string>
+{
+    try {
+        sol::protected_function_result res = fn(std::forward<Args>(args)...);
+        if (!res.valid()) {
+            sol::error err = res;
+            return Result<sol::protected_function_result, std::string>(err.what());
+        }
+        return Result<sol::protected_function_result, std::string>(std::move(res));
+    } catch (const std::exception& e) {
+        return Result<sol::protected_function_result, std::string>(e.what());
+    }
+}
+
+} // namespace util

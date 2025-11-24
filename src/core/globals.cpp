@@ -68,34 +68,36 @@ namespace globals {
         return legacy;
     }
 
-    void setEngineContext(EngineContext* ctx) {
-        g_ctx = ctx;
+void setEngineContext(EngineContext* ctx) {
+    g_ctx = ctx;
     if (g_ctx) {
         g_ctx->inputState = &inputState;
         g_ctx->physicsManager = physicsManager;
         g_ctx->worldMousePosition = {0.0f, 0.0f};
         g_ctx->scaledMousePosition = {0.0f, 0.0f};
-            g_ctx->audio = &g_audioContext;
-            g_ctx->currentGameState = currentGameState;
-            g_ctx->isGamePaused = isGamePaused;
-            g_ctx->useImGUI = useImGUI;
-            g_ctx->finalRenderScale = finalRenderScale;
-            g_ctx->finalLetterboxOffsetX = finalLetterboxOffsetX;
-            g_ctx->finalLetterboxOffsetY = finalLetterboxOffsetY;
-            g_ctx->globalUIScaleFactor = globalUIScaleFactor;
-            g_ctx->uiPadding = uiPadding;
-            g_ctx->settings = settings;
-            g_ctx->cameraDamping = cameraDamping;
-            g_ctx->cameraStiffness = cameraStiffness;
-            g_ctx->cameraVelocity = cameraVelocity;
-            g_ctx->nextCameraTarget = nextCameraTarget;
-            g_ctx->worldWidth = worldWidth;
-            g_ctx->worldHeight = worldHeight;
-            g_ctx->shaderUniforms = globalShaderUniforms;
-            g_ctx->visibilityMap = globalVisibilityMap;
-            g_ctx->useLineOfSight = useLineOfSight;
-            g_ctx->timerReal = G_TIMER_REAL;
-            g_ctx->timerTotal = G_TIMER_TOTAL;
+        g_ctx->audio = &g_audioContext;
+
+        g_ctx->currentGameState = currentGameState;
+        g_ctx->isGamePaused = isGamePaused;
+        g_ctx->useImGUI = useImGUI;
+        g_ctx->finalRenderScale = finalRenderScale;
+        g_ctx->finalLetterboxOffsetX = finalLetterboxOffsetX;
+        g_ctx->finalLetterboxOffsetY = finalLetterboxOffsetY;
+        g_ctx->globalUIScaleFactor = globalUIScaleFactor;
+        g_ctx->uiScaleFactor = globalUIScaleFactor;
+        g_ctx->uiPadding = uiPadding;
+        g_ctx->settings = settings;
+        g_ctx->cameraDamping = cameraDamping;
+        g_ctx->cameraStiffness = cameraStiffness;
+        g_ctx->cameraVelocity = cameraVelocity;
+        g_ctx->nextCameraTarget = nextCameraTarget;
+        g_ctx->worldWidth = worldWidth;
+        g_ctx->worldHeight = worldHeight;
+        g_ctx->baseShadowExaggeration = BASE_SHADOW_EXAGGERATION;
+        g_ctx->visibilityMap = globalVisibilityMap;
+        g_ctx->useLineOfSight = useLineOfSight;
+        g_ctx->timerReal = G_TIMER_REAL;
+        g_ctx->timerTotal = G_TIMER_TOTAL;
         g_ctx->framesMove = G_FRAMES_MOVE;
         g_ctx->drawDebugInfo = drawDebugInfo;
         g_ctx->drawPhysicsDebug = drawPhysicsDebug;
@@ -105,15 +107,23 @@ namespace globals {
         g_ctx->lastMouseClick = lastMouseClick;
         g_ctx->lastMouseButton = lastMouseButton;
         g_ctx->hasLastMouseClick = hasLastClickFlag;
-            g_ctx->lastCollisionA = lastCollisionA;
-            g_ctx->lastCollisionB = lastCollisionB;
-            g_ctx->lastUIFocus = lastUIFocus;
-            g_ctx->lastUIButtonActivated = lastUIButtonActivated;
-            g_ctx->lastLoadingStage = lastLoadingStage;
-            g_ctx->lastLoadingStageSuccess = lastLoadingStageSuccess;
-            // collision log is intentionally kept local; not mirroring to ctx to avoid copies.
+        g_ctx->lastCollisionA = lastCollisionA;
+        g_ctx->lastCollisionB = lastCollisionB;
+        g_ctx->lastUIFocus = lastUIFocus;
+        g_ctx->lastUIButtonActivated = lastUIButtonActivated;
+        g_ctx->lastLoadingStage = lastLoadingStage;
+        g_ctx->lastLoadingStageSuccess = lastLoadingStageSuccess;
+        // collision log is intentionally kept local; not mirroring to ctx to avoid copies.
+
+        g_ctx->shaderUniforms = globalShaderUniforms;
+        if (!g_ctx->shaderUniformsPtr) {
+            g_ctx->shaderUniformsOwned = std::make_unique<shaders::ShaderUniformComponent>(globalShaderUniforms);
+            g_ctx->shaderUniformsPtr = g_ctx->shaderUniformsOwned.get();
+        } else {
+            *g_ctx->shaderUniformsPtr = globalShaderUniforms;
         }
     }
+}
 
     // Get mouse position scaled to virtual resolution so collision works regardless of window size
     
@@ -203,17 +213,28 @@ namespace globals {
     std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap{};
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements
-    float& getGlobalUIScaleFactor() { 
+    float& getGlobalUIScaleFactor() {
         if (g_ctx) return g_ctx->globalUIScaleFactor;
         return globalUIScaleFactor; 
     }
     void setGlobalUIScaleFactor(float v) {
         globalUIScaleFactor = v;
-        if (g_ctx) g_ctx->globalUIScaleFactor = v;
+        if (g_ctx) {
+            g_ctx->globalUIScaleFactor = v;
+            g_ctx->uiScaleFactor = v;
+        }
         getEventBus().publish(events::UIScaleChanged{v});
     }
 
     bool drawDebugInfo = false, drawPhysicsDebug = false; // set to true to allow debug drawing of transforms
+    bool& getDrawDebugInfo() {
+        if (g_ctx) return g_ctx->drawDebugInfo;
+        return drawDebugInfo;
+    }
+    bool& getDrawPhysicsDebug() {
+        if (g_ctx) return g_ctx->drawPhysicsDebug;
+        return drawPhysicsDebug;
+    }
     void setDrawDebugInfo(bool v) {
         drawDebugInfo = v;
         if (g_ctx) g_ctx->drawDebugInfo = v;
@@ -226,8 +247,8 @@ namespace globals {
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
-    shaders::ShaderUniformComponent& getGlobalShaderUniforms() { 
-        if (g_ctx) return g_ctx->shaderUniforms;
+    shaders::ShaderUniformComponent& getGlobalShaderUniforms() {
+        if (g_ctx && g_ctx->shaderUniformsPtr) return *g_ctx->shaderUniformsPtr;
         return globalShaderUniforms; 
     }
 
@@ -450,7 +471,10 @@ namespace globals {
 
     
     float BASE_SHADOW_EXAGGERATION = 1.8f; 
-    float& getBaseShadowExaggeration() { return BASE_SHADOW_EXAGGERATION; }
+    float& getBaseShadowExaggeration() {
+        if (g_ctx) return g_ctx->baseShadowExaggeration;
+        return BASE_SHADOW_EXAGGERATION;
+    }
 
     //TODO: document
     std::optional<int> REFRESH_FRAME_MASTER_CACHE{}; // used for transform calculations

@@ -221,7 +221,7 @@ lua assets/scripts/tests/run_wand_tests.lua
 ### Integration Tests
 Use the integration test suite (requires game engine):
 ```lua
-local WandTests = require("assets.scripts.wand.wand_test_examples")
+local WandTests = require("wand.wand_test_examples")
 WandTests.runAllTests()
 ```
 

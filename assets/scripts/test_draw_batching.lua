@@ -3,7 +3,7 @@
     
     Add this to your game initialization or call it from Lua console:
     
-    local test = require("assets.scripts.test_draw_batching")
+    local test = require("test_draw_batching")
     test.runQuickTests()
 ]]
 
@@ -323,7 +323,7 @@ function TestDrawBatching.runFullTests(registry, layer, entities)
     print("\n--- Advanced Tests (with entities) ---\n")
     
     -- Load integration test module
-    local success, IntegrationTest = pcall(require, "assets.scripts.examples.integration_test")
+    local success, IntegrationTest = pcall(require, "examples.integration_test")
     
     if not success then
         print("⚠️  Could not load integration_test.lua")

@@ -217,7 +217,7 @@ end
 
 ### Initialization (in your main game init)
 ```lua
-local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+local ProjectileSystem = require("combat.projectile_system")
 
 -- Initialize once
 ProjectileSystem.init()  -- Automatically registers with physics step timer

@@ -45,7 +45,7 @@ cmake --build build --config Debug
 -- Test: Load the projectile system module
 print("\n========== PROJECTILE SYSTEM TEST ==========")
 
-local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+local ProjectileSystem = require("combat.projectile_system")
 
 if ProjectileSystem then
     print("[✓] ProjectileSystem module loaded successfully")
@@ -62,7 +62,7 @@ print("[✓] ProjectileSystem initialized")
 **Run this in your game's init function temporarily:**
 ```lua
 -- In your main.lua or game init:
-require("assets.scripts.test_projectiles")
+require("test_projectiles")
 ```
 
 **Expected Output:**
@@ -210,8 +210,8 @@ end
 ```lua
 print("\n========== WAND EXECUTION TEST ==========")
 
-local WandExecutor = require("assets.scripts.wand.wand_executor")
-local WandTests = require("assets.scripts.wand.wand_test_examples")
+local WandExecutor = require("wand.wand_executor")
+local WandTests = require("wand.wand_test_examples")
 
 if WandExecutor and WandTests then
     print("[✓] Wand system modules loaded")
@@ -282,7 +282,7 @@ end)
 ```lua
 print("\n========== COMBAT LOOP TEST ==========")
 
-local CombatLoopTest = require("assets.scripts.combat.combat_loop_test")
+local CombatLoopTest = require("combat.combat_loop_test")
 
 if CombatLoopTest then
     print("[✓] Combat loop test module loaded")

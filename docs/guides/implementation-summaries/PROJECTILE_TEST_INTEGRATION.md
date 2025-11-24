@@ -22,7 +22,7 @@ function initMainGame()
 
     -- ADD THIS AT THE END:
     print("\n[INIT] Running Projectile System Test...")
-    local ProjectileTest = require("assets.scripts.test_projectiles")
+    local ProjectileTest = require("test_projectiles")
     -- Test will run automatically
 end
 ```
@@ -106,12 +106,12 @@ function TestScene.init()
     print("Loading test scene...")
 
     -- Run projectile test
-    local ProjectileTest = require("assets.scripts.test_projectiles")
+    local ProjectileTest = require("test_projectiles")
 end
 
 function TestScene.update(dt)
     -- Update projectile system if not using physics step timer
-    local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+    local ProjectileSystem = require("combat.projectile_system")
     if not ProjectileSystem.use_physics_step_timer then
         ProjectileSystem.update(dt)
     end
@@ -128,7 +128,7 @@ function initMainGame()
     -- ... existing code ...
 
     -- Load test scene
-    local TestScene = require("assets.scripts.test_scene")
+    local TestScene = require("test_scene")
     TestScene.init()
 end
 ```
@@ -194,12 +194,12 @@ end
 
 ### Issue 1: "module not found"
 
-**Error:** `module 'assets.scripts.combat.projectile_system' not found`
+**Error:** `module 'combat.projectile_system' not found`
 
 **Solution:** Try different paths:
 ```lua
 -- Try one of these:
-require("assets.scripts.combat.projectile_system")
+require("combat.projectile_system")
 require("scripts.combat.projectile_system")
 require("combat.projectile_system")
 ```
@@ -213,7 +213,7 @@ require("combat.projectile_system")
 function update(dt)
     -- ... existing code ...
 
-    local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+    local ProjectileSystem = require("combat.projectile_system")
     ProjectileSystem.update(dt)
 end
 ```
@@ -244,7 +244,7 @@ end
 Once testing is complete, simply comment out or remove the line:
 
 ```lua
--- local ProjectileTest = require("assets.scripts.test_projectiles")
+-- local ProjectileTest = require("test_projectiles")
 ```
 
 ---

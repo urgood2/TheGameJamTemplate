@@ -6,11 +6,11 @@ Complete wand evaluation-to-execution pipeline for Lua/C++ game engine.
 
 ```lua
 -- 1. Initialize
-local WandExecutor = require("assets.scripts.wand.wand_executor")
+local WandExecutor = require("wand.wand_executor")
 WandExecutor.init()
 
 -- 2. Load a wand
-local cardEval = require("assets.scripts.core.card_eval_order_test")
+local cardEval = require("core.card_eval_order_test")
 
 local wandId = WandExecutor.loadWand(
     {id = "my_wand", mana_max = 50, cast_block_size = 2},  -- wand def
@@ -69,7 +69,7 @@ assets/scripts/wand/
 Run the test suite:
 
 ```lua
-local WandTests = require("assets.scripts.wand.wand_test_examples")
+local WandTests = require("wand.wand_test_examples")
 WandTests.runAllTests()
 ```
 
@@ -88,7 +88,7 @@ The wand system fully integrates with the projectile system:
 
 ```lua
 -- Modifiers from wand cards are applied to projectiles
-local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+local ProjectileSystem = require("combat.projectile_system")
 
 ProjectileSystem.spawn({
     -- Position from wand context

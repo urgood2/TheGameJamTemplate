@@ -8,7 +8,7 @@ Add this to your Lua initialization code (e.g., in `main.lua` or a test script):
 
 ```lua
 -- Load the integration test
-local IntegrationTest = require("assets.scripts.examples.integration_test")
+local IntegrationTest = require("examples.integration_test")
 
 -- Run quick test (no entities required)
 IntegrationTest.quickTest()
@@ -20,7 +20,7 @@ IntegrationTest.quickTest()
 ### Method 2: Run from Lua Console (if available)
 
 ```lua
-local test = require("assets.scripts.examples.integration_test")
+local test = require("examples.integration_test")
 test.quickTest()
 ```
 
@@ -264,7 +264,7 @@ end
 **Goal:** Measure performance improvement with batching.
 
 ```lua
-local example = require("assets.scripts.examples.draw_command_batch_example")
+local example = require("examples.draw_command_batch_example")
 
 -- You need a list of entities with shader pipelines
 local entities = {

@@ -225,7 +225,7 @@ batch:execute()
 **Phase 3: Measure & Tune**
 ```lua
 -- Compare performance
-local test = require("assets.scripts.examples.draw_command_batch_example")
+local test = require("examples.draw_command_batch_example")
 test.comparePerformance(registry, entities, iterations)
 ```
 

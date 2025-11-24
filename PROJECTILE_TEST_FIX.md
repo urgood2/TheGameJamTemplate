@@ -19,7 +19,7 @@ Find the `main.update(dt)` function (around line 527) and add this line **near t
 ```lua
 function main.update(dt)
     -- ADD THIS LINE:
-    local ProjectileTest = require("assets.scripts.test_projectiles")
+    local ProjectileTest = require("test_projectiles")
     ProjectileTest.update(dt)
 
     -- ... rest of your existing code ...

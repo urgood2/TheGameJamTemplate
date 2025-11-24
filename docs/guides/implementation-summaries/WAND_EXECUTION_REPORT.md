@@ -112,7 +112,7 @@ WandModifiers.calculateMulticastAngles(modifiers, baseAngle)
 
 ```lua
 -- Example from spawnSingleProjectile()
-local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+local ProjectileSystem = require("combat.projectile_system")
 
 local projectileId = ProjectileSystem.spawn({
     position = {x = position.x, y = position.y},
@@ -569,7 +569,7 @@ end)
 
 ### Running Tests
 ```lua
-local WandTests = require("assets.scripts.wand.wand_test_examples")
+local WandTests = require("wand.wand_test_examples")
 
 -- Run all tests
 local wands = WandTests.runAllTests()
@@ -679,13 +679,13 @@ TOTAL: 2,314 lines of production code + documentation
 
 1. **Initialize the system**
 ```lua
-local WandExecutor = require("assets.scripts.wand.wand_executor")
+local WandExecutor = require("wand.wand_executor")
 WandExecutor.init()
 ```
 
 2. **Load a wand**
 ```lua
-local cardEval = require("assets.scripts.core.card_eval_order_test")
+local cardEval = require("core.card_eval_order_test")
 
 -- Define wand
 local wandDef = {

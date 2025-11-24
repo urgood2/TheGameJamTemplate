@@ -5,7 +5,7 @@ BEHAVIOR REGISTRY - TEST AND EXAMPLES
 Demonstrates how to use the behavior registry for complex custom effects.
 ]] --
 
-local BehaviorRegistry = require("assets.scripts.wand.card_behavior_registry")
+local BehaviorRegistry = require("wand.card_behavior_registry")
 
 print("\n" .. string.rep("=", 60))
 print("BEHAVIOR REGISTRY - EXAMPLES")

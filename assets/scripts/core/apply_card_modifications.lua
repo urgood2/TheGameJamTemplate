@@ -10,7 +10,7 @@ Usage:
 ================================================================================
 ]] --
 
-local assignments = require("assets.scripts.core.add_card_rarity_tags")
+local assignments = require("core.add_card_rarity_tags")
 
 print("\n" .. string.rep("=", 60))
 print("GENERATING CARD MODIFICATIONS")

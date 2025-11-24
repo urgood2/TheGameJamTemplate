@@ -90,7 +90,7 @@ Register executable functions in the behavior registry, execute with context.
 **Step 1: Register the behavior**
 
 ```lua
-local BehaviorRegistry = require("assets.scripts.wand.card_behavior_registry")
+local BehaviorRegistry = require("wand.card_behavior_registry")
 
 BehaviorRegistry.register("my_custom_effect", function(ctx)
   -- ctx contains: player, target, card, params, time, position, damage, etc.

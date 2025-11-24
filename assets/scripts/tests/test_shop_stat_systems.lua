@@ -9,7 +9,7 @@ Usage:
   lua assets/scripts/tests/test_shop_stat_systems.lua
 
 Or require and run specific tests:
-  local Tests = require("assets.scripts.tests.test_shop_stat_systems")
+  local Tests = require("tests.test_shop_stat_systems")
   Tests.runAllTests()
   Tests.testStatSystem()
   Tests.testCardSynergy()
@@ -79,7 +79,7 @@ function Tests.testStatSystem()
     print("TEST 1: STAT SYSTEM")
     print(string.rep("=", 60))
 
-    local StatSystem = require("assets.scripts.core.stat_system")
+    local StatSystem = require("core.stat_system")
     StatSystem.init()
 
     -- Test 1.1: Default derivations
@@ -131,7 +131,7 @@ function Tests.testCardSynergy()
     print("TEST 2: CARD SYNERGY SYSTEM")
     print(string.rep("=", 60))
 
-    local CardSynergy = require("assets.scripts.wand.card_synergy_system")
+    local CardSynergy = require("wand.card_synergy_system")
     CardSynergy.init()
 
     -- Test 2.1: Tag detection
@@ -202,7 +202,7 @@ function Tests.testCardUpgrade()
     print("TEST 3: CARD UPGRADE SYSTEM")
     print(string.rep("=", 60))
 
-    local CardUpgrade = require("assets.scripts.wand.card_upgrade_system")
+    local CardUpgrade = require("wand.card_upgrade_system")
     CardUpgrade.init()
 
     -- Test 3.1: Card initialization
@@ -264,7 +264,7 @@ function Tests.testShopSystem()
     print("TEST 4: SHOP SYSTEM")
     print(string.rep("=", 60))
 
-    local ShopSystem = require("assets.scripts.core.shop_system")
+    local ShopSystem = require("core.shop_system")
 
     -- Register some test cards
     print("\n[4.1] Registering test cards...")
@@ -348,10 +348,10 @@ function Tests.testIntegratedWorkflow()
     print("TEST 5: INTEGRATED WORKFLOW")
     print(string.rep("=", 60))
 
-    local StatSystem = require("assets.scripts.core.stat_system")
-    local CardSynergy = require("assets.scripts.wand.card_synergy_system")
-    local CardUpgrade = require("assets.scripts.wand.card_upgrade_system")
-    local ShopSystem = require("assets.scripts.core.shop_system")
+    local StatSystem = require("core.stat_system")
+    local CardSynergy = require("wand.card_synergy_system")
+    local CardUpgrade = require("wand.card_upgrade_system")
+    local ShopSystem = require("core.shop_system")
 
     -- Initialize systems
     StatSystem.init()

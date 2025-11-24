@@ -417,7 +417,7 @@ end
 function ShopSystem.upgradeCard(card, player)
     -- Lazy load CardUpgrade
     if not CardUpgrade then
-        CardUpgrade = require("assets.scripts.wand.card_upgrade_system")
+        CardUpgrade = require("wand.card_upgrade_system")
     end
 
     local cost = CardUpgrade.getUpgradeCost(card)
@@ -536,7 +536,7 @@ function ShopSystem.createCardInstance(cardDef)
 
     -- Initialize upgrade tracking
     if not CardUpgrade then
-        CardUpgrade = require("assets.scripts.wand.card_upgrade_system")
+        CardUpgrade = require("wand.card_upgrade_system")
     end
     CardUpgrade.initializeCard(instance)
 

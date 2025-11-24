@@ -7,7 +7,7 @@ Use this to enrich card instances at runtime without modifying the original
 card_eval_order_test.lua file.
 
 Usage:
-  local CardMeta = require("assets.scripts.core.card_metadata")
+  local CardMeta = require("core.card_metadata")
 
   -- Get metadata for a card
   local meta = CardMeta.get("ACTION_BASIC_PROJECTILE")
@@ -385,7 +385,7 @@ end
 --- Registers all cards with the shop system
 --- @param ShopSystem table Shop system module
 function CardMetadata.registerAllWithShop(ShopSystem)
-    local cardEval = require("assets.scripts.core.card_eval_order_test")
+    local cardEval = require("core.card_eval_order_test")
 
     -- Register action/modifier cards
     for cardId, meta in pairs(CardMetadata.data) do

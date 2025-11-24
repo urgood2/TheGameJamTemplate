@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <chrono>
+
 #include "sol/sol.hpp"
 
 #include "util/error_handling.hpp"
@@ -76,6 +78,37 @@ TEST(ErrorHandling, SafeLuaCallHandlesNilFunctionGracefully) {
     auto result = util::safeLuaCall(lua, "maybe", 1);
 
     EXPECT_TRUE(result.isErr());
+}
+
+TEST(ErrorHandling, LoadWithRetrySucceedsAfterRetry) {
+    int attempts = 0;
+    auto loader = [&]() -> util::Result<int, std::string> {
+        attempts++;
+        if (attempts < 2) {
+            return util::Result<int, std::string>("fail");
+        }
+        return util::Result<int, std::string>(42);
+    };
+
+    auto result = util::loadWithRetry<int>(loader, 3, std::chrono::milliseconds(0));
+
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.value(), 42);
+    EXPECT_EQ(attempts, 2);
+}
+
+TEST(ErrorHandling, LoadWithRetryReturnsLastErrorAfterExhaustion) {
+    int attempts = 0;
+    auto loader = [&]() -> util::Result<int, std::string> {
+        attempts++;
+        return util::Result<int, std::string>("still failing");
+    };
+
+    auto result = util::loadWithRetry<int>(loader, 2, std::chrono::milliseconds(0));
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), "still failing");
+    EXPECT_EQ(attempts, 3); // maxRetries attempts + final attempt
 }
 
 } // namespace

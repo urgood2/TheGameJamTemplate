@@ -14,6 +14,10 @@
 #include "core/globals.hpp"
 #include "components/graphics.hpp"
 
+namespace shaders {
+    struct ShaderUniformComponent;
+}
+
 namespace input {
     struct InputState;
 }
@@ -46,6 +50,10 @@ struct EngineContext {
     AudioContext* audio{nullptr}; // non-owning placeholder for audio state
     float uiScaleFactor{1.0f};
     float baseShadowExaggeration{1.8f};
+    bool drawDebugInfo{false};
+    bool drawPhysicsDebug{false};
+    shaders::ShaderUniformComponent* shaderUniformsPtr{nullptr}; // optional alias to global or owned
+    std::unique_ptr<shaders::ShaderUniformComponent> shaderUniformsOwned{};
     json configJson{};
     json colorsJson{};
     json uiStringsJson{};

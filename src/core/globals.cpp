@@ -59,6 +59,14 @@ namespace globals {
             g_ctx->audio = &g_audioContext;
             g_ctx->uiScaleFactor = globalUIScaleFactor;
             g_ctx->baseShadowExaggeration = BASE_SHADOW_EXAGGERATION;
+            g_ctx->drawDebugInfo = drawDebugInfo;
+            g_ctx->drawPhysicsDebug = drawPhysicsDebug;
+            if (!g_ctx->shaderUniformsPtr) {
+                g_ctx->shaderUniformsOwned = std::make_unique<shaders::ShaderUniformComponent>(globalShaderUniforms);
+                g_ctx->shaderUniformsPtr = g_ctx->shaderUniformsOwned.get();
+            } else {
+                *g_ctx->shaderUniformsPtr = globalShaderUniforms;
+            }
         }
     }
 
@@ -135,7 +143,10 @@ namespace globals {
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
-    shaders::ShaderUniformComponent& getGlobalShaderUniforms() { return globalShaderUniforms; }
+    shaders::ShaderUniformComponent& getGlobalShaderUniforms() {
+        if (g_ctx && g_ctx->shaderUniformsPtr) return *g_ctx->shaderUniformsPtr;
+        return globalShaderUniforms;
+    }
 
     std::map<std::string, SpriteFrameData> spriteDrawFrames; 
 

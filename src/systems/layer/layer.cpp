@@ -4565,7 +4565,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   layer::render_stack_switch_internal::Pop();
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // Draw
     DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
   }
@@ -4677,7 +4677,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // 			WHITE);
   render_stack_switch_internal::Pop();
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // Draw
     DrawTexture(postPassRender.texture, 0, 150, WHITE);
   }
@@ -4798,7 +4798,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
   }
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // Draw the final texture to the screen for debugging
     DrawTexture(toRender.texture, 0, 300, WHITE);
     DrawText(fmt::format("Final Render Texture: {}x{}", toRender.texture.width,
@@ -4946,7 +4946,7 @@ Translate(-origin.x, -origin.y);
   DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, WHITE);
 
   // debug rect
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // DrawRectangleLines(-pad, -pad, (int)shader_pipeline::width,
     // (int)shader_pipeline::height, RED); DrawText(fmt::format("SHADER
     // PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 15, WHITE);
@@ -5157,7 +5157,7 @@ void renderSliceOffscreenFromDrawList(
   DrawTexture(postPassRT.texture, 0, 0, WHITE);
   layer::render_stack_switch_internal::Pop(); // also y-flipped
 
-  if (globals::drawDebugInfo) {
+  if (globals::getDrawDebugInfo()) {
     // DrawTexture(postPassRT.texture, 0, 0, WHITE);
 
     // DrawRectangle(0, 0, postPassRT.texture.width, postPassRT.texture.height,

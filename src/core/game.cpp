@@ -1855,7 +1855,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         // do transform debug drawing
         
         auto view = globals::getRegistry().view<transform::Transform, entity_gamestate_management::StateTag>();
-        if (globals::drawDebugInfo)
+        if (globals::getDrawDebugInfo())
             for (auto e : view)
             {
                 // check if the entity is active
@@ -2121,14 +2121,14 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             // 
             
             // draw rectangles indicating quad tree dimensions
-            if (globals::drawDebugInfo) {
+            if (globals::getDrawDebugInfo()) {
                 DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
                 
             }
             
             // -- draw physics world
             
-            if (globals::drawDebugInfo) {
+            if (globals::getDrawDebugInfo()) {
                 camera_manager::Begin(worldCamera->cam); // begin camera mode
                 DrawRectangle(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT, Fade(GREEN, 0.1f));
                 DrawText("Screen bounds", 5, 35, 20, GREEN);
@@ -2145,7 +2145,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             }
             
             
-            if (globals::drawPhysicsDebug) {
+            if (globals::getDrawPhysicsDebug()) {
                 camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
                 
                 

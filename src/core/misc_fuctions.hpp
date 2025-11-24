@@ -46,8 +46,8 @@ namespace game {
 
         if (ImGui::BeginTabBar("Debug variables")) {
             if (ImGui::BeginTabItem("Flags")) {
-                ImGui::Checkbox("Show Bounding Boxes & Debug Info", &globals::drawDebugInfo);
-                ImGui::Checkbox("Show physics debug draw", &globals::drawPhysicsDebug);
+                ImGui::Checkbox("Show Bounding Boxes & Debug Info", &globals::getDrawDebugInfo());
+                ImGui::Checkbox("Show physics debug draw", &globals::getDrawPhysicsDebug());
 
                 ImGui::Text("UI Scale:");
                 if (ImGui::BeginCombo("##uiScaleCombo", std::to_string(uiScales[currentScaleIndex]).c_str())) {
@@ -64,7 +64,7 @@ namespace game {
 
                 if (currentScaleIndex != previousScaleIndex) {
                     previousScaleIndex = currentScaleIndex;
-                    globals::globalUIScaleFactor = uiScales[currentScaleIndex];
+                    globals::getGlobalUIScaleFactor() = uiScales[currentScaleIndex];
                     OnUIScaleChanged(); // ✅ Call your method here
                 }
 

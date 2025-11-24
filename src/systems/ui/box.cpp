@@ -2610,7 +2610,7 @@ namespace ui
         }
 
         // 4) If you still want to draw bounding boxes for each UIBox itself:
-        if (globals::drawDebugInfo)
+        if (globals::getDrawDebugInfo())
         {
             for (auto box : view)
             {
@@ -2796,7 +2796,7 @@ namespace ui
         }
 
         // 4) If you still want to draw bounding boxes for each UIBox itself:
-        if (globals::drawDebugInfo)
+        if (globals::getDrawDebugInfo())
         {
             for (auto box : view)
             {

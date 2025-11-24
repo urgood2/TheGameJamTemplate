@@ -139,6 +139,14 @@ namespace globals {
     }
 
     bool drawDebugInfo = false, drawPhysicsDebug = false; // set to true to allow debug drawing of transforms
+    bool& getDrawDebugInfo() {
+        if (g_ctx) return g_ctx->drawDebugInfo;
+        return drawDebugInfo;
+    }
+    bool& getDrawPhysicsDebug() {
+        if (g_ctx) return g_ctx->drawPhysicsDebug;
+        return drawPhysicsDebug;
+    }
     
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 

@@ -2141,7 +2141,7 @@ namespace TextSystem
                     }, layerZIndex, drawSpace);
                 }
                 
-                if (debug && globals::drawDebugInfo) {
+                if (debug && globals::getDrawDebugInfo()) {
                     ZONE_SCOPED("TextSystem::renderText-debug info");
                     // subtract finetuning offset
                     if (!character.isImage) {
@@ -2167,7 +2167,7 @@ namespace TextSystem
             }
 
             // Draw debug bounding box
-            if (debug && globals::drawDebugInfo)
+            if (debug && globals::getDrawDebugInfo())
             {
                 auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
                 
@@ -2446,7 +2446,7 @@ namespace TextSystem
                     }, layerZIndex);
                 }
                 
-                if (debug && globals::drawDebugInfo) {
+                if (debug && globals::getDrawDebugInfo()) {
                     ZONE_SCOPED("TextSystem::renderText-debug info");
                     // subtract finetuning offset
                     if (!character.isImage) {
@@ -2472,7 +2472,7 @@ namespace TextSystem
             }
 
             // Draw debug bounding box
-            if (debug && globals::drawDebugInfo)
+            if (debug && globals::getDrawDebugInfo())
             {
                 auto &transform = globals::getRegistry().get<transform::Transform>(textEntity);
                 

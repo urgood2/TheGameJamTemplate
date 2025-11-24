@@ -479,49 +479,49 @@ Run this to test basic projectile spawning
 ]]--
 
 function ProjectileExamples.runTests()
-    log_info("=== Running Projectile System Tests ===")
+    log_debug("=== Running Projectile System Tests ===")
 
     -- Test 1: Basic projectile
-    log_info("Test 1: Basic straight projectile")
+    log_debug("Test 1: Basic straight projectile")
     local p1 = ProjectileExamples.spawnBasicFireball(400, 300, 0, entt_null)
-    log_info("  Spawned projectile:", p1)
+    log_debug("  Spawned projectile:", p1)
 
     -- Test 2: Homing projectile (need a target)
-    -- log_info("Test 2: Homing missile")
+    -- log_debug("Test 2: Homing missile")
     -- local target = ... -- get a target entity
     -- local p2 = ProjectileExamples.spawnHomingMissile(400, 300, target, entt_null)
 
     -- Test 3: Piercing arrow
-    log_info("Test 3: Piercing arrow")
+    log_debug("Test 3: Piercing arrow")
     local p3 = ProjectileExamples.spawnPiercingArrow(400, 300, math.pi/4, entt_null, 3)
-    log_info("  Spawned projectile:", p3)
+    log_debug("  Spawned projectile:", p3)
 
     -- Test 4: Bouncing orb
-    log_info("Test 4: Bouncing orb")
+    log_debug("Test 4: Bouncing orb")
     local p4 = ProjectileExamples.spawnBouncingOrb(400, 300, {x = 1, y = -0.5}, entt_null)
-    log_info("  Spawned projectile:", p4)
+    log_debug("  Spawned projectile:", p4)
 
     -- Test 5: Grenade
-    log_info("Test 5: Grenade (arc)")
+    log_debug("Test 5: Grenade (arc)")
     local p5 = ProjectileExamples.spawnGrenade(400, 300, -math.pi/4, 500, entt_null)
-    log_info("  Spawned projectile:", p5)
+    log_debug("  Spawned projectile:", p5)
 
     -- Test 6: Orbital shield
-    log_info("Test 6: Orbital projectile")
+    log_debug("Test 6: Orbital projectile")
     local p6 = ProjectileExamples.spawnOrbitalShield(400, 300, entt_null)
-    log_info("  Spawned projectile:", p6)
+    log_debug("  Spawned projectile:", p6)
 
     -- Test 7: Sine wave
-    log_info("Test 7: Sine wave projectile")
+    log_debug("Test 7: Sine wave projectile")
     local p7 = ProjectileExamples.spawnSineWaveProjectile(400, 300, 0, entt_null)
-    log_info("  Spawned projectile:", p7)
+    log_debug("  Spawned projectile:", p7)
 
     -- Test 8: Spread shot
-    log_info("Test 8: Spread shot")
+    log_debug("Test 8: Spread shot")
     local spread = ProjectileExamples.spawnSpread(400, 300, 0, entt_null, 5, math.pi/3)
-    log_info("  Spawned", #spread, "projectiles")
+    log_debug("  Spawned", #spread, "projectiles")
 
-    log_info("=== Tests Complete ===")
+    log_debug("=== Tests Complete ===")
 end
 
 return ProjectileExamples

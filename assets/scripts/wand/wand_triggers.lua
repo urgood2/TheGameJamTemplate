@@ -52,7 +52,7 @@ function WandTriggers.init()
     -- Subscribe to game events
     WandTriggers.subscribeToEvents()
 
-    log_info("WandTriggers initialized")
+    log_debug("WandTriggers initialized")
 end
 
 --- Cleans up the trigger system
@@ -68,7 +68,7 @@ function WandTriggers.cleanup()
     WandTriggers.registrations = {}
     WandTriggers.distanceTracking = {}
 
-    log_info("WandTriggers cleaned up")
+    log_debug("WandTriggers cleaned up")
 end
 
 --[[

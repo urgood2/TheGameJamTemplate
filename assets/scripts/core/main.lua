@@ -411,6 +411,10 @@ function initMainGame()
     
     
     ProjectileSystemTest = require("test_projectiles")
+    
+    
+    local WandTests = require("wand.wand_test_examples")
+    WandTests.runAllTests()
 
 end
 

@@ -1,5 +1,7 @@
 # Cumulative Wand & Cast Block State Plan
 
+Note: also ensure that all tools and systems are in place to implement the card definitions described in wand_eval file.
+
 ## Objectives
 - Track cumulative wand state per cycle (cast delay, recharge, mana use, overload) and per cast block (action-level stats, modifier context).
 - Ensure cast block execution reflects both card-derived modifiers and external player stats/buffs.

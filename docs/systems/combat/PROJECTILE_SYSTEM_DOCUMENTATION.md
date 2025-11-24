@@ -359,7 +359,7 @@ function fireProjectileAction(ctx, cardData)
         damageMultiplier = modifiers.damageMultiplier,
 
         lifetime = 4.0,
-        sprite = cardData.projectileSprite or "default_projectile.png"
+        sprite = cardData.projectileSprite or "b488.png"
     })
 
     return projectile

@@ -17,19 +17,19 @@ Integration:
 - Uses WandModifiers from wand/wand_modifiers.lua
 - Uses CombatSystem from combat/combat_system.lua
 ================================================================================
-]]--
+]] --
 
 local WandActions = {}
 
 -- Dependencies
-local ProjectileSystem = require("assets.scripts.combat.projectile_system")
-local WandModifiers = require("assets.scripts.wand.wand_modifiers")
+local ProjectileSystem = require("combat.projectile_system")
+local WandModifiers = require("wand.wand_modifiers")
 
 --[[
 ================================================================================
 MAIN ACTION EXECUTION
 ================================================================================
-]]--
+]] --
 
 --- Executes an action card with the given modifiers
 --- @param actionCard table Action card definition
@@ -86,7 +86,7 @@ end
 PROJECTILE ACTION EXECUTION
 ================================================================================
 Spawns projectiles using the ProjectileSystem from Task 1.
-]]--
+]] --
 
 --- Executes a projectile action card
 --- @param actionCard table Action card definition
@@ -98,7 +98,7 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context)
     local props = WandModifiers.applyToAction(actionCard, modifiers)
 
     -- Get spawn position and base angle
-    local spawnPos = context.playerPosition or {x = 0, y = 0}
+    local spawnPos = context.playerPosition or { x = 0, y = 0 }
     local baseAngle = context.playerAngle or 0
 
     -- Apply spread from action card
@@ -175,7 +175,7 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
     -- Build spawn parameters
     local spawnParams = {
         -- Position and direction
-        position = {x = position.x, y = position.y},
+        position = { x = position.x, y = position.y },
         angle = angle,
 
         -- Movement
@@ -242,7 +242,7 @@ end
 ================================================================================
 PROJECTILE EVENT HANDLERS
 ================================================================================
-]]--
+]] --
 
 --- Handles projectile hit event
 --- @param projectile number Projectile entity ID
@@ -304,7 +304,7 @@ end
 EFFECT ACTIONS
 ================================================================================
 Actions that apply effects to entities (heal, buff, debuff, etc.)
-]]--
+]] --
 
 --- Executes an effect action card
 --- @param actionCard table Action card definition
@@ -345,7 +345,7 @@ end
 HAZARD ACTIONS
 ================================================================================
 Actions that create persistent hazards (spike traps, AoE zones, etc.)
-]]--
+]] --
 
 --- Executes a hazard action card
 --- @param actionCard table Action card definition
@@ -365,7 +365,7 @@ end
 SUMMON ACTIONS
 ================================================================================
 Actions that summon entities (minions, allies, etc.)
-]]--
+]] --
 
 --- Executes a summon action card
 --- @param actionCard table Action card definition
@@ -387,7 +387,7 @@ end
 TELEPORT ACTIONS
 ================================================================================
 Actions that teleport the player
-]]--
+]] --
 
 --- Executes a teleport action card
 --- @param actionCard table Action card definition
@@ -407,7 +407,7 @@ end
 META ACTIONS
 ================================================================================
 Actions that affect wand state or player resources
-]]--
+]] --
 
 --- Executes a meta action card
 --- @param actionCard table Action card definition
@@ -430,7 +430,7 @@ end
 HELPER FUNCTIONS - COMBAT INTEGRATION
 ================================================================================
 These functions integrate with the combat system.
-]]--
+]] --
 
 --- Applies healing to an entity
 --- @param entity number Entity ID

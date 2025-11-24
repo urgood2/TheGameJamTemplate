@@ -15,7 +15,7 @@ Integration:
 - Used by wand_actions.lua to modify projectile properties
 - Reads from card definitions in card_eval_order_test.lua
 ================================================================================
-]]--
+]] --
 
 local WandModifiers = {}
 
@@ -24,7 +24,7 @@ local WandModifiers = {}
 MODIFIER AGGREGATION
 ================================================================================
 Takes a list of modifier cards and combines them into a single aggregate.
-]]--
+]] --
 
 --- Creates an empty modifier aggregate with default values
 --- @return table Modifier aggregate
@@ -32,24 +32,24 @@ function WandModifiers.createAggregate()
     return {
         -- Speed modifiers
         speedMultiplier = 1.0,
-        speedBonus = 0,           -- additive bonus (cards with speed_modifier)
+        speedBonus = 0, -- additive bonus (cards with speed_modifier)
 
         -- Damage modifiers
         damageMultiplier = 1.0,
-        damageBonus = 0,          -- flat bonus (cards with damage_modifier)
+        damageBonus = 0, -- flat bonus (cards with damage_modifier)
 
         -- Size modifiers
         sizeMultiplier = 1.0,
 
         -- Lifetime modifiers
         lifetimeMultiplier = 1.0,
-        lifetimeBonus = 0,        -- additive bonus in ms
+        lifetimeBonus = 0, -- additive bonus in ms
 
         -- Spread modifiers
-        spreadAngleBonus = 0,     -- additive (cards with spread_modifier)
+        spreadAngleBonus = 0, -- additive (cards with spread_modifier)
 
         -- Crit modifiers
-        critChanceBonus = 0,      -- additive % (cards with critical_hit_chance_modifier)
+        critChanceBonus = 0, -- additive % (cards with critical_hit_chance_modifier)
 
         -- Behavior modifiers
         pierceCount = 0,
@@ -74,7 +74,7 @@ function WandModifiers.createAggregate()
         ricochetCount = 0,
 
         -- Multicast
-        multicastCount = 1,       -- 1 = single shot
+        multicastCount = 1,        -- 1 = single shot
         circularPattern = false,
         spreadAngle = math.pi / 6, -- default 30 degrees
 
@@ -86,19 +86,19 @@ function WandModifiers.createAggregate()
         chainLightningTargets = 3,
         chainLightningDamageMult = 0.5,
 
-        lifesteal = 0,            -- percent of damage healed
+        lifesteal = 0, -- percent of damage healed
 
         knockback = 0,
-        slowOnHit = 0,            -- percent slow
+        slowOnHit = 0, -- percent slow
         slowDuration = 0,
 
-        healOnHit = 0,            -- flat heal amount
+        healOnHit = 0,      -- flat heal amount
 
-        statusEffects = {},       -- list of status effects to apply
+        statusEffects = {}, -- list of status effects to apply
 
         -- Trigger modifiers
         triggerOnCollision = false,
-        triggerOnTimer = nil,     -- milliseconds
+        triggerOnTimer = nil, -- milliseconds
         triggerOnDeath = false,
 
         -- Special modifiers
@@ -303,41 +303,41 @@ function WandModifiers.mergePlayerStats(agg, playerStats)
     -- Snapshot relevant stats
     -- We snapshot them here so we don't need to keep the full playerStats object around
     -- and to ensure consistency during the cast block execution.
-    
+
     local snapshot = agg.statsSnapshot
-    
+
     -- Global damage modifiers
     snapshot.all_damage_pct = playerStats:get("all_damage_pct")
     snapshot.crit_damage_pct = playerStats:get("crit_damage_pct")
-    
+
     -- Speed modifiers
     snapshot.cast_speed = playerStats:get("cast_speed")
     snapshot.attack_speed = playerStats:get("attack_speed")
-    
+
     -- Resource modifiers
     snapshot.skill_energy_cost_reduction = playerStats:get("skill_energy_cost_reduction")
-    
+
     -- Damage type modifiers
     -- We assume a standard set of damage types, or we could iterate if we had the list
     local damageTypes = {
-        "physical", "fire", "cold", "lightning", "poison", 
+        "physical", "fire", "cold", "lightning", "poison",
         "vitality", "aether", "chaos", "holy", "arcane", "void"
     }
-    
+
     for _, dt in ipairs(damageTypes) do
         snapshot[dt .. "_damage_pct"] = playerStats:get(dt .. "_modifier_pct")
     end
-    
+
     -- Apply global modifiers to aggregate fields immediately where appropriate
-    
-    -- Cast Speed -> Speed Multiplier? 
+
+    -- Cast Speed -> Speed Multiplier?
     -- Usually cast speed affects the rate of fire, not projectile speed.
     -- Projectile speed might be a separate stat, but for now let's leave projectile speed untouched by cast_speed.
-    
+
     -- Crit Chance (if available in stats, usually offensive_ability drives this in GD-like systems)
     -- But if there's a direct crit_chance stat:
     -- agg.critChanceBonus = agg.critChanceBonus + playerStats:get("crit_chance")
-    
+
     -- Mana Cost (Energy Cost)
     if snapshot.skill_energy_cost_reduction > 0 then
         agg.manaCostMultiplier = (agg.manaCostMultiplier or 1.0) * (1.0 - snapshot.skill_energy_cost_reduction / 100)
@@ -349,14 +349,14 @@ end
 COLLISION BEHAVIOR RESOLUTION
 ================================================================================
 Determines collision behavior based on modifier priority.
-]]--
+]] --
 
 --- Determines collision behavior from modifiers
 --- Priority: explode > bounce > pierce > destroy
 --- @param modifiers table Modifier aggregate
 --- @return string Collision behavior constant
 function WandModifiers.getCollisionBehavior(modifiers)
-    local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+    local ProjectileSystem = require("combat.projectile_system")
 
     -- Priority: explosion > bounce > pierce > destroy
     if modifiers.explosionRadius and modifiers.explosionRadius > 0 then
@@ -375,7 +375,7 @@ end
 MULTICAST ANGLE CALCULATION
 ================================================================================
 Calculates angles for multicast projectiles based on pattern.
-]]--
+]] --
 
 --- Calculates angles for multicast projectiles
 --- @param modifiers table Modifier aggregate
@@ -385,7 +385,7 @@ function WandModifiers.calculateMulticastAngles(modifiers, baseAngle)
     local count = modifiers.multicastCount or 1
 
     if count == 1 then
-        return {baseAngle}
+        return { baseAngle }
     end
 
     local angles = {}
@@ -423,7 +423,7 @@ end
 ON-HIT EFFECT HANDLING
 ================================================================================
 Handles effects that trigger when projectile hits a target.
-]]--
+]] --
 
 --- Creates on-hit callback function from modifiers
 --- @param modifiers table Modifier aggregate
@@ -467,7 +467,7 @@ end
 MODIFIER APPLICATION TO ACTION CARDS
 ================================================================================
 Applies modifiers to action card properties.
-]]--
+]] --
 
 --- Applies modifiers to an action card, returning modified properties
 --- @param actionCard table Action card definition
@@ -480,10 +480,10 @@ function WandModifiers.applyToAction(actionCard, modifiers)
     -- Apply player stats: (Base + Bonus) * (1 + Total% / 100) * Multiplier
     local baseDamage = actionCard.damage or 0
     local damageType = actionCard.damage_type or "physical"
-    
+
     local stats = modifiers.statsSnapshot
     local playerDamagePct = (stats.all_damage_pct or 0) + (stats[damageType .. "_damage_pct"] or 0)
-    
+
     modified.damage = (baseDamage + modifiers.damageBonus) * (1.0 + playerDamagePct / 100) * modifiers.damageMultiplier
 
     -- Speed: base + card's speed modifier, then apply aggregate multiplier
@@ -492,9 +492,10 @@ function WandModifiers.applyToAction(actionCard, modifiers)
     modified.speed = (baseSpeed + cardSpeedMod * 10) * modifiers.speedMultiplier
 
     -- Lifetime: base + card's lifetime modifier, then apply aggregate multiplier
-    local baseLifetime = actionCard.lifetime or 2000  -- milliseconds
+    local baseLifetime = actionCard.lifetime or 2000                                                  -- milliseconds
     local cardLifetimeMod = actionCard.lifetime_modifier or 0
-    modified.lifetime = (baseLifetime + cardLifetimeMod * 1000) * modifiers.lifetimeMultiplier / 1000  -- convert to seconds
+    modified.lifetime = (baseLifetime + cardLifetimeMod * 1000) * modifiers.lifetimeMultiplier /
+    1000                                                                                              -- convert to seconds
 
     -- Size: from modifier only (cards don't have base size usually)
     modified.size = 16 * modifiers.sizeMultiplier
@@ -502,7 +503,8 @@ function WandModifiers.applyToAction(actionCard, modifiers)
     -- Spread angle: base + card's spread + modifier's spread
     local baseSpread = actionCard.spread_angle or 0
     local cardSpreadMod = actionCard.spread_modifier or 0
-    modified.spreadAngle = (baseSpread + cardSpreadMod + modifiers.spreadAngleBonus) * (math.pi / 180)  -- convert to radians
+    modified.spreadAngle = (baseSpread + cardSpreadMod + modifiers.spreadAngleBonus) *
+    (math.pi / 180)                                                                                    -- convert to radians
 
     -- Damage type
     modified.damageType = actionCard.damage_type or "physical"
@@ -527,7 +529,7 @@ end
 ================================================================================
 UTILITY FUNCTIONS
 ================================================================================
-]]--
+]] --
 
 --- Checks if modifiers include any on-hit effects
 --- @param modifiers table Modifier aggregate

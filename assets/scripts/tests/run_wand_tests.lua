@@ -181,9 +181,9 @@ function StaticVerification.test3_ModuleDependencies()
 
     -- Check WandExecutor dependencies
     local _, executorReqs = checkRequires(basePath .. "wand/wand_executor.lua", {
-        "assets.scripts.wand.wand_modifiers",
-        "assets.scripts.wand.wand_actions",
-        "assets.scripts.wand.wand_triggers",
+        "wand.wand_modifiers",
+        "wand.wand_actions",
+        "wand.wand_triggers",
     })
 
     print("WandExecutor requires:")
@@ -193,8 +193,8 @@ function StaticVerification.test3_ModuleDependencies()
 
     -- Check WandTestExamples dependencies
     local _, testReqs = checkRequires(basePath .. "wand/wand_test_examples.lua", {
-        "assets.scripts.core.card_eval_order_test",
-        "assets.scripts.wand.wand_executor",
+        "core.card_eval_order_test",
+        "wand.wand_executor",
     })
 
     print("WandTestExamples requires:")

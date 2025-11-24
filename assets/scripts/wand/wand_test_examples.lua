@@ -17,19 +17,19 @@ Usage:
   local WandTests = require("wand.wand_test_examples")
   WandTests.runAllTests()
 ================================================================================
-]]--
+]] --
 
 local WandTests = {}
 
 -- Dependencies
-local cardEval = require("assets.scripts.core.card_eval_order_test")
-local WandExecutor = require("assets.scripts.wand.wand_executor")
+local cardEval = require("core.card_eval_order_test")
+local WandExecutor = require("wand.wand_executor")
 
 --[[
 ================================================================================
 EXAMPLE 1: BASIC FIRE BOLT
 ================================================================================
-]]--
+]] --
 
 function WandTests.example1_BasicFireBolt()
     print("\n" .. string.rep("=", 60))
@@ -78,7 +78,7 @@ end
 ================================================================================
 EXAMPLE 2: PIERCING ICE SHARD
 ================================================================================
-]]--
+]] --
 
 function WandTests.example2_PiercingIceShard()
     print("\n" .. string.rep("=", 60))
@@ -90,7 +90,7 @@ function WandTests.example2_PiercingIceShard()
         type = "trigger",
         mana_max = 50,
         mana_recharge_rate = 10,
-        cast_block_size = 2,  -- modifier + action
+        cast_block_size = 2, -- modifier + action
         cast_delay = 100,
         recharge_time = 800,
         spread_angle = 3,
@@ -134,7 +134,7 @@ end
 ================================================================================
 EXAMPLE 3: TRIPLE SHOT
 ================================================================================
-]]--
+]] --
 
 function WandTests.example3_TripleShot()
     print("\n" .. string.rep("=", 60))
@@ -182,7 +182,7 @@ end
 ================================================================================
 EXAMPLE 4: EXPLOSIVE ROUNDS
 ================================================================================
-]]--
+]] --
 
 function WandTests.example4_ExplosiveRounds()
     print("\n" .. string.rep("=", 60))
@@ -229,7 +229,7 @@ end
 ================================================================================
 EXAMPLE 5: HOMING MISSILES
 ================================================================================
-]]--
+]] --
 
 function WandTests.example5_HomingMissiles()
     print("\n" .. string.rep("=", 60))
@@ -277,7 +277,7 @@ end
 ================================================================================
 EXAMPLE 6: CHAIN LIGHTNING (On-Hit Trigger)
 ================================================================================
-]]--
+]] --
 
 function WandTests.example6_ChainLightning()
     print("\n" .. string.rep("=", 60))
@@ -334,7 +334,7 @@ end
 ================================================================================
 EXAMPLE 7: TIMER BOMB (Delayed Sub-Cast)
 ================================================================================
-]]--
+]] --
 
 function WandTests.example7_TimerBomb()
     print("\n" .. string.rep("=", 60))
@@ -382,7 +382,7 @@ end
 ================================================================================
 TEST RUNNER
 ================================================================================
-]]--
+]] --
 
 --- Runs all test examples
 function WandTests.runAllTests()

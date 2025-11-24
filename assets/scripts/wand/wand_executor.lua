@@ -23,17 +23,17 @@ Integration:
 - Uses WandActions for action execution
 - Uses WandModifiers for modifier aggregation
 ================================================================================
-]]--
+]] --
 
 local WandExecutor = {}
 
 -- Dependencies
 local timer = require("core.timer")
-local cardEval = require("assets.scripts.core.card_eval_order_test")
-local WandActions = require("assets.scripts.wand.wand_actions")
-local WandModifiers = require("assets.scripts.wand.wand_modifiers")
-local WandTriggers = require("assets.scripts.wand.wand_triggers")
-local ProjectileSystem = require("assets.scripts.combat.projectile_system")
+local cardEval = require("core.card_eval_order_test")
+local WandActions = require("wand.wand_actions")
+local WandModifiers = require("wand.wand_modifiers")
+local WandTriggers = require("wand.wand_triggers")
+local ProjectileSystem = require("combat.projectile_system")
 
 -- Wand states (persistent)
 WandExecutor.wandStates = {}
@@ -48,7 +48,7 @@ WandExecutor.pendingSubCasts = {}
 ================================================================================
 INITIALIZATION
 ================================================================================
-]]--
+]] --
 
 --- Initializes the wand executor system
 function WandExecutor.init()
@@ -99,7 +99,7 @@ end
 ================================================================================
 WAND LOADING & REGISTRATION
 ================================================================================
-]]--
+]] --
 
 --- Loads a wand and registers its trigger
 --- @param wandDef table Wand definition from card_eval_order_test
@@ -146,7 +146,7 @@ end
 ================================================================================
 WAND STATE MANAGEMENT
 ================================================================================
-]]--
+]] --
 
 --- Creates initial wand state
 --- @param wandDef table Wand definition
@@ -168,7 +168,7 @@ function WandExecutor.createWandState(wandDef)
         -- Mana tracking
         currentMana = wandDef.mana_max or 100,
         maxMana = wandDef.mana_max or 100,
-        manaRegenRate = wandDef.mana_recharge_rate or 5,  -- per second
+        manaRegenRate = wandDef.mana_recharge_rate or 5, -- per second
 
         -- Cast execution state
         currentBlockIndex = 1,
@@ -176,7 +176,7 @@ function WandExecutor.createWandState(wandDef)
         isRecharging = false,
 
         -- Runtime state
-        lastEvaluationResult = nil,  -- cached evaluation result
+        lastEvaluationResult = nil, -- cached evaluation result
     }
 end
 
@@ -238,7 +238,7 @@ end
 ================================================================================
 MAIN EXECUTION
 ================================================================================
-]]--
+]] --
 
 --- Executes a wand (called by trigger)
 --- @param wandId string Wand identifier
@@ -301,12 +301,12 @@ function WandExecutor.execute(wandId, triggerType)
             timestamp = os.clock(),
             totalManaSpent = context.cumulative.manaSpent,
             totalProjectiles = context.cumulative.projectileCount,
-            totalCastDelay = totalCastDelay * 1000,  -- Convert back to ms for logging
+            totalCastDelay = totalCastDelay * 1000, -- Convert back to ms for logging
             totalRecharge = activeWand.definition.recharge_time,
             blocksExecuted = #evaluationResult.blocks
         }
 
-        print(string.format("[WandExecutor] Executed wand %s - total delay: %.3fs, recharge: %.3fs, cooldown: %.3fs", 
+        print(string.format("[WandExecutor] Executed wand %s - total delay: %.3fs, recharge: %.3fs, cooldown: %.3fs",
             wandId, totalCastDelay, rechargeTime, totalCooldown))
     end
 
@@ -342,7 +342,7 @@ end
 ================================================================================
 CAST BLOCK EXECUTION
 ================================================================================
-]]--
+]] --
 
 --- Executes a sequence of cast blocks
 --- @param blocks table Array of cast blocks from card evaluation
@@ -351,8 +351,8 @@ CAST BLOCK EXECUTION
 --- @return boolean Success
 --- @return number Total cast delay accumulated (in seconds)
 function WandExecutor.executeCastBlocks(blocks, context, state)
-    local totalCastDelay = 0  -- Accumulate cast delay across all blocks
-    
+    local totalCastDelay = 0 -- Accumulate cast delay across all blocks
+
     for blockIndex, block in ipairs(blocks) do
         local success, blockCastDelay = WandExecutor.executeCastBlock(block, context, state, blockIndex)
 
@@ -409,7 +409,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
         if actionCard.type == "action" then
             -- Check mana cost (Overheat: Allow negative mana)
             local manaCost = actionCard.mana_cost or 0
-            
+
             -- Execute action
             local result = WandActions.execute(actionCard, modifiers, context)
 
@@ -428,8 +428,8 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
     end
 
     -- Calculate cast delay for this block
-    local blockCastDelay = (block.total_cast_delay or 0) / 1000  -- Convert ms to seconds
-    
+    local blockCastDelay = (block.total_cast_delay or 0) / 1000 -- Convert ms to seconds
+
     -- Apply player cast speed to this block's delay
     if context.playerStats and context.playerStats.get then
         local castSpeed = context.playerStats:get("cast_speed") or 0
@@ -437,18 +437,19 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
             blockCastDelay = blockCastDelay / (1.0 + castSpeed / 100)
         end
     end
-    
+
     -- Apply Overheat Penalty to this block's cast delay
     if state.currentMana < 0 then
         local deficit = math.abs(state.currentMana)
         local maxFlux = context.wandDefinition.mana_max or 100
         local overloadRatio = deficit / maxFlux
         local penaltyFactor = 5.0
-        
+
         local cooldownMultiplier = 1.0 + (overloadRatio * penaltyFactor)
         blockCastDelay = blockCastDelay * cooldownMultiplier
-        
-        print(string.format("[WandExecutor] Block %d Overheat! Deficit: %.1f, Ratio: %.2f, Mult: %.2f, BlockDelay: %.3fs", 
+
+        print(string.format(
+            "[WandExecutor] Block %d Overheat! Deficit: %.1f, Ratio: %.2f, Mult: %.2f, BlockDelay: %.3fs",
             blockIndex, deficit, overloadRatio, cooldownMultiplier, blockCastDelay))
     end
 
@@ -526,7 +527,7 @@ end
 ================================================================================
 EXECUTION CONTEXT
 ================================================================================
-]]--
+]] --
 
 --- Creates an execution context for wand casting
 --- @param wandId string Wand identifier
@@ -544,7 +545,7 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
         speed_mult = 1.0,
         -- Add other defaults or fetch from component
     }
-    
+
     -- TODO: Fetch actual stats from player entity components
     if playerEntity and component_cache and component_cache.get then
         -- Example: local stats = component_cache.get(playerEntity, "PlayerStats")
@@ -592,7 +593,7 @@ end
 ================================================================================
 HELPER FUNCTIONS
 ================================================================================
-]]--
+]] --
 
 --- Gets the player entity
 --- @return number Player entity ID
@@ -606,7 +607,7 @@ end
 --- @return table {x, y} position
 function WandExecutor.getPlayerPosition(playerEntity)
     if not playerEntity or not component_cache then
-        return {x = 0, y = 0}
+        return { x = 0, y = 0 }
     end
 
     local transform = component_cache.get(playerEntity, Transform)
@@ -617,7 +618,7 @@ function WandExecutor.getPlayerPosition(playerEntity)
         }
     end
 
-    return {x = 0, y = 0}
+    return { x = 0, y = 0 }
 end
 
 --- Gets player facing angle
@@ -653,7 +654,7 @@ end
 ================================================================================
 UTILITY FUNCTIONS
 ================================================================================
-]]--
+]] --
 
 --- Resets a wand (clears cooldown, restores charges/mana)
 --- @param wandId string Wand identifier

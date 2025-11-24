@@ -103,7 +103,7 @@ current_board_set_index = 1
 controller_focused_entity = nil
 
 
-local dash_sfx_list = {
+local dash_sfx_list               = {
     "dash_1",
     "dash_2",
     "dash_3",
@@ -113,15 +113,15 @@ local dash_sfx_list = {
     "dash_7",
 }
 
-local DASH_COOLDOWN_SECONDS  = 2.0   -- how long before the next dash is available
-local STAMINA_TICKER_LINGER  = 1.0   -- how long the stamina bar lingers after refilling
-local ENEMY_HEALTH_BAR_LINGER = 2.0  -- how long enemy health bars stay visible after a hit
+local DASH_COOLDOWN_SECONDS       = 2.0 -- how long before the next dash is available
+local STAMINA_TICKER_LINGER       = 1.0 -- how long the stamina bar lingers after refilling
+local ENEMY_HEALTH_BAR_LINGER     = 2.0 -- how long enemy health bars stay visible after a hit
 
 local playerDashCooldownRemaining = 0
 local playerStaminaTickerTimer    = 0
 
-local enemyHealthUiState = {}                               -- eid -> { actor=<combat actor>, visibleUntil=<time> }
-local combatActorToEntity = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
+local enemyHealthUiState          = {}                         -- eid -> { actor=<combat actor>, visibleUntil=<time> }
+local combatActorToEntity         = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
 
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
@@ -590,10 +590,11 @@ function setUpCardAndWandStatDisplay()
                             c.color = util.getColor("RED")
                             c.fontSize = STAT_FONT_SIZE * 1.5
                         end, z_orders.card_text, layer.DrawCommandSpace.World)
-                        
+
                         -- Draw deficit
                         command_buffer.queueDrawText(layers.sprites, function(c)
-                            c.text = localization.get("ui.wand_flux_deficit", { amount = string.format("%.1f", math.abs(wandState.currentMana)) })
+                            c.text = localization.get("ui.wand_flux_deficit",
+                                { amount = string.format("%.1f", math.abs(wandState.currentMana)) })
                             c.font = localization.getFont()
                             c.x = currentX
                             c.y = currentY + lineHeight * 2.5
@@ -723,14 +724,14 @@ function createNewCard(id, x, y, gameStateToApply)
                                 log_debug("Card", eid, "is being dragged, forcing z to", zToUse, "from",
                                     layer_order_system.getZIndex(eid))
                             end
-                            
+
                             -- check if card is over capacity on its board
                             local isOverCapacity = false
                             if cardScript.currentBoardEntity and entity_cache.valid(cardScript.currentBoardEntity) then
                                 -- skip capacity check for inventory boards
-                                local isInventoryBoard = (cardScript.currentBoardEntity == inventory_board_id or 
-                                                         cardScript.currentBoardEntity == trigger_inventory_board_id)
-                                
+                                local isInventoryBoard = (cardScript.currentBoardEntity == inventory_board_id or
+                                    cardScript.currentBoardEntity == trigger_inventory_board_id)
+
                                 if not isInventoryBoard then
                                     local board = boards[cardScript.currentBoardEntity]
                                     if board and board.cards then
@@ -742,11 +743,11 @@ function createNewCard(id, x, y, gameStateToApply)
                                                 break
                                             end
                                         end
-                                        
+
                                         if cardIndex then
                                             -- determine max capacity based on board type
                                             local maxCapacity = 1 -- default for trigger boards
-                                            
+
                                             -- check if this is an action board by looking through board_sets
                                             for _, boardSet in ipairs(board_sets) do
                                                 if boardSet.action_board_id == cardScript.currentBoardEntity then
@@ -757,7 +758,7 @@ function createNewCard(id, x, y, gameStateToApply)
                                                     break
                                                 end
                                             end
-                                            
+
                                             -- card is over capacity if its index exceeds max capacity
                                             if cardIndex > maxCapacity then
                                                 isOverCapacity = true
@@ -766,7 +767,7 @@ function createNewCard(id, x, y, gameStateToApply)
                                     end
                                 end
                             end
-                            
+
                             -- slightly above the card sprite
                             command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()
                                 -- draw debug label.
@@ -786,7 +787,7 @@ function createNewCard(id, x, y, gameStateToApply)
                                     local centerY = t.actualH * 0.5
                                     local thickness = 8
                                     local xColor = util.getColor("red")
-                                    
+
                                     -- draw diagonal line from top-left to bottom-right
                                     command_buffer.queueDrawLine(layers.sprites, function(c)
                                         c.x1 = centerX - xSize * 0.5
@@ -796,7 +797,7 @@ function createNewCard(id, x, y, gameStateToApply)
                                         c.color = xColor
                                         c.lineWidth = thickness
                                     end, zToUse + 2, layer.DrawCommandSpace.World)
-                                    
+
                                     -- draw diagonal line from top-right to bottom-left
                                     command_buffer.queueDrawLine(layers.sprites, function(c)
                                         c.x1 = centerX + xSize * 0.5
@@ -838,7 +839,7 @@ function createNewCard(id, x, y, gameStateToApply)
                 end
                 -- tracy.zoneEnd()
             end,
-            nil,            -- no onComplete
+            nil,                -- no onComplete
             "card_render_timer" -- tag
         )
     end
@@ -1213,7 +1214,7 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
     local cardTransform = component_cache.get(cardEntityID, Transform)
     if not cardTransform then return end
 
-    
+
     -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
     local PulseObjectType = Node:extend()
 
@@ -1263,7 +1264,7 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
     local pulseObject = PulseObjectType {}
         :attach_ecs { create_new = true }
         :destroy_when(function(self, eid) return self.age >= self.lifetime end)
-        
+
     -- add planning state tag after clearing all tags
     clear_state_tags(pulseObject:handle())
     add_state_tag(pulseObject:handle(), PLANNING_STATE)
@@ -1773,7 +1774,7 @@ function setUpLogicTimers()
         -- 1. Basic attack (vanilla weapon hit)
         CombatSystem.Game.Effects.deal_damage { weapon = true, scale_pct = 100 } (combat_context, enemyCombatTable,
             playerCombatTable)
-            
+
         -- pull player hp spring
         if hpBarScaleSpringEntity and entity_cache.valid(hpBarScaleSpringEntity) then
             local hpBarSpringRef = spring.get(registry, hpBarScaleSpringEntity)
@@ -1782,7 +1783,7 @@ function setUpLogicTimers()
             end
         end
     end
-    
+
     if signal.exists("on_bump_enemy") == false then
         signal.register(
             "on_bump_enemy",
@@ -1804,16 +1805,15 @@ function setUpLogicTimers()
                         local triggerCardEid = triggerBoard.cards[1]
                         if triggerCardEid and triggerCardEid ~= entt_null and entity_cache.valid(triggerCardEid) then
                             local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
-                            
+
                             -- we have a trigger card in the board. we need to assemble a deck of action cards from the action board, and execute them based on the trigger type.
-                            
+
                             -- for now, just make sure that timer is running.
                             if timer.get_delay("trigger_simul_timer") == nil then
                                 -- this timer will provide visual feedback for any of the cards which are active.
                                 timer.every(
                                     1.0, -- timing may need to change if there are many cards.
-                                    function() 
-                                        
+                                    function()
                                         -- bail if current action board has no cards
                                         local currentSet = board_sets[current_board_set_index]
                                         if not currentSet then return end
@@ -1821,63 +1821,68 @@ function setUpLogicTimers()
                                         if not actionBoardID or actionBoardID == entt_null or not entity_cache.valid(actionBoardID) then return end
                                         local actionBoard = boards[actionBoardID]
                                         if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return end
-                                        
-                                        local triggerBoardScript = getScriptTableFromEntityID(currentSet.trigger_board_id)
+
+                                        local triggerBoardScript = getScriptTableFromEntityID(currentSet
+                                        .trigger_board_id)
                                         log_debug("trigger_simul_timer fired for action board:", actionBoardID)
                                         log_debug("action board has", #actionBoard.cards, "cards")
                                         log_debug("Now simulating wand", currentSet.wandDef.id) -- wand def is stored in the set
-                                        
+
                                         -- run the simulation, then take the return value to pulse the cards that would be fired.
-                                        
+
                                         local deck = {}
                                         for _, cardEid in ipairs(actionBoard.cards) do
                                             local cardScript = getScriptTableFromEntityID(cardEid)
                                             if cardScript then
                                                 table.insert(deck, cardScript)
-                                            
                                             end
                                         end
-                                        
+
                                         -- print deck
                                         for i, card in ipairs(deck) do
                                             log_debug(" - deck card", i, ":", card.cardID)
                                         end
-                                        
+
                                         local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
-                                        
+
                                         local pitchToUse = 0.7
-                                        local castSequenceID = tostring(actionBoardID) .. "_" .. tostring(os.clock()) .. "_" .. tostring(math.random(1000000))
-                                        
+                                        local castSequenceID = tostring(actionBoardID) ..
+                                        "_" .. tostring(os.clock()) .. "_" .. tostring(math.random(1000000))
+
                                         -- inspect the cast blocks. for each block, pulse the corresponding cards.
                                         for blockIdx, castBlock in ipairs(simulatedResult.blocks) do
                                             log_debug(" - cast block", blockIdx, "type:", castBlock.type)
-                                            
+
                                             -- Use card_delays for precise timing
                                             for cardIdx, delayInfo in ipairs(castBlock.card_delays) do
                                                 local card = delayInfo.card
-                                                local cumulativeDelay = delayInfo.cumulative_delay / 1000.0  -- Convert ms to seconds
-                                                local timerTag = "cast_block_" .. castSequenceID .. "_block" .. blockIdx .. "_card" .. cardIdx
-                                                
+                                                local cumulativeDelay = delayInfo.cumulative_delay /
+                                                1000.0                                                      -- Convert ms to seconds
+                                                local timerTag = "cast_block_" ..
+                                                castSequenceID .. "_block" .. blockIdx .. "_card" .. cardIdx
+
                                                 timer.after(
                                                     cumulativeDelay,
                                                     function()
-                                                        log_debug("   - Firing card:", card.cardID, "at", cumulativeDelay, "seconds")
-                                                        local cardTransform = component_cache.get(card:handle(), Transform)
+                                                        log_debug("   - Firing card:", card.cardID, "at", cumulativeDelay,
+                                                            "seconds")
+                                                        local cardTransform = component_cache.get(card:handle(),
+                                                            Transform)
                                                         if cardTransform then
                                                             cardTransform.visualS = 1.5
-                                                            playSoundEffect("effects", "planning_card_activation", 
+                                                            playSoundEffect("effects", "planning_card_activation",
                                                                 0.8 + math.random() * 0.4 + pitchToUse)
                                                             pitchToUse = pitchToUse + 0.05
-                                                            
+
                                                             -- pulse the card
-                                                            addPulseEffectBehindCard(card:handle(), 
+                                                            addPulseEffectBehindCard(card:handle(),
                                                                 util.getColor("red"), util.getColor("black"))
                                                         end
                                                     end,
                                                     timerTag
                                                 )
                                             end
-                                            
+
                                             -- TODO: use total_cast_delay and total_recharge_time to determine wand visual activation.
                                         end
                                     end,
@@ -1887,15 +1892,15 @@ function setUpLogicTimers()
                                     "trigger_simul_timer"
                                 )
                             end
-                            
+
                             -- if triggerCardScript and triggerCardScript.cardID == "every_N_seconds" then
                             --     local timerName = "every_N_seconds_trigger_" .. tostring(triggerBoardID)
                             --     if not timer.get_timer_and_delay(timerName) then
                             --         startTriggerNSecondsTimer(triggerBoardID, actionBoardID, timerName)
                             --     end
                             -- end
-                            
-                            -- 
+
+                            --
 
                             -- bump enemy. if signal not registered, register it.
                         end
@@ -2003,7 +2008,7 @@ function applyStateToBoardSet(boardSet, stateTagToApply)
             -- apply to board
             add_state_tag(triggerBoard:handle(), stateTagToApply)
             remove_state_tag(triggerBoard:handle(), PLANNING_STATE)
-            
+
             -- apply to text entity
             add_state_tag(triggerBoard.textEntity, stateTagToApply)
             remove_state_tag(triggerBoard.textEntity, PLANNING_STATE)
@@ -2045,9 +2050,9 @@ function makeWandTooltip(wand_def)
     if not wand_def then
         wand_def = WandEngine.wand_defs[1]
     end
-    
+
     local globalFontSize = 10
-    
+
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
         if value == nil then return true end
@@ -2055,21 +2060,21 @@ function makeWandTooltip(wand_def)
         if type(value) == "string" and (value == "N/A" or value == "NONE") then return true end
         return false
     end
-    
+
     -- Helper function to add a line if value is not excluded
     local function addLine(lines, label, value, valueFormatter)
         if shouldExclude(value) then return end
         local formattedValue = valueFormatter and valueFormatter(value) or tostring(value)
-        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" .. 
+        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" ..
             formattedValue .. "](color=pink;fontSize=" .. globalFontSize .. ")")
     end
-    
+
     local lines = {}
-    
+
     -- Always show ID
-    table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" .. 
+    table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" ..
         wand_def.id .. "](color=pink;fontSize=" .. globalFontSize .. ")")
-    
+
     addLine(lines, "type", wand_def.type)
     addLine(lines, "cast block size", wand_def.cast_block_size)
     addLine(lines, "cast delay", wand_def.cast_delay)
@@ -2077,12 +2082,12 @@ function makeWandTooltip(wand_def)
     addLine(lines, "spread", wand_def.spread_angle)
     addLine(lines, "shuffle", wand_def.shuffle, function(v) return v and "on" or "off" end)
     addLine(lines, "total slots", wand_def.total_card_slots)
-    
+
     -- Handle always_cast_cards specially
     if wand_def.always_cast_cards and #wand_def.always_cast_cards > 0 then
         addLine(lines, "always casts", table.concat(wand_def.always_cast_cards, ", "))
     end
-    
+
     local text = table.concat(lines, "\n")
     local textDef = ui.definitions.getTextFromString(text)
 
@@ -2114,9 +2119,9 @@ function makeCardTooltip(card_def)
     if not card_def then
         card_def = CardTemplates.ACTION_BASIC_PROJECTILE
     end
-    
+
     local globalFontSize = 10
-    
+
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
         if value == nil then return true end
@@ -2125,22 +2130,22 @@ function makeCardTooltip(card_def)
         if type(value) == "number" and value == 0 then return false end -- Keep 0 values
         return false
     end
-    
+
     -- Helper function to add a line if value is not excluded
     local function addLine(lines, label, value)
         if shouldExclude(value) then return end
-        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" .. 
+        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" ..
             tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. ")")
     end
-    
+
     local lines = {}
-    
+
     -- Always show ID and type
     if card_def.id then
-        table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" .. 
+        table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" ..
             card_def.id .. "](color=pink;fontSize=" .. globalFontSize .. ")")
     end
-    
+
     addLine(lines, "type", card_def.type)
     addLine(lines, "max uses", card_def.max_uses)
     addLine(lines, "mana cost", card_def.mana_cost)
@@ -2157,7 +2162,7 @@ function makeCardTooltip(card_def)
     addLine(lines, "lifetime modifier", card_def.lifetime_modifier)
     addLine(lines, "crit chance mod", card_def.critical_hit_chance_modifier)
     addLine(lines, "weight", card_def.weight)
-    
+
     local text = table.concat(lines, "\n")
     local textDef = ui.definitions.getTextFromString(text)
 
@@ -2784,7 +2789,7 @@ function initPlanningPhase()
         end
 
         boardSet.wandDef = WandEngine.wand_defs[indexToUse]
-        
+
         -- inject the def with the trigger board's entity id
 
         boardSet.wandDef = util.deep_copy(WandEngine.wand_defs[indexToUse]) -- make a copy to avoid mutating original
@@ -2876,13 +2881,13 @@ function initCombatSystem()
 
 
     combat_context     = {
-        stat_defs    = combatStatDefs,  -- definitions for stats in this combat
-        DAMAGE_TYPES = DAMAGE_TYPES,    -- damage types available in this combat
-        _make_actor  = make_actor,      -- Factory for creating actors
-        debug        = true,            -- verbose debug prints across systems
-        bus          = combatBus,       -- shared event bus for this arena
-        time         = combatTime,      -- shared clock for statuses/DoTs/cooldowns
-        combat       = combatBundle     -- optional bundle for RR+damage types, if needed
+        stat_defs    = combatStatDefs, -- definitions for stats in this combat
+        DAMAGE_TYPES = DAMAGE_TYPES,   -- damage types available in this combat
+        _make_actor  = make_actor,     -- Factory for creating actors
+        debug        = true,           -- verbose debug prints across systems
+        bus          = combatBus,      -- shared event bus for this arena
+        time         = combatTime,     -- shared clock for statuses/DoTs/cooldowns
+        combat       = combatBundle    -- optional bundle for RR+damage types, if needed
     }
 
     local ctx          = combat_context
@@ -2935,14 +2940,14 @@ function initCombatSystem()
 
     -- store in player entity for easy access later
     assert(survivorEntity and entity_cache.valid(survivorEntity), "Survivor entity is not valid in combat system init!")
-    local playerScript       = getScriptTableFromEntityID(survivorEntity)
-    playerScript.combatTable = hero
+    local playerScript        = getScriptTableFromEntityID(survivorEntity)
+    playerScript.combatTable  = hero
     combatActorToEntity[hero] = survivorEntity
 
     -- attach defs/derivations to ctx for easy access later for pets
-    ctx._defs                = combatStatDefs
-    ctx._attach              = CombatSystem.Game.Content.attach_attribute_derivations
-    ctx._make_actor          = make_actor
+    ctx._defs                 = combatStatDefs
+    ctx._attach               = CombatSystem.Game.Content.attach_attribute_derivations
+    ctx._make_actor           = make_actor
 
     -- subscribe to events.
     ctx.bus:on('OnLevelUp', function()
@@ -2955,20 +2960,20 @@ function initCombatSystem()
             enemyHealthUiState[targetEntity].visibleUntil = GetTime() + ENEMY_HEALTH_BAR_LINGER
         end
     end)
-    
+
     -- make springs for exp bar and hp bar SCALE (for undulation effect)
     expBarScaleSpringEntity, expBarScaleSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
         target = 1.0,
         smoothingFactor = 0.9,
         preventOvershoot = false,
         maxVelocity = 10.0
-        })
+    })
     hpBarScaleSpringEntity, hpBarScaleSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
         target = 1.0,
         smoothingFactor = 0.9,
         preventOvershoot = false,
         maxVelocity = 10.0
-        })
+    })
 
     -- make springs for the main XP bar value (smooth lerping)
     expBarMainSpringEntity, expBarMainSpringRef = spring.make(registry, 0.0, 60.0, 8.0, {
@@ -2976,7 +2981,7 @@ function initCombatSystem()
         smoothingFactor = 0.85,
         preventOvershoot = false,
         maxVelocity = 8.0
-        })
+    })
 
     -- make springs for delayed indicator bars (white bars that catch up)
     expBarDelayedSpringEntity, expBarDelayedSpringRef = spring.make(registry, 1.0, 60.0, 8.0, {
@@ -2984,13 +2989,13 @@ function initCombatSystem()
         smoothingFactor = 0.85,
         preventOvershoot = false,
         maxVelocity = 8.0
-        })
+    })
     hpBarDelayedSpringEntity, hpBarDelayedSpringRef = spring.make(registry, 1.0, 60.0, 8.0, {
         target = 1.0,
         smoothingFactor = 0.85,
         preventOvershoot = false,
         maxVelocity = 8.0
-        })
+    })
 
     -- Track previous values for change detection
     local prevHpPct = 1.0
@@ -3041,12 +3046,12 @@ function initCombatSystem()
                     if playerDashCooldownRemaining > 0 then
                         staminaPct = 1.0 - (playerDashCooldownRemaining / DASH_COOLDOWN_SECONDS)
                     end
-                    staminaPct = math.max(0.0, math.min(1.0, staminaPct))
+                    staminaPct          = math.max(0.0, math.min(1.0, staminaPct))
 
                     local staminaWidth  = math.max(t.actualW * 0.8, 48)
                     local staminaHeight = 6
-                    local staminaX = t.actualX + t.actualW * 0.5
-                    local staminaY = t.actualY + t.actualH + 10
+                    local staminaX      = t.actualX + t.actualW * 0.5
+                    local staminaY      = t.actualY + t.actualH + 10
 
                     command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                         c.x     = staminaX
@@ -3062,14 +3067,14 @@ function initCombatSystem()
                     local staminaFillCenterX = (staminaX - staminaWidth * 0.5) + staminaFillWidth * 0.5
 
                     command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                        c.x     = staminaFillCenterX
-                        c.y     = staminaY
-                        c.w     = staminaFillWidth
-                        c.h     = staminaHeight
-                        c.rx    = 3
-                        c.ry    = 3
+                        c.x              = staminaFillCenterX
+                        c.y              = staminaY
+                        c.w              = staminaFillWidth
+                        c.h              = staminaHeight
+                        c.rx             = 3
+                        c.ry             = 3
                         local onCooldown = playerDashCooldownRemaining > 0
-                        c.color = onCooldown and Col(90, 180, 255, 235) or Col(90, 230, 140, 255)
+                        c.color          = onCooldown and Col(90, 180, 255, 235) or Col(90, 230, 140, 255)
                     end, z_orders.player_vfx + 2, layer.DrawCommandSpace.World)
                 end
 
@@ -3083,7 +3088,7 @@ function initCombatSystem()
                     -- Fetch scale spring ref
                     local hpBarScaleSpringRef = spring.get(registry, hpBarScaleSpringEntity)
                     local hpBarDelayedSpringRef = spring.get(registry, hpBarDelayedSpringEntity)
-                    
+
                     -- Trigger scale pulse for undulation
                     hpBarScaleSpringRef.value = 1.15
                     hpBarScaleSpringRef.targetValue = 1.0
@@ -3104,7 +3109,7 @@ function initCombatSystem()
                     local expBarScaleSpringRef = spring.get(registry, expBarScaleSpringEntity)
                     local expBarMainSpringRef = spring.get(registry, expBarMainSpringEntity)
                     local expBarDelayedSpringRef = spring.get(registry, expBarDelayedSpringEntity)
-                    
+
                     -- Trigger scale pulse for undulation
                     expBarScaleSpringRef.value = 1.15
                     expBarScaleSpringRef.targetValue = 1.0
@@ -3124,32 +3129,32 @@ function initCombatSystem()
                 end
 
                 -- Fetch spring refs for rendering
-                local hpBarScaleSpringRef = spring.get(registry, hpBarScaleSpringEntity)
-                local expBarScaleSpringRef = spring.get(registry, expBarScaleSpringEntity)
-                local hpBarDelayedSpringRef = spring.get(registry, hpBarDelayedSpringEntity)
+                local hpBarScaleSpringRef    = spring.get(registry, hpBarScaleSpringEntity)
+                local expBarScaleSpringRef   = spring.get(registry, expBarScaleSpringEntity)
+                local hpBarDelayedSpringRef  = spring.get(registry, hpBarDelayedSpringEntity)
                 local expBarDelayedSpringRef = spring.get(registry, expBarDelayedSpringEntity)
-                local expBarMainSpringRef = spring.get(registry, expBarMainSpringEntity)
+                local expBarMainSpringRef    = spring.get(registry, expBarMainSpringEntity)
 
                 -- Get current spring values
-                local hpScale = hpBarScaleSpringRef.value or 1.0
-                local xpScale = expBarScaleSpringRef.value or 1.0
-                local hpDelayedSpringVal = hpBarDelayedSpringRef.value or hpPct
-                local xpDelayedSpringVal = expBarDelayedSpringRef.value or xpPct
-                local xpMainSpringVal = expBarMainSpringRef.value or xpPct
+                local hpScale                = hpBarScaleSpringRef.value or 1.0
+                local xpScale                = expBarScaleSpringRef.value or 1.0
+                local hpDelayedSpringVal     = hpBarDelayedSpringRef.value or hpPct
+                local xpDelayedSpringVal     = expBarDelayedSpringRef.value or xpPct
+                local xpMainSpringVal        = expBarMainSpringRef.value or xpPct
 
-                local screenCenterX = globals.screenWidth() * 0.5
+                local screenCenterX          = globals.screenWidth() * 0.5
 
                 ------------------------------------------------------------
                 -- HEALTH BAR (container only – no scaling)
                 ------------------------------------------------------------
-                local baseHealthBarWidth  = globals.screenWidth() * 0.4
-                local baseHealthBarHeight = 20
+                local baseHealthBarWidth     = globals.screenWidth() * 0.4
+                local baseHealthBarHeight    = 20
 
-                local healthBarWidth  = baseHealthBarWidth
-                local healthBarHeight = baseHealthBarHeight
+                local healthBarWidth         = baseHealthBarWidth
+                local healthBarHeight        = baseHealthBarHeight
 
-                local healthBarX = screenCenterX
-                local healthBarY = healthBarHeight
+                local healthBarX             = screenCenterX
+                local healthBarY             = healthBarHeight
 
                 -- background container
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
@@ -3177,7 +3182,7 @@ function initCombatSystem()
 
                 -- White bar (behind) - shows the larger value
                 local fillWhiteWidth = baseHealthBarWidth * hpWhitePct
-                local fillWhiteCenterX = (healthBarX - healthBarWidth*0.5) + fillWhiteWidth*0.5
+                local fillWhiteCenterX = (healthBarX - healthBarWidth * 0.5) + fillWhiteWidth * 0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x     = fillWhiteCenterX
@@ -3191,7 +3196,7 @@ function initCombatSystem()
 
                 -- Red bar (front) - shows the smaller/current value
                 local fillRedWidth = baseHealthBarWidth * hpRedPct
-                local fillRedCenterX = (healthBarX - healthBarWidth*0.5) + fillRedWidth*0.5
+                local fillRedCenterX = (healthBarX - healthBarWidth * 0.5) + fillRedWidth * 0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x     = fillRedCenterX
@@ -3209,11 +3214,11 @@ function initCombatSystem()
                 local baseExpBarWidth  = globals.screenWidth()
                 local baseExpBarHeight = 20
 
-                local expBarWidth  = baseExpBarWidth
-                local expBarHeight = baseExpBarHeight
+                local expBarWidth      = baseExpBarWidth
+                local expBarHeight     = baseExpBarHeight
 
-                local expBarX = screenCenterX
-                local expBarY = healthBarY - expBarHeight
+                local expBarX          = screenCenterX
+                local expBarY          = healthBarY - expBarHeight
 
                 -- background container
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
@@ -3238,7 +3243,7 @@ function initCombatSystem()
 
                 -- White bar (behind) - shows the larger value
                 local xpFillWhiteWidth = baseExpBarWidth * xpWhitePct
-                local xpFillWhiteCenterX = (expBarX - expBarWidth*0.5) + xpFillWhiteWidth*0.5
+                local xpFillWhiteCenterX = (expBarX - expBarWidth * 0.5) + xpFillWhiteWidth * 0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x     = xpFillWhiteCenterX
@@ -3252,7 +3257,7 @@ function initCombatSystem()
 
                 -- Yellow bar (front) - shows the main spring value (smooth lerp)
                 local xpFillYellowWidth = baseExpBarWidth * xpYellowPct
-                local xpFillYellowCenterX = (expBarX - expBarWidth*0.5) + xpFillYellowWidth*0.5
+                local xpFillYellowCenterX = (expBarX - expBarWidth * 0.5) + xpFillYellowWidth * 0.5
 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x     = xpFillYellowCenterX
@@ -3315,8 +3320,6 @@ function initCombatSystem()
                         enemyHealthUiState[eid] = nil
                     end
                 end
-
-
             end
         end
 
@@ -3349,8 +3352,8 @@ function startActionPhase()
 
     activate_state(ACTION_STATE)
     activate_state("default_state") -- just for defaults, keep them open
-    
-    setLowPassTarget(0.0) -- low pass filter off
+
+    setLowPassTarget(0.0)           -- low pass filter off
 
     input.set_context("gameplay")   -- set input context to action phase.
 
@@ -3433,8 +3436,7 @@ local lastFrame = -1
 -- call every frame
 function debugUI()
     -- open a window (returns shouldDraw)
-    local shouldDraw = ImGui.Begin("Quick access")
-    if shouldDraw then
+    if ImGui.Begin("Quick access") then
         if ImGui.Button("Goto Planning Phase") then
             startPlanningPhase()
         end
@@ -3451,8 +3453,8 @@ function debugUI()
             local cam = camera.Get("world_camera")
             cam:SetVisualRotation(1)
         end
+        ImGui.End()
     end
-    ImGui.End()
 end
 
 cardsSoldInShop = {}
@@ -3460,9 +3462,8 @@ cardsSoldInShop = {}
 
 
 local function get_mag_items(world, player, radius)
-    
     local t = component_cache.get(player, Transform)
-    
+
     local pos = { x = t.actualX + t.actualW / 2, y = t.actualY + t.actualH / 2 }
 
     local x1 = pos.x - radius
@@ -3478,7 +3479,7 @@ local function get_mag_items(world, player, radius)
             local ipos = physics.GetPosition(world, e)
             local dx = ipos.x - pos.x
             local dy = ipos.y - pos.y
-            if (dx*dx + dy*dy) <= radius * radius then
+            if (dx * dx + dy * dy) <= radius * radius then
                 table.insert(result, e)
             end
         end
@@ -3489,23 +3490,23 @@ end
 
 function createJointedMask(parentEntity, worldName)
     local world = PhysicsManager.get_world(worldName)
-    
+
     -- Create mask entity with physics
     local maskEntity = animation_system.createAnimatedObjectWithTransform(
         "b6813.png",
         true
     )
-    
+
     -- Position at parent's head
     local parentT = component_cache.get(parentEntity, Transform)
     local maskT = component_cache.get(maskEntity, Transform)
-    
+
     local headOffsetY = -parentT.actualH * 0.3
     maskT.actualX = parentT.actualX + parentT.actualW / 2 - maskT.actualW / 2
     maskT.actualY = parentT.actualY + headOffsetY
     maskT.visualX = maskT.actualX
     maskT.visualY = maskT.actualY
-    
+
     -- Give mask physics (dynamic body)
     physics.create_physics_for_transform(
         registry,
@@ -3516,29 +3517,29 @@ function createJointedMask(parentEntity, worldName)
             shape = "rectangle",
             tag = "mask",
             sensor = false,
-            density = 0.1  -- Light weight
+            density = 0.1 -- Light weight
         }
     )
-    
+
     physics.SetBodyType(world, maskEntity, "dynamic")
-    
+
     -- Disable collision between mask and player
     -- physics.enable_trigger_between(world, "mask", "player")
-    
+
     -- Option 1: PIVOT JOINT (simple hinge)
     -- Mask rotates freely around attachment point
     local pivotJoint = physics.add_pivot_joint_world(
         world,
         parentEntity,
         maskEntity,
-        {x = maskT.actualX + maskT.actualW / 2, y = maskT.actualY + maskT.actualH / 2}  -- Attach at mask's initial position
+        { x = maskT.actualX + maskT.actualW / 2, y = maskT.actualY + maskT.actualH / 2 } -- Attach at mask's initial position
     )
-    
+
     physics.SetMoment(world, maskEntity, 0.1) -- VERY IMPORTANT
-    
+
     -- Make joint strong but allow some flex
     -- physics.set_constraint_limits(world, pivotJoint, 10000, nil)  -- maxForce
-    
+
     -- Option 2: DAMPED SPRING (bouncy attachment)
     -- Uncomment to use instead of pivot:
     -- local spring = physics.add_damped_spring(
@@ -3551,7 +3552,7 @@ function createJointedMask(parentEntity, worldName)
     --     500,                       -- Stiffness
     --     10                         -- Damping
     -- )
-    
+
     -- Option 3: SLIDE JOINT (constrained distance)
     -- Allows mask to slide within min/max range:
     -- local slideJoint = physics.add_slide_joint(
@@ -3563,20 +3564,20 @@ function createJointedMask(parentEntity, worldName)
     --     0,     -- Min distance
     --     10     -- Max distance (can stretch up to 10 units)
     -- )
-    
+
     -- Add rotary spring to keep mask mostly upright
     local rotarySpring = physics.add_damped_rotary_spring(
         world,
         parentEntity,
         maskEntity,
-        0,      -- Rest angle (upright)
-        6000,     -- Stiffness (lower = more floppy)
-        5       -- Damping
+        0,    -- Rest angle (upright)
+        6000, -- Stiffness (lower = more floppy)
+        5     -- Damping
     )
-    
-    
+
+
     physics.set_sync_mode(registry, maskEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
-    
+
     -- don't know why this is necessary, but set the rotation of the transform to match physics body
     timer.run(
         function()
@@ -3587,16 +3588,15 @@ function createJointedMask(parentEntity, worldName)
             t.actualR = math.deg(bodyAngle)
         end
     )
-    
+
     -- Add some angular damping for smoother rotation
     -- physics.SetDamping(world, maskEntity, 0.3)
-    
+
     -- Layer above player
     layer_order_system.assignZIndexToEntity(maskEntity, z_orders.player_char + 1)
-    
+
     return maskEntity
 end
-
 
 function initSurvivorEntity()
     local world = PhysicsManager.get_world("world")
@@ -3679,13 +3679,13 @@ function initSurvivorEntity()
 
     -- give shader pipeline comp for later use
     local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
-    
+
     -- give mask
-    survivorMaskEntity =  createJointedMask(survivorEntity, "world")
+    survivorMaskEntity = createJointedMask(survivorEntity, "world")
 
 
     physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", { "player", "enemy" }) -- enemy>player and enemy>enemy
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "enemy" })        -- player>enemy
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "enemy" })          -- player>enemy
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "enemy" })
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", { "player", "enemy" })
 
@@ -3760,7 +3760,7 @@ function initSurvivorEntity()
             end
         end)
     end)
-    
+
     -- test
     -- local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
     -- shaderPipelineComp:addPass("vacuum_collapse")
@@ -3800,7 +3800,7 @@ function initSurvivorEntity()
 
         timer.after(1.0, function()
             -- playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
-            
+
             -- low pass off
             setLowPassTarget(0.0)
         end)
@@ -3864,13 +3864,25 @@ function initSurvivorEntity()
 
 
     -- lets move the survivor based on input.
-    input.bind("survivor_left", { device = "keyboard", key = KeyboardKey.KEY_A, trigger = "Pressed", context = "gameplay" })
-    input.bind("survivor_right", { device = "keyboard", key = KeyboardKey.KEY_D, trigger = "Pressed", context =
-    "gameplay" })
+    input.bind("survivor_left",
+        { device = "keyboard", key = KeyboardKey.KEY_A, trigger = "Pressed", context = "gameplay" })
+    input.bind("survivor_right", {
+        device = "keyboard",
+        key = KeyboardKey.KEY_D,
+        trigger = "Pressed",
+        context =
+        "gameplay"
+    })
     input.bind("survivor_up", { device = "keyboard", key = KeyboardKey.KEY_W, trigger = "Pressed", context = "gameplay" })
-    input.bind("survivor_down", { device = "keyboard", key = KeyboardKey.KEY_S, trigger = "Pressed", context = "gameplay" })
-    input.bind("survivor_dash", { device = "keyboard", key = KeyboardKey.KEY_SPACE, trigger = "Pressed", context =
-    "gameplay" })
+    input.bind("survivor_down",
+        { device = "keyboard", key = KeyboardKey.KEY_S, trigger = "Pressed", context = "gameplay" })
+    input.bind("survivor_dash", {
+        device = "keyboard",
+        key = KeyboardKey.KEY_SPACE,
+        trigger = "Pressed",
+        context =
+        "gameplay"
+    })
 
     --also allow gamepad.
     -- same dash
@@ -3918,36 +3930,36 @@ function initSurvivorEntity()
         playSoundEffect("effects", "level_up", 1.0)
     end)
 
-    
+
     -- lets run every physics frame, detecting for magnet radus
     timer.every_physics_step(
         function()
             local magnetRadius = 200 -- TODO; make this a player stat later.
             local magItems = get_mag_items(PhysicsManager.get_world("world"), survivorEntity, magnetRadius)
-            
+
             -- iterate
             for _, itemEntity in ipairs(magItems) do
                 if entity_cache.valid(itemEntity) then
-                    
                     -- get script
                     local itemScript = getScriptTableFromEntityID(itemEntity)
                     if itemScript and itemScript.isPickup and not itemScript.pickedUp then
-                        
                         -- enable steering towards player
                         steering.make_steerable(registry, itemEntity, 3000.0, 30000.0, math.pi * 2.0, 10)
-                        
-                        
+
+
                         -- add a timer to move towards player
                         timer.every_physics_step(
                             function()
                                 if entity_cache.valid(itemEntity) and entity_cache.valid(survivorEntity) then
-                                    
                                     local playerT = component_cache.get(survivorEntity, Transform)
-                                    
+
                                     -- steering.seek_point(registry, enemyEntity, playerLocation, 1.0, 0.5)
 
-                                    steering.seek_point(registry, itemEntity, { x = playerT.actualX + playerT.actualW / 2,
-                                    y = playerT.actualY + playerT.actualH / 2 }, 1.0, 20)
+                                    steering.seek_point(registry, itemEntity,
+                                        {
+                                            x = playerT.actualX + playerT.actualW / 2,
+                                            y = playerT.actualY + playerT.actualH / 2
+                                        }, 1.0, 20)
                                 else
                                     -- cancel timer, entity no longer valid
                                     timer.cancel("player_magnet_steering_" .. tostring(itemEntity))
@@ -3956,7 +3968,7 @@ function initSurvivorEntity()
                             "player_magnet_steering_" .. tostring(itemEntity),
                             nil
                         )
-                    
+
                         itemScript.pickedUp = true -- mark as picked up to avoid double processing
                     end
                 end
@@ -3987,7 +3999,7 @@ function initSurvivorEntity()
                 expBarSpringRef:pull(0.15, 120.0, 14.0)
             end
         end
-        
+
         local playerT = component_cache.get(survivorEntity, Transform)
         if playerT then
             playerT.visualS = 1.5
@@ -4139,14 +4151,13 @@ end
 
 
 function initActionPhase()
-    
     -- add shader to backgorund layer
     add_layer_shader("background", "peaches_background")
     -- add_layer_shader("background", "fireworks")
     -- add_layer_shader("background", "starry_tunnel")
     -- add_layer_shader("background", "vacuum_collapse")
     -- add_fullscreen_shader("peaches_background")
-    
+
     log_debug("Action phase started!")
 
     -- setUpScrollingBackgroundSprites()
@@ -4229,7 +4240,7 @@ function initActionPhase()
                     moveDir.x, moveDir.y = 0, 0
                 end
             end
-            
+
             if (moveDir.x > 0) then
                 animation_system.set_horizontal_flip(survivorEntity, true)
             elseif (moveDir.x < 0) then
@@ -4286,8 +4297,8 @@ function initActionPhase()
                     local absX, absY = math.abs(dirX), math.abs(dirY)
                     local dominant = absX > absY and "horizontal" or "vertical"
 
-                    local squeeze = 0.6 -- how thin to get
-                    local stretch = 1.4 -- how long to stretch
+                    local squeeze = 0.6   -- how thin to get
+                    local stretch = 1.4   -- how long to stretch
                     local duration = 0.15 -- squash+stretch speed
 
                     -- store original values
@@ -4316,15 +4327,15 @@ function initActionPhase()
                 end
 
 
-                
+
                 local maskEntity = survivorMaskEntity
-                    
+
                 -- Apply rotational impulse (torque) to make mask spin
                 local torqueStrength = 3000 -- Adjust this value to control rotation speed
                 -- physics.ApplyTorque(world, maskEntity, torqueStrength)
-                
+
                 physics.ApplyAngularImpulse(world, maskEntity, moveDir.x * torqueStrength)
-                
+
                 -- Optional: Apply linear impulse too for more dramatic effect
                 -- local MASK_IMPULSE = 100
                 -- physics.ApplyImpulse(world, maskEntity, moveDir.x * MASK_IMPULSE, moveDir.y * MASK_IMPULSE)
@@ -4478,23 +4489,23 @@ function initActionPhase()
                             local t = component_cache.get(survivorEntity, Transform)
                             if t then
                                 particle.spawnDirectionalLinesCone(
-                                Vec2(t.actualX + t.actualW * 0.5, t.actualY + t.actualH * 0.5), 10, 0.3, {
-                                    direction = Vec2(-moveDir.x, -moveDir.y),
-                                    spread = 360,
-                                    minSpeed = 200,
-                                    maxSpeed = 400,
-                                    minLength = 32,
-                                    maxLength = 64,
-                                    minThickness = 2,
-                                    maxThickness = 5,
-                                    colors = { util.getColor("white") },
-                                    durationJitter = 0.3,
-                                    sizeJitter = 0.2,
-                                    faceVelocity = true,
-                                    shrink = false,
-                                    space = "world",
-                                    z = z_orders.particle_vfx
-                                })
+                                    Vec2(t.actualX + t.actualW * 0.5, t.actualY + t.actualH * 0.5), 10, 0.3, {
+                                        direction = Vec2(-moveDir.x, -moveDir.y),
+                                        spread = 360,
+                                        minSpeed = 200,
+                                        maxSpeed = 400,
+                                        minLength = 32,
+                                        maxLength = 64,
+                                        minThickness = 2,
+                                        maxThickness = 5,
+                                        colors = { util.getColor("white") },
+                                        durationJitter = 0.3,
+                                        sizeJitter = 0.2,
+                                        faceVelocity = true,
+                                        shrink = false,
+                                        space = "world",
+                                        z = z_orders.particle_vfx
+                                    })
                             end
                         end
                     })
@@ -4576,7 +4587,7 @@ function initActionPhase()
                 -- animation entity
                 local enemyEntity = animation_system.createAnimatedObjectWithTransform(
                     "b1060.png", -- animation ID
-                    true     -- use animation, not sprite identifier, if false
+                    true         -- use animation, not sprite identifier, if false
                 )
 
                 playSoundEffect("effects", "monster_appear_whoosh", 0.8 + math.random() * 0.3)
@@ -4598,9 +4609,9 @@ function initActionPhase()
                 -- give it physics
                 local info = { shape = "rectangle", tag = "enemy", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
                 physics.create_physics_for_transform(registry,
-                    physics_manager_instance,                                                                   -- global instance
-                    enemyEntity,                                                                                -- entity id
-                    "world",                                                                                    -- physics world identifier
+                    physics_manager_instance,                                                                       -- global instance
+                    enemyEntity,                                                                                    -- entity id
+                    "world",                                                                                        -- physics world identifier
                     info
                 )
 
@@ -4613,8 +4624,8 @@ function initActionPhase()
                 -- make it steerable
                 -- steering
                 steering.make_steerable(registry, enemyEntity, 3000.0, 30000.0, math.pi * 2.0, 2.0)
-                
-                
+
+
                 -- give a blinking timer
                 timer.every(0.1, function()
                     if entity_cache.valid(enemyEntity) then
@@ -4623,25 +4634,25 @@ function initActionPhase()
                             animComp.noDraw = not animComp.noDraw
                         end
                     end
-                end, nil, true, function() 
+                end, nil, true, function()
                 end, "enemy_blink_timer_" .. tostring(enemyEntity))
-                
+
                 -- tween the multiplier up to 3.0 over 0.5 seconds, then remove the timer
-                timer.tween_scalar(0.5, function ()
-                    return timer.get_multiplier("enemy_blink_timer_" .. tostring(enemyEntity))
-                end, 
-                function (v)
-                    timer.set_multiplier("enemy_blink_timer_" .. tostring(enemyEntity), v)
-                end, 2, Easing.cubic.f, function()
-                    timer.cancel("enemy_blink_timer_" .. tostring(enemyEntity))
-                    -- ensure it's visible
-                    local animComp = component_cache.get(enemyEntity, AnimationQueueComponent)
-                    if animComp then
-                        animComp.noDraw = false
-                    end
-                end)
-                
-                
+                timer.tween_scalar(0.5, function()
+                        return timer.get_multiplier("enemy_blink_timer_" .. tostring(enemyEntity))
+                    end,
+                    function(v)
+                        timer.set_multiplier("enemy_blink_timer_" .. tostring(enemyEntity), v)
+                    end, 2, Easing.cubic.f, function()
+                        timer.cancel("enemy_blink_timer_" .. tostring(enemyEntity))
+                        -- ensure it's visible
+                        local animComp = component_cache.get(enemyEntity, AnimationQueueComponent)
+                        if animComp then
+                            animComp.noDraw = false
+                        end
+                    end)
+
+
                 timer.after(0.6, function()
                     -- cancel blinking timer
                     timer.cancel("enemy_blink_timer_" .. tostring(enemyEntity))
@@ -4651,7 +4662,7 @@ function initActionPhase()
                         animComp.noDraw = false
                     end
                 end)
-                
+
 
                 -- give it a combat table.
 
@@ -4830,7 +4841,7 @@ function initActionPhase()
             local expPickupScript = Node {}
 
             expPickupScript:attach_ecs { create_new = false, existing_entity = expPickupEntity }
-            
+
             expPickupScript.isPickup = true
         end
     end)
@@ -4860,11 +4871,11 @@ function initPlanningUI()
             UIConfigBuilder.create()
             :addColor(util.getColor("gray"))
             :addEmboss(2.0)
-            :addHover(true)                                    -- needed for button effect
+            :addHover(true)                                -- needed for button effect
             :addButtonCallback(function()
-                playSoundEffect("effects", "button-click")     -- play button click sound
+                playSoundEffect("effects", "button-click") -- play button click sound
             end)
-            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER,AlignmentFlag.VERTICAL_CENTER))
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -4879,7 +4890,7 @@ function initPlanningUI()
             UIConfigBuilder.create()
             :addColor(util.getColor("yellow"))
             :addPadding(0)
-            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -4912,7 +4923,7 @@ function initPlanningUI()
         config = {
             id      = "shop_button",
             color   = "red",
-            align   = bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER),
+            align   = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             hover   = true,
             onClick = function()
                 playSoundEffect("effects", "button-click")

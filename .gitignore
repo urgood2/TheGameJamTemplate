@@ -2585,3 +2585,13 @@ build-emc/assets/raws/en/eng_synonyms.json
 build-emc/assets/raws/en/ui_strings.json
 build-emc/_deps/sol2-src
 raylib-cpp-cmake-template_web.zip
+src/third_party/fmt/support/.gradle/8.9/gc.properties
+src/third_party/fmt/support/.gradle/8.9/checksums/checksums.lock
+src/third_party/fmt/support/.gradle/8.9/checksums/md5-checksums.bin
+src/third_party/fmt/support/.gradle/8.9/checksums/sha1-checksums.bin
+src/third_party/fmt/support/.gradle/8.9/dependencies-accessors/gc.properties
+src/third_party/fmt/support/.gradle/8.9/fileChanges/last-build.bin
+src/third_party/fmt/support/.gradle/8.9/fileHashes/fileHashes.lock
+src/third_party/fmt/support/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+src/third_party/fmt/support/.gradle/buildOutputCleanup/cache.properties
+src/third_party/fmt/support/.gradle/vcs-1/gc.properties

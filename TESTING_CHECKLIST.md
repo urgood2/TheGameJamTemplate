@@ -4,6 +4,13 @@
 
 ---
 
+## Related Docs
+- docs/guides/SYSTEM_ARCHITECTURE.md (subsystem map, ownership, init order)
+- docs/guides/ERROR_HANDLING_POLICY.md (fail-fast vs fallback rules)
+- docs/guides/DOCUMENTATION_STANDARDS.md (comment templates and required coverage)
+
+---
+
 ## ✅ Completed
 
 - [x] Project compiles without errors
@@ -238,3 +245,5 @@ Before moving to Tasks 3, 6, 7, ALL of these must pass:
 ---
 
 Use this checklist to track progress. Check off items as you verify them working!
+
+

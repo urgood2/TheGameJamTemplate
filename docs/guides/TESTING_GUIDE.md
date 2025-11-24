@@ -16,3 +16,8 @@ Quick notes for adding tests while the EngineContext migration is ongoing.
 - If linking fails on UI/ImGui, add minimal stubs in `tests/helpers/` rather than touching production code.
 
 Goal: keep adding coverage alongside the globals→EngineContext refactor to catch regressions early.
+
+## Related Docs
+- [System Architecture Overview](SYSTEM_ARCHITECTURE.md) - Subsystem map, ownership, and init order.
+- [C++ Documentation Standards](DOCUMENTATION_STANDARDS.md) - Comment templates and required coverage.
+

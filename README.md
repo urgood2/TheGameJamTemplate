@@ -45,6 +45,8 @@ just build-web            # requires emsdk in PATH and copies assets into build-
 
 ## Documentation
 - Full docs index: `docs/README.md`
+- Architecture overview: `docs/guides/SYSTEM_ARCHITECTURE.md`
+- C++ documentation standards: `docs/guides/DOCUMENTATION_STANDARDS.md`
 - Changelog: `CHANGELOG.md`
 - Profiling: `USING_TRACY.md`
 - Draw-command/shader batching: `BATCHED_ENTITY_RENDERING.md`, `DRAW_COMMAND_OPTIMIZATION.md`
@@ -53,3 +55,4 @@ just build-web            # requires emsdk in PATH and copies assets into build-
 ## Credits & Licensing
 - Project scaffold originally based on https://github.com/tupini07/raylib-cpp-cmake-template.
 - All new code/assets are © Chugget. Please do not reuse without permission or explicit licensing.
+

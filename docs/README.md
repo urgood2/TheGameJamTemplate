@@ -10,6 +10,10 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 - [Lua Debugging](assets/DEBUGGING_LUA.md) - Debug your Lua scripts
 - [Game Design Context](../GAME_DESIGN_CONTEXT.md) - Central gameplay/design tenets
 
+## Architecture & Standards
+- [System Architecture Overview](guides/SYSTEM_ARCHITECTURE.md)
+- [C++ Documentation Standards](guides/DOCUMENTATION_STANDARDS.md)
+
 ## API Documentation
 
 ### Core Lua APIs
@@ -149,4 +153,7 @@ When adding new documentation:
 
 ---
 
-**Last Updated**: 2025-11-20
+**Last Updated**: 2025-11-24
+
+
+

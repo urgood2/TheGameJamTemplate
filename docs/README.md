@@ -8,6 +8,7 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 - [Changelog](../CHANGELOG.md) - Recent changes and history
 - [Tracy Profiling](../USING_TRACY.md) - Performance profiling guide
 - [Lua Debugging](assets/DEBUGGING_LUA.md) - Debug your Lua scripts
+- [Game Design Context](../GAME_DESIGN_CONTEXT.md) - Central gameplay/design tenets
 
 ## API Documentation
 

@@ -110,6 +110,16 @@ local dash_sfx_list = {
     "dash_7",
 }
 
+local DASH_COOLDOWN_SECONDS  = 2.0   -- how long before the next dash is available
+local STAMINA_TICKER_LINGER  = 1.0   -- how long the stamina bar lingers after refilling
+local ENEMY_HEALTH_BAR_LINGER = 2.0  -- how long enemy health bars stay visible after a hit
+
+local playerDashCooldownRemaining = 0
+local playerStaminaTickerTimer    = 0
+
+local enemyHealthUiState = {}                               -- eid -> { actor=<combat actor>, visibleUntil=<time> }
+local combatActorToEntity = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
+
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
     if not boardEntityID or boardEntityID == entt_null or not entity_cache.valid(boardEntityID) then return end
@@ -2064,7 +2074,7 @@ function makeWandTooltip(wand_def)
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
 
     ui.box.RenewAlignment(registry, boxID)
-    ui.box.set_draw_layer(boxID, "ui_layer")
+    -- ui.box.set_draw_layer(boxID, "ui")
 
     ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     remove_default_state_tag(boxID)
@@ -2141,7 +2151,7 @@ function makeCardTooltip(card_def)
 
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
 
-    ui.box.set_draw_layer(boxID, "ui_layer")
+    -- ui.box.set_draw_layer(boxID, "ui")
     ui.box.RenewAlignment(registry, boxID)
     -- ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     ui.box.ClearStateTagsFromUIBox(boxID) -- remove all state tags from sub entities and box
@@ -2899,6 +2909,7 @@ function initCombatSystem()
     assert(survivorEntity and entity_cache.valid(survivorEntity), "Survivor entity is not valid in combat system init!")
     local playerScript       = getScriptTableFromEntityID(survivorEntity)
     playerScript.combatTable = hero
+    combatActorToEntity[hero] = survivorEntity
 
     -- attach defs/derivations to ctx for easy access later for pets
     ctx._defs                = combatStatDefs
@@ -2909,6 +2920,12 @@ function initCombatSystem()
     ctx.bus:on('OnLevelUp', function()
         -- send player level up signal.
         signal.emit("player_level_up")
+    end)
+    ctx.bus:on('OnHitResolved', function(ev)
+        local targetEntity = combatActorToEntity[ev.target]
+        if targetEntity and enemyHealthUiState[targetEntity] then
+            enemyHealthUiState[targetEntity].visibleUntil = GetTime() + ENEMY_HEALTH_BAR_LINGER
+        end
     end)
     
     -- make springs for exp bar and hp bar SCALE (for undulation effect)
@@ -2957,7 +2974,14 @@ function initCombatSystem()
             -- bail if not in action state
             if not is_state_active(ACTION_STATE) then return end
 
-            ctx.time:tick(GetFrameTime())
+            local frameDt = GetFrameTime()
+            ctx.time:tick(frameDt)
+            if playerDashCooldownRemaining > 0 then
+                playerDashCooldownRemaining = math.max(playerDashCooldownRemaining - frameDt, 0)
+            end
+            if playerStaminaTickerTimer > 0 then
+                playerStaminaTickerTimer = math.max(playerStaminaTickerTimer - frameDt, 0)
+            end
 
 
             -- also, display a health bar indicator above the player entity, and an EXP bar.
@@ -2980,6 +3004,46 @@ function initCombatSystem()
 
                 local hpPct = playerHealth / playerMaxHealth
                 local xpPct = math.min(playerXP / playerXPForNextLevel, 1.0)
+
+                ------------------------------------------------------------
+                -- DASH STAMINA TICKER (world space, lingers after refilling)
+                ------------------------------------------------------------
+                if playerStaminaTickerTimer > 0 then
+                    local staminaPct = 1.0
+                    if playerDashCooldownRemaining > 0 then
+                        staminaPct = 1.0 - (playerDashCooldownRemaining / DASH_COOLDOWN_SECONDS)
+                    end
+                    staminaPct = math.max(0.0, math.min(1.0, staminaPct))
+
+                    local staminaWidth  = math.max(t.actualW * 0.8, 48)
+                    local staminaHeight = 6
+                    local staminaX = t.actualX + t.actualW * 0.5
+                    local staminaY = t.actualY + t.actualH + 10
+
+                    command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                        c.x     = staminaX
+                        c.y     = staminaY
+                        c.w     = staminaWidth
+                        c.h     = staminaHeight
+                        c.rx    = 3
+                        c.ry    = 3
+                        c.color = Col(20, 20, 20, 190)
+                    end, z_orders.player_vfx + 1, layer.DrawCommandSpace.World)
+
+                    local staminaFillWidth = staminaWidth * staminaPct
+                    local staminaFillCenterX = (staminaX - staminaWidth * 0.5) + staminaFillWidth * 0.5
+
+                    command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                        c.x     = staminaFillCenterX
+                        c.y     = staminaY
+                        c.w     = staminaFillWidth
+                        c.h     = staminaHeight
+                        c.rx    = 3
+                        c.ry    = 3
+                        local onCooldown = playerDashCooldownRemaining > 0
+                        c.color = onCooldown and Col(90, 180, 255, 235) or Col(90, 230, 140, 255)
+                    end, z_orders.player_vfx + 2, layer.DrawCommandSpace.World)
+                end
 
                 ------------------------------------------------------------
                 -- CHANGE DETECTION & SPRING UPDATES
@@ -3171,9 +3235,60 @@ function initCombatSystem()
                     c.ry    = 5
                     c.color = util.getColor("yellow")
                 end, z_orders.background + 2, layer.DrawCommandSpace.Screen)
-    
-                    
-                    
+
+                ------------------------------------------------------------
+                -- ENEMY HEALTH BARS (world space, show briefly after damage)
+                ------------------------------------------------------------
+                local now = GetTime()
+                local enemiesToRemove = nil
+                for enemyEid, state in pairs(enemyHealthUiState) do
+                    if not entity_cache.valid(enemyEid) then
+                        enemiesToRemove = enemiesToRemove or {}
+                        table.insert(enemiesToRemove, enemyEid)
+                    else
+                        local actor = state.actor
+                        local enemyT = component_cache.get(enemyEid, Transform)
+                        local maxHp = actor and (actor.max_health or (actor.stats and actor.stats:get('health')))
+                        local showBar = state.visibleUntil and state.visibleUntil > now
+                        if showBar and enemyT and actor and maxHp and maxHp > 0 then
+                            local hpPct = math.max(0.0, math.min(1.0, (actor.hp or maxHp) / maxHp))
+                            local barWidth = math.max(enemyT.actualW, 40)
+                            local barHeight = 6
+                            local barX = enemyT.actualX + enemyT.actualW * 0.5
+                            local barY = enemyT.actualY - 8
+
+                            command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                                c.x     = barX
+                                c.y     = barY
+                                c.w     = barWidth
+                                c.h     = barHeight
+                                c.rx    = 3
+                                c.ry    = 3
+                                c.color = Col(20, 20, 20, 190)
+                            end, z_orders.enemies + 1, layer.DrawCommandSpace.World)
+
+                            local hpFillWidth = barWidth * hpPct
+                            local hpFillCenterX = (barX - barWidth * 0.5) + hpFillWidth * 0.5
+
+                            command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                                c.x     = hpFillCenterX
+                                c.y     = barY
+                                c.w     = hpFillWidth
+                                c.h     = barHeight
+                                c.rx    = 3
+                                c.ry    = 3
+                                c.color = util.getColor("red")
+                            end, z_orders.enemies + 2, layer.DrawCommandSpace.World)
+                        end
+                    end
+                end
+                if enemiesToRemove then
+                    for _, eid in ipairs(enemiesToRemove) do
+                        enemyHealthUiState[eid] = nil
+                    end
+                end
+
+
             end
         end
 
@@ -3804,7 +3919,7 @@ function initSurvivorEntity()
                                     -- steering.seek_point(registry, enemyEntity, playerLocation, 1.0, 0.5)
 
                                     steering.seek_point(registry, itemEntity, { x = playerT.actualX + playerT.actualW / 2,
-                                    y = playerT.actualY + playerT.actualH / 2 }, 1.0, 100)
+                                    y = playerT.actualY + playerT.actualH / 2 }, 1.0, 20)
                                 else
                                     -- cancel timer, entity no longer valid
                                     timer.cancel("player_magnet_steering_" .. tostring(itemEntity))
@@ -4026,6 +4141,10 @@ function initActionPhase()
     physics.SetSleepTimeThreshold(world, 100000) -- time in seconds before body goes to sleep
 
     playerIsDashing = false
+    playerDashCooldownRemaining = 0
+    playerStaminaTickerTimer = 0
+    enemyHealthUiState = {}
+    combatActorToEntity = setmetatable({}, { __mode = "k" })
 
     -- create input timer. this must run every frame.
     timer.every_physics_step(
@@ -4106,7 +4225,7 @@ function initActionPhase()
                 timer.cancel(timerName)
             end
 
-            if not playerIsDashing and input.action_down("survivor_dash") then
+            if not playerIsDashing and playerDashCooldownRemaining <= 0 and input.action_down("survivor_dash") then
                 log_debug("Dash pressed!")
 
                 -- make transform not authoritative
@@ -4194,6 +4313,8 @@ function initActionPhase()
                 -- end, "dash_impulse_timer")
 
                 playerIsDashing = true
+                playerDashCooldownRemaining = DASH_COOLDOWN_SECONDS
+                playerStaminaTickerTimer = DASH_COOLDOWN_SECONDS + STAMINA_TICKER_LINGER
 
                 local DASH_LENGTH_SEC = 0.5
 
@@ -4534,6 +4655,8 @@ function initActionPhase()
                 local enemyScriptNode = Node {}
                 enemyScriptNode.combatTable = ogre
                 enemyScriptNode:attach_ecs { create_new = false, existing_entity = enemyEntity }
+                combatActorToEntity[ogre] = enemyEntity
+                enemyHealthUiState[enemyEntity] = { actor = ogre, visibleUntil = 0 }
 
 
                 -- make circle marker for enemy appearance, tween it down to 0 scale and then remove it

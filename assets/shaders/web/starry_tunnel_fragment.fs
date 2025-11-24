@@ -51,17 +51,29 @@ bool vec3lower(vec3 A, float v) {
 // -------------------------------------------------------------
 void main()
 {
-    vec2 suv = fragTexCoord - 0.5;
+    // Wrap UVs so even oversized coords still produce a pattern.
+    vec2 suv = fract(fragTexCoord) - 0.5;
 
     float PI = 3.14159265359;
     float TAU = 6.28318530718;
 
-    // SAFETY FIXES
-    float safeScale = max(scale, 0.03);
+    // SAFETY FIXES + FALLBACKS (prevents fully-black output when uniforms are unset)
+    int   M = max(m, 8);
+    int   N = max(n, 12);
+    bool  neonOn = hasNeonEffect;
+    bool  dotOn  = hasDot;
+    if (!neonOn && !dotOn) neonOn = true; // ensure at least one path draws
+
+    float safeScale     = max(scale, 0.03);
+    float safeLight     = max(light_disperse, 0.1);
+    float safeModTime   = max(modTime, 0.01);
+    float safeStretch   = max(stertch, 0.1);
+    float safeSpeed     = max(speed, 0.0);
     float angle = clamp(theta + iTime * theta_sine_change_speed, -80.0, 80.0);
     float angleRad = angle * PI / 180.0;
 
     vec4 COLOR = vec4(0.0);
+    finalColor = vec4(0.0);
 
     //--------------------------------------------
     // DEBUG VISUALIZATION MODE SHORTCUTS
@@ -83,17 +95,17 @@ void main()
     //--------------------------------------------
     // Main Loop
     //--------------------------------------------
-    for (int j = 0; j < n; j++)
+    for (int j = 0; j < N; j++)
     {
         float jfix = (j == 0) ? 0.001 : float(j);
         float seed = random2(vec2(2.0 - jfix, jfix * 37.0));
 
-        for (int i = 0; i < m; i++)
+        for (int i = 0; i < M; i++)
         {
             float rawz = mod(
-                5.0 + float(n)/jfix * 10.0 +
-                iTime * speed + 8.0 + float(i) * safeScale * stertch,
-                modTime
+                5.0 + float(N)/jfix * 10.0 +
+                iTime * safeSpeed + 8.0 + float(i) * safeScale * safeStretch,
+                safeModTime
             );
 
             float z = rawz * safeScale;
@@ -103,7 +115,7 @@ void main()
             float H = addH * safeScale + z * tan(angleRad);
 
             float zscale = haszExpend
-                ? min(z + 0.06, modTime) * safeScale * modTime * 0.5
+                ? min(z + 0.06, safeModTime) * safeScale * safeModTime * 0.5
                 : safeScale;
 
             zscale = max(zscale, 0.02);
@@ -153,10 +165,10 @@ void main()
             if (debugMode == 0)
             {
                 // Neon effect
-                if (hasNeonEffect)
+                if (neonOn)
                 {
                     float d = distance(suv / zscale, nuv / zscale);
-                    float l = exp(-d / max(light_disperse, 0.1));
+                    float l = exp(-d / safeLight);
 
                     vec4 L = iswhite
                         ? vec4(l)
@@ -172,7 +184,7 @@ void main()
                 }
 
                 // Dot mode
-                if (hasDot && distance(suv, nuv) < zscale)
+                if (dotOn && distance(suv, nuv) < zscale)
                 {
                     COLOR = vec4(1.0);
                 }

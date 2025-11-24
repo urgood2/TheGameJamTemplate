@@ -317,19 +317,19 @@ namespace game
         
 
         globalShaderUniforms.set("fireworks", "Praticle_num", (int)30);
-        globalShaderUniforms.set("fireworks", "TimeStep", (int)3);
+        globalShaderUniforms.set("fireworks", "TimeStep", (int)2);
 
-        // Floats
-        globalShaderUniforms.set("fireworks", "s77",            1.13f);
-        globalShaderUniforms.set("fireworks", "Range",          1.14f);
-        globalShaderUniforms.set("fireworks", "s55",            1.51f);
-        globalShaderUniforms.set("fireworks", "gravity",       -0.49f);
-        globalShaderUniforms.set("fireworks", "ShneyMagnitude", 0.42f);
-        globalShaderUniforms.set("fireworks", "s33",            4.15f);
-        globalShaderUniforms.set("fireworks", "iTime",        373.62292f);
-        globalShaderUniforms.set("fireworks", "s99",            9.92f);
-        globalShaderUniforms.set("fireworks", "s11",            0.40f);
-        globalShaderUniforms.set("fireworks", "speed",          5.57f);
+        // Floats (mirrors original Godot defaults)
+        globalShaderUniforms.set("fireworks", "s77",            0.90f);
+        globalShaderUniforms.set("fireworks", "Range",          0.75f);
+        globalShaderUniforms.set("fireworks", "s55",            0.16f);
+        globalShaderUniforms.set("fireworks", "gravity",        0.50f);
+        globalShaderUniforms.set("fireworks", "ShneyMagnitude", 1.00f);
+        globalShaderUniforms.set("fireworks", "s33",            0.13f);
+        globalShaderUniforms.set("fireworks", "iTime",          0.0f);
+        globalShaderUniforms.set("fireworks", "s99",            6.50f);
+        globalShaderUniforms.set("fireworks", "s11",            0.80f);
+        globalShaderUniforms.set("fireworks", "speed",          2.00f);
         
         // starry tunnel
         globalShaderUniforms.set("starry_tunnel", "m", 12);
@@ -355,6 +355,7 @@ namespace game
         globalShaderUniforms.set("starry_tunnel", "iswhite", false);
         globalShaderUniforms.set("starry_tunnel", "isdarktotransparent", false);
         globalShaderUniforms.set("starry_tunnel", "bemask", false);
+        globalShaderUniforms.set("starry_tunnel", "debugMode", 0);
 
         
         shaders::registerUniformUpdate("starry_tunnel", [](Shader &shader){

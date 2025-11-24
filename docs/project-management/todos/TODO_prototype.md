@@ -42,7 +42,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 
 # stat ideas
-- if shader uniforms thing still doesn't work, delay it to later and just use cpp versino for now. we need to do gameplay. debug asset scan hang, then get on with other stuff.
 - everything casts via triggers. artifacts hold triggers, and so do wands. artifacts should have more far-reaching or global effects, while wands mostly do projectile and other in game actions. 
 - what actions matter? dash, touching enemy, killing enemy... put together a list of triggers we can use, and let's arrive at three stats we can boil them down to. then we will tie the attack, defense, attack speed, and other stats that we will be allowing the player to upgrade upon level up.
 - triggers and actions as part of a bigger wand (item? artifact?) that you can move around and replace? maybe  a deck that can be clicked to expand it (for better ux.) decks could have fixed triggers & sometimes always casts (or shuffle) and variations in max card slot size, cast block size, cast speed, wand cooldown,  etc to make things more interesting.
@@ -51,61 +50,33 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     - physique: health, armor, knockback resistance
     - cunning: damage, critical chance, attack speed
     - spirit: cooldown reduction, luck
+- make dash distance stat-based, and vary particle effects based on that.
 
 # Non-stat values:
 - player level. 
-    
-# programming side
-- emphasize getting "wide' gameplay depth from a small set of changes/implementations, this is my core game design facet. Put that in a central doc somehwere.
-- brainstorm how best to visualize the execution order of the cards to the player. 
-- should they be cards? at all?
-- bounce the current visuals off the ai to get initial ffedback.
-- need to figure out how to process the cast blocks, and ensure they contain all necessary information I would need to ceonceivably implement the individual behaviors of each projectile/cast. 
 
-- nothing rendring, check past commit and command buffer change.
+# Things to do in downtime.
 - continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
-
 - I need to continue with "testing_checklist." starting with projectile system.
 - got to also test the new batching queue system.
 - issue error on closing via x again.
+    
+# programming side
+
+- brainstorm how best to visualize the execution order of the cards to the player. 
+- need to figure out how to process the cast blocks, and ensure they contain all necessary information I would need to ceonceivably implement the individual behaviors of each projectile/cast. 
 
 - highlight mod cards as well in the simulator. use the same color highlight for each cast block, to make it easier to see.
 - add an option to stop the ticking noise.
 
-- after that, make it so cards which are above the wand total are marked with an X
-- cards which are not used should also be marked with an X 
-
-- add uibox layer specification back in without brekaing anything please.
-
-
-- more variation in coin collect sounds
-- make dash distance stat-based, and vary particle effects based on that.
-- make trigger area accept only one card.
-
-
-- test shaders: item_glow, fireworks
-- only vaccum collapse seems to work so far. fireworks also works, but I need to know the right values for the uniforms.
-- glow doesn't seem to blend with background. why?
-- test new stingers for lootbox open.
-- [ ] Do fireworks, then the rush thing when you get an item. 
-
-- Need to make tooltips smaller and more readable. how?
 
 
 
-- [ ] cursor hover doesn't work fully correctly when controller (points to wrong card sometimes)
-- [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
-- [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.
+
 
 - start wand evaluation mechanism.
 
-- Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
-- add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
-- implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
-
-- use the new itch assets to indicate icons for wands & when they are on cooldown.
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
-- Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
 
 
 
@@ -115,10 +86,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - implement card evaluation order using actual cards to see how it behaves.
 - make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.
 
-
-- Add card 3d rotation for when initially dropped?
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
-- make dashed lines be used only when a trigger + action is valid and active.
+
 - add new stats with below:
 ```lua
 add_basic(defs, 'projectile_count')
@@ -217,6 +186,18 @@ end)
 - [ ] Add glow to specfiic sprites: https://godotshaders.com/shader/item-pulse-glow/
 
 # polish phase
+
+- [ ] cursor hover doesn't work fully correctly when controller (points to wrong card sometimes)
+- [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
+- [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.
+- Add card 3d rotation for when initially dropped?
+- make dashed lines be used only when a trigger + action is valid and active.
+- Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
+- add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
+
+
+- use the new itch assets to indicate icons for wands & when they are on cooldown.
+- more variation in coin collect sounds
 - [ ] disable decel on arrival 
 - [ ] turn pickups into sensors?
 - [ ] drop shadow implementation (do lua side, avoid bugs)

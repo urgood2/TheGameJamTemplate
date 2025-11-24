@@ -400,6 +400,9 @@ namespace shaders
                 } else if constexpr (std::is_same_v<T, Vector4>) {
                     // SPDLOG_DEBUG("Setting Vector4 uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
                     g_shaderApi.set_value(shader, loc, &val, SHADER_UNIFORM_VEC4);
+                } else if constexpr (std::is_same_v<T, bool>) {
+                    int b = val ? 1 : 0;
+                    g_shaderApi.set_value(shader, loc, &b, SHADER_UNIFORM_INT);
                 } else if constexpr (std::is_same_v<T, Texture2D>) {
                     // SPDLOG_DEBUG("Setting texture uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
                     // Bind a Texture2D to the sampler uniform slot

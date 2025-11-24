@@ -141,7 +141,7 @@ wrap_timer_action(sol::function action) {
 
         auto luaResult = dt.has_value()
             ? util::safeLuaCall(protectedAction, "timer_action(dt)", *dt)
-            : util::safeLuaCall(protectedAction, "timer_action()",  );
+            : util::safeLuaCall(protectedAction, "timer_action()");
 
         if (luaResult.isErr()) {
             SPDLOG_ERROR("Timer action failed: {}", luaResult.error());

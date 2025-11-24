@@ -9,6 +9,7 @@
 #include <thread>
 #include <utility>
 #include <variant>
+#include <type_traits>
 
 #include "spdlog/spdlog.h"
 
@@ -19,29 +20,34 @@ namespace util {
 // Lightweight Result wrapper for recoverable paths.
 template <typename T, typename E = std::string>
 class Result {
+    using Value = std::conditional_t<std::is_void_v<T>, std::monostate, T>;
 public:
-    Result(T value) : data_(std::move(value)), ok_(true) {}
+    Result(Value value) : data_(std::move(value)), ok_(true) {}
     Result(E error) : data_(std::move(error)), ok_(false) {}
 
     bool isOk() const { return ok_; }
     bool isErr() const { return !ok_; }
 
-    T& value() { return std::get<T>(data_); }
-    const T& value() const { return std::get<T>(data_); }
+    template <typename U = T, typename = std::enable_if_t<!std::is_void_v<U>>>
+    Value& value() { return std::get<Value>(data_); }
+    template <typename U = T, typename = std::enable_if_t<!std::is_void_v<U>>>
+    const Value& value() const { return std::get<Value>(data_); }
 
     const E& error() const { return std::get<E>(data_); }
 
-    T valueOr(T fallback) const { return ok_ ? std::get<T>(data_) : std::move(fallback); }
+    template <typename U = T, typename = std::enable_if_t<!std::is_void_v<U>>>
+    Value valueOr(Value fallback) const { return ok_ ? std::get<Value>(data_) : std::move(fallback); }
 
-    T valueOrThrow() const {
+    template <typename U = T, typename = std::enable_if_t<!std::is_void_v<U>>>
+    Value valueOrThrow() const {
         if (!ok_) {
             throw std::runtime_error(std::get<E>(data_));
         }
-        return std::get<T>(data_);
+        return std::get<Value>(data_);
     }
 
 private:
-    std::variant<T, E> data_;
+    std::variant<Value, E> data_;
     bool ok_;
 };
 
@@ -50,14 +56,20 @@ template <typename Fn>
 auto tryWithLog(Fn&& fn, std::string_view context)
     -> Result<decltype(fn()), std::string>
 {
+    using Ret = decltype(fn());
     try {
-        return Result<decltype(fn()), std::string>(fn());
+        if constexpr (std::is_void_v<Ret>) {
+            fn();
+            return Result<Ret, std::string>(std::monostate{});
+        } else {
+            return Result<Ret, std::string>(fn());
+        }
     } catch (const std::exception& e) {
         SPDLOG_ERROR("[{}] {}", context, e.what());
-        return Result<decltype(fn()), std::string>(std::string(e.what()));
+        return Result<Ret, std::string>(std::string(e.what()));
     } catch (...) {
         SPDLOG_ERROR("[{}] unknown exception", context);
-        return Result<decltype(fn()), std::string>("unknown exception");
+        return Result<Ret, std::string>(std::string("unknown exception"));
     }
 }
 

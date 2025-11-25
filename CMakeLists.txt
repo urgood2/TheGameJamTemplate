@@ -128,6 +128,7 @@ endif()
 option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
 option(SKIP_ASSET_SCAN "Skip recursive asset scan at startup (can also set env SKIP_ASSET_SCAN=1)" OFF)
 option(SKIP_UUID_DUMP "Skip writing auto-generated all_uuids.json (can also set env SKIP_UUID_DUMP=1)" OFF)
+option(ENABLE_WEB_HELPER_TARGETS "Expose web helper targets even when the top-level build is native" ON)
 
 # ------------------------------------------------------------------
 # Dev ergonomics:
@@ -153,7 +154,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 # set(CMAKE_BUILD_TYPE Debug)
 
-set(CRASH_REPORT_BUILD_ID "${PROJECT_VERSION}" CACHE STRING "Build identifier attached to crash reports")
 # enable tracy (disable for web)
 
 # Enable tracy only when requested (default OFF) and not on Web.
@@ -213,6 +213,20 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(ITCH_USER "chugget")
 set(ITCH_PAGE "testing")
 set(PROJECT_VERSION "0.1")
+
+# Build/version identifiers used for crash reporting and itch uploads
+set(_default_build_id "$ENV{ITCH_BUILD_ID}")
+if(NOT _default_build_id)
+    set(_default_build_id "$ENV{BUILD_ID}")
+endif()
+if(NOT _default_build_id)
+    set(_default_build_id "${PROJECT_VERSION}")
+endif()
+set(ITCH_BUILD_ID "${_default_build_id}" CACHE STRING "Version label used for itch.io pushes and crash reports")
+if(NOT DEFINED CRASH_REPORT_BUILD_ID OR CRASH_REPORT_BUILD_ID STREQUAL "")
+    set(CRASH_REPORT_BUILD_ID "${ITCH_BUILD_ID}")
+endif()
+set(CRASH_REPORT_BUILD_ID "${CRASH_REPORT_BUILD_ID}" CACHE STRING "Build identifier attached to crash reports" FORCE)
 
 include(FetchContent)
 
@@ -749,7 +763,7 @@ target_sources(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_INCLUDE})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
-if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.16")
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.16" AND NOT EMSCRIPTEN)
     # Speed up compiles by precompiling our shared heavy header.
     target_precompile_headers(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/src/util/common_headers.hpp")
 endif()
@@ -768,7 +782,7 @@ endif()
 # ------------------------------------------------------------
 # Web build helpers (shared)
 # ------------------------------------------------------------
-if(EMSCRIPTEN)
+if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     # Keep a configurable output dir for emscripten builds.
     set(WEB_BUILD_DIR "${WEB_BUILD_DIR}" CACHE PATH "Output directory for Emscripten builds")
     if(NOT WEB_BUILD_DIR)
@@ -780,34 +794,37 @@ if(EMSCRIPTEN)
         COMMENT "Copying asset files to web build directory"
     )
 
+    add_custom_command(
+        TARGET copy_assets PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E remove_directory "${WEB_BUILD_DIR}/assets"
+        COMMENT "Clearing existing web assets directory for fresh copy"
+    )
+
     file(GLOB_RECURSE ASSET_FILES RELATIVE ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets/*)
 
     foreach(ASSET_FILE ${ASSET_FILES})
-        # Skip macOS junk files
-        string(FIND "${ASSET_FILE}" ".DS_Store" IS_DS_STORE)
-        if(IS_DS_STORE GREATER -1)
+        # Skip junk files and dev-only archives to keep itch.io upload under file count limits
+        if(ASSET_FILE MATCHES "\\.DS_Store$"
+           OR ASSET_FILE MATCHES "graphics/pre-packing-files_globbed"
+           OR ASSET_FILE MATCHES "(/|^)scripts_archived/")
             continue()
         endif()
 
-        # Skip the excluded directory
-        string(FIND "${ASSET_FILE}" "graphics/pre-packing-files_globbed" FOUND)
-        if(FOUND EQUAL -1)
-            get_filename_component(DEST_DIR "${WEB_BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
-            add_custom_command(
-                TARGET copy_assets POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E copy
-                        "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
-                        "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
-            )
-        endif()
+        get_filename_component(DEST_DIR "${WEB_BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
+        add_custom_command(
+            TARGET copy_assets POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
+                    "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
+        )
     endforeach()
 endif()
 
 ##########################################################################################
 # Add custom commands for web build, zipping, and publishing with Butler (cross-platform)
 ##########################################################################################
-if(EMSCRIPTEN)
+if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     # Allow overriding the emsdk root; pick sensible defaults per platform.
     if(NOT EMSDK_PATH)
         if(DEFINED ENV{EMSDK} AND NOT "$ENV{EMSDK}" STREQUAL "")
@@ -824,16 +841,27 @@ if(EMSCRIPTEN)
     set(WEB_ZIP "${CMAKE_SOURCE_DIR}/${PROJECT_NAME}_web.zip")
 
     # OS-specific helpers
-    if(WIN32)
-        set(_emsdk_env_cmd "call \"${EMSDK_PATH}/emsdk_env.bat\" &&")
-        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake.bat\"")
-        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake.bat\"")
+    if(CMAKE_HOST_WIN32)
+        find_program(GIT_BASH_EXE bash
+            PATHS "C:/Program Files/Git/bin" "D:/Program Files/Git/bin" "C:/msys64/usr/bin"
+            NO_DEFAULT_PATH
+        )
+        if(NOT GIT_BASH_EXE)
+            find_program(GIT_BASH_EXE bash)
+        endif()
+        if(GIT_BASH_EXE)
+            set(_shell_prefix "${GIT_BASH_EXE}")
+        else()
+            set(_shell_prefix bash)
+        endif()
+        set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
+        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
+        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
         set(_inject_cmd
             powershell -ExecutionPolicy Bypass -NoProfile -File "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.ps1" `
                 -HtmlPath "${WEB_OUTPUT_HTML}" `
                 -SnippetPath "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html"
         )
-        set(_shell_prefix cmd /C)
     else()
         set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
         set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
@@ -841,16 +869,16 @@ if(EMSCRIPTEN)
         set(_inject_cmd
             ${CMAKE_COMMAND} -DHTML_PATH="${WEB_OUTPUT_HTML}" -DSNIPPET_PATH="${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html" -P "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.cmake"
         )
-        set(_shell_prefix bash -lc)
+        set(_shell_prefix bash)
     endif()
 
     set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1")
-    set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\\\"${_emscripten_link_flags}\\\" -DCMAKE_EXECUTABLE_SUFFIX=.html")
+    set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\"${_emscripten_link_flags}\" -DCMAKE_EXECUTABLE_SUFFIX=.html -DCCACHE_PROGRAM= -DCMAKE_C_COMPILER_LAUNCHER= -DCMAKE_CXX_COMPILER_LAUNCHER=")
 
     # Target to activate emsdk
     add_custom_target(activate_emsdk
         COMMAND ${CMAKE_COMMAND} -E echo "Activating emsdk latest..."
-        COMMAND ${_shell_prefix} "${_emsdk_env_cmd} emsdk activate latest --permanent"
+        COMMAND ${_shell_prefix} -lc "'${_emsdk_env_cmd} emsdk activate latest --permanent'"
         COMMENT "Activating latest emsdk"
     )
 
@@ -858,7 +886,7 @@ if(EMSCRIPTEN)
     add_custom_target(configure_web_build
         DEPENDS activate_emsdk copy_assets
         COMMAND ${CMAKE_COMMAND} -E make_directory "${WEB_BUILD_DIR}"
-        COMMAND ${_shell_prefix} "${_emsdk_env_cmd} ${_emcmake_cmd} cmake .. ${_configure_args}"
+        COMMAND ${_shell_prefix} -lc "'${_emsdk_env_cmd} ${_emcmake_cmd} cmake .. ${_configure_args}'"
         WORKING_DIRECTORY ${WEB_BUILD_DIR}
         COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"
     )
@@ -866,7 +894,7 @@ if(EMSCRIPTEN)
     # Target to compile the web build
     add_custom_target(compile_web_build
         DEPENDS configure_web_build
-        COMMAND ${_shell_prefix} "${_emsdk_env_cmd} cmake --build ."
+        COMMAND ${_shell_prefix} -lc "'${_emsdk_env_cmd} cmake --build .'"
         WORKING_DIRECTORY ${WEB_BUILD_DIR}
         COMMENT "Compiling web build with Emscripten"
     )
@@ -937,7 +965,7 @@ if(EMSCRIPTEN)
         # Publish directly to itch.io (you will need to install and login to butler)
         add_custom_target(push_web_build
             DEPENDS clean_web_build zip_web_build
-            COMMAND ${_BUTLER_EXE} push ${WEB_ZIP} ${ITCH_USER}/${ITCH_PAGE}:web --userversion ${PROJECT_VERSION}
+            COMMAND ${_BUTLER_EXE} push ${WEB_ZIP} ${ITCH_USER}/${ITCH_PAGE}:web --userversion ${CRASH_REPORT_BUILD_ID}
             COMMENT "Publishing web build to Itch.io with Butler"
         )
     else()

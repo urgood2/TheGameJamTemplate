@@ -11,6 +11,9 @@ using json = nlohmann::json;
 #if defined(_WIN32)           
 	#define NOGDI             // All GDI defines and routines
 	#define NOUSER            // All USER defines and routines
+    // Disable ImGui's Win32 clipboard helpers to avoid pulling in winuser APIs
+    #define IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
+    #define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
 #endif
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG // compiler-time log level

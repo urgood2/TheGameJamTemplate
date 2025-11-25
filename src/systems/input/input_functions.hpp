@@ -24,13 +24,13 @@ using namespace snowhouse; // assert
 struct EngineContext;
 
 namespace input {
-auto exposeToLua(sol::state &lua, EngineContext *ctx = globals::g_ctx) -> void;
+auto exposeToLua(sol::state &lua, ::EngineContext *ctx = globals::g_ctx) -> void;
 
 // Controller Initialization
 auto Init(InputState &inputState, entt::registry &registry,
-          EngineContext *ctx = nullptr) -> void;
+          ::EngineContext *ctx = nullptr) -> void;
 auto Update(entt::registry &registry, InputState &inputState, float dt,
-            EngineContext *ctx = nullptr) -> void;
+            ::EngineContext *ctx = nullptr) -> void;
 
 void hoverDragSimultaneousCheck(entt::registry &registry,
                                 input::InputState &inputState);
@@ -140,7 +140,7 @@ void ProcessLeftMouseButtonPress(entt::registry &registry, InputState &state,
                                  float x = -1, float y = -1);
 void ProcessLeftMouseButtonRelease(entt::registry &registry, InputState &state,
                                    float x = -1, float y = -1,
-                                   EngineContext *ctx = nullptr);
+                                  ::EngineContext *ctx = nullptr);
 
 // Focus and Navigation
 bool IsNodeFocusable(entt::registry &registry, InputState &state,

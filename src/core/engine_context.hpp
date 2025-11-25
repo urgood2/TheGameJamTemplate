@@ -16,13 +16,8 @@
 #include "components/graphics.hpp"
 #include "systems/shaders/shader_system.hpp"
 
-namespace shaders {
-    struct ShaderUniformComponent;
-}
-
-namespace input {
-    struct InputState;
-}
+namespace shaders { struct ShaderUniformComponent; }
+namespace input { struct InputState; }
 
 // Placeholder for future audio system state; currently mirrors legacy globals once wired.
 struct AudioContext {
@@ -54,12 +49,12 @@ struct EngineContext {
     std::map<std::string, Color> colors;
     std::unordered_map<std::string, std::vector<entt::entity>> globalUIInstances;
     std::unordered_map<std::string, std::function<void()>> buttonCallbacks;
-    input::InputState* inputState{nullptr}; // non-owning, mirrors legacy globals
+    ::input::InputState* inputState{nullptr}; // non-owning, mirrors legacy globals
     AudioContext* audio{nullptr}; // non-owning placeholder for audio state
     float uiScaleFactor{1.0f};
     float baseShadowExaggeration{1.8f};
-    shaders::ShaderUniformComponent* shaderUniformsPtr{nullptr}; // optional alias to global or owned
-    std::unique_ptr<shaders::ShaderUniformComponent> shaderUniformsOwned{};
+    ::shaders::ShaderUniformComponent* shaderUniformsPtr{nullptr}; // optional alias to global or owned
+    std::unique_ptr<::shaders::ShaderUniformComponent> shaderUniformsOwned{};
     json configJson{};
     json colorsJson{};
     json uiStringsJson{};
@@ -91,7 +86,7 @@ struct EngineContext {
     Vector2 nextCameraTarget{0.0f, 0.0f};
     int worldWidth{0};
     int worldHeight{0};
-    shaders::ShaderUniformComponent shaderUniforms{};
+    ::shaders::ShaderUniformComponent shaderUniforms{};
     std::vector<std::vector<bool>> visibilityMap{};
     bool useLineOfSight{false};
     float timerReal{0.0f};

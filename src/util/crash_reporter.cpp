@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstring>
 #include <csignal>
 #include <cstdlib>
 #include <exception>
@@ -145,9 +146,12 @@ std::vector<std::string> capture_stacktrace(bool include_stack) {
     }
 
 #if defined(__EMSCRIPTEN__)
-    std::string trace = emscripten_get_callstack(EM_LOG_DEMANGLE | EM_LOG_C_STACK | EM_LOG_JS_STACK);
+    constexpr int kMaxBytes = 16 * 1024;
+    char buffer[kMaxBytes];
+    const int written = emscripten_get_callstack(EM_LOG_DEMANGLE | EM_LOG_C_STACK | EM_LOG_JS_STACK, buffer, kMaxBytes);
+    const int usable = (written > 0 && written < kMaxBytes) ? written : static_cast<int>(std::strlen(buffer));
     std::vector<std::string> frames;
-    std::istringstream stream(trace);
+    std::istringstream stream(std::string(buffer, usable));
     std::string line;
     while (std::getline(stream, line)) {
         if (!line.empty()) {

@@ -27,11 +27,11 @@ void loadInSpriteFramesFromJSON();
 Texture2D retrieveNotAtlasTexture(string refrence);
 std::string getAssetPath(const std::string path_uuid_or_raw_identifier);
 AnimationObject getAnimationObject(std::string uuid_or_raw_identifier,
-                                   EngineContext *ctx = nullptr);
+                                    ::EngineContext *ctx = nullptr);
 std::string getUIString(std::string uuid_or_raw_identifier,
-                        EngineContext *ctx = nullptr);
+                        ::EngineContext *ctx = nullptr);
 globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier,
-                                        EngineContext *ctx = nullptr);
+                                        ::EngineContext *ctx = nullptr);
 
 // utility
 auto extractFileNumber(const std::string &filename) -> int;

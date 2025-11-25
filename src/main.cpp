@@ -15,7 +15,6 @@
 
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
-#define NOUSER // All USER defines and routines
 #endif
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE // compiler-time log level

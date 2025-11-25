@@ -103,6 +103,11 @@ function ProjectileSystemTest.scheduleTests()
         ProjectileSystemTest.testArcProjectile()
     end)
 
+    -- Test 5: Wall collision culling (after 5 seconds)
+    timer.after(5.0, function()
+        ProjectileSystemTest.testWallCollision()
+    end)
+
     -- Print results (after 8 seconds)
     timer.after(8.0, function()
         ProjectileSystemTest.printResults()
@@ -304,6 +309,53 @@ function ProjectileSystemTest.testArcProjectile()
             print("    Error:", projectileId)
         end
         ProjectileSystemTest.testResults.arcProjectile = false
+    end
+end
+
+function ProjectileSystemTest.testWallCollision()
+    print("\n[TEST 5] Wall Collision Culling")
+    print(string.rep("-", 40))
+
+    local ProjectileSystem = ProjectileSystemTest.ProjectileSystem
+
+    local success, projectileId = pcall(function()
+        return ProjectileSystem.spawn({
+            position = {x = 100, y = 100},
+            angle = 0,
+            baseSpeed = 0,
+            damage = 0,
+            lifetime = 3,
+            movementType = "straight",
+            collisionBehavior = "destroy",
+            collideWithWorld = true
+        })
+    end)
+
+    if not (success and projectileId and projectileId ~= entt_null) then
+        print("[✗] Failed to spawn projectile for wall test")
+        ProjectileSystemTest.testResults.wallCollision = false
+        return
+    end
+
+    local fakeWall = registry:create()
+    ProjectileSystem.handleCollision(projectileId, fakeWall)
+
+    local script = getScriptTableFromEntityID(projectileId)
+    local lifetime = script and script.projectileLifetime
+
+    if lifetime and lifetime.shouldDespawn then
+        print("[✓] Projectile marked for destruction after hitting wall")
+        ProjectileSystemTest.testResults.wallCollision = true
+    else
+        print("[✗] Projectile did not mark itself for destruction on wall hit")
+        ProjectileSystemTest.testResults.wallCollision = false
+    end
+
+    -- Cleanup spawned entities
+    ProjectileSystem.destroy(projectileId)
+    local entity_cache = ProjectileSystemTest.entity_cache
+    if registry and entity_cache and entity_cache.valid(fakeWall) then
+        registry:destroy(fakeWall)
     end
 end
 

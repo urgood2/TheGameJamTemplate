@@ -1039,8 +1039,22 @@ namespace ai_system
                                      "size", &Blackboard::size,
                                      "isEmpty", &Blackboard::isEmpty);
 
-        ai.set_function("get_blackboard", [](entt::entity e) -> Blackboard &
-                        { return globals::getRegistry().get<GOAPComponent>(e).blackboard; });
+        ai.set_function("get_blackboard", [](entt::entity e) -> Blackboard *
+                        {
+            auto &registry = globals::getRegistry();
+
+            if (!registry.valid(e)) {
+                SPDLOG_WARN("ai.get_blackboard called with invalid entity");
+                return nullptr;
+            }
+
+            if (!registry.any_of<GOAPComponent>(e)) {
+                SPDLOG_WARN("ai.get_blackboard called for entity {} without GOAPComponent", static_cast<int>(e));
+                return nullptr;
+            }
+
+            return &registry.get<GOAPComponent>(e).blackboard;
+        });
 
         lua.set_function("create_ai_entity",
                          sol::overload(
@@ -1143,8 +1157,8 @@ namespace ai_system
 
         rec.record_method("ai", {"get_blackboard",
                                  "---@param e Entity\n"
-                                 "---@return Blackboard",
-                                 "Returns a reference to the entity’s Blackboard component."});
+                                 "---@return Blackboard|nil",
+                                 "Returns the entity’s Blackboard component if present; nil otherwise."});
 
         rec.record_method("ai", {"create_ai_entity",
                                  "---@param type string\n"

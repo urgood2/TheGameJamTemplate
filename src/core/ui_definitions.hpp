@@ -327,6 +327,7 @@ namespace ui_defs
 
                     textSegmentDef.config.color = color;
                 }
+                bool shadowEnabled = true;
                 if (segment.attributes.find("fontSize") != segment.attributes.end()) {
                     auto fontSizeString = std::get<std::string>(segment.attributes["fontSize"]);
                     try {
@@ -335,6 +336,11 @@ namespace ui_defs
                         // ignore invalid fontSize
                     }
                 }
+                if (segment.attributes.find("shadow") != segment.attributes.end()) {
+                    auto shadowString = std::get<std::string>(segment.attributes["shadow"]);
+                    shadowEnabled = !(shadowString == "false" || shadowString == "0");
+                }
+                textSegmentDef.config.shadow = shadowEnabled;
                 if (segment.attributes.find("background") != segment.attributes.end()) {
                     auto backgroundString = std::get<std::string>(segment.attributes["background"]);
 

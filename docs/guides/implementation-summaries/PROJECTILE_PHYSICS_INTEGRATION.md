@@ -151,32 +151,37 @@ end
 
 **New Module Variables:**
 ```lua
--- Line 37-39
-ProjectileSystem.physics_step_timer_id = nil
+-- Line 37-42
+ProjectileSystem.physics_step_timer_tag = "projectile_system_update"
+ProjectileSystem.physics_step_timer_active = false
 ProjectileSystem.use_physics_step_timer = true  -- Set to true to update on physics steps
 ```
 
 **Init Function - Added Timer Registration:**
 ```lua
--- Register projectile update on physics step timer
 if ProjectileSystem.use_physics_step_timer and timer then
-    -- Use physics_step tag so this runs synchronously with physics updates
-    ProjectileSystem.physics_step_timer_id = timer.every_physics_step(function(dt)
-        ProjectileSystem.updateInternal(dt)
-    end, "projectile_update")
-
-    log_info("ProjectileSystem registered with physics step timer")
-else
-    log_info("ProjectileSystem will use manual update() calls")
+    if timer.every_physics_step then
+        timer.every_physics_step(function()
+            local now = os.clock()
+            local dt = now - ProjectileSystem._lastUpdateTime
+            ProjectileSystem._lastUpdateTime = now
+            ProjectileSystem.updateInternal(dt)
+        end, ProjectileSystem.physics_step_timer_tag)
+        ProjectileSystem.physics_step_timer_active = true
+        log_info("ProjectileSystem registered with physics step timer")
+    else
+        ProjectileSystem.use_physics_step_timer = false
+        log_info("ProjectileSystem will use manual update() calls")
+    end
 end
 ```
 
 **Cleanup Function - Cancel Timer:**
 ```lua
 -- Cancel physics step timer if active
-if ProjectileSystem.physics_step_timer_id and timer then
-    timer.cancel(ProjectileSystem.physics_step_timer_id)
-    ProjectileSystem.physics_step_timer_id = nil
+if ProjectileSystem.physics_step_timer_active and timer and timer.cancel_physics_step then
+    timer.cancel_physics_step(ProjectileSystem.physics_step_timer_tag)
+    ProjectileSystem.physics_step_timer_active = false
 end
 ```
 

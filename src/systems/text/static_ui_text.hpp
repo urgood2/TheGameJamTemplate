@@ -435,6 +435,11 @@ namespace static_ui_text_system {
                     textSegmentDef.config.fontSize = *fontSize;
                 }
 
+                // shadow override?
+                if (auto shadowStr = getAttrString(segment.attributes, "shadow")) {
+                    textSegmentDef.config.shadow = !(*shadowStr == "false" || *shadowStr == "0");
+                }
+
                 // assign id on the text node before any wrapping
                 textSegmentDef.config.id = segId; // ---- NEW
 

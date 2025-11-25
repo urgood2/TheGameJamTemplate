@@ -441,6 +441,9 @@ Main spawning function. Returns entity ID of spawned projectile.
 - `owner` - Owner entity ID
 - `faction` - Faction string for friendly fire logic
 - `collisionBehavior` - How projectile handles collisions
+- `targetCollisionTag` - Physics tag this projectile should damage (default `"enemy"`)
+- `collideWithWorld` - Whether to collide with terrain/world geometry (default `true`)
+- `collideWithTags` - Explicit list of physics tags to collide with (overrides defaults)
 - `lifetime` - Max seconds before despawn
 - `maxDistance` - Max pixels traveled before despawn
 - `maxHits` - Max number of hits before despawn

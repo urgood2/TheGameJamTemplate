@@ -18,6 +18,7 @@ inline void applyStateEffectsToEntity(entt::registry &registry, entt::entity ent
 
 // all transform entities should have this tag by default, unless overridden
 static const std::string DEFAULT_STATE_TAG = "default_state";
+static const std::string PLANNING_STATE_TAG = "PLANNING";
 
 //-----------------------------------------------------------------------------
 // Component: Attach to any entity you want to gate by state

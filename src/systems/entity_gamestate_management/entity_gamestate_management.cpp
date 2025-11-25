@@ -55,7 +55,7 @@ bool ActiveStates::is_active(const StateTag &tag) const {
 // Singleton accessor
 //-----------------------------------------------------------------------------
 ActiveStates &active_states_instance() {
-    static ActiveStates instance{ .active_hashes = { std::hash<std::string>{}(DEFAULT_STATE_TAG) } };
+    static ActiveStates instance{ .active_hashes = { std::hash<std::string>{}(DEFAULT_STATE_TAG), std::hash<std::string>{}(PLANNING_STATE_TAG) } };
     return instance;
 }
 

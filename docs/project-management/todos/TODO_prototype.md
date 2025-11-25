@@ -61,12 +61,14 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - make j8 default in compilation?
     
 # programming side
-- projectiles are sometimes vanishing without hitting a wall? we need to do projectile behaviors as well.
+- refer to balatro_analysis folder for design elements.
+- projectiles need better testing.
+- make SpellTypeEvaluator and JokerSystem compatible and ready to use.
+- we need to do projectile behaviors as well.
 - some simple dust particles when player walks. 
-- outline next steps in telemetry. what service should we try? I want maximum info from bare minimum of work, and it should be simple to enable.
+- outline next steps in telemetry. what service should we try? I want maximum info from bare minimum of work, and it should be simple to enable. -> posthog?
 - web - why do the scanline things disappear on web?
 make mask truly weightless. and make it scale bounce with player when p- layer picks soemthing up.
-- windows- imgui is cut off within original skill bounds.
 
 - some alignment issues with tooltip ui.
 - need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.

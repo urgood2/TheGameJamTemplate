@@ -103,13 +103,18 @@ function ProjectileSystemTest.scheduleTests()
         ProjectileSystemTest.testArcProjectile()
     end)
 
-    -- Test 5: Wall collision culling (after 5 seconds)
+    -- Test 5: Orbital projectile (after 5 seconds)
     timer.after(5.0, function()
+        ProjectileSystemTest.testOrbitalProjectile()
+    end)
+
+    -- Test 6: Wall collision culling (after 6 seconds)
+    timer.after(6.0, function()
         ProjectileSystemTest.testWallCollision()
     end)
 
-    -- Print results (after 8 seconds)
-    timer.after(8.0, function()
+    -- Print results (after 9 seconds)
+    timer.after(9.0, function()
         ProjectileSystemTest.printResults()
     end)
 end
@@ -236,17 +241,26 @@ function ProjectileSystemTest.testHomingProjectile()
     local entity_cache = ProjectileSystemTest.entity_cache
     local component_cache = ProjectileSystemTest.component_cache
 
-    -- Create a dummy target entity
-    local targetEntity = registry:create()
+    local targetEntity = survivorEntity
 
+    if not targetEntity or not entity_cache.valid(targetEntity) then
+        print("[!] survivorEntity not available; creating fallback target for homing test")
+        targetEntity = registry:create()
+        local fallbackTransform = component_cache.get(targetEntity, Transform)
+        if fallbackTransform then
+            fallbackTransform.actualX = 600
+            fallbackTransform.actualY = 300
+            fallbackTransform.actualW = 32
+            fallbackTransform.actualH = 32
+        end
+    end
+
+    local targetTransform = component_cache.get(targetEntity, Transform)
     local success, result = pcall(function()
-        -- Add transform to target
-        local targetTransform = component_cache.get(targetEntity, Transform)
+        -- Ensure player/fallback transform has valid size for homing
         if targetTransform then
-            targetTransform.actualX = 600
-            targetTransform.actualY = 300
-            targetTransform.actualW = 32
-            targetTransform.actualH = 32
+            targetTransform.actualW = targetTransform.actualW or 32
+            targetTransform.actualH = targetTransform.actualH or 32
         end
 
         -- Spawn homing projectile
@@ -255,7 +269,7 @@ function ProjectileSystemTest.testHomingProjectile()
             positionIsCenter = true,
             baseSpeed = 200,
             damage = 15,
-            lifetime = 10,
+            lifetime = 999, -- long lifetime so we can observe behavior
             movementType = "homing",
             homingTarget = targetEntity,
             homingStrength = 2.0,
@@ -267,7 +281,9 @@ function ProjectileSystemTest.testHomingProjectile()
 
     if success and result and entity_cache.valid(result) then
         print("[✓] Homing projectile spawned successfully")
-        print("    Target position: (600, 300)")
+        if targetTransform then
+            print(string.format("    Target position: (%.1f, %.1f)", targetTransform.actualX or 0, targetTransform.actualY or 0))
+        end
         print("    Homing strength: 2.0")
         ProjectileSystemTest.testResults.homingProjectile = true
     else
@@ -295,7 +311,9 @@ function ProjectileSystemTest.testArcProjectile()
             damage = 20,
             lifetime = 10,
             movementType = "arc",
-            gravityScale = 1.0,
+            gravityScale = 1.5,
+            forceManualGravity = true,
+            usePhysics = false,
             collisionBehavior = "destroy",
             size = 18
         })
@@ -304,8 +322,8 @@ function ProjectileSystemTest.testArcProjectile()
     if success and projectileId and entity_cache.valid(projectileId) then
         print("[✓] Arc projectile spawned successfully")
         print("    Launch angle: 45°")
-        print("    Gravity scale: 1.0")
-        print("    Expected: Parabolic trajectory")
+        print("    Gravity scale: 1.5 (manual, no world gravity)")
+        print("    Expected: Parabolic trajectory using internal gravity")
         ProjectileSystemTest.testResults.arcProjectile = true
     else
         print("[✗] FAILED to spawn arc projectile")
@@ -316,8 +334,70 @@ function ProjectileSystemTest.testArcProjectile()
     end
 end
 
+function ProjectileSystemTest.testOrbitalProjectile()
+    print("\n[TEST 5] Orbital Projectile")
+    print(string.rep("-", 40))
+
+    local ProjectileSystem = ProjectileSystemTest.ProjectileSystem
+    local entity_cache = ProjectileSystemTest.entity_cache
+    local component_cache = ProjectileSystemTest.component_cache
+
+    local centerEntity = survivorEntity
+    if not centerEntity or not entity_cache.valid(centerEntity) then
+        print("[!] survivorEntity not available; orbital test will use a fallback center")
+        centerEntity = registry:create()
+        local fallbackTransform = component_cache.get(centerEntity, Transform)
+        if fallbackTransform then
+            fallbackTransform.actualX = 400
+            fallbackTransform.actualY = 300
+            fallbackTransform.actualW = 32
+            fallbackTransform.actualH = 32
+        end
+    end
+
+    local success, projectileId = pcall(function()
+        local playerTransform = component_cache.get(centerEntity, Transform)
+        local function centerPos()
+            if playerTransform then
+                return playerTransform.actualX + (playerTransform.actualW or 0) * 0.5,
+                       playerTransform.actualY + (playerTransform.actualH or 0) * 0.5
+            end
+            return 400, 300
+        end
+
+        local cx, cy = centerPos()
+
+        return ProjectileSystem.spawn({
+            position = {x = cx, y = cy},
+            positionIsCenter = true,
+            movementType = "orbital",
+            orbitCenter = {x = cx, y = cy},
+            orbitCenterEntity = centerEntity,
+            orbitRadius = 80,
+            orbitSpeed = 2.0,
+            lifetime = 999,
+            collisionBehavior = "pass_through",
+            size = 20,
+            sprite = "b488.png" -- use guaranteed sprite to avoid missing animation errors
+        })
+    end)
+
+    if success and projectileId and entity_cache.valid(projectileId) then
+        print("[✓] Orbital projectile spawned successfully")
+        print("    Center: player (or fallback)")
+        print("    Lifetime: long (999s) for observation")
+        ProjectileSystemTest.testResults.orbitalProjectile = true
+    else
+        print("[✗] FAILED to spawn orbital projectile")
+        if not success then
+            print("    Error:", projectileId)
+        end
+        ProjectileSystemTest.testResults.orbitalProjectile = false
+    end
+end
+
 function ProjectileSystemTest.testWallCollision()
-    print("\n[TEST 5] Wall Collision Culling")
+    print("\n[TEST 6] Wall Collision Culling")
     print(string.rep("-", 40))
 
     local ProjectileSystem = ProjectileSystemTest.ProjectileSystem
@@ -393,6 +473,7 @@ function ProjectileSystemTest.printResults()
     print("  • They should move smoothly without jittering")
     print("  • Homing projectiles should curve toward target")
     print("  • Arc projectiles should follow parabolic path")
+    print("  • Orbital projectile should circle the player")
     print("  • Projectiles should disappear after lifetime expires")
 end
 

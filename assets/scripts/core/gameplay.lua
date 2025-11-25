@@ -1051,6 +1051,13 @@ function createNewCard(id, x, y, gameStateToApply)
         if not tooltip then
             return
         end
+        -- hide any other tooltips before showing this one
+        for _, tooltipEntity in pairs(card_tooltip_cache) do
+            if tooltipEntity ~= tooltip then
+                ui.box.ClearStateTagsFromUIBox(tooltipEntity)
+            end
+        end
+
         add_state_tag(tooltip, CARD_TOOLTIP_STATE)
         activate_state(CARD_TOOLTIP_STATE)
         ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE)

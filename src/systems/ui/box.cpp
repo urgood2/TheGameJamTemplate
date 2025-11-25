@@ -2411,11 +2411,13 @@ namespace ui
         size_t endExclusive; // first index after the subtree
         int    z;
         entt::entity pane{entt::null}; // NEW: which pane this scope represents
+        std::shared_ptr<layer::Layer> layerPtr; // layer used for begin/end scissor
     };
 
     void box::drawAllBoxesShaderEnabled(entt::registry &registry,
                            std::shared_ptr<layer::Layer> layerPtr)
     {
+        auto defaultLayerPtr = layerPtr;
         // 1) Build a flat list in the exact order your old box::Draw would have used.
         std::vector<UIDrawListItem> drawOrder;
         drawOrder.reserve(200); // or an estimate of your total UI element count
@@ -2466,7 +2468,15 @@ namespace ui
                 uiBoxEntity     = elemComp.uiBox;
                 drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
                 if (auto* l = registry.try_get<UIBoxLayer>(uiBoxEntity)) {
-                    layerPtr = game::GetLayer(l->layerName);
+                    auto overrideLayer = game::GetLayer(l->layerName);
+                    if (!overrideLayer) {
+                        spdlog::error("UI box {} requested unknown layer '{}'", static_cast<int>(uiBoxEntity), l->layerName);
+                        layerPtr = defaultLayerPtr;
+                    } else {
+                        layerPtr = overrideLayer;
+                    }
+                } else {
+                    layerPtr = defaultLayerPtr;
                 }
             }
             
@@ -2485,8 +2495,9 @@ namespace ui
                 // layer::QueueCommand<layer::CmdPopMatrix>(
                 //     layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
                 // );
+                auto scopeLayer = scissorStack.back().layerPtr ? scissorStack.back().layerPtr : defaultLayerPtr;
                 layer::QueueCommand<layer::CmdEndScissorMode>(
-                    layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
+                    scopeLayer, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
                 );
                 scissorStack.pop_back();
             }
@@ -2519,7 +2530,7 @@ namespace ui
                 );
 
                 // keep the scope open until we reach 'end'
-                scissorStack.push_back({ end, drawOrderZIndex, ent });
+                scissorStack.push_back({ end, drawOrderZIndex, ent, layerPtr });
 
                 // Optional (if you want to offset children visually by scroll):
                 // layer::QueueCommand<layer::CmdPushMatrix>(
@@ -2696,7 +2707,7 @@ namespace ui
             }
     
             layer::QueueCommand<layer::CmdEndScissorMode>(
-                layerPtr, [](layer::CmdEndScissorMode*){}, scope.z
+                scope.layerPtr ? scope.layerPtr : defaultLayerPtr, [](layer::CmdEndScissorMode*){}, scope.z
             );
         }
     }

@@ -508,6 +508,7 @@ namespace game
         
         timer::TimerSystem::clear_all_timers();
         event_system::ClearAllListeners(); // drop Lua callbacks before nuking the Lua state
+        localization::clearLanguageChangedCallbacks(); // drop localized UI callbacks (Lua-backed)
         
         globals::getRegistry().view<transform::Transform>().each([](auto entity, auto &t){
             transform::RemoveEntity(&globals::getRegistry(), entity);
@@ -522,6 +523,7 @@ namespace game
         clear_layer_shaders("ui_layer");
         clear_layer_shaders("sprites");
         clear_layer_shaders("background");  
+        shaders::unloadShaders(); // drops shader callbacks/uniforms tied to Lua
         controller_nav::NavManager::instance().reset();
         
         // clear lua state and re-load

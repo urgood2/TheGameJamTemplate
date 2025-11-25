@@ -450,7 +450,9 @@ void RunGameLoop() {
     timer::TimerSystem::clear_all_timers();
     event_system::ClearAllListeners();
     scripting::monobehavior_system::shutdown(globals::getRegistry());
+    localization::clearLanguageChangedCallbacks();
     game::resetLuaRefs();
+    controller_nav::NavManager::instance().reset(); // drop nav callbacks before Lua state teardown
     globals::getRegistry().clear();
 
     // Clean up Lua state before closing window to avoid crashes

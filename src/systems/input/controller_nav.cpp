@@ -521,6 +521,10 @@ void NavManager::debug_print_state() const {
 }
 
 void NavManager::reset() {
+    callbacks.on_focus = sol::lua_nil_t{};
+    callbacks.on_unfocus = sol::lua_nil_t{};
+    callbacks.on_select = sol::lua_nil_t{};
+
     for (auto& [name, g] : groups) {
         g.callbacks.on_focus = sol::lua_nil_t{};
         g.callbacks.on_unfocus = sol::lua_nil_t{};

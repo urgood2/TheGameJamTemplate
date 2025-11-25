@@ -152,6 +152,9 @@ namespace localization
     return true;
   }
   
+  // Clear all registered callbacks (used on shutdown/reset to drop Lua refs safely).
+  inline void clearLanguageChangedCallbacks() { langChangedCallbacks.clear(); }
+
   inline const std::string& getCurrentLanguage()
   {
     return currentLang;

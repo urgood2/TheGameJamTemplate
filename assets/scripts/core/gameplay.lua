@@ -3654,10 +3654,11 @@ function initSurvivorEntity()
     )
 
     -- make it collide with enemies & walls & pickups
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "WORLD", { "player" })
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "WORLD" })
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "pickup", { "player" })
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "pickup" })
+    physics.enable_collision_between_many(world, "WORLD", { "player", "projectile" })
+    physics.enable_collision_between_many(world, "player", { "WORLD" })
+    physics.enable_collision_between_many(world, "projectile", { "WORLD" })
+    physics.enable_collision_between_many(world, "pickup", { "player" })
+    physics.enable_collision_between_many(world, "player", { "pickup" })
 
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "WORLD" })
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", { "player" })
@@ -3670,7 +3671,7 @@ function initSurvivorEntity()
     )
 
 
-    -- make walls after defining collision relationships, tesitng because of bug.
+    -- make walls after defining collision relationships
     physics.add_screen_bounds(PhysicsManager.get_world("world"),
         SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
         30,
@@ -4194,6 +4195,7 @@ function initActionPhase()
     world:AddCollisionTag("enemy")
     world:AddCollisionTag("card")
     world:AddCollisionTag("pickup") -- for items on ground
+    world:AddCollisionTag("projectile")
 
     initSurvivorEntity()
 

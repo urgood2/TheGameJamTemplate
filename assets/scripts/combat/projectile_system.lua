@@ -248,17 +248,26 @@ function ProjectileSystem.spawn(params)
     -- Increment projectile ID
     ProjectileSystem.next_projectile_id = ProjectileSystem.next_projectile_id + 1
 
-    -- Set transform properties (treat provided position as the projectile center)
+    local sizeMultiplier = params.sizeMultiplier or 1.0
+    local spriteSize = params.size or 8
+    local width = spriteSize * sizeMultiplier
+    local height = spriteSize * sizeMultiplier
+    local spawnX = params.position.x
+    local spawnY = params.position.y
+
+    if params.positionIsCenter then
+        spawnX = spawnX - width * 0.5
+        spawnY = spawnY - height * 0.5
+    end
+
+    local startCenter = {
+        x = spawnX + width * 0.5,
+        y = spawnY + height * 0.5
+    }
+
+    -- Set transform properties (position stored as top-left in Transform)
     local transform = component_cache.get(entity, Transform)
     if transform then
-        local sizeMultiplier = params.sizeMultiplier or 1.0
-        local spriteSize = params.size or 8
-        local width = spriteSize * sizeMultiplier
-        local height = spriteSize * sizeMultiplier
-
-        local spawnX = params.position.x - width * 0.5
-        local spawnY = params.position.y - height * 0.5
-
         transform.actualX = spawnX
         transform.actualY = spawnY
         transform.actualW = width
@@ -293,7 +302,7 @@ function ProjectileSystem.spawn(params)
     local projectileLifetime = ProjectileSystem.createProjectileLifetime({
         maxLifetime = params.lifetime or 5.0,
         maxDistance = params.maxDistance,
-        startPosition = {x = params.position.x, y = params.position.y},
+        startPosition = startCenter,
         maxHits = params.maxHits
     })
 
@@ -399,11 +408,9 @@ function ProjectileSystem.setupPhysics(entity, params)
             ProjectileSystem.COLLISION_CATEGORY,
             collisionTargets
         )
-        physics.update_collision_masks_for(world, ProjectileSystem.COLLISION_CATEGORY, collisionTargets)
 
         for _, tag in ipairs(collisionTargets) do
             physics.enable_collision_between_many(world, tag, { ProjectileSystem.COLLISION_CATEGORY })
-            physics.update_collision_masks_for(world, tag, { ProjectileSystem.COLLISION_CATEGORY })
         end
     end
 
@@ -447,10 +454,38 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
 
     elseif behavior.movementType == ProjectileSystem.MovementType.HOMING then
         -- Initialize with starting velocity
+        local function applyVelocity(dx, dy)
+            behavior.velocity.x = dx
+            behavior.velocity.y = dy
+            local world = PhysicsManager.get_world("world")
+            if physics and world then
+                physics.SetVelocity(world, entity, dx, dy)
+            end
+        end
+
         if params.direction then
             local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
-            behavior.velocity.x = params.direction.x * speed
-            behavior.velocity.y = params.direction.y * speed
+            applyVelocity(params.direction.x * speed, params.direction.y * speed)
+        elseif params.angle then
+            local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
+            applyVelocity(math.cos(params.angle) * speed, math.sin(params.angle) * speed)
+        elseif behavior.homingTarget and entity_cache.valid(behavior.homingTarget) then
+            local targetTransform = component_cache.get(behavior.homingTarget, Transform)
+            if targetTransform and transform then
+                local targetX = targetTransform.actualX + targetTransform.actualW * 0.5
+                local targetY = targetTransform.actualY + targetTransform.actualH * 0.5
+                local currentX = transform.actualX + transform.actualW * 0.5
+                local currentY = transform.actualY + transform.actualH * 0.5
+                local dx = targetX - currentX
+                local dy = targetY - currentY
+                local dist = math.sqrt(dx * dx + dy * dy)
+                if dist > 0 then
+                    dx = dx / dist
+                    dy = dy / dist
+                    local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
+                    applyVelocity(dx * speed, dy * speed)
+                end
+            end
         end
 
     elseif behavior.movementType == ProjectileSystem.MovementType.ORBITAL then
@@ -468,6 +503,19 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
             local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
             behavior.velocity.x = params.direction.x * speed
             behavior.velocity.y = params.direction.y * speed
+        elseif params.angle then
+            local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
+            behavior.velocity.x = math.cos(params.angle) * speed
+            behavior.velocity.y = math.sin(params.angle) * speed
+        elseif params.velocity then
+            behavior.velocity.x = params.velocity.x
+            behavior.velocity.y = params.velocity.y
+        end
+
+        -- Apply velocity and let gravity influence via physics
+        local world = PhysicsManager.get_world("world")
+        if physics and world then
+            physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
         end
 
         -- Gravity is handled by physics system
@@ -1029,6 +1077,7 @@ HELPER FUNCTIONS
 function ProjectileSystem.spawnBasic(x, y, angle, speed, damage, owner)
     return ProjectileSystem.spawn({
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
         baseSpeed = speed,
         damage = damage,
@@ -1044,6 +1093,7 @@ end
 function ProjectileSystem.spawnHoming(x, y, target, speed, damage, owner)
     return ProjectileSystem.spawn({
         position = {x = x, y = y},
+        positionIsCenter = true,
         homingTarget = target,
         baseSpeed = speed,
         homingStrength = 8.0,
@@ -1061,6 +1111,7 @@ end
 function ProjectileSystem.spawnArc(x, y, angle, speed, damage, owner)
     return ProjectileSystem.spawn({
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
         baseSpeed = speed,
         damage = damage,

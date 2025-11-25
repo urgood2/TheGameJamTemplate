@@ -125,6 +125,7 @@ function ProjectileSystemTest.testBasicProjectile()
     local success, projectileId = pcall(function()
         return ProjectileSystem.spawn({
             position = {x = 400, y = 300},
+            positionIsCenter = true,
             angle = 0,  -- Shoot right
             baseSpeed = 300,
             damage = 10,
@@ -200,6 +201,7 @@ function ProjectileSystemTest.testMultipleProjectiles()
         local success, projectileId = pcall(function()
             return ProjectileSystem.spawn({
                 position = {x = 300, y = 300},
+                positionIsCenter = true,
                 angle = angle,
                 baseSpeed = 250,
                 damage = 8,
@@ -250,6 +252,7 @@ function ProjectileSystemTest.testHomingProjectile()
         -- Spawn homing projectile
         return ProjectileSystem.spawn({
             position = {x = 200, y = 300},
+            positionIsCenter = true,
             baseSpeed = 200,
             damage = 15,
             lifetime = 10,
@@ -286,6 +289,7 @@ function ProjectileSystemTest.testArcProjectile()
     local success, projectileId = pcall(function()
         return ProjectileSystem.spawn({
             position = {x = 300, y = 200},
+            positionIsCenter = true,
             angle = math.pi / 4,  -- 45 degrees up
             baseSpeed = 400,
             damage = 20,
@@ -321,6 +325,7 @@ function ProjectileSystemTest.testWallCollision()
     local success, projectileId = pcall(function()
         return ProjectileSystem.spawn({
             position = {x = 100, y = 100},
+            positionIsCenter = true,
             angle = 0,
             baseSpeed = 0,
             damage = 0,

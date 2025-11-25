@@ -173,9 +173,12 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
     end
 
     -- Build spawn parameters
+    local spawnCenter = { x = position.x, y = position.y }
+
     local spawnParams = {
         -- Position and direction
-        position = { x = position.x, y = position.y },
+        position = spawnCenter,
+        positionIsCenter = true,
         angle = angle,
 
         -- Movement

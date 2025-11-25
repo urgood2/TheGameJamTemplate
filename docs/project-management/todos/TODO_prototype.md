@@ -58,16 +58,23 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 # Things to do in downtime.
 - continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
 - got to also test the new batching queue system.
-- issue error on closing via x again.
+- make j8 default in compilation?
     
 # programming side
+- projectiles are sometimes vanishing without hitting a wall? we need to do projectile behaviors as well.
+- some simple dust particles when player walks. 
+- outline next steps in telemetry. what service should we try? I want maximum info from bare minimum of work, and it should be simple to enable.
+- web - why do the scanline things disappear on web?
+make mask truly weightless. and make it scale bounce with player when p- layer picks soemthing up.
+- windows- imgui is cut off within original skill bounds.
+
+- some alignment issues with tooltip ui.
 - need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.
 - then player progresses through 3 stages, the last of which is extra hard.
 
 - flesh out shop. display currency with dynamic text, add reroll and lock buttons. we should probably have a way to preview player's belongings & wands & inventory. as well as a return to planning button, and a go button for action.
 
 - also need currency. display it somewhere on the screen in the shop and planning phases.
-- let's scoot the walls outward so that the thickness falls right on the edge of hte playable area, and cull projectiles which contact the wall.
 
 - let's make it easy to hoook up triggers?
 - buttons of some kind to quickly press to send card up to wand or back to inventory, maybe popping out behind card? what would this look like?

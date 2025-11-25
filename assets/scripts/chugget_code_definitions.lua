@@ -3253,6 +3253,14 @@ util = {
 
 
 ---
+--- Telemetry event helpers.
+---
+---@class telemetry
+telemetry = {
+}
+
+
+---
 --- Manages an entity's position, size, rotation, and scale, with spring dynamics for smooth visual updates.
 ---
 ---@class Transform
@@ -10813,6 +10821,14 @@ function steering.apply_force(...) end
 ---@param radians number @direction in radians
 ---@param seconds number @duration seconds
 function steering.apply_impulse(...) end
+
+---
+--- Enqueues a telemetry event if telemetry is enabled.
+---
+---@param name string # Event name
+---@param props table|nil # Key/value properties (string/number/bool)
+---@return nil
+function telemetry.record(...) end
 
 ---
 --- Install or replace a local render callback on an entity.

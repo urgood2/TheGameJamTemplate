@@ -2233,6 +2233,13 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
                 // then your ImGui/debug, physics debug, fade_system, etc...
             }
+
+            // Ensure ImGui renders to the real backbuffer without any leftover
+            // render-target or scissor state from the layered passes.
+            if (layer::render_stack_switch_internal::IsActive()) {
+                layer::render_stack_switch_internal::ForceClear();
+            }
+            EndScissorMode();
             
             {
 #ifndef __EMSCRIPTEN__

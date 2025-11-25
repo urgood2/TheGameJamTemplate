@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "systems/main_loop_enhancement/main_loop.hpp"
+#include "sol/sol.hpp"
 #include "third_party/rlImGui/imgui.h"
 #include "systems/transform/transform.hpp"
 #include "systems/transform/transform_functions.hpp"
@@ -85,4 +86,9 @@ namespace NavMesh {
     void PathFinder::AddPolygons(const std::vector<Polygon>&, int) {}
     void PathFinder::AddExternalPoints(const std::vector<Point>&) {}
     std::vector<NavMesh::Point> PathFinder::GetPath(const Point&, const Point&) { return {}; }
+}
+
+// Stub master Lua state used by scripting_system to avoid pulling the full AI system into unit tests.
+namespace ai_system {
+    sol::state masterStateLua{};
 }

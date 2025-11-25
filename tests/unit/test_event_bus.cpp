@@ -84,3 +84,20 @@ TEST(EventBus, NestedPublishRunsEachListenerOncePerEvent) {
     EXPECT_EQ(calls[2], "first:2");
     EXPECT_EQ(calls[3], "second:2");
 }
+
+TEST(EventBus, ExceptionsDoNotBlockOtherListeners) {
+    event_bus::EventBus bus;
+    bool called = false;
+
+    bus.subscribe<SimpleEvent>([](const SimpleEvent&) {
+        throw std::runtime_error("boom");
+    });
+    bus.subscribe<SimpleEvent>([&](const SimpleEvent&) {
+        called = true;
+    });
+
+    SimpleEvent ev{10};
+    bus.publish(ev);
+
+    EXPECT_TRUE(called);
+}

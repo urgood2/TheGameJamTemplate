@@ -35,10 +35,15 @@ local ProjectileSystem = {}
 
 -- Active projectiles tracking
 ProjectileSystem.active_projectiles = {}
+ProjectileSystem.projectile_scripts = {}
 ProjectileSystem.next_projectile_id = 1
+ProjectileSystem.world_bounds = nil
+ProjectileSystem.world_bounds_margin = nil
+ProjectileSystem._playable_bounds = nil
 
 -- Physics step timer handle
-ProjectileSystem.physics_step_timer_id = nil
+ProjectileSystem.physics_step_timer_tag = "projectile_system_update"
+ProjectileSystem.physics_step_timer_active = false
 ProjectileSystem.use_physics_step_timer = true  -- Set to true to update on physics steps
 
 -- Movement pattern constants
@@ -61,6 +66,54 @@ ProjectileSystem.CollisionBehavior = {
 
 -- Physics collision category for projectiles
 ProjectileSystem.COLLISION_CATEGORY = "projectile"
+
+local function getGlobalNumber(name, fallback)
+    local value = rawget(_G, name)
+    if type(value) == "number" then
+        return value
+    end
+    return fallback
+end
+
+function ProjectileSystem.refreshWorldBounds()
+    local left = getGlobalNumber("SCREEN_BOUND_LEFT", 0)
+    local top = getGlobalNumber("SCREEN_BOUND_TOP", 0)
+    local right = getGlobalNumber("SCREEN_BOUND_RIGHT",
+        globals and globals.screenWidth and globals.screenWidth() or 1280)
+    local bottom = getGlobalNumber("SCREEN_BOUND_BOTTOM",
+        globals and globals.screenHeight and globals.screenHeight() or 720)
+
+    if right <= left or bottom <= top then
+        ProjectileSystem.world_bounds = nil
+        ProjectileSystem._playable_bounds = nil
+        return
+    end
+
+    local wallThickness = getGlobalNumber("SCREEN_BOUND_THICKNESS",
+        getGlobalNumber("PROJECTILE_WALL_THICKNESS", 30)) or 0
+
+    ProjectileSystem.world_bounds = {
+        left = left - wallThickness,
+        right = right + wallThickness,
+        top = top - wallThickness,
+        bottom = bottom + wallThickness
+    }
+    ProjectileSystem.wall_thickness = wallThickness
+
+    ProjectileSystem._playable_bounds = {
+        minX = left,
+        maxX = right,
+        minY = top,
+        maxY = bottom
+    }
+end
+
+function ProjectileSystem.getPlayableBounds()
+    if not ProjectileSystem._playable_bounds then
+        ProjectileSystem.refreshWorldBounds()
+    end
+    return ProjectileSystem._playable_bounds
+end
 
 --[[
 =============================================================================
@@ -161,6 +214,65 @@ function ProjectileSystem.createProjectileLifetime(params)
     }
 end
 
+-- Helper: cached access to projectile script tables
+local function addIfNotPresent(list, seen, value)
+    if not value or seen[value] then return end
+    seen[value] = true
+    list[#list + 1] = value
+end
+
+--- Returns the script table for a projectile entity, using a local cache for stability.
+--- @param entity integer
+--- @return table|nil
+function ProjectileSystem.getProjectileScript(entity)
+    if ProjectileSystem.projectile_scripts[entity] then
+        return ProjectileSystem.projectile_scripts[entity]
+    end
+
+    local script = getScriptTableFromEntityID(entity)
+    if script then
+        ProjectileSystem.projectile_scripts[entity] = script
+    end
+    return script
+end
+
+local function resolveCollisionTargets(params)
+    local targets = {}
+    local seen = {}
+
+    if params.collideWithTags then
+        for _, tag in ipairs(params.collideWithTags) do
+            addIfNotPresent(targets, seen, tag)
+        end
+        return targets
+    end
+
+    local targetTag = params.targetCollisionTag or "enemy"
+    addIfNotPresent(targets, seen, targetTag)
+
+    local collideWithWorld = params.collideWithWorld
+    if collideWithWorld == nil then
+        collideWithWorld = true
+    end
+
+    if collideWithWorld then
+        addIfNotPresent(targets, seen, "WORLD")
+    end
+
+    return targets
+end
+
+local function ensureCollisionCategoryRegistered()
+    if not PhysicsManager or not PhysicsManager.get_world then
+        return
+    end
+
+    local world = PhysicsManager.get_world("world")
+    if world and world.AddCollisionTag then
+        world:AddCollisionTag(ProjectileSystem.COLLISION_CATEGORY)
+    end
+end
+
 --[[
 =============================================================================
 PROJECTILE SPAWNING API
@@ -187,13 +299,30 @@ function ProjectileSystem.spawn(params)
     -- Increment projectile ID
     ProjectileSystem.next_projectile_id = ProjectileSystem.next_projectile_id + 1
 
-    -- Set transform properties
+    local sizeMultiplier = params.sizeMultiplier or 1.0
+    local spriteSize = params.size or 8
+    local width = spriteSize * sizeMultiplier
+    local height = spriteSize * sizeMultiplier
+    local spawnX = params.position.x
+    local spawnY = params.position.y
+
+    if params.positionIsCenter then
+        spawnX = spawnX - width * 0.5
+        spawnY = spawnY - height * 0.5
+    end
+
+    local startCenter = {
+        x = spawnX + width * 0.5,
+        y = spawnY + height * 0.5
+    }
+
+    -- Set transform properties (position stored as top-left in Transform)
     local transform = component_cache.get(entity, Transform)
     if transform then
-        transform.actualX = params.position.x
-        transform.actualY = params.position.y
-        transform.actualW = (params.size or 8) * (params.sizeMultiplier or 1.0)
-        transform.actualH = (params.size or 8) * (params.sizeMultiplier or 1.0)
+        transform.actualX = spawnX
+        transform.actualY = spawnY
+        transform.actualW = width
+        transform.actualH = height
         transform.actualR = params.rotation or 0
 
         -- Create visual representation
@@ -224,7 +353,7 @@ function ProjectileSystem.spawn(params)
     local projectileLifetime = ProjectileSystem.createProjectileLifetime({
         maxLifetime = params.lifetime or 5.0,
         maxDistance = params.maxDistance,
-        startPosition = {x = params.position.x, y = params.position.y},
+        startPosition = startCenter,
         maxHits = params.maxHits
     })
 
@@ -239,6 +368,7 @@ function ProjectileSystem.spawn(params)
 
     -- NOW attach to entity (must be after data assignment)
     projectileScript:attach_ecs { create_new = false, existing_entity = entity }
+    ProjectileSystem.projectile_scripts[entity] = projectileScript
 
     -- Setup physics body for projectile
     if params.usePhysics ~= false then
@@ -322,11 +452,18 @@ function ProjectileSystem.setupPhysics(entity, params)
     physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
 
     -- Setup collision masks for this projectile entity
-    -- Enable collisions between projectile and enemy tags
-    physics.enable_collision_between_many(world, ProjectileSystem.COLLISION_CATEGORY, { "enemy" })
-    physics.enable_collision_between_many(world, "enemy", { ProjectileSystem.COLLISION_CATEGORY })
-    physics.update_collision_masks_for(world, ProjectileSystem.COLLISION_CATEGORY, { "enemy" })
-    physics.update_collision_masks_for(world, "enemy", { ProjectileSystem.COLLISION_CATEGORY })
+    local collisionTargets = resolveCollisionTargets(params)
+    if #collisionTargets > 0 then
+        physics.enable_collision_between_many(
+            world,
+            ProjectileSystem.COLLISION_CATEGORY,
+            collisionTargets
+        )
+
+        for _, tag in ipairs(collisionTargets) do
+            physics.enable_collision_between_many(world, tag, { ProjectileSystem.COLLISION_CATEGORY })
+        end
+    end
 
     -- Setup collision callback
     ProjectileSystem.setupCollisionCallback(entity)
@@ -335,7 +472,7 @@ end
 -- Initialize movement based on movement type
 function ProjectileSystem.initializeMovement(entity, params, projectileScript)
     -- Use provided script or retrieve it (for backward compatibility)
-    projectileScript = projectileScript or getScriptTableFromEntityID(entity)
+    projectileScript = projectileScript or ProjectileSystem.getProjectileScript(entity)
 
     if not projectileScript then
         log_error("initializeMovement: No script table found for entity " .. tostring(entity))
@@ -368,16 +505,47 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
 
     elseif behavior.movementType == ProjectileSystem.MovementType.HOMING then
         -- Initialize with starting velocity
+        local function applyVelocity(dx, dy)
+            behavior.velocity.x = dx
+            behavior.velocity.y = dy
+            local world = PhysicsManager.get_world("world")
+            if physics and world then
+                physics.SetVelocity(world, entity, dx, dy)
+            end
+        end
+
         if params.direction then
             local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
-            behavior.velocity.x = params.direction.x * speed
-            behavior.velocity.y = params.direction.y * speed
+            applyVelocity(params.direction.x * speed, params.direction.y * speed)
+        elseif params.angle then
+            local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
+            applyVelocity(math.cos(params.angle) * speed, math.sin(params.angle) * speed)
+        elseif behavior.homingTarget and entity_cache.valid(behavior.homingTarget) then
+            local targetTransform = component_cache.get(behavior.homingTarget, Transform)
+            if targetTransform and transform then
+                local targetX = targetTransform.actualX + targetTransform.actualW * 0.5
+                local targetY = targetTransform.actualY + targetTransform.actualH * 0.5
+                local currentX = transform.actualX + transform.actualW * 0.5
+                local currentY = transform.actualY + transform.actualH * 0.5
+                local dx = targetX - currentX
+                local dy = targetY - currentY
+                local dist = math.sqrt(dx * dx + dy * dy)
+                if dist > 0 then
+                    dx = dx / dist
+                    dy = dy / dist
+                    local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
+                    applyVelocity(dx * speed, dy * speed)
+                end
+            end
         end
 
     elseif behavior.movementType == ProjectileSystem.MovementType.ORBITAL then
         -- Set orbit center if not provided
         if not behavior.orbitCenter then
-            behavior.orbitCenter = {x = transform.actualX, y = transform.actualY}
+            behavior.orbitCenter = {
+                x = transform.actualX + transform.actualW * 0.5,
+                y = transform.actualY + transform.actualH * 0.5
+            }
         end
 
     elseif behavior.movementType == ProjectileSystem.MovementType.ARC then
@@ -386,6 +554,19 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
             local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
             behavior.velocity.x = params.direction.x * speed
             behavior.velocity.y = params.direction.y * speed
+        elseif params.angle then
+            local speed = behavior.baseSpeed * (params.speedMultiplier or 1.0)
+            behavior.velocity.x = math.cos(params.angle) * speed
+            behavior.velocity.y = math.sin(params.angle) * speed
+        elseif params.velocity then
+            behavior.velocity.x = params.velocity.x
+            behavior.velocity.y = params.velocity.y
+        end
+
+        -- Apply velocity and let gravity influence via physics
+        local world = PhysicsManager.get_world("world")
+        if physics and world then
+            physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
         end
 
         -- Gravity is handled by physics system
@@ -404,21 +585,58 @@ function ProjectileSystem.updateInternal(dt)
     -- Update all active projectiles
     local toRemove = {}
 
-    -- for entity, _ in pairs(ProjectileSystem.active_projectiles) do
-    --     if not entity_cache.valid(entity) then
-    --         toRemove[#toRemove + 1] = entity
-    --     else
-    --         local shouldDestroy = ProjectileSystem.updateProjectile(entity, dt)
-    --         if shouldDestroy then
-    --             toRemove[#toRemove + 1] = entity
-    --         end
-    --     end
-    -- end
+    ProjectileSystem.processWorldCollisions()
 
-    -- -- Remove destroyed projectiles
-    -- for _, entity in ipairs(toRemove) do
-    --     ProjectileSystem.destroy(entity)
-    -- end
+    for entity, _ in pairs(ProjectileSystem.active_projectiles) do
+        if not entity_cache.valid(entity) then
+            toRemove[#toRemove + 1] = entity
+        else
+            local projectileScript = ProjectileSystem.getProjectileScript(entity)
+            if not projectileScript then
+                toRemove[#toRemove + 1] = entity
+            else
+                local shouldDestroy = false
+                if projectileScript.projectileLifetime
+                    and projectileScript.projectileLifetime.shouldDespawn then
+                    shouldDestroy = true
+                else
+                    shouldDestroy = ProjectileSystem.updateProjectile(entity, dt, projectileScript)
+                end
+
+                if shouldDestroy then
+                    toRemove[#toRemove + 1] = entity
+                end
+            end
+        end
+    end
+
+    -- Remove destroyed projectiles
+    for _, entity in ipairs(toRemove) do
+        ProjectileSystem.destroy(entity)
+    end
+end
+
+function ProjectileSystem.processWorldCollisions()
+    if not physics or not physics.GetCollisionEnter then
+        return
+    end
+    if not PhysicsManager or not PhysicsManager.get_world then
+        return
+    end
+
+    local world = PhysicsManager.get_world("world")
+    if not world then return end
+
+    local events = physics.GetCollisionEnter(world, ProjectileSystem.COLLISION_CATEGORY, "WORLD")
+    if not events then return end
+
+    for _, ev in ipairs(events) do
+        local projectile = ev.a
+        local other = ev.b or entt_null
+        if projectile and ProjectileSystem.active_projectiles[projectile] then
+            ProjectileSystem.handleCollision(projectile, other)
+        end
+    end
 end
 
 --- Public update function (for manual updates when not using physics step timer)
@@ -435,8 +653,8 @@ end
 
 -- Update individual projectile
 -- Returns: true if should be destroyed
-function ProjectileSystem.updateProjectile(entity, dt)
-    local projectileScript = getScriptTableFromEntityID(entity)
+function ProjectileSystem.updateProjectile(entity, dt, projectileScript)
+    projectileScript = projectileScript or ProjectileSystem.getProjectileScript(entity)
     if not projectileScript then return true end
 
     local data = projectileScript.projectileData
@@ -444,7 +662,13 @@ function ProjectileSystem.updateProjectile(entity, dt)
     local lifetime = projectileScript.projectileLifetime
     local transform = component_cache.get(entity, Transform)
 
-    if not data or not behavior or not lifetime then return true end
+    if not data or not behavior or not lifetime or not transform then
+        if lifetime then
+            lifetime.shouldDespawn = true
+            lifetime.despawnReason = "missing_components"
+        end
+        return true
+    end
 
     -- Update lifetime
     lifetime.currentLifetime = lifetime.currentLifetime + dt
@@ -478,8 +702,10 @@ function ProjectileSystem.updateProjectile(entity, dt)
 
     -- Update distance traveled
     if lifetime.maxDistance and lifetime.startPosition then
-        local dx = transform.actualX - lifetime.startPosition.x
-        local dy = transform.actualY - lifetime.startPosition.y
+        local centerX = transform.actualX + transform.actualW * 0.5
+        local centerY = transform.actualY + transform.actualH * 0.5
+        local dx = centerX - lifetime.startPosition.x
+        local dy = centerY - lifetime.startPosition.y
         lifetime.distanceTraveled = math.sqrt(dx * dx + dy * dy)
 
         if lifetime.distanceTraveled >= lifetime.maxDistance then
@@ -496,7 +722,104 @@ function ProjectileSystem.updateProjectile(entity, dt)
         return true
     end
 
+    if ProjectileSystem.checkWorldBounds(entity, projectileScript, transform) then
+        return projectileScript.projectileLifetime.shouldDespawn
+    end
+
     return false
+end
+
+function ProjectileSystem.checkWorldBounds(entity, projectileScript, transform)
+    local playable = ProjectileSystem.getPlayableBounds()
+    if not playable then return false end
+
+    local width = transform.actualW or 0
+    local height = transform.actualH or 0
+    local leftEdge = transform.actualX
+    local rightEdge = leftEdge + width
+    local topEdge = transform.actualY
+    local bottomEdge = topEdge + height
+
+    local minX = math.min(playable.minX, playable.maxX)
+    local maxX = math.max(playable.minX, playable.maxX)
+    local minY = math.min(playable.minY, playable.maxY)
+    local maxY = math.max(playable.minY, playable.maxY)
+
+    local hitLeft = leftEdge <= minX
+    local hitRight = rightEdge >= maxX
+    local hitTop = topEdge <= minY
+    local hitBottom = bottomEdge >= maxY
+
+    if not (hitLeft or hitRight or hitTop or hitBottom) then
+        return false
+    end
+
+    local collisionInfo = {
+        hitLeft = hitLeft,
+        hitRight = hitRight,
+        hitTop = hitTop,
+        hitBottom = hitBottom,
+        bounds = {
+            minX = minX,
+            maxX = maxX,
+            minY = minY,
+            maxY = maxY
+        }
+    }
+
+    return ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript, transform, collisionInfo)
+end
+
+function ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript, transform, collisionInfo)
+    local behavior = projectileScript.projectileBehavior
+    local lifetime = projectileScript.projectileLifetime
+    local data = projectileScript.projectileData
+
+    local bounds = collisionInfo.bounds
+    if collisionInfo.hitLeft then
+        transform.actualX = bounds.minX
+    elseif collisionInfo.hitRight then
+        transform.actualX = bounds.maxX - (transform.actualW or 0)
+    end
+    if collisionInfo.hitTop then
+        transform.actualY = bounds.minY
+    elseif collisionInfo.hitBottom then
+        transform.actualY = bounds.maxY - (transform.actualH or 0)
+    end
+
+    local collisionType = behavior.collisionBehavior
+
+    if collisionType == ProjectileSystem.CollisionBehavior.BOUNCE then
+        if collisionInfo.hitLeft or collisionInfo.hitRight then
+            behavior.velocity.x = -behavior.velocity.x * behavior.bounceDampening
+        end
+        if collisionInfo.hitTop or collisionInfo.hitBottom then
+            behavior.velocity.y = -behavior.velocity.y * behavior.bounceDampening
+        end
+
+        behavior.bounceCount = (behavior.bounceCount or 0) + 1
+
+        local world = PhysicsManager.get_world("world")
+        if physics and world then
+            physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
+        end
+
+        if behavior.bounceCount >= behavior.maxBounces then
+            lifetime.shouldDespawn = true
+            lifetime.despawnReason = "bounce_depleted"
+            return true
+        end
+
+        return false
+    end
+
+    if collisionType == ProjectileSystem.CollisionBehavior.EXPLODE then
+        ProjectileSystem.handleExplosion(entity, data, behavior)
+    end
+
+    lifetime.shouldDespawn = true
+    lifetime.despawnReason = "world_bounds"
+    return true
 end
 
 --[[
@@ -713,40 +1036,50 @@ end
 
 -- Handle collision between projectile and another entity
 function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
-    if not entity_cache.valid(projectileEntity) or not entity_cache.valid(otherEntity) then
+    if not entity_cache.valid(projectileEntity) then
         return
     end
 
-    local projectileScript = getScriptTableFromEntityID(projectileEntity)
+    local projectileScript = ProjectileSystem.getProjectileScript(projectileEntity)
     if not projectileScript or not projectileScript.projectileData then return end
 
     local data = projectileScript.projectileData
     local behavior = projectileScript.projectileBehavior
     local lifetime = projectileScript.projectileLifetime
 
-    -- Check if already hit this entity (for piercing)
-    if data.hitEntities[otherEntity] then
+    local otherIsValid = otherEntity and otherEntity ~= entt_null and entity_cache.valid(otherEntity)
+    local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
+    local isDamageable = targetGameObject ~= nil
+
+    -- Check if already hit this entity (for piercing) – only track damageable targets
+    if isDamageable and data.hitEntities[otherEntity] then
         return
     end
 
-    -- Mark as hit
-    data.hitEntities[otherEntity] = true
+    if isDamageable and otherIsValid then
+        data.hitEntities[otherEntity] = true
+    end
+
     lifetime.hitCount = lifetime.hitCount + 1
 
     -- Apply damage to other entity
-    ProjectileSystem.applyDamage(projectileEntity, otherEntity, data)
+    if isDamageable then
+        ProjectileSystem.applyDamage(projectileEntity, otherEntity, data, targetGameObject)
+    end
 
     -- Call onHit callback
-    if data.onHitCallback then
+    if isDamageable and data.onHitCallback then
         data.onHitCallback(projectileEntity, otherEntity, data)
     end
 
     -- Emit hit event
-    signal.emit("projectile_hit", projectileEntity, {
-        target = otherEntity,
-        owner = data.owner,
-        damage = data.damage * data.damageMultiplier
-    })
+    if isDamageable then
+        signal.emit("projectile_hit", projectileEntity, {
+            target = otherEntity,
+            owner = data.owner,
+            damage = data.damage * data.damageMultiplier
+        })
+    end
 
     -- Handle collision behavior
     if behavior.collisionBehavior == ProjectileSystem.CollisionBehavior.DESTROY then
@@ -774,9 +1107,9 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
 end
 
 -- Apply damage to target entity
-function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data)
+function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, precomputedGameObject)
     -- Check if target has health
-    local targetGameObj = component_cache.get(targetEntity, GameObject)
+    local targetGameObj = precomputedGameObject or component_cache.get(targetEntity, GameObject)
     if not targetGameObj then return end
 
     -- Use combat system if available
@@ -822,7 +1155,7 @@ function ProjectileSystem.handleBounce(projectileEntity, otherEntity, behavior)
 
     -- Check max bounces
     if behavior.bounceCount >= behavior.maxBounces then
-        local projectileScript = getScriptTableFromEntityID(projectileEntity)
+        local projectileScript = ProjectileSystem.getProjectileScript(projectileEntity)
         if projectileScript and projectileScript.projectileLifetime then
             projectileScript.projectileLifetime.shouldDespawn = true
             projectileScript.projectileLifetime.despawnReason = "bounce_depleted"
@@ -837,13 +1170,15 @@ function ProjectileSystem.handleExplosion(projectileEntity, data, behavior)
 
     local explosionRadius = behavior.explosionRadius or 100
     local explosionDamage = (data.damage * data.damageMultiplier) * (behavior.explosionDamageMult or 1.0)
+    local centerX = transform.actualX + transform.actualW * 0.5
+    local centerY = transform.actualY + transform.actualH * 0.5
 
     -- TODO: Query all entities in radius and apply AoE damage
     -- This requires spatial query system
 
     -- Emit explosion event
     signal.emit("projectile_exploded", projectileEntity, {
-        position = {x = transform.actualX, y = transform.actualY},
+        position = {x = centerX, y = centerY},
         radius = explosionRadius,
         damage = explosionDamage,
         owner = data.owner
@@ -854,7 +1189,7 @@ function ProjectileSystem.handleExplosion(projectileEntity, data, behavior)
         for i = 1, 20 do
             local angle = (i / 20) * math.pi * 2
             particle.CreateParticle(
-                Vec2(transform.actualX, transform.actualY),
+                Vec2(centerX, centerY),
                 Vec2(8, 8),
                 {
                     renderType = particle.ParticleRenderType.CIRCLE_FILLED,
@@ -875,9 +1210,9 @@ PROJECTILE DESTRUCTION & POOLING
 ]]--
 
 function ProjectileSystem.destroy(entity)
-    if not entity_cache.valid(entity) then return end
+    if not entity then return end
 
-    local projectileScript = getScriptTableFromEntityID(entity)
+    local projectileScript = ProjectileSystem.getProjectileScript(entity)
     if projectileScript and projectileScript.projectileData then
         local data = projectileScript.projectileData
 
@@ -895,9 +1230,12 @@ function ProjectileSystem.destroy(entity)
 
     -- Remove from active projectiles
     ProjectileSystem.active_projectiles[entity] = nil
+    ProjectileSystem.projectile_scripts[entity] = nil
 
-    -- Simply destroy the entity
-    registry:destroy(entity)
+    -- Simply destroy the entity if it still exists
+    if entity_cache.valid(entity) then
+        registry:destroy(entity)
+    end
 
     log_debug("Destroyed projectile", entity)
 end
@@ -912,6 +1250,7 @@ HELPER FUNCTIONS
 function ProjectileSystem.spawnBasic(x, y, angle, speed, damage, owner)
     return ProjectileSystem.spawn({
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
         baseSpeed = speed,
         damage = damage,
@@ -927,6 +1266,7 @@ end
 function ProjectileSystem.spawnHoming(x, y, target, speed, damage, owner)
     return ProjectileSystem.spawn({
         position = {x = x, y = y},
+        positionIsCenter = true,
         homingTarget = target,
         baseSpeed = speed,
         homingStrength = 8.0,
@@ -944,6 +1284,7 @@ end
 function ProjectileSystem.spawnArc(x, y, angle, speed, damage, owner)
     return ProjectileSystem.spawn({
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
         baseSpeed = speed,
         damage = damage,
@@ -967,6 +1308,8 @@ INITIALIZATION
 function ProjectileSystem.init()
     -- Track last physics tick time for dt calculation
     ProjectileSystem._lastUpdateTime = os.clock()
+    ProjectileSystem.refreshWorldBounds()
+    ensureCollisionCategoryRegistered()
 
     -- Register projectile update on physics step timer
     if ProjectileSystem.use_physics_step_timer and timer then
@@ -981,7 +1324,8 @@ function ProjectileSystem.init()
                 ProjectileSystem._lastUpdateTime = now
 
                 ProjectileSystem.updateInternal(dt)
-            end, "projectile_update")
+            end, ProjectileSystem.physics_step_timer_tag)
+            ProjectileSystem.physics_step_timer_active = true
 
             log_debug("ProjectileSystem registered with physics step timer")
         else
@@ -1000,9 +1344,9 @@ end
 -- Clean up all projectiles
 function ProjectileSystem.cleanup()
     -- Cancel physics step timer if active
-    if ProjectileSystem.physics_step_timer_id and timer then
-        timer.cancel(ProjectileSystem.physics_step_timer_id)
-        ProjectileSystem.physics_step_timer_id = nil
+    if ProjectileSystem.physics_step_timer_active and timer and timer.cancel_physics_step then
+        timer.cancel_physics_step(ProjectileSystem.physics_step_timer_tag)
+        ProjectileSystem.physics_step_timer_active = false
     end
 
     -- Destroy all active projectiles
@@ -1010,9 +1354,13 @@ function ProjectileSystem.cleanup()
         if entity_cache.valid(entity) then
             registry:destroy(entity)
         end
+        ProjectileSystem.projectile_scripts[entity] = nil
     end
 
     ProjectileSystem.active_projectiles = {}
+    ProjectileSystem.projectile_scripts = {}
+    ProjectileSystem.world_bounds = nil
+    ProjectileSystem._playable_bounds = nil
 
     log_debug("ProjectileSystem cleaned up")
 end

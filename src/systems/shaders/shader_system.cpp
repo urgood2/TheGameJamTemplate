@@ -716,6 +716,9 @@ namespace shaders
     // Unload shaders
     auto unloadShaders() -> void
     {
+        // Drop any Lua-backed uniform update callbacks before the Lua state is torn down.
+        uniformUpdateCallbacks.clear();
+
         for (auto &[name, shader] : loadedShaders)
         {
             g_shaderApi.unload_shader(shader);
@@ -723,6 +726,7 @@ namespace shaders
         }
         loadedShaders.clear();
         shaderFileModificationTimes.clear();
+        shaderPaths.clear();
     }
 
     void ShowShaderEditorUI(ShaderUniformComponent &component)

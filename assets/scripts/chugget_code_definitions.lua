@@ -960,10 +960,10 @@ function ai:patch_worldstate(...) end
 function ai:patch_goal(...) end
 
 ---
---- Returns a reference to the entity’s Blackboard component.
+--- Returns the entity’s Blackboard component if present; nil otherwise.
 ---
 ---@param e Entity
----@return Blackboard
+---@return Blackboard|nil
 function ai:get_blackboard(...) end
 
 ---

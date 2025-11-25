@@ -613,8 +613,8 @@ function WandExecutor.getPlayerPosition(playerEntity)
     local transform = component_cache.get(playerEntity, Transform)
     if transform then
         return {
-            x = transform.actualX,
-            y = transform.actualY
+            x = transform.actualX + (transform.actualW or 0) * 0.5,
+            y = transform.actualY + (transform.actualH or 0) * 0.5
         }
     end
 

@@ -144,6 +144,14 @@ namespace scripting
          * @param delta_time The time elapsed since the last frame.
          */
         extern auto update(entt::registry &registry, float delta_time) -> void;
+
+        /**
+         * @brief Cleanly disconnects scripting signals and drops Lua references before shutdown.
+         *
+         * Call this once during shutdown (while the Lua state is still alive) to avoid
+         * touching an already-destroyed state inside on_destroy callbacks.
+         */
+        extern void shutdown(entt::registry &registry);
     }
 
 } // namespace

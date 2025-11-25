@@ -444,11 +444,18 @@ void RunGameLoop() {
     shaders::unloadShaders();
     sound_system::Unload();
     shader_pipeline::ShaderPipelineUnload();
+    if (globals::physicsManager) {
+        globals::physicsManager->clearAllWorlds(); // destroy physics worlds while registry is still alive
+    }
+    game::physicsWorld.reset();
 
     // Drop Lua-owned callbacks/handles before tearing down the Lua state.
     timer::TimerSystem::clear_all_timers();
     event_system::ClearAllListeners();
+    scripting::monobehavior_system::shutdown(globals::getRegistry());
+    localization::clearLanguageChangedCallbacks();
     game::resetLuaRefs();
+    controller_nav::NavManager::instance().reset(); // drop nav callbacks before Lua state teardown
     globals::getRegistry().clear();
 
     // Clean up Lua state before closing window to avoid crashes

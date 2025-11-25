@@ -509,6 +509,7 @@ namespace game
         
         timer::TimerSystem::clear_all_timers();
         event_system::ClearAllListeners(); // drop Lua callbacks before nuking the Lua state
+        localization::clearLanguageChangedCallbacks(); // drop localized UI callbacks (Lua-backed)
         
         globals::getRegistry().view<transform::Transform>().each([](auto entity, auto &t){
             transform::RemoveEntity(&globals::getRegistry(), entity);
@@ -518,11 +519,13 @@ namespace game
         
         // clear registry, timers, physics worlds, layers
         globals::physicsManager->clearAllWorlds();
+        game::physicsWorld.reset();
         layer::UnloadAllLayers();
         ClearLayers();
         clear_layer_shaders("ui_layer");
         clear_layer_shaders("sprites");
         clear_layer_shaders("background");  
+        shaders::unloadShaders(); // drops shader callbacks/uniforms tied to Lua
         controller_nav::NavManager::instance().reset();
         
         // clear lua state and re-load
@@ -2257,7 +2260,11 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             // -- draw physics world
             
             if (globals::getDrawDebugInfo()) {
-                camera_manager::Begin(worldCamera->cam); // begin camera mode
+                Camera2D debugCam = worldCamera->cam;
+                debugCam.offset.x = debugCam.offset.x * scale + offsetX;
+                debugCam.offset.y = debugCam.offset.y * scale + offsetY;
+                debugCam.zoom *= scale;
+                camera_manager::Begin(debugCam); // begin camera mode
                 DrawRectangle(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT, Fade(GREEN, 0.1f));
                 DrawText("Screen bounds", 5, 35, 20, GREEN);
                 
@@ -2274,7 +2281,11 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
             
             if (globals::getDrawPhysicsDebug()) {
-                camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
+                Camera2D debugCam = worldCamera->cam;
+                debugCam.offset.x = debugCam.offset.x * scale + offsetX;
+                debugCam.offset.y = debugCam.offset.y * scale + offsetY;
+                debugCam.zoom *= scale;
+                camera_manager::Begin(debugCam); // begin camera mode for the physics world
                 
                 
                 physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);

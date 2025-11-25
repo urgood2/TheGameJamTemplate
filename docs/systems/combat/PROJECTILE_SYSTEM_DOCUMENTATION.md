@@ -431,6 +431,7 @@ Main spawning function. Returns entity ID of spawned projectile.
 
 **Parameters:**
 - `position` (required) - {x, y} spawn location
+- `positionIsCenter` - Treat `position` as the projectile's center instead of top-left (default: `false`)
 - `angle` - Direction in radians (alternative to direction/velocity)
 - `direction` - Normalized direction vector {x, y}
 - `velocity` - Direct velocity {x, y}
@@ -441,6 +442,9 @@ Main spawning function. Returns entity ID of spawned projectile.
 - `owner` - Owner entity ID
 - `faction` - Faction string for friendly fire logic
 - `collisionBehavior` - How projectile handles collisions
+- `targetCollisionTag` - Physics tag this projectile should damage (default `"enemy"`)
+- `collideWithWorld` - Whether to collide with terrain/world geometry (default `true`)
+- `collideWithTags` - Explicit list of physics tags to collide with (overrides defaults)
 - `lifetime` - Max seconds before despawn
 - `maxDistance` - Max pixels traveled before despawn
 - `maxHits` - Max number of hits before despawn

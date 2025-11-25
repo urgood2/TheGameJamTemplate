@@ -2059,6 +2059,7 @@ function makeWandTooltip(wand_def)
     end
 
     local globalFontSize = 10
+    local noShadowAttr   = ";shadow=false"
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2072,15 +2073,15 @@ function makeWandTooltip(wand_def)
     local function addLine(lines, label, value, valueFormatter)
         if shouldExclude(value) then return end
         local formattedValue = valueFormatter and valueFormatter(value) or tostring(value)
-        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" ..
-            formattedValue .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+            formattedValue .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
     end
 
     local lines = {}
 
     -- Always show ID
-    table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" ..
-        wand_def.id .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+    table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+        wand_def.id .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
 
     addLine(lines, "type", wand_def.type)
     addLine(lines, "cast block size", wand_def.cast_block_size)
@@ -2100,7 +2101,8 @@ function makeWandTooltip(wand_def)
 
     local v = dsl.vbox {
         config = { align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-            color = "blue" },
+            color = "blue",
+            padding = 2 },
         children = { textDef }
     }
 
@@ -2108,6 +2110,8 @@ function makeWandTooltip(wand_def)
         config = {
             color = "purple",
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = 2,
+            shadow = true,
         },
         children = { v } }
 
@@ -2128,6 +2132,7 @@ function makeCardTooltip(card_def)
     end
 
     local globalFontSize = 10
+    local noShadowAttr   = ";shadow=false"
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2141,16 +2146,16 @@ function makeCardTooltip(card_def)
     -- Helper function to add a line if value is not excluded
     local function addLine(lines, label, value)
         if shouldExclude(value) then return end
-        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. ") [" ..
-            tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+            tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
     end
 
     local lines = {}
 
     -- Always show ID and type
     if card_def.id then
-        table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. ") [" ..
-            card_def.id .. "](color=pink;fontSize=" .. globalFontSize .. ")")
+        table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+            card_def.id .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
     end
 
     addLine(lines, "type", card_def.type)
@@ -2176,7 +2181,8 @@ function makeCardTooltip(card_def)
     local v = dsl.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            color = "blue"
+            color = "blue",
+            padding = 2
         },
         children = { textDef }
     }
@@ -2184,7 +2190,9 @@ function makeCardTooltip(card_def)
     local root = dsl.root {
         config = {
             color = "purple",
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = 2,
+            shadow = true
         },
         children = { v }
     }
@@ -3027,9 +3035,9 @@ function initCombatSystem()
                 return
             end
 
-            local t = component_cache.get(survivorEntity, Transform)
+            local anchorTransform = component_cache.get(survivorEntity, Transform)
 
-            if t then
+            if anchorTransform then
                 local playerCombatInfo = ctx.side1[1]
 
                 local playerHealth = playerCombatInfo.hp
@@ -3052,10 +3060,13 @@ function initCombatSystem()
                     end
                     staminaPct          = math.max(0.0, math.min(1.0, staminaPct))
 
-                    local staminaWidth  = math.max(t.visualW * 0.8, 48)
+                    local visualCenterX = anchorTransform.visualX + anchorTransform.visualW * 0.5
+                    local visualBottomY = anchorTransform.visualY + anchorTransform.visualH
+
+                    local staminaWidth  = math.max(anchorTransform.visualW * 0.8, 48)
                     local staminaHeight = 6
-                    local staminaX      = t.visualX + t.visualW * 0.5
-                    local staminaY      = t.visualY + t.visualH + 10
+                    local staminaX      = visualCenterX
+                    local staminaY      = visualBottomY + 10
 
                     command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                         c.x     = staminaX
@@ -3068,7 +3079,7 @@ function initCombatSystem()
                     end, z_orders.player_vfx + 1, layer.DrawCommandSpace.World)
 
                     local staminaFillWidth = staminaWidth * staminaPct
-                    local staminaFillCenterX = (staminaX - staminaWidth * 0.5) + staminaFillWidth * 0.5
+                    local staminaFillCenterX = (visualCenterX - staminaWidth * 0.5) + staminaFillWidth * 0.5
 
                     command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                         c.x              = staminaFillCenterX
@@ -3351,6 +3362,11 @@ function cycleBoardSets(amount)
     activate_state(WAND_TOOLTIP_STATE)
 end
 
+local function playStateTransition()
+    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
+        { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
+end
+
 function startActionPhase()
     clear_states() -- disable all states.
 
@@ -3363,8 +3379,7 @@ function startActionPhase()
 
     PhysicsManager.enable_step("world", true)
 
-    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
-        { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
+    playStateTransition()
 
     -- fadeOutMusic("main-menu", 0.3)
     -- fadeOutMusic("shop-music", 0.3)
@@ -3402,11 +3417,7 @@ function startPlanningPhase()
         cam:SetActualTarget(globals.screenWidth() / 2, globals.screenHeight() / 2)
     end
 
-    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
-        { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
-
-    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
-        { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
+    playStateTransition()
 
 
     -- debug
@@ -3434,6 +3445,8 @@ function startShopPhase()
     if cam then
         cam:SetActualTarget(globals.screenWidth() / 2, globals.screenHeight() / 2)
     end
+
+    playStateTransition()
 
 
     -- debug
@@ -3641,10 +3654,11 @@ function initSurvivorEntity()
     )
 
     -- make it collide with enemies & walls & pickups
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "WORLD", { "player" })
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "WORLD" })
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "pickup", { "player" })
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "pickup" })
+    physics.enable_collision_between_many(world, "WORLD", { "player", "projectile" })
+    physics.enable_collision_between_many(world, "player", { "WORLD" })
+    physics.enable_collision_between_many(world, "projectile", { "WORLD" })
+    physics.enable_collision_between_many(world, "pickup", { "player" })
+    physics.enable_collision_between_many(world, "player", { "pickup" })
 
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "WORLD" })
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", { "player" })
@@ -3657,10 +3671,14 @@ function initSurvivorEntity()
     )
 
 
-    -- make walls after defining collision relationships, tesitng because of bug.
+    -- make walls after defining collision relationships
+    local wallThickness = SCREEN_BOUND_THICKNESS or 30
     physics.add_screen_bounds(PhysicsManager.get_world("world"),
-        SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
-        30,
+        SCREEN_BOUND_LEFT - wallThickness,
+        SCREEN_BOUND_TOP - wallThickness,
+        SCREEN_BOUND_RIGHT + wallThickness,
+        SCREEN_BOUND_BOTTOM + wallThickness,
+        wallThickness,
         "WORLD"
     )
 
@@ -4109,6 +4127,7 @@ SCREEN_BOUND_LEFT = 0
 SCREEN_BOUND_TOP = 0
 SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
+SCREEN_BOUND_THICKNESS = 30
 
 local playerFootStepSounds = {
     "walk_1",
@@ -4181,6 +4200,7 @@ function initActionPhase()
     world:AddCollisionTag("enemy")
     world:AddCollisionTag("card")
     world:AddCollisionTag("pickup") -- for items on ground
+    world:AddCollisionTag("projectile")
 
     initSurvivorEntity()
 

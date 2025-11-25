@@ -20,6 +20,7 @@ function ProjectileExamples.spawnBasicFireball(x, y, angle, owner)
     return ProjectileSystem.spawn({
         -- Position & direction
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
 
         -- Movement
@@ -79,6 +80,7 @@ function ProjectileExamples.spawnHomingMissile(x, y, targetEntity, owner)
     return ProjectileSystem.spawn({
         -- Position
         position = {x = x, y = y},
+        positionIsCenter = true,
 
         -- Movement - homing
         movementType = ProjectileSystem.MovementType.HOMING,
@@ -140,6 +142,7 @@ function ProjectileExamples.spawnPiercingArrow(x, y, angle, owner, pierceCount)
     return ProjectileSystem.spawn({
         -- Position & direction
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
 
         -- Movement
@@ -187,6 +190,7 @@ function ProjectileExamples.spawnBouncingOrb(x, y, direction, owner)
     return ProjectileSystem.spawn({
         -- Position & direction
         position = {x = x, y = y},
+        positionIsCenter = true,
         direction = direction,
 
         -- Movement
@@ -236,6 +240,7 @@ function ProjectileExamples.spawnGrenade(x, y, angle, power, owner)
     return ProjectileSystem.spawn({
         -- Position & direction
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
 
         -- Movement - arc with gravity
@@ -326,6 +331,7 @@ function ProjectileExamples.spawnSineWaveProjectile(x, y, angle, owner)
     return ProjectileSystem.spawn({
         -- Position & direction
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
 
         -- Movement - custom
@@ -390,6 +396,7 @@ function ProjectileExamples.spawnSpread(x, y, baseAngle, owner, count, spread)
 
         local projectile = ProjectileSystem.spawn({
             position = {x = x, y = y},
+            positionIsCenter = true,
             angle = angle,
             movementType = ProjectileSystem.MovementType.STRAIGHT,
             baseSpeed = 350,
@@ -429,6 +436,7 @@ function ProjectileExamples.spawnWithModifiers(x, y, angle, owner, cardModifiers
 
     local params = {
         position = {x = x, y = y},
+        positionIsCenter = true,
         angle = angle,
         movementType = ProjectileSystem.MovementType.STRAIGHT,
         baseSpeed = 300,

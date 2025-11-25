@@ -243,3 +243,7 @@
   
 11/25/2025
   - Build errors stomping progress. 
+  - Projectile system overhauls: cached script lookup, collision tag registration, center-based spawning via `positionIsCenter`, and wall collision test/docs updated.
+  - Added world bounds refresh using `SCREEN_BOUND_*` + `SCREEN_BOUND_THICKNESS`, culling/bouncing projectiles that leave play area, and better homing/orbital velocity init.
+  - Fixed crash on quit by clearing Lua-driven callbacks (controller nav, localization, shader uniforms), dropping scripting refs, and resetting physics worlds before teardown.
+  - Game flow/UI polish: start in planning state by default, shared phase transition helper, stamina bars anchored to visual bounds, tooltips padding/no-shadow options, AI blackboard getter now warns and can return nil.

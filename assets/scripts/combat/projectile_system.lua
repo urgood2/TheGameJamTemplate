@@ -828,30 +828,47 @@ MOVEMENT PATTERNS
 =============================================================================
 ]]--
 
+local function getVelocityXY(world, entity, fallbackVelocity)
+    if physics and world then
+        local vel = physics.GetVelocity(world, entity)
+        if vel then
+            return vel.x or 0, vel.y or 0
+        end
+    end
+
+    if fallbackVelocity then
+        return fallbackVelocity.x or 0, fallbackVelocity.y or 0
+    end
+
+    return 0, 0
+end
+
 function ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior)
     -- Physics-driven: Let Chipmunk2D handle movement via velocity
     -- Rotation is updated to face direction for visual purposes only
     local world = PhysicsManager.get_world("world")
     if physics and world then
         -- Sync velocity from physics (in case physics modified it)
-        local vx, vy = physics.GetVelocity(world, entity)
+        local vx, vy = getVelocityXY(world, entity, behavior.velocity)
         behavior.velocity.x = vx
         behavior.velocity.y = vy
 
         -- Update rotation to face direction (visual only, physics rotation locked)
         if vx ~= 0 or vy ~= 0 then
-            transform.visualR = math.atan2(vy, vx)
+            transform.visualR = math.atan(vy, vx)
         end
         return
     end
 
     -- Fallback: Manual movement if physics disabled (testing only)
-    transform.actualX = transform.actualX + behavior.velocity.x * dt
-    transform.actualY = transform.actualY + behavior.velocity.y * dt
+    local vx = behavior.velocity.x or 0
+    local vy = behavior.velocity.y or 0
+    transform.actualX = transform.actualX + vx * dt
+    transform.actualY = transform.actualY + vy * dt
 
     -- Update rotation to face direction
-    if behavior.velocity.x ~= 0 or behavior.velocity.y ~= 0 then
-        transform.actualR = math.atan2(behavior.velocity.y, behavior.velocity.x)
+    if vx ~= 0 or vy ~= 0 then
+        transform.actualR = math.atan(vy, vx)
     end
 end
 
@@ -891,10 +908,7 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
         dy = dy / dist
 
         -- Get current velocity from physics (authoritative)
-        local currentVelX, currentVelY = behavior.velocity.x, behavior.velocity.y
-        if physics and world then
-            currentVelX, currentVelY = physics.GetVelocity(world, entity)
-        end
+        local currentVelX, currentVelY = getVelocityXY(world, entity, behavior.velocity)
 
         local currentSpeed = math.sqrt(currentVelX * currentVelX + currentVelY * currentVelY)
 
@@ -920,20 +934,20 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
 
             -- Update visual rotation to face direction
             if desiredVelX ~= 0 or desiredVelY ~= 0 then
-                transform.visualR = math.atan2(desiredVelY, desiredVelX)
+                transform.visualR = math.atan(desiredVelY, desiredVelX)
             end
         else
             -- Fallback: Manual movement
             transform.actualX = transform.actualX + desiredVelX * dt
             transform.actualY = transform.actualY + desiredVelY * dt
-            transform.actualR = math.atan2(desiredVelY, desiredVelX)
+            transform.actualR = math.atan(desiredVelY, desiredVelX)
         end
     else
         -- Target reached or very close, maintain current velocity
         if physics and world then
-            local vx, vy = physics.GetVelocity(world, entity)
+            local vx, vy = getVelocityXY(world, entity)
             if vx ~= 0 or vy ~= 0 then
-                transform.visualR = math.atan2(vy, vx)
+                transform.visualR = math.atan(vy, vx)
             end
         end
     end
@@ -983,20 +997,20 @@ function ProjectileSystem.updateArcMovement(entity, dt, transform, behavior)
     -- Physics-driven: Chipmunk2D handles gravity automatically
     if physics and world then
         -- Sync velocity from physics (gravity is applied by Chipmunk2D)
-        local vx, vy = physics.GetVelocity(world, entity)
+        local vx, vy = getVelocityXY(world, entity, behavior.velocity)
         behavior.velocity.x = vx
         behavior.velocity.y = vy
 
         -- Update visual rotation to face velocity direction
         if vx ~= 0 or vy ~= 0 then
-            transform.visualR = math.atan2(vy, vx)
+            transform.visualR = math.atan(vy, vx)
         end
     else
         -- Fallback: Manual arc movement with gravity simulation
         behavior.velocity.y = behavior.velocity.y + (900 * behavior.gravityScale * dt)
         transform.actualX = transform.actualX + behavior.velocity.x * dt
         transform.actualY = transform.actualY + behavior.velocity.y * dt
-        transform.actualR = math.atan2(behavior.velocity.y, behavior.velocity.x)
+        transform.actualR = math.atan(behavior.velocity.y, behavior.velocity.x)
     end
 end
 

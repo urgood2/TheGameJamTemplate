@@ -806,7 +806,10 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
         # Skip junk files and dev-only archives to keep itch.io upload under file count limits
         if(ASSET_FILE MATCHES "\\.DS_Store$"
            OR ASSET_FILE MATCHES "graphics/pre-packing-files_globbed"
-           OR ASSET_FILE MATCHES "(/|^)scripts_archived/")
+           OR ASSET_FILE MATCHES "(/|^)scripts_archived/"
+           OR ASSET_FILE MATCHES "chugget_code_definitions\\.lua$"
+           OR ASSET_FILE MATCHES "(/|^)siralim_data(/|$)"
+           OR ASSET_FILE MATCHES "(/|^)docs(/|$)")
             continue()
         endif()
 

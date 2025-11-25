@@ -27,6 +27,10 @@ namespace scripting
     //    an entity, and a Lua table, and emplace the component using the
     //    new constructor we just added.
     void add_script_component(entt::registry& registry, entt::entity entity, const sol::table& script_table) {
+        if (!registry.valid(entity)) {
+            SPDLOG_WARN("Lua attempted to add ScriptComponent to invalid entity {}", static_cast<std::uint32_t>(entity));
+            return;
+        }
         if (script_table.valid()) {
             registry.emplace<ScriptComponent>(entity, script_table);
         }
@@ -82,14 +86,19 @@ namespace scripting
             // In open_registry, inside the entt::registry usertype
             "emplace",
             [](entt::registry &self, entt::entity entity, const sol::table &comp_type, sol::this_state s) -> sol::object {
-                if (!comp_type.valid()) return sol::lua_nil_t{};
+                if (!comp_type.valid()) return sol::make_object(s, sol::lua_nil);
 
                 const auto type_id = scripting::get_type_id(comp_type);
 
                 // We no longer pass the 'instance' table. We can pass an empty one.
                 const auto maybe_any = scripting::invoke_meta_func(type_id, "emplace"_hs, &self, entity, sol::table{}, s);
+                if (!maybe_any) return sol::make_object(s, sol::lua_nil);
 
-                return maybe_any ? maybe_any.cast<sol::reference>() : sol::lua_nil_t{};
+                if (auto *obj = maybe_any.try_cast<sol::object>()) {
+                    return (obj->valid()) ? *obj : sol::make_object(s, sol::lua_nil);
+                }
+
+                return sol::make_object(s, sol::lua_nil);
             },
             
             // --- ADD THE NEW DEDICATED FUNCTION BINDING ---
@@ -118,11 +127,15 @@ namespace scripting
             },
             "get",
             [](entt::registry &self, entt::entity entity, const sol::object &type_or_id,
-                sol::this_state s) {
+                sol::this_state s) -> sol::object {
             const auto maybe_any =
                 scripting::invoke_meta_func(scripting::deduce_type(type_or_id), "get"_hs,
                 &self, entity, s);
-            return maybe_any ? maybe_any.cast<sol::reference>() : sol::lua_nil_t{};
+            if (!maybe_any) return sol::make_object(s, sol::lua_nil);
+            if (auto *obj = maybe_any.try_cast<sol::object>()) {
+                return (obj->valid()) ? *obj : sol::make_object(s, sol::lua_nil);
+            }
+            return sol::make_object(s, sol::lua_nil);
             },
             "clear",
             sol::overload(

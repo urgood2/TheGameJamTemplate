@@ -211,6 +211,17 @@ local function resolveCollisionTargets(params)
     return targets
 end
 
+local function ensureCollisionCategoryRegistered()
+    if not PhysicsManager or not PhysicsManager.get_world then
+        return
+    end
+
+    local world = PhysicsManager.get_world("world")
+    if world and world.AddCollisionTag then
+        world:AddCollisionTag(ProjectileSystem.COLLISION_CATEGORY)
+    end
+end
+
 --[[
 =============================================================================
 PROJECTILE SPAWNING API
@@ -237,13 +248,21 @@ function ProjectileSystem.spawn(params)
     -- Increment projectile ID
     ProjectileSystem.next_projectile_id = ProjectileSystem.next_projectile_id + 1
 
-    -- Set transform properties
+    -- Set transform properties (treat provided position as the projectile center)
     local transform = component_cache.get(entity, Transform)
     if transform then
-        transform.actualX = params.position.x
-        transform.actualY = params.position.y
-        transform.actualW = (params.size or 8) * (params.sizeMultiplier or 1.0)
-        transform.actualH = (params.size or 8) * (params.sizeMultiplier or 1.0)
+        local sizeMultiplier = params.sizeMultiplier or 1.0
+        local spriteSize = params.size or 8
+        local width = spriteSize * sizeMultiplier
+        local height = spriteSize * sizeMultiplier
+
+        local spawnX = params.position.x - width * 0.5
+        local spawnY = params.position.y - height * 0.5
+
+        transform.actualX = spawnX
+        transform.actualY = spawnY
+        transform.actualW = width
+        transform.actualH = height
         transform.actualR = params.rotation or 0
 
         -- Create visual representation
@@ -437,7 +456,10 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
     elseif behavior.movementType == ProjectileSystem.MovementType.ORBITAL then
         -- Set orbit center if not provided
         if not behavior.orbitCenter then
-            behavior.orbitCenter = {x = transform.actualX, y = transform.actualY}
+            behavior.orbitCenter = {
+                x = transform.actualX + transform.actualW * 0.5,
+                y = transform.actualY + transform.actualH * 0.5
+            }
         end
 
     elseif behavior.movementType == ProjectileSystem.MovementType.ARC then
@@ -556,8 +578,10 @@ function ProjectileSystem.updateProjectile(entity, dt, projectileScript)
 
     -- Update distance traveled
     if lifetime.maxDistance and lifetime.startPosition then
-        local dx = transform.actualX - lifetime.startPosition.x
-        local dy = transform.actualY - lifetime.startPosition.y
+        local centerX = transform.actualX + transform.actualW * 0.5
+        local centerY = transform.actualY + transform.actualH * 0.5
+        local dx = centerX - lifetime.startPosition.x
+        local dy = centerY - lifetime.startPosition.y
         lifetime.distanceTraveled = math.sqrt(dx * dx + dy * dy)
 
         if lifetime.distanceTraveled >= lifetime.maxDistance then
@@ -791,7 +815,7 @@ end
 
 -- Handle collision between projectile and another entity
 function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
-    if not entity_cache.valid(projectileEntity) or not entity_cache.valid(otherEntity) then
+    if not entity_cache.valid(projectileEntity) then
         return
     end
 
@@ -802,7 +826,8 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     local behavior = projectileScript.projectileBehavior
     local lifetime = projectileScript.projectileLifetime
 
-    local targetGameObject = component_cache.get(otherEntity, GameObject)
+    local otherIsValid = otherEntity and otherEntity ~= entt_null and entity_cache.valid(otherEntity)
+    local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
     local isDamageable = targetGameObject ~= nil
 
     -- Check if already hit this entity (for piercing) – only track damageable targets
@@ -810,26 +835,30 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
         return
     end
 
-    if isDamageable then
+    if isDamageable and otherIsValid then
         data.hitEntities[otherEntity] = true
     end
 
     lifetime.hitCount = lifetime.hitCount + 1
 
     -- Apply damage to other entity
-    ProjectileSystem.applyDamage(projectileEntity, otherEntity, data, targetGameObject)
+    if isDamageable then
+        ProjectileSystem.applyDamage(projectileEntity, otherEntity, data, targetGameObject)
+    end
 
     -- Call onHit callback
-    if data.onHitCallback then
+    if isDamageable and data.onHitCallback then
         data.onHitCallback(projectileEntity, otherEntity, data)
     end
 
     -- Emit hit event
-    signal.emit("projectile_hit", projectileEntity, {
-        target = otherEntity,
-        owner = data.owner,
-        damage = data.damage * data.damageMultiplier
-    })
+    if isDamageable then
+        signal.emit("projectile_hit", projectileEntity, {
+            target = otherEntity,
+            owner = data.owner,
+            damage = data.damage * data.damageMultiplier
+        })
+    end
 
     -- Handle collision behavior
     if behavior.collisionBehavior == ProjectileSystem.CollisionBehavior.DESTROY then
@@ -920,13 +949,15 @@ function ProjectileSystem.handleExplosion(projectileEntity, data, behavior)
 
     local explosionRadius = behavior.explosionRadius or 100
     local explosionDamage = (data.damage * data.damageMultiplier) * (behavior.explosionDamageMult or 1.0)
+    local centerX = transform.actualX + transform.actualW * 0.5
+    local centerY = transform.actualY + transform.actualH * 0.5
 
     -- TODO: Query all entities in radius and apply AoE damage
     -- This requires spatial query system
 
     -- Emit explosion event
     signal.emit("projectile_exploded", projectileEntity, {
-        position = {x = transform.actualX, y = transform.actualY},
+        position = {x = centerX, y = centerY},
         radius = explosionRadius,
         damage = explosionDamage,
         owner = data.owner
@@ -937,7 +968,7 @@ function ProjectileSystem.handleExplosion(projectileEntity, data, behavior)
         for i = 1, 20 do
             local angle = (i / 20) * math.pi * 2
             particle.CreateParticle(
-                Vec2(transform.actualX, transform.actualY),
+                Vec2(centerX, centerY),
                 Vec2(8, 8),
                 {
                     renderType = particle.ParticleRenderType.CIRCLE_FILLED,
@@ -1053,6 +1084,7 @@ INITIALIZATION
 function ProjectileSystem.init()
     -- Track last physics tick time for dt calculation
     ProjectileSystem._lastUpdateTime = os.clock()
+    ensureCollisionCategoryRegistered()
 
     -- Register projectile update on physics step timer
     if ProjectileSystem.use_physics_step_timer and timer then

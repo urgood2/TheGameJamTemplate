@@ -61,6 +61,10 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - issue error on closing via x again.
     
 # programming side
+- need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.
+- then player progresses through 3 stages, the last of which is extra hard.
+
+- flesh out shop. display currency with dynamic text, add reroll and lock buttons. we should probably have a way to preview player's belongings & wands & inventory. as well as a return to planning button, and a go button for action.
 
 - also need currency. display it somewhere on the screen in the shop and planning phases.
 - let's scoot the walls outward so that the thickness falls right on the edge of hte playable area, and cull projectiles which contact the wall.

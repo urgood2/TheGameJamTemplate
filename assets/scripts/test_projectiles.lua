@@ -337,8 +337,7 @@ function ProjectileSystemTest.testWallCollision()
         return
     end
 
-    local fakeWall = registry:create()
-    ProjectileSystem.handleCollision(projectileId, fakeWall)
+    ProjectileSystem.handleCollision(projectileId, entt_null)
 
     local script = getScriptTableFromEntityID(projectileId)
     local lifetime = script and script.projectileLifetime
@@ -353,10 +352,6 @@ function ProjectileSystemTest.testWallCollision()
 
     -- Cleanup spawned entities
     ProjectileSystem.destroy(projectileId)
-    local entity_cache = ProjectileSystemTest.entity_cache
-    if registry and entity_cache and entity_cache.valid(fakeWall) then
-        registry:destroy(fakeWall)
-    end
 end
 
 function ProjectileSystemTest.printResults()

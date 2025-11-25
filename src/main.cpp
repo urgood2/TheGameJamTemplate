@@ -449,6 +449,7 @@ void RunGameLoop() {
     // Drop Lua-owned callbacks/handles before tearing down the Lua state.
     timer::TimerSystem::clear_all_timers();
     event_system::ClearAllListeners();
+    scripting::monobehavior_system::shutdown(globals::getRegistry());
     game::resetLuaRefs();
     globals::getRegistry().clear();
 

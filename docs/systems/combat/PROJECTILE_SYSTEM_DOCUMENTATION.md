@@ -430,7 +430,7 @@ ProjectileSystem.spawn({
 Main spawning function. Returns entity ID of spawned projectile.
 
 **Parameters:**
-- `position` (required) - {x, y} spawn location
+- `position` (required) - {x, y} spawn location (projectile center)
 - `angle` - Direction in radians (alternative to direction/velocity)
 - `direction` - Normalized direction vector {x, y}
 - `velocity` - Direct velocity {x, y}

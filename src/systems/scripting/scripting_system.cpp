@@ -76,8 +76,17 @@ namespace scripting
     void release_script(entt::registry &registry, entt::entity entity)
     {
         auto &script = registry.get<ScriptComponent>(entity);
-        if (auto &&f = script.self["destroy"]; f.valid())
-            f(script.self);
+        // Drop coroutine refs first so their destructors don't touch a dead lua_State.
+        for (auto &task : script.tasks)
+            task.abandon();
+        script.tasks.clear();
+
+        lua_State *script_state = script.self.lua_state();
+        lua_State *master_state = ai_system::masterStateLua.lua_state();
+        if (script_state != nullptr && script_state == master_state) {
+            if (auto &&f = script.self["destroy"]; f.valid())
+                f(script.self);
+        }
         script.self.abandon();
     }
 
@@ -421,6 +430,28 @@ namespace scripting
         auto update(entt::registry &registry, float delta_time) -> void
         {
             script_system_update(registry, delta_time);
+        }
+
+        void shutdown(entt::registry &registry)
+        {
+            // Avoid firing release_script during registry.clear on shutdown.
+            registry.on_destroy<ScriptComponent>().disconnect<&release_script>();
+
+            // Drop Lua references while the state is still alive to prevent destructor crashes later.
+            auto view = registry.view<ScriptComponent>();
+            for (auto entity : view)
+            {
+                if (auto *sc = registry.try_get<ScriptComponent>(entity))
+                {
+                    for (auto &task : sc->tasks)
+                        task.abandon();
+                    sc->tasks.clear();
+
+                    sc->hooks.update = sol::lua_nil;
+                    sc->hooks.on_collision = sol::lua_nil;
+                    sc->self = sol::lua_nil;
+                }
+            }
         }
     }
 

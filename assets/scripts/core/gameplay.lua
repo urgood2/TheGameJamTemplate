@@ -2202,9 +2202,6 @@ end
 
 -- initialize the game area for planning phase, where you combine cards and stuff.
 function initPlanningPhase()
-    -- activate planning state to draw/update planning entities
-    activate_state(PLANNING_STATE)
-
     -- set up timer to render tooltips
     -- setUpCardAndWandStatDisplay()
 
@@ -3055,10 +3052,10 @@ function initCombatSystem()
                     end
                     staminaPct          = math.max(0.0, math.min(1.0, staminaPct))
 
-                    local staminaWidth  = math.max(t.actualW * 0.8, 48)
+                    local staminaWidth  = math.max(t.visualW * 0.8, 48)
                     local staminaHeight = 6
-                    local staminaX      = t.actualX + t.actualW * 0.5
-                    local staminaY      = t.actualY + t.actualH + 10
+                    local staminaX      = t.visualX + t.visualW * 0.5
+                    local staminaY      = t.visualY + t.visualH + 10
 
                     command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                         c.x     = staminaX
@@ -3366,6 +3363,9 @@ function startActionPhase()
 
     PhysicsManager.enable_step("world", true)
 
+    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
+        { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
+
     -- fadeOutMusic("main-menu", 0.3)
     -- fadeOutMusic("shop-music", 0.3)
     -- fadeOutMusic("planning-music", 0.3)
@@ -3401,6 +3401,9 @@ function startPlanningPhase()
     if cam then
         cam:SetActualTarget(globals.screenWidth() / 2, globals.screenHeight() / 2)
     end
+
+    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
+        { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
 
     transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
         { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
@@ -4168,9 +4171,6 @@ function initActionPhase()
     log_debug("Action phase started!")
 
     -- setUpScrollingBackgroundSprites()
-
-    -- activate action state
-    activate_state(ACTION_STATE)
 
     local world = PhysicsManager.get_world("world")
     world:AddCollisionTag("sensor")

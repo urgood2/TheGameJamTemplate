@@ -402,6 +402,9 @@ function initMainGame()
     initActionPhase()
     initPlanningUI()
     initShopPhase()
+
+    -- begin in planning state by default
+    startPlanningPhase()
     
     -- run debug ui every frame.
     timer.run_every_render_frame(

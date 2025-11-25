@@ -115,5 +115,6 @@
     "C_Cpp.intelliSenseEngine": "disabled",
     "Lua.diagnostics.disable": [
         "unused-local"
-    ]
+    ],
+    "chatgpt.openOnStartup": true
 }

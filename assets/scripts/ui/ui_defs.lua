@@ -1278,12 +1278,13 @@ function ui_defs.generateTooltipUI()
         30.0,                                 -- font size
         "rainbow"                       -- animation spec
     )
+    registry:get(tooltipTitleText.config.object, TextSystem.Text).shadow_enabled = false -- disable shadow for the tooltip title text
     globals.ui.tooltipTitleText = tooltipTitleText.config.object
     local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("Sample tooltip body text") end,  -- initial text
         30.0,                                 -- font size
         "fade"                       -- animation spec
-    )
+)
     registry:get(tooltipBodyText.config.object, TextSystem.Text).shadow_enabled = false -- disable shadow for the tooltip body text
     globals.ui.tooltipBodyText = tooltipBodyText.config.object
     
@@ -1295,6 +1296,7 @@ function ui_defs.generateTooltipUI()
             :addColor(util.getColor("taupe_warm"))
             :addMinHeight(50)
             :addMinWidth(200)
+            :addPadding(2)
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
@@ -1311,6 +1313,8 @@ function ui_defs.generateTooltipUI()
         UIConfigBuilder.create()
             :addColor(util.getColor("dusty_rose"))
             :addMinHeight(50)
+            :addPadding(2)
+            :addShadow(true)
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
                 -- something init-related here

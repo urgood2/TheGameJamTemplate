@@ -3672,9 +3672,9 @@ function initSurvivorEntity()
 
 
     -- make walls after defining collision relationships
-    physics.add_screen_bounds(PhysicsManager.get_world("world"),
+physics.add_screen_bounds(PhysicsManager.get_world("world"),
         SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
-        30,
+        SCREEN_BOUND_THICKNESS,
         "WORLD"
     )
 
@@ -4123,6 +4123,7 @@ SCREEN_BOUND_LEFT = 0
 SCREEN_BOUND_TOP = 0
 SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
+SCREEN_BOUND_THICKNESS = 30
 
 local playerFootStepSounds = {
     "walk_1",

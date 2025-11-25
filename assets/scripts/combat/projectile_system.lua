@@ -37,6 +37,9 @@ local ProjectileSystem = {}
 ProjectileSystem.active_projectiles = {}
 ProjectileSystem.projectile_scripts = {}
 ProjectileSystem.next_projectile_id = 1
+ProjectileSystem.world_bounds = nil
+ProjectileSystem.world_bounds_margin = nil
+ProjectileSystem._playable_bounds = nil
 
 -- Physics step timer handle
 ProjectileSystem.physics_step_timer_tag = "projectile_system_update"
@@ -63,6 +66,54 @@ ProjectileSystem.CollisionBehavior = {
 
 -- Physics collision category for projectiles
 ProjectileSystem.COLLISION_CATEGORY = "projectile"
+
+local function getGlobalNumber(name, fallback)
+    local value = rawget(_G, name)
+    if type(value) == "number" then
+        return value
+    end
+    return fallback
+end
+
+function ProjectileSystem.refreshWorldBounds()
+    local left = getGlobalNumber("SCREEN_BOUND_LEFT", 0)
+    local top = getGlobalNumber("SCREEN_BOUND_TOP", 0)
+    local right = getGlobalNumber("SCREEN_BOUND_RIGHT",
+        globals and globals.screenWidth and globals.screenWidth() or 1280)
+    local bottom = getGlobalNumber("SCREEN_BOUND_BOTTOM",
+        globals and globals.screenHeight and globals.screenHeight() or 720)
+
+    if right <= left or bottom <= top then
+        ProjectileSystem.world_bounds = nil
+        ProjectileSystem._playable_bounds = nil
+        return
+    end
+
+    local margin = getGlobalNumber("SCREEN_BOUND_THICKNESS",
+        getGlobalNumber("PROJECTILE_WALL_THICKNESS", 30))
+
+    ProjectileSystem.world_bounds = {
+        left = left,
+        right = right,
+        top = top,
+        bottom = bottom
+    }
+    ProjectileSystem.world_bounds_margin = margin or 0
+
+    ProjectileSystem._playable_bounds = {
+        minX = left + (margin or 0),
+        maxX = right - (margin or 0),
+        minY = top + (margin or 0),
+        maxY = bottom - (margin or 0)
+    }
+end
+
+function ProjectileSystem.getPlayableBounds()
+    if not ProjectileSystem._playable_bounds then
+        ProjectileSystem.refreshWorldBounds()
+    end
+    return ProjectileSystem._playable_bounds
+end
 
 --[[
 =============================================================================
@@ -646,7 +697,121 @@ function ProjectileSystem.updateProjectile(entity, dt, projectileScript)
         return true
     end
 
+    if ProjectileSystem.checkWorldBounds(entity, projectileScript, transform) then
+        return projectileScript.projectileLifetime.shouldDespawn
+    end
+
     return false
+end
+
+function ProjectileSystem.checkWorldBounds(entity, projectileScript, transform)
+    local playable = ProjectileSystem.getPlayableBounds()
+    if not playable then return false end
+
+    local width = transform.actualW or 0
+    local height = transform.actualH or 0
+    local centerX = transform.actualX + width * 0.5
+    local centerY = transform.actualY + height * 0.5
+
+    local minX = math.min(playable.minX, playable.maxX)
+    local maxX = math.max(playable.minX, playable.maxX)
+    local minY = math.min(playable.minY, playable.maxY)
+    local maxY = math.max(playable.minY, playable.maxY)
+
+    local hitX, hitY = false, false
+    local normalX, normalY = 0, 0
+    local clampedCenterX = centerX
+    local clampedCenterY = centerY
+
+    if centerX < minX then
+        hitX = true
+        normalX = 1
+        clampedCenterX = minX
+    elseif centerX > maxX then
+        hitX = true
+        normalX = -1
+        clampedCenterX = maxX
+    end
+
+    if centerY < minY then
+        hitY = true
+        normalY = 1
+        clampedCenterY = minY
+    elseif centerY > maxY then
+        hitY = true
+        normalY = -1
+        clampedCenterY = maxY
+    end
+
+    if not hitX and not hitY then
+        return false
+    end
+
+    local collisionInfo = {
+        hitX = hitX,
+        hitY = hitY,
+        normalX = normalX,
+        normalY = normalY,
+        centerX = centerX,
+        centerY = centerY,
+        clampedCenterX = clampedCenterX,
+        clampedCenterY = clampedCenterY,
+        bounds = {
+            minX = minX,
+            maxX = maxX,
+            minY = minY,
+            maxY = maxY
+        }
+    }
+
+    return ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript, transform, collisionInfo)
+end
+
+function ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript, transform, collisionInfo)
+    local behavior = projectileScript.projectileBehavior
+    local lifetime = projectileScript.projectileLifetime
+    local data = projectileScript.projectileData
+
+    if collisionInfo.hitX then
+        transform.actualX = collisionInfo.clampedCenterX - transform.actualW * 0.5
+    end
+    if collisionInfo.hitY then
+        transform.actualY = collisionInfo.clampedCenterY - transform.actualH * 0.5
+    end
+
+    local collisionType = behavior.collisionBehavior
+
+    if collisionType == ProjectileSystem.CollisionBehavior.BOUNCE then
+        if collisionInfo.hitX then
+            behavior.velocity.x = -behavior.velocity.x * behavior.bounceDampening
+        end
+        if collisionInfo.hitY then
+            behavior.velocity.y = -behavior.velocity.y * behavior.bounceDampening
+        end
+
+        behavior.bounceCount = (behavior.bounceCount or 0) + 1
+
+        local world = PhysicsManager.get_world("world")
+        if physics and world then
+            physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
+        end
+
+        if behavior.bounceCount >= behavior.maxBounces then
+            lifetime.shouldDespawn = true
+            lifetime.despawnReason = "bounce_depleted"
+            return true
+        end
+
+        return false
+    end
+
+    if collisionType == ProjectileSystem.CollisionBehavior.EXPLODE then
+        ProjectileSystem.handleExplosion(entity, data, behavior)
+    end
+
+    lifetime.shouldDespawn = true
+    lifetime.despawnReason = "world_bounds"
+    return true
 end
 
 --[[
@@ -1135,6 +1300,7 @@ INITIALIZATION
 function ProjectileSystem.init()
     -- Track last physics tick time for dt calculation
     ProjectileSystem._lastUpdateTime = os.clock()
+    ProjectileSystem.refreshWorldBounds()
     ensureCollisionCategoryRegistered()
 
     -- Register projectile update on physics step timer
@@ -1185,6 +1351,8 @@ function ProjectileSystem.cleanup()
 
     ProjectileSystem.active_projectiles = {}
     ProjectileSystem.projectile_scripts = {}
+    ProjectileSystem.world_bounds = nil
+    ProjectileSystem._playable_bounds = nil
 
     log_debug("ProjectileSystem cleaned up")
 end

@@ -445,6 +445,10 @@ void RunGameLoop() {
     shaders::unloadShaders();
     sound_system::Unload();
     shader_pipeline::ShaderPipelineUnload();
+    if (globals::physicsManager) {
+        globals::physicsManager->clearAllWorlds(); // destroy physics worlds while registry is still alive
+    }
+    game::physicsWorld.reset();
 
     // Drop Lua-owned callbacks/handles before tearing down the Lua state.
     timer::TimerSystem::clear_all_timers();

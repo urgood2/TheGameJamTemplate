@@ -518,6 +518,7 @@ namespace game
         
         // clear registry, timers, physics worlds, layers
         globals::physicsManager->clearAllWorlds();
+        game::physicsWorld.reset();
         layer::UnloadAllLayers();
         ClearLayers();
         clear_layer_shaders("ui_layer");

@@ -3672,9 +3672,13 @@ function initSurvivorEntity()
 
 
     -- make walls after defining collision relationships
-physics.add_screen_bounds(PhysicsManager.get_world("world"),
-        SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
-        SCREEN_BOUND_THICKNESS,
+    local wallThickness = SCREEN_BOUND_THICKNESS or 30
+    physics.add_screen_bounds(PhysicsManager.get_world("world"),
+        SCREEN_BOUND_LEFT - wallThickness,
+        SCREEN_BOUND_TOP - wallThickness,
+        SCREEN_BOUND_RIGHT + wallThickness,
+        SCREEN_BOUND_BOTTOM + wallThickness,
+        wallThickness,
         "WORLD"
     )
 

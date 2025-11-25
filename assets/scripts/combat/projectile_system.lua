@@ -89,22 +89,22 @@ function ProjectileSystem.refreshWorldBounds()
         return
     end
 
-    local margin = getGlobalNumber("SCREEN_BOUND_THICKNESS",
-        getGlobalNumber("PROJECTILE_WALL_THICKNESS", 30))
+    local wallThickness = getGlobalNumber("SCREEN_BOUND_THICKNESS",
+        getGlobalNumber("PROJECTILE_WALL_THICKNESS", 30)) or 0
 
     ProjectileSystem.world_bounds = {
-        left = left,
-        right = right,
-        top = top,
-        bottom = bottom
+        left = left - wallThickness,
+        right = right + wallThickness,
+        top = top - wallThickness,
+        bottom = bottom + wallThickness
     }
-    ProjectileSystem.world_bounds_margin = margin or 0
+    ProjectileSystem.wall_thickness = wallThickness
 
     ProjectileSystem._playable_bounds = {
-        minX = left + (margin or 0),
-        maxX = right - (margin or 0),
-        minY = top + (margin or 0),
-        maxY = bottom - (margin or 0)
+        minX = left,
+        maxX = right,
+        minY = top,
+        maxY = bottom
     }
 end
 
@@ -585,6 +585,8 @@ function ProjectileSystem.updateInternal(dt)
     -- Update all active projectiles
     local toRemove = {}
 
+    ProjectileSystem.processWorldCollisions()
+
     for entity, _ in pairs(ProjectileSystem.active_projectiles) do
         if not entity_cache.valid(entity) then
             toRemove[#toRemove + 1] = entity
@@ -611,6 +613,29 @@ function ProjectileSystem.updateInternal(dt)
     -- Remove destroyed projectiles
     for _, entity in ipairs(toRemove) do
         ProjectileSystem.destroy(entity)
+    end
+end
+
+function ProjectileSystem.processWorldCollisions()
+    if not physics or not physics.GetCollisionEnter then
+        return
+    end
+    if not PhysicsManager or not PhysicsManager.get_world then
+        return
+    end
+
+    local world = PhysicsManager.get_world("world")
+    if not world then return end
+
+    local events = physics.GetCollisionEnter(world, ProjectileSystem.COLLISION_CATEGORY, "WORLD")
+    if not events then return end
+
+    for _, ev in ipairs(events) do
+        local projectile = ev.a
+        local other = ev.b or entt_null
+        if projectile and ProjectileSystem.active_projectiles[projectile] then
+            ProjectileSystem.handleCollision(projectile, other)
+        end
     end
 end
 
@@ -710,52 +735,30 @@ function ProjectileSystem.checkWorldBounds(entity, projectileScript, transform)
 
     local width = transform.actualW or 0
     local height = transform.actualH or 0
-    local centerX = transform.actualX + width * 0.5
-    local centerY = transform.actualY + height * 0.5
+    local leftEdge = transform.actualX
+    local rightEdge = leftEdge + width
+    local topEdge = transform.actualY
+    local bottomEdge = topEdge + height
 
     local minX = math.min(playable.minX, playable.maxX)
     local maxX = math.max(playable.minX, playable.maxX)
     local minY = math.min(playable.minY, playable.maxY)
     local maxY = math.max(playable.minY, playable.maxY)
 
-    local hitX, hitY = false, false
-    local normalX, normalY = 0, 0
-    local clampedCenterX = centerX
-    local clampedCenterY = centerY
+    local hitLeft = leftEdge <= minX
+    local hitRight = rightEdge >= maxX
+    local hitTop = topEdge <= minY
+    local hitBottom = bottomEdge >= maxY
 
-    if centerX < minX then
-        hitX = true
-        normalX = 1
-        clampedCenterX = minX
-    elseif centerX > maxX then
-        hitX = true
-        normalX = -1
-        clampedCenterX = maxX
-    end
-
-    if centerY < minY then
-        hitY = true
-        normalY = 1
-        clampedCenterY = minY
-    elseif centerY > maxY then
-        hitY = true
-        normalY = -1
-        clampedCenterY = maxY
-    end
-
-    if not hitX and not hitY then
+    if not (hitLeft or hitRight or hitTop or hitBottom) then
         return false
     end
 
     local collisionInfo = {
-        hitX = hitX,
-        hitY = hitY,
-        normalX = normalX,
-        normalY = normalY,
-        centerX = centerX,
-        centerY = centerY,
-        clampedCenterX = clampedCenterX,
-        clampedCenterY = clampedCenterY,
+        hitLeft = hitLeft,
+        hitRight = hitRight,
+        hitTop = hitTop,
+        hitBottom = hitBottom,
         bounds = {
             minX = minX,
             maxX = maxX,
@@ -772,20 +775,25 @@ function ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript,
     local lifetime = projectileScript.projectileLifetime
     local data = projectileScript.projectileData
 
-    if collisionInfo.hitX then
-        transform.actualX = collisionInfo.clampedCenterX - transform.actualW * 0.5
+    local bounds = collisionInfo.bounds
+    if collisionInfo.hitLeft then
+        transform.actualX = bounds.minX
+    elseif collisionInfo.hitRight then
+        transform.actualX = bounds.maxX - (transform.actualW or 0)
     end
-    if collisionInfo.hitY then
-        transform.actualY = collisionInfo.clampedCenterY - transform.actualH * 0.5
+    if collisionInfo.hitTop then
+        transform.actualY = bounds.minY
+    elseif collisionInfo.hitBottom then
+        transform.actualY = bounds.maxY - (transform.actualH or 0)
     end
 
     local collisionType = behavior.collisionBehavior
 
     if collisionType == ProjectileSystem.CollisionBehavior.BOUNCE then
-        if collisionInfo.hitX then
+        if collisionInfo.hitLeft or collisionInfo.hitRight then
             behavior.velocity.x = -behavior.velocity.x * behavior.bounceDampening
         end
-        if collisionInfo.hitY then
+        if collisionInfo.hitTop or collisionInfo.hitBottom then
             behavior.velocity.y = -behavior.velocity.y * behavior.bounceDampening
         end
 

@@ -7,6 +7,8 @@
 #include <optional>
 #include <functional>
 #include <unordered_set>
+#include <sstream>
+#include <nlohmann/json.hpp>
 
 #include "core/misc_fuctions.hpp"
 #include "systems/shaders/shader_system.hpp"
@@ -72,6 +74,30 @@ namespace
         std::ofstream out(path);
         out << contents;
         return path;
+    }
+
+    std::filesystem::path ShaderAssetsRoot()
+    {
+        return std::filesystem::path(ASSETS_PATH) / "shaders";
+    }
+
+    std::filesystem::path ShaderManifestPath()
+    {
+        return ShaderAssetsRoot() / "shaders.json";
+    }
+
+    nlohmann::json LoadShaderManifest()
+    {
+        std::ifstream manifestFile(ShaderManifestPath());
+        EXPECT_TRUE(manifestFile.is_open()) << "Failed to open shader manifest at " << ShaderManifestPath().string();
+        if (!manifestFile.is_open())
+        {
+            return {};
+        }
+
+        nlohmann::json manifest;
+        manifestFile >> manifest;
+        return manifest;
     }
 } // namespace
 
@@ -276,6 +302,121 @@ TEST_F(ShaderSystemTest, SkipsReloadWhenUnchanged)
     EXPECT_EQ(ShaderStubStats::loadCount, 0);
     EXPECT_EQ(ShaderStubStats::unloadCount, 0);
     EXPECT_EQ(shaders::loadedShaders["basic"].id, 2u);
+}
+
+TEST(ShaderManifest, DesktopAndWebShaderFilesExistAndAreNonEmpty)
+{
+    const auto manifest = LoadShaderManifest();
+    const auto shadersRoot = ShaderAssetsRoot();
+
+    std::vector<std::string> missing;
+
+    auto checkPath = [&](const std::string &shaderName, const std::string &label, const std::string &relativePath)
+    {
+        if (relativePath.empty())
+        {
+            std::ostringstream oss;
+            oss << shaderName << " " << label << " path is empty";
+            missing.push_back(oss.str());
+            return;
+        }
+
+        const auto fullPath = shadersRoot / relativePath;
+        std::error_code ec;
+        const auto exists = std::filesystem::exists(fullPath, ec);
+        const auto isFile = std::filesystem::is_regular_file(fullPath, ec);
+
+        if (!exists || !isFile)
+        {
+            std::ostringstream oss;
+            oss << shaderName << " " << label << " missing at " << fullPath.string();
+            missing.push_back(oss.str());
+            return;
+        }
+
+        const auto size = std::filesystem::file_size(fullPath, ec);
+        if (ec || size == 0)
+        {
+            std::ostringstream oss;
+            oss << shaderName << " " << label << " is empty at " << fullPath.string();
+            missing.push_back(oss.str());
+        }
+    };
+
+    for (const auto &[name, entry] : manifest.items())
+    {
+        checkPath(name, "vertex", entry.value("vertex", ""));
+        checkPath(name, "fragment", entry.value("fragment", ""));
+
+        if (entry.contains("web"))
+        {
+            const auto &web = entry["web"];
+            checkPath(name, "web vertex", web.value("vertex", ""));
+            checkPath(name, "web fragment", web.value("fragment", ""));
+        }
+    }
+
+    if (!missing.empty())
+    {
+        std::ostringstream oss;
+        for (size_t i = 0; i < missing.size(); ++i)
+        {
+            if (i > 0)
+            {
+                oss << "; ";
+            }
+            oss << missing[i];
+        }
+        ADD_FAILURE() << oss.str();
+    }
+
+    EXPECT_TRUE(missing.empty());
+}
+
+TEST_F(ShaderSystemTest, LoadsAllDesktopShadersFromManifest)
+{
+    const auto manifest = LoadShaderManifest();
+    shaders::loadShadersFromJSON("shaders/shaders.json");
+
+    EXPECT_EQ(ShaderStubStats::loadCount, static_cast<int>(manifest.size()));
+    EXPECT_EQ(shaders::loadedShaders.size(), manifest.size());
+
+    for (const auto &[shaderName, paths] : shaders::shaderPaths)
+    {
+        if (!paths.first.empty())
+        {
+            EXPECT_TRUE(std::filesystem::exists(paths.first)) << "Missing vertex shader for " << shaderName;
+        }
+        if (!paths.second.empty())
+        {
+            EXPECT_TRUE(std::filesystem::exists(paths.second)) << "Missing fragment shader for " << shaderName;
+        }
+    }
+}
+
+TEST_F(ShaderSystemTest, WebShaderVariantsCompileWithStubbedLoader)
+{
+    const auto manifest = LoadShaderManifest();
+    const auto shadersRoot = ShaderAssetsRoot();
+
+    for (const auto &[name, entry] : manifest.items())
+    {
+        ASSERT_TRUE(entry.contains("web")) << "Manifest missing web variant for " << name;
+        const auto &web = entry.at("web");
+        const auto vertexPath = shadersRoot / web.value("vertex", "");
+        const auto fragmentPath = shadersRoot / web.value("fragment", "");
+
+        ASSERT_TRUE(std::filesystem::exists(vertexPath)) << "Web vertex missing for " << name;
+        ASSERT_TRUE(std::filesystem::exists(fragmentPath)) << "Web fragment missing for " << name;
+
+        const auto shader = shaders::GetShaderApiHooks().load_shader(
+            vertexPath.string().c_str(),
+            fragmentPath.string().c_str());
+
+        EXPECT_NE(shader.id, 0u) << "Stubbed compile failed for web shader " << name;
+    }
+
+    EXPECT_EQ(ShaderStubStats::loadCount, static_cast<int>(manifest.size()));
 }
 
 TEST(DebugUIImGui, CallsEndWhenWindowCollapsed)

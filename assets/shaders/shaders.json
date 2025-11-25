@@ -265,8 +265,8 @@
         "fragment": "glow_fragment.fs",
 
         "web": {
-            "vertex": "web/glow_vertex.vs",
-            "fragment": "web/glow_fragment.fs"
+            "vertex": "web/glow.vs",
+            "fragment": "web/glow.fs"
         }
     },
     "fireworks": {

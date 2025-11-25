@@ -43,6 +43,7 @@
 #include "systems/physics/physics_lua_bindings.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
 #include "systems/text/static_ui_text.hpp"
+#include "systems/telemetry/telemetry.hpp"
 #include "util/utilities.hpp"
 
 #include "lua_hot_reload.hpp"
@@ -254,6 +255,11 @@ auto initLuaMasterState(sol::state &stateToInit,
   // methods from utilities.cpp. These can be called from lua✅
   //---------------------------------------------------------
   util::exposeToLua(stateToInit);
+
+  //---------------------------------------------------------
+  // telemetry (stubbed sink; respects config flags)
+  //---------------------------------------------------------
+  telemetry::exposeToLua(stateToInit);
 
   //---------------------------------------------------------
   // LDtk helpers (config-driven, entity iteration)

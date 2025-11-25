@@ -20,6 +20,7 @@
 #include "../systems/physics/physics_manager.hpp"
 #include "../systems/shaders/shader_system.hpp"
 #include "../systems/sound/sound_system.hpp"
+#include "../systems/telemetry/telemetry.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -161,6 +162,7 @@ auto loadJSONData() -> void {
                globals::g_ctx ? &globals::g_ctx->animationsJson : nullptr);
     assignJson(util::getRawAssetPathNoUUID("config.json"), globals::configJSON,
                globals::g_ctx ? &globals::g_ctx->configJson : nullptr);
+    telemetry::Configure(telemetry::Config::FromConfigJson(globals::configJSON));
     assignJson(util::getRawAssetPathNoUUID("scripts/scripting_config.json"),
                globals::aiConfigJSON,
                globals::g_ctx ? &globals::g_ctx->aiConfigJson : nullptr);

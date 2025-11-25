@@ -30,10 +30,15 @@ struct AudioContext {
 };
 
 // A minimal EngineContext to begin migrating away from globals.
+// Lightweight config pointer for EngineContext construction.
 struct EngineConfig {
     std::string configPath;
 };
 
+/**
+ * Core engine state container used for dependency injection.
+ * Not thread-safe; expected to live on the main thread.
+ */
 struct EngineContext {
     // Core systems/state
     entt::registry registry;
@@ -71,6 +76,9 @@ struct EngineContext {
     bool drawDebugInfo{false};
     bool drawPhysicsDebug{false};
     bool releaseMode{false};
+    bool screenWipe{false};
+    bool underOverlay{false};
+    float vibration{0.0f};
     float finalRenderScale{0.0f};
     float finalLetterboxOffsetX{0.0f};
     float finalLetterboxOffsetY{0.0f};

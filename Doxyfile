@@ -1,0 +1,15 @@
+PROJECT_NAME           = "TheGameJamTemplate"
+OUTPUT_DIRECTORY       = docs/doxygen
+INPUT                  = src include docs/guides
+FILE_PATTERNS          = *.h *.hpp *.cpp
+RECURSIVE              = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+JAVADOC_AUTOBRIEF      = YES
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+WARN_IF_UNDOCUMENTED   = YES
+WARN_LOGFILE           = docs/doxygen/doxygen.warnings.log
+QUIET                  = YES
+FULL_PATH_NAMES        = NO
+USE_MDFILE_AS_MAINPAGE = docs/guides/DOCUMENTATION_STANDARDS.md

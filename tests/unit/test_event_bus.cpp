@@ -1,11 +1,14 @@
 #include <gtest/gtest.h>
 #include <vector>
+#include <string>
 
 #include "core/event_bus.hpp"
 
 namespace {
 struct SimpleEvent : public event_bus::Event {
     int value{};
+    SimpleEvent() = default;
+    explicit SimpleEvent(int v) : value(v) {}
 };
 } // namespace
 
@@ -56,4 +59,28 @@ TEST(EventBus, ClearRemovesListenersAndDeferred) {
     bus.clear();
     bus.publish(SimpleEvent{});
     EXPECT_EQ(count, 1); // unchanged after clear
+}
+
+TEST(EventBus, NestedPublishRunsEachListenerOncePerEvent) {
+    event_bus::EventBus bus;
+    std::vector<std::string> calls;
+
+    bus.subscribe<SimpleEvent>([&](const SimpleEvent &ev) {
+        calls.push_back("first:" + std::to_string(ev.value));
+        if (ev.value == 1) {
+            bus.publish(SimpleEvent{2}); // should be deferred, not doubled
+        }
+    });
+    bus.subscribe<SimpleEvent>([&](const SimpleEvent &ev) {
+        calls.push_back("second:" + std::to_string(ev.value));
+    });
+
+    bus.publish(SimpleEvent{1});
+
+    // Expect exactly two callbacks for each of the two events (1 and 2), in FIFO order.
+    ASSERT_EQ(calls.size(), 4u);
+    EXPECT_EQ(calls[0], "first:1");
+    EXPECT_EQ(calls[1], "second:1");
+    EXPECT_EQ(calls[2], "first:2");
+    EXPECT_EQ(calls[3], "second:2");
 }

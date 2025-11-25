@@ -1,0 +1,761 @@
+[0/2] Re-checking globbed directories...
+[1/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/core/misc_functions.cpp.o
+FAILED: [code=1] CMakeFiles/raylib-cpp-cmake-template.dir/src/core/misc_functions.cpp.o 
+/opt/homebrew/Cellar/cmake/4.0.1/bin/cmake -E env CCACHE_DIR=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.ccache CCACHE_TEMPDIR=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.ccache/tmp CCACHE_CONFIGPATH=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.ccache/ccache.conf /opt/homebrew/bin/ccache /usr/bin/clang++ -DASSETS_PATH=\"/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/\" -DCMAKE_BUILD_TYPE=Debug -DCRASH_REPORT_BUILD_ID=\"\" -DFMT_HEADER_ONLY=1 -DGRAPHICS_API_OPENGL_33 -DIMGUI_DEFINE_MATH_OPERATORS -DLUA_VERSION=\"5.4.4\" -DPLATFORM_DESKTOP -DSKIP_ASSET_SCAN_DEFAULT=0 -DSKIP_UUID_DUMP_DEFAULT=0 -DSOL_STD_OPTIONAL -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DTRACY_ENABLED=0 -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/globals.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/graphics.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/gui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/ui_definitions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkAutogeometry.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkBody.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkShape.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkSpace.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/collision/broad_phase.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/effects.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/example_usage.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/loader_lua.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/pipelines.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/entity_gamestate_management/entity_gamestate_management.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/event/event_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/factory/factory.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/fade/fade_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/gif/gifLoadingAndPlayingSystem.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/gui_indicator/guiIndicatorSystem.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/controller_nav.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_order_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ldtk_loader/ldtk_combined.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ldtk_rule_import/ldtk_test.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/line_of_sight/line_of_sight.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/line_of_sight/variables.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/localization/localization.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/main_loop_enhancement/main_loop.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/crane_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_components.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/steering.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/transform_physics_hook.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/lua_hot_reload.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/registry_bond.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/scripting_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/scripting_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_draw_commands.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/sound/sound_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/spring/spring.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/spring/spring_pool.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/systems.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/text/textVer2.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/text/text_effects.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/timer/timer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/tutorial/tutorial_system_v2.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/box.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/common_definitions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/element.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/util.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/uuid/uuid.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/imgui_console/csys_console_sink.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/imgui_console/imgui_console.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/DataTypes.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Entity.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/EntityDef.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Enum.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/FieldsContainer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Layer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/LayerDef.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Level.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Project.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/TagsContainer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Tile.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Tileset.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Utils.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/World.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtkimport/include/ldtkimport/LdtkDefFile.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtkimport/include/ldtkimport/Rule.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtkimport/include/ldtkimport/yyjson.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/cone_of_vision.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/path_finder.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/point.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/polygon.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/segment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_demo.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_draw.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_tables.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_widgets.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/rlImGui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Animation.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AnimationState.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AnimationStateData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Atlas.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AtlasAttachmentLoader.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Attachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AttachmentLoader.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AttachmentTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Bone.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/BoneData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/BoundingBoxAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ClippingAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ColorTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/CurveTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/DeformTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/DrawOrderTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Event.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/EventData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/EventTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Extension.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/IkConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/IkConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/IkConstraintTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/InheritTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Json.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/LinkedMesh.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Log.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/MathUtil.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/MeshAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintMixTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintPositionTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintSpacingTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PhysicsConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PhysicsConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PhysicsConstraintTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PointAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/RTTI.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/RegionAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/RotateTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ScaleTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Sequence.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SequenceTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ShearTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Skeleton.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonBinary.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonBounds.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonClipping.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonJson.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonRenderer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Skin.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Slot.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SlotData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SpineObject.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TextureLoader.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Timeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TransformConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TransformConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TransformConstraintTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TranslateTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Triangulator.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Updatable.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/VertexAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine_raylib.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/crash_reporter.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/easing.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/random_utils.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/utilities.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/fudge_pathfinding -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/fudge_pathfinding/util -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/GPGOAP -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/random-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/entt-src/single_include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/magic_enum-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/taskflow-master/taskflow -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/glm-src -I/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/spine -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/stduuid-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/snowhouse-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/third_party/objectpool-master/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/raylib-src/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/raylib-src/src/external/glfw/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/fmt/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/json-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/spdlog-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/entt-src/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/stduuid-src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/lua-src/src -isystem /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/sol2/include -Wall -g -std=c++20 -arch arm64 -mmacosx-version-min=15.4 -Winvalid-pch -Xclang -include-pch -Xclang /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/CMakeFiles/raylib-cpp-cmake-template.dir/cmake_pch.hxx.pch -Xclang -include -Xclang /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/CMakeFiles/raylib-cpp-cmake-template.dir/cmake_pch.hxx -MD -MT CMakeFiles/raylib-cpp-cmake-template.dir/src/core/misc_functions.cpp.o -MF CMakeFiles/raylib-cpp-cmake-template.dir/src/core/misc_functions.cpp.o.d -o CMakeFiles/raylib-cpp-cmake-template.dir/src/core/misc_functions.cpp.o -c /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:1:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_fuctions.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.hpp:18:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.hpp:205:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.inl:31:18: warning: unused variable 'entry_align' [-Wunused-variable]
+   31 |     const size_t entry_align = __alignof(T);
+      |                  ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:1:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_fuctions.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:13:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:77:15: warning: unused variable 'W' [-Wunused-variable]
+   77 |         auto& W  = *rec->w;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:83:21: warning: unused variable 'cfg' [-Wunused-variable]
+   83 |         const auto& cfg = N.config;
+      |                     ^~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:17:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_system.hpp:279:43: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+  279 |         globals::getGlobalShaderUniforms().set(shaderName, "uImageSize",
+      |                                           ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:17:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_system.hpp:282:43: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+  282 |         globals::getGlobalShaderUniforms().set(shaderName, "uGridRect",
+      |                                           ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:134:33: error: member access into incomplete type 'EngineContext'
+  134 |         auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
+      |                                 ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/../systems/localization/localization.hpp:9:8: note: forward declaration of 'EngineContext'
+    9 | struct EngineContext;
+      |        ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:135:33: error: member access into incomplete type 'EngineContext'
+  135 |         if (it != globals::g_ctx->textureAtlas.end()) {
+      |                                 ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/../systems/localization/localization.hpp:9:8: note: forward declaration of 'EngineContext'
+    9 | struct EngineContext;
+      |        ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:7:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/palette/palette_quantizer.hpp:40:39: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   40 |     globals::getGlobalShaderUniforms().set(shaderName, "palette", paletteTex);
+      |                                       ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:26:39: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   26 |     globals::getGlobalShaderUniforms().set("custom_polychrome", "time",
+      |                                       ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:31:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   31 |   globals::getGlobalShaderUniforms().set("custom_polychrome", "stripeFreq",
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:33:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   33 |   globals::getGlobalShaderUniforms().set("custom_polychrome", "waveFreq", 2.0f);
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:34:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   34 |   globals::getGlobalShaderUniforms().set("custom_polychrome", "waveAmp", 0.4f);
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:35:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   35 |   globals::getGlobalShaderUniforms().set("custom_polychrome", "waveSpeed",
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:37:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   37 |   globals::getGlobalShaderUniforms().set("custom_polychrome", "stripeWidth",
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:39:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   39 |   globals::getGlobalShaderUniforms().set("custom_polychrome", "polychrome",
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:45:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   45 |   globals::getGlobalShaderUniforms().set(
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:47:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   47 |   globals::getGlobalShaderUniforms().set(
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:50:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   50 |   globals::getGlobalShaderUniforms().set("spotlight", "circle_size", 0.5f);
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:51:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   51 |   globals::getGlobalShaderUniforms().set("spotlight", "feather", 0.05f);
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:52:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   52 |   globals::getGlobalShaderUniforms().set("spotlight", "circle_position",
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:68:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   68 |   globals::getGlobalShaderUniforms().set("random_displacement_anim", "interval",
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp:70:37: error: member access into incomplete type 'shaders::ShaderUniformComponent'
+   70 |   globals::getGlobalShaderUniforms().set("random_displacement_anim",
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:97:8: note: forward declaration of 'shaders::ShaderUniformComponent'
+   97 | struct ShaderUniformComponent;
+      |        ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+3 warnings and 20 errors generated.
+[2/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/systems/factory/factory.cpp.o
+[3/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/systems/composable_mechanics/pipelines.cpp.o
+[4/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/systems/event/event_system.cpp.o
+[5/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/core/game.cpp.o
+FAILED: [code=1] CMakeFiles/raylib-cpp-cmake-template.dir/src/core/game.cpp.o 
+/opt/homebrew/Cellar/cmake/4.0.1/bin/cmake -E env CCACHE_DIR=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.ccache CCACHE_TEMPDIR=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.ccache/tmp CCACHE_CONFIGPATH=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.ccache/ccache.conf /opt/homebrew/bin/ccache /usr/bin/clang++ -DASSETS_PATH=\"/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/\" -DCMAKE_BUILD_TYPE=Debug -DCRASH_REPORT_BUILD_ID=\"\" -DFMT_HEADER_ONLY=1 -DGRAPHICS_API_OPENGL_33 -DIMGUI_DEFINE_MATH_OPERATORS -DLUA_VERSION=\"5.4.4\" -DPLATFORM_DESKTOP -DSKIP_ASSET_SCAN_DEFAULT=0 -DSKIP_UUID_DUMP_DEFAULT=0 -DSOL_STD_OPTIONAL -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DTRACY_ENABLED=0 -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/globals.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/graphics.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/gui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/misc_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/ui_definitions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkAutogeometry.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkBody.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkShape.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/chipmunk_objectivec/ChipmunkSpace.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/collision/broad_phase.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/effects.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/example_usage.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/loader_lua.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/composable_mechanics/pipelines.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/entity_gamestate_management/entity_gamestate_management.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/event/event_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/factory/factory.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/fade/fade_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/gif/gifLoadingAndPlayingSystem.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/gui_indicator/guiIndicatorSystem.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/controller_nav.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_order_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ldtk_loader/ldtk_combined.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ldtk_rule_import/ldtk_test.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/line_of_sight/line_of_sight.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/line_of_sight/variables.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/localization/localization.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/main_loop_enhancement/main_loop.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/crane_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_components.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/steering.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/transform_physics_hook.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/lua_hot_reload.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/registry_bond.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/scripting_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/scripting_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_draw_commands.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/sound/sound_system.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/spring/spring.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/spring/spring_pool.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/systems.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/text/textVer2.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/text/text_effects.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/timer/timer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/tutorial/tutorial_system_v2.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/box.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/common_definitions.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/element.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/util.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/uuid/uuid.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/imgui_console/csys_console_sink.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/imgui_console/imgui_console.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/DataTypes.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Entity.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/EntityDef.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Enum.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/FieldsContainer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Layer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/LayerDef.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Level.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Project.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/TagsContainer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Tile.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Tileset.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/Utils.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtk_loader/src/World.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtkimport/include/ldtkimport/LdtkDefFile.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtkimport/include/ldtkimport/Rule.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/ldtkimport/include/ldtkimport/yyjson.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/cone_of_vision.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/path_finder.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/point.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/polygon.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/navmesh/source/segment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_demo.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_draw.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_tables.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/imgui_widgets.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/rlImGui/rlImGui.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Animation.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AnimationState.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AnimationStateData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Atlas.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AtlasAttachmentLoader.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Attachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AttachmentLoader.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/AttachmentTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Bone.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/BoneData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/BoundingBoxAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ClippingAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ColorTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/CurveTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/DeformTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/DrawOrderTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Event.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/EventData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/EventTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Extension.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/IkConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/IkConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/IkConstraintTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/InheritTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Json.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/LinkedMesh.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Log.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/MathUtil.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/MeshAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintMixTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintPositionTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PathConstraintSpacingTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PhysicsConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PhysicsConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PhysicsConstraintTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/PointAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/RTTI.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/RegionAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/RotateTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ScaleTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Sequence.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SequenceTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/ShearTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Skeleton.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonBinary.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonBounds.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonClipping.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonJson.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SkeletonRenderer.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Skin.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Slot.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SlotData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/SpineObject.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TextureLoader.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Timeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TransformConstraint.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TransformConstraintData.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TransformConstraintTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/TranslateTimeline.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Triangulator.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/Updatable.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine/VertexAttachment.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/spine_impl/spine_raylib.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/crash_reporter.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/easing.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/random_utils.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/utilities.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.cpp -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/fudge_pathfinding -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/fudge_pathfinding/util -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/GPGOAP -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/random-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/entt-src/single_include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/magic_enum-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/taskflow-master/taskflow -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/glm-src -I/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/spine -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/stduuid-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/snowhouse-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/third_party/objectpool-master/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/raylib-src/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/raylib-src/src/external/glfw/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/fmt/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/json-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/spdlog-src/include -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/entt-src/src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/stduuid-src -I/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/lua-src/src -isystem /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/sol2/include -Wall -g -std=c++20 -arch arm64 -mmacosx-version-min=15.4 -Winvalid-pch -Xclang -include-pch -Xclang /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/CMakeFiles/raylib-cpp-cmake-template.dir/cmake_pch.hxx.pch -Xclang -include -Xclang /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/CMakeFiles/raylib-cpp-cmake-template.dir/cmake_pch.hxx -MD -MT CMakeFiles/raylib-cpp-cmake-template.dir/src/core/game.cpp.o -MF CMakeFiles/raylib-cpp-cmake-template.dir/src/core/game.cpp.o.d -o CMakeFiles/raylib-cpp-cmake-template.dir/src/core/game.cpp.o -c /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:22:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/controller_nav.hpp:13:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.hpp:18:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.hpp:205:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.inl:31:18: warning: unused variable 'entry_align' [-Wunused-variable]
+   31 |     const size_t entry_align = __alignof(T);
+      |                  ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:22:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/controller_nav.hpp:13:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:13:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:77:15: warning: unused variable 'W' [-Wunused-variable]
+   77 |         auto& W  = *rec->w;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:83:21: warning: unused variable 'cfg' [-Wunused-variable]
+   83 |         const auto& cfg = N.config;
+      |                     ^~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:40:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/shaders/shader_pipeline.hpp:451:14: warning: unused variable 'to_uniform_value' [-Wunused-variable]
+  451 |         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {
+      |              ^~~~~~~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:43:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.hpp:12:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/nine_patch/nine_patch_baker.hpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:94:37: error: field has incomplete type 'shaders::ShaderUniformComponent'
+   94 |     shaders::ShaderUniformComponent shaderUniforms{};
+      |                                     ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:20:12: note: forward declaration of 'game::shaders::ShaderUniformComponent'
+   20 |     struct ShaderUniformComponent;
+      |            ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:134:33: error: member access into incomplete type 'EngineContext'
+  134 |         auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
+      |                                 ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/../systems/localization/localization.hpp:9:8: note: forward declaration of 'EngineContext'
+    9 | struct EngineContext;
+      |        ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:43:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.hpp:12:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/nine_patch/nine_patch_baker.hpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/engine_context.hpp:135:33: error: member access into incomplete type 'EngineContext'
+  135 |         if (it != globals::g_ctx->textureAtlas.end()) {
+      |                                 ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/../systems/localization/localization.hpp:9:8: note: forward declaration of 'EngineContext'
+    9 | struct EngineContext;
+      |        ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:43:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.hpp:14:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:77:24: error: no type named 'InputDeviceInputCategory' in namespace 'game::input'; did you mean '::input::InputDeviceInputCategory'?
+   77 |     InputState &state, input::InputDeviceInputCategory category,
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                        ::input::InputDeviceInputCategory
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:28:16: note: '::input::InputDeviceInputCategory' declared here
+   28 |     enum class InputDeviceInputCategory
+      |                ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:43:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.hpp:14:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:114:42: error: no type named 'InputDeviceInputCategory' in namespace 'game::input'; did you mean '::input::InputDeviceInputCategory'?
+  114 |                             float dt) -> input::InputDeviceInputCategory;
+      |                                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                          ::input::InputDeviceInputCategory
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:28:16: note: '::input::InputDeviceInputCategory' declared here
+   28 |     enum class InputDeviceInputCategory
+      |                ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:43:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.hpp:14:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:164:33: error: no type named 'InputDeviceInputCategory' in namespace 'game::input'; did you mean '::input::InputDeviceInputCategory'?
+  164 | auto DispatchRaw(InputState &s, input::InputDeviceInputCategory dev, int code,
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 ::input::InputDeviceInputCategory
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:28:16: note: '::input::InputDeviceInputCategory' declared here
+   28 |     enum class InputDeviceInputCategory
+      |                ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:43:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.hpp:14:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:169:24: error: no type named 'ActionBinding' in namespace 'game::input'; did you mean '::input::ActionBinding'?
+  169 |                  const input::ActionBinding &b) -> void;
+      |                        ^~~~~~~~~~~~~~~~~~~~
+      |                        ::input::ActionBinding
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:41:12: note: '::input::ActionBinding' declared here
+   41 |     struct ActionBinding {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:43:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui_data.hpp:14:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:178:44: error: no type named 'ActionBinding' in namespace 'game::input'; did you mean '::input::ActionBinding'?
+  178 |                   std::function<void(bool, input::ActionBinding)> cb) -> void;
+      |                                            ^~~~~~~~~~~~~~~~~~~~
+      |                                            ::input::ActionBinding
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:41:12: note: '::input::ActionBinding' declared here
+   41 |     struct ActionBinding {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:35:7: error: no member named 'DrawCommandType' in namespace 'game::layer'; did you mean '::layer::DrawCommandType'?
+   35 | using layer::DrawCommandType;
+      |       ^~~~~~~~~~~~~~~~~~~~~~
+      |       ::layer::DrawCommandType
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:53:16: note: '::layer::DrawCommandType' declared here
+   53 |     enum class DrawCommandType {
+      |                ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:42:55: error: unknown type name 'CmdBeginDrawing'; did you mean '::layer::CmdBeginDrawing'?
+   42 | template <> inline DrawCommandType GetDrawCommandType<CmdBeginDrawing>() {
+      |                                                       ^~~~~~~~~~~~~~~
+      |                                                       ::layer::CmdBeginDrawing
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:182:12: note: '::layer::CmdBeginDrawing' declared here
+  182 |     struct CmdBeginDrawing {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:45:55: error: unknown type name 'CmdEndDrawing'; did you mean '::layer::CmdEndDrawing'?
+   45 | template <> inline DrawCommandType GetDrawCommandType<CmdEndDrawing>() {
+      |                                                       ^~~~~~~~~~~~~
+      |                                                       ::layer::CmdEndDrawing
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:185:12: note: '::layer::CmdEndDrawing' declared here
+  185 |     struct CmdEndDrawing {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:48:55: error: unknown type name 'CmdClearBackground'; did you mean '::layer::CmdClearBackground'?
+   48 | template <> inline DrawCommandType GetDrawCommandType<CmdClearBackground>() {
+      |                                                       ^~~~~~~~~~~~~~~~~~
+      |                                                       ::layer::CmdClearBackground
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:189:12: note: '::layer::CmdClearBackground' declared here
+  189 |     struct CmdClearBackground {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:51:55: error: unknown type name 'CmdBeginScissorMode'; did you mean '::layer::CmdBeginScissorMode'?
+   51 | template <> inline DrawCommandType GetDrawCommandType<CmdBeginScissorMode>() {
+      |                                                       ^~~~~~~~~~~~~~~~~~~
+      |                                                       ::layer::CmdBeginScissorMode
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:174:12: note: '::layer::CmdBeginScissorMode' declared here
+  174 |     struct CmdBeginScissorMode {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:54:55: error: unknown type name 'CmdEndScissorMode'; did you mean '::layer::CmdEndScissorMode'?
+   54 | template <> inline DrawCommandType GetDrawCommandType<CmdEndScissorMode>() {
+      |                                                       ^~~~~~~~~~~~~~~~~
+      |                                                       ::layer::CmdEndScissorMode
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:178:12: note: '::layer::CmdEndScissorMode' declared here
+  178 |     struct CmdEndScissorMode {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:58:43: error: unknown type name 'CmdRenderUISelfImmediate'; did you mean '::layer::CmdRenderUISelfImmediate'?
+   58 | inline DrawCommandType GetDrawCommandType<CmdRenderUISelfImmediate>() {
+      |                                           ^~~~~~~~~~~~~~~~~~~~~~~~
+      |                                           ::layer::CmdRenderUISelfImmediate
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:166:12: note: '::layer::CmdRenderUISelfImmediate' declared here
+  166 |     struct CmdRenderUISelfImmediate {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:62:43: error: unknown type name 'CmdRenderUISliceFromDrawList'; did you mean '::layer::CmdRenderUISliceFromDrawList'?
+   62 | inline DrawCommandType GetDrawCommandType<CmdRenderUISliceFromDrawList>() {
+      |                                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                           ::layer::CmdRenderUISliceFromDrawList
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:158:12: note: '::layer::CmdRenderUISliceFromDrawList' declared here
+  158 |     struct CmdRenderUISliceFromDrawList {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:65:55: error: unknown type name 'CmdTranslate'; did you mean '::layer::CmdTranslate'?
+   65 | template <> inline DrawCommandType GetDrawCommandType<CmdTranslate>() {
+      |                                                       ^~~~~~~~~~~~
+      |                                                       ::layer::CmdTranslate
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:193:12: note: '::layer::CmdTranslate' declared here
+  193 |     struct CmdTranslate {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:68:55: error: unknown type name 'CmdScale'; did you mean '::layer::CmdScale'?
+   68 | template <> inline DrawCommandType GetDrawCommandType<CmdScale>() {
+      |                                                       ^~~~~~~~
+      |                                                       ::layer::CmdScale
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:197:12: note: '::layer::CmdScale' declared here
+  197 |     struct CmdScale {
+      |            ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:48:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../systems/ui/inventory_ui.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_command_buffer.hpp:71:55: error: unknown type name 'CmdRotate'; did you mean '::layer::CmdRotate'?
+   71 | template <> inline DrawCommandType GetDrawCommandType<CmdRotate>() {
+      |                                                       ^~~~~~~~~
+      |                                                       ::layer::CmdRotate
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:201:12: note: '::layer::CmdRotate' declared here
+  201 |     struct CmdRotate {
+      |            ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+4 warnings and 20 errors generated.
+[6/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/systems/entity_gamestate_management/entity_gamestate_management.cpp.o
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/entity_gamestate_management/entity_gamestate_management.cpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.hpp:18:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.hpp:205:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.inl:31:18: warning: unused variable 'entry_align' [-Wunused-variable]
+   31 |     const size_t entry_align = __alignof(T);
+      |                  ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/entity_gamestate_management/entity_gamestate_management.cpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:13:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:77:15: warning: unused variable 'W' [-Wunused-variable]
+   77 |         auto& W  = *rec->w;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:83:21: warning: unused variable 'cfg' [-Wunused-variable]
+   83 |         const auto& cfg = N.config;
+      |                     ^~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/entity_gamestate_management/entity_gamestate_management.cpp:181:15: warning: unused variable 'transform' [-Wunused-variable]
+  181 |         auto &transform = registry.get<transform::Transform>(entity);
+      |               ^~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/entity_gamestate_management/entity_gamestate_management.cpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:153:17: warning: unused function 'slicePolyShape' [-Wunused-function]
+  153 |     static bool slicePolyShape(cpSpace* space, cpShape* shape, cpVect A, cpVect B, float density = 1.0f/10000.0f, float minArea = 1.0f) {
+      |                 ^~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:227:16: warning: unused function 'ClipCell' [-Wunused-function]
+  227 |     static int ClipCell(const cpShape* srcShape,
+      |                ^~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/entity_gamestate_management/entity_gamestate_management.cpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:55:17: warning: unused function 'install_local_callback' [-Wunused-function]
+   55 |     static void install_local_callback(entt::registry& R, entt::entity e,
+      |                 ^~~~~~~~~~~~~~~~~~~~~~
+7 warnings generated.
+[7/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/core/init.cpp.o
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp:1:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.hpp:18:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.hpp:205:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.inl:31:18: warning: unused variable 'entry_align' [-Wunused-variable]
+   31 |     const size_t entry_align = __alignof(T);
+      |                  ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:77:15: warning: unused variable 'W' [-Wunused-variable]
+   77 |         auto& W  = *rec->w;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:83:21: warning: unused variable 'cfg' [-Wunused-variable]
+   83 |         const auto& cfg = N.config;
+      |                     ^~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp:12:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/uuid/uuid.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:71:39: warning: loop variable 'ch' of type 'const unsigned char &' binds to a temporary constructed from type 'reference' (aka 'const char &') [-Wrange-loop-construct]
+   71 |             for( const unsigned char &ch : delimiters )
+      |                                       ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:71:18: note: use non-reference type 'unsigned char' to make construction explicit or type 'const char &' to prevent copying
+   71 |             for( const unsigned char &ch : delimiters )
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:74:39: warning: loop variable 'ch' of type 'const unsigned char &' binds to a temporary constructed from type 'reference' (aka 'const char &') [-Wrange-loop-construct]
+   74 |             for( const unsigned char &ch : self ) {
+      |                                       ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:74:18: note: use non-reference type 'unsigned char' to make construction explicit or type 'const char &' to prevent copying
+   74 |             for( const unsigned char &ch : self ) {
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp:83:22: warning: unused variable 'pathStr' [-Wunused-variable]
+   83 |     for (const auto &pathStr : subpaths) {
+      |                      ^~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp:553:7: warning: unused variable 'defaultSize' [-Wunused-variable]
+  553 |   int defaultSize =
+      |       ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.cpp:1:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:153:17: warning: unused function 'slicePolyShape' [-Wunused-function]
+  153 |     static bool slicePolyShape(cpSpace* space, cpShape* shape, cpVect A, cpVect B, float density = 1.0f/10000.0f, float minArea = 1.0f) {
+      |                 ^~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:227:16: warning: unused function 'ClipCell' [-Wunused-function]
+  227 |     static int ClipCell(const cpShape* srcShape,
+      |                ^~~~~~~~
+9 warnings generated.
+[8/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/systems/anim_system.cpp.o
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:1:9: warning: #pragma once in main file [-Wpragma-once-outside-header]
+    1 | #pragma once
+      |         ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/../core/engine_context.hpp:17:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_system.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.hpp:18:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.hpp:205:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.inl:31:18: warning: unused variable 'entry_align' [-Wunused-variable]
+   31 |     const size_t entry_align = __alignof(T);
+      |                  ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:13:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_pipeline.hpp:451:14: warning: unused variable 'to_uniform_value' [-Wunused-variable]
+  451 |         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {
+      |              ^~~~~~~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:13:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:77:15: warning: unused variable 'W' [-Wunused-variable]
+   77 |         auto& W  = *rec->w;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:83:21: warning: unused variable 'cfg' [-Wunused-variable]
+   83 |         const auto& cfg = N.config;
+      |                     ^~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:15:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/uuid/uuid.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:71:39: warning: loop variable 'ch' of type 'const unsigned char &' binds to a temporary constructed from type 'reference' (aka 'const char &') [-Wrange-loop-construct]
+   71 |             for( const unsigned char &ch : delimiters )
+      |                                       ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:71:18: note: use non-reference type 'unsigned char' to make construction explicit or type 'const char &' to prevent copying
+   71 |             for( const unsigned char &ch : delimiters )
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:74:39: warning: loop variable 'ch' of type 'const unsigned char &' binds to a temporary constructed from type 'reference' (aka 'const char &') [-Wrange-loop-construct]
+   74 |             for( const unsigned char &ch : self ) {
+      |                                       ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/unify/unify.hpp:74:18: note: use non-reference type 'unsigned char' to make construction explicit or type 'const char &' to prevent copying
+   74 |             for( const unsigned char &ch : self ) {
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:380:8: warning: unused variable 'storedW' [-Wunused-variable]
+  380 |   auto storedW = transform.getActualW();
+      |        ^~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:381:8: warning: unused variable 'storedH' [-Wunused-variable]
+  381 |   auto storedH = transform.getActualH();
+      |        ^~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:12:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/init.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.hpp:10:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:153:17: warning: unused function 'slicePolyShape' [-Wunused-function]
+  153 |     static bool slicePolyShape(cpSpace* space, cpShape* shape, cpVect A, cpVect B, float density = 1.0f/10000.0f, float minArea = 1.0f) {
+      |                 ^~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:227:16: warning: unused function 'ClipCell' [-Wunused-function]
+  227 |     static int ClipCell(const cpShape* srcShape,
+      |                ^~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/anim_system.cpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:55:17: warning: unused function 'install_local_callback' [-Wunused-function]
+   55 |     static void install_local_callback(entt::registry& R, entt::entity e,
+      |                 ^~~~~~~~~~~~~~~~~~~~~~
+12 warnings generated.
+[9/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/main.cpp.o
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:2:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.hpp:18:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.hpp:205:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.inl:31:18: warning: unused variable 'entry_align' [-Wunused-variable]
+   31 |     const size_t entry_align = __alignof(T);
+      |                  ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:2:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:13:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:77:15: warning: unused variable 'W' [-Wunused-variable]
+   77 |         auto& W  = *rec->w;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:83:21: warning: unused variable 'cfg' [-Wunused-variable]
+   83 |         const auto& cfg = N.config;
+      |                     ^~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:4:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/transform_physics_hook.hpp:126:15: warning: variable 'displayRot' set but not used [-Wunused-but-set-variable]
+  126 |         float displayRot = currRot;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:21:9: warning: 'SPDLOG_ACTIVE_LEVEL' macro redefined [-Wmacro-redefined]
+   21 | #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE // compiler-time log level
+      |         ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/util/../core/globals.hpp:18:9: note: previous definition is here
+   18 | #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG // compiler-time log level
+      |         ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:44:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/graphics.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../util/utilities.hpp:8:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:1402:185: warning: conditional expression between different enumeration types ('GuiControlProperty' and 'GuiDefaultProperty') is deprecated [-Wdeprecated-enum-compare-conditional]
+ 1402 |     GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
+      |                                                                                                                                                                                         ^ ~~~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:1403:204: warning: conditional expression between different enumeration types ('GuiControlProperty' and 'GuiDefaultProperty') is deprecated [-Wdeprecated-enum-compare-conditional]
+ 1403 |     GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height - 1, bounds.width, RAYGUI_GROUPBOX_LINE_THICK }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
+      |                                                                                                                                                                                                            ^ ~~~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:1404:204: warning: conditional expression between different enumeration types ('GuiControlProperty' and 'GuiDefaultProperty') is deprecated [-Wdeprecated-enum-compare-conditional]
+ 1404 |     GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - 1, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
+      |                                                                                                                                                                                                            ^ ~~~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:1422:79: warning: conditional expression between different enumeration types ('GuiControlProperty' and 'GuiDefaultProperty') is deprecated [-Wdeprecated-enum-compare-conditional]
+ 1422 |     Color color = Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha);
+      |                                                                               ^ ~~~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:1467:117: warning: conditional expression between different enumeration types ('GuiControlProperty' and 'GuiDefaultProperty') is deprecated [-Wdeprecated-enum-compare-conditional]
+ 1467 |     GuiDrawRectangle(bounds, RAYGUI_PANEL_BORDER_WIDTH, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED: LINE_COLOR)), guiAlpha),
+      |                                                                                                                     ^ ~~~~~~~~~~~~~~~~~~~~~  ~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:1468:82: warning: conditional expression between different enumeration types ('GuiControlProperty' and 'GuiDefaultProperty') is deprecated [-Wdeprecated-enum-compare-conditional]
+ 1468 |                      Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BASE_COLOR_DISABLED : BACKGROUND_COLOR)), guiAlpha));
+      |                                                                                  ^ ~~~~~~~~~~~~~~~~~~~   ~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:2035:23: warning: unused variable 'maxWidth' [-Wunused-variable]
+ 2035 |                 float maxWidth = (bounds.width - (GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING)*2));
+      |                       ^~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:2192:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2192 |     sprintf(textValue, "%i", *value);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:44:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/graphics.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../util/utilities.hpp:8:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:2323:25: warning: unused variable 'textUTF8' [-Wunused-variable]
+ 2323 |             const char *textUTF8 = CodepointToUTF8(codepoint, &byteSize);
+      |                         ^~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:3568:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3568 |         sprintf(buffer, "#%03i#", iconId);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:44:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/graphics.hpp:5:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../util/utilities.hpp:8:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/include/raygui.h:3580:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3580 |         sprintf(iconBuffer, "#%03i#", iconId & 0x1ff);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:44:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/graphics.hpp:5:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/../util/utilities.hpp:22:9: warning: 'SPDLOG_ACTIVE_LEVEL' macro redefined [-Wmacro-redefined]
+   22 | #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG // compiler-time log level
+      |         ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:21:9: note: previous definition is here
+   21 | #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE // compiler-time log level
+      |         ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:50:9: warning: 'JSON_DIAGNOSTICS' macro redefined [-Wmacro-redefined]
+   50 | #define JSON_DIAGNOSTICS 1
+      |         ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/build/_deps/json-src/include/nlohmann/detail/abi_macros.hpp:26:13: note: previous definition is here
+   26 |     #define JSON_DIAGNOSTICS 0
+      |             ^
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:87:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/scripting_system.hpp:9:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:489:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  489 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:489:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  489 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:589:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  589 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:589:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  589 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:605:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  605 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:605:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  605 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:618:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  618 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:618:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  618 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:403:10: warning: variable 'shadowEnabled' set but not used [-Wunused-but-set-variable]
+  403 |     bool shadowEnabled = false;
+      |          ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:404:11: warning: variable 'shadowDisplacementX' set but not used [-Wunused-but-set-variable]
+  404 |     float shadowDisplacementX{}, shadowDisplacementY{};
+      |           ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:404:34: warning: variable 'shadowDisplacementY' set but not used [-Wunused-but-set-variable]
+  404 |     float shadowDisplacementX{}, shadowDisplacementY{};
+      |                                  ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:426:11: warning: unused variable 'shadowColor' [-Wunused-variable]
+  426 |     Color shadowColor = {0, 0, 0, static_cast<unsigned char>(alpha * 1.0f)};
+      |           ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:87:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/scripting/scripting_system.hpp:11:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_pipeline.hpp:451:14: warning: unused variable 'to_uniform_value' [-Wunused-variable]
+  451 |         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {
+      |              ^~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:232:9: warning: unused variable 'lastFrameTime' [-Wunused-variable]
+  232 |   float lastFrameTime = GetTime();
+      |         ^~~~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:2:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:153:17: warning: unused function 'slicePolyShape' [-Wunused-function]
+  153 |     static bool slicePolyShape(cpSpace* space, cpShape* shape, cpVect A, cpVect B, float density = 1.0f/10000.0f, float minArea = 1.0f) {
+      |                 ^~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:227:16: warning: unused function 'ClipCell' [-Wunused-function]
+  227 |     static int ClipCell(const cpShape* srcShape,
+      |                ^~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:2:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_functions.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/input/input_function_data.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:55:17: warning: unused function 'install_local_callback' [-Wunused-function]
+   55 |     static void install_local_callback(entt::registry& R, entt::entity e,
+      |                 ^~~~~~~~~~~~~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/main.cpp:4:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/transform_physics_hook.hpp:233:17: warning: unused function 'worldActive' [-Wunused-function]
+  233 |     static bool worldActive(PhysicsManager& PM, const std::string& worldName) {
+      |                 ^~~~~~~~~~~
+36 warnings generated.
+[10/205] Building CXX object CMakeFiles/raylib-cpp-cmake-template.dir/src/systems/ai/ai_system.cpp.o
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp:10:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/../scripting/scripting_system.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:9:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer.hpp:18:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/layer/layer_optimized.hpp:14:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.hpp:205:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/third_party/objectpool-master/src/object_pool.inl:31:18: warning: unused variable 'entry_align' [-Wunused-variable]
+   31 |     const size_t entry_align = __alignof(T);
+      |                  ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp:10:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/../scripting/scripting_system.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:13:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:77:15: warning: unused variable 'W' [-Wunused-variable]
+   77 |         auto& W  = *rec->w;
+      |               ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_manager.hpp:83:21: warning: unused variable 'cfg' [-Wunused-variable]
+   83 |         const auto& cfg = N.config;
+      |                     ^~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp:10:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/../scripting/scripting_system.hpp:9:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:489:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  489 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:489:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  489 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:589:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  589 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:589:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  589 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:605:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  605 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:605:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  605 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:618:14: warning: lambda capture 'shadowDisplacementX' is not used [-Wunused-lambda-capture]
+  618 |             [shadowDisplacementX, shadowDisplacementY,
+      |              ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:618:35: warning: lambda capture 'shadowDisplacementY' is not used [-Wunused-lambda-capture]
+  618 |             [shadowDisplacementX, shadowDisplacementY,
+      |                                   ^~~~~~~~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:403:10: warning: variable 'shadowEnabled' set but not used [-Wunused-but-set-variable]
+  403 |     bool shadowEnabled = false;
+      |          ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:404:11: warning: variable 'shadowDisplacementX' set but not used [-Wunused-but-set-variable]
+  404 |     float shadowDisplacementX{}, shadowDisplacementY{};
+      |           ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:404:34: warning: variable 'shadowDisplacementY' set but not used [-Wunused-but-set-variable]
+  404 |     float shadowDisplacementX{}, shadowDisplacementY{};
+      |                                  ^
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/particles/particle.hpp:426:11: warning: unused variable 'shadowColor' [-Wunused-variable]
+  426 |     Color shadowColor = {0, 0, 0, static_cast<unsigned char>(alpha * 1.0f)};
+      |           ^~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp:10:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/../scripting/scripting_system.hpp:11:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/shaders/shader_pipeline.hpp:451:14: warning: unused variable 'to_uniform_value' [-Wunused-variable]
+  451 |         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {
+      |              ^~~~~~~~~~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp:10:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/../scripting/scripting_system.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:8:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:153:17: warning: unused function 'slicePolyShape' [-Wunused-function]
+  153 |     static bool slicePolyShape(cpSpace* space, cpShape* shape, cpVect A, cpVect B, float density = 1.0f/10000.0f, float minArea = 1.0f) {
+      |                 ^~~~~~~~~~~~~~
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/physics/physics_world.hpp:227:16: warning: unused function 'ClipCell' [-Wunused-function]
+  227 |     static int ClipCell(const cpShape* srcShape,
+      |                ^~~~~~~~
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/ai_system.cpp:10:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ai/../scripting/scripting_system.hpp:8:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/ui/ui.hpp:11:
+In file included from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform_functions.hpp:3:
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/systems/transform/transform.hpp:55:17: warning: unused function 'install_local_callback' [-Wunused-function]
+   55 |     static void install_local_callback(entt::registry& R, entt::entity e,
+      |                 ^~~~~~~~~~~~~~~~~~~~~~
+19 warnings generated.
+ninja: build stopped: subcommand failed.

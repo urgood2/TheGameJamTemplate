@@ -102,6 +102,9 @@ void setEngineContext(EngineContext* ctx) {
         g_ctx->drawDebugInfo = drawDebugInfo;
         g_ctx->drawPhysicsDebug = drawPhysicsDebug;
         g_ctx->releaseMode = releaseMode;
+        g_ctx->screenWipe = screenWipe;
+        g_ctx->underOverlay = under_overlay;
+        g_ctx->vibration = vibration;
         g_ctx->lastMouseClickTarget = lastMouseClickTarget;
         g_ctx->hasLastMouseClickTarget = hasLastMouseClickTargetFlag;
         g_ctx->lastMouseClick = lastMouseClick;
@@ -515,9 +518,16 @@ void setEngineContext(EngineContext* ctx) {
     std::string language{"en"}; // the current language for the game
 
     bool under_overlay{false}; // set to true when an ui overlay is active
-    bool& getUnderOverlay() { return under_overlay; }
+    bool& getUnderOverlay() { 
+        if (g_ctx) return g_ctx->underOverlay;
+        return under_overlay; 
+    }
 
     float vibration{0.0f}; // vibration strength for controllers
+    float& getVibration() {
+        if (g_ctx) return g_ctx->vibration;
+        return vibration;
+    }
 
     bool releaseMode = false; // set to true to disable debug features
     bool& getReleaseMode() { 
@@ -540,7 +550,10 @@ void setEngineContext(EngineContext* ctx) {
     }
 
     bool screenWipe = false; // true when the screen is being wiped (transitioning between scenes). Set this to true during transitions to prevent input.
-    bool& getScreenWipe() { return screenWipe; }
+    bool& getScreenWipe() { 
+        if (g_ctx) return g_ctx->screenWipe;
+        return screenWipe; 
+    }
 
     entt::entity gameWorldContainerEntity;
 

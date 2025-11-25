@@ -5,12 +5,12 @@
 #endif
 
 #if defined(__EMSCRIPTEN__)
-    #define GL_GLEXT_PROTOTYPES
-    #include <GLES3/gl3.h>
-    #include <GLES2/gl2ext.h>
+#define GL_GLEXT_PROTOTYPES
+#include <GLES2/gl2ext.h>
+#include <GLES3/gl3.h>
 #else
-    // #include <GL/gl.h>
-    // #include <GL/glext.h>
+// #include <GL/gl.h>
+// #include <GL/glext.h>
 #endif
 
 #include "raylib.h"
@@ -54,7 +54,6 @@
 
 #include "systems/scripting/binding_recorder.hpp"
 
-
 namespace layer {
 // only use for (DrawLayerCommandsToSpecificCanvas)
 namespace render_stack_switch_internal {
@@ -64,35 +63,32 @@ std::stack<RenderTexture2D> renderStack{};
 
 template <typename F>
 static void QueueScopedTransformCompositeRender(
-    std::shared_ptr<layer::Layer> layer,
-    entt::entity e,
-    int z,
-    layer::DrawCommandSpace space,
-    F&& buildChildren)
-{
-    static  std::array<std::vector<layer::DrawCommandV2>*, 8> s_commandStackArr;
-    static  int s_stackTop = 0;
+    std::shared_ptr<layer::Layer> layer, entt::entity e, int z,
+    layer::DrawCommandSpace space, F &&buildChildren) {
+  static std::array<std::vector<layer::DrawCommandV2> *, 8> s_commandStackArr;
+  static int s_stackTop = 0;
 
-    auto* cmd = layer::layer_command_buffer::Add<layer::CmdScopedTransformCompositeRender>(layer, z, space);
-    cmd->entity = e;
+  auto *cmd = layer::layer_command_buffer::Add<
+      layer::CmdScopedTransformCompositeRender>(layer, z, space);
+  cmd->entity = e;
 
-    // Pre-reserve a few children slots
-    cmd->children.reserve(8); // tweak this number based on your typical batch size
+  // Pre-reserve a few children slots
+  cmd->children.reserve(
+      8); // tweak this number based on your typical batch size
 
-    auto* prevList = layer->commands_ptr;
-    layer->commands_ptr = &cmd->children;
+  auto *prevList = layer->commands_ptr;
+  layer->commands_ptr = &cmd->children;
 
-    s_commandStackArr[s_stackTop++] = &cmd->children;
-    std::forward<F>(buildChildren)();
-    --s_stackTop;
+  s_commandStackArr[s_stackTop++] = &cmd->children;
+  std::forward<F>(buildChildren)();
+  --s_stackTop;
 
-    layer->commands_ptr = prevList;
+  layer->commands_ptr = prevList;
 }
-
 
 // Graphics namespace for rendering functions
 namespace layer {
-void exposeToLua(sol::state &lua, EngineContext* ctx) {
+void exposeToLua(sol::state &lua, EngineContext *ctx) {
 
   sol::state_view luaView{lua};
   auto layerTbl = luaView["layer"].get_or_create<sol::table>();
@@ -102,81 +98,72 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
   }
 
   auto &rec = BindingRecorder::instance();
-  
-  
-  // --- Rectangle binding -------------------------------------------------------
+
+  // --- Rectangle binding
+  // -------------------------------------------------------
   {
-        // 1) Usertype with constructors and fields
-        auto rectUT = lua.new_usertype<Rectangle>(
-        "Rectangle",
-        sol::no_constructor,
-        "x",      &Rectangle::x,
-        "y",      &Rectangle::y,
-        "width",  &Rectangle::width,
-        "height", &Rectangle::height,
+    // 1) Usertype with constructors and fields
+    auto rectUT = lua.new_usertype<Rectangle>(
+        "Rectangle", sol::no_constructor, "x", &Rectangle::x, "y",
+        &Rectangle::y, "width", &Rectangle::width, "height", &Rectangle::height,
         // nice for debugging
-        sol::meta_function::to_string, [](const Rectangle& r) {
-            char buf[96];
-            std::snprintf(buf, sizeof(buf), "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)",
-                          r.x, r.y, r.width, r.height);
-            return std::string(buf);
-        }
-    );
+        sol::meta_function::to_string, [](const Rectangle &r) {
+          char buf[96];
+          std::snprintf(buf, sizeof(buf),
+                        "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)", r.x, r.y,
+                        r.width, r.height);
+          return std::string(buf);
+        });
 
     // Attach a static Rectangle.new(...)
     sol::table rectTbl = lua["Rectangle"];
-    rectTbl.set_function("new", sol::overload(
-        []() {
-            return Rectangle{0.f, 0.f, 0.f, 0.f};
-        },
-        [](float x, float y, float w, float h) {
-            return Rectangle{x, y, w, h};
-        },
-        [](sol::table t) {
-            Rectangle r{};
-            r.x      = t.get_or("x",      0.0f);
-            r.y      = t.get_or("y",      0.0f);
-            r.width  = t.get_or("width",  0.0f);
-            r.height = t.get_or("height", 0.0f);
-            return r;
-        }
-    ));
-
+    rectTbl.set_function(
+        "new", sol::overload([]() { return Rectangle{0.f, 0.f, 0.f, 0.f}; },
+                             [](float x, float y, float w, float h) {
+                               return Rectangle{x, y, w, h};
+                             },
+                             [](sol::table t) {
+                               Rectangle r{};
+                               r.x = t.get_or("x", 0.0f);
+                               r.y = t.get_or("y", 0.0f);
+                               r.width = t.get_or("width", 0.0f);
+                               r.height = t.get_or("height", 0.0f);
+                               return r;
+                             }));
 
     // 2) Optional utility methods (handy but lightweight)
-    rectUT.set_function("center", [](const Rectangle& r) {
-      return Vector2{ r.x + r.width * 0.5f, r.y + r.height * 0.5f };
+    rectUT.set_function("center", [](const Rectangle &r) {
+      return Vector2{r.x + r.width * 0.5f, r.y + r.height * 0.5f};
     });
-    rectUT.set_function("contains", [](const Rectangle& r, float px, float py) {
-      return (px >= r.x) && (py >= r.y) && (px <= r.x + r.width) && (py <= r.y + r.height);
+    rectUT.set_function("contains", [](const Rectangle &r, float px, float py) {
+      return (px >= r.x) && (py >= r.y) && (px <= r.x + r.width) &&
+             (py <= r.y + r.height);
     });
-    rectUT.set_function("area", [](const Rectangle& r) {
-      return r.width * r.height;
-    });
+    rectUT.set_function("area",
+                        [](const Rectangle &r) { return r.width * r.height; });
 
     // 3) Nice __tostring for debugging
-    rectUT[sol::meta_function::to_string] = [](const Rectangle& r) {
+    rectUT[sol::meta_function::to_string] = [](const Rectangle &r) {
       char buf[128];
-      std::snprintf(buf, sizeof(buf), "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)",
-                    r.x, r.y, r.width, r.height);
+      std::snprintf(buf, sizeof(buf),
+                    "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)", r.x, r.y,
+                    r.width, r.height);
       return std::string(buf);
     };
 
     // 4) Convenience free-function constructors:
     //    Rect(x,y,w,h) and Rect{ x=..., y=..., width=..., height=... }
-    lua.set_function("Rect", sol::overload(
-        [](float x, float y, float w, float h) {
-          return Rectangle{ x, y, w, h };
-        },
-        [](sol::table t) {
-          Rectangle r{};
-          r.x      = t.get_or("x",      0.0f);
-          r.y      = t.get_or("y",      0.0f);
-          r.width  = t.get_or("width",  0.0f);
-          r.height = t.get_or("height", 0.0f);
-          return r;
-        }
-    ));
+    lua.set_function(
+        "Rect", sol::overload([](float x, float y, float w,
+                                 float h) { return Rectangle{x, y, w, h}; },
+                              [](sol::table t) {
+                                Rectangle r{};
+                                r.x = t.get_or("x", 0.0f);
+                                r.y = t.get_or("y", 0.0f);
+                                r.width = t.get_or("width", 0.0f);
+                                r.height = t.get_or("height", 0.0f);
+                                return r;
+                              }));
 
     // 5) (Optional) Recorder entries for your BindingRecorder docs
     rec.add_type("Rectangle", true).doc = "Raylib Rectangle (x,y,width,height)";
@@ -184,7 +171,6 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
     rec.record_property("Rectangle", {"y", "number", "Top-left Y"});
     rec.record_property("Rectangle", {"width", "number", "Width"});
     rec.record_property("Rectangle", {"height", "number", "Height"});
-
   }
 
   rec.add_type("layer").doc = "namespace for rendering & layer operations";
@@ -293,24 +279,20 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
                     "---@param height integer\n"
                     "---@return layer.Layer",
                     "Creates a layer with a main canvas of a specified size.");
-                    
-  rec.bind_function(lua, {"layer"}, "ExecuteScale",
-    &layer::Scale,
-    "---@param x number # Scale factor in X direction\n"
-    "---@param y number # Scale factor in Y direction\n"
-    "---@return nil",
-    "Applies scaling transformation to the current layer, immeidately (does not queue)."
-  );
-  
-  rec.bind_function(lua, {"layer"}, "ExecuteTranslate",
-    &layer::Translate,
-    "---@param x number # Translation in X direction\n"
-    "---@param y number # Translation in Y direction\n"
-    "---@return nil",
-    "Applies translation transformation to the current layer, immeidately (does not queue)."
-  );
-  
 
+  rec.bind_function(lua, {"layer"}, "ExecuteScale", &layer::Scale,
+                    "---@param x number # Scale factor in X direction\n"
+                    "---@param y number # Scale factor in Y direction\n"
+                    "---@return nil",
+                    "Applies scaling transformation to the current layer, "
+                    "immeidately (does not queue).");
+
+  rec.bind_function(lua, {"layer"}, "ExecuteTranslate", &layer::Translate,
+                    "---@param x number # Translation in X direction\n"
+                    "---@param y number # Translation in Y direction\n"
+                    "---@return nil",
+                    "Applies translation transformation to the current layer, "
+                    "immeidately (does not queue).");
 
   rec.bind_function(lua, {"layer"}, "RemoveLayerFromCanvas",
                     &layer::RemoveLayerFromCanvas,
@@ -342,7 +324,8 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
   rec.bind_function(lua, {"layer"}, "AddCanvasToLayer",
                     static_cast<void (*)(LPtr, const std::string &, int, int)>(
                         &layer::AddCanvasToLayer),
-                    "---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil",
+                    "---@overload fun(layer: layer.Layer, canvasName: string, "
+                    "width: integer, height: integer):nil",
                     "Adds a canvas of a specific size to the layer.",
                     /*is_overload=*/true);
 
@@ -489,23 +472,19 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
       "Rotate", layer::DrawCommandType::Rotate, "AddPush",
       layer::DrawCommandType::AddPush, "AddPop", layer::DrawCommandType::AddPop,
       "PushMatrix", layer::DrawCommandType::PushMatrix, "PopMatrix",
-      layer::DrawCommandType::PopMatrix, 
-      "PushObjectTransformsToMatrix",
+      layer::DrawCommandType::PopMatrix, "PushObjectTransformsToMatrix",
       layer::DrawCommandType::PushObjectTransformsToMatrix,
       "ScopedTransformCompositeRender",
-      layer::DrawCommandType::ScopedTransformCompositeRender,
-      "DrawCircle",
+      layer::DrawCommandType::ScopedTransformCompositeRender, "DrawCircle",
       layer::DrawCommandType::Circle, "DrawRectangle",
       layer::DrawCommandType::Rectangle, "DrawRectanglePro",
       layer::DrawCommandType::RectanglePro, "DrawRectangleLinesPro",
       layer::DrawCommandType::RectangleLinesPro, "DrawLine",
       layer::DrawCommandType::Line, "DrawDashedLine",
       layer::DrawCommandType::DashedLine, "DrawText",
-      layer::DrawCommandType::Text, 
-      
-      
-      "DrawTextCentered",
-      layer::DrawCommandType::DrawTextCentered, "TextPro",
+      layer::DrawCommandType::Text,
+
+      "DrawTextCentered", layer::DrawCommandType::DrawTextCentered, "TextPro",
       layer::DrawCommandType::TextPro, "DrawImage",
       layer::DrawCommandType::DrawImage, "TexturePro",
       layer::DrawCommandType::TexturePro, "DrawEntityAnimation",
@@ -536,8 +515,7 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
       layer::DrawCommandType::RenderRectVerticlesOutlineLayer, "DrawPolygon",
       layer::DrawCommandType::Polygon, "RenderNPatchRect",
       layer::DrawCommandType::RenderNPatchRect, "DrawTriangle",
-      layer::DrawCommandType::Triangle, 
-      "DrawGradientRectCentered",
+      layer::DrawCommandType::Triangle, "DrawGradientRectCentered",
       layer::DrawCommandType::DrawGradientRectCentered,
       "DrawGradientRectRoundedCentered",
       layer::DrawCommandType::DrawGradientRectRoundedCentered);
@@ -564,14 +542,12 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
                       {"AddPop", "7", "Pop transform matrix"});
   rec.record_property("layer.DrawCommandType",
                       {"PushMatrix", "8", "Explicit push matrix command"});
-  rec.record_property(
-      "layer.DrawCommandType",
-      {"PushObjectTransformsToMatrix", "100",
-       "Push object's transform to matrix stack"});
-  rec.record_property(
-      "layer.DrawCommandType",
-      {"ScopedTransformCompositeRender", "101",
-       "Scoped transform for composite rendering"});
+  rec.record_property("layer.DrawCommandType",
+                      {"PushObjectTransformsToMatrix", "100",
+                       "Push object's transform to matrix stack"});
+  rec.record_property("layer.DrawCommandType",
+                      {"ScopedTransformCompositeRender", "101",
+                       "Scoped transform for composite rendering"});
   rec.record_property("layer.DrawCommandType",
                       {"PopMatrix", "9", "Explicit pop matrix command"});
   rec.record_property("layer.DrawCommandType",
@@ -654,9 +630,9 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
                       {"RenderNPatchRect", "44", "Draw a 9-patch rectangle"});
   rec.record_property("layer.DrawCommandType",
                       {"DrawTriangle", "45", "Draw a triangle"});
-  rec.record_property("layer.DrawCommandType",
-                      {"DrawGradientRectCentered", "46",
-                       "Draw a gradient rectangle centered"});
+  rec.record_property(
+      "layer.DrawCommandType",
+      {"DrawGradientRectCentered", "46", "Draw a gradient rectangle centered"});
   rec.record_property("layer.DrawCommandType",
                       {"DrawGradientRectRoundedCentered", "47",
                        "Draw a rounded gradient rectangle centered"});
@@ -682,11 +658,11 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
   BIND_CMD(AddPop, "dummy", &layer::CmdAddPop::dummy)
   BIND_CMD(PushMatrix, "dummy", &layer::CmdPushMatrix::dummy)
   BIND_CMD(PopMatrix, "dummy", &layer::CmdPopMatrix::dummy)
-  BIND_CMD(PushObjectTransformsToMatrix,
-           "entity", &layer::CmdPushObjectTransformsToMatrix::entity)
-  BIND_CMD(ScopedTransformCompositeRender,
-           "entity", &layer::CmdScopedTransformCompositeRender::entity,
-           "payload", &layer::CmdScopedTransformCompositeRender::children)
+  BIND_CMD(PushObjectTransformsToMatrix, "entity",
+           &layer::CmdPushObjectTransformsToMatrix::entity)
+  BIND_CMD(ScopedTransformCompositeRender, "entity",
+           &layer::CmdScopedTransformCompositeRender::entity, "payload",
+           &layer::CmdScopedTransformCompositeRender::children)
   BIND_CMD(DrawCircleFilled, "x", &layer::CmdDrawCircleFilled::x, "y",
            &layer::CmdDrawCircleFilled::y, "radius",
            &layer::CmdDrawCircleFilled::radius, "color",
@@ -818,8 +794,7 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
            "color", &layer::CmdDrawTriangle::color)
   BIND_CMD(BeginStencilMode, "dummy", &layer::CmdBeginStencilMode::dummy)
   BIND_CMD(StencilOp, "sfail", &layer::CmdStencilOp::sfail, "dpfail",
-           &layer::CmdStencilOp::dpfail, "dppass",
-           &layer::CmdStencilOp::dppass)
+           &layer::CmdStencilOp::dpfail, "dppass", &layer::CmdStencilOp::dppass)
   BIND_CMD(RenderBatchFlush, "dummy", &layer::CmdRenderBatchFlush::dummy)
   BIND_CMD(AtomicStencilMask, "mask", &layer::CmdAtomicStencilMask::mask)
   BIND_CMD(ColorMask, "r", &layer::CmdColorMask::red, "g",
@@ -895,8 +870,8 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
            &layer::CmdDrawDashedRoundedRect::arcSteps, "thickness",
            &layer::CmdDrawDashedRoundedRect::thickness, "color",
            &layer::CmdDrawDashedRoundedRect::color)
-  BIND_CMD(DrawDashedLine, "start", &layer::CmdDrawDashedLine::start, "endPoint",
-           &layer::CmdDrawDashedLine::end, "dashLength",
+  BIND_CMD(DrawDashedLine, "start", &layer::CmdDrawDashedLine::start,
+           "endPoint", &layer::CmdDrawDashedLine::end, "dashLength",
            &layer::CmdDrawDashedLine::dashLength, "gapLength",
            &layer::CmdDrawDashedLine::gapLength, "phase",
            &layer::CmdDrawDashedLine::phase, "thickness",
@@ -920,8 +895,8 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
            &layer::CmdDrawGradientRectRoundedCentered::segments, "topLeft",
            &layer::CmdDrawGradientRectRoundedCentered::topLeft, "topRight",
            &layer::CmdDrawGradientRectRoundedCentered::topRight, "bottomRight",
-           &layer::CmdDrawGradientRectRoundedCentered::bottomRight, "bottomLeft",
-           &layer::CmdDrawGradientRectRoundedCentered::bottomLeft)
+           &layer::CmdDrawGradientRectRoundedCentered::bottomRight,
+           "bottomLeft", &layer::CmdDrawGradientRectRoundedCentered::bottomLeft)
   BIND_CMD(DrawBatchedEntities, "registry",
            &layer::CmdDrawBatchedEntities::registry, "entities",
            &layer::CmdDrawBatchedEntities::entities, "autoOptimize",
@@ -950,22 +925,28 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
   rec.record_property("layer.CmdTranslate", {"x", "number", "X offset"});
   rec.record_property("layer.CmdTranslate", {"y", "number", "Y offset"});
   rec.add_type("layer.CmdRenderBatchFlush", true);
-  
+
   rec.add_type("layer.CmdStencilOp", true);
-  rec.record_property("layer.CmdStencilOp", {"sfail", "number", "Stencil fail action"});
-  
-  rec.record_property("layer.CmdStencilOp", {"dpfail", "number", "Depth fail action"});
-  rec.record_property("layer.CmdStencilOp", {"dppass", "number", "Depth pass action"});
+  rec.record_property("layer.CmdStencilOp",
+                      {"sfail", "number", "Stencil fail action"});
+
+  rec.record_property("layer.CmdStencilOp",
+                      {"dpfail", "number", "Depth fail action"});
+  rec.record_property("layer.CmdStencilOp",
+                      {"dppass", "number", "Depth pass action"});
   rec.add_type("layer.CmdAtomicStencilMask", true);
-  rec.record_property("layer.CmdAtomicStencilMask", {"mask", "number", "Stencil mask value"});
+  rec.record_property("layer.CmdAtomicStencilMask",
+                      {"mask", "number", "Stencil mask value"});
   rec.add_type("layer.CmdColorMask", true);
   rec.record_property("layer.CmdColorMask", {"r", "boolean", "Red channel"});
   rec.record_property("layer.CmdColorMask", {"g", "boolean", "Green channel"});
   rec.record_property("layer.CmdColorMask", {"b", "boolean", "Blue channel"});
   rec.record_property("layer.CmdColorMask", {"a", "boolean", "Alpha channel"});
   rec.add_type("layer.CmdStencilFunc", true);
-  rec.record_property("layer.CmdStencilFunc", {"func", "number", "Stencil function"});
-  rec.record_property("layer.CmdStencilFunc", {"ref", "number", "Reference value"});
+  rec.record_property("layer.CmdStencilFunc",
+                      {"func", "number", "Stencil function"});
+  rec.record_property("layer.CmdStencilFunc",
+                      {"ref", "number", "Reference value"});
   rec.record_property("layer.CmdStencilFunc", {"mask", "number", "Mask value"});
   rec.add_type("layer.CmdBeginStencilMode", true);
   rec.record_property("layer.CmdBeginStencilMode",
@@ -1124,7 +1105,7 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
                       {"thickness", "number", "Thickness of the dashes"});
   rec.record_property("layer.CmdDrawDashedRoundedRect",
                       {"color", "Color", "Color of the dashes"});
-                      
+
   rec.add_type("layer.CmdDrawGradientRectCentered", true);
   rec.record_property("layer.CmdDrawGradientRectCentered",
                       {"cx", "number", "Center X"});
@@ -1166,10 +1147,13 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
   rec.add_type("layer.CmdDrawBatchedEntities", true);
   rec.record_property("layer.CmdDrawBatchedEntities",
                       {"registry", "Registry", "The entity registry"});
-  rec.record_property("layer.CmdDrawBatchedEntities",
-                      {"entities", "Entity[]", "Array of entities to batch render"});
-  rec.record_property("layer.CmdDrawBatchedEntities",
-                      {"autoOptimize", "boolean", "Whether to automatically optimize shader batching (default: true)"});
+  rec.record_property(
+      "layer.CmdDrawBatchedEntities",
+      {"entities", "Entity[]", "Array of entities to batch render"});
+  rec.record_property(
+      "layer.CmdDrawBatchedEntities",
+      {"autoOptimize", "boolean",
+       "Whether to automatically optimize shader batching (default: true)"});
   rec.add_type("layer.CmdDrawDashedLine", true);
   rec.record_property("layer.CmdDrawDashedLine",
                       {"start", "Vector2", "Start position"});
@@ -1208,14 +1192,13 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
   rec.add_type("layer.CmdPushObjectTransformsToMatrix", true);
   rec.record_property("layer.CmdPushObjectTransformsToMatrix",
                       {"entity", "Entity", "Entity to get transforms from"});
-                      
-  
+
   rec.add_type("layer.CmdScopedTransformCompositeRender", true);
   rec.record_property("layer.CmdScopedTransformCompositeRender",
                       {"entity", "Entity", "Entity to get transforms from"});
   rec.record_property("layer.CmdScopedTransformCompositeRender",
                       {"payload", "vector", "Additional payload data"});
-                      
+
   rec.add_type("layer.CmdPopMatrix", true);
   rec.record_property("layer.CmdPopMatrix", {"dummy", "false", "Unused field"});
 
@@ -1531,26 +1514,24 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
     cb = lua.create_table();
     layerTbl["command_buffer"] = cb;
   }
-  
-  
-                                  
-  cb.set_function(
-      "pushEntityTransformsToMatrix",
-      [](entt::registry &registry, entt::entity e,
-         std::shared_ptr<layer::Layer> layer, int zOrder) {
-        return pushEntityTransformsToMatrix(registry, e, layer, zOrder);
-      });
-  
-  rec.record_free_function({"command_buffer"}, {
-      "pushEntityTransformsToMatrix",
-      "---@param registry Registry\n"
-      "---@param e Entity\n"
-      "---@param layer Layer\n"
-      "---@param zOrder number\n"
-      "---@return void",
-      "Pushes the transform components of an entity onto the layer's matrix stack as draw commands."
-  });
-      
+
+  cb.set_function("pushEntityTransformsToMatrix",
+                  [](entt::registry &registry, entt::entity e,
+                     std::shared_ptr<layer::Layer> layer, int zOrder) {
+                    return pushEntityTransformsToMatrix(registry, e, layer,
+                                                        zOrder);
+                  });
+
+  rec.record_free_function({"command_buffer"},
+                           {"pushEntityTransformsToMatrix",
+                            "---@param registry Registry\n"
+                            "---@param e Entity\n"
+                            "---@param layer Layer\n"
+                            "---@param zOrder number\n"
+                            "---@return void",
+                            "Pushes the transform components of an entity onto "
+                            "the layer's matrix stack as draw commands."});
+
   // 1) Make a DrawCommandSpace table
   sol::table drawSpace = layerTbl.create_named(
       "DrawCommandSpace", "World", DrawCommandSpace::World, "Screen",
@@ -1646,34 +1627,37 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
         {"command_buffer"},
         {"queue" + cmd,
          "---@param layer Layer\n"
-         "---@param init_fn fun(c: layer.Cmd" + cmd + ")\n"
-         "---@param z integer\n"
-         "---@param renderSpace? layer.DrawCommandSpace\n"
-         "---@return void",
+         "---@param init_fn fun(c: layer.Cmd" +
+             cmd +
+             ")\n"
+             "---@param z integer\n"
+             "---@param renderSpace? layer.DrawCommandSpace\n"
+             "---@return void",
          "Queues layer.Cmd" + cmd +
              " into a layer via command_buffer (World or Screen space).",
          true, false});
 
-    rec.record_free_function(
-        {"command_buffer"},
-        {"execute" + cmd,
-         "---@param layer Layer\n"
-         "---@param init_fn fun(c: layer.Cmd" + cmd + ")\n"
-         "---@return void",
-         "Executes layer.Cmd" + cmd +
-             " immediately (bypasses the command queue).",
-         true, false});
+    rec.record_free_function({"command_buffer"},
+                             {"execute" + cmd,
+                              "---@param layer Layer\n"
+                              "---@param init_fn fun(c: layer.Cmd" +
+                                  cmd +
+                                  ")\n"
+                                  "---@return void",
+                              "Executes layer.Cmd" + cmd +
+                                  " immediately (bypasses the command queue).",
+                              true, false});
   }
-  
+
   lua["GL_KEEP"] = GL_KEEP;
   lua["GL_ZERO"] = GL_ZERO;
   lua["GL_REPLACE"] = GL_REPLACE;
   lua["GL_ALWAYS"] = GL_ALWAYS;
   lua["GL_EQUAL"] = GL_EQUAL;
   lua["GL_FALSE"] = GL_FALSE;
-  
-  
-  rec.add_type("GL_KEEP").doc = "OpenGL enum GL_KEEP";;
+
+  rec.add_type("GL_KEEP").doc = "OpenGL enum GL_KEEP";
+  ;
   rec.add_type("GL_ZERO").doc = "OpenGL enum GL_ZERO";
   rec.add_type("GL_REPLACE").doc = "OpenGL enum GL_REPLACE";
   rec.add_type("GL_ALWAYS").doc = "OpenGL enum GL_ALWAYS";
@@ -1683,31 +1667,30 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
 //    Pattern: queueCmdName(layer, init_fn, z, space)
 // Replace your QUEUE_CMD impl with a guarded one:
 #define QUEUE_CMD(cmd)                                                         \
-  cb.set_function(                                                             \
-      "queue" #cmd,                                                            \
-      [](std::shared_ptr<layer::Layer> lyr, sol::function init, int z,         \
-         DrawCommandSpace space = DrawCommandSpace::Screen) {                  \
-        return ::layer::QueueCommand<::layer::Cmd##cmd>(                       \
-            lyr,                                                               \
-            [&](::layer::Cmd##cmd *c) {                                        \
-              sol::protected_function pf(init);                                \
-              if (!pf.valid()) {                                               \
-                std::fprintf(stderr, "[queue%s] init is not a function\n",     \
-                               #cmd);                                          \
-                return;                                                        \
-              }                                                                \
-              auto result = util::safeLuaCall(pf, std::string("queue") + #cmd, c); \
-              if (result.isErr()) {                                            \
-                std::fprintf(stderr, "[queue%s] init error: %s\n", #cmd,       \
-                             result.error().c_str());                          \
-              }                                                                \
-              /* Optional: dump a few fields for sanity */                     \
-              /* std::fprintf(stderr, "[queue%s] dashLen=%.2f gap=%.2f r=%.2f th=%.2f\n", \
-                               #cmd, c->dashLen, c->gapLen, c->radius, c->thickness); */ \
-            },                                                                 \
-            z, space);                                                         \
-      });
-
+  cb.set_function("queue" #cmd, [](std::shared_ptr<layer::Layer> lyr,          \
+                                   sol::function init, int z,                  \
+                                   DrawCommandSpace space =                    \
+                                       DrawCommandSpace::Screen) {             \
+    return ::layer::QueueCommand<::layer::Cmd##cmd>(                           \
+        lyr,                                                                   \
+        [&](::layer::Cmd##cmd *c) {                                            \
+          sol::protected_function pf(init);                                    \
+          if (!pf.valid()) {                                                   \
+            std::fprintf(stderr, "[queue%s] init is not a function\n", #cmd);  \
+            return;                                                            \
+          }                                                                    \
+          auto result = util::safeLuaCall(pf, std::string("queue") + #cmd, c); \
+          if (result.isErr()) {                                                \
+            std::fprintf(stderr, "[queue%s] init error: %s\n", #cmd,           \
+                         result.error().c_str());                              \
+          }                                                                    \
+          /* Optional: dump a few fields for sanity */                         \
+          /* std::fprintf(stderr, "[queue%s] dashLen=%.2f gap=%.2f r=%.2f      \
+             th=%.2f\n", #cmd, c->dashLen, c->gapLen, c->radius,                                       \
+             c->thickness); */                                                 \
+        },                                                                     \
+        z, space);                                                             \
+  });
 
   QUEUE_CMD(BeginDrawing)
   QUEUE_CMD(EndDrawing)
@@ -1784,53 +1767,52 @@ void exposeToLua(sol::state &lua, EngineContext* ctx) {
 
 #undef QUEUE_CMD
 
-
-// special case for scoped render. this allows queuing commands that draw to the local space of a specific transform without having to use direct execution.
-cb.set_function("queueScopedTransformCompositeRender",
-    [](std::shared_ptr<layer::Layer> lyr,
-       entt::entity e,
-       sol::function child_builder,
-       int z,
-       DrawCommandSpace space = DrawCommandSpace::World)
-    {
-        QueueScopedTransformCompositeRender(
-            lyr, e, z, space, [&]() {
-                sol::protected_function pf(child_builder);
-                if (pf.valid()) {
-                    auto r = util::safeLuaCall(pf, "queueScopedTransformCompositeRender");
-                    if (r.isErr()) {
-                        std::fprintf(stderr,
-                            "[queueScopedTransformCompositeRender] child_builder error: %s\n",
-                            r.error().c_str());
-                    }
-                } else {
-                    std::fprintf(stderr,
-                        "[queueScopedTransformCompositeRender] invalid function\n");
-                }
-            });
-    });
-
-
+  // special case for scoped render. this allows queuing commands that draw to
+  // the local space of a specific transform without having to use direct
+  // execution.
+  cb.set_function(
+      "queueScopedTransformCompositeRender",
+      [](std::shared_ptr<layer::Layer> lyr, entt::entity e,
+         sol::function child_builder, int z,
+         DrawCommandSpace space = DrawCommandSpace::World) {
+        QueueScopedTransformCompositeRender(lyr, e, z, space, [&]() {
+          sol::protected_function pf(child_builder);
+          if (pf.valid()) {
+            auto r =
+                util::safeLuaCall(pf, "queueScopedTransformCompositeRender");
+            if (r.isErr()) {
+              std::fprintf(stderr,
+                           "[queueScopedTransformCompositeRender] "
+                           "child_builder error: %s\n",
+                           r.error().c_str());
+            }
+          } else {
+            std::fprintf(
+                stderr,
+                "[queueScopedTransformCompositeRender] invalid function\n");
+          }
+        });
+      });
 
   // -----------------------------------------------------------------------------
 // Immediate versions (execute immediately instead of queuing)
 // -----------------------------------------------------------------------------
 #define EXEC_CMD(execFunc, cmdName)                                            \
-  cb.set_function(                                                            \
-      "execute" #cmdName,                                                     \
-      [](std::shared_ptr<layer::Layer> lyr, sol::function init) {             \
-        ::layer::Cmd##cmdName c{};                                            \
-        sol::protected_function pf(init);                                     \
-        if (pf.valid()) {                                                     \
-          auto r = util::safeLuaCall(pf, std::string("execute") + #cmdName, &c); \
-          if (r.isErr()) {                                                   \
-            std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName, r.error().c_str()); \
-          }                                                                   \
-        }                                                                     \
-        ::layer::execFunc(lyr, &c);                                           \
-      });
+  cb.set_function("execute" #cmdName, [](std::shared_ptr<layer::Layer> lyr,    \
+                                         sol::function init) {                 \
+    ::layer::Cmd##cmdName c{};                                                 \
+    sol::protected_function pf(init);                                          \
+    if (pf.valid()) {                                                          \
+      auto r = util::safeLuaCall(pf, std::string("execute") + #cmdName, &c);   \
+      if (r.isErr()) {                                                         \
+        std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName,         \
+                     r.error().c_str());                                       \
+      }                                                                        \
+    }                                                                          \
+    ::layer::execFunc(lyr, &c);                                                \
+  });
 
-      // Circle & primitives
+  // Circle & primitives
   EXEC_CMD(ExecuteCircle, DrawCircleFilled)
   EXEC_CMD(ExecuteCircleLine, DrawCircleLine)
   EXEC_CMD(ExecuteRectangle, DrawRectangle)
@@ -1845,7 +1827,8 @@ cb.set_function("queueScopedTransformCompositeRender",
   EXEC_CMD(ExecuteTexturePro, TexturePro)
   EXEC_CMD(ExecuteDrawEntityAnimation, DrawEntityAnimation)
   EXEC_CMD(ExecuteDrawTransformEntityAnimation, DrawTransformEntityAnimation)
-  EXEC_CMD(ExecuteDrawTransformEntityAnimationPipeline, DrawTransformEntityAnimationPipeline)
+  EXEC_CMD(ExecuteDrawTransformEntityAnimationPipeline,
+           DrawTransformEntityAnimationPipeline)
   EXEC_CMD(ExecuteSetShader, SetShader)
   EXEC_CMD(ExecuteResetShader, ResetShader)
   EXEC_CMD(ExecuteSetBlendMode, SetBlendMode)
@@ -1864,7 +1847,8 @@ cb.set_function("queueScopedTransformCompositeRender",
   EXEC_CMD(ExecuteSetLineWidth, SetLineWidth)
   EXEC_CMD(ExecuteSetTexture, SetTexture)
   EXEC_CMD(ExecuteRenderRectVerticesFilledLayer, RenderRectVerticesFilledLayer)
-  EXEC_CMD(ExecuteRenderRectVerticesOutlineLayer, RenderRectVerticesOutlineLayer)
+  EXEC_CMD(ExecuteRenderRectVerticesOutlineLayer,
+           RenderRectVerticesOutlineLayer)
   EXEC_CMD(ExecutePolygon, DrawPolygon)
   EXEC_CMD(ExecuteRenderNPatchRect, RenderNPatchRect)
   EXEC_CMD(ExecuteTriangle, DrawTriangle)
@@ -1878,7 +1862,8 @@ cb.set_function("queueScopedTransformCompositeRender",
   EXEC_CMD(ExecutePushMatrix, PushMatrix)
   EXEC_CMD(ExecutePopMatrix, PopMatrix)
   EXEC_CMD(ExecutePushObjectTransformsToMatrix, PushObjectTransformsToMatrix)
-  EXEC_CMD(ExecuteScopedTransformCompositeRender, ScopedTransformCompositeRender)
+  EXEC_CMD(ExecuteScopedTransformCompositeRender,
+           ScopedTransformCompositeRender)
   EXEC_CMD(ExecuteClearStencilBuffer, ClearStencilBuffer)
   EXEC_CMD(ExecuteBeginStencilMode, BeginStencilMode)
   EXEC_CMD(ExecuteStencilOp, StencilOp)
@@ -1903,10 +1888,10 @@ cb.set_function("queueScopedTransformCompositeRender",
   EXEC_CMD(ExecuteDrawDashedRoundedRect, DrawDashedRoundedRect)
   EXEC_CMD(ExecuteDrawDashedLine, DrawDashedLine)
   EXEC_CMD(ExecuteDrawGradientRectCentered, DrawGradientRectCentered)
-  EXEC_CMD(ExecuteDrawGradientRectRoundedCentered, DrawGradientRectRoundedCentered)
+  EXEC_CMD(ExecuteDrawGradientRectRoundedCentered,
+           DrawGradientRectRoundedCentered)
 
-  #undef EXEC_CMD
-
+#undef EXEC_CMD
 
   struct CmdBeginStencilMode {
     bool dummy = false; // Placeholder
@@ -1955,7 +1940,7 @@ cb.set_function("queueScopedTransformCompositeRender",
               R"(Queues a CmdClearStencilBuffer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
-          
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -1969,7 +1954,7 @@ cb.set_function("queueScopedTransformCompositeRender",
               R"(Queues a CmdColorMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
-          
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -1983,7 +1968,7 @@ cb.set_function("queueScopedTransformCompositeRender",
               R"(Queues a CmdStencilOp into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
-          
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -1997,7 +1982,7 @@ cb.set_function("queueScopedTransformCompositeRender",
               R"(Queues a CmdRenderBatchFlush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
-          
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -2010,7 +1995,7 @@ cb.set_function("queueScopedTransformCompositeRender",
           .doc =
               R"(Queues a CmdAtomicStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
-          .is_overload = false}); 
+          .is_overload = false});
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -2224,7 +2209,7 @@ cb.set_function("queueScopedTransformCompositeRender",
               R"(Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
-        
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -2238,7 +2223,7 @@ cb.set_function("queueScopedTransformCompositeRender",
               R"(Queues a CmdDrawGradientRectCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
-          
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -2392,7 +2377,7 @@ cb.set_function("queueScopedTransformCompositeRender",
               R"(Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
-          
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -2405,8 +2390,8 @@ cb.set_function("queueScopedTransformCompositeRender",
           .doc =
               R"(Queues a CmdPushObjectTransformsToMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix())",
           .is_static = true,
-          .is_overload = false}); 
-          
+          .is_overload = false});
+
   rec.record_free_function(
       {"layer"},
       MethodDef{
@@ -3040,8 +3025,10 @@ void ResizeCanvasInLayer(std::shared_ptr<Layer> layer,
   auto it = layer->canvases.find(canvasName);
   if (it != layer->canvases.end()) {
     UnloadRenderTexture(it->second); // Free the existing texture
-    // it->second = LoadRenderTexture(width, height); // Create a new one with the specified dimensions
-    it->second = LoadRenderTextureStencilEnabled(width, height); // Create a new one with the specified dimensions
+    // it->second = LoadRenderTexture(width, height); // Create a new one with
+    // the specified dimensions
+    it->second = LoadRenderTextureStencilEnabled(
+        width, height); // Create a new one with the specified dimensions
   } else {
     // Handle error: Canvas does not exist
     SPDLOG_ERROR("Error: Canvas '{}' does not exist in the layer.", canvasName);
@@ -3052,8 +3039,7 @@ std::shared_ptr<Layer> CreateLayerWithSize(int width, int height) {
   auto layer = std::make_shared<Layer>();
   // Create a default "main" canvas with the specified size
   // RenderTexture2D mainCanvas = LoadRenderTexture(width, height);
-  RenderTexture2D mainCanvas =
-      LoadRenderTextureStencilEnabled(width, height);
+  RenderTexture2D mainCanvas = LoadRenderTextureStencilEnabled(width, height);
   layer->canvases["main"] = mainCanvas;
   layers.push_back(layer);
   return layer;
@@ -3102,15 +3088,15 @@ void UnloadAllLayers() {
 void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name,
                       int width, int height) {
   // RenderTexture2D canvas = LoadRenderTexture(width, height);
-  RenderTexture2D canvas =
-      LoadRenderTextureStencilEnabled(width, height);
+  RenderTexture2D canvas = LoadRenderTextureStencilEnabled(width, height);
   layer->canvases[name] = canvas;
 }
 
 void AddCanvasToLayer(std::shared_ptr<Layer> layer, const std::string &name) {
   RenderTexture2D canvas =
       // LoadRenderTexture(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
-      LoadRenderTextureStencilEnabled(globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT);
+      LoadRenderTextureStencilEnabled(globals::VIRTUAL_WIDTH,
+                                      globals::VIRTUAL_HEIGHT);
   layer->canvases[name] = canvas;
 }
 
@@ -3776,339 +3762,371 @@ void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr,
                  {outerRec, progressOrFullBackground, cacheEntity, color}, z);
 }
 
+void DrawGradientRectCentered(float cx, float cy, float width, float height,
+                              Color topLeft, Color topRight, Color bottomRight,
+                              Color bottomLeft) {
+  float x = cx - width / 2.0f;
+  float y = cy - height / 2.0f;
 
-void DrawGradientRectCentered(
-    float cx, float cy,
-    float width, float height,
-    Color topLeft, Color topRight,
-    Color bottomRight, Color bottomLeft)
-{
-    float x = cx - width / 2.0f;
-    float y = cy - height / 2.0f;
+  rlBegin(RL_QUADS);
+  rlColor4ub(topLeft.r, topLeft.g, topLeft.b, topLeft.a);
+  rlVertex2f(x, y);
 
-    rlBegin(RL_QUADS);
-        rlColor4ub(topLeft.r, topLeft.g, topLeft.b, topLeft.a);
-        rlVertex2f(x, y);
+  rlColor4ub(topRight.r, topRight.g, topRight.b, topRight.a);
+  rlVertex2f(x + width, y);
 
-        rlColor4ub(topRight.r, topRight.g, topRight.b, topRight.a);
-        rlVertex2f(x + width, y);
+  rlColor4ub(bottomRight.r, bottomRight.g, bottomRight.b, bottomRight.a);
+  rlVertex2f(x + width, y + height);
 
-        rlColor4ub(bottomRight.r, bottomRight.g, bottomRight.b, bottomRight.a);
-        rlVertex2f(x + width, y + height);
-
-        rlColor4ub(bottomLeft.r, bottomLeft.g, bottomLeft.b, bottomLeft.a);
-        rlVertex2f(x, y + height);
-    rlEnd();
+  rlColor4ub(bottomLeft.r, bottomLeft.g, bottomLeft.b, bottomLeft.a);
+  rlVertex2f(x, y + height);
+  rlEnd();
 }
 
-void DrawRectangleRoundedGradientH(Rectangle rec, float roundnessLeft, float roundnessRight, int segments, Color left, Color right)
-{
-    // Neither side is rounded
-    if ((roundnessLeft <= 0.0f && roundnessRight <= 0.0f) || (rec.width < 1) || (rec.height < 1 ))
-    {
-        DrawRectangleGradientEx(rec, left, left, right, right);
-        return;
-    }
+void DrawRectangleRoundedGradientH(Rectangle rec, float roundnessLeft,
+                                   float roundnessRight, int segments,
+                                   Color left, Color right) {
+  // Neither side is rounded
+  if ((roundnessLeft <= 0.0f && roundnessRight <= 0.0f) || (rec.width < 1) ||
+      (rec.height < 1)) {
+    DrawRectangleGradientEx(rec, left, left, right, right);
+    return;
+  }
 
-    if (roundnessLeft  >= 1.0f) roundnessLeft  = 1.0f;
-    if (roundnessRight >= 1.0f) roundnessRight = 1.0f;
+  if (roundnessLeft >= 1.0f)
+    roundnessLeft = 1.0f;
+  if (roundnessRight >= 1.0f)
+    roundnessRight = 1.0f;
 
-    // Calculate corner radius both from right and left
-    float recSize = rec.width > rec.height ? rec.height : rec.width;
-    float radiusLeft  = (recSize*roundnessLeft)/2;
-    float radiusRight = (recSize*roundnessRight)/2;
+  // Calculate corner radius both from right and left
+  float recSize = rec.width > rec.height ? rec.height : rec.width;
+  float radiusLeft = (recSize * roundnessLeft) / 2;
+  float radiusRight = (recSize * roundnessRight) / 2;
 
-    if (radiusLeft <= 0.0f) radiusLeft = 0.0f;
-    if (radiusRight <= 0.0f) radiusRight = 0.0f;
+  if (radiusLeft <= 0.0f)
+    radiusLeft = 0.0f;
+  if (radiusRight <= 0.0f)
+    radiusRight = 0.0f;
 
-    if (radiusRight <= 0.0f && radiusLeft <= 0.0f) return;
+  if (radiusRight <= 0.0f && radiusLeft <= 0.0f)
+    return;
 
-    float stepLength = 90.0f/(float)segments;
+  float stepLength = 90.0f / (float)segments;
 
-    /*
-    Diagram Copied here for reference, original at 'DrawRectangleRounded()' source code
+  /*
+  Diagram Copied here for reference, original at 'DrawRectangleRounded()' source
+  code
 
-          P0____________________P1
-          /|                    |\
-         /1|          2         |3\
-     P7 /__|____________________|__\ P2
-       |   |P8                P9|   |
-       | 8 |          9         | 4 |
-       | __|____________________|__ |
-     P6 \  |P11              P10|  / P3
-         \7|          6         |5/
-          \|____________________|/
-          P5                    P4
-    */
+        P0____________________P1
+        /|                    |\
+       /1|          2         |3\
+   P7 /__|____________________|__\ P2
+     |   |P8                P9|   |
+     | 8 |          9         | 4 |
+     | __|____________________|__ |
+   P6 \  |P11              P10|  / P3
+       \7|          6         |5/
+        \|____________________|/
+        P5                    P4
+  */
 
-    // Coordinates of the 12 points also apdated from `DrawRectangleRounded`
-    const Vector2 point[12] = {
-        // PO, P1, P2
-        {(float)rec.x + radiusLeft, rec.y}, {(float)(rec.x + rec.width) - radiusRight, rec.y}, { rec.x + rec.width, (float)rec.y + radiusRight },
-        // P3, P4
-        {rec.x + rec.width, (float)(rec.y + rec.height) - radiusRight}, {(float)(rec.x + rec.width) - radiusRight, rec.y + rec.height},
-        // P5, P6, P7
-        {(float)rec.x + radiusLeft, rec.y + rec.height}, { rec.x, (float)(rec.y + rec.height) - radiusLeft}, {rec.x, (float)rec.y + radiusLeft},
-        // P8, P9
-        {(float)rec.x + radiusLeft, (float)rec.y + radiusLeft}, {(float)(rec.x + rec.width) - radiusRight, (float)rec.y + radiusRight},
-        // P10, P11
-        {(float)(rec.x + rec.width) - radiusRight, (float)(rec.y + rec.height) - radiusRight}, {(float)rec.x + radiusLeft, (float)(rec.y + rec.height) - radiusLeft}
-    };
+  // Coordinates of the 12 points also apdated from `DrawRectangleRounded`
+  const Vector2 point[12] = {
+      // PO, P1, P2
+      {(float)rec.x + radiusLeft, rec.y},
+      {(float)(rec.x + rec.width) - radiusRight, rec.y},
+      {rec.x + rec.width, (float)rec.y + radiusRight},
+      // P3, P4
+      {rec.x + rec.width, (float)(rec.y + rec.height) - radiusRight},
+      {(float)(rec.x + rec.width) - radiusRight, rec.y + rec.height},
+      // P5, P6, P7
+      {(float)rec.x + radiusLeft, rec.y + rec.height},
+      {rec.x, (float)(rec.y + rec.height) - radiusLeft},
+      {rec.x, (float)rec.y + radiusLeft},
+      // P8, P9
+      {(float)rec.x + radiusLeft, (float)rec.y + radiusLeft},
+      {(float)(rec.x + rec.width) - radiusRight, (float)rec.y + radiusRight},
+      // P10, P11
+      {(float)(rec.x + rec.width) - radiusRight,
+       (float)(rec.y + rec.height) - radiusRight},
+      {(float)rec.x + radiusLeft, (float)(rec.y + rec.height) - radiusLeft}};
 
-    const Vector2 centers[4] = { point[8], point[9], point[10], point[11] };
-    const float angles[4] = { 180.0f, 270.0f, 0.0f, 90.0f };
+  const Vector2 centers[4] = {point[8], point[9], point[10], point[11]};
+  const float angles[4] = {180.0f, 270.0f, 0.0f, 90.0f};
 
 #if defined(SUPPORT_QUADS_DRAW_MODE)
-    rlSetTexture(GetShapesTexture().id);
-    Rectangle shapeRect = GetShapesTextureRectangle();
+  rlSetTexture(GetShapesTexture().id);
+  Rectangle shapeRect = GetShapesTextureRectangle();
 
-    rlBegin(RL_QUADS);
-        // Draw all the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
-        for (int k = 0; k < 4; ++k)
-        {
-            Color color;
-            float radius;
-            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
-            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
-            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
-            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
-            float angle = angles[k];
-            const Vector2 center = centers[k];
+  rlBegin(RL_QUADS);
+  // Draw all the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5]
+  // Lower Right Corner, [7] Lower Left Corner
+  for (int k = 0; k < 4; ++k) {
+    Color color;
+    float radius;
+    if (k == 0)
+      color = left, radius = radiusLeft; // [1] Upper Left Corner
+    if (k == 1)
+      color = right, radius = radiusRight; // [3] Upper Right Corner
+    if (k == 2)
+      color = right, radius = radiusRight; // [5] Lower Right Corner
+    if (k == 3)
+      color = left, radius = radiusLeft; // [7] Lower Left Corner
+    float angle = angles[k];
+    const Vector2 center = centers[k];
 
-            for (int i = 0; i < segments/2; i++)
-            {
-                rlColor4ub(color.r, color.g, color.b, color.a);
-                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
-                rlVertex2f(center.x, center.y);
+    for (int i = 0; i < segments / 2; i++) {
+      rlColor4ub(color.r, color.g, color.b, color.a);
+      rlTexCoord2f(shapeRect.x / texShapes.width,
+                   shapeRect.y / texShapes.height);
+      rlVertex2f(center.x, center.y);
 
-                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
-                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength*2))*radius, center.y + sinf(DEG2RAD*(angle + stepLength*2))*radius);
+      rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+                   shapeRect.y / texShapes.height);
+      rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength * 2)) * radius,
+                 center.y + sinf(DEG2RAD * (angle + stepLength * 2)) * radius);
 
-                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+      rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+                   (shapeRect.y + shapeRect.height) / texShapes.height);
+      rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength)) * radius,
+                 center.y + sinf(DEG2RAD * (angle + stepLength)) * radius);
 
-                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+      rlTexCoord2f(shapeRect.x / texShapes.width,
+                   (shapeRect.y + shapeRect.height) / texShapes.height);
+      rlVertex2f(center.x + cosf(DEG2RAD * angle) * radius,
+                 center.y + sinf(DEG2RAD * angle) * radius);
 
-                angle += (stepLength*2);
-            }
+      angle += (stepLength * 2);
+    }
 
-            // End one even segments
-            if ( segments % 2)
-            {
-                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
-                rlVertex2f(center.x, center.y);
+    // End one even segments
+    if (segments % 2) {
+      rlTexCoord2f(shapeRect.x / texShapes.width,
+                   shapeRect.y / texShapes.height);
+      rlVertex2f(center.x, center.y);
 
-                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+      rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+                   (shapeRect.y + shapeRect.height) / texShapes.height);
+      rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength)) * radius,
+                 center.y + sinf(DEG2RAD * (angle + stepLength)) * radius);
 
-                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+      rlTexCoord2f(shapeRect.x / texShapes.width,
+                   (shapeRect.y + shapeRect.height) / texShapes.height);
+      rlVertex2f(center.x + cosf(DEG2RAD * angle) * radius,
+                 center.y + sinf(DEG2RAD * angle) * radius);
 
-                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
-                rlVertex2f(center.x, center.y);
-            }
-        }
+      rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+                   shapeRect.y / texShapes.height);
+      rlVertex2f(center.x, center.y);
+    }
+  }
 
-        // Here we use the 'Diagram' to guide ourselves to which point receives what color
-        // By choosing the color correctly associated with a pointe the gradient effect
-        // will naturally come from OpenGL interpolation
+  // Here we use the 'Diagram' to guide ourselves to which point receives what
+  // color By choosing the color correctly associated with a pointe the gradient
+  // effect will naturally come from OpenGL interpolation
 
-        // [2] Upper Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[0].x, point[0].y);
-        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[8].x, point[8].y);
+  // [2] Upper Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+  rlVertex2f(point[0].x, point[0].y);
+  rlTexCoord2f(shapeRect.x / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[8].x, point[8].y);
 
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[9].x, point[9].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[9].x, point[9].y);
 
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[1].x, point[1].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               shapeRect.y / texShapes.height);
+  rlVertex2f(point[1].x, point[1].y);
 
-        // [4] Left Rectangle
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[2].x, point[2].y);
-        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[9].x, point[9].y);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[10].x, point[10].y);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[3].x, point[3].y);
+  // [4] Left Rectangle
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+  rlVertex2f(point[2].x, point[2].y);
+  rlTexCoord2f(shapeRect.x / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[9].x, point[9].y);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[10].x, point[10].y);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               shapeRect.y / texShapes.height);
+  rlVertex2f(point[3].x, point[3].y);
 
-        // [6] Bottom Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[11].x, point[11].y);
-        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[5].x, point[5].y);
+  // [6] Bottom Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+  rlVertex2f(point[11].x, point[11].y);
+  rlTexCoord2f(shapeRect.x / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[5].x, point[5].y);
 
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[4].x, point[4].y);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[10].x, point[10].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[4].x, point[4].y);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               shapeRect.y / texShapes.height);
+  rlVertex2f(point[10].x, point[10].y);
 
-        // [8] left Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[7].x, point[7].y);
-        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[6].x, point[6].y);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[11].x, point[11].y);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[8].x, point[8].y);
+  // [8] left Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+  rlVertex2f(point[7].x, point[7].y);
+  rlTexCoord2f(shapeRect.x / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[6].x, point[6].y);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[11].x, point[11].y);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               shapeRect.y / texShapes.height);
+  rlVertex2f(point[8].x, point[8].y);
 
-        // [9] Middle Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[8].x, point[8].y);
-        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[11].x, point[11].y);
+  // [9] Middle Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+  rlVertex2f(point[8].x, point[8].y);
+  rlTexCoord2f(shapeRect.x / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[11].x, point[11].y);
 
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
-        rlVertex2f(point[10].x, point[10].y);
-        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
-        rlVertex2f(point[9].x, point[9].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               (shapeRect.y + shapeRect.height) / texShapes.height);
+  rlVertex2f(point[10].x, point[10].y);
+  rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width,
+               shapeRect.y / texShapes.height);
+  rlVertex2f(point[9].x, point[9].y);
 
-    rlEnd();
-    rlSetTexture(0);
+  rlEnd();
+  rlSetTexture(0);
 #else
 
-    // Here we use the 'Diagram' to guide ourselves to which point receives what color
-    // By choosing the color correctly associated with a pointe the gradient effect
-    // will naturally come from OpenGL interpolation
-    // But this time instead of Quad, we think in triangles
+  // Here we use the 'Diagram' to guide ourselves to which point receives what
+  // color By choosing the color correctly associated with a pointe the gradient
+  // effect will naturally come from OpenGL interpolation But this time instead
+  // of Quad, we think in triangles
 
-    rlBegin(RL_TRIANGLES);
-        // Draw all of the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
-        for (int k = 0; k < 4; ++k)
-        {
-            Color color = { 0 };
-            float radius = 0.0f;
-            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
-            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
-            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
-            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
+  rlBegin(RL_TRIANGLES);
+  // Draw all of the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner,
+  // [5] Lower Right Corner, [7] Lower Left Corner
+  for (int k = 0; k < 4; ++k) {
+    Color color = {0};
+    float radius = 0.0f;
+    if (k == 0)
+      color = left, radius = radiusLeft; // [1] Upper Left Corner
+    if (k == 1)
+      color = right, radius = radiusRight; // [3] Upper Right Corner
+    if (k == 2)
+      color = right, radius = radiusRight; // [5] Lower Right Corner
+    if (k == 3)
+      color = left, radius = radiusLeft; // [7] Lower Left Corner
 
-            float angle = angles[k];
-            const Vector2 center = centers[k];
+    float angle = angles[k];
+    const Vector2 center = centers[k];
 
-            for (int i = 0; i < segments; i++)
-            {
-                rlColor4ub(color.r, color.g, color.b, color.a);
-                rlVertex2f(center.x, center.y);
-                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
-                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
-                angle += stepLength;
-            }
-        }
+    for (int i = 0; i < segments; i++) {
+      rlColor4ub(color.r, color.g, color.b, color.a);
+      rlVertex2f(center.x, center.y);
+      rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength)) * radius,
+                 center.y + sinf(DEG2RAD * (angle + stepLength)) * radius);
+      rlVertex2f(center.x + cosf(DEG2RAD * angle) * radius,
+                 center.y + sinf(DEG2RAD * angle) * radius);
+      angle += stepLength;
+    }
+  }
 
-        // [2] Upper Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlVertex2f(point[0].x, point[0].y);
-        rlVertex2f(point[8].x, point[8].y);
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlVertex2f(point[9].x, point[9].y);
-        rlVertex2f(point[1].x, point[1].y);
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlVertex2f(point[0].x, point[0].y);
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlVertex2f(point[9].x, point[9].y);
+  // [2] Upper Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlVertex2f(point[0].x, point[0].y);
+  rlVertex2f(point[8].x, point[8].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlVertex2f(point[9].x, point[9].y);
+  rlVertex2f(point[1].x, point[1].y);
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlVertex2f(point[0].x, point[0].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlVertex2f(point[9].x, point[9].y);
 
-        // [4] Right Rectangle
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlVertex2f(point[9].x, point[9].y);
-        rlVertex2f(point[10].x, point[10].y);
-        rlVertex2f(point[3].x, point[3].y);
-        rlVertex2f(point[2].x, point[2].y);
-        rlVertex2f(point[9].x, point[9].y);
-        rlVertex2f(point[3].x, point[3].y);
+  // [4] Right Rectangle
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlVertex2f(point[9].x, point[9].y);
+  rlVertex2f(point[10].x, point[10].y);
+  rlVertex2f(point[3].x, point[3].y);
+  rlVertex2f(point[2].x, point[2].y);
+  rlVertex2f(point[9].x, point[9].y);
+  rlVertex2f(point[3].x, point[3].y);
 
-        // [6] Bottom Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlVertex2f(point[11].x, point[11].y);
-        rlVertex2f(point[5].x, point[5].y);
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlVertex2f(point[4].x, point[4].y);
-        rlVertex2f(point[10].x, point[10].y);
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlVertex2f(point[11].x, point[11].y);
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlVertex2f(point[4].x, point[4].y);
+  // [6] Bottom Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlVertex2f(point[11].x, point[11].y);
+  rlVertex2f(point[5].x, point[5].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlVertex2f(point[4].x, point[4].y);
+  rlVertex2f(point[10].x, point[10].y);
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlVertex2f(point[11].x, point[11].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlVertex2f(point[4].x, point[4].y);
 
-        // [8] Left Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlVertex2f(point[7].x, point[7].y);
-        rlVertex2f(point[6].x, point[6].y);
-        rlVertex2f(point[11].x, point[11].y);
-        rlVertex2f(point[8].x, point[8].y);
-        rlVertex2f(point[7].x, point[7].y);
-        rlVertex2f(point[11].x, point[11].y);
+  // [8] Left Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlVertex2f(point[7].x, point[7].y);
+  rlVertex2f(point[6].x, point[6].y);
+  rlVertex2f(point[11].x, point[11].y);
+  rlVertex2f(point[8].x, point[8].y);
+  rlVertex2f(point[7].x, point[7].y);
+  rlVertex2f(point[11].x, point[11].y);
 
-        // [9] Middle Rectangle
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlVertex2f(point[8].x, point[8].y);
-        rlVertex2f(point[11].x, point[11].y);
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlVertex2f(point[10].x, point[10].y);
-        rlVertex2f(point[9].x, point[9].y);
-        rlColor4ub(left.r, left.g, left.b, left.a);
-        rlVertex2f(point[8].x, point[8].y);
-        rlColor4ub(right.r, right.g, right.b, right.a);
-        rlVertex2f(point[10].x, point[10].y);
-    rlEnd();
+  // [9] Middle Rectangle
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlVertex2f(point[8].x, point[8].y);
+  rlVertex2f(point[11].x, point[11].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlVertex2f(point[10].x, point[10].y);
+  rlVertex2f(point[9].x, point[9].y);
+  rlColor4ub(left.r, left.g, left.b, left.a);
+  rlVertex2f(point[8].x, point[8].y);
+  rlColor4ub(right.r, right.g, right.b, right.a);
+  rlVertex2f(point[10].x, point[10].y);
+  rlEnd();
 #endif
 }
 
-
-
-
-
 void DrawGradientRectRoundedCentered(
-    float cx, float cy,
-    float width, float height,
-    float roundness,
-    int segments,
-    Color top,
-    Color bottom,
-    Color, Color) // unused last two color params, for signature compatibility
+    float cx, float cy, float width, float height, float roundness,
+    int segments, Color top, Color bottom, Color,
+    Color) // unused last two color params, for signature compatibility
 {
-    if (width <= 0.0f || height <= 0.0f) return;
+  if (width <= 0.0f || height <= 0.0f)
+    return;
 
-    Rectangle rec = {
-        cx - width * 0.5f,
-        cy - height * 0.5f,
-        width,
-        height
-    };
+  Rectangle rec = {cx - width * 0.5f, cy - height * 0.5f, width, height};
 
-    rlPushMatrix();
+  rlPushMatrix();
 
-    // Move to center of rectangle before rotation
-    rlTranslatef(cx, cy, 0.0f);
+  // Move to center of rectangle before rotation
+  rlTranslatef(cx, cy, 0.0f);
 
-    // Rotate -90° CCW so horizontal gradient becomes vertical (top→bottom)
-    rlRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+  // Rotate -90° CCW so horizontal gradient becomes vertical (top→bottom)
+  rlRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 
-    // Adjust rectangle to rotated coordinate system (centered again)
-    Rectangle rotated = {
-        -height * 0.5f,  // new x (since rotated)
-        -width * 0.5f,   // new y
-        height,          // swapped width/height
-        width
-    };
+  // Adjust rectangle to rotated coordinate system (centered again)
+  Rectangle rotated = {-height * 0.5f, // new x (since rotated)
+                       -width * 0.5f,  // new y
+                       height,         // swapped width/height
+                       width};
 
-    // Reuse existing horizontal version safely
-    DrawRectangleRoundedGradientH(rotated, roundness, roundness, segments, top, bottom);
+  // Reuse existing horizontal version safely
+  DrawRectangleRoundedGradientH(rotated, roundness, roundness, segments, top,
+                                bottom);
 
-    rlPopMatrix();
+  rlPopMatrix();
 }
 
 void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr,
@@ -4117,8 +4135,8 @@ void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr,
                                    entt::entity cacheEntity,
                                    const Color color) {
 
-  auto &cache =
-      globals::getRegistry().get<ui::RoundedRectangleVerticesCache>(cacheEntity);
+  auto &cache = globals::getRegistry().get<ui::RoundedRectangleVerticesCache>(
+      cacheEntity);
 
   auto &outerVertices = progressOrFullBackground
                             ? cache.outerVerticesProgressReflected
@@ -4172,8 +4190,8 @@ void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr,
                                      entt::entity cacheEntity,
                                      const Color color, bool useFullVertices) {
 
-  auto &cache =
-      globals::getRegistry().get<ui::RoundedRectangleVerticesCache>(cacheEntity);
+  auto &cache = globals::getRegistry().get<ui::RoundedRectangleVerticesCache>(
+      cacheEntity);
   auto &innerVertices = (useFullVertices)
                             ? cache.innerVerticesFullRect
                             : cache.innerVerticesProgressReflected;
@@ -4353,13 +4371,13 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
         // Copy data instead of storing pointers to avoid dangling references
         animationFrameData =
             aqc.defaultAnimation
-                 .animationList[aqc.defaultAnimation.currentAnimIndex]
-                 .first.spriteData.frame;
+                .animationList[aqc.defaultAnimation.currentAnimIndex]
+                .first.spriteData.frame;
         animationFrame = &animationFrameData;
         currentSpriteData =
             aqc.defaultAnimation
-                 .animationList[aqc.defaultAnimation.currentAnimIndex]
-                 .first;
+                .animationList[aqc.defaultAnimation.currentAnimIndex]
+                .first;
         currentSprite = &currentSpriteData;
         flipX = aqc.defaultAnimation.flippedHorizontally;
         flipY = aqc.defaultAnimation.flippedVertically;
@@ -4369,11 +4387,11 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       // Copy data instead of storing pointers to avoid dangling references
       animationFrameData =
           currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
-               .first.spriteData.frame;
+              .first.spriteData.frame;
       animationFrame = &animationFrameData;
       currentSpriteData =
           currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
-               .first;
+              .first;
       currentSprite = &currentSpriteData;
       flipX = currentAnimObject.flippedHorizontally;
       flipY = currentAnimObject.flippedVertically;
@@ -4466,43 +4484,43 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   ClearBackground({0, 0, 0, 0});
 
   // local content area origin (0,0) should be inside padding
-  Vector2 drawOffset = { pad, pad };
+  Vector2 drawOffset = {pad, pad};
 
   bool usedLocalCallback = false;
-  
+
   // DrawCircle(0, 0, 100, RED); // debug point at local origin
 
   // 🟡 NEW: check for RenderImmediateCallback (Lua override)
   bool usedImmediateCallback = false;
   if (registry.any_of<transform::RenderImmediateCallback>(e)) {
-    const auto& cb = registry.get<transform::RenderImmediateCallback>(e);
+    const auto &cb = registry.get<transform::RenderImmediateCallback>(e);
     if (cb.fn.valid()) {
-        rlPushMatrix();
+      rlPushMatrix();
 
-        // Move to padded draw area
-        rlTranslatef(drawOffset.x, drawOffset.y, 0);
+      // Move to padded draw area
+      rlTranslatef(drawOffset.x, drawOffset.y, 0);
 
-        // Center the local origin inside the image region
-        rlTranslatef(baseWidth * 0.5f, baseHeight * 0.5f, 0);
+      // Center the local origin inside the image region
+      rlTranslatef(baseWidth * 0.5f, baseHeight * 0.5f, 0);
 
-        // Optional: flip Y if you still need upright drawing later
-        // rlTranslatef(0, baseHeight, 0);
-        // rlScalef(1, -1, 1);
+      // Optional: flip Y if you still need upright drawing later
+      // rlTranslatef(0, baseHeight, 0);
+      // rlScalef(1, -1, 1);
 
-        // Now (0,0) is at the image center
-        // DrawCircle(0, 0, 100, RED); // should render centered
-        // DrawGradientRectRoundedCentered(
-        //     0, 0,
-        //     baseWidth, baseHeight,
-        //     0.2f, 16,
-        //     RED, BLUE,
-        //     GREEN, YELLOW);
-        cb.fn(baseWidth, baseHeight);  // run Lua callback here if desired
-        rlPopMatrix();
+      // Now (0,0) is at the image center
+      // DrawCircle(0, 0, 100, RED); // should render centered
+      // DrawGradientRectRoundedCentered(
+      //     0, 0,
+      //     baseWidth, baseHeight,
+      //     0.2f, 16,
+      //     RED, BLUE,
+      //     GREEN, YELLOW);
+      cb.fn(baseWidth, baseHeight); // run Lua callback here if desired
+      rlPopMatrix();
 
-        usedImmediateCallback = true;
-        if (cb.disableSpriteRendering)
-            usedLocalCallback = true;
+      usedImmediateCallback = true;
+      if (cb.disableSpriteRendering)
+        usedLocalCallback = true;
     }
   }
 
@@ -4511,7 +4529,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     if (cb.fn && !cb.afterPipeline) {
       Translate(drawOffset.x, drawOffset.y);
       cb.fn(baseWidth, baseHeight, /*isShadow=*/false);
-      
+
       DrawCircle(0, 0, 100, RED); // debug point at local origin
       Translate(-drawOffset.x, -drawOffset.y);
       usedLocalCallback = true;
@@ -4521,31 +4539,33 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // existing sprite drawing logic only runs if no callback replaced it
   if (!usedLocalCallback && !usedImmediateCallback) {
     if (drawBackground) {
-      layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0,0}, 0, bgColor);
+      layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight},
+                          {0, 0}, 0, bgColor);
     }
 
     if (drawForeground) {
       if (animationFrame) {
-        layer::TexturePro(*spriteAtlas,
-                          {animationFrame->x, animationFrame->y,
-                           animationFrame->width * xFlipModifier,
-                           animationFrame->height * -yFlipModifier},
-                          drawOffset.x, drawOffset.y,
-                          {baseWidth * xFlipModifier, baseHeight * yFlipModifier},
-                          {0, 0}, 0, fgColor);
+        layer::TexturePro(
+            *spriteAtlas,
+            {animationFrame->x, animationFrame->y,
+             animationFrame->width * xFlipModifier,
+             animationFrame->height * -yFlipModifier},
+            drawOffset.x, drawOffset.y,
+            {baseWidth * xFlipModifier, baseHeight * yFlipModifier}, {0, 0}, 0,
+            fgColor);
 
         shader_pipeline::SetLastRenderRect({drawOffset.x, drawOffset.y,
                                             baseWidth * xFlipModifier,
                                             baseHeight * yFlipModifier});
         shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
       } else {
-        layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0,0}, 0, fgColor);
+        layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight},
+                            {0, 0}, 0, fgColor);
       }
     }
   }
 
   render_stack_switch_internal::Pop(); // done with id 6
-
 
   // 🟡 Save base sprite result
   // RenderTexture2D baseSpriteRender =
@@ -4562,18 +4582,19 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   Rectangle baseSpriteSourceRect = {
       0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
       renderWidth, renderHeight};
-  DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
+  DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0},
+                 WHITE);
   layer::render_stack_switch_internal::Pop();
 
   if (globals::getDrawDebugInfo()) {
     // Draw
-    DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect, {0, 0}, WHITE);
+    DrawTextureRec(shader_pipeline::front().texture, baseSpriteSourceRect,
+                   {0, 0}, WHITE);
   }
 
   // 3. Apply shader passes
   int total = pipelineComp.passes.size();
 
-  
   int i = 0;
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
     bool lastPass = (++i == total);
@@ -4610,7 +4631,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     //  injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName,
     //  srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
 
-    TryApplyUniforms(shader, globals::getGlobalShaderUniforms(), pass.shaderName);
+    TryApplyUniforms(shader, globals::getGlobalShaderUniforms(),
+                     pass.shaderName);
     // DrawTextureRec(shader_pipeline::front().texture,
     //                {0, 0, (float)renderWidth * xFlipModifier,
     //                 (float)-renderHeight * yFlipModifier},
@@ -4655,9 +4677,9 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   if (pipelineComp.passes.empty()) {
     // No shader passes - treat like 1 pass (odd) for consistent behavior
-    Rectangle sourceRect = {0.0f,
-                            (float)baseSpriteRender.texture.height - renderHeight,
-                            renderWidth, renderHeight};
+    Rectangle sourceRect = {
+        0.0f, (float)baseSpriteRender.texture.height - renderHeight,
+        renderWidth, renderHeight};
     DrawTextureRec(baseSpriteRender.texture, sourceRect, {0, 0}, WHITE);
   } else if (pipelineComp.passes.size() % 2 == 0) {
     DrawTexture(postPassRender.texture, 0, 0, WHITE);
@@ -4754,7 +4776,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
                   renderHeight}); // FIXME: not sure why, but it only works when
                                   // I do this instead of the full texture size
     }
-    TryApplyUniforms(shader, globals::getGlobalShaderUniforms(), overlay.shaderName);
+    TryApplyUniforms(shader, globals::getGlobalShaderUniforms(),
+                     overlay.shaderName);
 
     RenderTexture2D &source =
         (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
@@ -4812,54 +4835,52 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   if (camera) {
     camera_manager::Begin(*camera);
   }
-  
-  
+
   // ============================================================
-//               NEW GROUND ELLIPSE SHADOW BLOCK  (FIXED ANCHOR)
-// ============================================================
-if (registry.any_of<transform::GameObject>(e)) {
+  //               NEW GROUND ELLIPSE SHADOW BLOCK  (FIXED ANCHOR)
+  // ============================================================
+  if (registry.any_of<transform::GameObject>(e)) {
     auto &node = registry.get<transform::GameObject>(e);
 
     if (node.shadowDisplacement &&
-      node.shadowMode == transform::GameObject::ShadowMode::GroundEllipse) {
+        node.shadowMode == transform::GameObject::ShadowMode::GroundEllipse) {
 
-        // ----- Correct anchor point -----
-        // Center horizontally, bottom vertically
-        float baseX = transform.getVisualX() + transform.getVisualW() * 0.5f;
-        float baseY = transform.getVisualY() + transform.getVisualH()
-                      + node.groundShadowYOffset;
+      // ----- Correct anchor point -----
+      // Center horizontally, bottom vertically
+      float baseX = transform.getVisualX() + transform.getVisualW() * 0.5f;
+      float baseY = transform.getVisualY() + transform.getVisualH() +
+                    node.groundShadowYOffset;
 
-        // Compute visual scale
-        float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+      // Compute visual scale
+      float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
 
-        // Sprite size (pre-scale)
-        float spriteW = transform.getVisualW();
-        float spriteH = transform.getVisualH();
+      // Sprite size (pre-scale)
+      float spriteW = transform.getVisualW();
+      float spriteH = transform.getVisualH();
 
-        // Radii (auto or override)
-        float rx = node.groundShadowRadiusX.has_value()
+      // Radii (auto or override)
+      float rx = node.groundShadowRadiusX.has_value()
                      ? *node.groundShadowRadiusX
                      : spriteW * 0.40f;
 
-        float ry = node.groundShadowRadiusY.has_value()
+      float ry = node.groundShadowRadiusY.has_value()
                      ? *node.groundShadowRadiusY
                      : spriteH * 0.15f;
 
-        // Apply scaling and height factor
-        rx *= s * node.groundShadowHeightFactor;
-        ry *= s * node.groundShadowHeightFactor;
+      // Apply scaling and height factor
+      rx *= s * node.groundShadowHeightFactor;
+      ry *= s * node.groundShadowHeightFactor;
 
-        if (node.groundShadowColor.a > 0 && rx > 0.1f && ry > 0.1f) {
-            rlPushMatrix();
-            rlTranslatef(baseX, baseY, 0.0f);
-            rlScalef(rx, ry, 1.0f);
-            DrawCircleV({0.0f, 0.0f}, 1.0f, node.groundShadowColor);
-            rlPopMatrix();
-        }
+      if (node.groundShadowColor.a > 0 && rx > 0.1f && ry > 0.1f) {
+        rlPushMatrix();
+        rlTranslatef(baseX, baseY, 0.0f);
+        rlScalef(rx, ry, 1.0f);
+        DrawCircleV({0.0f, 0.0f}, 1.0f, node.groundShadowColor);
+        rlPopMatrix();
+      }
     }
-}
-// ============================================================
-
+  }
+  // ============================================================
 
   // 5. Final draw with transform
 
@@ -4871,8 +4892,9 @@ if (registry.any_of<transform::GameObject>(e)) {
                        // on the last texture?
 
   // default (no flip)
-  Rectangle finalSourceRect = {0.0f, (float)toRender.texture.height - renderHeight,
-                renderWidth, renderHeight};
+  Rectangle finalSourceRect = {0.0f,
+                               (float)toRender.texture.height - renderHeight,
+                               renderWidth, renderHeight};
 
   // if we’ve done an odd number of flips, correct it exactly once:
   if (pipelineComp.passes.empty()) {
@@ -4896,17 +4918,16 @@ if (registry.any_of<transform::GameObject>(e)) {
   //       transform.getVisualScaleWithHoverAndDynamicMotionReflected());
   // Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
   // Translate(-origin.x, -origin.y);
-  
+
   // shadow rendering first (with rotation but world-space offset)
   // ============================================================
   //        ORIGINAL SPRITE-BASED SHADOW (SpriteBased only)
   // ============================================================
   {
-      auto &node = registry.get<transform::GameObject>(e);
+    auto &node = registry.get<transform::GameObject>(e);
 
-      if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
-          node.shadowDisplacement)
-      {
+    if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
+        node.shadowDisplacement) {
       float baseExaggeration = globals::getBaseShadowExaggeration();
       float heightFactor = 1.0f + node.shadowHeight.value_or(
                                       0.f); // Increase effect based on height
@@ -4920,28 +4941,31 @@ if (registry.any_of<transform::GameObject>(e)) {
       float shadowAlpha = 0.8f; // 0.0f to 1.0f
       Color shadowColor = Fade(BLACK, shadowAlpha);
 
-      // Draw shadow at world-space offset WITH rotation (shadow rotates with sprite)
+      // Draw shadow at world-space offset WITH rotation (shadow rotates with
+      // sprite)
       PushMatrix();
       Translate(position.x - shadowOffsetX, position.y + shadowOffsetY);
       float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
       float visualScaleX = (transform.getVisualW() / baseWidth) * s;
       float visualScaleY = (transform.getVisualH() / baseHeight) * s;
       Scale(visualScaleX, visualScaleY);
-      Rotate(transform.getVisualRWithDynamicMotionAndXLeaning()); // Shadow rotates with sprite
+      Rotate(
+          transform.getVisualRWithDynamicMotionAndXLeaning()); // Shadow rotates
+                                                               // with sprite
       Translate(-origin.x, -origin.y);
       DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, shadowColor);
       PopMatrix();
     }
   }
-  
+
   PushMatrix();
-Translate(position.x, position.y);
-float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
-float visualScaleX = (transform.getVisualW() / baseWidth) * s;
-float visualScaleY = (transform.getVisualH() / baseHeight) * s;
-Scale(visualScaleX, visualScaleY);
-Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-Translate(-origin.x, -origin.y);
+  Translate(position.x, position.y);
+  float s = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+  float visualScaleX = (transform.getVisualW() / baseWidth) * s;
+  float visualScaleY = (transform.getVisualH() / baseHeight) * s;
+  Scale(visualScaleX, visualScaleY);
+  Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+  Translate(-origin.x, -origin.y);
 
   DrawTextureRec(toRender.texture, finalSourceRect, {0, 0}, WHITE);
 
@@ -4951,14 +4975,15 @@ Translate(-origin.x, -origin.y);
     // (int)shader_pipeline::height, RED); DrawText(fmt::format("SHADER
     // PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 15, WHITE);
   }
-  
-  // add local callback rendering which should go after the pipeline ends. (hud, or something that should bypass the ususal shader pipeline)
+
+  // add local callback rendering which should go after the pipeline ends. (hud,
+  // or something that should bypass the ususal shader pipeline)
   if (registry.any_of<transform::RenderLocalCallback>(e)) {
     const auto &cb = registry.get<transform::RenderLocalCallback>(e);
     // if you keep afterPipeline, gate it here:
     if (cb.fn && cb.afterPipeline) {
       // choose size (sprite-backed or callback-defined)
-      const float cw = (animationFrame ? baseWidth  : cb.contentWidth);
+      const float cw = (animationFrame ? baseWidth : cb.contentWidth);
       const float ch = (animationFrame ? baseHeight : cb.contentHeight);
 
       // Optional shadow call (mirrors your texture shadow)
@@ -4966,13 +4991,13 @@ Translate(-origin.x, -origin.y);
         auto &node = registry.get<transform::GameObject>(e);
         if (node.shadowDisplacement) {
           const float baseEx = globals::getBaseShadowExaggeration();
-          const float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
+          const float hFact = 1.0f + node.shadowHeight.value_or(0.f);
           const float shX = node.shadowDisplacement->x * baseEx * hFact;
           const float shY = node.shadowDisplacement->y * baseEx * hFact;
 
           Translate(-shX, shY);
           Translate(pad, pad);
-          cb.fn(cw, ch, /*isShadow=*/true);    // first pass: shadow
+          cb.fn(cw, ch, /*isShadow=*/true); // first pass: shadow
           Translate(-pad, -pad);
           Translate(shX, -shY);
         }
@@ -4985,14 +5010,11 @@ Translate(-origin.x, -origin.y);
     }
   }
 
-
   PopMatrix();
 
   // draw the mini pipeline view + ALL rects
   // shader_pipeline::DebugDrawAllRects(10, 10);
 }
-
-
 
 //-----------------------------------------------------------------------------------
 // renderSliceOffscreen
@@ -5259,17 +5281,18 @@ auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer,
   AddDrawCommand(layer, "draw_transform_entity_animation", {e, registry}, z);
 }
 
-auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void
-{
+auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e)
+    -> void {
   // AQC gate (unchanged)
   if (registry.any_of<AnimationQueueComponent>(e)) {
     auto &aqc = registry.get<AnimationQueueComponent>(e);
-    if (aqc.noDraw) return;
+    if (aqc.noDraw)
+      return;
   }
 
   // -------- Gather state --------
   const bool hasAQC = registry.any_of<AnimationQueueComponent>(e);
-  const bool hasCB  = registry.any_of<transform::RenderLocalCallback>(e);
+  const bool hasCB = registry.any_of<transform::RenderLocalCallback>(e);
 
   float renderScale = 1.0f;
 
@@ -5281,21 +5304,29 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
     auto &aqc = registry.get<AnimationQueueComponent>(e);
     if (aqc.animationQueue.empty()) {
       if (!aqc.defaultAnimation.animationList.empty()) {
-        animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
-        currentSprite  = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
+        animationFrame =
+            &aqc.defaultAnimation
+                 .animationList[aqc.defaultAnimation.currentAnimIndex]
+                 .first.spriteData.frame;
+        currentSprite =
+            &aqc.defaultAnimation
+                 .animationList[aqc.defaultAnimation.currentAnimIndex]
+                 .first;
         flipX = aqc.defaultAnimation.flippedHorizontally;
         flipY = aqc.defaultAnimation.flippedVertically;
-        renderScale = aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f)
-                    * aqc.defaultAnimation.uiRenderScale.value_or(1.0f);
+        renderScale =
+            aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f) *
+            aqc.defaultAnimation.uiRenderScale.value_or(1.0f);
       }
     } else {
       auto &cur = aqc.animationQueue[aqc.currentAnimationIndex];
-      animationFrame = &cur.animationList[cur.currentAnimIndex].first.spriteData.frame;
-      currentSprite  = &cur.animationList[cur.currentAnimIndex].first;
+      animationFrame =
+          &cur.animationList[cur.currentAnimIndex].first.spriteData.frame;
+      currentSprite = &cur.animationList[cur.currentAnimIndex].first;
       flipX = cur.flippedHorizontally;
       flipY = cur.flippedVertically;
-      renderScale = cur.intrinsincRenderScale.value_or(1.0f)
-                  * cur.uiRenderScale.value_or(1.0f);
+      renderScale = cur.intrinsincRenderScale.value_or(1.0f) *
+                    cur.uiRenderScale.value_or(1.0f);
     }
   }
 
@@ -5307,29 +5338,30 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
     AssertThat(currentSprite, Is().Not().Null());
   }
 
-  Texture2D* spriteAtlas = currentSprite ? currentSprite->spriteData.texture : nullptr;
+  Texture2D *spriteAtlas =
+      currentSprite ? currentSprite->spriteData.texture : nullptr;
 
   // Content size:
-  float renderWidth  = 0.f;
+  float renderWidth = 0.f;
   float renderHeight = 0.f;
 
   if (animationFrame) {
-    renderWidth  = animationFrame->width;
+    renderWidth = animationFrame->width;
     renderHeight = animationFrame->height;
   } else if (hasCB) {
     const auto &cb = registry.get<transform::RenderLocalCallback>(e);
-    renderWidth  = cb.contentWidth;
+    renderWidth = cb.contentWidth;
     renderHeight = cb.contentHeight;
   }
 
-  AssertThat(renderWidth,  IsGreaterThan(0.0f));
+  AssertThat(renderWidth, IsGreaterThan(0.0f));
   AssertThat(renderHeight, IsGreaterThan(0.0f));
 
   float flipXModifier = flipX ? -1.0f : 1.0f;
   float flipYModifier = flipY ? -1.0f : 1.0f;
 
   // Colors (kept for background rectangle + sprite tint)
-  Color bgColor = {0,0,0,0};
+  Color bgColor = {0, 0, 0, 0};
   Color fgColor = WHITE;
   bool drawBackground = false;
   bool drawForeground = true;
@@ -5337,7 +5369,8 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
   if (currentSprite) {
     bgColor = currentSprite->bgColor;
     fgColor = currentSprite->fgColor;
-    if (fgColor.a <= 0) fgColor = WHITE; // safety
+    if (fgColor.a <= 0)
+      fgColor = WHITE; // safety
     drawBackground = !currentSprite->noBackgroundColor;
     drawForeground = !currentSprite->noForegroundColor;
     // (Your forced debug)
@@ -5355,7 +5388,8 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
   Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
   Translate(-transform.getVisualW() * 0.5f, -transform.getVisualH() * 0.5f);
 
-  // Background rectangle if desired (applies to both sprite and callback content)
+  // Background rectangle if desired (applies to both sprite and callback
+  // content)
   if (drawBackground) {
     layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0, bgColor);
   }
@@ -5371,13 +5405,13 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
         auto &node = registry.get<transform::GameObject>(e);
         if (node.shadowDisplacement) {
           float baseEx = globals::getBaseShadowExaggeration();
-          float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
+          float hFact = 1.0f + node.shadowHeight.value_or(0.f);
           float shX = node.shadowDisplacement->x * baseEx * hFact;
           float shY = node.shadowDisplacement->y * baseEx * hFact;
 
           Color shadowColor = Fade(BLACK, 0.8f);
-          // We can't force-tint arbitrary callback draw; we just position the shadow version.
-          // Let the callback optionally branch on isShadow.
+          // We can't force-tint arbitrary callback draw; we just position the
+          // shadow version. Let the callback optionally branch on isShadow.
           Translate(-shX, shY);
           Scale(renderScale, renderScale);
           cb.fn(renderWidth, renderHeight, /*isShadow=*/true);
@@ -5397,20 +5431,20 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
         auto &node = registry.get<transform::GameObject>(e);
         if (node.shadowDisplacement) {
           float baseEx = globals::getBaseShadowExaggeration();
-          float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
+          float hFact = 1.0f + node.shadowHeight.value_or(0.f);
           float shX = node.shadowDisplacement->x * baseEx * hFact;
           float shY = node.shadowDisplacement->y * baseEx * hFact;
           Color shadowColor = Fade(BLACK, 0.8f);
 
           Translate(-shX, shY);
           Scale(renderScale, renderScale);
-          layer::TexturePro(*spriteAtlas,
-                            {animationFrame->x, animationFrame->y,
-                             animationFrame->width * flipXModifier,
-                             animationFrame->height * flipYModifier},
-                            0, 0,
-                            {renderWidth * flipXModifier, renderHeight * flipYModifier},
-                            {0,0}, 0, shadowColor);
+          layer::TexturePro(
+              *spriteAtlas,
+              {animationFrame->x, animationFrame->y,
+               animationFrame->width * flipXModifier,
+               animationFrame->height * flipYModifier},
+              0, 0, {renderWidth * flipXModifier, renderHeight * flipYModifier},
+              {0, 0}, 0, shadowColor);
           Scale(1.0f / renderScale, 1.0f / renderScale);
           Translate(shX, -shY);
         }
@@ -5421,14 +5455,13 @@ auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) 
                         {animationFrame->x, animationFrame->y,
                          animationFrame->width * flipXModifier,
                          animationFrame->height * flipYModifier},
-                        0, 0,
-                        {renderWidth, renderHeight},
-                        {0, 0}, 0, fgColor);
+                        0, 0, {renderWidth, renderHeight}, {0, 0}, 0, fgColor);
       Scale(1.0f / renderScale, 1.0f / renderScale);
 
     } else {
       // Fallback rect if neither sprite nor callback (unlikely due to asserts)
-      layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0, fgColor);
+      layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0,
+                          fgColor);
     }
   }
 
@@ -5557,67 +5590,75 @@ auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x,
 
 // Pushes the transform commands for an entity's transform component onto the
 // layer's command queue. remember to pair with a CmdPopMatrix!
-auto pushEntityTransformsToMatrix(entt::registry &registry,
-                                  entt::entity e,
+auto pushEntityTransformsToMatrix(entt::registry &registry, entt::entity e,
                                   std::shared_ptr<layer::Layer> layer,
-                                  int zOrder) -> void
-{
-    // Determine whether the entity renders in world or screen space.
-    bool isScreenSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
-    layer::DrawCommandSpace drawSpace =
-        isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
+                                  int zOrder) -> void {
+  // Determine whether the entity renders in world or screen space.
+  bool isScreenSpace =
+      registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+  layer::DrawCommandSpace drawSpace = isScreenSpace
+                                          ? layer::DrawCommandSpace::Screen
+                                          : layer::DrawCommandSpace::World;
 
-    // Retrieve the transform (and any needed springs)
-    auto &entityTransform = registry.get<transform::Transform>(e);
+  // Retrieve the transform (and any needed springs)
+  auto &entityTransform = registry.get<transform::Transform>(e);
 
-    // --- Push Matrix ---
-    layer::QueueCommand<layer::CmdPushMatrix>(layer,
-        [](layer::CmdPushMatrix *cmd) {}, zOrder, drawSpace);
+  // --- Push Matrix ---
+  layer::QueueCommand<layer::CmdPushMatrix>(
+      layer, [](layer::CmdPushMatrix *cmd) {}, zOrder, drawSpace);
 
-    // --- Apply Translation: move to entity center ---
-    layer::QueueCommand<layer::CmdTranslate>(layer,
-        [x = entityTransform.getVisualX() + entityTransform.getVisualW() * 0.5f,
-         y = entityTransform.getVisualY() + entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
-            cmd->x = x;
-            cmd->y = y;
-        },
-        zOrder, drawSpace);
+  // --- Apply Translation: move to entity center ---
+  layer::QueueCommand<layer::CmdTranslate>(
+      layer,
+      [x = entityTransform.getVisualX() + entityTransform.getVisualW() * 0.5f,
+       y = entityTransform.getVisualY() +
+           entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+        cmd->x = x;
+        cmd->y = y;
+      },
+      zOrder, drawSpace);
 
-    // --- Apply Scaling ---
-    layer::QueueCommand<layer::CmdScale>(layer,
-        [scaleX = entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
-         scaleY = entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
-            cmd->scaleX = scaleX;
-            cmd->scaleY = scaleY;
-        },
-        zOrder, drawSpace);
+  // --- Apply Scaling ---
+  layer::QueueCommand<layer::CmdScale>(
+      layer,
+      [scaleX =
+           entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+       scaleY =
+           entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected()](
+          layer::CmdScale *cmd) {
+        cmd->scaleX = scaleX;
+        cmd->scaleY = scaleY;
+      },
+      zOrder, drawSpace);
 
-    // --- Apply Rotation ---
-    layer::QueueCommand<layer::CmdRotate>(layer,
-        [rotation = entityTransform.getVisualR() + entityTransform.rotationOffset](layer::CmdRotate *cmd) {
-            cmd->angle = rotation;
-        },
-        zOrder, drawSpace);
+  // --- Apply Rotation ---
+  layer::QueueCommand<layer::CmdRotate>(
+      layer,
+      [rotation = entityTransform.getVisualR() +
+                  entityTransform.rotationOffset](layer::CmdRotate *cmd) {
+        cmd->angle = rotation;
+      },
+      zOrder, drawSpace);
 
-    // --- Translate back to local origin ---
-    layer::QueueCommand<layer::CmdTranslate>(layer,
-        [x = -entityTransform.getVisualW() * 0.5f,
-         y = -entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
-            cmd->x = x;
-            cmd->y = y;
-        },
-        zOrder, drawSpace);
+  // --- Translate back to local origin ---
+  layer::QueueCommand<layer::CmdTranslate>(
+      layer,
+      [x = -entityTransform.getVisualW() * 0.5f,
+       y = -entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+        cmd->x = x;
+        cmd->y = y;
+      },
+      zOrder, drawSpace);
 }
 
-auto pushEntityTransformsToMatrixImmediate(entt::registry& registry,
+auto pushEntityTransformsToMatrixImmediate(entt::registry &registry,
                                            entt::entity e,
                                            std::shared_ptr<layer::Layer> layer,
-                                           int zOrder) -> void
-{
-    auto& t = registry.get<transform::Transform>(e);
+                                           int zOrder) -> void {
+  auto &t = registry.get<transform::Transform>(e);
 
-    PushMatrix();
-    rlMultMatrixf(MatrixToFloat(t.cachedMatrix));
+  PushMatrix();
+  rlMultMatrixf(MatrixToFloat(t.cachedMatrix));
 }
 
 void Circle(float x, float y, float radius, const Color &color) {
@@ -6249,9 +6290,9 @@ void rectangle(float x, float y, float w, float h, std::optional<float> rx,
   const bool doStroke = lineWidth.has_value();
   const bool doFill = color.has_value() && !doStroke;
   Color C = color.value_or(defaultColor());
-  
-  //pprint color value
-  // SPDLOG_DEBUG("rectangle color: {} {} {} {}", C.r, C.g, C.b, C.a);
+
+  // pprint color value
+  //  SPDLOG_DEBUG("rectangle color: {} {} {} {}", C.r, C.g, C.b, C.a);
 
   if (rx.has_value() || ry.has_value()) {
     // Raylib uses [0..1] roundness proportion of min(width,height).
@@ -6309,8 +6350,7 @@ void triangle(float x, float y, float w, float h,
 // -----------------------------------------------------------------------------
 // Equilateral triangle of width w, centered at (x,y), pointing right.
 // -----------------------------------------------------------------------------
-void triangle_equilateral(float x, float y, float w,
-                          std::optional<Color> color,
+void triangle_equilateral(float x, float y, float w, std::optional<Color> color,
                           std::optional<float> lineWidth) {
   float h = std::sqrt(w * w - (w * 0.5f) * (w * 0.5f)); // = w*sqrt(3)/2
   triangle(x, y, w, h, color, lineWidth);
@@ -6389,8 +6429,7 @@ void arc(const char *arctype, float x, float y, float r, float r1, float r2,
 // Polygon: vertices in order. For fill, assumes convex (or star-shaped) for
 // DrawTriangleFan. Stroke uses DrawLineEx per edge; closed polygon.
 // -----------------------------------------------------------------------------
-void polygon(const std::vector<Vector2> &vertices,
-             std::optional<Color> color,
+void polygon(const std::vector<Vector2> &vertices, std::optional<Color> color,
              std::optional<float> lineWidth) {
   if (vertices.size() < 2)
     return;
@@ -6428,8 +6467,7 @@ void polygon(const std::vector<Vector2> &vertices,
 // -----------------------------------------------------------------------------
 // Line: (x1,y1)-(x2,y2)
 // -----------------------------------------------------------------------------
-void line(float x1, float y1, float x2, float y2,
-          std::optional<Color> color,
+void line(float x1, float y1, float x2, float y2, std::optional<Color> color,
           std::optional<float> lineWidth) {
   Color C = color.value_or(defaultColor());
   if (lineWidth.has_value()) {
@@ -6443,8 +6481,7 @@ void line(float x1, float y1, float x2, float y2,
 // -----------------------------------------------------------------------------
 // Polyline: draw connected segments (open path).
 // -----------------------------------------------------------------------------
-void polyline(const std::vector<Vector2> &points,
-              std::optional<Color> color,
+void polyline(const std::vector<Vector2> &points, std::optional<Color> color,
               std::optional<float> lineWidth) {
   if (points.size() < 2)
     return;
@@ -6459,8 +6496,7 @@ void polyline(const std::vector<Vector2> &points,
 // Rounded line caps: DrawLineEx + two endpoint circles for perfect round caps.
 // -----------------------------------------------------------------------------
 void rounded_line(float x1, float y1, float x2, float y2,
-                  std::optional<Color> color,
-                  std::optional<float> lineWidth) {
+                  std::optional<Color> color, std::optional<float> lineWidth) {
   Color C = color.value_or(defaultColor());
   float t = std::max(1.0f, lineWidth.value_or(1.0f));
   Vector2 a{x1, y1}, b{x2, y2};
@@ -6475,43 +6511,40 @@ void rounded_line(float x1, float y1, float x2, float y2,
 // - 1px stroke: DrawEllipseLines
 // - thick stroke: emulate with scaled ring (rlScale), keeping it simple.
 // -----------------------------------------------------------------------------
-void ellipse(float x, float y, float rx, float ry,
-             std::optional<Color> color,
+void ellipse(float x, float y, float rx, float ry, std::optional<Color> color,
              std::optional<float> lineWidth) {
-    Color C = color.value_or(defaultColor());
-    if (lineWidth.has_value()) {
-        float t = std::max(1.0f, lineWidth.value());
-        rlPushMatrix();
-        rlTranslatef(x, y, 0.0f);
-        rlScalef(1.0f, ry / rx, 1.0f);
-        float inner = std::max(0.0f, rx - t * 0.5f);
-        float outer = rx + t * 0.5f;
-        DrawRing(Vector2{0, 0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
-        rlDrawRenderBatchActive();   // <---- CRUCIAL
-        rlPopMatrix();
-    } else if (color.has_value()) {
-        DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
-    } else {
-        DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
-    }
+  Color C = color.value_or(defaultColor());
+  if (lineWidth.has_value()) {
+    float t = std::max(1.0f, lineWidth.value());
+    rlPushMatrix();
+    rlTranslatef(x, y, 0.0f);
+    rlScalef(1.0f, ry / rx, 1.0f);
+    float inner = std::max(0.0f, rx - t * 0.5f);
+    float outer = rx + t * 0.5f;
+    DrawRing(Vector2{0, 0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
+    rlDrawRenderBatchActive(); // <---- CRUCIAL
+    rlPopMatrix();
+  } else if (color.has_value()) {
+    DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
+  } else {
+    DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
+  }
 }
 
-
 // -- immediate sprite render
-static Texture2D* resolveAtlasTexture(const std::string& atlasUUID) {
-    return getAtlasTexture(atlasUUID);
+static Texture2D *resolveAtlasTexture(const std::string &atlasUUID) {
+  return getAtlasTexture(atlasUUID);
 }
 
 auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,
-                       std::optional<float> dstW,
-                       std::optional<float> dstH,
+                       std::optional<float> dstW, std::optional<float> dstH,
                        Color tint) -> void {
   // Resolve atlas frame + texture
   const auto spriteId = uuid::add(spriteName);
-  const auto &sfd =
-      init::getSpriteFrame(spriteId, globals::g_ctx); // expects .frame and .atlasUUID
+  const auto &sfd = init::getSpriteFrame(
+      spriteId, globals::g_ctx); // expects .frame and .atlasUUID
 
-  Texture2D* tex = resolveAtlasTexture(sfd.atlasUUID);
+  Texture2D *tex = resolveAtlasTexture(sfd.atlasUUID);
   if (!tex) {
     // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'",
     // spriteName.c_str());
@@ -6541,15 +6574,15 @@ auto DrawSpriteTopLeft(const std::string &spriteName, float x, float y,
 // - If only one is set, preserves aspect ratio to compute the other.
 // - `tint` tints the sprite (WHITE = unchanged).
 auto DrawSpriteCentered(const std::string &spriteName, float x, float y,
-                        std::optional<float> dstW,
-                        std::optional<float> dstH,
-                       Color tint) -> void {
+                        std::optional<float> dstW, std::optional<float> dstH,
+                        Color tint) -> void {
   // Resolve atlas frame + texture
   const auto spriteId = uuid::add(spriteName);
   const auto &sfd = init::getSpriteFrame(
-      spriteId, globals::g_ctx); // expect: has .frame (Rectangle) and .atlasUUID
+      spriteId,
+      globals::g_ctx); // expect: has .frame (Rectangle) and .atlasUUID
 
-  Texture2D* tex = resolveAtlasTexture(sfd.atlasUUID);
+  Texture2D *tex = resolveAtlasTexture(sfd.atlasUUID);
   if (!tex) {
     // TODO: replace with your logging/error path
     // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'",
@@ -6576,7 +6609,7 @@ auto DrawSpriteCentered(const std::string &spriteName, float x, float y,
   DrawTexturePro(*tex, src, dst, origin, 0.0f, tint);
 }
 #if !defined(__EMSCRIPTEN__)
-  #include "external/glad.h"
+#include "external/glad.h"
 #endif
 
 #include "rlgl.h"
@@ -6614,7 +6647,6 @@ void endStencilMask() {
   // Stop writing to stencil bits
   glStencilMask(0x00);
 
-
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
@@ -6623,66 +6655,64 @@ void endStencil() {
   glDisable(GL_STENCIL_TEST);
 }
 
-RenderTexture2D LoadRenderTextureStencilEnabled(int width, int height)
-{
-    RenderTexture2D target = { 0 };
+RenderTexture2D LoadRenderTextureStencilEnabled(int width, int height) {
+  RenderTexture2D target = {0};
 
-    target.id = rlLoadFramebuffer(); // Create framebuffer object
-    if (target.id <= 0)
-    {
-        TRACELOG(LOG_WARNING, "FBO: Framebuffer object cannot be created");
-        return target;
-    }
-
-    rlEnableFramebuffer(target.id);
-
-    // ------------------------------------------------------------
-    // COLOR ATTACHMENT (RGBA8)
-    // ------------------------------------------------------------
-    target.texture.id = rlLoadTexture(NULL, width, height,
-                                      PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
-    target.texture.width  = width;
-    target.texture.height = height;
-    target.texture.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-    target.texture.mipmaps = 1;
-
-    rlFramebufferAttach(target.id, target.texture.id,
-                        RL_ATTACHMENT_COLOR_CHANNEL0,
-                        RL_ATTACHMENT_TEXTURE2D, 0);
-
-    // ------------------------------------------------------------
-    // DEPTH + STENCIL RENDERBUFFER (GL_DEPTH24_STENCIL8)
-    // ------------------------------------------------------------
-    unsigned int depthStencilId = 0;
-    glGenRenderbuffers(1, &depthStencilId);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthStencilId);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-
-    // Attach same renderbuffer to both depth and stencil
-    rlFramebufferAttach(target.id, depthStencilId,
-                        RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
-    rlFramebufferAttach(target.id, depthStencilId,
-                        RL_ATTACHMENT_STENCIL, RL_ATTACHMENT_RENDERBUFFER, 0);
-
-    // Store metadata
-    target.depth.id = depthStencilId;
-    target.depth.width  = width;
-    target.depth.height = height;
-    target.depth.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8; // placeholder
-    target.depth.mipmaps = 1;
-
-    // ------------------------------------------------------------
-    // VALIDATION + CLEANUP
-    // ------------------------------------------------------------
-    if (rlFramebufferComplete(target.id))
-        TRACELOG(LOG_INFO, "FBO: [ID %i] Framebuffer with depth+stencil created successfully", target.id);
-    else
-        TRACELOG(LOG_WARNING, "FBO: [ID %i] Framebuffer is incomplete", target.id);
-
-    rlDisableFramebuffer();
-
+  target.id = rlLoadFramebuffer(); // Create framebuffer object
+  if (target.id <= 0) {
+    TRACELOG(LOG_WARNING, "FBO: Framebuffer object cannot be created");
     return target;
-}
+  }
 
+  rlEnableFramebuffer(target.id);
+
+  // ------------------------------------------------------------
+  // COLOR ATTACHMENT (RGBA8)
+  // ------------------------------------------------------------
+  target.texture.id =
+      rlLoadTexture(NULL, width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
+  target.texture.width = width;
+  target.texture.height = height;
+  target.texture.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+  target.texture.mipmaps = 1;
+
+  rlFramebufferAttach(target.id, target.texture.id,
+                      RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);
+
+  // ------------------------------------------------------------
+  // DEPTH + STENCIL RENDERBUFFER (GL_DEPTH24_STENCIL8)
+  // ------------------------------------------------------------
+  unsigned int depthStencilId = 0;
+  glGenRenderbuffers(1, &depthStencilId);
+  glBindRenderbuffer(GL_RENDERBUFFER, depthStencilId);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+
+  // Attach same renderbuffer to both depth and stencil
+  rlFramebufferAttach(target.id, depthStencilId, RL_ATTACHMENT_DEPTH,
+                      RL_ATTACHMENT_RENDERBUFFER, 0);
+  rlFramebufferAttach(target.id, depthStencilId, RL_ATTACHMENT_STENCIL,
+                      RL_ATTACHMENT_RENDERBUFFER, 0);
+
+  // Store metadata
+  target.depth.id = depthStencilId;
+  target.depth.width = width;
+  target.depth.height = height;
+  target.depth.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8; // placeholder
+  target.depth.mipmaps = 1;
+
+  // ------------------------------------------------------------
+  // VALIDATION + CLEANUP
+  // ------------------------------------------------------------
+  if (rlFramebufferComplete(target.id))
+    TRACELOG(LOG_INFO,
+             "FBO: [ID %i] Framebuffer with depth+stencil created successfully",
+             target.id);
+  else
+    TRACELOG(LOG_WARNING, "FBO: [ID %i] Framebuffer is incomplete", target.id);
+
+  rlDisableFramebuffer();
+
+  return target;
+}
 
 } // namespace layer

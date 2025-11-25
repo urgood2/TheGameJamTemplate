@@ -9,10 +9,9 @@
 
 #define _WIN32_WINNT 0x0600
 
-#include "raylib.h"      // raylib
 #include "entt/entt.hpp" // ECS
+#include "raylib.h"      // raylib
 // #include "tweeny.h"      // tweening library
-
 
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
@@ -21,9 +20,9 @@
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE // compiler-time log level
 
-#include "spdlog/spdlog.h" // SPD logging lib // or any library that uses Windows.h
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h" // or any library that uses Windows.h
+#include "spdlog/spdlog.h" // SPD logging lib // or any library that uses Windows.h
 
 #include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 #include "util/crash_reporter.hpp"
@@ -37,14 +36,14 @@
 #include <emscripten/emscripten.h>
 #endif
 
-#include "effolkronium/random.hpp"   // https://github.com/effolkronium/random
+#include "effolkronium/random.hpp" // https://github.com/effolkronium/random
 
-#include "core/init.hpp"
-#include "core/graphics.hpp"
-#include "core/game.hpp"
-#include "core/gui.hpp"
-#include "core/globals.hpp"
 #include "core/engine_context.hpp"
+#include "core/game.hpp"
+#include "core/globals.hpp"
+#include "core/graphics.hpp"
+#include "core/gui.hpp"
+#include "core/init.hpp"
 
 #include "util/utilities.hpp" // global utilty methods
 
@@ -52,21 +51,21 @@
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
 using json = nlohmann::json;
 
-#include <fmt/core.h>                 // https://github.com/fmtlib/fmt
+#include <fmt/core.h> // https://github.com/fmtlib/fmt
 // #include <boost/stacktrace.hpp> // stack trace
 
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <fstream>
-#include <memory>
-#include <map>
-#include <regex>
+#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <fstream>
 #include <functional>
-#include <algorithm> 
+#include <iostream>
+#include <map>
+#include <memory>
 #include <numeric>
+#include <regex>
+#include <sstream>
+#include <string>
 
 // #define SPINE_USE_STD_FUNCTION
 // #include "spine/spine.h"
@@ -75,331 +74,308 @@ using json = nlohmann::json;
 #include "raymath.h"
 
 // #include "systems/physics/physics_world.hpp"
-#include "systems/main_loop_enhancement/main_loop.hpp"
-#include "systems/shaders/shader_system.hpp"
-#include "systems/shaders/shader_pipeline.hpp"
+#include "core/events.hpp"
 #include "systems/anim_system.hpp"
+#include "systems/event/event_system.hpp"
+#include "systems/fade/fade_system.hpp"
+#include "systems/input/controller_nav.hpp"
 #include "systems/input/input.hpp"
-#include "systems/timer/timer.hpp"
-#include "systems/sound/sound_system.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/localization/localization.hpp"
-#include "systems/scripting/scripting_system.hpp"
-#include "systems/fade/fade_system.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/palette/palette_quantizer.hpp"
-#include "systems/input/controller_nav.hpp"
-#include "core/events.hpp"
-#include "systems/event/event_system.hpp"
-
-
+#include "systems/scripting/scripting_system.hpp"
+#include "systems/shaders/shader_pipeline.hpp"
+#include "systems/shaders/shader_system.hpp"
+#include "systems/sound/sound_system.hpp"
+#include "systems/timer/timer.hpp"
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
 // using namespace BT;
-using Random = effolkronium::random_static; // get base random alias which is auto seeded and has static API and internal state
+using Random =
+    effolkronium::random_static; // get base random alias which is auto seeded
+                                 // and has static API and internal state
 
 // update methods
 auto updateSystems(float dt) -> void;
 
-auto updateTimers(float dt) -> void
-{
-    globals::getTimerReal() += dt;
-    globals::getTimerTotal() += dt;
+auto updateTimers(float dt) -> void {
+  globals::getTimerReal() += dt;
+  globals::getTimerTotal() += dt;
 }
-
 
 bool pauseGameWhenOutofFocus = true;
 bool updatedGame = false;
-auto mainGameStateGameLoop(float dt) -> void
-{
+auto mainGameStateGameLoop(float dt) -> void {
 
-    // updatedGame = false;
-    // bool shouldPauseFromNoFocus = (pauseGameWhenOutofFocus == true && IsWindowFocused() == false);
-    // if (shouldPauseFromNoFocus == false && game::isGameOver == false)
-    // {
-        game::update(dt);
-        // updatedGame = true;
-        // if (game::isPaused == false)
-    // }
+  // updatedGame = false;
+  // bool shouldPauseFromNoFocus = (pauseGameWhenOutofFocus == true &&
+  // IsWindowFocused() == false); if (shouldPauseFromNoFocus == false &&
+  // game::isGameOver == false)
+  // {
+  game::update(dt);
+  // updatedGame = true;
+  // if (game::isPaused == false)
+  // }
 }
 
-void mainMenuStateGameLoop(float dt)
-{
-    
-    // FIXME: just set game to main game state for now
-    globals::setCurrentGameState(GameState::MAIN_GAME);
-    // show main menu here
+void mainMenuStateGameLoop(float dt) {
+
+  // FIXME: just set game to main game state for now
+  globals::setCurrentGameState(GameState::MAIN_GAME);
+  // show main menu here
 }
 
-void MainLoopFixedUpdateAbstraction(float dt)
-{
-    ZONE_SCOPED("MainLoopFixedUpdateAbstraction"); // custom label
-    
-    updateSystems(dt);
+void MainLoopFixedUpdateAbstraction(float dt) {
+  ZONE_SCOPED("MainLoopFixedUpdateAbstraction"); // custom label
 
-    // this switch statement handles only update logic, rendering is handled in the mainloopRenderAbstraction function
-    switch (globals::getCurrentGameState())
-    {
-    case GameState::MAIN_MENU:
-        // show main menu
-        mainMenuStateGameLoop(dt);
-        break;
-    case GameState::MAIN_GAME:
-        // show main game screen
-        mainGameStateGameLoop(dt);
-        break;
-    case GameState::GAME_OVER:
-        // show game over screen
-        mainGameStateGameLoop(dt);
-        break;
-    default:
-        globals::setCurrentGameState(GameState::MAIN_MENU);
-        break;
-    }
-    
-    // finalize input state at end of frame
-    input::finalizeUpdateAtEndOfFrame(globals::getInputState(), dt);
-    
+  updateSystems(dt);
+
+  // this switch statement handles only update logic, rendering is handled in
+  // the mainloopRenderAbstraction function
+  switch (globals::getCurrentGameState()) {
+  case GameState::MAIN_MENU:
+    // show main menu
+    mainMenuStateGameLoop(dt);
+    break;
+  case GameState::MAIN_GAME:
+    // show main game screen
+    mainGameStateGameLoop(dt);
+    break;
+  case GameState::GAME_OVER:
+    // show game over screen
+    mainGameStateGameLoop(dt);
+    break;
+  default:
+    globals::setCurrentGameState(GameState::MAIN_MENU);
+    break;
+  }
+
+  // finalize input state at end of frame
+  input::finalizeUpdateAtEndOfFrame(globals::getInputState(), dt);
 }
 
+auto mainGameStateGameLoopRender(float dt) -> void { game::draw(dt); }
 
+auto mainMenuStateGameLoopRender(float dt) -> void {}
 
-auto mainGameStateGameLoopRender(float dt) -> void {
-    game::draw(dt);
+bool mainMenuFirstFrame{
+    true}; // used to determine if this is the first frame of the main menu
+auto mainMenuStateGameLoop() -> void {}
+
+auto loadingScreenStateGameLoopRender(float dt) -> void {
+  // show loading screen
+
+  ClearBackground(RAYWHITE);
+  DrawText("Loading...", 20, 20, 40, LIGHTGRAY);
 }
 
+auto gameOverScreenGameLoopRender(float dt) -> void {
 
-
-auto mainMenuStateGameLoopRender(float dt) -> void {
-
+  // gui::showGameOverModal();
+  // ends the ImGui content mode. Make all ImGui calls before this
 }
-
-bool mainMenuFirstFrame{true}; // used to determine if this is the first frame of the main menu
-auto mainMenuStateGameLoop() -> void
-{
-
-}
-
-auto loadingScreenStateGameLoopRender(float dt) -> void
-{
-    // show loading screen
-
-    ClearBackground(RAYWHITE);
-    DrawText("Loading...", 20, 20, 40, LIGHTGRAY);
-}
-
-auto gameOverScreenGameLoopRender(float dt) -> void
-{
-
-    // gui::showGameOverModal();
-    // ends the ImGui content mode. Make all ImGui calls before this
-}
-
 
 auto MainLoopRenderAbstraction(float dt) -> void {
-    
-    
-    switch (globals::getCurrentGameState())
-    {
-    case GameState::MAIN_MENU:
-        mainMenuStateGameLoopRender(dt); 
-        break;
-    case GameState::MAIN_GAME:
-        mainGameStateGameLoopRender(dt);
-        break;
-    case GameState::LOADING_SCREEN:
-        loadingScreenStateGameLoopRender(dt);
-        break;
-    case GameState::GAME_OVER:
-        gameOverScreenGameLoopRender(dt);
-        break;
-    default:
-        // draw nothing
-        break;
-    }
-    
-    
 
-
+  switch (globals::getCurrentGameState()) {
+  case GameState::MAIN_MENU:
+    mainMenuStateGameLoopRender(dt);
+    break;
+  case GameState::MAIN_GAME:
+    mainGameStateGameLoopRender(dt);
+    break;
+  case GameState::LOADING_SCREEN:
+    loadingScreenStateGameLoopRender(dt);
+    break;
+  case GameState::GAME_OVER:
+    gameOverScreenGameLoopRender(dt);
+    break;
+  default:
+    // draw nothing
+    break;
+  }
 }
 
-auto updatePhysics(float dt, float alpha) -> void
-{
-    main_loop::mainLoop.physicsTicks++;
-    {
-        ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
-        if (globals::getPhysicsManager()) physics::ApplyAuthoritativeTransform(globals::getRegistry(), *globals::getPhysicsManager());
-    }
-    
-    {
-        ZONE_SCOPED("Physics Step All Worlds");
-        if (globals::getPhysicsManager()) globals::getPhysicsManager()->stepAll(dt); // step all physics worlds
-    }
-    
-    {
-        ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
-        if (globals::getPhysicsManager()) physics::ApplyAuthoritativePhysics(globals::getRegistry(), *globals::getPhysicsManager(), alpha);
-    
-    
-        // physics post-update
-        if (globals::getPhysicsManager()) globals::getPhysicsManager()->stepAllPostUpdate(dt);
-    }
+auto updatePhysics(float dt, float alpha) -> void {
+  main_loop::mainLoop.physicsTicks++;
+  {
+    ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
+    if (globals::getPhysicsManager())
+      physics::ApplyAuthoritativeTransform(globals::getRegistry(),
+                                           *globals::getPhysicsManager());
+  }
+
+  {
+    ZONE_SCOPED("Physics Step All Worlds");
+    if (globals::getPhysicsManager())
+      globals::getPhysicsManager()->stepAll(dt); // step all physics worlds
+  }
+
+  {
+    ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
+    if (globals::getPhysicsManager())
+      physics::ApplyAuthoritativePhysics(globals::getRegistry(),
+                                         *globals::getPhysicsManager(), alpha);
+
+    // physics post-update
+    if (globals::getPhysicsManager())
+      globals::getPhysicsManager()->stepAllPostUpdate(dt);
+  }
 }
 
-// The main game loop function that runs until the application or window is closed.
-// The main game loop callback / blocking loop
-void RunGameLoop()
-{
-    // ---------- Initialization ----------
-    float lastFrameTime = GetTime();
+// The main game loop function that runs until the application or window is
+// closed. The main game loop callback / blocking loop
+void RunGameLoop() {
+  // ---------- Initialization ----------
+  float lastFrameTime = GetTime();
 
-    // Optional frame smoothing (helps even out jitter in GetFrameTime)
-    const int frameSmoothingCount = 10;
-    std::deque<float> frameTimes;
+  // Optional frame smoothing (helps even out jitter in GetFrameTime)
+  const int frameSmoothingCount = 10;
+  std::deque<float> frameTimes;
 
-    // Safety: limit how many fixed updates can run per frame
-    const int maxUpdatesPerFrame = 5;
+  // Safety: limit how many fixed updates can run per frame
+  const int maxUpdatesPerFrame = 5;
 
-    // FPS tracking
-    int frameCounter = 0;
-    double fpsLastTime = GetTime();
+  // FPS tracking
+  int frameCounter = 0;
+  double fpsLastTime = GetTime();
 
 #ifndef __EMSCRIPTEN__
-    while (!WindowShouldClose())
+  while (!WindowShouldClose()) {
+    ZONE_SCOPED("RunGameLoop"); // custom label
+#endif
     {
-        ZONE_SCOPED("RunGameLoop"); // custom label
-#endif
-        {
-            ZONE_SCOPED("BeginDrawing/rlImGuiBegin call");
-            BeginDrawing();
-        
+      ZONE_SCOPED("BeginDrawing/rlImGuiBegin call");
+      BeginDrawing();
 
 #ifndef __EMSCRIPTEN__
 
-        if (globals::getUseImGUI())
-            rlImGuiBegin(); // Begin ImGui each frame (desktop only)
+      if (globals::getUseImGUI())
+        rlImGuiBegin(); // Begin ImGui each frame (desktop only)
 #endif
-        }
+    }
 
-        using namespace main_loop;
+    using namespace main_loop;
 
-        if (crash_reporter::IsEnabled() && IsKeyPressed(KEY_F10)) {
-            auto report = crash_reporter::CaptureReport("Manual capture (F10)");
-            auto path = crash_reporter::PersistReport(report);
-            if (path) {
-                SPDLOG_INFO("Manual crash report saved to {}", *path);
-            } else {
-                SPDLOG_WARN("Manual crash report captured but persistence is disabled or failed.");
-            }
-        }
+    if (crash_reporter::IsEnabled() && IsKeyPressed(KEY_F10)) {
+      auto report = crash_reporter::CaptureReport("Manual capture (F10)");
+      auto path = crash_reporter::PersistReport(report);
+      if (path) {
+        SPDLOG_INFO("Manual crash report saved to {}", *path);
+      } else {
+        SPDLOG_WARN("Manual crash report captured but persistence is disabled "
+                    "or failed.");
+      }
+    }
 
-        // ---------- Step 1: Measure REAL frame time ----------
-        float rawDeltaTime = std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
-        mainLoop.rawDeltaTime = rawDeltaTime;
+    // ---------- Step 1: Measure REAL frame time ----------
+    float rawDeltaTime =
+        std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
+    mainLoop.rawDeltaTime = rawDeltaTime;
 
-        // Optional smoothing
-        frameTimes.push_back(rawDeltaTime);
-        if (frameTimes.size() > frameSmoothingCount)
-            frameTimes.pop_front();
+    // Optional smoothing
+    frameTimes.push_back(rawDeltaTime);
+    if (frameTimes.size() > frameSmoothingCount)
+      frameTimes.pop_front();
 
-        float deltaTime = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
-        mainLoop.smoothedDeltaTime = deltaTime;
+    float deltaTime =
+        std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) /
+        frameTimes.size();
+    mainLoop.smoothedDeltaTime = deltaTime;
 
-        // ---------- Step 2: Accumulate time ----------
-        mainLoop.realtimeTimer += deltaTime;
-        if (!globals::getIsGamePaused())
-            mainLoop.totaltimeTimer += deltaTime;
+    // ---------- Step 2: Accumulate time ----------
+    mainLoop.realtimeTimer += deltaTime;
+    if (!globals::getIsGamePaused())
+      mainLoop.totaltimeTimer += deltaTime;
 
-        // Accumulate lag for fixed-step updates (real time, not scaled)
-        const float lagDelta = globals::getIsGamePaused() ? 0.0f : deltaTime;
-        mainLoop.lag = std::min(mainLoop.lag + lagDelta, mainLoop.rate * mainLoop.maxFrameSkip);
+    // Accumulate lag for fixed-step updates (real time, not scaled)
+    const float lagDelta = globals::getIsGamePaused() ? 0.0f : deltaTime;
+    mainLoop.lag = std::min(mainLoop.lag + lagDelta,
+                            mainLoop.rate * mainLoop.maxFrameSkip);
 
-        // ---------- Step 3: Fixed updates ----------
-        int updatesPerformed = 0;
-        while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
-        {
-            ZONE_SCOPED("Physics Update Step"); // custom label
-            float scaledStep = mainLoop.rate * mainLoop.timescale;
+    // ---------- Step 3: Fixed updates ----------
+    int updatesPerformed = 0;
+    while (mainLoop.lag >= mainLoop.rate &&
+           updatesPerformed < maxUpdatesPerFrame) {
+      ZONE_SCOPED("Physics Update Step"); // custom label
+      float scaledStep = mainLoop.rate * mainLoop.timescale;
 
-            // Split into two substeps for improved stability
-            const int substeps = 2;
-            float subDelta = scaledStep / substeps;
-            float alpha = mainLoop.lag / mainLoop.rate; // interpolation factor for lerping physics to transform
+      // Split into two substeps for improved stability
+      const int substeps = 2;
+      float subDelta = scaledStep / substeps;
+      float alpha =
+          mainLoop.lag /
+          mainLoop
+              .rate; // interpolation factor for lerping physics to transform
 
+      for (int i = 0; i < substeps; ++i) {
+        updatePhysics(subDelta, alpha);
+      }
 
-            for (int i = 0; i < substeps; ++i)
-            {
-                updatePhysics(subDelta, alpha);
-            }
+      // SPDLOG_DEBUG("physics step ({} substeps) of {} ms each at time {}",
+      //             substeps, subDelta * 1000.0f, mainLoop.totaltimeTimer);
 
-            // SPDLOG_DEBUG("physics step ({} substeps) of {} ms each at time {}",
-            //             substeps, subDelta * 1000.0f, mainLoop.totaltimeTimer);
+      mainLoop.lag -= mainLoop.rate;
+      mainLoop.updates++;
+      updatesPerformed++;
+      mainLoop.frame++;
+    }
 
-            mainLoop.lag -= mainLoop.rate;
-            mainLoop.updates++;
-            updatesPerformed++;
-            mainLoop.frame++;
-        }
+    // ---------- Step 4: Update UPS counter ----------
+    mainLoop.updateTimer += deltaTime;
+    if (mainLoop.updateTimer >= 1.0f) {
+      mainLoop.renderedUPS = mainLoop.updates;
+      mainLoop.updates = 0;
+      mainLoop.updateTimer = 0.0f;
+    }
 
+    // ---------- Step 5: Rendering ----------
+    float scaledStep = rawDeltaTime * mainLoop.timescale;
+    // ---------- Step 4.5: Fixed update (moved) ----------
+    {
 
-        // ---------- Step 4: Update UPS counter ----------
-        mainLoop.updateTimer += deltaTime;
-        if (mainLoop.updateTimer >= 1.0f)
-        {
-            mainLoop.renderedUPS = mainLoop.updates;
-            mainLoop.updates = 0;
-            mainLoop.updateTimer = 0.0f;
-        }
+      MainLoopFixedUpdateAbstraction(scaledStep);
+      // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
+    }
 
-        // ---------- Step 5: Rendering ----------
-        float scaledStep = rawDeltaTime * mainLoop.timescale;
-        // ---------- Step 4.5: Fixed update (moved) ----------
-        {
-            
-            MainLoopFixedUpdateAbstraction(scaledStep);
-            // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
-        }
+    // Pass real render deltaTime to renderer
+    MainLoopRenderAbstraction(scaledStep);
 
+    // Render-time timers (if you use time-scaled effects here, apply timescale
+    // manually)
+    timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
 
-        // Pass real render deltaTime to renderer
-        MainLoopRenderAbstraction(scaledStep);
+    // ---------- Step 6: FPS counter ----------
+    frameCounter++;
+    double now = GetTime();
+    if (now - fpsLastTime >= 1.0) {
+      mainLoop.renderedFPS = frameCounter;
+      frameCounter = 0;
+      fpsLastTime = now;
+    }
 
-        // Render-time timers (if you use time-scaled effects here, apply timescale manually)
-        timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
-
-        // ---------- Step 6: FPS counter ----------
-        frameCounter++;
-        double now = GetTime();
-        if (now - fpsLastTime >= 1.0)
-        {
-            mainLoop.renderedFPS = frameCounter;
-            frameCounter = 0;
-            fpsLastTime = now;
-        }
-        
-        {
-            ZONE_SCOPED("EndDrawing/rlImGuiEnd call");
+    {
+      ZONE_SCOPED("EndDrawing/rlImGuiEnd call");
 
 #ifndef __EMSCRIPTEN__
-        if (globals::getUseImGUI())
-            rlImGuiEnd();
+      if (globals::getUseImGUI())
+        rlImGuiEnd();
 #endif
-            EndDrawing();
-        }
-        
-        mainLoop.renderFrame++; // ✅ Count this as one rendered frame
+      EndDrawing();
+    }
+
+    mainLoop.renderFrame++; // ✅ Count this as one rendered frame
 
 #ifdef __EMSCRIPTEN__
-        // (No while loop on web)
+    // (No while loop on web)
 #else
-    } // while (!WindowShouldClose())
+} // while (!WindowShouldClose())
 #endif
-}
+  }
 
-
-
-int main(void)
-{
+  int main(void) {
 
     // --------------------------------------------------------------------------------------
     // game init
@@ -409,7 +385,7 @@ int main(void)
 #if defined(__EMSCRIPTEN__)
     crashConfig.enable_file_output = false;
 #else
-    crashConfig.enable_browser_download = false;
+  crashConfig.enable_browser_download = false;
 #endif
     crashConfig.build_id = CRASH_REPORT_BUILD_ID;
     crash_reporter::Init(crashConfig);
@@ -421,24 +397,24 @@ int main(void)
     crash_reporter::AttachSinkToLogger(spdlog::default_logger());
     layer::InitDispatcher();
 
-    main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
-    SetTargetFPS(main_loop::mainLoop.framerate); 
+    main_loop::initMainLoopData(
+        std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
+    SetTargetFPS(main_loop::mainLoop.framerate);
 
     SetExitKey(-1);
 
     init::startInit();
-    
 
-    input::Init(globals::getInputState(), globals::getRegistry(), globals::g_ctx);
+    input::Init(globals::getInputState(), globals::getRegistry(),
+                globals::g_ctx);
 
     game::init();
-    
-    
-    //gamepad connected? just connect gamepad 0
+
+    // gamepad connected? just connect gamepad 0
     if (IsGamepadAvailable(0)) {
-        input::SetCurrentGamepad(globals::getInputState(), GetGamepadName(0), 0);
+      input::SetCurrentGamepad(globals::getInputState(), GetGamepadName(0), 0);
     }
-    
+
     // --------------------------------------------------------------------------------------
     // game loop
     // --------------------------------------------------------------------------------------
@@ -451,20 +427,19 @@ int main(void)
     emscripten_set_main_loop(RunGameLoop, 0, 1);
 #else
 
-    // try {
-    
-    // Main game loop
-    while (!WindowShouldClose())
-    { // Detect window close button or ESC key
-        // FrameMark; // marks one frame
-        RunGameLoop();
-    }
+  // try {
+
+  // Main game loop
+  while (!WindowShouldClose()) { // Detect window close button or ESC key
+    // FrameMark; // marks one frame
+    RunGameLoop();
+  }
 
 #endif
     // De-Initialization
 
-    //TODO: unload all textures & sprite atlas & sounds
-    //TODO: unload all layer commands as welll.
+    // TODO: unload all textures & sprite atlas & sounds
+    // TODO: unload all layer commands as welll.
     palette_quantizer::unloadPaletteTexture(); // unload palette texture if any
     layer::UnloadAllLayers();
     shaders::unloadShaders();
@@ -490,78 +465,95 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     return 0;
-}
+  }
 
-/// @brief Update the systems that operate on ECS components. Note: dt is in seconds
-/// @return
-auto updateSystems(float dt) -> void
-{
+  /// @brief Update the systems that operate on ECS components. Note: dt is in
+  /// seconds
+  /// @return
+  auto updateSystems(float dt) -> void {
     ZONE_SCOPED("UpdateSystems"); // custom label
-    
+
     // clear layers
     {
-        ZONE_SCOPED("layer::Begin");
-        layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
+      ZONE_SCOPED("layer::Begin");
+      layer::Begin(); // clear all commands so we begin fresh next frame, and
+                      // also let draw commands from update loop to show up when
+                      // rendering (update is called before draw). we do this in
+                      // update rather than draw since draw will execute more
+                      // often than update.
     }
-    
+
     {
-        ZONE_SCOPED("Input System Update");
-        updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
-        fade_system::update(dt); // update fade system
+      ZONE_SCOPED("Input System Update");
+      updateTimers(dt); // these are used by event queue system (TODO: replace
+                        // with mainloop abstraction)
+      fade_system::update(dt); // update fade system
     }
-    
+
     {
-        ZONE_SCOPED("Input System Update");
-        input::Update(globals::getRegistry(), globals::getInputState(), dt, globals::g_ctx);
+      ZONE_SCOPED("Input System Update");
+      input::Update(globals::getRegistry(), globals::getInputState(), dt,
+                    globals::g_ctx);
     }
-    
+
     {
-        ZONE_SCOPED("Global Variables Update & sound");
-        globals::updateGlobalVariables();
-        // SPDLOG_DEBUG("Updating sound with dt of {}", main_loop::mainLoop.rawDeltaTime);
-        sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
+      ZONE_SCOPED("Global Variables Update & sound");
+      globals::updateGlobalVariables();
+      // SPDLOG_DEBUG("Updating sound with dt of {}",
+      // main_loop::mainLoop.rawDeltaTime);
+      sound_system::Update(
+          main_loop::mainLoop
+              .rawDeltaTime); // update sound system, ignore slowed DT here.
     }
-    
+
     // {
     //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativeTransform");
-    //     physics::ApplyAuthoritativeTransform(globals::getRegistry(), *globals::physicsManager);
+    //     physics::ApplyAuthoritativeTransform(globals::getRegistry(),
+    //     *globals::physicsManager);
     // }
-    
+
     // {
     //     ZONE_SCOPED("Physics Step All Worlds");
     //     globals::physicsManager->stepAll(dt); // step all physics worlds
     // }
-    
+
     // {
     //     ZONE_SCOPED("Physics Transform Hook ApplyAuthoritativePhysics");
-    //     physics::ApplyAuthoritativePhysics(globals::getRegistry(), *globals::physicsManager);
+    //     physics::ApplyAuthoritativePhysics(globals::getRegistry(),
+    //     *globals::physicsManager);
     // }
-    
+
     // systems
-    
+
     shaders::update(dt);
     timer::TimerSystem::update_timers(dt);
     spring::updateAllSprings(globals::getRegistry(), dt);
     animation_system::update(dt);
-    transform::ExecuteCallsForTransformMethod<void>(globals::getRegistry(), entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::getRegistry(), dt);
+    transform::ExecuteCallsForTransformMethod<void>(
+        globals::getRegistry(), entt::null,
+        transform::TransformMethod::UpdateAllTransforms,
+        &globals::getRegistry(), dt);
     controller_nav::NavManager::instance().update(dt);
     {
-        ZONE_SCOPED("EventQueueSystem::EventManager::update");
-        // update event queue
-        timer::EventQueueSystem::EventManager::update(dt);
+      ZONE_SCOPED("EventQueueSystem::EventManager::update");
+      // update event queue
+      timer::EventQueueSystem::EventManager::update(dt);
     }
-    
+
     {
-        ZONE_SCOPED("scripting::monobehavior_system::update");
-        scripting::monobehavior_system::update(globals::getRegistry(), dt); // update all monobehavior scripts in the registry
+      ZONE_SCOPED("scripting::monobehavior_system::update");
+      scripting::monobehavior_system::update(
+          globals::getRegistry(),
+          dt); // update all monobehavior scripts in the registry
     }
     {
-        ZONE_SCOPED("AI System Update");
-        ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
+      ZONE_SCOPED("AI System Update");
+      ai_system::masterScheduler.update(
+          static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
     }
-    
+
     {
-        ZONE_SCOPED("ai_system::updateHumanAI");
-        ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
+      ZONE_SCOPED("ai_system::updateHumanAI");
+      ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
     }
-}
+  }

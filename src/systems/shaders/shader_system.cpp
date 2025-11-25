@@ -727,23 +727,23 @@ namespace shaders
 
     void ShowShaderEditorUI(ShaderUniformComponent &component)
     {
-        if (!ImGui::Begin("Shader Editor"))
-            return;
-
-        if (ImGui::BeginTabBar("Shaders"))
+        const bool editorVisible = ImGui::Begin("Shader Editor");
+        if (editorVisible)
         {
-            for (auto &[shaderName, uniformSet] : component.shaderUniforms)
+            if (ImGui::BeginTabBar("Shaders"))
             {
-                if (ImGui::BeginTabItem(shaderName.c_str()))
+                for (auto &[shaderName, uniformSet] : component.shaderUniforms)
                 {
-                    // "Log Uniforms" button
-                    if (ImGui::Button("Log Uniforms"))
+                    if (ImGui::BeginTabItem(shaderName.c_str()))
                     {
-                        SPDLOG_INFO("Uniforms for shader '{}':", shaderName);
-                        for (const auto &[uniformName, uniformValue] : uniformSet.uniforms)
+                        // "Log Uniforms" button
+                        if (ImGui::Button("Log Uniforms"))
                         {
-                            std::visit([&](const auto &value)
-                                       {
+                            SPDLOG_INFO("Uniforms for shader '{}':", shaderName);
+                            for (const auto &[uniformName, uniformValue] : uniformSet.uniforms)
+                            {
+                                std::visit([&](const auto &value)
+                                           {
                                 using T = std::decay_t<decltype(value)>;
                                 if constexpr (std::is_same_v<T, float>) {
                                     SPDLOG_INFO("  {}: float = {}", uniformName, value);
@@ -762,18 +762,18 @@ namespace shaders
                                 else {
                                     SPDLOG_WARN("  {}: Unknown uniform type", uniformName);
                                 } }, uniformValue);
+                            }
                         }
-                    }
 
-                    ImGui::Separator();
+                        ImGui::Separator();
 
-                    // Live-edit uniforms
-                    for (auto &[uniformName, uniformValue] : uniformSet.uniforms)
-                    {
-                        ImGui::PushID(uniformName.c_str());
+                        // Live-edit uniforms
+                        for (auto &[uniformName, uniformValue] : uniformSet.uniforms)
+                        {
+                            ImGui::PushID(uniformName.c_str());
 
-                        std::visit([&](auto &value)
-                                   {
+                            std::visit([&](auto &value)
+                                       {
                             using T = std::decay_t<decltype(value)>;
                             if constexpr (std::is_same_v<T, float>) {
                                 ImGui::DragFloat(uniformName.c_str(), &value, 0.01f);
@@ -797,13 +797,14 @@ namespace shaders
                                 static_assert(always_false<T>::value, "Unsupported uniform type");
                             } }, uniformValue);
 
-                        ImGui::PopID();
-                    }
+                            ImGui::PopID();
+                        }
 
-                    ImGui::EndTabItem();
+                        ImGui::EndTabItem();
+                    }
                 }
+                ImGui::EndTabBar();
             }
-            ImGui::EndTabBar();
         }
 
         ImGui::End();

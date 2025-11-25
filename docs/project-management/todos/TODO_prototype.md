@@ -57,34 +57,32 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 # Things to do in downtime.
 - continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
-- I need to continue with "testing_checklist." starting with projectile system.
 - got to also test the new batching queue system.
 - issue error on closing via x again.
     
 # programming side
 
-- probably want to 
-- brainstorm how best to visualize the execution order of the cards to the player. 
+- also need currency. display it somewhere on the screen in the shop and planning phases.
+- let's scoot the walls outward so that the thickness falls right on the edge of hte playable area, and cull projectiles which contact the wall.
+
+- let's make it easy to hoook up triggers?
+- buttons of some kind to quickly press to send card up to wand or back to inventory, maybe popping out behind card? what would this look like?
+- color code wand slots + trigger area + card area so that it's easy to swap between them.
+- Then have a button that pops up when you click a card (or a pip if it's controller) that says "to wand" or (if already in wand) "to inven". Shortcut keys to swap to trigger inventory or card inventory.
+- Avatar slot. leave empty for now. maybe use stencil to have a rectangle area that has stripes animated through it.
+- Relic slot. Maybe ROR like bar which can be filled. 
+
+
+- brainstorm how best to visualize the execution order of the cards to the player. maybe use arrows?
 - need to figure out how to process the cast blocks, and ensure they contain all necessary information I would need to ceonceivably implement the individual behaviors of each projectile/cast. 
-
-- highlight mod cards as well in the simulator. use the same color highlight for each cast block, to make it easier to see.
-- add an option to stop the ticking noise.
-
-
-
-
-
 
 - start wand evaluation mechanism.
 
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 
 
-
-- buttons of some kind to quickly press to send card up to wand or back to inventory, maybe popping out of card?
-
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
-- implement card evaluation order using actual cards to see how it behaves.
+
 - make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.
 
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
@@ -130,7 +128,6 @@ end)
 - mods projectile_pierces_twice and summon_minion_wandering not implemented. 
 - apply card tag synergies: mobility, defense, hazard, brute
 - think up and  apply card upgrades. e.g., bolt -> takes on an element -> pierces 3 times -> explodes on impact. We  need an upgrade resource, and an area where upgrades can be applied.
-- also need currency.
 
 # errors
 - there's a memory leak in the wasm version.

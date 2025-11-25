@@ -2107,7 +2107,7 @@ function makeWandTooltip(wand_def)
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
 
     ui.box.RenewAlignment(registry, boxID)
-    -- ui.box.set_draw_layer(boxID, "ui")
+    ui.box.set_draw_layer(boxID, "ui")
 
     ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     remove_default_state_tag(boxID)
@@ -2184,7 +2184,7 @@ function makeCardTooltip(card_def)
 
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
 
-    -- ui.box.set_draw_layer(boxID, "ui")
+    ui.box.set_draw_layer(boxID, "ui")
     ui.box.RenewAlignment(registry, boxID)
     -- ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     ui.box.ClearStateTagsFromUIBox(boxID) -- remove all state tags from sub entities and box
@@ -3517,7 +3517,7 @@ function createJointedMask(parentEntity, worldName)
             shape = "rectangle",
             tag = "mask",
             sensor = false,
-            density = 0.1 -- Light weight
+            density = 0.0 -- Light weight
         }
     )
 

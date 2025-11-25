@@ -37,75 +37,76 @@ namespace game {
 
     inline void ShowDebugUI()
     {
-        if (!ImGui::Begin("DebugWindow"))
-            return;
+        const bool debugWindowOpen = ImGui::Begin("DebugWindow");
+        if (debugWindowOpen)
+        {
 
-        static const float uiScales[] = { 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f };
-        static int currentScaleIndex = 2; // Default to 1.0f
-        static int previousScaleIndex = currentScaleIndex;
-        static int lastLoadingCountShown = 0;
-        static float fakeProgress = 0.0f;
+            static const float uiScales[] = { 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f };
+            static int currentScaleIndex = 2; // Default to 1.0f
+            static int previousScaleIndex = currentScaleIndex;
+            static int lastLoadingCountShown = 0;
+            static float fakeProgress = 0.0f;
 
-        if (ImGui::BeginTabBar("Debug variables")) {
-            if (ImGui::BeginTabItem("Flags")) {
-                bool debugDraw = globals::getDrawDebugInfo();
-                if (ImGui::Checkbox("Show Bounding Boxes & Debug Info", &debugDraw)) {
-                    globals::setDrawDebugInfo(debugDraw);
-                }
-                bool physicsDebug = globals::getDrawPhysicsDebug();
-                if (ImGui::Checkbox("Show physics debug draw", &physicsDebug)) {
-                    globals::setDrawPhysicsDebug(physicsDebug);
-                }
-
-                ImGui::Text("UI Scale:");
-                if (ImGui::BeginCombo("##uiScaleCombo", std::to_string(uiScales[currentScaleIndex]).c_str())) {
-                    for (int i = 0; i < IM_ARRAYSIZE(uiScales); ++i) {
-                        bool isSelected = (i == currentScaleIndex);
-                        if (ImGui::Selectable(std::to_string(uiScales[i]).c_str(), isSelected)) {
-                            currentScaleIndex = i;
-                        }
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
+            if (ImGui::BeginTabBar("Debug variables")) {
+                if (ImGui::BeginTabItem("Flags")) {
+                    bool debugDraw = globals::getDrawDebugInfo();
+                    if (ImGui::Checkbox("Show Bounding Boxes & Debug Info", &debugDraw)) {
+                        globals::setDrawDebugInfo(debugDraw);
                     }
-                    ImGui::EndCombo();
-                }
+                    bool physicsDebug = globals::getDrawPhysicsDebug();
+                    if (ImGui::Checkbox("Show physics debug draw", &physicsDebug)) {
+                        globals::setDrawPhysicsDebug(physicsDebug);
+                    }
 
-                if (currentScaleIndex != previousScaleIndex) {
-                    previousScaleIndex = currentScaleIndex;
-                    globals::setGlobalUIScaleFactor(uiScales[currentScaleIndex]);
-                    OnUIScaleChanged(); // ✅ Call your method here
-                }
+                    ImGui::Text("UI Scale:");
+                    if (ImGui::BeginCombo("##uiScaleCombo", std::to_string(uiScales[currentScaleIndex]).c_str())) {
+                        for (int i = 0; i < IM_ARRAYSIZE(uiScales); ++i) {
+                            bool isSelected = (i == currentScaleIndex);
+                            if (ImGui::Selectable(std::to_string(uiScales[i]).c_str(), isSelected)) {
+                                currentScaleIndex = i;
+                            }
+                            if (isSelected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndCombo();
+                    }
 
-                ImGui::EndTabItem();
+                    if (currentScaleIndex != previousScaleIndex) {
+                        previousScaleIndex = currentScaleIndex;
+                        globals::setGlobalUIScaleFactor(uiScales[currentScaleIndex]);
+                        OnUIScaleChanged(); // ✅ Call your method here
+                    }
+
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Events")) {
+                    // Loading progress bar (debug-only).
+                    int stagesComplete = globals::loadingStateIndex;
+                    float progress = std::min(1.0f, stagesComplete / 10.0f); // heuristic until a real total is known
+                    if (stagesComplete != lastLoadingCountShown) {
+                        fakeProgress = progress;
+                        lastLoadingCountShown = stagesComplete;
+                    } else {
+                        fakeProgress = std::min(1.0f, fakeProgress + 0.02f); // creep forward visually
+                    }
+                    ImGui::Text("Loading progress");
+                    ImGui::ProgressBar(fakeProgress, ImVec2(0.0f, 0.0f));
+
+                    ImGui::Text("Last loading stage: %s (%s)",
+                                globals::getLastLoadingStage().empty() ? "<none>" : globals::getLastLoadingStage().c_str(),
+                                globals::getLastLoadingStageSuccess() ? "ok" : "failed");
+                    ImGui::Text("Last UI focus: %d", static_cast<int>(globals::getLastUIFocus()));
+                    ImGui::Text("Last UI button: %d", static_cast<int>(globals::getLastUIButtonActivated()));
+                    ImGui::Text("Last collision: A=%d B=%d",
+                                static_cast<int>(globals::getLastCollisionA()),
+                                static_cast<int>(globals::getLastCollisionB()));
+                    ImGui::EndTabItem();
+                }
+                ImGui::EndTabBar();
             }
-            if (ImGui::BeginTabItem("Events")) {
-                // Loading progress bar (debug-only).
-                int stagesComplete = globals::loadingStateIndex;
-                float progress = std::min(1.0f, stagesComplete / 10.0f); // heuristic until a real total is known
-                if (stagesComplete != lastLoadingCountShown) {
-                    fakeProgress = progress;
-                    lastLoadingCountShown = stagesComplete;
-                } else {
-                    fakeProgress = std::min(1.0f, fakeProgress + 0.02f); // creep forward visually
-                }
-                ImGui::Text("Loading progress");
-                ImGui::ProgressBar(fakeProgress, ImVec2(0.0f, 0.0f));
-
-                ImGui::Text("Last loading stage: %s (%s)",
-                            globals::getLastLoadingStage().empty() ? "<none>" : globals::getLastLoadingStage().c_str(),
-                            globals::getLastLoadingStageSuccess() ? "ok" : "failed");
-                ImGui::Text("Last UI focus: %d", static_cast<int>(globals::getLastUIFocus()));
-                ImGui::Text("Last UI button: %d", static_cast<int>(globals::getLastUIButtonActivated()));
-                ImGui::Text("Last collision: A=%d B=%d",
-                            static_cast<int>(globals::getLastCollisionA()),
-                            static_cast<int>(globals::getLastCollisionB()));
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
         }
 
         ImGui::End();
     }
-
 
 }

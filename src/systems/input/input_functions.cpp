@@ -53,6 +53,10 @@ namespace input
     }
 
     // Resolve input state and registry, preferring the EngineContext when available.
+    static EngineContext* resolveCtx(EngineContext* ctx) {
+        return ctx ? ctx : globals::g_ctx;
+    }
+
     static InputState& resolveInputState() {
         if (globals::g_ctx && globals::g_ctx->inputState) {
             return *globals::g_ctx->inputState;
@@ -62,6 +66,13 @@ namespace input
 
     static entt::registry& resolveRegistry() {
         return globals::getRegistry();
+    }
+
+    static event_bus::EventBus& resolveEventBus(EngineContext* ctx) {
+        if (auto* resolved = resolveCtx(ctx)) {
+            return resolved->eventBus;
+        }
+        return globals::getEventBus();
     }
 
     void HandleTextInput(ui::TextInput &input) {
@@ -137,9 +148,9 @@ namespace input
         }
     }
 
-    auto PollInput(entt::registry &registry, InputState &inputState, float dt) -> void
+    auto PollInput(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void
     {
-        auto& bus = globals::getEventBus();
+        auto& bus = resolveEventBus(ctx);
 
         // keyboard input polling
         // ---------------- Keyboard Input ----------------
@@ -204,7 +215,7 @@ namespace input
         { // release only for left button
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
             Vector2 mousePos = globals::getScaledMousePositionCached();
-            ProcessLeftMouseButtonRelease(registry, inputState, mousePos.x, mousePos.y);
+            ProcessLeftMouseButtonRelease(registry, inputState, mousePos.x, mousePos.y, ctx);
         }
 
         mouseLeftDownLastFrame = mosueLeftDownCurrentFrame;
@@ -285,9 +296,9 @@ namespace input
         }
     }
 
-    auto handleRawInput(entt::registry &registry, InputState &inputState, float dt) -> void
+    auto handleRawInput(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void
     {
-        PollInput(registry, inputState, dt);
+        PollInput(registry, inputState, dt, ctx);
 
         ProcessInputLocks(inputState, registry, dt);
 
@@ -351,7 +362,7 @@ namespace input
         // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt);
         auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
 
-        handleRawInput(registry, inputState, dt);
+        handleRawInput(registry, inputState, dt, ctx);
 
         // ReconfigureInputDeviceInfo(inputState, finalCategory);
 
@@ -410,7 +421,7 @@ namespace input
             }
         }
         
-        UpdateFocusForRelevantNodes(registry, inputState);
+        UpdateFocusForRelevantNodes(registry, inputState, std::nullopt, ctx);
         UpdateCursorHoveringState(registry, inputState);
         processRaylibLeftClick(inputState, registry);
 
@@ -2196,9 +2207,9 @@ namespace input
     }
 
     // called by update() function
-    void ProcessLeftMouseButtonRelease(entt::registry &registry, InputState &state, float x, float y)
+    void ProcessLeftMouseButtonRelease(entt::registry &registry, InputState &state, float x, float y, EngineContext* ctx)
     {
-        auto& bus = globals::getEventBus();
+        auto& bus = resolveEventBus(ctx);
         // Default to current cursor position if x or y is not provided
         if (x < 0.0f)
             x = state.cursor_position.x;
@@ -2339,9 +2350,9 @@ namespace input
     }
 
     // focus only works for controller input, when focus interrupt is not enabled, and when the game is not paused, and the input isn't locked.
-    void UpdateFocusForRelevantNodes(entt::registry &registry, InputState &state, std::optional<std::string> dir)
+    void UpdateFocusForRelevantNodes(entt::registry &registry, InputState &state, std::optional<std::string> dir, EngineContext* ctx)
     {
-        auto& bus = globals::getEventBus();
+        auto& bus = resolveEventBus(ctx);
         const entt::entity prevFocused = state.cursor_focused_target;
         
         // -----------------------------------------------------------------------------
@@ -2635,7 +2646,7 @@ namespace input
 
             if (state.cursor_focused_target != state.cursor_prev_focused_target)
             {
-                globals::vibration += 0.7f;
+                globals::getVibration() += 0.7f;
             }
         }
         else
@@ -2849,7 +2860,7 @@ namespace input
         // Apply vibration if input was handled
         if (ret)
         {
-            globals::vibration += 1;
+            globals::getVibration() += 1;
         }
         return ret;
     }

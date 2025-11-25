@@ -1,8 +1,8 @@
 #pragma once
 
 #include "entt/entity/fwd.hpp"
-#include "systems/anim_system.hpp"
 #include "sol/types.hpp"
+#include "systems/anim_system.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 
@@ -127,7 +127,7 @@ inline entt::entity CreateParticle(
     const std::string &tag = "" //<— new parameter
 ) {
   auto particle = transform::CreateOrEmplace(&globals::getRegistry(),
-                                            globals::getGameWorldContainer(),
+                                             globals::getGameWorldContainer(),
                                              location.x, location.y, 0, 0);
   auto &transform = registry.get<transform::Transform>(particle);
 
@@ -160,7 +160,8 @@ inline entt::entity CreateParticle(
   particleComp.acceleration = particleData.acceleration.value_or(0.0f);
 
   if (animationConfig) {
-    auto &anim = factory::emplaceAnimationQueue(globals::getRegistry(), particle);
+    auto &anim =
+        factory::emplaceAnimationQueue(globals::getRegistry(), particle);
 
     if (animationConfig->useSpriteNotAnimation) {
       anim.defaultAnimation =

@@ -79,6 +79,7 @@ build-skip/
 build-debug-ninja/
 .ccache/
 build-asan/
+/docs/doxygen/
 /web_build
 /desktop_build
 /build-emc

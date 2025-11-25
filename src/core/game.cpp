@@ -816,6 +816,7 @@ namespace game
         lua.set_function("remove_layer_shader", &game::remove_layer_shader);
         lua.set_function("clear_layer_shaders", &game::clear_layer_shaders);
 
+        //FIXME: seems to be undocumented?
         rec.record_free_function({""}, {
             "add_layer_shader",
             "---@param layer string @ \"background\" | \"sprites\" | \"ui\" | \"final\"",
@@ -1083,7 +1084,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
                     Vector2{(float)entt::to_integral(ev.entityA), (float)entt::to_integral(ev.entityB)});
                 globals::setLastCollision(ev.entityA, ev.entityB);
                 // Provide immediate haptic feedback for collisions.
-                globals::vibration = std::min(1.0f, globals::vibration + 0.5f);
+                globals::getVibration() = std::min(1.0f, globals::getVibration() + 0.5f);
                 globals::pushCollisionLog(globals::CollisionNote{
                     ev.entityA,
                     ev.entityB,

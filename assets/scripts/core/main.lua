@@ -45,8 +45,9 @@ end
 
 function initMainMenu()
     
-    add_fullscreen_shader("pixelate_image")
-    globalShaderUniforms:set("pixelate_image", "pixelRatio", 0.36)
+    add_layer_shader("sprites", pixelate_image)
+    -- add_fullscreen_shader("pixelate_image")
+    -- globalShaderUniforms:set("pixelate_image", "pixelRatio", 0.36)
     
     -- create a timer to increment the phase
     timer.run(

@@ -59,6 +59,7 @@ endif()
 
 option(TRACY_ENABLE "Enable Tracy profiler instrumentation" OFF)
 option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
+option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" OFF)
 
 # Prefer compiler cache when available to speed up rebuilds.
 find_program(CCACHE_PROGRAM ccache)
@@ -114,6 +115,10 @@ if (CCACHE_PROGRAM)
     )
 else()
     message(STATUS "ccache not found; builds will run without a compiler cache")
+endif()
+
+if(ENGINECTX_DEPRECATE_GLOBALS)
+    add_compile_definitions(ENGINECTX_DEPRECATE_GLOBALS=1)
 endif()
 
 

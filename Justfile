@@ -59,3 +59,6 @@ build-debug-ninja:
 build-release-ninja:
 	cmake -B build-release-ninja -G Ninja -DCMAKE_BUILD_TYPE=Release
 	cmake --build build-release-ninja --target raylib-cpp-cmake-template -j --
+
+docs:
+	doxygen Doxyfile

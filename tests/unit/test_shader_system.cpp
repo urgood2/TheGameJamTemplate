@@ -6,7 +6,9 @@
 #include <vector>
 #include <optional>
 #include <functional>
+#include <unordered_set>
 
+#include "core/misc_fuctions.hpp"
 #include "systems/shaders/shader_system.hpp"
 
 namespace
@@ -23,6 +25,7 @@ namespace
             lastVertexPath.clear();
             lastFragmentPath.clear();
             nextShaderId = 10;
+            missingUniforms.clear();
         }
 
         inline static int loadCount = 0;
@@ -33,7 +36,30 @@ namespace
         inline static std::string lastVertexPath;
         inline static std::string lastFragmentPath;
         inline static unsigned int nextShaderId = 10;
+        inline static std::unordered_set<std::string> missingUniforms;
     };
+
+    struct ImGuiCallTracker
+    {
+        static void Reset()
+        {
+            beginCalls = 0;
+            endCalls = 0;
+            contentCalls = 0;
+        }
+
+        inline static int beginCalls = 0;
+        inline static int endCalls = 0;
+        inline static int contentCalls = 0;
+    };
+
+    inline bool gImGuiBeginReturn = true;
+
+    inline void ResetImGuiStubs()
+    {
+        ImGuiCallTracker::Reset();
+        gImGuiBeginReturn = true;
+    }
 
     long fileWriteTime(const std::filesystem::path &p)
     {
@@ -48,6 +74,10 @@ namespace
         return path;
     }
 } // namespace
+
+namespace game {
+    std::function<void()> OnUIScaleChanged = []() {};
+}
 
 // Stub shader operations with external linkage so the implementation resolves to them.
 Shader TestLoadShader(const char *vertexPath, const char *fragmentPath)
@@ -67,6 +97,9 @@ void TestUnloadShader(Shader)
 
 int TestGetShaderLocation(Shader, const char *name)
 {
+    if (name && ShaderStubStats::missingUniforms.count(name)) {
+        return -1;
+    }
     ShaderStubStats::lastUniformName = name ? name : "";
     return 0;
 }
@@ -124,24 +157,30 @@ namespace ImGui
 {
     bool Begin(const char *, bool *, ImGuiWindowFlags, std::optional<std::function<void()>>)
     {
-        return true;
+        ImGuiCallTracker::beginCalls++;
+        return gImGuiBeginReturn;
     }
-    void End() {}
-    bool BeginTabBar(const char *, ImGuiTabBarFlags) { return true; }
+    void End() { ImGuiCallTracker::endCalls++; }
+    bool BeginTabBar(const char *, ImGuiTabBarFlags) { ImGuiCallTracker::contentCalls++; return true; }
     void EndTabBar() {}
-    bool BeginTabItem(const char *, bool *, ImGuiTabItemFlags) { return true; }
+    bool BeginTabItem(const char *, bool *, ImGuiTabItemFlags) { ImGuiCallTracker::contentCalls++; return true; }
     void EndTabItem() {}
-    bool Button(const char *, const ImVec2 &) { return false; }
-    void Separator() {}
+    bool Button(const char *, const ImVec2 &) { ImGuiCallTracker::contentCalls++; return false; }
+    void Separator() { ImGuiCallTracker::contentCalls++; }
     void PushID(const char *) {}
     void PopID() {}
-    bool DragFloat(const char *, float *, float, float, float, const char *, ImGuiSliderFlags) { return false; }
-    bool DragFloat2(const char *, float *, float, float, float, const char *, ImGuiSliderFlags) { return false; }
-    bool DragFloat3(const char *, float *, float, float, float, const char *, ImGuiSliderFlags) { return false; }
-    bool DragInt(const char *, int *, float, int, int, const char *, ImGuiSliderFlags) { return false; }
-    bool ColorEdit4(const char *, float *, ImGuiColorEditFlags) { return false; }
-    bool Checkbox(const char *, bool *) { return false; }
-    void Text(const char *, ...) {}
+    bool DragFloat(const char *, float *, float, float, float, const char *, ImGuiSliderFlags) { ImGuiCallTracker::contentCalls++; return false; }
+    bool DragFloat2(const char *, float *, float, float, float, const char *, ImGuiSliderFlags) { ImGuiCallTracker::contentCalls++; return false; }
+    bool DragFloat3(const char *, float *, float, float, float, const char *, ImGuiSliderFlags) { ImGuiCallTracker::contentCalls++; return false; }
+    bool DragInt(const char *, int *, float, int, int, const char *, ImGuiSliderFlags) { ImGuiCallTracker::contentCalls++; return false; }
+    bool ColorEdit4(const char *, float *, ImGuiColorEditFlags) { ImGuiCallTracker::contentCalls++; return false; }
+    bool Checkbox(const char *, bool *) { ImGuiCallTracker::contentCalls++; return false; }
+    bool BeginCombo(const char *, const char *, ImGuiComboFlags) { ImGuiCallTracker::contentCalls++; return false; }
+    bool Selectable(const char *, bool, ImGuiSelectableFlags, const ImVec2 &) { ImGuiCallTracker::contentCalls++; return false; }
+    void SetItemDefaultFocus() {}
+    void EndCombo() {}
+    void ProgressBar(float, const ImVec2 &, const char *) { ImGuiCallTracker::contentCalls++; }
+    void Text(const char *, ...) { ImGuiCallTracker::contentCalls++; }
 } // namespace ImGui
 
 TEST_F(ShaderSystemTest, ShaderUniformSetStoresAndRetrievesUniforms)
@@ -175,6 +214,23 @@ TEST_F(ShaderSystemTest, ApplyUniformsInvokesSetters)
 
     EXPECT_EQ(ShaderStubStats::setValueCount, 1);
     EXPECT_EQ(ShaderStubStats::lastUniformName, "uValue");
+}
+
+TEST_F(ShaderSystemTest, ApplyUniformsSkipsMissingLocationsButKeepsOthers)
+{
+    shaders::ShaderUniformSet set;
+    set.set("uMissing", 1.0f);
+    set.set("uPresent", Vector2{2.0f, 3.0f});
+
+    ShaderStubStats::missingUniforms.insert("uMissing");
+
+    Shader shader{};
+    shader.id = 2;
+    shaders::ApplyUniformsToShader(shader, set);
+
+    // Only the present uniform should be applied.
+    EXPECT_EQ(ShaderStubStats::setValueCount, 1);
+    EXPECT_EQ(ShaderStubStats::lastUniformName, "uPresent");
 }
 
 TEST_F(ShaderSystemTest, HotReloadsWhenTimestampChanges)
@@ -220,4 +276,16 @@ TEST_F(ShaderSystemTest, SkipsReloadWhenUnchanged)
     EXPECT_EQ(ShaderStubStats::loadCount, 0);
     EXPECT_EQ(ShaderStubStats::unloadCount, 0);
     EXPECT_EQ(shaders::loadedShaders["basic"].id, 2u);
+}
+
+TEST(DebugUIImGui, CallsEndWhenWindowCollapsed)
+{
+    ResetImGuiStubs();
+    gImGuiBeginReturn = false; // Simulate a collapsed/hidden window
+
+    game::ShowDebugUI();
+
+    EXPECT_EQ(ImGuiCallTracker::beginCalls, 1);
+    EXPECT_EQ(ImGuiCallTracker::endCalls, 1);
+    EXPECT_EQ(ImGuiCallTracker::contentCalls, 0);
 }

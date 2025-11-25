@@ -3206,7 +3206,7 @@ function initCombatSystem()
                     c.h     = healthBarHeight * hpScale
                     c.rx    = 5
                     c.ry    = 5
-                    c.color = util.getColor("white"):setAlpha(200)
+                    c.color = Col(255, 255, 255, 255)
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
                 -- Red bar (front) - shows the smaller/current value
@@ -3267,7 +3267,7 @@ function initCombatSystem()
                     c.h     = expBarHeight * xpScale
                     c.rx    = 5
                     c.ry    = 5
-                    c.color = util.getColor("white"):setAlpha(200)
+                    c.color = Col(255, 255, 255, 255)
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
                 -- Yellow bar (front) - shows the main spring value (smooth lerp)

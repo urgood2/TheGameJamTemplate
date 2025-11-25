@@ -2259,7 +2259,11 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             // -- draw physics world
             
             if (globals::getDrawDebugInfo()) {
-                camera_manager::Begin(worldCamera->cam); // begin camera mode
+                Camera2D debugCam = worldCamera->cam;
+                debugCam.offset.x = debugCam.offset.x * scale + offsetX;
+                debugCam.offset.y = debugCam.offset.y * scale + offsetY;
+                debugCam.zoom *= scale;
+                camera_manager::Begin(debugCam); // begin camera mode
                 DrawRectangle(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT, Fade(GREEN, 0.1f));
                 DrawText("Screen bounds", 5, 35, 20, GREEN);
                 
@@ -2276,7 +2280,11 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             
             
             if (globals::getDrawPhysicsDebug()) {
-                camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
+                Camera2D debugCam = worldCamera->cam;
+                debugCam.offset.x = debugCam.offset.x * scale + offsetX;
+                debugCam.offset.y = debugCam.offset.y * scale + offsetY;
+                debugCam.zoom *= scale;
+                camera_manager::Begin(debugCam); // begin camera mode for the physics world
                 
                 
                 physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);

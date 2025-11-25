@@ -9,6 +9,7 @@ add_executable(unit_tests
     unit/test_physics_manager.cpp
     unit/test_shader_system.cpp
     unit/test_binding_recorder.cpp
+    unit/test_crash_reporter.cpp
     unit/test_event_bus.cpp
     unit/test_collision_log.cpp
     unit/test_error_handling.cpp
@@ -22,6 +23,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/core/engine_context.cpp
     ${CMAKE_SOURCE_DIR}/src/core/globals.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/uuid/uuid.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/crash_reporter.cpp
     ${CMAKE_SOURCE_DIR}/src/util/utilities.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_function_data.cpp

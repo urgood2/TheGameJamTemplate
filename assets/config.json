@@ -32,9 +32,11 @@
         "__comment": "currently disabled feature"
     },
     "telemetry": {
-        "enabled": false,
+        "enabled": true,
         "endpoint": "",
-        "api_key": ""
+        "api_key": "phc_Vge8GE4CRyq3r5OTuMvfzk289hWApGGTKUuj9tYq1rB",
+        "posthog_host": "https://us.i.posthog.com",
+        "distinct_id": "dev-local"
     },
     "game_language": "en",
     "__comment": "language options (case sensitive): ko, en",

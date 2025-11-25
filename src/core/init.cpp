@@ -163,6 +163,7 @@ auto loadJSONData() -> void {
     assignJson(util::getRawAssetPathNoUUID("config.json"), globals::configJSON,
                globals::g_ctx ? &globals::g_ctx->configJson : nullptr);
     telemetry::Configure(telemetry::Config::FromConfigJson(globals::configJSON));
+    telemetry::RecordEvent("app_start", {{"stage", "config_loaded"}});
     assignJson(util::getRawAssetPathNoUUID("scripts/scripting_config.json"),
                globals::aiConfigJSON,
                globals::g_ctx ? &globals::g_ctx->aiConfigJson : nullptr);

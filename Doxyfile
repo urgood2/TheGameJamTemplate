@@ -1,7 +1,10 @@
 PROJECT_NAME           = "TheGameJamTemplate"
 OUTPUT_DIRECTORY       = docs/doxygen
 INPUT                  = src include docs/guides
-FILE_PATTERNS          = *.h *.hpp *.cpp
+FILE_PATTERNS          = *.h *.hpp *.cpp *.md
+INCLUDE_PATH           = src include
+EXCLUDE_PATTERNS       = src/third_party/* external/*
+EXCLUDE                = src/third_party external
 RECURSIVE              = YES
 EXTRACT_PRIVATE        = YES
 EXTRACT_STATIC         = YES

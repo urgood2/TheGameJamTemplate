@@ -60,6 +60,7 @@ endif()
 option(TRACY_ENABLE "Enable Tracy profiler instrumentation" OFF)
 option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
 option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" OFF)
+option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" OFF)
 
 # Prefer compiler cache when available to speed up rebuilds.
 find_program(CCACHE_PROGRAM ccache)
@@ -149,6 +150,17 @@ else()
     add_compile_definitions(SKIP_UUID_DUMP_DEFAULT=0)
 endif()
 
+# PostHog compile-time guard (libcurl-backed). Disabled on Web builds.
+if(ENABLE_POSTHOG AND EMSCRIPTEN)
+    message(WARNING "ENABLE_POSTHOG is not supported for Emscripten builds; disabling.")
+    set(ENABLE_POSTHOG OFF CACHE BOOL "Enable PostHog metrics (requires libcurl)" FORCE)
+endif()
+if(ENABLE_POSTHOG)
+    add_compile_definitions(ENABLE_POSTHOG=1)
+else()
+    add_compile_definitions(ENABLE_POSTHOG=0)
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -229,6 +241,40 @@ endif()
 set(CRASH_REPORT_BUILD_ID "${CRASH_REPORT_BUILD_ID}" CACHE STRING "Build identifier attached to crash reports" FORCE)
 
 include(FetchContent)
+
+if(ENABLE_POSTHOG)
+    find_package(CURL QUIET)
+    if(NOT CURL_FOUND)
+        message(STATUS "CURL not found; fetching via FetchContent")
+        set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
+        set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+        # Enable HTTPS support so PostHog can be reached over TLS.
+        set(HTTP_ONLY OFF CACHE BOOL "" FORCE)
+        set(CURL_ENABLE_SSL ON CACHE BOOL "" FORCE)
+        set(CURL_USE_SCHANNEL ON CACHE BOOL "" FORCE)
+        set(CURL_ZLIB OFF CACHE BOOL "" FORCE)
+        FetchContent_Declare(curl
+            GIT_REPOSITORY https://github.com/curl/curl.git
+            GIT_TAG curl-8_10_1
+            GIT_SHALLOW TRUE
+            GIT_PROGRESS TRUE
+        )
+        FetchContent_MakeAvailable(curl)
+        if(NOT TARGET CURL::libcurl)
+            if(TARGET libcurl)
+                get_target_property(_curl_aliased libcurl ALIASED_TARGET)
+                if(_curl_aliased)
+                    add_library(CURL::libcurl ALIAS ${_curl_aliased})
+                else()
+                    add_library(CURL::libcurl ALIAS libcurl)
+                endif()
+            endif()
+        endif()
+    endif()
+    if(NOT CURL_FOUND AND NOT TARGET CURL::libcurl)
+        message(FATAL_ERROR "ENABLE_POSTHOG is ON but libcurl is unavailable.")
+    endif()
+endif()
 
 ##########################################################################################
 # Add dependencies with FetchContent
@@ -654,6 +700,9 @@ target_link_libraries(CommonSettings INTERFACE
     snowhouse
     # LDtkLoader
 )
+if(ENABLE_POSTHOG)
+    target_link_libraries(CommonSettings INTERFACE CURL::libcurl)
+endif()
 target_compile_definitions(CommonSettings INTERFACE
     IMGUI_DEFINE_MATH_OPERATORS
 )

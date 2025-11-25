@@ -45,7 +45,7 @@ end
 
 function initMainMenu()
     
-    add_layer_shader("sprites", pixelate_image)
+    add_layer_shader("sprites", "pixelate_image")
     -- add_fullscreen_shader("pixelate_image")
     globalShaderUniforms:set("pixelate_image", "pixelRatio", 0.36)
     
@@ -414,11 +414,15 @@ function initMainGame()
     )
     
     
-    ProjectileSystemTest = require("test_projectiles")
-    
-    
-    local WandTests = require("wand.wand_test_examples")
-    WandTests.runAllTests()
+    if os.getenv("RUN_PROJECTILE_TESTS") == "1" then
+        ProjectileSystemTest = require("test_projectiles")
+    end
+
+    local runWandTests = os.getenv("RUN_WAND_TESTS") == "1"
+    if runWandTests then
+        local WandTests = require("wand.wand_test_examples")
+        WandTests.runAllTests()
+    end
 
 end
 

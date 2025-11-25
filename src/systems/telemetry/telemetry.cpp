@@ -2,14 +2,41 @@
 
 #include "util/common_headers.hpp"
 #include "systems/scripting/binding_recorder.hpp"
+#include "systems/telemetry/posthog_client.hpp"
 
 #include "sol/sol.hpp"
+
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 
 namespace telemetry
 {
     namespace
     {
         Config g_config{};
+        constexpr const char *kDefaultPosthogKey = "phc_Vge8GE4CRyq3r5OTuMvfzk289hWApGGTKUuj9tYq1rB";
+
+        bool envFlagSet(const char *name)
+        {
+            if (const char *v = std::getenv(name))
+            {
+                std::string val = v;
+                std::transform(val.begin(), val.end(), val.begin(),
+                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                return (val == "1" || val == "true" || val == "yes" || val == "on");
+            }
+            return false;
+        }
+
+        std::string envOr(const char *name, const std::string &fallback)
+        {
+            if (const char *v = std::getenv(name))
+            {
+                return std::string{v};
+            }
+            return fallback;
+        }
     } // namespace
 
     Config Config::FromConfigJson(const nlohmann::json &root)
@@ -23,17 +50,55 @@ namespace telemetry
         }
 
         const auto &telemetryJson = *it;
-        cfg.enabled = telemetryJson.value("enabled", false);
+        const bool envEnabled = envFlagSet("POSTHOG_ENABLED");
+        const bool envDisabled = envFlagSet("POSTHOG_DISABLED");
+
+        cfg.enabled = telemetryJson.value("enabled", true);
+        if (envEnabled)
+        {
+            cfg.enabled = true;
+        }
+        if (envDisabled)
+        {
+            cfg.enabled = false;
+        }
+
         cfg.endpoint = telemetryJson.value("endpoint", std::string{});
-        cfg.apiKey = telemetryJson.value("api_key", std::string{});
+        cfg.apiKey = envOr("POSTHOG_API_KEY", telemetryJson.value("api_key", std::string{}));
+        if (cfg.apiKey.empty())
+        {
+            cfg.apiKey = kDefaultPosthogKey;
+        }
+
+        auto hostFromJson = telemetryJson.value("posthog_host", telemetryJson.value("endpoint", std::string{}));
+        cfg.posthogHost = envOr("POSTHOG_HOST", hostFromJson);
+        if (cfg.posthogHost.empty())
+        {
+            cfg.posthogHost = "https://us.i.posthog.com";
+        }
+
+        cfg.distinctId = envOr("POSTHOG_DISTINCT_ID", telemetryJson.value("distinct_id", std::string{}));
+        if (cfg.distinctId.empty())
+        {
+            cfg.distinctId = "dev-local";
+        }
         return cfg;
     }
 
     void Configure(const Config &cfg)
     {
         g_config = cfg;
-        SPDLOG_INFO("[telemetry] configured: enabled={}, endpoint='{}'",
-                    g_config.enabled, g_config.endpoint);
+        SPDLOG_INFO("[telemetry] configured: enabled={}, host='{}'",
+                    g_config.enabled, g_config.posthogHost);
+
+#if ENABLE_POSTHOG
+        posthog::Configure({
+            g_config.enabled,
+            g_config.apiKey,
+            g_config.posthogHost,
+            g_config.distinctId
+        });
+#endif
     }
 
     const Config &GetConfig()
@@ -80,13 +145,19 @@ namespace telemetry
             return;
         }
 
+#if ENABLE_POSTHOG
+        posthog::Capture(name, props, g_config.distinctId);
+#else
         SPDLOG_DEBUG("[telemetry] stub event '{}' ({} props) -> {}",
                      name, props.size(), g_config.endpoint);
+#endif
     }
 
     void Flush()
     {
-        // Stub sink: nothing buffered yet.
+#if ENABLE_POSTHOG
+        posthog::Flush();
+#endif
     }
 
     void exposeToLua(sol::state &lua)

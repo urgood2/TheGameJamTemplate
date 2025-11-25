@@ -14,6 +14,8 @@ namespace telemetry
         bool enabled = false;
         std::string endpoint;
         std::string apiKey;
+        std::string posthogHost;
+        std::string distinctId;
 
         static Config FromConfigJson(const nlohmann::json &root);
     };

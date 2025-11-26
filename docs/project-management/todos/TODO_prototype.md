@@ -80,52 +80,13 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - brainstorm how best to visualize the execution order of the cards to the player. maybe use arrows?
 
-- start wand evaluation mechanism.
-
-- exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
+- exp drops, leveling, stat integration. start with hp  also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 
 
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
 
 - make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.
 
-- behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
-
-- add new stats with below:
-```lua
-add_basic(defs, 'projectile_count')
--- modify
-player.stats:add_base('projectile_count', 1)
--- derived stats
-player.stats:on_recompute(function(S)
-  local p = S:get_raw('physique').base
-  local c = S:get_raw('cunning').base
-  local s = S:get_raw('spirit').base
-
-  S:derived_add_base('health', 100 + p * 10)
-  S:derived_add_base('energy', 50 + s * 5)
-  S:derived_add_base('offensive_ability', c * 2)
-end)
--- set cooldowns (arbitrary)
-if ctx.time:is_ready(player.timers, "attack") then
-  shoot_projectile(player)
-  ctx.time:set_cooldown(player.timers, "attack", 0.5) -- attack every 0.5s
-end
--- access a stat:
-local count = math.floor(player.stats:get('projectile_count'))
-for i = 1, count do
-  shoot_projectile(player)
-end
--- custom leveliing logic:
-player.level = 1
-player.xp = 0
-
-player.stats:on_recompute(function(S)
-  local lvl = player.level
-  S:derived_add_mul_pct('health', lvl * 5)
-  S:derived_add_mul_pct('attack_speed', lvl * 3)
-end)
-```
 - implement level-ups. just grant +5 to a chosen stat.
 - maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
 - add basic triggers, actions, and modifiers and hook them up to gameplay.

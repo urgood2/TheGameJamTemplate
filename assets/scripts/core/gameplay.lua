@@ -2145,6 +2145,9 @@ function makeCardTooltip(card_def)
 
     local globalFontSize = 10
     local noShadowAttr   = ";shadow=false"
+    local valueColumnMinWidth = 32
+    local rowPadding = 0
+    local outerPadding = 0
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2155,56 +2158,94 @@ function makeCardTooltip(card_def)
         return false
     end
 
-    -- Helper function to add a line if value is not excluded
-    local function addLine(lines, label, value)
-        if shouldExclude(value) then return end
-        table.insert(lines,
-            "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
-            tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+    local function makeLabelNode(label, opts)
+        opts = opts or {}
+        local background = opts.background or "gray"
+        local color = opts.color or "green"
+        local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. background .. ";color=" .. color .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        return dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0
+            },
+            children = { labelDef }
+        }
     end
 
-    local lines = {}
+    local function makeValueNode(value)
+        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        return dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0,
+                minWidth = valueColumnMinWidth
+            },
+            children = { valueDef }
+        }
+    end
+
+    -- Helper function to add a line if value is not excluded
+    local function addLine(rows, label, value, labelOpts)
+        if shouldExclude(value) then return end
+        table.insert(rows, dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                padding = rowPadding
+            },
+            children = {
+                makeLabelNode(label, labelOpts),
+                makeValueNode(value)
+            }
+        })
+    end
+
+    local rows = {}
 
     -- Always show ID and type
     if card_def.id then
-        table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
-            card_def.id .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        table.insert(rows, dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                padding = rowPadding
+            },
+            children = {
+                makeLabelNode("id", { background = "red", color = "pink" }),
+                makeValueNode(card_def.id)
+            }
+        })
     end
 
-    addLine(lines, "type", card_def.type)
-    addLine(lines, "max uses", card_def.max_uses)
-    addLine(lines, "mana cost", card_def.mana_cost)
-    addLine(lines, "damage", card_def.damage)
-    addLine(lines, "damage type", card_def.damage_type)
-    addLine(lines, "radius of effect", card_def.radius_of_effect)
-    addLine(lines, "spread angle", card_def.spread_angle)
-    addLine(lines, "projectile speed", card_def.projectile_speed)
-    addLine(lines, "lifetime", card_def.lifetime)
-    addLine(lines, "cast delay", card_def.cast_delay)
-    addLine(lines, "recharge", card_def.recharge_time)
-    addLine(lines, "spread modifier", card_def.spread_modifier)
-    addLine(lines, "speed modifier", card_def.speed_modifier)
-    addLine(lines, "lifetime modifier", card_def.lifetime_modifier)
-    addLine(lines, "crit chance mod", card_def.critical_hit_chance_modifier)
-    addLine(lines, "weight", card_def.weight)
-
-    local text = table.concat(lines, "\n")
-    local textDef = ui.definitions.getTextFromString(text)
+    addLine(rows, "type", card_def.type)
+    addLine(rows, "max uses", card_def.max_uses)
+    addLine(rows, "mana cost", card_def.mana_cost)
+    addLine(rows, "damage", card_def.damage)
+    addLine(rows, "damage type", card_def.damage_type)
+    addLine(rows, "radius of effect", card_def.radius_of_effect)
+    addLine(rows, "spread angle", card_def.spread_angle)
+    addLine(rows, "projectile speed", card_def.projectile_speed)
+    addLine(rows, "lifetime", card_def.lifetime)
+    addLine(rows, "cast delay", card_def.cast_delay)
+    addLine(rows, "recharge", card_def.recharge_time)
+    addLine(rows, "spread modifier", card_def.spread_modifier)
+    addLine(rows, "speed modifier", card_def.speed_modifier)
+    addLine(rows, "lifetime modifier", card_def.lifetime_modifier)
+    addLine(rows, "crit chance mod", card_def.critical_hit_chance_modifier)
+    addLine(rows, "weight", card_def.weight)
 
     local v = dsl.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             color = "blue",
-            padding = 2
+            padding = outerPadding
         },
-        children = { textDef }
+        children = rows
     }
 
     local root = dsl.root {
         config = {
             color = "purple",
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = 2,
+            padding = outerPadding,
             shadow = true
         },
         children = { v }

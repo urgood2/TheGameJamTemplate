@@ -24,6 +24,29 @@ local WandTests = {}
 -- Dependencies
 local cardEval = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
+local timer = require("core.timer")
+
+local AUTO_REPEAT_TAG = "wand_tests_autofire"
+local AUTO_UPDATE_TAG = "wand_tests_update"
+
+local function startAutoRepeat(wands)
+    if not wands or #wands == 0 then return end
+    timer.cancel(AUTO_REPEAT_TAG)
+    timer.every(5.0, function()
+        for _, wandId in ipairs(wands) do
+            if wandId then
+                WandExecutor.execute(wandId, "auto_repeat")
+            end
+        end
+    end, -1, false, nil, AUTO_REPEAT_TAG)
+end
+
+local function startUpdateLoop()
+    timer.cancel(AUTO_UPDATE_TAG)
+    timer.every(0.016, function()
+        WandExecutor.update(0.016)
+    end, -1, false, nil, AUTO_UPDATE_TAG)
+end
 
 --[[
 ================================================================================
@@ -464,6 +487,9 @@ function WandTests.runAllTests()
     print("Call WandExecutor.update(dt) each frame to activate triggers")
     print(string.rep("=", 60))
 
+    startAutoRepeat(wands)
+    startUpdateLoop()
+
     return wands
 end
 
@@ -472,7 +498,10 @@ end
 function WandTests.runTest(testName)
     if WandTests[testName] and type(WandTests[testName]) == "function" then
         WandExecutor.init()
-        return WandTests[testName]()
+        local wandId = WandTests[testName]()
+        startAutoRepeat({ wandId })
+        startUpdateLoop()
+        return wandId
     else
         print("Error: Test", testName, "not found")
         return nil

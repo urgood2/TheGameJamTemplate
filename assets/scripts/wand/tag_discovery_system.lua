@@ -52,15 +52,39 @@ local TagDiscoverySystem = {}
 -- Thresholds to track (matches TagEvaluator breakpoints: 3, 5, 7, 9)
 local DISCOVERY_THRESHOLDS = { 3, 5, 7, 9 }
 
+-- Fallback storage when we only have an entity ID (e.g., during combat hooks)
+local discoveryStore = {}
+
+-- Resolves a table we can safely attach discoveries to.
+-- Accepts either a player table or an entity id (script table will be fetched if available).
+local function getDiscoveryTable(player)
+    local target = nil
+
+    if type(player) == "table" then
+        target = player
+    elseif getScriptTableFromEntityID and tonumber(player) then
+        target = getScriptTableFromEntityID(tonumber(player))
+    end
+
+    if target then
+        target.tag_discoveries = target.tag_discoveries or {}
+        return target.tag_discoveries
+    end
+
+    local key = tonumber(player) or "global"
+    discoveryStore[key] = discoveryStore[key] or {}
+    return discoveryStore[key]
+end
+
 --- Check for new tag threshold discoveries
 --- @param player: Player entity with tag_counts
 --- @param tag_counts: Table of tag -> count
 --- @return table: Array of new threshold discoveries
 function TagDiscoverySystem.checkTagThresholds(player, tag_counts)
-    -- Initialize discovery tracking
-    player.tag_discoveries = player.tag_discoveries or {}
+    local discoveries = getDiscoveryTable(player)
 
     local newDiscoveries = {}
+    if not tag_counts then return newDiscoveries end
 
     for tag, count in pairs(tag_counts) do
         -- Check each threshold
@@ -68,8 +92,8 @@ function TagDiscoverySystem.checkTagThresholds(player, tag_counts)
             local discoveryKey = "tag_" .. tag .. "_" .. threshold
 
             -- New discovery if we hit threshold and haven't discovered it yet
-            if count >= threshold and not player.tag_discoveries[discoveryKey] then
-                player.tag_discoveries[discoveryKey] = {
+            if count >= threshold and not discoveries[discoveryKey] then
+                discoveries[discoveryKey] = {
                     type = "tag_threshold",
                     tag = tag,
                     threshold = threshold,
@@ -96,14 +120,13 @@ end
 function TagDiscoverySystem.checkSpellType(player, spell_type)
     if not spell_type then return nil end
 
-    -- Initialize discovery tracking
-    player.tag_discoveries = player.tag_discoveries or {}
+    local discoveries = getDiscoveryTable(player)
 
     local discoveryKey = "spell_type_" .. spell_type
 
     -- Check if this is a new discovery
-    if not player.tag_discoveries[discoveryKey] then
-        player.tag_discoveries[discoveryKey] = {
+    if not discoveries[discoveryKey] then
+        discoveries[discoveryKey] = {
             type = "spell_type",
             spell_type = spell_type,
             timestamp = os.time()
@@ -126,14 +149,13 @@ end
 function TagDiscoverySystem.checkTagPattern(player, pattern_id, pattern_name)
     if not pattern_id then return nil end
 
-    -- Initialize discovery tracking
-    player.tag_discoveries = player.tag_discoveries or {}
+    local discoveries = getDiscoveryTable(player)
 
     local discoveryKey = "pattern_" .. pattern_id
 
     -- Check if this is a new discovery
-    if not player.tag_discoveries[discoveryKey] then
-        player.tag_discoveries[discoveryKey] = {
+    if not discoveries[discoveryKey] then
+        discoveries[discoveryKey] = {
             type = "tag_pattern",
             pattern_id = pattern_id,
             pattern_name = pattern_name,
@@ -154,14 +176,14 @@ end
 --- @param player: Player entity
 --- @return table: All discoveries
 function TagDiscoverySystem.getAllDiscoveries(player)
-    return player.tag_discoveries or {}
+    return getDiscoveryTable(player)
 end
 
 --- Get discovery statistics
 --- @param player: Player entity
 --- @return table: Stats about discoveries
 function TagDiscoverySystem.getStats(player)
-    local discoveries = player.tag_discoveries or {}
+    local discoveries = getDiscoveryTable(player)
 
     local stats = {
         total_discoveries = 0,
@@ -190,7 +212,7 @@ end
 --- @param discovery_type: "tag_threshold", "spell_type", or "tag_pattern"
 --- @return table: Array of discoveries of that type
 function TagDiscoverySystem.getDiscoveriesByType(player, discovery_type)
-    local discoveries = player.tag_discoveries or {}
+    local discoveries = getDiscoveryTable(player)
     local filtered = {}
 
     for _, discovery in pairs(discoveries) do
@@ -205,7 +227,10 @@ end
 --- Clear all discoveries (for testing/reset)
 --- @param player: Player entity
 function TagDiscoverySystem.clearDiscoveries(player)
-    player.tag_discoveries = {}
+    local discoveries = getDiscoveryTable(player)
+    for k in pairs(discoveries) do
+        discoveries[k] = nil
+    end
 end
 
 return TagDiscoverySystem

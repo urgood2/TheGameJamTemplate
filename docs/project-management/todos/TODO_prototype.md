@@ -62,9 +62,11 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - intermittent flicker when projectiles are wiped? not sure why.
     
 # programming side
+-
 - refer to balatro_analysis folder for design elements.
 
 - maybe pause game before starting action phase to evaluate cards once, show discoveries, etc?
+- lag at start may have to do with the tests. gotta make sure.
 
 - need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.
 - then player progresses through 3 stages, the last of which is extra hard.

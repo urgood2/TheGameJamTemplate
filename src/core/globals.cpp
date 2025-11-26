@@ -34,6 +34,8 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 
 namespace globals {
+
+    using ::EngineContext;
     
     EngineContext* g_ctx = nullptr;
     static AudioContext g_audioContext{};

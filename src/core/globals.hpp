@@ -1,15 +1,18 @@
 #pragma once
 
 /**
- * Global variables used by main.cpp.
+ * @file globals.hpp
+ * @brief Legacy global state kept for compatibility while migrating to EngineContext.
  *
- * The extern variables are defined in main.
+ * Most entries mirror fields inside EngineContext; new code should prefer the
+ * context and treat these globals as a temporary bridge during refactors.
  */
 #include "../core/gui.hpp"
 #include "../third_party/rlImGui/rlImGui.h" // raylib imGUI binding
 #include "entt/entt.hpp"                    // ECS
 #include "raylib.h"                         // raylib
 
+/// @cond DOXYGEN_SHOULD_SKIP_THIS
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
 // NOUSER intentionally omitted so Win32 clipboard/user APIs stay available
@@ -39,6 +42,7 @@
 #ifndef JSON_DIAGNOSTICS
 #define JSON_DIAGNOSTICS 1
 #endif
+/// @endcond
 #include <fmt/core.h>        // https://github.com/fmtlib/fmt
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
 // #include <boost/algorithm/string.hpp> // boost string
@@ -68,11 +72,15 @@ using Random =
     effolkronium::random_static; // get base random alias which is auto seeded
                                  // and has static API and internal state
 
-#if defined(ENGINECTX_DEPRECATE_GLOBALS)
+/// @cond DOXYGEN_SHOULD_SKIP_THIS
+#if defined(ENGINECTX_DEPRECATE_GLOBALS) && !defined(__DOXYGEN__)
 #define ENGINECTX_DEPRECATED(msg) [[deprecated(msg)]]
 #else
 #define ENGINECTX_DEPRECATED(msg)
 #endif
+/// @endcond
+
+class EngineContext;
 
 // Keep track of game state
 enum class GameState { MAIN_MENU, LOADING_SCREEN, MAIN_GAME, GAME_OVER };
@@ -80,12 +88,6 @@ enum class GameState { MAIN_MENU, LOADING_SCREEN, MAIN_GAME, GAME_OVER };
 namespace input {
 struct InputState;
 }
-
-namespace globals {
-ENGINECTX_DEPRECATED(
-    "Access EngineContext::inputState instead of globals::getInputState()")
-input::InputState &getInputState();
-} // namespace globals
 
 namespace transform {
 struct MasterCacheEntry;
@@ -101,13 +103,16 @@ struct Layer;
 }
 
 class PhysicsManager;
-struct EngineContext;
 
 namespace globals {
+// Bridge pointer to the new EngineContext (incremental migration).
+extern ::EngineContext *g_ctx;
+void setEngineContext(::EngineContext *ctx);
 
-extern EngineContext
-    *g_ctx; // bridge pointer to the new EngineContext (incremental migration)
-void setEngineContext(EngineContext *ctx);
+/// @cond LEGACY_ENGINECTX_GLOBALS
+ENGINECTX_DEPRECATED(
+    "Access EngineContext::inputState instead of globals::getInputState()")
+input::InputState &getInputState();
 
 extern Vector2 GetScaledMousePosition();
 extern Vector2 getScaledMousePositionCached();
@@ -562,4 +567,5 @@ struct CollisionNote {
 
 const std::vector<CollisionNote> &getCollisionLog();
 void pushCollisionLog(const CollisionNote &note);
+/// @endcond
 } // namespace globals

@@ -6,21 +6,15 @@
 
 namespace scripting {
   /**
-   * ------------------------------------------------------
-   * Get the `entt::id_type` of a Lua object’s associated C++ type.
-   * 
-   * In Lua, this is done by calling the `type_id` function that 
-   * your bound C++ type should expose in Lua.
-   * 
-   * Example usage in Lua:
+   * @brief Get the entt type id from a Lua table exposing `type_id()`.
+   * @param obj Lua table expected to implement `type_id`.
+   * @return entt::id_type for the bound C++ type.
+   *
+   * Example (Lua):
    * ```lua
-   * local tid = Transform.type_id()  -- for Transform
-   * local tid = SomeComponent.type_id() -- for other registered components
+   * local tid = Transform.type_id()
+   * local tid = SomeComponent.type_id()
    * ```
-   * 
-   * @param obj Lua table expected to have a `type_id` function.
-   * @return The `entt::id_type` representing the C++ type.
-   * ------------------------------------------------------
    */
   [[nodiscard]] inline entt::id_type get_type_id(const sol::table &obj) {
     const auto f = obj["type_id"].get<sol::function>();
@@ -29,23 +23,9 @@ namespace scripting {
   }
 
   /**
-   * ------------------------------------------------------
-   * Deduces the `entt::id_type` for a Lua-provided object.
-   * 
-   * This function handles two possible scenarios:
-   * 1. The object is a number (e.g., passed directly as `type_id`)
-   * 2. The object is a Lua table representing a bound C++ type, 
-   *    which exposes a `type_id` function.
-   * 
-   * Example usage in Lua:
-   * ```lua
-   * registry:has(e, Transform)          -- Pass the table, auto-deduces
-   * registry:has(e, Transform.type_id())-- Pass the type_id directly
-   * ```
-   * 
-   * @param obj The Lua object (either a table or number).
-   * @return The corresponding `entt::id_type` of the type.
-   * ------------------------------------------------------
+   * @brief Deduce entt type id from a Lua value (number or table).
+   * @param obj Lua number (type id) or table exposing `type_id`.
+   * @return entt::id_type representing the C++ type.
    */
   template <typename T> [[nodiscard]] inline entt::id_type deduce_type(T &&obj) {
     switch (obj.get_type()) {
@@ -60,14 +40,11 @@ namespace scripting {
   }
 
   /**
-   * ------------------------------------------------------
-   * Invokes a **registered meta function** on a resolved type directly.
-   * 
-   * @param meta_type The resolved `entt::meta_type` (obtained via `entt::resolve`).
-   * @param function_id The hashed string id of the function (e.g., `"emplace"_hs`).
-   * @param args Arguments to pass to the function.
-   * @return A `meta_any` holding the result of the call (may be empty if the call fails).
-   * ------------------------------------------------------
+   * @brief Invoke a registered meta function on a resolved entt type.
+   * @param meta_type Resolved entt::meta_type.
+   * @param function_id Hashed string id of the function (e.g. `"emplace"_hs`).
+   * @param args Arguments forwarded to the function.
+   * @return meta_any result (empty on failure).
    */
   template <typename... Args>
   inline auto invoke_meta_func(entt::meta_type meta_type,
@@ -82,25 +59,11 @@ namespace scripting {
   }
 
   /**
-   * ------------------------------------------------------
-   * Convenience overload: resolve the type_id internally before 
-   * invoking the meta function.
-   * 
-   * Example usage in Lua:
-   * ```lua
-   * registry:emplace(e, Transform, data)
-   * ```
-   * 
-   * C++ side (calls this helper):
-   * ```cpp
-   * invoke_meta_func(type_id, "emplace"_hs, &registry, entity, table, state);
-   * ```
-   * 
-   * @param type_id The type id of the C++ component or object.
-   * @param function_id The hashed string id of the function.
-   * @param args Arguments to pass to the function.
-   * @return A `meta_any` holding the result of the call.
-   * ------------------------------------------------------
+   * @brief Overload resolving type id internally before invocation.
+   * @param type_id entt type id.
+   * @param function_id Hashed string id of the function.
+   * @param args Arguments forwarded to the function.
+   * @return meta_any result.
    */
   template <typename... Args>
   inline auto invoke_meta_func(entt::id_type type_id, entt::id_type function_id,

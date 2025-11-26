@@ -1,10 +1,15 @@
 #pragma once
 
+/**
+ * @file engine_context.hpp
+ * @brief Central dependency-injection container replacing the legacy globals.
+ */
+
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <functional>
 #include <vector>
 
 #include "entt/entt.hpp"
@@ -19,20 +24,28 @@
 namespace shaders { struct ShaderUniformComponent; }
 namespace input { struct InputState; }
 
-// Placeholder for future audio system state; currently mirrors legacy globals once wired.
+/// Placeholder for audio system state; mirrors legacy globals until audio is migrated.
 struct AudioContext {
     bool deviceInitialized{false};
 };
 
-// A minimal EngineContext to begin migrating away from globals.
-// Lightweight config pointer for EngineContext construction.
+/// Lightweight configuration used to construct EngineContext.
 struct EngineConfig {
     std::string configPath;
 };
 
 /**
- * Core engine state container used for dependency injection.
- * Not thread-safe; expected to live on the main thread.
+ * @brief Core engine state container used for dependency injection.
+ *
+ * Owns the ECS registry plus resource caches and mirrors in-flight runtime
+ * values that were previously global. During the migration, many members
+ * intentionally track legacy globals to keep both call sites valid.
+ *
+ * @note Thread-safety: not thread-safe; main thread only.
+ * @note Ownership: owns most caches; pointers marked as non-owning are mirrors
+ *       to legacy globals and must outlive the context.
+ * @note Initialization: prefer creating via createEngineContext() so JSON
+ *       configuration is wired consistently.
  */
 struct EngineContext {
     // Core systems/state
@@ -121,9 +134,14 @@ private:
     const EngineConfig config;
 };
 
+/**
+ * @brief Create and initialize a new EngineContext from a config path.
+ * @param configPath Path to config.json (raw, not UUID).
+ * @return Move-only EngineContext ready for incremental migration away from globals.
+ */
 std::unique_ptr<EngineContext> createEngineContext(const std::string& configPath);
 
-// Helper: prefer context atlas, fall back to legacy globals.
+/// Helper: prefer context atlas, fall back to legacy globals.
 inline Texture2D* getAtlasTexture(const std::string& atlasUUID) {
     if (globals::g_ctx) {
         auto it = globals::g_ctx->textureAtlas.find(atlasUUID);

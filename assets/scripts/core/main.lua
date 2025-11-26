@@ -34,6 +34,30 @@ shapeAnimationPhase = 0
 
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
 
+local telemetry_once_flags = {}
+local function record_telemetry(event, props)
+    -- Guard against missing bindings or runtime errors so gameplay keeps going.
+    if type(telemetry) ~= "table" or type(telemetry.record) ~= "function" then
+        return
+    end
+    local ok, err = pcall(telemetry.record, event, props or {})
+    if not ok then
+        if log_debug then
+            log_debug(string.format("telemetry.record failed for %s: %s", event, tostring(err)))
+        else
+            print("telemetry.record failed for " .. tostring(event) .. ": " .. tostring(err))
+        end
+    end
+end
+
+local function record_telemetry_once(flag, event, props)
+    if telemetry_once_flags[flag] then
+        return
+    end
+    telemetry_once_flags[flag] = true
+    record_telemetry(event, props)
+end
+
 local mainMenuEntities = {
 }
 
@@ -45,7 +69,7 @@ end
 
 function initMainMenu()
     
-    add_layer_shader("sprites", pixelate_image)
+    add_layer_shader("sprites", "pixelate_image")
     -- add_fullscreen_shader("pixelate_image")
     globalShaderUniforms:set("pixelate_image", "pixelRatio", 0.36)
     
@@ -58,6 +82,7 @@ function initMainMenu()
     
     
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
+    record_telemetry_once("scene_main_menu", "scene_enter", { scene = "main_menu" })
     setCategoryVolume("effects", 0.5)
     playMusic("main-menu", true) 
     setTrackVolume("main-menu", 0.3)
@@ -314,6 +339,7 @@ end
 function startGameButtonCallback()
     clearMainMenu() -- clear the main menu
                     
+    record_telemetry("start_game_clicked", { scene = "main_menu" })
     
     --TODO: add full screeen transition shader, tween the value of that
     add_fullscreen_shader("screen_tone_transition") -- Add the fade out shader
@@ -397,6 +423,7 @@ function initMainGame()
     
     log_debug("Initializing main game...") -- Debug message to indicate the game is starting
     currentGameState = GAMESTATE.IN_GAME -- Set the game state to IN_GAME
+    record_telemetry_once("scene_main_game", "scene_enter", { scene = "main_game" })
     
     initPlanningPhase()
     initActionPhase()
@@ -414,11 +441,17 @@ function initMainGame()
     )
     
     
-    ProjectileSystemTest = require("test_projectiles")
-    
-    
-    local WandTests = require("wand.wand_test_examples")
-    WandTests.runAllTests()
+    if os.getenv("RUN_PROJECTILE_TESTS") == "1" then
+        record_telemetry("debug_tests_enabled", { suite = "projectile" })
+        ProjectileSystemTest = require("test_projectiles")
+    end
+
+    local runWandTests = os.getenv("RUN_WAND_TESTS") == "1"
+    if runWandTests then
+        record_telemetry("debug_tests_enabled", { suite = "wand" })
+        local WandTests = require("wand.wand_test_examples")
+        WandTests.runAllTests()
+    end
 
 end
 
@@ -442,6 +475,10 @@ ProjectileSystemTest = nil
 -- Main function to initialize the game. Called at the start of the game.
 function main.init()
     log_debug("Game initializing...") -- Debug message to indicate the game is initializing
+    record_telemetry_once("lua_runtime_init", "lua_runtime_init", {
+        lua = _VERSION,
+        jit = jit and jit.version or "none"
+    })
     math.randomseed(12345)
     if PROFILE_ENABLED then
         profile.start()

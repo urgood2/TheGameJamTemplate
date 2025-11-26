@@ -490,11 +490,14 @@ inline void LogAllPoolStats(const std::shared_ptr<Layer> &layer) {
       >;
 
   // Unpack and log for each
+#if 0
+  // Disabled to sidestep heavy template instantiation on some compilers (e.g. MinGW).
   std::apply(
       [&](auto... cmd) {
         (LogPoolStats<std::decay_t<decltype(cmd)>>(layer), ...);
       },
       AllCmds{});
+#endif
 }
 
 } // namespace layer

@@ -18,6 +18,7 @@ add_executable(unit_tests
     unit/test_scripting_bindings.cpp
     unit/test_scripting_lifecycle.cpp
     unit/test_globals_caches.cpp
+    unit/test_telemetry.cpp
     unit/test_controller_nav.cpp
     unit/test_input_events.cpp
     unit/test_physics_events.cpp
@@ -30,6 +31,8 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/localization/localization.cpp
     ${CMAKE_SOURCE_DIR}/src/core/engine_context.cpp
     ${CMAKE_SOURCE_DIR}/src/core/globals.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/telemetry/telemetry.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/telemetry/posthog_client.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/scripting/scripting_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/scripting/registry_bond.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/uuid/uuid.cpp

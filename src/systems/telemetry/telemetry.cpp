@@ -13,6 +13,11 @@
 #include <iomanip>
 #include <random>
 #include <sstream>
+#include <functional>
+
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+#endif
 
 namespace telemetry
 {
@@ -21,6 +26,94 @@ namespace telemetry
         Config g_config{};
         constexpr const char *kDefaultPosthogKey = "phc_Vge8GE4CRyq3r5OTuMvfzk289hWApGGTKUuj9tYq1rB";
         std::string g_sessionId{};
+        bool g_sentDebugPing = false;
+        bool g_sentSessionEnd = false;
+#if defined(__EMSCRIPTEN__)
+        bool g_lifecycleHooksRegistered = false;
+#endif
+
+#if defined(__EMSCRIPTEN__)
+        bool webDebugOverlayEnabled()
+        {
+            static int enabled = EM_ASM_INT({
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    return (params.has('telemetryDebug') || params.has('telemetrydebug') || params.get('telemetry') === 'debug') ? 1 : 0;
+                } catch (e) {
+                    return 0;
+                }
+            });
+            return enabled != 0;
+        }
+
+        void updateWebDebugOverlay(const std::string &status)
+        {
+            if (!webDebugOverlayEnabled())
+            {
+                return;
+            }
+
+            EM_ASM({
+                const text = UTF8ToString($0);
+                let el = document.getElementById('telemetry-debug-overlay');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'telemetry-debug-overlay';
+                    el.style.position = 'fixed';
+                    el.style.bottom = '8px';
+                    el.style.right = '8px';
+                    el.style.padding = '6px 8px';
+                    el.style.background = 'rgba(20, 20, 20, 0.78)';
+                    el.style.color = '#e8f1ff';
+                    el.style.font = '12px/1.4 monospace';
+                    el.style.borderRadius = '6px';
+                    el.style.zIndex = '2147483647';
+                    el.style.pointerEvents = 'none';
+                    el.style.boxShadow = '0 4px 14px rgba(0,0,0,0.4)';
+                    document.body.appendChild(el);
+                }
+                el.textContent = text;
+            }, status.c_str());
+        }
+#else
+        bool webDebugOverlayEnabled() { return false; }
+        void updateWebDebugOverlay(const std::string &) {}
+#endif
+
+#if defined(__EMSCRIPTEN__)
+        EM_JS(void, telemetry_register_lifecycle_hooks, (), {
+            if (Module.__telemetryLifecycleRegistered) return;
+            Module.__telemetryLifecycleRegistered = true;
+            const fire = (reason) => {
+                try {
+                    if (Module._telemetry_session_end) Module._telemetry_session_end(stringToUTF8OnStack(reason || 'unknown'));
+                } catch (e) {}
+            };
+            ['pagehide', 'beforeunload'].forEach((ev) => {
+                window.addEventListener(ev, () => fire(ev));
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') fire('hidden');
+            });
+            window.addEventListener('error', (ev) => {
+                try {
+                    const msg = ev && ev.message ? ev.message : 'unknown';
+                    const src = ev && ev.filename ? ev.filename : '';
+                    if (Module._telemetry_client_error) {
+                        Module._telemetry_client_error(stringToUTF8OnStack(msg), stringToUTF8OnStack(src));
+                    }
+                } catch (e) {}
+            });
+            window.addEventListener('unhandledrejection', (ev) => {
+                try {
+                    const msg = ev && ev.reason ? ('' + ev.reason) : 'unhandledrejection';
+                    if (Module._telemetry_client_error) {
+                        Module._telemetry_client_error(stringToUTF8OnStack(msg), stringToUTF8OnStack('unhandledrejection'));
+                    }
+                } catch (e) {}
+            });
+        });
+#endif
 
         bool envFlagSet(const char *name)
         {
@@ -98,7 +191,13 @@ namespace telemetry
         const bool envEnabled = envFlagSet("POSTHOG_ENABLED");
         const bool envDisabled = envFlagSet("POSTHOG_DISABLED");
 
-        cfg.enabled = telemetryJson.value("enabled", hasTelemetryBlock);
+        bool defaultEnabled = hasTelemetryBlock;
+#if defined(__EMSCRIPTEN__)
+        // Default to ON for web builds so telemetry works out of the box unless explicitly disabled.
+        defaultEnabled = true;
+#endif
+
+        cfg.enabled = telemetryJson.value("enabled", defaultEnabled);
         if (envEnabled)
         {
             cfg.enabled = true;
@@ -141,6 +240,21 @@ namespace telemetry
             g_sessionId = generateSessionId();
         }
 
+#if defined(__EMSCRIPTEN__)
+        {
+            std::ostringstream status;
+            status << "Telemetry " << (g_config.enabled ? "ON" : "OFF")
+                   << " | host: " << g_config.posthogHost
+                   << " | distinct: " << g_config.distinctId
+                   << " | session: " << g_sessionId;
+            if (!g_config.enabled)
+            {
+                status << " | enable via config.telemetry.enabled or POSTHOG_ENABLED";
+            }
+            updateWebDebugOverlay(status.str());
+        }
+#endif
+
 #if ENABLE_POSTHOG
         posthog::Configure({
             g_config.enabled,
@@ -148,6 +262,26 @@ namespace telemetry
             g_config.posthogHost,
             g_config.distinctId
         });
+#endif
+
+#if defined(__EMSCRIPTEN__)
+        if (g_config.enabled && webDebugOverlayEnabled() && !g_sentDebugPing)
+        {
+            g_sentDebugPing = true;
+            RecordEvent("telemetry_web_debug_ping",
+                        {{"platform", PlatformTag()},
+                         {"build_type", BuildTypeTag()},
+                         {"build_id", BuildId()},
+                         {"host", g_config.posthogHost},
+                         {"distinct_id", g_config.distinctId},
+                         {"session_id", SessionId()}});
+        }
+
+        if (!g_lifecycleHooksRegistered)
+        {
+            telemetry_register_lifecycle_hooks();
+            g_lifecycleHooksRegistered = true;
+        }
 #endif
     }
 
@@ -184,31 +318,128 @@ namespace telemetry
     {
         nlohmann::json tableToJson(const sol::table &tbl)
         {
-            nlohmann::json props = nlohmann::json::object();
+            constexpr int kMaxDepth = 5; // prevent runaway recursion from Lua tables.
+
+            std::function<nlohmann::json(const sol::object &, int)> toJson;
+            toJson = [&](const sol::object &obj, int depth) -> nlohmann::json {
+                if (depth > kMaxDepth)
+                {
+                    return nlohmann::json{};
+                }
+
+                if (obj.is<bool>())
+                {
+                    return obj.as<bool>();
+                }
+                if (obj.is<int64_t>())
+                {
+                    return obj.as<int64_t>();
+                }
+                if (obj.is<double>())
+                {
+                    return obj.as<double>();
+                }
+                if (obj.is<std::string>())
+                {
+                    return obj.as<std::string>();
+                }
+                if (obj.is<sol::table>())
+                {
+                    return tableToJson(obj.as<sol::table>());
+                }
+                return nlohmann::json{};
+            };
+
+            // Detect array-ish tables (1-based contiguous numeric keys) to emit JSON arrays.
+            auto isArrayLike = [](const sol::table &t, size_t &maxIndex) {
+                maxIndex = 0;
+                size_t count = 0;
+                bool arrayLike = true;
+                t.for_each([&](const sol::object &k, const sol::object &) {
+                    if (!k.is<int>() && !k.is<int64_t>())
+                    {
+                        arrayLike = false;
+                        return;
+                    }
+                    const int64_t idx = k.is<int64_t>() ? k.as<int64_t>() : static_cast<int64_t>(k.as<int>());
+                    if (idx <= 0)
+                    {
+                        arrayLike = false;
+                        return;
+                    }
+                    maxIndex = static_cast<size_t>(std::max<int64_t>(maxIndex, idx));
+                    ++count;
+                });
+                if (!arrayLike)
+                {
+                    return false;
+                }
+                return maxIndex == count; // contiguous from 1..maxIndex
+            };
+
+            size_t maxIdx = 0;
+            const bool isArray = isArrayLike(tbl, maxIdx);
+            nlohmann::json out = isArray ? nlohmann::json::array() : nlohmann::json::object();
+
             tbl.for_each([&](const sol::object &k, const sol::object &v) {
+                if (isArray)
+                {
+                    if (!k.is<int>() && !k.is<int64_t>())
+                    {
+                        return;
+                    }
+                    const int64_t idx = k.is<int64_t>() ? k.as<int64_t>() : static_cast<int64_t>(k.as<int>());
+                    if (idx <= 0)
+                    {
+                        return;
+                    }
+                    while (out.size() < static_cast<size_t>(idx))
+                    {
+                        out.push_back(nlohmann::json{});
+                    }
+                    out[static_cast<size_t>(idx) - 1] = toJson(v, 1);
+                    return;
+                }
+
                 if (!k.is<std::string>())
                 {
                     return;
                 }
                 const auto key = k.as<std::string>();
-                if (v.is<bool>())
-                {
-                    props[key] = v.as<bool>();
-                }
-                else if (v.is<int>())
-                {
-                    props[key] = v.as<int>();
-                }
-                else if (v.is<double>())
-                {
-                    props[key] = v.as<double>();
-                }
-                else if (v.is<std::string>())
-                {
-                    props[key] = v.as<std::string>();
-                }
+                out[key] = toJson(v, 1);
             });
-            return props;
+
+            return out;
+        }
+
+        nlohmann::json withDefaultProps(const nlohmann::json &props)
+        {
+            nlohmann::json out;
+            if (props.is_object())
+            {
+                out = props;
+            }
+            else
+            {
+                out = nlohmann::json::object();
+            }
+
+            auto setIfMissing = [&](const char *key, const nlohmann::json &val) {
+                if (!out.contains(key))
+                {
+                    out[key] = val;
+                }
+            };
+
+            setIfMissing("platform", PlatformTag());
+            setIfMissing("build_id", BuildId());
+            setIfMissing("build_type", BuildTypeTag());
+            setIfMissing("session_id", SessionId());
+            setIfMissing("distinct_id", g_config.distinctId);
+            setIfMissing("telemetry_enabled", g_config.enabled);
+            setIfMissing("telemetry_host", g_config.posthogHost);
+
+            return out;
         }
     } // namespace
 
@@ -216,16 +447,60 @@ namespace telemetry
     {
         if (!g_config.enabled)
         {
+#if defined(__EMSCRIPTEN__)
+            if (webDebugOverlayEnabled())
+            {
+                updateWebDebugOverlay("Telemetry OFF (config.telemetry.enabled=false)");
+            }
+#endif
             return;
         }
 
+#if defined(__EMSCRIPTEN__)
+        if (webDebugOverlayEnabled())
+        {
+            std::ostringstream status;
+            status << "Telemetry ON | last event: " << name
+                   << " | host: " << g_config.posthogHost;
+            updateWebDebugOverlay(status.str());
+        }
+#endif
+
 #if ENABLE_POSTHOG
-        posthog::Capture(name, props, g_config.distinctId);
+        posthog::Capture(name, withDefaultProps(props), g_config.distinctId);
 #else
+        const auto payload = withDefaultProps(props);
         SPDLOG_DEBUG("[telemetry] stub event '{}' ({} props) -> {}",
-                     name, props.size(), g_config.endpoint);
+                     name, payload.size(), g_config.endpoint);
 #endif
     }
+
+#if defined(__EMSCRIPTEN__)
+    extern "C" EMSCRIPTEN_KEEPALIVE void telemetry_session_end(const char *reasonCStr)
+    {
+        if (g_sentSessionEnd)
+        {
+            return;
+        }
+        g_sentSessionEnd = true;
+        const std::string reason = reasonCStr ? reasonCStr : "unknown";
+        RecordEvent("session_end", {{"reason", reason}});
+        Flush();
+    }
+
+    extern "C" EMSCRIPTEN_KEEPALIVE void telemetry_client_error(const char *messageCStr, const char *sourceCStr)
+    {
+        static int errorCount = 0;
+        if (errorCount > 5)
+        {
+            return;
+        }
+        ++errorCount;
+        const std::string msg = messageCStr ? messageCStr : "unknown";
+        const std::string src = sourceCStr ? sourceCStr : "";
+        RecordEvent("web_client_error", {{"message", msg}, {"source", src}});
+    }
+#endif
 
     void Flush()
     {

@@ -3383,6 +3383,20 @@ end
 function startActionPhase()
     clear_states() -- disable all states.
 
+    if record_telemetry then
+        local now = os.clock()
+        if _G.current_phase and _G.phase_started_at then
+            record_telemetry("phase_exit", {
+                phase = _G.current_phase,
+                duration_s = now - _G.phase_started_at,
+                next_phase = "action",
+                session_id = telemetry_session_id()
+            })
+        end
+        _G.current_phase = "action"
+        _G.phase_started_at = now
+    end
+
     activate_state(ACTION_STATE)
     activate_state("default_state") -- just for defaults, keep them open
 
@@ -3393,6 +3407,10 @@ function startActionPhase()
     PhysicsManager.enable_step("world", true)
 
     playStateTransition()
+
+    if record_telemetry then
+        record_telemetry("phase_enter", { phase = "action", session_id = telemetry_session_id() })
+    end
 
     -- fadeOutMusic("main-menu", 0.3)
     -- fadeOutMusic("shop-music", 0.3)
@@ -3408,6 +3426,20 @@ end
 function startPlanningPhase()
     clear_states() -- disable all states.
     entity_cache.clear()
+
+    if record_telemetry then
+        local now = os.clock()
+        if _G.current_phase and _G.phase_started_at then
+            record_telemetry("phase_exit", {
+                phase = _G.current_phase,
+                duration_s = now - _G.phase_started_at,
+                next_phase = "planning",
+                session_id = telemetry_session_id()
+            })
+        end
+        _G.current_phase = "planning"
+        _G.phase_started_at = now
+    end
 
     activate_state(PLANNING_STATE)
     activate_state("default_state")     -- just for defaults, keep them open
@@ -3432,6 +3464,10 @@ function startPlanningPhase()
 
     playStateTransition()
 
+    if record_telemetry then
+        record_telemetry("phase_enter", { phase = "planning", session_id = telemetry_session_id() })
+    end
+
 
     -- debug
 
@@ -3440,6 +3476,20 @@ end
 
 function startShopPhase()
     clear_states() -- disable all states.
+
+    if record_telemetry then
+        local now = os.clock()
+        if _G.current_phase and _G.phase_started_at then
+            record_telemetry("phase_exit", {
+                phase = _G.current_phase,
+                duration_s = now - _G.phase_started_at,
+                next_phase = "shop",
+                session_id = telemetry_session_id()
+            })
+        end
+        _G.current_phase = "shop"
+        _G.phase_started_at = now
+    end
 
     activate_state(SHOP_STATE)
     activate_state("default_state") -- just for defaults, keep them open
@@ -3460,6 +3510,10 @@ function startShopPhase()
     end
 
     playStateTransition()
+
+    if record_telemetry then
+        record_telemetry("phase_enter", { phase = "shop", session_id = telemetry_session_id() })
+    end
 
 
     -- debug

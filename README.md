@@ -44,7 +44,7 @@ just build-web            # requires emsdk in PATH and copies assets into build-
 ```
 
 ## PostHog Metrics (optional)
-- Build with metrics: `cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_POSTHOG=ON` (libcurl required; native builds only).
+- Build with metrics: `cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_POSTHOG=ON` (native builds use libcurl; Web/Emscripten builds use browser fetch and don't need curl).
 - Configure at runtime via env: `POSTHOG_ENABLED=1`, `POSTHOG_API_KEY=<key>`, `POSTHOG_HOST=https://us.i.posthog.com` (default), `POSTHOG_DISTINCT_ID=<anon-or-user-id>`. The same fields exist under `telemetry` in `assets/config.json`.
 - Emit events in C++ with `telemetry::RecordEvent("app_start", {{"scene","menu"}});` or in Lua with `telemetry.record("app_start", { scene = "menu" })`. Payloads are POSTed to `/capture/` on the configured host.
 

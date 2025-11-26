@@ -150,10 +150,9 @@ else()
     add_compile_definitions(SKIP_UUID_DUMP_DEFAULT=0)
 endif()
 
-# PostHog compile-time guard (libcurl-backed). Disabled on Web builds.
+# PostHog compile-time guard (libcurl on native; JS fetch on Web).
 if(ENABLE_POSTHOG AND EMSCRIPTEN)
-    message(WARNING "ENABLE_POSTHOG is not supported for Emscripten builds; disabling.")
-    set(ENABLE_POSTHOG OFF CACHE BOOL "Enable PostHog metrics (requires libcurl)" FORCE)
+    message(STATUS "ENABLE_POSTHOG is ON for Web builds (JS fetch, no libcurl).")
 endif()
 if(ENABLE_POSTHOG)
     add_compile_definitions(ENABLE_POSTHOG=1)
@@ -242,7 +241,7 @@ set(CRASH_REPORT_BUILD_ID "${CRASH_REPORT_BUILD_ID}" CACHE STRING "Build identif
 
 include(FetchContent)
 
-if(ENABLE_POSTHOG)
+if(ENABLE_POSTHOG AND NOT EMSCRIPTEN)
     find_package(CURL QUIET)
     if(NOT CURL_FOUND)
         message(STATUS "CURL not found; fetching via FetchContent")
@@ -700,7 +699,7 @@ target_link_libraries(CommonSettings INTERFACE
     snowhouse
     # LDtkLoader
 )
-if(ENABLE_POSTHOG)
+if(ENABLE_POSTHOG AND NOT EMSCRIPTEN)
     target_link_libraries(CommonSettings INTERFACE CURL::libcurl)
 endif()
 target_compile_definitions(CommonSettings INTERFACE

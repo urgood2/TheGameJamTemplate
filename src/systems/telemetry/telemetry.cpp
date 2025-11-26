@@ -9,6 +9,10 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <chrono>
+#include <iomanip>
+#include <random>
+#include <sstream>
 
 namespace telemetry
 {
@@ -16,6 +20,7 @@ namespace telemetry
     {
         Config g_config{};
         constexpr const char *kDefaultPosthogKey = "phc_Vge8GE4CRyq3r5OTuMvfzk289hWApGGTKUuj9tYq1rB";
+        std::string g_sessionId{};
 
         bool envFlagSet(const char *name)
         {
@@ -37,23 +42,63 @@ namespace telemetry
             }
             return fallback;
         }
+
+        std::string platformTag()
+        {
+#if defined(__EMSCRIPTEN__)
+            return "web";
+#elif defined(_WIN32)
+            return "windows";
+#elif defined(__APPLE__)
+            return "macos";
+#elif defined(__linux__)
+            return "linux";
+#else
+            return "unknown";
+#endif
+        }
+
+        std::string buildTypeTag()
+        {
+#if defined(NDEBUG)
+            return "Release";
+#else
+            return "Debug";
+#endif
+        }
+
+        std::string buildId()
+        {
+#ifdef CRASH_REPORT_BUILD_ID
+            return CRASH_REPORT_BUILD_ID;
+#else
+            return "dev-local";
+#endif
+        }
+
+        std::string generateSessionId()
+        {
+            const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+            std::mt19937_64 rng{static_cast<std::mt19937_64::result_type>(now)};
+            std::uniform_int_distribution<uint64_t> dist;
+            std::ostringstream oss;
+            oss << std::hex << std::setw(16) << std::setfill('0') << dist(rng);
+            return oss.str();
+        }
     } // namespace
 
     Config Config::FromConfigJson(const nlohmann::json &root)
     {
         Config cfg{};
 
-        auto it = root.find("telemetry");
-        if (it == root.end() || !it->is_object())
-        {
-            return cfg;
-        }
+        const auto it = root.find("telemetry");
+        const bool hasTelemetryBlock = (it != root.end() && it->is_object());
+        const nlohmann::json telemetryJson = hasTelemetryBlock ? *it : nlohmann::json::object();
 
-        const auto &telemetryJson = *it;
         const bool envEnabled = envFlagSet("POSTHOG_ENABLED");
         const bool envDisabled = envFlagSet("POSTHOG_DISABLED");
 
-        cfg.enabled = telemetryJson.value("enabled", true);
+        cfg.enabled = telemetryJson.value("enabled", hasTelemetryBlock);
         if (envEnabled)
         {
             cfg.enabled = true;
@@ -91,6 +136,11 @@ namespace telemetry
         SPDLOG_INFO("[telemetry] configured: enabled={}, host='{}'",
                     g_config.enabled, g_config.posthogHost);
 
+        if (g_sessionId.empty())
+        {
+            g_sessionId = generateSessionId();
+        }
+
 #if ENABLE_POSTHOG
         posthog::Configure({
             g_config.enabled,
@@ -104,6 +154,30 @@ namespace telemetry
     const Config &GetConfig()
     {
         return g_config;
+    }
+
+    std::string PlatformTag()
+    {
+        return platformTag();
+    }
+
+    std::string BuildTypeTag()
+    {
+        return buildTypeTag();
+    }
+
+    std::string BuildId()
+    {
+        return buildId();
+    }
+
+    std::string SessionId()
+    {
+        if (g_sessionId.empty())
+        {
+            g_sessionId = generateSessionId();
+        }
+        return g_sessionId;
     }
 
     namespace
@@ -175,12 +249,21 @@ namespace telemetry
             }
             RecordEvent(name, payload);
         });
+        t.set_function("session_id", []() {
+            return SessionId();
+        });
         rec.record_free_function({"telemetry"}, {
             "record",
             "---@param name string # Event name\n"
             "---@param props table|nil # Key/value properties (string/number/bool)\n"
             "---@return nil",
             "Enqueues a telemetry event if telemetry is enabled.",
+            true, false
+        });
+        rec.record_free_function({"telemetry"}, {
+            "session_id",
+            "---@return string # Current session id",
+            "Returns the current telemetry session id (generated on startup).",
             true, false
         });
     }

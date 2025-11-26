@@ -55,6 +55,22 @@ Event API surface
 - Shader system hook: on load failure or hot-reload failure, emit an event with shader name + platform (desktop/web) + error message.
 - Crash reporter hook: emit a `crash` or `fatal_error` event before handing off to existing crash reporter.
 
+Implemented signals (current)
+-----------------------------
+- Startup: `app_start` tagged with platform, build id, build type, release flag, locale, distinct_id.
+- Failures: `json_load_failed` (path/error), `shader_manifest_load_failed`, `shader_load_failed` (paths + platform + build), `crash_report` (reason/build/platform).
+- Lua gameplay: `scene_enter` (main menu/game), `start_game_clicked`, `lua_runtime_init`, `debug_tests_enabled`, `session_start`, `phase_enter/phase_exit` with duration and session id, language changes, discord/follow clicks.
+- Transport: native sends via libcurl; web/Emscripten uses `fetch` from JS (CORS still required).
+
+Future signals to add
+---------------------
+- Session lifecycle: `app_exit`/`session_end`, plus session id stitched to start/end.
+- Loading milestones: emit `loading_stage_started/completed` events from the event bus to spot stalls.
+- Asset coverage: texture/sound load failures and missing UUID lookups (de-duped per path).
+- Performance pulses: periodic frame time histogram and hardware summary (GPU/CPU coarse strings).
+- User actions: language toggles, controller navigation focus/activation, and menu funnel checkpoints.
+- Web parity: persist install id + offline queue in `localStorage`, opt-out via `?telemetry=off` query param.
+
 Config and privacy defaults
 ---------------------------
 - Default to disabled for developer builds; enable only in release with an explicit `telemetry.enabled: true` in `config.json`.

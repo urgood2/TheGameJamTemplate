@@ -16,6 +16,7 @@ Compatibility checklist
 - Web shell is `src/minshell.html`; linker flags preload `/assets` and request WebGL2/ES3.
 - Shader JSON supports `"web"` overrides in `shader_system.cpp`; prefer that for platform-specific shader variants.
 - Main loop uses `emscripten_set_main_loop`; avoid blocking loops and large stack allocations (stack bumped in CMake).
+- Telemetry/PostHog works on web when `-DENABLE_POSTHOG=ON` (uses browser fetch); ensure your `POSTHOG_HOST` allows CORS.
 - Keep asset filenames simple (no parentheses) to avoid packaging quirks, and prefer gzip-friendly formats where possible.
 
 Troubleshooting

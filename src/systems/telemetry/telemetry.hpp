@@ -24,6 +24,12 @@ namespace telemetry
     void Configure(const Config &cfg);
     const Config &GetConfig();
 
+    // Helpers for consistent tagging.
+    std::string PlatformTag();
+    std::string BuildTypeTag();
+    std::string BuildId();
+    std::string SessionId();
+
     // Stubbed sink: safe to call even when telemetry is disabled.
     void RecordEvent(const std::string &name, const nlohmann::json &props = nlohmann::json::object());
     void Flush();

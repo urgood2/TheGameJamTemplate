@@ -33,6 +33,27 @@ namespace telemetry
 #endif
 
 #if defined(__EMSCRIPTEN__)
+        EM_JS(void, telemetry_set_beacon_cfg, (const char* host,
+                                               const char* apiKey,
+                                               const char* distinctId,
+                                               const char* sessionId,
+                                               const char* buildId,
+                                               const char* buildType,
+                                               int enabled,
+                                               const char* captureUrl), {
+            const h = UTF8ToString(host);
+            Module.__telemetryBeaconCfg = {
+                enabled: enabled !== 0,
+                apiKey: UTF8ToString(apiKey),
+                distinctId: UTF8ToString(distinctId),
+                sessionId: UTF8ToString(sessionId),
+                buildId: UTF8ToString(buildId),
+                buildType: UTF8ToString(buildType),
+                telemetryHost: h,
+                captureUrl: UTF8ToString(captureUrl)
+            };
+        });
+
         bool webDebugOverlayEnabled()
         {
             static int enabled = EM_ASM_INT({
@@ -86,14 +107,51 @@ namespace telemetry
             Module.__telemetryLifecycleRegistered = true;
             const fire = (reason) => {
                 try {
+                    const unloadingReasons = ['pagehide', 'pagehide_bfcache', 'beforeunload', 'unload'];
+                    Module.__telemetryIsUnloading = unloadingReasons.includes(reason);
+
+                    // Fire a JS-side beacon immediately to avoid relying on wasm runtime during tab close.
+                    const cfg = Module.__telemetryBeaconCfg;
+                    if (cfg && cfg.enabled) {
+                        const payload = {
+                            api_key: cfg.apiKey,
+                            event: 'session_end',
+                            properties: {
+                                distinct_id: cfg.distinctId,
+                                session_id: cfg.sessionId,
+                                platform: 'web',
+                                build_id: cfg.buildId,
+                                build_type: cfg.buildType,
+                                telemetry_host: cfg.telemetryHost,
+                                reason: reason || 'unknown'
+                            },
+                            distinct_id: cfg.distinctId
+                        };
+                        const body = JSON.stringify(payload);
+                        try {
+                            if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+                                const ok = navigator.sendBeacon(cfg.captureUrl, new Blob([body], { type: 'application/json' }));
+                                if (!ok) {
+                                    fetch(cfg.captureUrl, { method: 'POST', headers: {'Content-Type': 'application/json'}, body, keepalive: true }).catch(() => {});
+                                }
+                            } else {
+                                fetch(cfg.captureUrl, { method: 'POST', headers: {'Content-Type': 'application/json'}, body, keepalive: true }).catch(() => {});
+                            }
+                        } catch (err) {
+                            console.warn('telemetry beacon send failed', err);
+                        }
+                    }
+
                     if (Module._telemetry_session_end) Module._telemetry_session_end(stringToUTF8OnStack(reason || 'unknown'));
                 } catch (e) {}
             };
-            ['pagehide', 'beforeunload'].forEach((ev) => {
-                window.addEventListener(ev, () => fire(ev));
+            window.addEventListener('pagehide', (ev) => {
+                fire(ev && ev.persisted ? 'pagehide_bfcache' : 'pagehide');
             });
+            window.addEventListener('beforeunload', () => fire('beforeunload'));
+            window.addEventListener('unload', () => fire('unload'));
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden') fire('hidden');
+                if (document.visibilityState === 'hidden') fire('visibility_hidden');
             });
             window.addEventListener('error', (ev) => {
                 try {
@@ -282,6 +340,37 @@ namespace telemetry
             telemetry_register_lifecycle_hooks();
             g_lifecycleHooksRegistered = true;
         }
+
+        // Expose capture URL + IDs for JS-side beacons on unload.
+        auto buildCaptureUrl = [](std::string host) {
+            constexpr std::string_view suffixWithSlash = "/capture/";
+            constexpr std::string_view suffixNoSlash = "/capture";
+            if (host.size() >= suffixWithSlash.size() &&
+                host.compare(host.size() - suffixWithSlash.size(), suffixWithSlash.size(), suffixWithSlash) == 0)
+            {
+                return host;
+            }
+            if (host.size() >= suffixNoSlash.size() &&
+                host.compare(host.size() - suffixNoSlash.size(), suffixNoSlash.size(), suffixNoSlash) == 0)
+            {
+                return host + "/";
+            }
+            if (!host.empty() && host.back() != '/')
+            {
+                host.push_back('/');
+            }
+            return host + "capture/";
+        };
+        const std::string captureUrl = buildCaptureUrl(g_config.posthogHost);
+        telemetry_set_beacon_cfg(
+            g_config.posthogHost.c_str(),
+            g_config.apiKey.c_str(),
+            g_config.distinctId.c_str(),
+            SessionId().c_str(),
+            BuildId().c_str(),
+            BuildTypeTag().c_str(),
+            g_config.enabled ? 1 : 0,
+            captureUrl.c_str());
 #endif
     }
 

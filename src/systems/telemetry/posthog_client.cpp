@@ -23,14 +23,39 @@
 EM_JS(void, posthog_fetch, (const char* url, const char* body), {
     const u = UTF8ToString(url);
     const b = UTF8ToString(body);
-    fetch(u, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: b,
-        keepalive: true
-    }).catch((err) => {
-        console.warn('posthog fetch failed', err);
-    });
+    try {
+        const module = (typeof Module !== 'undefined') ? Module : {};
+        const forceBeacon = !!module.__telemetryIsUnloading;
+        // Try a beacon first when the page is hiding/unloading; fetch with keepalive
+        // is less reliable in that phase across browsers.
+        const isDocAvailable = typeof document !== 'undefined';
+        const isUnloading = forceBeacon ||
+            (isDocAvailable && (document.visibilityState === 'hidden' || document.readyState === 'unloading'));
+        if (typeof navigator !== 'undefined' &&
+            isDocAvailable &&
+            isUnloading &&
+            typeof navigator.sendBeacon === 'function') {
+            const ok = navigator.sendBeacon(u, new Blob([b], { type: 'application/json' }));
+            if (ok) {
+                return;
+            }
+        }
+    } catch (err) {
+        console.warn('posthog beacon failed; falling back to fetch', err);
+    }
+
+    try {
+        fetch(u, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: b,
+            keepalive: true
+        }).catch((err) => {
+            console.warn('posthog fetch failed', err);
+        });
+    } catch (err) {
+        console.warn('posthog fetch threw', err);
+    }
 });
 #endif
 #if defined(_WIN32)

@@ -100,17 +100,21 @@ auto ProcessInputRegistry(InputState &state, entt::registry &registry) -> void;
 // Button Processing
 auto ButtonPressUpdate(entt::registry &registry, InputState &state,
                        const GamepadButton button, float dt) -> void;
-auto ProcessButtonPress(InputState &state, GamepadButton button) -> void;
-auto ProcessButtonRelease(InputState &state, GamepadButton button) -> void;
+auto ProcessButtonPress(InputState &state, GamepadButton button,
+                        ::EngineContext *ctx = nullptr) -> void;
+auto ProcessButtonRelease(InputState &state, GamepadButton button,
+                          ::EngineContext *ctx = nullptr) -> void;
 auto HeldButtonUpdate(entt::registry &registry, InputState &state,
                       const GamepadButton button, float dt) -> void;
 void ReleasedButtonUpdate(entt::registry &registry, InputState &state,
                           const GamepadButton button, float dt);
 
 // Axis Processing
-auto ProcessAxisButtons(InputState &state) -> void;
+auto ProcessAxisButtons(InputState &state, ::EngineContext *ctx = nullptr)
+    -> void;
 auto UpdateGamepadAxisInput(InputState &state, entt::registry &registry,
-                            float dt) -> InputDeviceInputCategory;
+                            float dt, ::EngineContext *ctx = nullptr)
+    -> InputDeviceInputCategory;
 
 // Keyboard Input Handling
 auto GetCharacterFromKey(KeyboardKey key, bool caps) -> char;

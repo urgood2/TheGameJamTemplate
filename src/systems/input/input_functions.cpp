@@ -260,13 +260,13 @@ namespace input
                 {
                     SetCurrentGamepad(inputState, GetGamepadName(0), 0);
                     ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
-                    ProcessButtonPress(inputState, (GamepadButton)button);
+                    ProcessButtonPress(inputState, (GamepadButton)button, ctx);
                 }
                 if (gamepadButtonDetectUpFirstFrame)
                 {
                     SetCurrentGamepad(inputState, GetGamepadName(0), 0);
                     ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
-                    ProcessButtonRelease(inputState, (GamepadButton)button);
+                    ProcessButtonRelease(inputState, (GamepadButton)button, ctx);
                 }
 
                 gamepadButtonStates[(GamepadButton)button].downLastFrame = gamepadButtonStates[(GamepadButton)button].downCurrentFrame;
@@ -291,7 +291,7 @@ namespace input
 
                 
                 ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_AXIS);
-                UpdateGamepadAxisInput(inputState, registry, dt);
+                UpdateGamepadAxisInput(inputState, registry, dt, ctx);
             }
         }
     }
@@ -331,11 +331,10 @@ namespace input
 
     auto Update(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void
     {
-        (void)ctx; // context reserved for future routing; registry/inputState already resolved by caller
         ZONE_SCOPED("Input system update");
         
         auto mouseCategory = DetectMouseActivity(inputState);
-        auto gamepadCategory = UpdateGamepadAxisInput(inputState, registry, dt);
+        auto gamepadCategory = UpdateGamepadAxisInput(inputState, registry, dt, ctx);
 
         // Choose which device takes precedence
         InputDeviceInputCategory finalCategory = InputDeviceInputCategory::NONE;
@@ -359,7 +358,7 @@ namespace input
             ReconfigureInputDeviceInfo(inputState, finalCategory);
         }
 
-        // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt);
+        // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt, ctx);
         auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
 
         handleRawInput(registry, inputState, dt, ctx);
@@ -1407,40 +1406,42 @@ namespace input
         }
     }
 
-    auto ProcessButtonPress(InputState &state, GamepadButton button) -> void
+    auto ProcessButtonPress(InputState &state, GamepadButton button, EngineContext* ctx) -> void
     {
         // SPDLOG_DEBUG("Button press detected: {}", magic_enum::enum_name(button));
         state.gamepadButtonsPressedThisFrame[button] = true;
         state.gamepadButtonsHeldThisFrame[button] = true;
         input::DispatchRaw(state, InputDeviceInputCategory::GAMEPAD_BUTTON, (int)button, true);
+        resolveEventBus(ctx).publish(events::GamepadButtonPressed{state.gamepad.id, button});
     }
 
-    auto ProcessButtonRelease(InputState &state, GamepadButton button) -> void
+    auto ProcessButtonRelease(InputState &state, GamepadButton button, EngineContext* ctx) -> void
     {
         state.gamepadButtonsHeldThisFrame[button] = false;
         state.gamepadButtonsReleasedThisFrame[button] = true;
         input::DispatchRaw(state, InputDeviceInputCategory::GAMEPAD_BUTTON, (int)button, false);
+        resolveEventBus(ctx).publish(events::GamepadButtonReleased{state.gamepad.id, button});
     }
 
-    auto ProcessAxisButtons(InputState &state) -> void
+    auto ProcessAxisButtons(InputState &state, EngineContext* ctx) -> void
     {
         for (auto &[key, axisButton] : state.axis_buttons)
         {
             // Trigger a button release if the button is no longer active or has changed
             if (axisButton.previous && (!axisButton.current || axisButton.previous != axisButton.current))
             {
-                ProcessButtonRelease(state, axisButton.previous.value());
+                ProcessButtonRelease(state, axisButton.previous.value(), ctx);
             }
 
             // Trigger a button press if a new button becomes active
             if (axisButton.current && axisButton.previous != axisButton.current)
             {
-                ProcessButtonPress(state, axisButton.current.value());
+                ProcessButtonPress(state, axisButton.current.value(), ctx);
             }
         }
     }
 
-    auto UpdateGamepadAxisInput(InputState &state, entt::registry &registry, float dt) -> InputDeviceInputCategory
+    auto UpdateGamepadAxisInput(InputState &state, entt::registry &registry, float dt, EngineContext* ctx) -> InputDeviceInputCategory
     {
         InputDeviceInputCategory axisInterpretation = InputDeviceInputCategory::NONE;
 
@@ -1575,7 +1576,7 @@ namespace input
             }
 
             // Handle button press/release for axis buttons
-            ProcessAxisButtons(state);
+            ProcessAxisButtons(state, ctx);
             
             // send axis each frame so action_value aggregates
             input::DispatchRaw(state, InputDeviceInputCategory::GAMEPAD_AXIS, (int)GAMEPAD_AXIS_LEFT_X,  true, l_stick_x);

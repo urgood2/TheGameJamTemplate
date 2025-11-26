@@ -115,6 +115,56 @@ TEST_F(InputEventBusTest, PublishesUIButtonActivatedForUiTargets) {
     EXPECT_EQ(lastActivation.button, MOUSE_LEFT_BUTTON);
 }
 
+TEST_F(InputEventBusTest, PublishesGamepadButtonEventsToContextBus) {
+    MockEngineContext ctx;
+
+    int presses = 0;
+    int releases = 0;
+    events::GamepadButtonPressed lastPress{};
+    events::GamepadButtonReleased lastRelease{};
+
+    ctx.eventBus.subscribe<events::GamepadButtonPressed>(
+        [&](const events::GamepadButtonPressed& evt) {
+            ++presses;
+            lastPress = evt;
+        });
+    ctx.eventBus.subscribe<events::GamepadButtonReleased>(
+        [&](const events::GamepadButtonReleased& evt) {
+            ++releases;
+            lastRelease = evt;
+        });
+
+    input::InputState state{};
+    state.gamepad.id = 3;
+
+    input::ProcessButtonPress(state, GAMEPAD_BUTTON_RIGHT_FACE_DOWN, &ctx);
+    input::ProcessButtonRelease(state, GAMEPAD_BUTTON_RIGHT_FACE_DOWN, &ctx);
+
+    EXPECT_EQ(presses, 1);
+    EXPECT_EQ(releases, 1);
+    EXPECT_EQ(lastPress.gamepadId, 3);
+    EXPECT_EQ(lastRelease.gamepadId, 3);
+    EXPECT_EQ(lastPress.button, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+    EXPECT_EQ(lastRelease.button, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+}
+
+TEST_F(InputEventBusTest, PublishesGamepadButtonEventsToFallbackBusWhenNoContext) {
+    int presses = 0;
+    events::GamepadButtonPressed last{};
+    globals::getEventBus().subscribe<events::GamepadButtonPressed>(
+        [&](const events::GamepadButtonPressed& evt) {
+            ++presses;
+            last = evt;
+        });
+
+    input::InputState state{};
+    input::ProcessButtonPress(state, GAMEPAD_BUTTON_LEFT_FACE_UP);
+
+    EXPECT_EQ(presses, 1);
+    EXPECT_EQ(last.gamepadId, state.gamepad.id);
+    EXPECT_EQ(last.button, GAMEPAD_BUTTON_LEFT_FACE_UP);
+}
+
 TEST_F(InputEventBusTest, FallsBackToGlobalBusWhenContextAbsent) {
     int fallbackClicks = 0;
     events::MouseClicked last{};

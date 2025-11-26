@@ -130,6 +130,14 @@ option(USE_LUAJIT "Use LuaJIT instead of standard Lua" OFF)
 option(SKIP_ASSET_SCAN "Skip recursive asset scan at startup (can also set env SKIP_ASSET_SCAN=1)" OFF)
 option(SKIP_UUID_DUMP "Skip writing auto-generated all_uuids.json (can also set env SKIP_UUID_DUMP=1)" OFF)
 option(ENABLE_WEB_HELPER_TARGETS "Expose web helper targets even when the top-level build is native" ON)
+option(STRIP_LUA_COMMENTS_FOR_WEB "Strip Lua comments from assets for web/release builds to shrink payloads" ON)
+
+if(STRIP_LUA_COMMENTS_FOR_WEB)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(NOT Python3_Interpreter_FOUND)
+        message(WARNING "STRIP_LUA_COMMENTS_FOR_WEB is ON but Python3 interpreter not found; Lua assets will be copied without stripping comments.")
+    endif()
+endif()
 
 # ------------------------------------------------------------------
 # Dev ergonomics:
@@ -850,6 +858,11 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
 
     file(GLOB_RECURSE ASSET_FILES RELATIVE ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets/*)
 
+    set(_is_release_like FALSE)
+    if(CMAKE_BUILD_TYPE MATCHES "Rel" OR CMAKE_BUILD_TYPE MATCHES "MinSizeRel" OR CMAKE_BUILD_TYPE MATCHES "Release")
+        set(_is_release_like TRUE)
+    endif()
+
     foreach(ASSET_FILE ${ASSET_FILES})
         # Skip junk files and dev-only archives to keep itch.io upload under file count limits
         if(ASSET_FILE MATCHES "\\.DS_Store$"
@@ -862,13 +875,31 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
         endif()
 
         get_filename_component(DEST_DIR "${WEB_BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
-        add_custom_command(
-            TARGET copy_assets POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
-            COMMAND ${CMAKE_COMMAND} -E copy
-                    "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
-                    "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
-        )
+        set(_should_strip_lua FALSE)
+        if(STRIP_LUA_COMMENTS_FOR_WEB AND Python3_Interpreter_FOUND AND _is_release_like)
+            if(ASSET_FILE MATCHES "\\.lua$")
+                set(_should_strip_lua TRUE)
+            endif()
+        endif()
+
+        if(_should_strip_lua)
+            add_custom_command(
+                TARGET copy_assets POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
+                COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/strip_lua_comments.py"
+                        "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
+                        "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
+                COMMENT "Stripping Lua comments: ${ASSET_FILE}"
+            )
+        else()
+            add_custom_command(
+                TARGET copy_assets POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
+                COMMAND ${CMAKE_COMMAND} -E copy
+                        "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
+                        "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
+            )
+        endif()
     endforeach()
 endif()
 

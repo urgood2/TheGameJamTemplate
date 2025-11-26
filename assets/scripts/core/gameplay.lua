@@ -2145,9 +2145,10 @@ function makeCardTooltip(card_def)
 
     local globalFontSize = 10
     local noShadowAttr   = ";shadow=false"
-    local valueColumnMinWidth = 32
-    local rowPadding = 0
-    local outerPadding = 0
+    local labelColumnMinWidth = 210
+    local valueColumnMinWidth = 56
+    local rowPadding = 2
+    local outerPadding = 2
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2165,8 +2166,9 @@ function makeCardTooltip(card_def)
         local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. background .. ";color=" .. color .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
         return dsl.hbox {
             config = {
-                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-                padding = 0
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0,
+                minWidth = labelColumnMinWidth
             },
             children = { labelDef }
         }
@@ -2189,7 +2191,7 @@ function makeCardTooltip(card_def)
         if shouldExclude(value) then return end
         table.insert(rows, dsl.hbox {
             config = {
-                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
                 padding = rowPadding
             },
             children = {
@@ -2205,7 +2207,7 @@ function makeCardTooltip(card_def)
     if card_def.id then
         table.insert(rows, dsl.hbox {
             config = {
-                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
                 padding = rowPadding
             },
             children = {
@@ -2234,7 +2236,7 @@ function makeCardTooltip(card_def)
 
     local v = dsl.vbox {
         config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             color = "blue",
             padding = outerPadding
         },
@@ -2246,6 +2248,8 @@ function makeCardTooltip(card_def)
             color = "purple",
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             padding = outerPadding,
+            outlineThickness = 2,
+            outlineColor = util.getColor("pink"),
             shadow = true
         },
         children = { v }

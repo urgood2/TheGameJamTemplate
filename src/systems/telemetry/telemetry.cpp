@@ -108,14 +108,19 @@ namespace telemetry
             const fire = (reason) => {
                 try {
                     const unloadingReasons = ['pagehide', 'pagehide_bfcache', 'beforeunload', 'unload'];
-                    Module.__telemetryIsUnloading = unloadingReasons.includes(reason);
+                    const isUnloading = unloadingReasons.includes(reason);
+                    const isVisibleNow = (typeof document !== 'undefined' && document.visibilityState === 'visible');
+                    const eventName = isUnloading ? 'session_end'
+                                                  : (reason === 'visibility_hidden' ? 'visibility_hidden'
+                                                                                    : (reason === 'visibility_visible' ? 'visibility_visible' : 'session_state'));
+                    Module.__telemetryIsUnloading = isUnloading;
 
                     // Fire a JS-side beacon immediately to avoid relying on wasm runtime during tab close.
                     const cfg = Module.__telemetryBeaconCfg;
                     if (cfg && cfg.enabled) {
                         const payload = {
                             api_key: cfg.apiKey,
-                            event: 'session_end',
+                            event: eventName,
                             properties: {
                                 distinct_id: cfg.distinctId,
                                 session_id: cfg.sessionId,
@@ -123,7 +128,8 @@ namespace telemetry
                                 build_id: cfg.buildId,
                                 build_type: cfg.buildType,
                                 telemetry_host: cfg.telemetryHost,
-                                reason: reason || 'unknown'
+                                reason: reason || 'unknown',
+                                visible: isVisibleNow
                             },
                             distinct_id: cfg.distinctId
                         };
@@ -142,7 +148,11 @@ namespace telemetry
                         }
                     }
 
-                    if (Module._telemetry_session_end) Module._telemetry_session_end(stringToUTF8OnStack(reason || 'unknown'));
+                    if (isUnloading) {
+                        if (Module._telemetry_session_end) Module._telemetry_session_end(stringToUTF8OnStack(reason || 'unknown'));
+                    } else {
+                        if (Module._telemetry_visibility_change) Module._telemetry_visibility_change(stringToUTF8OnStack(reason || 'unknown'), isVisibleNow ? 1 : 0);
+                    }
                 } catch (e) {}
             };
             window.addEventListener('pagehide', (ev) => {
@@ -152,6 +162,7 @@ namespace telemetry
             window.addEventListener('unload', () => fire('unload'));
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden') fire('visibility_hidden');
+                if (document.visibilityState === 'visible') fire('visibility_visible');
             });
             window.addEventListener('error', (ev) => {
                 try {
@@ -588,6 +599,13 @@ namespace telemetry
         const std::string msg = messageCStr ? messageCStr : "unknown";
         const std::string src = sourceCStr ? sourceCStr : "";
         RecordEvent("web_client_error", {{"message", msg}, {"source", src}});
+    }
+
+    extern "C" EMSCRIPTEN_KEEPALIVE void telemetry_visibility_change(const char *reasonCStr, int isVisible)
+    {
+        const std::string reason = reasonCStr ? reasonCStr : "unknown";
+        const bool visible = (isVisible != 0);
+        RecordEvent("visibility_change", {{"reason", reason}, {"visible", visible}});
     }
 #endif
 

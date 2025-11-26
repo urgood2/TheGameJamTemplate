@@ -3,7 +3,7 @@ help:
 
 build-with-config config:
 	@mkdir -p build 
-	@cd build && cmake ..
+	@cd build && cmake .. -DENABLE_UNIT_TESTS=OFF
 	@cmake --build ./build --config {{config}} --target raylib-cpp-cmake-template -j 10 --
 
 build-debug:
@@ -45,11 +45,11 @@ ccache-stats:
 
 # Separate single-config build dirs to avoid CMake cache churn.
 build-debug-fast:
-	cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug
+	cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-debug --target raylib-cpp-cmake-template -j 10 --
 
 build-release-fast:
-	cmake -B build-release -DCMAKE_BUILD_TYPE=Release
+	cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-release --target raylib-cpp-cmake-template -j 10 --
 
 build-debug-ninja:

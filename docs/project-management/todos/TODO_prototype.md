@@ -58,36 +58,34 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 # Things to do in downtime.
 - continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
 - got to also test the new batching queue system.
-- make j8 default in compilation?
+- some alignment issues with tooltip ui., also how to make the text right ailgned in the ui box?
+- make mask truly weightless. and make it scale bounce with player when p- layer picks soemthing up.
+- some simple dust particles when player walks. 
+- what telemetry points should we be asdding with posthog?
     
 # programming side
 - refer to balatro_analysis folder for design elements.
-- projectiles need better testing.
-- make SpellTypeEvaluator and JokerSystem compatible and ready to use.
-- we need to do projectile behaviors as well.
-- some simple dust particles when player walks. 
-- outline next steps in telemetry. what service should we try? I want maximum info from bare minimum of work, and it should be simple to enable. -> posthog?
-- web - why do the scanline things disappear on web?
-make mask truly weightless. and make it scale bounce with player when p- layer picks soemthing up.
 
-- some alignment issues with tooltip ui., also how to make the text right ailgned in the ui box?
+
+- maybe pause game before starting action phase to evaluate cards once, show discoveries, etc?
+- projectiles need better testing. also test with the wand action system, right now it casts things that it shouldnt.
+- we need to do projectile behaviors as well. let's make them trigger periodically, and make an imgui that disables/enables them so I can test them visually (the various type of triggers)
+
+
+
 - need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.
 - then player progresses through 3 stages, the last of which is extra hard.
 
-- flesh out shop. display currency with dynamic text, add reroll and lock buttons. we should probably have a way to preview player's belongings & wands & inventory. as well as a return to planning button, and a go button for action.
 
 - also need currency. display it somewhere on the screen in the shop and planning phases.
 
-- let's make it easy to hoook up triggers?
-- buttons of some kind to quickly press to send card up to wand or back to inventory, maybe popping out behind card? what would this look like?
-- color code wand slots + trigger area + card area so that it's easy to swap between them.
-- Then have a button that pops up when you click a card (or a pip if it's controller) that says "to wand" or (if already in wand) "to inven". Shortcut keys to swap to trigger inventory or card inventory.
+
+- flesh out shop. display currency with dynamic text, add reroll and lock buttons. we should probably have a way to preview player's belongings & wands & inventory. as well as a return to planning button, and a go button for action.
 - Avatar slot. leave empty for now. maybe use stencil to have a rectangle area that has stripes animated through it.
 - Relic slot. Maybe ROR like bar which can be filled. 
 
 
 - brainstorm how best to visualize the execution order of the cards to the player. maybe use arrows?
-- need to figure out how to process the cast blocks, and ensure they contain all necessary information I would need to ceonceivably implement the individual behaviors of each projectile/cast. 
 
 - start wand evaluation mechanism.
 
@@ -197,7 +195,10 @@ end)
 - [ ] Add glow to specfiic sprites: https://godotshaders.com/shader/item-pulse-glow/
 
 # polish phase
-
+- buttons of some kind to quickly press to send card up to wand or back to inventory, maybe popping out behind card? what would this look like?
+- color code wand slots + trigger area + card area so that it's easy to swap between them.
+- Then have a button that pops up when you click a card (or a pip if it's controller) that says "to wand" or (if already in wand) "to inven". Shortcut keys to swap to trigger inventory or card inventory.
+- web - why do the scanline things disappear on web?
 - [ ] cursor hover doesn't work fully correctly when controller (points to wrong card sometimes)
 - [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
 - [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.

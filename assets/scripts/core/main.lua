@@ -380,7 +380,7 @@ function startGameButtonCallback()
             add_fullscreen_shader("palette_quantize")
             
             
-            add_fullscreen_shader("pixelate_image")
+            -- add_fullscreen_shader("pixelate_image")
             
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer
@@ -441,10 +441,10 @@ function initMainGame()
     )
     
     
-    if os.getenv("RUN_PROJECTILE_TESTS") == "1" then
-        record_telemetry("debug_tests_enabled", { suite = "projectile" })
+    -- if os.getenv("RUN_PROJECTILE_TESTS") == "1" then
+    --     record_telemetry("debug_tests_enabled", { suite = "projectile" })
         ProjectileSystemTest = require("test_projectiles")
-    end
+    -- end
 
     local runWandTests = os.getenv("RUN_WAND_TESTS") == "1"
     if runWandTests then
@@ -620,7 +620,9 @@ function main.update(dt)
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
     
-    ProjectileSystemTest.update(dt)
+    if ProjectileSystemTest ~= nil then
+        ProjectileSystemTest.update(dt)
+    end
     
     -- tracy.zoneEnd()
     

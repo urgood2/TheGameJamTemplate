@@ -120,7 +120,7 @@ local ENEMY_HEALTH_BAR_LINGER     = 2.0 -- how long enemy health bars stay visib
 local playerDashCooldownRemaining = 0
 local playerStaminaTickerTimer    = 0
 
-local enemyHealthUiState          = {}                         -- eid -> { actor=<combat actor>, visibleUntil=<time> }
+local enemyHealthUiState          = {}                                 -- eid -> { actor=<combat actor>, visibleUntil=<time> }
 local combatActorToEntity         = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
 
 function addCardToBoard(cardEntityID, boardEntityID)
@@ -423,6 +423,17 @@ end
 
 function setUpCardAndWandStatDisplay()
     local STAT_FONT_SIZE = 27
+
+
+    -- Hook into update loop (this is a bit hacky, ideally we'd have a proper update hook)
+    -- We'll use a timer that runs every frame
+    timer.every(0, function()
+        if is_state_active(ACTION_STATE) then
+            local dt = love.timer.getDelta()
+            CastFeedUI.update(dt)
+            CastFeedUI.draw()
+        end
+    end, "cast_feed_update")
 
     local bumper_l = "xbox_lb.png"
     local bumper_r = "xbox_rb.png"
@@ -1830,7 +1841,7 @@ function setUpLogicTimers()
                                         if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return end
 
                                         local triggerBoardScript = getScriptTableFromEntityID(currentSet
-                                        .trigger_board_id)
+                                            .trigger_board_id)
                                         log_debug("trigger_simul_timer fired for action board:", actionBoardID)
                                         log_debug("action board has", #actionBoard.cards, "cards")
                                         log_debug("Now simulating wand", currentSet.wandDef.id) -- wand def is stored in the set
@@ -1854,7 +1865,7 @@ function setUpLogicTimers()
 
                                         local pitchToUse = 0.7
                                         local castSequenceID = tostring(actionBoardID) ..
-                                        "_" .. tostring(os.clock()) .. "_" .. tostring(math.random(1000000))
+                                            "_" .. tostring(os.clock()) .. "_" .. tostring(math.random(1000000))
 
                                         -- inspect the cast blocks. for each block, pulse the corresponding cards.
                                         for blockIdx, castBlock in ipairs(simulatedResult.blocks) do
@@ -1864,9 +1875,9 @@ function setUpLogicTimers()
                                             for cardIdx, delayInfo in ipairs(castBlock.card_delays) do
                                                 local card = delayInfo.card
                                                 local cumulativeDelay = delayInfo.cumulative_delay /
-                                                1000.0                                                      -- Convert ms to seconds
+                                                    1000.0 -- Convert ms to seconds
                                                 local timerTag = "cast_block_" ..
-                                                castSequenceID .. "_block" .. blockIdx .. "_card" .. cardIdx
+                                                    castSequenceID .. "_block" .. blockIdx .. "_card" .. cardIdx
 
                                                 timer.after(
                                                     cumulativeDelay,
@@ -2073,7 +2084,8 @@ function makeWandTooltip(wand_def)
     local function addLine(lines, label, value, valueFormatter)
         if shouldExclude(value) then return end
         local formattedValue = valueFormatter and valueFormatter(value) or tostring(value)
-        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+        table.insert(lines,
+            "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
             formattedValue .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
     end
 
@@ -2146,7 +2158,8 @@ function makeCardTooltip(card_def)
     -- Helper function to add a line if value is not excluded
     local function addLine(lines, label, value)
         if shouldExclude(value) then return end
-        table.insert(lines, "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+        table.insert(lines,
+            "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
             tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
     end
 
@@ -4180,6 +4193,13 @@ end
 
 
 function initActionPhase()
+    
+    
+    local CastFeedUI = require("ui.cast_feed_ui")
+
+    -- Initialize CastFeedUI
+    CastFeedUI.init()
+    
     -- add shader to backgorund layer
     add_layer_shader("background", "peaches_background")
     -- add_layer_shader("background", "fireworks")

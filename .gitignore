@@ -76,6 +76,7 @@ crash_reports/
 build-tests/
 build-test/
 build-skip/
+build-debug/
 build-debug-ninja/
 .ccache/
 build-asan/

@@ -59,8 +59,8 @@ endif()
 
 option(TRACY_ENABLE "Enable Tracy profiler instrumentation" OFF)
 option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
-option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" OFF)
-option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" OFF)
+option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" ON)
+option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" ON)
 
 # Prefer compiler cache when available to speed up rebuilds.
 find_program(CCACHE_PROGRAM ccache)

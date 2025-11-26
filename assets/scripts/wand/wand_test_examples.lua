@@ -380,6 +380,60 @@ end
 
 --[[
 ================================================================================
+EXAMPLE 8: SPELL TYPE & JOKER INTEGRATION
+================================================================================
+]] --
+
+function WandTests.example8_SpellTypeJoker()
+    print("\n" .. string.rep("=", 60))
+    print("EXAMPLE 8: Spell Type & Joker Integration")
+    print(string.rep("=", 60))
+
+    -- Add a Joker
+    local JokerSystem = require("wand.joker_system")
+    JokerSystem.clear_jokers()
+    JokerSystem.add_joker("echo_chamber") -- "Twin Casts trigger twice" (repeat_cast +1)
+
+    local wandDef = {
+        id = "twin_cast_wand",
+        type = "trigger",
+        mana_max = 50,
+        mana_recharge_rate = 10,
+        cast_block_size = 2,
+        cast_delay = 100,
+        recharge_time = 500,
+        spread_angle = 5,
+        shuffle = false,
+        total_card_slots = 2,
+        always_cast_cards = {},
+    }
+
+    -- Card pool: Double Cast + Fireball -> Twin Cast
+    local cardPool = {
+        cardEval.create_card_from_template(cardEval.card_defs.MULTI_DOUBLE_CAST),
+        cardEval.create_card_from_template(cardEval.card_defs.ACTION_BASIC_PROJECTILE),
+    }
+
+    local triggerDef = {
+        id = "every_N_seconds",
+        type = "trigger",
+        interval = 1.0,
+    }
+
+    local wandId = WandExecutor.loadWand(wandDef, cardPool, triggerDef)
+
+    print("Loaded Twin Cast wand with Echo Chamber Joker")
+    print("- Modifier: Double Cast (2 projectiles)")
+    print("- Action: Basic Projectile")
+    print("- Expected Spell Type: Twin Cast")
+    print("- Joker Effect: Echo Chamber should trigger and add another repeat_cast (+1)")
+    print("- Result: Multicast Count should increase from 2 to 3 (or repeat block)")
+
+    return wandId
+end
+
+--[[
+================================================================================
 TEST RUNNER
 ================================================================================
 ]] --
@@ -402,6 +456,7 @@ function WandTests.runAllTests()
         WandTests.example5_HomingMissiles(),
         WandTests.example6_ChainLightning(),
         WandTests.example7_TimerBomb(),
+        WandTests.example8_SpellTypeJoker(),
     }
 
     print("\n" .. string.rep("=", 60))
@@ -434,6 +489,7 @@ function WandTests.listTests()
     print("  5. example5_HomingMissiles")
     print("  6. example6_ChainLightning")
     print("  7. example7_TimerBomb")
+    print("  8. example8_SpellTypeJoker")
 end
 
 return WandTests

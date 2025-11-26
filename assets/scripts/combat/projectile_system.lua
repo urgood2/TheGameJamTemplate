@@ -40,6 +40,9 @@ ProjectileSystem.next_projectile_id = 1
 ProjectileSystem.world_bounds = nil
 ProjectileSystem.world_bounds_margin = nil
 ProjectileSystem._playable_bounds = nil
+ProjectileSystem.collisionTargetSet = { WORLD = true }
+ProjectileSystem.collisionTargetList = { "WORLD" }
+ProjectileSystem.collisionCallbacksRegistered = {}
 
 -- Physics step timer handle
 ProjectileSystem.physics_step_timer_tag = "projectile_system_update"
@@ -274,6 +277,49 @@ local function resolveCollisionTargets(params)
     return targets
 end
 
+local function ensureCollisionCallbackForTarget(target)
+    if not target then return end
+    if ProjectileSystem.collisionCallbacksRegistered[target] then return end
+    if not physics or not physics.on_pair_begin then return end
+
+    local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world") or nil
+    if not world then return end
+
+    physics.on_pair_begin(world, ProjectileSystem.COLLISION_CATEGORY, target, function(arb)
+        if not arb or not arb.entities then return true end
+        local a, b = arb:entities()
+        if not a or not b then return true end
+
+        local projectile, other = nil, nil
+        if ProjectileSystem.active_projectiles[a] then
+            projectile = a
+            other = b
+        elseif ProjectileSystem.active_projectiles[b] then
+            projectile = b
+            other = a
+        end
+
+        if not projectile then return true end
+
+        ProjectileSystem.handleCollision(projectile, other)
+        return true
+    end)
+
+    ProjectileSystem.collisionCallbacksRegistered[target] = true
+end
+
+local function registerCollisionTargets(targets)
+    if not targets then return end
+
+    for _, tag in ipairs(targets) do
+        if tag and not ProjectileSystem.collisionTargetSet[tag] then
+            ProjectileSystem.collisionTargetSet[tag] = true
+            table.insert(ProjectileSystem.collisionTargetList, tag)
+        end
+        ensureCollisionCallbackForTarget(tag)
+    end
+end
+
 local function ensureCollisionCategoryRegistered()
     if not PhysicsManager or not PhysicsManager.get_world then
         return
@@ -499,6 +545,7 @@ function ProjectileSystem.setupPhysics(entity, params)
 
     -- Setup collision masks for this projectile entity
     local collisionTargets = resolveCollisionTargets(params)
+    registerCollisionTargets(collisionTargets)
     if #collisionTargets > 0 then
         physics.enable_collision_between_many(
             world,
@@ -640,8 +687,6 @@ function ProjectileSystem.updateInternal(dt)
     -- Update all active projectiles
     local toRemove = {}
 
-    ProjectileSystem.processWorldCollisions()
-
     for entity, _ in pairs(ProjectileSystem.active_projectiles) do
         if not entity_cache.valid(entity) then
             toRemove[#toRemove + 1] = entity
@@ -668,29 +713,6 @@ function ProjectileSystem.updateInternal(dt)
     -- Remove destroyed projectiles
     for _, entity in ipairs(toRemove) do
         ProjectileSystem.destroy(entity)
-    end
-end
-
-function ProjectileSystem.processWorldCollisions()
-    if not physics or not physics.GetCollisionEnter then
-        return
-    end
-    if not PhysicsManager or not PhysicsManager.get_world then
-        return
-    end
-
-    local world = PhysicsManager.get_world("world")
-    if not world then return end
-
-    local events = physics.GetCollisionEnter(world, ProjectileSystem.COLLISION_CATEGORY, "WORLD")
-    if not events then return end
-
-    for _, ev in ipairs(events) do
-        local projectile = ev.a
-        local other = ev.b or entt_null
-        if projectile and ProjectileSystem.active_projectiles[projectile] then
-            ProjectileSystem.handleCollision(projectile, other)
-        end
     end
 end
 
@@ -1413,6 +1435,9 @@ INITIALIZATION
 
 -- Initialize projectile system
 function ProjectileSystem.init()
+    ProjectileSystem.collisionTargetSet = { WORLD = true }
+    ProjectileSystem.collisionTargetList = { "WORLD" }
+    ProjectileSystem.collisionCallbacksRegistered = {}
     -- Track last physics tick time for dt calculation
     ProjectileSystem._lastUpdateTime = os.clock()
     ProjectileSystem.refreshWorldBounds()
@@ -1468,6 +1493,9 @@ function ProjectileSystem.cleanup()
     ProjectileSystem.projectile_scripts = {}
     ProjectileSystem.world_bounds = nil
     ProjectileSystem._playable_bounds = nil
+    ProjectileSystem.collisionTargetSet = { WORLD = true }
+    ProjectileSystem.collisionTargetList = { "WORLD" }
+    ProjectileSystem.collisionCallbacksRegistered = {}
 
     log_debug("ProjectileSystem cleaned up")
 end

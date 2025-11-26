@@ -79,6 +79,20 @@ local function getGlobalNumber(name, fallback)
     return fallback
 end
 
+-- Gravity used when we are driving arc motion manually (pixels/sec^2)
+local MANUAL_GRAVITY_ACCEL = 900
+
+-- Returns the physics world for a projectile when physics is enabled on it
+local function getPhysicsWorld(projectileScript)
+    if not (projectileScript and projectileScript.usePhysics) then
+        return nil
+    end
+    if not (physics and PhysicsManager and PhysicsManager.get_world) then
+        return nil
+    end
+    return PhysicsManager.get_world("world")
+end
+
 function ProjectileSystem.refreshWorldBounds()
     local left = getGlobalNumber("SCREEN_BOUND_LEFT", 0)
     local top = getGlobalNumber("SCREEN_BOUND_TOP", 0)
@@ -333,13 +347,6 @@ local function ensureCollisionCategoryRegistered()
     end
 end
 
-local function hasPhysicsBody(entity)
-    if not registry or not registry.try_get then
-        return false
-    end
-    return registry:try_get(entity, PhysicsBody) ~= nil
-end
-
 -- Steering helpers (for homing projectiles)
 local function canUseSteering()
     return steering and steering.make_steerable and steering.seek_point and registry
@@ -347,7 +354,7 @@ end
 
 local function ensureSteeringAgent(entity, behavior)
     if behavior._steeringReady then return true end
-    if not canUseSteering() or not hasPhysicsBody(entity) then
+    if not canUseSteering() then
         return false
     end
 
@@ -378,6 +385,8 @@ function ProjectileSystem.spawn(params)
         log_error("ProjectileSystem.spawn: position is required")
         return entt_null
     end
+
+    local wantsPhysics = params.usePhysics ~= false
 
     -- Create new entity with transform
     local entity = create_transform_entity()
@@ -459,14 +468,17 @@ function ProjectileSystem.spawn(params)
     projectileScript.projectileData = projectileData
     projectileScript.projectileBehavior = projectileBehavior
     projectileScript.projectileLifetime = projectileLifetime
+    projectileScript.usePhysics = wantsPhysics
 
     -- NOW attach to entity (must be after data assignment)
     projectileScript:attach_ecs { create_new = false, existing_entity = entity }
     ProjectileSystem.projectile_scripts[entity] = projectileScript
 
     -- Setup physics body for projectile
-    if params.usePhysics ~= false then
-        ProjectileSystem.setupPhysics(entity, params)
+    if wantsPhysics then
+        ProjectileSystem.setupPhysics(entity, params, projectileScript)
+    else
+        projectileScript.usePhysics = false
     end
 
     -- Calculate initial velocity based on movement type
@@ -496,12 +508,20 @@ function ProjectileSystem.spawn(params)
 end
 
 -- Setup Chipmunk2D physics for projectile
-function ProjectileSystem.setupPhysics(entity, params)
+function ProjectileSystem.setupPhysics(entity, params, projectileScript)
+    projectileScript = projectileScript or ProjectileSystem.getProjectileScript(entity)
+
     -- Check if physics world is available
-    local world = PhysicsManager.get_world("world")
+    local world = getPhysicsWorld(projectileScript) or (PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")) or nil
     if not physics or not world then
+        if projectileScript then
+            projectileScript.usePhysics = false
+        end
         log_debug("Physics world not available, projectile will not have collision")
         return
+    end
+    if projectileScript then
+        projectileScript.usePhysics = true
     end
     local transform = component_cache.get(entity, Transform)
 
@@ -542,8 +562,15 @@ function ProjectileSystem.setupPhysics(entity, params)
     -- Note: Gravity is set globally per world, not per-entity
     -- Arc projectiles will use the world's gravity automatically
 
-    -- Configure physics sync: Make physics authoritative for projectiles (matches gameplay.lua)
-    physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+    -- Configure physics sync:
+    -- - Orbital and arc projectiles are driven kinematically, so Transform is the authority.
+    -- - All others are physics-driven.
+    local syncMode = physics.PhysicsSyncMode.AuthoritativePhysics
+    if params.movementType == ProjectileSystem.MovementType.ORBITAL
+        or params.movementType == ProjectileSystem.MovementType.ARC then
+        syncMode = physics.PhysicsSyncMode.AuthoritativeTransform
+    end
+    physics.set_sync_mode(registry, entity, syncMode)
 
     -- Setup collision masks for this projectile entity
     local collisionTargets = resolveCollisionTargets(params)
@@ -576,6 +603,8 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
 
     local behavior = projectileScript.projectileBehavior
     local transform = component_cache.get(entity, Transform)
+    local world = getPhysicsWorld(projectileScript)
+    local usePhysics = world ~= nil
 
     if behavior.movementType == ProjectileSystem.MovementType.STRAIGHT then
         -- Set initial velocity from direction/speed
@@ -593,8 +622,7 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
         end
 
         -- Apply velocity to physics body if present
-        local world = PhysicsManager.get_world("world")
-        if physics and world and hasPhysicsBody(entity) then
+        if usePhysics then
             physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
         end
 
@@ -603,8 +631,7 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
         local function applyVelocity(dx, dy)
             behavior.velocity.x = dx
             behavior.velocity.y = dy
-            local world = PhysicsManager.get_world("world")
-            if physics and world and hasPhysicsBody(entity) then
+            if usePhysics then
                 physics.SetVelocity(world, entity, dx, dy)
             end
         end
@@ -668,9 +695,15 @@ function ProjectileSystem.initializeMovement(entity, params, projectileScript)
         end
 
         -- Apply velocity and let gravity influence via physics
-        local world = PhysicsManager.get_world("world")
-        if physics and world and hasPhysicsBody(entity) then
+        if usePhysics then
             physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
+        end
+
+        -- If physics is disabled or we are forcing manual gravity, kick in a small downward impulse
+        -- so manual arc projectiles immediately begin to fall.
+        if (not usePhysics) or behavior.forceManualGravity then
+            local kickDt = params.manualGravityKickDt or (1 / 60)
+            behavior.velocity.y = behavior.velocity.y + (MANUAL_GRAVITY_ACCEL * behavior.gravityScale * kickDt)
         end
 
         -- Gravity is handled by physics system
@@ -761,17 +794,17 @@ function ProjectileSystem.updateProjectile(entity, dt, projectileScript)
 
     -- Update movement based on type
     if behavior.movementType == ProjectileSystem.MovementType.STRAIGHT then
-        ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior)
+        ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior, projectileScript)
 
     elseif behavior.movementType == ProjectileSystem.MovementType.HOMING then
-        ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
+        ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior, projectileScript)
 
     elseif behavior.movementType == ProjectileSystem.MovementType.ORBITAL then
-        ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior)
+        ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior, projectileScript)
 
     elseif behavior.movementType == ProjectileSystem.MovementType.ARC then
         -- Arc movement handled by physics gravity
-        ProjectileSystem.updateArcMovement(entity, dt, transform, behavior)
+        ProjectileSystem.updateArcMovement(entity, dt, transform, behavior, projectileScript)
 
     elseif behavior.movementType == ProjectileSystem.MovementType.CUSTOM then
         if behavior.customUpdate then
@@ -878,8 +911,8 @@ function ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript,
 
         behavior.bounceCount = (behavior.bounceCount or 0) + 1
 
-        local world = PhysicsManager.get_world("world")
-        if physics and world then
+        local world = getPhysicsWorld(projectileScript)
+        if world then
             physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
         end
 
@@ -907,8 +940,8 @@ MOVEMENT PATTERNS
 =============================================================================
 ]]--
 
-local function getVelocityXY(world, entity, fallbackVelocity)
-    if physics and world and hasPhysicsBody(entity) then
+local function getVelocityXY(world, entity, fallbackVelocity, usePhysics)
+    if usePhysics and physics and world then
         local vel = physics.GetVelocity(world, entity)
         if vel then
             return vel.x or 0, vel.y or 0
@@ -922,13 +955,14 @@ local function getVelocityXY(world, entity, fallbackVelocity)
     return 0, 0
 end
 
-function ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior)
+function ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior, projectileScript)
     -- Physics-driven: Let Chipmunk2D handle movement via velocity
     -- Rotation is updated to face direction for visual purposes only
-    local world = PhysicsManager.get_world("world")
-    if physics and world and hasPhysicsBody(entity) then
+    local world = getPhysicsWorld(projectileScript)
+    local usePhysics = world ~= nil
+    if usePhysics then
         -- Sync velocity from physics (in case physics modified it)
-        local vx, vy = getVelocityXY(world, entity, behavior.velocity)
+        local vx, vy = getVelocityXY(world, entity, behavior.velocity, usePhysics)
         behavior.velocity.x = vx
         behavior.velocity.y = vy
 
@@ -951,21 +985,22 @@ function ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior
     end
 end
 
-function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
+function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior, projectileScript)
     -- Get physics world once at function start
-    local world = PhysicsManager.get_world("world")
+    local world = getPhysicsWorld(projectileScript)
+    local usePhysics = world ~= nil
 
     -- Check if target is valid
     if not behavior.homingTarget or not entity_cache.valid(behavior.homingTarget) then
         -- Fall back to straight movement
-        ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior)
+        ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior, projectileScript)
         return
     end
 
     -- Get target position
     local targetTransform = component_cache.get(behavior.homingTarget, Transform)
     if not targetTransform then
-        ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior)
+        ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior, projectileScript)
         return
     end
 
@@ -974,27 +1009,27 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
 
     -- If steering is available, drive homing via steering behaviors (matches gameplay.lua usage)
     if ensureSteeringAgent(entity, behavior) then
-        steering.seek_point(registry, entity, { x = targetX, y = targetY }, 1.0, 1.0)
+        steering.seek_point(registry, entity, { x = targetX, y = targetY }, 1.0, 30)
 
-        if physics and world then
-            local vx, vy = getVelocityXY(world, entity, behavior.velocity)
-            local speed = math.sqrt(vx * vx + vy * vy)
-            local maxSpeed = behavior._steeringMaxSpeed or behavior.homingMaxSpeed or behavior.baseSpeed or speed
+        -- if usePhysics then
+        --     local vx, vy = getVelocityXY(world, entity, behavior.velocity, usePhysics)
+        --     local speed = math.sqrt(vx * vx + vy * vy)
+        --     local maxSpeed = behavior._steeringMaxSpeed or behavior.homingMaxSpeed or behavior.baseSpeed or speed
 
-            if speed > 0 then
-                -- Clamp to configured max speed so steering doesn't overshoot
-                if maxSpeed and speed > maxSpeed then
-                    local scale = maxSpeed / speed
-                    vx = vx * scale
-                    vy = vy * scale
-                    physics.SetVelocity(world, entity, vx, vy)
-                end
+        --     if speed > 0 then
+        --         -- Clamp to configured max speed so steering doesn't overshoot
+        --         if maxSpeed and speed > maxSpeed then
+        --             local scale = maxSpeed / speed
+        --             vx = vx * scale
+        --             vy = vy * scale
+        --             physics.SetVelocity(world, entity, vx, vy)
+        --         end
 
-                behavior.velocity.x = vx
-                behavior.velocity.y = vy
-                transform.visualR = math.atan(vy, vx)
-            end
-        end
+        --         behavior.velocity.x = vx
+        --         behavior.velocity.y = vy
+        --         transform.visualR = math.atan(vy, vx)
+        --     end
+        -- end
 
         return
     end
@@ -1014,7 +1049,7 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
         dy = dy / dist
 
         -- Get current velocity from physics (authoritative)
-        local currentVelX, currentVelY = getVelocityXY(world, entity, behavior.velocity)
+        local currentVelX, currentVelY = getVelocityXY(world, entity, behavior.velocity, usePhysics)
 
         local currentSpeed = math.sqrt(currentVelX * currentVelX + currentVelY * currentVelY)
 
@@ -1035,7 +1070,7 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
         behavior.velocity.y = desiredVelY
 
         -- Apply velocity to physics (physics-driven)
-        if physics and world and hasPhysicsBody(entity) then
+        if usePhysics then
             physics.SetVelocity(world, entity, desiredVelX, desiredVelY)
 
             -- Update visual rotation to face direction
@@ -1050,8 +1085,8 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
         end
     else
         -- Target reached or very close, maintain current velocity
-        if physics and world then
-            local vx, vy = getVelocityXY(world, entity)
+        if usePhysics then
+            local vx, vy = getVelocityXY(world, entity, behavior.velocity, usePhysics)
             if vx ~= 0 or vy ~= 0 then
                 transform.visualR = math.atan(vy, vx)
             end
@@ -1059,9 +1094,22 @@ function ProjectileSystem.updateHomingMovement(entity, dt, transform, behavior)
     end
 end
 
-function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior)
+function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior, projectileScript)
     -- Get physics world once at function start
-    local world = PhysicsManager.get_world("world")
+    local world = getPhysicsWorld(projectileScript)
+    local usePhysics = world ~= nil
+
+    -- Ensure we always have a center point (fallback to current position)
+    if not behavior.orbitCenter then
+        if transform then
+            behavior.orbitCenter = {
+                x = transform.actualX + (transform.actualW or 0) * 0.5,
+                y = transform.actualY + (transform.actualH or 0) * 0.5
+            }
+        else
+            return
+        end
+    end
 
     if behavior.orbitCenterEntity and entity_cache.valid(behavior.orbitCenterEntity) then
         local centerTransform = component_cache.get(behavior.orbitCenterEntity, Transform)
@@ -1078,56 +1126,46 @@ function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior)
     -- Calculate position on orbit
     local centerX = behavior.orbitCenter.x
     local centerY = behavior.orbitCenter.y
-
     local targetX = centerX + math.cos(behavior.orbitAngle) * behavior.orbitRadius
     local targetY = centerY + math.sin(behavior.orbitAngle) * behavior.orbitRadius
+    local tangentSpeed = (behavior.orbitSpeed or 0) * (behavior.orbitRadius or 0)
+    local velocityX = -math.sin(behavior.orbitAngle) * tangentSpeed
+    local velocityY = math.cos(behavior.orbitAngle) * tangentSpeed
 
-    -- Physics-driven: Calculate velocity to reach target position
-    if physics and world and hasPhysicsBody(entity) then
-        -- Get current position from transform (updated by physics sync)
-        local currentX = transform.actualX + transform.actualW / 2
-        local currentY = transform.actualY + transform.actualH / 2
-
-        -- Calculate velocity needed to reach target (simple proportional control)
-        local velocityX = (targetX - currentX) / dt
-        local velocityY = (targetY - currentY) / dt
-
-        -- Apply velocity to physics body
-        physics.SetVelocity(world, entity, velocityX, velocityY)
-
-        -- Update visual rotation to face tangent direction
-        transform.visualR = behavior.orbitAngle + math.pi / 2
-    else
-        -- Fallback: Direct position manipulation (not physics-driven)
+    -- Always place the transform along the orbit for visuals
+    if transform then
         transform.actualX = targetX - transform.actualW / 2
         transform.actualY = targetY - transform.actualH / 2
         transform.actualR = behavior.orbitAngle + math.pi / 2
+        transform.visualR = transform.actualR
+    end
+
+    if usePhysics then
+        -- Keep the physics body in lockstep with the transform for collision.
+        physics.SetPosition(world, entity, { x = targetX, y = targetY })
+        physics.SetVelocity(world, entity, velocityX, velocityY)
+    else
+        -- Fallback: record velocity for any consumers
+        behavior.velocity.x = velocityX
+        behavior.velocity.y = velocityY
     end
 end
 
-function ProjectileSystem.updateArcMovement(entity, dt, transform, behavior)
-    -- Get physics world once at function start
-    local world = PhysicsManager.get_world("world")
+function ProjectileSystem.updateArcMovement(entity, dt, transform, behavior, projectileScript)
+    -- Manual integration for consistent parabolic arcs regardless of world gravity.
+    behavior.velocity.y = behavior.velocity.y + (MANUAL_GRAVITY_ACCEL * behavior.gravityScale * dt)
+    transform.actualX = transform.actualX + behavior.velocity.x * dt
+    transform.actualY = transform.actualY + behavior.velocity.y * dt
+    transform.actualR = math.atan(behavior.velocity.y, behavior.velocity.x)
+    transform.visualR = transform.actualR
 
-    local usePhysicsGravity = physics and world and not behavior.forceManualGravity
-
-    -- Physics-driven: Chipmunk2D handles gravity automatically
-    if usePhysicsGravity and hasPhysicsBody(entity) then
-        -- Sync velocity from physics (gravity is applied by Chipmunk2D)
-        local vx, vy = getVelocityXY(world, entity, behavior.velocity)
-        behavior.velocity.x = vx
-        behavior.velocity.y = vy
-
-        -- Update visual rotation to face velocity direction
-        if vx ~= 0 or vy ~= 0 then
-            transform.visualR = math.atan(vy, vx)
-        end
-    else
-        -- Fallback: Manual arc movement with gravity simulation
-        behavior.velocity.y = behavior.velocity.y + (900 * behavior.gravityScale * dt)
-        transform.actualX = transform.actualX + behavior.velocity.x * dt
-        transform.actualY = transform.actualY + behavior.velocity.y * dt
-        transform.actualR = math.atan(behavior.velocity.y, behavior.velocity.x)
+    local world = getPhysicsWorld(projectileScript)
+    if world then
+        -- Keep physics body aligned with our kinematic integration for collision.
+        local centerX = transform.actualX + (transform.actualW or 0) * 0.5
+        local centerY = transform.actualY + (transform.actualH or 0) * 0.5
+        physics.SetPosition(world, entity, { x = centerX, y = centerY })
+        physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
     end
 end
 
@@ -1226,7 +1264,7 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
         end
 
     elseif behavior.collisionBehavior == ProjectileSystem.CollisionBehavior.BOUNCE then
-        ProjectileSystem.handleBounce(projectileEntity, otherEntity, behavior)
+        ProjectileSystem.handleBounce(projectileEntity, otherEntity, behavior, projectileScript)
 
     elseif behavior.collisionBehavior == ProjectileSystem.CollisionBehavior.EXPLODE then
         ProjectileSystem.handleExplosion(projectileEntity, data, behavior)
@@ -1282,7 +1320,8 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
 end
 
 -- Handle bounce collision
-function ProjectileSystem.handleBounce(projectileEntity, otherEntity, behavior)
+function ProjectileSystem.handleBounce(projectileEntity, otherEntity, behavior, projectileScript)
+    projectileScript = projectileScript or ProjectileSystem.getProjectileScript(projectileEntity)
     behavior.bounceCount = behavior.bounceCount + 1
 
     -- Reverse velocity with dampening
@@ -1290,15 +1329,14 @@ function ProjectileSystem.handleBounce(projectileEntity, otherEntity, behavior)
     behavior.velocity.y = -behavior.velocity.y * behavior.bounceDampening
 
     -- Apply to physics
-    local world = PhysicsManager.get_world("world")
-    if physics and world and hasPhysicsBody(projectileEntity) then
+    local world = getPhysicsWorld(projectileScript)
+    if world then
         physics.SetVelocity(world, projectileEntity,
             behavior.velocity.x, behavior.velocity.y)
     end
 
     -- Check max bounces
     if behavior.bounceCount >= behavior.maxBounces then
-        local projectileScript = ProjectileSystem.getProjectileScript(projectileEntity)
         if projectileScript and projectileScript.projectileLifetime then
             projectileScript.projectileLifetime.shouldDespawn = true
             projectileScript.projectileLifetime.despawnReason = "bounce_depleted"

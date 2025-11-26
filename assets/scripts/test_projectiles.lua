@@ -300,16 +300,37 @@ function ProjectileSystemTest.testHomingProjectile()
     if not targetEntity or not entity_cache.valid(targetEntity) then
         usingFallbackTarget = true
         print("[!] survivorEntity not available; creating fallback target for homing test")
-        targetEntity = ProjectileSystemTest.fallbackHomingTarget or registry:create()
-        ProjectileSystemTest.fallbackHomingTarget = targetEntity
+
+        -- Use a transform-backed entity so homing math has a valid position/size
+        targetEntity = ProjectileSystemTest.fallbackHomingTarget
+        if not targetEntity or not entity_cache.valid(targetEntity) then
+            if create_transform_entity then
+                targetEntity = create_transform_entity()
+            else
+                targetEntity = registry:create()
+            end
+            ProjectileSystemTest.fallbackHomingTarget = targetEntity
+        end
     end
 
     local targetTransform = component_cache.get(targetEntity, Transform)
-    if usingFallbackTarget and targetTransform then
-        targetTransform.actualX = 600
-        targetTransform.actualY = 300
-        targetTransform.actualW = 32
-        targetTransform.actualH = 32
+    if usingFallbackTarget then
+        -- If the cached fallback lost its transform for some reason, recreate it with one
+        if not targetTransform then
+            if entity_cache.valid(targetEntity) then
+                registry:destroy(targetEntity)
+            end
+            targetEntity = create_transform_entity and create_transform_entity() or registry:create()
+            ProjectileSystemTest.fallbackHomingTarget = targetEntity
+            targetTransform = component_cache.get(targetEntity, Transform)
+        end
+
+        if targetTransform then
+            targetTransform.actualX = 600
+            targetTransform.actualY = 300
+            targetTransform.actualW = 32
+            targetTransform.actualH = 32
+        end
     end
     local success, result = pcall(function()
         -- Ensure player/fallback transform has valid size for homing
@@ -369,7 +390,7 @@ function ProjectileSystemTest.testArcProjectile()
             movementType = "arc",
             gravityScale = 1.5,
             forceManualGravity = true,
-            usePhysics = false,
+            usePhysics = true,
             collisionBehavior = "destroy",
             size = 18
         })

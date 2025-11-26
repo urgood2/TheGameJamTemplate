@@ -61,7 +61,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - some alignment issues with tooltip ui., also how to make the text right ailgned in the ui box?
 - make mask truly weightless. and make it scale bounce with player when p- layer picks soemthing up.
 - some simple dust particles when player walks. 
-- what telemetry points should we be asdding with posthog?
     
 # programming side
 - refer to balatro_analysis folder for design elements.

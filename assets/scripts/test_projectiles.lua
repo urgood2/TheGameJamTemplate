@@ -13,6 +13,54 @@ local ProjectileSystemTest = {}
 -- Test state
 ProjectileSystemTest.initialized = false
 ProjectileSystemTest.testResults = {}
+ProjectileSystemTest.spawnedProjectiles = {}
+ProjectileSystemTest.repeatIntervalSeconds = 10
+ProjectileSystemTest.repeatTimerTag = "projectile_test_repeat"
+ProjectileSystemTest.fallbackHomingTarget = nil
+ProjectileSystemTest.fallbackOrbitalCenter = nil
+
+function ProjectileSystemTest.trackProjectile(entity)
+    if entity and entity ~= entt_null then
+        ProjectileSystemTest.spawnedProjectiles[entity] = true
+    end
+end
+
+function ProjectileSystemTest.cleanupTrackedProjectiles()
+    local ProjectileSystem = ProjectileSystemTest.ProjectileSystem
+    local entity_cache = ProjectileSystemTest.entity_cache
+
+    for entity, _ in pairs(ProjectileSystemTest.spawnedProjectiles) do
+        if ProjectileSystem and entity_cache and entity_cache.valid(entity) then
+            ProjectileSystem.destroy(entity)
+        end
+        ProjectileSystemTest.spawnedProjectiles[entity] = nil
+    end
+
+    ProjectileSystemTest.spawnedProjectiles = {}
+end
+
+function ProjectileSystemTest.resetTestState()
+    ProjectileSystemTest.testResults = {}
+    ProjectileSystemTest.cleanupTrackedProjectiles()
+end
+
+function ProjectileSystemTest.startRepeatSchedule()
+    local timer = ProjectileSystemTest.timer
+    if not timer then
+        return
+    end
+
+    timer.every(
+        ProjectileSystemTest.repeatIntervalSeconds,
+        function()
+            ProjectileSystemTest.scheduleTests()
+        end,
+        0,
+        false,
+        nil,
+        ProjectileSystemTest.repeatTimerTag
+    )
+end
 
 function ProjectileSystemTest.init()
     print("\n" .. string.rep("=", 60))
@@ -72,6 +120,7 @@ function ProjectileSystemTest.init()
 
     -- Schedule tests
     ProjectileSystemTest.scheduleTests()
+    ProjectileSystemTest.startRepeatSchedule()
 
     return true
 end
@@ -79,8 +128,10 @@ end
 function ProjectileSystemTest.scheduleTests()
     local timer = ProjectileSystemTest.timer
 
+    ProjectileSystemTest.resetTestState()
+
     print("\n" .. string.rep("-", 60))
-    print("Scheduling tests...")
+    print(string.format("Scheduling tests... (repeats every %ds)", ProjectileSystemTest.repeatIntervalSeconds))
     print(string.rep("-", 60))
 
     -- Test 1: Basic straight projectile (after 1 second)
@@ -148,6 +199,7 @@ function ProjectileSystemTest.testBasicProjectile()
         print("    Position: (400, 300)")
         print("    Direction: Right (0°)")
         print("    Speed: 300")
+        ProjectileSystemTest.trackProjectile(projectileId)
 
         -- DEBUG: Check projectile state
         print("\n[DEBUG] Projectile details:")
@@ -219,6 +271,7 @@ function ProjectileSystemTest.testMultipleProjectiles()
 
         if success and projectileId and entity_cache.valid(projectileId) then
             successCount = successCount + 1
+            ProjectileSystemTest.trackProjectile(projectileId)
         end
     end
 
@@ -242,20 +295,22 @@ function ProjectileSystemTest.testHomingProjectile()
     local component_cache = ProjectileSystemTest.component_cache
 
     local targetEntity = survivorEntity
+    local usingFallbackTarget = false
 
     if not targetEntity or not entity_cache.valid(targetEntity) then
+        usingFallbackTarget = true
         print("[!] survivorEntity not available; creating fallback target for homing test")
-        targetEntity = registry:create()
-        local fallbackTransform = component_cache.get(targetEntity, Transform)
-        if fallbackTransform then
-            fallbackTransform.actualX = 600
-            fallbackTransform.actualY = 300
-            fallbackTransform.actualW = 32
-            fallbackTransform.actualH = 32
-        end
+        targetEntity = ProjectileSystemTest.fallbackHomingTarget or registry:create()
+        ProjectileSystemTest.fallbackHomingTarget = targetEntity
     end
 
     local targetTransform = component_cache.get(targetEntity, Transform)
+    if usingFallbackTarget and targetTransform then
+        targetTransform.actualX = 600
+        targetTransform.actualY = 300
+        targetTransform.actualW = 32
+        targetTransform.actualH = 32
+    end
     local success, result = pcall(function()
         -- Ensure player/fallback transform has valid size for homing
         if targetTransform then
@@ -285,6 +340,7 @@ function ProjectileSystemTest.testHomingProjectile()
             print(string.format("    Target position: (%.1f, %.1f)", targetTransform.actualX or 0, targetTransform.actualY or 0))
         end
         print("    Homing strength: 2.0")
+        ProjectileSystemTest.trackProjectile(result)
         ProjectileSystemTest.testResults.homingProjectile = true
     else
         print("[✗] FAILED to spawn homing projectile")
@@ -324,6 +380,7 @@ function ProjectileSystemTest.testArcProjectile()
         print("    Launch angle: 45°")
         print("    Gravity scale: 1.5 (manual, no world gravity)")
         print("    Expected: Parabolic trajectory using internal gravity")
+        ProjectileSystemTest.trackProjectile(projectileId)
         ProjectileSystemTest.testResults.arcProjectile = true
     else
         print("[✗] FAILED to spawn arc projectile")
@@ -345,7 +402,8 @@ function ProjectileSystemTest.testOrbitalProjectile()
     local centerEntity = survivorEntity
     if not centerEntity or not entity_cache.valid(centerEntity) then
         print("[!] survivorEntity not available; orbital test will use a fallback center")
-        centerEntity = registry:create()
+        centerEntity = ProjectileSystemTest.fallbackOrbitalCenter or registry:create()
+        ProjectileSystemTest.fallbackOrbitalCenter = centerEntity
         local fallbackTransform = component_cache.get(centerEntity, Transform)
         if fallbackTransform then
             fallbackTransform.actualX = 400
@@ -386,6 +444,7 @@ function ProjectileSystemTest.testOrbitalProjectile()
         print("[✓] Orbital projectile spawned successfully")
         print("    Center: player (or fallback)")
         print("    Lifetime: long (999s) for observation")
+        ProjectileSystemTest.trackProjectile(projectileId)
         ProjectileSystemTest.testResults.orbitalProjectile = true
     else
         print("[✗] FAILED to spawn orbital projectile")

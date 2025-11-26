@@ -26,6 +26,7 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local signal = require("external.hump.signal")
 local Node = require("monobehavior.behavior_script_v2")
+local CombatSystem = require("combat.combat_system")
 
 ---@diagnostic disable: undefined-global
 -- Suppress warnings for runtime globals (registry, physics_manager)
@@ -144,6 +145,7 @@ function ProjectileSystem.createProjectileData(params)
         speedMultiplier = params.speedMultiplier or 1.0,
         damageMultiplier = params.damageMultiplier or 1.0,
         sizeMultiplier = params.sizeMultiplier or 1.0,
+        hitCooldown = params.hitCooldown or params.rehitCooldown or 0.25, -- allow re-hits after this many seconds
 
         -- Event hooks
         onSpawnCallback = params.onSpawn,
@@ -1179,14 +1181,15 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     local otherIsValid = otherEntity and otherEntity ~= entt_null and entity_cache.valid(otherEntity)
     local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
     local isDamageable = targetGameObject ~= nil
+    local now = os.clock()
 
     -- Check if already hit this entity (for piercing) – only track damageable targets
-    if isDamageable and data.hitEntities[otherEntity] then
-        return
-    end
-
     if isDamageable and otherIsValid then
-        data.hitEntities[otherEntity] = true
+        local lastHitAt = data.hitEntities[otherEntity]
+        if lastHitAt and (now - lastHitAt) < (data.hitCooldown or 0) then
+            return
+        end
+        data.hitEntities[otherEntity] = now
     end
 
     lifetime.hitCount = lifetime.hitCount + 1
@@ -1241,17 +1244,28 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
     local targetGameObj = precomputedGameObject or component_cache.get(targetEntity, GameObject)
     if not targetGameObj then return end
 
-    -- Use combat system if available
-    if CombatSystem and CombatSystem.applyDamage then
-        local finalDamage = data.damage * data.damageMultiplier
+    local function combatActorForEntity(eid)
+        if not eid or eid == entt_null or not entity_cache.valid(eid) then
+            return nil
+        end
+        local script = getScriptTableFromEntityID(eid)
+        return script and script.combatTable or nil
+    end
 
-        CombatSystem.applyDamage({
-            target = targetEntity,
-            source = data.owner,
-            damage = finalDamage,
-            damageType = data.damageType,
-            projectile = projectileEntity
-        })
+    local ctx = rawget(_G, "combat_context")
+    local targetCombatActor = combatActorForEntity(targetEntity)
+    local sourceCombatActor = combatActorForEntity(data.owner)
+
+    -- Use combat system if available
+    if CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and ctx and targetCombatActor then
+        local finalDamage = data.damage * data.damageMultiplier
+        local dmgType = data.damageType or "physical"
+
+        CombatSystem.Game.Effects.deal_damage {
+            components = { { type = dmgType, amount = finalDamage } },
+            tags = { projectile = true }
+        }(ctx, sourceCombatActor or targetCombatActor, targetCombatActor)
+        return
     else
         -- Fallback: apply damage via blackboard
         if ai and ai.get_blackboard then

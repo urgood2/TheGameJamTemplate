@@ -67,10 +67,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - refer to balatro_analysis folder for design elements.
 
 
+- projectiles need more work. homing , etc don't work at all
 - maybe pause game before starting action phase to evaluate cards once, show discoveries, etc?
-- projectiles need better testing. also test with the wand action system, right now it casts things that it shouldnt.
-- we need to do projectile behaviors as well. let's make them trigger periodically, and make an imgui that disables/enables them so I can test them visually (the various type of triggers)
-
 
 
 - need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.

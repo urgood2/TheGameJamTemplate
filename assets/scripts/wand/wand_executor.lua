@@ -422,7 +422,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
             spell_type = spellType,
             tag_analysis = tagAnalysis, -- NEW: Per-cast tag metrics
             tags = allTags,
-            player = context.playerEntity,
+            player = context.playerScript or context.playerEntity,
             wand_id = context.wandId
         }
 
@@ -458,7 +458,8 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
             if spellType then
                 -- Check for spell type discovery
                 local TagDiscoverySystem = require("wand.tag_discovery_system")
-                local spellDiscovery = TagDiscoverySystem.checkSpellType(context.playerEntity, spellType)
+                local spellDiscovery = TagDiscoverySystem.checkSpellType(context.playerScript or context.playerEntity,
+                    spellType)
 
                 if spellDiscovery then
                     local signal = require("external.hump.signal")
@@ -628,6 +629,7 @@ EXECUTION CONTEXT
 --- @return table Execution context
 function WandExecutor.createExecutionContext(wandId, state, activeWand)
     local playerEntity = WandExecutor.getPlayerEntity()
+    local playerScript = WandExecutor.getPlayerScript(playerEntity)
     local playerPos = WandExecutor.getPlayerPosition(playerEntity)
     local playerAngle = WandExecutor.getPlayerFacingAngle(playerEntity)
 
@@ -650,6 +652,7 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
         wandDefinition = activeWand.definition,
 
         playerEntity = playerEntity,
+        playerScript = playerScript,
         playerPosition = playerPos,
         playerAngle = playerAngle,
         playerStats = playerStats,
@@ -692,6 +695,17 @@ HELPER FUNCTIONS
 function WandExecutor.getPlayerEntity()
     -- TODO: Get actual player entity from game state
     return player or 0
+end
+
+--- Gets the player script table (if attached)
+--- @param playerEntity number Player entity ID
+--- @return table|nil Player script table
+function WandExecutor.getPlayerScript(playerEntity)
+    if not playerEntity or not getScriptTableFromEntityID then
+        return nil
+    end
+
+    return getScriptTableFromEntityID(playerEntity)
 end
 
 --- Gets player position

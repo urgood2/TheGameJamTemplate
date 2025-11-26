@@ -59,16 +59,12 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
 - got to also test the new batching queue system.
 - some alignment issues with tooltip ui., also how to make the text right ailgned in the ui box?
-- make mask truly weightless. and make it scale bounce with player when p- layer picks soemthing up.
-- some simple dust particles when player walks. 
+- intermittent flicker when projectiles are wiped? not sure why.
     
 # programming side
 - refer to balatro_analysis folder for design elements.
 
-
-- projectiles need more work. homing , etc don't work at all
 - maybe pause game before starting action phase to evaluate cards once, show discoveries, etc?
-
 
 - need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.
 - then player progresses through 3 stages, the last of which is extra hard.

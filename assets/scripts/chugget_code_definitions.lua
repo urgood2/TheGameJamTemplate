@@ -10831,6 +10831,12 @@ function steering.apply_impulse(...) end
 function telemetry.record(...) end
 
 ---
+--- Returns the current telemetry session id (generated on startup).
+---
+---@return string # Current session id
+function telemetry.session_id(...) end
+
+---
 --- Install or replace a local render callback on an entity.
 --- Positional overload.
 ---

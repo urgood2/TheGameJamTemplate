@@ -3606,12 +3606,13 @@ function createJointedMask(parentEntity, worldName)
         {
             shape = "rectangle",
             tag = "mask",
-            sensor = false,
+            sensor = true,
             density = 0.0 -- Light weight
         }
     )
 
     physics.SetBodyType(world, maskEntity, "dynamic")
+    physics.SetMass(world, maskEntity, 0.01)
 
     -- Disable collision between mask and player
     -- physics.enable_trigger_between(world, "mask", "player")
@@ -3625,7 +3626,7 @@ function createJointedMask(parentEntity, worldName)
         { x = maskT.actualX + maskT.actualW / 2, y = maskT.actualY + maskT.actualH / 2 } -- Attach at mask's initial position
     )
 
-    physics.SetMoment(world, maskEntity, 0.1) -- VERY IMPORTANT
+    physics.SetMoment(world, maskEntity, 0.01) -- Keep inertia tiny so it doesn't tug the player
 
     -- Make joint strong but allow some flex
     -- physics.set_constraint_limits(world, pivotJoint, 10000, nil)  -- maxForce
@@ -4209,6 +4210,31 @@ local playerFootStepSounds = {
     "walk_10"
 }
 
+local function spawnWalkDust()
+    -- Lightweight puff at the player's feet while walking
+    local t = component_cache.get(survivorEntity, Transform)
+    if not t then return end
+
+    local jitterX = (math.random() - 0.5) * (t.actualW * 0.25)
+    local baseX = t.actualX + t.actualW * 0.5 + jitterX
+    local baseY = t.actualY + t.actualH - 6
+
+    particle.spawnRadialParticles(baseX, baseY, 4, 0.35, {
+        lifetimeJitter = 0.35,
+        scaleJitter = 0.25,
+        minScale = 2.0,
+        maxScale = 4.0,
+        minSpeed = 40,
+        maxSpeed = 90,
+        colors = { Col(200, 190, 170, 200) },
+        renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+        easing = "cubic",
+        gravity = 0,
+        space = "world",
+        z = z_orders.player_vfx - 5,
+    })
+end
+
 -- location is top left of circle
 local function makeSpawnMarkerCircle(x, y, radius, color, state)
     -- make circle marker for enemy appearance, tween it down to 0 scale and then remove it
@@ -4275,6 +4301,7 @@ function initActionPhase()
     world:AddCollisionTag("card")
     world:AddCollisionTag("pickup") -- for items on ground
     world:AddCollisionTag("projectile")
+    world:AddCollisionTag("mask")
 
     initSurvivorEntity()
 
@@ -4319,6 +4346,7 @@ function initActionPhase()
 
                 -- Normalize deadzone
                 local len = math.sqrt(move_x * move_x + move_y * move_y)
+                playerMoving = len > 0.15
                 if len > 1 then
                     move_x = move_x / len
                     move_y = move_y / len
@@ -4363,6 +4391,17 @@ function initActionPhase()
             else
                 -- turn off timer if active
                 timer.cancel(timerName)
+            end
+
+            local dustTimerName = "survivorWalkDustTimer"
+            if playerMoving and not playerIsDashing then
+                if not timer.get_timer_and_delay(dustTimerName) then
+                    timer.every(0.12, function()
+                        spawnWalkDust()
+                    end, 0, true, nil, dustTimerName)
+                end
+            else
+                timer.cancel(dustTimerName)
             end
 
             if not playerIsDashing and playerDashCooldownRemaining <= 0 and input.action_down("survivor_dash") then
@@ -4432,7 +4471,7 @@ function initActionPhase()
                 local maskEntity = survivorMaskEntity
 
                 -- Apply rotational impulse (torque) to make mask spin
-                local torqueStrength = 3000 -- Adjust this value to control rotation speed
+                local torqueStrength = 800 -- Tuned for lighter, mostly-weightless mask
                 -- physics.ApplyTorque(world, maskEntity, torqueStrength)
 
                 physics.ApplyAngularImpulse(world, maskEntity, moveDir.x * torqueStrength)

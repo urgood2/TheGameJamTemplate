@@ -116,6 +116,25 @@ function TagEvaluator.evaluate_and_apply(player, deck_snapshot, ctx)
     -- Store tag counts on player for other systems to reference
     player.tag_counts = tag_counts
 
+    -- NEW: Check for tag threshold discoveries
+    local TagDiscoverySystem = require("wand.tag_discovery_system")
+    local newDiscoveries = TagDiscoverySystem.checkTagThresholds(player, tag_counts)
+
+    -- Emit discovery events via hump.signal
+    if #newDiscoveries > 0 then
+        local signal = require("external.hump.signal")
+        for _, discovery in ipairs(newDiscoveries) do
+            signal.emit("tag_threshold_discovered", {
+                tag = discovery.tag,
+                threshold = discovery.threshold,
+                count = discovery.count
+            })
+
+            print(string.format("[DISCOVERY] %s tags reached threshold %d! (current: %d)",
+                discovery.tag, discovery.threshold, discovery.count))
+        end
+    end
+
     -- Clear previous tag bonuses (to allow re-evaluation)
     player.active_tag_bonuses = player.active_tag_bonuses or {}
 

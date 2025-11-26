@@ -33,9 +33,9 @@ function SpellTypeEvaluator.evaluate(block)
         local action = block.actions[1]
 
         -- Check for Multicast
-        local multicast = mods.multicast or 0
+        local multicastCount = mods.multicastCount or 1
 
-        if multicast == 0 then
+        if multicastCount == 1 then
             -- Check for Precision (Speed/Damage up, no spread)
             if (mods.projectile_speed_multiplier and mods.projectile_speed_multiplier > 1.2) or
                 (mods.damage_multiplier and mods.damage_multiplier > 1.2) then
@@ -48,12 +48,12 @@ function SpellTypeEvaluator.evaluate(block)
             end
 
             return SpellTypeEvaluator.Types.SIMPLE
-        elseif multicast == 1 then
-            -- Total 2 projectiles (1 base + 1 multicast)
+        elseif multicastCount == 2 then
+            -- Total 2 projectiles
             return SpellTypeEvaluator.Types.TWIN
-        elseif multicast > 1 then
+        elseif multicastCount > 2 then
             -- Check for Spread
-            if mods.spread and mods.spread > 0 then
+            if mods.spreadAngleBonus and mods.spreadAngleBonus > 0 then
                 return SpellTypeEvaluator.Types.SCATTER
             end
             -- High multicast without spread is still a form of barrage/rapid
@@ -130,6 +130,55 @@ function SpellTypeEvaluator.evaluate(block)
     end
 
     return SpellTypeEvaluator.Types.CHAOS
+end
+
+--- Analyze tag composition of a cast block
+-- This provides metrics for Jokers to react to tag density/diversity
+-- @param actions: List of action cards in the cast
+-- @return table: Tag analysis metrics
+function SpellTypeEvaluator.analyzeTags(actions)
+    local tagCounts = {}
+    local totalTags = 0
+
+    -- Count all tags across all actions
+    for _, action in ipairs(actions) do
+        if action.tags then
+            for _, tag in ipairs(action.tags) do
+                tagCounts[tag] = (tagCounts[tag] or 0) + 1
+                totalTags = totalTags + 1
+            end
+        end
+    end
+
+    -- Find primary tag (most common)
+    local primaryTag = nil
+    local primaryCount = 0
+    for tag, count in pairs(tagCounts) do
+        if count > primaryCount then
+            primaryTag = tag
+            primaryCount = count
+        end
+    end
+
+    -- Calculate diversity (number of distinct tag types)
+    local diversity = 0
+    for _ in pairs(tagCounts) do
+        diversity = diversity + 1
+    end
+
+    return {
+        tag_counts = tagCounts,       -- Table of tag -> count
+        primary_tag = primaryTag,     -- Most common tag
+        primary_count = primaryCount, -- Count of primary tag
+        diversity = diversity,        -- Number of distinct tags
+        total_tags = totalTags,       -- Total tag instances
+
+        -- Threshold flags for Jokers to check
+        is_tag_heavy = primaryCount >= 3,               -- 3+ actions with same tag
+        is_mono_tag = diversity == 1,                   -- Only one tag type
+        is_diverse = diversity >= 3,                    -- 3+ different tag types
+        is_multi_tag = diversity >= 2 and #actions == 1 -- Single action with multiple tags
+    }
 end
 
 return SpellTypeEvaluator

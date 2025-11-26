@@ -34,6 +34,8 @@ local WandActions = require("wand.wand_actions")
 local WandModifiers = require("wand.wand_modifiers")
 local WandTriggers = require("wand.wand_triggers")
 local ProjectileSystem = require("combat.projectile_system")
+local SpellTypeEvaluator = require("wand.spell_type_evaluator")
+local JokerSystem = require("wand.joker_system")
 
 -- Wand states (persistent)
 WandExecutor.wandStates = {}
@@ -389,6 +391,96 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
     end
 
     local modifiers = WandModifiers.aggregate(modifierCards)
+
+    -- --- SPELL TYPE EVALUATION & JOKER INTEGRATION ---
+    -- 1. Identify Spell Type
+    local actions = {}
+    for _, card in ipairs(block.cards) do
+        if card.type == "action" then
+            table.insert(actions, card)
+        end
+    end
+
+    local spellType = SpellTypeEvaluator.evaluate({ actions = actions, modifiers = modifiers })
+
+    -- 2. Analyze tag composition (NEW: Per-cast tag metrics)
+    local tagAnalysis = SpellTypeEvaluator.analyzeTags(actions)
+
+    -- 3. Trigger Jokers (Artifacts)
+    if spellType or tagAnalysis then
+        -- Collect tags from all actions
+        local allTags = {}
+        for _, action in ipairs(actions) do
+            if action.tags then
+                for _, tag in ipairs(action.tags) do
+                    allTags[tag] = true
+                end
+            end
+        end
+
+        local jokerContext = {
+            spell_type = spellType,
+            tag_analysis = tagAnalysis, -- NEW: Per-cast tag metrics
+            tags = allTags,
+            player = context.playerEntity,
+            wand_id = context.wandId
+        }
+
+        local jokerEffects = JokerSystem.trigger_event("on_spell_cast", jokerContext)
+
+        -- 3. Apply Joker Effects to Modifiers
+        if jokerEffects then
+            -- Damage Multiplier
+            if jokerEffects.damage_mult and jokerEffects.damage_mult ~= 1 then
+                modifiers.damageMultiplier = modifiers.damageMultiplier * jokerEffects.damage_mult
+            end
+
+            -- Damage Bonus (Flat)
+            if jokerEffects.damage_mod and jokerEffects.damage_mod ~= 0 then
+                modifiers.damageBonus = modifiers.damageBonus + jokerEffects.damage_mod
+            end
+
+            -- Multicast / Repeat Cast
+            if jokerEffects.repeat_cast and jokerEffects.repeat_cast > 0 then
+                modifiers.multicastCount = modifiers.multicastCount + jokerEffects.repeat_cast
+            end
+
+            -- UI Feedback (Messages)
+            if jokerEffects.messages and #jokerEffects.messages > 0 then
+                for _, msg in ipairs(jokerEffects.messages) do
+                    print(string.format("[JOKER] %s triggered: %s", msg.joker, msg.text))
+                    -- Emit signal for UI
+                    local signal = require("external.hump.signal")
+                    signal.emit("on_joker_trigger", { joker_name = msg.joker, message = msg.text })
+                end
+            end
+
+            if spellType then
+                -- Check for spell type discovery
+                local TagDiscoverySystem = require("wand.tag_discovery_system")
+                local spellDiscovery = TagDiscoverySystem.checkSpellType(context.playerEntity, spellType)
+
+                if spellDiscovery then
+                    local signal = require("external.hump.signal")
+                    signal.emit("spell_type_discovered", {
+                        spell_type = spellType
+                    })
+                    print(string.format("[DISCOVERY] New Spell Type: %s!", spellType))
+                end
+
+                print(string.format("[WandExecutor] Spell Type: %s (Joker Mods: x%.2f Dmg)", spellType,
+                    jokerEffects.damage_mult or 1))
+                -- Emit signal for UI
+                local signal = require("external.hump.signal")
+                signal.emit("on_spell_cast", {
+                    spell_type = spellType,
+                    tag_analysis = tagAnalysis, -- NEW: Include tag metrics
+                    actions = actions
+                })
+            end
+        end
+    end
+    -- -------------------------------------------------
 
     -- Merge player stats into modifiers
     if context.playerStats then

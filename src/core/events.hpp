@@ -41,6 +41,24 @@ struct KeyPressed : public event_bus::Event {
         : keyCode(key), shift(s), ctrl(c), alt(a) {}
 };
 
+struct GamepadButtonPressed : public event_bus::Event {
+    int gamepadId{0};
+    ::GamepadButton button{GAMEPAD_BUTTON_UNKNOWN};
+
+    GamepadButtonPressed() = default;
+    GamepadButtonPressed(int id, ::GamepadButton btn)
+        : gamepadId(id), button(btn) {}
+};
+
+struct GamepadButtonReleased : public event_bus::Event {
+    int gamepadId{0};
+    ::GamepadButton button{GAMEPAD_BUTTON_UNKNOWN};
+
+    GamepadButtonReleased() = default;
+    GamepadButtonReleased(int id, ::GamepadButton btn)
+        : gamepadId(id), button(btn) {}
+};
+
 // Game state
 struct GameStateChanged : public event_bus::Event {
     GameState oldState{GameState::LOADING_SCREEN};

@@ -50,6 +50,15 @@ local function record_telemetry(event, props)
     end
 end
 
+-- Expose helpers globally for other modules (planning/action/shop phases).
+_G.record_telemetry = record_telemetry
+_G.telemetry_session_id = function()
+    if type(telemetry) == "table" and type(telemetry.session_id) == "function" then
+        return telemetry.session_id()
+    end
+    return "lua-session-unknown"
+end
+
 local function record_telemetry_once(flag, event, props)
     if telemetry_once_flags[flag] then
         return
@@ -177,6 +186,7 @@ function initMainMenu()
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Discord link
+                    record_telemetry("discord_button_clicked", { scene = "main_menu" })
                     OpenURL("https://discord.gg/urpjVuPwjW") 
                 end)
                 :addShadow(true)
@@ -216,6 +226,7 @@ function initMainMenu()
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Bluesky link
+                    record_telemetry("follow_button_clicked", { scene = "main_menu", platform = "bluesky" })
                     OpenURL("https://bsky.app/profile/chugget.itch.io") 
                 end)
                 :addShadow(true)
@@ -298,13 +309,15 @@ function initMainMenu()
                 :addHover(true) -- needed for button effect
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
-                    -- Switch the language
-                    if (localization.getCurrentLanguage() == "en_us") then
-                        localization.setCurrentLanguage("ko_kr")
-                    else
-                        localization.setCurrentLanguage("en_us")
-                    end
-                end)
+            -- Switch the language
+            if (localization.getCurrentLanguage() == "en_us") then
+                record_telemetry("language_changed", { from = "en_us", to = "ko_kr", session_id = telemetry_session_id() })
+                localization.setCurrentLanguage("ko_kr")
+            else
+                record_telemetry("language_changed", { from = "ko_kr", to = "en_us", session_id = telemetry_session_id() })
+                localization.setCurrentLanguage("en_us")
+            end
+        end)
                 :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
@@ -475,6 +488,10 @@ ProjectileSystemTest = nil
 -- Main function to initialize the game. Called at the start of the game.
 function main.init()
     log_debug("Game initializing...") -- Debug message to indicate the game is initializing
+    record_telemetry_once("session_start", "session_start", {
+        session_id = telemetry_session_id(),
+        scene = "boot"
+    })
     record_telemetry_once("lua_runtime_init", "lua_runtime_init", {
         lua = _VERSION,
         jit = jit and jit.version or "none"

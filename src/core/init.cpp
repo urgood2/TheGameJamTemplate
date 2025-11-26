@@ -145,6 +145,11 @@ auto loadJSONData() -> void {
 
       if (loadResult.isErr()) {
         SPDLOG_ERROR("[json] {}", loadResult.error());
+        telemetry::RecordEvent("json_load_failed",
+                               {{"path", path},
+                                {"error", loadResult.error()},
+                                {"platform", telemetry::PlatformTag()},
+                                {"build_id", telemetry::BuildId()}});
         return;
       }
 
@@ -163,7 +168,16 @@ auto loadJSONData() -> void {
     assignJson(util::getRawAssetPathNoUUID("config.json"), globals::configJSON,
                globals::g_ctx ? &globals::g_ctx->configJson : nullptr);
     telemetry::Configure(telemetry::Config::FromConfigJson(globals::configJSON));
-    telemetry::RecordEvent("app_start", {{"stage", "config_loaded"}});
+    telemetry::RecordEvent("app_start",
+                           {{"stage", "config_loaded"},
+                            {"platform", telemetry::PlatformTag()},
+                            {"build_id", telemetry::BuildId()},
+                            {"build_type", telemetry::BuildTypeTag()},
+                            {"release_mode", globals::getReleaseMode()},
+                            {"telemetry_enabled", telemetry::GetConfig().enabled},
+                            {"distinct_id", telemetry::GetConfig().distinctId},
+                            {"session_id", telemetry::SessionId()},
+                            {"locale", globals::configJSON.value("game_language", std::string{"unknown"})}});
     assignJson(util::getRawAssetPathNoUUID("scripts/scripting_config.json"),
                globals::aiConfigJSON,
                globals::g_ctx ? &globals::g_ctx->aiConfigJson : nullptr);

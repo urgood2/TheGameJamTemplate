@@ -38,6 +38,7 @@
 #include "../third_party/navmesh//source/navmesh_include.hpp"
 
 #include "../systems/shaders/shader_system.hpp"
+#include "../systems/telemetry/telemetry.hpp"
 #include "../systems/shaders/shader_pipeline.hpp"
 #include "../systems/event/event_system.hpp"
 #include "misc_fuctions.hpp"
@@ -1065,13 +1066,22 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
                 globals::setLastUIButtonActivated(ev.element);
                 SPDLOG_DEBUG("UI button activated on entity {} via button {}", static_cast<int>(ev.element), ev.button);
                 // Do not call the callback here; the UI click path already invokes it.
-                // This event is for telemetry/observers only to avoid double‑invoking actions.
+                // This event is for telemetry/observers only to avoid double-invoking actions.
+                telemetry::RecordEvent("ui_button_activated",
+                                       {{"entity", static_cast<int>(ev.element)},
+                                        {"button", ev.button},
+                                        {"platform", telemetry::PlatformTag()},
+                                        {"build_id", telemetry::BuildId()}});
             });
             bus.subscribe<events::LoadingStageStarted>([](const events::LoadingStageStarted& ev) {
                 globals::setLastLoadingStage(ev.stageId, true);
                 globals::worldGenCurrentStep = ev.stageId;
                 globals::loadingStages[globals::loadingStateIndex++] = ev.stageId + " (start)";
                 SPDLOG_INFO("Loading stage started: {}", ev.stageId);
+                telemetry::RecordEvent("loading_stage_started",
+                                       {{"stage", ev.stageId},
+                                        {"platform", telemetry::PlatformTag()},
+                                        {"build_id", telemetry::BuildId()}});
             });
             bus.subscribe<events::LoadingStageCompleted>([](const events::LoadingStageCompleted& ev) {
                 globals::setLastLoadingStage(ev.stageId, ev.success);
@@ -1081,6 +1091,12 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
                 globals::getGlobalShaderUniforms().set("loading_progress", "stage",
                     Vector2{static_cast<float>(globals::loadingStateIndex), ev.success ? 1.0f : 0.0f});
                 SPDLOG_INFO("Loading stage completed: {} (success={}, error='{}')", ev.stageId, ev.success, ev.error);
+                telemetry::RecordEvent("loading_stage_completed",
+                                       {{"stage", ev.stageId},
+                                        {"success", ev.success},
+                                        {"error", ev.error},
+                                        {"platform", telemetry::PlatformTag()},
+                                        {"build_id", telemetry::BuildId()}});
             });
             bus.subscribe<events::CollisionStarted>([](const events::CollisionStarted& ev) {
                 // Update a debug uniform so shaders can react to collisions (e.g., flash).

@@ -24,6 +24,7 @@ using json = nlohmann::json;
 #include <filesystem>
 
 #include "systems/scripting/binding_recorder.hpp"
+#include "systems/telemetry/telemetry.hpp"
 
 namespace shaders
 {
@@ -429,6 +430,10 @@ namespace shaders
         if (!jsonFile.is_open())
         {
             SPDLOG_ERROR("Failed to open shader JSON file: {}", path);
+            telemetry::RecordEvent("shader_manifest_load_failed",
+                                   {{"path", path},
+                                    {"platform", telemetry::PlatformTag()},
+                                    {"build_id", telemetry::BuildId()}});
             return;
         }
 
@@ -440,6 +445,11 @@ namespace shaders
         catch (const std::exception &e)
         {
             SPDLOG_ERROR("Failed to parse JSON: {}", e.what());
+            telemetry::RecordEvent("shader_manifest_load_failed",
+                                   {{"path", path},
+                                    {"error", e.what()},
+                                    {"platform", telemetry::PlatformTag()},
+                                    {"build_id", telemetry::BuildId()}});
             return;
         }
 
@@ -510,6 +520,13 @@ namespace shaders
             auto shaderResult = loadShaderSafe(shaderName, vsPtr, fsPtr);
             if (shaderResult.isErr()) {
                 SPDLOG_ERROR("[shader] {}: {}", shaderName, shaderResult.error());
+                telemetry::RecordEvent("shader_load_failed",
+                                       {{"name", shaderName},
+                                        {"vertex_path", vertexPath},
+                                        {"fragment_path", fragmentPath},
+                                        {"platform", telemetry::PlatformTag()},
+                                        {"error", shaderResult.error()},
+                                        {"build_id", telemetry::BuildId()}});
                 continue;
             }
 

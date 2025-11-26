@@ -15,8 +15,23 @@
 #define ShowCursor WinAPIShowCursor
 #endif
 
-#if ENABLE_POSTHOG
+#if ENABLE_POSTHOG && !defined(__EMSCRIPTEN__)
 #include <curl/curl.h>
+#endif
+#if ENABLE_POSTHOG && defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+EM_JS(void, posthog_fetch, (const char* url, const char* body), {
+    const u = UTF8ToString(url);
+    const b = UTF8ToString(body);
+    fetch(u, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: b,
+        keepalive: true
+    }).catch((err) => {
+        console.warn('posthog fetch failed', err);
+    });
+});
 #endif
 #if defined(_WIN32)
 #undef CloseWindow
@@ -109,6 +124,12 @@ namespace telemetry::posthog
         const auto body = payload.dump();
         const auto url = buildCaptureUrl(g_cfg.host);
 
+#if defined(__EMSCRIPTEN__)
+        SPDLOG_DEBUG("[posthog] web fetch '{}' to {}", event, url);
+        posthog_fetch(url.c_str(), body.c_str());
+        SPDLOG_DEBUG("[posthog] sent '{}' (web fetch)", event);
+        return;
+#else
         CURL *curl = curl_easy_init();
         if (!curl)
         {
@@ -143,6 +164,7 @@ namespace telemetry::posthog
 
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
+#endif
 #else
         SPDLOG_DEBUG("[posthog] compile-time disabled; dropping event '{}'", event);
         (void)properties;

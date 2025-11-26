@@ -25,6 +25,7 @@
 
 #include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 #include "util/crash_reporter.hpp"
+#include "systems/telemetry/telemetry.hpp"
 
 #if defined(_WIN32) // raylib uses these names as function parameters
 #undef near
@@ -376,11 +377,11 @@ void RunGameLoop() {
 
   int main(void) {
 
-    // --------------------------------------------------------------------------------------
-    // game init
-    // --------------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------------------
+  // game init
+  // --------------------------------------------------------------------------------------
 
-    crash_reporter::Config crashConfig{};
+  crash_reporter::Config crashConfig{};
 #if defined(__EMSCRIPTEN__)
     crashConfig.enable_file_output = false;
 #else
@@ -436,6 +437,15 @@ void RunGameLoop() {
 
 #endif
     // De-Initialization
+
+    telemetry::RecordEvent("app_exit",
+                           {{"reason", "normal"},
+                            {"platform", telemetry::PlatformTag()},
+                            {"build_id", telemetry::BuildId()},
+                            {"build_type", telemetry::BuildTypeTag()},
+                            {"release_mode", globals::getReleaseMode()},
+                            {"session_id", telemetry::SessionId()}});
+    telemetry::Flush();
 
     // TODO: unload all textures & sprite atlas & sounds
     // TODO: unload all layer commands as welll.

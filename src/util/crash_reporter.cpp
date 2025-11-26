@@ -20,6 +20,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "systems/telemetry/telemetry.hpp"
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <execinfo.h>
 #endif
@@ -245,6 +247,12 @@ void handle_fatal(const std::string& reason) {
 
     try {
         auto report = CaptureReport(reason, true);
+        telemetry::RecordEvent("crash_report",
+                               {{"reason", report.reason},
+                                {"build_id", report.build_id},
+                                {"build_type", report.build_type},
+                                {"platform", report.platform},
+                                {"session_id", telemetry::SessionId()}});
         const auto path = persist_report_internal(report);
         if (path) {
             SPDLOG_CRITICAL("Crash report captured: {}", *path);

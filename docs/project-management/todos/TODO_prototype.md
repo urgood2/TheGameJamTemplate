@@ -70,7 +70,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - web - why do the scanline things disappear on web?
 make mask truly weightless. and make it scale bounce with player when p- layer picks soemthing up.
 
-- some alignment issues with tooltip ui.
+- some alignment issues with tooltip ui., also how to make the text right ailgned in the ui box?
 - need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.
 - then player progresses through 3 stages, the last of which is extra hard.
 

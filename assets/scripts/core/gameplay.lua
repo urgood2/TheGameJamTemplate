@@ -425,15 +425,7 @@ function setUpCardAndWandStatDisplay()
     local STAT_FONT_SIZE = 27
 
 
-    -- Hook into update loop (this is a bit hacky, ideally we'd have a proper update hook)
-    -- We'll use a timer that runs every frame
-    timer.every(0, function()
-        if is_state_active(ACTION_STATE) then
-            local dt = love.timer.getDelta()
-            CastFeedUI.update(dt)
-            CastFeedUI.draw()
-        end
-    end, "cast_feed_update")
+
 
     local bumper_l = "xbox_lb.png"
     local bumper_r = "xbox_rb.png"
@@ -2268,8 +2260,20 @@ end
 
 -- initialize the game area for planning phase, where you combine cards and stuff.
 function initPlanningPhase()
+    
+    local CastFeedUI = require "ui.cast_feed_ui"
+    CastFeedUI.init()
+    
     -- set up timer to render tooltips
-    -- setUpCardAndWandStatDisplay()
+        -- Hook into update loop (this is a bit hacky, ideally we'd have a proper update hook)
+    -- We'll use a timer that runs every frame
+    timer.run(function()
+        -- if is_state_active(ACTION_STATE) then
+            local dt = GetFrameTime()
+            CastFeedUI.update(dt)
+            CastFeedUI.draw()
+        -- end
+    end)
 
     -- let's bind d-pad input to switch between cards, and A to select.
     input.bind("controller-navigation-planning-select", {

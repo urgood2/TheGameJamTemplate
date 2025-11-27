@@ -65,6 +65,12 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 -
 - refer to balatro_analysis folder for design elements.
 
+- cast combo ui: just show cast feed ui in both action and planning state.
+- discovery tags: we need to show this with toasts sort of thing.
+- Display the tags in the card ui.
+- make card tooltips appear next to cards.
+- Get basic systems like wand executor, discovery, most importantly cast events firing and the ui showing, up so I can get started.
+
 
 - refer to wand_cast_feed_integration_steps.md for wand → cast feed integration steps.
 - maybe pause game before starting action phase to evaluate cards once, show discoveries, etc?

@@ -4326,6 +4326,19 @@ function initActionPhase()
     
     local CastFeedUI = require("ui.cast_feed_ui")
 
+    -- Clamp the camera to the playable arena so its edges stay on screen.
+    do
+        local cam = camera.Get("world_camera")
+        if cam then
+            cam:SetBounds {
+                x = SCREEN_BOUND_LEFT,
+                y = SCREEN_BOUND_TOP,
+                width = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT,
+                height = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
+            }
+        end
+    end
+
     -- Initialize CastFeedUI
     CastFeedUI.init()
     

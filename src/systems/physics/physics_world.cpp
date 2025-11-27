@@ -10,6 +10,7 @@
 #include "third_party/chipmunk/include/chipmunk/chipmunk_unsafe.h"
 #include "util/common_headers.hpp"
 #include "util/error_handling.hpp"
+#include <cstdint>
 #include <algorithm>
 #include <memory>
 #include <raylib.h>
@@ -1665,7 +1666,26 @@ void PhysicsWorld::SetGlobalDamping(float damping) {
 
 void PhysicsWorld::SetVelocity(entt::entity entity, float velocityX,
                                float velocityY) {
+  if (!registry) {
+    SPDLOG_WARN("SetVelocity called with null registry (entity={})",
+                static_cast<std::uint32_t>(entity));
+    return;
+  }
+
+  if (!registry->valid(entity) ||
+      !registry->all_of<ColliderComponent>(entity)) {
+    SPDLOG_WARN("SetVelocity skipped: entity {} missing ColliderComponent",
+                static_cast<std::uint32_t>(entity));
+    return;
+  }
+
   auto &collider = registry->get<ColliderComponent>(entity);
+  if (!collider.body) {
+    SPDLOG_WARN("SetVelocity skipped: entity {} has no physics body",
+                static_cast<std::uint32_t>(entity));
+    return;
+  }
+
   cpBodySetVelocity(collider.body.get(), cpv(velocityX, velocityY));
 }
 

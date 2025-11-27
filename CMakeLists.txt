@@ -62,6 +62,13 @@ option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
 option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" ON)
 option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" ON)
 
+option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
+if(ENABLE_UNIT_TESTS)
+    set(BUILD_TESTING ON CACHE BOOL "Enable CTest and dependency tests" FORCE)
+else()
+    set(BUILD_TESTING OFF CACHE BOOL "Enable CTest and dependency tests" FORCE)
+endif()
+
 # Prefer compiler cache when available to speed up rebuilds.
 find_program(CCACHE_PROGRAM ccache)
 if (CCACHE_PROGRAM)
@@ -514,13 +521,14 @@ add_git_dependency(
     v3.13.2
 )
 
-# Add {Catch2} library
-set(BUILD_TESTING ON CACHE BOOL "" FORCE)
-add_git_dependency(
-    Catch2
-    https://github.com/catchorg/Catch2.git
-    v3.6.0
-)
+if(ENABLE_UNIT_TESTS)
+    # Add {Catch2} library
+    add_git_dependency(
+        Catch2
+        https://github.com/catchorg/Catch2.git
+        v3.6.0
+    )
+endif()
 
 #add ldtk loader
 # add_git_dependency(
@@ -1099,7 +1107,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
 # Add tests
 ##########################################################################################
 
-option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 if(ENABLE_UNIT_TESTS)

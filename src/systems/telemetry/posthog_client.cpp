@@ -16,7 +16,11 @@
 #endif
 
 #if ENABLE_POSTHOG && !defined(__EMSCRIPTEN__)
+#include <condition_variable>
 #include <curl/curl.h>
+#include <deque>
+#include <mutex>
+#include <thread>
 #endif
 #if ENABLE_POSTHOG && defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
@@ -108,6 +112,164 @@ namespace telemetry::posthog
             }
             return "anonymous";
         }
+
+#if ENABLE_POSTHOG && !defined(__EMSCRIPTEN__)
+        struct EventJob
+        {
+            std::string event;
+            nlohmann::json properties;
+            std::string distinctId;
+            std::string apiKey;
+            std::string host;
+        };
+
+        void sendEvent(const EventJob &job)
+        {
+            nlohmann::json payload = nlohmann::json::object();
+            payload["api_key"] = job.apiKey;
+            payload["event"] = job.event;
+            payload["properties"] = job.properties;
+            payload["properties"]["distinct_id"] = job.distinctId;
+            payload["distinct_id"] = job.distinctId;
+
+            const auto body = payload.dump();
+            const auto url = buildCaptureUrl(job.host);
+
+            CURL *curl = curl_easy_init();
+            if (!curl)
+            {
+                SPDLOG_WARN("[posthog] failed to initialize curl; dropping event '{}'", job.event);
+                return;
+            }
+
+            curl_slist *headers = nullptr;
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(body.size()));
+            // PostHog endpoints can occasionally take a couple seconds to respond; keep timeouts generous but bounded.
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 7000L);
+            curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 3000L);
+            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, "thegamejamtemplate-posthog/1.0");
+
+            const auto res = curl_easy_perform(curl);
+            if (res != CURLE_OK)
+            {
+                SPDLOG_WARN("[posthog] send failed for '{}': {}", job.event, curl_easy_strerror(res));
+            }
+            else
+            {
+                long status = 0;
+                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+                SPDLOG_DEBUG("[posthog] sent '{}' (status {})", job.event, status);
+            }
+
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+        }
+
+        class AsyncSender
+        {
+        public:
+            void enqueue(EventJob job)
+            {
+                {
+                    std::lock_guard<std::mutex> lock(mutex_);
+                    startWorkerLocked();
+                    queue_.push_back(std::move(job));
+                }
+                cv_.notify_one();
+            }
+
+            void flush()
+            {
+                std::unique_lock<std::mutex> lock(mutex_);
+                if (!running_)
+                {
+                    return;
+                }
+                cv_.wait(lock, [&] { return queue_.empty() && inFlight_ == 0; });
+            }
+
+            ~AsyncSender()
+            {
+                shutdown();
+            }
+
+        private:
+            void startWorkerLocked()
+            {
+                if (running_)
+                {
+                    return;
+                }
+                running_ = true;
+                worker_ = std::thread([this] { workerLoop(); });
+            }
+
+            void workerLoop()
+            {
+                for (;;)
+                {
+                    EventJob job;
+                    {
+                        std::unique_lock<std::mutex> lock(mutex_);
+                        cv_.wait(lock, [&] { return stop_ || !queue_.empty(); });
+                        if (stop_ && queue_.empty())
+                        {
+                            return;
+                        }
+                        job = std::move(queue_.front());
+                        queue_.pop_front();
+                        ++inFlight_;
+                    }
+
+                    sendEvent(job);
+
+                    {
+                        std::lock_guard<std::mutex> lock(mutex_);
+                        --inFlight_;
+                    }
+                    cv_.notify_all();
+                }
+            }
+
+            void shutdown()
+            {
+                std::unique_lock<std::mutex> lock(mutex_);
+                if (!running_)
+                {
+                    return;
+                }
+                stop_ = true;
+                cv_.notify_all();
+                lock.unlock();
+                if (worker_.joinable())
+                {
+                    worker_.join();
+                }
+                lock.lock();
+                running_ = false;
+            }
+
+            std::mutex mutex_;
+            std::condition_variable cv_;
+            std::deque<EventJob> queue_;
+            std::thread worker_;
+            bool running_ = false;
+            bool stop_ = false;
+            size_t inFlight_ = 0;
+        };
+
+        AsyncSender &asyncSender()
+        {
+            static AsyncSender sender;
+            return sender;
+        }
+#endif
     } // namespace
 
     void Configure(const Config &cfg)
@@ -139,6 +301,7 @@ namespace telemetry::posthog
             return;
         }
 
+#if defined(__EMSCRIPTEN__)
         nlohmann::json payload = nlohmann::json::object();
         payload["api_key"] = g_cfg.apiKey;
         payload["event"] = event;
@@ -149,46 +312,19 @@ namespace telemetry::posthog
         const auto body = payload.dump();
         const auto url = buildCaptureUrl(g_cfg.host);
 
-#if defined(__EMSCRIPTEN__)
         SPDLOG_DEBUG("[posthog] web fetch '{}' to {}", event, url);
         posthog_fetch(url.c_str(), body.c_str());
         SPDLOG_DEBUG("[posthog] sent '{}' (web fetch)", event);
         return;
 #else
-        CURL *curl = curl_easy_init();
-        if (!curl)
-        {
-            SPDLOG_WARN("[posthog] failed to initialize curl; dropping event '{}'", event);
-            return;
-        }
+        EventJob job;
+        job.event = event;
+        job.properties = properties;
+        job.distinctId = distinctId;
+        job.apiKey = g_cfg.apiKey;
+        job.host = g_cfg.host;
 
-        curl_slist *headers = nullptr;
-        headers = curl_slist_append(headers, "Content-Type: application/json");
-
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(body.size()));
-        // PostHog endpoints can occasionally take a couple seconds to respond; keep timeouts generous but bounded.
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 7000L);
-        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 3000L);
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "thegamejamtemplate-posthog/1.0");
-
-        const auto res = curl_easy_perform(curl);
-        if (res != CURLE_OK)
-        {
-            SPDLOG_WARN("[posthog] send failed for '{}': {}", event, curl_easy_strerror(res));
-        }
-        else
-        {
-            long status = 0;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-            SPDLOG_DEBUG("[posthog] sent '{}' (status {})", event, status);
-        }
-
-        curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
+        asyncSender().enqueue(std::move(job));
 #endif
 #else
         SPDLOG_DEBUG("[posthog] compile-time disabled; dropping event '{}'", event);
@@ -199,6 +335,12 @@ namespace telemetry::posthog
 
     void Flush()
     {
-        // No buffering right now.
+#if ENABLE_POSTHOG && !defined(__EMSCRIPTEN__)
+        if (!g_cfg.enabled)
+        {
+            return;
+        }
+        asyncSender().flush();
+#endif
     }
 } // namespace telemetry::posthog

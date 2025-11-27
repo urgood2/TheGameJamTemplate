@@ -1004,9 +1004,6 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         if (!subscriptionsInstalled) {
             subscriptionsInstalled = true;
             auto& bus = globals::getEventBus();
-            auto& registry = globals::getRegistry();
-            auto& inputState = globals::getInputState();
-            controller_nav::install_event_subscribers(bus, registry, inputState);
             bus.subscribe<events::MouseClicked>([](const events::MouseClicked& ev) {
                 entt::entity target = ev.target;
                 if (target == entt::null) {
@@ -1225,8 +1222,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         transform::registerDestroyListeners(globals::getRegistry());
 
         // init physics
-        auto* physicsBus = globals::g_ctx ? &globals::g_ctx->eventBus : nullptr;
-        physicsWorld = physics::InitPhysicsWorld(&globals::getRegistry(), 64.0f, 0.0f, 0.f, physicsBus);
+        physicsWorld = physics::InitPhysicsWorld(&globals::getRegistry(), 64.0f, 0.0f, 0.f);
         
         physicsWorld->AddCollisionTag(physics::DEFAULT_COLLISION_TAG); // default tag
         physicsWorld->AddCollisionTag("player");

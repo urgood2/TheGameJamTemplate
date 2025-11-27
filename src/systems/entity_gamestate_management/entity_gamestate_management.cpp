@@ -116,19 +116,13 @@ void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name) {
 }
 
 void assignDefaultStateTag(entt::entity entity) {
-    assignDefaultStateTag(globals::getRegistry(), entity);
-}
-
-void assignDefaultStateTag(entt::registry& registry, entt::entity entity) {
+    auto& registry = globals::getRegistry();
     registry.emplace_or_replace<StateTag>(entity, DEFAULT_STATE_TAG);
     applyStateEffectsToEntity(registry, entity);
 }
 
 bool isEntityActive(entt::entity entity) {
-    return isEntityActive(globals::getRegistry(), entity);
-}
-
-bool isEntityActive(entt::registry& registry, entt::entity entity) {
+    auto &registry = globals::getRegistry();
     if (!registry.all_of<StateTag>(entity)) return false;
     const auto &tag = registry.get<StateTag>(entity);
     return is_active(tag);
@@ -346,7 +340,7 @@ void exposeToLua(sol::state &lua) {
         &is_state_active,
         &is_state_active_name
     ));
-    lua.set_function("is_entity_active", [](entt::entity e) { return isEntityActive(e); });
+    lua.set_function("is_entity_active", &isEntityActive);
     
     lua.set_function("hasAnyTag", sol::overload(
         &hasAnyTag,

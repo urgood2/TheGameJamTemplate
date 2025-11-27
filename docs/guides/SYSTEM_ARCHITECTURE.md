@@ -4,10 +4,10 @@ Lightweight snapshot of the current engine boundaries while the EngineContext mi
 
 ## Core Backbone
 - EngineContext: owns registry/lua/resource caches; legacy globals still mirrored during transition.
-- Event Bus: standardized on `event_bus::EventBus` (scoped subscriptions supported); EngineContext owns the primary bus.
+- Event Bus: not yet standardized; prefer local, light event patterns and document ownership when adding new buses.
 - Registry (entt): main ECS store; creation/destruction order currently driven by init routines.
 - Rendering: raylib + rlgl; layering and command buffers remain the primary draw path.
-- Physics: Chipmunk2D via PhysicsManager; worlds are constructed with the EngineContext/global bus for collision events; raw pointers remain in some paths—call out ownership when extending.
+- Physics: Chipmunk2D via PhysicsManager; raw pointers remain in some paths—call out ownership when extending.
 - Scripting: sol2 bindings; Lua APIs still expect legacy globals, with ctx mirror being added incrementally.
 
 ## Communication Guidelines

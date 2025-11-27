@@ -171,7 +171,7 @@ Override with `NavmeshObstacle` on an entity:
 
 ```cpp
 // 1) World creation
-PM.add("world_main", physics::InitPhysicsWorld(&registry, /*meter*/64.0f, 0, 0, &globals::getEventBus()));
+PM.add("world_main", physics::InitPhysicsWorld(&registry, /*meter*/64.0f, 0, 0));
 
 // 2) Place static level colliders (tiles, walls). For special cases:
 registry.emplace<NavmeshObstacle>(wallEntity, NavmeshObstacle{.include=true});

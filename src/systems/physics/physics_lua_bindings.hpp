@@ -52,9 +52,6 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
     auto& rec = BindingRecorder::instance();
     const std::vector<std::string> path = {"physics"};
     entt::registry* defaultRegistry = ctx ? &ctx->registry : &globals::getRegistry();
-    PhysicsManager* defaultManager = (ctx && ctx->physicsManager)
-        ? ctx->physicsManager.get()
-        : globals::getPhysicsManager();
 
     // ---------- Types ----------
     rec.add_type("physics").doc =
@@ -122,9 +119,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
     using physics::PhysicsWorld;
     lua.new_usertype<PhysicsWorld>(
         "PhysicsWorld",
-        sol::constructors<
-            PhysicsWorld(entt::registry*, float, float, float),
-            PhysicsWorld(entt::registry*, float, float, float, event_bus::EventBus*)>(),
+        sol::constructors<PhysicsWorld(entt::registry*, float, float, float)>(),
         "Update",                 &PhysicsWorld::Update,
         "PostUpdate",             &PhysicsWorld::PostUpdate,
         "SetGravity",             &PhysicsWorld::SetGravity,
@@ -146,9 +141,8 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
         pw.doc =
             "Owns a Chipmunk cpSpace, manages collision/trigger tags, and buffers of "
             "collision/trigger events.\n"
-            "Construct with (registry*, meter:number, gravityX:number, gravityY:number[, eventBus]). "
-            "Pass the engine/EventBus when available to publish collision events without falling back "
-            "to globals. Call Update(dt) each frame and PostUpdate() after consuming event buffers.";
+            "Construct with (registry*, meter:number, gravityX:number, gravityY:number). "
+            "Call Update(dt) each frame and PostUpdate() after consuming event buffers.";
     }
     
     // Call this block inside expose_physics_to_lua(sol::state& lua)
@@ -865,10 +859,8 @@ rec.bind_function(lua, path, "set_arrive_radius",
         "Clears all PhysicsWorld instances and their data (for shutdown) using the global physics manager.",
         false, false
     });
-    physics_table.set_function("clear_all_worlds", [defaultManager]() {
-        if (defaultManager) {
-            defaultManager->clearAllWorlds();
-        }
+    physics_table.set_function("clear_all_worlds", []() {
+        globals::physicsManager->clearAllWorlds();
     });
 
     // ---------- Lua collision handler registration (new ones) ----------
@@ -1991,7 +1983,7 @@ struct NavmeshWorldConfigPublicView {
     int default_inflate_px = 8;
 };
 
-inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM, EngineContext* ctx = globals::g_ctx) {
+inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
     using std::string;
     auto &rec = BindingRecorder::instance();
     
@@ -2369,9 +2361,7 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM, E
             true, false
         });
         
-    // Prefer the context's physics manager if provided, else fall back to the given PM.
-    PhysicsManager* livePM = ctx && ctx->physicsManager ? ctx->physicsManager.get() : &PM;
-    lua["physics_manager_instance"] = livePM;
+    lua["physics_manager_instance"] = &PM;
 
         rec.record_free_function(
             {"physics_manager"},

@@ -61,9 +61,7 @@ bool hasAllTagNames(const std::vector<std::string>& tags);
 
 void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name);
 void assignDefaultStateTag(entt::entity entity);
-void assignDefaultStateTag(entt::registry& registry, entt::entity entity);
 bool isEntityActive(entt::entity entity);
-bool isEntityActive(entt::registry& registry, entt::entity entity);
 
 void activate_state(std::string_view s);
 void deactivate_state(std::string_view s);

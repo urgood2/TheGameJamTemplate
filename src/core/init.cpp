@@ -806,7 +806,7 @@ auto base_init() -> void {
 
   // load physics manager
   globals::physicsManager =
-      std::make_shared<PhysicsManager>(globals::getRegistry(), &globals::getEventBus());
+      std::make_shared<PhysicsManager>(globals::getRegistry());
   if (globals::g_ctx) {
     globals::g_ctx->physicsManager = globals::physicsManager;
   }

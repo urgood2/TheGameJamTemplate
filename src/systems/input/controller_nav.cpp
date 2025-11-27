@@ -3,90 +3,15 @@
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/input_functions.hpp"
 #include "core/engine_context.hpp"
-#include "core/events.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "sol/types.hpp"
 #include "util/error_handling.hpp"
-
-#include <algorithm>
-#include <memory>
-#include <optional>
-#include <string_view>
 
 namespace controller_nav {
 
 NavManager& NavManager::instance() {
     static NavManager mgr;
     return mgr;
-}
-
-namespace {
-
-std::optional<std::string_view> dir_from_button(::GamepadButton button) {
-    switch (button) {
-    case GAMEPAD_BUTTON_LEFT_FACE_LEFT:  return std::string_view{"L"};
-    case GAMEPAD_BUTTON_LEFT_FACE_RIGHT: return std::string_view{"R"};
-    case GAMEPAD_BUTTON_LEFT_FACE_UP:    return std::string_view{"U"};
-    case GAMEPAD_BUTTON_LEFT_FACE_DOWN:  return std::string_view{"D"};
-    default:
-        return std::nullopt;
-    }
-}
-
-bool is_select_button(::GamepadButton button) {
-    switch (button) {
-    case GAMEPAD_BUTTON_RIGHT_FACE_DOWN:  // A/Cross
-    case GAMEPAD_BUTTON_RIGHT_FACE_RIGHT: // B/Circle (treat as activate to avoid dropping inputs)
-    case GAMEPAD_BUTTON_MIDDLE_RIGHT:     // Start/Options confirm
-        return true;
-    default:
-        return false;
-    }
-}
-
-std::optional<std::string> active_group_for_nav(NavManager& nav, const input::InputState& state) {
-    if (!nav.activeLayer.empty()) {
-        auto it = nav.layers.find(nav.activeLayer);
-        if (it != nav.layers.end() && !it->second.groups.empty()) {
-            const int idx = std::clamp(it->second.focusGroupIndex, 0,
-                                       static_cast<int>(it->second.groups.size()) - 1);
-            return it->second.groups[static_cast<std::size_t>(idx)];
-        }
-    }
-
-    if (state.cursor_focused_target != entt::null) {
-        for (auto& [name, group] : nav.groups) {
-            if (std::find(group.entries.begin(), group.entries.end(), state.cursor_focused_target) != group.entries.end()) {
-                return name;
-            }
-        }
-    }
-
-    if (!nav.layerStack.empty()) {
-        const auto& candidate = nav.layerStack.back();
-        if (nav.groups.contains(candidate)) return candidate;
-    }
-
-    if (!nav.groups.empty()) {
-        return nav.groups.begin()->first;
-    }
-
-    return std::nullopt;
-}
-
-} // namespace
-
-static entt::registry& resolveRegistry(EngineContext* ctx) {
-    return (ctx) ? ctx->registry : globals::getRegistry();
-}
-
-static input::InputState& resolveInputState(EngineContext* ctx) {
-    if (ctx && ctx->inputState) return *ctx->inputState;
-    return globals::getInputState();
-}
-
-static event_bus::EventBus& resolveEventBus(EngineContext* ctx) {
-    return (ctx) ? ctx->eventBus : globals::getEventBus();
 }
 
 // -----------------------------------------------------------------------------
@@ -225,7 +150,7 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
     // Validate current focused target, switch if needed to next available
     //---------------------------------------------------------------------
     if (reg.valid(state.cursor_focused_target) &&
-        !entity_gamestate_management::isEntityActive(reg, state.cursor_focused_target))
+    !entity_gamestate_management::isEntityActive(state.cursor_focused_target))
     {
         // Try to find next available entry
         auto& entries = g.entries;
@@ -233,7 +158,7 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
         if (it != entries.end()) {
             auto nextIt = std::next(it);
             while (nextIt != entries.end() && 
-                (!reg.valid(*nextIt) || !entity_gamestate_management::isEntityActive(reg, *nextIt)))
+                (!reg.valid(*nextIt) || !entity_gamestate_management::isEntityActive(*nextIt)))
                 ++nextIt;
             if (nextIt != entries.end())
                 state.cursor_focused_target = *nextIt;
@@ -249,16 +174,15 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
     {
         // If nothing focused yet, use currently selectedIndex as base
         entt::entity referenceEntity = state.cursor_focused_target;
-        if (!reg.valid(referenceEntity) || !reg.all_of<transform::Transform>(referenceEntity))
+        if (!reg.valid(referenceEntity))
             referenceEntity = get_selected(group);
 
-        if (!reg.valid(referenceEntity) || !reg.all_of<transform::Transform>(referenceEntity))
+        if (!reg.valid(referenceEntity))
         {
             // fallback to first valid entry
             for (auto e : g.entries)
             {
-            if (reg.valid(e) && reg.all_of<transform::Transform>(e) &&
-                entity_gamestate_management::isEntityActive(reg, e) && is_entity_enabled(e))
+                if (reg.valid(e) && entity_gamestate_management::isEntityActive(e) && is_entity_enabled(e))
                 {
                     referenceEntity = e;
                     break;
@@ -266,7 +190,7 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
             }
         }
 
-        if (!reg.valid(referenceEntity) || !reg.all_of<transform::Transform>(referenceEntity))
+        if (!reg.valid(referenceEntity))
             return; // nothing to base navigation on
 
         auto& curT = reg.get<transform::Transform>(referenceEntity);
@@ -283,8 +207,7 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
         {
             if (e == referenceEntity) continue;
             if (!reg.valid(e)) continue;
-            if (!reg.all_of<transform::Transform>(e)) continue;
-            if (!entity_gamestate_management::isEntityActive(reg, e)) continue;
+            if (!entity_gamestate_management::isEntityActive(e)) continue;
             if (!is_entity_enabled(e)) continue;
 
             auto& t = reg.get<transform::Transform>(e);
@@ -346,14 +269,14 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
             
             // Fallback: choose nearest valid entity even if diagonal
             float bestDist = std::numeric_limits<float>::max();
-        for (auto e : g.entries)
-        {
-            if (!reg.valid(e)) continue;
-            if (!reg.all_of<transform::Transform>(e)) continue;
-            if (!entity_gamestate_management::isEntityActive(reg, e)) continue;
-            if (!is_entity_enabled(e)) continue;
+            for (auto e : g.entries)
+            {
+                if (!reg.valid(e)) continue;
+                if (!entity_gamestate_management::isEntityActive(e)) continue;
+                if (!is_entity_enabled(e)) continue;
+                if (!reg.all_of<transform::Transform>(e)) continue;
 
-            auto& t = reg.get<transform::Transform>(e);
+                auto& t = reg.get<transform::Transform>(e);
                 Vector2 c{t.getActualX() + t.getActualW() * 0.5f,
                         t.getActualY() + t.getActualH() * 0.5f};
                 float dx = c.x - curCenter.x;
@@ -382,11 +305,8 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
         std::vector<entt::entity> activeEntries;
         for (auto e : g.entries)
         {
-            if (!reg.valid(e)) continue;
-            if (!reg.all_of<transform::Transform>(e)) continue;
-            if (!entity_gamestate_management::isEntityActive(reg, e)) continue;
-            if (!is_entity_enabled(e)) continue;
-            activeEntries.push_back(e);
+            if (reg.valid(e) && entity_gamestate_management::isEntityActive(e) && is_entity_enabled(e))
+                activeEntries.push_back(e);
         }
         if (activeEntries.empty()) {
             g.selectedIndex = -1;
@@ -536,11 +456,6 @@ std::string NavManager::current_focus_group() const {
     return layerStack.empty() ? "" : layerStack.back();
 }
 
-event_bus::EventBus* NavManager::eventBus() const {
-    if (bus) return bus;
-    return &globals::getEventBus();
-}
-
 // -----------------------------------------------------------------------------
 // Lua Hooks
 // -----------------------------------------------------------------------------
@@ -579,12 +494,6 @@ void NavManager::notify_focus(entt::entity prev, entt::entity next, entt::regist
         else if (globalCB.on_focus.valid())
             fire(globalCB.on_focus, next, "on_nav_focus (global)");
     }
-
-    if (prev != next) {
-        if (auto* b = eventBus()) {
-            b->publish(events::UIElementFocused{next});
-        }
-    }
 }
 
 void NavManager::notify_select(entt::entity selected, entt::registry& reg) {
@@ -601,10 +510,6 @@ void NavManager::notify_select(entt::entity selected, entt::registry& reg) {
     if (globalCB.on_select.valid()) {
         auto r = util::safeLuaCall(globalCB.on_select, "on_nav_select (global)", selected);
         if (r.isErr()) SPDLOG_ERROR("[Lua] on_nav_select error (global): {}", r.error());
-    }
-
-    if (auto* b = eventBus()) {
-        b->publish(events::UIButtonActivated{selected, MOUSE_LEFT_BUTTON});
     }
 }
 
@@ -635,17 +540,11 @@ void NavManager::reset() {
 }
 
 void exposeToLua(sol::state& lua, EngineContext* ctx) {
+    (void)ctx; // placeholder for future context-aware bindings
     using std::string;
     auto& rec = BindingRecorder::instance();
     using controller_nav::NavManager;
     NavManager& NM = NavManager::instance();
-
-    // Resolve once to avoid capturing a potentially dangling EngineContext
-    auto* boundRegistry = std::addressof(resolveRegistry(ctx));
-    auto* boundInputState = std::addressof(resolveInputState(ctx));
-    auto* boundEventBus = std::addressof(resolveEventBus(ctx));
-
-    NM.setEventBus(boundEventBus);
 
     // -------------------------------------------------------------------------
     // Userdata: NavManagerUD
@@ -671,13 +570,14 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
         "is_entity_enabled",  &NavManager::is_entity_enabled,
 
         // Navigation
-        "navigate", [boundRegistry, boundInputState](NavManager* self, const string& group, const string& dir) {
-            if (!boundRegistry || !boundInputState) return;
-            self->navigate(*boundRegistry, *boundInputState, group, dir);
+        "navigate", [](NavManager* self, const string& group, const string& dir) {
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry();
+            auto& state = globals::getInputState();
+            self->navigate(reg, state, group, dir);
         },
-        "select_current", [boundRegistry](NavManager* self, const string& group) {
-            if (!boundRegistry) return;
-            self->select_current(*boundRegistry, group);
+        "select_current", [](NavManager* self, const string& group) {
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry();
+            self->select_current(reg, group);
         },
 
         // Layers
@@ -756,13 +656,14 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
     nav.set_function("create_group",        [&](const string& n){ NM.create_group(n); });
     nav.set_function("create_layer",        [&](const string& n){ NM.create_layer(n); });
     nav.set_function("add_group_to_layer",  [&](const string& l, const string& g){ NM.add_group_to_layer(l, g); });
-    nav.set_function("navigate",            [boundRegistry, boundInputState, &NM](const string& g, const string& d){ 
-        if (!boundRegistry || !boundInputState) return;
-        NM.navigate(*boundRegistry, *boundInputState, g, d); 
+    nav.set_function("navigate",            [&](const string& g, const string& d){ 
+        auto& reg = globals::getRegistry();
+        auto& state = globals::getInputState();
+        NM.navigate(reg, state, g, d); 
     });
-    nav.set_function("select_current",      [boundRegistry, &NM](const string& g){ 
-        if (!boundRegistry) return;
-        NM.select_current(*boundRegistry, g); 
+    nav.set_function("select_current",      [&](const string& g){ 
+        auto& reg = globals::getRegistry();
+        NM.select_current(reg, g); 
     });
     nav.set_function("set_entity_enabled",  [&](entt::entity e, bool enabled){ NM.set_entity_enabled(e, enabled); });
     nav.set_function("debug_print_state",   [&]{ NM.debug_print_state(); });
@@ -836,40 +737,16 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
     rec.record_free_function({"controller_nav"},
         {"set_wrap", "---@param group string\n---@param wrap boolean", "Enable or disable wrap-around navigation.", true, false});
         
-    nav.set_function("focus_entity", [boundInputState](entt::entity e) { 
-        if (boundInputState) {
-            boundInputState->cursor_focused_target = e;
-        }
+    nav.set_function("focus_entity", [&](entt::entity e) { 
+        auto& state = globals::getInputState();
+        state.cursor_focused_target = e; 
     }); 
     rec.record_free_function({"controller_nav"}, {"focus_entity", "---@param e entt.entity", "Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.", true, false});
         
         
 
-}
 
-void install_event_subscribers(event_bus::EventBus& bus,
-                               entt::registry& reg,
-                               input::InputState& state,
-                               bool force) {
-    static bool installed = false;
-    if (force) installed = false;
-    if (installed) return;
-    installed = true;
 
-    NavManager::instance().setEventBus(&bus);
-
-    bus.subscribe<events::GamepadButtonPressed>(
-        [&reg, &state](const events::GamepadButtonPressed& ev) {
-            auto& nav = NavManager::instance();
-            auto group = active_group_for_nav(nav, state);
-            if (!group) return;
-
-            if (auto dir = dir_from_button(ev.button)) {
-                nav.navigate(reg, state, *group, *dir);
-            } else if (is_select_button(ev.button)) {
-                nav.select_current(reg, *group);
-            }
-        });
 }
 
 

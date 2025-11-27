@@ -47,9 +47,8 @@ This doc shows how to drive your Chipmunk2D physics + steering from Lua using th
 ## Setup: Creating a world
 
 ```lua
--- C++ ctor: PhysicsWorld(entt::registry*, meter, gx, gy[, eventBus])
--- Prefer passing your engine/context EventBus so collision events publish there (otherwise falls back to globals).
-local world = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0, ctx and ctx.eventBus)  -- 64 px = 1 unit, gravity downward
+-- C++ ctor: PhysicsWorld(entt::registry*, meter, gx, gy)
+local world = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)  -- 64 px = 1 unit, gravity downward
 ```
 
 **Type docs**

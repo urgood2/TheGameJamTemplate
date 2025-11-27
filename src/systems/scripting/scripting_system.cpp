@@ -55,9 +55,10 @@ namespace scripting
         // assert(script.hooks.update.valid());
         assert(script.hooks.on_collision.valid());
 
-        script.self["id"] = entity;
+        script.self["id"] = sol::readonly_property([entity]
+                                                   { return entity; });
         script.self["owner"] = std::ref(registry);
-        script.self["__entity_id"] = static_cast<uint32_t>(entt::to_integral(entity));
+        script.self["__entity_id"] = static_cast<uint32_t>(entity);
         if (auto &&f = script.self["init"]; f.valid())
             f(script.self);
         // inspect_script(script);

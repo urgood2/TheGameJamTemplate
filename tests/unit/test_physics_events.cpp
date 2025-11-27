@@ -45,7 +45,7 @@ TEST_F(PhysicsEventBusTest, PublishesCollisionEventsToContextBus) {
     globals::setEngineContext(&ctx);
 
     entt::registry registry;
-    physics::PhysicsWorld world(&registry, 64.0f, 0.0f, 0.0f, &ctx.eventBus);
+    physics::PhysicsWorld world(&registry, 64.0f, 0.0f, 0.0f);
 
     auto e1 = registry.create();
     auto e2 = registry.create();

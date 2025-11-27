@@ -2,6 +2,8 @@
 
 #include "sol/sol.hpp"
 
+#include "core/events.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/controller_nav.hpp"
 #include "util/error_handling.hpp"
 
@@ -214,6 +216,121 @@ TEST(ControllerNav, NotifyFocusPrefersGroupOverGlobal) {
     EXPECT_EQ(globalUnfocus, 0);
     EXPECT_EQ(globalFocus, 0);
     nav.reset();
+}
+
+TEST(ControllerNav, PublishesEventBusOnFocusAndSelect) {
+    auto& nav = NavManager::instance();
+    nav.reset();
+
+    EngineContext* savedCtx = globals::g_ctx;
+    globals::setEngineContext(nullptr);
+
+    auto& bus = globals::getEventBus();
+    bus.clear();
+
+    bool focusReceived = false;
+    entt::entity focused{entt::null};
+    int activations = 0;
+    entt::entity activated{entt::null};
+    bus.subscribe<events::UIElementFocused>([&](const auto& ev) {
+        focusReceived = true;
+        focused = ev.element;
+    });
+    bus.subscribe<events::UIButtonActivated>([&](const auto& ev) {
+        ++activations;
+        activated = ev.element;
+    });
+
+    auto& reg = globals::getRegistry();
+    reg.clear();
+    auto e = reg.create();
+    reg.emplace<transform::Transform>(e);
+    entity_gamestate_management::assignDefaultStateTag(e);
+
+    nav.notify_focus(entt::null, e, reg);
+    nav.notify_select(e, reg);
+
+    EXPECT_TRUE(focusReceived);
+    EXPECT_EQ(focused, e);
+    EXPECT_EQ(activations, 1);
+    EXPECT_EQ(activated, e);
+
+    bus.clear();
+    nav.reset();
+    reg.clear();
+    globals::setEngineContext(savedCtx);
+}
+
+TEST(ControllerNav, RespondsToGamepadEventsViaBus) {
+    auto& nav = NavManager::instance();
+    nav.reset();
+
+    EngineContext* savedCtx = globals::g_ctx;
+    globals::setEngineContext(nullptr);
+
+    auto& bus = globals::getEventBus();
+    bus.clear();
+
+    auto& reg = globals::getRegistry();
+    reg.clear();
+
+    auto e1 = reg.create();
+    auto e2 = reg.create();
+    reg.emplace<transform::Transform>(e1);
+    reg.emplace<transform::Transform>(e2);
+    auto& t1 = reg.get<transform::Transform>(e1);
+    t1.setActualX(0.0f);
+    t1.setActualY(0.0f);
+    t1.setActualW(10.0f);
+    t1.setActualH(10.0f);
+    auto& t2 = reg.get<transform::Transform>(e2);
+    t2.setActualX(50.0f);
+    t2.setActualY(0.0f);
+    t2.setActualW(10.0f);
+    t2.setActualH(10.0f);
+    entity_gamestate_management::assignDefaultStateTag(e1);
+    entity_gamestate_management::assignDefaultStateTag(e2);
+
+    nav.create_group("ui");
+    nav.groups["ui"].entries = {e1, e2};
+    nav.groups["ui"].spatial = true;
+    nav.create_layer("root");
+    nav.add_group_to_layer("root", "ui");
+    nav.set_active_layer("root");
+
+    auto& state = globals::getInputState();
+    state = input::InputState{};
+    state.cursor_focused_target = e1;
+    state.hid.controller_enabled = true;
+
+    int focusEvents = 0;
+    entt::entity lastFocus{entt::null};
+    int activations = 0;
+    entt::entity lastActivated{entt::null};
+    bus.subscribe<events::UIElementFocused>([&](const auto& ev) {
+        ++focusEvents;
+        lastFocus = ev.element;
+    });
+    bus.subscribe<events::UIButtonActivated>([&](const auto& ev) {
+        ++activations;
+        lastActivated = ev.element;
+    });
+
+    controller_nav::install_event_subscribers(bus, reg, state, true);
+
+    bus.publish(events::GamepadButtonPressed{state.gamepad.id, GAMEPAD_BUTTON_LEFT_FACE_RIGHT});
+    EXPECT_EQ(state.cursor_focused_target, e2);
+    EXPECT_EQ(focusEvents, 1);
+    EXPECT_EQ(lastFocus, e2);
+
+    bus.publish(events::GamepadButtonPressed{state.gamepad.id, GAMEPAD_BUTTON_RIGHT_FACE_DOWN});
+    EXPECT_EQ(activations, 1);
+    EXPECT_EQ(lastActivated, e2);
+
+    bus.clear();
+    nav.reset();
+    reg.clear();
+    globals::setEngineContext(savedCtx);
 }
 
 } // namespace

@@ -10,7 +10,7 @@ protected:
 
 TEST_F(PhysicsManagerTest, AddsWorldWithNavmeshCache) {
     PhysicsManager pm{registry};
-    auto world = std::make_shared<physics::PhysicsWorld>(&registry, 1.0f, 0.0f, 0.0f);
+    auto world = std::make_shared<physics::PhysicsWorld>(&registry, 1.0f, 0.0f, 0.0f, &globals::getEventBus());
 
     pm.add("main", world);
 
@@ -25,7 +25,7 @@ TEST_F(PhysicsManagerTest, AddsWorldWithNavmeshCache) {
 
 TEST_F(PhysicsManagerTest, ClearAllWorldsResetsStorage) {
     PhysicsManager pm{registry};
-    auto world = std::make_shared<physics::PhysicsWorld>(&registry, 1.0f, 0.0f, 0.0f);
+    auto world = std::make_shared<physics::PhysicsWorld>(&registry, 1.0f, 0.0f, 0.0f, &globals::getEventBus());
     pm.add("main", world);
 
     pm.clearAllWorlds();

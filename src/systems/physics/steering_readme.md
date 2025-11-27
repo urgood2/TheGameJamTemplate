@@ -9,8 +9,8 @@ This document explains how to **set up and use the unified Steering System** (En
 ```cpp
 entt::registry registry;
 
-// Create PhysicsWorld
-auto world = physics::InitPhysicsWorld(&registry, 64.0f, 0.0f, 0.0f);
+// Create PhysicsWorld (optionally provide your EventBus for decoupled collision signals)
+auto world = physics::InitPhysicsWorld(&registry, 64.0f, 0.0f, 0.0f, /*bus*/ &globals::getEventBus());
 
 // Create an agent
 entt::entity agent = registry.create();

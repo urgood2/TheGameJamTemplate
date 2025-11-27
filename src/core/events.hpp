@@ -59,6 +59,16 @@ struct GamepadButtonReleased : public event_bus::Event {
         : gamepadId(id), button(btn) {}
 };
 
+struct InputDeviceChanged : public event_bus::Event {
+    int previous{0};
+    int current{0};
+    int gamepadButton{GAMEPAD_BUTTON_UNKNOWN};
+
+    InputDeviceChanged() = default;
+    InputDeviceChanged(int prev, int curr, int button)
+        : previous(prev), current(curr), gamepadButton(button) {}
+};
+
 // Game state
 struct GameStateChanged : public event_bus::Event {
     GameState oldState{GameState::LOADING_SCREEN};

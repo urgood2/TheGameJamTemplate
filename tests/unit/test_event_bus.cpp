@@ -101,3 +101,49 @@ TEST(EventBus, ExceptionsDoNotBlockOtherListeners) {
 
     EXPECT_TRUE(called);
 }
+
+TEST(EventBus, UnsubscribeStopsReceivingEvents) {
+    event_bus::EventBus bus;
+    int calls = 0;
+
+    auto sub = bus.subscribeScoped<SimpleEvent>([&](const SimpleEvent &) { calls++; });
+
+    bus.publish(SimpleEvent{1});
+    sub.unsubscribe();
+    bus.publish(SimpleEvent{2});
+
+    EXPECT_EQ(calls, 1);
+}
+
+TEST(EventBus, SubscriptionIsRAII) {
+    event_bus::EventBus bus;
+    int calls = 0;
+    {
+        auto sub = bus.subscribeScoped<SimpleEvent>([&](const SimpleEvent &) { calls++; });
+        bus.publish(SimpleEvent{1});
+    }
+    bus.publish(SimpleEvent{2});
+    EXPECT_EQ(calls, 1);
+}
+
+TEST(EventBus, UnsubscribeDuringDispatchIsDeferredSafely) {
+    event_bus::EventBus bus;
+    int firstCalls = 0;
+    int secondCalls = 0;
+
+    event_bus::EventBus::Subscription subA;
+    subA = bus.subscribeScoped<SimpleEvent>([&](const SimpleEvent &) {
+        firstCalls++;
+        subA.unsubscribe();
+    });
+
+    bus.subscribe<SimpleEvent>([&](const SimpleEvent &) { secondCalls++; });
+
+    // First dispatch invokes both listeners; the first unsubscribes itself.
+    bus.publish(SimpleEvent{1});
+    // Second dispatch should only reach the remaining listener.
+    bus.publish(SimpleEvent{2});
+
+    EXPECT_EQ(firstCalls, 1);
+    EXPECT_EQ(secondCalls, 2);
+}

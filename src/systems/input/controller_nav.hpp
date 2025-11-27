@@ -13,6 +13,8 @@
 #include "systems/input/input_function_data.hpp"
 #include "systems/transform/transform.hpp"
 
+namespace event_bus { class EventBus; }
+
 namespace controller_nav {
 
 // -----------------------------------------------------------------------------
@@ -72,6 +74,7 @@ struct NavManager {
     std::unordered_map<std::string, NavLayer> layers;
     std::vector<std::string> layerStack;
     std::string activeLayer;
+    event_bus::EventBus* bus{nullptr}; // non-owning; falls back to globals if null
     std::unordered_set<entt::entity> disabledEntities; // dynamic disabling of specific entities
     std::unordered_map<std::string, std::string> groupToLayer;
     NavCallbacks callbacks;
@@ -115,6 +118,8 @@ struct NavManager {
     std::string current_focus_group() const;
 
     // Callbacks
+    void setEventBus(event_bus::EventBus* busPtr) { bus = busPtr; }
+    event_bus::EventBus* eventBus() const;
     void notify_focus(entt::entity prev, entt::entity next, entt::registry& reg);
     void notify_select(entt::entity selected, entt::registry& reg);
     
@@ -123,5 +128,9 @@ struct NavManager {
 };
 
     extern void exposeToLua(sol::state& lua, EngineContext* ctx = globals::g_ctx);
+    void install_event_subscribers(event_bus::EventBus& bus,
+                                   entt::registry& reg,
+                                   input::InputState& state,
+                                   bool force = false);
 
 } // namespace controller_nav

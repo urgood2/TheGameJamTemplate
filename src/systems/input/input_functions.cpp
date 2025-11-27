@@ -1059,6 +1059,8 @@ namespace input
         if (category == InputDeviceInputCategory::NONE || category == state.hid.last_type)
             return;
 
+        const auto previousType = state.hid.last_type;
+
 
         const bool isControllerInput =
             category == InputDeviceInputCategory::GAMEPAD_AXIS ||
@@ -1082,13 +1084,11 @@ namespace input
             }
 
             state.hid.controller_enabled = true;
-            state.hid.last_type = category;
             state.hid.dpad_enabled = true;
             state.hid.pointer_enabled = (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
             state.hid.axis_cursor_enabled = (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
             state.hid.mouse_enabled = false;
             state.hid.touch_enabled = false;
-            return;
         }
 
         //----------------------------------------------------------
@@ -1099,7 +1099,6 @@ namespace input
             SPDLOG_DEBUG("Switching away from controller input to {}", magic_enum::enum_name(category));
 
             state.hid.controller_enabled = false;
-            state.hid.last_type = category;
             state.hid.dpad_enabled = (category == InputDeviceInputCategory::KEYBOARD);
             state.hid.pointer_enabled = (category == InputDeviceInputCategory::MOUSE || category == InputDeviceInputCategory::TOUCH);
             state.hid.mouse_enabled = (category == InputDeviceInputCategory::MOUSE);
@@ -1121,6 +1120,13 @@ namespace input
             for (auto entity : view)
                 view.get<transform::GameObject>(entity).state.isBeingFocused = false;
         }
+
+        globals::getEventBus().publish(events::InputDeviceChanged{
+            static_cast<int>(previousType),
+            static_cast<int>(category),
+            static_cast<int>(button)});
+
+        state.hid.last_type = category;
     }
 
 
@@ -1362,13 +1368,18 @@ namespace input
 
     auto UpdateCursor(InputState &state, entt::registry &registry, std::optional<Vector2> hardSetT) -> void
     {
+        const entt::entity cursor = globals::getCursorEntity();
+        if (!registry.valid(cursor) || !registry.all_of<transform::Transform>(cursor)) {
+            return; // no cursor entity yet (tests or early init)
+        }
+
         if (hardSetT)
         {
             // Update cursor position based on the provided transform
             state.cursor_position.x = hardSetT->x;
             state.cursor_position.y = hardSetT->y;
 
-            auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
+            auto &transform = registry.get<transform::Transform>(cursor);
             transform.setActualX(hardSetT->x);
             transform.setActualY(hardSetT->y);
             transform.setVisualX(hardSetT->x);
@@ -1383,7 +1394,7 @@ namespace input
             Vector2 mousePos = globals::getScaledMousePositionCached();
             state.cursor_position = mousePos;
 
-            auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
+            auto &transform = registry.get<transform::Transform>(cursor);
             transform.setActualX(mousePos.x);
             transform.setActualY(mousePos.y);
             transform.setVisualX(mousePos.x);
@@ -1398,7 +1409,7 @@ namespace input
             state.cursor_position = transform::GetCursorOnFocus(&registry, state.cursor_focused_target);
 
             // Update game-world coordinates
-            auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
+            auto &transform = registry.get<transform::Transform>(cursor);
             transform.setActualX(state.cursor_position.x);
             transform.setActualY(state.cursor_position.y);
             transform.setVisualX(state.cursor_position.x);

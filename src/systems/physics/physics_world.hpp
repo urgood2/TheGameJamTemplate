@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace event_bus { class EventBus; }
+
 namespace physics {
   
   extern void SetSensor(entt::entity e, bool isSensor);
@@ -705,6 +707,8 @@ struct UFNode {
 class PhysicsWorld {
 public:
 
+  void setEventBus(event_bus::EventBus* bus) { eventBusOverride = bus; }
+
 
   std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
   cpCollisionType _nextCollisionType =
@@ -722,6 +726,7 @@ public:
   entt::entity draggedEntity = entt::null; // which entity is being dragged
   physics::BodyPtr controlBodyOwner;       // for your player/controller joint
   std::vector<physics::ConstraintPtr> ownedConstraints; // constraints we own/cleanup
+  event_bus::EventBus* eventBusOverride{nullptr}; // optional; falls back to globals
   // TODO: isolate the above into the collision component later
 
   /**
@@ -767,7 +772,8 @@ public:
 
   // Constructors and Destructors
   PhysicsWorld(entt::registry *registry, float meter = 64.0f,
-               float gravityX = 0.0f, float gravityY = 0.0f);
+               float gravityX = 0.0f, float gravityY = 0.0f,
+               event_bus::EventBus* bus = nullptr);
   ~PhysicsWorld();
 
   // Update and Post-Update
@@ -1531,6 +1537,8 @@ entt::entity AddOneWayPlatform(float x1, float y1,
   }
 
 private:
+  event_bus::EventBus& resolveEventBus() const;
+
   cpConstraint *TrackConstraint(cpConstraint *c) {
     ownedConstraints.emplace_back(c);
     return c;
@@ -1686,9 +1694,10 @@ private:
 
 inline static std::shared_ptr<PhysicsWorld>
 InitPhysicsWorld(entt::registry *registry, float meter = 64.0f,
-                 float gravityX = 0.0f, float gravityY = 0.0f) {
+                 float gravityX = 0.0f, float gravityY = 0.0f,
+                 event_bus::EventBus* bus = nullptr) {
   auto toReturn =
-      std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY);
+      std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY, bus);
 
   return toReturn;
 }

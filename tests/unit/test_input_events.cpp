@@ -188,3 +188,27 @@ TEST_F(InputEventBusTest, FallsBackToGlobalBusWhenContextAbsent) {
     EXPECT_FLOAT_EQ(last.position.x, 1.0f);
     EXPECT_FLOAT_EQ(last.position.y, 2.0f);
 }
+
+TEST_F(InputEventBusTest, PublishesInputDeviceChanges) {
+    MockEngineContext ctx;
+    globals::setEngineContext(&ctx);
+
+    int changes = 0;
+    events::InputDeviceChanged last{};
+    ctx.eventBus.subscribe<events::InputDeviceChanged>([&](const auto& ev) {
+        ++changes;
+        last = ev;
+    });
+
+    input::InputState state{};
+
+    input::ReconfigureInputDeviceInfo(state, input::InputDeviceInputCategory::KEYBOARD,
+                                      GAMEPAD_BUTTON_UNKNOWN);
+    input::ReconfigureInputDeviceInfo(state, input::InputDeviceInputCategory::GAMEPAD_BUTTON,
+                                      GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+
+    EXPECT_EQ(changes, 2);
+    EXPECT_EQ(last.previous, static_cast<int>(input::InputDeviceInputCategory::KEYBOARD));
+    EXPECT_EQ(last.current, static_cast<int>(input::InputDeviceInputCategory::GAMEPAD_BUTTON));
+    EXPECT_EQ(last.gamepadButton, static_cast<int>(GAMEPAD_BUTTON_RIGHT_FACE_DOWN));
+}

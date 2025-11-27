@@ -5121,7 +5121,7 @@ physics.ColliderShapeType = {
 
 ---
 --- Owns a Chipmunk cpSpace, manages collision/trigger tags, and buffers of collision/trigger events.
---- Construct with (registry*, meter:number, gravityX:number, gravityY:number). Call Update(dt) each frame and PostUpdate() after consuming event buffers.
+--- Construct with (registry*, meter:number, gravityX:number, gravityY:number[, eventBus]). Pass the engine/EventBus when available to publish collision events without falling back to globals. Call Update(dt) each frame and PostUpdate() after consuming event buffers.
 ---
 ---@class physics.PhysicsWorld
 physics.PhysicsWorld = {

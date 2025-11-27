@@ -140,10 +140,12 @@ static void RemoveBody(cpSpace *space, physics::BodyPtr &bodyOwner) {
 }
 
 PhysicsWorld::PhysicsWorld(entt::registry *registry, float meter,
-                           float gravityX, float gravityY) {
+                           float gravityX, float gravityY,
+                           event_bus::EventBus* busOverride) {
   spaceOwner.reset(cpSpaceNew());
   space = spaceOwner.get();
   cpSpaceSetUserData(space, this);
+  eventBusOverride = busOverride;
 
   cpSpaceSetCollisionSlop(space, 0.0f);
 
@@ -189,6 +191,13 @@ PhysicsWorld::~PhysicsWorld() {
               mouseJointOwner ? "yes" : "no", controlBodyOwner ? "yes" : "no");
 }
 
+event_bus::EventBus& PhysicsWorld::resolveEventBus() const {
+  if (eventBusOverride) {
+    return *eventBusOverride;
+  }
+  return globals::getEventBus();
+}
+
 void CapturePostPhysicsPositions(entt::registry &R) {
   R.view<physics::ColliderComponent>().each([&](auto e, auto &CC) {
     if (auto *body = CC.body.get()) {
@@ -227,13 +236,14 @@ void PhysicsWorld::Update(float deltaTime) {
 
 void PhysicsWorld::PostUpdate() {
   // Process deferred collision events
+  auto& bus = resolveEventBus();
   for (const auto &[key, eventList] : collisionEnter) {
     for (const auto &event : eventList) {
       entt::entity entityA =
           static_cast<entt::entity>(reinterpret_cast<uintptr_t>(event.objectA));
       entt::entity entityB =
           static_cast<entt::entity>(reinterpret_cast<uintptr_t>(event.objectB));
-      globals::getEventBus().publish(events::CollisionStarted{
+      bus.publish(events::CollisionStarted{
           entityA, entityB,
           Vector2{static_cast<float>(event.x1), static_cast<float>(event.y1)}});
     }
@@ -245,7 +255,7 @@ void PhysicsWorld::PostUpdate() {
           static_cast<entt::entity>(reinterpret_cast<uintptr_t>(event.objectA));
       entt::entity entityB =
           static_cast<entt::entity>(reinterpret_cast<uintptr_t>(event.objectB));
-      globals::getEventBus().publish(events::CollisionEnded{entityA, entityB});
+      bus.publish(events::CollisionEnded{entityA, entityB});
     }
   }
 

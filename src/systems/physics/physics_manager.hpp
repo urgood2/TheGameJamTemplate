@@ -8,6 +8,7 @@
 #include "physics_world.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "core/globals.hpp"
+#include "core/event_bus.hpp"
 #include "steering.hpp"
 
 #include "third_party/navmesh/source/path_finder.h"
@@ -46,7 +47,10 @@ public:
     };
 
     /// @param R ECS registry used for collider queries and steering.
-    explicit PhysicsManager(entt::registry& R) : R(R) {}
+    explicit PhysicsManager(entt::registry& R, event_bus::EventBus* bus = nullptr)
+        : R(R) {
+        setEventBus(bus ? bus : &globals::getEventBus());
+    }
 
     /**
      * @brief Register a physics world (and optional game-state binding).
@@ -60,6 +64,7 @@ public:
     {
         WorldRec rec;
         rec.w         = std::move(world);
+        if (rec.w && bus_) rec.w->setEventBus(bus_);
         rec.name      = name;
         rec.name_hash = std::hash<std::string>{}(name);
         if (bindsToState) rec.state = WorldStateBinding{*bindsToState};
@@ -255,6 +260,13 @@ public:
         // }
     }
 
+    void setEventBus(event_bus::EventBus* bus) {
+        bus_ = bus;
+        for (auto& [_, rec] : worlds) {
+            if (rec.w) rec.w->setEventBus(bus_);
+        }
+    }
+
     /**
      * @brief Move an entity's body/shapes to another world safely.
      * @param e Entity with ColliderComponent and PhysicsWorldRef.
@@ -290,4 +302,5 @@ public:
 private:
     
     std::unordered_map<std::size_t, WorldRec> worlds;
+    event_bus::EventBus* bus_{nullptr};
 };

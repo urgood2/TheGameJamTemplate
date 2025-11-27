@@ -3,8 +3,8 @@
 
 ```cpp
 
-// init physics
-    physicsWorld = physics::InitPhysicsWorld(&globals::getRegistry(), 64.0f, 0.0f, 0.f);
+// init physics (pass an EventBus so collision events publish to your context)
+    physicsWorld = physics::InitPhysicsWorld(&globals::getRegistry(), 64.0f, 0.0f, 0.f, &globals::getEventBus());
     
     entt::entity testEntity = globals::getRegistry().create();
     

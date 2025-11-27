@@ -62,7 +62,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - intermittent flicker when projectiles are wiped? not sure why.
     
 # programming side
--
+- init() sometimes runs twice in lua. figure out why.
+
+
 - refer to balatro_analysis folder for design elements.
 
 - cast combo ui: just show cast feed ui in both action and planning state.

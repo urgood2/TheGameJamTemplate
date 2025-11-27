@@ -2264,15 +2264,12 @@ function initPlanningPhase()
     local CastFeedUI = require "ui.cast_feed_ui"
     CastFeedUI.init()
     
-    -- set up timer to render tooltips
-        -- Hook into update loop (this is a bit hacky, ideally we'd have a proper update hook)
-    -- We'll use a timer that runs every frame
     timer.run(function()
-        -- if is_state_active(ACTION_STATE) then
-            local dt = GetFrameTime()
-            CastFeedUI.update(dt)
+        
+        if CastFeedUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
+            CastFeedUI.update(GetFrameTime())
             CastFeedUI.draw()
-        -- end
+        end
     end)
 
     -- let's bind d-pad input to switch between cards, and A to select.
@@ -4089,7 +4086,7 @@ function initSurvivorEntity()
                     local itemScript = getScriptTableFromEntityID(itemEntity)
                     if itemScript and itemScript.isPickup and not itemScript.pickedUp then
                         -- enable steering towards player
-                        steering.make_steerable(registry, itemEntity, 3000.0, 30000.0, math.pi * 2.0, 10)
+                        steering.make_steerable(registry, itemEntity, 3000.0, 8000.0, math.pi * 2.0, 10)
 
 
                         -- add a timer to move towards player
@@ -4104,7 +4101,7 @@ function initSurvivorEntity()
                                         {
                                             x = playerT.actualX + playerT.actualW / 2,
                                             y = playerT.actualY + playerT.actualH / 2
-                                        }, 1.0, 20)
+                                        }, 1.0, 10)
                                 else
                                     -- cancel timer, entity no longer valid
                                     timer.cancel("player_magnet_steering_" .. tostring(itemEntity))
@@ -4336,6 +4333,7 @@ function initActionPhase()
                 width = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT,
                 height = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
             }
+            cam:SetBoundsPadding(10) -- small screen-space slack so camera can float while keeping arena visible
         end
     -- end
 
@@ -4965,9 +4963,13 @@ function initActionPhase()
                 if t then
                     targetX = t.actualX + t.actualW / 2
                     targetY = t.actualY + t.actualH / 2
-                    -- camera_smooth_pan_to("world_camera", targetX, targetY, { tag = "interval"}) -- pan to the target smoothly
-
-                    cam:SetActualTarget(targetX, targetY)
+                    -- Gently steer toward the player instead of hard locking.
+                    local current = cam:GetActualTarget()
+                    local lerp = 0.045 -- smaller = slower camera drift
+                    cam:SetActualTarget(
+                        current.x + (targetX - current.x) * lerp,
+                        current.y + (targetY - current.y) * lerp
+                    )
                 end
             else
                 -- local cam = camera.Get("world_camera")

@@ -162,6 +162,7 @@ lua.new_usertype<GameCamera>("GameCamera",
                          self.bounds = Rectangle{0, 0, 0, 0};
                      }
                  ),
+    "SetBoundsPadding", &GameCamera::SetBoundsPadding,
             
     // "SnapActualTo", &GameCamera::SnapActualTo, // immediate snap of actual (spring) position
 
@@ -459,6 +460,12 @@ lua.new_usertype<GameCamera>("GameCamera",
             "SetBounds",
             "---@param rect Rectangle|nil # nil disables clamping\n---@return nil",
             "Set world-space clamp rectangle or disable when nil.",
+            false, false
+        });
+        rec.record_method("GameCamera", MethodDef{
+            "SetBoundsPadding",
+            "---@param padding number # extra screen-space leeway in pixels\n---@return nil",
+            "Allow a little slack when clamping bounds (useful when bounds equal the viewport).",
             false, false
         });
 

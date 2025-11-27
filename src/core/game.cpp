@@ -1177,7 +1177,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         auto worldCamera = camera_manager::Get("world_camera");
         worldCamera->SetActualOffset({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
         worldCamera->SetActualTarget({globals::VIRTUAL_WIDTH / 2.0f, globals::VIRTUAL_HEIGHT / 2.0f});
-        worldCamera->SetActualZoom(1.0f);
+        worldCamera->SetActualZoom(0.8f);
         worldCamera->SetActualRotation(0.0f);
 
         sound_system::SetCategoryVolume("ui", 0.8f);

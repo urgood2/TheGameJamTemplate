@@ -71,6 +71,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - make card tooltips appear next to cards.
 - Get basic systems like wand executor, discovery, most importantly cast events firing and the ui showing, up so I can get started.
 
+
+- refer to wand_cast_feed_integration_steps.md for wand → cast feed integration steps.
 - maybe pause game before starting action phase to evaluate cards once, show discoveries, etc?
 - lag at start may have to do with the tests. gotta make sure.
 

@@ -247,3 +247,16 @@
   - Added world bounds refresh using `SCREEN_BOUND_*` + `SCREEN_BOUND_THICKNESS`, culling/bouncing projectiles that leave play area, and better homing/orbital velocity init.
   - Fixed crash on quit by clearing Lua-driven callbacks (controller nav, localization, shader uniforms), dropping scripting refs, and resetting physics worlds before teardown.
   - Game flow/UI polish: start in planning state by default, shared phase transition helper, stamina bars anchored to visual bounds, tooltips padding/no-shadow options, AI blackboard getter now warns and can return nil.
+
+11/26/2025
+  - Tag pattern/discovery system landed: Cast Feed UI now surfaces spell type/tag discoveries, added discovery journal + tag-reactive jokers, docs, and tests for the pattern matcher.
+  - PostHog telemetry integrated end-to-end with session IDs (exposed to Lua), crash-reporter/init hooks, and phase/menu events emitting with platform/build metadata; web builds default telemetry on.
+  - Web telemetry hardened with lifecycle hooks (session end, visibility change, client errors), sendBeacon/fetch beacons, visibility-change events, and optional on-page debug overlay for web debugging.
+  - Build pipeline now strips Lua comments for release/web asset copies when enabled, using a new Python helper wired into CMake to shrink payloads.
+  - Testing/gameplay polish: Cast Feed headless + UI test runners and wand examples, projectile system fixes, lighter mask physics with walking dust VFX, and gamepad button press/release events now published on the event bus with coverage.
+
+11/27/2025
+  - PostHog client now queues and sends events asynchronously (with flush waiting) to eliminate native telemetry stalls.
+  - Web build hooks auto-pause/resume gameplay and the main loop on focus/visibility changes (Emscripten glue in main loop), plus Cast Feed integration guide expanded with projectile lifecycle/validation notes.
+  - CMake defaults unit tests off; Catch2 is only fetched when `ENABLE_UNIT_TESTS=ON`.
+  - Reverted to commit 70fcf324 to unwind later experimental changes and regen UUID metadata; minor telemetry/test toggles refreshed after the revert.

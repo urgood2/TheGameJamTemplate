@@ -97,6 +97,56 @@ using Random =
     effolkronium::random_static; // get base random alias which is auto seeded
                                  // and has static API and internal state
 
+#if defined(__EMSCRIPTEN__)
+EM_JS(void, register_focus_pause_hooks, (), {
+  if (Module.__focusPauseHooksInstalled) return;
+  Module.__focusPauseHooksInstalled = true;
+  const dispatch = (visible) => {
+    try {
+      if (Module._game_handle_focus_change)
+        Module._game_handle_focus_change(visible ? 1 : 0);
+    } catch (e) {}
+  };
+  window.addEventListener("blur", () => dispatch(false), { passive: true });
+  window.addEventListener("focus", () => dispatch(true), { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    dispatch(document.visibilityState === "visible");
+  });
+});
+
+static bool g_webAutoPausedFromFocusLoss = false;
+static bool g_webMainLoopPausedFromFocusLoss = false;
+
+extern "C" EMSCRIPTEN_KEEPALIVE void game_handle_focus_change(int isVisible) {
+  const bool visible = isVisible != 0;
+  if (visible) {
+    if (g_webMainLoopPausedFromFocusLoss) {
+      emscripten_resume_main_loop();
+      g_webMainLoopPausedFromFocusLoss = false;
+    }
+    if (g_webAutoPausedFromFocusLoss) {
+      globals::setIsGamePaused(false);
+      game::isPaused = false;
+      g_webAutoPausedFromFocusLoss = false;
+    }
+    return;
+  }
+
+  const bool wasPaused = globals::getIsGamePaused() || game::isPaused;
+  g_webAutoPausedFromFocusLoss = !wasPaused;
+
+  if (g_webAutoPausedFromFocusLoss) {
+    globals::setIsGamePaused(true);
+    game::isPaused = true;
+  }
+
+  if (!g_webMainLoopPausedFromFocusLoss) {
+    emscripten_pause_main_loop();
+    g_webMainLoopPausedFromFocusLoss = true;
+  }
+}
+#endif
+
 // update methods
 auto updateSystems(float dt) -> void;
 
@@ -402,6 +452,10 @@ void RunGameLoop() {
     SetTargetFPS(main_loop::mainLoop.framerate);
 
     SetExitKey(-1);
+
+#if defined(__EMSCRIPTEN__)
+    register_focus_pause_hooks();
+#endif
 
     init::startInit();
 

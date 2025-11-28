@@ -118,6 +118,9 @@ local dash_sfx_list               = {
 }
 
 local DASH_COOLDOWN_SECONDS       = 2.0 -- how long before the next dash is available
+local DASH_LENGTH_SEC             = 0.5 -- how long a single dash lasts
+local DASH_BUFFER_WINDOW          = 0.15 -- grace window for queuing a dash near the end of dash/cooldown
+local DASH_COYOTE_WINDOW          = 0.1  -- leniency to allow a dash slightly before cooldown fully ends
 local STAMINA_TICKER_LINGER       = 1.0 -- how long the stamina bar lingers after refilling
 local ENEMY_HEALTH_BAR_LINGER     = 2.0 -- how long enemy health bars stay visible after a hit
 local DAMAGE_NUMBER_LIFETIME            = 1.35 -- seconds to keep a floating damage number around
@@ -127,6 +130,10 @@ local DAMAGE_NUMBER_GRAVITY             = 28   -- downward accel that eases the 
 local DAMAGE_NUMBER_FONT_SIZE           = 22
 
 local playerDashCooldownRemaining = 0
+local playerDashTimeRemaining     = 0
+local dashBufferTimer             = 0
+local bufferedDashDir             = nil
+local playerIsDashing             = false
 local playerStaminaTickerTimer    = 0
 
 local enemyHealthUiState          = {}                                 -- eid -> { actor=<combat actor>, visibleUntil=<time> }
@@ -3166,6 +3173,18 @@ function initCombatSystem()
             if playerDashCooldownRemaining > 0 then
                 playerDashCooldownRemaining = math.max(playerDashCooldownRemaining - frameDt, 0)
             end
+            if playerDashTimeRemaining > 0 then
+                playerDashTimeRemaining = math.max(playerDashTimeRemaining - frameDt, 0)
+                if playerDashTimeRemaining <= 0 then
+                    playerIsDashing = false
+                end
+            end
+            if dashBufferTimer > 0 then
+                dashBufferTimer = math.max(dashBufferTimer - frameDt, 0)
+                if dashBufferTimer <= 0 then
+                    bufferedDashDir = nil
+                end
+            end
             if playerStaminaTickerTimer > 0 then
                 playerStaminaTickerTimer = math.max(playerStaminaTickerTimer - frameDt, 0)
             end
@@ -4899,10 +4918,323 @@ function initActionPhase()
 
     playerIsDashing = false
     playerDashCooldownRemaining = 0
+    playerDashTimeRemaining = 0
+    dashBufferTimer = 0
+    bufferedDashDir = nil
     playerStaminaTickerTimer = 0
     enemyHealthUiState = {}
     combatActorToEntity = setmetatable({}, { __mode = "k" })
     damageNumbers = {}
+
+    local DASH_END_TIMER_NAME = "dash_end_timer"
+    local lastMoveInput = { x = 0, y = 0 }
+
+    local function resolveDashDirection(baseDir)
+        local dirX = (baseDir and baseDir.x) or 0
+        local dirY = (baseDir and baseDir.y) or 0
+        local len = math.sqrt(dirX * dirX + dirY * dirY)
+        if len == 0 then
+            local vel = physics.GetVelocity(world, survivorEntity)
+            len = math.sqrt(vel.x * vel.x + vel.y * vel.y)
+            if len > 0 then
+                dirX = vel.x / len
+                dirY = vel.y / len
+            else
+                dirX, dirY = 0, -1 -- default forward dash (e.g., up)
+            end
+        else
+            dirX, dirY = dirX / len, dirY / len
+        end
+        return dirX, dirY
+    end
+
+    local function queueDashRequest(dir)
+        bufferedDashDir = dir and { x = dir.x, y = dir.y } or nil
+        dashBufferTimer = DASH_BUFFER_WINDOW
+    end
+
+    local function startPlayerDash(dir)
+        if not survivorEntity or survivorEntity == entt_null or not entity_cache.valid(survivorEntity) then return end
+
+        local dashX, dashY = resolveDashDirection(dir)
+        local moveDir = { x = dashX, y = dashY }
+
+        dashBufferTimer = 0
+        bufferedDashDir = nil
+        playerIsDashing = true
+        playerDashTimeRemaining = DASH_LENGTH_SEC
+        playerDashCooldownRemaining = DASH_COOLDOWN_SECONDS
+        playerStaminaTickerTimer = DASH_COOLDOWN_SECONDS + STAMINA_TICKER_LINGER
+
+        timer.cancel(DASH_END_TIMER_NAME)
+
+        log_debug("Dash pressed!")
+
+        local t = component_cache.get(survivorEntity, Transform)
+        if t then
+            -- Base squash/stretch factors
+            local dirX, dirY = moveDir.x, moveDir.y
+            local absX, absY = math.abs(dirX), math.abs(dirY)
+            local dominant = absX > absY and "horizontal" or "vertical"
+
+            local squeeze = 0.6   -- how thin to get
+            local stretch = 1.4   -- how long to stretch
+            local duration = 0.15 -- squash+stretch speed
+
+            -- store original values
+            local originalW = t.visualW
+            local originalH = t.visualH
+            local originalS = t.visualS or 1.0
+            local originalR = t.visualR or 0.0
+
+            if dominant == "horizontal" then
+                -- Dash left/right → wider, shorter
+                t.visualW = originalW * stretch
+                t.visualH = originalH * squeeze
+                t.visualS = originalS * 1.1
+            else
+                -- Dash up/down → taller, thinner
+                t.visualH = originalH * stretch
+                t.visualW = originalW * squeeze
+                t.visualS = originalS * 1.1
+            end
+
+            -- Tiny rotational flair for diagonals
+            if absX > 0.2 and absY > 0.2 then
+                local tilt = math.deg(math.atan(dirY, dirX)) * 0.15
+                t.visualR = originalR + tilt
+            end
+        end
+
+
+
+        local maskEntity = survivorMaskEntity
+
+        -- Apply rotational impulse (torque) to make mask spin
+        local torqueStrength = 800 -- Tuned for lighter, mostly-weightless mask
+        -- physics.ApplyTorque(world, maskEntity, torqueStrength)
+
+        physics.ApplyAngularImpulse(world, maskEntity, moveDir.x * torqueStrength)
+
+        -- Optional: Apply linear impulse too for more dramatic effect
+        -- local MASK_IMPULSE = 100
+        -- physics.ApplyImpulse(world, maskEntity, moveDir.x * MASK_IMPULSE, moveDir.y * MASK_IMPULSE)
+
+        -- add impulse in the direction it's going
+        -- timer that resets damping after a short delay. (SetDamping)
+
+        local DASH_STRENGTH = 340
+
+        -- physics.ApplyImpulse(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
+
+        -- timer.on_new_physics_step(function()
+        physics.ApplyImpulse(world, survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
+        -- end, "dash_impulse_timer")
+
+        WandTriggers.handleEvent("on_dash", { player = survivorEntity })
+
+        playSoundEffect("effects", random_utils.random_element_string(dash_sfx_list), 0.9 + math.random() * 0.2)
+
+        -- timer.every((DASH_LENGTH_SEC) / 20, function()
+        --     local t = component_cache.get(survivorEntity, Transform)
+        --     if t then
+
+        --         -- new node
+
+        --         local particleNode = ParticleType{}
+        --         particleNode.lifetime = 0.1
+        --         particleNode.age = 0.0
+        --         particleNode.savedPos = { x = t.visualX, y = t.visualY }
+
+
+        --         particleNode
+        --             :attach_ecs{ create_new = true }
+        --             :destroy_when(function(self, eid) return self.age >= self.lifetime end)
+
+        --         add_state_tag(particleNode:handle(), ACTION_STATE)
+
+        --     end
+        -- end, 10) -- 5 times
+
+        -- directional dash trail particles
+        local survivorTransform = component_cache.get(survivorEntity, Transform)
+        if survivorTransform then
+            local origin = Vec2(survivorTransform.actualX + survivorTransform.actualW * 0.5,
+                survivorTransform.actualY + survivorTransform.actualH * 0.5)
+
+            particle.spawnDirectionalCone(origin, 30, DASH_LENGTH_SEC, {
+                direction = Vec2(-moveDir.x, -moveDir.y),
+                spread = 30, -- degrees
+                colors = {
+                    util.getColor("blue")
+                },
+                endColor = util.getColor("blue"),
+                minSpeed = 120,
+                maxSpeed = 340,
+                minScale = 3,
+                maxScale = 10,
+                rotationSpeed = 10,
+                rotationJitter = 0.2,
+                lifetimeJitter = 0.3,
+                scaleJitter = 0.1,
+                gravity = 0,
+                easing = "cubic",
+                renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+                space = "world",
+                z = z_orders.player_vfx - 20
+            })
+
+            spawnHollowCircleParticle(
+                origin.x,
+                origin.y,
+                30,
+                util.getColor("dim_gray"),
+                0.2
+            )
+
+            particle.spawnDirectionalStreaksCone(origin, 10, DASH_LENGTH_SEC, {
+                direction = Vec2(-moveDir.x, -moveDir.y), -- up
+                spread = a,                               -- ±22.5° cone
+                minSpeed = 200,
+                maxSpeed = 300,
+                minScale = 8,
+                maxScale = 10,
+                autoAspect = true,
+                shrink = true,
+                colors = { Col(255, 200, 100) },
+                space = "world",
+                z = 5
+            })
+
+            particle.spawnDirectionalLinesCone(origin, 20, 0.8, {
+                direction = Vec2(-moveDir.x, -moveDir.y),
+                spread = 45,
+                minSpeed = 200,
+                maxSpeed = 400,
+                minLength = 32,
+                maxLength = 64,
+                minThickness = 2,
+                maxThickness = 5,
+                colors = { Col(255, 220, 120), Col(255, 180, 80), Col(255, 120, 50) },
+                durationJitter = 0.3,
+                sizeJitter = 0.2,
+                faceVelocity = true,
+                shrink = true,
+                space = "world",
+                z = z_orders.particle_vfx
+            })
+
+
+            -- makeSwirlEmitter(320, 180, 120,
+            --     { Col(255, 220, 120), Col(255, 160, 80), Col(255, 100, 60) },
+            --     1.0,   -- emitDuration: spawn new dots for 1 second
+            --     2.5    -- totalLifetime: fadeout & cleanup
+            -- )
+
+            makeSwirlEmitterWithRing(
+                320, 180, 96,
+                { util.getColor("white"), Col(255, 160, 80), Col(255, 100, 60) },
+                1.0, -- emitDuration (how long to spawn new dots)
+                2.5  -- totalLifetime
+            )
+
+            spawnCrescentParticle(
+                200, 200, 40,
+                Vec2(250, -60),
+                Col(255, 220, 150, 255),
+                1.5
+            )
+
+            -- Bigger diagonal slash effect
+            spawnImpactSmear(320, 180, Vec2(0.7, 0.7), Col(255, 200, 200, 255), 0.3,
+                { maxLength = 80, maxThickness = 6, single = true })
+
+            particle.attachTrailToEntity(survivorEntity, DASH_LENGTH_SEC * 0.3, {
+                space = "world",
+                count = 20,
+                direction = Vec2(-moveDir.x, -moveDir.y),
+                spread = 45,
+                colors = { util.getColor("white") },
+                minSpeed = 80,
+                maxSpeed = 220,
+                lifetime = 0.4,
+                interval = 0.01,
+
+                onFinish = function(ent)
+                    -- spawn final burst at entity’s last known position
+                    local t = component_cache.get(survivorEntity, Transform)
+                    if t then
+                        particle.spawnDirectionalLinesCone(
+                            Vec2(t.actualX + t.actualW * 0.5, t.actualY + t.actualH * 0.5), 10, 0.3, {
+                                direction = Vec2(-moveDir.x, -moveDir.y),
+                                spread = 360,
+                                minSpeed = 200,
+                                maxSpeed = 400,
+                                minLength = 32,
+                                maxLength = 64,
+                                minThickness = 2,
+                                maxThickness = 5,
+                                colors = { util.getColor("white") },
+                                durationJitter = 0.3,
+                                sizeJitter = 0.2,
+                                faceVelocity = true,
+                                shrink = false,
+                                space = "world",
+                                z = z_orders.particle_vfx
+                            })
+                    end
+                end
+            })
+
+            -- Yellow rotating dashed circle with faint fill for 2 seconds
+            makeDashedCircleArea(320, 500, 80, {
+                color = util.getColor("YELLOW"),
+                fillColor = Col(255, 255, 100, 200),
+                hasFill = true,
+                dashLength = 18,
+                gapLength = 10,
+                rotateSpeed = 120, -- faster rotation
+                thickness = 5,
+                duration = 2.0
+            })
+
+            local p1 = Vec2(200, 600)
+            local p2 = Vec2(500, 800)
+
+            makePulsingBeam(p1, p2, {
+                color = util.getColor("CYAN"),
+                duration = 1.8,
+                radius = 14,
+                beamThickness = 12,
+                pulseSpeed = 3.5,
+            })
+
+
+            -- Wipe upward while facing 45° angle
+            -- makeDirectionalWipeWithTimer(320, 180, 400, 200,
+            --     Vec2(0.7, 0.7),  -- facing diagonal
+            --     Vec2(0, -1),     -- wipe upward
+            --     Col(255, 180, 120, 255),
+            --     1.0)
+        end
+
+
+        timer.after(DASH_LENGTH_SEC, function()
+            timer.on_new_physics_step(function()
+                -- physics.SetDamping(world, survivorEntity, 5.0)
+                playerIsDashing = false
+                playerDashTimeRemaining = 0
+            end)
+        end, DASH_END_TIMER_NAME)
+    end
+
+    local function tryConsumeBufferedDash(fallbackDir)
+        if dashBufferTimer > 0 and not playerIsDashing and playerDashCooldownRemaining <= DASH_COYOTE_WINDOW then
+            startPlayerDash(bufferedDashDir or fallbackDir)
+            return true
+        end
+        return false
+    end
 
     -- create input timer. this must run every frame.
     timer.every_physics_step(
@@ -4995,303 +5327,32 @@ function initActionPhase()
                 timer.cancel(dustTimerName)
             end
 
-            if not playerIsDashing and playerDashCooldownRemaining <= 0 and input.action_down("survivor_dash") then
-                log_debug("Dash pressed!")
-
-                -- make transform not authoritative
-                -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
-                -- physics.SetBodyType(PhysicsManager.get_world("world"), survivorEntity, "dynamic")
-                -- physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 0.0) -- no damping while dashing
-                -- set velocity to zero
-                -- physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, 0, 0)
-
-                -- let's add dashing.
-
-                local len = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
-                if len == 0 then
-                    -- fallback: use last known facing or velocity
-                    local vel = physics.GetVelocity(world, survivorEntity)
-                    len = math.sqrt(vel.x * vel.x + vel.y * vel.y)
-                    if len > 0 then
-                        moveDir.x = vel.x / len
-                        moveDir.y = vel.y / len
-                    else
-                        moveDir.x, moveDir.y = 0, -1 -- default forward dash (e.g., up)
-                    end
+            local dashPressed = input.action_pressed("survivor_dash")
+            local moveLen = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
+            local prevLen = math.sqrt(lastMoveInput.x * lastMoveInput.x + lastMoveInput.y * lastMoveInput.y)
+            local moveInputChanged = false
+            if moveLen > 0.1 then
+                if prevLen <= 0.1 then
+                    moveInputChanged = true
+                else
+                    local dot = (moveDir.x * lastMoveInput.x + moveDir.y * lastMoveInput.y) / (moveLen * prevLen)
+                    moveInputChanged = dot < 0.5
                 end
-
-
-                local t = component_cache.get(survivorEntity, Transform)
-                if t then
-                    -- Base squash/stretch factors
-                    local dirX, dirY = moveDir.x, moveDir.y
-                    local absX, absY = math.abs(dirX), math.abs(dirY)
-                    local dominant = absX > absY and "horizontal" or "vertical"
-
-                    local squeeze = 0.6   -- how thin to get
-                    local stretch = 1.4   -- how long to stretch
-                    local duration = 0.15 -- squash+stretch speed
-
-                    -- store original values
-                    local originalW = t.visualW
-                    local originalH = t.visualH
-                    local originalS = t.visualS or 1.0
-                    local originalR = t.visualR or 0.0
-
-                    if dominant == "horizontal" then
-                        -- Dash left/right → wider, shorter
-                        t.visualW = originalW * stretch
-                        t.visualH = originalH * squeeze
-                        t.visualS = originalS * 1.1
-                    else
-                        -- Dash up/down → taller, thinner
-                        t.visualH = originalH * stretch
-                        t.visualW = originalW * squeeze
-                        t.visualS = originalS * 1.1
-                    end
-
-                    -- Tiny rotational flair for diagonals
-                    if absX > 0.2 and absY > 0.2 then
-                        local tilt = math.deg(math.atan(dirY, dirX)) * 0.15
-                        t.visualR = originalR + tilt
-                    end
-                end
-
-
-
-                local maskEntity = survivorMaskEntity
-
-                -- Apply rotational impulse (torque) to make mask spin
-                local torqueStrength = 800 -- Tuned for lighter, mostly-weightless mask
-                -- physics.ApplyTorque(world, maskEntity, torqueStrength)
-
-                physics.ApplyAngularImpulse(world, maskEntity, moveDir.x * torqueStrength)
-
-                -- Optional: Apply linear impulse too for more dramatic effect
-                -- local MASK_IMPULSE = 100
-                -- physics.ApplyImpulse(world, maskEntity, moveDir.x * MASK_IMPULSE, moveDir.y * MASK_IMPULSE)
-
-                -- add impulse in the direction it's going
-                -- timer that resets damping after a short delay. (SetDamping)
-
-                local DASH_STRENGTH = 340
-
-                -- physics.ApplyImpulse(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
-
-                -- timer.on_new_physics_step(function()
-                physics.ApplyImpulse(world, survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
-                -- end, "dash_impulse_timer")
-
-                playerIsDashing = true
-                playerDashCooldownRemaining = DASH_COOLDOWN_SECONDS
-                playerStaminaTickerTimer = DASH_COOLDOWN_SECONDS + STAMINA_TICKER_LINGER
-                WandTriggers.handleEvent("on_dash", { player = survivorEntity })
-
-                local DASH_LENGTH_SEC = 0.5
-
-                playSoundEffect("effects", random_utils.random_element_string(dash_sfx_list), 0.9 + math.random() * 0.2)
-
-                -- timer.every((DASH_LENGTH_SEC) / 20, function()
-                --     local t = component_cache.get(survivorEntity, Transform)
-                --     if t then
-
-                --         -- new node
-
-                --         local particleNode = ParticleType{}
-                --         particleNode.lifetime = 0.1
-                --         particleNode.age = 0.0
-                --         particleNode.savedPos = { x = t.visualX, y = t.visualY }
-
-
-                --         particleNode
-                --             :attach_ecs{ create_new = true }
-                --             :destroy_when(function(self, eid) return self.age >= self.lifetime end)
-
-                --         add_state_tag(particleNode:handle(), ACTION_STATE)
-
-                --     end
-                -- end, 10) -- 5 times
-
-                -- directional dash trail particles
-                local survivorTransform = component_cache.get(survivorEntity, Transform)
-                if survivorTransform then
-                    local origin = Vec2(survivorTransform.actualX + survivorTransform.actualW * 0.5,
-                        survivorTransform.actualY + survivorTransform.actualH * 0.5)
-
-                    particle.spawnDirectionalCone(origin, 30, DASH_LENGTH_SEC, {
-                        direction = Vec2(-moveDir.x, -moveDir.y),
-                        spread = 30, -- degrees
-                        colors = {
-                            util.getColor("blue")
-                        },
-                        endColor = util.getColor("blue"),
-                        minSpeed = 120,
-                        maxSpeed = 340,
-                        minScale = 3,
-                        maxScale = 10,
-                        rotationSpeed = 10,
-                        rotationJitter = 0.2,
-                        lifetimeJitter = 0.3,
-                        scaleJitter = 0.1,
-                        gravity = 0,
-                        easing = "cubic",
-                        renderType = particle.ParticleRenderType.CIRCLE_FILLED,
-                        space = "world",
-                        z = z_orders.player_vfx - 20
-                    })
-
-                    spawnHollowCircleParticle(
-                        origin.x,
-                        origin.y,
-                        30,
-                        util.getColor("dim_gray"),
-                        0.2
-                    )
-
-                    particle.spawnDirectionalStreaksCone(origin, 10, DASH_LENGTH_SEC, {
-                        direction = Vec2(-moveDir.x, -moveDir.y), -- up
-                        spread = a,                               -- ±22.5° cone
-                        minSpeed = 200,
-                        maxSpeed = 300,
-                        minScale = 8,
-                        maxScale = 10,
-                        autoAspect = true,
-                        shrink = true,
-                        colors = { Col(255, 200, 100) },
-                        space = "world",
-                        z = 5
-                    })
-
-                    particle.spawnDirectionalLinesCone(origin, 20, 0.8, {
-                        direction = Vec2(-moveDir.x, -moveDir.y),
-                        spread = 45,
-                        minSpeed = 200,
-                        maxSpeed = 400,
-                        minLength = 32,
-                        maxLength = 64,
-                        minThickness = 2,
-                        maxThickness = 5,
-                        colors = { Col(255, 220, 120), Col(255, 180, 80), Col(255, 120, 50) },
-                        durationJitter = 0.3,
-                        sizeJitter = 0.2,
-                        faceVelocity = true,
-                        shrink = true,
-                        space = "world",
-                        z = z_orders.particle_vfx
-                    })
-
-
-                    -- makeSwirlEmitter(320, 180, 120,
-                    --     { Col(255, 220, 120), Col(255, 160, 80), Col(255, 100, 60) },
-                    --     1.0,   -- emitDuration: spawn new dots for 1 second
-                    --     2.5    -- totalLifetime: fadeout & cleanup
-                    -- )
-
-                    makeSwirlEmitterWithRing(
-                        320, 180, 96,
-                        { util.getColor("white"), Col(255, 160, 80), Col(255, 100, 60) },
-                        1.0, -- emitDuration (how long to spawn new dots)
-                        2.5  -- totalLifetime
-                    )
-
-                    spawnCrescentParticle(
-                        200, 200, 40,
-                        Vec2(250, -60),
-                        Col(255, 220, 150, 255),
-                        1.5
-                    )
-
-                    -- Bigger diagonal slash effect
-                    spawnImpactSmear(320, 180, Vec2(0.7, 0.7), Col(255, 200, 200, 255), 0.3,
-                        { maxLength = 80, maxThickness = 6, single = true })
-
-                    particle.attachTrailToEntity(survivorEntity, DASH_LENGTH_SEC * 0.3, {
-                        space = "world",
-                        count = 20,
-                        direction = Vec2(-moveDir.x, -moveDir.y),
-                        spread = 45,
-                        colors = { util.getColor("white") },
-                        minSpeed = 80,
-                        maxSpeed = 220,
-                        lifetime = 0.4,
-                        interval = 0.01,
-
-                        onFinish = function(ent)
-                            -- spawn final burst at entity’s last known position
-                            local t = component_cache.get(survivorEntity, Transform)
-                            if t then
-                                particle.spawnDirectionalLinesCone(
-                                    Vec2(t.actualX + t.actualW * 0.5, t.actualY + t.actualH * 0.5), 10, 0.3, {
-                                        direction = Vec2(-moveDir.x, -moveDir.y),
-                                        spread = 360,
-                                        minSpeed = 200,
-                                        maxSpeed = 400,
-                                        minLength = 32,
-                                        maxLength = 64,
-                                        minThickness = 2,
-                                        maxThickness = 5,
-                                        colors = { util.getColor("white") },
-                                        durationJitter = 0.3,
-                                        sizeJitter = 0.2,
-                                        faceVelocity = true,
-                                        shrink = false,
-                                        space = "world",
-                                        z = z_orders.particle_vfx
-                                    })
-                            end
-                        end
-                    })
-
-                    -- Yellow rotating dashed circle with faint fill for 2 seconds
-                    makeDashedCircleArea(320, 500, 80, {
-                        color = util.getColor("YELLOW"),
-                        fillColor = Col(255, 255, 100, 200),
-                        hasFill = true,
-                        dashLength = 18,
-                        gapLength = 10,
-                        rotateSpeed = 120, -- faster rotation
-                        thickness = 5,
-                        duration = 2.0
-                    })
-
-                    local p1 = Vec2(200, 600)
-                    local p2 = Vec2(500, 800)
-
-                    makePulsingBeam(p1, p2, {
-                        color = util.getColor("CYAN"),
-                        duration = 1.8,
-                        radius = 14,
-                        beamThickness = 12,
-                        pulseSpeed = 3.5,
-                    })
-
-
-                    -- Wipe upward while facing 45° angle
-                    -- makeDirectionalWipeWithTimer(320, 180, 400, 200,
-                    --     Vec2(0.7, 0.7),  -- facing diagonal
-                    --     Vec2(0, -1),     -- wipe upward
-                    --     Col(255, 180, 120, 255),
-                    --     1.0)
-                end
-
-
-                timer.after(DASH_LENGTH_SEC, function()
-                    timer.on_new_physics_step(function()
-                        -- physics.SetDamping(world, survivorEntity, 5.0)
-                        playerIsDashing = false
-                    end)
-                end, "dash_end_timer")
-                -- make timer to end dash after short delay
-                -- timer.after(DASH_LENGTH_SEC, function()
-                --     -- reset damping
-                --     physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 5.0) -- normal damping
-
-                --     playerIsDashing = false
-
-                --     -- make transform authoritative again
-                --     -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
-                -- end)
             end
+
+            if playerIsDashing and moveInputChanged then
+                startPlayerDash(moveDir)
+            elseif dashPressed then
+                if (not playerIsDashing) and playerDashCooldownRemaining <= DASH_COYOTE_WINDOW then
+                    startPlayerDash(moveDir)
+                else
+                    queueDashRequest(moveDir)
+                end
+            end
+
+            tryConsumeBufferedDash(moveDir)
+
+            lastMoveInput.x, lastMoveInput.y = moveDir.x, moveDir.y
 
             if playerIsDashing then
                 return -- skip movement input while dashing

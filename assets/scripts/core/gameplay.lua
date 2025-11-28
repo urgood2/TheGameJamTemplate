@@ -16,6 +16,7 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 require("ui.ui_definition_helper")
 local dsl = require("ui.ui_syntax_sugar")
+local CastExecutionGraphUI = require("ui.cast_execution_graph_ui")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
@@ -1833,11 +1834,20 @@ function setUpLogicTimers()
                                     function()
                                         -- bail if current action board has no cards
                                         local currentSet = board_sets[current_board_set_index]
-                                        if not currentSet then return end
+                                        if not currentSet then
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
                                         local actionBoardID = currentSet.action_board_id
-                                        if not actionBoardID or actionBoardID == entt_null or not entity_cache.valid(actionBoardID) then return end
+                                        if not actionBoardID or actionBoardID == entt_null or not entity_cache.valid(actionBoardID) then
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
                                         local actionBoard = boards[actionBoardID]
-                                        if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return end
+                                        if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
 
                                         local triggerBoardScript = getScriptTableFromEntityID(currentSet
                                             .trigger_board_id)
@@ -1861,6 +1871,14 @@ function setUpLogicTimers()
                                         end
 
                                         local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
+
+                                        if simulatedResult and simulatedResult.blocks then
+                                            CastExecutionGraphUI.render(simulatedResult.blocks,
+                                                { wandId = currentSet.wandDef.id, title = "Execution Preview" })
+                                        else
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
 
                                         local pitchToUse = 0.7
                                         local castSequenceID = tostring(actionBoardID) ..

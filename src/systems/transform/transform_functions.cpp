@@ -1499,6 +1499,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         // check if buffer is full and if so, flush batch
         
+        auto zlevel = 3000; // draw on top of most things
+        
         if (node.debug.debugText)
         {
             // does debug text contain "uibox"?
@@ -1516,27 +1518,27 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         layer::QueueCommand<layer::CmdPushMatrix>(layer, [](layer::CmdPushMatrix *cmd) {
             // Push the current matrix onto the stack
-        }, 100, drawSpace); // always on top of the stack
+        }, zlevel, drawSpace); // always on top of the stack
 
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
-        }, 100, drawSpace);
+        }, zlevel, drawSpace);
 
         layer::QueueCommand<layer::CmdScale>(layer, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
             cmd->scaleX = scaleX;
             cmd->scaleY = scaleY;
-        }, 100, drawSpace);
+        }, zlevel, drawSpace);
 
         layer::QueueCommand<layer::CmdRotate>(layer, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
             cmd->angle = rotation;
-        }, 100, drawSpace);
+        }, zlevel, drawSpace);
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
-        }, 100, drawSpace);
+        }, zlevel, drawSpace);
 
         auto scale = 2.0f;
         if (registry->any_of<ui::UIConfig>(e))
@@ -1574,7 +1576,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->fontSize = 15 * scale;
                 cmd->spacing = 1.0f;
                 cmd->color = WHITE;
-            }, 100, drawSpace);
+            }, zlevel, drawSpace);
         }
         else {
             // If ui, get ui type + entity number
@@ -1604,7 +1606,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->fontSize = 15 * scale;
                 cmd->spacing = 1.0f;
                 cmd->color = WHITE;
-            }, 100, drawSpace);
+            }, zlevel, drawSpace);
         }
 
         float lineWidth = 4;
@@ -1640,7 +1642,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->size = Vector2{width, height};
             cmd->lineThickness = lineThickness;
             cmd->color = color;
-        }, 100, drawSpace);
+        }, zlevel, drawSpace);
         
         
         // draw emboss effect rect
@@ -1653,10 +1655,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->offsetY = y;
                 cmd->size = Vector2{width, height};
                 cmd->color = Fade(BLACK, 0.3f);
-            }, 100, drawSpace);
+            }, zlevel, drawSpace);
         }
 
-        layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {}, 100, drawSpace);
+        layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {}, zlevel, drawSpace);
     }
 
     auto CalculateCursorPositionWithinFocus(entt::registry *registry, entt::entity e) -> Vector2

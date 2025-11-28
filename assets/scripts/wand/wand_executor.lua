@@ -37,6 +37,28 @@ local ProjectileSystem = require("combat.projectile_system")
 local SpellTypeEvaluator = require("wand.spell_type_evaluator")
 local JokerSystem = require("wand.joker_system")
 
+local graphUI = nil
+
+local function maybeRenderExecutionGraph(blocks, wandId)
+    if graphUI == false then return end
+    if not blocks or #blocks == 0 then return end
+    if not ui or not ui.box then return end
+
+    if not graphUI then
+        local ok, mod = pcall(require, "ui.cast_execution_graph_ui")
+        if not ok then
+            graphUI = false
+            print("[WandExecutor] Execution graph UI unavailable: " .. tostring(mod))
+            return
+        end
+        graphUI = mod
+    end
+
+    if graphUI and graphUI.render then
+        graphUI.render(blocks, { wandId = wandId, title = "Last Cast" })
+    end
+end
+
 -- Wand states (persistent)
 WandExecutor.wandStates = {}
 
@@ -276,6 +298,8 @@ function WandExecutor.execute(wandId, triggerType)
         print("[WandExecutor] Warning: No cast blocks from evaluation")
         return false
     end
+
+    maybeRenderExecutionGraph(evaluationResult.blocks, wandId)
 
     -- Execute cast blocks sequentially
     local success, totalCastDelay = WandExecutor.executeCastBlocks(evaluationResult.blocks, context, state)

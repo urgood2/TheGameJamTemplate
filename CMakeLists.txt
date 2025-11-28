@@ -243,25 +243,7 @@ set(PROJECT_VERSION "0.1")
 # Build/version identifiers used for crash reporting and itch uploads
 set(_default_build_id "$ENV{ITCH_BUILD_ID}")
 if(NOT _default_build_id)
-    set(_default_build_id "$ENV{TELEMETRY_BUILD_ID}")
-endif()
-if(NOT _default_build_id)
     set(_default_build_id "$ENV{BUILD_ID}")
-endif()
-if(NOT _default_build_id)
-    find_package(Git QUIET)
-    if(GIT_FOUND)
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE _git_build_id
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            RESULT_VARIABLE _git_build_id_result
-        )
-        if(_git_build_id_result EQUAL 0 AND NOT _git_build_id STREQUAL "")
-            set(_default_build_id "${_git_build_id}")
-        endif()
-    endif()
 endif()
 if(NOT _default_build_id)
     set(_default_build_id "${PROJECT_VERSION}")

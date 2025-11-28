@@ -31,7 +31,6 @@
 #include <entt/entt.hpp>        // EnTT ECS registry
 #include "raylib.h"             // Raylib types and functions
 
-#include "core/globals.hpp"
 #include "spdlog/spdlog.h"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/spring/spring.hpp"                  // Spring component definition
@@ -202,12 +201,6 @@ public:
     GameCamera(entt::registry &reg)
       : registry(reg)
     {
-        // Anchor the camera to screen center so zoom/clamp work around the midpoint.
-        cam.offset = {
-            (float)globals::VIRTUAL_WIDTH * 0.5f,
-            (float)globals::VIRTUAL_HEIGHT * 0.5f
-        };
-
         // Create entities for each spring component
         springTargetX  = registry.create();
         springTargetY  = registry.create();
@@ -728,21 +721,10 @@ public:
 
         // 5) Clamp within world bounds
         if (useBounds) {
-            float sw = (float)globals::VIRTUAL_WIDTH;
-            float sh = (float)globals::VIRTUAL_HEIGHT;
-
-            // Visible edges in world space, accounting for offset anchor and zoom.
-            float minX = bounds.x + cam.offset.x / cam.zoom;
-            float maxX = bounds.x + bounds.width - (sw - cam.offset.x) / cam.zoom;
-            float minY = bounds.y + cam.offset.y / cam.zoom;
-            float maxY = bounds.y + bounds.height - (sh - cam.offset.y) / cam.zoom;
-
-            // If the viewport is larger than the bounds, center within them.
-            if (minX > maxX) cam.target.x = bounds.x + bounds.width * 0.5f;
-            else             cam.target.x = ClampF(cam.target.x, minX, maxX);
-
-            if (minY > maxY) cam.target.y = bounds.y + bounds.height * 0.5f;
-            else             cam.target.y = ClampF(cam.target.y, minY, maxY);
+            float halfW = (float)globals::VIRTUAL_WIDTH*0.5f / cam.zoom;
+            float halfH = (float)globals::VIRTUAL_HEIGHT*0.5f / cam.zoom;
+            cam.target.x = ClampF(cam.target.x, bounds.x + halfW, bounds.x + bounds.width - halfW);
+            cam.target.y = ClampF(cam.target.y, bounds.y + halfH, bounds.y + bounds.height - halfH);
         }
         
         // Store actual position for next-frame velocity estimates

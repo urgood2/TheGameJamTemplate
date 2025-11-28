@@ -454,10 +454,10 @@ function initMainGame()
     )
     
     
-    if os.getenv("RUN_PROJECTILE_TESTS") == "1" then
-        record_telemetry("debug_tests_enabled", { suite = "projectile" })
+    -- if os.getenv("RUN_PROJECTILE_TESTS") == "1" then
+    --     record_telemetry("debug_tests_enabled", { suite = "projectile" })
         ProjectileSystemTest = require("test_projectiles")
-    end
+    -- end
 
     local runWandTests = os.getenv("RUN_WAND_TESTS") == "1"
     if runWandTests then

@@ -115,6 +115,7 @@ function WandExecutor.init()
     WandTriggers.init()
     ProjectileSystem.init()
 
+    -- Fail fast if card definitions introduce fields we don't handle
     print("[WandExecutor] Initialized")
 end
 

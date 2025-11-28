@@ -25,7 +25,6 @@ MODIFIER AGGREGATION
 ================================================================================
 Takes a list of modifier cards and combines them into a single aggregate.
 ]] --
-
 --- Creates an empty modifier aggregate with default values
 --- @return table Modifier aggregate
 function WandModifiers.createAggregate()

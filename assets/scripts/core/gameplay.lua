@@ -120,12 +120,18 @@ local dash_sfx_list               = {
 local DASH_COOLDOWN_SECONDS       = 2.0 -- how long before the next dash is available
 local STAMINA_TICKER_LINGER       = 1.0 -- how long the stamina bar lingers after refilling
 local ENEMY_HEALTH_BAR_LINGER     = 2.0 -- how long enemy health bars stay visible after a hit
+local DAMAGE_NUMBER_LIFETIME            = 1.35 -- seconds to keep a floating damage number around
+local DAMAGE_NUMBER_VERTICAL_SPEED      = 60   -- initial upward velocity of a damage number
+local DAMAGE_NUMBER_HORIZONTAL_JITTER   = 14   -- horizontal scatter when spawning a damage number
+local DAMAGE_NUMBER_GRAVITY             = 28   -- downward accel that eases the rise of the numbers
+local DAMAGE_NUMBER_FONT_SIZE           = 22
 
 local playerDashCooldownRemaining = 0
 local playerStaminaTickerTimer    = 0
 
 local enemyHealthUiState          = {}                                 -- eid -> { actor=<combat actor>, visibleUntil=<time> }
 local combatActorToEntity         = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
+local damageNumbers               = {}                                 -- active floating damage numbers
 
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
@@ -2974,6 +2980,46 @@ function make_actor(name, defs, attach)
     }
 end
 
+local function formatDamageNumber(amount)
+    if not amount then return "0" end
+    if amount >= 10 then
+        return string.format("%.0f", amount)
+    end
+    return string.format("%.1f", amount)
+end
+
+local function pickDamageColor(amount)
+    -- Damage above zero → opaque red, non-damage/zero → white
+    if amount and amount > 0 then
+        return { r = 255, g = 70, b = 70, a = 255 }
+    end
+    return { r = 255, g = 255, b = 255, a = 255 }
+end
+
+local function spawnDamageNumber(targetEntity, amount, isCrit)
+    if not targetEntity or not entity_cache.valid(targetEntity) then return end
+    if not amount then return end
+
+    local t = component_cache.get(targetEntity, Transform)
+    if not t then return end
+
+    local spawnX = t.actualX + t.actualW * 0.5 + (math.random() - 0.5) * DAMAGE_NUMBER_HORIZONTAL_JITTER
+    local spawnY = t.actualY - 10
+
+    damageNumbers[#damageNumbers + 1] = {
+        x        = spawnX,
+        y        = spawnY,
+        vx       = (math.random() - 0.5) * (DAMAGE_NUMBER_HORIZONTAL_JITTER * 0.8),
+        vy       = -(DAMAGE_NUMBER_VERTICAL_SPEED + math.random() * 20),
+        life     = DAMAGE_NUMBER_LIFETIME,
+        age      = 0,
+        text     = formatDamageNumber(amount),
+        crit     = isCrit or false,
+        fontSize = DAMAGE_NUMBER_FONT_SIZE,
+        color    = pickDamageColor(amount),
+    }
+end
+
 function initCombatSystem()
     -- init combat system.
 
@@ -3062,6 +3108,9 @@ function initCombatSystem()
         local targetEntity = combatActorToEntity[ev.target]
         if targetEntity and enemyHealthUiState[targetEntity] then
             enemyHealthUiState[targetEntity].visibleUntil = GetTime() + ENEMY_HEALTH_BAR_LINGER
+        end
+        if targetEntity then
+            spawnDamageNumber(targetEntity, ev.damage or 0, ev.crit)
         end
     end)
 
@@ -3426,6 +3475,55 @@ function initCombatSystem()
                 if enemiesToRemove then
                     for _, eid in ipairs(enemiesToRemove) do
                         enemyHealthUiState[eid] = nil
+                    end
+                end
+
+                ------------------------------------------------------------
+                -- DAMAGE NUMBERS (world space, float up and fade)
+                ------------------------------------------------------------
+                if #damageNumbers > 0 then
+                    for i = #damageNumbers, 1, -1 do
+                        local dn = damageNumbers[i]
+                        dn.age = (dn.age or 0) + frameDt
+                        local life = dn.life or DAMAGE_NUMBER_LIFETIME
+
+                        if dn.age >= life then
+                            table.remove(damageNumbers, i)
+                        else
+                            dn.x = dn.x + (dn.vx or 0) * frameDt
+                            dn.y = dn.y + (dn.vy or 0) * frameDt
+                            dn.vy = (dn.vy or 0) + DAMAGE_NUMBER_GRAVITY * frameDt
+
+                            local remaining = 1.0 - (dn.age / life)
+                            local alpha = math.max(0.0, math.min(1.0, remaining))
+                            local color = dn.color or { r = 255, g = 255, b = 255, a = 255 }
+                            local scale = (dn.crit and 1.15 or 1.0) * (1.0 + 0.05 * alpha)
+                            local fontSize = (dn.fontSize or DAMAGE_NUMBER_FONT_SIZE) * scale
+                            local r = color.r or 255
+                            local g = color.g or 255
+                            local b = color.b or 255
+                            local a = color.a or 255
+                            local z = z_orders.enemies + 3
+
+                            -- subtle shadow
+                            command_buffer.queueDrawText(layers.sprites, function(c)
+                                c.text = dn.text
+                                c.font = localization.getFont()
+                                c.x = dn.x + 1
+                                c.y = dn.y + 1
+                                c.color = Col(0, 0, 0, math.floor(180 * alpha))
+                                c.fontSize = fontSize
+                            end, z, layer.DrawCommandSpace.World)
+
+                            command_buffer.queueDrawText(layers.sprites, function(c)
+                                c.text = dn.text
+                                c.font = localization.getFont()
+                                c.x = dn.x
+                                c.y = dn.y
+                                c.color = Col(r, g, b, math.floor(a * alpha))
+                                c.fontSize = fontSize
+                            end, z + 1, layer.DrawCommandSpace.World)
+                        end
                     end
                 end
             end
@@ -4804,6 +4902,7 @@ function initActionPhase()
     playerStaminaTickerTimer = 0
     enemyHealthUiState = {}
     combatActorToEntity = setmetatable({}, { __mode = "k" })
+    damageNumbers = {}
 
     -- create input timer. this must run every frame.
     timer.every_physics_step(

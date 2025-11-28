@@ -8,10 +8,6 @@ _G.globals = {
     getScreenWidth = function() return 1920 end,
     getScreenHeight = function() return 1080 end
 }
-_G.localization = {
-    getFont = function() return nil end,
-    getTextWidthWithCurrentFont = function() return 100 end
-}
 _G.layers = { ui = 1, sprites = 0 }
 _G.z_orders = { ui = 100 }
 _G.command_buffer = {

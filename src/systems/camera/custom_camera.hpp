@@ -140,7 +140,8 @@ public:
     FollowStyle style = FollowStyle::NONE;  ///< Current follow mode
     float followLerpX = 1.0f, followLerpY = 1.0f;  ///< Lerp amounts for X/Y movement
     float followLeadX = 0.0f, followLeadY = 0.0f;  ///< Lead multipliers for lookahead
-    
+    float boundsPadding = 0.0f;    ///< Extra screen-space leeway while clamping
+
     // -- Offset damping/strafing settings ---
     float strafeTiltAngle = 0.0f;  // updated each frame
     // keep track of previous frame’s actual target to compute velocity
@@ -542,6 +543,12 @@ public:
     void SetBounds(const Rectangle &b) { bounds = b; useBounds = true; }
 
     /**
+     * @brief Allow small screen-space leeway while clamping bounds.
+     * @param pad Pixels of slack each direction (screen space). Clamped to >=0.
+     */
+    void SetBoundsPadding(float pad) { boundsPadding = std::max(0.0f, pad); }
+
+    /**
      * @brief Flash the screen with a solid color for a duration.
      * @param duration Time in seconds to flash.
      * @param c Color to flash.
@@ -730,12 +737,14 @@ public:
         if (useBounds) {
             float sw = (float)globals::VIRTUAL_WIDTH;
             float sh = (float)globals::VIRTUAL_HEIGHT;
+            float pad = boundsPadding / cam.zoom; // convert screen pixels -> world units
 
             // Visible edges in world space, accounting for offset anchor and zoom.
-            float minX = bounds.x + cam.offset.x / cam.zoom;
-            float maxX = bounds.x + bounds.width - (sw - cam.offset.x) / cam.zoom;
-            float minY = bounds.y + cam.offset.y / cam.zoom;
-            float maxY = bounds.y + bounds.height - (sh - cam.offset.y) / cam.zoom;
+            // Keep bounds inside the view but allow some slack (pad) in screen pixels.
+            float minX = bounds.x + bounds.width - (sw - cam.offset.x) / cam.zoom - pad; // lower
+            float maxX = bounds.x + cam.offset.x / cam.zoom + pad;                       // upper
+            float minY = bounds.y + bounds.height - (sh - cam.offset.y) / cam.zoom - pad;
+            float maxY = bounds.y + cam.offset.y / cam.zoom + pad;
 
             // If the viewport is larger than the bounds, center within them.
             if (minX > maxX) cam.target.x = bounds.x + bounds.width * 0.5f;

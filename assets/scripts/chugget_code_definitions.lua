@@ -5527,6 +5527,13 @@ function GameCamera:GetVisualTarget(...) end
 function GameCamera:SetBounds(...) end
 
 ---
+--- Allow a little slack when clamping bounds (useful when bounds equal the viewport).
+---
+---@param padding number # extra screen-space leeway in pixels
+---@return nil
+function GameCamera:SetBoundsPadding(...) end
+
+---
 --- Enable/disable damping on the offset spring.
 ---
 ---@param enabled boolean

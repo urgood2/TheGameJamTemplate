@@ -37,6 +37,9 @@ WandTriggers.eventSubscriptions = {}
 -- Distance tracking for on_distance_traveled triggers
 WandTriggers.distanceTracking = {}
 
+-- Deferred event executions (processed outside physics callbacks)
+WandTriggers.pendingEvents = {}
+
 --[[
 ================================================================================
 INITIALIZATION
@@ -48,6 +51,7 @@ function WandTriggers.init()
     WandTriggers.registrations = {}
     WandTriggers.eventSubscriptions = {}
     WandTriggers.distanceTracking = {}
+    WandTriggers.pendingEvents = {}
 
     -- Subscribe to game events
     WandTriggers.subscribeToEvents()
@@ -67,6 +71,7 @@ function WandTriggers.cleanup()
     -- Clear all registrations
     WandTriggers.registrations = {}
     WandTriggers.distanceTracking = {}
+    WandTriggers.pendingEvents = {}
 
     log_debug("WandTriggers cleaned up")
 end
@@ -113,19 +118,19 @@ function WandTriggers.register(wandId, triggerDef, executor)
 
     -- Event-based triggers are handled via global event subscriptions
     elseif triggerType == "on_player_attack" then
-        registration.eventType = "player_pressed_attack"
+        registration.eventType = triggerType
 
     elseif triggerType == "on_bump_enemy" then
-        registration.eventType = "player_bump_enemy"
+        registration.eventType = triggerType
 
     elseif triggerType == "on_dash" then
-        registration.eventType = "player_dash"
+        registration.eventType = triggerType
 
     elseif triggerType == "on_pickup" then
-        registration.eventType = "player_pickup_item"
+        registration.eventType = triggerType
 
     elseif triggerType == "on_low_health" then
-        registration.eventType = "player_health_changed"
+        registration.eventType = triggerType
         registration.healthThreshold = triggerDef.healthThreshold or 0.3  -- 30%
 
     else
@@ -262,12 +267,13 @@ function WandTriggers.handleEvent(eventType, eventData)
     -- Check all registered triggers for this event type
     for wandId, registration in pairs(WandTriggers.registrations) do
         if registration.enabled and registration.eventType == eventType then
-            -- Check additional conditions
+            -- Check additional conditions (not implemented for all triggers)
             local shouldFire = WandTriggers.checkEventCondition(registration, eventData)
 
             if shouldFire and registration.executor then
                 log_debug("WandTriggers: Event trigger fired", eventType, "for wand", wandId)
-                registration.executor(wandId, eventType)
+                -- Queue execution so we run outside physics callbacks (Chipmunk spaces are locked there)
+                WandTriggers.queueEvent(wandId, eventType, eventData)
             end
         end
     end
@@ -293,6 +299,34 @@ function WandTriggers.checkEventCondition(registration, eventData)
     return true
 end
 
+--- Queues a trigger execution to run on the next update tick
+--- This avoids spawning physics objects while Chipmunk space is locked (collision callbacks).
+--- @param wandId string
+--- @param eventType string
+--- @param eventData table|nil
+function WandTriggers.queueEvent(wandId, eventType, eventData)
+    WandTriggers.pendingEvents[#WandTriggers.pendingEvents + 1] = {
+        wandId = wandId,
+        eventType = eventType,
+        eventData = eventData,
+    }
+end
+
+--- Processes queued event triggers
+function WandTriggers.processPendingEvents()
+    if #WandTriggers.pendingEvents == 0 then return end
+
+    local queued = WandTriggers.pendingEvents
+    WandTriggers.pendingEvents = {}
+
+    for _, evt in ipairs(queued) do
+        local registration = WandTriggers.registrations[evt.wandId]
+        if registration and registration.enabled and registration.executor then
+            registration.executor(evt.wandId, evt.eventType, evt.eventData)
+        end
+    end
+end
+
 --[[
 ================================================================================
 UPDATE LOOP
@@ -303,6 +337,9 @@ UPDATE LOOP
 --- @param dt number Delta time in seconds
 --- @param playerEntity number Player entity ID (for distance tracking)
 function WandTriggers.update(dt, playerEntity)
+    -- Run any event triggers that were queued during physics callbacks
+    WandTriggers.processPendingEvents()
+
     -- Update distance-traveled triggers
     WandTriggers.updateDistanceTriggers(playerEntity)
 end

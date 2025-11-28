@@ -62,7 +62,18 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - intermittent flicker when projectiles are wiped? not sure why.
     
 # programming side
--
+- tween bg shader values differently when enterign different states for visual effect, preserve teh original preset for action phase.
+- cast execution graph needs debuggin. the card visulalization as well.
+- make a ui box that contains a row for every cast block.
+    - For now, use "M" with red box for modifiers applied to that block.
+    - Use nested horizontal row boxes for nested blocks.
+    - Use ">" in green background to show sequence of actions in cast blocks.
+    - If an action spawns a nested block, show action first, arrow, then the nested block in a horizontal row that is nested, as I requsted.
+- Also make the discovery thing work in planning phase? not sure how much info to show
+- Start rudimentary version of action phase indicator (show small blocks for each wand that activates, jiggle the ones that activate, show discovery & tag combos?)
+- Show damage numbers that fade out.
+
+
 - refer to balatro_analysis folder for design elements.
 
 - cast combo ui: just show cast feed ui in both action and planning state.

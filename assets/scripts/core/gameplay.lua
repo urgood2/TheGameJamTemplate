@@ -9,15 +9,19 @@ local CombatSystem = require("combat.combat_system")
 require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
+local WandTriggers = require("wand.wand_triggers")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 require("ui.ui_definition_helper")
 local dsl = require("ui.ui_syntax_sugar")
+local CastExecutionGraphUI = require("ui.cast_execution_graph_ui")
+local CastBlockFlashUI = require("ui.cast_block_flash_ui")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
+local BaseCreateExecutionContext = WandExecutor.createExecutionContext
 
 
 
@@ -1785,6 +1789,11 @@ function setUpLogicTimers()
         CombatSystem.Game.Effects.deal_damage { weapon = true, scale_pct = 100 } (combat_context, enemyCombatTable,
             playerCombatTable)
 
+        WandTriggers.handleEvent("on_bump_enemy", {
+            player = survivorEntity,
+            enemy = enemyEntityID
+        })
+
         -- pull player hp spring
         if hpBarScaleSpringEntity and entity_cache.valid(hpBarScaleSpringEntity) then
             local hpBarSpringRef = spring.get(registry, hpBarScaleSpringEntity)
@@ -1826,11 +1835,20 @@ function setUpLogicTimers()
                                     function()
                                         -- bail if current action board has no cards
                                         local currentSet = board_sets[current_board_set_index]
-                                        if not currentSet then return end
+                                        if not currentSet then
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
                                         local actionBoardID = currentSet.action_board_id
-                                        if not actionBoardID or actionBoardID == entt_null or not entity_cache.valid(actionBoardID) then return end
+                                        if not actionBoardID or actionBoardID == entt_null or not entity_cache.valid(actionBoardID) then
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
                                         local actionBoard = boards[actionBoardID]
-                                        if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return end
+                                        if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
 
                                         local triggerBoardScript = getScriptTableFromEntityID(currentSet
                                             .trigger_board_id)
@@ -1855,6 +1873,14 @@ function setUpLogicTimers()
 
                                         local simulatedResult = WandEngine.simulate_wand(currentSet.wandDef, deck)
 
+                                        if simulatedResult and simulatedResult.blocks then
+                                            CastExecutionGraphUI.render(simulatedResult.blocks,
+                                                { wandId = currentSet.wandDef.id, title = "Execution Preview" })
+                                        else
+                                            CastExecutionGraphUI.clear()
+                                            return
+                                        end
+
                                         local pitchToUse = 0.7
                                         local castSequenceID = tostring(actionBoardID) ..
                                             "_" .. tostring(os.clock()) .. "_" .. tostring(math.random(1000000))
@@ -1862,6 +1888,7 @@ function setUpLogicTimers()
                                         -- inspect the cast blocks. for each block, pulse the corresponding cards.
                                         for blockIdx, castBlock in ipairs(simulatedResult.blocks) do
                                             log_debug(" - cast block", blockIdx, "type:", castBlock.type)
+                                            
 
                                             -- Use card_delays for precise timing
                                             for cardIdx, delayInfo in ipairs(castBlock.card_delays) do
@@ -2264,15 +2291,18 @@ function initPlanningPhase()
     local CastFeedUI = require "ui.cast_feed_ui"
     CastFeedUI.init()
     
-    -- set up timer to render tooltips
-        -- Hook into update loop (this is a bit hacky, ideally we'd have a proper update hook)
-    -- We'll use a timer that runs every frame
     timer.run(function()
-        -- if is_state_active(ACTION_STATE) then
-            local dt = GetFrameTime()
+        local dt = GetFrameTime()
+
+        if CastFeedUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
             CastFeedUI.update(dt)
             CastFeedUI.draw()
-        -- end
+        end
+
+        if CastBlockFlashUI and CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
+            CastBlockFlashUI.update(dt)
+            CastBlockFlashUI.draw()
+        end
     end)
 
     -- let's bind d-pad input to switch between cards, and A to select.
@@ -3082,6 +3112,7 @@ function initCombatSystem()
             if not is_state_active(ACTION_STATE) then return end
 
             local frameDt = GetFrameTime()
+            WandExecutor.update(frameDt)
             ctx.time:tick(frameDt)
             if playerDashCooldownRemaining > 0 then
                 playerDashCooldownRemaining = math.max(playerDashCooldownRemaining - frameDt, 0)
@@ -3424,9 +3455,398 @@ function cycleBoardSets(amount)
     activate_state(WAND_TOOLTIP_STATE)
 end
 
+local virtualCardCounter = 0
+
+local function makeVirtualCardFromTemplate(template)
+    if not template then return nil end
+    virtualCardCounter = virtualCardCounter + 1
+    local card = util.deep_copy(template)
+    card.card_id = template.id or template.card_id
+    card.type = template.type
+    card._virtual_handle = "virtual_card_" .. tostring(virtualCardCounter)
+    card.handle = function(self) return self._virtual_handle end
+    return card
+end
+
+local function collectCardPoolForBoardSet(boardSet)
+    if not boardSet then return nil end
+    local actionBoard = boards[boardSet.action_board_id]
+    if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return nil end
+
+    local pool = {}
+
+    local function pushCard(cardScript)
+        if not cardScript then return end
+        if cardScript.cardStack and #cardScript.cardStack > 0 then
+            for _, modEid in ipairs(cardScript.cardStack) do
+                if modEid and entity_cache.valid(modEid) then
+                    local modScript = getScriptTableFromEntityID(modEid)
+                    if modScript then
+                        table.insert(pool, modScript)
+                    end
+                end
+            end
+        end
+        table.insert(pool, cardScript)
+    end
+
+    for _, cardEid in ipairs(actionBoard.cards) do
+        if cardEid and entity_cache.valid(cardEid) then
+            pushCard(getScriptTableFromEntityID(cardEid))
+        end
+    end
+
+    if boardSet.wandDef and boardSet.wandDef.always_cast_cards then
+        for _, alwaysId in ipairs(boardSet.wandDef.always_cast_cards) do
+            local template = WandEngine.card_defs[alwaysId]
+            local virtualCard = makeVirtualCardFromTemplate(template)
+            if virtualCard then
+                table.insert(pool, virtualCard)
+            end
+        end
+    end
+
+    return pool
+end
+
+local DEFAULT_TRIGGER_INTERVAL = 1.0
+
+local function buildTriggerDefForBoardSet(boardSet)
+    if not boardSet then return nil end
+    local triggerBoard = boards[boardSet.trigger_board_id]
+    if not triggerBoard or not triggerBoard.cards or #triggerBoard.cards == 0 then return nil end
+
+    local triggerCard = getScriptTableFromEntityID(triggerBoard.cards[1])
+    if not triggerCard then return nil end
+
+    -- Trigger defs are keyed by template name (e.g., TEST_TRIGGER_*), so scan values by their .id
+    local triggerTemplate
+    local triggerId = triggerCard.card_id or triggerCard.cardID
+    if triggerId then
+        for _, template in pairs(WandEngine.trigger_card_defs) do
+            if template.id == triggerId then
+                triggerTemplate = template
+                break
+            end
+        end
+    end
+
+    local triggerDef = triggerTemplate and util.deep_copy(triggerTemplate)
+        or { id = triggerId or triggerCard.cardID, type = "trigger" }
+
+    triggerDef.id = triggerDef.id or triggerCard.cardID
+    triggerDef.type = triggerDef.type or "trigger"
+
+    if triggerDef.id == "every_N_seconds" then
+        triggerDef.interval = triggerDef.interval or triggerCard.interval or DEFAULT_TRIGGER_INTERVAL
+    elseif triggerDef.id == "on_distance_traveled" then
+        triggerDef.distance = triggerDef.distance or triggerCard.distance
+    end
+
+    return triggerDef
+end
+
+local function loadWandsIntoExecutorFromBoards()
+    WandExecutor.cleanup()
+    WandExecutor.init()
+    virtualCardCounter = 0
+
+    WandExecutor.getPlayerEntity = function()
+        return survivorEntity
+    end
+
+    WandExecutor.createExecutionContext = function(wandId, state, activeWand)
+        local ctx = BaseCreateExecutionContext(wandId, state, activeWand)
+        local playerScript = survivorEntity and getScriptTableFromEntityID(survivorEntity)
+        if playerScript and playerScript.combatTable and playerScript.combatTable.stats then
+            ctx.playerStats = playerScript.combatTable.stats
+        end
+        return ctx
+    end
+
+    for index, boardSet in ipairs(board_sets) do
+        local cardPool = collectCardPoolForBoardSet(boardSet)
+        local triggerDef = buildTriggerDefForBoardSet(boardSet)
+
+        if boardSet.wandDef and cardPool and #cardPool > 0 and triggerDef then
+            local wandDefCopy = util.deep_copy(boardSet.wandDef)
+            WandExecutor.loadWand(wandDefCopy, cardPool, triggerDef)
+        else
+            log_debug(string.format("Skipping wand load for set %d (cards: %s, trigger: %s)", index,
+                cardPool and #cardPool or 0, triggerDef and triggerDef.id or "none"))
+        end
+    end
+end
+
 local function playStateTransition()
     transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
         { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
+end
+
+-- Phase-specific peaches background settings (action uses the default values defined in shader_uniforms).
+local peaches_background_defaults = nil
+local peaches_background_targets = {
+    planning = {
+        blob_count = 4.4,
+        blob_spacing = -1.2,
+        shape_amplitude = 0.14,
+        distortion_strength = 2.5,
+        noise_strength = 0.08,
+        radial_falloff = 0.12,
+        wave_strength = 1.1,
+        highlight_gain = 2.6,
+        cl_shift = -0.04,
+        edge_softness_min = 0.45,
+        edge_softness_max = 0.86,
+        colorTint = { x = 0.22, y = 0.55, z = 0.78 },
+        blob_color_blend = 0.55,
+        hue_shift = 0.45,
+        pixel_size = 5.0,
+        pixel_enable = 1.0,
+        blob_offset = { x = -0.05, y = -0.05 },
+        movement_randomness = 7.5
+    },
+    shop = {
+        blob_count = 6.8,
+        blob_spacing = -0.4,
+        shape_amplitude = 0.32,
+        distortion_strength = 5.0,
+        noise_strength = 0.22,
+        radial_falloff = -0.15,
+        wave_strength = 2.3,
+        highlight_gain = 4.6,
+        cl_shift = 0.18,
+        edge_softness_min = 0.24,
+        edge_softness_max = 0.55,
+        colorTint = { x = 0.82, y = 0.50, z = 0.28 },
+        blob_color_blend = 0.78,
+        hue_shift = 0.05,
+        pixel_size = 7.0,
+        pixel_enable = 1.0,
+        blob_offset = { x = 0.08, y = -0.14 },
+        movement_randomness = 12.0
+    }
+}
+
+local function make_vec2(x, y)
+    if _G.Vector2 then
+        return _G.Vector2(x, y)
+    end
+    return { x = x, y = y }
+end
+
+local function make_vec3(x, y, z)
+    if _G.Vector3 then
+        return _G.Vector3(x, y, z)
+    end
+    return { x = x, y = y, z = z }
+end
+
+local function copy_vec2(v)
+    if not v then return { x = 0, y = 0 } end
+    return { x = v.x or v[1] or 0, y = v.y or v[2] or 0 }
+end
+
+local function copy_vec3(v)
+    if not v then return { x = 0, y = 0, z = 0 } end
+    return { x = v.x or v[1] or 0, y = v.y or v[2] or 0, z = v.z or v[3] or 0 }
+end
+
+local function ensure_peaches_defaults()
+    if peaches_background_defaults or not globalShaderUniforms then
+        return peaches_background_defaults ~= nil
+    end
+
+    peaches_background_defaults = {
+        blob_count = globalShaderUniforms:get("peaches_background", "blob_count") or 0.0,
+        blob_spacing = globalShaderUniforms:get("peaches_background", "blob_spacing") or 0.0,
+        shape_amplitude = globalShaderUniforms:get("peaches_background", "shape_amplitude") or 0.0,
+        distortion_strength = globalShaderUniforms:get("peaches_background", "distortion_strength") or 0.0,
+        noise_strength = globalShaderUniforms:get("peaches_background", "noise_strength") or 0.0,
+        radial_falloff = globalShaderUniforms:get("peaches_background", "radial_falloff") or 0.0,
+        wave_strength = globalShaderUniforms:get("peaches_background", "wave_strength") or 0.0,
+        highlight_gain = globalShaderUniforms:get("peaches_background", "highlight_gain") or 0.0,
+        cl_shift = globalShaderUniforms:get("peaches_background", "cl_shift") or 0.0,
+        edge_softness_min = globalShaderUniforms:get("peaches_background", "edge_softness_min") or 0.0,
+        edge_softness_max = globalShaderUniforms:get("peaches_background", "edge_softness_max") or 0.0,
+        colorTint = copy_vec3(globalShaderUniforms:get("peaches_background", "colorTint")),
+        blob_color_blend = globalShaderUniforms:get("peaches_background", "blob_color_blend") or 0.0,
+        hue_shift = globalShaderUniforms:get("peaches_background", "hue_shift") or 0.0,
+        pixel_size = globalShaderUniforms:get("peaches_background", "pixel_size") or 0.0,
+        pixel_enable = globalShaderUniforms:get("peaches_background", "pixel_enable") or 0.0,
+        blob_offset = copy_vec2(globalShaderUniforms:get("peaches_background", "blob_offset")),
+        movement_randomness = globalShaderUniforms:get("peaches_background", "movement_randomness") or 0.0
+    }
+
+    peaches_background_targets.action = {
+        blob_count = peaches_background_defaults.blob_count,
+        blob_spacing = peaches_background_defaults.blob_spacing,
+        shape_amplitude = peaches_background_defaults.shape_amplitude,
+        distortion_strength = peaches_background_defaults.distortion_strength,
+        noise_strength = peaches_background_defaults.noise_strength,
+        radial_falloff = peaches_background_defaults.radial_falloff,
+        wave_strength = peaches_background_defaults.wave_strength,
+        highlight_gain = peaches_background_defaults.highlight_gain,
+        cl_shift = peaches_background_defaults.cl_shift,
+        edge_softness_min = peaches_background_defaults.edge_softness_min,
+        edge_softness_max = peaches_background_defaults.edge_softness_max,
+        colorTint = copy_vec3(peaches_background_defaults.colorTint),
+        blob_color_blend = peaches_background_defaults.blob_color_blend,
+        hue_shift = peaches_background_defaults.hue_shift,
+        pixel_size = peaches_background_defaults.pixel_size,
+        pixel_enable = peaches_background_defaults.pixel_enable,
+        blob_offset = copy_vec2(peaches_background_defaults.blob_offset),
+        movement_randomness = peaches_background_defaults.movement_randomness
+    }
+
+    return true
+end
+
+local function tween_peaches_scalar(name, target, duration, tag_suffix)
+    if target == nil then return end
+    timer.tween_scalar(
+        duration,
+        function() return globalShaderUniforms:get("peaches_background", name) end,
+        function(v) globalShaderUniforms:set("peaches_background", name, v) end,
+        target,
+        Easing.inOutQuad.f,
+        nil,
+        "peaches_bg_" .. name .. (tag_suffix or "")
+    )
+end
+
+local function tween_peaches_vec2(name, target, duration, tag_suffix)
+    if not target then return end
+    local baseTag = "peaches_bg_" .. name .. (tag_suffix or "")
+
+    timer.tween_scalar(
+        duration,
+        function()
+            local current = globalShaderUniforms:get("peaches_background", name)
+            return current and current.x or 0
+        end,
+        function(v)
+            local current = globalShaderUniforms:get("peaches_background", name)
+            local y = (current and current.y) or target.y or 0
+            globalShaderUniforms:set("peaches_background", name, make_vec2(v, y))
+        end,
+        target.x,
+        Easing.inOutQuad.f,
+        nil,
+        baseTag .. "_x"
+    )
+
+    timer.tween_scalar(
+        duration,
+        function()
+            local current = globalShaderUniforms:get("peaches_background", name)
+            return current and current.y or 0
+        end,
+        function(v)
+            local current = globalShaderUniforms:get("peaches_background", name)
+            local x = (current and current.x) or target.x or 0
+            globalShaderUniforms:set("peaches_background", name, make_vec2(x, v))
+        end,
+        target.y,
+        Easing.inOutQuad.f,
+        nil,
+        baseTag .. "_y"
+    )
+end
+
+local function tween_peaches_vec3(name, target, duration, tag_suffix)
+    if not target then return end
+    local baseTag = "peaches_bg_" .. name .. (tag_suffix or "")
+
+    timer.tween_scalar(
+        duration,
+        function()
+            local current = globalShaderUniforms:get("peaches_background", name)
+            return current and current.x or 0
+        end,
+        function(v)
+            local current = globalShaderUniforms:get("peaches_background", name)
+            local y = (current and current.y) or target.y or 0
+            local z = (current and current.z) or target.z or 0
+            globalShaderUniforms:set("peaches_background", name, make_vec3(v, y, z))
+        end,
+        target.x,
+        Easing.inOutQuad.f,
+        nil,
+        baseTag .. "_x"
+    )
+
+    timer.tween_scalar(
+        duration,
+        function()
+            local current = globalShaderUniforms:get("peaches_background", name)
+            return current and current.y or 0
+        end,
+        function(v)
+            local current = globalShaderUniforms:get("peaches_background", name)
+            local x = (current and current.x) or target.x or 0
+            local z = (current and current.z) or target.z or 0
+            globalShaderUniforms:set("peaches_background", name, make_vec3(x, v, z))
+        end,
+        target.y,
+        Easing.inOutQuad.f,
+        nil,
+        baseTag .. "_y"
+    )
+
+    timer.tween_scalar(
+        duration,
+        function()
+            local current = globalShaderUniforms:get("peaches_background", name)
+            return current and current.z or 0
+        end,
+        function(v)
+            local current = globalShaderUniforms:get("peaches_background", name)
+            local x = (current and current.x) or target.x or 0
+            local y = (current and current.y) or target.y or 0
+            globalShaderUniforms:set("peaches_background", name, make_vec3(x, y, v))
+        end,
+        target.z,
+        Easing.inOutQuad.f,
+        nil,
+        baseTag .. "_z"
+    )
+end
+
+local function tween_peaches_background(targets, duration)
+    if not targets or not ensure_peaches_defaults() then
+        return
+    end
+
+    local dur = duration or 1.0
+    tween_peaches_scalar("blob_count", targets.blob_count, dur)
+    tween_peaches_scalar("blob_spacing", targets.blob_spacing, dur)
+    tween_peaches_scalar("shape_amplitude", targets.shape_amplitude, dur)
+    tween_peaches_scalar("distortion_strength", targets.distortion_strength, dur)
+    tween_peaches_scalar("noise_strength", targets.noise_strength, dur)
+    tween_peaches_scalar("radial_falloff", targets.radial_falloff, dur)
+    tween_peaches_scalar("wave_strength", targets.wave_strength, dur)
+    tween_peaches_scalar("highlight_gain", targets.highlight_gain, dur)
+    tween_peaches_scalar("cl_shift", targets.cl_shift, dur)
+    tween_peaches_scalar("edge_softness_min", targets.edge_softness_min, dur)
+    tween_peaches_scalar("edge_softness_max", targets.edge_softness_max, dur)
+    tween_peaches_vec3("colorTint", targets.colorTint, dur)
+    tween_peaches_scalar("blob_color_blend", targets.blob_color_blend, dur)
+    tween_peaches_scalar("hue_shift", targets.hue_shift, dur)
+    tween_peaches_scalar("pixel_size", targets.pixel_size, dur)
+    tween_peaches_scalar("pixel_enable", targets.pixel_enable, dur)
+    tween_peaches_vec2("blob_offset", targets.blob_offset, dur)
+    tween_peaches_scalar("movement_randomness", targets.movement_randomness, dur)
+end
+
+local function apply_peaches_background_phase(phase)
+    if not globalShaderUniforms then
+        return
+    end
+    if not ensure_peaches_defaults() then
+        return
+    end
+    tween_peaches_background(peaches_background_targets[phase], 1.0)
 end
 
 function startActionPhase()
@@ -3455,7 +3875,11 @@ function startActionPhase()
 
     PhysicsManager.enable_step("world", true)
 
+    loadWandsIntoExecutorFromBoards()
+    CastBlockFlashUI.init()
+
     playStateTransition()
+    apply_peaches_background_phase("action")
 
     if record_telemetry then
         record_telemetry("phase_enter", { phase = "action", session_id = telemetry_session_id() })
@@ -3474,7 +3898,9 @@ end
 
 function startPlanningPhase()
     clear_states() -- disable all states.
+    WandExecutor.cleanup()
     entity_cache.clear()
+    CastBlockFlashUI.clear()
 
     if record_telemetry then
         local now = os.clock()
@@ -3512,6 +3938,7 @@ function startPlanningPhase()
     end
 
     playStateTransition()
+    apply_peaches_background_phase("planning")
 
     if record_telemetry then
         record_telemetry("phase_enter", { phase = "planning", session_id = telemetry_session_id() })
@@ -3525,6 +3952,7 @@ end
 
 function startShopPhase()
     clear_states() -- disable all states.
+    WandExecutor.cleanup()
 
     if record_telemetry then
         local now = os.clock()
@@ -3559,6 +3987,7 @@ function startShopPhase()
     end
 
     playStateTransition()
+    apply_peaches_background_phase("shop")
 
     if record_telemetry then
         record_telemetry("phase_enter", { phase = "shop", session_id = telemetry_session_id() })
@@ -4089,7 +4518,7 @@ function initSurvivorEntity()
                     local itemScript = getScriptTableFromEntityID(itemEntity)
                     if itemScript and itemScript.isPickup and not itemScript.pickedUp then
                         -- enable steering towards player
-                        steering.make_steerable(registry, itemEntity, 3000.0, 30000.0, math.pi * 2.0, 10)
+                        steering.make_steerable(registry, itemEntity, 3000.0, 8000.0, math.pi * 2.0, 10)
 
 
                         -- add a timer to move towards player
@@ -4104,7 +4533,7 @@ function initSurvivorEntity()
                                         {
                                             x = playerT.actualX + playerT.actualW / 2,
                                             y = playerT.actualY + playerT.actualH / 2
-                                        }, 1.0, 20)
+                                        }, 1.0, 10)
                                 else
                                     -- cancel timer, entity no longer valid
                                     timer.cancel("player_magnet_steering_" .. tostring(itemEntity))
@@ -4336,6 +4765,7 @@ function initActionPhase()
                 width = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT,
                 height = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
             }
+            cam:SetBoundsPadding(10) -- small screen-space slack so camera can float while keeping arena visible
         end
     -- end
 
@@ -4556,6 +4986,7 @@ function initActionPhase()
                 playerIsDashing = true
                 playerDashCooldownRemaining = DASH_COOLDOWN_SECONDS
                 playerStaminaTickerTimer = DASH_COOLDOWN_SECONDS + STAMINA_TICKER_LINGER
+                WandTriggers.handleEvent("on_dash", { player = survivorEntity })
 
                 local DASH_LENGTH_SEC = 0.5
 
@@ -4965,9 +5396,13 @@ function initActionPhase()
                 if t then
                     targetX = t.actualX + t.actualW / 2
                     targetY = t.actualY + t.actualH / 2
-                    -- camera_smooth_pan_to("world_camera", targetX, targetY, { tag = "interval"}) -- pan to the target smoothly
-
-                    cam:SetActualTarget(targetX, targetY)
+                    -- Gently steer toward the player instead of hard locking.
+                    local current = cam:GetActualTarget()
+                    local lerp = 0.045 -- smaller = slower camera drift
+                    cam:SetActualTarget(
+                        current.x + (targetX - current.x) * lerp,
+                        current.y + (targetY - current.y) * lerp
+                    )
                 end
             else
                 -- local cam = camera.Get("world_camera")

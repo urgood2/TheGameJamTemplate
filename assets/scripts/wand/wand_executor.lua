@@ -38,6 +38,7 @@ local SpellTypeEvaluator = require("wand.spell_type_evaluator")
 local JokerSystem = require("wand.joker_system")
 
 local graphUI = nil
+local blockFlashUI = nil
 
 local function maybeRenderExecutionGraph(blocks, wandId)
     if graphUI == false then return end
@@ -56,6 +57,36 @@ local function maybeRenderExecutionGraph(blocks, wandId)
 
     if graphUI and graphUI.render then
         graphUI.render(blocks, { wandId = wandId, title = "Last Cast" })
+    end
+end
+
+local function maybeFlashBlock(block, context)
+    if blockFlashUI == false then return end
+    if not block or not block.cards or #block.cards == 0 then return end
+
+    -- Only show during action phase if state helpers are available
+    if is_state_active and ACTION_STATE and not is_state_active(ACTION_STATE) then
+        return
+    end
+
+    -- Bail early if UI systems are unavailable (e.g., headless tests)
+    if not (registry and spring and command_buffer and layers and layer and globals) then
+        return
+    end
+
+    if not blockFlashUI then
+        local ok, mod = pcall(require, "ui.cast_block_flash_ui")
+        if not ok then
+            blockFlashUI = false
+            print("[WandExecutor] Cast block flash UI unavailable: " .. tostring(mod))
+            return
+        end
+        blockFlashUI = mod
+    end
+
+    if blockFlashUI and blockFlashUI.pushBlock then
+        local wandId = (context and context.wandDefinition and context.wandDefinition.id) or (context and context.wandId)
+        blockFlashUI.pushBlock(block, { wandId = wandId, deck = context and context.cardPool })
     end
 end
 
@@ -570,6 +601,8 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
             blockIndex, deficit, overloadRatio, cooldownMultiplier, blockCastDelay))
     end
 
+    maybeFlashBlock(block, context)
+
     return true, blockCastDelay
 end
 
@@ -674,6 +707,7 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
         wandId = wandId,
         wandState = state,
         wandDefinition = activeWand.definition,
+        cardPool = activeWand.cardPool,
 
         playerEntity = playerEntity,
         playerScript = playerScript,

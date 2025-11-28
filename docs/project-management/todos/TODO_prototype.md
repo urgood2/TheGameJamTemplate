@@ -62,6 +62,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - intermittent flicker when projectiles are wiped? not sure why.
     
 # programming side
+- tween bg shader values differently when enterign different states for visual effect, preserve teh original preset for action phase.
+- cast execution graph needs debuggin. the card visulalization as well.
 - make a ui box that contains a row for every cast block.
     - For now, use "M" with red box for modifiers applied to that block.
     - Use nested horizontal row boxes for nested blocks.

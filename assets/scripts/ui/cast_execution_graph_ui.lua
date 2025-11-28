@@ -15,7 +15,17 @@ local dsl = require("ui.ui_syntax_sugar")
 local z_ok, z_orders = pcall(require, "core.z_orders")
 if not z_ok then z_orders = { ui_tooltips = 0 } end
 
-local DEFAULT_POS = { x = 32, y = 64 }
+local function defaultPosition()
+    local h = nil
+    if globals then
+        if globals.screenHeight then h = globals.screenHeight() end
+        if not h and globals.getScreenHeight then h = globals.getScreenHeight() end
+    end
+    local y = h and (h - 200) or 540
+    return { x = 32, y = y }
+end
+
+local DEFAULT_POS = defaultPosition()
 local MAX_DEPTH = 6
 
 CastExecutionGraphUI.position = { x = DEFAULT_POS.x, y = DEFAULT_POS.y }
@@ -331,8 +341,16 @@ function CastExecutionGraphUI.clear()
     destroyBox()
 end
 
+local function planningActive()
+    return PLANNING_STATE and is_state_active and is_state_active(PLANNING_STATE)
+end
+
 function CastExecutionGraphUI.render(blocks, opts)
     if not ui or not ui.box or not registry then return nil end
+    if not planningActive() then
+        CastExecutionGraphUI.clear()
+        return nil
+    end
     if not blocks or #blocks == 0 then
         CastExecutionGraphUI.clear()
         return nil
@@ -361,7 +379,6 @@ function CastExecutionGraphUI.render(blocks, opts)
 
     if ui.box.AssignStateTagsToUIBox then
         if PLANNING_STATE then ui.box.AssignStateTagsToUIBox(CastExecutionGraphUI.currentBox, PLANNING_STATE) end
-        if ACTION_STATE then ui.box.AssignStateTagsToUIBox(CastExecutionGraphUI.currentBox, ACTION_STATE) end
     end
 
     if layer_order_system and layer_order_system.assignZIndexToEntity then

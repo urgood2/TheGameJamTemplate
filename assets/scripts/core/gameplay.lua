@@ -9,6 +9,7 @@ local CombatSystem = require("combat.combat_system")
 require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
+local WandTriggers = require("wand.wand_triggers")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
@@ -18,6 +19,7 @@ local dsl = require("ui.ui_syntax_sugar")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
+local BaseCreateExecutionContext = WandExecutor.createExecutionContext
 
 
 
@@ -1785,6 +1787,11 @@ function setUpLogicTimers()
         CombatSystem.Game.Effects.deal_damage { weapon = true, scale_pct = 100 } (combat_context, enemyCombatTable,
             playerCombatTable)
 
+        WandTriggers.handleEvent("on_bump_enemy", {
+            player = survivorEntity,
+            enemy = enemyEntityID
+        })
+
         -- pull player hp spring
         if hpBarScaleSpringEntity and entity_cache.valid(hpBarScaleSpringEntity) then
             local hpBarSpringRef = spring.get(registry, hpBarScaleSpringEntity)
@@ -1862,6 +1869,7 @@ function setUpLogicTimers()
                                         -- inspect the cast blocks. for each block, pulse the corresponding cards.
                                         for blockIdx, castBlock in ipairs(simulatedResult.blocks) do
                                             log_debug(" - cast block", blockIdx, "type:", castBlock.type)
+                                            
 
                                             -- Use card_delays for precise timing
                                             for cardIdx, delayInfo in ipairs(castBlock.card_delays) do
@@ -3079,6 +3087,7 @@ function initCombatSystem()
             if not is_state_active(ACTION_STATE) then return end
 
             local frameDt = GetFrameTime()
+            WandExecutor.update(frameDt)
             ctx.time:tick(frameDt)
             if playerDashCooldownRemaining > 0 then
                 playerDashCooldownRemaining = math.max(playerDashCooldownRemaining - frameDt, 0)
@@ -3421,6 +3430,129 @@ function cycleBoardSets(amount)
     activate_state(WAND_TOOLTIP_STATE)
 end
 
+local virtualCardCounter = 0
+
+local function makeVirtualCardFromTemplate(template)
+    if not template then return nil end
+    virtualCardCounter = virtualCardCounter + 1
+    local card = util.deep_copy(template)
+    card.card_id = template.id or template.card_id
+    card.type = template.type
+    card._virtual_handle = "virtual_card_" .. tostring(virtualCardCounter)
+    card.handle = function(self) return self._virtual_handle end
+    return card
+end
+
+local function collectCardPoolForBoardSet(boardSet)
+    if not boardSet then return nil end
+    local actionBoard = boards[boardSet.action_board_id]
+    if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return nil end
+
+    local pool = {}
+
+    local function pushCard(cardScript)
+        if not cardScript then return end
+        if cardScript.cardStack and #cardScript.cardStack > 0 then
+            for _, modEid in ipairs(cardScript.cardStack) do
+                if modEid and entity_cache.valid(modEid) then
+                    local modScript = getScriptTableFromEntityID(modEid)
+                    if modScript then
+                        table.insert(pool, modScript)
+                    end
+                end
+            end
+        end
+        table.insert(pool, cardScript)
+    end
+
+    for _, cardEid in ipairs(actionBoard.cards) do
+        if cardEid and entity_cache.valid(cardEid) then
+            pushCard(getScriptTableFromEntityID(cardEid))
+        end
+    end
+
+    if boardSet.wandDef and boardSet.wandDef.always_cast_cards then
+        for _, alwaysId in ipairs(boardSet.wandDef.always_cast_cards) do
+            local template = WandEngine.card_defs[alwaysId]
+            local virtualCard = makeVirtualCardFromTemplate(template)
+            if virtualCard then
+                table.insert(pool, virtualCard)
+            end
+        end
+    end
+
+    return pool
+end
+
+local DEFAULT_TRIGGER_INTERVAL = 1.0
+
+local function buildTriggerDefForBoardSet(boardSet)
+    if not boardSet then return nil end
+    local triggerBoard = boards[boardSet.trigger_board_id]
+    if not triggerBoard or not triggerBoard.cards or #triggerBoard.cards == 0 then return nil end
+
+    local triggerCard = getScriptTableFromEntityID(triggerBoard.cards[1])
+    if not triggerCard then return nil end
+
+    -- Trigger defs are keyed by template name (e.g., TEST_TRIGGER_*), so scan values by their .id
+    local triggerTemplate
+    local triggerId = triggerCard.card_id or triggerCard.cardID
+    if triggerId then
+        for _, template in pairs(WandEngine.trigger_card_defs) do
+            if template.id == triggerId then
+                triggerTemplate = template
+                break
+            end
+        end
+    end
+
+    local triggerDef = triggerTemplate and util.deep_copy(triggerTemplate)
+        or { id = triggerId or triggerCard.cardID, type = "trigger" }
+
+    triggerDef.id = triggerDef.id or triggerCard.cardID
+    triggerDef.type = triggerDef.type or "trigger"
+
+    if triggerDef.id == "every_N_seconds" then
+        triggerDef.interval = triggerDef.interval or triggerCard.interval or DEFAULT_TRIGGER_INTERVAL
+    elseif triggerDef.id == "on_distance_traveled" then
+        triggerDef.distance = triggerDef.distance or triggerCard.distance
+    end
+
+    return triggerDef
+end
+
+local function loadWandsIntoExecutorFromBoards()
+    WandExecutor.cleanup()
+    WandExecutor.init()
+    virtualCardCounter = 0
+
+    WandExecutor.getPlayerEntity = function()
+        return survivorEntity
+    end
+
+    WandExecutor.createExecutionContext = function(wandId, state, activeWand)
+        local ctx = BaseCreateExecutionContext(wandId, state, activeWand)
+        local playerScript = survivorEntity and getScriptTableFromEntityID(survivorEntity)
+        if playerScript and playerScript.combatTable and playerScript.combatTable.stats then
+            ctx.playerStats = playerScript.combatTable.stats
+        end
+        return ctx
+    end
+
+    for index, boardSet in ipairs(board_sets) do
+        local cardPool = collectCardPoolForBoardSet(boardSet)
+        local triggerDef = buildTriggerDefForBoardSet(boardSet)
+
+        if boardSet.wandDef and cardPool and #cardPool > 0 and triggerDef then
+            local wandDefCopy = util.deep_copy(boardSet.wandDef)
+            WandExecutor.loadWand(wandDefCopy, cardPool, triggerDef)
+        else
+            log_debug(string.format("Skipping wand load for set %d (cards: %s, trigger: %s)", index,
+                cardPool and #cardPool or 0, triggerDef and triggerDef.id or "none"))
+        end
+    end
+end
+
 local function playStateTransition()
     transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
         { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
@@ -3452,6 +3584,8 @@ function startActionPhase()
 
     PhysicsManager.enable_step("world", true)
 
+    loadWandsIntoExecutorFromBoards()
+
     playStateTransition()
 
     if record_telemetry then
@@ -3471,6 +3605,7 @@ end
 
 function startPlanningPhase()
     clear_states() -- disable all states.
+    WandExecutor.cleanup()
     entity_cache.clear()
 
     if record_telemetry then
@@ -3522,6 +3657,7 @@ end
 
 function startShopPhase()
     clear_states() -- disable all states.
+    WandExecutor.cleanup()
 
     if record_telemetry then
         local now = os.clock()
@@ -4554,6 +4690,7 @@ function initActionPhase()
                 playerIsDashing = true
                 playerDashCooldownRemaining = DASH_COOLDOWN_SECONDS
                 playerStaminaTickerTimer = DASH_COOLDOWN_SECONDS + STAMINA_TICKER_LINGER
+                WandTriggers.handleEvent("on_dash", { player = survivorEntity })
 
                 local DASH_LENGTH_SEC = 0.5
 

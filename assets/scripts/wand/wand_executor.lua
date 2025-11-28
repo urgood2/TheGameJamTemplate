@@ -397,7 +397,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
     local actions = {}
     for _, card in ipairs(block.cards) do
         if card.type == "action" then
-            table.insert(actions, card)
+            table.insert(actions, card) 
         end
     end
 

@@ -347,7 +347,7 @@ local function drawItem(item, index)
     local bgHeight = BACKGROUND_PADDING_Y * 2 + HEADER_FONT_SIZE + HEADER_SPACING + CARD_HEIGHT
 
     local space = layer.DrawCommandSpace.Screen
-    local zBase = (z_orders.ui_tooltips or 0) + 10
+    local zBase = (z_orders.ui_tooltips or 0) + 10 -- single z so sorting keeps the matrix around all draws
 
     command_buffer.queuePushMatrix(layers.ui, function() end, zBase, space)
     command_buffer.queueTranslate(layers.ui, function(c)
@@ -381,7 +381,7 @@ local function drawItem(item, index)
         c.y = -bgHeight * 0.5 + BACKGROUND_PADDING_Y + 1
         c.color = Col(0, 0, 0, math.floor(renderAlpha * 220))
         c.fontSize = HEADER_FONT_SIZE
-    end, zBase + 1, space)
+    end, zBase, space)
     command_buffer.queueDrawText(layers.ui, function(c)
         c.text = item.wandName or "Wand"
         c.font = localization.getFont and localization.getFont() or nil
@@ -389,7 +389,7 @@ local function drawItem(item, index)
         c.y = -bgHeight * 0.5 + BACKGROUND_PADDING_Y
         c.color = wandColor
         c.fontSize = HEADER_FONT_SIZE
-    end, zBase + 1, space)
+    end, zBase, space)
 
     -- Cards row
     local startX = -rowWidth * 0.5
@@ -428,7 +428,7 @@ local function drawItem(item, index)
             c.rx = CARD_RADIUS
             c.ry = CARD_RADIUS
             c.color = usedColor
-        end, zBase + 1, space)
+        end, zBase, space)
 
         -- Text shadow for readability
         command_buffer.queueDrawText(layers.ui, function(c)
@@ -439,7 +439,7 @@ local function drawItem(item, index)
             c.y = cardCenterY - CARD_HEIGHT * 0.5 + (CARD_HEIGHT - CARD_FONT_SIZE) * 0.5 + 1
             c.color = Col(0, 0, 0, 255)
             c.fontSize = CARD_FONT_SIZE
-        end, zBase + 2, space)
+        end, zBase, space)
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = label
             c.font = localization.getFont and localization.getFont() or nil
@@ -448,7 +448,7 @@ local function drawItem(item, index)
             c.y = cardCenterY - CARD_HEIGHT * 0.5 + (CARD_HEIGHT - CARD_FONT_SIZE) * 0.5
             c.color = textColor
             c.fontSize = CARD_FONT_SIZE
-        end, zBase + 3, space)
+        end, zBase, space)
     end
 
     command_buffer.queuePopMatrix(layers.ui, function() end, zBase, space)

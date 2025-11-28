@@ -1,6 +1,7 @@
 // camera_bindings.hpp
 #pragma once
 #include <sol/sol.hpp>
+#include <sol/types.hpp>
 #include "camera_manager.hpp"   // the file you posted
 #include "systems/scripting/binding_recorder.hpp"
 #include "util/error_handling.hpp"
@@ -11,6 +12,15 @@ namespace camera_bindings {
 inline void expose_camera_to_lua(sol::state& lua) {
     auto& rec = BindingRecorder::instance();
     const std::vector<std::string> path = {"camera"};
+
+    auto table_to_rect = [](sol::table t) {
+        Rectangle r{};
+        r.x = t.get_or("x", 0.0f);
+        r.y = t.get_or("y", 0.0f);
+        r.width  = t.get_or("width", t.get_or("w", 0.0f));
+        r.height = t.get_or("height", t.get_or("h", 0.0f));
+        return r;
+    };
 
     // Namespace doc
     rec.add_type("camera").doc =
@@ -66,6 +76,13 @@ lua.new_usertype<GameCamera>("GameCamera",
                       &GameCamera::SetDeadzone,                          // existing (Rectangle / optional<Rectangle>)
                       [](GameCamera& self, float x, float y, float w, float h){ // new numbers
                           self.SetDeadzone(Rectangle{x, y, w, h});
+                      },
+                      [table_to_rect](GameCamera& self, sol::table t){   // Lua table
+                          self.SetDeadzone(table_to_rect(t));
+                      },
+                      [](GameCamera& self, sol::lua_nil_t){                  // disable
+                          self.useDeadzone = false;
+                          self.deadzone = Rectangle{0, 0, 0, 0};
                       }
                   ),
     "SetFollowStyle", &GameCamera::SetFollowStyle,
@@ -136,6 +153,13 @@ lua.new_usertype<GameCamera>("GameCamera",
                      &GameCamera::SetBounds,                             // existing (Rectangle / optional<Rectangle>)
                      [](GameCamera& self, float x, float y, float w, float h){ // new numbers
                          self.SetBounds(Rectangle{x, y, w, h});
+                     },
+                     [table_to_rect](GameCamera& self, sol::table t){    // Lua table
+                         self.SetBounds(table_to_rect(t));
+                     },
+                     [](GameCamera& self, sol::lua_nil_t){                   // disable
+                         self.useBounds = false;
+                         self.bounds = Rectangle{0, 0, 0, 0};
                      }
                  ),
             

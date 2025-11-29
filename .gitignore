@@ -72,6 +72,8 @@ compile_commands.json
 *apk*
 android.*
 
+/build-emc2/
+build-emc2/
 crash_reports/
 build-tests/
 build-test/

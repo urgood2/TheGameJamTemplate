@@ -119,6 +119,9 @@ function WandModifiers.createAggregate()
 
         -- Total mana cost of modifiers
         manaCost = 0,
+
+        -- Cost scaling from player stats
+        manaCostMultiplier = 1.0,
     }
 end
 
@@ -313,8 +316,14 @@ function WandModifiers.mergePlayerStats(agg, playerStats)
     snapshot.cast_speed = playerStats:get("cast_speed")
     snapshot.attack_speed = playerStats:get("attack_speed")
 
+    -- Cooldown Reduction / Cast Speed tracking
+    snapshot.cooldown_reduction = playerStats:get("cooldown_reduction")
+
     -- Resource modifiers
     snapshot.skill_energy_cost_reduction = playerStats:get("skill_energy_cost_reduction")
+
+    -- Crit modifiers (optional, depends on stat schema)
+    -- snapshot.crit_chance_pct = playerStats:get("crit_chance_pct")
 
     -- Damage type modifiers
     -- We assume a standard set of damage types, or we could iterate if we had the list
@@ -341,6 +350,11 @@ function WandModifiers.mergePlayerStats(agg, playerStats)
     if snapshot.skill_energy_cost_reduction > 0 then
         agg.manaCostMultiplier = (agg.manaCostMultiplier or 1.0) * (1.0 - snapshot.skill_energy_cost_reduction / 100)
     end
+
+    -- Crit Chance
+    -- if snapshot.crit_chance_pct and snapshot.crit_chance_pct ~= 0 then
+    --     agg.critChanceBonus = agg.critChanceBonus + snapshot.crit_chance_pct
+    -- end
 end
 
 --[[

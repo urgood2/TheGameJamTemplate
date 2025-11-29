@@ -28,6 +28,14 @@ local WandTriggers = {}
 -- Dependencies
 local timer = require("core.timer")
 
+local EVENT_NAME_BY_TRIGGER = {
+    on_player_attack = "player_pressed_attack",
+    on_bump_enemy = "player_bump_enemy",
+    on_dash = "player_dash",
+    on_pickup = "player_pickup_item",
+    on_low_health = "player_health_changed",
+}
+
 -- Active trigger registrations
 WandTriggers.registrations = {}
 
@@ -86,7 +94,9 @@ TRIGGER REGISTRATION
 --- @param wandId string Wand identifier
 --- @param triggerDef table Trigger definition
 --- @param executor function Function to call when trigger fires (usually WandExecutor.execute)
-function WandTriggers.register(wandId, triggerDef, executor)
+--- @param opts table|nil Optional { canCast = function():boolean }
+function WandTriggers.register(wandId, triggerDef, executor, opts)
+    opts = opts or {}
     if not wandId or not triggerDef then
         log_error("WandTriggers.register: missing wandId or triggerDef")
         return
@@ -100,6 +110,7 @@ function WandTriggers.register(wandId, triggerDef, executor)
         triggerType = triggerDef.id or triggerDef.type,
         triggerDef = triggerDef,
         executor = executor,
+        canCast = opts.canCast,
         timerTag = nil,
         enabled = true,
     }
@@ -190,12 +201,11 @@ function WandTriggers.setupCooldownTrigger(registration)
     -- Check every frame if wand is off cooldown
     timer.cooldown(0.1, function()
         -- Check if wand can cast
-        if registration.executor then
-            -- Get wand state from executor (requires WandExecutor to expose canCast)
-            local canCast = true  -- TODO: Check actual wand state
-            return canCast
+        if not registration.enabled then return false end
+        if registration.canCast then
+            return registration.canCast(wandId)
         end
-        return false
+        return registration.executor ~= nil
     end, function()
         if registration.enabled and registration.executor then
             log_debug("WandTriggers: Cooldown trigger fired for wand", wandId)
@@ -273,7 +283,14 @@ function WandTriggers.handleEvent(eventType, eventData)
             if shouldFire and registration.executor then
                 log_debug("WandTriggers: Event trigger fired", eventType, "for wand", wandId)
                 -- Queue execution so we run outside physics callbacks (Chipmunk spaces are locked there)
-                WandTriggers.queueEvent(wandId, eventType, eventData)
+                local payload = {}
+                if eventData then
+                    for k, v in pairs(eventData) do
+                        payload[k] = v
+                    end
+                end
+                payload._source_event_type = eventType
+                WandTriggers.queueEvent(wandId, registration.triggerType, payload)
             end
         end
     end

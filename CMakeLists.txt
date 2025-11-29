@@ -182,8 +182,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # enable tracy (disable for web)
 
-# Enable tracy only when requested (default OFF) and not on Web.
-if (NOT EMSCRIPTEN AND TRACY_ENABLE)
+# Force Tracy off on Web builds regardless of the option.
+if (EMSCRIPTEN)
+    set(TRACY_ENABLE OFF CACHE BOOL "Tracy disabled on Web" FORCE)
+endif()
+
+if (TRACY_ENABLE AND NOT EMSCRIPTEN)
     message(STATUS "Tracy ENABLED for this build")
     add_definitions(-DTRACY_ENABLED=1)
     add_definitions(-DTRACY_NO_CRASH_HANDLER)

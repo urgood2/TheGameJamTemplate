@@ -60,7 +60,7 @@ endif()
 option(TRACY_ENABLE "Enable Tracy profiler instrumentation" ON)
 option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
 option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" ON)
-option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" ON)
+option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" OFF)
 
 option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
 if(ENABLE_UNIT_TESTS)

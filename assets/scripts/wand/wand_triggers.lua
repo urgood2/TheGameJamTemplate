@@ -27,14 +27,7 @@ local WandTriggers = {}
 
 -- Dependencies
 local timer = require("core.timer")
-
-local EVENT_NAME_BY_TRIGGER = {
-    on_player_attack = "player_pressed_attack",
-    on_bump_enemy = "player_bump_enemy",
-    on_dash = "player_dash",
-    on_pickup = "player_pickup_item",
-    on_low_health = "player_health_changed",
-}
+local signal = require("external.hump.signal")
 
 -- Active trigger registrations
 WandTriggers.registrations = {}
@@ -76,8 +69,14 @@ function WandTriggers.cleanup()
         end
     end
 
+    -- Remove signal listeners
+    for eventName, handler in pairs(WandTriggers.eventSubscriptions) do
+        signal.remove(eventName, handler)
+    end
+
     -- Clear all registrations
     WandTriggers.registrations = {}
+    WandTriggers.eventSubscriptions = {}
     WandTriggers.distanceTracking = {}
     WandTriggers.pendingEvents = {}
 
@@ -240,34 +239,24 @@ EVENT-BASED TRIGGERS
 
 --- Subscribes to game events
 function WandTriggers.subscribeToEvents()
-    -- Player attack
-    if subscribeToLuaEvent then
-        subscribeToLuaEvent("player_pressed_attack", function(eventData)
-            WandTriggers.handleEvent("player_pressed_attack", eventData)
-        end)
+    local eventNames = {
+        "on_player_attack",
+        "on_bump_enemy",
+        "on_dash",
+        "on_pickup",
+        "on_low_health",
+    }
 
-        -- Player collision with enemy
-        subscribeToLuaEvent("player_bump_enemy", function(eventData)
-            WandTriggers.handleEvent("player_bump_enemy", eventData)
-        end)
+    for _, eventName in ipairs(eventNames) do
+        local handler = function(eventData)
+            WandTriggers.handleEvent(eventName, eventData)
+        end
 
-        -- Player dash
-        subscribeToLuaEvent("player_dash", function(eventData)
-            WandTriggers.handleEvent("player_dash", eventData)
-        end)
-
-        -- Player pickup
-        subscribeToLuaEvent("player_pickup_item", function(eventData)
-            WandTriggers.handleEvent("player_pickup_item", eventData)
-        end)
-
-        -- Player health changed
-        subscribeToLuaEvent("player_health_changed", function(eventData)
-            WandTriggers.handleEvent("player_health_changed", eventData)
-        end)
-
-        log_debug("WandTriggers: Subscribed to game events")
+        signal.register(eventName, handler)
+        WandTriggers.eventSubscriptions[eventName] = handler
     end
+
+    log_debug("WandTriggers: Subscribed to game events via hump.signal")
 end
 
 --- Handles a game event

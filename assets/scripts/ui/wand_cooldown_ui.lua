@@ -99,6 +99,10 @@ function WandCooldownUI.update(dt)
             entry.cooldownRemaining = currentCooldown
             entry.currentMana = state.currentMana or 0
             entry.maxMana = state.maxMana or 0
+            local lastExec = state.lastExecutionState or {}
+            local overheatMult = lastExec.overheatPenaltyMult or 1.0
+            entry.overheatMult = overheatMult
+            entry.castProgress = state.currentCastProgress
 
             -- Track the last known max cooldown to compute progress.
             if currentCooldown > (entry.cooldownMax or 0) + 0.01 then
@@ -136,6 +140,7 @@ function WandCooldownUI.draw()
             local centerY = startY + (idx - 1) * (CARD_HEIGHT + CARD_SPACING) + CARD_HEIGHT * 0.5
             local isReady = (entry.cooldownRemaining or 0) <= 0
             local progress = computeProgress(entry)
+            local castProgress = entry.castProgress
 
             local rectColor = isReady and COLOR_READY or COLOR_COOLDOWN
             local rectColorCol = Col(rectColor.r, rectColor.g, rectColor.b, 200)
@@ -207,6 +212,12 @@ function WandCooldownUI.draw()
             end, Z_BASE + 4, SPACE)
 
             local statusText = isReady and "READY" or string.format("%.1fs", entry.cooldownRemaining or 0)
+            if castProgress and castProgress.total and castProgress.total > 0 then
+                local executed = math.min(castProgress.executed or 0, castProgress.total)
+                statusText = string.format("CASTING %d/%d", executed, castProgress.total)
+            elseif not isReady and entry.overheatMult and entry.overheatMult > 1.01 then
+                statusText = string.format("%s (x%.2f OH)", statusText, entry.overheatMult)
+            end
             command_buffer.queueDrawText(layers.ui, function(c)
                 c.text = statusText
                 c.font = localization.getFont()

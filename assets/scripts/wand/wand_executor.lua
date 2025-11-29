@@ -236,6 +236,7 @@ function WandExecutor.createWandState(wandDef)
         currentBlockIndex = 1,
         deckIndex = 1,
         isRecharging = false,
+        isCasting = false,
 
         -- Runtime state
         lastEvaluationResult = nil, -- cached evaluation result
@@ -339,10 +340,20 @@ function WandExecutor.execute(wandId, triggerType)
 
     maybeRenderExecutionGraph(evaluationResult.blocks, wandId)
 
-    -- Execute cast blocks sequentially
-    local success, totalCastDelay = WandExecutor.executeCastBlocks(evaluationResult.blocks, context, state)
+    state.isCasting = true
+    state.currentCastProgress = {
+        total = #evaluationResult.blocks,
+        executed = 0,
+    }
 
-    if success then
+    local function finalizeExecution(success, totalCastDelay)
+        state.isCasting = false
+        state.currentCastProgress = nil
+        if not success then
+            print("[WandExecutor] Cast aborted for wand", wandId)
+            return
+        end
+
         -- Apply recharge time (only once, after all blocks)
         local baseRechargeTime = (activeWand.definition.recharge_time or 0) / 1000
         local rechargeTime = baseRechargeTime
@@ -412,12 +423,12 @@ function WandExecutor.execute(wandId, triggerType)
             blocksExecuted = #evaluationResult.blocks,
             blocks = context.cumulative.blocks
         }
-
-        -- print(string.format("[WandExecutor] Executed wand %s - total delay: %.3fs, recharge: %.3fs, cooldown: %.3fs",
-        --     wandId, totalCastDelay, rechargeTime, totalCooldown))
     end
 
-    return success
+    -- Execute cast blocks sequentially over time
+    WandExecutor.executeCastBlocks(evaluationResult.blocks, context, state, finalizeExecution)
+
+    return true
 end
 
 --- Checks if a wand can be cast
@@ -429,6 +440,11 @@ function WandExecutor.canCast(wandId)
 
     -- Check cooldown
     if state.cooldownRemaining > 0 then
+        return false
+    end
+
+    -- Prevent re-entrancy while a cast chain is in progress
+    if state.isCasting then
         return false
     end
 
@@ -450,33 +466,53 @@ CAST BLOCK EXECUTION
 --- @param blocks table Array of cast blocks from card evaluation
 --- @param context table Execution context
 --- @param state table Wand state
---- @return boolean Success
---- @return number Total cast delay accumulated (in seconds)
-function WandExecutor.executeCastBlocks(blocks, context, state)
+--- @param onComplete function Callback(success:boolean, totalCastDelay:number)
+function WandExecutor.executeCastBlocks(blocks, context, state, onComplete)
     local totalCastDelay = 0 -- Accumulate cast delay across all blocks
 
-    for blockIndex, block in ipairs(blocks) do
+    local function runBlock(blockIndex)
+        if blockIndex > #blocks then
+            if onComplete then onComplete(true, totalCastDelay) end
+            return
+        end
+
+        local block = blocks[blockIndex]
         local success, blockCastDelay = WandExecutor.executeCastBlock(block, context, state, blockIndex)
 
         if not success then
             print("[WandExecutor] Warning: Cast block", blockIndex, "failed")
-            return false, totalCastDelay
+            if onComplete then onComplete(false, totalCastDelay) end
+            return
+        end
+
+        if state.currentCastProgress then
+            state.currentCastProgress.executed = blockIndex
         end
 
         -- Accumulate cast delay
         totalCastDelay = totalCastDelay + blockCastDelay
 
         -- Apply cast delay between blocks
+        local interBlockDelay = 0
         if blockIndex < #blocks then
             local delay = block.block_delay or 0
             if delay > 0 then
-                local delaySeconds = delay / 1000
-                totalCastDelay = totalCastDelay + delaySeconds
+                interBlockDelay = delay / 1000
+                totalCastDelay = totalCastDelay + interBlockDelay
             end
+        end
+
+        if blockIndex < #blocks then
+            local delaySeconds = math.max(0, blockCastDelay + interBlockDelay)
+            timer.after(delaySeconds, function()
+                runBlock(blockIndex + 1)
+            end, "wand_block_" .. tostring(context.wandId) .. "_" .. tostring(blockIndex) .. "_" .. tostring(os.clock()))
+        else
+            if onComplete then onComplete(true, totalCastDelay) end
         end
     end
 
-    return true, totalCastDelay
+    runBlock(1)
 end
 
 --- Executes a single cast block
@@ -672,10 +708,12 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
         context.cumulative.overheatPenaltyMult = math.max(context.cumulative.overheatPenaltyMult or 1.0,
             cooldownMultiplier)
 
-        local penalizedDelay = blockCastDelay * cooldownMultiplier
+        local baseDelay = blockCastDelay
+        local penalizedDelay = baseDelay * cooldownMultiplier
+        blockCastDelay = penalizedDelay
         print(string.format(
             "[WandExecutor] Block %d Overheat! Deficit: %.1f, Ratio: %.2f, Mult: %.2f, BlockDelay: %.3fs -> %.3fs",
-            blockIndex, deficit, overloadRatio, cooldownMultiplier, blockCastDelay, penalizedDelay))
+            blockIndex, deficit, overloadRatio, cooldownMultiplier, baseDelay, penalizedDelay))
     end
 
     blockMetrics.castDelay.adjusted = blockCastDelay
@@ -941,6 +979,7 @@ function WandExecutor.resetWand(wandId)
     state.cooldownRemaining = 0
     state.charges = state.maxCharges
     state.currentMana = state.maxMana
+    state.isCasting = false
 
     print("[WandExecutor] Reset wand", wandId)
 end

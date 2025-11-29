@@ -1803,11 +1803,6 @@ function setUpLogicTimers()
         CombatSystem.Game.Effects.deal_damage { weapon = true, scale_pct = 100 } (combat_context, enemyCombatTable,
             playerCombatTable)
 
-        WandTriggers.handleEvent("on_bump_enemy", {
-            player = survivorEntity,
-            enemy = enemyEntityID
-        })
-
         -- pull player hp spring
         if hpBarScaleSpringEntity and entity_cache.valid(hpBarScaleSpringEntity) then
             local hpBarSpringRef = spring.get(registry, hpBarScaleSpringEntity)

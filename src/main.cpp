@@ -32,11 +32,11 @@
 #undef far
 #endif
 
-#include "effolkronium/random.hpp" // https://github.com/effolkronium/random
 #if defined(PLATFORM_WEB) || defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
-#include <emscripten/html5.h>
 #endif
+
+#include "effolkronium/random.hpp" // https://github.com/effolkronium/random
 
 #include "core/engine_context.hpp"
 #include "core/game.hpp"
@@ -57,7 +57,6 @@ using json = nlohmann::json;
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <deque>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -90,44 +89,6 @@ using json = nlohmann::json;
 #include "systems/shaders/shader_system.hpp"
 #include "systems/sound/sound_system.hpp"
 #include "systems/timer/timer.hpp"
-
-#if defined(__EMSCRIPTEN__)
-// Track tab visibility to avoid large catch-up frames when resuming.
-static bool g_webTabHidden = false;
-
-extern "C" EMSCRIPTEN_KEEPALIVE void game_handle_visibility_change(int isVisible) {
-  const bool visible = isVisible != 0;
-  if (visible) {
-    g_webTabHidden = false;
-    globals::setIsGamePaused(false);
-    game::isPaused = false;
-    main_loop::mainLoop.lag = 0.0f;
-    emscripten_resume_main_loop();
-  } else {
-    g_webTabHidden = true;
-    globals::setIsGamePaused(true);
-    game::isPaused = true;
-    main_loop::mainLoop.lag = 0.0f;
-    emscripten_pause_main_loop();
-  }
-}
-
-EM_JS(void, register_visibility_hooks, (), {
-  if (Module.__visHooksInstalled) return;
-  Module.__visHooksInstalled = true;
-  const notify = (visible) => {
-    try {
-      if (Module._game_handle_visibility_change) {
-        Module._game_handle_visibility_change(visible ? 1 : 0);
-      }
-    } catch (e) {}
-  };
-  const handleVisibility = () => notify(document.visibilityState === "visible");
-  document.addEventListener("visibilitychange", handleVisibility, { passive: true });
-  window.addEventListener("focus", () => notify(true), { passive: true });
-  window.addEventListener("blur", () => notify(false), { passive: true });
-});
-#endif
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
@@ -268,27 +229,22 @@ auto updatePhysics(float dt, float alpha) -> void {
 // closed. The main game loop callback / blocking loop
 void RunGameLoop() {
   // ---------- Initialization ----------
+  float lastFrameTime = GetTime();
+
+  // Optional frame smoothing (helps even out jitter in GetFrameTime)
   const int frameSmoothingCount = 10;
-  static std::deque<float> frameTimes;
+  std::deque<float> frameTimes;
 
   // Safety: limit how many fixed updates can run per frame
   const int maxUpdatesPerFrame = 5;
 
-  // FPS tracking (persist across web frames too)
-  static int frameCounter = 0;
-  static double fpsLastTime = GetTime();
+  // FPS tracking
+  int frameCounter = 0;
+  double fpsLastTime = GetTime();
 
 #ifndef __EMSCRIPTEN__
   while (!WindowShouldClose()) {
     ZONE_SCOPED("RunGameLoop"); // custom label
-#endif
-    // On the web, bail out before touching the graphics API when the tab is
-    // hidden. We resume cleanly when visibility changes fire again.
-#if defined(__EMSCRIPTEN__)
-    if (g_webTabHidden) {
-      main_loop::mainLoop.lag = 0.0f;
-      return;
-    }
 #endif
     {
       ZONE_SCOPED("BeginDrawing/rlImGuiBegin call");
@@ -315,37 +271,8 @@ void RunGameLoop() {
     }
 
     // ---------- Step 1: Measure REAL frame time ----------
-    const float BACKGROUND_DT_THRESHOLD = 0.5f; // assume suspended above this
-    const float MAX_VISIBLE_DT = 0.1f;          // clamp visible hitches
-
-    float rawDeltaTime = GetFrameTime();
-    bool treatAsSuspended = false;
-    bool resetSmoothing = false;
-
-    if (pauseGameWhenOutofFocus && !IsWindowFocused()) {
-      treatAsSuspended = true;
-      resetSmoothing = true;
-    }
-
-    if (rawDeltaTime > BACKGROUND_DT_THRESHOLD) {
-      treatAsSuspended = true;
-      resetSmoothing = true;
-    }
-
-    if (treatAsSuspended) {
-      rawDeltaTime = 0.0f;
-    } else {
-      if (rawDeltaTime > MAX_VISIBLE_DT)
-        rawDeltaTime = MAX_VISIBLE_DT;
-      if (rawDeltaTime < 0.001f)
-        rawDeltaTime = 0.001f;
-    }
-
-    if (resetSmoothing) {
-      frameTimes.clear();
-      frameTimes.push_back(1.0f / main_loop::mainLoop.framerate);
-    }
-
+    float rawDeltaTime =
+        std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
     mainLoop.rawDeltaTime = rawDeltaTime;
 
     // Optional smoothing
@@ -496,9 +423,6 @@ void RunGameLoop() {
 
     SPDLOG_INFO("Starting game loop...");
 #ifdef __EMSCRIPTEN__
-
-    // Pause/resume cleanly based on tab visibility to avoid huge catch-up dt.
-    register_visibility_hooks();
 
     emscripten_set_main_loop(RunGameLoop, 0, 1);
 #else

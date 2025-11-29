@@ -23,3 +23,9 @@ Quick snapshot of what’s not yet wired in the current scripts (`assets/scripts
 4. Execute collision/timer/death sub-casts with inherited modifiers; use `pendingSubCasts` or projectile callbacks to fire them.
 5. Implement hazard/summon/teleport/meta/on-hit behaviors (or gate cards that depend on them).
 6. Call `TagEvaluator.evaluate_and_apply` when decks change so tag thresholds, Jokers, and discoveries fire.
+
+
+
+
+# FInal goal
+Make it easy (less hassle, all things in place) to implement the actual behavior of the projectiles, jokers, artifacts, etc.

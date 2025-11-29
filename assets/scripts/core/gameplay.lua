@@ -4326,7 +4326,7 @@ function initSurvivorEntity()
     physics.enable_collision_between_many(world, "WORLD", { "player", "projectile", "enemy" })
     physics.enable_collision_between_many(world, "player", { "WORLD" })
     physics.enable_collision_between_many(world, "projectile", { "WORLD" })
-    physics.enable_collision_between_many(world, "enemy", { "WORLD" })
+    -- physics.enable_collision_between_many(world, "enemy", { "WORLD" })
     physics.enable_collision_between_many(world, "pickup", { "player" })
     physics.enable_collision_between_many(world, "player", { "pickup" })
 

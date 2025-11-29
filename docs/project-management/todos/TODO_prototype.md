@@ -63,6 +63,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- fps issue. not sure where it's coming from?
+
 - cast execution graph needs debuggin. the card visulalization as well.
 - make a ui box that contains a row for every cast block.
     - For now, use "M" with red box for modifiers applied to that block.

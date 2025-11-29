@@ -264,8 +264,22 @@ DynamicObjectPool<T>::DynamicObjectPool(index_t entries_per_block)
 template <typename T>
 DynamicObjectPool<T>::~DynamicObjectPool()
 {
-    // explicitly delete_object or delete_all before pool goes out of scope
-    assert(calc_stats().num_allocations == 0);
+    // Destroy all blocks to ensure outstanding allocations are released even
+    // if the caller forgot to clear the pool first.
+    for (index_t i = 0; i < num_blocks_; ++i)
+    {
+        BlockInfo& info = block_info_[i];
+        if (info.block_)
+        {
+            Block::destroy(info.block_);
+            info.block_ = nullptr;
+        }
+    }
+
+    std::free(block_info_);
+    block_info_ = nullptr;
+    num_blocks_ = 0;
+    free_block_index_ = 0;
 }
 
 template <typename T>

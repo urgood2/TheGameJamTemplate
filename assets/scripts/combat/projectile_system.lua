@@ -469,6 +469,12 @@ function ProjectileSystem.spawn(params)
     projectileScript.projectileBehavior = projectileBehavior
     projectileScript.projectileLifetime = projectileLifetime
     projectileScript.usePhysics = wantsPhysics
+    projectileScript.projectileEntity = entity
+
+    -- Handle collision on the primary script so we do not add a second ScriptComponent.
+    function projectileScript:on_collision(other)
+        ProjectileSystem.handleCollision(self._eid or self.projectileEntity or entity, other)
+    end
 
     -- NOW attach to entity (must be after data assignment)
     projectileScript:attach_ecs { create_new = false, existing_entity = entity }
@@ -1176,30 +1182,10 @@ COLLISION HANDLING
 ]]--
 
 function ProjectileSystem.setupCollisionCallback(entity)
-    -- Create script component for collision handling
-    local CollisionScript = {
-        projectileEntity = entity,
-
-        init = function(self)
-            -- Called when script is attached
-        end,
-
-        update = function(self, dt)
-            -- Not used for projectiles
-        end,
-
-        on_collision = function(self, other)
-            ProjectileSystem.handleCollision(self.projectileEntity, other)
-        end,
-
-        destroy = function(self)
-            -- Called when entity is destroyed
-        end
-    }
-
-    -- Attach script to entity (or to collider child entity)
-    if registry.add_script then
-        registry:add_script(entity, CollisionScript)
+    -- Collision is handled by the primary projectile script (set before attach_ecs).
+    -- If that script went missing, log and skip to avoid duplicating ScriptComponents.
+    if not ProjectileSystem.getProjectileScript(entity) then
+        log_warn("setupCollisionCallback: missing projectile script for entity " .. tostring(entity))
     end
 end
 

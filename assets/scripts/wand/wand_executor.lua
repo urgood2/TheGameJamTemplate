@@ -387,8 +387,8 @@ function WandExecutor.execute(wandId, triggerType)
             blocksExecuted = #evaluationResult.blocks
         }
 
-        print(string.format("[WandExecutor] Executed wand %s - total delay: %.3fs, recharge: %.3fs, cooldown: %.3fs",
-            wandId, totalCastDelay, rechargeTime, totalCooldown))
+        -- print(string.format("[WandExecutor] Executed wand %s - total delay: %.3fs, recharge: %.3fs, cooldown: %.3fs",
+        --     wandId, totalCastDelay, rechargeTime, totalCooldown))
     end
 
     return success
@@ -522,7 +522,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
             -- UI Feedback (Messages)
             if jokerEffects.messages and #jokerEffects.messages > 0 then
                 for _, msg in ipairs(jokerEffects.messages) do
-                    print(string.format("[JOKER] %s triggered: %s", msg.joker, msg.text))
+                    -- print(string.format("[JOKER] %s triggered: %s", msg.joker, msg.text))
                     -- Emit signal for UI
                     local signal = require("external.hump.signal")
                     signal.emit("on_joker_trigger", { joker_name = msg.joker, message = msg.text })

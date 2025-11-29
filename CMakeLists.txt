@@ -57,7 +57,7 @@ if (GAME_PLATFORM STREQUAL "Web")
     add_definitions(-DFMT_USE_NONTYPE_TEMPLATE_PARAMETERS=0)
 endif()
 
-option(TRACY_ENABLE "Enable Tracy profiler instrumentation" OFF)
+option(TRACY_ENABLE "Enable Tracy profiler instrumentation" ON)
 option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
 option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" ON)
 option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" ON)

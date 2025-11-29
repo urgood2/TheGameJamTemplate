@@ -85,7 +85,8 @@ local function clamp01(v)
 end
 
 local function easeOutCubic(t)
-    return 1 - math.pow(1 - t, 3)
+    local inv = 1 - t
+    return 1 - (inv * inv * inv)
 end
 
 local function randomRange(min, max)
@@ -194,6 +195,19 @@ local function getItemSpring(item, kind)
     local ok, ref = pcall(spring.get, registry, entity)
     if not ok then return nil end
     return ref
+end
+
+local function forceFadeOutSoon(item)
+    if not item then return end
+    local now = item.age or 0.0
+    -- Clamp lifetime so this item fades out over the standard fade window
+    local newLifetime = math.min(item.lifetime or FLASH_LIFETIME, now + FADE_OUT_TIME)
+    item.lifetime = newLifetime
+
+    local scaleSpring = getItemSpring(item, "scale")
+    if scaleSpring then
+        scaleSpring.targetValue = EXIT_SCALE_TARGET
+    end
 end
 
 local function applyJiggle(item)
@@ -315,7 +329,10 @@ function CastBlockFlashUI.pushBlock(block, opts)
     table.insert(CastBlockFlashUI.items, item)
 
     if #CastBlockFlashUI.items > MAX_ITEMS then
-        removeItemAt(1)
+        local overflow = #CastBlockFlashUI.items - MAX_ITEMS
+        for i = 1, overflow do
+            forceFadeOutSoon(CastBlockFlashUI.items[i])
+        end
     end
 end
 
@@ -325,6 +342,7 @@ function CastBlockFlashUI.update(dt)
     for i = #CastBlockFlashUI.items, 1, -1 do
         local item = CastBlockFlashUI.items[i]
         item.age = item.age + dt
+        item.alpha = 1.0
 
         -- Trigger jiggle when a used card reaches its start time
         for idx, card in ipairs(item.cards or {}) do
@@ -343,7 +361,8 @@ function CastBlockFlashUI.update(dt)
         end
 
         -- Fade out near the end
-        local fadeStart = (item.lifetime or FLASH_LIFETIME) - FADE_OUT_TIME
+        local lifetime = item.lifetime or FLASH_LIFETIME
+        local fadeStart = lifetime - FADE_OUT_TIME
         if item.age >= fadeStart then
             local fadeProgress = clamp01((item.age - fadeStart) / FADE_OUT_TIME)
             item.alpha = 1.0 - fadeProgress
@@ -353,7 +372,7 @@ function CastBlockFlashUI.update(dt)
             end
         end
 
-        if item.age >= (item.lifetime or FLASH_LIFETIME) then
+        if item.age >= lifetime then
             removeItemAt(i)
         end
     end
@@ -365,12 +384,7 @@ function CastBlockFlashUI.update(dt)
 end
 
 local function drawItem(item, index)
-    local fadeStart = (item.lifetime or FLASH_LIFETIME) - FADE_OUT_TIME
-    local fading = item.age >= fadeStart
-    local renderAlpha = 1.0
-    if fading then
-        renderAlpha = clamp01(item.alpha or 1.0)
-    end
+    local renderAlpha = clamp01(item.alpha or 1.0)
     if renderAlpha <= 0 then return end
 
     local scaleSpring = getItemSpring(item, "scale")
@@ -464,7 +478,7 @@ local function drawItem(item, index)
             c.h = CARD_HEIGHT + 4
             c.rx = CARD_RADIUS + 2
             c.ry = CARD_RADIUS + 2
-            c.color = Col(0, 0, 0, 255)
+            c.color = Col(0, 0, 0, math.floor(renderAlpha * 255))
         end, zBase, space)
 
         -- Card body
@@ -485,7 +499,7 @@ local function drawItem(item, index)
             local tw = measureText(label, CARD_FONT_SIZE)
             c.x = cx - tw * 0.5 + 1
             c.y = cardCenterY - CARD_HEIGHT * 0.5 + (CARD_HEIGHT - CARD_FONT_SIZE) * 0.5 + 1
-            c.color = Col(0, 0, 0, 255)
+            c.color = Col(0, 0, 0, math.floor(renderAlpha * 255))
             c.fontSize = CARD_FONT_SIZE
         end, zBase, space)
         command_buffer.queueDrawText(layers.ui, function(c)

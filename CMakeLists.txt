@@ -182,8 +182,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # enable tracy (disable for web)
 
-# Enable tracy only when requested (default OFF) and not on Web.
-if (NOT EMSCRIPTEN AND TRACY_ENABLE)
+# Force Tracy off on Web builds regardless of the option.
+if (EMSCRIPTEN)
+    set(TRACY_ENABLE OFF CACHE BOOL "Tracy disabled on Web" FORCE)
+endif()
+
+if (TRACY_ENABLE AND NOT EMSCRIPTEN)
     message(STATUS "Tracy ENABLED for this build")
     add_definitions(-DTRACY_ENABLED=1)
     add_definitions(-DTRACY_NO_CRASH_HANDLER)
@@ -981,7 +985,7 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     endif()
 
     set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1")
-    set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\"${_emscripten_link_flags}\" -DCMAKE_EXECUTABLE_SUFFIX=.html -DCRASH_REPORT_BUILD_ID=${_default_build_id} -DITCH_BUILD_ID=${_default_build_id} -DCCACHE_PROGRAM= -DCMAKE_C_COMPILER_LAUNCHER= -DCMAKE_CXX_COMPILER_LAUNCHER=")
+    set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\"${_emscripten_link_flags}\" -DCMAKE_EXECUTABLE_SUFFIX=.html -DCCACHE_PROGRAM= -DCMAKE_C_COMPILER_LAUNCHER= -DCMAKE_CXX_COMPILER_LAUNCHER=")
 
     # Target to activate emsdk
     add_custom_target(activate_emsdk

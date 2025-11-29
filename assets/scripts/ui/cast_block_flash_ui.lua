@@ -23,7 +23,6 @@ local COLOR_TWEEN_TIME = 0.25
 local JIGGLE_INTERVAL_MIN = 0.04
 local JIGGLE_INTERVAL_MAX = 0.08
 local JIGGLE_STRENGTH = 12
-local STACK_SPACING = 40
 local SLIDE_DURATION = 0.25
 local ENTRY_SCALE_START = 0.9
 local EXIT_SCALE_TARGET = 0.8
@@ -38,10 +37,14 @@ local CARD_HIGHLIGHT_DURATION = 0.25
 local HEADER_FONT_SIZE = 13
 local CARD_FONT_SIZE = 12
 local HEADER_SPACING = 6
+local STACK_VERTICAL_GAP = 10
 local BACKGROUND_PADDING_X = 12
 local BACKGROUND_PADDING_Y = 8
 local BACKGROUND_RADIUS = 12
 local BACKGROUND_ALPHA = 255
+
+local BLOCK_HEIGHT = BACKGROUND_PADDING_Y * 2 + HEADER_FONT_SIZE + HEADER_SPACING + CARD_HEIGHT
+local STACK_SPACING = BLOCK_HEIGHT + STACK_VERTICAL_GAP
 
 local SPRING_STIFFNESS = 220
 local SPRING_DAMPING = 18
@@ -364,7 +367,10 @@ end
 local function drawItem(item, index)
     local fadeStart = (item.lifetime or FLASH_LIFETIME) - FADE_OUT_TIME
     local fading = item.age >= fadeStart
-    local renderAlpha = fading and clamp01(item.alpha or 1.0) or 1.0
+    local renderAlpha = 1.0
+    if fading then
+        renderAlpha = clamp01(item.alpha or 1.0)
+    end
     if renderAlpha <= 0 then return end
 
     local scaleSpring = getItemSpring(item, "scale")
@@ -386,7 +392,7 @@ local function drawItem(item, index)
     local rowWidth = totalCards * CARD_WIDTH + math.max(0, totalCards - 1) * CARD_SPACING
     local headerWidth = measureText(item.wandName, HEADER_FONT_SIZE)
     local bgWidth = math.max(rowWidth + BACKGROUND_PADDING_X * 2, headerWidth + BACKGROUND_PADDING_X * 2)
-    local bgHeight = BACKGROUND_PADDING_Y * 2 + HEADER_FONT_SIZE + HEADER_SPACING + CARD_HEIGHT
+    local bgHeight = BLOCK_HEIGHT
 
     local space = layer.DrawCommandSpace.Screen
     local zBase = (z_orders.ui_tooltips or 0) + 10 -- single z so sorting keeps the matrix around all draws

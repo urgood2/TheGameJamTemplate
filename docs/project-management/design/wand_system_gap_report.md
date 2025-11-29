@@ -7,6 +7,8 @@ Quick snapshot of what's not yet wired in the current scripts (`assets/scripts/w
   - Gameplay now overrides `getPlayerEntity/createExecutionContext` to use `survivorEntity` and combat stats, but the base helpers still fall back to globals and `findNearestEnemy` is empty, so homing/auto-aim/chain lightning revert to straight shots and facing still uses a mouse-only fallback.
 - **Resource/overheat rules still inconsistent**  
   - `canCast` never blocks on mana (intentional), regen ignores overheat/negative mana (also intentional), but meta cards such as `add_mana_amount` are stubs and child casts execute without paying mana/delay/overheat so overcast builds only see the parent block penalties.
+- **Upgrades/stats not merged into runtime casts**  
+  - Card upgrade data exists (shop calls `CardUpgrade`) and player stat leveling exists (`core.stat_system`), but wand execution never merges player stats into modifier aggregates (see `wand_cumulative_state_plan.md`) and custom upgrade behaviors are never consulted, so upgraded cards and stat gains only affect raw card fields—no behavior hooks or stat buffs flow into cast resolution.
 - **Trigger emit coverage is incomplete/mixed**  
   - `on_bump_enemy`/`on_pickup` now emit via `hump.signal` and `on_dash` calls `WandTriggers.handleEvent`, but `on_player_attack` and `on_low_health` never fire and we're mixing direct handler calls vs. signal emission.
 - **Non-projectile + special on-hit actions are still stubs**  

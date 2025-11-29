@@ -97,6 +97,8 @@ function WandCooldownUI.update(dt)
         if state then
             local currentCooldown = state.cooldownRemaining or 0
             entry.cooldownRemaining = currentCooldown
+            entry.currentMana = state.currentMana or 0
+            entry.maxMana = state.maxMana or 0
 
             -- Track the last known max cooldown to compute progress.
             if currentCooldown > (entry.cooldownMax or 0) + 0.01 then
@@ -192,7 +194,8 @@ function WandCooldownUI.draw()
             -- Text labels
             local textX = pieX + PIE_RADIUS + 14
             local labelY = centerY - 10
-            local statusY = centerY + 8
+            local statusY = centerY + 4
+            local manaY = centerY + 20
 
             command_buffer.queueDrawText(layers.ui, function(c)
                 c.text = string.upper(entry.label or tostring(wandId))
@@ -210,6 +213,17 @@ function WandCooldownUI.draw()
                 c.fontSize = STATUS_FONT_SIZE
                 c.x = textX
                 c.y = statusY
+                c.color = COLOR_TEXT
+            end, Z_BASE + 4, SPACE)
+
+            -- Mana readout (for debugging/verification)
+            local manaText = string.format("Mana: %.1f / %.1f", entry.currentMana or 0, entry.maxMana or 0)
+            command_buffer.queueDrawText(layers.ui, function(c)
+                c.text = manaText
+                c.font = localization.getFont()
+                c.fontSize = STATUS_FONT_SIZE
+                c.x = textX
+                c.y = manaY
                 c.color = COLOR_TEXT
             end, Z_BASE + 4, SPACE)
         end

@@ -24,6 +24,7 @@ local JIGGLE_INTERVAL_MIN = 0.04
 local JIGGLE_INTERVAL_MAX = 0.08
 local JIGGLE_STRENGTH = 12
 local STACK_SPACING = 40
+local SLIDE_DURATION = 0.25
 local ENTRY_SCALE_START = 0.9
 local EXIT_SCALE_TARGET = 0.8
 
@@ -78,6 +79,10 @@ local function clamp01(v)
     if v < 0 then return 0 end
     if v > 1 then return 1 end
     return v
+end
+
+local function easeOutCubic(t)
+    return 1 - math.pow(1 - t, 3)
 end
 
 local function randomRange(min, max)
@@ -228,6 +233,39 @@ local function attachSprings(item)
     applyJiggle(item)
 end
 
+local function computeAnchorY(index)
+    if not globals then return 0 end
+    local screenH = globals.screenHeight()
+    return screenH * 0.18 + (index - 1) * STACK_SPACING
+end
+
+local function updateSlidePosition(item, index, dt)
+    if not item then return end
+    local targetY = computeAnchorY(index)
+
+    if not item.currentY then
+        item.currentY = targetY
+        item.slideFromY = targetY
+        item.slideToY = targetY
+        item.slideTime = SLIDE_DURATION
+        return
+    end
+
+    if item.slideToY ~= targetY then
+        item.slideFromY = item.currentY or targetY
+        item.slideToY = targetY
+        item.slideTime = 0
+    end
+
+    if item.slideFromY and item.slideToY and item.slideTime < SLIDE_DURATION then
+        item.slideTime = math.min(item.slideTime + dt, SLIDE_DURATION)
+        local t = easeOutCubic(clamp01(item.slideTime / SLIDE_DURATION))
+        item.currentY = lerp(item.slideFromY, item.slideToY, t)
+    else
+        item.currentY = item.slideToY or targetY
+    end
+end
+
 local function removeItemAt(index)
     local item = CastBlockFlashUI.items[index]
     if item then
@@ -316,6 +354,11 @@ function CastBlockFlashUI.update(dt)
             removeItemAt(i)
         end
     end
+
+    -- Update slide targets after removals so vertical motion starts the same frame
+    for i, item in ipairs(CastBlockFlashUI.items) do
+        updateSlidePosition(item, i, dt)
+    end
 end
 
 local function drawItem(item, index)
@@ -330,9 +373,8 @@ local function drawItem(item, index)
     local rotation = (rotationSpring and rotationSpring.value) or 0.0
 
     local screenW = globals.screenWidth()
-    local screenH = globals.screenHeight()
     local anchorX = screenW * 0.5
-    local anchorY = screenH * 0.18 + (index - 1) * STACK_SPACING
+    local anchorY = item.currentY or computeAnchorY(index)
 
     local colorMix = clamp01(item.age / COLOR_TWEEN_TIME)
     local defaultFill = lerpColor(colors.cardIdle, colors.card, colorMix)

@@ -18,6 +18,7 @@ require("ui.ui_definition_helper")
 local dsl = require("ui.ui_syntax_sugar")
 local CastExecutionGraphUI = require("ui.cast_execution_graph_ui")
 local CastBlockFlashUI = require("ui.cast_block_flash_ui")
+local WandCooldownUI = require("ui.wand_cooldown_ui")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
@@ -2312,6 +2313,11 @@ function initPlanningPhase()
             CastFeedUI.draw()
         end
 
+        if WandCooldownUI and is_state_active and is_state_active(ACTION_STATE) then
+            WandCooldownUI.update(dt)
+            WandCooldownUI.draw()
+        end
+
         if CastBlockFlashUI and CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
             CastBlockFlashUI.update(dt)
             CastBlockFlashUI.draw()
@@ -4317,14 +4323,16 @@ function initSurvivorEntity()
     )
 
     -- make it collide with enemies & walls & pickups
-    physics.enable_collision_between_many(world, "WORLD", { "player", "projectile" })
+    physics.enable_collision_between_many(world, "WORLD", { "player", "projectile", "enemy" })
     physics.enable_collision_between_many(world, "player", { "WORLD" })
     physics.enable_collision_between_many(world, "projectile", { "WORLD" })
+    physics.enable_collision_between_many(world, "enemy", { "WORLD" })
     physics.enable_collision_between_many(world, "pickup", { "player" })
     physics.enable_collision_between_many(world, "player", { "pickup" })
 
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "WORLD" })
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", { "player" })
+    physics.update_collision_masks_for(world, "player", { "WORLD" })
+    physics.update_collision_masks_for(world, "enemy", { "WORLD" })
+    physics.update_collision_masks_for(world, "WORLD", { "player", "enemy" })
 
 
     -- assign z level
@@ -4375,10 +4383,10 @@ function initSurvivorEntity()
     survivorMaskEntity = createJointedMask(survivorEntity, "world")
 
 
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", { "player", "enemy" }) -- enemy>player and enemy>enemy
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "enemy" })          -- player>enemy
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "enemy" })
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", { "player", "enemy" })
+    physics.enable_collision_between_many(world, "enemy", { "player", "enemy" }) -- enemy>player and enemy>enemy
+    physics.enable_collision_between_many(world, "player", { "enemy" })          -- player>enemy
+    physics.update_collision_masks_for(world, "player", { "enemy" })
+    physics.update_collision_masks_for(world, "enemy", { "player", "enemy" })
 
     -- entity.set_draw_override(survivorEntity, function(w, h)
     --     -- immediate render version of the same thing.
@@ -4888,6 +4896,7 @@ function initActionPhase()
 
     -- Initialize CastFeedUI
     CastFeedUI.init()
+    WandCooldownUI.init()
     
     -- add shader to backgorund layer
     add_layer_shader("background", "peaches_background")

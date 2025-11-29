@@ -300,8 +300,6 @@ function CastFeedUI.draw()
         local scale = math.max((scaleSpring and scaleSpring.value) or 1.0, 0.1)
         local rotation = (rotationSpring and rotationSpring.value) or 0.0
         
-        log_debug("[CastFeedUI] Drawing item", i, "text:", item.text, "alpha:", alpha, "scale:", scale, "rotation:", rotation)
-
         -- Apply alpha to color
         local color = Col(item.color.r, item.color.g, item.color.b, alpha * 255)
 

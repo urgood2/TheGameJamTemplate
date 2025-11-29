@@ -5,7 +5,7 @@ CAST EXECUTION GRAPH UI
 Visualizes wand cast blocks as nested horizontal rows:
 - Each cast block becomes a row.
 - Applied modifiers render as red `M` pills.
-- Actions render as labeled boxes with green `>` separators.
+- Actions render as labeled boxes.
 - Nested blocks sit inline after the triggering action.
 ]]--
 
@@ -14,6 +14,7 @@ local CastExecutionGraphUI = {}
 local dsl = require("ui.ui_syntax_sugar")
 local z_ok, z_orders = pcall(require, "core.z_orders")
 if not z_ok then z_orders = { ui_tooltips = 0 } end
+local STYLING_ROUNDED = UIStylingType and UIStylingType.RoundedRectangle or nil
 
 local function defaultPosition()
     local h = nil
@@ -49,8 +50,6 @@ local colors = {
     mod = resolveColor("red"),
     modText = resolveColor("white"),
     action = resolveColor("apricot", "white"),
-    arrow = resolveColor("green"),
-    arrowText = resolveColor("white"),
     text = resolveColor("black"),
     outline = resolveColor("black"),
 }
@@ -112,34 +111,26 @@ end
 
 local function pill(text, opts)
     opts = opts or {}
+    local outline = opts.outline
+    if outline == nil then outline = 1 end
+    local label = tostring(text or "")
+
     return dsl.hbox{
         config = {
             color = opts.bg or colors.row,
             padding = opts.padding or 4,
-            outlineThickness = opts.outline or 0,
+            outlineThickness = outline,
             outlineColor = opts.outlineColor or colors.outline,
+            stylingType = STYLING_ROUNDED,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             minWidth = opts.minWidth,
-            minHeight = opts.minHeight,
+            minHeight = opts.minHeight or 20,
             shadow = opts.shadow,
         },
         children = {
-            dsl.text(text, { color = opts.textColor or colors.text, fontSize = opts.fontSize or 13 })
+            dsl.text(label, { color = opts.textColor or colors.text, fontSize = opts.fontSize or 13 })
         }
     }
-end
-
-local function arrowBox()
-    return pill(">", {
-        bg = colors.arrow,
-        textColor = colors.outline,
-        fontSize = 12,
-        padding = 3,
-        outline = 0,
-        shadow = false,
-        minWidth = 18,
-        minHeight = 18,
-    })
 end
 
 local function modBox(modInfo)
@@ -147,8 +138,10 @@ local function modBox(modInfo)
         bg = colors.mod,
         textColor = colors.modText,
         fontSize = 12,
-        padding = 3,
-        minWidth = 20,
+        padding = 4,
+        minWidth = 22,
+        minHeight = 20,
+        shadow = true,
     })
 end
 
@@ -251,12 +244,7 @@ local function buildBlockRow(block, depth, label)
 
         local child = childMap[actionCard]
         if child and child.block then
-            table.insert(rowChildren, arrowBox())
             table.insert(rowChildren, wrapNested(buildBlockRow(child.block, depth + 1, "Sub")))
-        end
-
-        if idx < #cards then
-            table.insert(rowChildren, arrowBox())
         end
     end
 

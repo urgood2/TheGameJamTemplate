@@ -208,6 +208,8 @@ WAND STATE MANAGEMENT
 --- @param wandDef table Wand definition
 --- @return table Wand state
 function WandExecutor.createWandState(wandDef)
+    local maxCharges = wandDef.max_charges or 0
+
     return {
         wandId = wandDef.id,
 
@@ -216,10 +218,10 @@ function WandExecutor.createWandState(wandDef)
         lastCastTime = 0,
 
         -- Charge tracking
-        charges = wandDef.max_charges or 1,
-        maxCharges = wandDef.max_charges or 1,
+        charges = maxCharges,
+        maxCharges = maxCharges,
         chargeRegenTime = wandDef.charge_regen_time or 0,
-        lastChargeTime = 0,
+        lastChargeTime = os.clock(),
 
         -- Mana tracking
         currentMana = wandDef.mana_max or 100,
@@ -315,7 +317,7 @@ function WandExecutor.execute(wandId, triggerType)
 
     -- Check if can cast
     if not WandExecutor.canCast(wandId) then
-        print("[WandExecutor] Cannot cast wand", wandId, "- on cooldown or insufficient resources")
+        print("[WandExecutor] Cannot cast wand", wandId, "- on cooldown or out of charges")
         return false
     end
 
@@ -351,8 +353,29 @@ function WandExecutor.execute(wandId, triggerType)
         -- Total cooldown = accumulated cast delay + recharge time
         local totalCooldown = totalCastDelay + rechargeTime
 
+        -- Apply overheat penalty to total cooldown if we went negative on mana/flux
+        if state.currentMana < 0 then
+            local deficit = math.abs(state.currentMana)
+            local maxFlux = context.wandDefinition.mana_max or state.maxMana or 100
+            local overloadRatio = deficit / math.max(maxFlux, 1)
+            local penaltyFactor = context.wandDefinition.overheat_penalty_factor or 5.0
+
+            local cooldownMultiplier = 1.0 + (overloadRatio * penaltyFactor)
+            totalCooldown = totalCooldown * cooldownMultiplier
+
+            print(string.format(
+                "[WandExecutor] Overheat penalty applied - deficit: %.1f, ratio: %.2f, mult: %.2f, cooldown: %.3fs",
+                deficit, overloadRatio, cooldownMultiplier, totalCooldown))
+        end
+
         state.cooldownRemaining = totalCooldown
         state.lastCastTime = os.clock()
+
+        -- Consume a charge if the wand uses charges
+        if state.maxCharges > 0 then
+            state.charges = math.max(0, state.charges - 1)
+            state.lastChargeTime = os.clock()
+        end
 
         -- Store last execution state for debugging/telemetry
         state.lastExecutionState = {
@@ -385,11 +408,6 @@ function WandExecutor.canCast(wandId)
 
     -- Check charges
     if state.maxCharges > 0 and state.charges <= 0 then
-        return false
-    end
-
-    -- Check mana (basic check - more detailed check happens during evaluation)
-    if state.currentMana <= 0 then
         return false
     end
 

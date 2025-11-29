@@ -5,10 +5,9 @@ local entity_cache = require("core.entity_cache")
 local z_orders = require("core.z_orders")
 
 -- cache globals / upvalues
-local math_max, math_floor, math_abs = math.max, math.floor, math.abs
+local math_max, math_floor = math.max, math.floor
 local registry_get, registry_valid = registry.get, registry.valid
 local assignZ = layer_order_system.assignZIndexToEntity
-local getScript = getScriptTableFromEntityID
 local cardBaseZ = z_orders.card
 local ENT_NULL = entt_null
 
@@ -99,26 +98,6 @@ function BoardType:update(dt)
     end
 
     ------------------------------------------------------------
-    -- Detect selected card (only one)
-    ------------------------------------------------------------
-    local selectedIndex = nil
-    for i = 1, n do
-        local cardEid = cards[i]
-        local cardScript = getScript(cardEid)
-        if cardScript and cardScript.selected then
-            selectedIndex = i
-            break
-        end
-    end
-
-    ------------------------------------------------------------
-    -- Spread parameters
-    ------------------------------------------------------------
-    local spreadAmount = 80   -- total distance to expand layout outward
-    local spreadEnabled = selectedIndex ~= nil
-    local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
-
-    ------------------------------------------------------------
     -- Layout cards
     ------------------------------------------------------------
     for i = 1, n do
@@ -127,33 +106,6 @@ function BoardType:update(dt)
         if ct then
             local x = startX + (i - 1) * spacing
             local y = centerY - ct.actualH * 0.5
-
-            --------------------------------------------------------
-            -- Vertical lift for selected card (inventory only)
-            --------------------------------------------------------
-            if isInventory then
-                local cardScript = getScript(cardEid)
-                if cardScript and cardScript.selected then
-                    y = y - ct.actualH * 0.7
-                end
-            end
-
-            --------------------------------------------------------
-            -- Apply full-layout spread if a card is selected
-            --------------------------------------------------------
-            if spreadEnabled then
-                -- Determine total shift: cards to left go left, right go right
-                local relativeIndex = i - selectedIndex
-                if relativeIndex < 0 then
-                    -- Move left side cards farther left
-                    -- Use a simpler linear offset based on distance from selected
-                    x = x - spreadAmount * 0.5
-                elseif relativeIndex > 0 then
-                    -- Move right side cards farther right
-                    -- Use a simpler linear offset based on distance from selected
-                    x = x + spreadAmount * 0.5
-                end
-            end
 
             ct.actualX = math_floor(x + 0.5)
             ct.actualY = math_floor(y + 0.5)

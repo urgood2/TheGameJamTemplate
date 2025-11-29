@@ -35,8 +35,9 @@ MAIN ACTION EXECUTION
 --- @param actionCard table Action card definition
 --- @param modifiers table Modifier aggregate from WandModifiers
 --- @param context table Execution context
+--- @param childInfo table|nil Sub-cast metadata for this action
 --- @return table|nil Result of action execution (e.g., spawned entities)
-function WandActions.execute(actionCard, modifiers, context)
+function WandActions.execute(actionCard, modifiers, context, childInfo)
     if not actionCard or actionCard.type ~= "action" then
         log_debug("WandActions.execute: invalid action card")
         return nil
@@ -46,7 +47,7 @@ function WandActions.execute(actionCard, modifiers, context)
     local actionType = WandActions.getActionType(actionCard)
 
     if actionType == "projectile" then
-        return WandActions.executeProjectileAction(actionCard, modifiers, context)
+        return WandActions.executeProjectileAction(actionCard, modifiers, context, childInfo)
     elseif actionType == "effect" then
         return WandActions.executeEffectAction(actionCard, modifiers, context)
     elseif actionType == "hazard" then
@@ -92,8 +93,9 @@ Spawns projectiles using the ProjectileSystem from Task 1.
 --- @param actionCard table Action card definition
 --- @param modifiers table Modifier aggregate
 --- @param context table Execution context
+--- @param childInfo table|nil Sub-cast metadata for this action
 --- @return table List of spawned projectile entity IDs
-function WandActions.executeProjectileAction(actionCard, modifiers, context)
+function WandActions.executeProjectileAction(actionCard, modifiers, context, childInfo)
     -- Apply modifiers to action properties
     local props = WandModifiers.applyToAction(actionCard, modifiers)
 
@@ -120,7 +122,8 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context)
             modifiers,
             context,
             spawnPos,
-            angle
+            angle,
+            childInfo
         )
 
         if projectileId and projectileId ~= entt_null then
@@ -138,8 +141,9 @@ end
 --- @param context table Execution context
 --- @param position table {x, y} spawn position
 --- @param angle number Spawn angle in radians
+--- @param childInfo table|nil Sub-cast metadata for this action
 --- @return number Entity ID of spawned projectile
-function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context, position, angle)
+function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context, position, angle, childInfo)
     -- Determine movement type
     local movementType = ProjectileSystem.MovementType.STRAIGHT
 
@@ -223,6 +227,9 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         -- Store modifiers for on-hit processing
         modifiers = modifiers,
 
+        -- Child cast info for collision/death triggers
+        subCast = childInfo,
+
         -- Event hooks
         onHit = function(proj, target, data)
             WandActions.handleProjectileHit(proj, target, data, modifiers, context)
@@ -256,6 +263,22 @@ PROJECTILE EVENT HANDLERS
 function WandActions.handleProjectileHit(projectile, target, hitData, modifiers, context)
     -- Apply on-hit effects from modifiers
     if not target or target == entt_null then return end
+
+    -- Collision-triggered sub-cast
+    if hitData and hitData.subCast and hitData.subCast.collision then
+        local WandExecutor = require("wand.wand_executor")
+        WandExecutor.enqueueSubCast({
+            block = hitData.subCast.block,
+            inheritedModifiers = hitData.subCast.inheritedModifiers or modifiers,
+            context = hitData.subCast.context or context,
+            source = {
+                trigger = "collision",
+                blockIndex = hitData.subCast.parent and hitData.subCast.parent.blockIndex,
+                cardIndex = hitData.subCast.parent and hitData.subCast.parent.cardIndex,
+                wandId = hitData.subCast.parent and hitData.subCast.parent.wandId
+            }
+        })
+    end
 
     -- Healing (life steal)
     if modifiers.healOnHit > 0 and context.playerEntity then
@@ -294,6 +317,21 @@ end
 --- @param modifiers table Modifier aggregate
 --- @param context table Execution context
 function WandActions.handleProjectileDestroy(projectile, destroyData, modifiers, context)
+    if destroyData and destroyData.subCast and destroyData.subCast.death then
+        local WandExecutor = require("wand.wand_executor")
+        WandExecutor.enqueueSubCast({
+            block = destroyData.subCast.block,
+            inheritedModifiers = destroyData.subCast.inheritedModifiers or modifiers,
+            context = destroyData.subCast.context or context,
+            source = {
+                trigger = "death",
+                blockIndex = destroyData.subCast.parent and destroyData.subCast.parent.blockIndex,
+                cardIndex = destroyData.subCast.parent and destroyData.subCast.parent.cardIndex,
+                wandId = destroyData.subCast.parent and destroyData.subCast.parent.wandId
+            }
+        })
+    end
+
     -- Check if projectile should trigger on death
     if modifiers.triggerOnDeath then
         -- TODO: Execute sub-cast block

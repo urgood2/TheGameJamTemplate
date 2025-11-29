@@ -166,6 +166,9 @@ function ProjectileSystem.createProjectileData(params)
         onHitCallback = params.onHit,
         onDestroyCallback = params.onDestroy,
 
+        -- Child cast metadata (wand system)
+        subCast = params.subCast,
+
         -- Metadata
         projectileId = ProjectileSystem.next_projectile_id,
         creationTime = os.clock()

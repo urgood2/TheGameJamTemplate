@@ -273,9 +273,15 @@ function WandTriggers.handleEvent(eventType, eventData)
                 log_debug("WandTriggers: Event trigger fired", eventType, "for wand", wandId)
                 -- Queue execution so we run outside physics callbacks (Chipmunk spaces are locked there)
                 local payload = {}
-                if eventData then
+                if type(eventData) == "table" then
                     for k, v in pairs(eventData) do
                         payload[k] = v
+                    end
+                elseif eventData ~= nil then
+                    -- Allow scalar event payloads (e.g., entity id) without crashing
+                    payload.value = eventData
+                    if eventType == "on_bump_enemy" then
+                        payload.enemy = eventData
                     end
                 end
                 payload._source_event_type = eventType

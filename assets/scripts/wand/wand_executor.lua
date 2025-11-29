@@ -40,6 +40,22 @@ local JokerSystem = require("wand.joker_system")
 local graphUI = nil
 local blockFlashUI = nil
 
+local function shallowCopyTable(source)
+    local copy = {}
+    for k, v in pairs(source or {}) do
+        if type(v) == "table" then
+            local t = {}
+            for i, vv in ipairs(v) do
+                t[i] = vv
+            end
+            copy[k] = t
+        else
+            copy[k] = v
+        end
+    end
+    return copy
+end
+
 local function maybeRenderExecutionGraph(blocks, wandId)
     if graphUI == false then return end
     if not blocks or #blocks == 0 then return end
@@ -128,6 +144,9 @@ function WandExecutor.update(dt)
 
     -- Update projectiles
     ProjectileSystem.update(dt)
+
+    -- Run any queued sub-casts (collision/death) outside physics callbacks
+    WandExecutor.processPendingSubCasts()
 
     -- Update cooldowns
     WandExecutor.updateCooldowns(dt)
@@ -515,6 +534,27 @@ function WandExecutor.executeCastBlocks(blocks, context, state, onComplete)
     runBlock(1)
 end
 
+local function buildChildCastMap(block, blockIndex, context)
+    local lookup = {}
+    for _, child in ipairs(block.children or {}) do
+        if child.trigger then
+            lookup[child.trigger] = {
+                block = child.block,
+                delay = child.delay,
+                collision = child.collision,
+                death = child.death,
+                triggerType = child.collision and "collision" or child.death and "death" or child.delay and "timer"
+                    or "unknown",
+                parent = {
+                    blockIndex = blockIndex,
+                    wandId = context.wandId
+                }
+            }
+        end
+    end
+    return lookup
+end
+
 --- Executes a single cast block
 --- @param block table Cast block from evaluation
 --- @param context table Execution context
@@ -656,14 +696,25 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
         blockMetrics.mana.modifiers = modifierManaCost
     end
 
+    -- Pre-index child casts for this block so we can hand metadata into actions
+    local childCastMap = buildChildCastMap(block, blockIndex, context)
+    context._childCastMap = childCastMap
+
     -- Execute each action card in the block
     for cardIndex, actionCard in ipairs(block.cards) do
         if actionCard.type == "action" then
+            local childInfo = childCastMap[actionCard]
+            if childInfo then
+                childInfo.inheritedModifiers = modifiers
+                childInfo.context = context
+                childInfo.parent.cardIndex = cardIndex
+            end
+
             -- Check mana cost (Overheat: Allow negative mana)
             local manaCost = math.max(0, (actionCard.mana_cost or 0) * manaCostMultiplier)
 
             -- Execute action
-            local result = WandActions.execute(actionCard, modifiers, context)
+            local result = WandActions.execute(actionCard, modifiers, context, childInfo)
 
             if result then
                 -- Consume mana (allow negative)
@@ -675,7 +726,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
                 blockMetrics.projectiles = blockMetrics.projectiles + 1
 
                 -- Handle sub-casts (timer, collision triggers)
-                WandExecutor.handleSubCasts(block, actionCard, modifiers, context, cardIndex)
+                WandExecutor.handleSubCasts(block, actionCard, modifiers, context, cardIndex, childInfo)
             else
                 print("[WandExecutor] Warning: Action execution failed:", actionCard.card_id)
             end
@@ -720,6 +771,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
     context.cumulative.castDelayAdjusted = context.cumulative.castDelayAdjusted + blockCastDelay
 
     maybeFlashBlock(block, context)
+    context._childCastMap = nil
 
     return true, blockCastDelay
 end
@@ -730,35 +782,40 @@ end
 --- @param modifiers table Modifier aggregate
 --- @param context table Execution context
 --- @param cardIndex number Card index in block
-function WandExecutor.handleSubCasts(block, actionCard, modifiers, context, cardIndex)
-    -- Find child block for this action card
-    local childBlock = nil
-    for _, child in ipairs(block.children or {}) do
-        if child.trigger == actionCard then
-            childBlock = child
-            break
-        end
-    end
-
-    if not childBlock or not childBlock.block then
+--- @param childInfo table|nil Child cast metadata
+function WandExecutor.handleSubCasts(block, actionCard, modifiers, context, cardIndex, childInfo)
+    if not childInfo or not childInfo.block then
         return
     end
 
     -- Timer-based sub-cast
-    if childBlock.delay and childBlock.delay > 0 then
-        local delaySeconds = childBlock.delay / 1000
+    if childInfo.delay and childInfo.delay > 0 then
+        local delaySeconds = childInfo.delay / 1000
 
         timer.after(delaySeconds, function()
             print("[WandExecutor] Executing timer sub-cast after", delaySeconds, "seconds")
-            WandExecutor.executeSubCast(childBlock.block, context, modifiers)
+            WandExecutor.enqueueSubCast({
+                block = childInfo.block,
+                inheritedModifiers = modifiers,
+                context = context,
+                source = {
+                    trigger = "timer",
+                    blockIndex = childInfo.parent and childInfo.parent.blockIndex,
+                    cardIndex = childInfo.parent and childInfo.parent.cardIndex,
+                    wandId = childInfo.parent and childInfo.parent.wandId
+                }
+            })
         end, "wand_subcast_" .. context.wandId .. "_" .. os.clock())
     end
 
     -- Collision-based sub-cast
-    if childBlock.collision then
-        -- Store sub-cast info for projectile on-hit callback
-        -- This is handled via modifier tracking in WandActions
+    if childInfo.collision then
+        -- Stored on the projectile via WandActions
         print("[WandExecutor] Registered collision sub-cast for action:", actionCard.card_id)
+    end
+
+    if childInfo.death then
+        print("[WandExecutor] Registered death sub-cast for action:", actionCard.card_id)
     end
 end
 
@@ -766,29 +823,91 @@ end
 --- @param subBlock table Sub-cast block
 --- @param context table Execution context
 --- @param inheritedModifiers table Modifiers inherited from parent
+--- @param meta table|nil Additional metadata (trigger, parent block/card)
 --- @return boolean Success
-function WandExecutor.executeSubCast(subBlock, context, inheritedModifiers)
-    -- Aggregate modifiers (inherited + block's own)
-    local modifierCards = {}
+function WandExecutor.executeSubCast(subBlock, context, inheritedModifiers, meta)
+    -- Aggregate modifiers using inherited cards plus the child block's modifiers
+    local combinedCards = {}
+    if inheritedModifiers and inheritedModifiers.modifierCards then
+        for _, card in ipairs(inheritedModifiers.modifierCards) do
+            table.insert(combinedCards, card)
+        end
+    end
     for _, modInfo in ipairs(subBlock.applied_modifiers or {}) do
-        table.insert(modifierCards, modInfo.card)
+        table.insert(combinedCards, modInfo.card)
     end
 
-    local modifiers = WandModifiers.aggregate(modifierCards)
+    local modifiers = inheritedModifiers or WandModifiers.createAggregate()
+    if #combinedCards > 0 then
+        modifiers = WandModifiers.aggregate(combinedCards)
+    else
+        modifiers = shallowCopyTable(inheritedModifiers or WandModifiers.createAggregate())
+    end
+
+    if inheritedModifiers then
+        modifiers.damageMultiplier = (modifiers.damageMultiplier or 1.0) *
+            (inheritedModifiers.damageMultiplier or 1.0)
+        modifiers.damageBonus = (modifiers.damageBonus or 0) + (inheritedModifiers.damageBonus or 0)
+        modifiers.multicastCount = math.max(modifiers.multicastCount or 1, inheritedModifiers.multicastCount or 1)
+        modifiers.manaCostMultiplier = (modifiers.manaCostMultiplier or 1.0) *
+            (inheritedModifiers.manaCostMultiplier or 1.0)
+        modifiers.explosionDamageMult = (modifiers.explosionDamageMult or 1.0) *
+            (inheritedModifiers.explosionDamageMult or 1.0)
+        if inheritedModifiers.bounceDampening then
+            modifiers.bounceDampening = inheritedModifiers.bounceDampening
+        end
+    end
 
     -- Merge player stats into modifiers (inherited from context)
     if context.playerStats then
         WandModifiers.mergePlayerStats(modifiers, context.playerStats)
     end
 
-    -- Execute actions in sub-cast block
-    for _, actionCard in ipairs(subBlock.cards) do
+    -- Execute actions in sub-cast block (no mana/delay/overheat costs)
+    local childMap = buildChildCastMap(subBlock, meta and meta.parentBlockIndex or 0, context)
+    for cardIndex, actionCard in ipairs(subBlock.cards or {}) do
         if actionCard.type == "action" then
-            WandActions.execute(actionCard, modifiers, context)
+            local childInfo = childMap[actionCard]
+            if childInfo then
+                childInfo.inheritedModifiers = modifiers
+                childInfo.context = context
+                childInfo.parent.cardIndex = cardIndex
+                childInfo.parent.blockIndex = meta and meta.parentBlockIndex or childInfo.parent.blockIndex
+            end
+            WandActions.execute(actionCard, modifiers, context, childInfo)
+            WandExecutor.handleSubCasts(subBlock, actionCard, modifiers, context, cardIndex, childInfo)
         end
     end
 
+    if meta then
+        print(string.format("[WandExecutor] Executed sub-cast via %s (block %s card %s)", meta.trigger or "child",
+            tostring(meta.parentBlockIndex), tostring(meta.parentCardIndex)))
+    end
+
     return true
+end
+
+--- Queues a sub-cast to be processed on the next update (avoids physics callback issues)
+--- @param payload table { block, inheritedModifiers, context, source = { trigger, blockIndex, cardIndex, wandId } }
+function WandExecutor.enqueueSubCast(payload)
+    if not payload or not payload.block then return end
+    WandExecutor.pendingSubCasts[#WandExecutor.pendingSubCasts + 1] = payload
+end
+
+--- Processes any pending sub-casts
+function WandExecutor.processPendingSubCasts()
+    if #WandExecutor.pendingSubCasts == 0 then return end
+
+    local queue = WandExecutor.pendingSubCasts
+    WandExecutor.pendingSubCasts = {}
+
+    for _, payload in ipairs(queue) do
+        WandExecutor.executeSubCast(payload.block, payload.context or {}, payload.inheritedModifiers, {
+            trigger = payload.source and payload.source.trigger,
+            parentBlockIndex = payload.source and payload.source.blockIndex,
+            parentCardIndex = payload.source and payload.source.cardIndex
+        })
+    end
 end
 
 local function createStatsProxy(source)

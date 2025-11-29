@@ -62,16 +62,30 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - intermittent flicker when projectiles are wiped? not sure why.
     
 # programming side
+- how to best verify subcasts are hooked up and firing? it's hard to do this.
+- Display a simple tutorial text on the background whne spawning in for first time (entering action state). Just text that shows keys (or controller) to press for movement and dash.
+- Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom right)
+- destrutible objects that spawn from time to time and give resources?
+- Make enemies actually die when they reach 0 hp and spawn exp drops, remove auto drops for exp.
 
-- fps issue. not sure where it's coming from?
+- let's show three entities basic rects for now, which can be clicked, (pausing the game of course), to choose what stat to improve. a tooltip (refer to card tooltips) should explain what each stat does. jiggle them on hover, and when they first appear, they should smoothly tween in one by one.
+- we should show current level number somewhere on the actoin phase screen.
+- we need a button that will show current stats of the player (those that are relevant.)
+- we need small rectangles with numbers 1-4 in them for the wand slots. when hovered, they should show a tooltip with the relevant stats for the wands.
+- we need to add gold to the shop and gold screen.
 
-- cast execution graph needs debuggin. the card visulalization as well.
-- make a ui box that contains a row for every cast block.
-    - For now, use "M" with red box for modifiers applied to that block.
-    - Use nested horizontal row boxes for nested blocks.
-    - Use ">" in green background to show sequence of actions in cast blocks.
-    - If an action spawns a nested block, show action first, arrow, then the nested block in a horizontal row that is nested, as I requsted.
-- Also make the discovery thing work in planning phase? not sure how much info to show
+
+- we need a transition which animates the current gold, then shows in a jiggle how much interest was earned, then closes the transition.
+
+- we need a generic queue for rectangles with messages in them as well as an icon (animation or sprite) on the bottom right corner. we'll test it with test sprite and a test message from time to time. this will be used to show achievements or other relevant data.
+
+- we need to flesh out the shop. let's extend how it looks now. there should be a rounded rect for showing 3 shop offers (just cards)
+- A button for removing a card.
+- A button for rerolling the shop, at escalating cost (initial cost is 5 gold)
+- A dynamic text for showing current gold balance (gold is decimal internally, round for display)
+- a rounded rect area for purchasing jokers.
+
+
 
 - right now, moving after dash is infinite, might want to make a mechanic from that.
 

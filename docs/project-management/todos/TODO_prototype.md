@@ -56,12 +56,13 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - player level. 
 
 # Things to do in downtime.
+- web build resuming visibility is terrible. also disable telemetry for now until we do a demo.
 - continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
-- got to also test the new batching queue system.
-- some alignment issues with tooltip ui., also how to make the text right ailgned in the ui box?
 - intermittent flicker when projectiles are wiped? not sure why.
     
 # programming side
+- got to also test the new batching queue system.
+
 - how to best verify subcasts are hooked up and firing? it's hard to do this.
 - Display a simple tutorial text on the background whne spawning in for first time (entering action state). Just text that shows keys (or controller) to press for movement and dash.
 - Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom right)
@@ -81,10 +82,12 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - we need to flesh out the shop. let's extend how it looks now. there should be a rounded rect for showing 3 shop offers (just cards)
 - A button for removing a card.
+- a button for locking the offers of the shop. when lock is in place, a sprite should be rendered above each item offered by the shop to indicate it is locked.
 - A button for rerolling the shop, at escalating cost (initial cost is 5 gold)
 - A dynamic text for showing current gold balance (gold is decimal internally, round for display)
 - a rounded rect area for purchasing jokers.
-
+- a fancy dynamic text for "SHOP" somewhere prominent. 
+- please suggest other features from shop_system.lua
 
 
 - right now, moving after dash is infinite, might want to make a mechanic from that.

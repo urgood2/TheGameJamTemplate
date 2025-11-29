@@ -1,28 +1,25 @@
 # Wand System Integration Gaps (implementation vs. design)
 
-Quick snapshot of what’s not yet wired in the current scripts (`assets/scripts/wand` + `assets/scripts/core`) relative to the wand design docs. Use this before authoring content so you know which systems need finishing.
+Quick snapshot of what's not yet wired in the current scripts (`assets/scripts/wand` + `assets/scripts/core`) relative to the wand design docs. Use this before authoring content so you know which systems need finishing.
 
 ## High-priority gaps
-- **Player/context hooks still stubs**  
-  - `getPlayerEntity/getPlayerScript` rely on globals, `findNearestEnemy` is unimplemented, and homing/auto-aim/projectile spawns all default to `{0,0}` until wired to the real player/enemy data.
-- **Overheat/resource handling still incomplete**  
-  - `canCast` ignores mana/flux, overheat only multiplies block delay and total cooldown when `currentMana < 0`, regen ignores overheat, and sub-casts don’t spend mana or add delay/cooldown at all.
-- **Trigger wiring moved to `on_*` signals, emitters still needed**  
-  - Listeners now use `hump.signal` with queued execution for `on_player_attack/on_bump_enemy/on_dash/on_pickup/on_low_health`, but gameplay still doesn’t emit them; hook the real events and avoid duplicate trigger paths.
-- **Sub-casts/on-hit branching now executes collision/death but stays free**  
-  - Timer/collision/death children enqueue and run with inherited modifiers/context; projectiles carry child refs and `pendingSubCasts` is processed outside physics. By design, child casts currently ignore mana/delay/overheat—adjust if downstream balance needs them to pay costs.
-- **Non-projectile actions/on-hit effects still stubs**  
-  - Hazards, summons, teleport, meta resource tweaks, knockback impulses, chain lightning, AOE heal/shield, and on-death triggers are scaffolded but don’t touch combat/physics beyond logs; projectile hits only cover basic heal/freeze/slow.
-- **Deck/tag/Joker bridge only half-wired**  
-  - Per-cast spell-type/tag analysis triggers Jokers and discovery signals, but `TagEvaluator.evaluate_and_apply` is never called on deck changes, so deck-wide tag thresholds/procs/Joker/discovery effects never fire.
+- **Player context/homing still partial**  
+  - Gameplay now overrides `getPlayerEntity/createExecutionContext` to use `survivorEntity` and combat stats, but the base helpers still fall back to globals and `findNearestEnemy` is empty, so homing/auto-aim/chain lightning revert to straight shots and facing still uses a mouse-only fallback.
+- **Resource/overheat rules still inconsistent**  
+  - `canCast` never blocks on mana (intentional), regen ignores overheat/negative mana (also intentional), but meta cards such as `add_mana_amount` are stubs and child casts execute without paying mana/delay/overheat so overcast builds only see the parent block penalties.
+- **Trigger emit coverage is incomplete/mixed**  
+  - `on_bump_enemy`/`on_pickup` now emit via `hump.signal` and `on_dash` calls `WandTriggers.handleEvent`, but `on_player_attack` and `on_low_health` never fire and we're mixing direct handler calls vs. signal emission.
+- **Non-projectile + special on-hit actions are still stubs**  
+  - Hazards, summons, teleport, meta resource tweaks, AOE heal/shield, knockback impulses, chain lightning, and on-death branches log or no-op instead of touching combat/physics.
+- **Deck/tag/Joker bridge still missing deck-change hook**  
+  - Per-cast spell-type/tag analysis triggers Jokers and discovery signals, but nothing calls `TagEvaluator.evaluate_and_apply` on deck/board changes so tag thresholds, player `tag_counts`, Joker scalers, and tag discoveries never update in play.
 
 ## Suggested fix order (to unblock content work)
-1. Wire execution context to the real player/enemy data (entity ID, transform, facing, nearest-enemy queries) so spawns, homing, and chain logic use live positions.
-2. Emit the `on_*` signals from gameplay (attack/bump/dash/pickup/low-health) to feed WandTriggers’ listeners/queueing and avoid duplicate pathways.
-3. Execute collision/death sub-casts via projectile callbacks: attach child refs to projectiles, apply inherited modifiers, and charge mana/delay/cooldown for child blocks.
-4. Normalize resource/overheat rules (decide gating vs. negative mana), extend penalties to regen if desired, and ensure sub-casts respect the same rules.
+1. Finish player/enemy context: wire `findNearestEnemy` and consistent facing/position helpers so homing/auto-aim/chain effects target live enemies in-game and in tests.
+2. Standardize trigger emission: fire `on_player_attack` and `on_low_health`, and choose one pathway (signal or direct `handleEvent`) to avoid duplicated trigger plumbing.
+3. Lock down resource/overheat rules (gating vs. negative mana), make regen respect overheat if desired, and charge mana/delay/cooldown on child casts; hook meta `add_mana_amount` into wand state.
+4. Call `TagEvaluator.evaluate_and_apply` whenever decks/boards change or wands load so tag thresholds, Joker scalers, and tag discovery events stay current.
 5. Flesh out non-projectile/on-hit actions (hazard, summon, teleport, meta resource, knockback, chain lightning, shield/AOE heal, on-death) against combat/physics systems.
-6. Call `TagEvaluator.evaluate_and_apply` on deck changes so deck-wide tag thresholds, Jokers, and discovery hooks activate.
 
 
 

@@ -440,7 +440,8 @@ function WandExecutor.execute(wandId, triggerType)
             overheatPenaltyMult = context.cumulative.overheatPenaltyMult or 1.0,
             cooldownSeconds = totalCooldown,
             blocksExecuted = #evaluationResult.blocks,
-            blocks = context.cumulative.blocks
+            blocks = context.cumulative.blocks,
+            playerStats = context.cumulative.lastPlayerStats
         }
     end
 
@@ -675,6 +676,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
     local blockMetrics = {
         mana = { modifiers = 0, actions = 0, total = 0, multiplier = manaCostMultiplier },
         projectiles = 0,
+        stats = modifiers.statsSnapshot or {},
         castDelay = {
             base = baseBlockDelay,
             adjusted = nil,
@@ -683,6 +685,7 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
         }
     }
     context.cumulative.blocks[blockIndex] = blockMetrics
+    context.cumulative.lastPlayerStats = modifiers.statsSnapshot or {}
 
     -- Consume Modifier Mana (once per block)
     local modifierManaCost = modifiers.manaCost or 0

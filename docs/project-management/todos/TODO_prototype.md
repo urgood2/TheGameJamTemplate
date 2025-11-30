@@ -57,12 +57,12 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 # Things to do in downtime.
 - web build resuming visibility is terrible. also disable telemetry for now until we do a demo.
-- continue testing checklist, finish refactor, test the projectiles, test ldtk, get ready for gameplay impelementation.
 - intermittent flicker when projectiles are wiped? not sure why.
+- got to also test the new batching queue system.
     
 # programming side
-- got to also test the new batching queue system.
 
+- isolate shop ui to shop state only. also needs work. where is the gold, the jokers, etc?
 - shop ui is terrible needs rework.
 
 - how to best verify subcasts are hooked up and firing? it's hard to do this.
@@ -137,6 +137,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - think up and  apply card upgrades. e.g., bolt -> takes on an element -> pierces 3 times -> explodes on impact. We  need an upgrade resource, and an area where upgrades can be applied.
 
 # errors
+- toasts show icon below the bg rectangle.
 - there's a memory leak in the wasm version.
 - starry_tunnel shader not working.
 - Using 3d_skew shader on cards makes player invisible. why?

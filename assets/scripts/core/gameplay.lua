@@ -12,6 +12,8 @@ require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
 local WandTriggers = require("wand.wand_triggers")
+local AvatarSystem = require("wand.avatar_system")
+local TagEvaluator = require("wand.tag_evaluator")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
@@ -28,6 +30,11 @@ local MessageQueueUI = require("ui.message_queue_ui")
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
 local messageQueueHooksRegistered = false
+local avatarTestEventsFired = false
+local DEBUG_AVATAR_TEST_EVENTS = rawget(_G, "DEBUG_AVATAR_TEST_EVENTS")
+if DEBUG_AVATAR_TEST_EVENTS == nil then
+    DEBUG_AVATAR_TEST_EVENTS = true
+end
 
 local function ensureMessageQueueHooks()
     if messageQueueHooksRegistered then return end
@@ -57,6 +64,26 @@ local function ensureMessageQueueHooks()
         local spell = (data and data.spell_type) or "Spell"
         MessageQueueUI.enqueue(string.format("New spell type: %s", spell))
     end)
+end
+
+local function fireAvatarDebugEvents()
+    if avatarTestEventsFired or not DEBUG_AVATAR_TEST_EVENTS then return end
+    avatarTestEventsFired = true
+
+    local testPlayer = {}
+    local cards = {}
+    for _ = 1, 7 do
+        table.insert(cards, { tags = { "Fire" } })
+    end
+
+    -- Emits tag discovery + wildfire unlock signals
+    TagEvaluator.evaluate_and_apply(testPlayer, { cards = cards })
+
+    -- Unlocks citadel via metric path
+    AvatarSystem.record_progress(testPlayer, "damage_blocked", 5000)
+
+    -- Exercise spell discovery hook
+    signal.emit("spell_type_discovered", { spell_type = "Twin Cast" })
 end
 
 
@@ -2368,7 +2395,7 @@ function initPlanningPhase()
             CastBlockFlashUI.draw()
         end
 
-        if SubcastDebugUI and SubcastDebugUI.enabled and is_state_active and is_state_active(ACTION_STATE) then
+        if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
             SubcastDebugUI.update(dt)
             SubcastDebugUI.draw()
         end
@@ -4070,11 +4097,12 @@ function startActionPhase()
 end
 
 function startPlanningPhase()
-    clear_states() -- disable all states.
-    WandExecutor.cleanup()
-    entity_cache.clear()
-    CastBlockFlashUI.clear()
-    SubcastDebugUI.clear()
+	    clear_states() -- disable all states.
+	    WandExecutor.cleanup()
+	    entity_cache.clear()
+	    CastBlockFlashUI.clear()
+	    SubcastDebugUI.clear()
+	    SubcastDebugUI.init()
 
     if record_telemetry then
         local now = os.clock()
@@ -5057,6 +5085,7 @@ function initActionPhase()
         MessageQueueUI.init()
     end
     ensureMessageQueueHooks()
+    fireAvatarDebugEvents()
 
     -- Clamp the camera to the playable arena so its edges stay on screen.
     -- do

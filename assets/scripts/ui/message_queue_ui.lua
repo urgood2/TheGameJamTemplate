@@ -309,7 +309,7 @@ function MessageQueueUI.draw()
             c.fontSize = cfg.fontSize
         end, cfg.baseZ + 2, space)
 
-        drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ + 3, space)
+        drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ +100, space)
     end
 end
 

@@ -9,19 +9,41 @@ package.path = table.concat({
     scriptsRoot .. "?/init.lua",
     scriptsRoot .. "wand/?.lua",
     scriptsRoot .. "data/?.lua",
-    scriptsRoot .. "util/?.lua"
+    scriptsRoot .. "ui/?.lua"
 }, ";")
+
+-- Lightweight stub of message_queue_ui (full module depends on engine)
+package.preload["ui.message_queue_ui"] = function()
+    local M = { pending = {}, active = {}, isActive = false }
+    function M.init(opts)
+        M.pending = {}
+        M.active = {}
+        M.isActive = true
+    end
+    function M.enqueue(text, opts)
+        table.insert(M.pending, { text = text, opts = opts })
+    end
+    return M
+end
 
 local AvatarSystem = require("wand.avatar_system")
 local TagEvaluator = require("wand.tag_evaluator")
-local MessageQueue = require("util.message_queue")
+local MessageQueueUI = require("ui.message_queue_ui")
+MessageQueueUI.init({ maxVisible = 10 })
 
 -- stub signal to capture emits
 local emitted = {}
 local signal = {
     emit = function(event, payload)
         table.insert(emitted, { event = event, payload = payload })
-        MessageQueue.push(event, payload)
+        local text = event
+        if payload and payload.avatar_id then
+            text = text .. " avatar=" .. tostring(payload.avatar_id)
+        end
+        if payload and payload.spell_type then
+            text = text .. " spell=" .. tostring(payload.spell_type)
+        end
+        MessageQueueUI.enqueue(text)
     end
 }
 package.loaded["external.hump.signal"] = signal
@@ -80,14 +102,16 @@ local function run_tests()
 
     -- Test 4: incremental metric feed with queue output (kills_with_fire)
     reset()
-    MessageQueue.clear()
     local player3 = {}
     for _ = 1, 4 do
         AvatarSystem.record_progress(player3, "kills_with_fire", 25)
     end
     assert_true(player3.avatar_state.unlocked.wildfire, "wildfire should unlock after 100 fire kills metric")
-    -- Dump queued messages so we can see the progression when running the test
-    MessageQueue.dump()
+
+    -- Print queued messages for visibility
+    for i, item in ipairs(MessageQueueUI.pending) do
+        print(string.format("[QUEUE %d] %s", i, item.text))
+    end
 end
 
 run_tests()

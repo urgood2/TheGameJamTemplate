@@ -22,6 +22,7 @@ Quick snapshot of what's not yet wired in the current scripts (`assets/scripts/w
 3. Lock down resource/overheat rules (gating vs. negative mana), make regen respect overheat if desired, and charge mana/delay/cooldown on child casts; hook meta `add_mana_amount` into wand state.
 4. Call `TagEvaluator.evaluate_and_apply` whenever decks/boards change or wands load so tag thresholds, Joker scalers, and tag discovery events stay current.
 5. Flesh out non-projectile/on-hit actions (hazard, summon, teleport, meta resource, knockback, chain lightning, shield/AOE heal, on-death) against combat/physics systems.
+6. Wire avatar unlock/equip: `avatar_system.lua` now exists and is invoked from `TagEvaluator`; feed it runtime metrics (kills, distance, damage blocked) and expose equip/active avatar into wand/joker logic.
 
 
 

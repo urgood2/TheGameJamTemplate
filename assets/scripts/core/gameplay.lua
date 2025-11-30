@@ -12,6 +12,7 @@ require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
 local WandTriggers = require("wand.wand_triggers")
+local TagEvaluator = require("wand.tag_evaluator")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
@@ -139,6 +140,21 @@ previously_hovered_tooltip = nil
 board_sets = {}
 current_board_set_index = 1
 
+local reevaluateDeckTags -- forward declaration; defined after deck helpers
+
+local function notifyDeckChanged(boardEntityID)
+    if not boardEntityID or not board_sets or #board_sets == 0 then return end
+
+    for _, boardSet in ipairs(board_sets) do
+        if boardSet.action_board_id == boardEntityID or boardSet.trigger_board_id == boardEntityID then
+            if reevaluateDeckTags then
+                reevaluateDeckTags()
+            end
+            return
+        end
+    end
+end
+
 -- keep track of controller focus
 controller_focused_entity = nil
 
@@ -197,6 +213,8 @@ function addCardToBoard(cardEntityID, boardEntityID)
         log_debug("Card", cardEntityID, "now on board", boardEntityID)
         cardScript.currentBoardEntity = boardEntityID
     end
+
+    notifyDeckChanged(boardEntityID)
 end
 
 function removeCardFromBoard(cardEntityID, boardEntityID)
@@ -225,6 +243,8 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
     if is_state_active(SHOP_STATE) then
         add_state_tag(cardEntityID, SHOP_STATE)
     end
+
+    notifyDeckChanged(boardEntityID)
 end
 
 function resetCardStackZOrder(rootCardEntityID)
@@ -3682,6 +3702,60 @@ local function collectCardPoolForBoardSet(boardSet)
     return pool
 end
 
+local tagEvaluationFallbackPlayer = { active_tag_bonuses = {}, active_procs = {} }
+
+local function buildDeckSnapshotFromBoards()
+    local cards = {}
+
+    if board_sets then
+        for _, boardSet in ipairs(board_sets) do
+            local pool = collectCardPoolForBoardSet(boardSet)
+            if pool then
+                for _, card in ipairs(pool) do
+                    cards[#cards + 1] = card
+                end
+            end
+        end
+    end
+
+    return { cards = cards }
+end
+
+local function getTagEvaluationTargets()
+    local playerScript = survivorEntity and getScriptTableFromEntityID(survivorEntity)
+
+    if playerScript and playerScript.combatTable then
+        return playerScript.combatTable, playerScript
+    end
+
+    if playerScript then
+        return playerScript, playerScript
+    end
+
+    if player and type(player) == "table" then
+        return player, nil
+    end
+
+    return tagEvaluationFallbackPlayer, nil
+end
+
+reevaluateDeckTags = function()
+    if not board_sets or #board_sets == 0 then
+        return
+    end
+
+    local deckSnapshot = buildDeckSnapshotFromBoards()
+    local playerTarget, playerScript = getTagEvaluationTargets()
+    if not playerTarget then return end
+
+    TagEvaluator.evaluate_and_apply(playerTarget, deckSnapshot, combat_context)
+
+    if playerScript and playerTarget ~= playerScript then
+        playerScript.tag_counts = playerTarget.tag_counts
+        playerScript.active_tag_bonuses = playerTarget.active_tag_bonuses
+    end
+end
+
 local DEFAULT_TRIGGER_INTERVAL = 1.0
 
 local function buildTriggerDefForBoardSet(boardSet)
@@ -3748,6 +3822,10 @@ local function loadWandsIntoExecutorFromBoards()
             log_debug(string.format("Skipping wand load for set %d (cards: %s, trigger: %s)", index,
                 cardPool and #cardPool or 0, triggerDef and triggerDef.id or "none"))
         end
+    end
+
+    if reevaluateDeckTags then
+        reevaluateDeckTags()
     end
 end
 

@@ -46,7 +46,7 @@ local CardUpgrade = nil -- Lazy loaded
 
 ShopSystem.config = {
     offerSlots = 5,       -- Number of card offerings
-    baseRerollCost = 2,   -- Starting reroll cost
+    baseRerollCost = 5,   -- Starting reroll cost (escalates each roll)
     rerollCostIncrease = 1, -- Cost increase per reroll
     interestRate = 1,     -- 1 gold per 10 gold
     interestThreshold = 10, -- Gold needed for 1 interest

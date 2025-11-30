@@ -12,23 +12,22 @@ package.path = table.concat({
     scriptsRoot .. "ui/?.lua"
 }, ";")
 
--- Lightweight stub of message_queue_ui (full module depends on engine)
-package.preload["ui.message_queue_ui"] = function()
-    local M = { pending = {}, active = {}, isActive = false }
-    function M.init(opts)
-        M.pending = {}
-        M.active = {}
-        M.isActive = true
-    end
-    function M.enqueue(text, opts)
-        table.insert(M.pending, { text = text, opts = opts })
-    end
-    return M
-end
-
 local AvatarSystem = require("wand.avatar_system")
 local TagEvaluator = require("wand.tag_evaluator")
-local MessageQueueUI = require("ui.message_queue_ui")
+
+-- Prefer real message queue UI; fall back to stub in headless runs
+local ok, MessageQueueUI = pcall(require, "ui.message_queue_ui")
+if not ok or not MessageQueueUI then
+    MessageQueueUI = { pending = {}, active = {}, isActive = false }
+    function MessageQueueUI.init(opts)
+        MessageQueueUI.pending = {}
+        MessageQueueUI.active = {}
+        MessageQueueUI.isActive = true
+    end
+    function MessageQueueUI.enqueue(text, opts)
+        table.insert(MessageQueueUI.pending, { text = text, opts = opts })
+    end
+end
 MessageQueueUI.init({ maxVisible = 10 })
 
 -- stub signal to capture emits

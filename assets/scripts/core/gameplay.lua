@@ -24,6 +24,37 @@ local MessageQueueUI = require("ui.message_queue_ui")
 
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
+local messageQueueHooksRegistered = false
+
+local function ensureMessageQueueHooks()
+    if messageQueueHooksRegistered then return end
+    messageQueueHooksRegistered = true
+
+    local function ensureMQ()
+        if not MessageQueueUI.isActive then
+            MessageQueueUI.init()
+        end
+    end
+
+    signal.register("avatar_unlocked", function(data)
+        ensureMQ()
+        local avatarId = (data and data.avatar_id) or "Unknown Avatar"
+        MessageQueueUI.enqueue(string.format("Avatar unlocked: %s", avatarId))
+    end)
+
+    signal.register("tag_threshold_discovered", function(data)
+        ensureMQ()
+        local tag = (data and data.tag) or "Tag"
+        local threshold = (data and data.threshold) or "?"
+        MessageQueueUI.enqueue(string.format("Discovery: %s x%s", tag, threshold))
+    end)
+
+    signal.register("spell_type_discovered", function(data)
+        ensureMQ()
+        local spell = (data and data.spell_type) or "Spell"
+        MessageQueueUI.enqueue(string.format("New spell type: %s", spell))
+    end)
+end
 
 
 
@@ -4884,6 +4915,7 @@ function initActionPhase()
     if not MessageQueueUI.isActive then
         MessageQueueUI.init()
     end
+    ensureMessageQueueHooks()
 
     -- Clamp the camera to the playable arena so its edges stay on screen.
     -- do

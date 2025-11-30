@@ -14,6 +14,7 @@
 #include <random>
 #include <sstream>
 #include <functional>
+#include <utility>
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
@@ -28,6 +29,7 @@ namespace telemetry
         std::string g_sessionId{};
         bool g_sentDebugPing = false;
         bool g_sentSessionEnd = false;
+        VisibilityChangeCallback g_visibilityChangeCallback{};
 #if defined(__EMSCRIPTEN__)
         bool g_lifecycleHooksRegistered = false;
 #endif
@@ -414,6 +416,11 @@ namespace telemetry
         return g_sessionId;
     }
 
+    void SetVisibilityChangeCallback(VisibilityChangeCallback cb)
+    {
+        g_visibilityChangeCallback = std::move(cb);
+    }
+
     namespace
     {
         nlohmann::json tableToJson(const sol::table &tbl)
@@ -606,6 +613,10 @@ namespace telemetry
         const std::string reason = reasonCStr ? reasonCStr : "unknown";
         const bool visible = (isVisible != 0);
         RecordEvent("visibility_change", {{"reason", reason}, {"visible", visible}});
+        if (g_visibilityChangeCallback)
+        {
+            g_visibilityChangeCallback(reason, visible);
+        }
     }
 #endif
 

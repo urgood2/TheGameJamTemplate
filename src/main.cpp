@@ -107,6 +107,7 @@ auto updateTimers(float dt) -> void {
 
 bool pauseGameWhenOutofFocus = true;
 bool updatedGame = false;
+static bool gPausedByVisibilityLoss = false;
 auto mainGameStateGameLoop(float dt) -> void {
 
   // updatedGame = false;
@@ -409,6 +410,35 @@ void RunGameLoop() {
                 globals::g_ctx);
 
     game::init();
+
+#ifdef __EMSCRIPTEN__
+    telemetry::SetVisibilityChangeCallback([](const std::string &reason, bool visible) {
+        if (!pauseGameWhenOutofFocus)
+            return;
+        if (!visible)
+        {
+            if (!globals::getIsGamePaused())
+            {
+                globals::setIsGamePaused(true);
+                gPausedByVisibilityLoss = true;
+                SPDLOG_INFO("Pausing game (tab hidden: {})", reason);
+            }
+            else
+            {
+                gPausedByVisibilityLoss = false;
+            }
+        }
+        else
+        {
+            if (gPausedByVisibilityLoss)
+            {
+                globals::setIsGamePaused(false);
+                SPDLOG_INFO("Resuming game (tab visible: {})", reason);
+            }
+            gPausedByVisibilityLoss = false;
+        }
+    });
+#endif
 
     // gamepad connected? just connect gamepad 0
     if (IsGamepadAvailable(0)) {

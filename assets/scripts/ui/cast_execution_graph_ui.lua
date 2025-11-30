@@ -32,6 +32,8 @@ local MAX_DEPTH = 6
 CastExecutionGraphUI.position = { x = DEFAULT_POS.x, y = DEFAULT_POS.y }
 CastExecutionGraphUI.currentBox = nil
 CastExecutionGraphUI._lastFingerprint = nil
+CastExecutionGraphUI._activeTooltip = nil
+CastExecutionGraphUI._fallbackTooltipActive = false
 
 local function resolveColor(name, fallback)
     local ok, c = pcall(util.getColor, name)
@@ -58,6 +60,100 @@ local function cleanLabel(str)
     str = tostring(str or "?")
     str = str:gsub("\n", " / ")
     return str
+end
+local function tooltipCardId(card)
+    if not card then return nil end
+    return card.cardID or card.card_id or card.id
+end
+
+local function showCardTooltip(card, anchorEntity, fallbackLabel, fallbackBody)
+    if not card then return nil end
+    local cardId = tooltipCardId(card)
+    if not cardId or not card_tooltip_cache then return nil end
+
+    local tooltip = card_tooltip_cache[cardId]
+    if not tooltip then return nil end
+
+    if centerTooltipAboveEntity then
+        centerTooltipAboveEntity(tooltip, anchorEntity, 12)
+    end
+
+    if ui and ui.box and ui.box.ClearStateTagsFromUIBox then
+        for _, tooltipEntity in pairs(card_tooltip_cache) do
+            if tooltipEntity ~= tooltip then
+                ui.box.ClearStateTagsFromUIBox(tooltipEntity)
+            end
+        end
+    end
+
+    if add_state_tag then add_state_tag(tooltip, CARD_TOOLTIP_STATE) end
+    if activate_state then activate_state(CARD_TOOLTIP_STATE) end
+    if ui and ui.box and ui.box.AddStateTagToUIBox then
+        ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE)
+    end
+
+    previously_hovered_tooltip = tooltip
+    CastExecutionGraphUI._activeTooltip = tooltip
+
+    return tooltip
+end
+
+local function hideActiveTooltip()
+    local tooltip = CastExecutionGraphUI._activeTooltip
+    if tooltip then
+        if clear_state_tags then clear_state_tags(tooltip) end
+        if ui and ui.box and ui.box.ClearStateTagsFromUIBox then
+            ui.box.ClearStateTagsFromUIBox(tooltip)
+        end
+        if previously_hovered_tooltip == tooltip then
+            previously_hovered_tooltip = nil
+        end
+    end
+
+    if CastExecutionGraphUI._fallbackTooltipActive and hideTooltip then
+        hideTooltip()
+    end
+
+    CastExecutionGraphUI._activeTooltip = nil
+    CastExecutionGraphUI._fallbackTooltipActive = false
+end
+
+local function attachTooltip(config, tooltipData)
+    if not tooltipData then return config end
+
+    local prevInit = config.initFunc
+    local card = tooltipData.card
+    local label = tooltipData.label
+    local body = tooltipData.body or ""
+
+    config.hover = true
+    config.canCollide = true
+    config.collideable = true
+
+    config.initFunc = function(registry, entity)
+        if prevInit then prevInit(registry, entity) end
+
+        local go = registry:get(entity, GameObject)
+        if not go then return end
+
+        go.state.hoverEnabled = true
+        go.state.collisionEnabled = true
+        go.state.triggerOnReleaseEnabled = true
+
+        go.methods.onHover = function()
+            local shown = showCardTooltip(card, entity, label, body)
+            if not shown and label and showTooltip then
+                showTooltip(cleanLabel(label), cleanLabel(body))
+                CastExecutionGraphUI._fallbackTooltipActive = true
+            end
+        end
+
+        go.methods.onStopHover = function()
+            hideActiveTooltip()
+        end
+    end
+
+    return config
 end
 
 local function abbreviateLabel(label)
@@ -98,6 +194,8 @@ local function destroyBox()
         registry:destroy(box)
     end
 
+    hideActiveTooltip()
+
     CastExecutionGraphUI.currentBox = nil
 end
 
@@ -115,18 +213,23 @@ local function pill(text, opts)
     if outline == nil then outline = 1 end
     local label = tostring(text or "")
 
+    local config = {
+        color = opts.bg or colors.row,
+        padding = opts.padding or 4,
+        outlineThickness = outline,
+        outlineColor = opts.outlineColor or colors.outline,
+        stylingType = STYLING_ROUNDED,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        minWidth = opts.minWidth,
+        minHeight = opts.minHeight or 20,
+        shadow = opts.shadow,
+        initFunc = opts.initFunc,
+    }
+
+    config = attachTooltip(config, opts.tooltip)
+
     return dsl.hbox{
-        config = {
-            color = opts.bg or colors.row,
-            padding = opts.padding or 4,
-            outlineThickness = outline,
-            outlineColor = opts.outlineColor or colors.outline,
-            stylingType = STYLING_ROUNDED,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            minWidth = opts.minWidth,
-            minHeight = opts.minHeight or 20,
-            shadow = opts.shadow,
-        },
+        config = config,
         children = {
             dsl.text(label, { color = opts.textColor or colors.text, fontSize = opts.fontSize or 13 })
         }
@@ -134,6 +237,7 @@ local function pill(text, opts)
 end
 
 local function modBox(modInfo)
+    local label = cardLabel(modInfo and modInfo.card)
     return pill("M", {
         bg = colors.mod,
         textColor = colors.modText,
@@ -142,16 +246,19 @@ local function modBox(modInfo)
         minWidth = 22,
         minHeight = 20,
         shadow = true,
+        tooltip = { card = modInfo and modInfo.card, label = label, body = "Modifier" },
     })
 end
 
 local function actionBox(card)
-    local label = abbreviateLabel(cardLabel(card))
+    local fullLabel = cardLabel(card)
+    local label = abbreviateLabel(fullLabel)
     return pill(label, {
         bg = colors.action,
         textColor = colors.outline,
         fontSize = 12,
         padding = 4,
+        tooltip = { card = card, label = fullLabel, body = "Action" },
     })
 end
 

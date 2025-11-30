@@ -8,17 +8,20 @@ package.path = table.concat({
     scriptsRoot .. "?.lua",
     scriptsRoot .. "?/init.lua",
     scriptsRoot .. "wand/?.lua",
-    scriptsRoot .. "data/?.lua"
+    scriptsRoot .. "data/?.lua",
+    scriptsRoot .. "util/?.lua"
 }, ";")
 
 local AvatarSystem = require("wand.avatar_system")
 local TagEvaluator = require("wand.tag_evaluator")
+local MessageQueue = require("util.message_queue")
 
 -- stub signal to capture emits
 local emitted = {}
 local signal = {
     emit = function(event, payload)
         table.insert(emitted, { event = event, payload = payload })
+        MessageQueue.push(event, payload)
     end
 }
 package.loaded["external.hump.signal"] = signal
@@ -74,6 +77,17 @@ local function run_tests()
 
     local ok2, err2 = AvatarSystem.equip(player2, "voidwalker")
     assert_true(not ok2 and err2 == "avatar_locked", "equip should fail for locked avatar")
+
+    -- Test 4: incremental metric feed with queue output (kills_with_fire)
+    reset()
+    MessageQueue.clear()
+    local player3 = {}
+    for _ = 1, 4 do
+        AvatarSystem.record_progress(player3, "kills_with_fire", 25)
+    end
+    assert_true(player3.avatar_state.unlocked.wildfire, "wildfire should unlock after 100 fire kills metric")
+    -- Dump queued messages so we can see the progression when running the test
+    MessageQueue.dump()
 end
 
 run_tests()

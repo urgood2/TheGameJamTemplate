@@ -469,6 +469,30 @@ function initMainGame()
 
 end
 
+local drawBatchingTestRan = false
+local function runDrawBatchingSmokeTest()
+    if drawBatchingTestRan then
+        return
+    end
+    drawBatchingTestRan = true
+
+    local env = os.getenv("RUN_DRAW_BATCH_TESTS")
+    if env == "0" or env == "false" then
+        return
+    end
+
+    local ok, testModule = pcall(require, "test_draw_batching")
+    if not ok then
+        log_warn("Skipping draw batching smoke test: " .. tostring(testModule))
+        return
+    end
+
+    local success = testModule.runQuickTests()
+    if not success then
+        log_warn("Draw batching smoke test failed; check console output")
+    end
+end
+
 function changeGameState(newState)
     -- Check if the new state is different from the current state
     if newState == GAMESTATE.MAIN_MENU then
@@ -583,6 +607,8 @@ function main.init()
     nil, -- no "after" callback
     "tooltip_hide_timer" -- unique tag for this timer
     )
+
+    runDrawBatchingSmokeTest()
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
     

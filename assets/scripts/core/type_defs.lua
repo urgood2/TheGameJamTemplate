@@ -107,6 +107,14 @@ function BoardType:update(dt)
             local x = startX + (i - 1) * spacing
             local y = centerY - ct.actualH * 0.5
 
+            if self.isInventoryBoard and getScriptTableFromEntityID then
+                local cardScript = getScriptTableFromEntityID(cardEid)
+                if cardScript and cardScript.selected and not cardScript.isBeingDragged then
+                    local lift = math_max(8, ct.actualH * 0.12)
+                    y = y - lift
+                end
+            end
+
             ct.actualX = math_floor(x + 0.5)
             ct.actualY = math_floor(y + 0.5)
         end

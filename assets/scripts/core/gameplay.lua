@@ -274,6 +274,39 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
     notifyDeckChanged(boardEntityID)
 end
 
+-- Moves all selected cards from the inventory board to the current set's action board.
+function sendSelectedInventoryCardsToActiveActionBoard()
+    if not inventory_board_id or inventory_board_id == entt_null or not entity_cache.valid(inventory_board_id) then
+        return false
+    end
+
+    local inventoryBoard = boards[inventory_board_id]
+    if not inventoryBoard or not inventoryBoard.cards or #inventoryBoard.cards == 0 then
+        return false
+    end
+
+    local activeSet = board_sets and board_sets[current_board_set_index]
+    if not activeSet or not activeSet.action_board_id or not entity_cache.valid(activeSet.action_board_id) then
+        return false
+    end
+
+    local moved = false
+    for i = #inventoryBoard.cards, 1, -1 do
+        local cardEid = inventoryBoard.cards[i]
+        if cardEid and entity_cache.valid(cardEid) then
+            local script = getScriptTableFromEntityID(cardEid)
+            if script and script.selected then
+                removeCardFromBoard(cardEid, inventory_board_id)
+                addCardToBoard(cardEid, activeSet.action_board_id)
+                script.selected = false
+                moved = true
+            end
+        end
+    end
+
+    return moved
+end
+
 function resetCardStackZOrder(rootCardEntityID)
     local rootCardScript = getScriptTableFromEntityID(rootCardEntityID)
     if not rootCardScript or not rootCardScript.cardStack then return end
@@ -753,6 +786,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- save category and id
     cardScript.category = category
     cardScript.cardID = id or "unknown"
+    cardScript.selected = false
 
     -- copy over card definition data if it exists
     if not id then
@@ -2920,6 +2954,7 @@ function initPlanningPhase()
         inventoryBoardHeight)
     local inventoryBoard         = boards[inventoryBoardID]
     inventoryBoard.borderColor   = util.getColor("white")
+    inventoryBoard.isInventoryBoard = true
     inventory_board_id           = inventoryBoardID
 
 
@@ -2952,6 +2987,101 @@ function initPlanningPhase()
 
     -- map
     inventory_board_id = inventoryBoardID
+
+    -- Send selected inventory cards up to the active action board.
+    local sendUpButtonText = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.send_up") end, -- initial text
+        18.0,
+        "color=apricot_cream"
+    )
+
+    local sendUpButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addId("inventory_send_up_button")
+            :addColor(util.getColor("gray"))
+            :addPadding(10.0)
+            :addEmboss(2.0)
+            :addHover(true)
+            :addDisableButton(true)
+            :addButtonCallback(function()
+                local moved = sendSelectedInventoryCardsToActiveActionBoard()
+                if moved then
+                    playSoundEffect("effects", "card_put_down_3", 0.9 + math.random() * 0.2)
+                end
+            end)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+            :build()
+        )
+        :addChild(sendUpButtonText)
+        :build()
+
+    local sendUpRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addColor(util.getColor("blank"))
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+            :build()
+        )
+        :addChild(sendUpButtonTemplate)
+        :build()
+
+    planningUIEntities.send_up_button_box = ui.box.Initialize(
+        { x = inventoryBoardX + inventoryBoardWidth + boardPadding * 0.5, y = inventoryBoardY },
+        sendUpRoot
+    )
+
+    local sendUpBoxTransform = component_cache.get(planningUIEntities.send_up_button_box, Transform)
+    if sendUpBoxTransform then
+        sendUpBoxTransform.actualX = inventoryBoardX + inventoryBoardWidth + boardPadding * 0.5
+        sendUpBoxTransform.actualY = inventoryBoardY + (inventoryBoardHeight - sendUpBoxTransform.actualH) * 0.5
+    end
+
+    ui.box.AssignStateTagsToUIBox(planningUIEntities.send_up_button_box, PLANNING_STATE)
+    remove_default_state_tag(planningUIEntities.send_up_button_box)
+
+    local sendUpButtonEntity = ui.box.GetUIEByID(registry, "inventory_send_up_button")
+    planningUIEntities.send_up_button = sendUpButtonEntity
+
+    local lastDisabledState = nil
+    local function updateSendUpButtonState()
+        if not sendUpButtonEntity or not entity_cache.valid(sendUpButtonEntity) then return end
+        if not is_state_active or not is_state_active(PLANNING_STATE) then return end
+
+        local hasSelection = false
+        if inventoryBoard and inventoryBoard.cards then
+            for _, cardEid in ipairs(inventoryBoard.cards) do
+                local script = getScriptTableFromEntityID(cardEid)
+                if script and script.selected then
+                    hasSelection = true
+                    break
+                end
+            end
+        end
+
+        local activeSet = board_sets and board_sets[current_board_set_index]
+        local hasDestination = activeSet and activeSet.action_board_id and entity_cache.valid(activeSet.action_board_id)
+        local disabled = (not hasSelection) or (not hasDestination)
+        if disabled == lastDisabledState then return end
+        lastDisabledState = disabled
+
+        local config = component_cache.get(sendUpButtonEntity, UIConfig)
+        if config then
+            config.disable_button = disabled
+        end
+
+        local go = component_cache.get(sendUpButtonEntity, GameObject)
+        if go then
+            go.state.clickEnabled = not disabled
+            go.state.collisionEnabled = true
+        end
+    end
+
+    timer.run(function()
+        updateSendUpButtonState()
+    end, nil, "inventory_send_up_button_state")
 
 
     -- -------------------------------------------------------------------------- --
@@ -5943,7 +6073,9 @@ function initActionPhase()
 end
 
 planningUIEntities = {
-    start_action_button_box = nil
+    start_action_button_box = nil,
+    send_up_button_box = nil,
+    send_up_button = nil
 }
 
 

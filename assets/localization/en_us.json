@@ -7,6 +7,7 @@
 		"augment_action_area": "Augment Action Card",
 		"shop_area": "Shop",
 		"buy_area": "Buy Card",
+		"send_up": "Send Up",
 		"inventory_area": "Inventory",
 		"trigger_inventory_area": "Your Triggers",
 		"tooltip_wand_button": "Card Set Info",

@@ -405,7 +405,8 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
                 blockIndex = hitData.subCast.parent and hitData.subCast.parent.blockIndex,
                 cardIndex = hitData.subCast.parent and hitData.subCast.parent.cardIndex,
                 wandId = hitData.subCast.parent and hitData.subCast.parent.wandId
-            }
+            },
+            traceId = hitData.subCast.traceId
         })
     end
 
@@ -473,7 +474,8 @@ function WandActions.handleProjectileDestroy(projectile, destroyData, modifiers,
                 blockIndex = destroyData.subCast.parent and destroyData.subCast.parent.blockIndex,
                 cardIndex = destroyData.subCast.parent and destroyData.subCast.parent.cardIndex,
                 wandId = destroyData.subCast.parent and destroyData.subCast.parent.wandId
-            }
+            },
+            traceId = destroyData.subCast.traceId
         })
     end
 

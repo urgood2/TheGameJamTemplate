@@ -36,9 +36,61 @@ local WandTriggers = require("wand.wand_triggers")
 local ProjectileSystem = require("combat.projectile_system")
 local SpellTypeEvaluator = require("wand.spell_type_evaluator")
 local JokerSystem = require("wand.joker_system")
+local okSignal, signal = pcall(require, "external.hump.signal")
+
+local DEBUG_SUBCAST = rawget(_G, "DEBUG_SUBCAST") ~= nil and rawget(_G, "DEBUG_SUBCAST") or true
 
 local graphUI = nil
 local blockFlashUI = nil
+
+-- Generate a stable-ish id for a sub-cast so we can correlate schedule/enqueue/execute
+local function makeSubcastTraceId(context, parent, triggerType)
+    local wandId = context and (context.wandId or context.wandDefinition and context.wandDefinition.id) or "wand"
+    local blockIdx = parent and parent.blockIndex or "?"
+    local cardIdx = parent and parent.cardIndex or "?"
+    local trigger = triggerType or "sub"
+    return string.format("%s-%s-%s-%s-%.3f", tostring(wandId), tostring(blockIdx), tostring(cardIdx), tostring(trigger),
+        os.clock())
+end
+
+local function emitSubcastDebug(stage, payload)
+    if not DEBUG_SUBCAST then return end
+    payload = payload or {}
+    payload.stage = stage
+    payload.timestamp = os.clock()
+
+    local wandId = payload.wandId or (payload.context and payload.context.wandId) or "?"
+    local trigger = payload.trigger or payload.triggerType or "?"
+    local blockIdx = payload.blockIndex or (payload.parent and payload.parent.blockIndex) or "?"
+    local cardIdx = payload.cardIndex or (payload.parent and payload.parent.cardIndex) or "?"
+    local delay = payload.delay or payload.delaySeconds
+
+    local parts = {
+        "[SUBCAST]",
+        stage,
+        "wand=" .. tostring(wandId),
+        "trigger=" .. tostring(trigger),
+        "block=" .. tostring(blockIdx),
+        "card=" .. tostring(cardIdx)
+    }
+    if delay then
+        table.insert(parts, string.format("delay=%.3fs", tonumber(delay) or 0))
+    end
+    if payload.traceId then
+        table.insert(parts, "id=" .. tostring(payload.traceId))
+    end
+
+    print(table.concat(parts, " "))
+
+    if okSignal and signal and signal.emit then
+        signal.emit("debug_subcast", payload)
+    end
+end
+
+-- Exposed for other modules (e.g., wand_actions) to reuse the tracer
+function WandExecutor.debugSubcastEvent(stage, payload)
+    emitSubcastDebug(stage, payload)
+end
 
 local function shallowCopyTable(source)
     local copy = {}
@@ -791,9 +843,23 @@ function WandExecutor.handleSubCasts(block, actionCard, modifiers, context, card
         return
     end
 
+    -- Assign a trace id so we can correlate schedule → enqueue → execute
+    if not childInfo.traceId then
+        childInfo.traceId = makeSubcastTraceId(context, childInfo.parent, childInfo.triggerType)
+    end
+
     -- Timer-based sub-cast
     if childInfo.delay and childInfo.delay > 0 then
         local delaySeconds = childInfo.delay / 1000
+
+        WandExecutor.debugSubcastEvent("scheduled_timer", {
+            traceId = childInfo.traceId,
+            wandId = context.wandId,
+            trigger = "timer",
+            blockIndex = childInfo.parent and childInfo.parent.blockIndex,
+            cardIndex = childInfo.parent and childInfo.parent.cardIndex,
+            delay = delaySeconds
+        })
 
         timer.after(delaySeconds, function()
             print("[WandExecutor] Executing timer sub-cast after", delaySeconds, "seconds")
@@ -806,18 +872,33 @@ function WandExecutor.handleSubCasts(block, actionCard, modifiers, context, card
                     blockIndex = childInfo.parent and childInfo.parent.blockIndex,
                     cardIndex = childInfo.parent and childInfo.parent.cardIndex,
                     wandId = childInfo.parent and childInfo.parent.wandId
-                }
+                },
+                traceId = childInfo.traceId
             })
         end, "wand_subcast_" .. context.wandId .. "_" .. os.clock())
     end
 
     -- Collision-based sub-cast
     if childInfo.collision then
+        WandExecutor.debugSubcastEvent("registered_collision", {
+            traceId = childInfo.traceId,
+            wandId = context.wandId,
+            trigger = "collision",
+            blockIndex = childInfo.parent and childInfo.parent.blockIndex,
+            cardIndex = childInfo.parent and childInfo.parent.cardIndex
+        })
         -- Stored on the projectile via WandActions
         print("[WandExecutor] Registered collision sub-cast for action:", actionCard.card_id)
     end
 
     if childInfo.death then
+        WandExecutor.debugSubcastEvent("registered_death", {
+            traceId = childInfo.traceId,
+            wandId = context.wandId,
+            trigger = "death",
+            blockIndex = childInfo.parent and childInfo.parent.blockIndex,
+            cardIndex = childInfo.parent and childInfo.parent.cardIndex
+        })
         print("[WandExecutor] Registered death sub-cast for action:", actionCard.card_id)
     end
 end
@@ -883,6 +964,13 @@ function WandExecutor.executeSubCast(subBlock, context, inheritedModifiers, meta
     end
 
     if meta then
+        WandExecutor.debugSubcastEvent("executed", {
+            traceId = meta.traceId,
+            wandId = context.wandId,
+            trigger = meta.trigger,
+            blockIndex = meta.parentBlockIndex,
+            cardIndex = meta.parentCardIndex
+        })
         print(string.format("[WandExecutor] Executed sub-cast via %s (block %s card %s)", meta.trigger or "child",
             tostring(meta.parentBlockIndex), tostring(meta.parentCardIndex)))
     end
@@ -894,6 +982,13 @@ end
 --- @param payload table { block, inheritedModifiers, context, source = { trigger, blockIndex, cardIndex, wandId } }
 function WandExecutor.enqueueSubCast(payload)
     if not payload or not payload.block then return end
+    WandExecutor.debugSubcastEvent("enqueued", {
+        traceId = payload.traceId,
+        wandId = payload.source and payload.source.wandId or (payload.context and payload.context.wandId),
+        trigger = payload.source and payload.source.trigger,
+        blockIndex = payload.source and payload.source.blockIndex,
+        cardIndex = payload.source and payload.source.cardIndex
+    })
     WandExecutor.pendingSubCasts[#WandExecutor.pendingSubCasts + 1] = payload
 end
 
@@ -908,7 +1003,8 @@ function WandExecutor.processPendingSubCasts()
         WandExecutor.executeSubCast(payload.block, payload.context or {}, payload.inheritedModifiers, {
             trigger = payload.source and payload.source.trigger,
             parentBlockIndex = payload.source and payload.source.blockIndex,
-            parentCardIndex = payload.source and payload.source.cardIndex
+            parentCardIndex = payload.source and payload.source.cardIndex,
+            traceId = payload.traceId
         })
     end
 end

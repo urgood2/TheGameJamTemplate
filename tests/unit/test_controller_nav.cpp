@@ -16,12 +16,13 @@ struct Counter {
 };
 
 sol::state& shared_lua() {
-    static sol::state* lua = [] {
-        auto* s = new sol::state();
-        s->open_libraries(sol::lib::base);
-        return s;
+    static sol::state lua{};
+    static const bool initialized = [] {
+        lua.open_libraries(sol::lib::base);
+        return true;
     }();
-    return *lua;
+    (void)initialized;
+    return lua;
 }
 
 TEST(ControllerNav, NotifyFocusInvokesGroupCallbacks) {

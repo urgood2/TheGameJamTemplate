@@ -163,3 +163,24 @@ TEST_F(GlobalsBridgeTest, GetEventBusResolvesToContextWhenPresent) {
     auto& fallback2 = globals::getEventBus();
     EXPECT_EQ(&fallback1, &fallback2); // stable fallback bus
 }
+
+TEST_F(GlobalsBridgeTest, ExternalShaderUniformPointerIsRespected) {
+    EngineContext ctx{EngineConfig{std::string{"config.json"}}};
+    shaders::ShaderUniformComponent external{};
+    ctx.shaderUniformsPtr = &external;
+
+    // Seed legacy global uniforms so they mirror into the external buffer.
+    globals::getGlobalShaderUniforms().set("example_shader", "uValue", 3.14f);
+
+    globals::setEngineContext(&ctx);
+
+    EXPECT_EQ(ctx.shaderUniformsPtr, &external);
+    EXPECT_EQ(ctx.shaderUniformsOwned, nullptr);
+
+    const auto* set = ctx.shaderUniformsPtr->getSet("example_shader");
+    ASSERT_NE(set, nullptr);
+    const auto* value = set->get("uValue");
+    ASSERT_NE(value, nullptr);
+    EXPECT_TRUE(std::holds_alternative<float>(*value));
+    EXPECT_FLOAT_EQ(std::get<float>(*value), 3.14f);
+}

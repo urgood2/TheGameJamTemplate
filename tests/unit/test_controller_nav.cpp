@@ -16,12 +16,13 @@ struct Counter {
 };
 
 sol::state& shared_lua() {
-    static sol::state* lua = [] {
-        auto* s = new sol::state();
-        s->open_libraries(sol::lib::base);
-        return s;
+    static sol::state lua{};
+    static const bool initialized = [] {
+        lua.open_libraries(sol::lib::base);
+        return true;
     }();
-    return *lua;
+    (void)initialized;
+    return lua;
 }
 
 TEST(ControllerNav, NotifyFocusInvokesGroupCallbacks) {
@@ -213,6 +214,63 @@ TEST(ControllerNav, NotifyFocusPrefersGroupOverGlobal) {
     EXPECT_EQ(groupFocus, 1);
     EXPECT_EQ(globalUnfocus, 0);
     EXPECT_EQ(globalFocus, 0);
+    nav.reset();
+}
+
+TEST(ControllerNav, ResetClearsAllManagerState) {
+    auto& nav = NavManager::instance();
+    nav.reset();
+
+    auto& lua = shared_lua();
+    lua.set_function("cb", []() {});
+    nav.callbacks.on_select = lua["cb"];
+
+    entt::registry reg;
+    const auto e = reg.create();
+
+    nav.create_group("ui");
+    nav.add_entity("ui", e);
+    nav.create_layer("main");
+    nav.add_group_to_layer("main", "ui");
+    nav.groupCooldowns["ui"] = 1.0f;
+    nav.disabledEntities.insert(e);
+    nav.groupToLayer["ui"] = "main";
+    nav.layerStack.push_back("main");
+    nav.activeLayer = "main";
+
+    nav.reset();
+
+    EXPECT_TRUE(nav.groups.empty());
+    EXPECT_TRUE(nav.layers.empty());
+    EXPECT_TRUE(nav.groupCooldowns.empty());
+    EXPECT_TRUE(nav.disabledEntities.empty());
+    EXPECT_TRUE(nav.groupToLayer.empty());
+    EXPECT_TRUE(nav.layerStack.empty());
+    EXPECT_TRUE(nav.activeLayer.empty());
+    EXPECT_FALSE(nav.callbacks.on_select.valid());
+}
+
+TEST(ControllerNav, SelectCurrentFallsBackToFirstEntryWhenIndexInvalid) {
+    auto& nav = NavManager::instance();
+    nav.reset();
+
+    auto& lua = shared_lua();
+    int selects = 0;
+    lua.set_function("on_select_global", [&]() { ++selects; });
+    nav.callbacks.on_select = lua["on_select_global"];
+
+    entt::registry reg;
+    const auto e1 = reg.create();
+    const auto e2 = reg.create();
+
+    nav.create_group("ui");
+    nav.add_entity("ui", e1);
+    nav.add_entity("ui", e2);
+    nav.groups["ui"].selectedIndex = 5; // out of range
+
+    ASSERT_NO_THROW(nav.select_current(reg, "ui"));
+    EXPECT_EQ(selects, 1);
+
     nav.reset();
 }
 

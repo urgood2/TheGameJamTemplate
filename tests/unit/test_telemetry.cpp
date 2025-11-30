@@ -34,3 +34,13 @@ TEST_F(TelemetryBindingTest, LuaRecordFunctionIsExposedAndCallable) {
     EXPECT_EQ(active.distinctId, "lua-test");
     EXPECT_EQ(active.apiKey, "test-key");
 }
+
+TEST_F(TelemetryBindingTest, RecordEventNoopWhenDisabled) {
+    telemetry::Config cfg{};
+    cfg.enabled = false;
+    cfg.distinctId = "noop";
+    telemetry::Configure(cfg);
+
+    EXPECT_FALSE(telemetry::GetConfig().enabled);
+    EXPECT_NO_THROW(telemetry::RecordEvent("should_not_send", {{"n", 1}}));
+}

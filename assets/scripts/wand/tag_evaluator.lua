@@ -3,6 +3,7 @@
 -- This is the core synergy system that rewards specialization.
 
 local TagEvaluator = {}
+local AvatarSystem = require("wand.avatar_system")
 
 -- Tag Breakpoint Definitions (from TODO_design.md)
 -- Each tag has bonuses at 3, 5, 7, and 9 card thresholds
@@ -134,6 +135,13 @@ function TagEvaluator.evaluate_and_apply(player, deck_snapshot, ctx)
                 discovery.tag, discovery.threshold, discovery.count))
         end
     end
+
+    -- Avatar unlocks: use tag counts (and optional metrics from ctx) to unlock avatars
+    local avatarMetrics = ctx and ctx.avatar_metrics or nil
+    local newAvatars = AvatarSystem.check_unlocks(player, {
+        tag_counts = tag_counts,
+        metrics = avatarMetrics
+    })
 
     -- Clear previous tag bonuses (to allow re-evaluation)
     player.active_tag_bonuses = player.active_tag_bonuses or {}

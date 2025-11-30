@@ -1061,6 +1061,9 @@ local function apply_card_properties(obj, card_table, card_type)
     if not obj.card_id then
         obj.card_id = card_table.id
     end
+    if (not obj.cardID or obj.cardID == "unknown") and card_table.id then
+        obj.cardID = card_table.id
+    end
 
     return obj
 end
@@ -1114,6 +1117,9 @@ function apply_card_properties(obj, card_table, card_type)
     -- Optionally tag it with the card id
     if not obj.card_id then
         obj.card_id = card_table.id
+    end
+    if (not obj.cardID or obj.cardID == "unknown") and card_table.id then
+        obj.cardID = card_table.id
     end
 
     return obj

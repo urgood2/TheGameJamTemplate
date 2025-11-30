@@ -859,6 +859,9 @@ function ui_defs.generateUI()
         -- update the currency text every second
         local text = localization.get("ui.currency_text", {currency = math.floor(globals.currency)})
         TextSystem.Functions.setText(globals.ui.currencyTextEntity.config.object, text)
+        if globals.ui.shopGoldText and globals.ui.shopGoldText.config and globals.ui.shopGoldText.config.object then
+            TextSystem.Functions.setText(globals.ui.shopGoldText.config.object, "Gold: " .. math.floor(globals.currency + 0.5))
+        end
         
     end)
     
@@ -955,6 +958,76 @@ function ui_defs.generateUI()
         -- add buttonDef to weatherButtonDefs
         table.insert(weatherButtonDefs, buttonDef)
     end
+
+    local ShopSystem = require("core.shop_system")
+    globals.shopUIState.rerollCost = globals.shopUIState.rerollCost or ShopSystem.config.baseRerollCost
+    globals.shopUIState.rerollCount = globals.shopUIState.rerollCount or 0
+    globals.shopUIState.locked = globals.shopUIState.locked or false
+    globals.shopUIState.awaitingRemoval = false
+
+    local function formatGold(amount)
+        return "Gold: " .. tostring(math.floor(amount + 0.5))
+    end
+
+    globals.ui.shopLockIcons = {}
+
+    local function buildLockIcon(idSuffix)
+        local icon = animation_system.createAnimatedObjectWithTransform(
+            "4024-TheRoguelike_1_10_alpha_817.png",
+            true
+        )
+        animation_system.resizeAnimationObjectsInEntityToFit(icon, 22, 22)
+        animation_system.setFGColorForAllAnimationObjects(icon, util.getColor("blackberry"))
+        local iconGO = component_cache.get(icon, GameObject)
+        if iconGO and iconGO.state then
+            iconGO.state.disableSpriteRendering = true
+            iconGO.state.hoverEnabled = false
+            iconGO.state.collisionEnabled = false
+        end
+        table.insert(globals.ui.shopLockIcons, icon)
+        local iconDef = ui.definitions.wrapEntityInsideObjectElement(icon)
+        iconDef.config.id = "shop_lock_icon_" .. idSuffix
+        return iconDef
+    end
+
+    local function setLockIconsVisible(visible)
+        for _, icon in ipairs(globals.ui.shopLockIcons) do
+            local go = component_cache.get(icon, GameObject)
+            if go and go.state then
+                go.state.disableSpriteRendering = not visible
+            end
+            local t = component_cache.get(icon, Transform)
+            if t then
+                local size = visible and 22 or 0
+                t.actualW = size
+                t.visualW = size
+                t.actualH = size
+                t.visualH = size
+            end
+        end
+        if globals.ui.weatherShopUIBox then
+            ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox)
+        end
+    end
+
+    local offerSlots = {}
+    for i, buttonDef in ipairs(weatherButtonDefs) do
+        if i <= 3 then
+            local slot = UIElementTemplateNodeBuilder.create()
+                :addType(UITypeEnum.VERTICAL_CONTAINER)
+                :addConfig(
+                    UIConfigBuilder.create()
+                        :addColor(util.getColor("blank"))
+                        :addPadding(4)
+                        :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                        :build()
+                )
+                :addChild(buildLockIcon(i))
+                :addChild(buttonDef)
+                :build()
+            table.insert(offerSlots, slot)
+        end
+    end
     
     -- add a close button to the weather shop
     local closeButton = createStructurePlacementButton(
@@ -970,17 +1043,249 @@ function ui_defs.generateUI()
         toggleShopWindow() -- toggle the shop window visibility
         togglePausedState(false) -- unpause the game
     end
-    -- add the close button to the weatherButtonDefs
-    table.insert(weatherButtonDefs, closeButton)
     
-    -- add a text entity that says "Relic Shop"
+    -- add a text entity that says "Shop"
     globals.ui.weatherShopTextEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return "RELIC SHOP" end,  -- initial text
-        40.0,                                 -- font size
-        "float;color=apricot_cream"                       -- animation spec
+        function() return "SHOP" end,  -- initial text
+        46.0,                                 -- font size
+        "float;wiggle;color=marigold"                       -- animation spec
     )
-    
-    -- make a new row
+
+    local shopGoldIcon = animation_system.createAnimatedObjectWithTransform(
+        "4024-TheRoguelike_1_10_alpha_817.png",
+        true
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        shopGoldIcon,
+        28,
+        28
+    )
+    globals.ui.shopGoldText = ui.definitions.getNewDynamicTextEntry(
+        function() return formatGold(globals.currency) end,  -- initial text
+        26.0,                                 -- font size
+        "pulse;color=apricot_cream"                       -- animation spec
+    )
+
+    local goldRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addPadding(6)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :build()
+        )
+        :addChild(ui.definitions.wrapEntityInsideObjectElement(shopGoldIcon))
+        :addChild(globals.ui.shopGoldText)
+        :build()
+
+    local offersLabel = ui.definitions.getNewDynamicTextEntry(
+        function() return "Card Offers" end,
+        22.0,
+        "color=apricot_cream"
+    )
+
+    local offersRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addPadding(8)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :build()
+        )
+        :addChildren(offerSlots)
+        :build()
+
+    local offersPanel = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(6.0)
+                :addPadding(12)
+                :addMinWidth(560)
+                :addMinHeight(200)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :build()
+        )
+        :addChild(offersLabel)
+        :addChild(offersRow)
+        :build()
+
+    local function buildShopButton(textEntry, callback, id)
+        return UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                    :addId(id or "")
+                    :addColor(util.getColor("dusty_rose"))
+                    :addEmboss(4.0)
+                    :addHover(true)
+                    :addPadding(6)
+                    :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                    :addButtonCallback(callback)
+                    :build()
+            )
+            :addChild(textEntry)
+            :build()
+    end
+
+    globals.ui.shopRemoveButtonText = ui.definitions.getNewDynamicTextEntry(
+        function() return "Remove card" end,
+        20.0,
+        "bump"
+    )
+    globals.ui.shopLockButtonText = ui.definitions.getNewDynamicTextEntry(
+        function()
+            if globals.shopUIState.locked then
+                return "Unlock offers"
+            end
+            return "Lock offers"
+        end,
+        20.0,
+        "pulse"
+    )
+    globals.ui.shopRerollButtonText = ui.definitions.getNewDynamicTextEntry(
+        function() return string.format("Reroll (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5)) end,
+        20.0,
+        "bump"
+    )
+
+    local function refreshRerollText()
+        if globals.ui.shopRerollButtonText and globals.ui.shopRerollButtonText.config then
+            TextSystem.Functions.setText(
+                globals.ui.shopRerollButtonText.config.object,
+                string.format("Reroll (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5))
+            )
+        end
+    end
+
+    local function refreshLockText()
+        if globals.ui.shopLockButtonText and globals.ui.shopLockButtonText.config then
+            local nextLabel = globals.shopUIState.locked and "Unlock offers" or "Lock offers"
+            TextSystem.Functions.setText(globals.ui.shopLockButtonText.config.object, nextLabel)
+        end
+    end
+
+    local function refreshGoldText()
+        if globals.ui.shopGoldText and globals.ui.shopGoldText.config then
+            TextSystem.Functions.setText(globals.ui.shopGoldText.config.object, formatGold(globals.currency))
+        end
+    end
+
+    local function trySpend(cost, failMessage)
+        if globals.currency < cost then
+            playSoundEffect("effects", "cannot-buy")
+            newTextPopup(
+                failMessage or "Not enough gold",
+                globals.screenWidth() / 2,
+                globals.screenHeight() / 2 - 60,
+                1.4,
+                "color=fiery_red"
+            )
+            return false
+        end
+        globals.currency = globals.currency - cost
+        refreshGoldText()
+        return true
+    end
+
+    local removeButton = buildShopButton(globals.ui.shopRemoveButtonText, function()
+        globals.shopUIState.awaitingRemoval = true
+        playSoundEffect("effects", "button-click")
+        newTextPopup(
+            string.format("Choose a card to remove (-%dg)", ShopSystem.config.removalCost),
+            globals.screenWidth() / 2,
+            globals.screenHeight() / 2 - 80,
+            1.8,
+            "color=fiery_red"
+        )
+    end, "shop_remove_button")
+
+    local lockButton = buildShopButton(globals.ui.shopLockButtonText, function()
+        globals.shopUIState.locked = not globals.shopUIState.locked
+        playSoundEffect("effects", "button-click")
+        setLockIconsVisible(globals.shopUIState.locked)
+        refreshLockText()
+        newTextPopup(
+            globals.shopUIState.locked and "Shop locked" or "Shop unlocked",
+            globals.screenWidth() / 2,
+            globals.screenHeight() / 2 - 100,
+            1.4,
+            "color=plum"
+        )
+    end, "shop_lock_button")
+
+    local rerollButton = buildShopButton(globals.ui.shopRerollButtonText, function()
+        local spend = math.floor(globals.shopUIState.rerollCost + 0.5)
+        if not trySpend(spend, "Need more gold to reroll") then return end
+        globals.shopUIState.rerollCount = (globals.shopUIState.rerollCount or 0) + 1
+        globals.shopUIState.rerollCost = spend + ShopSystem.config.rerollCostIncrease
+        refreshRerollText()
+        newTextPopup(
+            string.format("Rerolled shop for %dg", spend),
+            globals.screenWidth() / 2,
+            globals.screenHeight() / 2 - 120,
+            1.6,
+            "color=marigold"
+        )
+    end, "shop_reroll_button")
+
+    local actionRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                :addPadding(6)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :build()
+        )
+        :addChild(removeButton)
+        :addChild(lockButton)
+        :addChild(rerollButton)
+        :addChild(closeButton)
+        :build()
+
+    local jokerTitle = ui.definitions.getNewDynamicTextEntry(
+        function() return "Joker Shelf" end,
+        26.0,
+        "float;color=blue_midnight"
+    )
+    local jokerHint = ui.definitions.getNewDynamicTextEntry(
+        function() return "Reserve a slot for jokers and wildcards" end,
+        18.0,
+        "color=apricot_cream"
+    )
+
+    local jokerPanel = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(4.0)
+                :addPadding(10)
+                :addMinWidth(500)
+                :addMinHeight(90)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :build()
+        )
+        :addChild(jokerTitle)
+        :addChild(jokerHint)
+        :build()
+
+    local header = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.VERTICAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :build()
+        )
+        :addChild(globals.ui.weatherShopTextEntity)
+        :addChild(goldRow)
+        :build()
+
     local weatherRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.VERTICAL_CONTAINER)
         :addConfig(
@@ -988,6 +1293,7 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("dusty_rose"))
                 -- :addShadow(true) --- IGNORE ---
                 :addEmboss(4.0)
+                :addPadding(12)
                 :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -995,8 +1301,10 @@ function ui_defs.generateUI()
                 :build()
         )
         -- add all weather button defs to the row
-        :addChild(globals.ui.weatherShopTextEntity) -- add the weather shop text entity
-        :addChildren(weatherButtonDefs)
+        :addChild(header) -- add the weather shop text entity
+        :addChild(offersPanel)
+        :addChild(actionRow)
+        :addChild(jokerPanel)
         :build()
     
     
@@ -1007,6 +1315,11 @@ function ui_defs.generateUI()
     weatherShopTransform.actualX = globals.screenWidth() / 2 - weatherShopTransform.actualW / 2 -- center horizontally
     weatherShopTransform.visualX = weatherShopTransform.actualX -- update visual position as well
     weatherShopTransform.actualY = globals.screenHeight() -- out of view initially
+
+    setLockIconsVisible(globals.shopUIState.locked)
+    refreshRerollText()
+    refreshLockText()
+    refreshGoldText()
     
     
     -- relics menu 

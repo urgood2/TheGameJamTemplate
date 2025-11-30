@@ -527,6 +527,9 @@ function WandModifiers.applyToAction(actionCard, modifiers)
     modified.bounceCount = modifiers.bounceCount
     modified.explosionRadius = modifiers.explosionRadius
 
+    -- Explosion damage multiplier (from modifiers or upgrade behaviors)
+    modified.explosionDamageMult = modifiers.explosionDamageMult or 1.0
+
     -- Copy homing
     modified.homingEnabled = modifiers.homingEnabled
     modified.homingStrength = modifiers.homingStrength

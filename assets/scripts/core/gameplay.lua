@@ -20,6 +20,7 @@ local CastExecutionGraphUI = require("ui.cast_execution_graph_ui")
 local CastBlockFlashUI = require("ui.cast_block_flash_ui")
 local WandCooldownUI = require("ui.wand_cooldown_ui")
 local SubcastDebugUI = require("ui.subcast_debug_ui")
+local MessageQueueUI = require("ui.message_queue_ui")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
@@ -2301,6 +2302,7 @@ function initPlanningPhase()
     local CastFeedUI = require "ui.cast_feed_ui"
     CastFeedUI.init()
     SubcastDebugUI.init()
+    MessageQueueUI.init()
     
     timer.run(function()
         local dt = GetFrameTime()
@@ -2308,6 +2310,11 @@ function initPlanningPhase()
         if CastFeedUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
             CastFeedUI.update(dt)
             CastFeedUI.draw()
+        end
+
+        if MessageQueueUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
+            MessageQueueUI.update(dt)
+            MessageQueueUI.draw()
         end
 
         if WandCooldownUI and is_state_active and is_state_active(ACTION_STATE) then
@@ -4882,6 +4889,9 @@ function initActionPhase()
     
     
     local CastFeedUI = require("ui.cast_feed_ui")
+    if not MessageQueueUI.isActive then
+        MessageQueueUI.init()
+    end
 
     -- Clamp the camera to the playable arena so its edges stay on screen.
     -- do

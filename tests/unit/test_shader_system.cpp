@@ -419,6 +419,19 @@ TEST_F(ShaderSystemTest, WebShaderVariantsCompileWithStubbedLoader)
     EXPECT_EQ(ShaderStubStats::loadCount, static_cast<int>(manifest.size()));
 }
 
+TEST_F(ShaderSystemTest, MissingUniformsAreSkipped) {
+    ShaderStubStats::missingUniforms.insert("missing_uniform");
+
+    ShaderUniformSet set{};
+    set.set("missing_uniform", 1.0f);
+
+    Shader shader{};
+    shaders::ApplyUniformsToShader(shader, set);
+
+    EXPECT_EQ(ShaderStubStats::setValueCount, 0);
+    EXPECT_EQ(ShaderStubStats::setTextureCount, 0);
+}
+
 TEST(DebugUIImGui, CallsEndWhenWindowCollapsed)
 {
     ResetImGuiStubs();

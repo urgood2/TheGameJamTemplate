@@ -95,3 +95,9 @@ TEST(SoundSystem, LoadFromJSONThrowsWhenSoundPathTypeInvalid) {
     }
     EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
 }
+
+TEST(SoundSystem, ResetSoundSystemIsIdempotent) {
+    // Should be safe to call repeatedly even when nothing is loaded.
+    ASSERT_NO_THROW(sound_system::ResetSoundSystem());
+    ASSERT_NO_THROW(sound_system::ResetSoundSystem());
+}

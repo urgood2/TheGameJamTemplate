@@ -86,3 +86,24 @@ TEST_F(LocalizationTest, GetRawFallsBackToFallbackLanguage) {
     const std::string value = localization::getRaw("menu.quit");
     EXPECT_EQ(value, "Quit");
 }
+
+TEST_F(LocalizationTest, GetReturnsMissingMarkerWhenNotFoundAnywhere) {
+    localization::languageData.clear();
+    localization::currentLang = "en";
+    localization::fallbackLang = "en";
+    localization::languageData["en"] = nlohmann::json::object();
+
+    const std::string value = localization::get("ui.missing_key");
+    EXPECT_EQ(value, "[MISSING: ui.missing_key]");
+}
+
+TEST_F(LocalizationTest, GetPrefersCurrentLanguageOverFallback) {
+    localization::languageData.clear();
+
+    localization::currentLang = "es";
+    localization::fallbackLang = "en";
+    localization::languageData["en"] = nlohmann::json::parse(R"({ "menu": { "start": "Start" } })");
+    localization::languageData["es"] = nlohmann::json::parse(R"({ "menu": { "start": "Comenzar" } })");
+
+    EXPECT_EQ(localization::get("menu.start"), "Comenzar");
+}

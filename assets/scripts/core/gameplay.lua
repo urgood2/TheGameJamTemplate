@@ -19,6 +19,7 @@ local dsl = require("ui.ui_syntax_sugar")
 local CastExecutionGraphUI = require("ui.cast_execution_graph_ui")
 local CastBlockFlashUI = require("ui.cast_block_flash_ui")
 local WandCooldownUI = require("ui.wand_cooldown_ui")
+local SubcastDebugUI = require("ui.subcast_debug_ui")
 local MessageQueueUI = require("ui.message_queue_ui")
 -- local bit = require("bit") -- LuaJIT's bit library
 
@@ -2300,6 +2301,7 @@ function initPlanningPhase()
     
     local CastFeedUI = require "ui.cast_feed_ui"
     CastFeedUI.init()
+    SubcastDebugUI.init()
     MessageQueueUI.init()
     
     timer.run(function()
@@ -2323,6 +2325,11 @@ function initPlanningPhase()
         if CastBlockFlashUI and CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
             CastBlockFlashUI.update(dt)
             CastBlockFlashUI.draw()
+        end
+
+        if SubcastDebugUI and SubcastDebugUI.enabled and is_state_active and is_state_active(ACTION_STATE) then
+            SubcastDebugUI.update(dt)
+            SubcastDebugUI.draw()
         end
     end)
 
@@ -4026,6 +4033,7 @@ function startPlanningPhase()
     WandExecutor.cleanup()
     entity_cache.clear()
     CastBlockFlashUI.clear()
+    SubcastDebugUI.clear()
 
     if record_telemetry then
         local now = os.clock()
@@ -4902,6 +4910,7 @@ function initActionPhase()
     -- Initialize CastFeedUI
     CastFeedUI.init()
     WandCooldownUI.init()
+    SubcastDebugUI.init()
     
     -- add shader to backgorund layer
     add_layer_shader("background", "peaches_background")

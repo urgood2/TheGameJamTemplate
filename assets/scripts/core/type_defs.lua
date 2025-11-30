@@ -110,7 +110,7 @@ function BoardType:update(dt)
             if self.isInventoryBoard and getScriptTableFromEntityID then
                 local cardScript = getScriptTableFromEntityID(cardEid)
                 if cardScript and cardScript.selected and not cardScript.isBeingDragged then
-                    local lift = math_max(8, ct.actualH * 0.12)
+                    local lift = math_max(10, ct.actualH * 0.16)
                     y = y - lift
                 end
             end

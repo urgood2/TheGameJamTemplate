@@ -2644,17 +2644,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
     void element::Update(entt::registry &registry, entt::entity entity, float dt,  UIConfig *uiConfig, transform::Transform *transform, UIElementComponent *uiElement, transform::GameObject *node)
     {
         ZONE_SCOPED("UI Element: Update");
-        // if button is disabled, set clickable to false
+        // If button is disabled, keep the callback intact and only gate click input.
         if (uiConfig->disable_button)
         {
             uiConfig->buttonClicked = false;
-            uiConfig->buttonDelay.reset();
-            uiConfig->buttonCallback.reset();
-            uiConfig->buttonTemp.reset();
-            uiConfig->buttonDelayProgress.reset();
-            
             node->state.clickEnabled = false;
-        } else {
+        }
+        else
+        {
             node->state.clickEnabled = true;
         }
 

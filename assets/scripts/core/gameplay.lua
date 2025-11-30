@@ -163,6 +163,84 @@ wand_tooltip_cache = {}
 card_tooltip_cache = {}
 previously_hovered_tooltip = nil
 
+local tooltipStyle = {
+    fontSize = 12,
+    labelBg = "black",
+    labelColor = "apricot_cream",
+    valueColor = "white",
+    innerPadding = 3,
+    rowPadding = 1,
+    labelColumnMinWidth = 220,
+    valueColumnMinWidth = 72,
+    bgColor = Col(18, 22, 32, 235),
+    innerColor = Col(28, 32, 44, 230),
+    outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255)
+}
+
+local function centerTooltipAboveEntity(tooltipEntity, targetEntity, offset)
+    if not tooltipEntity or not targetEntity then return end
+    if not entity_cache.valid(tooltipEntity) or not entity_cache.valid(targetEntity) then return end
+
+    ui.box.RenewAlignment(registry, tooltipEntity)
+
+    local tooltipTransform = component_cache.get(tooltipEntity, Transform)
+    local targetTransform = component_cache.get(targetEntity, Transform)
+    if not tooltipTransform or not targetTransform then return end
+
+    local gap = offset or 12
+    local anchorX = targetTransform.actualX or 0
+    local anchorY = targetTransform.actualY or 0
+    local anchorW = targetTransform.actualW or 0
+    local anchorH = targetTransform.actualH or 0
+    local tooltipW = tooltipTransform.actualW or 0
+    local tooltipH = tooltipTransform.actualH or 0
+
+    tooltipTransform.actualX = anchorX + anchorW * 0.5 - tooltipW * 0.5
+    tooltipTransform.actualY = anchorY - tooltipH - gap
+    tooltipTransform.visualX = tooltipTransform.actualX
+    tooltipTransform.visualY = tooltipTransform.actualY
+end
+
+local function positionTooltipRightOfEntity(tooltipEntity, targetEntity, opts)
+    if not tooltipEntity or not targetEntity then return end
+    if not entity_cache.valid(tooltipEntity) or not entity_cache.valid(targetEntity) then return end
+
+    ui.box.RenewAlignment(registry, tooltipEntity)
+
+    local tooltipTransform = component_cache.get(tooltipEntity, Transform)
+    local targetTransform = component_cache.get(targetEntity, Transform)
+    if not tooltipTransform or not targetTransform then return end
+
+    local gap = (opts and opts.gap) or 8
+    local screenW = globals.screenWidth() or 0
+    local screenH = globals.screenHeight() or 0
+
+    local tooltipW = tooltipTransform.actualW or 0
+    local tooltipH = tooltipTransform.actualH or 0
+    local anchorX = targetTransform.actualX or 0
+    local anchorY = targetTransform.actualY or 0
+    local anchorW = targetTransform.actualW or 0
+    local anchorH = targetTransform.actualH or 0
+
+    local x = anchorX + anchorW + gap
+    local y = anchorY + anchorH * 0.5 - tooltipH * 0.5
+
+    if x + tooltipW > screenW - gap then
+        x = math.max(gap, screenW - tooltipW - gap)
+    end
+
+    if y < gap then
+        y = gap
+    elseif y + tooltipH > screenH - gap then
+        y = math.max(gap, screenH - tooltipH - gap)
+    end
+
+    tooltipTransform.actualX = x
+    tooltipTransform.actualY = y
+    tooltipTransform.visualX = x
+    tooltipTransform.visualY = y
+end
+
 -- to decide which trigger+action board set is active
 board_sets = {}
 current_board_set_index = 1
@@ -1194,6 +1272,7 @@ function createNewCard(id, x, y, gameStateToApply)
         if not tooltip then
             return
         end
+        centerTooltipAboveEntity(tooltip, card, 12)
         -- hide any other tooltips before showing this one
         for _, tooltipEntity in pairs(card_tooltip_cache) do
             if tooltipEntity ~= tooltip then
@@ -2219,7 +2298,7 @@ function makeWandTooltip(wand_def)
         wand_def = WandEngine.wand_defs[1]
     end
 
-    local globalFontSize = 10
+    local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr   = ";shadow=false"
 
     -- Helper function to check if value should be excluded
@@ -2235,15 +2314,17 @@ function makeWandTooltip(wand_def)
         if shouldExclude(value) then return end
         local formattedValue = valueFormatter and valueFormatter(value) or tostring(value)
         table.insert(lines,
-            "[" .. label .. "](background=gray;color=green;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
-            formattedValue .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+            "[" .. label .. "](background=" .. tooltipStyle.labelBg .. ";color=" .. tooltipStyle.labelColor ..
+            ";fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+            formattedValue .. "](color=" .. tooltipStyle.valueColor .. ";fontSize=" .. globalFontSize .. noShadowAttr ..
+            ")")
     end
 
     local lines = {}
 
-    -- Always show ID
-    table.insert(lines, "[id](background=red;color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
-        wand_def.id .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+    -- Always show ID in a single pill
+    table.insert(lines, "[id: " .. tostring(wand_def.id) .. "](background=" .. tooltipStyle.labelBg .. ";color=" ..
+        tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
 
     addLine(lines, "type", wand_def.type)
     addLine(lines, "cast block size", wand_def.cast_block_size)
@@ -2262,17 +2343,19 @@ function makeWandTooltip(wand_def)
     local textDef = ui.definitions.getTextFromString(text)
 
     local v = dsl.vbox {
-        config = { align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-            color = "blue",
-            padding = 2 },
+        config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            color = tooltipStyle.innerColor,
+            padding = tooltipStyle.innerPadding },
         children = { textDef }
     }
 
     local root = dsl.root {
         config = {
-            color = "purple",
+            color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = 2,
+            padding = tooltipStyle.innerPadding,
+            outlineThickness = 2,
+            outlineColor = tooltipStyle.outlineColor,
             shadow = true,
         },
         children = { v } }
@@ -2293,12 +2376,12 @@ function makeCardTooltip(card_def)
         card_def = CardTemplates.ACTION_BASIC_PROJECTILE
     end
 
-    local globalFontSize = 10
+    local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr   = ";shadow=false"
-    local labelColumnMinWidth = 210
-    local valueColumnMinWidth = 56
-    local rowPadding = 2
-    local outerPadding = 2
+    local labelColumnMinWidth = tooltipStyle.labelColumnMinWidth
+    local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
+    local rowPadding = tooltipStyle.rowPadding
+    local outerPadding = tooltipStyle.innerPadding
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2311,8 +2394,8 @@ function makeCardTooltip(card_def)
 
     local function makeLabelNode(label, opts)
         opts = opts or {}
-        local background = opts.background or "gray"
-        local color = opts.color or "green"
+        local background = opts.background or tooltipStyle.labelBg
+        local color = opts.color or tooltipStyle.labelColor
         local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. background .. ";color=" .. color .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
         return dsl.hbox {
             config = {
@@ -2325,7 +2408,7 @@ function makeCardTooltip(card_def)
     end
 
     local function makeValueNode(value)
-        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=pink;fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. tooltipStyle.valueColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -2353,20 +2436,20 @@ function makeCardTooltip(card_def)
 
     local rows = {}
 
-    -- Always show ID and type
     if card_def.id then
+        local idPill = ui.definitions.getTextFromString("[id: " .. tostring(card_def.id) .. "](background=" ..
+            tooltipStyle.labelBg .. ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize ..
+            noShadowAttr .. ")")
         table.insert(rows, dsl.hbox {
             config = {
-                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
                 padding = rowPadding
             },
-            children = {
-                makeLabelNode("id", { background = "red", color = "pink" }),
-                makeValueNode(card_def.id)
-            }
+            children = { idPill }
         })
     end
 
+    -- Always show ID and type
     addLine(rows, "type", card_def.type)
     addLine(rows, "max uses", card_def.max_uses)
     addLine(rows, "mana cost", card_def.mana_cost)
@@ -2386,8 +2469,8 @@ function makeCardTooltip(card_def)
 
     local v = dsl.vbox {
         config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-            color = "blue",
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            color = tooltipStyle.innerColor,
             padding = outerPadding
         },
         children = rows
@@ -2395,11 +2478,11 @@ function makeCardTooltip(card_def)
 
     local root = dsl.root {
         config = {
-            color = "purple",
+            color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             padding = outerPadding,
             outlineThickness = 2,
-            outlineColor = util.getColor("pink"),
+            outlineColor = tooltipStyle.outlineColor,
             shadow = true
         },
         children = { v }
@@ -2995,6 +3078,8 @@ function initPlanningPhase()
         "color=apricot_cream"
     )
 
+    local canSendInventorySelection
+
     local sendUpButtonTemplate = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
@@ -3004,8 +3089,10 @@ function initPlanningPhase()
             :addPadding(10.0)
             :addEmboss(2.0)
             :addHover(true)
-            :addDisableButton(true)
             :addButtonCallback(function()
+                if canSendInventorySelection and not canSendInventorySelection() then
+                    return
+                end
                 local moved = sendSelectedInventoryCardsToActiveActionBoard()
                 if moved then
                     playSoundEffect("effects", "card_put_down_3", 0.9 + math.random() * 0.2)
@@ -3028,15 +3115,37 @@ function initPlanningPhase()
         :addChild(sendUpButtonTemplate)
         :build()
 
+    local sendUpMargin = boardPadding * 0.25
+
     planningUIEntities.send_up_button_box = ui.box.Initialize(
-        { x = inventoryBoardX + inventoryBoardWidth + boardPadding * 0.5, y = inventoryBoardY },
+        { x = inventoryBoardX + inventoryBoardWidth * 0.5, y = inventoryBoardY + inventoryBoardHeight + sendUpMargin },
         sendUpRoot
     )
 
     local sendUpBoxTransform = component_cache.get(planningUIEntities.send_up_button_box, Transform)
+    local inventoryTransform = inventoryBoard and inventoryBoard:handle() and component_cache.get(inventoryBoard:handle(),
+        Transform)
     if sendUpBoxTransform then
-        sendUpBoxTransform.actualX = inventoryBoardX + inventoryBoardWidth + boardPadding * 0.5
-        sendUpBoxTransform.actualY = inventoryBoardY + (inventoryBoardHeight - sendUpBoxTransform.actualH) * 0.5
+        if inventoryTransform then
+            sendUpBoxTransform.actualX = inventoryTransform.actualX + (inventoryTransform.actualW - sendUpBoxTransform.actualW) * 0.5
+            sendUpBoxTransform.actualY = inventoryTransform.actualY + inventoryTransform.actualH + sendUpMargin
+        else
+            sendUpBoxTransform.actualX = inventoryBoardX + (inventoryBoardWidth - sendUpBoxTransform.actualW) * 0.5
+            sendUpBoxTransform.actualY = inventoryBoardY + inventoryBoardHeight + sendUpMargin
+        end
+
+        -- keep it on-screen
+        local screenW = globals.screenWidth()
+        local screenH = globals.screenHeight()
+        if screenW and sendUpBoxTransform.actualX + sendUpBoxTransform.actualW > screenW then
+            sendUpBoxTransform.actualX = screenW - sendUpBoxTransform.actualW - sendUpMargin
+        end
+        if sendUpBoxTransform.actualX < sendUpMargin then
+            sendUpBoxTransform.actualX = sendUpMargin
+        end
+        if screenH and sendUpBoxTransform.actualY + sendUpBoxTransform.actualH > screenH then
+            sendUpBoxTransform.actualY = screenH - sendUpBoxTransform.actualH - sendUpMargin
+        end
     end
 
     ui.box.AssignStateTagsToUIBox(planningUIEntities.send_up_button_box, PLANNING_STATE)
@@ -3045,25 +3154,32 @@ function initPlanningPhase()
     local sendUpButtonEntity = ui.box.GetUIEByID(registry, "inventory_send_up_button")
     planningUIEntities.send_up_button = sendUpButtonEntity
 
-    local lastDisabledState = nil
-    local function updateSendUpButtonState()
-        if not sendUpButtonEntity or not entity_cache.valid(sendUpButtonEntity) then return end
-        if not is_state_active or not is_state_active(PLANNING_STATE) then return end
+    -- Helper used by both UI state and button callback.
+    function canSendInventorySelection()
+        if not inventoryBoard or not inventoryBoard.cards then
+            return false
+        end
 
         local hasSelection = false
-        if inventoryBoard and inventoryBoard.cards then
-            for _, cardEid in ipairs(inventoryBoard.cards) do
-                local script = getScriptTableFromEntityID(cardEid)
-                if script and script.selected then
-                    hasSelection = true
-                    break
-                end
+        for _, cardEid in ipairs(inventoryBoard.cards) do
+            local script = getScriptTableFromEntityID(cardEid)
+            if script and script.selected then
+                hasSelection = true
+                break
             end
         end
 
         local activeSet = board_sets and board_sets[current_board_set_index]
         local hasDestination = activeSet and activeSet.action_board_id and entity_cache.valid(activeSet.action_board_id)
-        local disabled = (not hasSelection) or (not hasDestination)
+        return hasSelection and hasDestination
+    end
+
+    local lastDisabledState = nil
+    local function updateSendUpButtonState()
+        if not sendUpButtonEntity or not entity_cache.valid(sendUpButtonEntity) then return end
+        if not is_state_active or not is_state_active(PLANNING_STATE) then return end
+
+        local disabled = not canSendInventorySelection()
         if disabled == lastDisabledState then return end
         lastDisabledState = disabled
 
@@ -3074,8 +3190,9 @@ function initPlanningPhase()
 
         local go = component_cache.get(sendUpButtonEntity, GameObject)
         if go then
-            go.state.clickEnabled = not disabled
+            go.state.hoverEnabled = true
             go.state.collisionEnabled = true
+            go.state.clickEnabled = true
         end
     end
 
@@ -6075,7 +6192,8 @@ end
 planningUIEntities = {
     start_action_button_box = nil,
     send_up_button_box = nil,
-    send_up_button = nil
+    send_up_button = nil,
+    wand_buttons = {}
 }
 
 
@@ -6098,6 +6216,7 @@ function initPlanningUI()
             :addHover(true)                                -- needed for button effect
             :addButtonCallback(function()
                 playSoundEffect("effects", "button-click") -- play button click sound
+                startActionPhase()
             end)
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
             :addInitFunc(function(registry, entity)
@@ -6136,6 +6255,161 @@ function initPlanningUI()
     -- remove default state
     remove_default_state_tag(planningUIEntities.start_action_button_box)
 
+    planningUIEntities.wand_buttons = {}
+
+    local function createWandSelectorButtons()
+        if not board_sets or #board_sets == 0 then return end
+
+        local anchorTransform = nil
+        if board_sets[1] and board_sets[1].trigger_board_id and entity_cache.valid(board_sets[1].trigger_board_id) then
+            anchorTransform = component_cache.get(board_sets[1].trigger_board_id, Transform)
+        end
+
+        local screenW = globals.screenWidth()
+        local screenH = globals.screenHeight()
+        local buttonMargin = 12
+        local verticalSpacing = 8
+        local defaultButtonWidth = 52
+        local defaultButtonHeight = 52
+
+        local startX = (anchorTransform and anchorTransform.actualX) or (screenW * 0.08)
+        local startY = (anchorTransform and anchorTransform.actualY) or (screenH * 0.2)
+
+        for index, boardSet in ipairs(board_sets) do
+            local buttonIndex = index
+            local thisBoardSet = boardSet
+            local buttonId = "wand_selector_button_" .. buttonIndex
+            local label = ui.definitions.getTextFromString("[" .. tostring(buttonIndex) .. "](color=" .. tooltipStyle.labelColor .. ";fontSize=24;shadow=false)")
+
+            local buttonTemplate = UIElementTemplateNodeBuilder.create()
+                :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+                :addConfig(
+                    UIConfigBuilder.create()
+                    :addId(buttonId)
+                    :addColor(util.getColor("gray"))
+                    :addPadding(8.0)
+                    :addEmboss(2.0)
+                    :addHover(true)
+                    :addMinWidth(defaultButtonWidth)
+                    :addMinHeight(defaultButtonHeight)
+                    :addButtonCallback(function()
+                        local delta = buttonIndex - current_board_set_index
+                        if delta ~= 0 then
+                            cycleBoardSets(delta)
+                        end
+                    end)
+                    :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+                    :build()
+                )
+                :addChild(label)
+                :build()
+
+            local root = UIElementTemplateNodeBuilder.create()
+                :addType(UITypeEnum.ROOT)
+                :addConfig(
+                    UIConfigBuilder.create()
+                    :addColor(util.getColor("blank"))
+                    :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP))
+                    :build()
+                )
+                :addChild(buttonTemplate)
+                :build()
+
+            local box = ui.box.Initialize({ x = startX, y = startY }, root)
+            ui.box.AssignStateTagsToUIBox(box, PLANNING_STATE)
+            remove_default_state_tag(box)
+            ui.box.RenewAlignment(registry, box)
+
+            local boxTransform = component_cache.get(box, Transform)
+            local resolvedButtonHeight = (boxTransform and boxTransform.actualH) or defaultButtonHeight
+            local resolvedButtonWidth = (boxTransform and boxTransform.actualW) or defaultButtonWidth
+            if boxTransform then
+                local targetX = startX - (resolvedButtonWidth + buttonMargin)
+                local totalHeight = (#board_sets) * (resolvedButtonHeight + verticalSpacing) - verticalSpacing
+                local clampedY = math.min(math.max(startY, buttonMargin), (screenH or 9999) - totalHeight - buttonMargin)
+                boxTransform.actualX = math.max(buttonMargin, targetX)
+                boxTransform.actualY = clampedY + (buttonIndex - 1) * (resolvedButtonHeight + verticalSpacing)
+            end
+
+            local buttonEntity = ui.box.GetUIEByID(registry, buttonId)
+            local anchorBox = box
+            local go = component_cache.get(buttonEntity, GameObject)
+            if go then
+                go.state.hoverEnabled = true
+                go.state.collisionEnabled = true
+                go.state.clickEnabled = true
+                go.methods.onHover = function()
+                    local wandDef = thisBoardSet and thisBoardSet.wandDef
+                    if not wandDef then return end
+
+                    for id, tooltipEntity in pairs(wand_tooltip_cache) do
+                        if id == wandDef.id then
+                            positionTooltipRightOfEntity(tooltipEntity, anchorBox, { gap = 10 })
+                            add_state_tag(tooltipEntity, WAND_TOOLTIP_STATE)
+                        else
+                            clear_state_tags(tooltipEntity)
+                        end
+                    end
+
+                    activate_state(WAND_TOOLTIP_STATE)
+                end
+                go.methods.onStopHover = function()
+                    deactivate_state(WAND_TOOLTIP_STATE)
+                end
+            end
+
+            planningUIEntities.wand_buttons[buttonIndex] = {
+                box = box,
+                button = buttonEntity
+            }
+        end
+    end
+
+    createWandSelectorButtons()
+
+    timer.run(function()
+        if not is_state_active or not is_state_active(PLANNING_STATE) then return end
+        if not planningUIEntities.wand_buttons then return end
+
+        local currentButton = planningUIEntities.wand_buttons[current_board_set_index]
+        if not currentButton or not currentButton.box or not entity_cache.valid(currentButton.box) then return end
+
+        local t = component_cache.get(currentButton.box, Transform)
+        if not t then return end
+
+        local zIndex = (layer_order_system and layer_order_system.getZIndex and layer_order_system.getZIndex(currentButton.box)) or 0
+        local centerX = (t.actualX or 0) + (t.actualW or 0) * 0.5
+        local centerY = (t.actualY or 0) + (t.actualH or 0) * 0.5
+        local pulse = 0.5 + 0.5 * math.sin(os.clock() * 3.0)
+        local baseRadius = math.max(t.actualW or 0, t.actualH or 0) * 0.6
+        local alpha = math.floor(110 + 80 * pulse)
+
+        -- soft halo
+        command_buffer.queueDrawCircleFilled(layers.ui, function(c)
+            c.x = centerX
+            c.y = centerY
+            c.radius = baseRadius + 6 * pulse
+            c.color = Col(255, 210, 140, alpha)
+        end, zIndex - 2, layer.DrawCommandSpace.Screen)
+
+        -- outward particle stream (procedural)
+        local now = os.clock()
+        for i = 1, 10 do
+            local phase = (now * 1.8 + i * 0.23)
+            local progress = phase - math.floor(phase)
+            local angle = (i * 0.8 + phase * 2.6)
+            local travel = baseRadius + progress * (baseRadius * 0.8 + 26)
+            local moteRadius = 2 + progress * 4
+            local fade = math.floor(180 * (1.0 - progress))
+
+            command_buffer.queueDrawCircleFilled(layers.ui, function(c)
+                c.x = centerX + math.cos(angle) * travel
+                c.y = centerY + math.sin(angle) * travel
+                c.radius = moteRadius
+                c.color = Col(255, 225, 180, fade)
+            end, zIndex - 1, layer.DrawCommandSpace.Screen)
+        end
+    end, nil, "wand_selector_highlight")
 
 
     -- testing ui
@@ -6206,6 +6480,7 @@ function initPlanningUI()
             -- activate the wand tooltip for this wand
             for id, tooltipEntity in pairs(wand_tooltip_cache) do
                 if id == wandDef.id then
+                    positionTooltipRightOfEntity(tooltipEntity, hoveredEntity or box, { gap = 10 })
                     add_state_tag(tooltipEntity, WAND_TOOLTIP_STATE)
                 else
                     clear_state_tags(tooltipEntity)

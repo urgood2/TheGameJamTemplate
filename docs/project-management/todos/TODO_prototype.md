@@ -59,11 +59,16 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - web build resuming visibility is terrible. also disable telemetry for now until we do a demo.
 - intermittent flicker when projectiles are wiped? not sure why.
 - got to also test the new batching queue system.
+- message icon still under toast depsite specifying z order. need to debug transform rendering and how it relates to queued rendering from lua.
     
 # programming side
 
+- send up button doesn't work. investigate.
+- enemy knockback on projectile collision, direction-facing particles when theyc collide with wall.
+- make achievements show one by one even if there are multiple so I can play sound fx
+- tag evaluation should show current active tag combos on right side of screen.
 - isolate shop ui to shop state only. also needs work. where is the gold, the jokers, etc?
-- shop ui is terrible needs rework.
+- shop ui is terrible needs rework. put example jokers & avatars in the shop.
 
 - how to best verify subcasts are hooked up and firing? it's hard to do this.
 

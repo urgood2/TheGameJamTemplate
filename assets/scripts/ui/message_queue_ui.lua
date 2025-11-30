@@ -93,6 +93,12 @@ local function tryMakeIcon(id, forceSprite, size)
     end
     
     transform.set_space(entity, "screen")
+    if registry and registry.valid and ObjectAttachedToUITag and registry:valid(entity) then
+        -- Keep icons out of the world/sprite render pass so we can render them on the UI layer manually.
+        if not registry:has(entity, ObjectAttachedToUITag) then
+            registry:emplace(entity, ObjectAttachedToUITag)
+        end
+    end
     
 
     animation_system.resizeAnimationObjectsInEntityToFit(entity, size, size)
@@ -215,6 +221,34 @@ local function computeAlpha(age, lifetime, fadeIn, fadeOut)
     return clamp01(math.min(alphaIn, alphaOut))
 end
 
+local function wrapTextToWidth(text, maxWidth, fontSize)
+    if not text or text == "" then return "" end
+    local spaceWidth = localization.getTextWidthWithCurrentFont(" ", fontSize, 1)
+    local lines = {}
+    local current = ""
+    local currentWidth = 0
+
+    for word in text:gmatch("%S+") do
+        local w = localization.getTextWidthWithCurrentFont(word, fontSize, 1)
+        if current == "" then
+            current = word
+            currentWidth = w
+        elseif currentWidth + spaceWidth + w <= maxWidth then
+            current = current .. " " .. word
+            currentWidth = currentWidth + spaceWidth + w
+        else
+            table.insert(lines, current)
+            current = word
+            currentWidth = w
+        end
+    end
+    if current ~= "" then
+        table.insert(lines, current)
+    end
+
+    return table.concat(lines, "\n")
+end
+
 local function drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, z, space)
     if not item.icon or not item.icon.entity or not registry or not registry.valid or not registry:valid(item.icon.entity) then
         return
@@ -222,7 +256,7 @@ local function drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, z, s
 
     local cfg = MessageQueueUI.config
     local size = item.icon.size or cfg.iconSize
-    local iconCenterX = centerX + (boxWidth * 0.5 - cfg.padding - size * 0.5)
+    local iconCenterX = centerX - (boxWidth * 0.5) + cfg.padding + size * 0.5
     local iconCenterY = centerY
     local iconTint = colWithAlpha(item.iconColor or item.accentColor or cfg.accentColor or cfg.textColor, alpha)
 
@@ -248,6 +282,25 @@ local function drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, z, s
     if layer_order_system and layer_order_system.assignZIndexToEntity then
         layer_order_system.assignZIndexToEntity(item.icon.entity, z)
     end
+
+    -- Manually queue the icon onto the UI layer (screen space) so it sits above the toast background.
+    if command_buffer and layers and layers.ui then
+        local hasPipeline = false
+        if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
+            hasPipeline = registry:has(item.icon.entity, shader_pipeline.ShaderPipelineComponent)
+        end
+
+        local queue = hasPipeline
+            and command_buffer.queueDrawTransformEntityAnimationPipeline
+            or command_buffer.queueDrawTransformEntityAnimation
+
+        if queue then
+            queue(layers.ui, function(cmd)
+                cmd.registry = registry
+                cmd.e = item.icon.entity
+            end, z, space or layer.DrawCommandSpace.Screen)
+        end
+    end
 end
 
 function MessageQueueUI.draw()
@@ -265,10 +318,12 @@ function MessageQueueUI.draw()
     local total = #MessageQueueUI.active
 
     for i, item in ipairs(MessageQueueUI.active) do
-        local textWidth = localization.getTextWidthWithCurrentFont(item.text or "", cfg.fontSize, 1)
+        local rawText = item.text or ""
+        local textWidth = localization.getTextWidthWithCurrentFont(rawText, cfg.fontSize, 1)
         local idealWidth = textWidth + cfg.padding * 2 + cfg.iconSize + cfg.iconPadding
         local boxWidth = math.max(cfg.minWidth, math.min(cfg.maxWidth, idealWidth))
         local boxHeight = cfg.height
+        local availableTextWidth = boxWidth - (cfg.padding * 2 + cfg.iconSize + cfg.iconPadding)
 
         -- Stack upward from the bottom-right so the newest toast sits closest to the corner.
         local stackIndex = total - i
@@ -301,12 +356,41 @@ function MessageQueueUI.draw()
         end, cfg.baseZ + 1, space)
 
         command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = item.text or ""
+            local function wrapAndMeasure(fontSize)
+                local wrapped = wrapTextToWidth(rawText, availableTextWidth, fontSize)
+                local maxLineWidth = 0
+                for line in wrapped:gmatch("[^\n]+") do
+                    local w = localization.getTextWidthWithCurrentFont(line, fontSize, 1)
+                    if w > maxLineWidth then maxLineWidth = w end
+                end
+                return wrapped, maxLineWidth
+            end
+
+            local fontSize = cfg.fontSize
+            local wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
+            if maxLineWidth > availableTextWidth and maxLineWidth > 0 then
+                local ratio = availableTextWidth / maxLineWidth
+                fontSize = math.max(12, math.floor(fontSize * ratio))
+                wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
+            end
+
+            local lineCount = select(2, wrappedText:gsub("\n", "")) + 1
+            local textBlockHeight = lineCount * fontSize * 1.05
+            local maxHeight = boxHeight - cfg.padding * 2
+            if textBlockHeight > maxHeight and lineCount > 0 then
+                local ratio = maxHeight / textBlockHeight
+                fontSize = math.max(10, math.floor(fontSize * ratio))
+                wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
+                lineCount = select(2, wrappedText:gsub("\n", "")) + 1
+                textBlockHeight = lineCount * fontSize * 1.05
+            end
+
+            c.text = wrappedText
             c.font = font
-            c.x = centerX - boxWidth * 0.5 + cfg.padding
-            c.y = centerY - boxHeight * 0.5 + cfg.padding
+            c.x = centerX - boxWidth * 0.5 + cfg.padding + cfg.iconSize + cfg.iconPadding
+            c.y = centerY - textBlockHeight * 0.5
             c.color = textColor
-            c.fontSize = cfg.fontSize
+            c.fontSize = fontSize
         end, cfg.baseZ + 2, space)
 
         drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ +100, space)

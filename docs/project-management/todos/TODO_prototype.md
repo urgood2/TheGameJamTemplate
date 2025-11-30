@@ -60,6 +60,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - intermittent flicker when projectiles are wiped? not sure why.
 - got to also test the new batching queue system.
 - message icon still under toast depsite specifying z order. need to debug transform rendering and how it relates to queued rendering from lua.
+- give execution preview simple tooltips so I know what each one is.
+- give trigger cards tooltips.
     
 # programming side
 

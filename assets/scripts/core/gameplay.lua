@@ -8,6 +8,7 @@ local Easing = require("util.easing")
 local CombatSystem = require("combat.combat_system")
 local ShopSystem = require("core.shop_system")
 local CardMetadata = require("core.card_metadata")
+local CardRarityTags = require("core.add_card_rarity_tags")
 require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
@@ -166,6 +167,8 @@ previously_hovered_tooltip = nil
 local tooltipStyle = {
     fontSize = 12,
     labelBg = "black",
+    idBg = "gold",
+    idTextColor = "black",
     labelColor = "apricot_cream",
     valueColor = "white",
     innerPadding = 3,
@@ -188,6 +191,8 @@ local function centerTooltipAboveEntity(tooltipEntity, targetEntity, offset)
     if not tooltipTransform or not targetTransform then return end
 
     local gap = offset or 12
+    local screenW = globals.screenWidth() or 0
+    local screenH = globals.screenHeight() or 0
     local anchorX = targetTransform.actualX or 0
     local anchorY = targetTransform.actualY or 0
     local anchorW = targetTransform.actualW or 0
@@ -195,8 +200,20 @@ local function centerTooltipAboveEntity(tooltipEntity, targetEntity, offset)
     local tooltipW = tooltipTransform.actualW or 0
     local tooltipH = tooltipTransform.actualH or 0
 
-    tooltipTransform.actualX = anchorX + anchorW * 0.5 - tooltipW * 0.5
-    tooltipTransform.actualY = anchorY - tooltipH - gap
+    local x = anchorX + anchorW * 0.5 - tooltipW * 0.5
+    local y = anchorY - tooltipH - gap
+
+    if x < gap then
+        x = gap
+    elseif x + tooltipW > screenW - gap then
+        x = math.max(gap, screenW - tooltipW - gap)
+    end
+    if y < gap then
+        y = gap
+    end
+
+    tooltipTransform.actualX = x
+    tooltipTransform.actualY = y
     tooltipTransform.visualX = tooltipTransform.actualX
     tooltipTransform.visualY = tooltipTransform.actualY
 end
@@ -2305,6 +2322,7 @@ function makeWandTooltip(wand_def)
     local function shouldExclude(value)
         if value == nil then return true end
         if value == -1 then return true end
+        if type(value) == "number" and value == 0 then return true end
         if type(value) == "string" and (value == "N/A" or value == "NONE") then return true end
         return false
     end
@@ -2322,10 +2340,6 @@ function makeWandTooltip(wand_def)
 
     local lines = {}
 
-    -- Always show ID in a single pill
-    table.insert(lines, "[id: " .. tostring(wand_def.id) .. "](background=" .. tooltipStyle.labelBg .. ";color=" ..
-        tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
-
     addLine(lines, "type", wand_def.type)
     addLine(lines, "cast block size", wand_def.cast_block_size)
     addLine(lines, "cast delay", wand_def.cast_delay)
@@ -2342,11 +2356,20 @@ function makeWandTooltip(wand_def)
     local text = table.concat(lines, "\n")
     local textDef = ui.definitions.getTextFromString(text)
 
+    local idText = ui.definitions.getTextFromString("[id: " .. tostring(wand_def.id) .. "](background=" ..
+        tooltipStyle.idBg .. ";color=" .. (tooltipStyle.idTextColor or tooltipStyle.labelColor) .. ";fontSize=" .. globalFontSize .. noShadowAttr ..
+        ")")
+
     local v = dsl.vbox {
         config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             color = tooltipStyle.innerColor,
             padding = tooltipStyle.innerPadding },
-        children = { textDef }
+        children = {
+            dsl.hbox { config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER) },
+                children = { idText } },
+            dsl.hbox { config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER) },
+                children = { textDef } }
+        }
     }
 
     local root = dsl.root {
@@ -2387,8 +2410,8 @@ function makeCardTooltip(card_def)
     local function shouldExclude(value)
         if value == nil then return true end
         if value == -1 then return true end
+        if type(value) == "number" and value == 0 then return true end
         if type(value) == "string" and value == "N/A" then return true end
-        if type(value) == "number" and value == 0 then return false end -- Keep 0 values
         return false
     end
 
@@ -2438,7 +2461,7 @@ function makeCardTooltip(card_def)
 
     if card_def.id then
         local idPill = ui.definitions.getTextFromString("[id: " .. tostring(card_def.id) .. "](background=" ..
-            tooltipStyle.labelBg .. ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize ..
+            tooltipStyle.idBg .. ";color=" .. (tooltipStyle.idTextColor or tooltipStyle.labelColor) .. ";fontSize=" .. globalFontSize ..
             noShadowAttr .. ")")
         table.insert(rows, dsl.hbox {
             config = {
@@ -2466,6 +2489,57 @@ function makeCardTooltip(card_def)
     addLine(rows, "lifetime modifier", card_def.lifetime_modifier)
     addLine(rows, "crit chance mod", card_def.critical_hit_chance_modifier)
     addLine(rows, "weight", card_def.weight)
+
+    local rarityColors = {
+        common = "gray",
+        uncommon = "green",
+        rare = "blue",
+        legendary = "purple"
+    }
+    local tagColors = {
+        brute = "red",
+        tactical = "cyan",
+        mobility = "orange",
+        defense = "green",
+        hazard = "brown",
+        elemental = "blue"
+    }
+
+    local assignment = nil
+    if CardRarityTags and CardRarityTags.cardAssignments then
+        assignment = CardRarityTags.cardAssignments[card_def.id]
+    end
+    if not assignment and CardRarityTags and CardRarityTags.triggerAssignments then
+        assignment = CardRarityTags.triggerAssignments[card_def.id]
+    end
+
+    if assignment then
+        local pillDefs = {}
+        if assignment.rarity then
+            local rarity = tostring(assignment.rarity)
+            local rarityBg = rarityColors[rarity] or tooltipStyle.idBg
+            table.insert(pillDefs, ui.definitions.getTextFromString(
+                "[" .. rarity .. "](background=" .. rarityBg .. ";color=white;fontSize=" .. globalFontSize ..
+                    noShadowAttr .. ")"))
+        end
+        if assignment.tags and #assignment.tags > 0 then
+            for _, tag in ipairs(assignment.tags) do
+                local tagBg = tagColors[tag] or "dim_gray"
+                table.insert(pillDefs, ui.definitions.getTextFromString(
+                    "[" .. tostring(tag) .. "](background=" .. tagBg .. ";color=white;fontSize=" .. globalFontSize ..
+                        noShadowAttr .. ")"))
+            end
+        end
+        if #pillDefs > 0 then
+            table.insert(rows, dsl.hbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                    padding = rowPadding
+                },
+                children = pillDefs
+            })
+        end
+    end
 
     local v = dsl.vbox {
         config = {
@@ -3122,12 +3196,15 @@ function initPlanningPhase()
         sendUpRoot
     )
 
+    ui.box.RenewAlignment(registry, planningUIEntities.send_up_button_box)
     local sendUpBoxTransform = component_cache.get(planningUIEntities.send_up_button_box, Transform)
     local inventoryTransform = inventoryBoard and inventoryBoard:handle() and component_cache.get(inventoryBoard:handle(),
         Transform)
     if sendUpBoxTransform then
         if inventoryTransform then
-            sendUpBoxTransform.actualX = inventoryTransform.actualX + (inventoryTransform.actualW - sendUpBoxTransform.actualW) * 0.5
+            local boardW = inventoryTransform.actualW ~= 0 and inventoryTransform.actualW or inventoryBoardWidth
+            local boardX = inventoryTransform.actualX ~= 0 and inventoryTransform.actualX or inventoryBoardX
+            sendUpBoxTransform.actualX = boardX + (boardW - sendUpBoxTransform.actualW) * 0.5
             sendUpBoxTransform.actualY = inventoryTransform.actualY + inventoryTransform.actualH + sendUpMargin
         else
             sendUpBoxTransform.actualX = inventoryBoardX + (inventoryBoardWidth - sendUpBoxTransform.actualW) * 0.5
@@ -3264,25 +3341,34 @@ function initPlanningPhase()
         boardSet.wandDef.action_board_entity = boardSet.action_board_id
     end
 
-    -- for each card, make a tooltip
-    for id, cardDef in pairs(WandEngine.card_defs) do
+    local function addCardTooltip(cardDef)
+        if not cardDef or not cardDef.id then return end
+        if card_tooltip_cache[cardDef.id] then return end
+
         card_tooltip_cache[cardDef.id] = makeCardTooltip(cardDef)
 
-        -- z_orders
         layer_order_system.assignZIndexToEntity(
             card_tooltip_cache[cardDef.id],
             z_orders.ui_tooltips
         )
 
-        -- get transform and center vertically
         local t = component_cache.get(card_tooltip_cache[cardDef.id], Transform)
         if t then
             t.actualY = globals.screenHeight() * 0.5 - (t.actualH * 0.5)
             t.visualY = t.actualY
         end
 
-        -- disable by default, enable only on
         clear_state_tags(card_tooltip_cache[cardDef.id])
+    end
+
+    -- for each card, make a tooltip
+    for id, cardDef in pairs(WandEngine.card_defs) do
+        addCardTooltip(cardDef)
+    end
+
+    -- ensure trigger cards get tooltips too
+    for id, cardDef in pairs(WandEngine.trigger_card_defs or {}) do
+        addCardTooltip(cardDef)
     end
 
     activate_state(WAND_TOOLTIP_STATE) -- keep activated at  all times.
@@ -3920,6 +4006,15 @@ function cycleBoardSets(amount)
 
     -- activate tooltip state
     activate_state(WAND_TOOLTIP_STATE)
+end
+
+function cycleBoardSet(targetIndex)
+    if not targetIndex or not board_sets or #board_sets == 0 then return end
+    local clamped = math.max(1, math.min(#board_sets, targetIndex))
+    local delta = clamped - current_board_set_index
+    if delta ~= 0 then
+        cycleBoardSets(delta)
+    end
 end
 
 local virtualCardCounter = 0
@@ -6293,10 +6388,7 @@ function initPlanningUI()
                     :addMinWidth(defaultButtonWidth)
                     :addMinHeight(defaultButtonHeight)
                     :addButtonCallback(function()
-                        local delta = buttonIndex - current_board_set_index
-                        if delta ~= 0 then
-                            cycleBoardSets(delta)
-                        end
+                        cycleBoardSet(buttonIndex)
                     end)
                     :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
                     :build()
@@ -6410,108 +6502,4 @@ function initPlanningUI()
             end, zIndex - 1, layer.DrawCommandSpace.Screen)
         end
     end, nil, "wand_selector_highlight")
-
-
-    -- testing ui
-    require("ui.ui_definition_helper")
-    local dsl = require("ui.ui_syntax_sugar")
-
-    -- Example: simple button
-    local shopButton = dsl.hbox {
-        config = {
-            id      = "shop_button",
-            color   = "red",
-            align   = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            hover   = true,
-            onClick = function()
-                playSoundEffect("effects", "button-click")
-                log_debug("Shop button clicked!")
-            end,
-        },
-        children = {
-            dsl.anim("4130-TheRoguelike_1_10_alpha_923.png", { w = 20, h = 20, isAnimation = false, shadow = false }),
-            dsl.text(localization.get("ui.tooltip_wand_button"),
-                { id = "shopButtonText", color = "blackberry", fontSize = 27.0 }),
-        }
-    }
-
-    local root = dsl.root {
-        config = {
-            color = "blank",
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-        },
-        children = { shopButton } }
-
-    -- Create box and attach resize callback
-    local box = dsl.spawn({ x = 0, y = 700 }, root, "HUD", 5, {
-        onBoxResize = function(registry, eid, w, h)
-            log_debug("Resized box", eid, "to", w, h)
-        end
-    })
-
-    -- Attach hovers recursively (uses orderedChildren)
-    dsl.applyHoverRecursive(box)
-
-    -- ggive entire box the planning state
-    ui.box.AssignStateTagsToUIBox(box, PLANNING_STATE)
-    -- remove default state
-    remove_default_state_tag(box)
-
-    -- get shop button entity
-    local buttonEntity = ui.box.GetUIEByID(registry, "shop_button")
-    local textEntity = ui.box.GetUIEByID(registry, "shopButtonText")
-
-    -- add onhover and stophover
-    local node = component_cache.get(buttonEntity, GameObject)
-
-    if node then
-        node.state.hoverEnabled = true
-        node.state.collisionEnabled = true
-
-        node.methods.onHover = function(registry, hoveredEntity)
-            log_debug("Shop button hovered!", hoveredEntity)
-            -- playSoundEffect("effects", "button-hover")
-
-            -- show current wand tooltip
-            -- get current board's wand def
-            local currentSet = board_sets[current_board_set_index]
-            local wandDef = currentSet.wandDef
-
-            -- activate the wand tooltip for this wand
-            for id, tooltipEntity in pairs(wand_tooltip_cache) do
-                if id == wandDef.id then
-                    positionTooltipRightOfEntity(tooltipEntity, hoveredEntity or box, { gap = 10 })
-                    add_state_tag(tooltipEntity, WAND_TOOLTIP_STATE)
-                else
-                    clear_state_tags(tooltipEntity)
-                end
-            end
-
-            -- activate tooltip state
-            activate_state(WAND_TOOLTIP_STATE)
-        end
-        node.methods.onStopHover = function(registry, hoveredEntity)
-            log_debug("Shop button stop hovered!", hoveredEntity)
-
-            -- hide all wand tooltips
-
-            deactivate_state(WAND_TOOLTIP_STATE)
-        end
-    end
-
-    -- test resize
-    timer.after(2.0, function()
-        ui.box.RenewAlignment(registry, box)
-    end)
-
-    -- test shader
-    shaderPipelineComp = registry:emplace(buttonEntity, shader_pipeline.ShaderPipelineComponent)
-
-    shaderPipelineComp:addPass("item_glow")
-
-    -- jiggle button
-    -- timer.every(5.0, function()
-    --     transform.InjectDynamicMotionDefault(buttonEntity)
-    --     transform.InjectDynamicMotionDefault(textEntity)
-    -- end)
 end

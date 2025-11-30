@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 #include <nlohmann/json.hpp>
 
 namespace sol {
@@ -20,6 +21,8 @@ namespace telemetry
         static Config FromConfigJson(const nlohmann::json &root);
     };
 
+    using VisibilityChangeCallback = std::function<void(const std::string &reason, bool isVisible)>;
+
     // Set the active telemetry configuration (no-op sink by default).
     void Configure(const Config &cfg);
     const Config &GetConfig();
@@ -33,6 +36,9 @@ namespace telemetry
     // Stubbed sink: safe to call even when telemetry is disabled.
     void RecordEvent(const std::string &name, const nlohmann::json &props = nlohmann::json::object());
     void Flush();
+
+    // Optional hook invoked from JS visibilitychange/pagehide events on web.
+    void SetVisibilityChangeCallback(VisibilityChangeCallback cb);
 
     // Lua bindings (telemetry.record(name, propsTable))
     void exposeToLua(sol::state &lua);

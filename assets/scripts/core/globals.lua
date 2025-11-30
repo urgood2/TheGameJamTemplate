@@ -47,6 +47,12 @@ globals.main_menu_elapsed_time = 0 -- time spent in the main menu
 
 globals.isShopOpen = false -- whether the shop is currently open
 
+globals.shopUIState = globals.shopUIState or {
+  rerollCost = 5,
+  rerollCount = 0,
+  locked = false
+}
+
 globals.ownedRelics = {
   {
     id = "proto_umbrella"

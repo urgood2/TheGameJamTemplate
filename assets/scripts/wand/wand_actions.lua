@@ -24,6 +24,122 @@ local WandActions = {}
 -- Dependencies
 local ProjectileSystem = require("combat.projectile_system")
 local WandModifiers = require("wand.wand_modifiers")
+local CardUpgrade = require("wand.card_upgrade_system")
+local BehaviorRegistry = require("wand.card_behavior_registry")
+
+--[[
+================================================================================
+UPGRADE & STAT HELPERS
+================================================================================
+]] --
+
+local function collectUpgradeBehaviors(card)
+    if not card or not CardUpgrade.getCustomBehaviors then
+        return nil
+    end
+
+    local behaviors = CardUpgrade.getCustomBehaviors(card)
+    if not behaviors then return nil end
+
+    local active = {}
+    for behaviorId, params in pairs(behaviors) do
+        if params and params.enabled ~= false then
+            active[behaviorId] = params
+        end
+    end
+
+    if next(active) then
+        return active
+    end
+
+    return nil
+end
+
+local function applyUpgradeBehaviorsToProps(props, behaviors, modifiers)
+    if not behaviors then return end
+
+    for behaviorId, params in pairs(behaviors) do
+        if behaviorId == "on_hit_explosion" then
+            props.explosionRadius = params.radius or props.explosionRadius or modifiers.explosionRadius
+            props.explosionDamageMult = params.damage_mult or props.explosionDamageMult or
+                modifiers.explosionDamageMult or 1.0
+            props.collisionBehaviorOverride = ProjectileSystem.CollisionBehavior.EXPLODE
+        elseif behaviorId == "chain_explosion" then
+            props.chainExplosion = params
+        elseif behaviorId == "gravity_well" then
+            props.gravityWell = params
+        elseif behaviorId == "pierce_spawn_projectile" then
+            props.pierceSpawnProjectile = params
+        elseif params and params.behavior_id then
+            -- Preserve any behavior_registry-backed behaviors even if we don't inspect the ID here
+            props.behaviorDriven = true
+        end
+    end
+end
+
+local function getProjectilePosition(projectile)
+    if not (component_cache and Transform and projectile) then
+        return nil
+    end
+
+    local transform = component_cache.get(projectile, Transform)
+    if transform then
+        return {
+            x = transform.actualX + (transform.actualW or 0) * 0.5,
+            y = transform.actualY + (transform.actualH or 0) * 0.5
+        }
+    end
+
+    return nil
+end
+
+local function triggerExplosionFromBehavior(projectile, params, fallbackBehavior)
+    local script = ProjectileSystem.getProjectileScript and ProjectileSystem.getProjectileScript(projectile)
+    if not (script and script.projectileData) then return end
+
+    local behavior = fallbackBehavior or {}
+    behavior.explosionRadius = params and (params.radius or params.explosion_radius) or behavior.explosionRadius
+    behavior.explosionDamageMult = params and (params.damage_mult or params.explosionDamageMult) or
+        behavior.explosionDamageMult or 1.0
+
+    ProjectileSystem.handleExplosion(projectile, script.projectileData, behavior)
+end
+
+local function runUpgradeBehaviors(event, behaviors, payload)
+    if not behaviors or not next(behaviors) then return end
+
+    for behaviorId, params in pairs(behaviors) do
+        if params == false or (params and params.enabled == false) then
+            goto continue
+        end
+
+        if params and params.behavior_id and BehaviorRegistry.has(params.behavior_id) then
+            BehaviorRegistry.execute(params.behavior_id, {
+                event = event,
+                params = params,
+                card = payload.card,
+                projectile = payload.projectile,
+                target = payload.target,
+                context = payload.context,
+                position = payload.position,
+                damage = payload.damage,
+                collision_behavior = payload.collisionBehavior
+            })
+            goto continue
+        end
+
+        if behaviorId == "on_hit_explosion" then
+            -- Only fire here if the projectile wasn't already configured to explode
+            if payload.collisionBehavior ~= ProjectileSystem.CollisionBehavior.EXPLODE then
+                triggerExplosionFromBehavior(payload.projectile, params)
+            end
+        elseif behaviorId == "chain_explosion" then
+            triggerExplosionFromBehavior(payload.projectile, params)
+        end
+
+        ::continue::
+    end
+end
 
 --[[
 ================================================================================
@@ -99,6 +215,10 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context, chi
     -- Apply modifiers to action properties
     local props = WandModifiers.applyToAction(actionCard, modifiers)
 
+    -- Apply upgrade behaviors (custom hooks, explosions, etc.)
+    local upgradeBehaviors = collectUpgradeBehaviors(actionCard)
+    applyUpgradeBehaviorsToProps(props, upgradeBehaviors, modifiers)
+
     -- Get spawn position and base angle
     local spawnPos = context.playerPosition or { x = 0, y = 0 }
     local baseAngle = context.playerAngle or 0
@@ -123,7 +243,8 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context, chi
             context,
             spawnPos,
             angle,
-            childInfo
+            childInfo,
+            upgradeBehaviors
         )
 
         if projectileId and projectileId ~= entt_null then
@@ -142,8 +263,10 @@ end
 --- @param position table {x, y} spawn position
 --- @param angle number Spawn angle in radians
 --- @param childInfo table|nil Sub-cast metadata for this action
+--- @param upgradeBehaviors table|nil Custom behaviors from CardUpgrade
 --- @return number Entity ID of spawned projectile
-function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context, position, angle, childInfo)
+function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context, position, angle, childInfo,
+    upgradeBehaviors)
     -- Determine movement type
     local movementType = ProjectileSystem.MovementType.STRAIGHT
 
@@ -153,8 +276,8 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         movementType = ProjectileSystem.MovementType.ARC
     end
 
-    -- Determine collision behavior
-    local collisionBehavior = WandModifiers.getCollisionBehavior(modifiers)
+    -- Determine collision behavior (upgrade behaviors can override to explode)
+    local collisionBehavior = props.collisionBehaviorOverride or WandModifiers.getCollisionBehavior(modifiers)
 
     -- Find homing target if needed
     local homingTarget = nil
@@ -209,7 +332,7 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         maxBounces = props.bounceCount or 0,
         bounceDampening = modifiers.bounceDampening or 0.8,
         explosionRadius = props.explosionRadius,
-        explosionDamageMult = modifiers.explosionDamageMult or 1.0,
+        explosionDamageMult = props.explosionDamageMult or modifiers.explosionDamageMult or 1.0,
 
         -- Lifetime
         lifetime = props.lifetime,
@@ -232,11 +355,13 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
 
         -- Event hooks
         onHit = function(proj, target, data)
-            WandActions.handleProjectileHit(proj, target, data, modifiers, context)
+            WandActions.handleProjectileHit(proj, target, data, modifiers, context, upgradeBehaviors, actionCard,
+                collisionBehavior)
         end,
 
         onDestroy = function(proj, data)
-            WandActions.handleProjectileDestroy(proj, data, modifiers, context)
+            WandActions.handleProjectileDestroy(proj, data, modifiers, context, upgradeBehaviors, actionCard,
+                collisionBehavior)
         end,
     }
 
@@ -260,7 +385,11 @@ PROJECTILE EVENT HANDLERS
 --- @param hitData table Hit data from projectile system
 --- @param modifiers table Modifier aggregate
 --- @param context table Execution context
-function WandActions.handleProjectileHit(projectile, target, hitData, modifiers, context)
+--- @param upgradeBehaviors table|nil Custom behaviors attached to the card
+--- @param actionCard table|nil Action card reference for context
+--- @param collisionBehavior string|nil Collision behavior applied to this projectile
+function WandActions.handleProjectileHit(projectile, target, hitData, modifiers, context, upgradeBehaviors, actionCard,
+    collisionBehavior)
     -- Apply on-hit effects from modifiers
     if not target or target == entt_null then return end
 
@@ -279,6 +408,18 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
             }
         })
     end
+
+    -- Custom upgrade behaviors
+    local hitPosition = getProjectilePosition(projectile)
+    runUpgradeBehaviors("on_hit", upgradeBehaviors, {
+        card = actionCard,
+        projectile = projectile,
+        target = target,
+        context = context,
+        position = hitPosition,
+        damage = hitData and hitData.damage,
+        collisionBehavior = collisionBehavior
+    })
 
     -- Healing (life steal)
     if modifiers.healOnHit > 0 and context.playerEntity then
@@ -316,7 +457,11 @@ end
 --- @param destroyData table Destroy data from projectile system
 --- @param modifiers table Modifier aggregate
 --- @param context table Execution context
-function WandActions.handleProjectileDestroy(projectile, destroyData, modifiers, context)
+--- @param upgradeBehaviors table|nil Custom behaviors attached to the card
+--- @param actionCard table|nil Action card reference for context
+--- @param collisionBehavior string|nil Collision behavior applied to this projectile
+function WandActions.handleProjectileDestroy(projectile, destroyData, modifiers, context, upgradeBehaviors, actionCard,
+    collisionBehavior)
     if destroyData and destroyData.subCast and destroyData.subCast.death then
         local WandExecutor = require("wand.wand_executor")
         WandExecutor.enqueueSubCast({
@@ -331,6 +476,16 @@ function WandActions.handleProjectileDestroy(projectile, destroyData, modifiers,
             }
         })
     end
+
+    local destroyPosition = getProjectilePosition(projectile)
+    runUpgradeBehaviors("on_destroy", upgradeBehaviors, {
+        card = actionCard,
+        projectile = projectile,
+        target = destroyData and destroyData.target,
+        context = context,
+        position = destroyPosition,
+        collisionBehavior = collisionBehavior
+    })
 
     -- Check if projectile should trigger on death
     if modifiers.triggerOnDeath then

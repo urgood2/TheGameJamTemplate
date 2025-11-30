@@ -422,7 +422,7 @@ TEST_F(ShaderSystemTest, WebShaderVariantsCompileWithStubbedLoader)
 TEST_F(ShaderSystemTest, MissingUniformsAreSkipped) {
     ShaderStubStats::missingUniforms.insert("missing_uniform");
 
-    ShaderUniformSet set{};
+    shaders::ShaderUniformSet set{};
     set.set("missing_uniform", 1.0f);
 
     Shader shader{};

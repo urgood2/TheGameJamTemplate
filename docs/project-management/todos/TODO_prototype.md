@@ -70,8 +70,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - isolate shop ui to shop state only. also needs work. where is the gold, the jokers, etc?
 - shop ui is terrible needs rework. put example jokers & avatars in the shop.
 
-- how to best verify subcasts are hooked up and firing? it's hard to do this.
-
 - Display a simple tutorial text on the background whne spawning in for first time (entering action state). Just text that shows keys (or controller) to press for movement and dash.
 - Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom right)
 - destrutible objects that spawn from time to time and give resources?

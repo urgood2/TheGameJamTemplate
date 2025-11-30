@@ -3200,30 +3200,13 @@ function initPlanningPhase()
     local sendUpBoxTransform = component_cache.get(planningUIEntities.send_up_button_box, Transform)
     local inventoryTransform = inventoryBoard and inventoryBoard:handle() and component_cache.get(inventoryBoard:handle(),
         Transform)
-    if sendUpBoxTransform then
-        if inventoryTransform then
-            local boardW = inventoryTransform.actualW ~= 0 and inventoryTransform.actualW or inventoryBoardWidth
-            local boardX = inventoryTransform.actualX ~= 0 and inventoryTransform.actualX or inventoryBoardX
-            sendUpBoxTransform.actualX = boardX + (boardW - sendUpBoxTransform.actualW) * 0.5
-            sendUpBoxTransform.actualY = inventoryTransform.actualY + inventoryTransform.actualH + sendUpMargin
-        else
-            sendUpBoxTransform.actualX = inventoryBoardX + (inventoryBoardWidth - sendUpBoxTransform.actualW) * 0.5
-            sendUpBoxTransform.actualY = inventoryBoardY + inventoryBoardHeight + sendUpMargin
-        end
-
-        -- keep it on-screen
-        local screenW = globals.screenWidth()
-        local screenH = globals.screenHeight()
-        if screenW and sendUpBoxTransform.actualX + sendUpBoxTransform.actualW > screenW then
-            sendUpBoxTransform.actualX = screenW - sendUpBoxTransform.actualW - sendUpMargin
-        end
-        if sendUpBoxTransform.actualX < sendUpMargin then
-            sendUpBoxTransform.actualX = sendUpMargin
-        end
-        if screenH and sendUpBoxTransform.actualY + sendUpBoxTransform.actualH > screenH then
-            sendUpBoxTransform.actualY = screenH - sendUpBoxTransform.actualH - sendUpMargin
-        end
-    end
+        
+    -- center below inventory board
+    if sendUpBoxTransform and inventoryTransform then
+        sendUpBoxTransform.actualX = inventoryTransform.actualX + (inventoryTransform.actualW * 0.5) -
+                                         (sendUpBoxTransform.actualW * 0.5)
+        sendUpBoxTransform.actualY = inventoryTransform.actualY + inventoryTransform.actualH + sendUpMargin
+    end 
 
     ui.box.AssignStateTagsToUIBox(planningUIEntities.send_up_button_box, PLANNING_STATE)
     remove_default_state_tag(planningUIEntities.send_up_button_box)

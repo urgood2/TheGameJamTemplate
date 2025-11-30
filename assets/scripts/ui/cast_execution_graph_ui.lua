@@ -139,6 +139,7 @@ local function attachTooltip(config, tooltipData)
         go.state.hoverEnabled = true
         go.state.collisionEnabled = true
         go.state.triggerOnReleaseEnabled = true
+        go.state.clickEnabled = true
 
         go.methods.onHover = function()
             local shown = showCardTooltip(card, entity, label, body)

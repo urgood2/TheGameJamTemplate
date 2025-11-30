@@ -39,6 +39,8 @@ local ShopSystem = {}
 
 -- Dependencies (will be required at runtime)
 local CardUpgrade = nil -- Lazy loaded
+local ui_defs = require("ui.ui_defs")
+local shop_ui_initialized = false
 
 -- ============================================================================
 -- SHOP CONFIGURATION
@@ -614,6 +616,18 @@ function ShopSystem.init()
     end
 
     print(string.format("[ShopSystem] Card pool: %d cards", total))
+end
+
+--- Initializes the shop UI (delegates to ui_defs) if not already created.
+function ShopSystem.initUI()
+    if shop_ui_initialized then
+        return
+    end
+    if ui_defs and ui_defs.generateShopUI then
+        ui_defs.generateShopUI()
+        shop_ui_initialized = true
+        print("[ShopSystem] Shop UI initialized")
+    end
 end
 
 return ShopSystem

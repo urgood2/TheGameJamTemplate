@@ -53,6 +53,13 @@ globals.shopUIState = globals.shopUIState or {
   locked = false
 }
 
+globals.shopState = globals.shopState or {
+  playerLevel = 1,
+  lastInterest = 0,
+  instance = nil,
+  cards = {}
+}
+
 globals.ownedRelics = {
   {
     id = "proto_umbrella"

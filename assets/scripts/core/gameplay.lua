@@ -6,6 +6,8 @@ local palette = require("color.palette")
 local TimerChain = require("core.timer_chain")
 local Easing = require("util.easing")
 local CombatSystem = require("combat.combat_system")
+local ShopSystem = require("core.shop_system")
+local CardMetadata = require("core.card_metadata")
 require("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local WandExecutor = require("wand.wand_executor")
@@ -107,6 +109,12 @@ current_board_set_index = 1
 
 -- keep track of controller focus
 controller_focused_entity = nil
+
+-- shop system state
+local shop_system_initialized = false
+local shop_board_id = nil
+local shop_buy_board_id = nil
+local active_shop_instance = nil
 
 
 local dash_sfx_list               = {
@@ -2302,6 +2310,8 @@ function initPlanningPhase()
     CastFeedUI.init()
     MessageQueueUI.init()
     
+    MessageQueueUI.enqueueTest()
+    
     timer.run(function()
         local dt = GetFrameTime()
 
@@ -2310,10 +2320,10 @@ function initPlanningPhase()
             CastFeedUI.draw()
         end
 
-        if MessageQueueUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
+        -- if MessageQueueUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
             MessageQueueUI.update(dt)
             MessageQueueUI.draw()
-        end
+        -- end
 
         if WandCooldownUI and is_state_active and is_state_active(ACTION_STATE) then
             WandCooldownUI.update(dt)
@@ -4118,6 +4128,8 @@ function startShopPhase()
         record_telemetry("phase_enter", { phase = "shop", session_id = telemetry_session_id() })
     end
 
+    regenerateShopState()
+
 
     -- debug
 
@@ -4710,9 +4722,139 @@ function initSurvivorEntity()
     end)
 end
 
+local function ensureShopSystemInitialized()
+    if shop_system_initialized then
+        return
+    end
+    CardMetadata.registerAllWithShop(ShopSystem)
+    ShopSystem.init()
+    shop_system_initialized = true
+end
+
+local function clearBoardCards(boardId)
+    local board = boards[boardId]
+    if not board or not board.cards then
+        return
+    end
+
+    for _, eid in ipairs(board.cards) do
+        cards[eid] = nil
+        if eid and entity_cache.valid(eid) then
+            registry:destroy(eid)
+        end
+    end
+    board.cards = {}
+end
+
+local function formatShopLabel(offering)
+    if not offering or not offering.cardDef then
+        return "Unknown"
+    end
+    local rarity = offering.rarity or "?"
+    local cost = offering.cost or 0
+    return string.format("%s\n[%s] %dg", offering.cardDef.id or "?", rarity, cost)
+end
+
+local function populateShopBoard(shop)
+    if not shop_board_id or not shop then
+        return
+    end
+
+    clearBoardCards(shop_board_id)
+
+    for _, offering in ipairs(shop.offerings or {}) do
+        if not offering.isEmpty and offering.cardDef then
+            local eid = createNewCard(offering.cardDef.id, 0, 0, SHOP_STATE)
+            local script = getScriptTableFromEntityID(eid)
+            if script then
+                script.test_label = formatShopLabel(offering)
+            end
+            addCardToBoard(eid, shop_board_id)
+        end
+    end
+end
+
+function regenerateShopState()
+    ensureShopSystemInitialized()
+    ShopSystem.initUI()
+
+    local playerLevel = (globals.shopState and globals.shopState.playerLevel) or 1
+    local player = {
+        gold = globals.currency or 0,
+        cards = (globals.shopState and globals.shopState.cards) or {}
+    }
+
+    local interestEarned = ShopSystem.applyInterest(player)
+    globals.currency = player.gold
+
+    active_shop_instance = ShopSystem.generateShop(playerLevel, player.gold)
+    globals.shopState = globals.shopState or {}
+    globals.shopState.instance = active_shop_instance
+    globals.shopState.lastInterest = interestEarned
+    globals.shopState.playerLevel = playerLevel
+    globals.shopState.cards = player.cards
+
+    globals.shopUIState.rerollCost = active_shop_instance.rerollCost
+    globals.shopUIState.rerollCount = active_shop_instance.rerollCount
+
+    setShopLocked(false)
+
+    populateShopBoard(active_shop_instance)
+end
+
+function rerollActiveShop()
+    if not active_shop_instance then
+        return false
+    end
+
+    local player = {
+        gold = globals.currency or 0,
+        cards = (globals.shopState and globals.shopState.cards) or {}
+    }
+
+    local success = ShopSystem.rerollOfferings(active_shop_instance, player)
+    if not success then
+        return false
+    end
+
+    globals.currency = player.gold
+    globals.shopState.cards = player.cards
+    globals.shopUIState.rerollCost = active_shop_instance.rerollCost
+    globals.shopUIState.rerollCount = active_shop_instance.rerollCount
+
+    populateShopBoard(active_shop_instance)
+    return true
+end
+
+function setShopLocked(locked)
+    globals.shopUIState.locked = locked
+
+    if active_shop_instance then
+        for i = 1, #active_shop_instance.offerings do
+            if active_shop_instance.locks[i] ~= locked then
+                if locked then
+                    ShopSystem.lockOffering(active_shop_instance, i)
+                else
+                    ShopSystem.unlockOffering(active_shop_instance, i)
+                end
+            end
+        end
+    end
+
+    if globals.ui and globals.ui.setLockIconsVisible then
+        globals.ui.setLockIconsVisible(globals.shopUIState.locked)
+    end
+end
+
+function getActiveShop()
+    return active_shop_instance
+end
+
 function initShopPhase()
+    ensureShopSystemInitialized()
     -- let's make a large board for shopping
     local shopBoardID = createNewBoard(100, 100, 800, 400)
+    shop_board_id = shopBoardID
     local shopBoard = boards[shopBoardID]
     shopBoard.borderColor = util.getColor("apricot_cream")
 
@@ -4742,18 +4884,9 @@ function initShopPhase()
     add_state_tag(shopBoard.textEntity, SHOP_STATE)
     add_state_tag(shopBoard:handle(), SHOP_STATE)
 
-    -- let's populate the shop with some cards
-    local testCard1 = createNewCard(WandEngine.card_defs.ACTION_BASIC_PROJECTILE, 0, 0, SHOP_STATE)
-    local testCard2 = createNewCard(WandEngine.card_defs.ACTION_FIREBALL, 0, 0, SHOP_STATE)
-    local testCard3 = createNewCard(WandEngine.card_defs.ACTION_FAST_ACCURATE_PROJECTILE, 0, 0, SHOP_STATE)
-
-    -- add them to the board.
-    addCardToBoard(testCard1, shopBoard:handle())
-    addCardToBoard(testCard2, shopBoard:handle())
-    addCardToBoard(testCard3, shopBoard:handle())
-
     -- let's add a (buy) board below.
     local buyBoardID = createNewBoard(100, 550, 800, 150)
+    shop_buy_board_id = buyBoardID
     local buyBoard = boards[buyBoardID]
     buyBoard.borderColor = util.getColor("green")
     buyBoard.textEntity = ui.definitions.getNewDynamicTextEntry(

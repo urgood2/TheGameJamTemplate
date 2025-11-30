@@ -1,13 +1,12 @@
 --[[
 Notification/message queue UI.
 Displays stacked rounded-rect toasts with text and an icon (sprite or animation)
-anchored to the top-right of the screen. Intended for achievements or other
+anchored to the bottom-right of the screen. Intended for achievements or other
 lightweight notices.
 ]]
 
 local MessageQueueUI = {}
 
-local util = require("util.util")
 local z_orders = require("core.z_orders")
 local timer = require("core.timer")
 local entity_cache = require("core.entity_cache")
@@ -92,6 +91,9 @@ local function tryMakeIcon(id, forceSprite, size)
     if not entity or entity == entt_null or not entity_cache.valid(entity) then
         return nil
     end
+    
+    transform.set_space(entity, "screen")
+    
 
     animation_system.resizeAnimationObjectsInEntityToFit(entity, size, size)
     animation_system.setFGColorForAllAnimationObjects(entity, Col(255, 255, 255, 255))
@@ -137,6 +139,7 @@ local function makeItem(text, opts)
         bgColor = (opts and opts.bgColor) or cfg.bgColor,
         accentColor = (opts and opts.accentColor) or cfg.accentColor,
         textColor = (opts and opts.textColor) or cfg.textColor,
+        iconColor = opts and (opts.iconColor or opts.iconTint or opts.tintColor),
         icon = buildIcon(opts, cfg)
     }
     return item
@@ -217,9 +220,11 @@ local function drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, z, s
         return
     end
 
-    local size = item.icon.size or MessageQueueUI.config.iconSize
-    local iconCenterX = centerX + (boxWidth * 0.5 - MessageQueueUI.config.padding - size * 0.5)
-    local iconCenterY = centerY + (boxHeight * 0.5 - MessageQueueUI.config.padding - size * 0.5)
+    local cfg = MessageQueueUI.config
+    local size = item.icon.size or cfg.iconSize
+    local iconCenterX = centerX + (boxWidth * 0.5 - cfg.padding - size * 0.5)
+    local iconCenterY = centerY
+    local iconTint = colWithAlpha(item.iconColor or item.accentColor or cfg.accentColor or cfg.textColor, alpha)
 
     local transform = component_cache.get(item.icon.entity, Transform)
     if transform then
@@ -231,16 +236,18 @@ local function drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, z, s
         transform.actualH = size
         transform.visualW = size
         transform.visualH = size
-        transform.matrixDirty = true
+        if transform.markDirty then
+            transform:markDirty()
+        end
     end
 
-    -- Match fade with the toast
-    animation_system.setFGColorForAllAnimationObjects(item.icon.entity, Col(255, 255, 255, math.floor(alpha * 255)))
-
-    command_buffer.queueDrawTransformEntityAnimationPipeline(layers.ui, function(cmd)
-        cmd.e = item.icon.entity
-        cmd.registry = registry
-    end, z, space)
+    -- Match fade with the toast and ensure the engine renders it above the toast.
+    if animation_system and animation_system.setFGColorForAllAnimationObjects then
+        animation_system.setFGColorForAllAnimationObjects(item.icon.entity, iconTint)
+    end
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(item.icon.entity, z)
+    end
 end
 
 function MessageQueueUI.draw()
@@ -252,9 +259,10 @@ function MessageQueueUI.draw()
     if not screenW or not screenH then return end
 
     local baseX = screenW - cfg.marginX
-    local baseY = cfg.marginY
+    local baseY = screenH - cfg.marginY
     local space = layer.DrawCommandSpace.Screen
     local font = localization.getFont()
+    local total = #MessageQueueUI.active
 
     for i, item in ipairs(MessageQueueUI.active) do
         local textWidth = localization.getTextWidthWithCurrentFont(item.text or "", cfg.fontSize, 1)
@@ -262,8 +270,10 @@ function MessageQueueUI.draw()
         local boxWidth = math.max(cfg.minWidth, math.min(cfg.maxWidth, idealWidth))
         local boxHeight = cfg.height
 
+        -- Stack upward from the bottom-right so the newest toast sits closest to the corner.
+        local stackIndex = total - i
         local centerX = baseX - boxWidth * 0.5
-        local centerY = baseY + (i - 1) * (boxHeight + cfg.stackSpacing) + boxHeight * 0.5
+        local centerY = baseY - stackIndex * (boxHeight + cfg.stackSpacing) - boxHeight * 0.5
 
         local alpha = computeAlpha(item.age, item.lifetime, cfg.fadeIn, cfg.fadeOut)
         local bgColor = colWithAlpha(item.bgColor, alpha)
@@ -283,7 +293,7 @@ function MessageQueueUI.draw()
         -- Accent stripe on the left edge
         command_buffer.queueDrawRectangle(layers.ui, function(c)
             c.x = centerX - boxWidth * 0.5
-            c.y = centerY - boxHeight * 0.5
+            c.y = centerY
             c.width = cfg.accentWidth
             c.height = boxHeight
             c.color = accentColor
@@ -299,7 +309,7 @@ function MessageQueueUI.draw()
             c.fontSize = cfg.fontSize
         end, cfg.baseZ + 2, space)
 
-        drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ + 2, space)
+        drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ + 3, space)
     end
 end
 

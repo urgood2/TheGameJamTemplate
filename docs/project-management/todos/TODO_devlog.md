@@ -249,7 +249,7 @@
   - Game flow/UI polish: start in planning state by default, shared phase transition helper, stamina bars anchored to visual bounds, tooltips padding/no-shadow options, AI blackboard getter now warns and can return nil.
 
 11/26/2025
-  - Tag pattern/discovery system landed: Cast Feed UI now surfaces spell type/tag discoveries, added discovery journal + tag-reactive jokers, docs, and tests for the pattern matcher.
+ - Tag pattern/discovery system landed: Cast Feed UI now surfaces spell type/tag discoveries, added discovery journal + tag-reactive jokers, docs, and tests for the pattern matcher.
   - PostHog telemetry integrated end-to-end with session IDs (exposed to Lua), crash-reporter/init hooks, and phase/menu events emitting with platform/build metadata; web builds default telemetry on.
   - Web telemetry hardened with lifecycle hooks (session end, visibility change, client errors), sendBeacon/fetch beacons, visibility-change events, and optional on-page debug overlay for web debugging.
   - Build pipeline now strips Lua comments for release/web asset copies when enabled, using a new Python helper wired into CMake to shrink payloads.
@@ -260,3 +260,16 @@
   - Web build hooks auto-pause/resume gameplay and the main loop on focus/visibility changes (Emscripten glue in main loop), plus Cast Feed integration guide expanded with projectile lifecycle/validation notes.
   - CMake defaults unit tests off; Catch2 is only fetched when `ENABLE_UNIT_TESTS=ON`.
   - Reverted to commit 70fcf324 to unwind later experimental changes and regen UUID metadata; minor telemetry/test toggles refreshed after the revert.
+
+11/28/2025
+  - Cast UI pass: Cast Feed finally renders in-game, added springy execution graph preview plus a cast-block flash overlay for last cast blocks, and continued wand→UI hooking.
+  - Implemented buffered dash mechanics (coyote/buffer window, mid-dash retarget) with impulse-based movement, VFX/SFX, and wand trigger emission.
+  - Added floating damage numbers with fade/arc motion and brief enemy health bar reveals on hit.
+  - Stabilized web builds: fixed a focus regression and restored the reverted web build files/tagging step.
+
+11/29/2025
+  - Added a wand cooldown UI: left-edge cards show per-wand cooldown pies, cast progress/overheat status, labels, and mana readouts pulled from the executor.
+  - Refactored wand executor/triggers: queued child sub-casts with metadata, started piping player stats into modifier aggregates, and improved projectile action execution and trigger subscriptions.
+  - Polished CastBlockFlash UI (force fade-out controls, jiggle/alpha tweaks) so cast block flashes render and expire more reliably.
+  - Instrumentation/build toggles: Tracy instrumentation re-enabled (forced off on Web), telemetry build flag defaults to off, and Emscripten main loop now pauses/resumes on focus/visibility changes.
+  - Docs/planning updates: wand gap report expanded around upgrades/stat merging and trigger coverage; TODO_prototype gained visibility/shop/UX notes.

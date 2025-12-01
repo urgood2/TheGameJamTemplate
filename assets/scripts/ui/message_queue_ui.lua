@@ -11,6 +11,7 @@ local z_orders = require("core.z_orders")
 local timer = require("core.timer")
 local entity_cache = require("core.entity_cache")
 local component_cache = require("core.component_cache")
+local Easing = require("util.easing")
 
 local DEFAULT_TEST_MESSAGE = "Achievement unlocked!"
 local DEFAULT_ICON = {
@@ -20,27 +21,28 @@ local DEFAULT_ICON = {
 }
 
 local DEFAULT_CONFIG = {
-    maxVisible = 3,
-    lifetime = 4.0,
-    fadeIn = 0.22,
-    fadeOut = 0.45,
-    minWidth = 150,
-    maxWidth = 270,
-    height = 48,
-    padding = 8,
-    iconPadding = 6,
-    marginX = 28,
-    marginY = 28,
-    stackSpacing = 6,
-    cornerRadius = 7,
-    spawnInterval = 0.75,
+    maxVisible = 1,          -- now one-at-a-time
+    enterDuration = 0.38,
+    holdDuration = 2.8,
+    exitDuration = 0.55,
+    minWidth = 160,
+    maxWidth = 240,
+    height = 72,
+    padding = 12,
+    iconPadding = 8,
+    marginX = 36,
+    marginY = 44,
+    cornerRadius = 14,
     iconSize = 26,
-    fontSize = 12,
+    fontSize = 14,
     baseZ = z_orders.ui_tooltips + 8,
-    bgColor = { r = 12, g = 12, b = 16, a = 220 },
+    bgColor = { r = 14, g = 14, b = 24, a = 235 },
     accentColor = util.getColor("gold"),
     textColor = util.getColor("white"),
-    accentWidth = 3
+    shadowColor = Col(4, 8, 14, 140),
+    accentWidth = 5,
+    borderColor = Col(255, 255, 255, 70),
+    slideDistance = 180
 }
 
 MessageQueueUI.pending = {}
@@ -155,35 +157,15 @@ local function makeItem(text, opts)
 end
 
 local function promotePending()
-    local cfg = MessageQueueUI.config
-    local interval = cfg.spawnInterval or 0
+    if #MessageQueueUI.active > 0 then return end
+    if #MessageQueueUI.pending == 0 then return end
 
-    -- Immediate promotion when no interval configured
-    if interval <= 0 then
-        while #MessageQueueUI.active < cfg.maxVisible and #MessageQueueUI.pending > 0 do
-            local nextItem = table.remove(MessageQueueUI.pending, 1)
-            nextItem.age = 0
-            table.insert(MessageQueueUI.active, nextItem)
-            if MessageQueueUI.onItemShown then
-                pcall(MessageQueueUI.onItemShown, nextItem)
-            end
-        end
-        return
-    end
-
-    MessageQueueUI._timeSinceLastShow = MessageQueueUI._timeSinceLastShow or 0
-
-    while #MessageQueueUI.active < cfg.maxVisible and #MessageQueueUI.pending > 0 do
-        if MessageQueueUI._timeSinceLastShow < interval then
-            break
-        end
-        local nextItem = table.remove(MessageQueueUI.pending, 1)
-        nextItem.age = 0
-        table.insert(MessageQueueUI.active, nextItem)
-        MessageQueueUI._timeSinceLastShow = 0
-        if MessageQueueUI.onItemShown then
-            pcall(MessageQueueUI.onItemShown, nextItem)
-        end
+    local nextItem = table.remove(MessageQueueUI.pending, 1)
+    nextItem.state = "enter"
+    nextItem.t = 0
+    table.insert(MessageQueueUI.active, nextItem)
+    if MessageQueueUI.onItemShown then
+        pcall(MessageQueueUI.onItemShown, nextItem)
     end
 end
 
@@ -192,7 +174,7 @@ function MessageQueueUI.init(opts)
     MessageQueueUI.config = shallowCopy(DEFAULT_CONFIG)
     mergeConfig(MessageQueueUI.config, opts)
     MessageQueueUI.isActive = true
-    MessageQueueUI._timeSinceLastShow = MessageQueueUI.config.spawnInterval or 0
+    MessageQueueUI._timeSinceLastShow = 0
 end
 
 function MessageQueueUI.reset()
@@ -230,9 +212,15 @@ function MessageQueueUI.update(dt)
 
     for i = #MessageQueueUI.active, 1, -1 do
         local item = MessageQueueUI.active[i]
-        item.age = item.age + dt
+        item.t = (item.t or 0) + dt
 
-        if item.age >= item.lifetime then
+        if item.state == "enter" and item.t >= MessageQueueUI.config.enterDuration then
+            item.state = "hold"
+            item.t = 0
+        elseif item.state == "hold" and item.t >= MessageQueueUI.config.holdDuration then
+            item.state = "exit"
+            item.t = 0
+        elseif item.state == "exit" and item.t >= MessageQueueUI.config.exitDuration then
             destroyIcon(item.icon)
             table.remove(MessageQueueUI.active, i)
         end
@@ -246,13 +234,16 @@ function MessageQueueUI.setOnShow(callback)
     MessageQueueUI.onItemShown = callback
 end
 
-local function computeAlpha(age, lifetime, fadeIn, fadeOut)
-    local alphaIn = fadeIn > 0 and clamp01(age / fadeIn) or 1
-    local remaining = lifetime - age
-    local alphaOut = (fadeOut > 0 and remaining < fadeOut)
-        and clamp01(remaining / fadeOut)
-        or 1
-    return clamp01(math.min(alphaIn, alphaOut))
+local function stateAlpha(item)
+    local cfg = MessageQueueUI.config
+    if item.state == "enter" then
+        local p = clamp01(item.t / cfg.enterDuration)
+        return Easing.outQuad.f(p)
+    elseif item.state == "exit" then
+        local p = clamp01(item.t / cfg.exitDuration)
+        return 1 - Easing.inQuad.f(p)
+    end
+    return 1
 end
 
 local function wrapTextToWidth(text, maxWidth, fontSize)
@@ -349,86 +340,118 @@ function MessageQueueUI.draw()
     local baseY = screenH - cfg.marginY
     local space = layer.DrawCommandSpace.Screen
     local font = localization.getFont()
-    local total = #MessageQueueUI.active
+    local item = MessageQueueUI.active[1]
+    local rawText = item.text or ""
+    local textWidth = localization.getTextWidthWithCurrentFont(rawText, cfg.fontSize, 1)
+    local idealWidth = textWidth + cfg.padding * 2 + cfg.iconSize + cfg.iconPadding
+    local boxWidth = math.max(cfg.minWidth, math.min(cfg.maxWidth, idealWidth))
+    local boxHeight = cfg.height
+    local availableTextWidth = boxWidth - (cfg.padding * 2 + cfg.iconSize + cfg.iconPadding)
 
-    for i, item in ipairs(MessageQueueUI.active) do
-        local rawText = item.text or ""
-        local textWidth = localization.getTextWidthWithCurrentFont(rawText, cfg.fontSize, 1)
-        local idealWidth = textWidth + cfg.padding * 2 + cfg.iconSize + cfg.iconPadding
-        local boxWidth = math.max(cfg.minWidth, math.min(cfg.maxWidth, idealWidth))
-        local boxHeight = cfg.height
-        local availableTextWidth = boxWidth - (cfg.padding * 2 + cfg.iconSize + cfg.iconPadding)
-
-        -- Stack upward from the bottom-right so the newest toast sits closest to the corner.
-        local stackIndex = total - i
-        local centerX = baseX - boxWidth * 0.5
-        local centerY = baseY - stackIndex * (boxHeight + cfg.stackSpacing) - boxHeight * 0.5
-
-        local alpha = computeAlpha(item.age, item.lifetime, cfg.fadeIn, cfg.fadeOut)
-        local bgColor = colWithAlpha(item.bgColor, alpha)
-        local textColor = colWithAlpha(item.textColor, alpha)
-        local accentColor = colWithAlpha(item.accentColor, alpha)
-
-        command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-            c.x = centerX
-            c.y = centerY
-            c.w = boxWidth
-            c.h = boxHeight
-            c.rx = cfg.cornerRadius
-            c.ry = cfg.cornerRadius
-            c.color = bgColor
-        end, cfg.baseZ, space)
-
-        -- Accent stripe on the left edge
-        command_buffer.queueDrawRectangle(layers.ui, function(c)
-            c.x = centerX - boxWidth * 0.5
-            c.y = centerY
-            c.width = cfg.accentWidth
-            c.height = boxHeight
-            c.color = accentColor
-            c.lineWidth = 0
-        end, cfg.baseZ + 1, space)
-
-        command_buffer.queueDrawText(layers.ui, function(c)
-            local function wrapAndMeasure(fontSize)
-                local wrapped = wrapTextToWidth(rawText, availableTextWidth, fontSize)
-                local maxLineWidth = 0
-                for line in wrapped:gmatch("[^\n]+") do
-                    local w = localization.getTextWidthWithCurrentFont(line, fontSize, 1)
-                    if w > maxLineWidth then maxLineWidth = w end
-                end
-                return wrapped, maxLineWidth
-            end
-
-            local fontSize = cfg.fontSize
-            local wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
-            if maxLineWidth > availableTextWidth and maxLineWidth > 0 then
-                local ratio = availableTextWidth / maxLineWidth
-                fontSize = math.max(12, math.floor(fontSize * ratio))
-                wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
-            end
-
-            local lineCount = select(2, wrappedText:gsub("\n", "")) + 1
-            local textBlockHeight = lineCount * fontSize * 1.05
-            local maxHeight = boxHeight - cfg.padding * 2
-            if textBlockHeight > maxHeight and lineCount > 0 then
-                local ratio = maxHeight / textBlockHeight
-                fontSize = math.max(10, math.floor(fontSize * ratio))
-                wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
-                lineCount = select(2, wrappedText:gsub("\n", "")) + 1
-                textBlockHeight = lineCount * fontSize * 1.05
-            end
-
-            c.text = wrappedText
-            c.font = font
-            c.x = centerX - boxWidth * 0.5 + cfg.padding + cfg.iconSize + cfg.iconPadding
-            c.y = centerY - textBlockHeight * 0.5
-            c.color = textColor
-            c.fontSize = fontSize
-        end, cfg.baseZ + 2, space)
-
-        drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ +100, space)
+    local alpha = stateAlpha(item)
+    local slideDist = cfg.slideDistance or (boxWidth + 40)
+    local offset = 0
+    if item.state == "enter" then
+        local p = clamp01(item.t / cfg.enterDuration)
+        offset = (1 - Easing.outQuad.f(p)) * slideDist
+    elseif item.state == "exit" then
+        local p = clamp01(item.t / cfg.exitDuration)
+        offset = Easing.outBack.f(p) * slideDist
     end
+
+    local centerX = baseX - boxWidth * 0.5 + offset
+    local centerY = baseY - boxHeight * 0.5
+
+    local bgColor = colWithAlpha(item.bgColor, alpha)
+    local textColor = colWithAlpha(item.textColor, alpha)
+    local accentColor = colWithAlpha(item.accentColor, alpha)
+    local shadowColor = colWithAlpha(cfg.shadowColor, alpha)
+
+    -- Drop shadow
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        c.x = centerX + 6
+        c.y = centerY + 10
+        c.w = boxWidth + 14
+        c.h = boxHeight + 10
+        c.rx = cfg.cornerRadius + 6
+        c.ry = cfg.cornerRadius + 6
+        c.color = shadowColor
+    end, cfg.baseZ - 1, space)
+
+    -- Main body
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        c.x = centerX
+        c.y = centerY
+        c.w = boxWidth
+        c.h = boxHeight
+        c.rx = cfg.cornerRadius
+        c.ry = cfg.cornerRadius
+        c.color = bgColor
+    end, cfg.baseZ, space)
+
+    -- Accent slash
+    local slashX1 = centerX + boxWidth * 0.2
+    local slashX2 = centerX + boxWidth * 0.45
+    local slashY1 = centerY - boxHeight * 0.55
+    local slashY2 = centerY + boxHeight * 0.6
+    command_buffer.queueDrawLine(layers.ui, function(c)
+        c.x1 = slashX1
+        c.y1 = slashY1
+        c.x2 = slashX2
+        c.y2 = slashY2
+        c.lineWidth = cfg.accentWidth
+        c.color = accentColor
+    end, cfg.baseZ + 1, space)
+
+    -- Border
+    command_buffer.queueDrawRectangle(layers.ui, function(c)
+        c.x = centerX - boxWidth * 0.5
+        c.y = centerY - boxHeight * 0.5
+        c.width = boxWidth
+        c.height = boxHeight
+        c.color = colWithAlpha(cfg.borderColor, alpha)
+        c.lineWidth = 2
+    end, cfg.baseZ + 2, space)
+
+    command_buffer.queueDrawText(layers.ui, function(c)
+        local function wrapAndMeasure(fontSize)
+            local wrapped = wrapTextToWidth(rawText, availableTextWidth, fontSize)
+            local maxLineWidth = 0
+            for line in wrapped:gmatch("[^\n]+") do
+                local w = localization.getTextWidthWithCurrentFont(line, fontSize, 1)
+                if w > maxLineWidth then maxLineWidth = w end
+            end
+            return wrapped, maxLineWidth
+        end
+
+        local fontSize = cfg.fontSize
+        local wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
+        if maxLineWidth > availableTextWidth and maxLineWidth > 0 then
+            local ratio = availableTextWidth / maxLineWidth
+            fontSize = math.max(12, math.floor(fontSize * ratio))
+            wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
+        end
+
+        local lineCount = select(2, wrappedText:gsub("\n", "")) + 1
+        local textBlockHeight = lineCount * fontSize * 1.05
+        local maxHeight = boxHeight - cfg.padding * 2
+        if textBlockHeight > maxHeight and lineCount > 0 then
+            local ratio = maxHeight / textBlockHeight
+            fontSize = math.max(10, math.floor(fontSize * ratio))
+            wrappedText, maxLineWidth = wrapAndMeasure(fontSize)
+            lineCount = select(2, wrappedText:gsub("\n", "")) + 1
+            textBlockHeight = lineCount * fontSize * 1.05
+        end
+
+        c.text = wrappedText
+        c.font = font
+        c.x = centerX - boxWidth * 0.5 + cfg.padding + cfg.iconSize + cfg.iconPadding
+        c.y = centerY - textBlockHeight * 0.5
+        c.color = textColor
+        c.fontSize = fontSize
+    end, cfg.baseZ + 2, space)
+
+    drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ + 100, space)
 end
 
 function MessageQueueUI.startDemo(interval)

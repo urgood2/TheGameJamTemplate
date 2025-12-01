@@ -34,6 +34,12 @@ AvatarJokerStrip.layout = {
     cardH = 64,
     labelSize = 14,
     bgRadius = 12,
+    rotateAmplitude = 6,
+    floatSpeed = 1.3,
+    glowPadding = 8,
+    glowBaseAlpha = 55,
+    glowPulseAlpha = 70,
+    glowPulseSpeed = 1.6,
     avatarSprite = "4165-TheRoguelike_1_10_alpha_958.png",
     jokerSprite = "4169-TheRoguelike_1_10_alpha_962.png"
 }
@@ -47,6 +53,11 @@ local colors = {
     muted = util.getColor("gray"),
     divider = Col(80, 90, 110, 180)
 }
+
+local function now()
+    if GetTime then return GetTime() end
+    return os.clock()
+end
 
 local function makeSignature(list)
     local parts = {}
@@ -207,6 +218,14 @@ local function computeLayout(list, anchorRight, title)
     local count = math.max(1, #list)
     local contentW = count * layout.cardW + math.max(0, count - 1) * layout.spacing
     local w = contentW + layout.pad * 2
+    local label = title or ""
+    local labelW = 0
+    if localization and localization.getTextWidthWithCurrentFont then
+        labelW = localization.getTextWidthWithCurrentFont(label, layout.labelSize, 1)
+    end
+    if labelW > 0 then
+        w = math.max(w, labelW + layout.pad * 2)
+    end
     local h = layout.pad * 2 + layout.cardH + layout.labelSize + 6
 
     local x = anchorRight and (screenW - layout.margin - w) or layout.margin
@@ -227,22 +246,40 @@ local function computeLayout(list, anchorRight, title)
     }
 end
 
-local function applyTransforms(list, box, baseZ)
+local function applyTransforms(list, box, baseZ, opts)
     local layout = AvatarJokerStrip.layout
+    local animate = opts and opts.animate
+    local tNow = animate and now() or 0
+    local function easedSine(time, phase)
+        local raw = math.sin(time + phase)
+        if not animate then return raw end
+        local tNorm = (raw + 1) * 0.5
+        local eased = (3 - 2 * tNorm) * tNorm * tNorm -- simple quad-ish ease (smoothstep)
+        return eased * 2 - 1 -- back to [-1,1]
+    end
 
     for i, item in ipairs(list) do
         if item.entity and registry and registry.valid and registry:valid(item.entity) then
             local t = component_cache.get(item.entity, Transform)
             if t then
                 local x = box.startX + (i - 1) * (layout.cardW + layout.spacing)
+                local y = box.startY
+
                 t.actualX = x
-                t.actualY = box.startY
+                t.actualY = y
                 t.visualX = t.actualX
                 t.visualY = t.actualY
                 t.actualW = layout.cardW
                 t.actualH = layout.cardH
                 t.visualW = layout.cardW
                 t.visualH = layout.cardH
+                local angle = 0
+                if animate then
+                    local phase = (i - 1) * 0.7
+                    angle = easedSine(tNow * layout.floatSpeed, phase) * layout.rotateAmplitude
+                end
+                t.actualR = angle
+                t.visualR = angle
                 if t.markDirty then t:markDirty() end
             end
 
@@ -270,6 +307,32 @@ local function drawSprites(list, z, space)
                 queue(layers.ui, function(cmd)
                     cmd.registry = registry
                     cmd.e = item.entity
+                end, z, space or layer.DrawCommandSpace.Screen)
+            end
+        end
+    end
+end
+
+local function drawGlow(list, accent, z, space)
+    if not command_buffer or not layers or not list then return end
+    local layout = AvatarJokerStrip.layout
+    local pulseTime = now() * layout.glowPulseSpeed
+
+    for i, item in ipairs(list) do
+        if item.entity and registry and registry.valid and registry:valid(item.entity) then
+            local t = component_cache.get(item.entity, Transform)
+            if t then
+                local pulse = 0.5 + 0.5 * math.sin(pulseTime + i * 0.8)
+                local alpha = layout.glowBaseAlpha + layout.glowPulseAlpha * pulse
+                local color = accent or colors.jokerAccent
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+                    c.x = t.actualX + (t.actualW or layout.cardW) * 0.5
+                    c.y = t.actualY + (t.actualH or layout.cardH) * 0.5
+                    c.w = (t.actualW or layout.cardW) + layout.glowPadding * 2
+                    c.h = (t.actualH or layout.cardH) + layout.glowPadding * 2
+                    c.rx = layout.bgRadius + 4
+                    c.ry = layout.bgRadius + 4
+                    c.color = Col(color.r, color.g, color.b, math.min(255, math.max(0, math.floor(alpha))))
                 end, z, space or layer.DrawCommandSpace.Screen)
             end
         end
@@ -401,8 +464,8 @@ function AvatarJokerStrip.update()
     AvatarJokerStrip._layoutCache = { avatar = avatarBox, joker = jokerBox }
 
     local baseZ = (z_orders.ui_tooltips or 0) - 8
-    applyTransforms(AvatarJokerStrip.avatarSprites, avatarBox, baseZ)
-    applyTransforms(AvatarJokerStrip.jokerSprites, jokerBox, baseZ)
+    applyTransforms(AvatarJokerStrip.avatarSprites, avatarBox, baseZ, { animate = true })
+    applyTransforms(AvatarJokerStrip.jokerSprites, jokerBox, baseZ, { animate = true })
 end
 
 function AvatarJokerStrip.draw()
@@ -414,6 +477,8 @@ function AvatarJokerStrip.draw()
 
     drawGroup(AvatarJokerStrip._layoutCache.avatar, colors.avatarAccent, "Avatars", baseZ)
     drawGroup(AvatarJokerStrip._layoutCache.joker, colors.jokerAccent, "Jokers", baseZ)
+
+    drawGlow(AvatarJokerStrip.jokerSprites, colors.jokerAccent, baseZ + 2, space)
 
     drawSprites(AvatarJokerStrip.avatarSprites, baseZ + 3, space)
     drawSprites(AvatarJokerStrip.jokerSprites, baseZ + 3, space)

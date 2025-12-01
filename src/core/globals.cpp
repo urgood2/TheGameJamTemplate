@@ -12,6 +12,7 @@
 #include "systems/shaders/shader_system.hpp"
 #include "systems/collision/Quadtree.h"
 #include "systems/localization/localization.hpp"
+#include "../systems/spring/spring.hpp"
 
 #include "../systems/physics/physics_manager.hpp"
 
@@ -299,13 +300,38 @@ void setEngineContext(EngineContext* ctx) {
     
     // collision detection
     std::function<quadtree::Box<float>(entt::entity)> getBoxWorld = [](entt::entity e) -> quadtree::Box<float> {
-        auto &transform = globals::getRegistry().get<transform::Transform>(e);
-        
-        const float x = transform.getActualX();
-        const float y = transform.getActualY();
-        const float w = transform.getActualW();
-        const float h = transform.getActualH();
-        const float r = std::abs(transform.getActualRotation());
+        static const quadtree::Box<float> kEmpty{{0.f, 0.f}, {0.f, 0.f}};
+        auto &registry = globals::getRegistry();
+
+        if (!registry.valid(e) || !registry.all_of<transform::Transform>(e)) {
+            return kEmpty;
+        }
+
+        auto *transform = registry.try_get<transform::Transform>(e);
+        if (!transform) {
+            return kEmpty;
+        }
+
+        auto fetchSpring = [&](entt::entity springEid) -> const spring::Spring * {
+            if (!registry.valid(springEid)) return nullptr;
+            return registry.try_get<spring::Spring>(springEid);
+        };
+
+        const auto *springX = fetchSpring(transform->x);
+        const auto *springY = fetchSpring(transform->y);
+        const auto *springW = fetchSpring(transform->w);
+        const auto *springH = fetchSpring(transform->h);
+        const auto *springR = fetchSpring(transform->r);
+
+        if (!springX || !springY || !springW || !springH || !springR) {
+            return kEmpty;
+        }
+
+        const float x = springX->targetValue;
+        const float y = springY->targetValue;
+        const float w = springW->targetValue;
+        const float h = springH->targetValue;
+        const float r = std::abs(springR->targetValue);
     
         // Use inflation factor only when rotation is non-negligible
         constexpr float inflation = 1.4142f; // sqrt(2)

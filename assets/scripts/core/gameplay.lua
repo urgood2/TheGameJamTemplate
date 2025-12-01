@@ -29,6 +29,7 @@ local MessageQueueUI = require("ui.message_queue_ui")
 local CurrencyDisplay = require("ui.currency_display")
 local TagSynergyPanel = require("ui.tag_synergy_panel")
 local AvatarJokerStrip = require("ui.avatar_joker_strip")
+local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
@@ -4761,6 +4762,162 @@ end
 
 local lastFrame = -1
 
+-- Debug card spawner ---------------------------------------------------------
+local TESTED_CARD_IDS = {}
+local cardSpawnerState = {
+    built = false,
+    target = "inventory",
+    tested = {},
+    untested = {}
+}
+
+local function rebuildCardSpawnerLists()
+    local testedLookup = {}
+    for _, id in ipairs(TESTED_CARD_IDS) do
+        testedLookup[id] = true
+    end
+
+    cardSpawnerState.tested = {}
+    cardSpawnerState.untested = {}
+
+    local function push(def, source)
+        if not def then return end
+        local cid = def.id or def.card_id
+        if not cid then return end
+        local entry = {
+            id = cid,
+            name = def.name or def.test_label or cid,
+            type = def.type or (source == "trigger" and "trigger") or def.category or "card",
+            source = source
+        }
+        if testedLookup[cid] then
+            table.insert(cardSpawnerState.tested, entry)
+        else
+            table.insert(cardSpawnerState.untested, entry)
+        end
+    end
+
+    for _, def in pairs(WandEngine.card_defs or {}) do
+        push(def, "card")
+    end
+    for _, def in pairs(WandEngine.trigger_card_defs or {}) do
+        push(def, "trigger")
+    end
+
+    local function sortEntries(list)
+        table.sort(list, function(a, b)
+            return (a.name or a.id or "") < (b.name or b.id or "")
+        end)
+    end
+
+    sortEntries(cardSpawnerState.tested)
+    sortEntries(cardSpawnerState.untested)
+    cardSpawnerState.built = true
+end
+
+local function resolveCardSpawnTarget(entry)
+    if not entry then return nil end
+
+    if entry.type == "trigger" then
+        if trigger_inventory_board_id and entity_cache.valid(trigger_inventory_board_id) then
+            return trigger_inventory_board_id
+        end
+        local set = board_sets and board_sets[current_board_set_index]
+        if set and set.trigger_board_id and entity_cache.valid(set.trigger_board_id) then
+            return set.trigger_board_id
+        end
+    else
+        if cardSpawnerState.target == "action" then
+            local set = board_sets and board_sets[current_board_set_index]
+            if set and set.action_board_id and entity_cache.valid(set.action_board_id) then
+                return set.action_board_id
+            end
+        end
+        if inventory_board_id and entity_cache.valid(inventory_board_id) then
+            return inventory_board_id
+        end
+    end
+
+    return nil
+end
+
+local function spawnCardEntry(entry)
+    if not entry or not entry.id then return end
+
+    local boardId = resolveCardSpawnTarget(entry)
+    if not boardId then
+        print("[CardSpawner] No valid target board for " .. tostring(entry.id))
+        return
+    end
+
+    local eid
+    if entry.type == "trigger" then
+        eid = createNewTriggerSlotCard(entry.id, 0, 0, PLANNING_STATE)
+    else
+        eid = createNewCard(entry.id, 0, 0, PLANNING_STATE)
+    end
+
+    if not eid or eid == entt_null or not entity_cache.valid(eid) then
+        print("[CardSpawner] Failed to spawn " .. tostring(entry.id))
+        return
+    end
+
+    local script = getScriptTableFromEntityID(eid)
+    if script then
+        script.category = script.category or script.type or entry.type
+        script.id = script.id or entry.id
+        script.card_id = script.card_id or entry.id
+        CardMetadata.enrich(script)
+    end
+
+    addCardToBoard(eid, boardId)
+end
+
+local function renderCardList(entries, childId)
+    if not entries then return end
+    ImGui.BeginChild(childId, 0, 240, true)
+    for _, entry in ipairs(entries) do
+        ImGui.PushID(entry.id)
+        ImGui.Text(string.format("%s (%s)", entry.name or entry.id, entry.type or "card"))
+        ImGui.SameLine()
+        if ImGui.Button("Spawn##" .. entry.id) then
+            spawnCardEntry(entry)
+        end
+        ImGui.PopID()
+    end
+    ImGui.EndChild()
+end
+
+local function renderCardSpawnerDebugUI()
+    if not ImGui or not ImGui.Begin then return end
+    if not cardSpawnerState.built then
+        rebuildCardSpawnerLists()
+    end
+
+    if ImGui.Begin("Card Spawner (Debug)") then
+        ImGui.Text("Drop target:")
+        if ImGui.Button(cardSpawnerState.target == "inventory" and "[Inventory]" or "Inventory") then
+            cardSpawnerState.target = "inventory"
+        end
+        ImGui.SameLine()
+        if ImGui.Button(cardSpawnerState.target == "action" and "[Action Board]" or "Action Board") then
+            cardSpawnerState.target = "action"
+        end
+
+        ImGui.Separator()
+        ImGui.Text(string.format("Untested cards (%d)", #cardSpawnerState.untested))
+        renderCardList(cardSpawnerState.untested, "untested_card_list")
+        ImGui.Separator()
+        ImGui.Text("Tested cards")
+        if #cardSpawnerState.tested == 0 then
+            ImGui.Text("None marked tested yet.")
+        else
+            renderCardList(cardSpawnerState.tested, "tested_card_list")
+        end
+    end
+    ImGui.End()
+end
+
 -- call every frame
 function debugUI()
     -- open a window (returns shouldDraw)
@@ -4783,6 +4940,8 @@ function debugUI()
         end
         ImGui.End()
     end
+
+    renderCardSpawnerDebugUI()
 end
 
 cardsSoldInShop = {}
@@ -5016,8 +5175,12 @@ function initSurvivorEntity()
     -- give shader pipeline comp for later use
     local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
 
-    -- give mask
-    survivorMaskEntity = createJointedMask(survivorEntity, "world")
+    -- give mask (optional)
+    if ENABLE_SURVIVOR_MASK then
+        survivorMaskEntity = createJointedMask(survivorEntity, "world")
+    else
+        survivorMaskEntity = nil
+    end
 
 
     physics.enable_collision_between_many(world, "enemy", { "player", "enemy" }) -- enemy>player and enemy>enemy
@@ -5782,19 +5945,13 @@ function initActionPhase()
 
 
         local maskEntity = survivorMaskEntity
-
-        -- Apply rotational impulse (torque) to make mask spin
-        local torqueStrength = 800 -- Tuned for lighter, mostly-weightless mask
-        -- physics.ApplyTorque(world, maskEntity, torqueStrength)
-
-        physics.ApplyAngularImpulse(world, maskEntity, moveDir.x * torqueStrength)
-
-        -- Optional: Apply linear impulse too for more dramatic effect
-        -- local MASK_IMPULSE = 100
-        -- physics.ApplyImpulse(world, maskEntity, moveDir.x * MASK_IMPULSE, moveDir.y * MASK_IMPULSE)
-
-        -- add impulse in the direction it's going
-        -- timer that resets damping after a short delay. (SetDamping)
+        if ENABLE_SURVIVOR_MASK and maskEntity and entity_cache.valid(maskEntity) then
+            -- Apply rotational impulse (torque) to make mask spin
+            local torqueStrength = 800 -- Tuned for lighter, mostly-weightless mask
+            -- physics.ApplyTorque(world, maskEntity, torqueStrength)
+            physics.ApplyAngularImpulse(world, maskEntity, moveDir.x * torqueStrength)
+            -- Optional linear impulse skipped while mask disabled
+        end
 
         local DASH_STRENGTH = 340
 

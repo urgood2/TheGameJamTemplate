@@ -1683,6 +1683,13 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // spdlog::debug("Checking collision for entity: {}", static_cast<int>(e));
         // spdlog::debug("Point: ({}, {})", point.x, point.y);
 
+        if (!registry || !registry->valid(e)) {
+            return false;
+        }
+        if (!registry->all_of<InheritedProperties, GameObject, Transform>(e)) {
+            return false;
+        }
+
         auto &role = registry->get<InheritedProperties>(e);
         auto &node = registry->get<GameObject>(e);
 
@@ -1690,7 +1697,13 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (node.collisionTransform)
         {
-            transform = &registry->get<Transform>(node.collisionTransform.value());
+            if (!registry->valid(node.collisionTransform.value())) {
+                return false;
+            }
+            transform = registry->try_get<Transform>(node.collisionTransform.value());
+            if (!transform) {
+                return false;
+            }
             // spdlog::debug("Using collision transform for entity {}.", static_cast<int>(e));
         }
         else
@@ -1827,6 +1840,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     {
         using namespace quadtree;
         constexpr float pointBoxSize = 1.0f;
+        auto &registry = globals::getRegistry();
 
         // ——— 1) UI pass (screen-space) ———
         // Build a tiny AABB around the mouse in screen coords
@@ -1845,11 +1859,14 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             auto uiCands = globals::quadtreeUI.query(uiQuery);
             for (auto e : uiCands)
             {
+                if (!registry.valid(e)) continue;
+                if (!registry.all_of<transform::Transform, transform::InheritedProperties, transform::GameObject>(e)) continue;
+
                 // cursor is never in the UI quadtree, but if you store it for some reason:
                 if (e == globals::getCursorEntity()) continue;
 
                 // precise, rotated‐AABB / SAT test in screen‐space
-                if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, mouseScreen))
+                if (transform::CheckCollisionWithPoint(&registry, e, mouseScreen))
                     hits.push_back(e);
             }
         }
@@ -1868,11 +1885,14 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             auto worldCands = globals::quadtreeWorld.query(worldQuery);
             for (auto e : worldCands)
             {
+                if (!registry.valid(e)) continue;
+                if (!registry.all_of<transform::Transform, transform::InheritedProperties, transform::GameObject>(e)) continue;
+
                 // again, cursor is not in quadtreeWorld
                 // but if you ever put it there, you can skip it:
                 if (e == globals::getCursorEntity()) continue;
 
-                if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, mouseWorld))
+                if (transform::CheckCollisionWithPoint(&registry, e, mouseWorld))
                     hits.push_back(e);
             }
         }
@@ -2006,6 +2026,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      */
     std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point) {
         using namespace quadtree;
+        auto &registry = globals::getRegistry();
         // Make a tiny AABB around the point for the quadtree query
         constexpr float pointBoxSize = 1.0f;
         Box<float> queryBox = {
@@ -2020,15 +2041,18 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
         // Query quadtree for potential candidates
         auto results = globals::quadtreeWorld.query(queryBox);
+        results.erase(std::remove_if(results.begin(), results.end(), [&](entt::entity e){
+            return !registry.valid(e) || !registry.all_of<transform::Transform, transform::InheritedProperties, transform::GameObject>(e);
+        }), results.end());
     
         // Sort by layer order (topmost last)
-        std::sort(results.begin(), results.end(), [](entt::entity a, entt::entity b) {
-            bool hasA = globals::getRegistry().any_of<layer::LayerOrderComponent>(a);
-            bool hasB = globals::getRegistry().any_of<layer::LayerOrderComponent>(b);
+        std::sort(results.begin(), results.end(), [&](entt::entity a, entt::entity b) {
+            bool hasA = registry.any_of<layer::LayerOrderComponent>(a);
+            bool hasB = registry.any_of<layer::LayerOrderComponent>(b);
     
             if (hasA && hasB) {
-                return globals::getRegistry().get<layer::LayerOrderComponent>(a).zIndex <
-                       globals::getRegistry().get<layer::LayerOrderComponent>(b).zIndex;
+                return registry.get<layer::LayerOrderComponent>(a).zIndex <
+                       registry.get<layer::LayerOrderComponent>(b).zIndex;
             }
             return hasA < hasB; // Entities without LayerOrderComponent go first
         });
@@ -2039,7 +2063,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
             if (e == globals::getCursorEntity()) continue;
     
-            if (transform::CheckCollisionWithPoint(&globals::getRegistry(), e, point)) {
+            if (transform::CheckCollisionWithPoint(&registry, e, point)) {
                 return e; // First topmost entity that matches
             }
         }

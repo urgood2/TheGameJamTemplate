@@ -7,6 +7,7 @@ local AvatarSystem = require("wand.avatar_system")
 
 -- Tag Breakpoint Definitions (from TODO_design.md)
 -- Each tag has bonuses at 3, 5, 7, and 9 card thresholds
+local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
 local TAG_BREAKPOINTS = {
     Fire = {
         [3] = { type = "stat", stat = "burn_damage_pct", value = 10 },
@@ -253,6 +254,46 @@ function TagEvaluator.get_active_bonuses(player)
     end
 
     return bonuses
+end
+
+local function copy_breakpoints()
+    local out = {}
+    for tag, breakpoints in pairs(TAG_BREAKPOINTS) do
+        out[tag] = out[tag] or {}
+        for threshold, bonus in pairs(breakpoints) do
+            out[tag][threshold] = bonus
+        end
+    end
+    return out
+end
+
+local function sorted_thresholds(list)
+    local thresholds = {}
+    if list then
+        for threshold, _ in pairs(list) do
+            table.insert(thresholds, threshold)
+        end
+    end
+    table.sort(thresholds)
+    return thresholds
+end
+
+--- Fetch the defined thresholds for a tag, or the default set.
+function TagEvaluator.get_thresholds(tag)
+    local breakpoints = TAG_BREAKPOINTS[tag]
+    if not breakpoints then
+        local fallback = {}
+        for _, t in ipairs(DEFAULT_THRESHOLDS) do
+            fallback[#fallback + 1] = t
+        end
+        return fallback
+    end
+    return sorted_thresholds(breakpoints)
+end
+
+--- Return a copy of all breakpoint definitions for UI/analytics purposes.
+function TagEvaluator.get_breakpoints()
+    return copy_breakpoints()
 end
 
 return TagEvaluator

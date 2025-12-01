@@ -15,7 +15,6 @@ local WandExecutor = require("wand.wand_executor")
 local WandTriggers = require("wand.wand_triggers")
 local TagEvaluator = require("wand.tag_evaluator")
 local AvatarSystem = require("wand.avatar_system")
-local TagEvaluator = require("wand.tag_evaluator")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
@@ -27,6 +26,8 @@ local CastBlockFlashUI = require("ui.cast_block_flash_ui")
 local WandCooldownUI = require("ui.wand_cooldown_ui")
 local SubcastDebugUI = require("ui.subcast_debug_ui")
 local MessageQueueUI = require("ui.message_queue_ui")
+local CurrencyDisplay = require("ui.currency_display")
+local TagSynergyPanel = require("ui.tag_synergy_panel")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
@@ -652,6 +653,113 @@ function transitionInOutCircle(duration, message, color, startPosition)
         :addStateTag(PLANNING_STATE)
         :addStateTag(ACTION_STATE)
         :addStateTag(SHOP_STATE) -- make them function in all states
+        :destroy_when(function(self, eid) return self.age >= self.duration end)
+end
+
+function transitionGoldInterest(duration, startingGold, interestEarned)
+    local TransitionType = Node:extend()
+
+    TransitionType.age = 0
+    TransitionType.duration = duration or 1.35
+    TransitionType.radius = 0
+    TransitionType.textScale = 0
+    TransitionType.centerX = globals.screenWidth() * 0.5
+    TransitionType.centerY = globals.screenHeight() * 0.5
+    TransitionType.color = util.getColor("black")
+    TransitionType.accent = util.getColor("gold")
+    TransitionType.startingGold = math.floor(startingGold or globals.currency or 0)
+    TransitionType.interest = math.floor(interestEarned or 0)
+    TransitionType.displayGold = TransitionType.startingGold
+    TransitionType.targetGold = TransitionType.startingGold + TransitionType.interest
+    TransitionType.interestPulse = 0
+    TransitionType.title = "Banked gold"
+
+    function TransitionType:init()
+        local maxRadius = math.sqrt(globals.screenWidth() ^ 2 + globals.screenHeight() ^ 2)
+
+        timer.tween_fields(self.duration * 0.28, self,
+            { radius = maxRadius }, Easing.outCubic.f, nil, "gold_transition_expand", "ui")
+
+        timer.tween_fields(self.duration * 0.24, self, { textScale = 1.0 }, Easing.outBack.f, nil,
+            "gold_transition_text", "ui")
+
+        timer.tween_fields(self.duration * 0.55, self, { displayGold = self.targetGold }, Easing.inOutQuad.f, nil,
+            "gold_transition_count", "ui")
+
+        timer.after(self.duration * 0.42, function()
+            self.interestPulse = 1.0
+            if self.interest > 0 and playSoundEffect then
+                playSoundEffect("effects", "gold-gain", 1.0)
+            end
+        end, "gold_transition_ping", "ui")
+
+        timer.after(self.duration * 0.7, function()
+            timer.tween_fields(self.duration * 0.26, self, { radius = 0, textScale = 0.0 }, Easing.inOutCubic.f, nil,
+                "gold_transition_shrink", "ui")
+        end, "gold_transition_shrink_delay", "ui")
+
+        if playSoundEffect then
+            playSoundEffect("effects", "transition_whoosh", 0.9)
+        end
+    end
+
+    function TransitionType:update(dt)
+        self.age = self.age + dt
+        self.interestPulse = math.max(0, self.interestPulse - dt * 3.0)
+
+        local alpha = 1.0
+        if self.age > self.duration * 0.8 then
+            alpha = math.max(0, 1 - (self.age - self.duration * 0.8) / (self.duration * 0.2))
+        end
+
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = self.centerX
+            c.y = self.centerY
+            c.rx = self.radius
+            c.ry = self.radius
+            c.color = Col(self.color.r, self.color.g, self.color.b, math.floor(235 * alpha))
+        end, z_orders.ui_transition, layer.DrawCommandSpace.Screen)
+
+        local font = localization.getFont()
+        local labelSize = 20 * self.textScale
+        local amountSize = 46 * self.textScale
+        local interestSize = (24 + self.interestPulse * 6) * self.textScale
+
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = self.title
+            c.font = font
+            c.x = self.centerX - localization.getTextWidthWithCurrentFont(self.title, labelSize, 1) * 0.5
+            c.y = self.centerY - 64 * self.textScale
+            c.color = Col(self.accent.r, self.accent.g, self.accent.b, 220)
+            c.fontSize = labelSize
+        end, z_orders.ui_transition + 1, layer.DrawCommandSpace.Screen)
+
+        local amountText = tostring(math.floor(self.displayGold + 0.5))
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = amountText
+            c.font = font
+            c.x = self.centerX - localization.getTextWidthWithCurrentFont(amountText, amountSize, 1) * 0.5
+            c.y = self.centerY - amountSize * 0.5
+            c.color = self.accent
+            c.fontSize = amountSize
+        end, z_orders.ui_transition + 1, layer.DrawCommandSpace.Screen)
+
+        local interestLabel = string.format("+%d interest", self.interest)
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = interestLabel
+            c.font = font
+            c.x = self.centerX - localization.getTextWidthWithCurrentFont(interestLabel, interestSize, 1) * 0.5
+            c.y = self.centerY + 24 * self.textScale - self.interestPulse * 6
+            c.color = Col(self.accent.r, self.accent.g, self.accent.b, 220)
+            c.fontSize = interestSize
+        end, z_orders.ui_transition + 1, layer.DrawCommandSpace.Screen)
+    end
+
+    local transition = TransitionType {}
+        :attach_ecs { create_new = true }
+        :addStateTag(PLANNING_STATE)
+        :addStateTag(ACTION_STATE)
+        :addStateTag(SHOP_STATE)
         :destroy_when(function(self, eid) return self.age >= self.duration end)
 end
 
@@ -2580,6 +2688,11 @@ function initPlanningPhase()
     CastFeedUI.init()
     SubcastDebugUI.init()
     MessageQueueUI.init()
+    CurrencyDisplay.init({ amount = globals.currency or 0 })
+    TagSynergyPanel.init({
+        breakpoints = TagEvaluator.get_breakpoints(),
+        layout = { marginX = 24, marginTop = 18, panelWidth = 360 }
+    })
     
     MessageQueueUI.enqueueTest()
     
@@ -2604,6 +2717,19 @@ function initPlanningPhase()
         if CastBlockFlashUI and CastBlockFlashUI.isActive and is_state_active and is_state_active(ACTION_STATE) then
             CastBlockFlashUI.update(dt)
             CastBlockFlashUI.draw()
+        end
+
+        if CurrencyDisplay and CurrencyDisplay.isActive and is_state_active
+            and (is_state_active(PLANNING_STATE) or is_state_active(SHOP_STATE)) then
+            CurrencyDisplay.setAmount(globals.currency or 0)
+            CurrencyDisplay.update(dt)
+            CurrencyDisplay.draw()
+        end
+
+        if TagSynergyPanel and TagSynergyPanel.isActive and is_state_active
+            and (is_state_active(PLANNING_STATE) or is_state_active(SHOP_STATE)) then
+            TagSynergyPanel.update(dt)
+            TagSynergyPanel.draw()
         end
 
         if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
@@ -3200,13 +3326,19 @@ function initPlanningPhase()
     local sendUpBoxTransform = component_cache.get(planningUIEntities.send_up_button_box, Transform)
     local inventoryTransform = inventoryBoard and inventoryBoard:handle() and component_cache.get(inventoryBoard:handle(),
         Transform)
-        
-    -- center below inventory board
-    if sendUpBoxTransform and inventoryTransform then
+
+    local function recenterSendUpButton()
+        if not sendUpBoxTransform or not inventoryTransform then return end
         sendUpBoxTransform.actualX = inventoryTransform.actualX + (inventoryTransform.actualW * 0.5) -
                                          (sendUpBoxTransform.actualW * 0.5)
         sendUpBoxTransform.actualY = inventoryTransform.actualY + inventoryTransform.actualH + sendUpMargin
-    end 
+        sendUpBoxTransform.visualX = sendUpBoxTransform.actualX
+        sendUpBoxTransform.visualY = sendUpBoxTransform.actualY
+        ui.box.RenewAlignment(registry, planningUIEntities.send_up_button_box)
+    end
+
+    recenterSendUpButton()
+    timer.after(0, recenterSendUpButton, nil, nil, "send_up_button_recentering")
 
     ui.box.AssignStateTagsToUIBox(planningUIEntities.send_up_button_box, PLANNING_STATE)
     remove_default_state_tag(planningUIEntities.send_up_button_box)
@@ -4101,6 +4233,9 @@ reevaluateDeckTags = function()
     if not playerTarget then return end
 
     TagEvaluator.evaluate_and_apply(playerTarget, deckSnapshot, combat_context)
+    if TagSynergyPanel and TagSynergyPanel.isActive then
+        TagSynergyPanel.setData(playerTarget.tag_counts, TagEvaluator.get_breakpoints())
+    end
 
     if playerScript and playerTarget ~= playerScript then
         playerScript.tag_counts = playerTarget.tag_counts
@@ -4556,6 +4691,8 @@ function startPlanningPhase()
 end
 
 function startShopPhase()
+    local preShopGold = globals.currency or 0
+    local interestPreview = ShopSystem.calculateInterest(preShopGold)
     clear_states() -- disable all states.
     WandExecutor.cleanup()
 
@@ -4591,7 +4728,7 @@ function startShopPhase()
         cam:SetActualTarget(globals.screenWidth() / 2, globals.screenHeight() / 2)
     end
 
-    playStateTransition()
+    transitionGoldInterest(1.35, preShopGold, interestPreview)
     apply_peaches_background_phase("shop")
 
     if record_telemetry then

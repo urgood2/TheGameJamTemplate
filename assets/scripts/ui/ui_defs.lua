@@ -646,19 +646,29 @@ local function buildShopUI()
         :build()
     -- new ui box for relics
     globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRoot)
-    -- align the relics UI box to the left side of the screen, and top
+    -- align the relics UI box near the bottom-left to avoid the gold pill
     local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
     local currencyBoxTrnsform = globals.ui.currencyUIBox and registry:get(globals.ui.currencyUIBox, Transform)
     
     globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
     
+    local margin = 12
+    local screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth())
+    local screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight())
     if currencyBoxTrnsform then
-        relicsTransform.actualX = currencyBoxTrnsform.actualX + currencyBoxTrnsform.actualW + 10 -- 10 pixels from the right edge of the currency box
+        relicsTransform.actualX = currencyBoxTrnsform.actualX + (currencyBoxTrnsform.actualW or 0) + 10
+        relicsTransform.actualY = currencyBoxTrnsform.actualY
     else
-        relicsTransform.actualX = 10
+        relicsTransform.actualX = margin
+        relicsTransform.actualY = screenH and (screenH - (relicsTransform.actualH or 0) - margin) or (globals.screenHeight() - 80)
+    end
+    if screenW and relicsTransform.actualW then
+        relicsTransform.actualX = math.min(relicsTransform.actualX, screenW - relicsTransform.actualW - margin)
+    end
+    if screenH and relicsTransform.actualH then
+        relicsTransform.actualY = math.min(relicsTransform.actualY, screenH - relicsTransform.actualH - margin)
     end
     relicsTransform.visualX = relicsTransform.actualX -- update visual position as well
-    relicsTransform.actualY = 10 -- 10 pixels from the top edge
     relicsTransform.visualY = relicsTransform.actualY -- update visual position as well
     
     
@@ -1453,11 +1463,24 @@ function ui_defs.generateUI()
         
     -- create a new UI box for the currency row
     globals.ui.currencyUIBox = ui.box.Initialize({x = globals.screenWidth() - 200, y = 10}, currencyRow)
-    -- align the currency UI box to the top left
+    -- align the currency UI box away from the gold pill and clamp to screen bounds
     local currencyTransform = registry:get(globals.ui.currencyUIBox, Transform)
-    currencyTransform.actualX = 10
+    local margin = 16
+    local desiredX = margin
+    local desiredY = margin
+    local screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth())
+    local screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight())
+    if currencyTransform then
+        if screenW and currencyTransform.actualW then
+            desiredX = math.max(margin, math.min(screenW - currencyTransform.actualW - margin, desiredX))
+        end
+        if screenH and currencyTransform.actualH then
+            desiredY = math.max(margin, screenH - currencyTransform.actualH - margin) -- bottom-left
+        end
+    end
+    currencyTransform.actualX = desiredX
     currencyTransform.visualX = currencyTransform.actualX -- update visual position as well
-    currencyTransform.actualY = 10 -- 10 pixels from the top edge
+    currencyTransform.actualY = desiredY
     currencyTransform.visualY = currencyTransform.actualY -- update visual position as well
     
     if not globals.ui.weatherShopUIBox then
@@ -1974,10 +1997,21 @@ function ui_defs.generateUI()
     
     globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
     
-    relicsTransform.actualX = currencyBoxTrnsform.actualX + currencyBoxTrnsform.actualW + 10 -- 10 pixels from the right edge of the currency box
-    relicsTransform.visualX = relicsTransform.actualX -- update visual position as well
-    relicsTransform.actualY = 10 -- 10 pixels from the top edge
-    relicsTransform.visualY = relicsTransform.actualY -- update visual position as well
+    if relicsTransform and currencyBoxTrnsform then
+        local screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth())
+        local screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight())
+        local margin = 12
+        relicsTransform.actualX = currencyBoxTrnsform.actualX + (currencyBoxTrnsform.actualW or 0) + 10
+        relicsTransform.actualY = currencyBoxTrnsform.actualY
+        if screenW and relicsTransform.actualW then
+            relicsTransform.actualX = math.min(relicsTransform.actualX, screenW - relicsTransform.actualW - margin)
+        end
+        if screenH and relicsTransform.actualH then
+            relicsTransform.actualY = math.min(relicsTransform.actualY, screenH - relicsTransform.actualH - margin)
+        end
+        relicsTransform.visualX = relicsTransform.actualX
+        relicsTransform.visualY = relicsTransform.actualY
+    end
     
     
     -- text that says "new day has arrived!"

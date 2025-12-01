@@ -510,11 +510,16 @@ end
     @param amount number
 ]]
 function LootSystem:apply_gold(amount)
+    amount = amount or 0
     if globals and globals.currencies and globals.currencies.whale_dust then
         globals.currencies.whale_dust.target = (globals.currencies.whale_dust.target or 0) + amount
         log_debug("[LootSystem] Granted", amount, "gold")
     else
         log_debug("[LootSystem] Granted", amount, "gold (no currency system)")
+    end
+
+    if globals then
+        globals.currency = (globals.currency or 0) + amount
     end
 end
 

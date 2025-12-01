@@ -16,7 +16,7 @@ local DEFAULT_TEST_MESSAGE = "Achievement unlocked!"
 local DEFAULT_ICON = {
     animationId = "discord_icon_anim",  -- falls back to sprite if needed
     spriteId = "test_char_woman.png",
-    size = 52
+    size = 26
 }
 
 local DEFAULT_CONFIG = {
@@ -24,27 +24,30 @@ local DEFAULT_CONFIG = {
     lifetime = 4.0,
     fadeIn = 0.22,
     fadeOut = 0.45,
-    minWidth = 300,
-    maxWidth = 540,
-    height = 96,
-    padding = 16,
-    iconPadding = 12,
+    minWidth = 150,
+    maxWidth = 270,
+    height = 48,
+    padding = 8,
+    iconPadding = 6,
     marginX = 28,
     marginY = 28,
-    stackSpacing = 12,
-    cornerRadius = 14,
-    iconSize = 52,
-    fontSize = 24,
+    stackSpacing = 6,
+    cornerRadius = 7,
+    spawnInterval = 0.75,
+    iconSize = 26,
+    fontSize = 12,
     baseZ = z_orders.ui_tooltips + 8,
     bgColor = { r = 12, g = 12, b = 16, a = 220 },
     accentColor = util.getColor("gold"),
     textColor = util.getColor("white"),
-    accentWidth = 6
+    accentWidth = 3
 }
 
 MessageQueueUI.pending = {}
 MessageQueueUI.active = {}
 MessageQueueUI.isActive = false
+MessageQueueUI._timeSinceLastShow = 0
+MessageQueueUI.onItemShown = nil
 
 local function clamp01(v)
     if v < 0 then return 0 end
@@ -153,10 +156,34 @@ end
 
 local function promotePending()
     local cfg = MessageQueueUI.config
+    local interval = cfg.spawnInterval or 0
+
+    -- Immediate promotion when no interval configured
+    if interval <= 0 then
+        while #MessageQueueUI.active < cfg.maxVisible and #MessageQueueUI.pending > 0 do
+            local nextItem = table.remove(MessageQueueUI.pending, 1)
+            nextItem.age = 0
+            table.insert(MessageQueueUI.active, nextItem)
+            if MessageQueueUI.onItemShown then
+                pcall(MessageQueueUI.onItemShown, nextItem)
+            end
+        end
+        return
+    end
+
+    MessageQueueUI._timeSinceLastShow = MessageQueueUI._timeSinceLastShow or 0
+
     while #MessageQueueUI.active < cfg.maxVisible and #MessageQueueUI.pending > 0 do
+        if MessageQueueUI._timeSinceLastShow < interval then
+            break
+        end
         local nextItem = table.remove(MessageQueueUI.pending, 1)
         nextItem.age = 0
         table.insert(MessageQueueUI.active, nextItem)
+        MessageQueueUI._timeSinceLastShow = 0
+        if MessageQueueUI.onItemShown then
+            pcall(MessageQueueUI.onItemShown, nextItem)
+        end
     end
 end
 
@@ -165,6 +192,7 @@ function MessageQueueUI.init(opts)
     MessageQueueUI.config = shallowCopy(DEFAULT_CONFIG)
     mergeConfig(MessageQueueUI.config, opts)
     MessageQueueUI.isActive = true
+    MessageQueueUI._timeSinceLastShow = MessageQueueUI.config.spawnInterval or 0
 end
 
 function MessageQueueUI.reset()
@@ -176,6 +204,7 @@ function MessageQueueUI.reset()
     end
     MessageQueueUI.pending = {}
     MessageQueueUI.active = {}
+    MessageQueueUI._timeSinceLastShow = DEFAULT_CONFIG.spawnInterval or 0
 end
 
 function MessageQueueUI.enqueue(text, opts)
@@ -209,7 +238,12 @@ function MessageQueueUI.update(dt)
         end
     end
 
+    MessageQueueUI._timeSinceLastShow = (MessageQueueUI._timeSinceLastShow or 0) + dt
     promotePending()
+end
+
+function MessageQueueUI.setOnShow(callback)
+    MessageQueueUI.onItemShown = callback
 end
 
 local function computeAlpha(age, lifetime, fadeIn, fadeOut)

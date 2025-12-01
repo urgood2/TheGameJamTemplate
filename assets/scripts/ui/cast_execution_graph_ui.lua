@@ -33,6 +33,7 @@ CastExecutionGraphUI.position = { x = DEFAULT_POS.x, y = DEFAULT_POS.y }
 CastExecutionGraphUI.currentBox = nil
 CastExecutionGraphUI._lastFingerprint = nil
 CastExecutionGraphUI._activeTooltip = nil
+CastExecutionGraphUI._activeTooltipOwner = nil
 CastExecutionGraphUI._fallbackTooltipActive = false
 
 local function resolveColor(name, fallback)
@@ -94,11 +95,17 @@ local function showCardTooltip(card, anchorEntity, fallbackLabel, fallbackBody)
 
     previously_hovered_tooltip = tooltip
     CastExecutionGraphUI._activeTooltip = tooltip
+    CastExecutionGraphUI._activeTooltipOwner = anchorEntity
 
     return tooltip
 end
 
-local function hideActiveTooltip()
+local function hideActiveTooltip(sourceEntity)
+    if sourceEntity and CastExecutionGraphUI._activeTooltipOwner
+        and CastExecutionGraphUI._activeTooltipOwner ~= sourceEntity then
+        return
+    end
+
     local tooltip = CastExecutionGraphUI._activeTooltip
     if tooltip then
         if clear_state_tags then clear_state_tags(tooltip) end
@@ -115,6 +122,7 @@ local function hideActiveTooltip()
     end
 
     CastExecutionGraphUI._activeTooltip = nil
+    CastExecutionGraphUI._activeTooltipOwner = nil
     CastExecutionGraphUI._fallbackTooltipActive = false
 end
 
@@ -145,12 +153,15 @@ local function attachTooltip(config, tooltipData)
             local shown = showCardTooltip(card, entity, label, body)
             if not shown and label and showTooltip then
                 showTooltip(cleanLabel(label), cleanLabel(body))
+                CastExecutionGraphUI._activeTooltipOwner = entity
                 CastExecutionGraphUI._fallbackTooltipActive = true
+            elseif shown then
+                CastExecutionGraphUI._activeTooltipOwner = entity
             end
         end
 
         go.methods.onStopHover = function()
-            hideActiveTooltip()
+            hideActiveTooltip(entity)
         end
     end
 

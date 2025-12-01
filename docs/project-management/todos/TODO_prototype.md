@@ -64,7 +64,11 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- Show avatars active on bottom of screen. Jokers well be on right half of bottom screen. 
 
+- Debug imgui that lets me spawn the cards i need easily. Categorize tested & untested
+
+- we should show current jokers in a pleasing way. they should be basic sprites/animations linked to transforms, like cards, but anchored along the top of the screen maybe, some remaining space that can be filled, on a transluenct rounded rect backgound. some way to differentiate it from the other areas would be nice.
 
 - enemy knockback on projectile collision, direction-facing particles when theyc collide with wall. recoil when launching (or at least show animatino, as well as shot vfx)
 - make achievements show one by one even if there are multiple so I can play sound fx
@@ -85,8 +89,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 
 - we need a transition which animates the current gold, then shows in a jiggle how much interest was earned, then closes the transition.
-
-- we need a generic queue for rectangles with messages in them as well as an icon (animation or sprite) on the bottom right corner. we'll test it with test sprite and a test message from time to time. this will be used to show achievements or other relevant data.
 
 - we need to flesh out the shop. let's extend how it looks now. there should be a rounded rect for showing 3 shop offers (just cards)
 - A button for removing a card.

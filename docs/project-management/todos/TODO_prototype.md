@@ -64,19 +64,15 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
-- Draw canvases to other canvases with shaders
-/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:2179
-Draw canvas to render target (screen)
-/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:2221
-these two zones are the most cost intensive in a tracy run, showing they take up about 25 ms total. any way to speed this up?
-
-- ambient movement on the jokers and artifacts, make them glow or something.
-
 - affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
+
 
 - getting an error when swapping wands.
 
 - sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
+
+
+- ambient movement on the jokers and artifacts, make them glow or something.
 
 - Debug imgui that lets me spawn the cards i need easily. Categorize tested & untested
 

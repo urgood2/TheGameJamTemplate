@@ -113,6 +113,12 @@ namespace telemetry::posthog
             return "anonymous";
         }
 
+        std::string dumpForWire(const nlohmann::json &payload)
+        {
+            // Use replacement error handling so NaN/invalid UTF-8 never throw (wasm builds disable exceptions).
+            return payload.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+        }
+
 #if ENABLE_POSTHOG && !defined(__EMSCRIPTEN__)
         struct EventJob
         {
@@ -132,7 +138,7 @@ namespace telemetry::posthog
             payload["properties"]["distinct_id"] = job.distinctId;
             payload["distinct_id"] = job.distinctId;
 
-            const auto body = payload.dump();
+            const auto body = dumpForWire(payload);
             const auto url = buildCaptureUrl(job.host);
 
             CURL *curl = curl_easy_init();
@@ -309,7 +315,7 @@ namespace telemetry::posthog
         payload["properties"]["distinct_id"] = distinctId;
         payload["distinct_id"] = distinctId;
 
-        const auto body = payload.dump();
+        const auto body = dumpForWire(payload);
         const auto url = buildCaptureUrl(g_cfg.host);
 
         SPDLOG_DEBUG("[posthog] web fetch '{}' to {}", event, url);

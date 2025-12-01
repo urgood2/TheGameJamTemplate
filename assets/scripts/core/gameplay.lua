@@ -28,6 +28,7 @@ local SubcastDebugUI = require("ui.subcast_debug_ui")
 local MessageQueueUI = require("ui.message_queue_ui")
 local CurrencyDisplay = require("ui.currency_display")
 local TagSynergyPanel = require("ui.tag_synergy_panel")
+local AvatarJokerStrip = require("ui.avatar_joker_strip")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 require("core.type_defs") -- for Node customizations
@@ -2693,6 +2694,7 @@ function initPlanningPhase()
         breakpoints = TagEvaluator.get_breakpoints(),
         layout = { marginX = 24, marginTop = 18, panelWidth = 360 }
     })
+    AvatarJokerStrip.init({ margin = 20 })
     
     MessageQueueUI.enqueueTest()
     
@@ -2730,6 +2732,17 @@ function initPlanningPhase()
             and (is_state_active(PLANNING_STATE) or is_state_active(SHOP_STATE)) then
             TagSynergyPanel.update(dt)
             TagSynergyPanel.draw()
+        end
+
+        if AvatarJokerStrip and AvatarJokerStrip.isActive and is_state_active
+            and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE) or is_state_active(SHOP_STATE)) then
+            local playerTarget = nil
+            if getTagEvaluationTargets then
+                playerTarget = select(1, getTagEvaluationTargets())
+            end
+            AvatarJokerStrip.syncFrom(playerTarget)
+            AvatarJokerStrip.update(dt)
+            AvatarJokerStrip.draw()
         end
 
         if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
@@ -4235,6 +4248,9 @@ reevaluateDeckTags = function()
     TagEvaluator.evaluate_and_apply(playerTarget, deckSnapshot, combat_context)
     if TagSynergyPanel and TagSynergyPanel.isActive then
         TagSynergyPanel.setData(playerTarget.tag_counts, TagEvaluator.get_breakpoints())
+    end
+    if AvatarJokerStrip and AvatarJokerStrip.isActive then
+        AvatarJokerStrip.syncFrom(playerTarget)
     end
 
     if playerScript and playerTarget ~= playerScript then
@@ -6482,13 +6498,15 @@ function initPlanningUI()
 
         local screenW = globals.screenWidth()
         local screenH = globals.screenHeight()
+        local usableScreenH = screenH or 9999
         local buttonMargin = 12
         local verticalSpacing = 8
         local defaultButtonWidth = 52
         local defaultButtonHeight = 52
+        local estimatedTotalHeight = (#board_sets) * (defaultButtonHeight + verticalSpacing) - verticalSpacing
 
         local startX = (anchorTransform and anchorTransform.actualX) or (screenW * 0.08)
-        local startY = (anchorTransform and anchorTransform.actualY) or (screenH * 0.2)
+        local startY = math.max(buttonMargin, (usableScreenH - estimatedTotalHeight) * 0.5)
 
         for index, boardSet in ipairs(board_sets) do
             local buttonIndex = index
@@ -6538,7 +6556,8 @@ function initPlanningUI()
             if boxTransform then
                 local targetX = startX - (resolvedButtonWidth + buttonMargin)
                 local totalHeight = (#board_sets) * (resolvedButtonHeight + verticalSpacing) - verticalSpacing
-                local clampedY = math.min(math.max(startY, buttonMargin), (screenH or 9999) - totalHeight - buttonMargin)
+                local centeredTop = (usableScreenH - totalHeight) * 0.5
+                local clampedY = math.max(buttonMargin, math.min(centeredTop, usableScreenH - totalHeight - buttonMargin))
                 boxTransform.actualX = math.max(buttonMargin, targetX)
                 boxTransform.actualY = clampedY + (buttonIndex - 1) * (resolvedButtonHeight + verticalSpacing)
             end

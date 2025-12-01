@@ -64,6 +64,12 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
+
+- getting an error when swapping wands.
+
+- sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
+
 - Show avatars active on bottom of screen. Jokers well be on right half of bottom screen. 
 
 - Debug imgui that lets me spawn the cards i need easily. Categorize tested & untested

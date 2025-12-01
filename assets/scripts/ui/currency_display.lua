@@ -103,8 +103,22 @@ function CurrencyDisplay.draw()
     local space = layer.DrawCommandSpace.Screen
     local baseZ = (z_orders.ui_tooltips or 0) - 4
     local radius = 16
+    local outlineWidth = 2
     local font = localization.getFont()
     local accentCenterX = clampedX + accentWidth * 0.5
+    local accentHeight = math.max(0, h + outlineWidth * 2)
+    local accentRadiusX = accentWidth * 0.5
+    local accentRadiusY = math.min(radius + outlineWidth, accentHeight * 0.5)
+
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        c.x = centerX
+        c.y = centerY
+        c.w = w + outlineWidth * 2
+        c.h = h + outlineWidth * 2
+        c.rx = radius + outlineWidth
+        c.ry = radius + outlineWidth
+        c.color = colors.outline
+    end, baseZ, space)
 
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = centerX
@@ -114,29 +128,21 @@ function CurrencyDisplay.draw()
         c.rx = radius
         c.ry = radius
         c.color = colors.bg
-    end, baseZ, space)
-
-    command_buffer.queueDrawRectangle(layers.ui, function(c)
-        c.x = centerX
-        c.y = centerY
-        c.width = w
-        c.height = h
-        c.color = colors.outline
-        c.lineWidth = 2
     end, baseZ + 1, space)
 
-    command_buffer.queueDrawRectangle(layers.ui, function(c)
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = accentCenterX
         c.y = centerY
-        c.width = accentWidth
-        c.height = h
+        c.w = accentWidth
+        c.h = accentHeight
+        c.rx = accentRadiusX
+        c.ry = accentRadiusY
         c.color = colors.accent
-        c.lineWidth = 0
     end, baseZ + 2, space)
 
     local iconCenterX = clampedX + accentWidth + 20
     local iconRadius = 14 + CurrencyDisplay.pulse * 4
-    drawIcon(iconCenterX, centerY, iconRadius, baseZ + 2, space)
+    drawIcon(iconCenterX, centerY, iconRadius, baseZ + 3, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
         c.text = "Gold"
@@ -145,7 +151,7 @@ function CurrencyDisplay.draw()
         c.y = centerY - 18
         c.color = colors.muted
         c.fontSize = labelSize
-    end, baseZ + 2, space)
+    end, baseZ + 3, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
         c.text = tostring(amount)
@@ -154,7 +160,7 @@ function CurrencyDisplay.draw()
         c.y = centerY + 2
         c.color = colors.text
         c.fontSize = amountSize
-    end, baseZ + 2, space)
+    end, baseZ + 3, space)
 end
 
 return CurrencyDisplay

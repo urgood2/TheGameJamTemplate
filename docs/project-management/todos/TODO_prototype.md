@@ -59,10 +59,18 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - web build resuming visibility is terrible. also disable telemetry for now until we do a demo.
 - intermittent flicker when projectiles are wiped? not sure why.
 - got to also test the new batching queue system.
-- give execution preview simple tooltips so I know what each one is. > buggy though.
-- give trigger cards tooltips.
+- performance pass iwth tracy & profiling necessary.
+
     
 # programming side
+
+- Draw canvases to other canvases with shaders
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:2179
+Draw canvas to render target (screen)
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/src/core/game.cpp:2221
+these two zones are the most cost intensive in a tracy run, showing they take up about 25 ms total. any way to speed this up?
+
+- ambient movement on the jokers and artifacts, make them glow or something.
 
 - affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
 
@@ -70,11 +78,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
 
-- Show avatars active on bottom of screen. Jokers well be on right half of bottom screen. 
-
 - Debug imgui that lets me spawn the cards i need easily. Categorize tested & untested
-
-- we should show current jokers in a pleasing way. they should be basic sprites/animations linked to transforms, like cards, but anchored along the top of the screen maybe, some remaining space that can be filled, on a transluenct rounded rect backgound. some way to differentiate it from the other areas would be nice.
 
 - enemy knockback on projectile collision, direction-facing particles when theyc collide with wall. recoil when launching (or at least show animatino, as well as shot vfx)
 - make achievements show one by one even if there are multiple so I can play sound fx

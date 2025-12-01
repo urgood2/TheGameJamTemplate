@@ -2135,68 +2135,47 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
                     game::run_shader_pipeline(ui_layer, it->second);
             }
 
-            
-            {
-                ZONE_SCOPED("final output layer");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr);
+        }
 
-                // layer-specific final shaders (optional)
-                if (auto it = game::s_layerShaders.find("final"); it != game::s_layerShaders.end())
-                    game::run_shader_pipeline(finalOutput, it->second);
+        {
+            ZONE_SCOPED("Draw canvases to other canvases with shaders");
 
-                // global fullscreen shaders (your old system)
-                game::run_shader_pipeline(finalOutput, game::fullscreenShaders);
+            layer::render_stack_switch_internal::RenderStackGuard guard;
+            auto dstIt = finalOutput->canvases.find("main");
 
-                // final pass to screen (still uses CRT unless you later make it dynamic)
-                layer::DrawCanvasToCurrentRenderTargetWithTransform(
-                    finalOutput,
-                    "main",
-                    0, 0, 0,
-                    1, 1,
-                    WHITE,
-                    "crt"
-                );
+            if (dstIt != finalOutput->canvases.end() && guard.push(dstIt->second)) {
+                // reset the final buffer once per frame before compositing
+                ClearBackground(finalOutput->backgroundColor);
+
+                auto drawCanvas = [](const std::shared_ptr<layer::Layer>& src) {
+                    auto srcIt = src->canvases.find("main");
+                    if (srcIt == src->canvases.end()) return;
+
+                    const RenderTexture2D& srcCanvas = srcIt->second;
+                    DrawTexturePro(
+                        srcCanvas.texture,
+                        {0, 0, (float)srcCanvas.texture.width, (float)-srcCanvas.texture.height},
+                        {0, 0, (float)srcCanvas.texture.width, (float)srcCanvas.texture.height},
+                        {0, 0},
+                        0.0f,
+                        WHITE
+                    );
+                };
+
+                drawCanvas(background);
+                drawCanvas(sprites);
+                drawCanvas(ui_layer);
             }
-            
+        }
 
-            // #ifdef __EMSCRIPTEN__
-            // rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
-            // #endif
-            
-            
-            
-            
-            
-            // layer::Push(&worldCamera->cam);  
+        {
+            ZONE_SCOPED("Apply final shaders");
 
-            
-            // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
+            if (auto it = game::s_layerShaders.find("final"); it != game::s_layerShaders.end())
+                game::run_shader_pipeline(finalOutput, it->second);
 
-            // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
-            // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
-            
-            {
-                ZONE_SCOPED("Draw canvases to other canvases with shaders");
-                // FIRST: Composite background (with its shaders applied)
-                layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main",
-                    0, 0, 0, 1, 1, WHITE);
-
-
-                
-                
-                layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
-                
-                
-                layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
-                
-
-
-
-
-                // #ifdef __EMSCRIPTEN__
-                // rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
-                // #endif
-            }
+            // global fullscreen shaders (your old system)
+            game::run_shader_pipeline(finalOutput, game::fullscreenShaders);
         }
 
         
@@ -2214,41 +2193,20 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             ZONE_SCOPED("Final Output Draw to screen");
             // BeginDrawing();
 
-            // clear screen
             ClearBackground(BLACK);
-            
-            { // build final output layer
-                ZONE_SCOPED("Draw canvas to render target (screen)");
-                layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "crt"); // render the final output layer main canvas to the screen
-                
-                
-                
-            }
-            
-            {
-                ZONE_SCOPED("Final Output Draw to screen");
 
-                ClearBackground(BLACK);
-
-                // 1) Run fullscreen shader pipeline on finalOutput (in virtual space)
-                game::run_shader_pipeline(finalOutput, game::fullscreenShaders);
-
-                // 2) Draw finalOutput.main → actual screen with letterboxing
-                // scale & offset from the top of draw()
-                layer::DrawCanvasToCurrentRenderTargetWithTransform(
-                    finalOutput,
-                    "main",
-                    offsetX,         // x on physical screen
-                    offsetY,         // y on physical screen
-                    0.0f,            // rotation
-                    scale,           // scaleX
-                    scale,           // scaleY
-                    WHITE,
-                    "crt"            // or "" if you want CRT only sometimes
-                );
-
-                // then your ImGui/debug, physics debug, fade_system, etc...
-            }
+            // Draw finalOutput.main → actual screen with letterboxing
+            layer::DrawCanvasToCurrentRenderTargetWithTransform(
+                finalOutput,
+                "main",
+                offsetX,         // x on physical screen
+                offsetY,         // y on physical screen
+                0.0f,            // rotation
+                scale,           // scaleX
+                scale,           // scaleY
+                WHITE,
+                "crt"            // or "" if you want CRT only sometimes
+            );
 
             // Ensure ImGui renders to the real backbuffer without any leftover
             // render-target or scissor state from the layered passes.

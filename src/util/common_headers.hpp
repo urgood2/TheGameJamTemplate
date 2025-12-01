@@ -26,7 +26,7 @@ using json = nlohmann::json;
 	#undef far
 #endif
 
-#if TRACY_ENABLED
+#if defined(TRACY_ENABLE) || (defined(TRACY_ENABLED) && TRACY_ENABLED)
     #include "third_party/tracy-master/public/tracy/Tracy.hpp"
     #define ZONE_SCOPED(name) ZoneScopedN(name)
 #else

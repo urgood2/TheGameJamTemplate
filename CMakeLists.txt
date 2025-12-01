@@ -189,11 +189,14 @@ endif()
 
 if (TRACY_ENABLE AND NOT EMSCRIPTEN)
     message(STATUS "Tracy ENABLED for this build")
-    add_definitions(-DTRACY_ENABLED=1)
-    add_definitions(-DTRACY_NO_CRASH_HANDLER)
+    add_compile_definitions(
+        TRACY_ENABLE
+        TRACY_ENABLED=1
+        TRACY_NO_CRASH_HANDLER
+    )
 else()
     message(STATUS "Tracy DISABLED for this build")
-    add_definitions(-DTRACY_ENABLED=0)
+    add_compile_definitions(TRACY_ENABLED=0)
 endif()
 
 

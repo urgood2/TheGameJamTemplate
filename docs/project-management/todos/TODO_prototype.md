@@ -71,6 +71,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
 
+- probably make a prompt guideline based on my current scripts.
 
 - ambient movement on the jokers and artifacts, make them glow or something.
 

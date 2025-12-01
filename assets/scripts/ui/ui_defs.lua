@@ -138,240 +138,24 @@ local function buildShopUI()
         return
     end
 
-    local weatherDifficultyText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.weather_difficulty_text", {difficulty = globals.current_weather_event_base_damage}) end,  -- initial text
-        30.0,                                 -- font size
-        "pulse"                       -- animation spec
-    )
-    
-    globals.ui.weatherDifficultyTextEntity = weatherDifficultyText
-    
-    -- update it every 2 seconds
-    timer.every(2, function()
-        -- update the weather difficulty text every 2 seconds
-        local text = localization.get("ui.weather_difficulty_text", {difficulty = globals.current_weather_event_base_damage})
-        TextSystem.Functions.setText(globals.ui.weatherDifficultyTextEntity.config.object, text)    
-        TextSystem.Functions.applyGlobalEffects(globals.ui.weatherDifficultyTextEntity.config.object, "pulse") -- apply the pulse effect to the text
-    end)
-    
-    -- put in a row
-    local weatherDifficultyTextDef = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("blank"))
-                -- :addShadow(true) --- IGNORE ---
-                -- :addEmboss(4.0) --- IGNORE ---
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        :addChild(globals.ui.weatherDifficultyTextEntity)
-        :build()
-    -- create a new UI box for the weather difficulty text
-    globals.ui.weatherDifficultyUIBox = ui.box.Initialize({x = globals.screenWidth() - 200, y = 60}, weatherDifficultyTextDef)
-    -- align the weather difficulty UI box to the top right of the screen
-    local weatherDifficultyTransform = registry:get(globals.ui.weatherDifficultyUIBox, Transform)
-    weatherDifficultyTransform.actualX = globals.screenWidth() - weatherDifficultyTransform.actualW - 10 -- 10 pixels from the right edge
-    weatherDifficultyTransform.visualX = weatherDifficultyTransform.actualX -- update visual position as well
-    weatherDifficultyTransform.actualY = 10 -- 10 pixels from the top edge
-    weatherDifficultyTransform.visualY = weatherDifficultyTransform.actualY
-    
-    
-    local relicSlots = {
-        {id = "relic1", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.relic_slot_1", animHandle = "relic1ButtonAnimationEntity", textHandle = "relic1TextEntity", cost = 0, costTextHandle = "relic1CostTextEntity", uielementID = "relic1UIElement"},
-        {id = "relic2", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.relic_slot_2", animHandle = "relic2ButtonAnimationEntity", textHandle = "relic2TextEntity", cost = 0, costTextHandle = "relic2CostTextEntity", uielementID = "relic2UIElement"},
-        {id = "relic3", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.relic_slot_3", animHandle = "relic3ButtonAnimationEntity", textHandle = "relic3TextEntity", cost = 0, costTextHandle = "relic3CostTextEntity", uielementID = "relic3UIElement"},
-    }
-
-    local weatherButtonDefs = {}
-    
-    -- populate weatherButtonDefs based on weatherEvents
-    for _, event in ipairs(relicSlots) do
-
-        -- TODO: so these are stored under globals.ui["relic1TextEntity"] globals.ui["relic1ButtonAnimationEntity"] and so on, we will access these later
-        local buttonDef = createStructurePlacementButton(
-            event.spriteID, -- sprite ID for the weather event
-            event.animHandle, -- global animation handle
-            event.textHandle, -- global text handle
-            event.text, -- localization key for text
-            event.cost, -- cost to buy the weather event
-            event.costTextHandle -- global cost text handle
-        )
-        
-        buttonDef.config.id = event.uielementID -- set the id for the buttonDef
-        -- add buttonDef to weatherButtonDefs
-        table.insert(weatherButtonDefs, buttonDef)
-    end
-
     local ShopSystem = require("core.shop_system")
+    globals.shopUIState = globals.shopUIState or {}
     globals.shopUIState.rerollCost = globals.shopUIState.rerollCost or ShopSystem.config.baseRerollCost
     globals.shopUIState.rerollCount = globals.shopUIState.rerollCount or 0
     globals.shopUIState.locked = globals.shopUIState.locked or false
-    globals.shopUIState.awaitingRemoval = false
-
-    local function formatGold(amount)
-        return "Gold: " .. tostring(math.floor(amount + 0.5))
-    end
+    globals.shopUIState.peekPlanning = globals.shopUIState.peekPlanning or false
 
     globals.ui.shopLockIcons = {}
+    globals.ui.setLockIconsVisible = function() end
 
-    local function buildLockIcon(idSuffix)
-        local icon = animation_system.createAnimatedObjectWithTransform(
-            "4024-TheRoguelike_1_10_alpha_817.png",
-            true
-        )
-        animation_system.resizeAnimationObjectsInEntityToFit(icon, 22, 22)
-        animation_system.setFGColorForAllAnimationObjects(icon, util.getColor("blackberry"))
-        local animComp = component_cache.get(icon, AnimationQueueComponent)
-        if animComp then
-            animComp.noDraw = true
-        end
-        local iconGO = component_cache.get(icon, GameObject)
-        if iconGO and iconGO.state then
-            iconGO.state.hoverEnabled = false
-            iconGO.state.collisionEnabled = false
-        end
-        table.insert(globals.ui.shopLockIcons, icon)
-        local iconDef = ui.definitions.wrapEntityInsideObjectElement(icon)
-        iconDef.config.id = "shop_lock_icon_" .. idSuffix
-        return iconDef
-    end
-
-    local function setLockIconsVisible(visible)
-        for _, icon in ipairs(globals.ui.shopLockIcons) do
-            local animComp = component_cache.get(icon, AnimationQueueComponent)
-            if animComp then
-                animComp.noDraw = not visible
-            end
-            local t = component_cache.get(icon, Transform)
-            if t then
-                local size = visible and 22 or 0
-                t.actualW = size
-                t.visualW = size
-                t.actualH = size
-                t.visualH = size
-            end
-        end
-        if globals.ui.weatherShopUIBox then
-            ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox)
-        end
-    end
-    globals.ui.setLockIconsVisible = setLockIconsVisible
-
-    local offerSlots = {}
-    for i, buttonDef in ipairs(weatherButtonDefs) do
-        if i <= 3 then
-            local slot = UIElementTemplateNodeBuilder.create()
-                :addType(UITypeEnum.VERTICAL_CONTAINER)
-                :addConfig(
-                    UIConfigBuilder.create()
-                        :addColor(util.getColor("blank"))
-                        :addPadding(4)
-                        :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                        :build()
-                )
-                :addChild(buildLockIcon(i))
-                :addChild(buttonDef)
-                :build()
-            table.insert(offerSlots, slot)
-        end
-    end
-    
-    -- add a close button to the weather shop
-    local closeButton = createStructurePlacementButton(
-        "4158-TheRoguelike_1_10_alpha_951.png", 
-        "shopCloseButton", -- global animation handle
-        "shopCloseText", -- global text handle
-        "ui.shop_close" -- localization key for text
-    )
-    closeButton.config.buttonCallback = function ()
-        -- close the weather shop
-        log_debug("Weather shop closed!")
-        playSoundEffect("effects", "button-click") -- play button click sound
-        toggleShopWindow() -- toggle the shop window visibility
-        togglePausedState(false) -- unpause the game
-    end
-    
-    -- add a text entity that says "Shop"
-    globals.ui.weatherShopTextEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return "SHOP" end,  -- initial text
-        46.0,                                 -- font size
-        "float;wiggle;color=marigold"                       -- animation spec
-    )
-
-    local shopGoldIcon = animation_system.createAnimatedObjectWithTransform(
-        "4024-TheRoguelike_1_10_alpha_817.png",
-        true
-    )
-    animation_system.resizeAnimationObjectsInEntityToFit(
-        shopGoldIcon,
-        28,
-        28
-    )
-    globals.ui.shopGoldText = ui.definitions.getNewDynamicTextEntry(
-        function() return formatGold(globals.currency) end,  -- initial text
-        26.0,                                 -- font size
-        "pulse;color=apricot_cream"                       -- animation spec
-    )
-
-    local goldRow = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("blank"))
-                :addPadding(6)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-        :addChild(ui.definitions.wrapEntityInsideObjectElement(shopGoldIcon))
-        :addChild(globals.ui.shopGoldText)
-        :build()
-
-    local offersLabel = ui.definitions.getNewDynamicTextEntry(
-        function() return "Card Offers" end,
-        22.0,
-        "color=apricot_cream"
-    )
-
-    local offersRow = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("blank"))
-                :addPadding(8)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-        :addChildren(offerSlots)
-        :build()
-
-    local offersPanel = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.ROOT)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
-                :addEmboss(6.0)
-                :addPadding(12)
-                :addMinWidth(560)
-                :addMinHeight(200)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-        :addChild(offersLabel)
-        :addChild(offersRow)
-        :build()
-
-    local function buildShopButton(textEntry, callback, id)
+    local function buildShopButton(textEntry, callback, id, color)
         return UIElementTemplateNodeBuilder.create()
             :addType(UITypeEnum.HORIZONTAL_CONTAINER)
             :addConfig(
                 UIConfigBuilder.create()
                     :addId(id or "")
-                    :addColor(util.getColor("dusty_rose"))
-                    :addEmboss(4.0)
+                    :addColor(color or util.getColor("dusty_rose"))
+                    :addEmboss(3.0)
                     :addHover(true)
                     :addPadding(6)
                     :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
@@ -382,60 +166,48 @@ local function buildShopUI()
             :build()
     end
 
-    globals.ui.shopRemoveButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return "Remove card" end,
-        20.0,
-        "bump"
-    )
     globals.ui.shopLockButtonText = ui.definitions.getNewDynamicTextEntry(
         function()
-            if globals.shopUIState.locked then
-                return "Unlock offers"
-            end
-            return "Lock offers"
+            return globals.shopUIState.locked and "Unlock shop" or "Lock shop"
         end,
-        20.0,
-        "pulse"
+        18.0,
+        "color=apricot_cream"
     )
     globals.ui.shopRerollButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return string.format("Reroll (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5)) end,
-        20.0,
-        "bump"
+        function() return string.format("Reshuffle (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5)) end,
+        18.0,
+        "color=apricot_cream"
+    )
+    globals.ui.shopPeekButtonText = ui.definitions.getNewDynamicTextEntry(
+        function()
+            return globals.shopUIState.peekPlanning and "Hide planning boards" or "Peek planning boards"
+        end,
+        18.0,
+        "color=apricot_cream"
     )
 
     local function refreshRerollText()
         if globals.ui.shopRerollButtonText and globals.ui.shopRerollButtonText.config then
             TextSystem.Functions.setText(
                 globals.ui.shopRerollButtonText.config.object,
-                string.format("Reroll (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5))
+                string.format("Reshuffle (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5))
             )
         end
     end
 
     local function refreshLockText()
         if globals.ui.shopLockButtonText and globals.ui.shopLockButtonText.config then
-            local nextLabel = globals.shopUIState.locked and "Unlock offers" or "Lock offers"
+            local nextLabel = globals.shopUIState.locked and "Unlock shop" or "Lock shop"
             TextSystem.Functions.setText(globals.ui.shopLockButtonText.config.object, nextLabel)
         end
     end
 
-    local function refreshGoldText()
-        if globals.ui.shopGoldText and globals.ui.shopGoldText.config then
-            TextSystem.Functions.setText(globals.ui.shopGoldText.config.object, formatGold(globals.currency))
+    local function refreshPeekText()
+        if globals.ui.shopPeekButtonText and globals.ui.shopPeekButtonText.config then
+            local label = globals.shopUIState.peekPlanning and "Hide planning boards" or "Peek planning boards"
+            TextSystem.Functions.setText(globals.ui.shopPeekButtonText.config.object, label)
         end
     end
-
-    local removeButton = buildShopButton(globals.ui.shopRemoveButtonText, function()
-        globals.shopUIState.awaitingRemoval = true
-        playSoundEffect("effects", "button-click")
-        newTextPopup(
-            string.format("Choose a card to remove (-%dg)", ShopSystem.config.removalCost),
-            globals.screenWidth() / 2,
-            globals.screenHeight() / 2 - 80,
-            1.8,
-            "color=fiery_red"
-        )
-    end, "shop_remove_button")
 
     local lockButton = buildShopButton(globals.ui.shopLockButtonText, function()
         local nextLocked = not globals.shopUIState.locked
@@ -445,15 +217,7 @@ local function buildShopUI()
             globals.shopUIState.locked = nextLocked
         end
         playSoundEffect("effects", "button-click")
-        setLockIconsVisible(globals.shopUIState.locked)
         refreshLockText()
-        newTextPopup(
-            globals.shopUIState.locked and "Shop locked" or "Shop unlocked",
-            globals.screenWidth() / 2,
-            globals.screenHeight() / 2 - 100,
-            1.4,
-            "color=plum"
-        )
     end, "shop_lock_button")
 
     local rerollButton = buildShopButton(globals.ui.shopRerollButtonText, function()
@@ -469,240 +233,70 @@ local function buildShopUI()
                 message,
                 globals.screenWidth() / 2,
                 globals.screenHeight() / 2 - 60,
-                1.4,
+                1.2,
                 "color=fiery_red"
             )
             return
         end
         refreshRerollText()
-        refreshGoldText()
         newTextPopup(
             string.format("Rerolled shop for %dg", spend),
             globals.screenWidth() / 2,
             globals.screenHeight() / 2 - 120,
-            1.6,
+            1.3,
             "color=marigold"
         )
     end, "shop_reroll_button")
 
-    local actionRow = UIElementTemplateNodeBuilder.create()
+    local peekButton = buildShopButton(globals.ui.shopPeekButtonText, function()
+        if togglePlanningPeek then
+            togglePlanningPeek()
+        end
+        refreshPeekText()
+    end, "shop_peek_button", util.getColor("dusty_rose"))
+
+    local buttonRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(4.0)
                 :addPadding(6)
                 :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
-        :addChild(removeButton)
         :addChild(lockButton)
         :addChild(rerollButton)
-        :addChild(closeButton)
+        :addChild(peekButton)
         :build()
 
-    local jokerTitle = ui.definitions.getNewDynamicTextEntry(
-        function() return "Joker Shelf" end,
-        26.0,
-        "float;color=blue_midnight"
-    )
-    local jokerHint = ui.definitions.getNewDynamicTextEntry(
-        function() return "Reserve a slot for jokers and wildcards" end,
-        18.0,
-        "color=apricot_cream"
-    )
-
-    local jokerPanel = UIElementTemplateNodeBuilder.create()
+    local root = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
-                :addEmboss(4.0)
-                :addPadding(10)
-                :addMinWidth(500)
-                :addMinHeight(90)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :build()
-        )
-        :addChild(jokerTitle)
-        :addChild(jokerHint)
-        :build()
-
-    local header = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.VERTICAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_TOP))
                 :build()
         )
-        :addChild(globals.ui.weatherShopTextEntity)
-        :addChild(goldRow)
+        :addChild(buttonRow)
         :build()
 
-    local weatherRow = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.VERTICAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
-                -- :addShadow(true) --- IGNORE ---
-                :addEmboss(4.0)
-                :addPadding(12)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        -- add all weather button defs to the row
-        :addChild(header) -- add the weather shop text entity
-        :addChild(offersPanel)
-        :addChild(actionRow)
-        :addChild(jokerPanel)
-        :build()
-    
-    
-    -- create a new UI box for the shop
-    globals.ui.weatherShopUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 100}, weatherRow)
-    -- align the weather shop UI box to the center of the screen
-    local weatherShopTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
-    weatherShopTransform.actualX = globals.screenWidth() / 2 - weatherShopTransform.actualW / 2 -- center horizontally
-    weatherShopTransform.visualX = weatherShopTransform.actualX -- update visual position as well
-    weatherShopTransform.actualY = globals.screenHeight() -- out of view initially
-
-    setLockIconsVisible(globals.shopUIState.locked)
-    refreshRerollText()
-    refreshLockText()
-    refreshGoldText()
-    
-    
-    -- relics menu 
-    -- for each relic in globals.ownedRelics, create a hoverable animatione entity
-    local relicsRowImages = {}
-    
-    for _, ownedRelic in ipairs(globals.ownedRelics) do
-        local relicID = ownedRelic.id
-        local relicDef = findInTable(globals.relicDefs, "id", relicID)
-        if relicDef then
-            -- you already have the entry, no need to look it up again
-            ownedRelic.animation_entity = animation_system.createAnimatedObjectWithTransform(
-                relicDef.spriteID,
-                true
-            )
-        
-            animation_system.resizeAnimationObjectsInEntityToFit(
-                ownedRelic.animation_entity,
-                40, 40
-            )
-        
-            local relicIconDef = ui.definitions.wrapEntityInsideObjectElement(ownedRelic.animation_entity)
-        
-            local relicGameObject = registry:get(ownedRelic.animation_entity, GameObject)
-            relicGameObject.methods.onHover = function()
-                showTooltip(
-                localization.get(relicDef.localizationKeyName),
-                localization.get(relicDef.localizationKeyDesc)
-                )
-            end
-            relicGameObject.state.hoverEnabled = true
-            relicGameObject.state.collisionEnabled = true -- enable collision for the hover to work
-      
-          table.insert(relicsRowImages, relicIconDef)
-        end
-      end
-    
-    -- make a new row for relics
-    local relicsRow = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addId("relics_row")
-                :addColor(util.getColor("blank"))
-                -- :addShadow(true) --- IGNORE ---
-                -- :addEmboss(4.0)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        -- add all relic button defs to the row
-        :addChildren(relicsRowImages)
-        :build()
-    relicsRow.config.id = "relics_row" -- set the id for the relics row   
-    
-    -- new root
-    local relicsRoot = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.ROOT)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        :addChild(relicsRow) -- add the relics row
-        :build()
-    -- new ui box for relics
-    globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRoot)
-    -- align the relics UI box near the bottom-left to avoid the gold pill
-    local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
-    local currencyBoxTrnsform = globals.ui.currencyUIBox and registry:get(globals.ui.currencyUIBox, Transform)
-    
-    globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
-    
+    globals.ui.weatherShopUIBox = ui.box.Initialize({x = 0, y = 0}, root)
+    local t = registry:get(globals.ui.weatherShopUIBox, Transform)
     local margin = 12
-    local screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth())
-    local screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight())
-    if currencyBoxTrnsform then
-        relicsTransform.actualX = currencyBoxTrnsform.actualX + (currencyBoxTrnsform.actualW or 0) + 10
-        relicsTransform.actualY = currencyBoxTrnsform.actualY
-    else
-        relicsTransform.actualX = margin
-        relicsTransform.actualY = screenH and (screenH - (relicsTransform.actualH or 0) - margin) or (globals.screenHeight() - 80)
+    t.actualX = math.max(margin, globals.screenWidth() / 2 - (t.actualW or 0) / 2)
+    t.visualX = t.actualX
+    t.actualY = margin
+    t.visualY = t.actualY
+    ui.box.AssignStateTagsToUIBox(globals.ui.weatherShopUIBox, SHOP_STATE)
+    remove_default_state_tag(globals.ui.weatherShopUIBox)
+
+    globals.ui.refreshShopUIFromInstance = function()
+        refreshRerollText()
+        refreshLockText()
+        refreshPeekText()
+        ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox)
     end
-    if screenW and relicsTransform.actualW then
-        relicsTransform.actualX = math.min(relicsTransform.actualX, screenW - relicsTransform.actualW - margin)
-    end
-    if screenH and relicsTransform.actualH then
-        relicsTransform.actualY = math.min(relicsTransform.actualY, screenH - relicsTransform.actualH - margin)
-    end
-    relicsTransform.visualX = relicsTransform.actualX -- update visual position as well
-    relicsTransform.visualY = relicsTransform.actualY -- update visual position as well
-    
-    
-    -- text that says "new day has arrived!"
-    globals.ui.newDayTextEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.new_day_text") end,  -- initial text
-        30.0,                                 -- font size
-        "bump"                       -- animation spec
-    )
-    
-    -- put in its own row
-    local newDayTextDef = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
-                -- :addShadow(true) --- IGNORE ---
-                :addEmboss(4.0)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        :addChild(globals.ui.newDayTextEntity)
-        :build()
-        
-    -- new uibox
-    globals.ui.newDayUIBox = ui.box.Initialize({x = globals.screenWidth() / 2 - 150, y = globals.screenHeight() / 2 - 50}, newDayTextDef)
-    -- align the new day UI box to the center of the screen
-    local newDayTransform = registry:get(globals.ui.newDayUIBox, Transform)
-    newDayTransform.actualX = globals.screenWidth() / 2 - newDayTransform.actualW / 2 -- center horizontally
-    newDayTransform.visualX = newDayTransform.actualX -- update visual position as well
-    newDayTransform.actualY = globals.screenHeight() -- hide it initially
 end
 
 function ui_defs.generateShopUI()

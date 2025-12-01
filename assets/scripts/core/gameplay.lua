@@ -288,6 +288,17 @@ local shop_system_initialized = false
 local shop_board_id = nil
 local shop_buy_board_id = nil
 local active_shop_instance = nil
+local AVATAR_PURCHASE_COST = 10
+_G.AVATAR_PURCHASE_COST = AVATAR_PURCHASE_COST
+local shop_overlay_layout = {
+    margin = 14,
+    pad = 10,
+    rowH = 22,
+    panelW = 420
+}
+local tryPurchaseShopCard -- forward declaration
+local setPlanningPeekMode -- forward declaration
+local togglePlanningPeek -- forward declaration
 
 
 local dash_sfx_list               = {
@@ -318,6 +329,10 @@ local dashBufferTimer             = 0
 local bufferedDashDir             = nil
 local playerIsDashing             = false
 local playerStaminaTickerTimer    = 0
+
+local function lerp(a, b, t)
+    return a + (b - a) * t
+end
 
 local enemyHealthUiState          = {}                                 -- eid -> { actor=<combat actor>, visibleUntil=<time> }
 local combatActorToEntity         = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
@@ -1044,6 +1059,8 @@ function createNewCard(id, x, y, gameStateToApply)
                     return
                 end
 
+                local dt = (GetFrameTime and GetFrameTime()) or 0.016
+
                 -- loop through cards.
                 for eid, cardScript in pairs(cards) do
                     if eid and entity_cache.valid(eid) then
@@ -1072,6 +1089,14 @@ function createNewCard(id, x, y, gameStateToApply)
                                 log_debug("Card", eid, "is being dragged, forcing z to", zToUse, "from",
                                     layer_order_system.getZIndex(eid))
                             end
+
+                            -- animate shop buy affordance
+                            local revealTarget = 0
+                            if is_state_active(SHOP_STATE) and cardScript.shop_slot then
+                                revealTarget = cardScript.selected and 1 or 0
+                            end
+                            cardScript.shopBuyReveal = lerp(cardScript.shopBuyReveal or 0, revealTarget,
+                                math.min(1.0, dt * 8.0))
 
                             -- check if card is over capacity on its board
                             local isOverCapacity = false
@@ -1114,6 +1139,36 @@ function createNewCard(id, x, y, gameStateToApply)
                                         end
                                     end
                                 end
+                            end
+
+                            if cardScript.shop_slot and cardScript.shopBuyReveal and cardScript.shopBuyReveal > 0.02 and
+                                is_state_active(SHOP_STATE) then
+                                local btnWidth = t.actualW * 0.9
+                                local btnHeight = math.max(22, math.min(t.actualH * 0.36, 46))
+                                local slide = (1 - cardScript.shopBuyReveal) * (btnHeight + 6)
+                                local centerX = t.actualX + t.actualW * 0.5
+                                local centerY = t.actualY - btnHeight * 0.5 + slide
+
+                                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                                    c.x = centerX
+                                    c.y = centerY
+                                    c.w = btnWidth
+                                    c.h = btnHeight
+                                    c.rx = 12
+                                    c.ry = 12
+                                    c.color = Col(20, 24, 32, 215)
+                                    c.outlineColor = util.getColor("apricot_cream")
+                                end, math.max(0, zToUse - 1), layer.DrawCommandSpace.World)
+
+                                local buyLabel = string.format("BUY %dg", math.floor((cardScript.shop_cost or 0) + 0.5))
+                                command_buffer.queueDrawText(layers.sprites, function(c)
+                                    c.text = buyLabel
+                                    c.font = localization.getFont()
+                                    c.x = centerX - localization.getTextWidthWithCurrentFont(buyLabel, 22, 1) * 0.5
+                                    c.y = centerY - 10
+                                    c.color = util.getColor("apricot_cream")
+                                    c.fontSize = 22
+                                end, zToUse, layer.DrawCommandSpace.World)
                             end
 
                             -- slightly above the card sprite
@@ -1383,9 +1438,15 @@ function createNewCard(id, x, y, gameStateToApply)
     -- end
 
     nodeComp.methods.onClick = function(registry, clickedEntity)
-        if not cardScript.selected then
-            cardScript.selected = false
+        if is_state_active and is_state_active(SHOP_STATE) and cardScript.shop_slot then
+            if cardScript.selected then
+                tryPurchaseShopCard(cardScript)
+            else
+                cardScript.selected = true
+            end
+            return
         end
+
         cardScript.selected = not cardScript.selected
     end
 
@@ -1500,12 +1561,6 @@ function createNewCard(id, x, y, gameStateToApply)
 
     return cardScript:handle()
 end
-
--- utility: linear interpolation
-local function lerp(a, b, t)
-    return a + (b - a) * t
-end
-
 
 function setUpScrollingBackgroundSprites()
     local gridSpacingX     = 700
@@ -2730,7 +2785,7 @@ function initPlanningPhase()
         end
 
         if TagSynergyPanel and TagSynergyPanel.isActive and is_state_active
-            and (is_state_active(PLANNING_STATE) or is_state_active(SHOP_STATE)) then
+            and is_state_active(PLANNING_STATE) then
             TagSynergyPanel.update(dt)
             TagSynergyPanel.draw()
         end
@@ -4606,6 +4661,9 @@ end
 
 function startActionPhase()
     clear_states() -- disable all states.
+    if setPlanningPeekMode then
+        setPlanningPeekMode(false)
+    end
 
     if record_telemetry then
         local now = os.clock()
@@ -4653,6 +4711,9 @@ end
 
 function startPlanningPhase()
 	    clear_states() -- disable all states.
+	    if setPlanningPeekMode then
+	        setPlanningPeekMode(false)
+	    end
 	    WandExecutor.cleanup()
 	    entity_cache.clear()
 	    CastBlockFlashUI.clear()
@@ -4711,6 +4772,9 @@ function startShopPhase()
     local preShopGold = globals.currency or 0
     local interestPreview = ShopSystem.calculateInterest(preShopGold)
     clear_states() -- disable all states.
+    if setPlanningPeekMode then
+        setPlanningPeekMode(false)
+    end
     WandExecutor.cleanup()
 
     if record_telemetry then
@@ -5532,6 +5596,97 @@ local function clearBoardCards(boardId)
     board.cards = {}
 end
 
+local planningPeekEntities = {}
+
+local function refreshShopUIFromInstance(shop)
+    if globals.ui and globals.ui.refreshShopUIFromInstance then
+        globals.ui.refreshShopUIFromInstance(shop or active_shop_instance)
+    end
+end
+
+local function addPurchasedCardToInventory(cardInstance)
+    if not cardInstance then return end
+    local cardId = cardInstance.id or cardInstance.card_id or cardInstance.cardID
+    if not cardId then return end
+
+    local dropX, dropY = globals.screenWidth() * 0.74, globals.screenHeight() * 0.78
+    local inventoryBoard = boards[inventory_board_id]
+    if inventoryBoard then
+        local t = component_cache.get(inventory_board_id, Transform)
+        if t then
+            dropX = t.actualX + t.actualW * 0.5
+            dropY = t.actualY + t.actualH * 0.2
+        end
+    end
+
+    local eid = createNewCard(cardId, dropX, dropY, PLANNING_STATE)
+    local script = getScriptTableFromEntityID(eid)
+    if script then
+        script.selected = false
+    end
+    addCardToBoard(eid, inventory_board_id)
+    return eid
+end
+
+local function collectPlanningPeekTargets()
+    local targets = {}
+    local function add(eid)
+        if eid and eid ~= entt_null and entity_cache.valid(eid) then
+            table.insert(targets, eid)
+        end
+    end
+
+    add(inventory_board_id)
+    local invBoard = boards[inventory_board_id]
+    if invBoard and invBoard.textEntity then add(invBoard.textEntity) end
+
+    add(trigger_inventory_board_id)
+    local trigInv = boards[trigger_inventory_board_id]
+    if trigInv and trigInv.textEntity then add(trigInv.textEntity) end
+
+    if board_sets then
+        for _, set in ipairs(board_sets) do
+            add(set.trigger_board_id)
+            add(set.action_board_id)
+            local trigBoard = set.trigger_board_id and boards[set.trigger_board_id]
+            if trigBoard and trigBoard.textEntity then add(trigBoard.textEntity) end
+            local actBoard = set.action_board_id and boards[set.action_board_id]
+            if actBoard and actBoard.textEntity then add(actBoard.textEntity) end
+        end
+    end
+
+    if planningUIEntities then
+        add(planningUIEntities.send_up_button_box)
+    end
+
+    return targets
+end
+
+setPlanningPeekMode = function(enable)
+    globals.shopUIState = globals.shopUIState or {}
+    planningPeekEntities = collectPlanningPeekTargets()
+    for _, eid in ipairs(planningPeekEntities) do
+        if enable then
+            add_state_tag(eid, SHOP_STATE)
+        else
+            remove_state_tag(eid, SHOP_STATE)
+        end
+    end
+    globals.shopUIState.peekPlanning = enable
+    newTextPopup(
+        enable and "Planning boards visible" or "Planning boards hidden",
+        globals.screenWidth() * 0.5,
+        globals.screenHeight() * 0.14,
+        1.2,
+        "color=apricot_cream"
+    )
+end
+
+togglePlanningPeek = function()
+    globals.shopUIState = globals.shopUIState or {}
+    setPlanningPeekMode(not globals.shopUIState.peekPlanning)
+end
+
 local function formatShopLabel(offering)
     if not offering or not offering.cardDef then
         return "Unknown"
@@ -5548,16 +5703,23 @@ local function populateShopBoard(shop)
 
     clearBoardCards(shop_board_id)
 
-    for _, offering in ipairs(shop.offerings or {}) do
+    for index, offering in ipairs(shop.offerings or {}) do
         if not offering.isEmpty and offering.cardDef then
             local eid = createNewCard(offering.cardDef.id, 0, 0, SHOP_STATE)
             local script = getScriptTableFromEntityID(eid)
             if script then
                 script.test_label = formatShopLabel(offering)
+                script.shop_slot = index
+                script.shop_cost = offering.cost
+                script.shop_rarity = offering.rarity
+                script.shopBuyReveal = 0
+                script.selected = false
             end
             addCardToBoard(eid, shop_board_id)
         end
     end
+
+    refreshShopUIFromInstance(shop)
 end
 
 function regenerateShopState()
@@ -5612,6 +5774,261 @@ function rerollActiveShop()
     return true
 end
 
+tryPurchaseShopCard = function(cardScript)
+    if not cardScript or not cardScript.shop_slot or not active_shop_instance then
+        return false
+    end
+
+    globals.shopState = globals.shopState or {}
+    local offering = active_shop_instance.offerings[cardScript.shop_slot]
+    if not offering or offering.isEmpty then
+        return false
+    end
+
+    local player = {
+        gold = globals.currency or 0,
+        cards = (globals.shopState and globals.shopState.cards) or {}
+    }
+
+    local success, cardInstance = ShopSystem.purchaseCard(active_shop_instance, cardScript.shop_slot, player)
+    if not success then
+        playSoundEffect("effects", "cannot-buy")
+        newTextPopup(
+            "Need more gold",
+            globals.screenWidth() * 0.5,
+            globals.screenHeight() * 0.4,
+            1.4,
+            "color=fiery_red"
+        )
+        return false
+    end
+
+    globals.currency = player.gold
+    globals.shopState.cards = player.cards
+    globals.shopState.instance = active_shop_instance
+
+    addPurchasedCardToInventory(cardInstance)
+
+    playSoundEffect("effects", "shop-buy", 1.0)
+    newTextPopup(
+        string.format("Bought %s", cardInstance.id or cardInstance.card_id or "card"),
+        globals.screenWidth() * 0.5,
+        globals.screenHeight() * 0.36,
+        1.6,
+        "color=marigold"
+    )
+
+    populateShopBoard(active_shop_instance)
+    refreshShopUIFromInstance(active_shop_instance)
+
+    return true
+end
+
+function tryPurchaseAvatar(avatarId)
+    if not avatarId then
+        return false
+    end
+
+    globals.shopState = globals.shopState or {}
+    globals.shopState.avatarPurchases = globals.shopState.avatarPurchases or {}
+
+    local playerTarget = getTagEvaluationTargets and select(1, getTagEvaluationTargets()) or nil
+    if not playerTarget then
+        return false
+    end
+
+    AvatarSystem.check_unlocks(playerTarget, { tag_counts = playerTarget.tag_counts })
+    local unlocked = playerTarget.avatar_state and playerTarget.avatar_state.unlocked
+        and playerTarget.avatar_state.unlocked[avatarId]
+    if not unlocked then
+        newTextPopup(
+            "Avatar not unlocked yet",
+            globals.screenWidth() * 0.72,
+            globals.screenHeight() * 0.3,
+            1.4,
+            "color=fiery_red"
+        )
+        playSoundEffect("effects", "cannot-buy")
+        return false
+    end
+
+    if globals.shopState.avatarPurchases[avatarId] then
+        newTextPopup(
+            "Already purchased",
+            globals.screenWidth() * 0.72,
+            globals.screenHeight() * 0.3,
+            1.2,
+            "color=apricot_cream"
+        )
+        return false
+    end
+
+    if (globals.currency or 0) < AVATAR_PURCHASE_COST then
+        playSoundEffect("effects", "cannot-buy")
+        newTextPopup(
+            string.format("Need %dg", AVATAR_PURCHASE_COST),
+            globals.screenWidth() * 0.72,
+            globals.screenHeight() * 0.3,
+            1.4,
+            "color=fiery_red"
+        )
+        return false
+    end
+
+    globals.currency = (globals.currency or 0) - AVATAR_PURCHASE_COST
+    globals.shopState.avatarPurchases[avatarId] = true
+    AvatarSystem.equip(playerTarget, avatarId)
+
+    if AvatarJokerStrip and AvatarJokerStrip.syncFrom then
+        AvatarJokerStrip.syncFrom(playerTarget)
+    end
+
+    playSoundEffect("effects", "shop-buy")
+    newTextPopup(
+        string.format("Avatar unlocked: %s", avatarId),
+        globals.screenWidth() * 0.72,
+        globals.screenHeight() * 0.3,
+        1.6,
+        "color=marigold"
+    )
+
+    refreshShopUIFromInstance(active_shop_instance)
+    return true
+end
+
+local function buildAvatarOverlayEntries()
+    local entries = {}
+    local defs = require("data.avatars")
+    local purchases = (globals.shopState and globals.shopState.avatarPurchases) or {}
+    local playerTarget = getTagEvaluationTargets and select(1, getTagEvaluationTargets()) or nil
+    if playerTarget then
+        AvatarSystem.check_unlocks(playerTarget, { tag_counts = playerTarget.tag_counts })
+    end
+
+    for id, def in pairs(defs or {}) do
+        entries[#entries + 1] = {
+            id = id,
+            name = def.name or id,
+            unlocked = playerTarget and playerTarget.avatar_state and playerTarget.avatar_state.unlocked
+                and playerTarget.avatar_state.unlocked[id],
+            purchased = purchases[id]
+        }
+    end
+
+    table.sort(entries, function(a, b) return (a.name or a.id) < (b.name or b.id) end)
+    return entries
+end
+
+local function drawShopPanel(x, y, w, h, title)
+    local cx, cy = x + w * 0.5, y + h * 0.5
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+        c.x = cx
+        c.y = cy
+        c.w = w
+        c.h = h
+        c.rx = 12
+        c.ry = 12
+        c.color = Col(18, 22, 32, 220)
+        c.outlineColor = util.getColor("apricot_cream")
+    end, z_orders.card - 1, layer.DrawCommandSpace.Screen)
+
+    command_buffer.queueDrawText(layers.sprites, function(c)
+        c.text = title
+        c.font = localization.getFont()
+        c.x = x + shop_overlay_layout.pad
+        c.y = y + shop_overlay_layout.pad
+        c.color = util.getColor("apricot_cream")
+        c.fontSize = 20
+    end, z_orders.card, layer.DrawCommandSpace.Screen)
+end
+
+local function drawShopOverlay()
+    if not is_state_active or not is_state_active(SHOP_STATE) then
+        return
+    end
+    if not active_shop_instance then
+        return
+    end
+
+    local screenW, screenH = globals.screenWidth(), globals.screenHeight()
+    local margin = shop_overlay_layout.margin
+    local pad = shop_overlay_layout.pad
+    local rowH = shop_overlay_layout.rowH
+    local panelW = math.min(shop_overlay_layout.panelW, screenW - margin * 2)
+
+    local offerCount = math.min(#(active_shop_instance.offerings or {}), ShopSystem.config.offerSlots or 5)
+    local offersHeight = pad * 2 + 26 + offerCount * rowH
+
+    local avatarEntries = buildAvatarOverlayEntries()
+    local maxAvatarRows = math.min(4, #avatarEntries)
+    local avatarHeight = pad * 2 + 26 + maxAvatarRows * rowH
+
+    local spacing = 10
+    local totalHeight = offersHeight + avatarHeight + spacing
+
+    local startX = screenW - panelW - margin
+    local startY = margin
+    if startY + totalHeight > screenH - margin then
+        startY = math.max(margin, screenH - totalHeight - margin)
+    end
+
+    -- Offers panel
+    drawShopPanel(startX, startY, panelW, offersHeight, "Shop offers")
+    local textY = startY + pad + 24
+    for i = 1, offerCount do
+        local offering = active_shop_instance.offerings[i]
+        local status = string.format("%d) Empty", i)
+        local color = util.getColor("gray")
+        if offering then
+            if offering.isEmpty then
+                status = offering.sold and string.format("%d) Sold", i) or status
+            elseif offering.cardDef then
+                local lockSuffix = (active_shop_instance.locks and active_shop_instance.locks[i]) and " [Locked]" or ""
+                status = string.format("%d) %s [%s] %dg%s", i, offering.cardDef.id or "?",
+                    tostring(offering.rarity or "?"), math.floor((offering.cost or 0) + 0.5), lockSuffix)
+                color = util.getColor("apricot_cream")
+            end
+        end
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = status
+            c.font = localization.getFont()
+            c.x = startX + pad
+            c.y = textY
+            c.color = color
+            c.fontSize = 18
+        end, z_orders.card, layer.DrawCommandSpace.Screen)
+        textY = textY + rowH
+    end
+
+    -- Avatars panel
+    local avatarY = startY + offersHeight + spacing
+    drawShopPanel(startX, avatarY, panelW, avatarHeight, "Avatars")
+    local avatarTextY = avatarY + pad + 24
+    for idx = 1, maxAvatarRows do
+        local entry = avatarEntries[idx]
+        local label = entry.name
+        local color = util.getColor("gray")
+        if entry.purchased then
+            label = label .. " [Owned]"
+            color = util.getColor("marigold")
+        elseif entry.unlocked then
+            label = label .. string.format(" [%dg]", AVATAR_PURCHASE_COST)
+            color = util.getColor("mint_green")
+        else
+            label = label .. " [Locked]"
+        end
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = label
+            c.font = localization.getFont()
+            c.x = startX + pad
+            c.y = avatarTextY
+            c.color = color
+            c.fontSize = 18
+        end, z_orders.card, layer.DrawCommandSpace.Screen)
+        avatarTextY = avatarTextY + rowH
+    end
+end
+
 function setShopLocked(locked)
     globals.shopUIState.locked = locked
 
@@ -5631,6 +6048,10 @@ function setShopLocked(locked)
         globals.ui.setLockIconsVisible(globals.shopUIState.locked)
     end
 end
+
+timer.run(function()
+    drawShopOverlay()
+end, nil, "shop_overlay_draw")
 
 function getActiveShop()
     return active_shop_instance

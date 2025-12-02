@@ -347,6 +347,12 @@ function MessageQueueUI.draw()
     local boxWidth = math.max(cfg.minWidth, math.min(cfg.maxWidth, idealWidth))
     local boxHeight = cfg.height
     local availableTextWidth = boxWidth - (cfg.padding * 2 + cfg.iconSize + cfg.iconPadding)
+    local cornerRadius = cfg.cornerRadius or DEFAULT_CONFIG.cornerRadius or 0
+    local borderWidth = 2
+    local borderRadius = cornerRadius + borderWidth
+    local bodyZ = cfg.baseZ + 1
+    local accentZ = bodyZ + 1
+    local textZ = accentZ + 1
 
     local alpha = stateAlpha(item)
     local slideDist = cfg.slideDistance or (boxWidth + 40)
@@ -373,10 +379,21 @@ function MessageQueueUI.draw()
         c.y = centerY + 10
         c.w = boxWidth + 14
         c.h = boxHeight + 10
-        c.rx = cfg.cornerRadius + 6
-        c.ry = cfg.cornerRadius + 6
+        c.rx = cornerRadius + 6
+        c.ry = cornerRadius + 6
         c.color = shadowColor
     end, cfg.baseZ - 1, space)
+
+    -- Border
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        c.x = centerX
+        c.y = centerY
+        c.w = boxWidth + borderWidth * 2
+        c.h = boxHeight + borderWidth * 2
+        c.rx = borderRadius
+        c.ry = borderRadius
+        c.color = colWithAlpha(cfg.borderColor, alpha)
+    end, cfg.baseZ, space)
 
     -- Main body
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
@@ -384,10 +401,10 @@ function MessageQueueUI.draw()
         c.y = centerY
         c.w = boxWidth
         c.h = boxHeight
-        c.rx = cfg.cornerRadius
-        c.ry = cfg.cornerRadius
+        c.rx = cornerRadius
+        c.ry = cornerRadius
         c.color = bgColor
-    end, cfg.baseZ, space)
+    end, bodyZ, space)
 
     -- Accent slash
     local slashX1 = centerX + boxWidth * 0.2
@@ -401,17 +418,7 @@ function MessageQueueUI.draw()
         c.y2 = slashY2
         c.lineWidth = cfg.accentWidth
         c.color = accentColor
-    end, cfg.baseZ + 1, space)
-
-    -- Border
-    command_buffer.queueDrawRectangle(layers.ui, function(c)
-        c.x = centerX - boxWidth * 0.5
-        c.y = centerY - boxHeight * 0.5
-        c.width = boxWidth
-        c.height = boxHeight
-        c.color = colWithAlpha(cfg.borderColor, alpha)
-        c.lineWidth = 2
-    end, cfg.baseZ + 2, space)
+    end, accentZ, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
         local function wrapAndMeasure(fontSize)
@@ -449,7 +456,7 @@ function MessageQueueUI.draw()
         c.y = centerY - textBlockHeight * 0.5
         c.color = textColor
         c.fontSize = fontSize
-    end, cfg.baseZ + 2, space)
+    end, textZ, space)
 
     drawIcon(item, boxWidth, boxHeight, centerX, centerY, alpha, cfg.baseZ + 100, space)
 end

@@ -47,8 +47,10 @@ local tag_palette = {
 
 TagSynergyPanel.entries = {}
 TagSynergyPanel.breakpoints = {}
+TagSynergyPanel.breakpointDetails = {}
 TagSynergyPanel.displayedCounts = {}
 TagSynergyPanel._pulses = {}
+TagSynergyPanel._hoverKey = nil
 TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
     marginX = 22,
@@ -74,19 +76,22 @@ local function copyThresholds(list)
 end
 
 local function normalizeBreakpoints(raw)
-    local result = {}
-    if not raw then return result end
+    local thresholdsOnly = {}
+    local details = {}
+    if not raw then return thresholdsOnly, details end
 
     for tag, thresholds in pairs(raw) do
         local sorted = {}
-        for threshold, _ in pairs(thresholds or {}) do
+        thresholdsOnly[tag] = sorted
+        details[tag] = {}
+        for threshold, bonus in pairs(thresholds or {}) do
             table.insert(sorted, threshold)
+            details[tag][threshold] = bonus
         end
         table.sort(sorted)
-        result[tag] = sorted
     end
 
-    return result
+    return thresholdsOnly, details
 end
 
 local function colorForTag(tag)
@@ -101,11 +106,170 @@ local function thresholdsFor(tag, breakpoints)
     return DEFAULT_THRESHOLDS
 end
 
+local function getMousePosition()
+    if not input then return nil end
+    if input.getMousePosition then return input.getMousePosition() end
+    if input.getMousePos then return input.getMousePos() end
+    return nil
+end
+
+local function pointInRect(mx, my, x, y, w, h)
+    return mx >= x and mx <= x + w and my >= y and my <= y + h
+end
+
+local function canShowTooltip()
+    return showTooltip
+        and hideTooltip
+        and globals and globals.ui
+        and globals.ui.tooltipTitleText
+        and globals.ui.tooltipBodyText
+        and globals.ui.tooltipUIBox
+        and globals.cursor
+end
+
+local function clearHover()
+    if TagSynergyPanel._hoverKey and canShowTooltip() then
+        hideTooltip()
+    end
+    TagSynergyPanel._hoverKey = nil
+end
+
+local statDescriptions = {
+    burn_damage_pct = "Burn damage +%d%%",
+    burn_tick_rate_pct = "Burn tick rate +%d%%",
+    slow_potency_pct = "Slow potency +%d%%",
+    damage_vs_frozen_pct = "Damage vs frozen +%d%%",
+    buff_duration_pct = "Buff duration +%d%%",
+    buff_effect_pct = "Buff potency +%d%%",
+    chain_targets = function(v)
+        local suffix = (v or 0) == 1 and "target" or "targets"
+        return string.format("+%d chain %s", v or 0, suffix)
+    end,
+    on_move_proc_frequency_pct = "Move procs trigger %d%% faster",
+    move_speed_pct = "Move speed +%d%%",
+    damage_taken_reduction_pct = "Damage taken -%d%%",
+    hazard_radius_pct = "Hazard radius +%d%%",
+    hazard_damage_pct = "Hazard damage +%d%%",
+    hazard_duration = "Hazard duration +%ds",
+    max_poison_stacks_pct = "Max poison stacks +%d%%",
+    summon_hp_pct = "Summon health +%d%%",
+    summon_damage_pct = "Summon damage +%d%%",
+    summon_persistence = "Summon persistence +%d",
+    barrier_refresh_rate_pct = "Barrier refresh rate +%d%%",
+    health_pct = "Max health +%d%%",
+    melee_damage_pct = "Melee damage +%d%%",
+    melee_crit_chance_pct = "Melee crit chance +%d%%",
+}
+
+local procDescriptions = {
+    burn_explosion_on_kill = "Burn kills trigger an explosion",
+    burn_spread = "Burn spreads to nearby enemies",
+    bonus_damage_on_chilled = "Bonus damage against chilled targets",
+    shatter_on_kill = "Frozen enemies shatter on death",
+    buffs_apply_to_allies = "Buffs also apply to allies",
+    chain_restores_cooldown = "Chain hits restore cooldown",
+    chain_ricochets = "Chains ricochet to new targets",
+    chain_nova = "Chain nova at the end of the bounce",
+    move_proc_spray = "Move procs spray extra projectiles",
+    move_evade_buff = "Gain an evade buff while moving",
+    barrier_on_block = "Blocking grants a barrier",
+    thorns_on_block = "Blocks retaliate with thorns",
+    poison_ramp_damage = "Poison ramps damage over time",
+    poison_spore_on_kill = "Poison kills release spores",
+    poison_spread_on_death = "Poison spreads when enemies die",
+    empower_minion_periodic = "Periodically empower your minions",
+    hazard_chain_ignite = "Hazards chain-ignite nearby foes",
+    melee_cleave = "Melee attacks cleave in an arc",
+    regen_when_low = "Regenerate when low on health",
+    survive_lethal = "Survive a lethal hit with a sliver",
+    ally_hp_buff = "Allies gain a max health buff",
+}
+
+local function describeStat(stat, value)
+    if not stat then return "Unknown bonus" end
+    local formatter = statDescriptions[stat]
+    if type(formatter) == "function" then
+        return formatter(value or 0)
+    elseif formatter then
+        return string.format(formatter, value or 0)
+    end
+
+    local label = stat:gsub("_", " ")
+    label = label:sub(1, 1):upper() .. label:sub(2)
+    if value then
+        if stat:find("_pct") then
+            return string.format("%s +%d%%", label, value)
+        end
+        return string.format("%s +%s", label, tostring(value))
+    end
+    return label
+end
+
+local function describeProc(procId)
+    if not procId then return "Unlocks a new effect" end
+    if procDescriptions[procId] then
+        return procDescriptions[procId]
+    end
+    local label = procId:gsub("_", " ")
+    return label:sub(1, 1):upper() .. label:sub(2)
+end
+
+local function describeBonus(tag, threshold)
+    local detail = TagSynergyPanel.breakpointDetails[tag]
+    if detail then
+        detail = detail[threshold]
+    end
+    if not detail then
+        return "Unknown bonus"
+    end
+
+    if detail.type == "stat" then
+        return describeStat(detail.stat, detail.value)
+    elseif detail.type == "proc" then
+        return describeProc(detail.proc_id)
+    end
+    return "Unknown bonus"
+end
+
+local function formatThresholdStatus(entry, threshold)
+    local count = entry.count or 0
+    if count >= threshold then
+        return string.format("Active (%d/%d %s tags)", count, threshold, entry.tag)
+    end
+    local remaining = threshold - count
+    local noun = remaining == 1 and "tag" or "tags"
+    return string.format("%d/%d %s tags — %d more %s", count, threshold, entry.tag, remaining, noun)
+end
+
+local function updateHoverTooltip(target)
+    if not target then
+        if TagSynergyPanel._hoverKey then
+            if canShowTooltip() then
+                hideTooltip()
+            end
+            TagSynergyPanel._hoverKey = nil
+        end
+        return
+    end
+
+    if not canShowTooltip() then
+        TagSynergyPanel._hoverKey = nil
+        return
+    end
+
+    if target.key ~= TagSynergyPanel._hoverKey then
+        showTooltip(target.title, target.body)
+        TagSynergyPanel._hoverKey = target.key
+    end
+end
+
 function TagSynergyPanel.init(opts)
-    TagSynergyPanel.breakpoints = normalizeBreakpoints(opts and opts.breakpoints or TagSynergyPanel.breakpoints)
+    TagSynergyPanel.breakpoints, TagSynergyPanel.breakpointDetails =
+        normalizeBreakpoints(opts and opts.breakpoints or TagSynergyPanel.breakpointDetails)
     TagSynergyPanel.entries = {}
     TagSynergyPanel.displayedCounts = {}
     TagSynergyPanel._pulses = {}
+    TagSynergyPanel._hoverKey = nil
     if opts and opts.layout then
         TagSynergyPanel.setLayout(opts.layout)
     end
@@ -123,7 +287,7 @@ end
 
 function TagSynergyPanel.setData(tagCounts, breakpoints)
     if breakpoints then
-        TagSynergyPanel.breakpoints = normalizeBreakpoints(breakpoints)
+        TagSynergyPanel.breakpoints, TagSynergyPanel.breakpointDetails = normalizeBreakpoints(breakpoints)
     end
 
     local entries = {}
@@ -160,7 +324,10 @@ function TagSynergyPanel.setData(tagCounts, breakpoints)
 end
 
 function TagSynergyPanel.update(dt)
-    if not TagSynergyPanel.isActive then return end
+    if not TagSynergyPanel.isActive then
+        clearHover()
+        return
+    end
     if not dt then dt = GetFrameTime() end
 
     TagSynergyPanel._pulses = TagSynergyPanel._pulses or {}
@@ -225,14 +392,24 @@ local function drawSegment(left, top, width, height, fill, accent, tag, threshol
 end
 
 function TagSynergyPanel.draw()
-    if not TagSynergyPanel.isActive then return end
-    if not globals or not layers or not command_buffer then return end
+    if not TagSynergyPanel.isActive then
+        clearHover()
+        return
+    end
+    if not globals or not layers or not command_buffer then
+        clearHover()
+        return
+    end
 
     local screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth()) or 1920
     local screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight()) or 1080
     local font = localization.getFont()
     local totalRows = math.min(#TagSynergyPanel.entries, MAX_ROWS)
     local layout = TagSynergyPanel.layout
+    local mouse = getMousePosition()
+    local hovered = nil
+    local hoverPadX = 6
+    local hoverPadY = 12
 
     -- If nothing to show, render a small hint and exit.
     if totalRows == 0 then
@@ -249,6 +426,7 @@ function TagSynergyPanel.draw()
             c.color = colors.muted
             c.fontSize = fontSize
         end, (z_orders.ui_tooltips or 0) + 3, layer.DrawCommandSpace.Screen)
+        clearHover()
         return
     end
 
@@ -262,6 +440,8 @@ function TagSynergyPanel.draw()
     local headerH = 26
     local indicatorWidth = 160
     local indicatorHeight = 14
+    local panelRadius = 16
+    local outlineWidth = 2
 
     local totalHeight = paddingY * 2 + headerH + (rowH * totalRows) + (rowSpacing * math.max(0, totalRows - 1))
     local panelLeft = math.max(marginX, screenW - panelW - marginX)
@@ -275,21 +455,22 @@ function TagSynergyPanel.draw()
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = panelCenterX
         c.y = panelCenterY
+        c.w = panelW + outlineWidth * 2
+        c.h = totalHeight + outlineWidth * 2
+        c.rx = panelRadius + outlineWidth
+        c.ry = panelRadius + outlineWidth
+        c.color = colors.outline
+    end, baseZ - 1, space)
+
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        c.x = panelCenterX
+        c.y = panelCenterY
         c.w = panelW
         c.h = totalHeight
-        c.rx = 16
-        c.ry = 16
+        c.rx = panelRadius
+        c.ry = panelRadius
         c.color = colors.panel
     end, baseZ, space)
-
-    command_buffer.queueDrawRectangle(layers.ui, function(c)
-        c.x = panelLeft
-        c.y = panelTop
-        c.width = panelW
-        c.height = totalHeight
-        c.color = colors.outline
-        c.lineWidth = 2
-    end, baseZ + 1, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
         c.text = "Tag Synergies"
@@ -368,8 +549,26 @@ function TagSynergyPanel.draw()
             local left = indicatorLeft + (segWidth + spacing) * (i - 1)
             local fill = entry.count / threshold
             drawSegment(left, indicatorTop, segWidth, indicatorHeight, fill, accent, entry.tag, threshold, baseZ + 2, space, font)
+            if mouse and not hovered then
+                local hitLeft = left - hoverPadX
+                local hitTop = indicatorTop - hoverPadY
+                local hitW = segWidth + hoverPadX * 2
+                local hitH = indicatorHeight + hoverPadY * 2
+                if pointInRect(mouse.x, mouse.y, hitLeft, hitTop, hitW, hitH) then
+                    local title = string.format("%s %d", entry.tag, threshold)
+                    local body = string.format("%s\n%s", describeBonus(entry.tag, threshold),
+                        formatThresholdStatus(entry, threshold))
+                    hovered = {
+                        key = entry.tag .. ":" .. threshold,
+                        title = title,
+                        body = body
+                    }
+                end
+            end
         end
     end
+
+    updateHoverTooltip(hovered)
 end
 
 return TagSynergyPanel

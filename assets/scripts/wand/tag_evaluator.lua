@@ -87,6 +87,19 @@ local TAG_BREAKPOINTS = {
     }
 }
 
+local function normalize_tag_name(tag)
+    if type(tag) ~= "string" then
+        return nil
+    end
+
+    local trimmed = tag:match("^%s*(.-)%s*$")
+    if not trimmed or trimmed == "" then
+        return nil
+    end
+
+    return trimmed:sub(1, 1):upper() .. trimmed:sub(2)
+end
+
 --- Count tags in a deck
 -- @param deck: Table with .cards array, each card has .tags array
 -- @return table: { Fire = 5, Ice = 2, ... }
@@ -99,8 +112,22 @@ function TagEvaluator.count_tags(deck)
 
     for _, card in ipairs(deck.cards) do
         if card.tags then
-            for _, tag in ipairs(card.tags) do
-                counts[tag] = (counts[tag] or 0) + 1
+            if #card.tags > 0 then
+                for _, tag in ipairs(card.tags) do
+                    local normalized = normalize_tag_name(tag)
+                    if normalized then
+                        counts[normalized] = (counts[normalized] or 0) + 1
+                    end
+                end
+            else
+                for tag, present in pairs(card.tags) do
+                    if present then
+                        local normalized = normalize_tag_name(tag)
+                        if normalized then
+                            counts[normalized] = (counts[normalized] or 0) + 1
+                        end
+                    end
+                end
             end
         end
     end

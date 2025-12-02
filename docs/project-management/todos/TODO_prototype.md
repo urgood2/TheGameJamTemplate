@@ -66,36 +66,27 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
 
-
-- getting an error when swapping wands.
-
 - sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
 
 - probably make a prompt guideline based on my current scripts.
 
-- ambient movement on the jokers and artifacts, make them glow or something.
-
-- Debug imgui that lets me spawn the cards i need easily. Categorize tested & untested
-
 - enemy knockback on projectile collision, direction-facing particles when theyc collide with wall. recoil when launching (or at least show animatino, as well as shot vfx)
-- make achievements show one by one even if there are multiple so I can play sound fx
-- tag evaluation should show current active tag combos on right side of screen.
-- isolate shop ui to shop state only. also needs work. where is the gold, the jokers, etc?
-- shop ui is terrible needs rework. put example jokers & avatars in the shop.
 
 - Display a simple tutorial text on the background whne spawning in for first time (entering action state). Just text that shows keys (or controller) to press for movement and dash.
 - Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom right)
 - destrutible objects that spawn from time to time and give resources?
 - Make enemies actually die when they reach 0 hp and spawn exp drops, remove auto drops for exp.
 
-- let's show three entities basic rects for now, which can be clicked, (pausing the game of course), to choose what stat to improve. a tooltip (refer to card tooltips) should explain what each stat does. jiggle them on hover, and when they first appear, they should smoothly tween in one by one.
+- Make enemies actually die (go out with a pulse of sprite, and particles) when they reach 0 hp and spawn exp drops, remove auto drops for exp.
+
+- enemy knockback on projectile collision. direction-facing particles should launch when projectiles collide with wall and vanish. recoil the character when launching (or at least show animation (size bounce), as well as shot vfx, a small receding circle where the shot spawned)
+
+- Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom. If mouse is enabled, follow the mouse iwtht he indicator. otherwise, it should be moved with controller right stick. for the sprites, we can use the P key (keyboard_p_outline.png) and the y key controller (xbox_button_y_outline.png).
+
+
+
 - we should show current level number somewhere on the actoin phase screen.
 - we need a button that will show current stats of the player (those that are relevant.)
-- we need small rectangles with numbers 1-4 in them for the wand slots. when hovered, they should show a tooltip with the relevant stats for the wands.
-- we need to add gold to the shop and gold screen.
-
-
-- we need a transition which animates the current gold, then shows in a jiggle how much interest was earned, then closes the transition.
 
 - we need to flesh out the shop. let's extend how it looks now. there should be a rounded rect for showing 3 shop offers (just cards)
 - A button for removing a card.

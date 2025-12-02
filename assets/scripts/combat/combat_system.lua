@@ -1106,6 +1106,28 @@ function StatDef.make()
   -- === OPTIONAL: Armor/Block Pierce (attacker) ===
   add_basic(defs, 'armor_penetration_pct')
 
+  -- === Tag synergy / wand-specific stats ===
+  -- These are granted by deck tag thresholds; keep in sync with TagEvaluator.
+  add_basic(defs, 'burn_damage_pct')
+  add_basic(defs, 'burn_tick_rate_pct')
+  add_basic(defs, 'damage_vs_frozen_pct')
+  add_basic(defs, 'buff_duration_pct')
+  add_basic(defs, 'buff_effect_pct')
+  add_basic(defs, 'chain_targets')
+  add_basic(defs, 'on_move_proc_frequency_pct')
+  add_basic(defs, 'move_speed_pct')
+  add_basic(defs, 'hazard_radius_pct')
+  add_basic(defs, 'hazard_damage_pct')
+  add_basic(defs, 'hazard_duration')
+  add_basic(defs, 'max_poison_stacks_pct')
+  add_basic(defs, 'summon_hp_pct')
+  add_basic(defs, 'summon_damage_pct')
+  add_basic(defs, 'summon_persistence')
+  add_basic(defs, 'barrier_refresh_rate_pct')
+  add_basic(defs, 'health_pct')
+  add_basic(defs, 'melee_damage_pct')
+  add_basic(defs, 'melee_crit_chance_pct')
+
   return defs, DAMAGE_TYPES
 end
 
@@ -1135,6 +1157,13 @@ function Stats.new(defs)
   return setmetatable(t, Stats)
 end
 
+-- Ensure a stat bucket exists before mutating it.
+function Stats:_ensure(n)
+  if not self.values[n] then
+    self.values[n] = { base = 0, add_pct = 0, mul_pct = 0 }
+  end
+end
+
 -- Helpers to safely add derived deltas:
 -- NOTE: Use these inside derived hooks to ensure changes are reversible.
 -- RENAME: _mark -> _track_derived_delta
@@ -1143,14 +1172,17 @@ function Stats:_mark(kind, n, amt)
 end
 
 function Stats:derived_add_base(n, a)
+  self:_ensure(n)
   self.values[n].base = self.values[n].base + a; self:_mark('base', n, a)
 end
 
 function Stats:derived_add_add_pct(n, a)
+  self:_ensure(n)
   self.values[n].add_pct = self.values[n].add_pct + a; self:_mark('add_pct', n, a)
 end
 
 function Stats:derived_add_mul_pct(n, a)
+  self:_ensure(n)
   self.values[n].mul_pct = self.values[n].mul_pct + a; self:_mark('mul_pct', n, a)
 end
 
@@ -1180,25 +1212,31 @@ end
 --  Computed as: base * (1 + add_pct/100) * (1 + mul_pct/100).
 -- NOTE: Nonexistent stats return 0 (via default table).
 function Stats:get(n)
-  local v = self.values[n] or { base = 0, add_pct = 0, mul_pct = 0 }
+  local v = self.values[n]
+  if not v then
+    v = { base = 0, add_pct = 0, mul_pct = 0 }
+  end
   return v.base * (1 + v.add_pct / 100) * (1 + v.mul_pct / 100)
 end
 
 --- Increment base value of a stat.
 -- RENAME: add_base -> inc_base
 function Stats:add_base(n, a)
+  self:_ensure(n)
   self.values[n].base = self.values[n].base + a
 end
 
 --- Increment additive percentage modifier of a stat.
 -- RENAME: add_add_pct -> inc_add_pct
 function Stats:add_add_pct(n, a)
+  self:_ensure(n)
   self.values[n].add_pct = self.values[n].add_pct + a
 end
 
 --- Increment multiplicative percentage modifier of a stat.
 -- RENAME: add_mul_pct -> inc_mul_pct
 function Stats:add_mul_pct(n, a)
+  self:_ensure(n)
   self.values[n].mul_pct = self.values[n].mul_pct + a
 end
 

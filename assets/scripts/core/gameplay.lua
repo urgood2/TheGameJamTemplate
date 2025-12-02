@@ -29,6 +29,8 @@ local MessageQueueUI = require("ui.message_queue_ui")
 local CurrencyDisplay = require("ui.currency_display")
 local TagSynergyPanel = require("ui.tag_synergy_panel")
 local AvatarJokerStrip = require("ui.avatar_joker_strip")
+local LevelUpScreen = require("ui.level_up_screen")
+local LEVEL_UP_MODAL_DELAY = 0.5
 local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
 
@@ -165,6 +167,7 @@ action_board_id = nil
 -- ui tooltip cache
 wand_tooltip_cache = {}
 card_tooltip_cache = {}
+card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
 
 local tooltipStyle = {
@@ -182,6 +185,8 @@ local tooltipStyle = {
     innerColor = Col(28, 32, 44, 230),
     outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255)
 }
+
+local ensureCardTooltip -- forward declaration
 
 local function centerTooltipAboveEntity(tooltipEntity, targetEntity, offset)
     if not tooltipEntity or not targetEntity then return end
@@ -289,6 +294,7 @@ local shop_board_id = nil
 local shop_buy_board_id = nil
 local active_shop_instance = nil
 local AVATAR_PURCHASE_COST = 10
+local ensureShopSystemInitialized -- forward declaration so planning init can ensure metadata before card spawn
 _G.AVATAR_PURCHASE_COST = AVATAR_PURCHASE_COST
 local shop_overlay_layout = {
     margin = 14,
@@ -337,6 +343,53 @@ end
 local enemyHealthUiState          = {}                                 -- eid -> { actor=<combat actor>, visibleUntil=<time> }
 local combatActorToEntity         = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
 local damageNumbers               = {}                                 -- active floating damage numbers
+
+local function isLevelUpModalActive()
+    return LevelUpScreen and LevelUpScreen.isActive
+end
+
+local function isCardOverCapacity(cardScript, cardEntityID)
+    if not cardScript then return false end
+
+    local boardEntity = cardScript.currentBoardEntity
+    if not boardEntity or not entity_cache.valid(boardEntity) then return false end
+
+    -- inventory boards have no capacity cap
+    if boardEntity == inventory_board_id or boardEntity == trigger_inventory_board_id then
+        return false
+    end
+
+    local board = boards[boardEntity]
+    if not board or not board.cards then return false end
+
+    local cardEid = cardEntityID
+    if (not cardEid) and cardScript.handle then
+        cardEid = cardScript:handle()
+    end
+
+    local cardIndex = nil
+    for i, cardInBoard in ipairs(board.cards) do
+        if cardInBoard == cardEid then
+            cardIndex = i
+            break
+        end
+    end
+    if not cardIndex then return false end
+
+    local maxCapacity = 1 -- default for trigger boards
+    if board_sets then
+        for _, boardSet in ipairs(board_sets) do
+            if boardSet.action_board_id == boardEntity then
+                if boardSet.wandDef and boardSet.wandDef.total_card_slots then
+                    maxCapacity = boardSet.wandDef.total_card_slots
+                end
+                break
+            end
+        end
+    end
+
+    return cardIndex > maxCapacity
+end
 
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
@@ -1099,47 +1152,8 @@ function createNewCard(id, x, y, gameStateToApply)
                                 math.min(1.0, dt * 8.0))
 
                             -- check if card is over capacity on its board
-                            local isOverCapacity = false
-                            if cardScript.currentBoardEntity and entity_cache.valid(cardScript.currentBoardEntity) then
-                                -- skip capacity check for inventory boards
-                                local isInventoryBoard = (cardScript.currentBoardEntity == inventory_board_id or
-                                    cardScript.currentBoardEntity == trigger_inventory_board_id)
-
-                                if not isInventoryBoard then
-                                    local board = boards[cardScript.currentBoardEntity]
-                                    if board and board.cards then
-                                        -- find the index of this card in the board
-                                        local cardIndex = nil
-                                        for i, cardEid in ipairs(board.cards) do
-                                            if cardEid == eid then
-                                                cardIndex = i
-                                                break
-                                            end
-                                        end
-
-                                        if cardIndex then
-                                            -- determine max capacity based on board type
-                                            local maxCapacity = 1 -- default for trigger boards
-
-                                            -- check if this is an action board by looking through board_sets
-                                            for _, boardSet in ipairs(board_sets) do
-                                                if boardSet.action_board_id == cardScript.currentBoardEntity then
-                                                    -- this is an action board, get capacity from wand def
-                                                    if boardSet.wandDef and boardSet.wandDef.total_card_slots then
-                                                        maxCapacity = boardSet.wandDef.total_card_slots
-                                                    end
-                                                    break
-                                                end
-                                            end
-
-                                            -- card is over capacity if its index exceeds max capacity
-                                            if cardIndex > maxCapacity then
-                                                isOverCapacity = true
-                                            end
-                                        end
-                                    end
-                                end
-                            end
+                            local isOverCapacity = isCardOverCapacity(cardScript, eid)
+                            cardScript.isDisabled = isOverCapacity
 
                             if cardScript.shop_slot and cardScript.shopBuyReveal and cardScript.shopBuyReveal > 0.02 and
                                 is_state_active(SHOP_STATE) then
@@ -1183,13 +1197,23 @@ function createNewCard(id, x, y, gameStateToApply)
                                     c.fontSize = 20.0
                                 end, zToUse, layer.DrawCommandSpace.World) -- z order on the inside here doesn't matter much.
 
-                                -- if over capacity, draw red X
-                                if isOverCapacity then
+                                -- if over capacity, gray overlay + disabled marker
+                                if isOverCapacity and not cardScript.isBeingDragged then
                                     local xSize = math.min(t.actualW, t.actualH) * 0.6
                                     local centerX = t.actualW * 0.5
                                     local centerY = t.actualH * 0.5
                                     local thickness = 8
                                     local xColor = util.getColor("red")
+
+                                    command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                                        c.x = centerX
+                                        c.y = centerY
+                                        c.w = t.actualW
+                                        c.h = t.actualH
+                                        c.rx = 12
+                                        c.ry = 12
+                                        c.color = Col(18, 20, 24, 180)
+                                    end, zToUse + 1, layer.DrawCommandSpace.World)
 
                                     -- draw diagonal line from top-left to bottom-right
                                     command_buffer.queueDrawLine(layers.sprites, function(c)
@@ -1456,13 +1480,27 @@ function createNewCard(id, x, y, gameStateToApply)
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
 
-        local tooltip = card_tooltip_cache[hoveredCardScript.cardID]
+        local isDisabled = isCardOverCapacity(hoveredCardScript, card)
+        hoveredCardScript.isDisabled = isDisabled
+
+        local cardDef = WandEngine.card_defs[hoveredCardScript.cardID] or WandEngine.trigger_card_defs[hoveredCardScript.cardID] or hoveredCardScript
+        local tooltipOpts = nil
+        if isDisabled then
+            tooltipOpts = { status = "disabled", statusColor = "red" }
+        end
+
+        local tooltip = ensureCardTooltip(cardDef, tooltipOpts)
         if not tooltip then
             return
         end
         centerTooltipAboveEntity(tooltip, card, 12)
         -- hide any other tooltips before showing this one
         for _, tooltipEntity in pairs(card_tooltip_cache) do
+            if tooltipEntity ~= tooltip then
+                ui.box.ClearStateTagsFromUIBox(tooltipEntity)
+            end
+        end
+        for _, tooltipEntity in pairs(card_tooltip_disabled_cache) do
             if tooltipEntity ~= tooltip then
                 ui.box.ClearStateTagsFromUIBox(tooltipEntity)
             end
@@ -2559,11 +2597,14 @@ function makeWandTooltip(wand_def)
     return boxID
 end
 
-function makeCardTooltip(card_def)
+function makeCardTooltip(card_def, opts)
     if not card_def then
         card_def = CardTemplates.ACTION_BASIC_PROJECTILE
     end
 
+    opts = opts or {}
+
+    local cardId = card_def.id or card_def.cardID
     local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr   = ";shadow=false"
     local labelColumnMinWidth = tooltipStyle.labelColumnMinWidth
@@ -2595,8 +2636,10 @@ function makeCardTooltip(card_def)
         }
     end
 
-    local function makeValueNode(value)
-        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. tooltipStyle.valueColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+    local function makeValueNode(value, opts)
+        opts = opts or {}
+        local valueColor = opts.color or tooltipStyle.valueColor
+        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. valueColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -2608,7 +2651,7 @@ function makeCardTooltip(card_def)
     end
 
     -- Helper function to add a line if value is not excluded
-    local function addLine(rows, label, value, labelOpts)
+    local function addLine(rows, label, value, labelOpts, valueOpts)
         if shouldExclude(value) then return end
         table.insert(rows, dsl.hbox {
             config = {
@@ -2617,15 +2660,15 @@ function makeCardTooltip(card_def)
             },
             children = {
                 makeLabelNode(label, labelOpts),
-                makeValueNode(value)
+                makeValueNode(value, valueOpts)
             }
         })
     end
 
     local rows = {}
 
-    if card_def.id then
-        local idPill = ui.definitions.getTextFromString("[id: " .. tostring(card_def.id) .. "](background=" ..
+    if cardId then
+        local idPill = ui.definitions.getTextFromString("[id: " .. tostring(cardId) .. "](background=" ..
             tooltipStyle.idBg .. ";color=" .. (tooltipStyle.idTextColor or tooltipStyle.labelColor) .. ";fontSize=" .. globalFontSize ..
             noShadowAttr .. ")")
         table.insert(rows, dsl.hbox {
@@ -2635,6 +2678,11 @@ function makeCardTooltip(card_def)
             },
             children = { idPill }
         })
+    end
+
+    if opts.status then
+        addLine(rows, "status", opts.status, { background = "dim_gray", color = "white" },
+            { color = opts.statusColor or "red" })
     end
 
     -- Always show ID and type
@@ -2672,10 +2720,10 @@ function makeCardTooltip(card_def)
 
     local assignment = nil
     if CardRarityTags and CardRarityTags.cardAssignments then
-        assignment = CardRarityTags.cardAssignments[card_def.id]
+        assignment = CardRarityTags.cardAssignments[cardId]
     end
     if not assignment and CardRarityTags and CardRarityTags.triggerAssignments then
-        assignment = CardRarityTags.triggerAssignments[card_def.id]
+        assignment = CardRarityTags.triggerAssignments[cardId]
     end
 
     if assignment then
@@ -2738,9 +2786,41 @@ function makeCardTooltip(card_def)
     return boxID
 end
 
+function ensureCardTooltip(card_def, opts)
+    if not card_def then return nil end
+
+    local cardId = card_def.id or card_def.cardID
+    if not cardId then return nil end
+
+    local cache = card_tooltip_cache
+    if opts and opts.status then
+        cache = card_tooltip_disabled_cache
+    end
+
+    if cache[cardId] then return cache[cardId] end
+
+    local tooltip = makeCardTooltip(card_def, opts)
+    cache[cardId] = tooltip
+
+    layer_order_system.assignZIndexToEntity(
+        tooltip,
+        z_orders.ui_tooltips
+    )
+
+    local t = component_cache.get(tooltip, Transform)
+    if t then
+        t.actualY = globals.screenHeight() * 0.5 - (t.actualH * 0.5)
+        t.visualY = t.actualY
+    end
+
+    clear_state_tags(tooltip)
+    return tooltip
+end
+
 -- initialize the game area for planning phase, where you combine cards and stuff.
 function initPlanningPhase()
     
+    ensureShopSystemInitialized() -- make sure card defs carry metadata/tags before any cards spawn
     local CastFeedUI = require "ui.cast_feed_ui"
     CastFeedUI.init()
     SubcastDebugUI.init()
@@ -2804,6 +2884,11 @@ function initPlanningPhase()
         if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
             SubcastDebugUI.update(dt)
             SubcastDebugUI.draw()
+        end
+
+        if LevelUpScreen and LevelUpScreen.isActive then
+            LevelUpScreen.update(dt)
+            LevelUpScreen.draw()
         end
     end)
 
@@ -3138,14 +3223,25 @@ function initPlanningPhase()
 
     local testTable = getScriptTableFromEntityID(card1)
 
-    boardHeight = globals.screenHeight() / 5
-    local actionBoardWidth = globals.screenWidth() * 0.7
-    local triggerBoardWidth = globals.screenWidth() * 0.2
+    local screenW = globals.screenWidth()
+    local screenH = globals.screenHeight()
 
-    boardPadding = globals.screenWidth() * 0.1 / 3
+    -- Leave space for the synergy panel on the right during planning.
+    local synergyPanelReserve = 300
+    if TagSynergyPanel and TagSynergyPanel.layout then
+        local layout = TagSynergyPanel.layout
+        synergyPanelReserve = math.max(synergyPanelReserve, (layout.panelWidth or 0) + (layout.marginX or 0))
+    end
 
+    boardHeight = screenH / 5
+    local planningRegionWidth = math.max(0, screenW - synergyPanelReserve)
+    boardPadding = planningRegionWidth * 0.1 / 3
+    local actionBoardWidth = planningRegionWidth * 0.7
+    local triggerBoardWidth = planningRegionWidth * 0.2
+
+    local boardSetTotalWidth = triggerBoardWidth + actionBoardWidth + boardPadding
     local runningYValue = boardPadding
-    local leftAlignValueTriggerBoardX = boardPadding
+    local leftAlignValueTriggerBoardX = math.max(boardPadding, (planningRegionWidth - boardSetTotalWidth) * 0.5)
     local leftAlignValueActionBoardX = leftAlignValueTriggerBoardX + triggerBoardWidth + boardPadding
     local leftAlignValueRemoveBoardX = leftAlignValueActionBoardX + actionBoardWidth + boardPadding
 
@@ -3282,16 +3378,16 @@ function initPlanningPhase()
     --       make a large board at bottom that will serve as the inventory, with a trigger inventory on the left.       --
     -- --------------------------------------------------------------------------
 
-    local triggerInventoryWidth  = globals.screenWidth() * 0.2
-    local triggerInventoryHeight = (globals.screenHeight() - runningYValue) * 0.4
+    local triggerInventoryWidth  = planningRegionWidth * 0.2
+    local triggerInventoryHeight = (screenH - runningYValue) * 0.4
 
-    local inventoryBoardWidth    = globals.screenWidth() * 0.65
+    local inventoryBoardWidth    = planningRegionWidth * 0.65
     local inventoryBoardHeight   = triggerInventoryHeight
     local boardPadding           = boardPadding or 20 -- just in case
 
     -- Center both panels as a group
     local totalWidth             = triggerInventoryWidth + boardPadding + inventoryBoardWidth
-    local offsetX                = (globals.screenWidth() - totalWidth) / 2
+    local offsetX                = (planningRegionWidth - totalWidth) / 2
 
     -- Left (trigger) panel
     local triggerInventoryX      = offsetX
@@ -3526,23 +3622,7 @@ function initPlanningPhase()
     end
 
     local function addCardTooltip(cardDef)
-        if not cardDef or not cardDef.id then return end
-        if card_tooltip_cache[cardDef.id] then return end
-
-        card_tooltip_cache[cardDef.id] = makeCardTooltip(cardDef)
-
-        layer_order_system.assignZIndexToEntity(
-            card_tooltip_cache[cardDef.id],
-            z_orders.ui_tooltips
-        )
-
-        local t = component_cache.get(card_tooltip_cache[cardDef.id], Transform)
-        if t then
-            t.actualY = globals.screenHeight() * 0.5 - (t.actualH * 0.5)
-            t.visualY = t.actualY
-        end
-
-        clear_state_tags(card_tooltip_cache[cardDef.id])
+        ensureCardTooltip(cardDef)
     end
 
     -- for each card, make a tooltip
@@ -3785,7 +3865,7 @@ function initCombatSystem()
     timer.run(
         function()
             -- bail if not in action state
-            if not is_state_active(ACTION_STATE) then return end
+            if not is_state_active(ACTION_STATE) or isLevelUpModalActive() then return end
 
             local frameDt = GetFrameTime()
             WandExecutor.update(frameDt)
@@ -5491,12 +5571,20 @@ function initSurvivorEntity()
     signal.register("player_level_up", function()
         log_debug("Player leveled up!")
         playSoundEffect("effects", "level_up", 1.0)
+        local playerScript = getScriptTableFromEntityID(survivorEntity)
+        timer.after(LEVEL_UP_MODAL_DELAY, function()
+            LevelUpScreen.push({
+                playerEntity = survivorEntity,
+                actor = playerScript and playerScript.combatTable
+            })
+        end, "level_up_modal_delay")
     end)
 
 
     -- lets run every physics frame, detecting for magnet radus
     timer.every_physics_step(
         function()
+            if isLevelUpModalActive() then return end
             local magnetRadius = 200 -- TODO; make this a player stat later.
             local magItems = get_mag_items(PhysicsManager.get_world("world"), survivorEntity, magnetRadius)
 
@@ -5513,6 +5601,7 @@ function initSurvivorEntity()
                         -- add a timer to move towards player
                         timer.every_physics_step(
                             function()
+                                if isLevelUpModalActive() then return end
                                 if entity_cache.valid(itemEntity) and entity_cache.valid(survivorEntity) then
                                     local playerT = component_cache.get(survivorEntity, Transform)
 
@@ -5572,7 +5661,7 @@ function initSurvivorEntity()
     end)
 end
 
-local function ensureShopSystemInitialized()
+function ensureShopSystemInitialized()
     if shop_system_initialized then
         return
     end
@@ -6219,6 +6308,7 @@ end
 
 function initActionPhase()
     
+    LevelUpScreen.init()
     
     local CastFeedUI = require("ui.cast_feed_ui")
     if not MessageQueueUI.isActive then
@@ -6590,6 +6680,7 @@ function initActionPhase()
     -- create input timer. this must run every frame.
     timer.every_physics_step(
         function()
+            if isLevelUpModalActive() then return end
             -- TODO: debug by logging pos
             -- local debugPos = physics.GetPosition(world, survivorEntity)
             -- log_debug("Survivor pos:", debugPos.x, debugPos.y)
@@ -6727,7 +6818,7 @@ function initActionPhase()
 
     -- lets make a timer that, if action state is active, spawn an enemy every few seconds
     timer.every(5.0, function()
-            if is_state_active(ACTION_STATE) then
+            if is_state_active(ACTION_STATE) and not isLevelUpModalActive() then
                 -- animation entity
                 local enemyEntity = animation_system.createAnimatedObjectWithTransform(
                     "b1060.png", -- animation ID
@@ -6871,6 +6962,7 @@ function initActionPhase()
                 end)
 
                 timer.every_physics_step(function()
+                    if isLevelUpModalActive() then return end
                     local t = component_cache.get(enemyEntity, Transform)
 
                     local playerLocation = { x = 0, y = 0 }
@@ -6941,7 +7033,7 @@ function initActionPhase()
 
     -- timer to spawn an exp pickup every few seconds, for testing purposes.
     timer.every(3.0, function()
-        if is_state_active(ACTION_STATE) then
+        if is_state_active(ACTION_STATE) and not isLevelUpModalActive() then
             playSoundEffect("effects", random_utils.random_element_string(expPickupSounds), 0.9 + math.random() * 0.2)
 
             local expPickupEntity = animation_system.createAnimatedObjectWithTransform(

@@ -4163,7 +4163,7 @@ function initCombatSystem()
                     local rStickY = input.getPadAxis(0, axisRY) or 0
                     local mag = math.sqrt(rStickX * rStickX + rStickY * rStickY)
                     if mag > 0.25 then
-                        aimAngle = math.atan2(rStickY, rStickX)
+                        aimAngle = math.atan(rStickY, rStickX)
                     end
                 else
                     local cam = camera and camera.Get and camera.Get("world_camera")
@@ -4173,7 +4173,7 @@ function initCombatSystem()
                             local dx = mouseWorld.x - centerX
                             local dy = mouseWorld.y - centerY
                             if dx * dx + dy * dy > 0.0001 then
-                                aimAngle = math.atan2(dy, dx)
+                                aimAngle = math.atan(dy, dx)
                             end
                         end
                     end
@@ -4205,16 +4205,16 @@ function initCombatSystem()
                     local aimZ = (z_orders.player_vfx or 0) + 1
 
                     command_buffer.queueDrawTriangle(layers.sprites, function(c)
-                        c.p1 = { x = tipX + shadowOffset, y = tipY + shadowOffset }
-                        c.p2 = { x = p2x + shadowOffset, y = p2y + shadowOffset }
-                        c.p3 = { x = p3x + shadowOffset, y = p3y + shadowOffset }
+                        c.p1 = Vec2(tipX + shadowOffset, tipY + shadowOffset)
+                        c.p2 = Vec2(p2x + shadowOffset, p2y + shadowOffset)
+                        c.p3 = Vec2(p3x + shadowOffset, p3y + shadowOffset)
                         c.color = Col(0, 0, 0, 110)
                     end, aimZ, layer.DrawCommandSpace.World)
 
                     command_buffer.queueDrawTriangle(layers.sprites, function(c)
-                        c.p1 = { x = tipX, y = tipY }
-                        c.p2 = { x = p2x, y = p2y }
-                        c.p3 = { x = p3x, y = p3y }
+                        c.p1 = Vec2(tipX, tipY)
+                        c.p2 = Vec2(p2x, p2y)
+                        c.p3 = Vec2(p3x, p3y)
                         c.color = (util and util.getColor and util.getColor("apricot_cream")) or Col(255, 230, 190, 255)
                     end, aimZ + 1, layer.DrawCommandSpace.World)
                 end

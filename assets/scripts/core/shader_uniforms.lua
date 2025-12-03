@@ -463,6 +463,25 @@ local function init_static_defaults()
     set("polychrome", "burn_colour_1", Vector4{ x = 1.0, y = 1.0, z = 0.0, w = 1.0 })
     set("polychrome", "burn_colour_2", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
 
+    -- material_card_overlay
+    set("material_card_overlay", "uGridRect", Vector4{ x = 0.0, y = 0.0, z = 1.0, w = 1.0 })
+    set("material_card_overlay", "uImageSize", Vector2{ x = VW, y = VH })
+    set("material_card_overlay", "texture_details", Vector4{ x = 0.0, y = 0.0, z = 64.0, w = 64.0 })
+    set("material_card_overlay", "image_details", Vector2{ x = 64.0, y = 64.0 })
+    set("material_card_overlay", "time", get_time())
+    set("material_card_overlay", "dissolve", 0.0)
+    set("material_card_overlay", "shadow", 0.0)
+    set("material_card_overlay", "burn_colour_1", COLOR_BLUE_N)
+    set("material_card_overlay", "burn_colour_2", COLOR_PURPLE_N)
+    set("material_card_overlay", "card_rotation", 0.0)
+    set("material_card_overlay", "material_tint", Vector3{ x = 0.92, y = 0.86, z = 0.76 })
+    set("material_card_overlay", "grain_intensity", 0.35)
+    set("material_card_overlay", "grain_scale", 1.0)
+    set("material_card_overlay", "sheen_strength", 0.65)
+    set("material_card_overlay", "sheen_width", 0.18)
+    set("material_card_overlay", "sheen_speed", 0.6)
+    set("material_card_overlay", "noise_amount", 0.35)
+
     -- negative_shine
     set("negative_shine", "texture_details", Vector4{ x = 0.0, y = 0.0, z = 64.0, w = 64.0 })
     set("negative_shine", "image_details", Vector2{ x = 64.0, y = 64.0 })
@@ -849,6 +868,10 @@ local function init_updates()
 
     register("polychrome", function(_shader)
         set("polychrome", "time", get_time())
+    end)
+
+    register("material_card_overlay", function(_shader)
+        set("material_card_overlay", "time", get_time())
     end)
 
     register("negative_shine", function(_shader)

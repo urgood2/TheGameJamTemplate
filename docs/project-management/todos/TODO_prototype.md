@@ -64,6 +64,17 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- can we move execution preview out of its window (so blank background), ditch the "execution preview" panel, and place it under the card inventories?
+
+- treasure opening sequence.
+    - darken screen.
+    - show a chest. it should start to shake, and halo of particles from behind it shoud expand and spin.
+    - an exciting shader background that is colorful and dynamic.
+    - there should be three escalations, like fanfare, box jerking each time, which will modify the shader background color, maybe make it pulse.
+    - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
+    - Then show the reward, with ambient animation.
+    
+
 - affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
 
 - sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.

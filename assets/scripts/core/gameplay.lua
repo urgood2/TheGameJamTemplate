@@ -329,6 +329,14 @@ local DAMAGE_NUMBER_HORIZONTAL_JITTER   = 14   -- horizontal scatter when spawni
 local DAMAGE_NUMBER_GRAVITY             = 28   -- downward accel that eases the rise of the numbers
 local DAMAGE_NUMBER_FONT_SIZE           = 22
 
+local EXP_PICKUP_ANIMATION_ID = "b8090.png"
+local EXP_PICKUP_SOUNDS = {
+    "item_appear_1",
+    "item_appear_2",
+    "item_appear_3",
+    "item_appear_4"
+}
+
 local playerDashCooldownRemaining = 0
 local playerDashTimeRemaining     = 0
 local dashBufferTimer             = 0
@@ -343,6 +351,7 @@ end
 local enemyHealthUiState          = {}                                 -- eid -> { actor=<combat actor>, visibleUntil=<time> }
 local combatActorToEntity         = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
 local damageNumbers               = {}                                 -- active floating damage numbers
+local spawnExpPickupAt            -- forward declaration
 
 local function isLevelUpModalActive()
     return LevelUpScreen and LevelUpScreen.isActive
@@ -3820,6 +3829,52 @@ function initCombatSystem()
             spawnDamageNumber(targetEntity, ev.damage or 0, ev.crit)
         end
     end)
+    ctx.bus:on('OnDeath', function(ev)
+        local actor = ev.entity
+        if not actor or actor.side ~= 2 then return end
+
+        local enemyEntity = combatActorToEntity[actor]
+        combatActorToEntity[actor] = nil
+
+        if enemyEntity then
+            enemyHealthUiState[enemyEntity] = nil
+            local dropX, dropY = nil, nil
+            if entity_cache.valid(enemyEntity) then
+                local t = component_cache.get(enemyEntity, Transform)
+                if t then
+                    dropX = t.actualX + t.actualW * 0.5
+                    dropY = t.actualY + t.actualH * 0.5
+                end
+            end
+
+            timer.after(0.01, function()
+                if dropX and dropY then
+                    particle.spawnExplosion(dropX, dropY, 18, 0.45, {
+                        colors = { util.getColor("ORANGE"), util.getColor("YELLOW"), util.getColor("WHITE") },
+                        space = "world"
+                    })
+                    if particle.spawnDirectionalLinesCone then
+                        particle.spawnDirectionalLinesCone(Vec2(dropX, dropY), 18, 0.35, {
+                            direction = Vec2(0, -1),
+                            spread = 320,
+                            colors = { util.getColor("WHITE"), util.getColor("YELLOW") },
+                            minSpeed = 180,
+                            maxSpeed = 360,
+                            minLength = 18,
+                            maxLength = 46,
+                            space = "world",
+                            z = z_orders.particle_vfx
+                        })
+                    end
+                    spawnExpPickupAt(dropX, dropY, { positionIsCenter = true })
+                end
+
+                if entity_cache.valid(enemyEntity) then
+                    registry:destroy(enemyEntity)
+                end
+            end, "enemy_death_cleanup_" .. tostring(enemyEntity))
+        end
+    end)
 
     -- make springs for exp bar and hp bar SCALE (for undulation effect)
     expBarScaleSpringEntity, expBarScaleSpringRef = spring.make(registry, 1.0, 120.0, 14.0, {
@@ -6300,6 +6355,71 @@ local function makeSpawnMarkerCircle(x, y, radius, color, state)
     end)
 end
 
+function spawnExpPickupAt(x, y, opts)
+    opts = opts or {}
+    local spawnX = x or lume.random(SCREEN_BOUND_LEFT + 50, SCREEN_BOUND_RIGHT - 50)
+    local spawnY = y or lume.random(SCREEN_BOUND_TOP + 50, SCREEN_BOUND_BOTTOM - 50)
+    local world = PhysicsManager.get_world("world")
+
+    if opts.playSound ~= false then
+        playSoundEffect("effects", random_utils.random_element_string(EXP_PICKUP_SOUNDS), 0.9 + math.random() * 0.2)
+    end
+
+    local expPickupEntity = animation_system.createAnimatedObjectWithTransform(
+        EXP_PICKUP_ANIMATION_ID,
+        true
+    )
+
+    add_state_tag(expPickupEntity, opts.state or ACTION_STATE)
+    remove_default_state_tag(expPickupEntity)
+
+    local expPickupTransform = component_cache.get(expPickupEntity, Transform)
+    if expPickupTransform then
+        if opts.positionIsCenter then
+            spawnX = spawnX - (expPickupTransform.actualW or 0) * 0.5
+            spawnY = spawnY - (expPickupTransform.actualH or 0) * 0.5
+        end
+
+        expPickupTransform.actualX = spawnX
+        expPickupTransform.actualY = spawnY
+        expPickupTransform.visualX = spawnX
+        expPickupTransform.visualY = spawnY
+    end
+
+    if opts.marker ~= false and expPickupTransform then
+        makeSpawnMarkerCircle(
+            expPickupTransform.actualX,
+            expPickupTransform.actualY,
+            expPickupTransform.actualW,
+            util.getColor("red"),
+            opts.state or ACTION_STATE
+        )
+    end
+
+    local info = { shape = "rectangle", tag = "pickup", sensor = true, density = 1.0, inflate_px = 0 }
+
+    physics.create_physics_for_transform(
+        registry,
+        physics_manager_instance,
+        expPickupEntity,
+        "world",
+        info
+    )
+
+    if world then
+        physics.enable_collision_between_many(world, "pickup", { "player" })
+        physics.enable_collision_between_many(world, "player", { "pickup" })
+        physics.update_collision_masks_for(world, "pickup", { "player" })
+        physics.update_collision_masks_for(world, "player", { "pickup" })
+    end
+
+    local expPickupScript = Node {}
+    expPickupScript:attach_ecs { create_new = false, existing_entity = expPickupEntity }
+    expPickupScript.isPickup = true
+
+    return expPickupEntity
+end
+
 
 
 
@@ -6962,6 +7082,7 @@ function initActionPhase()
                 end)
 
                 timer.every_physics_step(function()
+                    if not entity_cache.valid(enemyEntity) then return end
                     if isLevelUpModalActive() then return end
                     local t = component_cache.get(enemyEntity, Transform)
 
@@ -7024,65 +7145,10 @@ function initActionPhase()
         nil,
         "cameraPanToPlayerTimer")
 
-    local expPickupSounds = {
-        "item_appear_1",
-        "item_appear_2",
-        "item_appear_3",
-        "item_appear_4"
-    }
-
     -- timer to spawn an exp pickup every few seconds, for testing purposes.
     timer.every(3.0, function()
         if is_state_active(ACTION_STATE) and not isLevelUpModalActive() then
-            playSoundEffect("effects", random_utils.random_element_string(expPickupSounds), 0.9 + math.random() * 0.2)
-
-            local expPickupEntity = animation_system.createAnimatedObjectWithTransform(
-                "b8090.png", -- animation ID
-                true         -- use animation, not sprite identifier, if false
-            )
-
-            add_state_tag(expPickupEntity, ACTION_STATE)
-            remove_default_state_tag(expPickupEntity)
-
-            local expPickupTransform = component_cache.get(expPickupEntity, Transform)
-            expPickupTransform.actualX = lume.random(SCREEN_BOUND_LEFT + 50, SCREEN_BOUND_RIGHT - 50)
-            expPickupTransform.actualY = lume.random(SCREEN_BOUND_TOP + 50, SCREEN_BOUND_BOTTOM - 50)
-            expPickupTransform.visualX = expPickupTransform.actualX
-            expPickupTransform.visualY = expPickupTransform.actualY
-
-
-            -- add marker spanw
-            makeSpawnMarkerCircle(
-                expPickupTransform.actualX,
-                expPickupTransform.actualY,
-                expPickupTransform.actualW,
-                util.getColor("red"),
-                ACTION_STATE
-            )
-
-
-
-            -- give it physics
-            local info = { shape = "rectangle", tag = "pickup", sensor = true, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"
-
-            physics.create_physics_for_transform(registry,
-                physics_manager_instance, -- global instance
-                expPickupEntity,          -- entity id
-                "world",                  -- physics world identifier
-                info
-            )
-
-            physics.enable_collision_between_many(PhysicsManager.get_world("world"), "pickup", { "player" })
-            physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", { "pickup" })
-            physics.update_collision_masks_for(PhysicsManager.get_world("world"), "pickup", { "player" })
-            physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "pickup" })
-
-            -- give it a script
-            local expPickupScript = Node {}
-
-            expPickupScript:attach_ecs { create_new = false, existing_entity = expPickupEntity }
-
-            expPickupScript.isPickup = true
+            spawnExpPickupAt()
         end
     end)
 

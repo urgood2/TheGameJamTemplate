@@ -338,7 +338,7 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         lifetime = props.lifetime,
 
         -- Visual
-        sprite = actionCard.projectileSprite or actionCard.sprite or "b488.png",
+        sprite = actionCard.projectileSprite or actionCard.sprite or "b7835.png",
         size = props.size or 16,
         shadow = true,
 

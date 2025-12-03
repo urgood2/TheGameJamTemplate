@@ -1479,6 +1479,59 @@ function spawnImpactSmear(x, y, dir, color, lifetime, opts)
     return e
 end
 
+--- Spawn a short, forward-facing burst of particles and a smear along `direction`.
+--- Useful for bullet impacts that should inherit the incoming travel vector.
+--- @param x number
+--- @param y number
+--- @param direction table Vector with x/y components
+--- @param opts table? Optional overrides: count, spread, lifetime, colors, space, smearLength, smearThickness
+function particle.spawnDirectionalImpact(x, y, direction, opts)
+    opts = opts or {}
+    if type(x) == "table" then
+        direction = direction or opts.direction
+        opts = opts or {}
+        y = x.y
+        x = x.x
+    end
+
+    direction = direction or opts.direction or Vec2(1, 0)
+    local dx, dy = direction.x or 0, direction.y or 0
+    local len = math.sqrt(dx * dx + dy * dy)
+    if len < 0.0001 then return end
+    dx, dy = dx / len, dy / len
+
+    particle.spawnDirectionalCone(Vec2(x, y), opts.count or 12, opts.lifetime or 0.35, {
+        direction = Vec2(dx, dy),
+        spread = opts.spread or 30,
+        colors = opts.colors or { util.getColor("WHITE"), util.getColor("YELLOW") },
+        minSpeed = opts.minSpeed or 140,
+        maxSpeed = opts.maxSpeed or 340,
+        minScale = opts.minScale or 3,
+        maxScale = opts.maxScale or 7,
+        lifetimeJitter = opts.lifetimeJitter or 0.25,
+        scaleJitter = opts.scaleJitter or 0.2,
+        gravity = opts.gravity or 0,
+        space = opts.space or "world",
+        z = opts.z or z_orders.particle_vfx,
+        renderType = opts.renderType or particle.ParticleRenderType.RECTANGLE_FILLED,
+    })
+
+    if opts.smear ~= false then
+        spawnImpactSmear(
+            x,
+            y,
+            Vec2(dx, dy),
+            opts.smearColor or util.getColor("white"),
+            opts.smearLifetime or 0.18,
+            {
+                single = true,
+                maxLength = opts.smearLength or 46,
+                maxThickness = opts.smearThickness or 9
+            }
+        )
+    end
+end
+
 
 ---@param ent entt.entity              -- entity to trail
 ---@param duration number              -- total time to emit

@@ -27,6 +27,7 @@ local entity_cache = require("core.entity_cache")
 local signal = require("external.hump.signal")
 local Node = require("monobehavior.behavior_script_v2")
 local CombatSystem = require("combat.combat_system")
+local z_orders = require("core.z_orders")
 
 ---@diagnostic disable: undefined-global
 -- Suppress warnings for runtime globals (registry, physics_manager)
@@ -70,6 +71,10 @@ ProjectileSystem.CollisionBehavior = {
 
 -- Physics collision category for projectiles
 ProjectileSystem.COLLISION_CATEGORY = "projectile"
+
+local ENEMY_HIT_RECOIL_FORCE = 260
+local ENEMY_HIT_FLASH_SCALE = 1.08
+local ENEMY_HIT_FLASH_DURATION = 0.12
 
 local function getGlobalNumber(name, fallback)
     local value = rawget(_G, name)
@@ -244,7 +249,8 @@ function ProjectileSystem.createProjectileLifetime(params)
 
         -- Flags
         shouldDespawn = false,
-        despawnReason = nil
+        despawnReason = nil,
+        wallImpactVfxPlayed = false
     }
 end
 
@@ -432,7 +438,7 @@ function ProjectileSystem.spawn(params)
         transform.actualR = params.rotation or 0
 
         -- Create visual representation
-        local spriteToUse = params.sprite or "b1761.png"
+        local spriteToUse = params.sprite or "b7835.png"
         animation_system.setupAnimatedObjectOnEntity(
             entity,
             spriteToUse,
@@ -465,6 +471,94 @@ function ProjectileSystem.spawn(params)
 
     -- Initialize script table and store data BEFORE attach_ecs
     local ProjectileType = Node:extend()
+
+    function ProjectileType:init()
+        self._renderNoSprite = false
+    end
+
+    function ProjectileType:update(dt)
+        local eid = self._eid or self.projectileEntity or entity
+        if not eid or not entity_cache.valid(eid) then return end
+
+        -- Hide default animation/sprite once
+        if not self._renderNoSprite then
+            local animComp = component_cache.get(eid, AnimationQueueComponent)
+            if animComp then
+                animComp.noDraw = true
+            end
+            self._renderNoSprite = true
+        end
+
+        local t = component_cache.get(eid, Transform)
+        if not t then return end
+
+        local behavior = self.projectileBehavior
+        local vx, vy = 0, 0
+        local world = getPhysicsWorld(self)
+        if world and physics and physics.GetVelocity then
+            local vel = physics.GetVelocity(world, eid)
+            if vel then
+                vx = vel.x or 0
+                vy = vel.y or 0
+            end
+        end
+        if (vx == 0 and vy == 0) and behavior and behavior.velocity then
+            vx = behavior.velocity.x or 0
+            vy = behavior.velocity.y or 0
+        end
+
+        local angle = (vx ~= 0 or vy ~= 0) and math.atan(vy, vx) or (t.actualR or 0)
+
+        local w, h = t.actualW or 0, t.actualH or 0
+        local cx = t.actualX + w * 0.5
+        local cy = t.actualY + h * 0.5
+        local rx = w * 0.65
+        local baseRy = h * 0.35
+
+        local speed = math.sqrt(vx * vx + vy * vy)
+        local speedNorm = math.min(1.0, speed / 600.0)
+        local ry = baseRy * (1.0 - 0.5 * speedNorm) -- faster → flatter
+
+        command_buffer.queuePushMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
+        command_buffer.queueTranslate(layers.sprites, function(c)
+            c.x = cx
+            c.y = cy
+        end, z_orders.projectiles, layer.DrawCommandSpace.World)
+        command_buffer.queueRotate(layers.sprites, function(c)
+            c.angle = math.deg(angle)
+        end, z_orders.projectiles, layer.DrawCommandSpace.World)
+
+        -- drop shadow
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = 2
+            c.y = 2
+            c.rx = rx * 1.05
+            c.ry = ry * 1.15
+            c.color = util.getColor("black"):setAlpha(110)
+            c.lineWidth = nil
+        end, z_orders.projectiles, layer.DrawCommandSpace.World)
+
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = 0
+            c.y = 0
+            c.rx = rx
+            c.ry = ry
+            c.color = util.getColor("white")
+            c.lineWidth = nil
+        end, z_orders.projectiles, layer.DrawCommandSpace.World)
+
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = rx * 0.25
+            c.y = 0
+            c.rx = rx * 0.6
+            c.ry = ry * 0.55
+            c.color = util.getColor("yellow"):setAlpha(200)
+            c.lineWidth = nil
+        end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+
+        command_buffer.queuePopMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
+    end
+
     local projectileScript = ProjectileType {}
 
     -- Assign data to script table first
@@ -482,6 +576,54 @@ function ProjectileSystem.spawn(params)
     -- NOW attach to entity (must be after data assignment)
     projectileScript:attach_ecs { create_new = false, existing_entity = entity }
     ProjectileSystem.projectile_scripts[entity] = projectileScript
+
+    -- Custom render: oriented ellipse that faces travel direction (disable sprite).
+    if _G.entity and _G.entity.set_draw_override then
+        _G.entity.set_draw_override(entity, function(w, h)
+            local t = component_cache.get(entity, Transform)
+            if not t then return end
+
+            local script = ProjectileSystem.getProjectileScript(entity)
+            local behavior = script and script.projectileBehavior
+            local vx = (behavior and behavior.velocity and behavior.velocity.x) or 0
+            local vy = (behavior and behavior.velocity and behavior.velocity.y) or 0
+            local angle = (vx ~= 0 or vy ~= 0) and math.atan(vy, vx) or (t.actualR or 0)
+
+            local cx = t.actualX + w * 0.5
+            local cy = t.actualY + h * 0.5
+            local rx = (w * 0.65)
+            local ry = (h * 0.35)
+
+            command_buffer.queuePushMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
+            command_buffer.queueTranslate(layers.sprites, function(c)
+                c.x = cx
+                c.y = cy
+            end, z_orders.projectiles, layer.DrawCommandSpace.World)
+            command_buffer.queueRotate(layers.sprites, function(c)
+                c.angle = math.deg(angle)
+            end, z_orders.projectiles, layer.DrawCommandSpace.World)
+
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                c.x = 0
+                c.y = 0
+                c.rx = rx
+                c.ry = ry
+                c.color = util.getColor("white")
+                c.lineWidth = nil
+            end, z_orders.projectiles, layer.DrawCommandSpace.World)
+
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                c.x = rx * 0.25
+                c.y = 0
+                c.rx = rx * 0.6
+                c.ry = ry * 0.55
+                c.color = util.getColor("yellow"):setAlpha(200)
+                c.lineWidth = nil
+            end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+
+            command_buffer.queuePopMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
+        end, true)
+    end
 
     -- Setup physics body for projectile
     if wantsPhysics then
@@ -938,6 +1080,8 @@ function ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript,
         ProjectileSystem.handleExplosion(entity, data, behavior)
     end
 
+    spawnWallImpactFx(projectileScript, transform, behavior, collisionInfo)
+
     lifetime.shouldDespawn = true
     lifetime.despawnReason = "world_bounds"
     return true
@@ -1184,6 +1328,108 @@ COLLISION HANDLING
 =============================================================================
 ]]--
 
+local function computeImpactDirection(projectileEntity, targetEntity, behavior, collisionInfo)
+    local vx = (behavior and behavior.velocity and behavior.velocity.x) or 0
+    local vy = (behavior and behavior.velocity and behavior.velocity.y) or 0
+    local len = math.sqrt(vx * vx + vy * vy)
+
+    if len < 0.0001 and projectileEntity and targetEntity then
+        local projT = component_cache.get(projectileEntity, Transform)
+        local targetT = component_cache.get(targetEntity, Transform)
+        if projT and targetT then
+            local px = projT.actualX + (projT.actualW or 0) * 0.5
+            local py = projT.actualY + (projT.actualH or 0) * 0.5
+            local tx = targetT.actualX + (targetT.actualW or 0) * 0.5
+            local ty = targetT.actualY + (targetT.actualH or 0) * 0.5
+            vx = tx - px
+            vy = ty - py
+            len = math.sqrt(vx * vx + vy * vy)
+        end
+    end
+
+    if len < 0.0001 and collisionInfo then
+        local nx, ny = 0, 0
+        if collisionInfo.hitLeft then
+            nx = 1
+        elseif collisionInfo.hitRight then
+            nx = -1
+        end
+        if collisionInfo.hitTop then
+            ny = 1
+        elseif collisionInfo.hitBottom then
+            ny = -1
+        end
+        len = math.sqrt(nx * nx + ny * ny)
+        if len > 0.0001 then
+            vx, vy = nx / len, ny / len
+        end
+    end
+
+    if len < 0.0001 then
+        return 1, 0
+    end
+    return vx / len, vy / len
+end
+
+local function spawnWallImpactFx(projectileScript, transform, behavior, collisionInfo)
+    if not projectileScript then return end
+    local lifetime = projectileScript.projectileLifetime
+    if lifetime and lifetime.wallImpactVfxPlayed then return end
+
+    transform = transform or component_cache.get(projectileScript.projectileEntity, Transform)
+    if not transform then return end
+
+    if lifetime then
+        lifetime.wallImpactVfxPlayed = true
+    end
+
+    local dirX, dirY = computeImpactDirection(projectileScript.projectileEntity, nil, behavior, collisionInfo)
+    -- if particle and particle.spawnDirectionalLinesCone then
+        local cx = transform.actualX + (transform.actualW or 0) * 0.5
+        local cy = transform.actualY + (transform.actualH or 0) * 0.5
+        particle.spawnDirectionalLinesCone(Vec2(cx, cy), 14, 0.25, {
+            direction = Vec2(-dirX, -dirY),
+            spread = 32,
+            colors = { util.getColor("WHITE"), util.getColor("YELLOW") },
+            minSpeed = 180,
+            maxSpeed = 360,
+            minLength = 26,
+            maxLength = 62,
+            minThickness = 2,
+            maxThickness = 5,
+            shrink = true,
+            space = "world",
+            z = z_orders.particle_vfx
+        })
+
+        -- if spawnImpactSmear then
+        --     spawnImpactSmear(
+        --         cx,
+        --         cy,
+        --         Vec2(dirX, dirY),
+        --         util.getColor("white"),
+        --         0.16,
+        --         { single = true, maxLength = 46, maxThickness = 9 }
+        --     )
+        -- end
+    -- end
+end
+
+local function applyEnemyHitFeedback(projectileEntity, targetEntity, behavior, projectileScript, targetCombatActor)
+    if not targetCombatActor or targetCombatActor.side ~= 2 then return end
+    if not targetEntity or targetEntity == entt_null or not entity_cache.valid(targetEntity) then return end
+
+    local dirX, dirY = computeImpactDirection(projectileEntity, targetEntity, behavior)
+    local world = getPhysicsWorld(projectileScript) or (PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")) or nil
+    if world and physics and physics.ApplyImpulse then
+        physics.ApplyImpulse(world, targetEntity, dirX * ENEMY_HIT_RECOIL_FORCE, dirY * ENEMY_HIT_RECOIL_FORCE)
+    end
+
+    if hitFX and component_cache.get(targetEntity, Transform) then
+        hitFX(targetEntity, ENEMY_HIT_FLASH_SCALE, ENEMY_HIT_FLASH_DURATION)
+    end
+end
+
 function ProjectileSystem.setupCollisionCallback(entity)
     -- Collision is handled by the primary projectile script (set before attach_ecs).
     -- If that script went missing, log and skip to avoid duplicating ScriptComponents.
@@ -1204,6 +1450,7 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     local data = projectileScript.projectileData
     local behavior = projectileScript.projectileBehavior
     local lifetime = projectileScript.projectileLifetime
+    local transform = component_cache.get(projectileEntity, Transform)
 
     local otherIsValid = otherEntity and otherEntity ~= entt_null and entity_cache.valid(otherEntity)
     local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
@@ -1219,11 +1466,14 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
         data.hitEntities[otherEntity] = now
     end
 
-    lifetime.hitCount = lifetime.hitCount + 1
+    if lifetime then
+        lifetime.hitCount = lifetime.hitCount + 1
+    end
 
     -- Apply damage to other entity
+    local targetCombatActor = nil
     if isDamageable then
-        ProjectileSystem.applyDamage(projectileEntity, otherEntity, data, targetGameObject)
+        targetCombatActor = ProjectileSystem.applyDamage(projectileEntity, otherEntity, data, targetGameObject)
     end
 
     -- Call onHit callback
@@ -1240,8 +1490,15 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
         })
     end
 
+    if targetCombatActor then
+        applyEnemyHitFeedback(projectileEntity, otherEntity, behavior, projectileScript, targetCombatActor)
+    end
+
     -- Handle collision behavior
     if behavior.collisionBehavior == ProjectileSystem.CollisionBehavior.DESTROY then
+        if not isDamageable then
+            spawnWallImpactFx(projectileScript, transform, behavior)
+        end
         lifetime.shouldDespawn = true
         lifetime.despawnReason = "hit"
 
@@ -1257,6 +1514,9 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
 
     elseif behavior.collisionBehavior == ProjectileSystem.CollisionBehavior.EXPLODE then
         ProjectileSystem.handleExplosion(projectileEntity, data, behavior)
+        if not isDamageable then
+            spawnWallImpactFx(projectileScript, transform, behavior)
+        end
         lifetime.shouldDespawn = true
         lifetime.despawnReason = "explosion"
 
@@ -1269,7 +1529,7 @@ end
 function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, precomputedGameObject)
     -- Check if target has health
     local targetGameObj = precomputedGameObject or component_cache.get(targetEntity, GameObject)
-    if not targetGameObj then return end
+    if not targetGameObj then return nil, nil end
 
     local function combatActorForEntity(eid)
         if not eid or eid == entt_null or not entity_cache.valid(eid) then
@@ -1292,20 +1552,13 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
             components = { { type = dmgType, amount = finalDamage } },
             tags = { projectile = true }
         }(ctx, sourceCombatActor or targetCombatActor, targetCombatActor)
-        return
+        return targetCombatActor, sourceCombatActor
     else
-        -- Fallback: apply damage via blackboard
-        if ai and ai.get_blackboard then
-            local bb = ai:get_blackboard(targetEntity)
-            if bb then
-                local currentHealth = getBlackboardFloat(targetEntity, "health") or 100
-                local finalDamage = data.damage * data.damageMultiplier
-                setBlackboardFloat(targetEntity, "health", currentHealth - finalDamage)
-
-                log_debug("Projectile dealt", finalDamage, "damage to", targetEntity)
-            end
-        end
+        -- throw an exception
+        error("Combat system missing")
     end
+
+    return targetCombatActor, sourceCombatActor
 end
 
 -- Handle bounce collision

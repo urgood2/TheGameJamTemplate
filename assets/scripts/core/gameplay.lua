@@ -163,6 +163,8 @@ inventory_board_id = nil
 trigger_board_id_to_action_board_id = {} -- map trigger boards to action boards
 trigger_board_id = nil
 action_board_id = nil
+mouseAimAngle = mouseAimAngle or 0
+if globals then globals.mouseAimAngle = globals.mouseAimAngle or mouseAimAngle end
 
 -- ui tooltip cache
 wand_tooltip_cache = {}
@@ -4132,6 +4134,76 @@ function initCombatSystem()
             local anchorTransform = component_cache.get(survivorEntity, Transform)
 
             if anchorTransform then
+                local centerX = (anchorTransform.visualX or anchorTransform.actualX or 0) +
+                    (anchorTransform.visualW or anchorTransform.actualW or 0) * 0.5
+                local centerY = (anchorTransform.visualY or anchorTransform.actualY or 0) +
+                    (anchorTransform.visualH or anchorTransform.actualH or 0) * 0.5
+
+                local aimAngle = mouseAimAngle or 0
+                local padConnected = input and input.isPadConnected and input.isPadConnected(0)
+                if padConnected and input.getPadAxis then
+                    local axisRX = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_X) or 2
+                    local axisRY = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_Y) or 3
+                    local rStickX = input.getPadAxis(0, axisRX) or 0
+                    local rStickY = input.getPadAxis(0, axisRY) or 0
+                    local mag = math.sqrt(rStickX * rStickX + rStickY * rStickY)
+                    if mag > 0.25 then
+                        aimAngle = math.atan2(rStickY, rStickX)
+                    end
+                else
+                    local cam = camera and camera.Get and camera.Get("world_camera")
+                    if cam and cam.GetMouseWorld then
+                        local mouseWorld = cam:GetMouseWorld()
+                        if mouseWorld then
+                            local dx = mouseWorld.x - centerX
+                            local dy = mouseWorld.y - centerY
+                            if dx * dx + dy * dy > 0.0001 then
+                                aimAngle = math.atan2(dy, dx)
+                            end
+                        end
+                    end
+                end
+
+                mouseAimAngle = aimAngle
+                if globals then
+                    globals.mouseAimAngle = aimAngle
+                end
+
+                if command_buffer and command_buffer.queueDrawTriangle and layers and layers.sprites then
+                    local dirX, dirY = math.cos(aimAngle), math.sin(aimAngle)
+                    local w = anchorTransform.visualW or anchorTransform.actualW or 0
+                    local h = anchorTransform.visualH or anchorTransform.actualH or 0
+                    local baseRadius = math.max(w, h, 48) * 0.55
+                    local triangleLength = 18
+                    local baseDistance = math.max(baseRadius - triangleLength, baseRadius * 0.5)
+                    local tipX = centerX + dirX * baseRadius
+                    local tipY = centerY + dirY * baseRadius
+                    local baseX = centerX + dirX * baseDistance
+                    local baseY = centerY + dirY * baseDistance
+                    local perpX, perpY = -dirY, dirX
+                    local halfWidth = 8
+                    local p2x = baseX + perpX * halfWidth
+                    local p2y = baseY + perpY * halfWidth
+                    local p3x = baseX - perpX * halfWidth
+                    local p3y = baseY - perpY * halfWidth
+                    local shadowOffset = 3
+                    local aimZ = (z_orders.player_vfx or 0) + 1
+
+                    command_buffer.queueDrawTriangle(layers.sprites, function(c)
+                        c.p1 = { x = tipX + shadowOffset, y = tipY + shadowOffset }
+                        c.p2 = { x = p2x + shadowOffset, y = p2y + shadowOffset }
+                        c.p3 = { x = p3x + shadowOffset, y = p3y + shadowOffset }
+                        c.color = Col(0, 0, 0, 110)
+                    end, aimZ, layer.DrawCommandSpace.World)
+
+                    command_buffer.queueDrawTriangle(layers.sprites, function(c)
+                        c.p1 = { x = tipX, y = tipY }
+                        c.p2 = { x = p2x, y = p2y }
+                        c.p3 = { x = p3x, y = p3y }
+                        c.color = (util and util.getColor and util.getColor("apricot_cream")) or Col(255, 230, 190, 255)
+                    end, aimZ + 1, layer.DrawCommandSpace.World)
+                end
+
                 local playerCombatInfo = ctx.side1[1]
 
                 local playerHealth = playerCombatInfo.hp

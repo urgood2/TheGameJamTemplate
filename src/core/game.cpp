@@ -1035,8 +1035,8 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
             });
             bus.subscribe<events::KeyPressed>([](const events::KeyPressed& ev) {
                 if (ev.keyCode == KEY_P) {
-                    globals::setIsGamePaused(!globals::getIsGamePaused());
-                    SPDLOG_INFO("Pause toggled via event bus: {}", globals::getIsGamePaused());
+                    // globals::setIsGamePaused(!globals::getIsGamePaused());
+                    // SPDLOG_INFO("Pause toggled via event bus: {}", globals::getIsGamePaused());
                 } else if (ev.keyCode == KEY_F1) {
                     globals::setUseImGUI(!globals::getUseImGUI());
                     SPDLOG_INFO("ImGui toggled via event bus: {}", globals::getUseImGUI());

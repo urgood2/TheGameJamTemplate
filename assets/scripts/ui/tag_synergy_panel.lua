@@ -56,6 +56,10 @@ local tooltipStyle = {
     padding = 10,
     outlineThickness = 2,
     maxWidth = 320,
+    labelColumnMinWidth = 140,
+    valueColumnMinWidth = 160,
+    rowPadding = 4,
+    innerPadding = 8,
 }
 
 local tag_palette = {
@@ -81,6 +85,7 @@ TagSynergyPanel._hoverKey = nil
 TagSynergyPanel._activeTooltip = nil
 TagSynergyPanel._tooltips = {}
 TagSynergyPanel._hoverCandidate = nil
+TagSynergyPanel._hoverCooldown = 0
 TagSynergyPanel._layoutCache = nil
 TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
@@ -175,11 +180,6 @@ local function pointInRect(mx, my, x, y, w, h)
     return mx >= x and mx <= x + w and my >= y and my <= y + h
 end
 
-local function colorToHex(c)
-    if not c then return "#FFFFFF" end
-    return string.format("#%02X%02X%02X", c.r or 255, c.g or 255, c.b or 255)
-end
-
 local function wrapTextToWidth(text, maxWidth, fontSize)
     if not text then return {} end
     local plain = tostring(text)
@@ -211,21 +211,88 @@ local function wrapTextToWidth(text, maxWidth, fontSize)
     return lines
 end
 
-local function buildTooltipDef(title, lines, accent)
+local function makeLabelNode(text, color, fontSize)
+    if not text or text == "" then return nil end
+    return dsl.hbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+            padding = 0,
+            minWidth = tooltipStyle.labelColumnMinWidth
+        },
+        children = {
+            dsl.text(text, {
+                color = color or tooltipStyle.label,
+                fontSize = fontSize or 12,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+            })
+        }
+    }
+end
+
+local function makeValueNode(text, color, fontSize)
+    if not text or text == "" then return nil end
+    local maxWidth = (tooltipStyle.maxWidth or 320)
+        - (tooltipStyle.labelColumnMinWidth or 0)
+        - (tooltipStyle.padding or 0) * 2
+        - (tooltipStyle.innerPadding or 0) * 2
+    local lines = wrapTextToWidth(text, maxWidth, fontSize)
+    local children = {}
+    for _, line in ipairs(lines) do
+        children[#children + 1] = dsl.text(line, {
+            color = color or tooltipStyle.value,
+            fontSize = fontSize or 12,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+        })
+    end
+    return dsl.vbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+            padding = 0,
+            minWidth = tooltipStyle.valueColumnMinWidth
+        },
+        children = children
+    }
+end
+
+local function buildTooltipDef(title, rows, accent)
     local children = {}
 
-    local titleMarkup = string.format("[%s](color=%s;fontSize=16;shadow=false)", title,
-        colorToHex(accent or tooltipStyle.title))
-    children[#children + 1] = ui.definitions.getTextFromString(titleMarkup)
+    local titleNode = makeLabelNode(title, accent or tooltipStyle.title, 16)
+    if titleNode then
+        children[#children + 1] = titleNode
+    end
 
-    for _, line in ipairs(lines or {}) do
-        local colorHex = colorToHex(line.color or tooltipStyle.text)
-        local fontSize = line.fontSize or 12
-        local wrapped = wrapTextToWidth(line.text, tooltipStyle.maxWidth or 320, fontSize)
-        for _, segment in ipairs(wrapped) do
-            local markup = string.format("[%s](color=%s;fontSize=%d;shadow=false)", segment, colorHex, fontSize)
-            children[#children + 1] = ui.definitions.getTextFromString(markup)
+    for _, row in ipairs(rows or {}) do
+        local labelNode = makeLabelNode(row.label, row.labelColor or tooltipStyle.label, row.fontSize)
+        local valueNode = makeValueNode(row.value, row.valueColor or tooltipStyle.value, row.fontSize)
+        if not labelNode then
+            labelNode = dsl.hbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                    padding = 0,
+                    minWidth = tooltipStyle.labelColumnMinWidth
+                },
+                children = {}
+            }
         end
+        if not valueNode then
+            valueNode = dsl.hbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                    padding = 0,
+                    minWidth = tooltipStyle.valueColumnMinWidth
+                },
+                children = {}
+            }
+        end
+
+        children[#children + 1] = dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                padding = tooltipStyle.rowPadding or 0
+            },
+            children = { labelNode, valueNode }
+        }
     end
 
     return dsl.root {
@@ -241,7 +308,7 @@ local function buildTooltipDef(title, lines, accent)
             dsl.vbox {
                 config = {
                     color = tooltipStyle.inner,
-                    padding = 6,
+                    padding = tooltipStyle.innerPadding,
                     align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
                 },
                 children = children
@@ -275,7 +342,7 @@ local function getOrBuildTooltip(target)
     end
 
     destroyTooltip(target.key)
-    local def = buildTooltipDef(target.title or "Synergy", target.lines or {}, colorForTag(target.entry and target.entry.tag))
+    local def = buildTooltipDef(target.title or "Synergy", target.rows or {}, colorForTag(target.entry and target.entry.tag))
     local z = (z_orders.ui_tooltips or 0) + 5
     local entity = dsl.spawn({ x = -2000, y = -2000 }, def, "ui", z)
     if ui and ui.box and ui.box.RenewAlignment then
@@ -296,6 +363,9 @@ end
 
 local function positionTooltip(entity, mouse)
     if not entity then return end
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, entity)
+    end
     local t = component_cache.get(entity, Transform)
     if not t then return end
 
@@ -312,7 +382,9 @@ local function positionTooltip(entity, mouse)
         t.actualW = w
         t.visualW = w
     end
+    if x < margin then x = margin end
     if x + w > screenW - margin then x = math.max(margin, screenW - w - margin) end
+    if y < margin then y = margin end
     if y + h > screenH - margin then y = math.max(margin, screenH - h - margin) end
 
     t.actualX = x
@@ -337,6 +409,7 @@ end
 
 local function clearHover()
     hideActiveTooltip()
+    TagSynergyPanel._hoverCooldown = 0
 end
 
 local statDescriptions = {
@@ -541,19 +614,22 @@ local hoverPadY = 12
 local function buildTooltipLines(entry, focusThreshold)
     local lines = {}
     lines[#lines + 1] = {
-        text = string.format("%d cards in deck", entry.count or 0),
-        color = tooltipStyle.label,
+        label = "cards in deck",
+        value = tostring(entry.count or 0),
+        labelColor = tooltipStyle.label,
+        valueColor = tooltipStyle.value,
         fontSize = 12
     }
     for _, threshold in ipairs(entry.thresholds) do
         local focus = (threshold == focusThreshold)
-        local prefix = focus and ">" or "-"
         local bonus = describeBonus(entry.tag, threshold)
         local status = formatThresholdStatus(entry, threshold)
         local color = focus and colorForTag(entry.tag) or tooltipStyle.text
         lines[#lines + 1] = {
-            text = string.format("%s %d: %s (%s)", prefix, threshold, bonus, status),
-            color = color,
+            label = string.format("threshold %d", threshold),
+            value = string.format("%s (%s)", bonus, status),
+            labelColor = color,
+            valueColor = color,
             fontSize = focus and 13 or 12
         }
     end
@@ -564,13 +640,13 @@ local function buildHoverTarget(entry, focusThreshold)
     local lines = buildTooltipLines(entry, focusThreshold)
     local sigParts = {}
     for _, l in ipairs(lines) do
-        sigParts[#sigParts + 1] = l.text
+        sigParts[#sigParts + 1] = (l.label or "") .. ":" .. (l.value or "")
     end
     local signature = table.concat(sigParts, "|")
     return {
         key = entry.tag .. ":" .. (focusThreshold or "row"),
         title = string.format("%s Synergy", entry.tag),
-        lines = lines,
+        rows = lines,
         signature = signature,
         entry = entry,
         threshold = focusThreshold
@@ -628,6 +704,7 @@ function TagSynergyPanel.init(opts)
     TagSynergyPanel._activeTooltip = nil
     resetTooltipCache()
     TagSynergyPanel._hoverCandidate = nil
+    TagSynergyPanel._hoverCooldown = 0
     TagSynergyPanel._layoutCache = nil
     if opts and opts.layout then
         TagSynergyPanel.setLayout(opts.layout)
@@ -682,6 +759,7 @@ function TagSynergyPanel.setData(tagCounts, breakpoints)
     TagSynergyPanel.entries = entries
     resetTooltipCache()
     TagSynergyPanel._hoverCandidate = nil
+    TagSynergyPanel._hoverCooldown = 0
     TagSynergyPanel._layoutCache = nil
 end
 
@@ -709,9 +787,9 @@ function TagSynergyPanel.update(dt)
         TagSynergyPanel._pulses[tag] = math.max(0, pulse - dt * 2.4)
     end
 
-    local mouse = getMousePosition()
-    TagSynergyPanel._hoverCandidate = resolveHoverTarget(mouse, TagSynergyPanel._layoutCache)
-    updateHoverTooltip(TagSynergyPanel._hoverCandidate, mouse)
+    TagSynergyPanel._hoverCandidate = nil
+    TagSynergyPanel._hoverCooldown = 0
+    hideActiveTooltip()
 end
 
 local function drawSegment(left, top, width, height, fill, accent, tag, threshold, z, space, font)

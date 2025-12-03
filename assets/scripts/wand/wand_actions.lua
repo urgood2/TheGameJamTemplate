@@ -251,6 +251,25 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context, chi
     -- Get spawn position and base angle
     local spawnPos = context.playerPosition or { x = 0, y = 0 }
     local baseAngle = context.playerAngle or 0
+    do
+        -- Re-read the live aim angle (gameplay.lua writes globals.mouseAimAngle)
+        local liveAim = nil
+        if context and context.getPlayerFacingAngle then
+            liveAim = context.getPlayerFacingAngle()
+        end
+        if liveAim == nil and globals and type(globals.mouseAimAngle) == "number" then
+            liveAim = globals.mouseAimAngle
+        end
+        if liveAim == nil then
+            local g = rawget(_G, "mouseAimAngle")
+            if type(g) == "number" then
+                liveAim = g
+            end
+        end
+        if type(liveAim) == "number" then
+            baseAngle = liveAim
+        end
+    end
 
     -- Apply spread from action card
     if props.spreadAngle and props.spreadAngle > 0 then

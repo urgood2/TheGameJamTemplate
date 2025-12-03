@@ -136,6 +136,47 @@ local function buildChoices(ctx)
     LevelUpScreen._actor = resolveActor(ctx)
 end
 
+local function spawnSelectionBurst(choice)
+    if not (choice and particle and particle.spawnRadialParticles) then return end
+
+    local screenW, screenH = resolveScreen()
+    local cx = (choice.pos and choice.pos.x) or screenW * 0.5
+    local cy = (choice.pos and choice.pos.y) or screenH * 0.5
+    local palette = {
+        util.getColor("apricot_cream"),
+        util.getColor("cyan"),
+        util.getColor("pink"),
+        util.getColor("gold"),
+        util.getColor("mint_green"),
+    }
+
+    particle.spawnRadialParticles(cx, cy, 42, 0.55, {
+        colors = palette,
+        minSpeed = 220,
+        maxSpeed = 520,
+        minScale = 6,
+        maxScale = 14,
+        lifetimeJitter = 0.35,
+        scaleJitter = 0.25,
+        renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+        rotationSpeed = 180,
+        rotationJitter = 0.5,
+        space = "screen",
+        z = (z_orders.ui_transition or 1000) + 40,
+    })
+
+    if particle.spawnRing then
+        particle.spawnRing(cx, cy, 22, 0.5, 52, {
+            colors = palette,
+            expandFactor = 1.1,
+            renderType = particle.ParticleRenderType.CIRCLE_LINE,
+            durationVariance = 0.1,
+            space = "screen",
+            z = (z_orders.ui_transition or 1000) + 35,
+        })
+    end
+end
+
 local function startSession(ctx)
     LevelUpScreen._state = "opening"
     LevelUpScreen.isActive = true
@@ -203,6 +244,7 @@ end
 function LevelUpScreen.select(choice)
     if not choice or LevelUpScreen._state == "closing" then return end
     LevelUpScreen._state = "closing"
+    spawnSelectionBurst(choice)
     if choice.apply then
         choice.apply(LevelUpScreen._actor)
     end

@@ -76,6 +76,11 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
     - Then show the reward, with ambient animation.
     
+- make a single material shader based off of balatro to use for special cards.
+- replace card sprites with real ones. 
+- make use of the new shader I have for appear/disappear when spawning/despawning things.
+
+- maybe port the snkrx text code over to lua so I can use it easily.
 
 - affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
 

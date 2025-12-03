@@ -9,6 +9,16 @@ local z_orders = require("core.z_orders")
 -- local entity_cache = require("core.entity_cache")
 -- local component_cache = require("core.component_cache")
 
+local function resolveEasing(name, defaultName)
+    -- Safely grab an easing entry; fall back to a known good curve.
+    if name and Easing[name] then
+        return Easing[name]
+    end
+    if defaultName and Easing[defaultName] then
+        return Easing[defaultName]
+    end
+    return Easing.linear
+end
 
 
 
@@ -97,7 +107,7 @@ end
 function particle.spawnRadialParticles(x, y, count, seconds, opts)
     opts = opts or {}
 
-    local easing          = Easing[opts.easing or "cubic"]
+    local easing          = resolveEasing(opts.easing, "cubic")
     local startAngle      = math.rad(opts.startAngle or 0)
     local endAngle        = math.rad(opts.endAngle or 360)
     local minRadius       = opts.minRadius or 0
@@ -200,7 +210,7 @@ end
 ---@param opts table?
 function particle.spawnImageBurst(x, y, count, seconds, imageName, opts)
     opts = opts or {}
-    local easing = Easing[opts.easing or "quad"]
+    local easing = resolveEasing(opts.easing, "quad")
     local startAngle = math.rad(opts.startAngle or 0)
     local endAngle   = math.rad(opts.endAngle or 360)
     local minSpeed   = opts.minSpeed or 100
@@ -264,7 +274,7 @@ end
 ---@param opts table?
 function particle.spawnRing(x, y, count, seconds, radius, opts)
     opts = opts or {}
-    local easing = Easing[opts.easing or "cubic"]
+    local easing = resolveEasing(opts.easing, "cubic")
     local colorSet = opts.colors or { util.getColor("WHITE") }
     local space = opts.space or "screen"
     seconds = applyDurationVariance(seconds, opts.durationVariance or 0.2)
@@ -309,7 +319,7 @@ end
 ---@param opts table?
 function particle.spawnRectAreaParticles(x, y, w, h, count, seconds, opts)
     opts = opts or {}
-    local easing = Easing[opts.easing or "linear"]
+    local easing = resolveEasing(opts.easing, "linear")
     local colorSet = opts.colors or { util.getColor("WHITE") }
 
     local minSpeed = opts.minSpeed or 50
@@ -366,7 +376,7 @@ end
 ---@param opts table?
 function particle.spawnDirectionalCone(origin, count, seconds, opts)
     opts = opts or {}
-    local easing = Easing[opts.easing or "cubic"]
+    local easing = resolveEasing(opts.easing, "cubic")
     local direction = opts.direction or Vec2(0, -1)  -- default: upward
     local spread = math.rad(opts.spread or 30)
     local colorSet = opts.colors or { util.getColor("WHITE") }
@@ -454,7 +464,7 @@ function makePulsingBeam(a, b, opts)
     local color         = opts.color or util.getColor("CYAN")
     local duration      = opts.duration or 1.0
     local pulseSpeed    = opts.pulseSpeed or 5.0
-    local easing        = Easing[opts.easing or "cubic"]
+    local easing        = resolveEasing(opts.easing, "cubic")
     local baseRadius    = opts.radius or 12
     local baseThickness = opts.beamThickness or 10
     local z             = opts.z or z_orders.particle_vfx
@@ -584,7 +594,7 @@ function makePulsingBeam(p1, p2, opts)
     local color         = opts.color or util.getColor("CYAN")
     local duration      = opts.duration or 1.0
     local pulseSpeed    = opts.pulseSpeed or 5.0  -- how many pulses per second
-    local easing        = Easing[opts.easing or "cubic"]
+    local easing        = resolveEasing(opts.easing, "cubic")
     local baseRadius    = opts.radius or 12
     local baseThickness = opts.beamThickness or 10
     local z             = opts.z or z_orders.particle_vfx
@@ -809,7 +819,7 @@ end
 
 function particle.spawnDirectionalStreaksCone(origin, count, seconds, opts)
     opts = opts or {}
-    local easing      = Easing[opts.easing or "cubic"]
+    local easing      = resolveEasing(opts.easing, "cubic")
     local colorSet    = opts.colors or { util.getColor("WHITE") }
     local minSpeed    = opts.minSpeed or 150
     local maxSpeed    = opts.maxSpeed or 350
@@ -878,7 +888,7 @@ end
 ---@param opts table?
 function particle.spawnDirectionalLinesCone(origin, count, seconds, opts)
     opts = opts or {}
-    local easing         = Easing[opts.easing or "cubic"]
+    local easing         = resolveEasing(opts.easing, "cubic")
     local colorSet       = opts.colors or { util.getColor("WHITE") }
     local minSpeed       = opts.minSpeed or 150
     local maxSpeed       = opts.maxSpeed or 350
@@ -1888,7 +1898,7 @@ end
 ---@param opts table?
 function particle.spawnDirectionalStreaks(x, y, count, seconds, opts)
     opts = opts or {}
-    local easing = Easing[opts.easing or "cubic"]
+    local easing = resolveEasing(opts.easing, "cubic")
     local colorSet = opts.colors or { util.getColor("WHITE") }
     local minSpeed = opts.minSpeed or 150
     local maxSpeed = opts.maxSpeed or 350

@@ -1157,16 +1157,55 @@ end
 --- @param playerEntity number Player entity ID
 --- @return number Angle in radians
 function WandExecutor.getPlayerFacingAngle(playerEntity)
-    -- TODO: Get actual facing angle
-    -- For now, use mouse position if available
+    -- Prefer the aim angle tracked by gameplay (handles mouse/controller/auto-aim)
+    local trackedAngle = nil
+    if globals and type(globals.mouseAimAngle) == "number" then
+        trackedAngle = globals.mouseAimAngle
+    else
+        local g = rawget(_G, "mouseAimAngle")
+        if type(g) == "number" then
+            trackedAngle = g
+        end
+    end
+    if trackedAngle ~= nil then
+        return trackedAngle
+    end
+
+    local playerPos = WandExecutor.getPlayerPosition(playerEntity)
+
+    -- Controller aim fallback (right stick)
+    if input and input.isPadConnected and input.getPadAxis and input.isPadConnected(0) then
+        local axisRX = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_X) or 2
+        local axisRY = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_Y) or 3
+        local rStickX = input.getPadAxis(0, axisRX) or 0
+        local rStickY = input.getPadAxis(0, axisRY) or 0
+        local mag = math.sqrt(rStickX * rStickX + rStickY * rStickY)
+        if mag > 0.25 then
+            return math.atan(rStickY, rStickX)
+        end
+    end
+
+    -- World-space mouse aim if camera is available
+    if camera and camera.Get then
+        local cam = camera.Get("world_camera")
+        if cam and cam.GetMouseWorld then
+            local mouseWorld = cam:GetMouseWorld()
+            if mouseWorld then
+                local dx = mouseWorld.x - playerPos.x
+                local dy = mouseWorld.y - playerPos.y
+                if dx ~= 0 or dy ~= 0 then
+                    return math.atan(dy, dx)
+                end
+            end
+        end
+    end
+
+    -- Screen-space mouse aim as last resort
     if input and input.getMousePosition then
         local mousePos = input.getMousePosition()
-        local playerPos = WandExecutor.getPlayerPosition(playerEntity)
-
         local dx = mousePos.x - playerPos.x
         local dy = mousePos.y - playerPos.y
-
-        return math.atan2(dy, dx)
+        return math.atan(dy, dx)
     end
 
     return 0

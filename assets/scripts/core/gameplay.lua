@@ -333,6 +333,10 @@ local DAMAGE_NUMBER_FONT_SIZE           = 22
 local PLAYER_PROJECTILE_RECOIL_STRENGTH = 120
 local PLAYER_PROJECTILE_RECOIL_DECAY    = 0.85
 local playerShotRecoil                  = { x = 0, y = 0 }
+local AUTO_AIM_RADIUS                   = 1200
+local autoAimEnabled                    = autoAimEnabled or (globals and globals.autoAimEnabled) or false
+if globals then globals.autoAimEnabled = autoAimEnabled end
+local aimSpring = { ox = 0, oy = 0, vx = 0, vy = 0 } -- spring offsets for aim indicator
 
 local EXP_PICKUP_ANIMATION_ID = "b8090.png"
 local EXP_PICKUP_SOUNDS = {
@@ -360,6 +364,74 @@ local spawnExpPickupAt            -- forward declaration
 
 local function isLevelUpModalActive()
     return LevelUpScreen and LevelUpScreen.isActive
+end
+
+local function kickAimSpring()
+    aimSpring.vx = aimSpring.vx + (math.random() * 2 - 1) * 220
+    aimSpring.vy = aimSpring.vy + (math.random() * 2 - 1) * 220
+end
+
+local function updateAimSpring(dt)
+    local k = 280    -- spring stiffness
+    local drag = 3.5 -- damping
+    aimSpring.vx = aimSpring.vx - k * aimSpring.ox * dt
+    aimSpring.vy = aimSpring.vy - k * aimSpring.oy * dt
+    aimSpring.vx = aimSpring.vx * math.max(0, 1 - drag * dt)
+    aimSpring.vy = aimSpring.vy * math.max(0, 1 - drag * dt)
+    aimSpring.ox = aimSpring.ox + aimSpring.vx * dt
+    aimSpring.oy = aimSpring.oy + aimSpring.vy * dt
+end
+
+local function isEnemyEntity(eid)
+    return eid and eid ~= entt_null and eid ~= survivorEntity and enemyHealthUiState[eid]
+        and entity_cache.valid(eid)
+end
+
+local function findNearestEnemyPosition(px, py, maxDistance)
+    local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
+    if not (physics and physics.point_query_nearest and physics.entity_from_ptr and world) then
+        return nil
+    end
+
+    local radius = maxDistance or AUTO_AIM_RADIUS
+
+    local nearestHit = physics.point_query_nearest(world, { x = px, y = py }, radius)
+    if nearestHit and nearestHit.hit and nearestHit.shape then
+        local hitEntity = physics.entity_from_ptr(nearestHit.shape)
+        if isEnemyEntity(hitEntity) then
+            local t = component_cache.get(hitEntity, Transform)
+            if t then
+                return {
+                    x = (t.actualX or t.visualX or 0) + (t.actualW or t.visualW or 0) * 0.5,
+                    y = (t.actualY or t.visualY or 0) + (t.actualH or t.visualH or 0) * 0.5,
+                }
+            end
+        end
+    end
+
+    if physics.GetObjectsInArea then
+        local half = radius
+        local candidates = physics.GetObjectsInArea(world, px - half, py - half, half * 2, half * 2) or {}
+        local bestPos, bestDistSq = nil, nil
+        for _, eid in ipairs(candidates) do
+            if isEnemyEntity(eid) then
+                local t = component_cache.get(eid, Transform)
+                if t then
+                    local ex = (t.actualX or t.visualX or 0) + (t.actualW or t.visualW or 0) * 0.5
+                    local ey = (t.actualY or t.visualY or 0) + (t.actualH or t.visualH or 0) * 0.5
+                    local dx, dy = ex - px, ey - py
+                    local distSq = dx * dx + dy * dy
+                    if not bestDistSq or distSq < bestDistSq then
+                        bestDistSq = distSq
+                        bestPos = { x = ex, y = ey }
+                    end
+                end
+            end
+        end
+        if bestPos then return bestPos end
+    end
+
+    return nil
 end
 
 local function isCardOverCapacity(cardScript, cardEntityID)
@@ -4118,6 +4190,7 @@ function initCombatSystem()
             if not is_state_active(ACTION_STATE) or isLevelUpModalActive() then return end
 
             local frameDt = GetFrameTime()
+            updateAimSpring(frameDt)
             WandExecutor.update(frameDt)
             ctx.time:tick(frameDt)
             if playerDashCooldownRemaining > 0 then
@@ -4153,27 +4226,44 @@ function initCombatSystem()
                     (anchorTransform.visualW or anchorTransform.actualW or 0) * 0.5
                 local centerY = (anchorTransform.visualY or anchorTransform.actualY or 0) +
                     (anchorTransform.visualH or anchorTransform.actualH or 0) * 0.5
+                centerX = centerX + aimSpring.ox
+                centerY = centerY + aimSpring.oy
 
                 local aimAngle = mouseAimAngle or 0
-                local padConnected = input and input.isPadConnected and input.isPadConnected(0)
-                if padConnected and input.getPadAxis then
-                    local axisRX = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_X) or 2
-                    local axisRY = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_Y) or 3
-                    local rStickX = input.getPadAxis(0, axisRX) or 0
-                    local rStickY = input.getPadAxis(0, axisRY) or 0
-                    local mag = math.sqrt(rStickX * rStickX + rStickY * rStickY)
-                    if mag > 0.25 then
-                        aimAngle = math.atan(rStickY, rStickX)
+                local autoAimTarget = nil
+
+                if autoAimEnabled then
+                    autoAimTarget = findNearestEnemyPosition(centerX, centerY, AUTO_AIM_RADIUS)
+                    if autoAimTarget then
+                        local dx = autoAimTarget.x - centerX
+                        local dy = autoAimTarget.y - centerY
+                        if dx * dx + dy * dy > 0.0001 then
+                            aimAngle = math.atan(dy, dx)
+                        end
                     end
-                else
-                    local cam = camera and camera.Get and camera.Get("world_camera")
-                    if cam and cam.GetMouseWorld then
-                        local mouseWorld = cam:GetMouseWorld()
-                        if mouseWorld then
-                            local dx = mouseWorld.x - centerX
-                            local dy = mouseWorld.y - centerY
-                            if dx * dx + dy * dy > 0.0001 then
-                                aimAngle = math.atan(dy, dx)
+                end
+
+                if not autoAimTarget then
+                    local padConnected = input and input.isPadConnected and input.isPadConnected(0)
+                    if padConnected and input.getPadAxis then
+                        local axisRX = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_X) or 2
+                        local axisRY = (GamepadAxis and GamepadAxis.GAMEPAD_AXIS_RIGHT_Y) or 3
+                        local rStickX = input.getPadAxis(0, axisRX) or 0
+                        local rStickY = input.getPadAxis(0, axisRY) or 0
+                        local mag = math.sqrt(rStickX * rStickX + rStickY * rStickY)
+                        if mag > 0.25 then
+                            aimAngle = math.atan(rStickY, rStickX)
+                        end
+                    else
+                        local cam = camera and camera.Get and camera.Get("world_camera")
+                        if cam and cam.GetMouseWorld then
+                            local mouseWorld = cam:GetMouseWorld()
+                            if mouseWorld then
+                                local dx = mouseWorld.x - centerX
+                                local dy = mouseWorld.y - centerY
+                                if dx * dx + dy * dy > 0.0001 then
+                                    aimAngle = math.atan(dy, dx)
+                                end
                             end
                         end
                     end
@@ -4215,7 +4305,9 @@ function initCombatSystem()
                         c.p1 = Vec2(tipX, tipY)
                         c.p2 = Vec2(p2x, p2y)
                         c.p3 = Vec2(p3x, p3y)
-                        c.color = (util and util.getColor and util.getColor("apricot_cream")) or Col(255, 230, 190, 255)
+                        local baseColor = (util and util.getColor and util.getColor("apricot_cream")) or Col(255, 230, 190, 255)
+                        local offColor = Col(255, 245, 230, 200)
+                        c.color = autoAimEnabled and baseColor or offColor
                     end, aimZ + 1, layer.DrawCommandSpace.World)
                 end
 
@@ -6024,6 +6116,12 @@ function initSurvivorEntity()
         context =
         "gameplay"
     })
+    input.bind("toggle_auto_aim", {
+        device = "keyboard",
+        key = KeyboardKey.KEY_P,
+        trigger = "Pressed",
+        context = "gameplay"
+    })
 
     --also allow gamepad.
     -- same dash
@@ -6031,6 +6129,12 @@ function initSurvivorEntity()
         device = "gamepad_button",
         axis = GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN, -- A button
         trigger = "Pressed",                                 -- or "Threshold" if your system uses analog triggers
+        context = "gameplay"
+    })
+    input.bind("toggle_auto_aim", {
+        device = "gamepad_button",
+        axis = GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_UP, -- Y button
+        trigger = "Pressed",
         context = "gameplay"
     })
 
@@ -7271,6 +7375,12 @@ function initActionPhase()
     -- create input timer. this must run every frame.
     timer.every_physics_step(
         function()
+            if input and input.action_pressed and input.action_pressed("toggle_auto_aim") then
+                autoAimEnabled = not autoAimEnabled
+                if globals then globals.autoAimEnabled = autoAimEnabled end
+                kickAimSpring()
+            end
+
             if isLevelUpModalActive() then
                 decayPlayerShotRecoil(playerShotRecoil.x, playerShotRecoil.y)
                 return

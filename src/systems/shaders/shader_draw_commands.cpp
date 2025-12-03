@@ -54,13 +54,22 @@ void executeEntityPipelineWithCommands(
         return;
     }
 
-    // Begin recording commands
-    batch.beginRecording();
+    // Only begin/end recording here if the caller hasn't already started a batch.
+    const bool startedRecordingHere = !batch.recording();
+    if (startedRecordingHere) {
+        batch.beginRecording();
+    }
 
-    // Per-entity rotation (radians) for shader use.
+    // Per-entity transform info for positioning, scaling, and rotation.
+    Vector2 drawPos{0.0f, 0.0f};
+    float destW = static_cast<float>(animationFrame->width);
+    float destH = static_cast<float>(animationFrame->height);
     float cardRotationRad = 0.0f;
     if (auto *t = registry.try_get<transform::Transform>(e)) {
         t->updateCachedValues();
+        drawPos = {t->getVisualX(), t->getVisualY()};
+        destW = t->getVisualW();
+        destH = t->getVisualH();
         float rotDeg = t->getVisualRWithDynamicMotionAndXLeaning();
         if (std::abs(rotDeg) < 0.0001f) {
             rotDeg = t->getVisualR();
@@ -80,10 +89,16 @@ void executeEntityPipelineWithCommands(
     auto spriteAtlas = currentSprite->spriteData.texture;
     Color fgColor = currentSprite->fgColor;
 
-    batch.addDrawTexture(
+    // Destination rect/rotation centered so rotation pivots around sprite center.
+    Rectangle destRect = {drawPos.x + destW * 0.5f, drawPos.y + destH * 0.5f, destW, destH};
+    Vector2 origin = {destW * 0.5f, destH * 0.5f};
+
+    batch.addDrawTexturePro(
         *spriteAtlas,
         *animationFrame,
-        {0, 0},
+        destRect,
+        origin,
+        cardRotationRad * RAD2DEG,
         fgColor
     );
 
@@ -115,10 +130,12 @@ void executeEntityPipelineWithCommands(
         }
 
         // Draw the texture through the shader
-        batch.addDrawTexture(
+        batch.addDrawTexturePro(
             shader_pipeline::front().texture,
             {0, 0, (float)shader_pipeline::width, (float)shader_pipeline::height},
-            {0, 0},
+            destRect,
+            origin,
+            cardRotationRad * RAD2DEG,
             WHITE
         );
 
@@ -154,21 +171,23 @@ void executeEntityPipelineWithCommands(
             ? shader_pipeline::GetBaseRenderTextureCache()
             : shader_pipeline::GetPostShaderPassRenderTextureCache();
 
-        batch.addDrawTexture(
+        batch.addDrawTexturePro(
             source.texture,
             {0, 0, (float)shader_pipeline::width, (float)shader_pipeline::height},
-            {0, 0},
+            destRect,
+            origin,
+            cardRotationRad * RAD2DEG,
             WHITE
         );
 
         batch.addEndShader();
     }
 
-    // End recording
-    batch.endRecording();
-
-    // Optimize if requested
-    if (autoOptimize) {
+    // End/optimize only if we started recording in this helper.
+    if (startedRecordingHere) {
+        batch.endRecording();
+    }
+    if (autoOptimize && startedRecordingHere) {
         batch.optimize();
     }
 }

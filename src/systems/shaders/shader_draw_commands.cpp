@@ -73,36 +73,27 @@ void executeEntityPipelineWithCommands(
     }
     float renderScale = intrinsicScale * uiScale;
 
-    Vector2 drawPos{0.0f, 0.0f};
+    Vector2 center{0.0f, 0.0f};
     float baseW = static_cast<float>(animationFrame->width) * renderScale;
     float baseH = static_cast<float>(animationFrame->height) * renderScale;
     float pad = pipelineComp.padding;
     float destW = baseW + pad * 2.0f;
     float destH = baseH + pad * 2.0f;
-    float visualScaleX = 1.0f;
-    float visualScaleY = 1.0f;
     float cardRotationRad = 0.0f;
     if (auto *t = registry.try_get<transform::Transform>(e)) {
         t->updateCachedValues();
-        drawPos = {t->getVisualX(), t->getVisualY()};
-        float s = t->getVisualScaleWithHoverAndDynamicMotionReflected();
-        if (t->getVisualW() > 0.0f && baseW > 0.0f) {
-            visualScaleX = (t->getVisualW() / baseW) * s;
-        } else {
-            visualScaleX = s;
-        }
-        if (t->getVisualH() > 0.0f && baseH > 0.0f) {
-            visualScaleY = (t->getVisualH() / baseH) * s;
-        } else {
-            visualScaleY = s;
-        }
-        destW = (baseW + pad * 2.0f) * visualScaleX;
-        destH = (baseH + pad * 2.0f) * visualScaleY;
+        destW = t->getVisualW();
+        destH = t->getVisualH();
+        center = {t->getVisualX() + destW * 0.5f,
+                  t->getVisualY() + destH * 0.5f};
         float rotDeg = t->getVisualRWithDynamicMotionAndXLeaning();
         if (std::abs(rotDeg) < 0.0001f) {
             rotDeg = t->getVisualR();
         }
         cardRotationRad = rotDeg * DEG2RAD;
+    } else {
+        // Fallback when no transform exists: center based on sprite size + padding
+        center = {destW * 0.5f, destH * 0.5f};
     }
     static int debugRotationLogs = 0;
     if (debugRotationLogs < 8) {
@@ -117,8 +108,8 @@ void executeEntityPipelineWithCommands(
     auto spriteAtlas = currentSprite->spriteData.texture;
     Color fgColor = currentSprite->fgColor;
 
-    // Destination rect/rotation centered so rotation pivots around sprite center.
-    Rectangle destRect = {drawPos.x - pad + destW * 0.5f, drawPos.y - pad + destH * 0.5f, destW, destH};
+    // Destination rect/rotation centered so rotation pivots around sprite center while position stays anchored at the transform's top-left.
+    Rectangle destRect = {center.x - destW * 0.5f, center.y - destH * 0.5f, destW, destH};
     Vector2 origin = {destW * 0.5f, destH * 0.5f};
 
     // Approximate legacy sprite-based shadow rendering

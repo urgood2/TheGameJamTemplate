@@ -111,19 +111,18 @@ void main() {
     float luma = dot(base.rgb, vec3(0.299, 0.587, 0.114));
 
     float foilStrength = abs(grain_intensity) * grain + abs(sheen_strength) * sheen;
-    float overlayMask = clamp(foilStrength, 0.0, 1.5) * edgeMask;
+    float overlayMask = clamp(foilStrength, 0.0, 2.0) * edgeMask;
 
-    // Grain-driven brightness wobble; keep it monochrome so it behaves like sakura_overlay.
-    float grainContrast = (grain - 0.5) * overlayMask * 0.4;
-    float brightLift = overlayMask * 0.55 + sheen * 0.25;
-    float preserveWhite = 1.0 - smoothstep(0.82, 0.98, luma);
-    float brightness = max(0.0, brightLift * preserveWhite + grainContrast);
+    // Stronger signed wobble so even white shows motion.
+    float brightness = ((grain - 0.5) * 1.6 + (sheen - 0.5) * 1.0) * overlayMask;
+    float factor = clamp(1.0 + brightness, 0.35, 1.7);
+    float detail = (grain - 0.5) * 0.12 * overlayMask;
 
-    vec3 lit = clamp(base.rgb + vec3(brightness), 0.0, 1.0);
-    lit = max(lit, base.rgb); // lighten-only, no hue shift
+    vec3 lit = clamp(base.rgb * factor + vec3(detail), 0.0, 1.0);
 
     // Temporary: ignore incoming vertex tint to rule out upstream color.
-    vec4 tex = vec4(lit, base.a);
+    // Respect only alpha from fragColor to avoid reintroducing vertex color tint.
+    vec4 tex = vec4(lit, base.a * fragColor.a);
 
     vec2 dissolve_uv = (((fragTexCoord) * image_details) - texture_details.xy * texture_details.zw) / texture_details.zw;
     finalColor = dissolve_mask(tex, spriteUV, dissolve_uv);

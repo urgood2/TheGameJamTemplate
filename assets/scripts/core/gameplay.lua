@@ -3860,6 +3860,184 @@ function initCombatSystem()
     -- Track previous values for change detection
     local prevHpPct = 1.0
     local prevXpPct = 0.0
+    local movementTutorialStyle = {
+        margin = 20,
+        paddingX = 14,
+        paddingY = 12,
+        rowSpacing = 10,
+        iconTextGap = 12,
+        keySize = 28,
+        keyGap = 4,
+        spaceWidth = 80,
+        spaceHeight = 24,
+        stickSize = 40,
+        buttonSize = 32,
+        fontSize = 18,
+        textColor = util.getColor("apricot_cream"),
+        bgColor = Col(8, 10, 16, 170),
+        outlineColor = Col(255, 255, 255, 30),
+        z = z_orders.background - 1
+    }
+
+    local function measureMoveHint(isPad)
+        if isPad then
+            local size = movementTutorialStyle.stickSize
+            return size, size
+        end
+        local keySize = movementTutorialStyle.keySize
+        local gap = movementTutorialStyle.keyGap
+        return keySize * 3 + gap * 2, keySize * 2 + gap
+    end
+
+    local function measureDashHint(isPad)
+        if isPad then
+            local size = movementTutorialStyle.buttonSize
+            return size, size
+        end
+        return movementTutorialStyle.spaceWidth, movementTutorialStyle.spaceHeight
+    end
+
+    local function drawMoveHintIcons(x, y, isPad, z)
+        if isPad then
+            local size = movementTutorialStyle.stickSize
+            command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
+                c.spriteName = "xbox_stick_top_l.png"
+                c.x = x
+                c.y = y
+                c.dstW = size
+                c.dstH = size
+            end, z, layer.DrawCommandSpace.Screen)
+            return
+        end
+
+        local keySize = movementTutorialStyle.keySize
+        local gap = movementTutorialStyle.keyGap
+        local rowWidth = keySize * 3 + gap * 2
+        local topX = x + (rowWidth - keySize) * 0.5
+        local topY = y
+        local bottomY = y + keySize + gap
+
+        command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
+            c.spriteName = "keyboard_w.png"
+            c.x = topX
+            c.y = topY
+            c.dstW = keySize
+            c.dstH = keySize
+        end, z, layer.DrawCommandSpace.Screen)
+
+        command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
+            c.spriteName = "keyboard_a.png"
+            c.x = x
+            c.y = bottomY
+            c.dstW = keySize
+            c.dstH = keySize
+        end, z, layer.DrawCommandSpace.Screen)
+
+        command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
+            c.spriteName = "keyboard_s.png"
+            c.x = x + keySize + gap
+            c.y = bottomY
+            c.dstW = keySize
+            c.dstH = keySize
+        end, z, layer.DrawCommandSpace.Screen)
+
+        command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
+            c.spriteName = "keyboard_d.png"
+            c.x = x + (keySize + gap) * 2
+            c.y = bottomY
+            c.dstW = keySize
+            c.dstH = keySize
+        end, z, layer.DrawCommandSpace.Screen)
+    end
+
+    local function drawDashHintIcon(x, y, isPad, z)
+        if isPad then
+            local size = movementTutorialStyle.buttonSize
+            command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
+                c.spriteName = "xbox_button_a.png"
+                c.x = x
+                c.y = y
+                c.dstW = size
+                c.dstH = size
+            end, z, layer.DrawCommandSpace.Screen)
+            return
+        end
+
+        command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
+            c.spriteName = "keyboard_space.png"
+            c.x = x
+            c.y = y
+            c.dstW = movementTutorialStyle.spaceWidth
+            c.dstH = movementTutorialStyle.spaceHeight
+        end, z, layer.DrawCommandSpace.Screen)
+    end
+
+    local function drawActionInputTutorial()
+        local screenH = globals.screenHeight() or 0
+        local usingPad = input and input.isPadConnected and input.isPadConnected(0)
+
+        local moveText = "to move"
+        local dashText = "to dash"
+        local fontSize = movementTutorialStyle.fontSize
+        local moveTextWidth = localization.getTextWidthWithCurrentFont(moveText, fontSize, 1)
+        local dashTextWidth = localization.getTextWidthWithCurrentFont(dashText, fontSize, 1)
+
+        local moveIconW, moveIconH = measureMoveHint(usingPad)
+        local dashIconW, dashIconH = measureDashHint(usingPad)
+        local rowSpacing = movementTutorialStyle.rowSpacing
+        local row1Height = math.max(moveIconH, fontSize)
+        local row2Height = math.max(dashIconH, fontSize)
+        local contentWidth = math.max(
+            moveIconW + movementTutorialStyle.iconTextGap + moveTextWidth,
+            dashIconW + movementTutorialStyle.iconTextGap + dashTextWidth
+        )
+        local contentHeight = row1Height + row2Height + rowSpacing
+        local panelW = contentWidth + movementTutorialStyle.paddingX * 2
+        local panelH = contentHeight + movementTutorialStyle.paddingY * 2
+        local startX = movementTutorialStyle.margin
+        local startY = math.max(movementTutorialStyle.margin, screenH - movementTutorialStyle.margin - panelH)
+
+        command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+            c.x = startX + panelW * 0.5
+            c.y = startY + panelH * 0.5
+            c.w = panelW
+            c.h = panelH
+            c.rx = 10
+            c.ry = 10
+            c.color = movementTutorialStyle.bgColor
+            c.outlineColor = movementTutorialStyle.outlineColor
+        end, movementTutorialStyle.z, layer.DrawCommandSpace.Screen)
+
+        local cursorY = startY + movementTutorialStyle.paddingY
+        local iconX = startX + movementTutorialStyle.paddingX
+
+        local moveIconY = cursorY + (row1Height - moveIconH) * 0.5
+        drawMoveHintIcons(iconX, moveIconY, usingPad, movementTutorialStyle.z + 1)
+        local moveTextX = iconX + moveIconW + movementTutorialStyle.iconTextGap
+        local moveTextY = cursorY + (row1Height - fontSize) * 0.5
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = moveText
+            c.font = localization.getFont()
+            c.x = moveTextX
+            c.y = moveTextY
+            c.color = movementTutorialStyle.textColor
+            c.fontSize = fontSize
+        end, movementTutorialStyle.z + 2, layer.DrawCommandSpace.Screen)
+
+        cursorY = cursorY + row1Height + rowSpacing
+        local dashIconY = cursorY + (row2Height - dashIconH) * 0.5
+        drawDashHintIcon(iconX, dashIconY, usingPad, movementTutorialStyle.z + 1)
+        local dashTextX = iconX + dashIconW + movementTutorialStyle.iconTextGap
+        local dashTextY = cursorY + (row2Height - fontSize) * 0.5
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = dashText
+            c.font = localization.getFont()
+            c.x = dashTextX
+            c.y = dashTextY
+            c.color = movementTutorialStyle.textColor
+            c.fontSize = fontSize
+        end, movementTutorialStyle.z + 2, layer.DrawCommandSpace.Screen)
+    end
 
     -- update combat system every frame / render health bars
     timer.run(
@@ -4245,6 +4423,8 @@ function initCombatSystem()
                         end
                     end
                 end
+                -- Simple manual input tutorial (icons + text) for action phase
+                drawActionInputTutorial()
             end
         end
 

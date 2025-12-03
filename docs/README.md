@@ -34,6 +34,7 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 ### Core Systems
 - [Entity State Management](systems/core/entity_state_management_doc.md) - Entity lifecycle and state tags
 - [Static UI Text System](systems/text-ui/static_ui_text_system_doc.md) - UI text rendering
+- [Command Buffer Text Renderer](systems/text-ui/command_buffer_text.md) - Per-character effects over the layer command buffer
 
 ### AI & Behavior
 - [AI System README](systems/ai-behavior/AI_README.md) - GOAP-based AI system
@@ -154,6 +155,5 @@ When adding new documentation:
 ---
 
 **Last Updated**: 2025-11-24
-
 
 

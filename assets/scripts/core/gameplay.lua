@@ -1384,8 +1384,8 @@ function createNewCard(id, x, y, gameStateToApply)
     -- local roleComp = component_cache.get(cardScript.labelEntity, InheritedProperties)
     -- roleComp.flags = AlignmentFlag.VERTICAL_CENTER | AlignmentFlag.HORIZONTAL_CENTER
 
-    -- local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
-    -- shaderPipelineComp:addPass("3d_skew")
+    local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
+    shaderPipelineComp:addPass("material_card_overlay")
 
 
     -- make draggable and set some callbacks in the transform system

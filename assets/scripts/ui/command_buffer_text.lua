@@ -1,0 +1,378 @@
+-- Command-buffer friendly rich text renderer.
+-- Merges the character-effect mixin with the existing command_buffer + behavior_script_v2 flow.
+-- Usage:
+--   local Text = require("ui.command_buffer_text")
+--   local t = Text({
+--     text = "[Hello](color=Col(255,0,0)) world",
+--     w = 240,
+--     x = 320, y = 180,
+--     layer = layers.ui,
+--     z = 10,
+--   })
+--   -- If attached as a MonoBehaviour, update_all() will call :update(dt) automatically.
+--   -- Otherwise, call t:update(dt) yourself each frame.
+
+local Node = require("monobehavior.behavior_script_v2")
+local component_cache = require("core.component_cache")
+
+local CommandBufferText = Node:extend()
+
+local unpack = table.unpack or unpack
+
+local DEFAULT_LINE_HEIGHT = 1.1
+local DEFAULT_COLOR = (Col and Col(255, 255, 255, 255)) or { r = 255, g = 255, b = 255, a = 255 }
+
+local function measure_width(str, font_size, spacing)
+  if localization and localization.getTextWidthWithCurrentFont then
+    local ok, w = pcall(localization.getTextWidthWithCurrentFont, str, font_size, spacing or 1)
+    if ok and w then return w end
+  end
+  -- Fallback heuristic for tests/headless runs.
+  return (#str) * (font_size * 0.55)
+end
+
+local function parse_effect_arg(raw)
+  raw = tostring(raw or "")
+  if raw == "" then return raw end
+  if raw:find("#") then return raw end
+  local chunk = load("return " .. raw)
+  if not chunk then return raw end
+  local ok, val = pcall(chunk)
+  if not ok then return raw end
+  return val
+end
+
+local function parse_effects(effect_str)
+  local parsed = {}
+  for effect in string.gmatch(effect_str or "", "[^;]+") do
+    local name, args = effect:match("^%s*([^=]+)%s*=%s*(.+)%s*$")
+    name = name or effect:match("^%s*(.-)%s*$")
+    if name and name ~= "" then
+      local entry = { name }
+      if args then
+        for arg in string.gmatch(args, "[^,]+") do
+          table.insert(entry, parse_effect_arg(arg))
+        end
+      end
+      table.insert(parsed, entry)
+    end
+  end
+  return parsed
+end
+
+local DEFAULT_EFFECTS = {
+  color = function(_, _, char, color)
+    char.color = color
+  end,
+  shake = function(_, dt, char, intensity, duration)
+    local amp = tonumber(intensity) or 1
+    local dur = tonumber(duration) or 0
+
+    if dur > 0 then
+      char._shake_t = (char._shake_t or 0) + dt
+      if char._shake_t > dur then
+        return
+      end
+    end
+
+    local decay = 1
+    if dur > 0 and char._shake_t then
+      decay = math.max(0, (dur - char._shake_t) / dur)
+    end
+
+    local range = amp * decay
+    char.ox = (char.ox or 0) + (math.random() * 2 - 1) * range
+    char.oy = (char.oy or 0) + (math.random() * 2 - 1) * range
+  end
+}
+
+local function merge_effects(custom)
+  local merged = {}
+  for k, v in pairs(DEFAULT_EFFECTS) do merged[k] = v end
+  for k, v in pairs(custom or {}) do merged[k] = v end
+  return merged
+end
+
+function CommandBufferText:init(args)
+  CommandBufferText.super.init(self, args)
+  args = args or {}
+
+  self.raw_text = args.text or args.raw_text or ""
+  self.w = args.w or args.width
+  assert(self.w, "command_buffer_text requires a wrap width (w)")
+
+  self.x = args.x or 0
+  self.y = args.y or 0
+  self.offset_x = args.offset_x or 0
+  self.offset_y = args.offset_y or 0
+  self.z = args.z or args.z_index or 0
+
+  self.layer = args.layer or (layers and layers.ui) or (_G.layers and _G.layers.ui)
+  self.render_space = args.render_space or args.space or (layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen)
+
+  self.font = args.font or (localization and localization.getFont and localization.getFont())
+  self.font_size = args.font_size or args.fontSize or 16
+  self.alignment = args.text_alignment or args.alignment or "left"
+  self.anchor = args.anchor or "center"  -- "center" or "topleft"
+  self.height_multiplier = args.height_multiplier or args.line_height or DEFAULT_LINE_HEIGHT
+  self.letter_spacing = args.spacing or args.letter_spacing or 1
+  self.base_color = args.color or DEFAULT_COLOR
+  self.follow_transform = args.follow_transform ~= false
+
+  self.text_effects = merge_effects(args.text_effects)
+
+  self.characters = {}
+  self.text_w = 0
+  self.text_h = self.font_size * self.height_multiplier
+  self.first_frame = true
+  self.dirty = true
+
+  self:rebuild()
+end
+
+function CommandBufferText:rebuild(new_text)
+  if new_text ~= nil then
+    self.raw_text = new_text
+  end
+  self.characters = self:_parse_text(self.raw_text or "")
+  self:_format_characters()
+  self.dirty = false
+  self.first_frame = true
+end
+
+function CommandBufferText:set_text(new_text)
+  self.raw_text = new_text or ""
+  self.dirty = true
+end
+
+function CommandBufferText:set_width(w)
+  if w and w ~= self.w then
+    self.w = w
+    self.dirty = true
+  end
+end
+
+function CommandBufferText:_parse_text(raw)
+  local parsed_segments = {}
+  for i, field, j, effects, k in string.gmatch(raw, "()%[(.-)%]()%((.-)%)()") do
+    local parsed_effects = parse_effects(effects)
+    table.insert(parsed_segments, {
+      i = tonumber(i),
+      j = tonumber(j),
+      k = tonumber(k),
+      field = field,
+      effects = parsed_effects
+    })
+  end
+
+  local characters = {}
+  for idx = 1, #raw do
+    local ch = raw:sub(idx, idx)
+    local effects = nil
+    local include = true
+
+    for _, seg in ipairs(parsed_segments) do
+      if idx >= seg.i + 1 and idx <= seg.j - 2 then
+        effects = seg.effects
+      end
+      if (idx >= seg.j and idx <= seg.k - 1) or idx == seg.i or idx == seg.j - 1 then
+        include = false
+        break
+      end
+    end
+
+    if include then
+      table.insert(characters, { c = ch, effects = effects or {} })
+    end
+  end
+
+  return characters
+end
+
+function CommandBufferText:_format_characters()
+  local chars = self.characters or {}
+  local line_height = self.font_size * self.height_multiplier
+  local cx, cy, line = 0, 0, 1
+  local space_w = measure_width(" ", self.font_size, self.letter_spacing)
+
+  for idx, ch in ipairs(chars) do
+    local char = ch.c
+    if char == "|" or char == "\n" then
+      cx = 0
+      cy = cy + line_height
+      line = line + 1
+      ch._remove = true
+    elseif char == " " then
+      local word_w = 0
+      local j = idx + 1
+      while j <= #chars do
+        local c2 = chars[j].c
+        if c2 == " " or c2 == "|" or c2 == "\n" then break end
+        word_w = word_w + measure_width(c2, self.font_size, self.letter_spacing)
+        j = j + 1
+      end
+
+      if cx + space_w + word_w > self.w then
+        cx = 0
+        cy = cy + line_height
+        line = line + 1
+        ch._remove = true
+      else
+        ch.x, ch.y, ch.line = cx, cy, line
+        ch.r = 0
+        ch.ox, ch.oy = 0, 0
+        ch.w, ch.h = space_w, line_height
+        cx = cx + space_w
+      end
+    else
+      local w = measure_width(char, self.font_size, self.letter_spacing)
+      ch.x, ch.y, ch.line = cx, cy, line
+      ch.r = 0
+      ch.ox, ch.oy = 0, 0
+      ch.w, ch.h = w, line_height
+      cx = cx + w
+      if cx > self.w then
+        cx = 0
+        cy = cy + line_height
+        line = line + 1
+      end
+    end
+  end
+
+  for i = #chars, 1, -1 do
+    if chars[i]._remove then table.remove(chars, i) end
+  end
+
+  for i, ch in ipairs(chars) do
+    ch.i = i
+  end
+
+  local line_widths = {}
+  local max_line = 0
+  local max_w = 0
+
+  for _, ch in ipairs(chars) do
+    local ln = ch.line or 1
+    line_widths[ln] = (line_widths[ln] or 0) + (ch.w or 0)
+    if ln > max_line then max_line = ln end
+  end
+
+  for _, w in pairs(line_widths) do
+    if w > max_w then max_w = w end
+  end
+
+  if max_line == 0 then
+    self.text_w = 0
+    self.text_h = line_height
+    return
+  end
+
+  self.text_w = max_w
+  self.text_h = (max_line - 1) * line_height + line_height
+
+  local align = self.alignment
+  if align == "justified" then align = "justify" end
+
+  if align ~= "left" then
+    for ln = 1, max_line do
+      local lw = line_widths[ln] or 0
+      local leftover = max_w - lw
+      if align == "center" then
+        local offset = leftover * 0.5
+        for _, ch in ipairs(chars) do
+          if ch.line == ln then
+            ch.x = ch.x + offset
+          end
+        end
+      elseif align == "right" then
+        for _, ch in ipairs(chars) do
+          if ch.line == ln then
+            ch.x = ch.x + leftover
+          end
+        end
+      elseif align == "justify" and lw > 0 then
+        local spaces = 0
+        for _, ch in ipairs(chars) do
+          if ch.line == ln and ch.c == " " then
+            spaces = spaces + 1
+          end
+        end
+        if spaces > 0 then
+          local extra = leftover / spaces
+          local added = 0
+          for _, ch in ipairs(chars) do
+            if ch.line == ln then
+              if ch.c == " " then
+                ch.x = ch.x + added
+                added = added + extra
+              else
+                ch.x = ch.x + added
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+function CommandBufferText:update(dt)
+  if self.dirty then
+    self:rebuild()
+  end
+
+  local layer_handle = self.layer or (layers and layers.ui)
+  if not (command_buffer and command_buffer.queueDrawText and layer_handle) then
+    return
+  end
+
+  local base_x = self.x or 0
+  local base_y = self.y or 0
+  if self.follow_transform and self._eid then
+    local t = component_cache.get(self._eid, Transform)
+    if t then
+      base_x = t.actualX or t.x or base_x
+      base_y = t.actualY or t.y or base_y
+    end
+  end
+  base_x = base_x + (self.offset_x or 0)
+  base_y = base_y + (self.offset_y or 0)
+
+  local anchor_center = not (self.anchor == "topleft" or self.anchor == "top-left" or self.anchor == "top")
+  local origin_x = anchor_center and (base_x - self.text_w * 0.5) or base_x
+  local origin_y = anchor_center and (base_y - self.text_h * 0.5) or base_y
+
+  local font_ref = self.font or (localization and localization.getFont and localization.getFont())
+  local default_color = self.base_color
+
+  for _, ch in ipairs(self.characters) do
+    ch.ox, ch.oy = 0, 0
+    ch.color = nil
+
+    if ch.effects and #ch.effects > 0 then
+      for _, eff in ipairs(ch.effects) do
+        local name = eff[1]
+        local fn = name and self.text_effects[name]
+        if fn then
+          fn(self, dt or 0, ch, unpack(eff, 2))
+        end
+      end
+    end
+
+    local draw_x = origin_x + (ch.x or 0) + (ch.ox or 0)
+    local draw_y = origin_y + (ch.y or 0) + (ch.oy or 0)
+
+    command_buffer.queueDrawText(layer_handle, function(c)
+      c.text = ch.c
+      c.font = font_ref
+      c.x = draw_x
+      c.y = draw_y
+      c.color = ch.color or default_color
+      c.fontSize = self.font_size
+    end, self.z or 0, self.render_space)
+  end
+
+  if self.first_frame then self.first_frame = false end
+end
+
+return CommandBufferText

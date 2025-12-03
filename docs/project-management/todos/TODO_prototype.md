@@ -78,7 +78,7 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 - make a single material shader based off of balatro to use for special cards.
 - replace card sprites with real ones. 
-- make use of the new shader I have for appear/disappear when spawning/despawning things.
+- make use of the new shader I have for appear/disappear when spawning/despawning things. -try with sakura shader as well?
 
 - maybe port the snkrx text code over to lua so I can use it easily. > try using the new text.
 

@@ -4354,6 +4354,12 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       }
       return;
     }
+    if (!aqc.drawWithLegacyPipeline) {
+      if (camera) {
+        camera_manager::Begin(*camera);
+      }
+      return;
+    }
 
     // compute the same renderScale as in your other overload:
     intrinsicScale =

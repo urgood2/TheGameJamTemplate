@@ -80,6 +80,8 @@ auto exposeToLua(sol::state &lua) -> void {
 
   lua.new_usertype<AnimationQueueComponent>(
       "AnimationQueueComponent", "noDraw", &AnimationQueueComponent::noDraw,
+      "drawWithLegacyPipeline",
+      &AnimationQueueComponent::drawWithLegacyPipeline,
       "type_id",
       []() { return entt::type_hash<AnimationQueueComponent>::value(); });
 

@@ -61,15 +61,43 @@ void executeEntityPipelineWithCommands(
     }
 
     // Per-entity transform info for positioning, scaling, and rotation.
+    float intrinsicScale = 1.0f;
+    float uiScale = 1.0f;
+    if (aqc.animationQueue.empty()) {
+        intrinsicScale = aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f);
+        uiScale = aqc.defaultAnimation.uiRenderScale.value_or(1.0f);
+    } else {
+        const auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
+        intrinsicScale = currentAnimObject.intrinsincRenderScale.value_or(1.0f);
+        uiScale = currentAnimObject.uiRenderScale.value_or(1.0f);
+    }
+    float renderScale = intrinsicScale * uiScale;
+
     Vector2 drawPos{0.0f, 0.0f};
-    float destW = static_cast<float>(animationFrame->width);
-    float destH = static_cast<float>(animationFrame->height);
+    float baseW = static_cast<float>(animationFrame->width) * renderScale;
+    float baseH = static_cast<float>(animationFrame->height) * renderScale;
+    float pad = pipelineComp.padding;
+    float destW = baseW + pad * 2.0f;
+    float destH = baseH + pad * 2.0f;
+    float visualScaleX = 1.0f;
+    float visualScaleY = 1.0f;
     float cardRotationRad = 0.0f;
     if (auto *t = registry.try_get<transform::Transform>(e)) {
         t->updateCachedValues();
         drawPos = {t->getVisualX(), t->getVisualY()};
-        destW = t->getVisualW();
-        destH = t->getVisualH();
+        float s = t->getVisualScaleWithHoverAndDynamicMotionReflected();
+        if (t->getVisualW() > 0.0f && baseW > 0.0f) {
+            visualScaleX = (t->getVisualW() / baseW) * s;
+        } else {
+            visualScaleX = s;
+        }
+        if (t->getVisualH() > 0.0f && baseH > 0.0f) {
+            visualScaleY = (t->getVisualH() / baseH) * s;
+        } else {
+            visualScaleY = s;
+        }
+        destW = (baseW + pad * 2.0f) * visualScaleX;
+        destH = (baseH + pad * 2.0f) * visualScaleY;
         float rotDeg = t->getVisualRWithDynamicMotionAndXLeaning();
         if (std::abs(rotDeg) < 0.0001f) {
             rotDeg = t->getVisualR();
@@ -90,8 +118,36 @@ void executeEntityPipelineWithCommands(
     Color fgColor = currentSprite->fgColor;
 
     // Destination rect/rotation centered so rotation pivots around sprite center.
-    Rectangle destRect = {drawPos.x + destW * 0.5f, drawPos.y + destH * 0.5f, destW, destH};
+    Rectangle destRect = {drawPos.x - pad + destW * 0.5f, drawPos.y - pad + destH * 0.5f, destW, destH};
     Vector2 origin = {destW * 0.5f, destH * 0.5f};
+
+    // Approximate legacy sprite-based shadow rendering
+    if (registry.any_of<transform::GameObject>(e)) {
+        const auto &node = registry.get<transform::GameObject>(e);
+        if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
+            node.shadowDisplacement) {
+            const float baseExaggeration = globals::getBaseShadowExaggeration();
+            const float heightFactor = 1.0f + node.shadowHeight.value_or(0.0f);
+            const float shadowOffsetX =
+                node.shadowDisplacement->x * baseExaggeration * heightFactor;
+            const float shadowOffsetY =
+                node.shadowDisplacement->y * baseExaggeration * heightFactor;
+
+            Color shadowColor = Fade(BLACK, 0.8f);
+            Rectangle shadowDest = destRect;
+            shadowDest.x -= shadowOffsetX;
+            shadowDest.y += shadowOffsetY;
+
+            batch.addDrawTexturePro(
+                *spriteAtlas,
+                *animationFrame,
+                shadowDest,
+                origin,
+                cardRotationRad * RAD2DEG,
+                shadowColor
+            );
+        }
+    }
 
     batch.addDrawTexturePro(
         *spriteAtlas,
@@ -111,8 +167,8 @@ void executeEntityPipelineWithCommands(
 
         shaders::ShaderUniformSet uniforms;
         if (pass.injectAtlasUniforms) {
-            float renderWidth = animationFrame->width + pipelineComp.padding * 2.0f;
-            float renderHeight = animationFrame->height + pipelineComp.padding * 2.0f;
+            float renderWidth = destW;
+            float renderHeight = destH;
 
             uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
             uniforms.set("uGridRect", Vector4{0, 0, renderWidth, renderHeight});
@@ -131,12 +187,12 @@ void executeEntityPipelineWithCommands(
 
         // Draw the texture through the shader
         batch.addDrawTexturePro(
-            shader_pipeline::front().texture,
-            {0, 0, (float)shader_pipeline::width, (float)shader_pipeline::height},
+            *spriteAtlas,
+            *animationFrame,
             destRect,
             origin,
             cardRotationRad * RAD2DEG,
-            WHITE
+            fgColor
         );
 
         // End shader
@@ -155,8 +211,8 @@ void executeEntityPipelineWithCommands(
 
         if (overlay.injectAtlasUniforms) {
             shaders::ShaderUniformSet uniforms;
-            float renderWidth = animationFrame->width + pipelineComp.padding * 2.0f;
-            float renderHeight = animationFrame->height + pipelineComp.padding * 2.0f;
+            float renderWidth = destW;
+            float renderHeight = destH;
 
             uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
             uniforms.set("uGridRect", Vector4{
@@ -166,14 +222,9 @@ void executeEntityPipelineWithCommands(
             batch.addSetUniforms(overlay.shaderName, uniforms);
         }
 
-        // Determine source texture based on input source
-        RenderTexture2D source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
-            ? shader_pipeline::GetBaseRenderTextureCache()
-            : shader_pipeline::GetPostShaderPassRenderTextureCache();
-
         batch.addDrawTexturePro(
-            source.texture,
-            {0, 0, (float)shader_pipeline::width, (float)shader_pipeline::height},
+            *spriteAtlas,
+            *animationFrame,
             destRect,
             origin,
             cardRotationRad * RAD2DEG,

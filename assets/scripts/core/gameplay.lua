@@ -1201,6 +1201,60 @@ function createNewCard(id, x, y, gameStateToApply)
 
                 local dt = (GetFrameTime and GetFrameTime()) or 0.016
 
+                -- Collect cards for batched shader rendering (reduces per-pass overhead).
+                local batchedCardBuckets = {}
+                local cardZCache = {}
+
+                if command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.sprites
+                    and registry and registry.valid then
+                    for eid, cardScript in pairs(cards) do
+                        if eid and entity_cache.valid(eid) and entity_cache.active(eid) and registry:valid(eid) then
+                            local hasPipeline = shader_pipeline and shader_pipeline.ShaderPipelineComponent
+                                and registry:has(eid, shader_pipeline.ShaderPipelineComponent)
+                            local animComp = component_cache.get(eid, AnimationQueueComponent)
+                            if animComp then
+                                animComp.drawWithLegacyPipeline = true
+                            end
+                            if hasPipeline and animComp and not animComp.noDraw then
+                                local zToUse = layer_order_system.getZIndex(eid)
+                                if cardScript and cardScript.isBeingDragged then
+                                    zToUse = z_orders.top_card + 2
+                                end
+                                cardZCache[eid] = zToUse
+
+                                local bucket = batchedCardBuckets[zToUse]
+                                if not bucket then
+                                    bucket = {}
+                                    batchedCardBuckets[zToUse] = bucket
+                                end
+                                bucket[#bucket + 1] = eid
+                                animComp.drawWithLegacyPipeline = false
+                            end
+                        end
+                    end
+
+                    if next(batchedCardBuckets) then
+                        local zKeys = {}
+                        for z, entityList in pairs(batchedCardBuckets) do
+                            if #entityList > 0 then
+                                table.insert(zKeys, z)
+                            end
+                        end
+                        table.sort(zKeys)
+
+                        for _, z in ipairs(zKeys) do
+                            local entityList = batchedCardBuckets[z]
+                            if entityList and #entityList > 0 then
+                                command_buffer.queueDrawBatchedEntities(layers.sprites, function(cmd)
+                                    cmd.registry = registry
+                                    cmd.entities = entityList
+                                    cmd.autoOptimize = true
+                                end, z, layer.DrawCommandSpace.World)
+                            end
+                        end
+                    end
+                end
+
                 -- loop through cards.
                 for eid, cardScript in pairs(cards) do
                     if eid and entity_cache.valid(eid) then
@@ -1223,8 +1277,8 @@ function createNewCard(id, x, y, gameStateToApply)
                             -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
 
                             -- this will draw in local space of the card, hopefully.
-                            local zToUse = layer_order_system.getZIndex(eid)
-                            if cardScript.isBeingDragged then
+                            local zToUse = cardZCache[eid] or layer_order_system.getZIndex(eid)
+                            if not cardZCache[eid] and cardScript.isBeingDragged then
                                 zToUse = z_orders.top_card + 2 -- force on top if being dragged
                                 log_debug("Card", eid, "is being dragged, forcing z to", zToUse, "from",
                                     layer_order_system.getZIndex(eid))

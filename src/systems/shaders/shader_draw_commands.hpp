@@ -35,14 +35,19 @@ struct DrawCommand {
     // Data for texture drawing
     Texture2D texture;
     Rectangle sourceRect;
-    Vector2 position;
+    Rectangle destRect;
+    Vector2 origin;
+    float rotation;
     Color tint;
+    bool useDestRect;
 
     // Uniforms to apply
     shaders::ShaderUniformSet uniforms;
 
     DrawCommand() : type(DrawCommandType::Custom), texture{0},
-                    sourceRect{0,0,0,0}, position{0,0}, tint(WHITE) {}
+                    sourceRect{0,0,0,0}, destRect{0,0,0,0},
+                    origin{0,0}, rotation(0.0f), tint(WHITE),
+                    useDestRect(false) {}
 };
 
 /**
@@ -111,7 +116,29 @@ public:
         cmd.type = DrawCommandType::DrawTexture;
         cmd.texture = texture;
         cmd.sourceRect = sourceRect;
-        cmd.position = position;
+        cmd.destRect = {position.x, position.y, sourceRect.width, sourceRect.height};
+        cmd.origin = {0.0f, 0.0f};
+        cmd.rotation = 0.0f;
+        cmd.useDestRect = false;
+        cmd.tint = tint;
+        commands.push_back(cmd);
+    }
+
+    /**
+     * @brief Add a texture draw command with destination rectangle and rotation
+     */
+    void addDrawTexturePro(Texture2D texture, Rectangle sourceRect,
+                           Rectangle destRect, Vector2 origin,
+                           float rotationDeg, Color tint = WHITE) {
+        if (!isRecording) return;
+        DrawCommand cmd;
+        cmd.type = DrawCommandType::DrawTexture;
+        cmd.texture = texture;
+        cmd.sourceRect = sourceRect;
+        cmd.destRect = destRect;
+        cmd.origin = origin;
+        cmd.rotation = rotationDeg;
+        cmd.useDestRect = true;
         cmd.tint = tint;
         commands.push_back(cmd);
     }
@@ -171,7 +198,11 @@ public:
                     break;
 
                 case DrawCommandType::DrawTexture:
-                    DrawTextureRec(cmd.texture, cmd.sourceRect, cmd.position, cmd.tint);
+                    if (cmd.useDestRect) {
+                        DrawTexturePro(cmd.texture, cmd.sourceRect, cmd.destRect, cmd.origin, cmd.rotation, cmd.tint);
+                    } else {
+                        DrawTextureRec(cmd.texture, cmd.sourceRect, {cmd.destRect.x, cmd.destRect.y}, cmd.tint);
+                    }
                     break;
 
                 case DrawCommandType::SetUniforms:

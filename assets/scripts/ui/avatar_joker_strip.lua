@@ -502,6 +502,82 @@ function AvatarJokerStrip.draw()
         end, baseZ + 1, space)
     end
 
+    local jokerBox = AvatarJokerStrip._layoutCache.joker
+    if jokerBox and command_buffer and layers and localization and localization.getFont then
+        local font = localization.getFont()
+        local fontSize = AvatarJokerStrip.layout.labelSize
+        local leftText = "press"
+        local rightText = " to toggle auto-aim."
+        local textWidthFn = localization.getTextWidthWithCurrentFont
+        local leftW = (textWidthFn and textWidthFn(leftText, fontSize, 1)) or (#leftText * fontSize * 0.5)
+        local rightW = (textWidthFn and textWidthFn(rightText, fontSize, 1)) or (#rightText * fontSize * 0.5)
+        local keySize = 18
+        local iconPad = 6
+        local totalW = leftW + rightW + keySize + iconPad * 2
+        local startX = jokerBox.x + (jokerBox.w - totalW) * 0.5
+        local promptY = jokerBox.y - fontSize - 6
+        local iconX = startX + leftW + iconPad + keySize * 0.5
+        local textRightX = startX + leftW + iconPad * 2 + keySize
+        local centerY = promptY + fontSize * 0.5
+        local shadowOffset = 1
+
+        command_buffer.queueDrawText(layers.ui, function(c)
+            c.text = leftText
+            c.font = font
+            c.x = startX + shadowOffset
+            c.y = promptY + shadowOffset
+            c.color = Col(0, 0, 0, 140)
+            c.fontSize = fontSize
+        end, baseZ + 5, space)
+
+        command_buffer.queueDrawText(layers.ui, function(c)
+            c.text = leftText
+            c.font = font
+            c.x = startX
+            c.y = promptY
+            c.color = colors.text
+            c.fontSize = fontSize
+        end, baseZ + 6, space)
+
+        if command_buffer.queueDrawSpriteCentered then
+            command_buffer.queueDrawSpriteCentered(layers.ui, function(c)
+                c.spriteName = "keyboard_f.png"
+                c.x = iconX + shadowOffset
+                c.y = centerY + shadowOffset
+                c.dstW = keySize
+                c.dstH = keySize
+                c.tint = Col(0, 0, 0, 140)
+            end, baseZ + 5, space)
+
+            command_buffer.queueDrawSpriteCentered(layers.ui, function(c)
+                c.spriteName = "keyboard_f.png"
+                c.x = iconX
+                c.y = centerY
+                c.dstW = keySize
+                c.dstH = keySize
+                c.tint = colors.text
+            end, baseZ + 6, space)
+        end
+
+        command_buffer.queueDrawText(layers.ui, function(c)
+            c.text = rightText
+            c.font = font
+            c.x = textRightX + shadowOffset
+            c.y = promptY + shadowOffset
+            c.color = Col(0, 0, 0, 140)
+            c.fontSize = fontSize
+        end, baseZ + 5, space)
+
+        command_buffer.queueDrawText(layers.ui, function(c)
+            c.text = rightText
+            c.font = font
+            c.x = textRightX
+            c.y = promptY
+            c.color = colors.text
+            c.fontSize = fontSize
+        end, baseZ + 6, space)
+    end
+
     -- Fallback tooltip (only when shared tooltip UI isn't available)
     if AvatarJokerStrip._fallbackHover and AvatarJokerStrip._fallbackHover.entity then
         local anchor = AvatarJokerStrip._fallbackHover.entity

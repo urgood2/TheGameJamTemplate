@@ -7,6 +7,7 @@ pill indicators for each breakpoint so partially-filled synergies stay visible.
 local TagSynergyPanel = {}
 
 local z_orders = require("core.z_orders")
+local component_cache = require("core.component_cache")
 
 local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
 local MAX_ROWS = 6
@@ -19,6 +20,16 @@ local function safeColor(name, fallback)
         if ok2 and c2 then return c2 end
     end
     return Col(255, 255, 255, 255)
+end
+
+local function resolveScreenSize()
+    local screenW = 1920
+    local screenH = 1080
+    if globals then
+        screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth()) or screenW
+        screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight()) or screenH
+    end
+    return screenW, screenH
 end
 
 local colors = {
@@ -51,6 +62,8 @@ TagSynergyPanel.breakpointDetails = {}
 TagSynergyPanel.displayedCounts = {}
 TagSynergyPanel._pulses = {}
 TagSynergyPanel._hoverKey = nil
+TagSynergyPanel._hoverCandidate = nil
+TagSynergyPanel._layoutCache = nil
 TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
     marginX = 22,
@@ -107,6 +120,19 @@ local function thresholdsFor(tag, breakpoints)
 end
 
 local function getMousePosition()
+    if globals and globals.cursor and component_cache then
+        local cursor = globals.cursor()
+        if cursor then
+            local t = component_cache.get(cursor, Transform)
+            if t then
+                local x = t.actualX or t.visualX
+                local y = t.actualY or t.visualY
+                if x and y then
+                    return { x = x, y = y }
+                end
+            end
+        end
+    end
     if not input then return nil end
     if input.getMousePosition then return input.getMousePosition() end
     if input.getMousePos then return input.getMousePos() end
@@ -241,6 +267,142 @@ local function formatThresholdStatus(entry, threshold)
     return string.format("%d/%d %s tags — %d more %s", count, threshold, entry.tag, remaining, noun)
 end
 
+local function computeLayoutCache()
+    local screenW, screenH = resolveScreenSize()
+    local totalRows = math.min(#TagSynergyPanel.entries, MAX_ROWS)
+    local layout = TagSynergyPanel.layout
+    local marginX = math.max(12, layout.marginX or 18)
+    local marginTop = math.max(12, layout.marginTop or 60)
+    local panelW = math.max(240, math.min(layout.panelWidth or 360, screenW - marginX * 2))
+    local paddingX = 14
+    local paddingY = 14
+    local rowH = 56
+    local rowSpacing = 8
+    local headerH = 26
+    local indicatorWidth = 160
+    local indicatorHeight = 14
+    local panelRadius = 16
+    local outlineWidth = 2
+
+    local totalHeight = paddingY * 2 + headerH + (rowH * totalRows) + (rowSpacing * math.max(0, totalRows - 1))
+    local panelLeft = math.max(marginX, screenW - panelW - marginX)
+    local maxTop = math.max(12, screenH - totalHeight - 12)
+    local panelTop = math.max(12, math.min(marginTop, maxTop))
+    local panelCenterX = panelLeft + panelW * 0.5
+    local panelCenterY = panelTop + totalHeight * 0.5
+
+    local rowLeft = panelLeft + paddingX
+    local rowWidth = panelW - paddingX * 2
+    local rowStartY = panelTop + paddingY + headerH
+    local rows = {}
+
+    for index = 1, totalRows do
+        local entry = TagSynergyPanel.entries[index]
+        local rowTop = rowStartY + (index - 1) * (rowH + rowSpacing)
+        local rowCenterY = rowTop + rowH * 0.5
+        local indicatorLeft = rowLeft + rowWidth - indicatorWidth - 14
+        local indicatorTop = rowCenterY - indicatorHeight * 0.5 + 8
+        local spacing = 8
+        local availableWidth = indicatorWidth - spacing * (math.max(1, #entry.thresholds) - 1)
+        local segWidth = availableWidth / math.max(1, #entry.thresholds)
+        local segments = {}
+        for i, threshold in ipairs(entry.thresholds) do
+            local left = indicatorLeft + (segWidth + spacing) * (i - 1)
+            segments[#segments + 1] = {
+                left = left,
+                top = indicatorTop,
+                width = segWidth,
+                height = indicatorHeight,
+                threshold = threshold
+            }
+        end
+
+        rows[#rows + 1] = {
+            entry = entry,
+            top = rowTop,
+            centerY = rowCenterY,
+            rowLeft = rowLeft,
+            rowWidth = rowWidth,
+            rowHeight = rowH,
+            segments = segments
+        }
+    end
+
+    return {
+        screenW = screenW,
+        screenH = screenH,
+        totalRows = totalRows,
+        marginX = marginX,
+        marginTop = marginTop,
+        panelW = panelW,
+        paddingX = paddingX,
+        paddingY = paddingY,
+        rowH = rowH,
+        rowSpacing = rowSpacing,
+        headerH = headerH,
+        indicatorWidth = indicatorWidth,
+        indicatorHeight = indicatorHeight,
+        panelRadius = panelRadius,
+        outlineWidth = outlineWidth,
+        totalHeight = totalHeight,
+        panelLeft = panelLeft,
+        panelTop = panelTop,
+        panelCenterX = panelCenterX,
+        panelCenterY = panelCenterY,
+        rowLeft = rowLeft,
+        rowWidth = rowWidth,
+        rowStartY = rowStartY,
+        rows = rows
+    }
+end
+
+local hoverPadX = 6
+local hoverPadY = 12
+
+local function buildTooltipBody(entry, focusThreshold)
+    local lines = {}
+    lines[#lines + 1] = string.format("%d cards in deck", entry.count or 0)
+    for _, threshold in ipairs(entry.thresholds) do
+        local prefix = (threshold == focusThreshold) and ">" or "-"
+        local bonus = describeBonus(entry.tag, threshold)
+        local status = formatThresholdStatus(entry, threshold)
+        lines[#lines + 1] = string.format("%s %d: %s (%s)", prefix, threshold, bonus, status)
+    end
+    return table.concat(lines, "\n")
+end
+
+local function buildHoverTarget(entry, focusThreshold)
+    return {
+        key = entry.tag .. ":" .. (focusThreshold or "row"),
+        title = string.format("%s Synergy", entry.tag),
+        body = buildTooltipBody(entry, focusThreshold)
+    }
+end
+
+local function resolveHoverTarget(mouse, layoutCache)
+    if not mouse or not layoutCache or layoutCache.totalRows == 0 then
+        return nil
+    end
+
+    for _, row in ipairs(layoutCache.rows or {}) do
+        for _, seg in ipairs(row.segments or {}) do
+            local hitLeft = seg.left - hoverPadX
+            local hitTop = seg.top - hoverPadY
+            local hitW = seg.width + hoverPadX * 2
+            local hitH = seg.height + hoverPadY * 2
+            if pointInRect(mouse.x, mouse.y, hitLeft, hitTop, hitW, hitH) then
+                return buildHoverTarget(row.entry, seg.threshold)
+            end
+        end
+
+        if pointInRect(mouse.x, mouse.y, row.rowLeft, row.top, row.rowWidth, row.rowHeight) then
+            return buildHoverTarget(row.entry)
+        end
+    end
+
+    return nil
+end
+
 local function updateHoverTooltip(target)
     if not target then
         if TagSynergyPanel._hoverKey then
@@ -270,6 +432,8 @@ function TagSynergyPanel.init(opts)
     TagSynergyPanel.displayedCounts = {}
     TagSynergyPanel._pulses = {}
     TagSynergyPanel._hoverKey = nil
+    TagSynergyPanel._hoverCandidate = nil
+    TagSynergyPanel._layoutCache = nil
     if opts and opts.layout then
         TagSynergyPanel.setLayout(opts.layout)
     end
@@ -321,16 +485,21 @@ function TagSynergyPanel.setData(tagCounts, breakpoints)
     end
 
     TagSynergyPanel.entries = entries
+    TagSynergyPanel._hoverCandidate = nil
+    TagSynergyPanel._layoutCache = nil
 end
 
 function TagSynergyPanel.update(dt)
     if not TagSynergyPanel.isActive then
         clearHover()
+        TagSynergyPanel._hoverCandidate = nil
+        TagSynergyPanel._layoutCache = nil
         return
     end
     if not dt then dt = GetFrameTime() end
 
     TagSynergyPanel._pulses = TagSynergyPanel._pulses or {}
+    TagSynergyPanel._layoutCache = computeLayoutCache()
 
     for _, entry in ipairs(TagSynergyPanel.entries) do
         local previous = TagSynergyPanel.displayedCounts[entry.tag]
@@ -343,6 +512,10 @@ function TagSynergyPanel.update(dt)
     for tag, pulse in pairs(TagSynergyPanel._pulses) do
         TagSynergyPanel._pulses[tag] = math.max(0, pulse - dt * 2.4)
     end
+
+    local mouse = getMousePosition()
+    TagSynergyPanel._hoverCandidate = resolveHoverTarget(mouse, TagSynergyPanel._layoutCache)
+    updateHoverTooltip(TagSynergyPanel._hoverCandidate)
 end
 
 local function drawSegment(left, top, width, height, fill, accent, tag, threshold, z, space, font)
@@ -401,23 +574,20 @@ function TagSynergyPanel.draw()
         return
     end
 
-    local screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth()) or 1920
-    local screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight()) or 1080
+    TagSynergyPanel._layoutCache = computeLayoutCache()
+    local layoutCache = TagSynergyPanel._layoutCache
+    local screenW = layoutCache.screenW
+    local screenH = layoutCache.screenH
     local font = localization.getFont()
-    local totalRows = math.min(#TagSynergyPanel.entries, MAX_ROWS)
-    local layout = TagSynergyPanel.layout
-    local mouse = getMousePosition()
-    local hovered = nil
-    local hoverPadX = 6
-    local hoverPadY = 12
+    local totalRows = layoutCache.totalRows
 
     -- If nothing to show, render a small hint and exit.
     if totalRows == 0 then
         local hint = "Add tagged cards to start a synergy"
         local fontSize = 15
         local w = localization.getTextWidthWithCurrentFont(hint, fontSize, 1)
-        local x = screenW - w - math.max(14, layout.marginX)
-        local y = math.max(24, layout.marginTop - 56)
+        local x = screenW - w - math.max(14, layoutCache.marginX or 0)
+        local y = math.max(24, layoutCache.marginTop - 56)
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = hint
             c.font = font
@@ -430,75 +600,51 @@ function TagSynergyPanel.draw()
         return
     end
 
-    local marginX = math.max(12, layout.marginX or 18)
-    local marginTop = math.max(12, layout.marginTop or 60)
-    local panelW = math.max(240, math.min(layout.panelWidth or 360, screenW - marginX * 2))
-    local paddingX = 14
-    local paddingY = 14
-    local rowH = 56
-    local rowSpacing = 8
-    local headerH = 26
-    local indicatorWidth = 160
-    local indicatorHeight = 14
-    local panelRadius = 16
-    local outlineWidth = 2
-
-    local totalHeight = paddingY * 2 + headerH + (rowH * totalRows) + (rowSpacing * math.max(0, totalRows - 1))
-    local panelLeft = math.max(marginX, screenW - panelW - marginX)
-    local maxTop = math.max(12, screenH - totalHeight - 12)
-    local panelTop = math.max(12, math.min(marginTop, maxTop))
-    local panelCenterX = panelLeft + panelW * 0.5
-    local panelCenterY = panelTop + totalHeight * 0.5
     local space = layer.DrawCommandSpace.Screen
     local baseZ = (z_orders.ui_tooltips or 0) + 3
 
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-        c.x = panelCenterX
-        c.y = panelCenterY
-        c.w = panelW + outlineWidth * 2
-        c.h = totalHeight + outlineWidth * 2
-        c.rx = panelRadius + outlineWidth
-        c.ry = panelRadius + outlineWidth
+        c.x = layoutCache.panelCenterX
+        c.y = layoutCache.panelCenterY
+        c.w = layoutCache.panelW + layoutCache.outlineWidth * 2
+        c.h = layoutCache.totalHeight + layoutCache.outlineWidth * 2
+        c.rx = layoutCache.panelRadius + layoutCache.outlineWidth
+        c.ry = layoutCache.panelRadius + layoutCache.outlineWidth
         c.color = colors.outline
     end, baseZ - 1, space)
 
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-        c.x = panelCenterX
-        c.y = panelCenterY
-        c.w = panelW
-        c.h = totalHeight
-        c.rx = panelRadius
-        c.ry = panelRadius
+        c.x = layoutCache.panelCenterX
+        c.y = layoutCache.panelCenterY
+        c.w = layoutCache.panelW
+        c.h = layoutCache.totalHeight
+        c.rx = layoutCache.panelRadius
+        c.ry = layoutCache.panelRadius
         c.color = colors.panel
     end, baseZ, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
         c.text = "Tag Synergies"
         c.font = font
-        c.x = panelLeft + paddingX
-        c.y = panelTop + paddingY - 2
+        c.x = layoutCache.panelLeft + layoutCache.paddingX
+        c.y = layoutCache.panelTop + layoutCache.paddingY - 2
         c.color = colors.header
         c.fontSize = 18
     end, baseZ + 2, space)
 
-    local rowLeft = panelLeft + paddingX
-    local rowWidth = panelW - paddingX * 2
-    local rowStartY = panelTop + paddingY + headerH
-
-    for index = 1, totalRows do
-        local entry = TagSynergyPanel.entries[index]
-        local rowTop = rowStartY + (index - 1) * (rowH + rowSpacing)
-        local rowCenterY = rowTop + rowH * 0.5
+    for _, row in ipairs(layoutCache.rows or {}) do
+        local entry = row.entry
+        local rowCenterY = row.centerY
         local accent = colorForTag(entry.tag)
         local pulse = TagSynergyPanel._pulses[entry.tag] or 0
         local nameSize = 18 * (1 + pulse * 0.08)
         local subtitleSize = 12
 
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-            c.x = rowLeft + rowWidth * 0.5
+            c.x = row.rowLeft + row.rowWidth * 0.5
             c.y = rowCenterY
-            c.w = rowWidth
-            c.h = rowH
+            c.w = row.rowWidth
+            c.h = row.rowHeight
             c.rx = 12
             c.ry = 12
             c.color = colors.row
@@ -508,7 +654,7 @@ function TagSynergyPanel.draw()
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = entry.tag
             c.font = font
-            c.x = rowLeft + 12
+            c.x = row.rowLeft + 12
             c.y = rowCenterY - 16
             c.color = accent
             c.fontSize = nameSize
@@ -532,43 +678,17 @@ function TagSynergyPanel.draw()
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = subtitle
             c.font = font
-            c.x = rowLeft + 12
+            c.x = row.rowLeft + 12
             c.y = rowCenterY + 6
             c.color = colors.text
             c.fontSize = subtitleSize
         end, baseZ + 2, space)
 
-        -- Segment indicator
-        local indicatorLeft = rowLeft + rowWidth - indicatorWidth - 14
-        local indicatorTop = rowCenterY - indicatorHeight * 0.5 + 8
-        local spacing = 8
-        local availableWidth = indicatorWidth - spacing * (math.max(1, #entry.thresholds) - 1)
-        local segWidth = availableWidth / math.max(1, #entry.thresholds)
-
-        for i, threshold in ipairs(entry.thresholds) do
-            local left = indicatorLeft + (segWidth + spacing) * (i - 1)
-            local fill = entry.count / threshold
-            drawSegment(left, indicatorTop, segWidth, indicatorHeight, fill, accent, entry.tag, threshold, baseZ + 2, space, font)
-            if mouse and not hovered then
-                local hitLeft = left - hoverPadX
-                local hitTop = indicatorTop - hoverPadY
-                local hitW = segWidth + hoverPadX * 2
-                local hitH = indicatorHeight + hoverPadY * 2
-                if pointInRect(mouse.x, mouse.y, hitLeft, hitTop, hitW, hitH) then
-                    local title = string.format("%s %d", entry.tag, threshold)
-                    local body = string.format("%s\n%s", describeBonus(entry.tag, threshold),
-                        formatThresholdStatus(entry, threshold))
-                    hovered = {
-                        key = entry.tag .. ":" .. threshold,
-                        title = title,
-                        body = body
-                    }
-                end
-            end
+        for _, seg in ipairs(row.segments or {}) do
+            local fill = entry.count / seg.threshold
+            drawSegment(seg.left, seg.top, seg.width, seg.height, fill, accent, entry.tag, seg.threshold, baseZ + 2, space, font)
         end
     end
-
-    updateHoverTooltip(hovered)
 end
 
 return TagSynergyPanel

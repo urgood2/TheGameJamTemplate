@@ -5,6 +5,7 @@
 #include "systems/scripting/binding_recorder.hpp"
 #include "util/utilities.hpp"
 #include "systems/transform/transform.hpp"
+#include "raylib.h"
 
 namespace shader_draw_commands {
 
@@ -33,25 +34,45 @@ void executeEntityPipelineWithCommands(
         return;
     }
 
-    // Get current sprite information
+    // Get current sprite information (copy to avoid dangling references) + flips
+    SpriteComponentASCII currentSpriteData{};
     SpriteComponentASCII* currentSprite = nullptr;
+    Rectangle animationFrameData{};
     Rectangle* animationFrame = nullptr;
+    bool flipX = false;
+    bool flipY = false;
 
     if (aqc.animationQueue.empty()) {
         if (!aqc.defaultAnimation.animationList.empty()) {
-            currentSprite = &aqc.defaultAnimation
+            currentSpriteData = aqc.defaultAnimation
                 .animationList[aqc.defaultAnimation.currentAnimIndex].first;
-            animationFrame = &currentSprite->spriteData.frame;
+            animationFrameData = currentSpriteData.spriteData.frame;
+            currentSprite = &currentSpriteData;
+            animationFrame = &animationFrameData;
+            flipX = aqc.defaultAnimation.flippedHorizontally;
+            flipY = aqc.defaultAnimation.flippedVertically;
         }
     } else {
         auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-        currentSprite = &currentAnimObject
+        currentSpriteData = currentAnimObject
             .animationList[currentAnimObject.currentAnimIndex].first;
-        animationFrame = &currentSprite->spriteData.frame;
+        animationFrameData = currentSpriteData.spriteData.frame;
+        currentSprite = &currentSpriteData;
+        animationFrame = &animationFrameData;
+        flipX = currentAnimObject.flippedHorizontally;
+        flipY = currentAnimObject.flippedVertically;
     }
 
     if (!currentSprite || !animationFrame) {
         return;
+    }
+
+    Color bgColor = currentSprite->bgColor;
+    Color fgColor = currentSprite->fgColor;
+    bool drawBackground = !currentSprite->noBackgroundColor;
+    bool drawForeground = !currentSprite->noForegroundColor;
+    if (fgColor.a == 0) {
+        fgColor = WHITE;
     }
 
     // Only begin/end recording here if the caller hasn't already started a batch.
@@ -73,28 +94,59 @@ void executeEntityPipelineWithCommands(
     }
     float renderScale = intrinsicScale * uiScale;
 
-    Vector2 center{0.0f, 0.0f};
+    // Baseline dimensions from sprite (no padding in direct render path)
     float baseW = static_cast<float>(animationFrame->width) * renderScale;
     float baseH = static_cast<float>(animationFrame->height) * renderScale;
-    float pad = pipelineComp.padding;
-    float destW = baseW + pad * 2.0f;
-    float destH = baseH + pad * 2.0f;
-    float cardRotationRad = 0.0f;
-    if (auto *t = registry.try_get<transform::Transform>(e)) {
-        t->updateCachedValues();
-        destW = t->getVisualW();
-        destH = t->getVisualH();
-        center = {t->getVisualX() + destW * 0.5f,
-                  t->getVisualY() + destH * 0.5f};
-        float rotDeg = t->getVisualRWithDynamicMotionAndXLeaning();
-        if (std::abs(rotDeg) < 0.0001f) {
-            rotDeg = t->getVisualR();
+    float renderW = baseW;
+    float renderH = baseH;
+
+    float xSign = flipX ? -1.0f : 1.0f;
+    float ySign = flipY ? -1.0f : 1.0f;
+    Rectangle srcRect{
+        static_cast<float>(animationFrame->x),
+        static_cast<float>(animationFrame->y),
+        static_cast<float>(animationFrame->width) * xSign,
+        static_cast<float>(animationFrame->height) * ySign};
+
+    Vector2 center{renderW * 0.5f, renderH * 0.5f};
+    float destW = baseW;
+    float destH = baseH;
+    float basePosX = 0.0f;
+    float basePosY = 0.0f;
+    float drawRotationDeg = 0.0f;
+    float uniformRotationDeg = 0.0f;
+    transform::Transform* transformComp = registry.try_get<transform::Transform>(e);
+    if (transformComp) {
+        transformComp->updateCachedValues();
+        const float visualW = transformComp->getVisualW();
+        const float visualH = transformComp->getVisualH();
+        basePosX = transformComp->getVisualX();
+        basePosY = transformComp->getVisualY();
+
+        const float scale = transformComp->getVisualScaleWithHoverAndDynamicMotionReflected();
+        destW = visualW * scale;
+        destH = visualH * scale;
+
+        drawRotationDeg = transformComp->getVisualRWithDynamicMotionAndXLeaning();
+        uniformRotationDeg = drawRotationDeg;
+        if (std::abs(uniformRotationDeg) < 0.0001f) {
+            uniformRotationDeg = transformComp->getVisualR();
         }
-        cardRotationRad = rotDeg * DEG2RAD;
     } else {
-        // Fallback when no transform exists: center based on sprite size + padding
-        center = {destW * 0.5f, destH * 0.5f};
+        // Fallback when no transform exists: use sprite size at origin
+        basePosX = 0.0f;
+        basePosY = 0.0f;
     }
+    const float cardRotationRad = uniformRotationDeg * DEG2RAD;
+    const float cardRotationDeg = drawRotationDeg;
+
+    // Top-left anchor; keep destination size positive and flip via source rect.
+    // DrawTexturePro subtracts origin from dest position, so offset by origin to
+    // keep top-left anchored while rotating around the center.
+    Vector2 origin = {destW * 0.5f, destH * 0.5f};
+    Rectangle destRect{basePosX + origin.x, basePosY + origin.y, destW, destH};
+    center = {destRect.x + destRect.width * 0.5f,
+              destRect.y + destRect.height * 0.5f};
     static int debugRotationLogs = 0;
     if (debugRotationLogs < 8) {
         SPDLOG_INFO("material_card_overlay rotation rad={} deg={} hasTransform={}",
@@ -106,11 +158,55 @@ void executeEntityPipelineWithCommands(
 
     // Add base sprite draw command
     auto spriteAtlas = currentSprite->spriteData.texture;
-    Color fgColor = currentSprite->fgColor;
 
-    // Destination rect/rotation centered so rotation pivots around sprite center while position stays anchored at the transform's top-left.
-    Rectangle destRect = {center.x - destW * 0.5f, center.y - destH * 0.5f, destW, destH};
-    Vector2 origin = {destW * 0.5f, destH * 0.5f};
+    // Background fill to match legacy pipeline
+    if (drawBackground) {
+        Rectangle bgRect{
+            destRect.x,
+            destRect.y,
+            destRect.width,
+            destRect.height};
+        batch.addCustomCommand([bgRect, origin, cardRotationDeg, bgColor]() {
+            DrawRectanglePro(bgRect, origin, cardRotationDeg, bgColor);
+        });
+    }
+
+    // Ground ellipse shadow (non-rotating)
+    if (transformComp && registry.any_of<transform::GameObject>(e)) {
+        const auto &node = registry.get<transform::GameObject>(e);
+        if (node.shadowDisplacement &&
+            node.shadowMode == transform::GameObject::ShadowMode::GroundEllipse) {
+            float baseX = transformComp->getVisualX() + transformComp->getVisualW() * 0.5f;
+            float baseY = transformComp->getVisualY() + transformComp->getVisualH() +
+                          node.groundShadowYOffset;
+
+            float s = transformComp->getVisualScaleWithHoverAndDynamicMotionReflected();
+            float spriteW = transformComp->getVisualW();
+            float spriteH = transformComp->getVisualH();
+
+            float rx = node.groundShadowRadiusX.has_value()
+                           ? *node.groundShadowRadiusX
+                           : spriteW * 0.40f;
+
+            float ry = node.groundShadowRadiusY.has_value()
+                           ? *node.groundShadowRadiusY
+                           : spriteH * 0.15f;
+
+            rx *= s * node.groundShadowHeightFactor;
+            ry *= s * node.groundShadowHeightFactor;
+
+            if (node.groundShadowColor.a > 0 && rx > 0.1f && ry > 0.1f) {
+                Color ellipseColor = node.groundShadowColor;
+                batch.addCustomCommand([baseX, baseY, rx, ry, ellipseColor]() {
+                    rlPushMatrix();
+                    rlTranslatef(baseX, baseY, 0.0f);
+                    rlScalef(rx, ry, 1.0f);
+                    DrawCircleV({0.0f, 0.0f}, 1.0f, ellipseColor);
+                    rlPopMatrix();
+                });
+            }
+        }
+    }
 
     // Approximate legacy sprite-based shadow rendering
     if (registry.any_of<transform::GameObject>(e)) {
@@ -131,23 +227,25 @@ void executeEntityPipelineWithCommands(
 
             batch.addDrawTexturePro(
                 *spriteAtlas,
-                *animationFrame,
+                srcRect,
                 shadowDest,
                 origin,
-                cardRotationRad * RAD2DEG,
+                cardRotationDeg,
                 shadowColor
             );
         }
     }
 
-    batch.addDrawTexturePro(
-        *spriteAtlas,
-        *animationFrame,
-        destRect,
-        origin,
-        cardRotationRad * RAD2DEG,
-        fgColor
-    );
+    if (drawForeground) {
+        batch.addDrawTexturePro(
+            *spriteAtlas,
+            srcRect,
+            destRect,
+            origin,
+            cardRotationDeg,
+            fgColor
+        );
+    }
 
     // Add shader passes as commands
     for (auto& pass : pipelineComp.passes) {
@@ -158,8 +256,8 @@ void executeEntityPipelineWithCommands(
 
         shaders::ShaderUniformSet uniforms;
         if (pass.injectAtlasUniforms) {
-            float renderWidth = destW;
-            float renderHeight = destH;
+            float renderWidth = renderW;
+            float renderHeight = renderH;
 
             uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
             uniforms.set("uGridRect", Vector4{0, 0, renderWidth, renderHeight});
@@ -177,14 +275,16 @@ void executeEntityPipelineWithCommands(
         }
 
         // Draw the texture through the shader
-        batch.addDrawTexturePro(
-            *spriteAtlas,
-            *animationFrame,
-            destRect,
-            origin,
-            cardRotationRad * RAD2DEG,
-            fgColor
-        );
+        if (drawForeground) {
+            batch.addDrawTexturePro(
+                *spriteAtlas,
+                srcRect,
+                destRect,
+                origin,
+                cardRotationDeg,
+                fgColor
+            );
+        }
 
         // End shader
         batch.addEndShader();
@@ -202,8 +302,8 @@ void executeEntityPipelineWithCommands(
 
         if (overlay.injectAtlasUniforms) {
             shaders::ShaderUniformSet uniforms;
-            float renderWidth = destW;
-            float renderHeight = destH;
+            float renderWidth = renderW;
+            float renderHeight = renderH;
 
             uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
             uniforms.set("uGridRect", Vector4{
@@ -213,14 +313,16 @@ void executeEntityPipelineWithCommands(
             batch.addSetUniforms(overlay.shaderName, uniforms);
         }
 
-        batch.addDrawTexturePro(
-            *spriteAtlas,
-            *animationFrame,
-            destRect,
-            origin,
-            cardRotationRad * RAD2DEG,
-            WHITE
-        );
+        if (drawForeground) {
+            batch.addDrawTexturePro(
+                *spriteAtlas,
+                srcRect,
+                destRect,
+                origin,
+                cardRotationDeg,
+                WHITE
+            );
+        }
 
         batch.addEndShader();
     }

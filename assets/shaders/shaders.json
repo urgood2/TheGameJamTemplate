@@ -233,6 +233,15 @@
             "fragment": "web/sakura_overlay_fragment.fs"
         }
     },
+    "material_card_overlay": {
+        "vertex": "material_card_overlay_vertex.vs",
+        "fragment": "material_card_overlay_fragment.fs",
+
+        "web": {
+            "vertex": "web/material_card_overlay_vertex.vs",
+            "fragment": "web/material_card_overlay_fragment.fs"
+        }
+    },
     "spotlight": {
         "vertex": "spotlight_vertex.vs",
         "fragment": "spotlight_fragment.fs",

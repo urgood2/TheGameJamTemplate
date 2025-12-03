@@ -8,6 +8,8 @@ local TagSynergyPanel = {}
 
 local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
+local dsl = require("ui.ui_syntax_sugar")
+-- local bit = require("bit")
 
 local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
 local MAX_ROWS = 6
@@ -42,6 +44,20 @@ local colors = {
     track = Col(36, 40, 52, 245),
 }
 
+local tooltipStyle = {
+    bg = Col(16, 18, 26, 235),
+    inner = Col(24, 26, 36, 230),
+    outline = safeColor("apricot_cream", "white"),
+    title = safeColor("apricot", "white"),
+    text = safeColor("white"),
+    muted = safeColor("gray", "light_gray"),
+    label = safeColor("apricot_cream", "white"),
+    value = safeColor("white", "white"),
+    padding = 10,
+    outlineThickness = 2,
+    maxWidth = 320,
+}
+
 local tag_palette = {
     Fire = safeColor("fiery_red", "red"),
     Ice = safeColor("baby_blue", "cyan"),
@@ -62,6 +78,8 @@ TagSynergyPanel.breakpointDetails = {}
 TagSynergyPanel.displayedCounts = {}
 TagSynergyPanel._pulses = {}
 TagSynergyPanel._hoverKey = nil
+TagSynergyPanel._activeTooltip = nil
+TagSynergyPanel._tooltips = {}
 TagSynergyPanel._hoverCandidate = nil
 TagSynergyPanel._layoutCache = nil
 TagSynergyPanel.isActive = false
@@ -120,6 +138,23 @@ local function thresholdsFor(tag, breakpoints)
 end
 
 local function getMousePosition()
+    if input then
+        -- Prefer raw mouse input so we stay in screen-space even if the cursor
+        -- entity isn't keeping up (e.g., controller focus).
+        if input.getMousePos then
+            local m = input.getMousePos()
+            if m and m.x and m.y then
+                return { x = m.x, y = m.y }
+            end
+        end
+        if input.getMousePosition then
+            local m = input.getMousePosition()
+            if m and m.x and m.y then
+                return { x = m.x, y = m.y }
+            end
+        end
+    end
+
     if globals and globals.cursor and component_cache then
         local cursor = globals.cursor()
         if cursor then
@@ -133,9 +168,6 @@ local function getMousePosition()
             end
         end
     end
-    if not input then return nil end
-    if input.getMousePosition then return input.getMousePosition() end
-    if input.getMousePos then return input.getMousePos() end
     return nil
 end
 
@@ -143,21 +175,168 @@ local function pointInRect(mx, my, x, y, w, h)
     return mx >= x and mx <= x + w and my >= y and my <= y + h
 end
 
-local function canShowTooltip()
-    return showTooltip
-        and hideTooltip
-        and globals and globals.ui
-        and globals.ui.tooltipTitleText
-        and globals.ui.tooltipBodyText
-        and globals.ui.tooltipUIBox
-        and globals.cursor
+local function colorToHex(c)
+    if not c then return "#FFFFFF" end
+    return string.format("#%02X%02X%02X", c.r or 255, c.g or 255, c.b or 255)
+end
+
+local function wrapTextToWidth(text, maxWidth, fontSize)
+    if not text then return {} end
+    local plain = tostring(text)
+    if not (localization and localization.getTextWidthWithCurrentFont) then
+        return { plain }
+    end
+    local words = {}
+    for w in plain:gmatch("%S+") do
+        words[#words + 1] = w
+    end
+    if #words == 0 then return { plain } end
+
+    local lines = {}
+    local current = words[1]
+    local function width(str)
+        return localization.getTextWidthWithCurrentFont(str, fontSize or 12, 1)
+    end
+
+    for i = 2, #words do
+        local candidate = current .. " " .. words[i]
+        if width(candidate) <= maxWidth then
+            current = candidate
+        else
+            lines[#lines + 1] = current
+            current = words[i]
+        end
+    end
+    lines[#lines + 1] = current
+    return lines
+end
+
+local function buildTooltipDef(title, lines, accent)
+    local children = {}
+
+    local titleMarkup = string.format("[%s](color=%s;fontSize=16;shadow=false)", title,
+        colorToHex(accent or tooltipStyle.title))
+    children[#children + 1] = ui.definitions.getTextFromString(titleMarkup)
+
+    for _, line in ipairs(lines or {}) do
+        local colorHex = colorToHex(line.color or tooltipStyle.text)
+        local fontSize = line.fontSize or 12
+        local wrapped = wrapTextToWidth(line.text, tooltipStyle.maxWidth or 320, fontSize)
+        for _, segment in ipairs(wrapped) do
+            local markup = string.format("[%s](color=%s;fontSize=%d;shadow=false)", segment, colorHex, fontSize)
+            children[#children + 1] = ui.definitions.getTextFromString(markup)
+        end
+    end
+
+    return dsl.root {
+        config = {
+            color = tooltipStyle.bg,
+            padding = tooltipStyle.padding,
+            outlineThickness = tooltipStyle.outlineThickness,
+            outlineColor = tooltipStyle.outline,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            shadow = true,
+        },
+        children = {
+            dsl.vbox {
+                config = {
+                    color = tooltipStyle.inner,
+                    padding = 6,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                },
+                children = children
+            }
+        }
+    }
+end
+
+local function destroyTooltip(key)
+    local cached = TagSynergyPanel._tooltips[key]
+    if not cached then return end
+    if cached.entity and registry and registry.valid and registry:valid(cached.entity) then
+        registry:destroy(cached.entity)
+    end
+    TagSynergyPanel._tooltips[key] = nil
+end
+
+local function resetTooltipCache()
+    for key in pairs(TagSynergyPanel._tooltips) do
+        destroyTooltip(key)
+    end
+    TagSynergyPanel._tooltips = {}
+    TagSynergyPanel._activeTooltip = nil
+end
+
+local function getOrBuildTooltip(target)
+    if not target or not target.key then return nil end
+    local cached = TagSynergyPanel._tooltips[target.key]
+    if cached and cached.signature == target.signature and cached.entity then
+        return cached.entity
+    end
+
+    destroyTooltip(target.key)
+    local def = buildTooltipDef(target.title or "Synergy", target.lines or {}, colorForTag(target.entry and target.entry.tag))
+    local z = (z_orders.ui_tooltips or 0) + 5
+    local entity = dsl.spawn({ x = -2000, y = -2000 }, def, "ui", z)
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, entity)
+    end
+    if ui and ui.box and ui.box.AssignStateTagsToUIBox and PLANNING_STATE then
+        ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
+    end
+    if remove_default_state_tag then
+        remove_default_state_tag(entity)
+    end
+    TagSynergyPanel._tooltips[target.key] = {
+        entity = entity,
+        signature = target.signature
+    }
+    return entity
+end
+
+local function positionTooltip(entity, mouse)
+    if not entity then return end
+    local t = component_cache.get(entity, Transform)
+    if not t then return end
+
+    local screenW, screenH = resolveScreenSize()
+    local w = t.actualW or 0
+    local h = t.actualH or 0
+    local margin = 12
+    local offsetX = 16
+    local offsetY = 16
+    local x = (mouse and mouse.x + offsetX) or (screenW - w - margin)
+    local y = (mouse and mouse.y + offsetY) or margin
+    if tooltipStyle.maxWidth and tooltipStyle.maxWidth > 0 and w > tooltipStyle.maxWidth + tooltipStyle.padding * 2 then
+        w = tooltipStyle.maxWidth + tooltipStyle.padding * 2
+        t.actualW = w
+        t.visualW = w
+    end
+    if x + w > screenW - margin then x = math.max(margin, screenW - w - margin) end
+    if y + h > screenH - margin then y = math.max(margin, screenH - h - margin) end
+
+    t.actualX = x
+    t.visualX = x
+    t.actualY = y
+    t.visualY = y
+end
+
+local function hideActiveTooltip()
+    if TagSynergyPanel._activeTooltip then
+        local t = component_cache.get(TagSynergyPanel._activeTooltip, Transform)
+        if t then
+            t.actualX = -2000
+            t.actualY = -2000
+            t.visualX = t.actualX
+            t.visualY = t.actualY
+        end
+    end
+    TagSynergyPanel._activeTooltip = nil
+    TagSynergyPanel._hoverKey = nil
 end
 
 local function clearHover()
-    if TagSynergyPanel._hoverKey and canShowTooltip() then
-        hideTooltip()
-    end
-    TagSynergyPanel._hoverKey = nil
+    hideActiveTooltip()
 end
 
 local statDescriptions = {
@@ -359,23 +538,42 @@ end
 local hoverPadX = 6
 local hoverPadY = 12
 
-local function buildTooltipBody(entry, focusThreshold)
+local function buildTooltipLines(entry, focusThreshold)
     local lines = {}
-    lines[#lines + 1] = string.format("%d cards in deck", entry.count or 0)
+    lines[#lines + 1] = {
+        text = string.format("%d cards in deck", entry.count or 0),
+        color = tooltipStyle.label,
+        fontSize = 12
+    }
     for _, threshold in ipairs(entry.thresholds) do
-        local prefix = (threshold == focusThreshold) and ">" or "-"
+        local focus = (threshold == focusThreshold)
+        local prefix = focus and ">" or "-"
         local bonus = describeBonus(entry.tag, threshold)
         local status = formatThresholdStatus(entry, threshold)
-        lines[#lines + 1] = string.format("%s %d: %s (%s)", prefix, threshold, bonus, status)
+        local color = focus and colorForTag(entry.tag) or tooltipStyle.text
+        lines[#lines + 1] = {
+            text = string.format("%s %d: %s (%s)", prefix, threshold, bonus, status),
+            color = color,
+            fontSize = focus and 13 or 12
+        }
     end
-    return table.concat(lines, "\n")
+    return lines
 end
 
 local function buildHoverTarget(entry, focusThreshold)
+    local lines = buildTooltipLines(entry, focusThreshold)
+    local sigParts = {}
+    for _, l in ipairs(lines) do
+        sigParts[#sigParts + 1] = l.text
+    end
+    local signature = table.concat(sigParts, "|")
     return {
         key = entry.tag .. ":" .. (focusThreshold or "row"),
         title = string.format("%s Synergy", entry.tag),
-        body = buildTooltipBody(entry, focusThreshold)
+        lines = lines,
+        signature = signature,
+        entry = entry,
+        threshold = focusThreshold
     }
 end
 
@@ -403,26 +601,21 @@ local function resolveHoverTarget(mouse, layoutCache)
     return nil
 end
 
-local function updateHoverTooltip(target)
+local function updateHoverTooltip(target, mouse)
     if not target then
-        if TagSynergyPanel._hoverKey then
-            if canShowTooltip() then
-                hideTooltip()
-            end
-            TagSynergyPanel._hoverKey = nil
-        end
+        hideActiveTooltip()
         return
     end
 
-    if not canShowTooltip() then
-        TagSynergyPanel._hoverKey = nil
+    local tooltip = getOrBuildTooltip(target)
+    if not tooltip then
+        hideActiveTooltip()
         return
     end
 
-    if target.key ~= TagSynergyPanel._hoverKey then
-        showTooltip(target.title, target.body)
-        TagSynergyPanel._hoverKey = target.key
-    end
+    TagSynergyPanel._activeTooltip = tooltip
+    TagSynergyPanel._hoverKey = target.key
+    positionTooltip(tooltip, mouse)
 end
 
 function TagSynergyPanel.init(opts)
@@ -432,6 +625,8 @@ function TagSynergyPanel.init(opts)
     TagSynergyPanel.displayedCounts = {}
     TagSynergyPanel._pulses = {}
     TagSynergyPanel._hoverKey = nil
+    TagSynergyPanel._activeTooltip = nil
+    resetTooltipCache()
     TagSynergyPanel._hoverCandidate = nil
     TagSynergyPanel._layoutCache = nil
     if opts and opts.layout then
@@ -485,6 +680,7 @@ function TagSynergyPanel.setData(tagCounts, breakpoints)
     end
 
     TagSynergyPanel.entries = entries
+    resetTooltipCache()
     TagSynergyPanel._hoverCandidate = nil
     TagSynergyPanel._layoutCache = nil
 end
@@ -515,7 +711,7 @@ function TagSynergyPanel.update(dt)
 
     local mouse = getMousePosition()
     TagSynergyPanel._hoverCandidate = resolveHoverTarget(mouse, TagSynergyPanel._layoutCache)
-    updateHoverTooltip(TagSynergyPanel._hoverCandidate)
+    updateHoverTooltip(TagSynergyPanel._hoverCandidate, mouse)
 end
 
 local function drawSegment(left, top, width, height, fill, accent, tag, threshold, z, space, font)

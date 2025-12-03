@@ -20,8 +20,19 @@ namespace uuid {
 
     // Lookup the physical path representation using UID or URI
     inline std::string lookup(const std::string &uid_or_uri) {
-        auto find = map.find(unify(uid_or_uri));
-        return (find == map.end()) ? std::string() : find->second;
+        const auto unified = unify(uid_or_uri);
+
+        if (auto it = map.find(unified); it != map.end()) {
+            return it->second;
+        }
+
+        // Fallback: if `unify` is not idempotent for this key (e.g. "keyboard_s"
+        // losing its trailing 's'), try the raw identifier as well.
+        if (auto it = map.find(uid_or_uri); it != map.end()) {
+            return it->second;
+        }
+
+        return {};
     }
 
     

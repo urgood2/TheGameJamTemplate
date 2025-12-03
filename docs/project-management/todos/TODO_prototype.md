@@ -64,6 +64,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- can we add the option to add 5 random cards to the action board from the inventory in my debug imgui setup? as well as a button to shuffle the cards in the action board.
+
 - can we move execution preview out of its window (so blank background), ditch the "execution preview" panel, and place it under the card inventories?
 
 - treasure opening sequence.
@@ -79,9 +81,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
 
-- probably make a prompt guideline based on my current scripts.
+tag system tooltips need work.
 
-- enemy knockback on projectile collision, direction-facing particles when theyc collide with wall. recoil when launching (or at least show animatino, as well as shot vfx)
+- probably make a prompt guideline based on my current scripts.
 
 - Display a simple tutorial text on the background whne spawning in for first time (entering action state). Just text that shows keys (or controller) to press for movement and dash.
 - Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom right)

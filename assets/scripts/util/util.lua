@@ -2790,10 +2790,14 @@ function newTextPopup(textString, x, y, duration, effectString)
     function()
       -- move text slowly upward
       local tc2 = component_cache.get(entity, Transform)
-      tc2.actualY = tc2.actualY - 30 * GetFrameTime()
+      if tc2 then
+        tc2.actualY = tc2.actualY - 30 * GetFrameTime()
+      end
       
       local textComp = component_cache.get(entity, TextSystem.Text)
-      textComp.globalAlpha = textComp.globalAlpha - 0.1 * GetFrameTime() -- fade out the text
+      if textComp then
+        textComp.globalAlpha = textComp.globalAlpha - 0.1 * GetFrameTime() -- fade out the text
+      end
     end,
     nil
   )
@@ -2801,11 +2805,13 @@ function newTextPopup(textString, x, y, duration, effectString)
   -- 6) after duration, burst and destroy
   timer.after(duration or 2.0, function()
     local tc2 = component_cache.get(entity, Transform)
-    spawnCircularBurstParticles(
-      tc2.actualX + tc2.actualW * 0.5,
-      tc2.actualY + tc2.actualH * 0.5,
-      5, 0.2
-    )
+    if tc2 then
+      spawnCircularBurstParticles(
+        tc2.actualX + tc2.actualW * 0.5,
+        tc2.actualY + tc2.actualH * 0.5,
+        5, 0.2
+      )
+    end
     if entity_cache.valid(entity) then
       registry:destroy(entity)
     end

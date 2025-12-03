@@ -26,6 +26,12 @@ local ProjectileSystem = require("combat.projectile_system")
 local WandModifiers = require("wand.wand_modifiers")
 local CardUpgrade = require("wand.card_upgrade_system")
 local BehaviorRegistry = require("wand.card_behavior_registry")
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
+
+local PLAYER_LAUNCH_RECOIL_STRENGTH = 120
+local PLAYER_LAUNCH_SCALE_MULT = 1.08
+local PLAYER_LAUNCH_SCALE_CAP = 1.28
 
 --[[
 ================================================================================
@@ -205,6 +211,29 @@ PROJECTILE ACTION EXECUTION
 Spawns projectiles using the ProjectileSystem from Task 1.
 ]] --
 
+local function applyPlayerLaunchFeedback(context, angle)
+    if not context then return end
+
+    local aimAngle = angle or context.playerAngle or 0
+    local recoilFn = rawget(_G, "apply_player_projectile_recoil")
+    if recoilFn then
+        recoilFn(aimAngle, PLAYER_LAUNCH_RECOIL_STRENGTH)
+    end
+
+    local playerEntity = context.playerEntity
+    if not (playerEntity and entity_cache and entity_cache.valid(playerEntity)) then
+        return
+    end
+
+    local t = component_cache.get(playerEntity, Transform)
+    if not t then return end
+
+    local currentScale = t.visualS or t.actualS or 1.0
+    local bumpedScale = currentScale * PLAYER_LAUNCH_SCALE_MULT
+    local targetScale = math.min(bumpedScale, PLAYER_LAUNCH_SCALE_CAP)
+    t.visualS = math.max(currentScale, targetScale)
+end
+
 --- Executes a projectile action card
 --- @param actionCard table Action card definition
 --- @param modifiers table Modifier aggregate
@@ -231,6 +260,8 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context, chi
 
     -- Calculate multicast angles
     local angles = WandModifiers.calculateMulticastAngles(modifiers, baseAngle)
+
+    applyPlayerLaunchFeedback(context, baseAngle)
 
     local spawnedProjectiles = {}
 

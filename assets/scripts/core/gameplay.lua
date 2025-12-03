@@ -328,6 +328,9 @@ local DAMAGE_NUMBER_VERTICAL_SPEED      = 60   -- initial upward velocity of a d
 local DAMAGE_NUMBER_HORIZONTAL_JITTER   = 14   -- horizontal scatter when spawning a damage number
 local DAMAGE_NUMBER_GRAVITY             = 28   -- downward accel that eases the rise of the numbers
 local DAMAGE_NUMBER_FONT_SIZE           = 22
+local PLAYER_PROJECTILE_RECOIL_STRENGTH = 120
+local PLAYER_PROJECTILE_RECOIL_DECAY    = 0.85
+local playerShotRecoil                  = { x = 0, y = 0 }
 
 local EXP_PICKUP_ANIMATION_ID = "b8090.png"
 local EXP_PICKUP_SOUNDS = {
@@ -3952,7 +3955,8 @@ function initCombatSystem()
         return movementTutorialStyle.spaceWidth, movementTutorialStyle.spaceHeight
     end
 
-    local function drawMoveHintIcons(x, y, isPad, z)
+    local function drawMoveHintIcons(x, y, isPad, z, renderSpace)
+        renderSpace = renderSpace or layer.DrawCommandSpace.Screen
         if isPad then
             local size = movementTutorialStyle.stickSize
             command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
@@ -3961,7 +3965,7 @@ function initCombatSystem()
                 c.y = y
                 c.dstW = size
                 c.dstH = size
-            end, z, layer.DrawCommandSpace.Screen)
+            end, z, renderSpace)
             return
         end
 
@@ -3978,7 +3982,7 @@ function initCombatSystem()
             c.y = topY
             c.dstW = keySize
             c.dstH = keySize
-        end, z, layer.DrawCommandSpace.Screen)
+        end, z, renderSpace)
 
         command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
             c.spriteName = "keyboard_a.png"
@@ -3986,7 +3990,7 @@ function initCombatSystem()
             c.y = bottomY
             c.dstW = keySize
             c.dstH = keySize
-        end, z, layer.DrawCommandSpace.Screen)
+        end, z, renderSpace)
 
         command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
             c.spriteName = "keyboard_s.png"
@@ -3994,7 +3998,7 @@ function initCombatSystem()
             c.y = bottomY
             c.dstW = keySize
             c.dstH = keySize
-        end, z, layer.DrawCommandSpace.Screen)
+        end, z, renderSpace)
 
         command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
             c.spriteName = "keyboard_d.png"
@@ -4002,10 +4006,11 @@ function initCombatSystem()
             c.y = bottomY
             c.dstW = keySize
             c.dstH = keySize
-        end, z, layer.DrawCommandSpace.Screen)
+        end, z, renderSpace)
     end
 
-    local function drawDashHintIcon(x, y, isPad, z)
+    local function drawDashHintIcon(x, y, isPad, z, renderSpace)
+        renderSpace = renderSpace or layer.DrawCommandSpace.Screen
         if isPad then
             local size = movementTutorialStyle.buttonSize
             command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
@@ -4014,7 +4019,7 @@ function initCombatSystem()
                 c.y = y
                 c.dstW = size
                 c.dstH = size
-            end, z, layer.DrawCommandSpace.Screen)
+            end, z, renderSpace)
             return
         end
 
@@ -4024,11 +4029,15 @@ function initCombatSystem()
             c.y = y
             c.dstW = movementTutorialStyle.spaceWidth
             c.dstH = movementTutorialStyle.spaceHeight
-        end, z, layer.DrawCommandSpace.Screen)
+        end, z, renderSpace)
     end
 
     local function drawActionInputTutorial()
-        local screenH = globals.screenHeight() or 0
+        local arenaLeft = SCREEN_BOUND_LEFT or 0
+        local arenaTop = SCREEN_BOUND_TOP or 0
+        local arenaRight = SCREEN_BOUND_RIGHT or 0
+        local arenaBottom = SCREEN_BOUND_BOTTOM or 0
+        local renderSpace = layer.DrawCommandSpace.World
         local usingPad = input and input.isPadConnected and input.isPadConnected(0)
 
         local moveText = "to move"
@@ -4049,8 +4058,14 @@ function initCombatSystem()
         local contentHeight = row1Height + row2Height + rowSpacing
         local panelW = contentWidth + movementTutorialStyle.paddingX * 2
         local panelH = contentHeight + movementTutorialStyle.paddingY * 2
-        local startX = movementTutorialStyle.margin
-        local startY = math.max(movementTutorialStyle.margin, screenH - movementTutorialStyle.margin - panelH)
+        local startX = arenaLeft + movementTutorialStyle.margin
+        local startY = arenaBottom - movementTutorialStyle.margin - panelH
+
+        -- Keep the tutorial anchored inside the arena bounds.
+        local maxStartX = arenaRight - movementTutorialStyle.margin - panelW
+        local minStartY = arenaTop + movementTutorialStyle.margin
+        if startX > maxStartX then startX = maxStartX end
+        if startY < minStartY then startY = minStartY end
 
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
             c.x = startX + panelW * 0.5
@@ -4060,14 +4075,14 @@ function initCombatSystem()
             c.rx = 10
             c.ry = 10
             c.color = movementTutorialStyle.bgColor
-            c.outlineColor = movementTutorialStyle.outlineColor
-        end, movementTutorialStyle.z, layer.DrawCommandSpace.Screen)
+            -- c.outlineColor = movementTutorialStyle.outlineColor
+        end, movementTutorialStyle.z, renderSpace)
 
         local cursorY = startY + movementTutorialStyle.paddingY
         local iconX = startX + movementTutorialStyle.paddingX
 
         local moveIconY = cursorY + (row1Height - moveIconH) * 0.5
-        drawMoveHintIcons(iconX, moveIconY, usingPad, movementTutorialStyle.z + 1)
+        drawMoveHintIcons(iconX, moveIconY, usingPad, movementTutorialStyle.z + 1, renderSpace)
         local moveTextX = iconX + moveIconW + movementTutorialStyle.iconTextGap
         local moveTextY = cursorY + (row1Height - fontSize) * 0.5
         command_buffer.queueDrawText(layers.sprites, function(c)
@@ -4077,11 +4092,11 @@ function initCombatSystem()
             c.y = moveTextY
             c.color = movementTutorialStyle.textColor
             c.fontSize = fontSize
-        end, movementTutorialStyle.z + 2, layer.DrawCommandSpace.Screen)
+        end, movementTutorialStyle.z + 2, renderSpace)
 
         cursorY = cursorY + row1Height + rowSpacing
         local dashIconY = cursorY + (row2Height - dashIconH) * 0.5
-        drawDashHintIcon(iconX, dashIconY, usingPad, movementTutorialStyle.z + 1)
+        drawDashHintIcon(iconX, dashIconY, usingPad, movementTutorialStyle.z + 1, renderSpace)
         local dashTextX = iconX + dashIconW + movementTutorialStyle.iconTextGap
         local dashTextY = cursorY + (row2Height - fontSize) * 0.5
         command_buffer.queueDrawText(layers.sprites, function(c)
@@ -4091,7 +4106,7 @@ function initCombatSystem()
             c.y = dashTextY
             c.color = movementTutorialStyle.textColor
             c.fontSize = fontSize
-        end, movementTutorialStyle.z + 2, layer.DrawCommandSpace.Screen)
+        end, movementTutorialStyle.z + 2, renderSpace)
     end
 
     -- update combat system every frame / render health bars
@@ -5297,6 +5312,161 @@ local function renderCardSpawnerDebugUI()
     ImGui.End()
 end
 
+local debugQuickAccessState = { lastMessage = nil }
+
+local function setQuickAccessMessage(message)
+    debugQuickAccessState.lastMessage = message
+end
+
+local function shuffleList(list)
+    if not list or #list < 2 then return end
+    for i = #list, 2, -1 do
+        local j = math.random(i)
+        list[i], list[j] = list[j], list[i]
+    end
+end
+
+local function getActiveActionBoard()
+    if not board_sets or #board_sets == 0 then return nil end
+    local set = board_sets[current_board_set_index]
+    if not set or not set.action_board_id or not entity_cache.valid(set.action_board_id) then
+        return nil
+    end
+    local board = boards[set.action_board_id]
+    if not board then return nil end
+    return board, set, set.action_board_id
+end
+
+local function relayoutBoardCardsInOrder(board)
+    if not board or not board.cards or #board.cards == 0 then return end
+    local boardTransform = component_cache.get(board:handle(), Transform)
+    if not boardTransform then return end
+
+    local cardW, cardH = 100, 140
+    for _, cardEid in ipairs(board.cards) do
+        if cardEid and entity_cache.valid(cardEid) then
+            local t = component_cache.get(cardEid, Transform)
+            if t and t.actualW and t.actualH and t.actualW > 0 and t.actualH > 0 then
+                cardW, cardH = t.actualW, t.actualH
+                break
+            end
+        end
+    end
+
+    local padding = 20
+    local availW = math.max(0, boardTransform.actualW - padding * 2)
+    local minGap = 12
+    local n = #board.cards
+    local spacing, groupW
+    if n == 1 then
+        spacing, groupW = 0, cardW
+    else
+        local fitSpacing = (availW - cardW) / (n - 1)
+        spacing = math.max(minGap, fitSpacing)
+        groupW = cardW + spacing * (n - 1)
+        if groupW > availW then
+            spacing = math.max(0, fitSpacing)
+            groupW = cardW + spacing * (n - 1)
+        end
+    end
+
+    local startX = boardTransform.actualX + padding + (availW - groupW) * 0.5
+    local centerY = boardTransform.actualY + boardTransform.actualH * 0.5
+
+    board.z_order_cache_per_card = board.z_order_cache_per_card or {}
+
+    for i, cardEid in ipairs(board.cards) do
+        if cardEid and entity_cache.valid(cardEid) then
+            local t = component_cache.get(cardEid, Transform)
+            if t then
+                t.actualX = math.floor(startX + (i - 1) * spacing + 0.5)
+                t.actualY = math.floor(centerY - (t.actualH or cardH) * 0.5 + 0.5)
+            end
+            local zi = z_orders.card + (i - 1)
+            board.z_order_cache_per_card[cardEid] = zi
+            layer_order_system.assignZIndexToEntity(cardEid, zi)
+        end
+    end
+end
+
+local function shuffleActiveActionBoard()
+    local actionBoard, _, boardId = getActiveActionBoard()
+    if not actionBoard or not boardId then
+        return false, "No active action board"
+    end
+
+    actionBoard.cards = actionBoard.cards or {}
+    for i = #actionBoard.cards, 1, -1 do
+        local eid = actionBoard.cards[i]
+        if not eid or not entity_cache.valid(eid) then
+            table.remove(actionBoard.cards, i)
+        end
+    end
+
+    if #actionBoard.cards < 2 then
+        return false, "Need at least 2 valid cards to shuffle"
+    end
+
+    shuffleList(actionBoard.cards)
+    relayoutBoardCardsInOrder(actionBoard)
+    notifyDeckChanged(boardId)
+    return true, #actionBoard.cards
+end
+
+local function moveRandomInventoryCardsToActiveActionBoard(count)
+    local actionBoard, set = getActiveActionBoard()
+    if not actionBoard or not set then
+        return false, "No active action board"
+    end
+
+    local inventoryBoard = inventory_board_id and boards[inventory_board_id]
+    if not inventoryBoard or not inventoryBoard.cards or #inventoryBoard.cards == 0 then
+        return false, "Inventory is empty"
+    end
+
+    local candidates = {}
+    for _, cardEid in ipairs(inventoryBoard.cards) do
+        if cardEid and entity_cache.valid(cardEid) then
+            local script = getScriptTableFromEntityID(cardEid)
+            if script and script.type ~= "trigger" and not script.isStackChild then
+                table.insert(candidates, cardEid)
+            end
+        end
+    end
+
+    if #candidates == 0 then
+        return false, "No usable cards in inventory"
+    end
+
+    shuffleList(candidates)
+
+    local targetCount = math.min(count or 1, #candidates)
+    if set.wandDef and set.wandDef.total_card_slots then
+        local capacity = set.wandDef.total_card_slots
+        local currentCount = (actionBoard.cards and #actionBoard.cards) or 0
+        local openSlots = math.max(0, capacity - currentCount)
+        targetCount = math.min(targetCount, openSlots)
+    end
+
+    if targetCount <= 0 then
+        return false, "No free slots on action board"
+    end
+
+    local moved = 0
+    for i = 1, targetCount do
+        local cardEid = candidates[i]
+        removeCardFromBoard(cardEid, inventory_board_id)
+        addCardToBoard(cardEid, set.action_board_id)
+        local script = getScriptTableFromEntityID(cardEid)
+        if script then
+            script.selected = false
+        end
+        moved = moved + 1
+    end
+
+    return true, moved
+end
+
 -- call every frame
 function debugUI()
     -- open a window (returns shouldDraw)
@@ -5316,6 +5486,27 @@ function debugUI()
             -- cam jiggle
             local cam = camera.Get("world_camera")
             cam:SetVisualRotation(1)
+        end
+        ImGui.Separator()
+        ImGui.Text("Action board helpers")
+        if ImGui.Button("Add 5 random inv -> action") then
+            local ok, result = moveRandomInventoryCardsToActiveActionBoard(5)
+            if ok then
+                setQuickAccessMessage(string.format("Moved %d card(s) to action board", result or 0))
+            else
+                setQuickAccessMessage(result or "Failed to move cards")
+            end
+        end
+        if ImGui.Button("Shuffle action board") then
+            local ok, result = shuffleActiveActionBoard()
+            if ok then
+                setQuickAccessMessage(string.format("Shuffled %d card(s) on action board", result or 0))
+            else
+                setQuickAccessMessage(result or "Failed to shuffle cards")
+            end
+        end
+        if debugQuickAccessState.lastMessage then
+            ImGui.Text(debugQuickAccessState.lastMessage)
         end
         ImGui.End()
     end
@@ -6600,6 +6791,26 @@ function spawnExpPickupAt(x, y, opts)
     return expPickupEntity
 end
 
+function apply_player_projectile_recoil(angle, strength)
+    if not angle then return end
+
+    local magnitude = strength or PLAYER_PROJECTILE_RECOIL_STRENGTH
+    local dx = math.cos(angle)
+    local dy = math.sin(angle)
+    if dx == 0 and dy == 0 then return end
+
+    playerShotRecoil.x = playerShotRecoil.x - dx * magnitude
+    playerShotRecoil.y = playerShotRecoil.y - dy * magnitude
+
+    local maxKick = PLAYER_PROJECTILE_RECOIL_STRENGTH * 2
+    local magSq = playerShotRecoil.x * playerShotRecoil.x + playerShotRecoil.y * playerShotRecoil.y
+    if magSq > maxKick * maxKick then
+        local mag = math.sqrt(magSq)
+        playerShotRecoil.x = playerShotRecoil.x / mag * maxKick
+        playerShotRecoil.y = playerShotRecoil.y / mag * maxKick
+    end
+end
+
 
 
 
@@ -6976,11 +7187,22 @@ function initActionPhase()
         end
         return false
     end
+    
+    local function decayPlayerShotRecoil(recoilX, recoilY)
+        playerShotRecoil.x = recoilX * PLAYER_PROJECTILE_RECOIL_DECAY
+        playerShotRecoil.y = recoilY * PLAYER_PROJECTILE_RECOIL_DECAY
+
+        if math.abs(playerShotRecoil.x) < 0.5 then playerShotRecoil.x = 0 end
+        if math.abs(playerShotRecoil.y) < 0.5 then playerShotRecoil.y = 0 end
+    end
 
     -- create input timer. this must run every frame.
     timer.every_physics_step(
         function()
-            if isLevelUpModalActive() then return end
+            if isLevelUpModalActive() then
+                decayPlayerShotRecoil(playerShotRecoil.x, playerShotRecoil.y)
+                return
+            end
             -- TODO: debug by logging pos
             -- local debugPos = physics.GetPosition(world, survivorEntity)
             -- log_debug("Survivor pos:", debugPos.x, debugPos.y)
@@ -6989,6 +7211,7 @@ function initActionPhase()
 
             -- tracy.zoneBeginN("Survivor Input Handling") -- just some default depth to avoid bugs
             if not survivorEntity or survivorEntity == entt_null or not entity_cache.valid(survivorEntity) then
+                decayPlayerShotRecoil(playerShotRecoil.x, playerShotRecoil.y)
                 return
             end
 
@@ -7095,14 +7318,23 @@ function initActionPhase()
             tryConsumeBufferedDash(moveDir)
 
             lastMoveInput.x, lastMoveInput.y = moveDir.x, moveDir.y
+            local recoilX, recoilY = playerShotRecoil.x, playerShotRecoil.y
 
             if playerIsDashing then
+                decayPlayerShotRecoil(recoilX, recoilY)
                 return -- skip movement input while dashing
             end
 
             local speed = 200 -- pixels per second
 
-            physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * speed, moveDir.y * speed)
+            physics.SetVelocity(
+                PhysicsManager.get_world("world"),
+                survivorEntity,
+                moveDir.x * speed + recoilX,
+                moveDir.y * speed + recoilY
+            )
+
+            decayPlayerShotRecoil(recoilX, recoilY)
 
             -- tracy.zoneEnd()
         end,

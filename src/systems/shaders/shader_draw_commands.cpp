@@ -111,6 +111,8 @@ void executeEntityPipelineWithCommands(
     Vector2 center{renderW * 0.5f, renderH * 0.5f};
     float destW = baseW;
     float destH = baseH;
+    float baseVisualW = destW;
+    float baseVisualH = destH;
     float basePosX = 0.0f;
     float basePosY = 0.0f;
     float drawRotationDeg = 0.0f;
@@ -122,6 +124,8 @@ void executeEntityPipelineWithCommands(
         const float visualH = transformComp->getVisualH();
         basePosX = transformComp->getVisualX();
         basePosY = transformComp->getVisualY();
+        baseVisualW = visualW;
+        baseVisualH = visualH;
 
         const float scale = transformComp->getVisualScaleWithHoverAndDynamicMotionReflected();
         destW = visualW * scale;
@@ -140,13 +144,12 @@ void executeEntityPipelineWithCommands(
     const float cardRotationRad = uniformRotationDeg * DEG2RAD;
     const float cardRotationDeg = drawRotationDeg;
 
-    // Top-left anchor; keep destination size positive and flip via source rect.
-    // DrawTexturePro subtracts origin from dest position, so offset by origin to
-    // keep top-left anchored while rotating around the center.
+    // Pivot at transform center; keep transform position as the top-left anchor at scale 1,
+    // and allow scale to expand/contract symmetrically around the center.
     Vector2 origin = {destW * 0.5f, destH * 0.5f};
-    Rectangle destRect{basePosX + origin.x, basePosY + origin.y, destW, destH};
-    center = {destRect.x + destRect.width * 0.5f,
-              destRect.y + destRect.height * 0.5f};
+    center = {basePosX + baseVisualW * 0.5f,
+              basePosY + baseVisualH * 0.5f};
+    Rectangle destRect{center.x, center.y, destW, destH};
     static int debugRotationLogs = 0;
     if (debugRotationLogs < 8) {
         SPDLOG_INFO("material_card_overlay rotation rad={} deg={} hasTransform={}",

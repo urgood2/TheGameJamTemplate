@@ -4626,6 +4626,16 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       //     transform.getVisualH());
     }
 
+    // Per-entity rotation feed for material_card_overlay.
+    if (pass.shaderName == "material_card_overlay") {
+      float rotDeg = transform.getVisualRWithDynamicMotionAndXLeaning();
+      if (std::abs(rotDeg) < 0.0001f) {
+        rotDeg = transform.getVisualR();
+      }
+      globals::getGlobalShaderUniforms().set(pass.shaderName, "card_rotation",
+                                             rotDeg * DEG2RAD);
+    }
+
     if (pass.customPrePassFunction)
       pass.customPrePassFunction();
     // TODO: auto inject sprite atlas texture dims and sprite rect here

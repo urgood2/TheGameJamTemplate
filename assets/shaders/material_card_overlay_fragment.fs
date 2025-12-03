@@ -111,18 +111,20 @@ void main() {
     float luma = dot(base.rgb, vec3(0.299, 0.587, 0.114));
 
     float foilStrength = abs(grain_intensity) * grain + abs(sheen_strength) * sheen;
-    float overlayMask = clamp(foilStrength, 0.0, 2.0) * edgeMask;
-
-    // Stronger signed wobble so even white shows motion.
-    float brightness = ((grain - 0.5) * 1.6 + (sheen - 0.5) * 1.0) * overlayMask;
-    float factor = clamp(1.0 + brightness, 0.35, 1.7);
-    float detail = (grain - 0.5) * 0.12 * overlayMask;
+    float overlayMask = clamp(foilStrength, 0.0, 1.0) * edgeMask;
+ 
+    // Tie wobble to rotation, but keep it subtle.
+    float rotMod = sin(card_rotation * 4.0) * 0.35 + sin(card_rotation * 8.0) * 0.15;
+    float brightness = ((grain - 0.5) * 0.4 + (sheen - 0.5) * 0.25 + rotMod * 0.35) * overlayMask;
+    float factor = clamp(1.0 + brightness, 0.85, 1.15);
+    float detail = ((grain - 0.5) + rotMod * 0.5) * 0.06 * overlayMask;
 
     vec3 lit = clamp(base.rgb * factor + vec3(detail), 0.0, 1.0);
 
     // Temporary: ignore incoming vertex tint to rule out upstream color.
     // Respect only alpha from fragColor to avoid reintroducing vertex color tint.
     vec4 tex = vec4(lit, base.a * fragColor.a);
+    // Remove debug tint; only alpha from fragColor is respected.
 
     vec2 dissolve_uv = (((fragTexCoord) * image_details) - texture_details.xy * texture_details.zw) / texture_details.zw;
     finalColor = dissolve_mask(tex, spriteUV, dissolve_uv);

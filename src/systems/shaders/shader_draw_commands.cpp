@@ -4,6 +4,7 @@
 #include "components/graphics.hpp"
 #include "systems/scripting/binding_recorder.hpp"
 #include "util/utilities.hpp"
+#include "systems/transform/transform.hpp"
 
 namespace shader_draw_commands {
 
@@ -56,6 +57,25 @@ void executeEntityPipelineWithCommands(
     // Begin recording commands
     batch.beginRecording();
 
+    // Per-entity rotation (radians) for shader use.
+    float cardRotationRad = 0.0f;
+    if (auto *t = registry.try_get<transform::Transform>(e)) {
+        t->updateCachedValues();
+        float rotDeg = t->getVisualRWithDynamicMotionAndXLeaning();
+        if (std::abs(rotDeg) < 0.0001f) {
+            rotDeg = t->getVisualR();
+        }
+        cardRotationRad = rotDeg * DEG2RAD;
+    }
+    static int debugRotationLogs = 0;
+    if (debugRotationLogs < 8) {
+        SPDLOG_INFO("material_card_overlay rotation rad={} deg={} hasTransform={}",
+                    cardRotationRad,
+                    cardRotationRad * RAD2DEG,
+                    registry.any_of<transform::Transform>(e));
+        ++debugRotationLogs;
+    }
+
     // Add base sprite draw command
     auto spriteAtlas = currentSprite->spriteData.texture;
     Color fgColor = currentSprite->fgColor;
@@ -74,17 +94,18 @@ void executeEntityPipelineWithCommands(
         // Begin shader
         batch.addBeginShader(pass.shaderName);
 
-        // Set uniforms if needed
+        shaders::ShaderUniformSet uniforms;
         if (pass.injectAtlasUniforms) {
-            shaders::ShaderUniformSet uniforms;
             float renderWidth = animationFrame->width + pipelineComp.padding * 2.0f;
             float renderHeight = animationFrame->height + pipelineComp.padding * 2.0f;
 
             uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
-            uniforms.set("uGridRect", Vector4{
-                0, 0, renderWidth, renderHeight
-            });
-
+            uniforms.set("uGridRect", Vector4{0, 0, renderWidth, renderHeight});
+        }
+        if (pass.shaderName == "material_card_overlay") {
+            uniforms.set("card_rotation", cardRotationRad);
+        }
+        if (!uniforms.uniforms.empty()) {
             batch.addSetUniforms(pass.shaderName, uniforms);
         }
 

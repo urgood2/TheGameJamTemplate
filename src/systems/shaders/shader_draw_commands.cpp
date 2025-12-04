@@ -212,6 +212,9 @@ void executeEntityPipelineWithCommands(
                          [](const OwnedDrawCommand& a, const OwnedDrawCommand& b) {
                              return a.cmd.z < b.cmd.z;
                          });
+        // Commands are intended to be frame-scoped; clear after consuming to avoid
+        // accumulation and duplicated draws across frames.
+        localCmds->clear();
     }
 
     auto renderLocalCommand = [](const OwnedDrawCommand& oc) {

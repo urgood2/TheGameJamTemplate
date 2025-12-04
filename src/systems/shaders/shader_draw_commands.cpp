@@ -267,8 +267,10 @@ void executeEntityPipelineWithCommands(
         };
     };
 
+    const bool hasLocalCommands = !localCommands.empty();
+
     if (drawForeground && pipelineComp.passes.empty()) {
-        if (!localCommands.empty()) {
+        if (hasLocalCommands) {
             batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
         }
         batch.addDrawTexturePro(
@@ -279,19 +281,31 @@ void executeEntityPipelineWithCommands(
             cardRotationDeg,
             fgColor
         );
-        if (!localCommands.empty()) {
+        if (hasLocalCommands) {
             batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
         }
     } else if (drawForeground && !pipelineComp.passes.empty()) {
         // Draw locals once before/after all shader passes so they use the default shader.
-        if (!localCommands.empty()) {
-            batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
-        }
         // Defer drawing to shader passes for shaded output
     }
 
+    int lastEnabledPass = -1;
+    for (size_t i = 0; i < pipelineComp.passes.size(); ++i) {
+        if (pipelineComp.passes[i].enabled) {
+            lastEnabledPass = static_cast<int>(i);
+        }
+    }
+    int lastEnabledOverlay = -1;
+    for (size_t i = 0; i < pipelineComp.overlayDraws.size(); ++i) {
+        if (pipelineComp.overlayDraws[i].enabled) {
+            lastEnabledOverlay = static_cast<int>(i);
+        }
+    }
+    const bool hasEnabledOverlays = lastEnabledOverlay != -1;
+
     // Add shader passes as commands
-    for (auto& pass : pipelineComp.passes) {
+    for (size_t passIndex = 0; passIndex < pipelineComp.passes.size(); ++passIndex) {
+        auto& pass = pipelineComp.passes[passIndex];
         if (!pass.enabled) continue;
 
         // Begin shader
@@ -344,6 +358,12 @@ void executeEntityPipelineWithCommands(
         }
 
         if (drawForeground) {
+            const bool emitLocalsThisPass =
+                hasLocalCommands && !hasEnabledOverlays &&
+                static_cast<int>(passIndex) == lastEnabledPass;
+            if (emitLocalsThisPass) {
+                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
+            }
             batch.addDrawTexturePro(
                 *spriteAtlas,
                 srcRect,
@@ -352,6 +372,9 @@ void executeEntityPipelineWithCommands(
                 cardRotationDeg,
                 fgColor
             );
+            if (emitLocalsThisPass) {
+                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
+            }
         }
 
         // End shader
@@ -359,7 +382,8 @@ void executeEntityPipelineWithCommands(
     }
 
     // Add overlay draws
-    for (const auto& overlay : pipelineComp.overlayDraws) {
+    for (size_t overlayIndex = 0; overlayIndex < pipelineComp.overlayDraws.size(); ++overlayIndex) {
+        const auto& overlay = pipelineComp.overlayDraws[overlayIndex];
         if (!overlay.enabled) continue;
 
         batch.addBeginShader(overlay.shaderName);
@@ -399,6 +423,12 @@ void executeEntityPipelineWithCommands(
         }
 
         if (drawForeground) {
+            const bool emitLocalsThisOverlay =
+                hasLocalCommands &&
+                static_cast<int>(overlayIndex) == lastEnabledOverlay;
+            if (emitLocalsThisOverlay) {
+                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
+            }
             batch.addDrawTexturePro(
                 *spriteAtlas,
                 srcRect,
@@ -407,14 +437,12 @@ void executeEntityPipelineWithCommands(
                 cardRotationDeg,
                 WHITE
             );
+            if (emitLocalsThisOverlay) {
+                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
+            }
         }
 
         batch.addEndShader();
-    }
-
-    if (drawForeground && !pipelineComp.passes.empty() && !localCommands.empty()) {
-        // Draw locals after all shader/overlay passes with the default shader active.
-        batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
     }
 
     // End/optimize only if we started recording in this helper.

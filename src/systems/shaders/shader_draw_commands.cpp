@@ -225,11 +225,7 @@ void executeEntityPipelineWithCommands(
         }
     };
 
-    auto emitLocalCommandsToBatch = [&](bool beforeSprite) {
-        if (localCommands.empty()) {
-            return;
-        }
-
+    auto makeLocalCommandEmitter = [&](bool beforeSprite) {
         const float capturedBaseVisualW = baseVisualW;
         const float capturedBaseVisualH = baseVisualH;
         const float capturedDestW = destW;
@@ -238,15 +234,15 @@ void executeEntityPipelineWithCommands(
         const Vector2 capturedCenter = center;
         auto commandsCopy = localCommands; // keep shared_ptr owners alive
 
-        batch.addCustomCommand([commandsCopy,
-                                beforeSprite,
-                                capturedBaseVisualW,
-                                capturedBaseVisualH,
-                                capturedDestW,
-                                capturedDestH,
-                                capturedRotation,
-                                capturedCenter,
-                                renderLocalCommand]() {
+        return [commandsCopy,
+                beforeSprite,
+                capturedBaseVisualW,
+                capturedBaseVisualH,
+                capturedDestW,
+                capturedDestH,
+                capturedRotation,
+                capturedCenter,
+                renderLocalCommand]() {
             const float scaleX = (capturedBaseVisualW > 0.0f)
                                      ? (capturedDestW / capturedBaseVisualW)
                                      : 1.0f;
@@ -268,11 +264,13 @@ void executeEntityPipelineWithCommands(
                 renderLocalCommand(oc);
             }
             rlPopMatrix();
-        });
+        };
     };
 
     if (drawForeground && pipelineComp.passes.empty()) {
-        emitLocalCommandsToBatch(/*beforeSprite=*/true);
+        if (!localCommands.empty()) {
+            batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
+        }
         batch.addDrawTexturePro(
             *spriteAtlas,
             srcRect,
@@ -281,8 +279,14 @@ void executeEntityPipelineWithCommands(
             cardRotationDeg,
             fgColor
         );
-        emitLocalCommandsToBatch(/*beforeSprite=*/false);
+        if (!localCommands.empty()) {
+            batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
+        }
     } else if (drawForeground && !pipelineComp.passes.empty()) {
+        // Draw locals once before/after all shader passes so they use the default shader.
+        if (!localCommands.empty()) {
+            batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
+        }
         // Defer drawing to shader passes for shaded output
     }
 
@@ -322,8 +326,6 @@ void executeEntityPipelineWithCommands(
             batch.addCustomCommand(pass.customPrePassFunction);
         }
 
-        // Draw the texture through the shader
-        emitLocalCommandsToBatch(/*beforeSprite=*/true);
         if (drawForeground) {
             batch.addDrawTexturePro(
                 *spriteAtlas,
@@ -334,7 +336,6 @@ void executeEntityPipelineWithCommands(
                 fgColor
             );
         }
-        emitLocalCommandsToBatch(/*beforeSprite=*/false);
 
         // End shader
         batch.addEndShader();
@@ -383,6 +384,11 @@ void executeEntityPipelineWithCommands(
         }
 
         batch.addEndShader();
+    }
+
+    if (drawForeground && !pipelineComp.passes.empty() && !localCommands.empty()) {
+        // Draw locals after all shader/overlay passes with the default shader active.
+        batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
     }
 
     // End/optimize only if we started recording in this helper.

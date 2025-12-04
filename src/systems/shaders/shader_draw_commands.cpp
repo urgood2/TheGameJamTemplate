@@ -526,10 +526,14 @@ void executeEntityPipelineWithCommands(
         }
 
         if (!textShaderName.empty()) {
+            const bool textIs3DSkew = (textShaderName == "3d_skew");
             batch.addBeginShader(textShaderName);
             batch.addCustomCommand([textShaderName,
                                     textInjectAtlas,
-                                    cardRotation = cardRotationRad]() {
+                                    textIs3DSkew,
+                                    cardRotation = cardRotationRad,
+                                    skewCenter,
+                                    skewSize]() {
                 if (textInjectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -540,6 +544,10 @@ void executeEntityPipelineWithCommands(
                 globals::getGlobalShaderUniforms().set(textShaderName, "regionRate", Vector2{1.0f, 1.0f});
                 globals::getGlobalShaderUniforms().set(textShaderName, "pivot", Vector2{0.0f, 0.0f});
                 globals::getGlobalShaderUniforms().set(textShaderName, "card_rotation", cardRotation);
+                if (textIs3DSkew) {
+                    globals::getGlobalShaderUniforms().set(textShaderName, "quad_center", skewCenter);
+                    globals::getGlobalShaderUniforms().set(textShaderName, "quad_size", skewSize);
+                }
                 Shader shader = shaders::getShader(textShaderName);
                 if (shader.id) {
                     shaders::TryApplyUniforms(

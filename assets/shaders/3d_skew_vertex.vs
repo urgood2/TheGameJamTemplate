@@ -37,6 +37,11 @@ void main()
     fragTexCoord = vertexTexCoord;
     fragColor = vertexColor;
 
+    // Derive a stable 0..1 quad-space UV from screen-space geometry so tilt math
+    // is decoupled from atlas coordinates.
+    vec2 safeQuadSize = max(abs(quad_size), vec2(1.0));
+    vec2 quadUV = ((vertexPosition.xy - quad_center) / safeQuadSize) + vec2(0.5);
+
     // Compute pseudo-random subtle movement
     float randAngle = rand_trans_power * mod(iTime * (0.9 + mod(rand_seed, 0.5)), 6.28318);
     vec2 randVec = vec2(cos(randAngle), sin(randAngle));
@@ -91,7 +96,7 @@ void main()
     // Apply vertex displacement for corner tilting
     // UV 0,0 is top-left, 1,1 is bottom-right
     // Center the UV for rotation (-0.5 to 0.5 range)
-    vec2 centeredUV = vertexTexCoord - vec2(0.5);
+    vec2 centeredUV = quadUV - vec2(0.5);
     
     // Create 3D point on a flat plane
     vec3 point3D = vec3(centeredUV.x, centeredUV.y, 0.0);

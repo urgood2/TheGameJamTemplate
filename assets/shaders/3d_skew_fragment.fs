@@ -40,63 +40,46 @@ void main()
 {
     vec2 uv = fragTexCoord;
 
-    // Special-case identity atlas (text pass): skip UV foreshortening/rotation so
-    // glyphs stay within their own rect; geometry already skewed in vertex stage.
     bool identityAtlas = abs(regionRate.x - 1.0) < 0.0001 &&
                          abs(regionRate.y - 1.0) < 0.0001 &&
                          abs(pivot.x) < 0.0001 &&
                          abs(pivot.y) < 0.0001;
 
-    if (!identityAtlas) {
-        // Center UV for transformation (0.5 is center in normalized UV)
-        vec2 centered = (uv - pivot) / regionRate;
-        vec2 localCentered = centered - vec2(0.5);
-
-        // Apply inverse rotation to get correct texture sampling
-        // This compensates for the vertex displacement
+    if (identityAtlas) {
+        // Text path: rely on vertex-stage skew for motion; keep UVs fixed and clamp
+        // to avoid sampling outside glyphs.
+        float inset = 0.0035; // tiny padding to kill bleed
+        vec2 finalUV = clamp(uv, vec2(inset), vec2(1.0 - inset));
+        vec4 texel = texture(texture0, finalUV);
+        finalColor = texel * fragColor * colDiffuse;
+    } else {
+        // Full atlas-aware path for sprites.
         float tiltStrength = abs(fov) * 2.0;
         float tiltX = tiltAmount.y * tiltStrength;
         float tiltY = tiltAmount.x * tiltStrength;
-
-        // Simple perspective UV correction
-        // When tilted, the UV needs to be adjusted to account for foreshortening
         float cosX = cos(tiltX);
         float cosY = cos(tiltY);
 
-        // Apply perspective correction to UVs
+        vec2 centered = (uv - pivot) / regionRate;
+        vec2 localCentered = centered - vec2(0.5);
         vec2 correctedUV = localCentered;
-
-        // Foreshortening: compress UVs in the direction of tilt
         correctedUV.x /= max(cosY, 0.5);
         correctedUV.y /= max(cosX, 0.5);
-
-        // Shift based on tilt (parallax-like effect)
         correctedUV.x -= sin(tiltY) * 0.1;
         correctedUV.y -= sin(tiltX) * 0.1;
-
-        // Move back to 0-1 range
         uv = correctedUV + vec2(0.5);
 
-        // Apply aspect ratio correction
         float asp = regionRate.y / regionRate.x;
         uv.y *= asp;
 
-        // Apply rotation if specified
         float angle = rotation + rand_trans_power * 0.05 *
             sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
         uv = rotate(uv, vec2(0.5), angle);
         uv.y /= asp;
 
-        // Discard pixels outside valid UV range
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
 
-        // Apply pivot and regionRate to get final atlas UV
         vec2 finalUV = pivot + uv * regionRate;
-
-        vec4 texel = texture(texture0, finalUV);
-        finalColor = texel * fragColor * colDiffuse;
-    } else {
-        vec2 finalUV = clamp(uv, 0.0, 1.0);
         vec4 texel = texture(texture0, finalUV);
         finalColor = texel * fragColor * colDiffuse;
     }

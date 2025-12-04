@@ -3197,6 +3197,18 @@ function shader_draw_commands.DrawCommandBatch:addEndShader(...) end
 function shader_draw_commands.DrawCommandBatch:addDrawTexture(...) end
 
 ---
+--- Add a command to draw text.
+---
+---@param text string
+---@param position Vector2
+---@param fontSize number
+---@param spacing number
+---@param color? Color
+---@param font? Font
+---@return nil
+function shader_draw_commands.DrawCommandBatch:addDrawText(...) end
+
+---
 --- Add a custom command function to execute.
 ---
 ---@param func fun()

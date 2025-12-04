@@ -76,7 +76,23 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
     - Then show the reward, with ambient animation.
 
-- let's make projectiles release different types of particles (varying in color/intensity) based on the speed at which they collide with the wall, and its damage. if they contain x or more damage, they should pulse as they move, and release a bit of a trail.    
+- let's make projectiles release different types of particles (varying in color/intensity) based on the speed at which they collide with the wall, and its damage. if they contain x or more damage, they should pulse as they move, and release a bit of a trail.
+
+- shader needs a shadow version, for dissolve, but I'm not entirely sure how that works.
+
+- We have
+
+
+    // Per-entity rotation feed for material_card_overlay.
+    if (pass.shaderName == "material_card_overlay" ||
+        pass.shaderName == "material_card_overlay_new_dissolve") {
+      float rotDeg = transform.getVisualRWithDynamicMotionAndXLeaning();
+      if (std::abs(rotDeg) < 0.0001f) {
+        rotDeg = transform.getVisualR();
+      }
+
+in [layer.cpp](src/systems/layer/layer.cpp) .
+I was wondering if we can make this futureproof and not have to hard code shader names, without hurting performance. how could we accomplish this?    
 
 - make a single material shader based off of balatro to use for special cards.
 - replace card sprites with real ones. 

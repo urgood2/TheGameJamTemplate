@@ -1326,18 +1326,26 @@ function createNewCard(id, x, y, gameStateToApply)
                                 end, zToUse, layer.DrawCommandSpace.World)
                             end
 
-                            -- slightly above the card sprite
-                            command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()
-                                -- draw debug label.
-                                command_buffer.queueDrawText(layers.sprites, function(c)
+                            -- inject card label into the batched shader pipeline (local space, shaded)
+                            shader_draw_commands.add_local_command(
+                                registry, eid, "text_pro",
+                                function(c)
                                     c.text = cardScript.test_label or "unknown"
                                     c.font = localization.getFont()
                                     c.x = t.visualW * 0.1
                                     c.y = t.visualH * 0.1
-                                    c.color = colorToUse
+                                    c.origin = _G.Vector2 and _G.Vector2(0, 0) or { x = 0, y = 0 }
+                                    c.rotation = 0
                                     c.fontSize = 20.0
-                                end, zToUse, layer.DrawCommandSpace.World) -- z order on the inside here doesn't matter much.
+                                    c.spacing = 1.0
+                                    c.color = colorToUse
+                                end,
+                                1, -- z >= 0 to draw after sprite
+                                layer.DrawCommandSpace.World -- keep in world space with the card
+                            )
 
+                            -- slightly above the card sprite
+                            command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()
                                 -- if over capacity, gray overlay + disabled marker
                                 if isOverCapacity and not cardScript.isBeingDragged then
                                     local xSize = math.min(t.actualW, t.actualH) * 0.6
@@ -1441,6 +1449,7 @@ function createNewCard(id, x, y, gameStateToApply)
 
     local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
     shaderPipelineComp:addPass("material_card_overlay")
+    -- shaderPipelineComp:addPass("material_card_overlay_new_dissolve")
 
 
     -- make draggable and set some callbacks in the transform system

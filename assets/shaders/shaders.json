@@ -242,6 +242,15 @@
             "fragment": "web/material_card_overlay_fragment.fs"
         }
     },
+    "material_card_overlay_new_dissolve": {
+        "vertex": "material_card_overlay_vertex.vs",
+        "fragment": "material_card_overlay_new_dissolve_fragment.fs",
+
+        "web": {
+            "vertex": "web/material_card_overlay_vertex.vs",
+            "fragment": "web/material_card_overlay_new_dissolve_fragment.fs"
+        }
+    },
     "spotlight": {
         "vertex": "spotlight_vertex.vs",
         "fragment": "spotlight_fragment.fs",

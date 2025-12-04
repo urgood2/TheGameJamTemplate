@@ -6,6 +6,8 @@
 #include "util/utilities.hpp"
 #include "systems/transform/transform.hpp"
 #include "raylib.h"
+#include "spdlog/spdlog.h"
+#include <algorithm>
 
 namespace shader_draw_commands {
 
@@ -202,7 +204,45 @@ void executeEntityPipelineWithCommands(
         }
     }
 
-    if (drawForeground) {
+    BatchedLocalCommands* localCmds = registry.try_get<BatchedLocalCommands>(e);
+    std::vector<OwnedDrawCommand> localCommands;
+    if (localCmds) {
+        localCommands = localCmds->commands;
+        std::stable_sort(localCommands.begin(), localCommands.end(),
+                         [](const OwnedDrawCommand& a, const OwnedDrawCommand& b) {
+                             return a.cmd.z < b.cmd.z;
+                         });
+    }
+
+    auto renderLocalCommand = [](const OwnedDrawCommand& oc) {
+        auto it = layer::dispatcher.find(oc.cmd.type);
+        if (it != layer::dispatcher.end()) {
+            std::shared_ptr<layer::Layer> dummyLayer{};
+            it->second(dummyLayer, oc.cmd.data);
+        }
+    };
+
+    auto emitLocalCommands = [&](bool beforeSprite) {
+        if (localCommands.empty())
+            return;
+        float scaleX = (baseVisualW > 0.0f) ? (destW / baseVisualW) : 1.0f;
+        float scaleY = (baseVisualH > 0.0f) ? (destH / baseVisualH) : 1.0f;
+        rlPushMatrix();
+        rlTranslatef(center.x, center.y, 0.0f);
+        rlRotatef(cardRotationDeg, 0.0f, 0.0f, 1.0f);
+        rlScalef(scaleX, scaleY, 1.0f);
+        rlTranslatef(-baseVisualW * 0.5f, -baseVisualH * 0.5f, 0.0f);
+        for (const auto& oc : localCommands) {
+            const bool cmdIsBefore = oc.cmd.z < 0;
+            if (beforeSprite != cmdIsBefore)
+                continue;
+            renderLocalCommand(oc);
+        }
+        rlPopMatrix();
+    };
+
+    if (drawForeground && pipelineComp.passes.empty()) {
+        emitLocalCommands(/*beforeSprite=*/true);
         batch.addDrawTexturePro(
             *spriteAtlas,
             srcRect,
@@ -211,6 +251,9 @@ void executeEntityPipelineWithCommands(
             cardRotationDeg,
             fgColor
         );
+        emitLocalCommands(/*beforeSprite=*/false);
+    } else if (drawForeground && !pipelineComp.passes.empty()) {
+        // Defer drawing to shader passes for shaded output
     }
 
     // Add shader passes as commands
@@ -236,7 +279,8 @@ void executeEntityPipelineWithCommands(
             uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
             uniforms.set("uGridRect", Vector4{0, 0, renderWidth, renderHeight});
         }
-        if (pass.shaderName == "material_card_overlay") {
+        if (pass.shaderName == "material_card_overlay" ||
+            pass.shaderName == "material_card_overlay_new_dissolve") {
             uniforms.set("card_rotation", cardRotationRad);
         }
         if (!uniforms.uniforms.empty()) {
@@ -249,6 +293,7 @@ void executeEntityPipelineWithCommands(
         }
 
         // Draw the texture through the shader
+        emitLocalCommands(/*beforeSprite=*/true);
         if (drawForeground) {
             batch.addDrawTexturePro(
                 *spriteAtlas,
@@ -259,6 +304,7 @@ void executeEntityPipelineWithCommands(
                 fgColor
             );
         }
+        emitLocalCommands(/*beforeSprite=*/false);
 
         // End shader
         batch.addEndShader();
@@ -331,6 +377,7 @@ void exposeToLua(sol::state& lua) {
         "BeginShader", DrawCommandType::BeginShader,
         "EndShader", DrawCommandType::EndShader,
         "DrawTexture", DrawCommandType::DrawTexture,
+        "DrawText", DrawCommandType::DrawText,
         "SetUniforms", DrawCommandType::SetUniforms,
         "Custom", DrawCommandType::Custom
     );
@@ -350,6 +397,7 @@ void exposeToLua(sol::state& lua) {
         "addDrawTexture", &DrawCommandBatch::addDrawTexture,
         "addSetUniforms", &DrawCommandBatch::addSetUniforms,
         "addCustomCommand", &DrawCommandBatch::addCustomCommand,
+        "addDrawText", &DrawCommandBatch::addDrawText,
 
         "execute", &DrawCommandBatch::execute,
         "optimize", &DrawCommandBatch::optimize,
@@ -398,6 +446,11 @@ void exposeToLua(sol::state& lua) {
         "---@param texture Texture2D\n---@param sourceRect Rectangle\n---@param position Vector2\n---@param tint? Color\n---@return nil",
         "Add a command to draw a texture."
     });
+    rec.record_method("shader_draw_commands.DrawCommandBatch", {
+        "addDrawText",
+        "---@param text string\n---@param position Vector2\n---@param fontSize number\n---@param spacing number\n---@param color? Color\n---@param font? Font\n---@return nil",
+        "Add a command to draw text."
+    });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addCustomCommand",
@@ -428,6 +481,120 @@ void exposeToLua(sol::state& lua) {
         "---@return integer",
         "Get the number of commands in the batch."
     });
+
+    // Generic helper: add any existing layer command to BatchedLocalCommands (local space, shader-aware)
+    sdc.set_function("add_local_command",
+        [](entt::registry* registry, entt::entity e, const std::string& type,
+           sol::object initFnObj, sol::object zObj, sol::object spaceObj) {
+            int z = zObj.is<int>() ? zObj.as<int>() : 0;
+            layer::DrawCommandSpace space = layer::DrawCommandSpace::Screen;
+            if (spaceObj.is<int>()) {
+                int s = spaceObj.as<int>();
+                if (s == static_cast<int>(layer::DrawCommandSpace::World)) {
+                    space = layer::DrawCommandSpace::World;
+                }
+            }
+            sol::protected_function initFn;
+            if (initFnObj.is<sol::protected_function>()) {
+                initFn = initFnObj.as<sol::protected_function>();
+            }
+            auto callInit = [&](auto* c) {
+                if (initFn.valid()) {
+                    auto res = initFn(c);
+                    if (!res.valid()) {
+                        sol::error err = res;
+                        SPDLOG_ERROR("add_local_command init error: {}", err.what());
+                    }
+                }
+            };
+
+#define ADD_CMD(name, T)                                                                    \
+    if (type == name) {                                                                    \
+        AddLocalCommand<T>(*registry, e, z, space, [&](T* c) { callInit(c); });            \
+        return;                                                                            \
+    }
+
+            ADD_CMD("render_ui_slice", layer::CmdRenderUISliceFromDrawList)
+            ADD_CMD("render_ui_self_immediate", layer::CmdRenderUISelfImmediate)
+            ADD_CMD("begin_scissor", layer::CmdBeginScissorMode)
+            ADD_CMD("end_scissor", layer::CmdEndScissorMode)
+            ADD_CMD("begin_drawing", layer::CmdBeginDrawing)
+            ADD_CMD("end_drawing", layer::CmdEndDrawing)
+            ADD_CMD("clear_background", layer::CmdClearBackground)
+            ADD_CMD("translate", layer::CmdTranslate)
+            ADD_CMD("scale", layer::CmdScale)
+            ADD_CMD("rotate", layer::CmdRotate)
+            ADD_CMD("add_push", layer::CmdAddPush)
+            ADD_CMD("add_pop", layer::CmdAddPop)
+            ADD_CMD("push_matrix", layer::CmdPushMatrix)
+            ADD_CMD("pop_matrix", layer::CmdPopMatrix)
+            ADD_CMD("push_object_transforms", layer::CmdPushObjectTransformsToMatrix)
+            ADD_CMD("scoped_transform_composite_render", layer::CmdScopedTransformCompositeRender)
+            ADD_CMD("draw_circle", layer::CmdDrawCircleFilled)
+            ADD_CMD("draw_circle_line", layer::CmdDrawCircleLine)
+            ADD_CMD("draw_rect", layer::CmdDrawRectangle)
+            ADD_CMD("draw_rect_pro", layer::CmdDrawRectanglePro)
+            ADD_CMD("draw_rect_lines_pro", layer::CmdDrawRectangleLinesPro)
+            ADD_CMD("draw_line", layer::CmdDrawLine)
+            ADD_CMD("draw_text", layer::CmdDrawText)
+            ADD_CMD("draw_text_centered", layer::CmdDrawTextCentered)
+            ADD_CMD("text_pro", layer::CmdTextPro)
+            ADD_CMD("draw_image", layer::CmdDrawImage)
+            ADD_CMD("texture_pro", layer::CmdTexturePro)
+            ADD_CMD("draw_entity_animation", layer::CmdDrawEntityAnimation)
+            ADD_CMD("draw_transform_entity_animation", layer::CmdDrawTransformEntityAnimation)
+            ADD_CMD("draw_transform_entity_animation_pipeline", layer::CmdDrawTransformEntityAnimationPipeline)
+            ADD_CMD("set_shader", layer::CmdSetShader)
+            ADD_CMD("reset_shader", layer::CmdResetShader)
+            ADD_CMD("set_blend_mode", layer::CmdSetBlendMode)
+            ADD_CMD("unset_blend_mode", layer::CmdUnsetBlendMode)
+            ADD_CMD("send_uniform_float", layer::CmdSendUniformFloat)
+            ADD_CMD("send_uniform_int", layer::CmdSendUniformInt)
+            ADD_CMD("send_uniform_vec2", layer::CmdSendUniformVec2)
+            ADD_CMD("send_uniform_vec3", layer::CmdSendUniformVec3)
+            ADD_CMD("send_uniform_vec4", layer::CmdSendUniformVec4)
+            ADD_CMD("send_uniform_float_array", layer::CmdSendUniformFloatArray)
+            ADD_CMD("send_uniform_int_array", layer::CmdSendUniformIntArray)
+            ADD_CMD("vertex", layer::CmdVertex)
+            ADD_CMD("begin_gl_mode", layer::CmdBeginOpenGLMode)
+            ADD_CMD("end_gl_mode", layer::CmdEndOpenGLMode)
+            ADD_CMD("set_color", layer::CmdSetColor)
+            ADD_CMD("set_line_width", layer::CmdSetLineWidth)
+            ADD_CMD("set_texture", layer::CmdSetTexture)
+            ADD_CMD("render_rect_vertices_filled", layer::CmdRenderRectVerticesFilledLayer)
+            ADD_CMD("render_rect_vertices_outline", layer::CmdRenderRectVerticesOutlineLayer)
+            ADD_CMD("draw_polygon", layer::CmdDrawPolygon)
+            ADD_CMD("render_npatch_rect", layer::CmdRenderNPatchRect)
+            ADD_CMD("draw_triangle", layer::CmdDrawTriangle)
+            ADD_CMD("begin_stencil_mode", layer::CmdBeginStencilMode)
+            ADD_CMD("color_mask", layer::CmdColorMask)
+            ADD_CMD("stencil_func", layer::CmdStencilFunc)
+            ADD_CMD("stencil_op", layer::CmdStencilOp)
+            ADD_CMD("render_batch_flush", layer::CmdRenderBatchFlush)
+            ADD_CMD("atomic_stencil_mask", layer::CmdAtomicStencilMask)
+            ADD_CMD("end_stencil_mode", layer::CmdEndStencilMode)
+            ADD_CMD("clear_stencil_buffer", layer::CmdClearStencilBuffer)
+            ADD_CMD("begin_stencil_mask", layer::CmdBeginStencilMask)
+            ADD_CMD("end_stencil_mask", layer::CmdEndStencilMask)
+            ADD_CMD("draw_centered_ellipse", layer::CmdDrawCenteredEllipse)
+            ADD_CMD("draw_rounded_line", layer::CmdDrawRoundedLine)
+            ADD_CMD("draw_polyline", layer::CmdDrawPolyline)
+            ADD_CMD("draw_arc", layer::CmdDrawArc)
+            ADD_CMD("draw_triangle_equilateral", layer::CmdDrawTriangleEquilateral)
+            ADD_CMD("draw_centered_filled_rounded_rect", layer::CmdDrawCenteredFilledRoundedRect)
+            ADD_CMD("draw_sprite_centered", layer::CmdDrawSpriteCentered)
+            ADD_CMD("draw_sprite_top_left", layer::CmdDrawSpriteTopLeft)
+            ADD_CMD("draw_dashed_circle", layer::CmdDrawDashedCircle)
+            ADD_CMD("draw_dashed_rounded_rect", layer::CmdDrawDashedRoundedRect)
+            ADD_CMD("draw_dashed_line", layer::CmdDrawDashedLine)
+            ADD_CMD("draw_gradient_rect_centered", layer::CmdDrawGradientRectCentered)
+            ADD_CMD("draw_gradient_rect_rounded_centered", layer::CmdDrawGradientRectRoundedCentered)
+            ADD_CMD("draw_batched_entities", layer::CmdDrawBatchedEntities)
+            else {
+                SPDLOG_WARN("add_local_command: unsupported type '{}'", type);
+            }
+#undef ADD_CMD
+        });
 
     // Global batch accessor
     sdc["globalBatch"] = &globalBatch;

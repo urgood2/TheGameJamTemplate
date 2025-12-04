@@ -4633,7 +4633,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     }
 
     // Per-entity rotation feed for material_card_overlay.
-    if (pass.shaderName == "material_card_overlay") {
+    if (pass.shaderName == "material_card_overlay" ||
+        pass.shaderName == "material_card_overlay_new_dissolve") {
       float rotDeg = transform.getVisualRWithDynamicMotionAndXLeaning();
       if (std::abs(rotDeg) < 0.0001f) {
         rotDeg = transform.getVisualR();

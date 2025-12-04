@@ -273,3 +273,25 @@
   - Polished CastBlockFlash UI (force fade-out controls, jiggle/alpha tweaks) so cast block flashes render and expire more reliably.
   - Instrumentation/build toggles: Tracy instrumentation re-enabled (forced off on Web), telemetry build flag defaults to off, and Emscripten main loop now pauses/resumes on focus/visibility changes.
   - Docs/planning updates: wand gap report expanded around upgrades/stat merging and trigger coverage; TODO_prototype gained visibility/shop/UX notes.
+
+11/30/2025
+  - Planning/UX polish: fixed card ID assignment, added rarity-aware tooltips, improved execution graph hover handling, and continued planning UI cleanup.
+  - Avatar unlock and messaging: implemented unlock tracker + discovery toasts, added avatar debug UI, wired message queue signals into gameplay, and lifted inventory cards with a Send Up flow plus tag evaluation hooks.
+  - Shop and wand systems: expanded shop window/offers, piped card upgrade behaviors into projectile execution with stat snapshots and explosion scaling, and added a subcast debug overlay gated by DEBUG_SUBCAST.
+  - Stability/coverage: paused web builds on tab visibility changes, broadened ASAN/unit coverage (controller nav, shader/uniform skip logic, sound, telemetry/localization), and refreshed tests/stubs for message queue/avatars.
+
+12/01/2025
+  - Shop flow landed: card purchasing plus avatar unlocking, card spawner + debug UI, and gold interest transitions/currency+tag synergy UI updates.
+  - UI/engine plumbing: added AvatarJokerStrip UI to gameplay, refactored Tracy integration with canvas rendering tweaks, and hardened web telemetry serialization.
+
+12/02/2025
+  - Broad UI/functionality sweep across scripts with incremental polish and fixes.
+
+12/03/2025
+  - Input/aiming: added auto-aim with spring smoothing, projectile recoil/launch feedback, a world-space aim indicator that swaps mouse/pad inputs, and an F/joker prompt for toggling auto-aim.
+  - Action onboarding: built an action-phase tutorial overlay that renders contextual move/dash cues with controller/keyboard art while the action timer runs.
+  - UI polish: tag synergy panel now caches layout for hover detection and lists tag breakpoints/remaining counts in tooltips; continued tooltip/particle tuning.
+  - Rendering: added a brushed `material_card_overlay` shader pass wired for native/web, fed per-entity rotation into the pipeline, and started a new render path for card transforms.
+
+12/04/2025
+  - Prototyping a `material_card_overlay_new_dissolve` pass (native + web) with dissolve/burn controls, default uniform registration, rotation support, and initial shader draw command batching helpers; card pipeline can be pointed at the new pass for testing.

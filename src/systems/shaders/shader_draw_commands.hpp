@@ -3,6 +3,9 @@
 #include "raylib.h"
 #include "shader_system.hpp"
 #include "shader_pipeline.hpp"
+#include "systems/layer/layer_optimized.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
+#include "entt/entt.hpp"
 #include <vector>
 #include <string>
 #include <functional>
@@ -10,6 +13,16 @@
 #include <unordered_map>
 
 namespace shader_draw_commands {
+
+struct OwnedDrawCommand {
+    layer::DrawCommandV2 cmd;
+    std::shared_ptr<void> owner; // keeps command data alive
+};
+
+struct BatchedLocalCommands {
+    std::vector<OwnedDrawCommand> commands;
+    void clear() { commands.clear(); }
+};
 
 /**
  * @enum DrawCommandType
@@ -19,6 +32,7 @@ enum class DrawCommandType {
     BeginShader,
     EndShader,
     DrawTexture,
+    DrawText,
     SetUniforms,
     Custom
 };
@@ -41,13 +55,21 @@ struct DrawCommand {
     Color tint;
     bool useDestRect;
 
+    // Data for text drawing
+    std::string text;
+    Font font;
+    float fontSize{0.0f};
+    float spacing{0.0f};
+    Vector2 textPos{0.0f, 0.0f};
+
     // Uniforms to apply
     shaders::ShaderUniformSet uniforms;
 
     DrawCommand() : type(DrawCommandType::Custom), texture{0},
                     sourceRect{0,0,0,0}, destRect{0,0,0,0},
                     origin{0,0}, rotation(0.0f), tint(WHITE),
-                    useDestRect(false) {}
+                    useDestRect(false), font{0}, fontSize(0.0f),
+                    spacing(0.0f), textPos{0.0f, 0.0f} {}
 };
 
 /**
@@ -144,6 +166,23 @@ public:
     }
 
     /**
+     * @brief Add a text draw command
+     */
+    void addDrawText(const std::string& text, Vector2 position, float fontSize,
+                     float spacing, Color color = WHITE, Font font = GetFontDefault()) {
+        if (!isRecording) return;
+        DrawCommand cmd;
+        cmd.type = DrawCommandType::DrawText;
+        cmd.text = text;
+        cmd.textPos = position;
+        cmd.fontSize = fontSize;
+        cmd.spacing = spacing;
+        cmd.tint = color;
+        cmd.font = font;
+        commands.push_back(cmd);
+    }
+
+    /**
      * @brief Add a uniform set command
      */
     void addSetUniforms(const std::string& shaderName,
@@ -205,6 +244,17 @@ public:
                     }
                     break;
 
+                case DrawCommandType::DrawText: {
+                    Font fontToUse = (cmd.font.texture.id != 0) ? cmd.font : GetFontDefault();
+                    DrawTextEx(fontToUse,
+                               cmd.text.c_str(),
+                               cmd.textPos,
+                               cmd.fontSize,
+                               cmd.spacing,
+                               cmd.tint);
+                    break;
+                }
+
                 case DrawCommandType::SetUniforms:
                     if (shaderActive && cmd.shaderName == currentShader) {
                         Shader shader = shaders::getShader(cmd.shaderName);
@@ -236,7 +286,8 @@ public:
         std::stable_sort(commands.begin(), commands.end(),
             [](const DrawCommand& a, const DrawCommand& b) {
                 // Keep custom commands in order
-                if (a.type == DrawCommandType::Custom || b.type == DrawCommandType::Custom) {
+                if (a.type == DrawCommandType::Custom || b.type == DrawCommandType::Custom ||
+                    a.type == DrawCommandType::DrawText || b.type == DrawCommandType::DrawText) {
                     return false;
                 }
                 // Group shader-related commands together
@@ -293,5 +344,24 @@ void executeEntityPipelineWithCommands(
  * @brief Expose draw command system to Lua
  */
 void exposeToLua(sol::state& lua);
+
+// Utility: add a layer command (local space) to be drawn with the entity's shader pipeline.
+template <typename T, typename Initializer>
+inline void AddLocalCommand(entt::registry& registry, entt::entity e, int z,
+                            layer::DrawCommandSpace space, Initializer&& init) {
+    auto* comp = registry.try_get<BatchedLocalCommands>(e);
+    if (!comp) {
+        comp = &registry.emplace<BatchedLocalCommands>(e);
+    }
+    auto data = std::make_shared<T>();
+    init(data.get());
+    layer::DrawCommandV2 dc{};
+    dc.type = layer::layer_command_buffer::GetDrawCommandType<T>();
+    dc.data = data.get();
+    dc.z = z;
+    dc.space = space;
+    OwnedDrawCommand owned{dc, data};
+    comp->commands.push_back(std::move(owned));
+}
 
 } // namespace shader_draw_commands

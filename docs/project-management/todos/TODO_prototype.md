@@ -75,7 +75,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     - there should be three escalations, like fanfare, box jerking each time, which will modify the shader background color, maybe make it pulse.
     - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
     - Then show the reward, with ambient animation.
-    
+
+- let's make projectiles release different types of particles (varying in color/intensity) based on the speed at which they collide with the wall, and its damage. if they contain x or more damage, they should pulse as they move, and release a bit of a trail.    
+
 - make a single material shader based off of balatro to use for special cards.
 - replace card sprites with real ones. 
 - make use of the new shader I have for appear/disappear when spawning/despawning things. -try with sakura shader as well?

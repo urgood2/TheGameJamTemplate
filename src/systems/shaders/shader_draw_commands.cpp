@@ -174,43 +174,6 @@ void executeEntityPipelineWithCommands(
         });
     }
 
-    // Ground ellipse shadow (non-rotating)
-    if (transformComp && registry.any_of<transform::GameObject>(e)) {
-        const auto &node = registry.get<transform::GameObject>(e);
-        if (node.shadowDisplacement &&
-            node.shadowMode == transform::GameObject::ShadowMode::GroundEllipse) {
-            float baseX = transformComp->getVisualX() + transformComp->getVisualW() * 0.5f;
-            float baseY = transformComp->getVisualY() + transformComp->getVisualH() +
-                          node.groundShadowYOffset;
-
-            float s = transformComp->getVisualScaleWithHoverAndDynamicMotionReflected();
-            float spriteW = transformComp->getVisualW();
-            float spriteH = transformComp->getVisualH();
-
-            float rx = node.groundShadowRadiusX.has_value()
-                           ? *node.groundShadowRadiusX
-                           : spriteW * 0.40f;
-
-            float ry = node.groundShadowRadiusY.has_value()
-                           ? *node.groundShadowRadiusY
-                           : spriteH * 0.15f;
-
-            rx *= s * node.groundShadowHeightFactor;
-            ry *= s * node.groundShadowHeightFactor;
-
-            if (node.groundShadowColor.a > 0 && rx > 0.1f && ry > 0.1f) {
-                Color ellipseColor = node.groundShadowColor;
-                batch.addCustomCommand([baseX, baseY, rx, ry, ellipseColor]() {
-                    rlPushMatrix();
-                    rlTranslatef(baseX, baseY, 0.0f);
-                    rlScalef(rx, ry, 1.0f);
-                    DrawCircleV({0.0f, 0.0f}, 1.0f, ellipseColor);
-                    rlPopMatrix();
-                });
-            }
-        }
-    }
-
     // Approximate legacy sprite-based shadow rendering
     if (registry.any_of<transform::GameObject>(e)) {
         const auto &node = registry.get<transform::GameObject>(e);
@@ -257,6 +220,14 @@ void executeEntityPipelineWithCommands(
         // Begin shader
         batch.addBeginShader(pass.shaderName);
 
+        // Apply global uniforms first (equivalent to TryApplyUniforms)
+        if (const auto *globalSet =
+                globals::getGlobalShaderUniforms().getSet(pass.shaderName)) {
+            if (!globalSet->uniforms.empty()) {
+                batch.addSetUniforms(pass.shaderName, *globalSet);
+            }
+        }
+
         shaders::ShaderUniformSet uniforms;
         if (pass.injectAtlasUniforms) {
             float renderWidth = renderW;
@@ -298,6 +269,14 @@ void executeEntityPipelineWithCommands(
         if (!overlay.enabled) continue;
 
         batch.addBeginShader(overlay.shaderName);
+
+        // Apply global uniforms first (equivalent to TryApplyUniforms)
+        if (const auto *globalSet =
+                globals::getGlobalShaderUniforms().getSet(overlay.shaderName)) {
+            if (!globalSet->uniforms.empty()) {
+                batch.addSetUniforms(overlay.shaderName, *globalSet);
+            }
+        }
 
         if (overlay.customPrePassFunction) {
             batch.addCustomCommand(overlay.customPrePassFunction);

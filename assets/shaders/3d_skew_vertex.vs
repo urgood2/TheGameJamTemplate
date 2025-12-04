@@ -28,6 +28,8 @@ uniform float rand_seed;
 uniform float vortex_amt;
 uniform float rotation;
 uniform vec2 mouse_screen_pos;
+uniform vec2 quad_center;
+uniform vec2 quad_size;
 
 void main()
 {
@@ -46,20 +48,10 @@ void main()
     vec2 localMouse = mouse_screen_pos / resolution;
     worldMouseUV = localMouse;
 
-    // Convert pivot to screen space
-    vec2 objectCenterScreen = (pivot + regionRate * 0.5) * resolution;
-
-    // Compute mouse offset relative to object center
-    vec2 relative = (mouse_screen_pos - objectCenterScreen) / (regionRate * resolution);
-
-    // Normalize
-    vec2 relativeMouseDir = clamp(relative, -1.0, 1.0);
-
-    // Flip vertical tilt direction
-    relativeMouseDir.y *= -1.0;
-    
-    // Properly normalize and preserve direction across both halves
-    relativeMouseDir.x = -relativeMouseDir.x;
+    // Compute mouse offset relative to the actual quad on screen
+    vec2 halfSize = max(quad_size * 0.5, vec2(1.0));
+    vec2 relativeMouseDir = clamp((mouse_screen_pos - quad_center) / halfSize, -1.0, 1.0);
+    relativeMouseDir.y = -relativeMouseDir.y; // screen Y goes down; convert to up
 
     // Final force
     vec2 mouseForce = hovering * relativeMouseDir + randVec * 0.05 * rand_trans_power;
@@ -69,8 +61,8 @@ void main()
     // --- compute inverse rotation to tilt TOWARD the mouse ---
     float sinY = sin(radians(y_rot) + mouseForce.x);  // yaw  (right = positive)
     float cosY = cos(radians(y_rot) + mouseForce.x);
-    float sinX = sin(radians(x_rot) - mouseForce.y);  // pitch (up = positive -> forward tilt)
-    float cosX = cos(radians(x_rot) - mouseForce.y);
+    float sinX = sin(radians(x_rot) + mouseForce.y);  // pitch (up = positive -> forward tilt)
+    float cosX = cos(radians(x_rot) + mouseForce.y);
 
     mat3 rotY = mat3(
         cosY, 0.0, sinY,

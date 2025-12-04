@@ -659,6 +659,10 @@ void SetUpShaderUniforms() {
                                drawHeight / drawHeight // = 1.0
                            });
   globalShaderUniforms.set("3d_skew", "pivot", Vector2{0.0f, 0.0f}); // Al
+  globalShaderUniforms.set("3d_skew", "quad_center",
+                           Vector2{0.0f, 0.0f}); // Screen-space center
+  globalShaderUniforms.set("3d_skew", "quad_size",
+                           Vector2{1.0f, 1.0f}); // Screen-space size
 
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});

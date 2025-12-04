@@ -8,6 +8,7 @@
 #include "raylib.h"
 #include "spdlog/spdlog.h"
 #include <algorithm>
+#include <cmath>
 
 namespace shader_draw_commands {
 
@@ -167,6 +168,8 @@ void executeEntityPipelineWithCommands(
     center = {basePosX + baseVisualW * 0.5f,
               basePosY + baseVisualH * 0.5f};
     Rectangle destRect{center.x, center.y, destW, destH};
+    Vector2 skewCenter{destRect.x, destRect.y};
+    Vector2 skewSize{std::abs(destRect.width), std::abs(destRect.height)};
     static int debugRotationLogs = 0;
     if (debugRotationLogs < 8) {
         SPDLOG_INFO("material_card_overlay rotation rad={} deg={} hasTransform={}",
@@ -373,6 +376,8 @@ void executeEntityPipelineWithCommands(
                                     regionRate,
                                     pivot,
                                     cardRotation,
+                                    skewCenter,
+                                    skewSize,
                                     customPrePass]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
@@ -384,6 +389,8 @@ void executeEntityPipelineWithCommands(
                 if (is3DSkew) {
                     globals::getGlobalShaderUniforms().set(shaderName, "regionRate", regionRate);
                     globals::getGlobalShaderUniforms().set(shaderName, "pivot", pivot);
+                    globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
+                    globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
                 }
                 if (isCardOverlay) {
                     globals::getGlobalShaderUniforms().set(
@@ -452,6 +459,8 @@ void executeEntityPipelineWithCommands(
                                                          atlasRect.height / atlasSize.y},
                                     pivot = Vector2{atlasRect.x / atlasSize.x,
                                                     atlasRect.y / atlasSize.y},
+                                    skewCenter,
+                                    skewSize,
                                     customPrePass]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
@@ -463,6 +472,8 @@ void executeEntityPipelineWithCommands(
                 if (is3DSkew) {
                     globals::getGlobalShaderUniforms().set(shaderName, "regionRate", regionRate);
                     globals::getGlobalShaderUniforms().set(shaderName, "pivot", pivot);
+                    globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
+                    globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
                 }
                 if (customPrePass) {
                     customPrePass();

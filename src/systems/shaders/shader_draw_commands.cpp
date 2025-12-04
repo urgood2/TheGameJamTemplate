@@ -222,27 +222,54 @@ void executeEntityPipelineWithCommands(
         }
     };
 
-    auto emitLocalCommands = [&](bool beforeSprite) {
-        if (localCommands.empty())
+    auto emitLocalCommandsToBatch = [&](bool beforeSprite) {
+        if (localCommands.empty()) {
             return;
-        float scaleX = (baseVisualW > 0.0f) ? (destW / baseVisualW) : 1.0f;
-        float scaleY = (baseVisualH > 0.0f) ? (destH / baseVisualH) : 1.0f;
-        rlPushMatrix();
-        rlTranslatef(center.x, center.y, 0.0f);
-        rlRotatef(cardRotationDeg, 0.0f, 0.0f, 1.0f);
-        rlScalef(scaleX, scaleY, 1.0f);
-        rlTranslatef(-baseVisualW * 0.5f, -baseVisualH * 0.5f, 0.0f);
-        for (const auto& oc : localCommands) {
-            const bool cmdIsBefore = oc.cmd.z < 0;
-            if (beforeSprite != cmdIsBefore)
-                continue;
-            renderLocalCommand(oc);
         }
-        rlPopMatrix();
+
+        const float capturedBaseVisualW = baseVisualW;
+        const float capturedBaseVisualH = baseVisualH;
+        const float capturedDestW = destW;
+        const float capturedDestH = destH;
+        const float capturedRotation = cardRotationDeg;
+        const Vector2 capturedCenter = center;
+        auto commandsCopy = localCommands; // keep shared_ptr owners alive
+
+        batch.addCustomCommand([commandsCopy,
+                                beforeSprite,
+                                capturedBaseVisualW,
+                                capturedBaseVisualH,
+                                capturedDestW,
+                                capturedDestH,
+                                capturedRotation,
+                                capturedCenter,
+                                renderLocalCommand]() {
+            const float scaleX = (capturedBaseVisualW > 0.0f)
+                                     ? (capturedDestW / capturedBaseVisualW)
+                                     : 1.0f;
+            const float scaleY = (capturedBaseVisualH > 0.0f)
+                                     ? (capturedDestH / capturedBaseVisualH)
+                                     : 1.0f;
+            rlPushMatrix();
+            rlTranslatef(capturedCenter.x, capturedCenter.y, 0.0f);
+            rlRotatef(capturedRotation, 0.0f, 0.0f, 1.0f);
+            rlScalef(scaleX, scaleY, 1.0f);
+            rlTranslatef(-capturedBaseVisualW * 0.5f,
+                         -capturedBaseVisualH * 0.5f,
+                         0.0f);
+            for (const auto& oc : commandsCopy) {
+                const bool cmdIsBefore = oc.cmd.z < 0;
+                if (beforeSprite != cmdIsBefore) {
+                    continue;
+                }
+                renderLocalCommand(oc);
+            }
+            rlPopMatrix();
+        });
     };
 
     if (drawForeground && pipelineComp.passes.empty()) {
-        emitLocalCommands(/*beforeSprite=*/true);
+        emitLocalCommandsToBatch(/*beforeSprite=*/true);
         batch.addDrawTexturePro(
             *spriteAtlas,
             srcRect,
@@ -251,7 +278,7 @@ void executeEntityPipelineWithCommands(
             cardRotationDeg,
             fgColor
         );
-        emitLocalCommands(/*beforeSprite=*/false);
+        emitLocalCommandsToBatch(/*beforeSprite=*/false);
     } else if (drawForeground && !pipelineComp.passes.empty()) {
         // Defer drawing to shader passes for shaded output
     }
@@ -293,7 +320,7 @@ void executeEntityPipelineWithCommands(
         }
 
         // Draw the texture through the shader
-        emitLocalCommands(/*beforeSprite=*/true);
+        emitLocalCommandsToBatch(/*beforeSprite=*/true);
         if (drawForeground) {
             batch.addDrawTexturePro(
                 *spriteAtlas,
@@ -304,7 +331,7 @@ void executeEntityPipelineWithCommands(
                 fgColor
             );
         }
-        emitLocalCommands(/*beforeSprite=*/false);
+        emitLocalCommandsToBatch(/*beforeSprite=*/false);
 
         // End shader
         batch.addEndShader();

@@ -14,12 +14,8 @@ namespace layer
                     if (a.z != b.z) return a.z < b.z;
                     // if (a.followAnchor && a.followAnchor == b.uniqueID) return false;
                     // if (b.followAnchor && b.followAnchor == a.uniqueID) return true;
-                    if (a.type == DrawCommandType::ScopedTransformCompositeRender ||
-                    b.type == DrawCommandType::ScopedTransformCompositeRender)
-                        return true;
-                    
-                    return false;
-
+                    return false; // stable_sort preserves insertion order when z is equal
+        
             
                     // return a.uniqueID < b.uniqueID; // preserve queue order
                 });

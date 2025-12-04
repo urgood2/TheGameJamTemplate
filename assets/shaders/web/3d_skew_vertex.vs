@@ -57,19 +57,14 @@ void main()
     // Final force
     vec2 mouseForce = hovering * relativeMouseDir + randVec * 0.05 * rand_trans_power;
 
-
-
-    // Compute rotation matrix (inverse)
-    float sinY = sin(radians(y_rot) + mouseForce.x);
-    float cosY = cos(radians(y_rot) + mouseForce.x);
-    float sinX = sin(radians(x_rot) + mouseForce.y);
-    float cosX = cos(radians(x_rot) + mouseForce.y);
-
-    invRotMat = mat3(
-        vec3( cosY,      0.0, -sinY ),
-        vec3( sinY*sinX, cosX, cosY*sinX ),
-        vec3( sinY*cosX, -sinX, cosY*cosX )
-    );
+    // Build orientation so the quad normal points toward the mouse
+    vec3 forward = normalize(vec3(mouseForce.x, mouseForce.y, 1.0));
+    vec3 upRef = vec3(0.0, 1.0, 0.0);
+    vec3 right = normalize(cross(upRef, forward));
+    if (length(right) < 1e-4) right = vec3(1.0, 0.0, 0.0);
+    vec3 up = normalize(cross(forward, right));
+    mat3 rot = mat3(right, up, forward); // columns
+    invRotMat = transpose(rot); // inverse of rotation
 
     // Apply perspective shift to vertex
     float t = tan(radians(fov) / 2.0);

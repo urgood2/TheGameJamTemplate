@@ -102,11 +102,13 @@ void executeEntityPipelineWithCommands(
     float renderW = baseW;
     float renderH = baseH;
 
-    float xSign = flipX ? -1.0f : 1.0f;
-    float ySign = flipY ? -1.0f : 1.0f;
+    const float xSign = flipX ? -1.0f : 1.0f;
+    const float ySign = flipY ? -1.0f : 1.0f;
+    // When flipping, offset into the atlas by frame dimensions so negative widths/heights
+    // don't sample outside the intended region.
     Rectangle srcRect{
-        static_cast<float>(animationFrame->x),
-        static_cast<float>(animationFrame->y),
+        static_cast<float>(animationFrame->x) + (flipX ? static_cast<float>(animationFrame->width) : 0.0f),
+        static_cast<float>(animationFrame->y) + (flipY ? static_cast<float>(animationFrame->height) : 0.0f),
         static_cast<float>(animationFrame->width) * xSign,
         static_cast<float>(animationFrame->height) * ySign};
 
@@ -146,6 +148,19 @@ void executeEntityPipelineWithCommands(
     const float cardRotationRad = uniformRotationDeg * DEG2RAD;
     const float cardRotationDeg = drawRotationDeg;
 
+    // Add base sprite draw command
+    auto spriteAtlas = currentSprite->spriteData.texture;
+
+    // Atlas rect and size for accurate UVs in shaders
+    Rectangle atlasRect{
+        static_cast<float>(animationFrame->x),
+        static_cast<float>(animationFrame->y),
+        static_cast<float>(animationFrame->width),
+        static_cast<float>(animationFrame->height)};
+    Vector2 atlasSize{
+        static_cast<float>(spriteAtlas->width),
+        static_cast<float>(spriteAtlas->height)};
+
     // Pivot at transform center; keep transform position as the top-left anchor at scale 1,
     // and allow scale to expand/contract symmetrically around the center.
     Vector2 origin = {destW * 0.5f, destH * 0.5f};
@@ -160,9 +175,6 @@ void executeEntityPipelineWithCommands(
                     registry.any_of<transform::Transform>(e));
         ++debugRotationLogs;
     }
-
-    // Add base sprite draw command
-    auto spriteAtlas = currentSprite->spriteData.texture;
 
     // Background fill to match legacy pipeline
     if (drawBackground) {
@@ -205,10 +217,10 @@ void executeEntityPipelineWithCommands(
     }
 
     BatchedLocalCommands* localCmds = registry.try_get<BatchedLocalCommands>(e);
-    std::vector<OwnedDrawCommand> localCommands;
+    std::vector<OwnedDrawCommand> allLocalCommands;
     if (localCmds) {
-        localCommands = localCmds->commands;
-        std::stable_sort(localCommands.begin(), localCommands.end(),
+        allLocalCommands = localCmds->commands;
+        std::stable_sort(allLocalCommands.begin(), allLocalCommands.end(),
                          [](const OwnedDrawCommand& a, const OwnedDrawCommand& b) {
                              return a.cmd.z < b.cmd.z;
                          });
@@ -225,14 +237,15 @@ void executeEntityPipelineWithCommands(
         }
     };
 
-    auto makeLocalCommandEmitter = [&](bool beforeSprite) {
+    auto makeLocalCommandEmitter = [&](const std::vector<OwnedDrawCommand>& commands,
+                                       bool beforeSprite) {
         const float capturedBaseVisualW = baseVisualW;
         const float capturedBaseVisualH = baseVisualH;
         const float capturedDestW = destW;
         const float capturedDestH = destH;
         const float capturedRotation = cardRotationDeg;
         const Vector2 capturedCenter = center;
-        auto commandsCopy = localCommands; // keep shared_ptr owners alive
+        auto commandsCopy = commands; // keep shared_ptr owners alive
 
         return [commandsCopy,
                 beforeSprite,
@@ -267,11 +280,29 @@ void executeEntityPipelineWithCommands(
         };
     };
 
-    const bool hasLocalCommands = !localCommands.empty();
+    // Partition locals into text and non-text so we can render text separately with identity atlas.
+    auto isTextCommand = [](const OwnedDrawCommand& oc) {
+        using layer::DrawCommandType;
+        return oc.cmd.type == DrawCommandType::Text ||
+               oc.cmd.type == DrawCommandType::DrawTextCentered ||
+               oc.cmd.type == DrawCommandType::TextPro;
+    };
+    std::vector<OwnedDrawCommand> localTextCommands;
+    std::vector<OwnedDrawCommand> localNonTextCommands;
+    for (const auto& oc : allLocalCommands) {
+        if (isTextCommand(oc)) {
+            localTextCommands.push_back(oc);
+        } else {
+            localNonTextCommands.push_back(oc);
+        }
+    }
+
+    const bool hasLocalNonTextCommands = !localNonTextCommands.empty();
+    const bool hasLocalTextCommands = !localTextCommands.empty();
 
     if (drawForeground && pipelineComp.passes.empty()) {
-        if (hasLocalCommands) {
-            batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
+        if (hasLocalNonTextCommands) {
+            batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
         }
         batch.addDrawTexturePro(
             *spriteAtlas,
@@ -281,12 +312,16 @@ void executeEntityPipelineWithCommands(
             cardRotationDeg,
             fgColor
         );
-        if (hasLocalCommands) {
-            batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
+        if (hasLocalNonTextCommands) {
+            batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/false));
+        }
+        if (hasLocalTextCommands) {
+            // Draw text with default shader but same transform.
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/true));
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/false));
         }
     } else if (drawForeground && !pipelineComp.passes.empty()) {
-        // Draw locals once before/after all shader passes so they use the default shader.
-        // Defer drawing to shader passes for shaded output
+        // Non-text locals are emitted inside the last active pass/overlay below.
     }
 
     int lastEnabledPass = -1;
@@ -318,24 +353,37 @@ void executeEntityPipelineWithCommands(
             const bool isCardOverlay =
                 (shaderName == "material_card_overlay" ||
                  shaderName == "material_card_overlay_new_dissolve");
-            const float uniformRenderW = renderW;
-            const float uniformRenderH = renderH;
             const float cardRotation = cardRotationRad;
+            // For pseudo-3D skew shaders, keep UVs locked to the atlas sub-rect.
+            const bool is3DSkew = (shaderName == "3d_skew");
+            const Vector2 regionRate{
+                atlasRect.width / atlasSize.x,
+                atlasRect.height / atlasSize.y};
+            const Vector2 pivot{
+                atlasRect.x / atlasSize.x,
+                atlasRect.y / atlasSize.y};
             auto customPrePass = pass.customPrePassFunction;
 
             batch.addCustomCommand([shaderName,
                                     injectAtlas,
                                     isCardOverlay,
-                                    uniformRenderW,
-                                    uniformRenderH,
+                                    is3DSkew,
+                                    atlasRect,
+                                    atlasSize,
+                                    regionRate,
+                                    pivot,
                                     cardRotation,
                                     customPrePass]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
                         shaderName,
-                        {0, 0, uniformRenderW, uniformRenderH},
-                        Vector2{uniformRenderW, uniformRenderH});
+                        atlasRect,
+                        atlasSize);
+                }
+                if (is3DSkew) {
+                    globals::getGlobalShaderUniforms().set(shaderName, "regionRate", regionRate);
+                    globals::getGlobalShaderUniforms().set(shaderName, "pivot", pivot);
                 }
                 if (isCardOverlay) {
                     globals::getGlobalShaderUniforms().set(
@@ -359,10 +407,10 @@ void executeEntityPipelineWithCommands(
 
         if (drawForeground) {
             const bool emitLocalsThisPass =
-                hasLocalCommands && !hasEnabledOverlays &&
+                hasLocalNonTextCommands && !hasEnabledOverlays &&
                 static_cast<int>(passIndex) == lastEnabledPass;
             if (emitLocalsThisPass) {
-                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
+                batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
             }
             batch.addDrawTexturePro(
                 *spriteAtlas,
@@ -373,7 +421,7 @@ void executeEntityPipelineWithCommands(
                 fgColor
             );
             if (emitLocalsThisPass) {
-                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
+                batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/false));
             }
         }
 
@@ -392,21 +440,29 @@ void executeEntityPipelineWithCommands(
         {
             const std::string shaderName = overlay.shaderName;
             const bool injectAtlas = overlay.injectAtlasUniforms;
-            const float uniformRenderW = renderW;
-            const float uniformRenderH = renderH;
+            const bool is3DSkew = (shaderName == "3d_skew");
             auto customPrePass = overlay.customPrePassFunction;
 
             batch.addCustomCommand([shaderName,
                                     injectAtlas,
-                                    uniformRenderW,
-                                    uniformRenderH,
+                                    is3DSkew,
+                                    atlasRect,
+                                    atlasSize,
+                                    regionRate = Vector2{atlasRect.width / atlasSize.x,
+                                                         atlasRect.height / atlasSize.y},
+                                    pivot = Vector2{atlasRect.x / atlasSize.x,
+                                                    atlasRect.y / atlasSize.y},
                                     customPrePass]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
                         shaderName,
-                        {0, 0, uniformRenderW, uniformRenderH},
-                        Vector2{uniformRenderW, uniformRenderH});
+                        atlasRect,
+                        atlasSize);
+                }
+                if (is3DSkew) {
+                    globals::getGlobalShaderUniforms().set(shaderName, "regionRate", regionRate);
+                    globals::getGlobalShaderUniforms().set(shaderName, "pivot", pivot);
                 }
                 if (customPrePass) {
                     customPrePass();
@@ -424,10 +480,10 @@ void executeEntityPipelineWithCommands(
 
         if (drawForeground) {
             const bool emitLocalsThisOverlay =
-                hasLocalCommands &&
+                hasLocalNonTextCommands &&
                 static_cast<int>(overlayIndex) == lastEnabledOverlay;
             if (emitLocalsThisOverlay) {
-                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/true));
+                batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
             }
             batch.addDrawTexturePro(
                 *spriteAtlas,
@@ -438,11 +494,55 @@ void executeEntityPipelineWithCommands(
                 WHITE
             );
             if (emitLocalsThisOverlay) {
-                batch.addCustomCommand(makeLocalCommandEmitter(/*beforeSprite=*/false));
+                batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/false));
             }
         }
 
         batch.addEndShader();
+    }
+
+    // Dedicated text pass: reuse the last active shader (overlay preferred) but
+    // force identity atlas uniforms so font atlas sampling stays stable.
+    if (drawForeground && hasLocalTextCommands) {
+        std::string textShaderName;
+        bool textInjectAtlas = true;
+        if (lastEnabledOverlay != -1) {
+            textShaderName = pipelineComp.overlayDraws[lastEnabledOverlay].shaderName;
+            textInjectAtlas = pipelineComp.overlayDraws[lastEnabledOverlay].injectAtlasUniforms;
+        } else if (lastEnabledPass != -1) {
+            textShaderName = pipelineComp.passes[lastEnabledPass].shaderName;
+            textInjectAtlas = pipelineComp.passes[lastEnabledPass].injectAtlasUniforms;
+        }
+
+        if (!textShaderName.empty()) {
+            batch.addBeginShader(textShaderName);
+            batch.addCustomCommand([textShaderName,
+                                    textInjectAtlas,
+                                    cardRotation = cardRotationRad]() {
+                if (textInjectAtlas) {
+                    shaders::injectAtlasUniforms(
+                        globals::getGlobalShaderUniforms(),
+                        textShaderName,
+                        Rectangle{0.0f, 0.0f, 1.0f, 1.0f},
+                        Vector2{1.0f, 1.0f});
+                }
+                globals::getGlobalShaderUniforms().set(textShaderName, "regionRate", Vector2{1.0f, 1.0f});
+                globals::getGlobalShaderUniforms().set(textShaderName, "pivot", Vector2{0.0f, 0.0f});
+                globals::getGlobalShaderUniforms().set(textShaderName, "card_rotation", cardRotation);
+                Shader shader = shaders::getShader(textShaderName);
+                if (shader.id) {
+                    shaders::TryApplyUniforms(
+                        shader,
+                        globals::getGlobalShaderUniforms(),
+                        textShaderName);
+                }
+            });
+
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/true));
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/false));
+
+            batch.addEndShader();
+        }
     }
 
     // End/optimize only if we started recording in this helper.

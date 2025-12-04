@@ -297,33 +297,50 @@ void executeEntityPipelineWithCommands(
         // Begin shader
         batch.addBeginShader(pass.shaderName);
 
-        // Apply global uniforms first (equivalent to TryApplyUniforms)
-        if (const auto *globalSet =
-                globals::getGlobalShaderUniforms().getSet(pass.shaderName)) {
-            if (!globalSet->uniforms.empty()) {
-                batch.addSetUniforms(pass.shaderName, *globalSet);
-            }
-        }
+        // Run pre-pass work and apply uniforms after any dynamic updates.
+        {
+            const std::string shaderName = pass.shaderName;
+            const bool injectAtlas = pass.injectAtlasUniforms;
+            const bool isCardOverlay =
+                (shaderName == "material_card_overlay" ||
+                 shaderName == "material_card_overlay_new_dissolve");
+            const float uniformRenderW = renderW;
+            const float uniformRenderH = renderH;
+            const float cardRotation = cardRotationRad;
+            auto customPrePass = pass.customPrePassFunction;
 
-        shaders::ShaderUniformSet uniforms;
-        if (pass.injectAtlasUniforms) {
-            float renderWidth = renderW;
-            float renderHeight = renderH;
+            batch.addCustomCommand([shaderName,
+                                    injectAtlas,
+                                    isCardOverlay,
+                                    uniformRenderW,
+                                    uniformRenderH,
+                                    cardRotation,
+                                    customPrePass]() {
+                if (injectAtlas) {
+                    shaders::injectAtlasUniforms(
+                        globals::getGlobalShaderUniforms(),
+                        shaderName,
+                        {0, 0, uniformRenderW, uniformRenderH},
+                        Vector2{uniformRenderW, uniformRenderH});
+                }
+                if (isCardOverlay) {
+                    globals::getGlobalShaderUniforms().set(
+                        shaderName,
+                        "card_rotation",
+                        cardRotation);
+                }
+                if (customPrePass) {
+                    customPrePass();
+                }
 
-            uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
-            uniforms.set("uGridRect", Vector4{0, 0, renderWidth, renderHeight});
-        }
-        if (pass.shaderName == "material_card_overlay" ||
-            pass.shaderName == "material_card_overlay_new_dissolve") {
-            uniforms.set("card_rotation", cardRotationRad);
-        }
-        if (!uniforms.uniforms.empty()) {
-            batch.addSetUniforms(pass.shaderName, uniforms);
-        }
-
-        // Custom pre-pass function
-        if (pass.customPrePassFunction) {
-            batch.addCustomCommand(pass.customPrePassFunction);
+                Shader shader = shaders::getShader(shaderName);
+                if (shader.id) {
+                    shaders::TryApplyUniforms(
+                        shader,
+                        globals::getGlobalShaderUniforms(),
+                        shaderName);
+                }
+            });
         }
 
         if (drawForeground) {
@@ -347,29 +364,38 @@ void executeEntityPipelineWithCommands(
 
         batch.addBeginShader(overlay.shaderName);
 
-        // Apply global uniforms first (equivalent to TryApplyUniforms)
-        if (const auto *globalSet =
-                globals::getGlobalShaderUniforms().getSet(overlay.shaderName)) {
-            if (!globalSet->uniforms.empty()) {
-                batch.addSetUniforms(overlay.shaderName, *globalSet);
-            }
-        }
+        // Run pre-pass work and apply uniforms after any dynamic updates.
+        {
+            const std::string shaderName = overlay.shaderName;
+            const bool injectAtlas = overlay.injectAtlasUniforms;
+            const float uniformRenderW = renderW;
+            const float uniformRenderH = renderH;
+            auto customPrePass = overlay.customPrePassFunction;
 
-        if (overlay.customPrePassFunction) {
-            batch.addCustomCommand(overlay.customPrePassFunction);
-        }
+            batch.addCustomCommand([shaderName,
+                                    injectAtlas,
+                                    uniformRenderW,
+                                    uniformRenderH,
+                                    customPrePass]() {
+                if (injectAtlas) {
+                    shaders::injectAtlasUniforms(
+                        globals::getGlobalShaderUniforms(),
+                        shaderName,
+                        {0, 0, uniformRenderW, uniformRenderH},
+                        Vector2{uniformRenderW, uniformRenderH});
+                }
+                if (customPrePass) {
+                    customPrePass();
+                }
 
-        if (overlay.injectAtlasUniforms) {
-            shaders::ShaderUniformSet uniforms;
-            float renderWidth = renderW;
-            float renderHeight = renderH;
-
-            uniforms.set("uImageSize", Vector2{renderWidth, renderHeight});
-            uniforms.set("uGridRect", Vector4{
-                0, 0, renderWidth, renderHeight
+                Shader shader = shaders::getShader(shaderName);
+                if (shader.id) {
+                    shaders::TryApplyUniforms(
+                        shader,
+                        globals::getGlobalShaderUniforms(),
+                        shaderName);
+                }
             });
-
-            batch.addSetUniforms(overlay.shaderName, uniforms);
         }
 
         if (drawForeground) {

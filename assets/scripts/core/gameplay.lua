@@ -1116,6 +1116,7 @@ end
 -- retursn the entity ID of the created card
 function createNewCard(id, x, y, gameStateToApply)
     local imageToUse = "trigger_card_placeholder.png"
+    -- local imageToUse = "3500-TheRoguelike_1_10_alpha_293.png"
     -- local imageToUse = "b1822.png"
     -- if category == "action" then
     --     imageToUse = "action_card_placeholder.png"

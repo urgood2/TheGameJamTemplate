@@ -278,27 +278,63 @@ public:
 
     /**
      * @brief Optimize command order to minimize state changes
-     * Groups commands by shader to reduce shader switching overhead
+     * Keeps Begin/End ordering intact and removes redundant shader toggles.
      */
     void optimize() {
-        // Sort commands to group by shader while preserving drawing order within groups
-        // This is a simplified optimization - could be made more sophisticated
-        std::stable_sort(commands.begin(), commands.end(),
-            [](const DrawCommand& a, const DrawCommand& b) {
-                // Keep custom commands in order
-                if (a.type == DrawCommandType::Custom || b.type == DrawCommandType::Custom ||
-                    a.type == DrawCommandType::DrawText || b.type == DrawCommandType::DrawText) {
-                    return false;
+        if (commands.empty()) return;
+
+        std::vector<DrawCommand> optimized;
+        optimized.reserve(commands.size());
+
+        bool shaderActive = false;
+        std::string activeShader;
+
+        auto endCurrentShader = [&](bool emitEnd) {
+            if (!shaderActive) return;
+            if (emitEnd) {
+                DrawCommand endCmd;
+                endCmd.type = DrawCommandType::EndShader;
+                optimized.push_back(endCmd);
+            }
+            shaderActive = false;
+            activeShader.clear();
+        };
+
+        for (const auto& cmd : commands) {
+            switch (cmd.type) {
+                case DrawCommandType::BeginShader: {
+                    // If the same shader is already active, skip redundant begin.
+                    if (shaderActive && cmd.shaderName == activeShader) {
+                        continue;
+                    }
+                    // Close any different active shader before switching.
+                    if (shaderActive && cmd.shaderName != activeShader) {
+                        endCurrentShader(true);
+                    }
+                    optimized.push_back(cmd);
+                    shaderActive = true;
+                    activeShader = cmd.shaderName;
+                    break;
                 }
-                // Group shader-related commands together
-                if (a.type == DrawCommandType::BeginShader && b.type != DrawCommandType::BeginShader) {
-                    return true;
+                case DrawCommandType::EndShader: {
+                    if (shaderActive) {
+                        optimized.push_back(cmd);
+                        shaderActive = false;
+                        activeShader.clear();
+                    }
+                    // Ignore stray end commands when no shader is active.
+                    break;
                 }
-                if (a.shaderName < b.shaderName) {
-                    return true;
-                }
-                return false;
-            });
+                default:
+                    optimized.push_back(cmd);
+                    break;
+            }
+        }
+
+        // Ensure we don't leave a shader active at the end of the batch.
+        endCurrentShader(true);
+
+        commands.swap(optimized);
     }
 
     /**

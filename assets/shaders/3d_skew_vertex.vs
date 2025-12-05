@@ -51,6 +51,11 @@ void main()
     float randAngle = randScale * mod(iTime * (0.9 + mod(rand_seed, 0.5)), 6.28318);
     vec2 randVec = vec2(cos(randAngle), sin(randAngle));
 
+    // Circular ambient orbit so the tilt sweeps 360 degrees instead of just swaying.
+    float orbitSpeed = 1.0 * (0.8 + mod(rand_seed, 0.4));
+    float orbitAngle = iTime * orbitSpeed + rand_seed * 7.0;
+    vec2 orbitVec = vec2(cos(orbitAngle), sin(orbitAngle)) * 0.04 * tiltScale;
+
     // Transform mouse screen position to UV offset
     vec2 localMouse = mouse_screen_pos / resolution;
     worldMouseUV = localMouse;
@@ -67,7 +72,9 @@ void main()
     // Keep the sign as-is since the rotation logic handles it correctly
 
     // Final tilt force: hovering controls strength, add subtle random movement
-    vec2 mouseForce = hoverScale * relativeMouseDir + randVec * 0.02 * randScale;
+    vec2 mouseForce = hoverScale * relativeMouseDir
+                    + randVec * 0.01 * randScale
+                    + orbitVec;
     tiltAmount = mouseForce;
 
     // Build rotation matrix for pseudo-3D effect

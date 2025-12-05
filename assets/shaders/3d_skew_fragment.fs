@@ -180,10 +180,8 @@ void main()
                          abs(pivot.x) < 0.0001 &&
                          abs(pivot.y) < 0.0001;
 
-    // Stickers/text use uv_passthrough to clamp to their own sub-rect; keep them free
-    // of ambient jitter so their UVs stay pinned.
-    float jitter = (uv_passthrough > 0.5) ? 0.0 :
-        rand_trans_power * 0.05 *
+    // Apply ambient jitter to all passes (including text) so overlay text follows card wobble.
+    float jitter = rand_trans_power * 0.05 *
         sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
     float angle = rotation + jitter;
 

@@ -48,9 +48,14 @@ void main()
 
     if (identityAtlas || uv_passthrough > 0.5) {
         // Passthrough: rely on vertex-stage skew for motion; clamp UVs to stay inside
-        // the intended region (identity or atlas sub-rect).
+        // the intended region (identity or atlas sub-rect). Apply the ambient
+        // rotation jitter so text/stickers follow rand_trans_power motion.
+        float angle = rotation + rand_trans_power * 0.05 *
+            sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
+        vec2 rotated = rotate(uv, vec2(0.5), angle);
+
         float inset = 0.0035; // tiny padding to reduce bleed
-        vec2 clamped = clamp(uv, vec2(inset), vec2(1.0 - inset));
+        vec2 clamped = clamp(rotated, vec2(inset), vec2(1.0 - inset));
         vec2 finalUV = identityAtlas
             ? clamped
             : (pivot + clamped * regionRate);

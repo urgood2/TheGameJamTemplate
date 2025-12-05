@@ -242,7 +242,8 @@ void executeEntityPipelineWithCommands(
     };
 
     auto makeLocalCommandEmitter = [&](const std::vector<OwnedDrawCommand>& commands,
-                                       bool beforeSprite) {
+                                       bool beforeSprite,
+                                       bool shaderIs3DSkew = false) {
         const float capturedBaseVisualW = baseVisualW;
         const float capturedBaseVisualH = baseVisualH;
         const float capturedDestW = destW;
@@ -259,13 +260,51 @@ void executeEntityPipelineWithCommands(
                 capturedDestH,
                 capturedRotation,
                 capturedCenter,
-                renderLocalCommand]() {
+                renderLocalCommand,
+                shaderIs3DSkew]() {
             auto applyUvPassthrough = [](float value) {
                 globals::getGlobalShaderUniforms().set("3d_skew", "uv_passthrough", value);
                 Shader shader = shaders::getShader("3d_skew");
                 if (shader.id) {
                     shaders::TryApplyUniforms(shader,
                                               globals::getGlobalShaderUniforms(),
+                                              "3d_skew");
+                }
+            };
+            auto apply3DSkewAtlasForCommand = [&](const OwnedDrawCommand& oc) {
+                if (!shaderIs3DSkew) {
+                    return;
+                }
+                Vector2 regionRate{1.0f, 1.0f};
+                Vector2 pivot{0.0f, 0.0f};
+                bool hasRegion = false;
+
+                if (oc.cmd.type == layer::DrawCommandType::TexturePro) {
+                    auto* texCmd = static_cast<layer::CmdTexturePro*>(oc.cmd.data);
+                    if (texCmd && texCmd->texture.id != 0 &&
+                        texCmd->texture.width > 0 && texCmd->texture.height > 0) {
+                        regionRate = Vector2{
+                            texCmd->source.width / static_cast<float>(texCmd->texture.width),
+                            texCmd->source.height / static_cast<float>(texCmd->texture.height)};
+                        pivot = Vector2{
+                            texCmd->source.x / static_cast<float>(texCmd->texture.width),
+                            texCmd->source.y / static_cast<float>(texCmd->texture.height)};
+                        hasRegion = true;
+                    }
+                }
+
+                if (!hasRegion) {
+                    regionRate = Vector2{1.0f, 1.0f};
+                    pivot = Vector2{0.0f, 0.0f};
+                }
+
+                auto& uniforms = globals::getGlobalShaderUniforms();
+                uniforms.set("3d_skew", "regionRate", regionRate);
+                uniforms.set("3d_skew", "pivot", pivot);
+                Shader shader = shaders::getShader("3d_skew");
+                if (shader.id) {
+                    shaders::TryApplyUniforms(shader,
+                                              uniforms,
                                               "3d_skew");
                 }
             };
@@ -287,6 +326,9 @@ void executeEntityPipelineWithCommands(
                 const bool cmdIsBefore = oc.cmd.z < 0;
                 if (beforeSprite != cmdIsBefore) {
                     continue;
+                }
+                if (shaderIs3DSkew) {
+                    apply3DSkewAtlasForCommand(oc);
                 }
                 if (oc.forceUvPassthrough) {
                     applyUvPassthrough(1.0f);
@@ -587,8 +629,8 @@ void executeEntityPipelineWithCommands(
                         stickerShaderName);
                 }
             });
-            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/true));
-            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/false));
+            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/true, stickerIs3DSkew));
+            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/false, stickerIs3DSkew));
             batch.addEndShader();
         }
     }
@@ -631,8 +673,8 @@ void executeEntityPipelineWithCommands(
                 }
             });
 
-            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/true));
-            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/false));
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/true, textIs3DSkew));
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/false, textIs3DSkew));
 
             batch.addEndShader();
         }

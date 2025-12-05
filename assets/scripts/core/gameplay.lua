@@ -1491,7 +1491,8 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("material_card_overlay")
     -- shaderPipelineComp:addPass("3d_skew_hologram")
     -- shaderPipelineComp:addPass("3d_skew")
-    shaderPipelineComp:addPass("3d_skew_polychrome")
+    shaderPipelineComp:addPass("3d_skew_foil")
+    -- shaderPipelineComp:addPass("3d_polychrome")
     -- shaderPipelineComp:addPass("material_card_overlay_new_dissolve")
 
 

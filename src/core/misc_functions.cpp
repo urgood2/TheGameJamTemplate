@@ -830,6 +830,73 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew_polychrome", "polychrome",
                            Vector2{0.65f, 0.25f});
 
+  // pseudo 3d skew foil (foil overlay)
+  shaders::registerUniformUpdate("3d_skew_foil", [](Shader &shader) {
+    globalShaderUniforms.set("3d_skew_foil", "iTime",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_foil", "time",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_foil", "mouse_screen_pos",
+                             getScaledMousePositionCached());
+    globalShaderUniforms.set(
+        "3d_skew_foil", "resolution",
+        Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    globalShaderUniforms.set("3d_skew_foil", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew_foil", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew_foil", "fade_start", 0.7f);
+  });
+  globalShaderUniforms.set("3d_skew_foil", "fov", -0.39f);
+  globalShaderUniforms.set("3d_skew_foil", "x_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "y_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "inset", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "hovering", 0.3f);
+  globalShaderUniforms.set("3d_skew_foil", "rand_trans_power", 0.4f);
+  globalShaderUniforms.set("3d_skew_foil", "rand_seed", 3.1415f);
+  globalShaderUniforms.set("3d_skew_foil", "rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "cull_back", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "tilt_enabled", 0.0f);
+  float foilDrawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+  float foilDrawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+  globalShaderUniforms.set("3d_skew_foil", "regionRate",
+                           Vector2{foilDrawWidth / foilDrawWidth,
+                                   foilDrawHeight / foilDrawHeight});
+  globalShaderUniforms.set("3d_skew_foil", "pivot",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_foil", "quad_center",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_foil", "quad_size",
+                           Vector2{1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_foil", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_foil", "uImageSize",
+                           Vector2{foilDrawWidth, foilDrawHeight});
+  globalShaderUniforms.set("3d_skew_foil", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew_foil", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew_foil", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_foil", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_foil", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_foil", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_foil", "grain_intensity", -1.95f);
+  globalShaderUniforms.set("3d_skew_foil", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew_foil", "sheen_strength", -1.49f);
+  globalShaderUniforms.set("3d_skew_foil", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew_foil", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew_foil", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew_foil", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew_foil", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew_foil", "fade_start", 0.7f);
+  globalShaderUniforms.set("3d_skew_foil", "foil",
+                           Vector2{0.65f, 0.25f});
+
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

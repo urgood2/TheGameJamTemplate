@@ -46,12 +46,17 @@ void main()
                          abs(pivot.x) < 0.0001 &&
                          abs(pivot.y) < 0.0001;
 
+    // Stickers/text use uv_passthrough to clamp to their own sub-rect; keep them free
+    // of ambient jitter so their UVs stay pinned.
+    float jitter = (uv_passthrough > 0.5) ? 0.0 :
+        rand_trans_power * 0.05 *
+        sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
+    float angle = rotation + jitter;
+
     if (identityAtlas || uv_passthrough > 0.5) {
         // Passthrough: rely on vertex-stage skew for motion; clamp UVs to stay inside
         // the intended region (identity or atlas sub-rect). Apply the ambient
         // rotation jitter so text/stickers follow rand_trans_power motion.
-        float angle = rotation + rand_trans_power * 0.05 *
-            sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
         vec2 rotated = rotate(uv, vec2(0.5), angle);
 
         float inset = 0.0035; // tiny padding to reduce bleed

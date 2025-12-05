@@ -3133,15 +3133,16 @@ function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
 
 
 ---
---- Draw command batching system for optimized shader rendering.
+--- Draw command batching for shader pipelines. Build a DrawCommandBatch in Lua, optionally optimize it, then execute once.
 ---
 ---@class shader_draw_commands
 shader_draw_commands = {
+    globalBatch = DrawCommandBatch  -- Shared batch instance you can reuse instead of allocating each frame.
 }
 
 
 ---
---- Types of draw commands that can be batched.
+--- Draw command tags used inside a DrawCommandBatch.
 ---
 ---@class shader_draw_commands.DrawCommandType
 shader_draw_commands.DrawCommandType = {
@@ -3149,7 +3150,7 @@ shader_draw_commands.DrawCommandType = {
 
 
 ---
---- Manages a batch of draw commands for optimized rendering.
+--- Record shader/text draw commands then execute them later as a single batch. Use beginRecording/endRecording to delimit writes; call optimize to collapse redundant shader changes.
 ---
 ---@class shader_draw_commands.DrawCommandBatch
 shader_draw_commands.DrawCommandBatch = {
@@ -3187,7 +3188,7 @@ function shader_draw_commands.DrawCommandBatch:addBeginShader(...) end
 function shader_draw_commands.DrawCommandBatch:addEndShader(...) end
 
 ---
---- Add a command to draw a texture.
+--- Queue a texture draw using the source rect size at the given position.
 ---
 ---@param texture Texture2D
 ---@param sourceRect Rectangle
@@ -3209,11 +3210,19 @@ function shader_draw_commands.DrawCommandBatch:addDrawTexture(...) end
 function shader_draw_commands.DrawCommandBatch:addDrawText(...) end
 
 ---
---- Add a custom command function to execute.
+--- Add a custom function to be executed inside the batch (runs during render).
 ---
 ---@param func fun()
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:addCustomCommand(...) end
+
+---
+--- Apply a ShaderUniformSet to the currently active shader inside the batch.
+---
+---@param shaderName string
+---@param uniforms ShaderUniformSet
+---@return nil
+function shader_draw_commands.DrawCommandBatch:addSetUniforms(...) end
 
 ---
 --- Execute all recorded commands in order.
@@ -10485,7 +10494,22 @@ function random_utils.random_weighted_pick_vec2(...) end
 function random_utils.random_weighted_pick_entity(...) end
 
 ---
---- Execute an entity's shader pipeline using draw command batching.
+--- Attach a layer command to BatchedLocalCommands so it renders with the entity's shader pipeline.
+---
+---@param registry Registry
+---@param entity Entity
+---@param type string @ layer command name (e.g., "draw_rect")
+---@param initFn function|nil @ called with the command instance to fill fields
+---@param z integer|nil @ z offset (default 0, <0 runs before sprite)
+---@param space integer|nil @ layer.DrawCommandSpace.World or Screen
+---@param forceTextPass boolean|nil @ render in text pass even if not a text command
+---@param forceUvPassthrough boolean|nil @ keep atlas UVs unwarped for 3d_skew
+---@param forceStickerPass boolean|nil @ render in sticker pass (identity atlas, after overlays)
+---@return nil
+function shader_draw_commands.add_local_command(...) end
+
+---
+--- Record an entity's shader pipeline into a batch; optionally autoOptimize before execution.
 ---
 ---@param registry Registry
 ---@param entity Entity

@@ -227,7 +227,7 @@ command_buffer.queueDrawGradientRectRoundedCentered(
 ## Shaders & Pipeline
 - Shader uniforms: `shaders.ShaderUniformComponent`/`ShaderUniformSet` (`set/get/registerEntityUniformCallback/applyToShaderForEntity`).
 - Shader pipeline: `shader_pipeline` tables for `ShaderPass`, `OverlayInputSource`, `ShaderOverlayDraw`, `ShaderPipelineComponent`; helpers like `ShaderPipelineInit/Resize/ClearTextures/Swap/DebugDrawFront`.
-- Batched shader commands: `shader_draw_commands.DrawCommandBatch` (`beginRecording/endRecording/addBeginShader/addEndShader/addDrawTexture/addCustomCommand/execute/optimize/clear/size`).
+- Batched shader commands: `shader_draw_commands.DrawCommandBatch` (`globalBatch`, `add_local_command`, `executeEntityPipelineWithCommands`, methods: beginRecording/endRecording/addBeginShader/addEndShader/addDrawTexture/addDrawText/addSetUniforms/addCustomCommand/execute/optimize/clear/size); examples in `docs/api/shader_draw_commands_doc.md`.
 - Fullscreen shader helpers: `add_fullscreen_shader/remove_fullscreen_shader`.
 - More: pipeline internals in `DRAW_COMMAND_OPTIMIZATION.md` and `docs/guides/shaders/` for shader patterns.
 

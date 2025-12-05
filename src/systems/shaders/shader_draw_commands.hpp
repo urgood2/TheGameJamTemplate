@@ -17,7 +17,9 @@ namespace shader_draw_commands {
 struct OwnedDrawCommand {
     layer::DrawCommandV2 cmd;
     std::shared_ptr<void> owner; // keeps command data alive
-    bool forceTextPass = false;  // allow routing to text pass (e.g., small overlays)
+    bool forceTextPass = false;   // allow routing to text pass (e.g., text)
+    bool forceUvPassthrough = false; // force uv_passthrough for 3d_skew without text pass
+    bool forceStickerPass = false; // route to sticker pass (identity atlas, after overlays)
 };
 
 struct BatchedLocalCommands {
@@ -386,7 +388,9 @@ void exposeToLua(sol::state& lua);
 template <typename T, typename Initializer>
 inline void AddLocalCommand(entt::registry& registry, entt::entity e, int z,
                             layer::DrawCommandSpace space, Initializer&& init,
-                            bool forceTextPass = false) {
+                            bool forceTextPass = false,
+                            bool forceUvPassthrough = false,
+                            bool forceStickerPass = false) {
     auto* comp = registry.try_get<BatchedLocalCommands>(e);
     if (!comp) {
         comp = &registry.emplace<BatchedLocalCommands>(e);
@@ -398,7 +402,7 @@ inline void AddLocalCommand(entt::registry& registry, entt::entity e, int z,
     dc.data = data.get();
     dc.z = z;
     dc.space = space;
-    OwnedDrawCommand owned{dc, data, forceTextPass};
+    OwnedDrawCommand owned{dc, data, forceTextPass, forceUvPassthrough, forceStickerPass};
     comp->commands.push_back(std::move(owned));
 }
 

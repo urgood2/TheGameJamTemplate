@@ -1373,7 +1373,9 @@ function createNewCard(id, x, y, gameStateToApply)
                                     end,
                                     2, -- draw above the text label
                                     layer.DrawCommandSpace.World,
-                                    true -- force text pass so uv_passthrough clamps UVs
+                                    false, -- text pass (leave false; we use sticker pass instead)
+                                    true, -- force uv_passthrough in 3d_skew to clamp within atlas subrect
+                                    true -- sticker pass: identity atlas, after overlays
                                 )
                             end
 

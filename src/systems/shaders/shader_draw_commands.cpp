@@ -9,6 +9,7 @@
 #include "spdlog/spdlog.h"
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace shader_draw_commands {
 
@@ -259,6 +260,16 @@ void executeEntityPipelineWithCommands(
                 capturedRotation,
                 capturedCenter,
                 renderLocalCommand]() {
+            auto applyUvPassthrough = [](float value) {
+                globals::getGlobalShaderUniforms().set("3d_skew", "uv_passthrough", value);
+                Shader shader = shaders::getShader("3d_skew");
+                if (shader.id) {
+                    shaders::TryApplyUniforms(shader,
+                                              globals::getGlobalShaderUniforms(),
+                                              "3d_skew");
+                }
+            };
+
             const float scaleX = (capturedBaseVisualW > 0.0f)
                                      ? (capturedDestW / capturedBaseVisualW)
                                      : 1.0f;
@@ -277,13 +288,19 @@ void executeEntityPipelineWithCommands(
                 if (beforeSprite != cmdIsBefore) {
                     continue;
                 }
+                if (oc.forceUvPassthrough) {
+                    applyUvPassthrough(1.0f);
+                }
                 renderLocalCommand(oc);
+                if (oc.forceUvPassthrough) {
+                    applyUvPassthrough(0.0f);
+                }
             }
             rlPopMatrix();
         };
     };
 
-    // Partition locals into text and non-text so we can render text separately with identity atlas.
+    // Partition locals into text, sticker, and non-text so we can render sticker/text separately with identity atlas.
     auto isTextCommand = [](const OwnedDrawCommand& oc) {
         using layer::DrawCommandType;
         return oc.forceTextPass ||
@@ -292,10 +309,13 @@ void executeEntityPipelineWithCommands(
                oc.cmd.type == DrawCommandType::TextPro;
     };
     std::vector<OwnedDrawCommand> localTextCommands;
+    std::vector<OwnedDrawCommand> localStickerCommands;
     std::vector<OwnedDrawCommand> localNonTextCommands;
     for (const auto& oc : allLocalCommands) {
         if (isTextCommand(oc)) {
             localTextCommands.push_back(oc);
+        } else if (oc.forceStickerPass) {
+            localStickerCommands.push_back(oc);
         } else {
             localNonTextCommands.push_back(oc);
         }
@@ -303,6 +323,32 @@ void executeEntityPipelineWithCommands(
 
     const bool hasLocalNonTextCommands = !localNonTextCommands.empty();
     const bool hasLocalTextCommands = !localTextCommands.empty();
+    const bool hasLocalStickerCommands = !localStickerCommands.empty();
+
+    int lastEnabledPass = -1;
+    for (size_t i = 0; i < pipelineComp.passes.size(); ++i) {
+        if (pipelineComp.passes[i].enabled) {
+            lastEnabledPass = static_cast<int>(i);
+        }
+    }
+    int lastEnabledOverlay = -1;
+    for (size_t i = 0; i < pipelineComp.overlayDraws.size(); ++i) {
+        if (pipelineComp.overlayDraws[i].enabled) {
+            lastEnabledOverlay = static_cast<int>(i);
+        }
+    }
+    auto selectTextLikeShader = [&]() -> std::pair<std::string, bool> {
+        std::string shaderName;
+        bool injectAtlas = true;
+        if (lastEnabledOverlay != -1) {
+            shaderName = pipelineComp.overlayDraws[lastEnabledOverlay].shaderName;
+            injectAtlas = pipelineComp.overlayDraws[lastEnabledOverlay].injectAtlasUniforms;
+        } else if (lastEnabledPass != -1) {
+            shaderName = pipelineComp.passes[lastEnabledPass].shaderName;
+            injectAtlas = pipelineComp.passes[lastEnabledPass].injectAtlasUniforms;
+        }
+        return {shaderName, injectAtlas};
+    };
 
     if (drawForeground && pipelineComp.passes.empty()) {
         if (hasLocalNonTextCommands) {
@@ -325,22 +371,13 @@ void executeEntityPipelineWithCommands(
             batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/false));
         }
     } else if (drawForeground && !pipelineComp.passes.empty()) {
-        // Non-text locals are emitted inside the last active pass/overlay below.
-    }
-
-    int lastEnabledPass = -1;
-    for (size_t i = 0; i < pipelineComp.passes.size(); ++i) {
-        if (pipelineComp.passes[i].enabled) {
-            lastEnabledPass = static_cast<int>(i);
+        // Emit non-text locals inside the same pass/overlay as the sprite so
+        // forceUvPassthrough overlays draw.
+        if (hasLocalNonTextCommands && lastEnabledPass != -1) {
+            batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
         }
+        // sprite draw happens inside passes below
     }
-    int lastEnabledOverlay = -1;
-    for (size_t i = 0; i < pipelineComp.overlayDraws.size(); ++i) {
-        if (pipelineComp.overlayDraws[i].enabled) {
-            lastEnabledOverlay = static_cast<int>(i);
-        }
-    }
-    const bool hasEnabledOverlays = lastEnabledOverlay != -1;
 
     // Add shader passes as commands
     for (size_t passIndex = 0; passIndex < pipelineComp.passes.size(); ++passIndex) {
@@ -416,7 +453,7 @@ void executeEntityPipelineWithCommands(
 
         if (drawForeground) {
             const bool emitLocalsThisPass =
-                hasLocalNonTextCommands && !hasEnabledOverlays &&
+                hasLocalNonTextCommands &&
                 static_cast<int>(passIndex) == lastEnabledPass;
             if (emitLocalsThisPass) {
                 batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
@@ -515,18 +552,51 @@ void executeEntityPipelineWithCommands(
         batch.addEndShader();
     }
 
+    // Sticker pass: identity atlas + uv_passthrough, separate from text
+    if (drawForeground && hasLocalStickerCommands) {
+        auto [stickerShaderName, stickerInjectAtlas] = selectTextLikeShader();
+        if (!stickerShaderName.empty()) {
+            const bool stickerIs3DSkew = (stickerShaderName == "3d_skew");
+            batch.addBeginShader(stickerShaderName);
+            batch.addCustomCommand([stickerShaderName,
+                                    stickerInjectAtlas,
+                                    stickerIs3DSkew,
+                                    cardRotation = cardRotationRad,
+                                    skewCenter,
+                                    skewSize]() {
+                if (stickerInjectAtlas) {
+                    shaders::injectAtlasUniforms(
+                        globals::getGlobalShaderUniforms(),
+                        stickerShaderName,
+                        Rectangle{0.0f, 0.0f, 1.0f, 1.0f},
+                        Vector2{1.0f, 1.0f});
+                }
+                globals::getGlobalShaderUniforms().set(stickerShaderName, "regionRate", Vector2{1.0f, 1.0f});
+                globals::getGlobalShaderUniforms().set(stickerShaderName, "pivot", Vector2{0.0f, 0.0f});
+                globals::getGlobalShaderUniforms().set(stickerShaderName, "card_rotation", cardRotation);
+                if (stickerIs3DSkew) {
+                    globals::getGlobalShaderUniforms().set(stickerShaderName, "quad_center", skewCenter);
+                    globals::getGlobalShaderUniforms().set(stickerShaderName, "quad_size", skewSize);
+                    globals::getGlobalShaderUniforms().set(stickerShaderName, "uv_passthrough", 1.0f);
+                }
+                Shader shader = shaders::getShader(stickerShaderName);
+                if (shader.id) {
+                    shaders::TryApplyUniforms(
+                        shader,
+                        globals::getGlobalShaderUniforms(),
+                        stickerShaderName);
+                }
+            });
+            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/true));
+            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/false));
+            batch.addEndShader();
+        }
+    }
+
     // Dedicated text pass: reuse the last active shader (overlay preferred) but
     // force identity atlas uniforms so font atlas sampling stays stable.
     if (drawForeground && hasLocalTextCommands) {
-        std::string textShaderName;
-        bool textInjectAtlas = true;
-        if (lastEnabledOverlay != -1) {
-            textShaderName = pipelineComp.overlayDraws[lastEnabledOverlay].shaderName;
-            textInjectAtlas = pipelineComp.overlayDraws[lastEnabledOverlay].injectAtlasUniforms;
-        } else if (lastEnabledPass != -1) {
-            textShaderName = pipelineComp.passes[lastEnabledPass].shaderName;
-            textInjectAtlas = pipelineComp.passes[lastEnabledPass].injectAtlasUniforms;
-        }
+        auto [textShaderName, textInjectAtlas] = selectTextLikeShader();
 
         if (!textShaderName.empty()) {
             const bool textIs3DSkew = (textShaderName == "3d_skew");
@@ -583,7 +653,13 @@ void exposeToLua(sol::state& lua) {
     // Create namespace table
     sol::table sdc = lua.create_named_table("shader_draw_commands");
     rec.add_type("shader_draw_commands").doc =
-        "Draw command batching system for optimized shader rendering.";
+        "Draw command batching for shader pipelines. "
+        "Build a DrawCommandBatch in Lua, optionally optimize it, then execute once.";
+    rec.record_property("shader_draw_commands", {
+        "globalBatch",
+        "DrawCommandBatch",
+        "Shared batch instance you can reuse instead of allocating each frame."
+    });
 
     // DrawCommandType enum
     sdc["DrawCommandType"] = lua.create_table_with(
@@ -595,7 +671,7 @@ void exposeToLua(sol::state& lua) {
         "Custom", DrawCommandType::Custom
     );
     auto& enumType = rec.add_type("shader_draw_commands.DrawCommandType");
-    enumType.doc = "Types of draw commands that can be batched.";
+    enumType.doc = "Draw command tags used inside a DrawCommandBatch.";
 
     // DrawCommandBatch class
     sdc.new_usertype<DrawCommandBatch>("DrawCommandBatch",
@@ -621,7 +697,9 @@ void exposeToLua(sol::state& lua) {
     );
 
     auto& batchType = rec.add_type("shader_draw_commands.DrawCommandBatch", true);
-    batchType.doc = "Manages a batch of draw commands for optimized rendering.";
+    batchType.doc =
+        "Record shader/text draw commands then execute them later as a single batch. "
+        "Use beginRecording/endRecording to delimit writes; call optimize to collapse redundant shader changes.";
 
     // Document methods
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
@@ -657,7 +735,7 @@ void exposeToLua(sol::state& lua) {
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addDrawTexture",
         "---@param texture Texture2D\n---@param sourceRect Rectangle\n---@param position Vector2\n---@param tint? Color\n---@return nil",
-        "Add a command to draw a texture."
+        "Queue a texture draw using the source rect size at the given position."
     });
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addDrawText",
@@ -668,7 +746,13 @@ void exposeToLua(sol::state& lua) {
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addCustomCommand",
         "---@param func fun()\n---@return nil",
-        "Add a custom command function to execute."
+        "Add a custom function to be executed inside the batch (runs during render)."
+    });
+
+    rec.record_method("shader_draw_commands.DrawCommandBatch", {
+        "addSetUniforms",
+        "---@param shaderName string\n---@param uniforms ShaderUniformSet\n---@return nil",
+        "Apply a ShaderUniformSet to the currently active shader inside the batch."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
@@ -698,7 +782,7 @@ void exposeToLua(sol::state& lua) {
     // Generic helper: add any existing layer command to BatchedLocalCommands (local space, shader-aware)
     sdc.set_function("add_local_command",
         [](entt::registry* registry, entt::entity e, const std::string& type,
-           sol::object initFnObj, sol::object zObj, sol::object spaceObj, sol::object forceTextObj) {
+           sol::object initFnObj, sol::object zObj, sol::object spaceObj, sol::object forceTextObj, sol::object forceUvPassObj, sol::object forceStickerObj) {
             int z = zObj.is<int>() ? zObj.as<int>() : 0;
             layer::DrawCommandSpace space = layer::DrawCommandSpace::Screen;
             if (spaceObj.is<int>()) {
@@ -708,6 +792,8 @@ void exposeToLua(sol::state& lua) {
                 }
             }
             bool forceTextPass = forceTextObj.is<bool>() ? forceTextObj.as<bool>() : false;
+            bool forceUvPassthrough = forceUvPassObj.is<bool>() ? forceUvPassObj.as<bool>() : false;
+            bool forceStickerPass = forceStickerObj.is<bool>() ? forceStickerObj.as<bool>() : false;
             sol::protected_function initFn;
             if (initFnObj.is<sol::protected_function>()) {
                 initFn = initFnObj.as<sol::protected_function>();
@@ -724,7 +810,7 @@ void exposeToLua(sol::state& lua) {
 
 #define ADD_CMD(name, T)                                                                    \
     if (type == name) {                                                                    \
-        AddLocalCommand<T>(*registry, e, z, space, [&](T* c) { callInit(c); }, forceTextPass);            \
+        AddLocalCommand<T>(*registry, e, z, space, [&](T* c) { callInit(c); }, forceTextPass, forceUvPassthrough, forceStickerPass);            \
         return;                                                                            \
     }
 
@@ -821,13 +907,28 @@ void exposeToLua(sol::state& lua) {
     );
 
     rec.record_free_function({"shader_draw_commands"}, {
+        "add_local_command",
+        "---@param registry Registry\n"
+        "---@param entity Entity\n"
+        "---@param type string @ layer command name (e.g., \"draw_rect\")\n"
+        "---@param initFn function|nil @ called with the command instance to fill fields\n"
+        "---@param z integer|nil @ z offset (default 0, <0 runs before sprite)\n"
+        "---@param space integer|nil @ layer.DrawCommandSpace.World or Screen\n"
+        "---@param forceTextPass boolean|nil @ render in text pass even if not a text command\n"
+        "---@param forceUvPassthrough boolean|nil @ keep atlas UVs unwarped for 3d_skew\n"
+        "---@param forceStickerPass boolean|nil @ render in sticker pass (identity atlas, after overlays)\n"
+        "---@return nil",
+        "Attach a layer command to BatchedLocalCommands so it renders with the entity's shader pipeline."
+    });
+
+    rec.record_free_function({"shader_draw_commands"}, {
         "executeEntityPipelineWithCommands",
         "---@param registry Registry\n"
         "---@param entity Entity\n"
         "---@param batch DrawCommandBatch\n"
         "---@param autoOptimize? boolean\n"
         "---@return nil",
-        "Execute an entity's shader pipeline using draw command batching."
+        "Record an entity's shader pipeline into a batch; optionally autoOptimize before execution."
     });
 
     SPDLOG_INFO("Exposed shader_draw_commands to Lua");

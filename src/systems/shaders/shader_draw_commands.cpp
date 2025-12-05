@@ -242,6 +242,10 @@ void executeEntityPipelineWithCommands(
         }
     };
 
+    auto shaderIsPseudo3DSkew = [](const std::string& shaderName) {
+        return shaderName == "3d_skew" || shaderName == "3d_skew_hologram";
+    };
+
     auto makeLocalCommandEmitter = [&](const std::vector<OwnedDrawCommand>& commands,
                                        bool beforeSprite,
                                        bool shaderIs3DSkew = false) {
@@ -264,12 +268,14 @@ void executeEntityPipelineWithCommands(
                 renderLocalCommand,
                 shaderIs3DSkew]() {
             auto applyUvPassthrough = [](float value) {
-                globals::getGlobalShaderUniforms().set("3d_skew", "uv_passthrough", value);
-                Shader shader = shaders::getShader("3d_skew");
-                if (shader.id) {
-                    shaders::TryApplyUniforms(shader,
-                                              globals::getGlobalShaderUniforms(),
-                                              "3d_skew");
+                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram"}) {
+                    globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", value);
+                    Shader shader = shaders::getShader(shaderName);
+                    if (shader.id) {
+                        shaders::TryApplyUniforms(shader,
+                                                  globals::getGlobalShaderUniforms(),
+                                                  shaderName);
+                    }
                 }
             };
             auto apply3DSkewAtlasForCommand = [&](const OwnedDrawCommand& oc) {
@@ -300,13 +306,15 @@ void executeEntityPipelineWithCommands(
                 }
 
                 auto& uniforms = globals::getGlobalShaderUniforms();
-                uniforms.set("3d_skew", "regionRate", regionRate);
-                uniforms.set("3d_skew", "pivot", pivot);
-                Shader shader = shaders::getShader("3d_skew");
-                if (shader.id) {
-                    shaders::TryApplyUniforms(shader,
-                                              uniforms,
-                                              "3d_skew");
+                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram"}) {
+                    uniforms.set(shaderName, "regionRate", regionRate);
+                    uniforms.set(shaderName, "pivot", pivot);
+                    Shader shader = shaders::getShader(shaderName);
+                    if (shader.id) {
+                        shaders::TryApplyUniforms(shader,
+                                                  uniforms,
+                                                  shaderName);
+                    }
                 }
             };
 
@@ -439,7 +447,7 @@ void executeEntityPipelineWithCommands(
                  shaderName == "material_card_overlay_new_dissolve");
             const float cardRotation = cardRotationRad;
             // For pseudo-3D skew shaders, keep UVs locked to the atlas sub-rect.
-            const bool is3DSkew = (shaderName == "3d_skew");
+            const bool is3DSkew = shaderIsPseudo3DSkew(shaderName);
             const Vector2 regionRate{
                 atlasRect.width / atlasSize.x,
                 atlasRect.height / atlasSize.y};
@@ -497,7 +505,7 @@ void executeEntityPipelineWithCommands(
             });
         }
 
-        const bool passIs3DSkew = (pass.shaderName == "3d_skew");
+        const bool passIs3DSkew = shaderIsPseudo3DSkew(pass.shaderName);
         const bool passIsCardOverlay =
             (pass.shaderName == "material_card_overlay" ||
              pass.shaderName == "material_card_overlay_new_dissolve");
@@ -577,7 +585,7 @@ void executeEntityPipelineWithCommands(
         {
             const std::string shaderName = overlay.shaderName;
             const bool injectAtlas = overlay.injectAtlasUniforms;
-            const bool is3DSkew = (shaderName == "3d_skew");
+            const bool is3DSkew = shaderIsPseudo3DSkew(shaderName);
             const bool isCardOverlay =
                 (shaderName == "material_card_overlay" ||
                  shaderName == "material_card_overlay_new_dissolve");
@@ -662,7 +670,7 @@ void executeEntityPipelineWithCommands(
     if (drawForeground && hasLocalStickerCommands) {
         auto [stickerShaderName, stickerInjectAtlas] = selectTextLikeShader();
         if (!stickerShaderName.empty()) {
-            const bool stickerIs3DSkew = (stickerShaderName == "3d_skew");
+            const bool stickerIs3DSkew = shaderIsPseudo3DSkew(stickerShaderName);
             batch.addBeginShader(stickerShaderName);
             batch.addCustomCommand([stickerShaderName,
                                     stickerInjectAtlas,
@@ -707,7 +715,7 @@ void executeEntityPipelineWithCommands(
         auto [textShaderName, textInjectAtlas] = selectTextLikeShader();
 
         if (!textShaderName.empty()) {
-            const bool textIs3DSkew = (textShaderName == "3d_skew");
+            const bool textIs3DSkew = shaderIsPseudo3DSkew(textShaderName);
             batch.addBeginShader(textShaderName);
             batch.addCustomCommand([textShaderName,
                                     textInjectAtlas,

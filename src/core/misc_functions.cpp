@@ -698,6 +698,71 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew", "distortion_strength", 0.05f);
   globalShaderUniforms.set("3d_skew", "fade_start", 0.7f);
 
+  // pseudo 3d skew hologram (shares defaults; overlay differs in shader code)
+  shaders::registerUniformUpdate("3d_skew_hologram", [](Shader &shader) {
+    globalShaderUniforms.set("3d_skew_hologram", "iTime",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_hologram", "time",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_hologram", "mouse_screen_pos",
+                             getScaledMousePositionCached());
+    globalShaderUniforms.set(
+        "3d_skew_hologram", "resolution",
+        Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    globalShaderUniforms.set("3d_skew_hologram", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew_hologram", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew_hologram", "fade_start", 0.7f);
+  });
+  globalShaderUniforms.set("3d_skew_hologram", "fov", -0.39f);
+  globalShaderUniforms.set("3d_skew_hologram", "x_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "y_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "inset", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "hovering", 0.3f);
+  globalShaderUniforms.set("3d_skew_hologram", "rand_trans_power", 0.4f);
+  globalShaderUniforms.set("3d_skew_hologram", "rand_seed", 3.1415f);
+  globalShaderUniforms.set("3d_skew_hologram", "rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "cull_back", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "tilt_enabled", 0.0f);
+  float holoDrawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+  float holoDrawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+  globalShaderUniforms.set("3d_skew_hologram", "regionRate",
+                           Vector2{holoDrawWidth / holoDrawWidth,
+                                   holoDrawHeight / holoDrawHeight});
+  globalShaderUniforms.set("3d_skew_hologram", "pivot",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "quad_center",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "quad_size",
+                           Vector2{1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "uImageSize",
+                           Vector2{holoDrawWidth, holoDrawHeight});
+  globalShaderUniforms.set("3d_skew_hologram", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_hologram", "grain_intensity", -1.95f);
+  globalShaderUniforms.set("3d_skew_hologram", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew_hologram", "sheen_strength", -1.49f);
+  globalShaderUniforms.set("3d_skew_hologram", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew_hologram", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew_hologram", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew_hologram", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew_hologram", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew_hologram", "fade_start", 0.7f);
+
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

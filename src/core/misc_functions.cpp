@@ -763,6 +763,73 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew_hologram", "distortion_strength", 0.05f);
   globalShaderUniforms.set("3d_skew_hologram", "fade_start", 0.7f);
 
+  // pseudo 3d skew polychrome (sheen replaced by polychrome hue shift)
+  shaders::registerUniformUpdate("3d_skew_polychrome", [](Shader &shader) {
+    globalShaderUniforms.set("3d_skew_polychrome", "iTime",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_polychrome", "time",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_polychrome", "mouse_screen_pos",
+                             getScaledMousePositionCached());
+    globalShaderUniforms.set(
+        "3d_skew_polychrome", "resolution",
+        Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    globalShaderUniforms.set("3d_skew_polychrome", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew_polychrome", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew_polychrome", "fade_start", 0.7f);
+  });
+  globalShaderUniforms.set("3d_skew_polychrome", "fov", -0.39f);
+  globalShaderUniforms.set("3d_skew_polychrome", "x_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "y_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "inset", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "hovering", 0.3f);
+  globalShaderUniforms.set("3d_skew_polychrome", "rand_trans_power", 0.4f);
+  globalShaderUniforms.set("3d_skew_polychrome", "rand_seed", 3.1415f);
+  globalShaderUniforms.set("3d_skew_polychrome", "rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "cull_back", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "tilt_enabled", 0.0f);
+  float polyDrawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+  float polyDrawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+  globalShaderUniforms.set("3d_skew_polychrome", "regionRate",
+                           Vector2{polyDrawWidth / polyDrawWidth,
+                                   polyDrawHeight / polyDrawHeight});
+  globalShaderUniforms.set("3d_skew_polychrome", "pivot",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "quad_center",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "quad_size",
+                           Vector2{1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "uImageSize",
+                           Vector2{polyDrawWidth, polyDrawHeight});
+  globalShaderUniforms.set("3d_skew_polychrome", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_polychrome", "grain_intensity", -1.95f);
+  globalShaderUniforms.set("3d_skew_polychrome", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew_polychrome", "sheen_strength", -1.49f);
+  globalShaderUniforms.set("3d_skew_polychrome", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew_polychrome", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew_polychrome", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew_polychrome", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew_polychrome", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew_polychrome", "fade_start", 0.7f);
+  globalShaderUniforms.set("3d_skew_polychrome", "polychrome",
+                           Vector2{0.65f, 0.25f});
+
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

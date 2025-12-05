@@ -1490,7 +1490,8 @@ function createNewCard(id, x, y, gameStateToApply)
     local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
     -- shaderPipelineComp:addPass("material_card_overlay")
     -- shaderPipelineComp:addPass("3d_skew_hologram")
-    shaderPipelineComp:addPass("3d_skew")
+    -- shaderPipelineComp:addPass("3d_skew")
+    shaderPipelineComp:addPass("3d_skew_polychrome")
     -- shaderPipelineComp:addPass("material_card_overlay_new_dissolve")
 
 

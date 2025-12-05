@@ -78,6 +78,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - let's make projectiles release different types of particles (varying in color/intensity) based on the speed at which they collide with the wall, and its damage. if they contain x or more damage, they should pulse as they move, and release a bit of a trail.
 
+- add outline to the hp and exp bars.
+- also apply some sort of texture shader to the ui (overlay)
+
 - shader needs a shadow version, for dissolve, but I'm not entirely sure how that works.
 
 - We have

@@ -2708,6 +2708,12 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     //=========================================================
     // Part 3: GameObject & Related Types
     //=========================================================
+    lua.new_enum<GameObject::ShadowMode>("ShadowMode", {
+        {"SpriteBased", GameObject::ShadowMode::SpriteBased},
+        {"GroundEllipse", GameObject::ShadowMode::GroundEllipse}
+    });
+    rec.record_property("ShadowMode", {"SpriteBased", "GroundEllipse"});
+
     // 3a) GameObject.Methods
     lua.new_usertype<GameObject::Methods>("GameObjectMethods",
         sol::constructors<>(),
@@ -2789,6 +2795,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
         "dragOffset",           &GameObject::dragOffset,
         "clickOffset",          &GameObject::clickOffset,
         "hoverOffset",          &GameObject::hoverOffset,
+        "shadowMode",           &GameObject::shadowMode,
         "shadowDisplacement",   &GameObject::shadowDisplacement,
         "layerDisplacement",    &GameObject::layerDisplacement,
         "layerDisplacementPrev",&GameObject::layerDisplacementPrev,
@@ -2811,6 +2818,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     rec.record_property("GameObject", {"dragOffset", "Vector2"});
     rec.record_property("GameObject", {"clickOffset", "Vector2"});
     rec.record_property("GameObject", {"hoverOffset", "Vector2"});
+    rec.record_property("GameObject", {"shadowMode", "ShadowMode"});
     rec.record_property("GameObject", {"shadowDisplacement", "Vector2"});
     rec.record_property("GameObject", {"layerDisplacement", "Vector2"});
     rec.record_property("GameObject", {"layerDisplacementPrev", "Vector2"});

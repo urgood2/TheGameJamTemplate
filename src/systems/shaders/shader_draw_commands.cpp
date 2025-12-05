@@ -192,9 +192,11 @@ void executeEntityPipelineWithCommands(
         });
     }
 
-    // Approximate legacy sprite-based shadow rendering
+    bool renderShadow = false;
+    Rectangle shadowDest{};
+    Color shadowColor{};
     if (registry.any_of<transform::GameObject>(e)) {
-        const auto &node = registry.get<transform::GameObject>(e);
+        const auto& node = registry.get<transform::GameObject>(e);
         if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
             node.shadowDisplacement) {
             const float baseExaggeration = globals::getBaseShadowExaggeration();
@@ -204,19 +206,11 @@ void executeEntityPipelineWithCommands(
             const float shadowOffsetY =
                 node.shadowDisplacement->y * baseExaggeration * heightFactor;
 
-            Color shadowColor = Fade(BLACK, 0.8f);
-            Rectangle shadowDest = destRect;
+            shadowDest = destRect;
             shadowDest.x -= shadowOffsetX;
             shadowDest.y += shadowOffsetY;
-
-            batch.addDrawTexturePro(
-                *spriteAtlas,
-                srcRect,
-                shadowDest,
-                origin,
-                cardRotationDeg,
-                shadowColor
-            );
+            shadowColor = Fade(BLACK, 0.8f);
+            renderShadow = true;
         }
     }
 
@@ -494,10 +488,55 @@ void executeEntityPipelineWithCommands(
             });
         }
 
+        const bool passIs3DSkew = (pass.shaderName == "3d_skew");
+        const bool passIsCardOverlay =
+            (pass.shaderName == "material_card_overlay" ||
+             pass.shaderName == "material_card_overlay_new_dissolve");
+
         if (drawForeground) {
             const bool emitLocalsThisPass =
                 hasLocalNonTextCommands &&
                 static_cast<int>(passIndex) == lastEnabledPass;
+            if (renderShadow) {
+                batch.addCustomCommand([shaderName = pass.shaderName,
+                                        passIs3DSkew,
+                                        passIsCardOverlay,
+                                        cardRotation = cardRotationRad]() {
+                    if (passIs3DSkew || passIsCardOverlay) {
+                        globals::getGlobalShaderUniforms().set(shaderName, "shadow", 1.0f);
+                        globals::getGlobalShaderUniforms().set(shaderName, "card_rotation", cardRotation);
+                        Shader shader = shaders::getShader(shaderName);
+                        if (shader.id) {
+                            shaders::TryApplyUniforms(shader,
+                                                      globals::getGlobalShaderUniforms(),
+                                                      shaderName);
+                        }
+                    }
+                });
+
+                batch.addDrawTexturePro(
+                    *spriteAtlas,
+                    srcRect,
+                    shadowDest,
+                    origin,
+                    cardRotationDeg,
+                    shadowColor
+                );
+
+                batch.addCustomCommand([shaderName = pass.shaderName,
+                                        passIs3DSkew,
+                                        passIsCardOverlay]() {
+                    if (passIs3DSkew || passIsCardOverlay) {
+                        globals::getGlobalShaderUniforms().set(shaderName, "shadow", 0.0f);
+                        Shader shader = shaders::getShader(shaderName);
+                        if (shader.id) {
+                            shaders::TryApplyUniforms(shader,
+                                                      globals::getGlobalShaderUniforms(),
+                                                      shaderName);
+                        }
+                    }
+                });
+            }
             if (emitLocalsThisPass) {
                 batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
             }

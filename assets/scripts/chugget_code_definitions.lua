@@ -3682,6 +3682,8 @@ GameObject = {
     clickOffset = nil,
     ---@type Vector2
     hoverOffset = nil,
+    ---@type ShadowMode
+    shadowMode = nil,
     ---@type Vector2
     shadowDisplacement = nil,
     ---@type Vector2

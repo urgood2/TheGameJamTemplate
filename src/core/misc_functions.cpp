@@ -1164,6 +1164,73 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew_voucher", "fade_start", 0.7f);
   globalShaderUniforms.set("3d_skew_voucher", "booster",
                            Vector2{0.65f, 0.25f});
+
+  // pseudo 3d skew gold seal
+  shaders::registerUniformUpdate("3d_skew_gold_seal", [](Shader &shader) {
+    globalShaderUniforms.set("3d_skew_gold_seal", "iTime",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_gold_seal", "time",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_gold_seal", "mouse_screen_pos",
+                             getScaledMousePositionCached());
+    globalShaderUniforms.set(
+        "3d_skew_gold_seal", "resolution",
+        Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    globalShaderUniforms.set("3d_skew_gold_seal", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew_gold_seal", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew_gold_seal", "fade_start", 0.7f);
+  });
+  globalShaderUniforms.set("3d_skew_gold_seal", "fov", -0.39f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "x_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "y_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "inset", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "hovering", 0.3f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "rand_trans_power", 0.4f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "rand_seed", 3.1415f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "cull_back", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "tilt_enabled", 0.0f);
+  float goldDrawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+  float goldDrawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+  globalShaderUniforms.set("3d_skew_gold_seal", "regionRate",
+                           Vector2{goldDrawWidth / goldDrawWidth,
+                                   goldDrawHeight / goldDrawHeight});
+  globalShaderUniforms.set("3d_skew_gold_seal", "pivot",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "quad_center",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "quad_size",
+                           Vector2{1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "uImageSize",
+                           Vector2{goldDrawWidth, goldDrawHeight});
+  globalShaderUniforms.set("3d_skew_gold_seal", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_gold_seal", "grain_intensity", -1.95f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "sheen_strength", -1.49f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "fade_start", 0.7f);
+  globalShaderUniforms.set("3d_skew_gold_seal", "gold_seal",
+                           Vector4{0.65f, 0.25f, 0.0f, 1.0f});
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

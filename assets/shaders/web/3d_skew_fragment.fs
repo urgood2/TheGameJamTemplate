@@ -41,6 +41,9 @@ uniform float sheen_strength;
 uniform float sheen_width;
 uniform float sheen_speed;
 uniform float noise_amount;
+uniform float spread_strength;
+uniform float distortion_strength;
+uniform float fade_start;
 
 out vec4 finalColor;
 
@@ -105,20 +108,14 @@ vec4 applyOverlay(vec2 atlasUV) {
     float dist = length(centered);
     vec2 dir = dist > 0.0001 ? centered / dist : vec2(0.0);
 
-    const float SPREAD = 0.85;
-    const float WOBBLE = 0.035;
-    const float FADE_START = 0.45;
-
-    vec2 displaced = centered + dir * progress * SPREAD;
-    displaced += WOBBLE * vec2(
+    vec2 displaced = centered + dir * progress * spread_strength;
+    displaced += distortion_strength * vec2(
         sin(dist * 20.0 - time * 10.0),
         cos(dist * 20.0 - time * 8.0)
     ) * progress;
 
     vec2 warpedLocal = displaced + vec2(0.5);
     vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
-    float inside = step(0.0, warpedLocal.x) * step(warpedLocal.x, 1.0) *
-                   step(0.0, warpedLocal.y) * step(warpedLocal.y, 1.0);
 
     vec2 sampleUV = localToAtlas(clampedLocal);
     vec4 base = sampleTinted(sampleUV);
@@ -153,8 +150,8 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec3 lit = clamp(base.rgb * factor + vec3(detail), 0.0, 1.0);
     lit = clamp(lit * material_tint, 0.0, 1.0);
 
-    float alphaFactor = 1.0 - smoothstep(FADE_START, 1.0, progress);
-    float alpha = base.a * alphaFactor * inside;
+    float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
+    float alpha = base.a * alphaFactor;
 
     float edgeDistance = length(warpedLocal - clampedLocal);
     float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
@@ -204,9 +201,5 @@ void main()
 
     vec2 finalUV = pivot + uv * regionRate;
 
-    if (uv_passthrough > 0.5) {
-        finalColor = sampleTinted(finalUV);
-    } else {
-        finalColor = applyOverlay(finalUV);
-    }
+    finalColor = applyOverlay(finalUV);
 }

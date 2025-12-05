@@ -689,6 +689,9 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew", "sheen_width", 2.22f);
   globalShaderUniforms.set("3d_skew", "sheen_speed", 2.3f);
   globalShaderUniforms.set("3d_skew", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew", "fade_start", 0.7f);
 
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});

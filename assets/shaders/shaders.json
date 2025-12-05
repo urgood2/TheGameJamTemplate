@@ -89,6 +89,24 @@
             "fragment": "web/3d_skew_foil_fragment.fs"
         }
     },
+    "3d_skew_negative_shine": {
+        "vertex": "3d_skew_negative_shine_vertex.vs",
+        "fragment": "3d_skew_negative_shine_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_negative_shine_vertex.vs",
+            "fragment": "web/3d_skew_negative_shine_fragment.fs"
+        }
+    },
+    "3d_skew_negative": {
+        "vertex": "3d_skew_negative_vertex.vs",
+        "fragment": "3d_skew_negative_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_negative_vertex.vs",
+            "fragment": "web/3d_skew_negative_fragment.fs"
+        }
+    },
     "squish": {
         "vertex": "squish_vertex.vs",
         "fragment": "squish_fragment.fs",

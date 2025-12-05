@@ -897,6 +897,139 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew_foil", "foil",
                            Vector2{0.65f, 0.25f});
 
+  // pseudo 3d skew negative shine
+  shaders::registerUniformUpdate("3d_skew_negative_shine", [](Shader &shader) {
+    globalShaderUniforms.set("3d_skew_negative_shine", "iTime",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_negative_shine", "time",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_negative_shine", "mouse_screen_pos",
+                             getScaledMousePositionCached());
+    globalShaderUniforms.set(
+        "3d_skew_negative_shine", "resolution",
+        Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    globalShaderUniforms.set("3d_skew_negative_shine", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew_negative_shine", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew_negative_shine", "fade_start", 0.7f);
+  });
+  globalShaderUniforms.set("3d_skew_negative_shine", "fov", -0.39f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "x_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "y_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "inset", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "hovering", 0.3f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "rand_trans_power", 0.4f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "rand_seed", 3.1415f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "cull_back", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "tilt_enabled", 0.0f);
+  float negDrawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+  float negDrawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+  globalShaderUniforms.set("3d_skew_negative_shine", "regionRate",
+                           Vector2{negDrawWidth / negDrawWidth,
+                                   negDrawHeight / negDrawHeight});
+  globalShaderUniforms.set("3d_skew_negative_shine", "pivot",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "quad_center",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "quad_size",
+                           Vector2{1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "uImageSize",
+                           Vector2{negDrawWidth, negDrawHeight});
+  globalShaderUniforms.set("3d_skew_negative_shine", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_negative_shine", "grain_intensity", -1.95f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "sheen_strength", -1.49f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "fade_start", 0.7f);
+  globalShaderUniforms.set("3d_skew_negative_shine", "negative_shine",
+                           Vector2{0.65f, 0.25f});
+
+  // pseudo 3d skew negative
+  shaders::registerUniformUpdate("3d_skew_negative", [](Shader &shader) {
+    globalShaderUniforms.set("3d_skew_negative", "iTime",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_negative", "time",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_negative", "mouse_screen_pos",
+                             getScaledMousePositionCached());
+    globalShaderUniforms.set(
+        "3d_skew_negative", "resolution",
+        Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    globalShaderUniforms.set("3d_skew_negative", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew_negative", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew_negative", "fade_start", 0.7f);
+  });
+  globalShaderUniforms.set("3d_skew_negative", "fov", -0.39f);
+  globalShaderUniforms.set("3d_skew_negative", "x_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "y_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "inset", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "hovering", 0.3f);
+  globalShaderUniforms.set("3d_skew_negative", "rand_trans_power", 0.4f);
+  globalShaderUniforms.set("3d_skew_negative", "rand_seed", 3.1415f);
+  globalShaderUniforms.set("3d_skew_negative", "rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "cull_back", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "tilt_enabled", 0.0f);
+  float neg2DrawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+  float neg2DrawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+  globalShaderUniforms.set("3d_skew_negative", "regionRate",
+                           Vector2{neg2DrawWidth / neg2DrawWidth,
+                                   neg2DrawHeight / neg2DrawHeight});
+  globalShaderUniforms.set("3d_skew_negative", "pivot",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative", "quad_center",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative", "quad_size",
+                           Vector2{1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_negative", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_negative", "uImageSize",
+                           Vector2{neg2DrawWidth, neg2DrawHeight});
+  globalShaderUniforms.set("3d_skew_negative", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew_negative", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew_negative", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_negative", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_negative", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_negative", "grain_intensity", -1.95f);
+  globalShaderUniforms.set("3d_skew_negative", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew_negative", "sheen_strength", -1.49f);
+  globalShaderUniforms.set("3d_skew_negative", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew_negative", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew_negative", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew_negative", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew_negative", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew_negative", "fade_start", 0.7f);
+  globalShaderUniforms.set("3d_skew_negative", "negative",
+                           Vector2{0.65f, 0.25f});
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

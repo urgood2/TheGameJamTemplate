@@ -637,6 +637,10 @@ void SetUpShaderUniforms() {
         "3d_skew", "resolution",
         Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
                 static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    // Keep dissolve defaults in sync with the Godot reference.
+    globalShaderUniforms.set("3d_skew", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew", "fade_start", 0.7f);
   });
   // --- Projection parameters (from your log) ---
   globalShaderUniforms.set("3d_skew", "fov", -0.39f); // From runtime dump

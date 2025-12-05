@@ -419,6 +419,7 @@ local function init_static_defaults()
     set("3d_skew", "sheen_width", 2.22)
     set("3d_skew", "sheen_speed", 2.3)
     set("3d_skew", "noise_amount", 1.12)
+    -- Dissolve defaults aligned to the Godot reference.
     set("3d_skew", "spread_strength", 1.0)
     set("3d_skew", "distortion_strength", 0.05)
     set("3d_skew", "fade_start", 0.7)

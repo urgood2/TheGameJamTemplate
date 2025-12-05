@@ -101,24 +101,24 @@ vec4 applyOverlay(vec2 atlasUV) {
         return sampleTinted(atlasUV);
     }
 
+    // Godot-style dissolve: push pixels outward with wobble, then fade alpha.
     float progress = clamp(dissolve, 0.0, 1.0);
     vec2 localUV = getSpriteUV(atlasUV);
     vec2 centered = localUV - 0.5;
     float dist = length(centered);
     vec2 dir = dist > 0.0001 ? centered / dist : vec2(0.0);
 
-    vec2 displaced = centered + dir * progress * spread_strength;
-    displaced += distortion_strength * vec2(
+    vec2 uvOutward = centered + dir * progress * spread_strength;
+    uvOutward += distortion_strength * vec2(
         sin(dist * 20.0 - time * 10.0),
         cos(dist * 20.0 - time * 8.0)
     ) * progress;
 
-    vec2 warpedLocal = displaced + vec2(0.5);
-    vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
-
-    vec2 sampleUV = localToAtlas(clampedLocal);
+    vec2 warpedLocal = uvOutward + vec2(0.5);
+    vec2 sampleUV = localToAtlas(warpedLocal);
     vec4 base = sampleTinted(sampleUV);
 
+    vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
     vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
 
     float stripeFreq = max(6.0, abs(grain_scale) * 55.0);
@@ -151,18 +151,6 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
     float alpha = base.a * alphaFactor;
-
-    float edgeDistance = length(warpedLocal - clampedLocal);
-    float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
-
-    if (!shadow && burn_colour_1.a > 0.01) {
-        vec3 burnMix = burn_colour_1.rgb;
-        if (burn_colour_2.a > 0.01) {
-            float t = clamp(edgeDistance / 0.04, 0.0, 1.0);
-            burnMix = mix(burn_colour_1.rgb, burn_colour_2.rgb, t);
-        }
-        lit = mix(lit, burnMix, clamp(burnMask * burn_colour_1.a, 0.0, 1.0));
-    }
 
     if (shadow) {
         return vec4(vec3(0.0), alpha * 0.35);

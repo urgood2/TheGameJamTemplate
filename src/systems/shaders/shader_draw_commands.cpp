@@ -206,7 +206,8 @@ void executeEntityPipelineWithCommands(
         if (node.shadowMode == transform::GameObject::ShadowMode::SpriteBased &&
             node.shadowDisplacement) {
             const float baseExaggeration = globals::getBaseShadowExaggeration();
-            const float heightFactor = 1.0f + node.shadowHeight.value_or(0.0f);
+            const float dragLift = node.state.isBeingDragged ? 7.5f : 1.0f; // stronger lift when dragging
+            const float heightFactor = (1.0f + node.shadowHeight.value_or(0.0f)) * dragLift;
             const float shadowOffsetX =
                 node.shadowDisplacement->x * baseExaggeration * heightFactor;
             const float shadowOffsetY =

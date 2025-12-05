@@ -629,6 +629,8 @@ void SetUpShaderUniforms() {
   shaders::registerUniformUpdate("3d_skew", [](Shader &shader) {
     globalShaderUniforms.set("3d_skew", "iTime",
                              static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew", "time",
+                             static_cast<float>(main_loop::getTime()));
     globalShaderUniforms.set("3d_skew", "mouse_screen_pos",
                              getScaledMousePositionCached());
     globalShaderUniforms.set(
@@ -664,6 +666,29 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew", "quad_size",
                            Vector2{1.0f, 1.0f}); // Screen-space size
   globalShaderUniforms.set("3d_skew", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew", "uImageSize",
+                           Vector2{drawWidth, drawHeight});
+  globalShaderUniforms.set("3d_skew", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew", "grain_intensity", 0.0f);
+  globalShaderUniforms.set("3d_skew", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew", "sheen_strength", 0.0f);
+  globalShaderUniforms.set("3d_skew", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew", "noise_amount", 1.12f);
 
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});

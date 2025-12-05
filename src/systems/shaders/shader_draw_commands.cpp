@@ -472,6 +472,7 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
                     globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", 0.0f);
+                    globals::getGlobalShaderUniforms().set(shaderName, "card_rotation", cardRotation);
                 }
                 if (isCardOverlay) {
                     globals::getGlobalShaderUniforms().set(
@@ -529,11 +530,13 @@ void executeEntityPipelineWithCommands(
             const std::string shaderName = overlay.shaderName;
             const bool injectAtlas = overlay.injectAtlasUniforms;
             const bool is3DSkew = (shaderName == "3d_skew");
+            const float cardRotation = cardRotationRad;
             auto customPrePass = overlay.customPrePassFunction;
 
             batch.addCustomCommand([shaderName,
                                     injectAtlas,
                                     is3DSkew,
+                                    cardRotation,
                                     atlasRect,
                                     atlasSize,
                                     regionRate = Vector2{atlasRect.width / atlasSize.x,
@@ -556,6 +559,7 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
                     globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", 0.0f);
+                    globals::getGlobalShaderUniforms().set(shaderName, "card_rotation", cardRotation);
                 }
                 if (customPrePass) {
                     customPrePass();

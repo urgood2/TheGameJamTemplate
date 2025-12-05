@@ -683,9 +683,9 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew", "card_rotation", 0.0f);
   globalShaderUniforms.set("3d_skew", "material_tint",
                            Vector3{1.0f, 1.0f, 1.0f});
-  globalShaderUniforms.set("3d_skew", "grain_intensity", 0.0f);
+  globalShaderUniforms.set("3d_skew", "grain_intensity", -1.95f);
   globalShaderUniforms.set("3d_skew", "grain_scale", -2.21f);
-  globalShaderUniforms.set("3d_skew", "sheen_strength", 0.0f);
+  globalShaderUniforms.set("3d_skew", "sheen_strength", -1.49f);
   globalShaderUniforms.set("3d_skew", "sheen_width", 2.22f);
   globalShaderUniforms.set("3d_skew", "sheen_speed", 2.3f);
   globalShaderUniforms.set("3d_skew", "noise_amount", 1.12f);

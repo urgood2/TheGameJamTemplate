@@ -28,6 +28,7 @@ uniform float rand_trans_power;
 uniform float rand_seed;
 uniform float vortex_amt;
 uniform float rotation;
+uniform float tilt_enabled;
 uniform vec2 mouse_screen_pos;
 uniform vec2 quad_center;
 uniform vec2 quad_size;
@@ -42,7 +43,11 @@ void main()
     vec2 size = vec2(1.0); // Assuming full sprite region
 
     // Compute pseudo-random rotation vector
-    float randAngle = rand_trans_power * mod(iTime * (0.9 + mod(rand_seed, 0.5)), 6.28318);
+    float tiltScale = tilt_enabled;
+    float randScale = rand_trans_power * tiltScale;
+    float hoverScale = hovering * tiltScale;
+
+    float randAngle = randScale * mod(iTime * (0.9 + mod(rand_seed, 0.5)), 6.28318);
     vec2 randVec = vec2(cos(randAngle), sin(randAngle));
 
     // Transform mouse screen position to UV offset
@@ -55,7 +60,7 @@ void main()
     relativeMouseDir.y = -relativeMouseDir.y; // screen Y goes down; convert to up
 
     // Final force
-    vec2 mouseForce = hovering * relativeMouseDir + randVec * 0.05 * rand_trans_power;
+    vec2 mouseForce = hoverScale * relativeMouseDir + randVec * 0.05 * randScale;
 
     // Build orientation so the quad normal points toward the mouse
     vec3 forward = normalize(vec3(mouseForce.x, mouseForce.y, 1.0));

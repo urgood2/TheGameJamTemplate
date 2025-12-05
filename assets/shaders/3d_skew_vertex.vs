@@ -28,6 +28,7 @@ uniform float rand_trans_power;
 uniform float rand_seed;
 uniform float vortex_amt;
 uniform float rotation;
+uniform float tilt_enabled;
 uniform vec2 mouse_screen_pos;
 uniform vec2 quad_center;
 uniform vec2 quad_size;
@@ -43,7 +44,11 @@ void main()
     vec2 quadUV = ((vertexPosition.xy - quad_center) / safeQuadSize) + vec2(0.5);
 
     // Compute pseudo-random subtle movement
-    float randAngle = rand_trans_power * mod(iTime * (0.9 + mod(rand_seed, 0.5)), 6.28318);
+    float tiltScale = tilt_enabled;
+    float randScale = rand_trans_power * tiltScale;
+    float hoverScale = hovering * tiltScale;
+
+    float randAngle = randScale * mod(iTime * (0.9 + mod(rand_seed, 0.5)), 6.28318);
     vec2 randVec = vec2(cos(randAngle), sin(randAngle));
 
     // Transform mouse screen position to UV offset
@@ -62,7 +67,7 @@ void main()
     // Keep the sign as-is since the rotation logic handles it correctly
 
     // Final tilt force: hovering controls strength, add subtle random movement
-    vec2 mouseForce = hovering * relativeMouseDir + randVec * 0.02 * rand_trans_power;
+    vec2 mouseForce = hoverScale * relativeMouseDir + randVec * 0.02 * randScale;
     tiltAmount = mouseForce;
 
     // Build rotation matrix for pseudo-3D effect

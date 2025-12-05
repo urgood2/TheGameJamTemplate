@@ -1273,6 +1273,11 @@ function createNewCard(id, x, y, gameStateToApply)
                             goto continue
                         end
 
+                        local go = component_cache.get(eid, GameObject)
+                        if go then
+                            go.state.isBeingFocused = cardScript.selected and true or false
+                        end
+
                         local t = component_cache.get(eid, Transform)
                         if t then
                             local colorToUse = util.getColor("RED")
@@ -1654,11 +1659,13 @@ function createNewCard(id, x, y, gameStateToApply)
                 tryPurchaseShopCard(cardScript)
             else
                 cardScript.selected = true
+                nodeComp.state.isBeingFocused = true
             end
             return
         end
 
         cardScript.selected = not cardScript.selected
+        nodeComp.state.isBeingFocused = cardScript.selected
     end
 
     nodeComp.methods.onHover = function()
@@ -3159,6 +3166,8 @@ function initPlanningPhase()
             local cardScript = getScriptTableFromEntityID(e)
             if cardScript then
                 cardScript.selected = true
+                local go = component_cache.get(e, GameObject)
+                if go then go.state.isBeingFocused = true end
             end
         end,
         on_unfocus = function(e)
@@ -3166,6 +3175,8 @@ function initPlanningPhase()
             local cardScript = getScriptTableFromEntityID(e)
             if cardScript then
                 cardScript.selected = false
+                local go = component_cache.get(e, GameObject)
+                if go then go.state.isBeingFocused = false end
             end
         end,
         on_select = function(e)

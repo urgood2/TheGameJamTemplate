@@ -180,6 +180,12 @@ void executeEntityPipelineWithCommands(
         ++debugRotationLogs;
     }
 
+    bool tiltEnabled = false;
+    if (registry.any_of<transform::GameObject>(e)) {
+        const auto& node = registry.get<transform::GameObject>(e);
+        tiltEnabled = node.state.isBeingHovered || node.state.isBeingFocused;
+    }
+
     // Background fill to match legacy pipeline
     if (drawBackground) {
         Rectangle bgRect{
@@ -452,7 +458,8 @@ void executeEntityPipelineWithCommands(
                                     cardRotation,
                                     skewCenter,
                                     skewSize,
-                                    customPrePass]() {
+                                    customPrePass,
+                                    tiltEnabled]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -466,6 +473,7 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
                     globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", 0.0f);
+                    globals::getGlobalShaderUniforms().set(shaderName, "tilt_enabled", tiltEnabled ? 1.0f : 0.0f);
                     globals::getGlobalShaderUniforms().set(shaderName, "card_rotation", cardRotation);
                 }
                 if (isCardOverlay) {
@@ -569,12 +577,16 @@ void executeEntityPipelineWithCommands(
             const std::string shaderName = overlay.shaderName;
             const bool injectAtlas = overlay.injectAtlasUniforms;
             const bool is3DSkew = (shaderName == "3d_skew");
+            const bool isCardOverlay =
+                (shaderName == "material_card_overlay" ||
+                 shaderName == "material_card_overlay_new_dissolve");
             const float cardRotation = cardRotationRad;
             auto customPrePass = overlay.customPrePassFunction;
 
             batch.addCustomCommand([shaderName,
                                     injectAtlas,
                                     is3DSkew,
+                                    isCardOverlay,
                                     cardRotation,
                                     atlasRect,
                                     atlasSize,
@@ -584,6 +596,7 @@ void executeEntityPipelineWithCommands(
                                                     atlasRect.y / atlasSize.y},
                                     skewCenter,
                                     skewSize,
+                                    tiltEnabled,
                                     customPrePass]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
@@ -598,7 +611,14 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
                     globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", 0.0f);
+                    globals::getGlobalShaderUniforms().set(shaderName, "tilt_enabled", tiltEnabled ? 1.0f : 0.0f);
                     globals::getGlobalShaderUniforms().set(shaderName, "card_rotation", cardRotation);
+                }
+                if (isCardOverlay) {
+                    globals::getGlobalShaderUniforms().set(
+                        shaderName,
+                        "card_rotation",
+                        cardRotation);
                 }
                 if (customPrePass) {
                     customPrePass();
@@ -648,7 +668,8 @@ void executeEntityPipelineWithCommands(
                                     stickerIs3DSkew,
                                     cardRotation = cardRotationRad,
                                     skewCenter,
-                                    skewSize]() {
+                                    skewSize,
+                                    tiltEnabled]() {
                 if (stickerInjectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -663,6 +684,7 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(stickerShaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(stickerShaderName, "quad_size", skewSize);
                     globals::getGlobalShaderUniforms().set(stickerShaderName, "uv_passthrough", 1.0f);
+                    globals::getGlobalShaderUniforms().set(stickerShaderName, "tilt_enabled", tiltEnabled ? 1.0f : 0.0f);
                 }
                 Shader shader = shaders::getShader(stickerShaderName);
                 if (shader.id) {
@@ -691,7 +713,8 @@ void executeEntityPipelineWithCommands(
                                     textIs3DSkew,
                                     cardRotation = cardRotationRad,
                                     skewCenter,
-                                    skewSize]() {
+                                    skewSize,
+                                    tiltEnabled]() {
                 if (textInjectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -706,6 +729,7 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(textShaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(textShaderName, "quad_size", skewSize);
                     globals::getGlobalShaderUniforms().set(textShaderName, "uv_passthrough", 1.0f);
+                    globals::getGlobalShaderUniforms().set(textShaderName, "tilt_enabled", tiltEnabled ? 1.0f : 0.0f);
                 }
                 Shader shader = shaders::getShader(textShaderName);
                 if (shader.id) {

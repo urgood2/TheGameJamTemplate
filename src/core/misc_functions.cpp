@@ -652,6 +652,7 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew", "rotation", 0.0f); // No UV twist
   globalShaderUniforms.set("3d_skew", "cull_back",
                            0.0f); // Disable backface culling
+  globalShaderUniforms.set("3d_skew", "tilt_enabled", 0.0f);
   // --- Geometry settings ---
   float drawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
   float drawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);

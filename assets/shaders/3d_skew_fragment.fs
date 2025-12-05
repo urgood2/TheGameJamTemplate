@@ -19,6 +19,7 @@ uniform float rand_trans_power;
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
+uniform float uv_passthrough;
 
 out vec4 finalColor;
 
@@ -45,11 +46,14 @@ void main()
                          abs(pivot.x) < 0.0001 &&
                          abs(pivot.y) < 0.0001;
 
-    if (identityAtlas) {
-        // Text path: rely on vertex-stage skew for motion; keep UVs fixed and clamp
-        // to avoid sampling outside glyphs.
-        float inset = 0.0035; // tiny padding to kill bleed
-        vec2 finalUV = clamp(uv, vec2(inset), vec2(1.0 - inset));
+    if (identityAtlas || uv_passthrough > 0.5) {
+        // Passthrough: rely on vertex-stage skew for motion; clamp UVs to stay inside
+        // the intended region (identity or atlas sub-rect).
+        float inset = 0.0035; // tiny padding to reduce bleed
+        vec2 clamped = clamp(uv, vec2(inset), vec2(1.0 - inset));
+        vec2 finalUV = identityAtlas
+            ? clamped
+            : (pivot + clamped * regionRate);
         vec4 texel = texture(texture0, finalUV);
         finalColor = texel * fragColor * colDiffuse;
     } else {

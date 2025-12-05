@@ -17,6 +17,7 @@ namespace shader_draw_commands {
 struct OwnedDrawCommand {
     layer::DrawCommandV2 cmd;
     std::shared_ptr<void> owner; // keeps command data alive
+    bool forceTextPass = false;  // allow routing to text pass (e.g., small overlays)
 };
 
 struct BatchedLocalCommands {
@@ -384,7 +385,8 @@ void exposeToLua(sol::state& lua);
 // Utility: add a layer command (local space) to be drawn with the entity's shader pipeline.
 template <typename T, typename Initializer>
 inline void AddLocalCommand(entt::registry& registry, entt::entity e, int z,
-                            layer::DrawCommandSpace space, Initializer&& init) {
+                            layer::DrawCommandSpace space, Initializer&& init,
+                            bool forceTextPass = false) {
     auto* comp = registry.try_get<BatchedLocalCommands>(e);
     if (!comp) {
         comp = &registry.emplace<BatchedLocalCommands>(e);
@@ -396,7 +398,7 @@ inline void AddLocalCommand(entt::registry& registry, entt::entity e, int z,
     dc.data = data.get();
     dc.z = z;
     dc.space = space;
-    OwnedDrawCommand owned{dc, data};
+    OwnedDrawCommand owned{dc, data, forceTextPass};
     comp->commands.push_back(std::move(owned));
 }
 

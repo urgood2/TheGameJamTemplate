@@ -286,7 +286,8 @@ void executeEntityPipelineWithCommands(
     // Partition locals into text and non-text so we can render text separately with identity atlas.
     auto isTextCommand = [](const OwnedDrawCommand& oc) {
         using layer::DrawCommandType;
-        return oc.cmd.type == DrawCommandType::Text ||
+        return oc.forceTextPass ||
+               oc.cmd.type == DrawCommandType::Text ||
                oc.cmd.type == DrawCommandType::DrawTextCentered ||
                oc.cmd.type == DrawCommandType::TextPro;
     };
@@ -391,6 +392,7 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(shaderName, "pivot", pivot);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
+                    globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", 0.0f);
                 }
                 if (isCardOverlay) {
                     globals::getGlobalShaderUniforms().set(
@@ -474,6 +476,7 @@ void executeEntityPipelineWithCommands(
                     globals::getGlobalShaderUniforms().set(shaderName, "pivot", pivot);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(shaderName, "quad_size", skewSize);
+                    globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", 0.0f);
                 }
                 if (customPrePass) {
                     customPrePass();
@@ -547,6 +550,7 @@ void executeEntityPipelineWithCommands(
                 if (textIs3DSkew) {
                     globals::getGlobalShaderUniforms().set(textShaderName, "quad_center", skewCenter);
                     globals::getGlobalShaderUniforms().set(textShaderName, "quad_size", skewSize);
+                    globals::getGlobalShaderUniforms().set(textShaderName, "uv_passthrough", 1.0f);
                 }
                 Shader shader = shaders::getShader(textShaderName);
                 if (shader.id) {
@@ -694,7 +698,7 @@ void exposeToLua(sol::state& lua) {
     // Generic helper: add any existing layer command to BatchedLocalCommands (local space, shader-aware)
     sdc.set_function("add_local_command",
         [](entt::registry* registry, entt::entity e, const std::string& type,
-           sol::object initFnObj, sol::object zObj, sol::object spaceObj) {
+           sol::object initFnObj, sol::object zObj, sol::object spaceObj, sol::object forceTextObj) {
             int z = zObj.is<int>() ? zObj.as<int>() : 0;
             layer::DrawCommandSpace space = layer::DrawCommandSpace::Screen;
             if (spaceObj.is<int>()) {
@@ -703,6 +707,7 @@ void exposeToLua(sol::state& lua) {
                     space = layer::DrawCommandSpace::World;
                 }
             }
+            bool forceTextPass = forceTextObj.is<bool>() ? forceTextObj.as<bool>() : false;
             sol::protected_function initFn;
             if (initFnObj.is<sol::protected_function>()) {
                 initFn = initFnObj.as<sol::protected_function>();
@@ -719,7 +724,7 @@ void exposeToLua(sol::state& lua) {
 
 #define ADD_CMD(name, T)                                                                    \
     if (type == name) {                                                                    \
-        AddLocalCommand<T>(*registry, e, z, space, [&](T* c) { callInit(c); });            \
+        AddLocalCommand<T>(*registry, e, z, space, [&](T* c) { callInit(c); }, forceTextPass);            \
         return;                                                                            \
     }
 

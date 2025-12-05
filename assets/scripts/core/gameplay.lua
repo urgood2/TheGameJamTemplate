@@ -171,6 +171,15 @@ wand_tooltip_cache = {}
 card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
+local testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
+    getSpriteFrameTextureInfo("graphics/pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy/b138.png")
+
+local function make_rect(x, y, w, h)
+    if Rectangle and Rectangle.new then
+        return Rectangle.new(x, y, w, h)
+    end
+    return { x = x, y = y, width = w, height = h }
+end
 
 local tooltipStyle = {
     fontSize = 12,
@@ -1342,8 +1351,31 @@ function createNewCard(id, x, y, gameStateToApply)
                                     c.color = colorToUse
                                 end,
                                 1, -- z >= 0 to draw after sprite
-                                layer.DrawCommandSpace.World -- keep in world space with the card
+                                layer.DrawCommandSpace.World, -- keep in world space with the card
+                                true -- force text pass (uses uv_passthrough in 3d_skew)
                             )
+
+                            if testStickerInfo then
+                                shader_draw_commands.add_local_command(
+                                    registry, eid, "texture_pro",
+                                    function(c)
+                                        local size = (t and t.visualW or 32) * 0.22
+                                        local vec = (_G.Vector2 and _G.Vector2(size, size)) or { x = size, y = size }
+                                        local center = (_G.Vector2 and _G.Vector2(size * 0.5, size * 0.5)) or { x = size * 0.5, y = size * 0.5 }
+                                        c.texture = testStickerInfo.atlas
+                                        c.source = testStickerInfo.gridRect or make_rect(0, 0, 32, 32)
+                                        c.offsetX = (t and t.visualW or 0) * 0.5 - size * 0.5
+                                        c.offsetY = (t and t.visualH or 0) * 0.1
+                                        c.size = vec
+                                        c.rotationCenter = center
+                                        c.rotation = 0
+                                        c.color = (_G.WHITE or Col(255, 255, 255, 255))
+                                    end,
+                                    2, -- draw above the text label
+                                    layer.DrawCommandSpace.World,
+                                    true -- force text pass so uv_passthrough clamps UVs
+                                )
+                            end
 
                             -- slightly above the card sprite
                             command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()

@@ -663,6 +663,7 @@ void SetUpShaderUniforms() {
                            Vector2{0.0f, 0.0f}); // Screen-space center
   globalShaderUniforms.set("3d_skew", "quad_size",
                            Vector2{1.0f, 1.0f}); // Screen-space size
+  globalShaderUniforms.set("3d_skew", "uv_passthrough", 0.0f);
 
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});

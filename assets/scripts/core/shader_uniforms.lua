@@ -401,6 +401,7 @@ local function init_static_defaults()
     set("3d_skew", "pivot", Vector2{ x = 0.0, y = 0.0 })
     set("3d_skew", "quad_center", Vector2{ x = 0.0, y = 0.0 })
     set("3d_skew", "quad_size", Vector2{ x = 1.0, y = 1.0 })
+    set("3d_skew", "uv_passthrough", 0.0)
 
     -- squish
     set("squish", "up_left", Vector2{ x = 0.0, y = 0.0 })

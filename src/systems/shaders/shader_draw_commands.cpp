@@ -248,7 +248,8 @@ void executeEntityPipelineWithCommands(
                shaderName == "3d_skew_polychrome" ||
                shaderName == "3d_skew_foil" ||
                shaderName == "3d_skew_negative_shine" ||
-               shaderName == "3d_skew_negative";
+               shaderName == "3d_skew_negative" ||
+               shaderName == "3d_skew_holo";
     };
 
     auto makeLocalCommandEmitter = [&](const std::vector<OwnedDrawCommand>& commands,
@@ -273,7 +274,7 @@ void executeEntityPipelineWithCommands(
                 renderLocalCommand,
                 shaderIs3DSkew]() {
             auto applyUvPassthrough = [](float value) {
-                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram", "3d_skew_polychrome", "3d_skew_foil", "3d_skew_negative_shine", "3d_skew_negative"}) {
+                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram", "3d_skew_polychrome", "3d_skew_foil", "3d_skew_negative_shine", "3d_skew_negative", "3d_skew_holo"}) {
                     globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", value);
                     Shader shader = shaders::getShader(shaderName);
                     if (shader.id) {
@@ -311,7 +312,7 @@ void executeEntityPipelineWithCommands(
                 }
 
                 auto& uniforms = globals::getGlobalShaderUniforms();
-                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram", "3d_skew_polychrome", "3d_skew_foil", "3d_skew_negative_shine", "3d_skew_negative"}) {
+                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram", "3d_skew_polychrome", "3d_skew_foil", "3d_skew_negative_shine", "3d_skew_negative", "3d_skew_holo"}) {
                     uniforms.set(shaderName, "regionRate", regionRate);
                     uniforms.set(shaderName, "pivot", pivot);
                     Shader shader = shaders::getShader(shaderName);

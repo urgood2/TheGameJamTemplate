@@ -107,6 +107,15 @@
             "fragment": "web/3d_skew_negative_fragment.fs"
         }
     },
+    "3d_skew_holo": {
+        "vertex": "3d_skew_holo_vertex.vs",
+        "fragment": "3d_skew_holo_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_holo_vertex.vs",
+            "fragment": "web/3d_skew_holo_fragment.fs"
+        }
+    },
     "squish": {
         "vertex": "squish_vertex.vs",
         "fragment": "squish_fragment.fs",

@@ -1030,6 +1030,73 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew_negative", "fade_start", 0.7f);
   globalShaderUniforms.set("3d_skew_negative", "negative",
                            Vector2{0.65f, 0.25f});
+
+  // pseudo 3d skew holo
+  shaders::registerUniformUpdate("3d_skew_holo", [](Shader &shader) {
+    globalShaderUniforms.set("3d_skew_holo", "iTime",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_holo", "time",
+                             static_cast<float>(main_loop::getTime()));
+    globalShaderUniforms.set("3d_skew_holo", "mouse_screen_pos",
+                             getScaledMousePositionCached());
+    globalShaderUniforms.set(
+        "3d_skew_holo", "resolution",
+        Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                static_cast<float>(globals::VIRTUAL_HEIGHT)});
+    globalShaderUniforms.set("3d_skew_holo", "spread_strength", 1.0f);
+    globalShaderUniforms.set("3d_skew_holo", "distortion_strength", 0.05f);
+    globalShaderUniforms.set("3d_skew_holo", "fade_start", 0.7f);
+  });
+  globalShaderUniforms.set("3d_skew_holo", "fov", -0.39f);
+  globalShaderUniforms.set("3d_skew_holo", "x_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "y_rot", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "inset", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "hovering", 0.3f);
+  globalShaderUniforms.set("3d_skew_holo", "rand_trans_power", 0.4f);
+  globalShaderUniforms.set("3d_skew_holo", "rand_seed", 3.1415f);
+  globalShaderUniforms.set("3d_skew_holo", "rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "cull_back", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "tilt_enabled", 0.0f);
+  float holo2DrawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+  float holo2DrawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+  globalShaderUniforms.set("3d_skew_holo", "regionRate",
+                           Vector2{holo2DrawWidth / holo2DrawWidth,
+                                   holo2DrawHeight / holo2DrawHeight});
+  globalShaderUniforms.set("3d_skew_holo", "pivot",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_holo", "quad_center",
+                           Vector2{0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_holo", "quad_size",
+                           Vector2{1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_holo", "uv_passthrough", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "uGridRect",
+                           Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_holo", "uImageSize",
+                           Vector2{holo2DrawWidth, holo2DrawHeight});
+  globalShaderUniforms.set("3d_skew_holo", "texture_details",
+                           Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+  globalShaderUniforms.set("3d_skew_holo", "image_details",
+                           Vector2{65.15f, 64.0f});
+  globalShaderUniforms.set("3d_skew_holo", "dissolve", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "shadow", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "burn_colour_1",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_holo", "burn_colour_2",
+                           Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+  globalShaderUniforms.set("3d_skew_holo", "card_rotation", 0.0f);
+  globalShaderUniforms.set("3d_skew_holo", "material_tint",
+                           Vector3{1.0f, 1.0f, 1.0f});
+  globalShaderUniforms.set("3d_skew_holo", "grain_intensity", -1.95f);
+  globalShaderUniforms.set("3d_skew_holo", "grain_scale", -2.21f);
+  globalShaderUniforms.set("3d_skew_holo", "sheen_strength", -1.49f);
+  globalShaderUniforms.set("3d_skew_holo", "sheen_width", 2.22f);
+  globalShaderUniforms.set("3d_skew_holo", "sheen_speed", 2.3f);
+  globalShaderUniforms.set("3d_skew_holo", "noise_amount", 1.12f);
+  globalShaderUniforms.set("3d_skew_holo", "spread_strength", 1.0f);
+  globalShaderUniforms.set("3d_skew_holo", "distortion_strength", 0.05f);
+  globalShaderUniforms.set("3d_skew_holo", "fade_start", 0.7f);
+  globalShaderUniforms.set("3d_skew_holo", "holo",
+                           Vector2{0.65f, 0.25f});
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

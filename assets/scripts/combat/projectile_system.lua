@@ -35,6 +35,12 @@ local z_orders = require("core.z_orders")
 -- Module table
 local ProjectileSystem = {}
 
+-- Visual tuning defaults (do not change gameplay)
+local WALL_IMPACT_SPEED_BANDS = { slow = 180, fast = 420 }
+local HIGH_DAMAGE_PULSE_SCALE = 0.12
+local HIGH_DAMAGE_TRAIL_INTERVAL = 0.08
+local HIGH_DAMAGE_TRAIL_MIN_SPEED = 120
+
 -- Active projectiles tracking
 ProjectileSystem.active_projectiles = {}
 ProjectileSystem.projectile_scripts = {}
@@ -45,6 +51,10 @@ ProjectileSystem._playable_bounds = nil
 ProjectileSystem.collisionTargetSet = { WORLD = true }
 ProjectileSystem.collisionTargetList = { "WORLD" }
 ProjectileSystem.collisionCallbacksRegistered = {}
+ProjectileSystem.highDamageVisualThreshold = 30
+ProjectileSystem.highDamageTrailInterval = HIGH_DAMAGE_TRAIL_INTERVAL
+ProjectileSystem.highDamageTrailMinSpeed = HIGH_DAMAGE_TRAIL_MIN_SPEED
+ProjectileSystem.wallImpactSpeedBands = WALL_IMPACT_SPEED_BANDS
 
 -- Physics step timer handle
 ProjectileSystem.physics_step_timer_tag = "projectile_system_update"
@@ -153,6 +163,7 @@ function ProjectileSystem.createProjectileData(params)
         damageType = params.damageType or "physical",
         owner = params.owner or entt_null,
         faction = params.faction or "player", -- for friendly fire logic
+        visualDamageThreshold = params.highDamageVisualThreshold or ProjectileSystem.highDamageVisualThreshold,
 
         -- Piercing/hit tracking
         pierceCount = params.pierceCount or 0,
@@ -255,6 +266,15 @@ function ProjectileSystem.createProjectileLifetime(params)
 end
 
 -- Helper: cached access to projectile script tables
+local function computeProjectileDamage(data)
+    if not data then return 0 end
+    local dmg = data.damage or 0
+    if data.damageMultiplier then
+        dmg = dmg * data.damageMultiplier
+    end
+    return dmg
+end
+
 local function addIfNotPresent(list, seen, value)
     if not value or seen[value] then return end
     seen[value] = true
@@ -518,6 +538,39 @@ function ProjectileSystem.spawn(params)
         local speed = math.sqrt(vx * vx + vy * vy)
         local speedNorm = math.min(1.0, speed / 600.0)
         local ry = baseRy * (1.0 - 0.5 * speedNorm) -- faster → flatter
+        local data = self.projectileData
+        local damageValue = computeProjectileDamage(data)
+        local highDamageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
+        local isHighDamage = damageValue >= highDamageThreshold
+        self._pulseClock = (self._pulseClock or 0) + dt
+        local pulseScale = isHighDamage and (1 + HIGH_DAMAGE_PULSE_SCALE * (0.5 + 0.5 * math.sin(self._pulseClock * 8))) or 1
+        local pulseAlpha = isHighDamage and (150 + 70 * (0.5 + 0.5 * math.sin(self._pulseClock * 10))) or nil
+
+        -- Subtle trail behind heavy projectiles (visual only, no gameplay impact)
+        if isHighDamage and particle and particle.spawnDirectionalLinesCone and speed > ProjectileSystem.highDamageTrailMinSpeed then
+            self._trailAccumulator = (self._trailAccumulator or 0) + dt
+            if self._trailAccumulator >= ProjectileSystem.highDamageTrailInterval then
+                self._trailAccumulator = 0
+                local nx, ny = 0, 0
+                if speed > 0.01 then
+                    nx, ny = vx / speed, vy / speed
+                end
+                particle.spawnDirectionalLinesCone(Vec2(cx, cy), 3, 0.2, {
+                    direction = Vec2(-nx, -ny),
+                    spread = 18,
+                    colors = { util.getColor("ORANGE"), util.getColor("YELLOW"), util.getColor("WHITE") },
+                    minSpeed = 80,
+                    maxSpeed = 180,
+                    minLength = 12,
+                    maxLength = 26,
+                    minThickness = 1.2,
+                    maxThickness = 2.4,
+                    shrink = true,
+                    space = "world",
+                    z = z_orders.particle_vfx
+                })
+            end
+        end
 
         command_buffer.queuePushMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
         command_buffer.queueTranslate(layers.sprites, function(c)
@@ -538,6 +591,17 @@ function ProjectileSystem.spawn(params)
             c.lineWidth = nil
         end, z_orders.projectiles, layer.DrawCommandSpace.World)
 
+        if isHighDamage then
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                c.x = 0
+                c.y = 0
+                c.rx = rx * pulseScale * 1.05
+                c.ry = ry * pulseScale * 1.05
+                c.color = util.getColor("ORANGE"):setAlpha(pulseAlpha or 170)
+                c.lineWidth = nil
+            end, z_orders.projectiles, layer.DrawCommandSpace.World)
+        end
+
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
             c.x = 0
             c.y = 0
@@ -550,8 +614,8 @@ function ProjectileSystem.spawn(params)
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
             c.x = rx * 0.25
             c.y = 0
-            c.rx = rx * 0.6
-            c.ry = ry * 0.55
+            c.rx = rx * 0.6 * pulseScale
+            c.ry = ry * 0.55 * pulseScale
             c.color = util.getColor("yellow"):setAlpha(200)
             c.lineWidth = nil
         end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
@@ -588,6 +652,13 @@ function ProjectileSystem.spawn(params)
             local vx = (behavior and behavior.velocity and behavior.velocity.x) or 0
             local vy = (behavior and behavior.velocity and behavior.velocity.y) or 0
             local angle = (vx ~= 0 or vy ~= 0) and math.atan(vy, vx) or (t.actualR or 0)
+            local data = script and script.projectileData
+            local damageValue = computeProjectileDamage(data)
+            local highDamageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
+            local pulseClock = (script and script._pulseClock) or 0
+            local isHighDamage = damageValue >= highDamageThreshold
+            local pulseScale = isHighDamage and (1 + HIGH_DAMAGE_PULSE_SCALE * (0.5 + 0.5 * math.sin(pulseClock * 8))) or 1
+            local pulseAlpha = isHighDamage and (150 + 70 * (0.5 + 0.5 * math.sin(pulseClock * 10))) or nil
 
             local cx = t.actualX + w * 0.5
             local cy = t.actualY + h * 0.5
@@ -603,6 +674,17 @@ function ProjectileSystem.spawn(params)
                 c.angle = math.deg(angle)
             end, z_orders.projectiles, layer.DrawCommandSpace.World)
 
+            if isHighDamage then
+                command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                    c.x = 0
+                    c.y = 0
+                    c.rx = rx * pulseScale * 1.05
+                    c.ry = ry * pulseScale * 1.05
+                    c.color = util.getColor("ORANGE"):setAlpha(pulseAlpha or 170)
+                    c.lineWidth = nil
+                end, z_orders.projectiles, layer.DrawCommandSpace.World)
+            end
+
             command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
                 c.x = 0
                 c.y = 0
@@ -615,8 +697,8 @@ function ProjectileSystem.spawn(params)
             command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
                 c.x = rx * 0.25
                 c.y = 0
-                c.rx = rx * 0.6
-                c.ry = ry * 0.55
+                c.rx = rx * 0.6 * pulseScale
+                c.ry = ry * 0.55 * pulseScale
                 c.color = util.getColor("yellow"):setAlpha(200)
                 c.lineWidth = nil
             end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
@@ -1371,6 +1453,60 @@ local function computeImpactDirection(projectileEntity, targetEntity, behavior, 
     return vx / len, vy / len
 end
 
+local function resolveImpactFxOptions(projectileScript, behavior, impactSpeed)
+    local data = projectileScript and projectileScript.projectileData or nil
+    local bands = (data and data.impactSpeedBands) or ProjectileSystem.wallImpactSpeedBands or WALL_IMPACT_SPEED_BANDS
+    local slowThreshold = bands.slow or WALL_IMPACT_SPEED_BANDS.slow
+    local fastThreshold = bands.fast or WALL_IMPACT_SPEED_BANDS.fast
+
+    local colors = { util.getColor("WHITE"), util.getColor("YELLOW") }
+    local opts = {
+        count = 14,
+        spread = 32,
+        minSpeed = 180,
+        maxSpeed = 360,
+        minLength = 26,
+        maxLength = 62,
+        minThickness = 2,
+        maxThickness = 5
+    }
+
+    if impactSpeed >= fastThreshold then
+        colors = { util.getColor("ORANGE"), util.getColor("RED"), util.getColor("YELLOW") }
+        opts.count = 20
+        opts.spread = 24
+        opts.minSpeed = 280
+        opts.maxSpeed = 560
+        opts.minLength = 32
+        opts.maxLength = 82
+        opts.minThickness = 2.4
+        opts.maxThickness = 6.3
+    elseif impactSpeed >= slowThreshold then
+        colors = { util.getColor("YELLOW"), util.getColor("ORANGE"), util.getColor("WHITE") }
+        opts.count = 16
+        opts.spread = 28
+        opts.minSpeed = 220
+        opts.maxSpeed = 440
+        opts.minLength = 30
+        opts.maxLength = 72
+        opts.minThickness = 2.1
+        opts.maxThickness = 5.7
+    end
+
+    local damageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
+    if computeProjectileDamage(data) >= damageThreshold then
+        colors[#colors + 1] = util.getColor("CYAN")
+        opts.count = math.floor(opts.count * 1.15)
+        opts.minSpeed = opts.minSpeed + 30
+        opts.maxSpeed = opts.maxSpeed + 80
+        opts.maxLength = opts.maxLength + 10
+        opts.maxThickness = opts.maxThickness + 0.8
+    end
+
+    opts.colors = colors
+    return opts
+end
+
 local function spawnWallImpactFx(projectileScript, transform, behavior, collisionInfo)
     if not projectileScript then return end
     local lifetime = projectileScript.projectileLifetime
@@ -1383,35 +1519,45 @@ local function spawnWallImpactFx(projectileScript, transform, behavior, collisio
         lifetime.wallImpactVfxPlayed = true
     end
 
+    local world = getPhysicsWorld(projectileScript)
+    local vx, vy = getVelocityXY(world, projectileScript.projectileEntity, behavior and behavior.velocity, world ~= nil)
+    local impactSpeed = math.sqrt(vx * vx + vy * vy)
+    if impactSpeed <= 0 and behavior and behavior.baseSpeed then
+        impactSpeed = behavior.baseSpeed
+    end
+
     local dirX, dirY = computeImpactDirection(projectileScript.projectileEntity, nil, behavior, collisionInfo)
-    -- if particle and particle.spawnDirectionalLinesCone then
-        local cx = transform.actualX + (transform.actualW or 0) * 0.5
-        local cy = transform.actualY + (transform.actualH or 0) * 0.5
-        particle.spawnDirectionalLinesCone(Vec2(cx, cy), 14, 0.25, {
+    local fxOptions = resolveImpactFxOptions(projectileScript, behavior, impactSpeed)
+    local cx = transform.actualX + (transform.actualW or 0) * 0.5
+    local cy = transform.actualY + (transform.actualH or 0) * 0.5
+    local impactDuration = 0.25 + math.min(impactSpeed / 2000, 0.08)
+
+    if particle and particle.spawnDirectionalLinesCone then
+        particle.spawnDirectionalLinesCone(Vec2(cx, cy), fxOptions.count, impactDuration, {
             direction = Vec2(-dirX, -dirY),
-            spread = 32,
-            colors = { util.getColor("WHITE"), util.getColor("YELLOW") },
-            minSpeed = 180,
-            maxSpeed = 360,
-            minLength = 26,
-            maxLength = 62,
-            minThickness = 2,
-            maxThickness = 5,
+            spread = fxOptions.spread,
+            colors = fxOptions.colors,
+            minSpeed = fxOptions.minSpeed,
+            maxSpeed = fxOptions.maxSpeed,
+            minLength = fxOptions.minLength,
+            maxLength = fxOptions.maxLength,
+            minThickness = fxOptions.minThickness,
+            maxThickness = fxOptions.maxThickness,
             shrink = true,
             space = "world",
             z = z_orders.particle_vfx
         })
+    end
 
-        -- if spawnImpactSmear then
-        --     spawnImpactSmear(
-        --         cx,
-        --         cy,
-        --         Vec2(dirX, dirY),
-        --         util.getColor("white"),
-        --         0.16,
-        --         { single = true, maxLength = 46, maxThickness = 9 }
-        --     )
-        -- end
+    -- if spawnImpactSmear then
+    --     spawnImpactSmear(
+    --         cx,
+    --         cy,
+    --         Vec2(dirX, dirY),
+    --         util.getColor("white"),
+    --         0.16,
+    --         { single = true, maxLength = 46, maxThickness = 9 }
+    --     )
     -- end
 end
 

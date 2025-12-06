@@ -7,8 +7,6 @@ in vec4 fragColor;
 uniform vec2 regionRate;
 uniform vec2 pivot;
 
-in mat3 invRotMat;
-in vec2 worldMouseUV;
 in vec2 tiltAmount;
 
 uniform sampler2D texture0;
@@ -69,18 +67,6 @@ vec2 getSpriteUV(vec2 uv) {
 
 vec2 localToAtlas(vec2 localUV) {
     return (uGridRect.xy + localUV * uGridRect.zw) / uImageSize;
-}
-
-mat2 rotate2d(float a) {
-    float s = sin(a);
-    float c = cos(a);
-    return mat2(c, -s, s, c);
-}
-
-float hash21(vec2 p) {
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 34.345);
-    return fract(p.x * p.y);
 }
 
 vec4 sampleTinted(vec2 uv) {
@@ -165,7 +151,6 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec4 base = sampleTinted(sampleUV);
 
     vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
-    vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
 
     // Polychrome overlay: hue shift driven by the polychrome vector and noise field.
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
@@ -256,8 +241,6 @@ void main()
         float asp = regionRate.y / regionRate.x;
         uv.y *= asp;
 
-        float angle = rotation + rand_trans_power * 0.05 *
-            sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
         uv = rotate(uv, vec2(0.5), angle);
         uv.y /= asp;
 

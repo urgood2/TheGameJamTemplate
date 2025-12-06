@@ -256,7 +256,8 @@ void executeEntityPipelineWithCommands(
 
     auto makeLocalCommandEmitter = [&](const std::vector<OwnedDrawCommand>& commands,
                                        bool beforeSprite,
-                                       bool shaderIs3DSkew = false) {
+                                       bool shaderIs3DSkew = false,
+                                       std::string targetShaderName = {}) {
         const float capturedBaseVisualW = baseVisualW;
         const float capturedBaseVisualH = baseVisualH;
         const float capturedDestW = destW;
@@ -274,22 +275,35 @@ void executeEntityPipelineWithCommands(
                 capturedRotation,
                 capturedCenter,
                 renderLocalCommand,
-                shaderIs3DSkew]() {
-            auto applyUvPassthrough = [](float value) {
-                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram", "3d_skew_polychrome", "3d_skew_foil", "3d_skew_negative_shine", "3d_skew_negative", "3d_skew_holo", "3d_skew_voucher", "3d_skew_gold_seal"}) {
-                    globals::getGlobalShaderUniforms().set(shaderName, "uv_passthrough", value);
-                    Shader shader = shaders::getShader(shaderName);
-                    if (shader.id) {
-                        shaders::TryApplyUniforms(shader,
-                                                  globals::getGlobalShaderUniforms(),
-                                                  shaderName);
-                    }
-                }
-            };
-            auto apply3DSkewAtlasForCommand = [&](const OwnedDrawCommand& oc) {
-                if (!shaderIs3DSkew) {
+                shaderIs3DSkew,
+                targetShaderName]() {
+            auto& uniforms = globals::getGlobalShaderUniforms();
+            bool haveRegionCache = false;
+            Vector2 lastRegionRate{0.0f, 0.0f};
+            Vector2 lastPivot{0.0f, 0.0f};
+            float cachedUvPassthrough = -123.0f;
+
+            auto applyUvPassthrough = [&](float value) {
+                if (!shaderIs3DSkew || targetShaderName.empty()) {
                     return;
                 }
+                if (cachedUvPassthrough == value) {
+                    return;
+                }
+                uniforms.set(targetShaderName, "uv_passthrough", value);
+                Shader shader = shaders::getShader(targetShaderName);
+                if (shader.id) {
+                    shaders::TryApplyUniforms(shader,
+                                              uniforms,
+                                              targetShaderName);
+                }
+                cachedUvPassthrough = value;
+            };
+            auto apply3DSkewAtlasForCommand = [&](const OwnedDrawCommand& oc) {
+                if (!shaderIs3DSkew || targetShaderName.empty()) {
+                    return;
+                }
+
                 Vector2 regionRate{1.0f, 1.0f};
                 Vector2 pivot{0.0f, 0.0f};
                 bool hasRegion = false;
@@ -313,17 +327,25 @@ void executeEntityPipelineWithCommands(
                     pivot = Vector2{0.0f, 0.0f};
                 }
 
-                auto& uniforms = globals::getGlobalShaderUniforms();
-                for (const auto* shaderName : {"3d_skew", "3d_skew_hologram", "3d_skew_polychrome", "3d_skew_foil", "3d_skew_negative_shine", "3d_skew_negative", "3d_skew_holo", "3d_skew_voucher", "3d_skew_gold_seal"}) {
-                    uniforms.set(shaderName, "regionRate", regionRate);
-                    uniforms.set(shaderName, "pivot", pivot);
-                    Shader shader = shaders::getShader(shaderName);
-                    if (shader.id) {
-                        shaders::TryApplyUniforms(shader,
-                                                  uniforms,
-                                                  shaderName);
-                    }
+                if (haveRegionCache &&
+                    regionRate.x == lastRegionRate.x &&
+                    regionRate.y == lastRegionRate.y &&
+                    pivot.x == lastPivot.x &&
+                    pivot.y == lastPivot.y) {
+                    return;
                 }
+
+                uniforms.set(targetShaderName, "regionRate", regionRate);
+                uniforms.set(targetShaderName, "pivot", pivot);
+                Shader shader = shaders::getShader(targetShaderName);
+                if (shader.id) {
+                    shaders::TryApplyUniforms(shader,
+                                              uniforms,
+                                              targetShaderName);
+                }
+                lastRegionRate = regionRate;
+                lastPivot = pivot;
+                haveRegionCache = true;
             };
 
             const float scaleX = (capturedBaseVisualW > 0.0f)
@@ -711,8 +733,8 @@ void executeEntityPipelineWithCommands(
                         stickerShaderName);
                 }
             });
-            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/true, stickerIs3DSkew));
-            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/false, stickerIs3DSkew));
+            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/true, stickerIs3DSkew, stickerShaderName));
+            batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/false, stickerIs3DSkew, stickerShaderName));
             batch.addEndShader();
         }
     }
@@ -757,8 +779,8 @@ void executeEntityPipelineWithCommands(
                 }
             });
 
-            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/true, textIs3DSkew));
-            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/false, textIs3DSkew));
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/true, textIs3DSkew, textShaderName));
+            batch.addCustomCommand(makeLocalCommandEmitter(localTextCommands, /*beforeSprite=*/false, textIs3DSkew, textShaderName));
 
             batch.addEndShader();
         }

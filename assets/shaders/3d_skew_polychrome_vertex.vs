@@ -8,8 +8,6 @@ in vec4 vertexColor;
 out vec2 fragTexCoord;
 out vec4 fragColor;
 
-out mat3 invRotMat;
-out vec2 worldMouseUV;
 out vec2 tiltAmount; // Pass tilt to fragment shader
 
 uniform mat4 mvp;
@@ -57,9 +55,6 @@ void main()
     vec2 orbitVec = vec2(cos(orbitAngle), sin(orbitAngle)) * 0.04 * tiltScale;
 
     // Transform mouse screen position to UV offset
-    vec2 localMouse = mouse_screen_pos / resolution;
-    worldMouseUV = localMouse;
-
     // Compute mouse offset relative to the actual quad on screen
     // quad_center is the center of the sprite in screen coordinates
     // quad_size is the size of the sprite
@@ -103,7 +98,6 @@ void main()
     );
     
     mat3 rot = rotX * rotY;
-    invRotMat = transpose(rot); // inverse of rotation for fragment shader
 
     // Apply vertex displacement for corner tilting
     // UV 0,0 is top-left, 1,1 is bottom-right

@@ -4551,6 +4551,17 @@ function initCombatSystem()
                 local xpMainSpringVal        = expBarMainSpringRef.value or xpPct
 
                 local screenCenterX          = globals.screenWidth() * 0.5
+                local barOutlineWidth        = 3
+                local barGap                 = 0
+
+                local baseExpBarWidth        = globals.screenWidth()
+                local baseExpBarHeight       = 20
+
+                local expBarWidth            = baseExpBarWidth
+                local expBarHeight           = baseExpBarHeight
+
+                local expBarX                = screenCenterX
+                local expBarY                = math.max(barOutlineWidth, 0)
 
                 ------------------------------------------------------------
                 -- HEALTH BAR (container only – no scaling)
@@ -4562,7 +4573,7 @@ function initCombatSystem()
                 local healthBarHeight        = baseHealthBarHeight
 
                 local healthBarX             = screenCenterX
-                local healthBarY             = healthBarHeight
+                local healthBarY             = expBarY + expBarHeight + barGap
 
                 -- background container
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
@@ -4602,6 +4613,19 @@ function initCombatSystem()
                     c.color = Col(255, 255, 255, 255)
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    local outlineW = math.max(0, baseHealthBarWidth - barOutlineWidth)
+                    local outlineH = math.max(0, (healthBarHeight * hpScale) - barOutlineWidth)
+                    c.x         = healthBarX
+                    c.y         = healthBarY + healthBarHeight * 0.5
+                    c.w         = outlineW
+                    c.h         = outlineH
+                    c.rx        = 5
+                    c.ry        = 5
+                    c.color     = Col(255, 255, 255, 255)
+                    c.lineWidth = barOutlineWidth
+                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+
                 -- Red bar (front) - shows the smaller/current value
                 local fillRedWidth = baseHealthBarWidth * hpRedPct
                 local fillRedCenterX = (healthBarX - healthBarWidth * 0.5) + fillRedWidth * 0.5
@@ -4616,18 +4640,22 @@ function initCombatSystem()
                     c.color = util.getColor("red")
                 end, z_orders.background + 2, layer.DrawCommandSpace.Screen)
 
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    local outlineW = math.max(0, baseHealthBarWidth - barOutlineWidth)
+                    local outlineH = math.max(0, (healthBarHeight * hpScale) - barOutlineWidth)
+                    c.x         = healthBarX
+                    c.y         = healthBarY + healthBarHeight * 0.5
+                    c.w         = outlineW
+                    c.h         = outlineH
+                    c.rx        = 5
+                    c.ry        = 5
+                    c.color     = util.getColor("red")
+                    c.lineWidth = barOutlineWidth
+                end, z_orders.background + 3, layer.DrawCommandSpace.Screen)
+
                 ------------------------------------------------------------
                 -- EXP BAR (container only — no scaling)
                 ------------------------------------------------------------
-                local baseExpBarWidth  = globals.screenWidth()
-                local baseExpBarHeight = 20
-
-                local expBarWidth      = baseExpBarWidth
-                local expBarHeight     = baseExpBarHeight
-
-                local expBarX          = screenCenterX
-                local expBarY          = healthBarY - expBarHeight
-
                 -- background container
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x     = expBarX
@@ -4663,6 +4691,19 @@ function initCombatSystem()
                     c.color = Col(255, 255, 255, 255)
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
 
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    local outlineW = math.max(0, baseExpBarWidth - barOutlineWidth)
+                    local outlineH = math.max(0, (expBarHeight * xpScale) - barOutlineWidth)
+                    c.x         = expBarX
+                    c.y         = expBarY + expBarHeight * 0.5
+                    c.w         = outlineW
+                    c.h         = outlineH
+                    c.rx        = 5
+                    c.ry        = 5
+                    c.color     = Col(255, 255, 255, 255)
+                    c.lineWidth = barOutlineWidth
+                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+
                 -- Yellow bar (front) - shows the main spring value (smooth lerp)
                 local xpFillYellowWidth = baseExpBarWidth * xpYellowPct
                 local xpFillYellowCenterX = (expBarX - expBarWidth * 0.5) + xpFillYellowWidth * 0.5
@@ -4676,6 +4717,19 @@ function initCombatSystem()
                     c.ry    = 5
                     c.color = util.getColor("yellow")
                 end, z_orders.background + 2, layer.DrawCommandSpace.Screen)
+
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    local outlineW = math.max(0, baseExpBarWidth - barOutlineWidth)
+                    local outlineH = math.max(0, (expBarHeight * xpScale) - barOutlineWidth)
+                    c.x         = expBarX
+                    c.y         = expBarY + expBarHeight * 0.5
+                    c.w         = outlineW
+                    c.h         = outlineH
+                    c.rx        = 5
+                    c.ry        = 5
+                    c.color     = util.getColor("yellow")
+                    c.lineWidth = barOutlineWidth
+                end, z_orders.background + 3, layer.DrawCommandSpace.Screen)
 
                 ------------------------------------------------------------
                 -- ENEMY HEALTH BARS (world space, show briefly after damage)

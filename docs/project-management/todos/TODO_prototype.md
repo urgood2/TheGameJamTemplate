@@ -81,9 +81,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 - also apply some sort of texture shader to the ui (overlay)
 
 - replace card sprites with real ones. 
-- make use of the new shader I have for appear/disappear when spawning/despawning things. -try with sakura shader as well?
-
-- maybe port the snkrx text code over to lua so I can use it easily. > try using the new text.
 
 - affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
 
@@ -93,18 +90,7 @@ tag system tooltips need work.
 
 - probably make a prompt guideline based on my current scripts.
 
-- Display a simple tutorial text on the background whne spawning in for first time (entering action state). Just text that shows keys (or controller) to press for movement and dash.
-- Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom right)
 - destrutible objects that spawn from time to time and give resources?
-- Make enemies actually die when they reach 0 hp and spawn exp drops, remove auto drops for exp.
-
-- Make enemies actually die (go out with a pulse of sprite, and particles) when they reach 0 hp and spawn exp drops, remove auto drops for exp.
-
-- enemy knockback on projectile collision. direction-facing particles should launch when projectiles collide with wall and vanish. recoil the character when launching (or at least show animation (size bounce), as well as shot vfx, a small receding circle where the shot spawned)
-
-- Mouse aim indicator (triangle), option to enable auto-aim nearest enemy with a key. (display key image (both for controller and keyboard) on bottom. If mouse is enabled, follow the mouse iwtht he indicator. otherwise, it should be moved with controller right stick. for the sprites, we can use the P key (keyboard_p_outline.png) and the y key controller (xbox_button_y_outline.png).
-
-
 
 - we should show current level number somewhere on the actoin phase screen.
 - we need a button that will show current stats of the player (those that are relevant.)

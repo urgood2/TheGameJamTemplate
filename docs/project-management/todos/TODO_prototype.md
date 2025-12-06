@@ -116,15 +116,7 @@ tag system tooltips need work.
 - Get basic systems like wand executor, discovery, most importantly cast events firing and the ui showing, up so I can get started.
 
 
-- refer to wand_cast_feed_integration_steps.md for wand → cast feed integration steps.
-- maybe pause game before starting action phase to evaluate cards once, show discoveries, etc?
-- lag at start may have to do with the tests. gotta make sure.
-
-- need to make level up screen. instead of doing ui, let's spawn something on the center of the map - three choices that player can select, a pip pops up for input when player gets close, of the three stats.
 - then player progresses through 3 stages, the last of which is extra hard.
-
-
-- also need currency. display it somewhere on the screen in the shop and planning phases.
 
 
 - flesh out shop. display currency with dynamic text, add reroll and lock buttons. we should probably have a way to preview player's belongings & wands & inventory. as well as a return to planning button, and a go button for action.
@@ -136,7 +128,7 @@ tag system tooltips need work.
 
 - exp drops, leveling, stat integration. start with hp  also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 
-
+- make all tooltips newly created jump to full size instead of tweening size, which is the default.
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
 
 - make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.

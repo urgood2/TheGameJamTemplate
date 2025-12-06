@@ -8,7 +8,9 @@ in vec4 vertexColor;
 out vec2 fragTexCoord;
 out vec4 fragColor;
 
-out vec2 tiltAmount; // Pass tilt to fragment shader
+flat out vec2 tiltSin;
+flat out vec2 tiltCos;
+flat out float angleFlat;
 
 uniform mat4 mvp;
 uniform vec2 resolution;
@@ -70,33 +72,35 @@ void main()
     vec2 mouseForce = hoverScale * relativeMouseDir
                     + randVec * 0.01 * randScale
                     + orbitVec;
-    tiltAmount = mouseForce;
 
-    // Build rotation matrix for pseudo-3D effect
-    // mouseForce.x controls rotation around Y axis (left-right tilt)
-    // mouseForce.y controls rotation around X axis (up-down tilt)
-    float tiltX = mouseForce.y * 0.5; // Rotation around X axis
-    float tiltY = mouseForce.x * 0.5; // Rotation around Y axis
-    
-    // Build rotation matrices
-    float cosX = cos(tiltX);
-    float sinX = sin(tiltX);
-    float cosY = cos(tiltY);
-    float sinY = sin(tiltY);
-    
-    // Combined rotation matrix (Y then X rotation)
+    // Precompute tilt trig once per draw (constant across the quad) for UV correction.
+    float tiltStrength = abs(fov) * 2.0;
+    float tiltXFrag = mouseForce.y * tiltStrength;
+    float tiltYFrag = mouseForce.x * tiltStrength;
+    tiltSin = vec2(sin(tiltXFrag), sin(tiltYFrag));
+    tiltCos = vec2(cos(tiltXFrag), cos(tiltYFrag));
+
+    float jitter = rand_trans_power * 0.05 *
+        sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
+    angleFlat = rotation + jitter;
+
+    // Build rotation matrix for pseudo-3D effect (geometry uses the legacy 0.5 tilt scale).
+    float tiltXGeom = mouseForce.y * 0.5;
+    float tiltYGeom = mouseForce.x * 0.5;
+    float cosX = cos(tiltXGeom);
+    float sinX = sin(tiltXGeom);
+    float cosY = cos(tiltYGeom);
+    float sinY = sin(tiltYGeom);
     mat3 rotX = mat3(
         1.0, 0.0, 0.0,
         0.0, cosX, -sinX,
         0.0, sinX, cosX
     );
-    
     mat3 rotY = mat3(
         cosY, 0.0, sinY,
         0.0, 1.0, 0.0,
         -sinY, 0.0, cosY
     );
-    
     mat3 rot = rotX * rotY;
 
     // Apply vertex displacement for corner tilting

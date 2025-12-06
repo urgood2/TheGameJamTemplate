@@ -288,6 +288,7 @@ function initMainMenu()
     
     -- new uibox for the main menu
     mainMenuEntities.main_menu_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, startMenuRoot)
+    ui.box.set_draw_layer(mainMenuEntities.main_menu_uibox, "ui")
     
     -- center the ui box X-axi
     local mainMenuTransform = component_cache.get(mainMenuEntities.main_menu_uibox, Transform)
@@ -342,6 +343,7 @@ function initMainMenu()
         :build()
     -- new uibox for the language button
     mainMenuEntities.language_button_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, languageButtonRoot)
+    ui.box.set_draw_layer(mainMenuEntities.language_button_uibox, "ui")
     
     -- put in the bottom right corner
     local languageButtonTransform = component_cache.get(mainMenuEntities.language_button_uibox, Transform)

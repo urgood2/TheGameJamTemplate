@@ -2816,7 +2816,7 @@ function makeCardTooltip(card_def, opts)
     local noShadowAttr   = ";shadow=false"
     local labelColumnMinWidth = tooltipStyle.labelColumnMinWidth
     local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
-    local rowPadding = tooltipStyle.rowPadding
+    local rowPadding = math.max(0, (tooltipStyle.rowPadding or 0) - 1)
     local outerPadding = tooltipStyle.innerPadding
 
     -- Helper function to check if value should be excluded

@@ -3051,9 +3051,6 @@ local function collectPlayerStatsSnapshot()
         hp = player.hp or stats:get('health') or 0,
         max_hp = player.max_health or stats:get('health') or 0,
         health_regen = stats:get('health_regen'),
-        energy = player.energy or stats:get('energy') or 0,
-        max_energy = player.max_energy or stats:get('energy') or 0,
-        energy_regen = stats:get('energy_regen'),
         physique = stats:get('physique'),
         cunning = stats:get('cunning'),
         spirit = stats:get('spirit'),
@@ -3092,11 +3089,6 @@ local function ensurePlayerStatsTooltip()
         tooltip,
         z_orders.ui_tooltips
     )
-
-    ui.box.AddStateTagToUIBox(tooltip, PLANNING_STATE)
-    ui.box.AddStateTagToUIBox(tooltip, ACTION_STATE)
-    ui.box.AddStateTagToUIBox(tooltip, SHOP_STATE)
-    ui.box.AddStateTagToUIBox(tooltip, PLAYER_STATS_TOOLTIP_STATE)
 
     return tooltip
 end
@@ -3166,10 +3158,6 @@ function makePlayerStatsTooltip(snapshot)
             addLine(rows, "health", string.format("%d / %d", math.floor(snapshot.hp + 0.5), math.floor(snapshot.max_hp + 0.5)))
         end
         addLine(rows, "health regen", snapshot.health_regen and string.format("%.1f/s", snapshot.health_regen))
-        if snapshot.energy and snapshot.max_energy then
-            addLine(rows, "energy", string.format("%d / %d", math.floor(snapshot.energy + 0.5), math.floor(snapshot.max_energy + 0.5)))
-        end
-        addLine(rows, "energy regen", snapshot.energy_regen and string.format("%.1f/s", snapshot.energy_regen))
         if snapshot.xp and snapshot.xp_to_next then
             addLine(rows, "xp", string.format("%d / %d", math.floor(snapshot.xp + 0.5), math.floor(snapshot.xp_to_next + 0.5)))
         end
@@ -3231,6 +3219,13 @@ local function showPlayerStatsTooltip(anchorEntity)
     local tooltip = ensurePlayerStatsTooltip()
     if not tooltip then return end
 
+    -- Reapply state tags in case they were cleared when hidden
+    ui.box.ClearStateTagsFromUIBox(tooltip)
+    ui.box.AddStateTagToUIBox(tooltip, PLANNING_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, ACTION_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, SHOP_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, PLAYER_STATS_TOOLTIP_STATE)
+
     ui.box.RenewAlignment(registry, tooltip)
 
     if anchorEntity then
@@ -3244,6 +3239,8 @@ end
 local function hidePlayerStatsTooltip()
     if not playerStatsTooltipEntity or not entity_cache.valid(playerStatsTooltipEntity) then return end
     deactivate_state(PLAYER_STATS_TOOLTIP_STATE)
+    clear_state_tags(playerStatsTooltipEntity)
+    ui.box.ClearStateTagsFromUIBox(playerStatsTooltipEntity)
 end
 
 local function refreshPlayerStatsTooltip(anchorEntity)

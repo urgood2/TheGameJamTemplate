@@ -31,6 +31,7 @@ local Core = {}
 --   * Favor predictable behavior on edge cases (empty lists, zero/negative weights).
 -- ============================================================================
 local util = {}
+local signal = require("external.hump.signal")
 
 -- ============================================================================
 -- Gameplay Modules (namespaces)
@@ -1266,6 +1267,7 @@ function Stats:recompute()
   for _, fn in ipairs(self.derived_hooks) do
     fn(self)
   end
+  signal.emit("stats_recomputed", { stats = self, owner = self.owner })
 end
 
 
@@ -4873,7 +4875,7 @@ local function make_actor(name, defs, attach)
   local hp = s:get('health')
   local en = s:get('energy')
 
-  return {
+  local actor = {
     name             = name,
     stats            = s,
     hp               = hp,
@@ -4889,6 +4891,10 @@ local function make_actor(name, defs, attach)
     _attach          = attach,
     _make_actor      = make_actor,
   }
+
+  s.owner = actor
+
+  return actor
 end
 
 

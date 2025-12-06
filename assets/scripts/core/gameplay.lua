@@ -149,6 +149,7 @@ ACTION_STATE = "SURVIVORS"
 SHOP_STATE = "SHOP"
 WAND_TOOLTIP_STATE = "WAND_TOOLTIP_STATE" -- we use this to show wand tooltips and hide them when needed.
 CARD_TOOLTIP_STATE = "CARD_TOOLTIP_STATE" -- we use this to show card tooltips and hide them when needed.
+PLAYER_STATS_TOOLTIP_STATE = "PLAYER_STATS_TOOLTIP_STATE"
 
 -- combat context, to be used with the combat system.
 combat_context = nil
@@ -171,6 +172,9 @@ wand_tooltip_cache = {}
 card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
+local playerStatsTooltipEntity = nil
+local playerStatsSignalRegistered = false
+local makePlayerStatsTooltip
 local testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
     getSpriteFrameTextureInfo("graphics/pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy/b138.png")
 
@@ -1496,7 +1500,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_negative")
     -- shaderPipelineComp:addPass("3d_skew_holo")
     -- shaderPipelineComp:addPass("3d_skew_voucher")
-    shaderPipelineComp:addPass("3d_skew_gold_seal")
+    -- shaderPipelineComp:addPass("3d_skew_gold_seal")
     -- shaderPipelineComp:addPass("3d_polychrome")
     -- shaderPipelineComp:addPass("material_card_overlay_new_dissolve")
 
@@ -3017,6 +3021,244 @@ function ensureCardTooltip(card_def, opts)
 
     clear_state_tags(tooltip)
     return tooltip
+end
+
+local function destroyPlayerStatsTooltip()
+    if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) then
+        registry:destroy(playerStatsTooltipEntity)
+    end
+    playerStatsTooltipEntity = nil
+end
+
+local function collectPlayerStatsSnapshot()
+    local ctx = combat_context
+    if not ctx or not ctx.side1 or not ctx.side1[1] then return nil end
+
+    local player = ctx.side1[1]
+    local stats = player and player.stats
+    if not player or not stats then return nil end
+
+    local level = player.level or 1
+    local xpToNext = nil
+    if CombatSystem and CombatSystem.Game and CombatSystem.Game.Leveling and CombatSystem.Game.Leveling.xp_to_next then
+        xpToNext = CombatSystem.Game.Leveling.xp_to_next(ctx, player, level)
+    end
+
+    return {
+        level = level,
+        xp = player.xp or 0,
+        xp_to_next = xpToNext,
+        hp = player.hp or stats:get('health') or 0,
+        max_hp = player.max_health or stats:get('health') or 0,
+        health_regen = stats:get('health_regen'),
+        energy = player.energy or stats:get('energy') or 0,
+        max_energy = player.max_energy or stats:get('energy') or 0,
+        energy_regen = stats:get('energy_regen'),
+        physique = stats:get('physique'),
+        cunning = stats:get('cunning'),
+        spirit = stats:get('spirit'),
+        offensive_ability = stats:get('offensive_ability'),
+        defensive_ability = stats:get('defensive_ability'),
+        weapon_min = stats:get('weapon_min'),
+        weapon_max = stats:get('weapon_max'),
+        attack_speed = stats:get('attack_speed'),
+        cast_speed = stats:get('cast_speed'),
+        cooldown_reduction = stats:get('cooldown_reduction'),
+        life_steal_pct = stats:get('life_steal_pct'),
+        crit_damage_pct = stats:get('crit_damage_pct'),
+        dodge_chance_pct = stats:get('dodge_chance_pct'),
+        armor = stats:get('armor'),
+        run_speed = stats:get('run_speed'),
+        move_speed_pct = stats:get('move_speed_pct'),
+        all_damage_pct = stats:get('all_damage_pct'),
+        skill_energy_cost_reduction = stats:get('skill_energy_cost_reduction'),
+    }
+end
+
+
+local function ensurePlayerStatsTooltip()
+    if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) then
+        return playerStatsTooltipEntity
+    end
+
+    destroyPlayerStatsTooltip()
+
+    local tooltip = makePlayerStatsTooltip(collectPlayerStatsSnapshot())
+    if not tooltip then return nil end
+
+    playerStatsTooltipEntity = tooltip
+
+    layer_order_system.assignZIndexToEntity(
+        tooltip,
+        z_orders.ui_tooltips
+    )
+
+    ui.box.AddStateTagToUIBox(tooltip, PLANNING_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, ACTION_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, SHOP_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, PLAYER_STATS_TOOLTIP_STATE)
+
+    return tooltip
+end
+
+function makePlayerStatsTooltip(snapshot)
+    local globalFontSize = tooltipStyle.fontSize
+    local noShadowAttr = ";shadow=false"
+    local labelColumnMinWidth = tooltipStyle.labelColumnMinWidth
+    local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
+    local rowPadding = tooltipStyle.rowPadding
+    local outerPadding = tooltipStyle.innerPadding
+
+    local function makeLabelNode(label)
+        local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. tooltipStyle.labelBg ..
+            ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        return dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0,
+                minWidth = labelColumnMinWidth
+            },
+            children = { labelDef }
+        }
+    end
+
+    local function makeValueNode(value, opts)
+        opts = opts or {}
+        local valueColor = opts.color or tooltipStyle.valueColor
+        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. valueColor .. ";fontSize=" ..
+            globalFontSize .. noShadowAttr .. ")")
+        return dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0,
+                minWidth = valueColumnMinWidth
+            },
+            children = { valueDef }
+        }
+    end
+
+    local function addLine(rows, label, value, valueOpts)
+        if value == nil then return end
+        table.insert(rows, dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                padding = rowPadding
+            },
+            children = {
+                makeLabelNode(label),
+                makeValueNode(value, valueOpts)
+            }
+        })
+    end
+
+    local function pct(val)
+        if val == nil then return nil end
+        return string.format("%d%%", math.floor(val + 0.5))
+    end
+
+    local rows = {}
+
+    if not snapshot then
+        addLine(rows, "status", "Stats unavailable", { color = "red" })
+    else
+        addLine(rows, "level", snapshot.level)
+        if snapshot.hp and snapshot.max_hp then
+            addLine(rows, "health", string.format("%d / %d", math.floor(snapshot.hp + 0.5), math.floor(snapshot.max_hp + 0.5)))
+        end
+        addLine(rows, "health regen", snapshot.health_regen and string.format("%.1f/s", snapshot.health_regen))
+        if snapshot.energy and snapshot.max_energy then
+            addLine(rows, "energy", string.format("%d / %d", math.floor(snapshot.energy + 0.5), math.floor(snapshot.max_energy + 0.5)))
+        end
+        addLine(rows, "energy regen", snapshot.energy_regen and string.format("%.1f/s", snapshot.energy_regen))
+        if snapshot.xp and snapshot.xp_to_next then
+            addLine(rows, "xp", string.format("%d / %d", math.floor(snapshot.xp + 0.5), math.floor(snapshot.xp_to_next + 0.5)))
+        end
+        addLine(rows, "physique", snapshot.physique)
+        addLine(rows, "cunning", snapshot.cunning)
+        addLine(rows, "spirit", snapshot.spirit)
+        addLine(rows, "offensive ability", snapshot.offensive_ability)
+        addLine(rows, "defensive ability", snapshot.defensive_ability)
+        if snapshot.weapon_min and snapshot.weapon_max then
+            addLine(rows, "damage", string.format("%d - %d", math.floor(snapshot.weapon_min + 0.5), math.floor(snapshot.weapon_max + 0.5)))
+        end
+        addLine(rows, "attack speed", snapshot.attack_speed and string.format("%.2f/s", snapshot.attack_speed))
+        addLine(rows, "cast speed", snapshot.cast_speed and string.format("%.2f/s", snapshot.cast_speed))
+        addLine(rows, "cooldown reduction", pct(snapshot.cooldown_reduction))
+        addLine(rows, "skill cost reduction", pct(snapshot.skill_energy_cost_reduction))
+        addLine(rows, "all damage", pct(snapshot.all_damage_pct))
+        addLine(rows, "life steal", pct(snapshot.life_steal_pct))
+        addLine(rows, "crit dmg", pct(snapshot.crit_damage_pct))
+        addLine(rows, "dodge", pct(snapshot.dodge_chance_pct))
+        addLine(rows, "armor", snapshot.armor)
+        addLine(rows, "run speed", snapshot.run_speed and string.format("%.1f", snapshot.run_speed))
+        addLine(rows, "move speed", pct(snapshot.move_speed_pct))
+    end
+
+    if #rows == 0 then
+        addLine(rows, "status", "No stats", { color = "yellow" })
+    end
+
+    local v = dsl.vbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            color = tooltipStyle.innerColor,
+            padding = outerPadding
+        },
+        children = rows
+    }
+
+    local root = dsl.root {
+        config = {
+            color = tooltipStyle.bgColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = outerPadding,
+            outlineThickness = 2,
+            outlineColor = tooltipStyle.outlineColor,
+            shadow = true
+        },
+        children = { v }
+    }
+
+    local boxID = dsl.spawn({ x = 200, y = 200 }, root)
+    ui.box.set_draw_layer(boxID, "ui")
+    ui.box.RenewAlignment(registry, boxID)
+    ui.box.ClearStateTagsFromUIBox(boxID)
+
+    return boxID
+end
+
+local function showPlayerStatsTooltip(anchorEntity)
+    local tooltip = ensurePlayerStatsTooltip()
+    if not tooltip then return end
+
+    ui.box.RenewAlignment(registry, tooltip)
+
+    if anchorEntity then
+        positionTooltipRightOfEntity(tooltip, anchorEntity, { gap = 10 })
+    end
+
+    add_state_tag(tooltip, PLAYER_STATS_TOOLTIP_STATE)
+    activate_state(PLAYER_STATS_TOOLTIP_STATE)
+end
+
+local function hidePlayerStatsTooltip()
+    if not playerStatsTooltipEntity or not entity_cache.valid(playerStatsTooltipEntity) then return end
+    deactivate_state(PLAYER_STATS_TOOLTIP_STATE)
+end
+
+local function refreshPlayerStatsTooltip(anchorEntity)
+    if not anchorEntity or not entity_cache.valid(anchorEntity) then return end
+    local wasActive = is_state_active and is_state_active(PLAYER_STATS_TOOLTIP_STATE)
+    destroyPlayerStatsTooltip()
+    local tooltip = ensurePlayerStatsTooltip()
+    if not tooltip then return end
+
+    positionTooltipRightOfEntity(tooltip, anchorEntity, { gap = 10 })
+
+    if wasActive then
+        add_state_tag(tooltip, PLAYER_STATS_TOOLTIP_STATE)
+        activate_state(PLAYER_STATS_TOOLTIP_STATE)
+    end
 end
 
 -- initialize the game area for planning phase, where you combine cards and stuff.
@@ -7928,7 +8170,9 @@ planningUIEntities = {
     start_action_button_box = nil,
     send_up_button_box = nil,
     send_up_button = nil,
-    wand_buttons = {}
+    wand_buttons = {},
+    player_stats_button_box = nil,
+    player_stats_button = nil
 }
 
 
@@ -7989,6 +8233,73 @@ function initPlanningUI()
     ui.box.AssignStateTagsToUIBox(planningUIEntities.start_action_button_box, PLANNING_STATE)
     -- remove default state
     remove_default_state_tag(planningUIEntities.start_action_button_box)
+
+    -- simple stats button with hover tooltip
+    local statsButtonLabel = ui.definitions.getTextFromString("[Stats](color=white;fontSize=14;shadow=false)")
+    local statsButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addId("player_stats_button")
+            :addColor(util.getColor("gray"))
+            :addPadding(8.0)
+            :addEmboss(2.0)
+            :addHover(true)
+            :addMinWidth(80)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+            :build()
+        )
+        :addChild(statsButtonLabel)
+        :build()
+
+    local statsRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addColor(util.getColor("blank"))
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP))
+            :build()
+        )
+        :addChild(statsButtonTemplate)
+        :build()
+
+    local statsPosX = 20
+    local statsPosY = 90
+    planningUIEntities.player_stats_button_box = ui.box.Initialize({ x = statsPosX, y = statsPosY }, statsRoot)
+    local statsTransform = component_cache.get(planningUIEntities.player_stats_button_box, Transform)
+    if statsTransform then
+        statsTransform.actualX = statsPosX
+        statsTransform.visualX = statsTransform.actualX
+        statsTransform.actualY = statsPosY
+        statsTransform.visualY = statsTransform.actualY
+    end
+    ui.box.ClearStateTagsFromUIBox(planningUIEntities.player_stats_button_box)
+    ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, PLANNING_STATE)
+    ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, ACTION_STATE)
+    ui.box.AddStateTagToUIBox(planningUIEntities.player_stats_button_box, SHOP_STATE)
+
+    local statsButtonEntity = ui.box.GetUIEByID(registry, "player_stats_button")
+    planningUIEntities.player_stats_button = statsButtonEntity
+    if statsButtonEntity and entity_cache.valid(statsButtonEntity) then
+        local go = component_cache.get(statsButtonEntity, GameObject)
+        if go then
+            go.state.hoverEnabled = true
+            go.state.collisionEnabled = true
+            go.methods.onHover = function()
+                showPlayerStatsTooltip(statsButtonEntity)
+            end
+            go.methods.onStopHover = function()
+                hidePlayerStatsTooltip()
+            end
+        end
+    end
+    if not playerStatsSignalRegistered then
+        signal.register("stats_recomputed", function()
+            local anchor = planningUIEntities and planningUIEntities.player_stats_button
+            refreshPlayerStatsTooltip(anchor)
+        end)
+        playerStatsSignalRegistered = true
+    end
 
     planningUIEntities.wand_buttons = {}
 

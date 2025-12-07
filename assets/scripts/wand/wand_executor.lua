@@ -36,6 +36,7 @@ local WandTriggers = require("wand.wand_triggers")
 local ProjectileSystem = require("combat.projectile_system")
 local SpellTypeEvaluator = require("wand.spell_type_evaluator")
 local JokerSystem = require("wand.joker_system")
+local AvatarSystem = require("wand.avatar_system")
 local okSignal, signal = pcall(require, "external.hump.signal")
 
 local DEBUG_SUBCAST = rawget(_G, "DEBUG_SUBCAST") ~= nil and rawget(_G, "DEBUG_SUBCAST") or true
@@ -1100,6 +1101,10 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
         findNearestEnemy = function(position, radius)
             return WandExecutor.findNearestEnemy(position, radius)
         end,
+
+        -- Equipped avatar for Joker/wand logic
+        equippedAvatar = AvatarSystem.get_equipped and AvatarSystem.get_equipped(playerScript) or
+            (playerScript and playerScript.avatar_state and playerScript.avatar_state.equipped),
     }
 
     context.canAffordCast = function(manaCost)
@@ -1216,8 +1221,67 @@ end
 --- @param radius number Search radius in pixels
 --- @return number|nil Enemy entity ID
 function WandExecutor.findNearestEnemy(position, radius)
-    -- TODO: Implement spatial query
-    -- Requires access to enemy entities and spatial partitioning
+    if not position then return nil end
+
+    local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
+    if not world then return nil end
+
+    local px, py = position.x or 0, position.y or 0
+    local maxDist = radius or 1200
+
+    -- Use gameplay's findNearestEnemyPosition if available (already handles isEnemyEntity)
+    local findPosFn = rawget(_G, "findNearestEnemyPosition")
+    if findPosFn then
+        local result = findPosFn(px, py, maxDist)
+        -- findNearestEnemyPosition returns position, not entity, so we need to fallback
+        -- Actually let's implement our own entity-returning version here
+    end
+
+    -- Try physics point_query_nearest first
+    if physics and physics.point_query_nearest and physics.entity_from_ptr then
+        local nearestHit = physics.point_query_nearest(world, { x = px, y = py }, maxDist)
+        if nearestHit and nearestHit.hit and nearestHit.shape then
+            local hitEntity = physics.entity_from_ptr(nearestHit.shape)
+            if hitEntity and hitEntity ~= entt_null then
+                -- Check it's an enemy (not the player)
+                local playerEntity = WandExecutor.getPlayerEntity()
+                if hitEntity ~= playerEntity and entity_cache and entity_cache.valid(hitEntity) then
+                    return hitEntity
+                end
+            end
+        end
+    end
+
+    -- Fallback: area query for multiple entities
+    if physics and physics.GetObjectsInArea then
+        local half = maxDist
+        local candidates = physics.GetObjectsInArea(world, px - half, py - half, half * 2, half * 2) or {}
+        local playerEntity = WandExecutor.getPlayerEntity()
+        local bestEntity, bestDistSq = nil, nil
+
+        for _, eid in ipairs(candidates) do
+            if eid and eid ~= entt_null and eid ~= playerEntity then
+                if entity_cache and entity_cache.valid(eid) then
+                    local t = component_cache and component_cache.get(eid, Transform)
+                    if t then
+                        local ex = (t.actualX or 0) + (t.actualW or 0) * 0.5
+                        local ey = (t.actualY or 0) + (t.actualH or 0) * 0.5
+                        local dx, dy = ex - px, ey - py
+                        local distSq = dx * dx + dy * dy
+                        if distSq <= maxDist * maxDist then
+                            if not bestDistSq or distSq < bestDistSq then
+                                bestDistSq = distSq
+                                bestEntity = eid
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        return bestEntity
+    end
+
     return nil
 end
 

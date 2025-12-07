@@ -4597,12 +4597,51 @@ function initCombatSystem()
         if targetEntity then
             spawnDamageNumber(targetEntity, ev.damage or 0, ev.crit)
         end
+
+        -- NEW: Emit on_player_attack when player deals damage to enemies
+        local attackerEntity = combatActorToEntity[ev.attacker]
+        if attackerEntity == survivorEntity and targetEntity and targetEntity ~= survivorEntity then
+            signal.emit("on_player_attack", {
+                entity = survivorEntity,
+                target = targetEntity,
+                damage = ev.damage or 0,
+                crit = ev.crit
+            })
+        end
+
+        -- NEW: Check for on_low_health when player takes damage
+        if targetEntity == survivorEntity then
+            local playerActor = ev.target
+            if playerActor and playerActor.hp and playerActor.max_health then
+                local healthPct = playerActor.hp / playerActor.max_health
+                if healthPct < 0.3 and healthPct > 0 then
+                    signal.emit("on_low_health", {
+                        entity = survivorEntity,
+                        health_pct = healthPct
+                    })
+                end
+            end
+            -- NEW: Track damage blocked for avatar system
+            local blocked = ev.blocked or 0
+            if blocked > 0 then
+                local playerScript = getScriptTableFromEntityID(survivorEntity)
+                if playerScript then
+                    AvatarSystem.record_progress(playerScript, "damage_blocked", blocked)
+                end
+            end
+        end
     end)
     ctx.bus:on('OnDeath', function(ev)
         local actor = ev.entity
         if not actor or actor.side ~= 2 then return end
 
         local enemyEntity = combatActorToEntity[actor]
+
+        -- NEW: Track kills for avatar system
+        local playerScript = getScriptTableFromEntityID(survivorEntity)
+        if playerScript then
+            AvatarSystem.record_progress(playerScript, "kills", 1)
+        end
         combatActorToEntity[actor] = nil
 
         if enemyEntity then

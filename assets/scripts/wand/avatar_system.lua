@@ -134,4 +134,11 @@ function AvatarSystem.equip(player, avatarId)
     return true
 end
 
+-- Get the currently equipped avatar for a player
+function AvatarSystem.get_equipped(player)
+    if type(player) ~= "table" then return nil end
+    local state = player.avatar_state
+    return state and state.equipped or nil
+end
+
 return AvatarSystem

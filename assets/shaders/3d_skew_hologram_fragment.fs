@@ -9,7 +9,9 @@ uniform vec2 pivot;
 
 in mat3 invRotMat;
 in vec2 worldMouseUV;
-in vec2 tiltAmount;
+flat in vec2 tiltSin;
+flat in vec2 tiltCos;
+flat in float angleFlat;
 
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
@@ -171,9 +173,7 @@ void main()
                          abs(pivot.y) < 0.0001;
 
     // Apply ambient jitter to all passes (including text) so overlay text follows card wobble.
-    float jitter = rand_trans_power * 0.05 *
-        sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
-    float angle = rotation + jitter;
+    float angle = angleFlat;
 
     if (identityAtlas || uv_passthrough > 0.5) {
         // Passthrough: rely on vertex-stage skew for motion; clamp UVs to stay inside
@@ -189,26 +189,23 @@ void main()
         finalColor = applyOverlay(finalUV);
     } else {
         // Full atlas-aware path for sprites.
-        float tiltStrength = abs(fov) * 2.0;
-        float tiltX = tiltAmount.y * tiltStrength;
-        float tiltY = tiltAmount.x * tiltStrength;
-        float cosX = cos(tiltX);
-        float cosY = cos(tiltY);
+        float cosX = tiltCos.x;
+        float cosY = tiltCos.y;
+        float sinX = tiltSin.x;
+        float sinY = tiltSin.y;
 
         vec2 centered = (uv - pivot) / regionRate;
         vec2 localCentered = centered - vec2(0.5);
         vec2 correctedUV = localCentered;
         correctedUV.x /= max(cosY, 0.5);
         correctedUV.y /= max(cosX, 0.5);
-        correctedUV.x -= sin(tiltY) * 0.1;
-        correctedUV.y -= sin(tiltX) * 0.1;
+        correctedUV.x -= sinY * 0.1;
+        correctedUV.y -= sinX * 0.1;
         uv = correctedUV + vec2(0.5);
 
         float asp = regionRate.y / regionRate.x;
         uv.y *= asp;
 
-        float angle = rotation + rand_trans_power * 0.05 *
-            sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
         uv = rotate(uv, vec2(0.5), angle);
         uv.y /= asp;
 

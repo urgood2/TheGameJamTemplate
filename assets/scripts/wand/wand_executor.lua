@@ -1259,20 +1259,30 @@ function WandExecutor.findNearestEnemy(position, radius)
         local playerEntity = WandExecutor.getPlayerEntity()
         local bestEntity, bestDistSq = nil, nil
 
+        -- Get isEnemyEntity helper once, outside the loop (performance fix)
+        local isEnemyFn = rawget(_G, "isEnemyEntity")
+
         for _, eid in ipairs(candidates) do
-            if eid and eid ~= entt_null and eid ~= playerEntity then
-                if entity_cache and entity_cache.valid(eid) then
-                    local t = component_cache and component_cache.get(eid, Transform)
-                    if t then
-                        local ex = (t.actualX or 0) + (t.actualW or 0) * 0.5
-                        local ey = (t.actualY or 0) + (t.actualH or 0) * 0.5
-                        local dx, dy = ex - px, ey - py
-                        local distSq = dx * dx + dy * dy
-                        if distSq <= maxDist * maxDist then
-                            if not bestDistSq or distSq < bestDistSq then
-                                bestDistSq = distSq
-                                bestEntity = eid
-                            end
+            local isValidEnemy = false
+            if isEnemyFn then
+                isValidEnemy = isEnemyFn(eid)
+            else
+                -- Fallback: basic check (not player, valid entity)
+                isValidEnemy = eid and eid ~= entt_null and eid ~= playerEntity
+                    and entity_cache and entity_cache.valid(eid)
+            end
+
+            if isValidEnemy then
+                local t = component_cache and component_cache.get(eid, Transform)
+                if t then
+                    local ex = (t.actualX or 0) + (t.actualW or 0) * 0.5
+                    local ey = (t.actualY or 0) + (t.actualH or 0) * 0.5
+                    local dx, dy = ex - px, ey - py
+                    local distSq = dx * dx + dy * dy
+                    if distSq <= maxDist * maxDist then
+                        if not bestDistSq or distSq < bestDistSq then
+                            bestDistSq = distSq
+                            bestEntity = eid
                         end
                     end
                 end

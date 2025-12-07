@@ -927,3 +927,15 @@ for k, v in pairs(defaults) do
     globals[k] = v
   end
 end
+
+-- ============================================================================
+-- ENTITY TYPE HELPERS (stubs - can be overridden by gameplay.lua)
+-- ============================================================================
+
+--- Checks if an entity is an enemy. Default stub returns false.
+--- Override in gameplay.lua with actual faction/enemy detection.
+--- @param eid number Entity ID to check
+--- @return boolean True if entity is an enemy
+function globals.isEnemyEntity(eid)
+    return false
+end

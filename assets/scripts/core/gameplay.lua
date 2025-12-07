@@ -71,6 +71,13 @@ local function ensureMessageQueueHooks()
         local spell = (data and data.spell_type) or "Spell"
         MessageQueueUI.enqueue(string.format("New spell type: %s", spell))
     end)
+
+    signal.register("deck_changed", function(data)
+        -- Re-evaluate tag thresholds when deck changes (shop purchases, loot, etc.)
+        if reevaluateDeckTags then
+            reevaluateDeckTags()
+        end
+    end)
 end
 
 local function fireAvatarDebugEvents()
@@ -445,6 +452,10 @@ local function isEnemyEntity(eid)
     return eid and eid ~= entt_null and eid ~= survivorEntity and enemyHealthUiState[eid]
         and entity_cache.valid(eid)
 end
+
+-- Override globals stub with actual implementation and expose globally for wand_executor
+globals.isEnemyEntity = isEnemyEntity
+_G.isEnemyEntity = isEnemyEntity
 
 local function findNearestEnemyPosition(px, py, maxDistance)
     local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
@@ -7303,6 +7314,9 @@ tryPurchaseShopCard = function(cardScript)
     populateShopBoard(active_shop_instance)
     refreshShopUIFromInstance(active_shop_instance)
 
+    -- Notify systems that deck has changed (triggers tag re-evaluation)
+    signal.emit("deck_changed", { source = "shop_purchase" })
+
     return true
 end
 
@@ -7952,7 +7966,7 @@ function initActionPhase()
         physics.ApplyImpulse(world, survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
         -- end, "dash_impulse_timer")
 
-        WandTriggers.handleEvent("on_dash", { player = survivorEntity })
+        signal.emit("on_dash", { player = survivorEntity })
 
         playSoundEffect("effects", random_utils.random_element_string(dash_sfx_list), 0.9 + math.random() * 0.2)
 

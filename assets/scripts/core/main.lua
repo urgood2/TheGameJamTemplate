@@ -408,13 +408,6 @@ function startGameButtonCallback()
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer
     )
-    timer.after(
-        4.5,
-        function()
-            remove_fullscreen_shader("palette_quantize")
-        end,
-        "main_menu_palette_quantize_cleanup"
-    )
     
 end
 function clearMainMenu() 

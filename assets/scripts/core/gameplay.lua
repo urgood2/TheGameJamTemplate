@@ -187,6 +187,50 @@ local function make_rect(x, y, w, h)
     return { x = x, y = y, width = w, height = h }
 end
 
+-- Safely extract rect components from either sol userdata (Vector4) or plain tables.
+local function unpack_rect_like(rectLike, fallbackTable)
+    if not rectLike then
+        if type(fallbackTable) == "table" then
+            return fallbackTable.x or fallbackTable[1] or 0,
+                fallbackTable.y or fallbackTable[2] or 0,
+                fallbackTable.width or fallbackTable[3] or 32,
+                fallbackTable.height or fallbackTable[4] or 32
+        end
+        return 0, 0, 32, 32
+    end
+
+    local x, y, w, h
+    if type(rectLike) == "table" then
+        x = rectLike.x or rectLike[1] or 0
+        y = rectLike.y or rectLike[2] or 0
+        w = rectLike.z or rectLike[3] or rectLike.width or 32
+        h = rectLike.w or rectLike[4] or rectLike.height or 32
+    else
+        local ok, rx, ry, rw, rh = pcall(function()
+            return rectLike.x, rectLike.y, rectLike.z or rectLike.width, rectLike.w or rectLike.height
+        end)
+        if ok and rx ~= nil and ry ~= nil and rw ~= nil and rh ~= nil then
+            x, y, w, h = rx, ry, rw, rh
+        else
+            ok, rx, ry, rw, rh = pcall(function()
+                return rectLike[1], rectLike[2], rectLike[3], rectLike[4]
+            end)
+            if ok and rx ~= nil and ry ~= nil and rw ~= nil and rh ~= nil then
+                x, y, w, h = rx, ry, rw, rh
+            end
+        end
+    end
+
+    if not (x and y and w and h) and type(fallbackTable) == "table" then
+        return fallbackTable.x or fallbackTable[1] or 0,
+            fallbackTable.y or fallbackTable[2] or 0,
+            fallbackTable.width or fallbackTable[3] or 32,
+            fallbackTable.height or fallbackTable[4] or 32
+    end
+
+    return x or 0, y or 0, w or 32, h or 32
+end
+
 local tooltipStyle = {
     fontSize = 11,
     labelBg = "black",
@@ -1375,7 +1419,8 @@ function createNewCard(id, x, y, gameStateToApply)
                                         local vec = (_G.Vector2 and _G.Vector2(size, size)) or { x = size, y = size }
                                         local center = (_G.Vector2 and _G.Vector2(size * 0.5, size * 0.5)) or { x = size * 0.5, y = size * 0.5 }
                                         c.texture = testStickerInfo.atlas
-                                        c.source = testStickerInfo.gridRect or make_rect(0, 0, 32, 32)
+                                        local x, y, w, h = unpack_rect_like(testStickerInfo.gridRect, testStickerInfo.frame)
+                                        c.source = make_rect(x, y, w, h)
                                         c.offsetX = (t and t.visualW or 0) * 0.5 - size * 0.5
                                         c.offsetY = (t and t.visualH or 0) * 0.1
                                         c.size = vec

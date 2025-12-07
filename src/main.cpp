@@ -341,12 +341,12 @@ void RunGameLoop() {
       // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
     }
 
+    // Render-time timers must run before we enqueue draw commands, otherwise
+    // anything they queue gets wiped by layer::Begin() next frame.
+    timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
+
     // Pass real render deltaTime to renderer
     MainLoopRenderAbstraction(scaledStep);
-
-    // Render-time timers (if you use time-scaled effects here, apply timescale
-    // manually)
-    timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
 
     // ---------- Step 6: FPS counter ----------
     frameCounter++;

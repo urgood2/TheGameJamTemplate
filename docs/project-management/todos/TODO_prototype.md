@@ -74,6 +74,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
     - Then show the reward, with ambient animation.
 
+- find assets. start designing better card graphics.
+
 - use non serif font for reading. titles should have serifs. use bolded text with reason. text should have good contrast all the time.
 
 - figure out how to use the new balatro-based material shaders.

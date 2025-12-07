@@ -145,7 +145,7 @@ vec4 applyOverlay(vec2 atlasUV) {
         !shadow &&
         length(material_tint - vec3(1.0)) < EPS;
 
-    if (effectInactive) {
+    if (effectInactive && (abs(polychrome.x) + abs(polychrome.y)) < EPS) {
         return sampleTinted(atlasUV);
     }
 

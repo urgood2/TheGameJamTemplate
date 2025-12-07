@@ -150,6 +150,7 @@ SHOP_STATE = "SHOP"
 WAND_TOOLTIP_STATE = "WAND_TOOLTIP_STATE" -- we use this to show wand tooltips and hide them when needed.
 CARD_TOOLTIP_STATE = "CARD_TOOLTIP_STATE" -- we use this to show card tooltips and hide them when needed.
 PLAYER_STATS_TOOLTIP_STATE = "PLAYER_STATS_TOOLTIP_STATE"
+DETAILED_STATS_TOOLTIP_STATE = "DETAILED_STATS_TOOLTIP_STATE"
 
 -- combat context, to be used with the combat system.
 combat_context = nil
@@ -173,6 +174,7 @@ card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
 local playerStatsTooltipEntity = nil
+local detailedStatsTooltipEntity = nil
 local playerStatsSignalRegistered = false
 local makePlayerStatsTooltip
 local testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
@@ -186,16 +188,16 @@ local function make_rect(x, y, w, h)
 end
 
 local tooltipStyle = {
-    fontSize = 12,
+    fontSize = 11,
     labelBg = "black",
     idBg = "gold",
     idTextColor = "black",
     labelColor = "apricot_cream",
     valueColor = "white",
-    innerPadding = 3,
-    rowPadding = 1,
-    labelColumnMinWidth = 220,
-    valueColumnMinWidth = 72,
+    innerPadding = 1,
+    rowPadding = 0,
+    labelColumnMinWidth = 180,
+    valueColumnMinWidth = 60,
     bgColor = Col(18, 22, 32, 235),
     innerColor = Col(28, 32, 44, 230),
     outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255)
@@ -2961,13 +2963,43 @@ function makeCardTooltip(card_def, opts)
         end
     end
 
-    local v = dsl.vbox {
+    local left, right = {}, {}
+    local half = math.ceil(#rows / 2)
+    for i, row in ipairs(rows) do
+        if i <= half then
+            table.insert(left, row)
+        else
+            table.insert(right, row)
+        end
+    end
+
+    local v = dsl.hbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             color = tooltipStyle.innerColor,
-            padding = outerPadding
+            padding = outerPadding,
+            spacing = outerPadding
         },
-        children = rows
+        children = {
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                    color = tooltipStyle.innerColor,
+                    minWidth = 220
+                },
+                children = left
+            },
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                    color = tooltipStyle.innerColor,
+                    minWidth = 220
+                },
+                children = right
+            }
+        }
     }
 
     local root = dsl.root {
@@ -3045,6 +3077,19 @@ local function collectPlayerStatsSnapshot()
         xpToNext = CombatSystem.Game.Leveling.xp_to_next(ctx, player, level)
     end
 
+    local perType = {}
+    if CombatSystem and CombatSystem.Core and CombatSystem.Core.DAMAGE_TYPES then
+        for _, dt in ipairs(CombatSystem.Core.DAMAGE_TYPES) do
+            perType[#perType + 1] = {
+                type = dt,
+                dmg = stats:get(dt .. "_damage"),
+                mod = stats:get(dt .. "_modifier_pct"),
+                resist = stats:get(dt .. "_resist_pct"),
+                duration = stats:get(dt .. "_duration_pct")
+            }
+        end
+    end
+
     return {
         level = level,
         xp = player.xp or 0,
@@ -3070,6 +3115,40 @@ local function collectPlayerStatsSnapshot()
         move_speed_pct = stats:get('move_speed_pct'),
         all_damage_pct = stats:get('all_damage_pct'),
         skill_energy_cost_reduction = stats:get('skill_energy_cost_reduction'),
+        experience_gained_pct = stats:get('experience_gained_pct'),
+        weapon_damage_pct = stats:get('weapon_damage_pct'),
+        block_chance_pct = stats:get('block_chance_pct'),
+        block_amount = stats:get('block_amount'),
+        block_recovery_reduction_pct = stats:get('block_recovery_reduction_pct'),
+        percent_absorb_pct = stats:get('percent_absorb_pct'),
+        flat_absorb = stats:get('flat_absorb'),
+        armor_absorption_bonus_pct = stats:get('armor_absorption_bonus_pct'),
+        healing_received_pct = stats:get('healing_received_pct'),
+        reflect_damage_pct = stats:get('reflect_damage_pct'),
+        penetration_all_pct = stats:get('penetration_all_pct'),
+        armor_penetration_pct = stats:get('armor_penetration_pct'),
+        max_resist_cap_pct = stats:get('max_resist_cap_pct'),
+        min_resist_cap_pct = stats:get('min_resist_cap_pct'),
+        damage_taken_reduction_pct = stats:get('damage_taken_reduction_pct'),
+        burn_damage_pct = stats:get('burn_damage_pct'),
+        burn_tick_rate_pct = stats:get('burn_tick_rate_pct'),
+        damage_vs_frozen_pct = stats:get('damage_vs_frozen_pct'),
+        buff_duration_pct = stats:get('buff_duration_pct'),
+        buff_effect_pct = stats:get('buff_effect_pct'),
+        chain_targets = stats:get('chain_targets'),
+        on_move_proc_frequency_pct = stats:get('on_move_proc_frequency_pct'),
+        hazard_radius_pct = stats:get('hazard_radius_pct'),
+        hazard_damage_pct = stats:get('hazard_damage_pct'),
+        hazard_duration = stats:get('hazard_duration'),
+        max_poison_stacks_pct = stats:get('max_poison_stacks_pct'),
+        summon_hp_pct = stats:get('summon_hp_pct'),
+        summon_damage_pct = stats:get('summon_damage_pct'),
+        summon_persistence = stats:get('summon_persistence'),
+        barrier_refresh_rate_pct = stats:get('barrier_refresh_rate_pct'),
+        health_pct = stats:get('health_pct'),
+        melee_damage_pct = stats:get('melee_damage_pct'),
+        melee_crit_chance_pct = stats:get('melee_crit_chance_pct'),
+        per_type = perType
     }
 end
 
@@ -3094,6 +3173,171 @@ local function ensurePlayerStatsTooltip()
     return tooltip
 end
 
+local function destroyDetailedStatsTooltip()
+    if detailedStatsTooltipEntity and entity_cache.valid(detailedStatsTooltipEntity) then
+        registry:destroy(detailedStatsTooltipEntity)
+    end
+    detailedStatsTooltipEntity = nil
+end
+
+local function makeDetailedStatsTooltip(snapshot)
+    local globalFontSize = tooltipStyle.fontSize
+    local noShadowAttr = ";shadow=false"
+    local labelColumnMinWidth = tooltipStyle.labelColumnMinWidth
+    local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
+    local rowPadding = tooltipStyle.rowPadding
+    local outerPadding = tooltipStyle.innerPadding
+
+    local function makeLabelNode(label)
+        local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. tooltipStyle.labelBg ..
+            ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        return dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0,
+                minWidth = labelColumnMinWidth
+            },
+            children = { labelDef }
+        }
+    end
+
+    local function makeValueNode(value, opts)
+        opts = opts or {}
+        local valueColor = opts.color or tooltipStyle.valueColor
+        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. valueColor .. ";fontSize=" ..
+            globalFontSize .. noShadowAttr .. ")")
+        return dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                padding = 0,
+                minWidth = valueColumnMinWidth
+            },
+            children = { valueDef }
+        }
+    end
+
+    local function addLine(rows, label, value, valueOpts)
+        if value == nil then return end
+        if type(value) == "number" and math.abs(value) < 0.0001 then return end
+        table.insert(rows, dsl.hbox {
+            config = {
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                padding = rowPadding
+            },
+            children = {
+                makeLabelNode(label),
+                makeValueNode(value, valueOpts)
+            }
+        })
+    end
+
+    local function pct(val)
+        if val == nil then return nil end
+        return string.format("%d%%", math.floor(val + 0.5))
+    end
+
+    local rows = {}
+
+    if not snapshot then
+        addLine(rows, "status", "Stats unavailable", { color = "red" })
+    else
+        addLine(rows, "xp gain", pct(snapshot.experience_gained_pct))
+        addLine(rows, "weapon dmg %", pct(snapshot.weapon_damage_pct))
+        addLine(rows, "block chance", pct(snapshot.block_chance_pct))
+        addLine(rows, "block amount", snapshot.block_amount)
+        addLine(rows, "block recovery", pct(snapshot.block_recovery_reduction_pct))
+        addLine(rows, "absorb %", pct(snapshot.percent_absorb_pct))
+        addLine(rows, "absorb flat", snapshot.flat_absorb)
+        addLine(rows, "armor absorb bonus", pct(snapshot.armor_absorption_bonus_pct))
+        addLine(rows, "healing received", pct(snapshot.healing_received_pct))
+        addLine(rows, "reflect dmg", pct(snapshot.reflect_damage_pct))
+        addLine(rows, "penetration all", pct(snapshot.penetration_all_pct))
+        addLine(rows, "armor penetration", pct(snapshot.armor_penetration_pct))
+        addLine(rows, "max resist cap", pct(snapshot.max_resist_cap_pct))
+        addLine(rows, "min resist cap", pct(snapshot.min_resist_cap_pct))
+        addLine(rows, "damage taken reduction", pct(snapshot.damage_taken_reduction_pct))
+        addLine(rows, "burn dmg %", pct(snapshot.burn_damage_pct))
+        addLine(rows, "burn tick rate %", pct(snapshot.burn_tick_rate_pct))
+        addLine(rows, "vs frozen dmg %", pct(snapshot.damage_vs_frozen_pct))
+        addLine(rows, "buff duration", pct(snapshot.buff_duration_pct))
+        addLine(rows, "buff effect", pct(snapshot.buff_effect_pct))
+        addLine(rows, "chain targets", snapshot.chain_targets)
+        addLine(rows, "on-move proc freq", pct(snapshot.on_move_proc_frequency_pct))
+        addLine(rows, "hazard radius", pct(snapshot.hazard_radius_pct))
+        addLine(rows, "hazard damage", pct(snapshot.hazard_damage_pct))
+        addLine(rows, "hazard duration", snapshot.hazard_duration)
+        addLine(rows, "max poison stacks", pct(snapshot.max_poison_stacks_pct))
+        addLine(rows, "summon hp", pct(snapshot.summon_hp_pct))
+        addLine(rows, "summon damage", pct(snapshot.summon_damage_pct))
+        addLine(rows, "summon persistence", snapshot.summon_persistence)
+        addLine(rows, "barrier refresh", pct(snapshot.barrier_refresh_rate_pct))
+        addLine(rows, "health %", pct(snapshot.health_pct))
+        addLine(rows, "melee dmg %", pct(snapshot.melee_damage_pct))
+        addLine(rows, "melee crit %", pct(snapshot.melee_crit_chance_pct))
+
+        if snapshot.per_type then
+            for _, entry in ipairs(snapshot.per_type) do
+                local labelPrefix = entry.type
+                addLine(rows, labelPrefix .. " dmg", entry.dmg)
+                addLine(rows, labelPrefix .. " dmg %", pct(entry.mod))
+                addLine(rows, labelPrefix .. " resist", pct(entry.resist))
+                addLine(rows, labelPrefix .. " dur %", pct(entry.duration))
+            end
+        end
+    end
+
+    if #rows == 0 then
+        addLine(rows, "status", "No stats", { color = "yellow" })
+    end
+
+    local v = dsl.vbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            color = tooltipStyle.innerColor,
+            padding = outerPadding
+        },
+        children = rows
+    }
+
+    local root = dsl.root {
+        config = {
+            color = tooltipStyle.bgColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = outerPadding,
+            outlineThickness = 2,
+            outlineColor = tooltipStyle.outlineColor,
+            shadow = true
+        },
+        children = { v }
+    }
+
+    local boxID = dsl.spawn({ x = 200, y = 200 }, root)
+    ui.box.set_draw_layer(boxID, "ui")
+    ui.box.RenewAlignment(registry, boxID)
+    ui.box.ClearStateTagsFromUIBox(boxID)
+
+    return boxID
+end
+
+local function ensureDetailedStatsTooltip()
+    if detailedStatsTooltipEntity and entity_cache.valid(detailedStatsTooltipEntity) then
+        return detailedStatsTooltipEntity
+    end
+
+    destroyDetailedStatsTooltip()
+
+    local tooltip = makeDetailedStatsTooltip(collectPlayerStatsSnapshot())
+    if not tooltip then return nil end
+
+    detailedStatsTooltipEntity = tooltip
+
+    layer_order_system.assignZIndexToEntity(
+        tooltip,
+        z_orders.ui_tooltips
+    )
+
+    return tooltip
+end
 function makePlayerStatsTooltip(snapshot)
     local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr = ";shadow=false"
@@ -3244,6 +3488,33 @@ local function hidePlayerStatsTooltip()
     ui.box.ClearStateTagsFromUIBox(playerStatsTooltipEntity)
 end
 
+local function showDetailedStatsTooltip(anchorEntity)
+    local tooltip = ensureDetailedStatsTooltip()
+    if not tooltip then return end
+
+    ui.box.ClearStateTagsFromUIBox(tooltip)
+    ui.box.AddStateTagToUIBox(tooltip, PLANNING_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, ACTION_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, SHOP_STATE)
+    ui.box.AddStateTagToUIBox(tooltip, DETAILED_STATS_TOOLTIP_STATE)
+
+    ui.box.RenewAlignment(registry, tooltip)
+
+    if anchorEntity then
+        positionTooltipRightOfEntity(tooltip, anchorEntity, { gap = 10 })
+    end
+
+    add_state_tag(tooltip, DETAILED_STATS_TOOLTIP_STATE)
+    activate_state(DETAILED_STATS_TOOLTIP_STATE)
+end
+
+local function hideDetailedStatsTooltip()
+    if not detailedStatsTooltipEntity or not entity_cache.valid(detailedStatsTooltipEntity) then return end
+    deactivate_state(DETAILED_STATS_TOOLTIP_STATE)
+    clear_state_tags(detailedStatsTooltipEntity)
+    ui.box.ClearStateTagsFromUIBox(detailedStatsTooltipEntity)
+end
+
 local function refreshPlayerStatsTooltip(anchorEntity)
     if not anchorEntity or not entity_cache.valid(anchorEntity) then return end
     local wasActive = is_state_active and is_state_active(PLAYER_STATS_TOOLTIP_STATE)
@@ -3256,6 +3527,21 @@ local function refreshPlayerStatsTooltip(anchorEntity)
     if wasActive then
         add_state_tag(tooltip, PLAYER_STATS_TOOLTIP_STATE)
         activate_state(PLAYER_STATS_TOOLTIP_STATE)
+    end
+end
+
+local function refreshDetailedStatsTooltip(anchorEntity)
+    if not anchorEntity or not entity_cache.valid(anchorEntity) then return end
+    local wasActive = is_state_active and is_state_active(DETAILED_STATS_TOOLTIP_STATE)
+    destroyDetailedStatsTooltip()
+    local tooltip = ensureDetailedStatsTooltip()
+    if not tooltip then return end
+
+    positionTooltipRightOfEntity(tooltip, anchorEntity, { gap = 10 })
+
+    if wasActive then
+        add_state_tag(tooltip, DETAILED_STATS_TOOLTIP_STATE)
+        activate_state(DETAILED_STATS_TOOLTIP_STATE)
     end
 end
 
@@ -5590,6 +5876,8 @@ function startActionPhase()
     activate_state(ACTION_STATE)
     activate_state("default_state") -- just for defaults, keep them open
 
+    add_layer_shader("sprites", "pixelate_image")
+
     setLowPassTarget(0.0)           -- low pass filter off
 
     input.set_context("gameplay")   -- set input context to action phase.
@@ -5644,6 +5932,8 @@ function startPlanningPhase()
 
     activate_state(PLANNING_STATE)
     activate_state("default_state")     -- just for defaults, keep them open
+
+    remove_layer_shader("sprites", "pixelate_image")
 
     input.set_context("planning-phase") -- set input context to planning phase.
 
@@ -5701,6 +5991,8 @@ function startShopPhase()
 
     activate_state(SHOP_STATE)
     activate_state("default_state") -- just for defaults, keep them open
+
+    remove_layer_shader("sprites", "pixelate_image")
 
     PhysicsManager.enable_step("world", false)
 
@@ -8250,6 +8542,23 @@ function initPlanningUI()
         :addChild(statsButtonLabel)
         :build()
 
+    local detailedButtonLabel = ui.definitions.getTextFromString("[Detailed](color=white;fontSize=14;shadow=false)")
+    local detailedButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addId("player_stats_detailed_button")
+            :addColor(util.getColor("gray"))
+            :addPadding(8.0)
+            :addEmboss(2.0)
+            :addHover(true)
+            :addMinWidth(80)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+            :build()
+        )
+        :addChild(detailedButtonLabel)
+        :build()
+
     local statsRoot = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.ROOT)
         :addConfig(
@@ -8259,6 +8568,7 @@ function initPlanningUI()
             :build()
         )
         :addChild(statsButtonTemplate)
+        :addChild(detailedButtonTemplate)
         :build()
 
     local statsPosX = 20
@@ -8291,10 +8601,29 @@ function initPlanningUI()
             end
         end
     end
+
+    local detailedButtonEntity = ui.box.GetUIEByID(registry, "player_stats_detailed_button")
+    planningUIEntities.player_stats_detailed_button = detailedButtonEntity
+    if detailedButtonEntity and entity_cache.valid(detailedButtonEntity) then
+        local go = component_cache.get(detailedButtonEntity, GameObject)
+        if go then
+            go.state.hoverEnabled = true
+            go.state.collisionEnabled = true
+            go.methods.onHover = function()
+                showDetailedStatsTooltip(detailedButtonEntity)
+            end
+            go.methods.onStopHover = function()
+                hideDetailedStatsTooltip()
+            end
+        end
+    end
+
     if not playerStatsSignalRegistered then
         signal.register("stats_recomputed", function()
             local anchor = planningUIEntities and planningUIEntities.player_stats_button
             refreshPlayerStatsTooltip(anchor)
+            local detailedAnchor = planningUIEntities and planningUIEntities.player_stats_detailed_button
+            refreshDetailedStatsTooltip(detailedAnchor or anchor)
         end)
         playerStatsSignalRegistered = true
     end

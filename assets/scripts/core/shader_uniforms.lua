@@ -69,9 +69,32 @@ local register = function(shader, fn)
     shaders.registerUniformUpdate(shader, fn)
 end
 
-local get_time = GetTime
-local get_mouse = function()
+local get_time_raw = GetTime
+local cached_time, cached_time_frame = nil, nil
+local function get_time()
+    local frame = (main_loop and main_loop.data and main_loop.data.renderFrame) or nil
+    if frame ~= nil and frame == cached_time_frame and cached_time ~= nil then
+        return cached_time
+    end
+    local t = get_time_raw()
+    cached_time = t
+    cached_time_frame = frame
+    return t
+end
+
+local cached_mouse, cached_mouse_frame = nil, nil
+local get_mouse_raw = function()
     return input.getMousePos()
+end
+local function get_mouse()
+    local frame = (main_loop and main_loop.data and main_loop.data.renderFrame) or nil
+    if frame ~= nil and frame == cached_mouse_frame and cached_mouse ~= nil then
+        return cached_mouse
+    end
+    local pos = get_mouse_raw()
+    cached_mouse = pos
+    cached_mouse_frame = frame
+    return pos
 end
 
 local function init_tile_grid_overlay()

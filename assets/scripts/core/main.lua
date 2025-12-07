@@ -401,6 +401,13 @@ function startGameButtonCallback()
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer
     )
+    timer.after(
+        4.5,
+        function()
+            remove_fullscreen_shader("palette_quantize")
+        end,
+        "main_menu_palette_quantize_cleanup"
+    )
     
 end
 function clearMainMenu() 
@@ -414,13 +421,31 @@ function clearMainMenu()
     end
     
     -- move global.ui.logo out of view
-    local logoTransform = component_cache.get(globals.ui.logo, Transform)
-    logoTransform.actualY = globals.screenHeight() + 500 -- push it down out of view
+    if globals.ui.logo and entity_cache.valid(globals.ui.logo) then
+        local logoTransform = component_cache.get(globals.ui.logo, Transform)
+        if logoTransform then
+            logoTransform.actualY = globals.screenHeight() + 500 -- push it down out of view
+        end
+    end
     
     
     -- delete tiemrs
     timer.cancel("logo_text_update") -- cancel the logo text update timer
     timer.cancel("logo_text_pulse") -- cancel the logo text pulse timer
+    remove_layer_shader("sprites", "pixelate_image")
+
+    if mainMenuEntities.main_menu_uibox and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, mainMenuEntities.main_menu_uibox)
+        mainMenuEntities.main_menu_uibox = nil
+    end
+    if mainMenuEntities.language_button_uibox and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, mainMenuEntities.language_button_uibox)
+        mainMenuEntities.language_button_uibox = nil
+    end
+    if entity_cache and entity_cache.valid and entity_cache.valid(globals.ui.logo) then
+        registry:destroy(globals.ui.logo)
+        globals.ui.logo = nil
+    end
 end
 
 boards = {}

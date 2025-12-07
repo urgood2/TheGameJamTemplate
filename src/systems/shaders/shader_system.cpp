@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 #include "rlgl.h"
@@ -28,6 +29,17 @@ using json = nlohmann::json;
 
 namespace shaders
 {
+    #ifndef CMAKE_BUILD_TYPE
+    #define CMAKE_BUILD_TYPE Unknown
+    #endif
+    #define STRINGIFY_INNER(x) #x
+    #define STRINGIFY(x) STRINGIFY_INNER(x)
+
+    namespace {
+        constexpr std::string_view kBuildType = STRINGIFY(CMAKE_BUILD_TYPE);
+        constexpr bool kIsReleaseBuild = (kBuildType == "Release");
+    }
+
     namespace {
         ShaderApiHooks makeDefaultHooks() {
             return ShaderApiHooks{
@@ -693,7 +705,10 @@ namespace shaders
         updateAllShaderUniforms();
         // FIXME: perforamnce intensive on windows, commenting out for now
     #ifndef __EMSCRIPTEN__
-         hotReloadShaders(); // Check for shader file modifications
+        if (!kIsReleaseBuild)
+        {
+            hotReloadShaders(); // Check for shader file modifications
+        }
     #endif
     }
 

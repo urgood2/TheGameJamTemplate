@@ -40,7 +40,7 @@ local messageQueueHooksRegistered = false
 local avatarTestEventsFired = false
 local DEBUG_AVATAR_TEST_EVENTS = rawget(_G, "DEBUG_AVATAR_TEST_EVENTS")
 if DEBUG_AVATAR_TEST_EVENTS == nil then
-    DEBUG_AVATAR_TEST_EVENTS = true
+    DEBUG_AVATAR_TEST_EVENTS = os.getenv("ENABLE_AVATAR_DEBUG_EVENTS") == "1"
 end
 
 local function ensureMessageQueueHooks()
@@ -518,6 +518,7 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
     if not board then return end
     board.cards = board.cards or {}
     board.needsResort = true
+
     for i, eid in ipairs(board.cards) do
         if eid == cardEntityID then
             table.remove(board.cards, i)
@@ -7708,7 +7709,9 @@ function initActionPhase()
         MessageQueueUI.init()
     end
     ensureMessageQueueHooks()
-    fireAvatarDebugEvents()
+    if DEBUG_AVATAR_TEST_EVENTS then
+        fireAvatarDebugEvents()
+    end
 
     -- Clamp the camera to the playable arena so its edges stay on screen.
     -- do

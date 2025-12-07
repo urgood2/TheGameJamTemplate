@@ -71,6 +71,9 @@ end
 local mainMenuEntities = {
 }
 
+local MAIN_MENU_TIMER_GROUP = "main_menu"
+local MAIN_MENU_PHASE_TIMER_TAG = "main_menu_shape_phase"
+
 function myCustomCallback()
     -- a test to see if the callback works for text typing
     wait(5)
@@ -87,7 +90,10 @@ function initMainMenu()
     timer.run(
         function()
             shapeAnimationPhase = shapeAnimationPhase + 1
-        end
+        end,
+        nil,
+        MAIN_MENU_PHASE_TIMER_TAG,
+        MAIN_MENU_TIMER_GROUP
     )
     
     
@@ -128,7 +134,8 @@ function initMainMenu()
         0, -- infinite repetitions
         true, -- start immediately
         nil, -- no "after" callback
-        "logo_text_pulse"
+        "logo_text_pulse",
+        MAIN_MENU_TIMER_GROUP
     )
     
     
@@ -430,8 +437,10 @@ function clearMainMenu()
     
     
     -- delete tiemrs
+    timer.kill_group(MAIN_MENU_TIMER_GROUP)
     timer.cancel("logo_text_update") -- cancel the logo text update timer
     timer.cancel("logo_text_pulse") -- cancel the logo text pulse timer
+    timer.cancel(MAIN_MENU_PHASE_TIMER_TAG) -- cancel the shape phase timer
     remove_layer_shader("sprites", "pixelate_image")
 
     if mainMenuEntities.main_menu_uibox and ui.box and ui.box.Remove then
@@ -498,6 +507,10 @@ end
 
 function changeGameState(newState)
     -- Check if the new state is different from the current state
+    if currentGameState == GAMESTATE.MAIN_MENU and newState ~= GAMESTATE.MAIN_MENU then
+        clearMainMenu()
+    end
+
     if newState == GAMESTATE.MAIN_MENU then
         initMainMenu()
     elseif newState == GAMESTATE.IN_GAME then
@@ -505,6 +518,7 @@ function changeGameState(newState)
     else
         error("Invalid game state: " .. tostring(newState))
     end
+    currentGameState = newState
     globals.currentGameState = newState -- Update the current game state
 end
 
@@ -653,18 +667,22 @@ function main.update(dt)
 
     component_cache.update_frame() -- Update the component cache for the current frame
     
-    -- Node system (lua side)
-    Node.update_all(dt) -- Update all nodes with update() functions
-    
-    
-    if (globals.gamePaused or currentGameState == GAMESTATE.MAIN_MENU) then
-        return -- If the game is paused, do not update anything
+    local isPaused = (globals.gamePaused or currentGameState == GAMESTATE.MAIN_MENU)
+
+    if not isPaused then
+        -- Node system (lua side)
+        Node.update_all(dt) -- Update all nodes with update() functions
     end
-    
+
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
-    
+
+    if isPaused then
+        component_cache.end_frame()
+        return -- If the game is paused, do not update gameplay objects
+    end
+
     if ProjectileSystemTest ~= nil then
         ProjectileSystemTest.update(dt)
     end

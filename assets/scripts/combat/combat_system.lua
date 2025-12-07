@@ -192,6 +192,10 @@ local function collect_ability_mods(caster, spell_ref)
 end
 -- ============================================================================
 
+local function mark_mutators_dirty(bucket)
+  if bucket then bucket._sorted = false end
+end
+
 -- === Spell mutator pipeline ==================================================
 -- A mutator is: function(orig_effects_fn) -> new_effects_fn
 -- DOC: apply_spell_mutators
@@ -210,7 +214,10 @@ local function apply_spell_mutators(caster, ctx, spell_ref, effects_fn)
 
   if muts and #muts > 0 then
     -- sort by priority if present
-    table.sort(muts, function(a, b) return (a.pr or 0) < (b.pr or 0) end)
+    if not muts._sorted then
+      table.sort(muts, function(a, b) return (a.pr or 0) < (b.pr or 0) end)
+      muts._sorted = true
+    end
 
     if caster and ctx.debug then
       print(string.format("[DEBUG][Mutators] Applying %d mutator(s) to spell '%s'", #muts, tostring(id)))
@@ -3194,6 +3201,7 @@ function ItemSystem.equip(ctx, e, item)
           mut = { pr = entry.pr or 0, wrap = entry.wrap }
         end
         table.insert(bucket, mut)
+        mark_mutators_dirty(bucket)
         -- remember where we inserted so we can remove later
         item._mut_applied[#item._mut_applied + 1] = { sid = sid, ref = mut }
       end
@@ -3271,6 +3279,7 @@ function ItemSystem.unequip(ctx, e, slot)
         for j = #bucket, 1, -1 do
           if bucket[j] == rec.ref then
             table.remove(bucket, j)
+            mark_mutators_dirty(bucket)
             break
           end
         end
@@ -3775,6 +3784,7 @@ local function _attach_mutator(e, base_id, wrap)
   e.spell_mutators[base_id] = bucket
   local rec = { pr = 0, wrap = wrap }
   bucket[#bucket + 1] = rec
+  mark_mutators_dirty(bucket)
   e.skills._mutators[base_id] = e.skills._mutators[base_id] or {}
   table.insert(e.skills._mutators[base_id], rec)
 end
@@ -3792,6 +3802,7 @@ local function _clear_mutators_for(e, base_id)
         end
       end
     end
+    mark_mutators_dirty(bucket)
     if #bucket == 0 then e.spell_mutators[base_id] = nil end
   end
 end
@@ -4644,7 +4655,7 @@ local function _apply_set_bonus(ctx, e, bonus)
     for sid, wrap in pairs(bonus.mutators) do
       e.spell_mutators = e.spell_mutators or {}
       local bucket = e.spell_mutators[sid] or {}; e.spell_mutators[sid] = bucket
-      local rec = { pr = 0, wrap = wrap }; table.insert(bucket, rec)
+      local rec = { pr = 0, wrap = wrap }; table.insert(bucket, rec); mark_mutators_dirty(bucket)
       bonus._muts = bonus._muts or {}; table.insert(bonus._muts, { sid = sid, ref = rec })
     end
   end
@@ -4662,6 +4673,7 @@ local function _remove_set_bonus(e, bonus)
             table.remove(b, j)
             break
           end end
+        mark_mutators_dirty(b)
         if #b == 0 then e.spell_mutators[m.sid] = nil end
       end
     end

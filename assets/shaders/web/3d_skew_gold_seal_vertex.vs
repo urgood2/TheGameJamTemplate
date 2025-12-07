@@ -11,6 +11,7 @@ out vec4 fragColor;
 
 out mat3 invRotMat;
 out vec2 worldMouseUV;
+flat out float angleFlat;
 
 uniform mat4 mvp;
 uniform vec2 resolution;
@@ -29,6 +30,7 @@ uniform float rand_seed;
 uniform float vortex_amt;
 uniform float rotation;
 uniform float tilt_enabled;
+uniform float uv_passthrough;
 uniform vec2 mouse_screen_pos;
 uniform vec2 quad_center;
 uniform vec2 quad_size;
@@ -49,6 +51,10 @@ void main()
 
     float randAngle = randScale * mod(iTime * (0.9 + mod(rand_seed, 0.5)), 6.28318);
     vec2 randVec = vec2(cos(randAngle), sin(randAngle));
+    float jitter = (uv_passthrough > 0.5) ? 0.0 :
+        rand_trans_power * 0.05 *
+        sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
+    angleFlat = rotation + jitter;
 
     // Transform mouse screen position to UV offset
     vec2 localMouse = mouse_screen_pos / resolution;

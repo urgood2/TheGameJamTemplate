@@ -11,6 +11,7 @@ uniform vec2 pivot;
 
 in mat3 invRotMat;
 in vec2 worldMouseUV;
+flat in float angleFlat;
 
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
@@ -251,10 +252,7 @@ void main()
     float asp = regionRate.y / regionRate.x;
     uv.y *= asp;
 
-    float jitter = (uv_passthrough > 0.5) ? 0.0 :
-        rand_trans_power * 0.05 *
-        sin(iTime * (0.9 + mod(rand_seed, 0.5)) + rand_seed * 123.8985);
-    float angle = rotation + jitter;
+    float angle = angleFlat;
     uv = rotate(uv, vec2(0.5), angle);
     uv.y /= asp;
 

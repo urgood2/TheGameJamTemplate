@@ -7,8 +7,6 @@ in vec4 fragColor;
 uniform vec2 regionRate;
 uniform vec2 pivot;
 
-in mat3 invRotMat;
-in vec2 worldMouseUV;
 flat in vec2 tiltSin;
 flat in vec2 tiltCos;
 flat in float angleFlat;

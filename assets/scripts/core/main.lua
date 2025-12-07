@@ -399,12 +399,8 @@ function startGameButtonCallback()
         2.2, -- delay in seconds
         function()
             remove_fullscreen_shader("screen_tone_transition") -- Remove the fade out shader
-            
-            add_fullscreen_shader("palette_quantize")
-            
-            
-            -- add_fullscreen_shader("pixelate_image")
-            
+            add_layer_shader("sprites", "palette_quantize")
+            add_layer_shader("ui", "palette_quantize")
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer
     )

@@ -3237,6 +3237,44 @@ local function destroyDetailedStatsTooltip()
     detailedStatsTooltipEntity = nil
 end
 
+local function buildTwoColumnBody(rows, opts)
+    opts = opts or {}
+    local leftCount = math.ceil(#rows / 2)
+    local left, right = {}, {}
+
+    for i, row in ipairs(rows) do
+        if i <= leftCount then
+            left[#left + 1] = row
+        else
+            right[#right + 1] = row
+        end
+    end
+
+    return dsl.hbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            color = opts.innerColor,
+            padding = opts.padding or 0
+        },
+        children = {
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = left
+            },
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = right
+            }
+        }
+    }
+end
+
 local function makeDetailedStatsTooltip(snapshot)
     local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr = ";shadow=false"
@@ -3347,14 +3385,10 @@ local function makeDetailedStatsTooltip(snapshot)
         addLine(rows, "status", "No stats", { color = "yellow" })
     end
 
-    local v = dsl.vbox {
-        config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            color = tooltipStyle.innerColor,
-            padding = outerPadding
-        },
-        children = rows
-    }
+    local v = buildTwoColumnBody(rows, {
+        innerColor = tooltipStyle.innerColor,
+        padding = outerPadding
+    })
 
     local root = dsl.root {
         config = {
@@ -3488,14 +3522,10 @@ function makePlayerStatsTooltip(snapshot)
         addLine(rows, "status", "No stats", { color = "yellow" })
     end
 
-    local v = dsl.vbox {
-        config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            color = tooltipStyle.innerColor,
-            padding = outerPadding
-        },
-        children = rows
-    }
+    local v = buildTwoColumnBody(rows, {
+        innerColor = tooltipStyle.innerColor,
+        padding = outerPadding
+    })
 
     local root = dsl.root {
         config = {
@@ -8720,7 +8750,17 @@ function initPlanningUI()
     end
 
     if not playerStatsSignalRegistered then
-        signal.register("stats_recomputed", function()
+        signal.register("stats_recomputed", function(payload)
+            local ctx = combat_context
+            local playerActor = ctx and ctx.side1 and ctx.side1[1]
+            if not playerActor then return end
+
+            local owner = payload and payload.owner
+            local stats = payload and payload.stats
+            if owner ~= playerActor and stats ~= playerActor.stats then
+                return
+            end
+
             local anchor = planningUIEntities and planningUIEntities.player_stats_button
             refreshPlayerStatsTooltip(anchor)
             local detailedAnchor = planningUIEntities and planningUIEntities.player_stats_detailed_button

@@ -221,8 +221,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     float pearl = pow(fresnel, 3.0) * 0.3;
     iridColor += vec3(0.9, 0.85, 1.0) * pearl;
 
-    float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
-    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0) * edgeMask;
+    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0);
 
     vec3 lit = mix(base.rgb, iridColor, overlayMask);
     lit = clamp(lit * material_tint, 0.0, 1.0);

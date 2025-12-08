@@ -274,8 +274,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     centralGlow *= 0.5 + 0.5 * sin(t * 2.0);
     nebulaColor += vec3(0.8, 0.6, 1.0) * centralGlow * 0.4;
 
-    float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
-    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0) * edgeMask;
+    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0);
 
     vec3 lit = mix(base.rgb, nebulaColor, overlayMask);
     lit = clamp(lit * material_tint, 0.0, 1.0);

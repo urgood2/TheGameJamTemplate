@@ -202,8 +202,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     float glow = pow(auroraIntensity, 2.0) * 0.3;
     auroraColor += vec3(0.1, 0.3, 0.2) * glow;
 
-    float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
-    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0) * edgeMask;
+    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0);
 
     vec3 lit = mix(base.rgb, auroraColor, overlayMask);
     lit = clamp(lit * material_tint, 0.0, 1.0);

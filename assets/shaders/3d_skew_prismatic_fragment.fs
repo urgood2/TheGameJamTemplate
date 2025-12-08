@@ -239,8 +239,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     );
     prismaticColor = mix(prismaticColor, prismaticColor * (aberrated / max(base.rgb, vec3(0.01))), edgeIntensity * 0.3);
 
-    float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
-    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0) * edgeMask;
+    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0);
 
     vec3 lit = mix(base.rgb, prismaticColor, overlayMask);
     lit = clamp(lit * material_tint, 0.0, 1.0);

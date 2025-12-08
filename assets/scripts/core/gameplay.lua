@@ -1670,7 +1670,14 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_holo")
     -- shaderPipelineComp:addPass("3d_skew_voucher")
     -- shaderPipelineComp:addPass("3d_skew_gold_seal")
-    shaderPipelineComp:addPass("3d_skew_polychrome")
+    -- shaderPipelineComp:addPass("3d_skew_polychrome")
+    shaderPipelineComp:addPass("3d_skew_aurora")
+    -- shaderPipelineComp:addPass("3d_skew_iridescent")
+    -- shaderPipelineComp:addPass("3d_skew_nebula")
+    -- shaderPipelineComp:addPass("3d_skew_plasma")
+    -- shaderPipelineComp:addPass("3d_skew_prismatic")
+    -- shaderPipelineComp:addPass("3d_skew_thermal")
+    
     do
         local passes = shaderPipelineComp.passes
         local idx = passes and #passes

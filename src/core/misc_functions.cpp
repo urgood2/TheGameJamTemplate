@@ -1231,6 +1231,85 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("3d_skew_gold_seal", "fade_start", 0.7f);
   globalShaderUniforms.set("3d_skew_gold_seal", "gold_seal",
                            Vector4{0.65f, 0.25f, 0.0f, 1.0f});
+
+  // Additional pseudo-3D skew variants share the same baseline uniforms.
+  auto registerPseudo3DSkewVariant =
+      [&](const std::string& shaderName, const std::string& effectUniform) {
+        const std::string shaderKey = shaderName;
+        shaders::registerUniformUpdate(shaderKey, [shaderKey](Shader& shader) {
+          globalShaderUniforms.set(
+              shaderKey, "iTime", static_cast<float>(main_loop::getTime()));
+          globalShaderUniforms.set(
+              shaderKey, "time", static_cast<float>(main_loop::getTime()));
+          globalShaderUniforms.set(shaderKey, "mouse_screen_pos",
+                                   getScaledMousePositionCached());
+          globalShaderUniforms.set(
+              shaderKey, "resolution",
+              Vector2{static_cast<float>(globals::VIRTUAL_WIDTH),
+                      static_cast<float>(globals::VIRTUAL_HEIGHT)});
+          globalShaderUniforms.set(shaderKey, "spread_strength", 1.0f);
+          globalShaderUniforms.set(shaderKey, "distortion_strength", 0.05f);
+          globalShaderUniforms.set(shaderKey, "fade_start", 0.7f);
+        });
+
+        globalShaderUniforms.set(shaderKey, "fov", -0.39f);
+        globalShaderUniforms.set(shaderKey, "x_rot", 0.0f);
+        globalShaderUniforms.set(shaderKey, "y_rot", 0.0f);
+        globalShaderUniforms.set(shaderKey, "inset", 0.0f);
+        globalShaderUniforms.set(shaderKey, "hovering", 0.3f);
+        globalShaderUniforms.set(shaderKey, "rand_trans_power", 0.4f);
+        globalShaderUniforms.set(shaderKey, "rand_seed", 3.1415f);
+        globalShaderUniforms.set(shaderKey, "rotation", 0.0f);
+        globalShaderUniforms.set(shaderKey, "cull_back", 0.0f);
+        globalShaderUniforms.set(shaderKey, "tilt_enabled", 0.0f);
+
+        float drawWidth = static_cast<float>(globals::VIRTUAL_WIDTH);
+        float drawHeight = static_cast<float>(globals::VIRTUAL_HEIGHT);
+        globalShaderUniforms.set(shaderKey, "regionRate",
+                                 Vector2{drawWidth / drawWidth,
+                                         drawHeight / drawHeight});
+        globalShaderUniforms.set(shaderKey, "pivot", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set(shaderKey, "quad_center",
+                                 Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set(shaderKey, "quad_size",
+                                 Vector2{1.0f, 1.0f});
+        globalShaderUniforms.set(shaderKey, "uv_passthrough", 0.0f);
+        globalShaderUniforms.set(shaderKey, "uGridRect",
+                                 Vector4{0.0f, 0.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set(shaderKey, "uImageSize",
+                                 Vector2{drawWidth, drawHeight});
+        globalShaderUniforms.set(shaderKey, "texture_details",
+                                 Vector4{0.0f, 0.0f, 64.0f, 64.0f});
+        globalShaderUniforms.set(shaderKey, "image_details",
+                                 Vector2{65.15f, 64.0f});
+        globalShaderUniforms.set(shaderKey, "dissolve", 0.0f);
+        globalShaderUniforms.set(shaderKey, "shadow", 0.0f);
+        globalShaderUniforms.set(shaderKey, "burn_colour_1",
+                                 Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+        globalShaderUniforms.set(shaderKey, "burn_colour_2",
+                                 Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+        globalShaderUniforms.set(shaderKey, "card_rotation", 0.0f);
+        globalShaderUniforms.set(shaderKey, "material_tint",
+                                 Vector3{1.0f, 1.0f, 1.0f});
+        globalShaderUniforms.set(shaderKey, "grain_intensity", -1.95f);
+        globalShaderUniforms.set(shaderKey, "grain_scale", -2.21f);
+        globalShaderUniforms.set(shaderKey, "sheen_strength", -1.49f);
+        globalShaderUniforms.set(shaderKey, "sheen_width", 2.22f);
+        globalShaderUniforms.set(shaderKey, "sheen_speed", 2.3f);
+        globalShaderUniforms.set(shaderKey, "noise_amount", 1.12f);
+        globalShaderUniforms.set(shaderKey, "spread_strength", 1.0f);
+        globalShaderUniforms.set(shaderKey, "distortion_strength", 0.05f);
+        globalShaderUniforms.set(shaderKey, "fade_start", 0.7f);
+        globalShaderUniforms.set(shaderKey, effectUniform,
+                                 Vector2{0.65f, 0.25f});
+      };
+
+  registerPseudo3DSkewVariant("3d_skew_aurora", "aurora");
+  registerPseudo3DSkewVariant("3d_skew_iridescent", "iridescent");
+  registerPseudo3DSkewVariant("3d_skew_nebula", "nebula");
+  registerPseudo3DSkewVariant("3d_skew_plasma", "plasma");
+  registerPseudo3DSkewVariant("3d_skew_prismatic", "prismatic");
+  registerPseudo3DSkewVariant("3d_skew_thermal", "thermal");
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

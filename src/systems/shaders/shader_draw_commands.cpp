@@ -245,14 +245,20 @@ void executeEntityPipelineWithCommands(
 
     auto shaderIsPseudo3DSkew = [](const std::string& shaderName) {
         return shaderName == "3d_skew" ||
-               shaderName == "3d_skew_hologram" ||
-               shaderName == "3d_skew_polychrome" ||
+               shaderName == "3d_skew_aurora" ||
                shaderName == "3d_skew_foil" ||
-               shaderName == "3d_skew_negative_shine" ||
-               shaderName == "3d_skew_negative" ||
+               shaderName == "3d_skew_gold_seal" ||
                shaderName == "3d_skew_holo" ||
-               shaderName == "3d_skew_voucher" ||
-               shaderName == "3d_skew_gold_seal";
+               shaderName == "3d_skew_hologram" ||
+               shaderName == "3d_skew_iridescent" ||
+               shaderName == "3d_skew_negative" ||
+               shaderName == "3d_skew_negative_shine" ||
+               shaderName == "3d_skew_nebula" ||
+               shaderName == "3d_skew_plasma" ||
+               shaderName == "3d_skew_polychrome" ||
+               shaderName == "3d_skew_prismatic" ||
+               shaderName == "3d_skew_thermal" ||
+               shaderName == "3d_skew_voucher";
     };
 
     struct SkewUniformCacheEntry {

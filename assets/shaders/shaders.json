@@ -134,6 +134,60 @@
             "fragment": "web/3d_skew_gold_seal_fragment.fs"
         }
     },
+    "3d_skew_aurora": {
+        "vertex": "3d_skew_aurora_vertex.vs",
+        "fragment": "3d_skew_aurora_fragment.fs",
+
+        "web": {
+            "vertex": "3d_skew_aurora_vertex.vs",
+            "fragment": "3d_skew_aurora_fragment.fs"
+        }
+    },
+    "3d_skew_iridescent": {
+        "vertex": "3d_skew_iridescent_vertex.vs",
+        "fragment": "3d_skew_iridescent_fragment.fs",
+
+        "web": {
+            "vertex": "3d_skew_iridescent_vertex.vs",
+            "fragment": "3d_skew_iridescent_fragment.fs"
+        }
+    },
+    "3d_skew_nebula": {
+        "vertex": "3d_skew_nebula_vertex.vs",
+        "fragment": "3d_skew_nebula_fragment.fs",
+
+        "web": {
+            "vertex": "3d_skew_nebula_vertex.vs",
+            "fragment": "3d_skew_nebula_fragment.fs"
+        }
+    },
+    "3d_skew_plasma": {
+        "vertex": "3d_skew_plasma_vertex.vs",
+        "fragment": "3d_skew_plasma_fragment.fs",
+
+        "web": {
+            "vertex": "3d_skew_plasma_vertex.vs",
+            "fragment": "3d_skew_plasma_fragment.fs"
+        }
+    },
+    "3d_skew_prismatic": {
+        "vertex": "3d_skew_prismatic_vertex.vs",
+        "fragment": "3d_skew_prismatic_fragment.fs",
+
+        "web": {
+            "vertex": "3d_skew_prismatic_vertex.vs",
+            "fragment": "3d_skew_prismatic_fragment.fs"
+        }
+    },
+    "3d_skew_thermal": {
+        "vertex": "3d_skew_thermal_vertex.vs",
+        "fragment": "3d_skew_thermal_fragment.fs",
+
+        "web": {
+            "vertex": "3d_skew_thermal_vertex.vs",
+            "fragment": "3d_skew_thermal_fragment.fs"
+        }
+    },
     "squish": {
         "vertex": "squish_vertex.vs",
         "fragment": "squish_fragment.fs",

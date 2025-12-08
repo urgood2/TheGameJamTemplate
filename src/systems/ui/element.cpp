@@ -27,9 +27,11 @@ namespace ui
         // Resolve the font for a given UI configuration, falling back to the current language font.
         const globals::FontData& resolveFontData(const UIConfig* config)
         {
-            if (config && config->fontName && localization::hasNamedFont(config->fontName.value()))
-            {
-                return localization::getNamedFont(config->fontName.value());
+            if (config && config->fontName) {
+                const auto& fontName = config->fontName.value();
+                if (localization::hasNamedFont(fontName)) {
+                    return localization::getNamedFont(fontName);
+                }
             }
             return localization::getFontData();
         }

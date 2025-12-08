@@ -133,6 +133,8 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
 end
 
 -- Builds the shop/relic UI without relying on generateUI.
+-- COMMENTED OUT: Rebuild shop UI from scratch
+--[[
 local function buildShopUI()
     if globals.ui.weatherShopUIBox then
         return
@@ -298,9 +300,10 @@ local function buildShopUI()
         ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox)
     end
 end
+--]]
 
 function ui_defs.generateShopUI()
-    buildShopUI()
+    -- buildShopUI() -- COMMENTED OUT: Rebuild shop UI from scratch
 end
 
 function ui_defs.generateUI()
@@ -1303,6 +1306,8 @@ function ui_defs.generateUI()
         :addChild(offersRow)
         :build()
 
+    -- COMMENTED OUT: Shop action buttons (remove/lock/reroll) - rebuild from scratch
+    --[[
     local function buildShopButton(textEntry, callback, id)
         return UIElementTemplateNodeBuilder.create()
             :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -1438,6 +1443,7 @@ function ui_defs.generateUI()
         :addChild(rerollButton)
         :addChild(closeButton)
         :build()
+    --]]
 
     local jokerTitle = ui.definitions.getNewDynamicTextEntry(
         function() return "Joker Shelf" end,
@@ -1495,7 +1501,7 @@ function ui_defs.generateUI()
         -- add all weather button defs to the row
         :addChild(header) -- add the weather shop text entity
         :addChild(offersPanel)
-        :addChild(actionRow)
+        -- :addChild(actionRow) -- COMMENTED OUT: Shop action buttons removed
         :addChild(jokerPanel)
         :build()
     
@@ -1508,10 +1514,11 @@ function ui_defs.generateUI()
     weatherShopTransform.visualX = weatherShopTransform.actualX -- update visual position as well
     weatherShopTransform.actualY = globals.screenHeight() -- out of view initially
 
-    setLockIconsVisible(globals.shopUIState.locked)
-    refreshRerollText()
-    refreshLockText()
-    refreshGoldText()
+    -- COMMENTED OUT: Shop button refresh functions removed
+    -- setLockIconsVisible(globals.shopUIState.locked)
+    -- refreshRerollText()
+    -- refreshLockText()
+    -- refreshGoldText()
     
     
     -- relics menu 
@@ -1804,6 +1811,14 @@ function ui_defs.generateTooltipUI()
 )
     registry:get(tooltipBodyText.config.object, TextSystem.Text).shadow_enabled = false -- disable shadow for the tooltip body text
     globals.ui.tooltipBodyText = tooltipBodyText.config.object
+
+    -- Apply tooltip font if available to avoid per-frame fallback checks
+    local tooltipFont = (localization and localization.hasNamedFont and localization.hasNamedFont("tooltip"))
+        and localization.getNamedFont("tooltip")
+    if tooltipFont then
+        registry:get(tooltipTitleText.config.object, TextSystem.Text).fontData = tooltipFont
+        registry:get(tooltipBodyText.config.object, TextSystem.Text).fontData = tooltipFont
+    end
     
     -- make vertical container for the tooltip
     local tooltipContainer = UIElementTemplateNodeBuilder.create()

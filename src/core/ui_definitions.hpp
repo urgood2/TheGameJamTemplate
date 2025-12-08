@@ -336,6 +336,14 @@ namespace ui_defs
                         // ignore invalid fontSize
                     }
                 }
+                // Handle font override
+                if (segment.attributes.find("font") != segment.attributes.end()) {
+                    auto fontName = std::get<std::string>(segment.attributes["font"]);
+                    textSegmentDef.config.fontName = fontName;
+                } else if (segment.attributes.find("fontName") != segment.attributes.end()) {
+                    auto fontName = std::get<std::string>(segment.attributes["fontName"]);
+                    textSegmentDef.config.fontName = fontName;
+                }
                 if (segment.attributes.find("shadow") != segment.attributes.end()) {
                     auto shadowString = std::get<std::string>(segment.attributes["shadow"]);
                     shadowEnabled = !(shadowString == "false" || shadowString == "0");

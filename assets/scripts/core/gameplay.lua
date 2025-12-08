@@ -180,6 +180,13 @@ wand_tooltip_cache = {}
 card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
+local function hideCardTooltip(entity)
+    if not entity or not entity_cache.valid(entity) then
+        return
+    end
+    clear_state_tags(entity)
+    ui.box.ClearStateTagsFromUIBox(entity)
+end
 local playerStatsTooltipEntity = nil
 local detailedStatsTooltipEntity = nil
 local playerStatsSignalRegistered = false
@@ -259,7 +266,10 @@ local tooltipStyle = {
 -- Initialize tooltip font
 -- Load JetBrains Mono Nerd Font for tooltips at startup
 if localization and localization.loadNamedFont then
-    localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 32)
+    local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
+    if not alreadyLoaded then
+        localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 32)
+    end
 end
 
 -- Helper to get the tooltip font (with fallback)
@@ -268,6 +278,17 @@ local function getTooltipFont()
         return localization.getNamedFont(tooltipStyle.fontName).font
     end
     return localization and localization.getFont and localization.getFont() or nil
+end
+
+-- Build a font attribute suffix only if the tooltip font is available.
+local function getTooltipFontAttr()
+    if not tooltipStyle.fontName then
+        return ""
+    end
+    if localization and localization.hasNamedFont and localization.hasNamedFont(tooltipStyle.fontName) then
+        return ";font=" .. tooltipStyle.fontName
+    end
+    return ""
 end
 
 local ensureCardTooltip -- forward declaration
@@ -380,15 +401,7 @@ local active_shop_instance = nil
 local AVATAR_PURCHASE_COST = 10
 local ensureShopSystemInitialized -- forward declaration so planning init can ensure metadata before card spawn
 _G.AVATAR_PURCHASE_COST = AVATAR_PURCHASE_COST
-local shop_overlay_layout = {
-    margin = 14,
-    pad = 10,
-    rowH = 22,
-    panelW = 420
-}
 local tryPurchaseShopCard -- forward declaration
-local setPlanningPeekMode -- forward declaration
-local togglePlanningPeek -- forward declaration
 
 
 local dash_sfx_list               = {
@@ -1377,47 +1390,9 @@ function createNewCard(id, x, y, gameStateToApply)
                                     layer_order_system.getZIndex(eid))
                             end
 
-                            -- animate shop buy affordance
-                            local revealTarget = 0
-                            if is_state_active(SHOP_STATE) and cardScript.shop_slot then
-                                revealTarget = cardScript.selected and 1 or 0
-                            end
-                            cardScript.shopBuyReveal = lerp(cardScript.shopBuyReveal or 0, revealTarget,
-                                math.min(1.0, dt * 8.0))
-
                             -- check if card is over capacity on its board
                             local isOverCapacity = isCardOverCapacity(cardScript, eid)
                             cardScript.isDisabled = isOverCapacity
-
-                            if cardScript.shop_slot and cardScript.shopBuyReveal and cardScript.shopBuyReveal > 0.02 and
-                                is_state_active(SHOP_STATE) then
-                                local btnWidth = t.actualW * 0.9
-                                local btnHeight = math.max(22, math.min(t.actualH * 0.36, 46))
-                                local slide = (1 - cardScript.shopBuyReveal) * (btnHeight + 6)
-                                local centerX = t.actualX + t.actualW * 0.5
-                                local centerY = t.actualY - btnHeight * 0.5 + slide
-
-                                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                                    c.x = centerX
-                                    c.y = centerY
-                                    c.w = btnWidth
-                                    c.h = btnHeight
-                                    c.rx = 12
-                                    c.ry = 12
-                                    c.color = Col(20, 24, 32, 215)
-                                    c.outlineColor = util.getColor("apricot_cream")
-                                end, math.max(0, zToUse - 1), layer.DrawCommandSpace.World)
-
-                                local buyLabel = string.format("BUY %dg", math.floor((cardScript.shop_cost or 0) + 0.5))
-                                command_buffer.queueDrawText(layers.sprites, function(c)
-                                    c.text = buyLabel
-                                    c.font = localization.getFont()
-                                    c.x = centerX - localization.getTextWidthWithCurrentFont(buyLabel, 22, 1) * 0.5
-                                    c.y = centerY - 10
-                                    c.color = util.getColor("apricot_cream")
-                                    c.fontSize = 22
-                                end, zToUse, layer.DrawCommandSpace.World)
-                            end
 
                             -- inject card label into the batched shader pipeline (local space, shaded)
                             shader_draw_commands.add_local_command(
@@ -1742,16 +1717,6 @@ function createNewCard(id, x, y, gameStateToApply)
     -- end
 
     nodeComp.methods.onClick = function(registry, clickedEntity)
-        if is_state_active and is_state_active(SHOP_STATE) and cardScript.shop_slot then
-            if cardScript.selected then
-                tryPurchaseShopCard(cardScript)
-            else
-                cardScript.selected = true
-                nodeComp.state.isBeingFocused = true
-            end
-            return
-        end
-
         cardScript.selected = not cardScript.selected
         nodeComp.state.isBeingFocused = cardScript.selected
     end
@@ -1776,16 +1741,9 @@ function createNewCard(id, x, y, gameStateToApply)
             return
         end
         centerTooltipAboveEntity(tooltip, card, 12)
-        -- hide any other tooltips before showing this one
-        for _, tooltipEntity in pairs(card_tooltip_cache) do
-            if tooltipEntity ~= tooltip then
-                ui.box.ClearStateTagsFromUIBox(tooltipEntity)
-            end
-        end
-        for _, tooltipEntity in pairs(card_tooltip_disabled_cache) do
-            if tooltipEntity ~= tooltip then
-                ui.box.ClearStateTagsFromUIBox(tooltipEntity)
-            end
+        -- hide the previously hovered tooltip (avoid clearing hundreds of cached tooltips every frame)
+        if previously_hovered_tooltip and previously_hovered_tooltip ~= tooltip then
+            hideCardTooltip(previously_hovered_tooltip)
         end
 
         add_state_tag(tooltip, CARD_TOOLTIP_STATE)
@@ -1802,10 +1760,9 @@ function createNewCard(id, x, y, gameStateToApply)
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
 
-        -- disable all tooltips in the cache
+        -- disable the currently active tooltip
         if previously_hovered_tooltip then
-            clear_state_tags(previously_hovered_tooltip)
-            ui.box.ClearStateTagsFromUIBox(previously_hovered_tooltip)
+            hideCardTooltip(previously_hovered_tooltip)
             -- propagate_state_effects_to_ui_box(previously_hovered_tooltip)
             previously_hovered_tooltip = nil
         end
@@ -2802,7 +2759,7 @@ function makeWandTooltip(wand_def)
 
     local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr   = ";shadow=false"
-    local fontAttr = tooltipStyle.fontName and (";font=" .. tooltipStyle.fontName) or ""
+    local fontAttr = getTooltipFontAttr()
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2894,7 +2851,7 @@ function makeCardTooltip(card_def, opts)
     local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
     local rowPadding = math.max(0, (tooltipStyle.rowPadding or 0) - 1)
     local outerPadding = tooltipStyle.innerPadding
-    local fontAttr = tooltipStyle.fontName and (";font=" .. tooltipStyle.fontName) or ""
+    local fontAttr = getTooltipFontAttr()
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -4533,19 +4490,7 @@ function initPlanningPhase()
         boardSet.wandDef.action_board_entity = boardSet.action_board_id
     end
 
-    local function addCardTooltip(cardDef)
-        ensureCardTooltip(cardDef)
-    end
-
-    -- for each card, make a tooltip
-    for id, cardDef in pairs(WandEngine.card_defs) do
-        addCardTooltip(cardDef)
-    end
-
-    -- ensure trigger cards get tooltips too
-    for id, cardDef in pairs(WandEngine.trigger_card_defs or {}) do
-        addCardTooltip(cardDef)
-    end
+    -- Card tooltips are built lazily on hover to avoid spawning hundreds of UI boxes up front.
 
     activate_state(WAND_TOOLTIP_STATE) -- keep activated at  all times.
     -- activate_state(CARD_TOOLTIP_STATE) -- keep activated at all times.
@@ -7197,21 +7142,6 @@ function ensureShopSystemInitialized()
     shop_system_initialized = true
 end
 
-local function clearBoardCards(boardId)
-    local board = boards[boardId]
-    if not board or not board.cards then
-        return
-    end
-
-    for _, eid in ipairs(board.cards) do
-        cards[eid] = nil
-        if eid and entity_cache.valid(eid) then
-            registry:destroy(eid)
-        end
-    end
-    board.cards = {}
-end
-
 local planningPeekEntities = {}
 
 local function refreshShopUIFromInstance(shop)
@@ -7278,65 +7208,7 @@ local function collectPlanningPeekTargets()
     return targets
 end
 
-setPlanningPeekMode = function(enable)
-    globals.shopUIState = globals.shopUIState or {}
-    planningPeekEntities = collectPlanningPeekTargets()
-    for _, eid in ipairs(planningPeekEntities) do
-        if enable then
-            add_state_tag(eid, SHOP_STATE)
-        else
-            remove_state_tag(eid, SHOP_STATE)
-        end
-    end
-    globals.shopUIState.peekPlanning = enable
-    newTextPopup(
-        enable and "Planning boards visible" or "Planning boards hidden",
-        globals.screenWidth() * 0.5,
-        globals.screenHeight() * 0.14,
-        1.2,
-        "color=apricot_cream"
-    )
-end
-
-togglePlanningPeek = function()
-    globals.shopUIState = globals.shopUIState or {}
-    setPlanningPeekMode(not globals.shopUIState.peekPlanning)
-end
-
-local function formatShopLabel(offering)
-    if not offering or not offering.cardDef then
-        return "Unknown"
-    end
-    local rarity = offering.rarity or "?"
-    local cost = offering.cost or 0
-    return string.format("%s\n[%s] %dg", offering.cardDef.id or "?", rarity, cost)
-end
-
-local function populateShopBoard(shop)
-    if not shop_board_id or not shop then
-        return
-    end
-
-    clearBoardCards(shop_board_id)
-
-    for index, offering in ipairs(shop.offerings or {}) do
-        if not offering.isEmpty and offering.cardDef then
-            local eid = createNewCard(offering.cardDef.id, 0, 0, SHOP_STATE)
-            local script = getScriptTableFromEntityID(eid)
-            if script then
-                script.test_label = formatShopLabel(offering)
-                script.shop_slot = index
-                script.shop_cost = offering.cost
-                script.shop_rarity = offering.rarity
-                script.shopBuyReveal = 0
-                script.selected = false
-            end
-            addCardToBoard(eid, shop_board_id)
-        end
-    end
-
-    refreshShopUIFromInstance(shop)
-end
+-- Shop UI functions removed (setPlanningPeekMode, togglePlanningPeek, formatShopLabel, populateShopBoard)
 
 function regenerateShopState()
     ensureShopSystemInitialized()
@@ -7363,7 +7235,7 @@ function regenerateShopState()
 
     setShopLocked(false)
 
-    populateShopBoard(active_shop_instance)
+    -- populateShopBoard removed - rebuild shop UI handles this
 end
 
 function rerollActiveShop()
@@ -7386,7 +7258,7 @@ function rerollActiveShop()
     globals.shopUIState.rerollCost = active_shop_instance.rerollCost
     globals.shopUIState.rerollCount = active_shop_instance.rerollCount
 
-    populateShopBoard(active_shop_instance)
+    -- populateShopBoard(active_shop_instance) -- Removed: rebuild shop UI handles this
     return true
 end
 
@@ -7434,7 +7306,7 @@ tryPurchaseShopCard = function(cardScript)
         "color=marigold"
     )
 
-    populateShopBoard(active_shop_instance)
+    -- populateShopBoard(active_shop_instance) -- Removed: rebuild shop UI handles this
     refreshShopUIFromInstance(active_shop_instance)
 
     -- Notify systems that deck has changed (triggers tag re-evaluation)
@@ -7538,115 +7410,7 @@ local function buildAvatarOverlayEntries()
     return entries
 end
 
-local function drawShopPanel(x, y, w, h, title)
-    local cx, cy = x + w * 0.5, y + h * 0.5
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-        c.x = cx
-        c.y = cy
-        c.w = w
-        c.h = h
-        c.rx = 12
-        c.ry = 12
-        c.color = Col(18, 22, 32, 220)
-        c.outlineColor = util.getColor("apricot_cream")
-    end, z_orders.card - 1, layer.DrawCommandSpace.Screen)
-
-    command_buffer.queueDrawText(layers.sprites, function(c)
-        c.text = title
-        c.font = localization.getFont()
-        c.x = x + shop_overlay_layout.pad
-        c.y = y + shop_overlay_layout.pad
-        c.color = util.getColor("apricot_cream")
-        c.fontSize = 20
-    end, z_orders.card, layer.DrawCommandSpace.Screen)
-end
-
-local function drawShopOverlay()
-    if not is_state_active or not is_state_active(SHOP_STATE) then
-        return
-    end
-    if not active_shop_instance then
-        return
-    end
-
-    local screenW, screenH = globals.screenWidth(), globals.screenHeight()
-    local margin = shop_overlay_layout.margin
-    local pad = shop_overlay_layout.pad
-    local rowH = shop_overlay_layout.rowH
-    local panelW = math.min(shop_overlay_layout.panelW, screenW - margin * 2)
-
-    local offerCount = math.min(#(active_shop_instance.offerings or {}), ShopSystem.config.offerSlots or 5)
-    local offersHeight = pad * 2 + 26 + offerCount * rowH
-
-    local avatarEntries = buildAvatarOverlayEntries()
-    local maxAvatarRows = math.min(4, #avatarEntries)
-    local avatarHeight = pad * 2 + 26 + maxAvatarRows * rowH
-
-    local spacing = 10
-    local totalHeight = offersHeight + avatarHeight + spacing
-
-    local startX = screenW - panelW - margin
-    local startY = margin
-    if startY + totalHeight > screenH - margin then
-        startY = math.max(margin, screenH - totalHeight - margin)
-    end
-
-    -- Offers panel
-    drawShopPanel(startX, startY, panelW, offersHeight, "Shop offers")
-    local textY = startY + pad + 24
-    for i = 1, offerCount do
-        local offering = active_shop_instance.offerings[i]
-        local status = string.format("%d) Empty", i)
-        local color = util.getColor("gray")
-        if offering then
-            if offering.isEmpty then
-                status = offering.sold and string.format("%d) Sold", i) or status
-            elseif offering.cardDef then
-                local lockSuffix = (active_shop_instance.locks and active_shop_instance.locks[i]) and " [Locked]" or ""
-                status = string.format("%d) %s [%s] %dg%s", i, offering.cardDef.id or "?",
-                    tostring(offering.rarity or "?"), math.floor((offering.cost or 0) + 0.5), lockSuffix)
-                color = util.getColor("apricot_cream")
-            end
-        end
-        command_buffer.queueDrawText(layers.sprites, function(c)
-            c.text = status
-            c.font = localization.getFont()
-            c.x = startX + pad
-            c.y = textY
-            c.color = color
-            c.fontSize = 18
-        end, z_orders.card, layer.DrawCommandSpace.Screen)
-        textY = textY + rowH
-    end
-
-    -- Avatars panel
-    local avatarY = startY + offersHeight + spacing
-    drawShopPanel(startX, avatarY, panelW, avatarHeight, "Avatars")
-    local avatarTextY = avatarY + pad + 24
-    for idx = 1, maxAvatarRows do
-        local entry = avatarEntries[idx]
-        local label = entry.name
-        local color = util.getColor("gray")
-        if entry.purchased then
-            label = label .. " [Owned]"
-            color = util.getColor("marigold")
-        elseif entry.unlocked then
-            label = label .. string.format(" [%dg]", AVATAR_PURCHASE_COST)
-            color = util.getColor("mint_green")
-        else
-            label = label .. " [Locked]"
-        end
-        command_buffer.queueDrawText(layers.sprites, function(c)
-            c.text = label
-            c.font = localization.getFont()
-            c.x = startX + pad
-            c.y = avatarTextY
-            c.color = color
-            c.fontSize = 18
-        end, z_orders.card, layer.DrawCommandSpace.Screen)
-        avatarTextY = avatarTextY + rowH
-    end
-end
+-- Shop overlay UI removed - rebuild from scratch
 
 function setShopLocked(locked)
     globals.shopUIState.locked = locked
@@ -7668,9 +7432,7 @@ function setShopLocked(locked)
     end
 end
 
-timer.run(function()
-    drawShopOverlay()
-end, nil, "shop_overlay_draw")
+-- Shop overlay draw timer removed - rebuild from scratch
 
 function getActiveShop()
     return active_shop_instance

@@ -69,7 +69,7 @@ namespace TextSystem
         std::string spriteUUID;
         float imageScale = 1.0f;
         Color fgTint = WHITE;
-        Color bgTint = BLANK;        
+        Color bgTint = BLANK;
     };
 
     extern std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;

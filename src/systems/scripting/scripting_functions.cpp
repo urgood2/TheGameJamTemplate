@@ -302,18 +302,214 @@ auto initLuaMasterState(sol::state &stateToInit,
       return ldtk_loader::PrefabForEntity(entityName);
     });
 
-    ldtk.set_function("set_spawner", [](sol::function fn) {
+    // Helper to convert entity fields to Lua table
+    auto entityFieldsToLua = [](sol::state_view lua, const ldtk::Entity &ent) -> sol::table {
+      sol::table fields = lua.create_table();
+
+      // Get all field definitions from the entity
+      for (const auto &fieldDef : ent.allFields()) {
+        const std::string &name = fieldDef.name;
+
+        try {
+          switch (fieldDef.type) {
+          case ldtk::FieldType::Int: {
+            const auto &f = ent.getField<int>(name);
+            if (!f.is_null())
+              fields[name] = f.value();
+            break;
+          }
+          case ldtk::FieldType::Float: {
+            const auto &f = ent.getField<float>(name);
+            if (!f.is_null())
+              fields[name] = f.value();
+            break;
+          }
+          case ldtk::FieldType::Bool: {
+            const auto &f = ent.getField<bool>(name);
+            if (!f.is_null())
+              fields[name] = f.value();
+            break;
+          }
+          case ldtk::FieldType::String: {
+            const auto &f = ent.getField<std::string>(name);
+            if (!f.is_null())
+              fields[name] = f.value();
+            break;
+          }
+          case ldtk::FieldType::Color: {
+            const auto &f = ent.getField<ldtk::Color>(name);
+            if (!f.is_null()) {
+              sol::table color = lua.create_table();
+              color["r"] = f.value().r;
+              color["g"] = f.value().g;
+              color["b"] = f.value().b;
+              color["a"] = f.value().a;
+              fields[name] = color;
+            }
+            break;
+          }
+          case ldtk::FieldType::Point: {
+            const auto &f = ent.getField<ldtk::IntPoint>(name);
+            if (!f.is_null()) {
+              sol::table point = lua.create_table();
+              point["x"] = f.value().x;
+              point["y"] = f.value().y;
+              fields[name] = point;
+            }
+            break;
+          }
+          case ldtk::FieldType::Enum: {
+            const auto &f = ent.getField<ldtk::EnumValue>(name);
+            if (!f.is_null())
+              fields[name] = f.value().name;
+            break;
+          }
+          case ldtk::FieldType::FilePath: {
+            const auto &f = ent.getField<ldtk::FilePath>(name);
+            if (!f.is_null())
+              fields[name] = std::string(f.value().c_str());
+            break;
+          }
+          case ldtk::FieldType::EntityRef: {
+            const auto &f = ent.getField<ldtk::EntityRef>(name);
+            if (!f.is_null()) {
+              sol::table ref = lua.create_table();
+              ref["entity_iid"] = f.value().entity_iid.str();
+              ref["layer_iid"] = f.value().layer_iid.str();
+              ref["level_iid"] = f.value().level_iid.str();
+              ref["world_iid"] = f.value().world_iid.str();
+              fields[name] = ref;
+            }
+            break;
+          }
+          case ldtk::FieldType::ArrayInt: {
+            const auto &arr = ent.getArrayField<int>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null())
+                t[i + 1] = arr[i].value();
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayFloat: {
+            const auto &arr = ent.getArrayField<float>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null())
+                t[i + 1] = arr[i].value();
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayBool: {
+            const auto &arr = ent.getArrayField<bool>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null())
+                t[i + 1] = arr[i].value();
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayString: {
+            const auto &arr = ent.getArrayField<std::string>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null())
+                t[i + 1] = arr[i].value();
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayColor: {
+            const auto &arr = ent.getArrayField<ldtk::Color>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null()) {
+                sol::table color = lua.create_table();
+                color["r"] = arr[i].value().r;
+                color["g"] = arr[i].value().g;
+                color["b"] = arr[i].value().b;
+                color["a"] = arr[i].value().a;
+                t[i + 1] = color;
+              }
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayPoint: {
+            const auto &arr = ent.getArrayField<ldtk::IntPoint>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null()) {
+                sol::table point = lua.create_table();
+                point["x"] = arr[i].value().x;
+                point["y"] = arr[i].value().y;
+                t[i + 1] = point;
+              }
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayEnum: {
+            const auto &arr = ent.getArrayField<ldtk::EnumValue>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null())
+                t[i + 1] = arr[i].value().name;
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayFilePath: {
+            const auto &arr = ent.getArrayField<ldtk::FilePath>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null())
+                t[i + 1] = std::string(arr[i].value().c_str());
+            }
+            fields[name] = t;
+            break;
+          }
+          case ldtk::FieldType::ArrayEntityRef: {
+            const auto &arr = ent.getArrayField<ldtk::EntityRef>(name);
+            sol::table t = lua.create_table();
+            for (size_t i = 0; i < arr.size(); ++i) {
+              if (!arr[i].is_null()) {
+                sol::table ref = lua.create_table();
+                ref["entity_iid"] = arr[i].value().entity_iid.str();
+                ref["layer_iid"] = arr[i].value().layer_iid.str();
+                ref["level_iid"] = arr[i].value().level_iid.str();
+                ref["world_iid"] = arr[i].value().world_iid.str();
+                t[i + 1] = ref;
+              }
+            }
+            fields[name] = t;
+            break;
+          }
+          }
+        } catch (const std::exception &e) {
+          spdlog::warn("LDtk field extraction error for '{}': {}", name,
+                       e.what());
+        }
+      }
+
+      return fields;
+    };
+
+    ldtk.set_function("set_spawner", [&stateToInit, entityFieldsToLua](sol::function fn) {
       static sol::function stored;
       stored = fn;
       ldtk_loader::SetEntitySpawner(
-          [fn](const ldtk::Entity &ent, entt::registry & /*R*/) {
+          [fn, &stateToInit, entityFieldsToLua](const ldtk::Entity &ent, entt::registry & /*R*/) {
             if (!fn.valid())
               return;
             const auto pos = ent.getPosition();
             const auto grid = ent.getGridPosition();
-            const auto &tags = ent.getTags();
+            sol::table fields = entityFieldsToLua(stateToInit, ent);
             fn(ent.getName(), (float)pos.x, (float)pos.y, ent.layer->getName(),
-               grid.x, grid.y, sol::as_table(tags));
+               grid.x, grid.y, fields);
           });
       ldtk_loader::SetRegistry(globals::getRegistry());
     });
@@ -357,6 +553,97 @@ auto initLuaMasterState(sol::state &stateToInit,
                       []() { return ldtk_loader::GetActiveLevel(); });
     ldtk.set_function("has_active_level",
                       []() { return ldtk_loader::HasActiveLevel(); });
+
+    // Level query helpers
+    ldtk.set_function("level_exists", [](const std::string &levelName) {
+      return ldtk_loader::LevelExists(levelName);
+    });
+
+    ldtk.set_function("get_level_bounds", [&stateToInit](const std::string &levelName) {
+      auto bounds = ldtk_loader::GetLevelBounds(levelName);
+      sol::table result = stateToInit.create_table();
+      result["x"] = bounds.x;
+      result["y"] = bounds.y;
+      result["width"] = bounds.width;
+      result["height"] = bounds.height;
+      return result;
+    });
+
+    ldtk.set_function("get_level_meta", [&stateToInit](const std::string &levelName) {
+      auto meta = ldtk_loader::GetLevelMeta(levelName);
+      sol::table result = stateToInit.create_table();
+      result["width"] = meta.width;
+      result["height"] = meta.height;
+      result["world_x"] = meta.world_x;
+      result["world_y"] = meta.world_y;
+      result["depth"] = meta.depth;
+      sol::table bg = stateToInit.create_table();
+      bg["r"] = meta.bg_color.r;
+      bg["g"] = meta.bg_color.g;
+      bg["b"] = meta.bg_color.b;
+      bg["a"] = meta.bg_color.a;
+      result["bg_color"] = bg;
+      return result;
+    });
+
+    ldtk.set_function("get_neighbors", [&stateToInit](const std::string &levelName) {
+      auto neighbors = ldtk_loader::GetNeighbors(levelName);
+      sol::table result = stateToInit.create_table();
+      if (!neighbors.north.empty()) result["north"] = neighbors.north;
+      if (!neighbors.south.empty()) result["south"] = neighbors.south;
+      if (!neighbors.east.empty()) result["east"] = neighbors.east;
+      if (!neighbors.west.empty()) result["west"] = neighbors.west;
+      if (!neighbors.overlap.empty()) {
+        result["overlap"] = sol::as_table(neighbors.overlap);
+      }
+      return result;
+    });
+
+    // Entity query helpers
+    ldtk.set_function("get_entity_position", [&stateToInit](const std::string &levelName,
+                                                             const std::string &iid) {
+      auto pos = ldtk_loader::GetEntityPositionByIID(levelName, iid);
+      if (!pos.found) return sol::object(sol::lua_nil);
+      sol::table result = stateToInit.create_table();
+      result["x"] = pos.x;
+      result["y"] = pos.y;
+      return sol::object(result);
+    });
+
+    ldtk.set_function("get_entities_by_name", [&stateToInit, entityFieldsToLua](
+                                                  const std::string &levelName,
+                                                  const std::string &entityName) {
+      auto entities = ldtk_loader::GetEntitiesByName(levelName, entityName);
+      sol::table result = stateToInit.create_table();
+
+      // Also get fields for each entity
+      const auto& world = ldtk_loader::internal_loader::project.getWorld();
+      const auto& level = world.getLevel(levelName);
+
+      int idx = 1;
+      for (const auto& info : entities) {
+        sol::table ent = stateToInit.create_table();
+        ent["name"] = info.name;
+        ent["iid"] = info.iid;
+        ent["x"] = info.x;
+        ent["y"] = info.y;
+        ent["grid_x"] = info.grid_x;
+        ent["grid_y"] = info.grid_y;
+        ent["width"] = info.width;
+        ent["height"] = info.height;
+        ent["layer"] = info.layer;
+        ent["tags"] = sol::as_table(info.tags);
+
+        // Get fields for this entity
+        const auto* entPtr = ldtk_loader::GetEntityByIID(levelName, info.iid);
+        if (entPtr) {
+          ent["fields"] = entityFieldsToLua(stateToInit, *entPtr);
+        }
+
+        result[idx++] = ent;
+      }
+      return result;
+    });
 
     stateToInit["ldtk"] = ldtk;
     rec.record_property(

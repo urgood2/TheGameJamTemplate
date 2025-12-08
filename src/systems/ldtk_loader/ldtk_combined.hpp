@@ -654,6 +654,159 @@ inline size_t GetCachedTilesetCount() {
     return internal_loader::tilesetCache.size();
 }
 
+// -------------------- Level Query Helpers --------------------
+
+struct LevelBounds {
+    float x, y, width, height;
+};
+
+inline LevelBounds GetLevelBounds(const std::string& levelName) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+    return LevelBounds{
+        (float)level.position.x,
+        (float)level.position.y,
+        (float)level.size.x,
+        (float)level.size.y
+    };
+}
+
+struct LevelMeta {
+    int width, height;
+    int world_x, world_y;
+    int depth;
+    ldtk::Color bg_color;
+};
+
+inline LevelMeta GetLevelMeta(const std::string& levelName) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+    return LevelMeta{
+        level.size.x,
+        level.size.y,
+        level.position.x,
+        level.position.y,
+        level.depth,
+        level.bg_color
+    };
+}
+
+inline bool LevelExists(const std::string& levelName) {
+    try {
+        const auto& world = internal_loader::project.getWorld();
+        world.getLevel(levelName);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+struct NeighborData {
+    std::string north;
+    std::string south;
+    std::string east;
+    std::string west;
+    std::vector<std::string> overlap;
+};
+
+inline NeighborData GetNeighbors(const std::string& levelName) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    NeighborData result;
+
+    auto getFirst = [](const std::vector<const ldtk::Level*>& vec) -> std::string {
+        return vec.empty() ? "" : vec[0]->name;
+    };
+
+    result.north = getFirst(level.getNeighbours(ldtk::Dir::North));
+    result.south = getFirst(level.getNeighbours(ldtk::Dir::South));
+    result.east = getFirst(level.getNeighbours(ldtk::Dir::East));
+    result.west = getFirst(level.getNeighbours(ldtk::Dir::West));
+
+    for (const auto* neighbor : level.getNeighbours(ldtk::Dir::Overlap)) {
+        result.overlap.push_back(neighbor->name);
+    }
+
+    return result;
+}
+
+// -------------------- Entity Query Helpers --------------------
+
+struct EntityInfo {
+    std::string name;
+    std::string iid;
+    float x, y;
+    int grid_x, grid_y;
+    int width, height;
+    std::string layer;
+    std::vector<std::string> tags;
+};
+
+inline std::vector<EntityInfo> GetEntitiesByName(const std::string& levelName, const std::string& entityName) {
+    std::vector<EntityInfo> result;
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            if (ent.getName() == entityName) {
+                EntityInfo info;
+                info.name = ent.getName();
+                info.iid = ent.iid.str();
+                info.x = (float)ent.getPosition().x;
+                info.y = (float)ent.getPosition().y;
+                info.grid_x = ent.getGridPosition().x;
+                info.grid_y = ent.getGridPosition().y;
+                info.width = ent.getSize().x;
+                info.height = ent.getSize().y;
+                info.layer = layer.getName();
+                info.tags = ent.getTags();
+                result.push_back(info);
+            }
+        }
+    }
+    return result;
+}
+
+struct EntityPosition {
+    float x, y;
+    bool found;
+};
+
+inline EntityPosition GetEntityPositionByIID(const std::string& levelName, const std::string& iid) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            if (ent.iid.str() == iid) {
+                return EntityPosition{
+                    (float)ent.getPosition().x,
+                    (float)ent.getPosition().y,
+                    true
+                };
+            }
+        }
+    }
+    return EntityPosition{0, 0, false};
+}
+
+// Get raw Entity reference for field extraction (used by Lua bindings)
+inline const ldtk::Entity* GetEntityByIID(const std::string& levelName, const std::string& iid) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            if (ent.iid.str() == iid) {
+                return &ent;
+            }
+        }
+    }
+    return nullptr;
+}
+
 } // namespace ldtk_loader
 
 // ----------------------------------------------------

@@ -30,6 +30,7 @@ local CurrencyDisplay = require("ui.currency_display")
 local TagSynergyPanel = require("ui.tag_synergy_panel")
 local AvatarJokerStrip = require("ui.avatar_joker_strip")
 local LevelUpScreen = require("ui.level_up_screen")
+local ContentDebugPanel = require("ui.content_debug_panel")
 local LEVEL_UP_MODAL_DELAY = 0.5
 local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
@@ -3729,6 +3730,13 @@ end
 function initPlanningPhase()
     
     ensureShopSystemInitialized() -- make sure card defs carry metadata/tags before any cards spawn
+
+    -- Validate content definitions (runtime check)
+    local ok, ContentValidator = pcall(require, "tools.content_validator")
+    if ok and ContentValidator and ContentValidator.runtime_check then
+        ContentValidator.runtime_check()
+    end
+
     local CastFeedUI = require "ui.cast_feed_ui"
     CastFeedUI.init()
     SubcastDebugUI.init()
@@ -6601,6 +6609,11 @@ function debugUI()
     end
 
     renderCardSpawnerDebugUI()
+
+    -- Content Debug Panel (Jokers, Projectiles, Tags)
+    if ContentDebugPanel and ContentDebugPanel.render then
+        ContentDebugPanel.render()
+    end
 end
 
 cardsSoldInShop = {}

@@ -3,6 +3,11 @@
 CARD DEFINITIONS
 ================================================================================
 Centralized registry for all Action and Modifier cards.
+
+Tags (for joker synergies):
+  Elements: Fire, Ice, Lightning, Poison, Arcane, Holy, Void
+  Mechanics: Projectile, AoE, Hazard, Summon, Buff, Debuff
+  Playstyle: Mobility, Defense, Brute
 ]]
 
 local Cards = {}
@@ -26,6 +31,7 @@ Cards.TEST_PROJECTILE = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     weight = 1,
+    tags = { "Projectile" },
     test_label = "TEST\nprojectile",
 }
 
@@ -48,6 +54,7 @@ Cards.TEST_PROJECTILE_TIMER = {
     critical_hit_chance_modifier = 0,
     timer_ms = 1000,
     weight = 2,
+    tags = { "Projectile", "Arcane" },
     test_label = "TEST\nprojectile\ntimer",
 }
 
@@ -70,6 +77,7 @@ Cards.TEST_PROJECTILE_TRIGGER = {
     critical_hit_chance_modifier = 0,
     trigger_on_collision = true,
     weight = 2,
+    tags = { "Projectile", "Arcane" },
     test_label = "TEST\nprojectile\ntrigger",
 }
 
@@ -87,6 +95,7 @@ Cards.TEST_DAMAGE_BOOST = {
     multicast_count = 1,
     weight = 1,
     revisit_limit = 2,
+    tags = { "Buff", "Brute" },
     test_label = "TEST\ndamage\nboost",
 }
 
@@ -102,6 +111,7 @@ Cards.TEST_MULTICAST_2 = {
     critical_hit_chance_modifier = 0,
     multicast_count = 2,
     weight = 2,
+    tags = { "Arcane" },
     test_label = "TEST\nmulticast",
 }
 
@@ -124,6 +134,7 @@ Cards.ACTION_BASIC_PROJECTILE = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     weight = 1,
+    tags = { "Projectile" },
     test_label = "ACTION\nbasic\nprojectile",
 }
 
@@ -145,6 +156,7 @@ Cards.ACTION_FAST_ACCURATE_PROJECTILE = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 5,
     weight = 1,
+    tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nfast\naccurate\nprojectile",
 }
 
@@ -166,6 +178,7 @@ Cards.ACTION_SLOW_ORB = {
     lifetime_modifier = 1,
     critical_hit_chance_modifier = 0,
     weight = 2,
+    tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nslow\norb",
 }
 
@@ -187,6 +200,7 @@ Cards.ACTION_EXPLOSIVE_FIRE_PROJECTILE = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     weight = 3,
+    tags = { "Fire", "Projectile", "AoE" },
     test_label = "ACTION\nexplosive\nfire\nprojectile",
 }
 
@@ -209,6 +223,7 @@ Cards.ACTION_RICOCHET_PROJECTILE = {
     critical_hit_chance_modifier = 0,
     ricochet_count = 3,
     weight = 2,
+    tags = { "Projectile" },
     test_label = "ACTION\nricochet\nprojectile",
 }
 
@@ -231,6 +246,7 @@ Cards.ACTION_HEAVY_OBJECT_PROJECTILE = {
     critical_hit_chance_modifier = 0,
     gravity_affected = true,
     weight = 2,
+    tags = { "Projectile", "Brute" },
     test_label = "ACTION\nheavy\nobject\nprojectile",
 }
 
@@ -253,6 +269,7 @@ Cards.ACTION_VACUUM_PROJECTILE = {
     critical_hit_chance_modifier = 0,
     suction_strength = 10,
     weight = 3,
+    tags = { "Void", "Projectile", "AoE" },
     test_label = "ACTION\nvacuum\nprojectile",
 }
 
@@ -271,6 +288,7 @@ Cards.MOD_SEEKING = {
     multicast_count = 1,
     weight = 2,
     revisit_limit = 2,
+    tags = { "Arcane", "Projectile" },
     test_label = "MOD\nseeking",
 }
 
@@ -287,6 +305,7 @@ Cards.MOD_SPEED_UP = {
     multicast_count = 1,
     weight = 1,
     revisit_limit = 2,
+    tags = { "Buff", "Mobility" },
     test_label = "MOD\nspeed\nup",
 }
 
@@ -303,6 +322,7 @@ Cards.MOD_SPEED_DOWN = {
     multicast_count = 1,
     weight = 1,
     revisit_limit = 2,
+    tags = { "Debuff" },
     test_label = "MOD\nspeed\ndown",
 }
 
@@ -319,6 +339,7 @@ Cards.MOD_REDUCE_SPREAD = {
     multicast_count = 1,
     weight = 1,
     revisit_limit = 2,
+    tags = { "Buff", "Projectile" },
     test_label = "MOD\nreduce\nspread",
 }
 
@@ -335,6 +356,7 @@ Cards.MOD_DAMAGE_UP = {
     multicast_count = 1,
     weight = 2,
     revisit_limit = 2,
+    tags = { "Buff", "Brute" },
     test_label = "MOD\ndamage\nup",
 }
 
@@ -351,6 +373,7 @@ Cards.MOD_SHORT_LIFETIME = {
     multicast_count = 1,
     weight = 1,
     revisit_limit = 2,
+    tags = { "Debuff" },
     test_label = "MOD\nshort\nlifetime",
 }
 
@@ -368,6 +391,7 @@ Cards.MOD_TRIGGER_ON_HIT = {
     multicast_count = 1,
     weight = 2,
     revisit_limit = 1,
+    tags = { "Arcane" },
     test_label = "MOD\ntrigger\non\nhit",
 }
 
@@ -385,6 +409,7 @@ Cards.MOD_TRIGGER_TIMER = {
     multicast_count = 1,
     weight = 2,
     revisit_limit = 1,
+    tags = { "Arcane" },
     test_label = "MOD\ntrigger\ntimer",
 }
 
@@ -402,6 +427,7 @@ Cards.MOD_TRIGGER_ON_DEATH = {
     multicast_count = 1,
     weight = 2,
     revisit_limit = 1,
+    tags = { "Arcane", "Void" },
     test_label = "MOD\ntrigger\non\ndeath",
 }
 
@@ -418,6 +444,7 @@ Cards.MULTI_DOUBLE_CAST = {
     critical_hit_chance_modifier = 0,
     multicast_count = 2,
     weight = 2,
+    tags = { "Arcane" },
     test_label = "MULTI\ndouble\ncast",
 }
 
@@ -433,6 +460,7 @@ Cards.MULTI_TRIPLE_CAST = {
     critical_hit_chance_modifier = 0,
     multicast_count = 3,
     weight = 3,
+    tags = { "Arcane" },
     test_label = "MULTI\ntriple\ncast",
 }
 
@@ -449,6 +477,7 @@ Cards.MULTI_CIRCLE_FIVE_CAST = {
     multicast_count = 5,
     circular_pattern = true,
     weight = 4,
+    tags = { "Arcane", "AoE" },
     test_label = "MULTI\ncircle\nfive\ncast",
 }
 
@@ -462,6 +491,7 @@ Cards.UTIL_TELEPORT_TO_IMPACT = {
     recharge_time = 0,
     teleport_to_impact = true,
     weight = 3,
+    tags = { "Mobility", "Arcane" },
     test_label = "UTIL\nteleport\nto\nimpact",
 }
 
@@ -475,6 +505,7 @@ Cards.UTIL_HEAL_AREA = {
     cast_delay = 100,
     recharge_time = 0,
     weight = 2,
+    tags = { "Buff", "AoE", "Holy" },
     test_label = "UTIL\nheal\narea",
 }
 
@@ -488,6 +519,7 @@ Cards.UTIL_SHIELD_BUBBLE = {
     cast_delay = 150,
     recharge_time = 0,
     weight = 3,
+    tags = { "Defense", "Buff", "AoE" },
     test_label = "UTIL\nshield\nbubble",
 }
 
@@ -500,6 +532,7 @@ Cards.UTIL_SUMMON_ALLY = {
     cast_delay = 200,
     recharge_time = 0,
     weight = 4,
+    tags = { "Summon" },
     test_label = "UTIL\nsummon\nally",
 }
 
@@ -512,6 +545,7 @@ Cards.META_RECAST_FIRST = {
     recast_first_spell = true,
     multicast_count = 1,
     weight = 3,
+    tags = { "Arcane" },
     test_label = "META\nrecast\nfirst",
 }
 
@@ -523,6 +557,7 @@ Cards.META_APPLY_ALL_MODS_NEXT = {
     apply_all_mods_next = true,
     multicast_count = 1,
     weight = 3,
+    tags = { "Arcane" },
     test_label = "META\napply\nall\nmods\nnext",
 }
 
@@ -534,6 +569,7 @@ Cards.META_CAST_ALL_AT_ONCE = {
     cast_all_spells = true,
     multicast_count = 999,
     weight = 5,
+    tags = { "Arcane" },
     test_label = "META\ncast\nall\nat\nonce",
 }
 
@@ -545,6 +581,7 @@ Cards.META_CONVERT_WEIGHT_TO_DAMAGE = {
     convert_weight_to_damage = true,
     multicast_count = 1,
     weight = 3,
+    tags = { "Arcane", "Brute" },
     test_label = "META\nconvert\nweight\nto\ndamage",
 }
 
@@ -558,6 +595,7 @@ Cards.ACTION_ADD_MANA = {
     cast_delay = 100,
     recharge_time = 0,
     weight = 3,
+    tags = { "Arcane", "Buff" },
     test_label = "ACTION\nadd\nmana",
 }
 
@@ -575,6 +613,7 @@ Cards.ACTION_BOUNCE_BALL = {
     cast_delay = 120,
     recharge_time = 0,
     weight = 2,
+    tags = { "Projectile" },
     test_label = "ACTION\nbounce\nball",
 }
 
@@ -593,6 +632,7 @@ Cards.ACTION_BOUNCE_TRIGGER = {
     cast_delay = 150,
     recharge_time = 0,
     weight = 3,
+    tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nbounce\ntrigger",
 }
 
@@ -611,6 +651,7 @@ Cards.ACTION_SPIKE_HAZARD_TIMER = {
     cast_delay = 200,
     recharge_time = 0,
     weight = 3,
+    tags = { "Hazard", "AoE" },
     test_label = "ACTION\nspike\nhazard\ntimer",
 }
 
@@ -628,6 +669,7 @@ Cards.ACTION_FLYING_CROSS = {
     cast_delay = 150,
     recharge_time = 0,
     weight = 4,
+    tags = { "Holy", "Projectile" },
     test_label = "ACTION\nflying\ncross",
 }
 
@@ -646,6 +688,7 @@ Cards.ACTION_TELEPORT_BOLT = {
     cast_delay = 150,
     recharge_time = 0,
     weight = 4,
+    tags = { "Arcane", "Projectile", "Mobility" },
     test_label = "ACTION\nteleport\nbolt",
 }
 
@@ -664,6 +707,7 @@ Cards.ACTION_PROJECTILE_TIMER_CAST = {
     cast_delay = 120,
     recharge_time = 0,
     weight = 2,
+    tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nprojectile\ntimer\ncast",
 }
 
@@ -678,6 +722,7 @@ Cards.ACTION_SUMMON_MINION = {
     cast_delay = 200,
     recharge_time = 0,
     weight = 4,
+    tags = { "Summon" },
     test_label = "ACTION\nsummon\nminion",
 }
 
@@ -690,6 +735,7 @@ Cards.MOD_DOUBLE_SPELL = {
     mana_cost = 10,
     multicast_count = 2,
     weight = 2,
+    tags = { "Arcane" },
     test_label = "MOD\ndouble\nspell",
 }
 
@@ -701,6 +747,7 @@ Cards.MOD_TRIPLE_SPELL = {
     mana_cost = 15,
     multicast_count = 3,
     weight = 3,
+    tags = { "Arcane" },
     test_label = "MOD\ntriple\nspell",
 }
 
@@ -713,6 +760,7 @@ Cards.MOD_FORCE_CRIT = {
     force_crit_next = true,
     multicast_count = 1,
     weight = 2,
+    tags = { "Buff", "Brute" },
     test_label = "MOD\nforce\ncrit",
 }
 
@@ -725,6 +773,7 @@ Cards.MOD_BIG_SLOW = {
     size_multiplier = 2.0,
     speed_modifier = -3,
     weight = 2,
+    tags = { "Brute", "Projectile" },
     test_label = "MOD\nbig\nslow",
 }
 
@@ -737,6 +786,7 @@ Cards.MOD_IMMUNE_AND_ADD_CARD = {
     immunity_duration_ms = 2000,
     add_cards_to_block = 1,
     weight = 3,
+    tags = { "Defense", "Buff" },
     test_label = "MOD\nimmune\n+1card",
 }
 
@@ -748,6 +798,7 @@ Cards.MOD_HEAL_ON_HIT = {
     mana_cost = 6,
     heal_on_hit = 10,
     weight = 2,
+    tags = { "Buff", "Holy" },
     test_label = "MOD\nheal\non\nhit",
 }
 
@@ -759,6 +810,7 @@ Cards.MOD_RANDOM_MODIFIER = {
     mana_cost = 10,
     cast_random_modifier = true,
     weight = 3,
+    tags = { "Arcane" },
     test_label = "MOD\nrandom\nmodifier",
 }
 
@@ -770,6 +822,7 @@ Cards.MOD_AUTO_AIM = {
     mana_cost = 7,
     auto_aim = true,
     weight = 2,
+    tags = { "Arcane", "Projectile" },
     test_label = "MOD\nauto\naim",
 }
 
@@ -781,6 +834,7 @@ Cards.MOD_HOMING = {
     mana_cost = 6,
     homing_strength = 10,
     weight = 2,
+    tags = { "Arcane", "Projectile" },
     test_label = "MOD\nhoming",
 }
 
@@ -793,6 +847,7 @@ Cards.MOD_EXPLOSIVE = {
     make_explosive = true,
     radius_of_effect = 60,
     weight = 3,
+    tags = { "Fire", "AoE" },
     test_label = "MOD\nexplosive",
 }
 
@@ -805,6 +860,7 @@ Cards.MOD_PHASE_SLOW = {
     phase_in_out = true,
     speed_modifier = -3,
     weight = 2,
+    tags = { "Arcane", "Void" },
     test_label = "MOD\nphase\nslow",
 }
 
@@ -816,6 +872,7 @@ Cards.MOD_LONG_CAST = {
     mana_cost = 9,
     long_distance_cast = true,
     weight = 3,
+    tags = { "Arcane", "Projectile" },
     test_label = "MOD\nlong\ndistance\ncast",
 }
 
@@ -827,6 +884,7 @@ Cards.MOD_TELEPORT_CAST = {
     mana_cost = 12,
     teleport_cast_from_enemy = true,
     weight = 3,
+    tags = { "Arcane", "Mobility" },
     test_label = "MOD\nteleport\ncast",
 }
 
@@ -839,6 +897,7 @@ Cards.MOD_BLOOD_TO_DAMAGE = {
     health_sacrifice_ratio = 0.1,
     damage_bonus_ratio = 0.5,
     weight = 4,
+    tags = { "Brute", "Void" },
     test_label = "MOD\nblood\nto\ndamage",
 }
 
@@ -850,6 +909,7 @@ Cards.MOD_WAND_REFRESH = {
     mana_cost = 15,
     wand_refresh = true,
     weight = 3,
+    tags = { "Arcane" },
     test_label = "MOD\nwand\nrefresh",
 }
 
@@ -863,6 +923,7 @@ TriggerCards.TEST_TRIGGER_EVERY_N_SECONDS = {
     max_uses = -1,
     mana_cost = 0,
     weight = 0,
+    tags = {},
     test_label = "TRIGGER\nevery\nN\nseconds",
 }
 
@@ -872,6 +933,7 @@ TriggerCards.TEST_TRIGGER_ON_BUMP_ENEMY = {
     max_uses = -1,
     mana_cost = 0,
     weight = 0,
+    tags = { "Brute" },
     test_label = "TRIGGER\non\nbump\nenemy",
 }
 
@@ -881,6 +943,7 @@ TriggerCards.TEST_TRIGGER_ON_DASH = {
     max_uses = -1,
     mana_cost = 0,
     weight = 0,
+    tags = { "Mobility" },
     test_label = "TRIGGER\non\ndash",
 }
 
@@ -890,6 +953,7 @@ TriggerCards.TEST_TRIGGER_ON_DISTANCE_TRAVELED = {
     max_uses = -1,
     mana_cost = 0,
     weight = 0,
+    tags = { "Mobility" },
     test_label = "TRIGGER\non\ndistance\ntraveled",
 }
 

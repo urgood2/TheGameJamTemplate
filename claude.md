@@ -570,6 +570,84 @@ end
 
 ---
 
+## Content Creation (Cards, Jokers, Projectiles, Avatars)
+
+Full documentation in `docs/content-creation/`. Quick reference below.
+
+### Adding a Card
+
+Add to `assets/scripts/data/cards.lua`:
+
+```lua
+Cards.MY_FIREBALL = {
+    id = "MY_FIREBALL",
+    type = "action",           -- "action", "modifier", or "trigger"
+    mana_cost = 12,
+    damage = 25,
+    damage_type = "fire",
+    projectile_speed = 400,
+    lifetime = 2000,
+    radius_of_effect = 50,     -- AoE radius (0 = no AoE)
+    tags = { "Fire", "Projectile", "AoE" },
+    test_label = "MY\nfireball",
+}
+```
+
+### Adding a Joker
+
+Add to `assets/scripts/data/jokers.lua`:
+
+```lua
+my_joker = {
+    id = "my_joker",
+    name = "My Joker",
+    description = "+10 damage to Fire spells",
+    rarity = "Common",         -- Common, Uncommon, Rare, Epic, Legendary
+    calculate = function(self, context)
+        if context.event == "on_spell_cast" and context.tags and context.tags.Fire then
+            return { damage_mod = 10, message = "My Joker!" }
+        end
+    end
+}
+```
+
+### Adding a Projectile Preset
+
+Add to `assets/scripts/data/projectiles.lua`:
+
+```lua
+my_projectile = {
+    id = "my_projectile",
+    speed = 400,
+    damage_type = "fire",
+    movement = "straight",     -- straight, homing, arc, orbital
+    collision = "explode",     -- destroy, pierce, bounce, explode, pass_through, chain
+    explosion_radius = 60,
+    lifetime = 2000,
+    tags = { "Fire", "Projectile", "AoE" },
+}
+```
+
+### Standard Tags
+
+**Elements:** `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`
+**Mechanics:** `Projectile`, `AoE`, `Hazard`, `Summon`, `Buff`, `Debuff`
+**Playstyle:** `Mobility`, `Defense`, `Brute`
+
+### Validation & Testing
+
+```lua
+-- Validate all content (run in-game or standalone)
+dofile("assets/scripts/tools/content_validator.lua")
+
+-- ImGui Content Debug Panel shows:
+-- - Joker Tester: Add/remove jokers, trigger test events
+-- - Projectile Spawner: Spawn with live parameter tweaking
+-- - Tag Inspector: View tag counts and bonuses
+```
+
+---
+
 ## References
 
 - **Card Creation**: [gameplay.lua:577-1034](assets/scripts/core/gameplay.lua#L577-L1034)

@@ -570,6 +570,149 @@ end
 
 ---
 
+## Content Creation (Cards, Jokers, Projectiles, Avatars)
+
+Full documentation in `docs/content-creation/`. Quick reference below.
+
+### Adding a Card
+
+Add to `assets/scripts/data/cards.lua`:
+
+```lua
+Cards.MY_FIREBALL = {
+    id = "MY_FIREBALL",
+    type = "action",           -- "action", "modifier", or "trigger"
+    mana_cost = 12,
+    damage = 25,
+    damage_type = "fire",
+    projectile_speed = 400,
+    lifetime = 2000,
+    radius_of_effect = 50,     -- AoE radius (0 = no AoE)
+    tags = { "Fire", "Projectile", "AoE" },
+    test_label = "MY\nfireball",
+}
+```
+
+### Adding a Joker
+
+Add to `assets/scripts/data/jokers.lua`:
+
+```lua
+my_joker = {
+    id = "my_joker",
+    name = "My Joker",
+    description = "+10 damage to Fire spells",
+    rarity = "Common",         -- Common, Uncommon, Rare, Epic, Legendary
+    calculate = function(self, context)
+        if context.event == "on_spell_cast" and context.tags and context.tags.Fire then
+            return { damage_mod = 10, message = "My Joker!" }
+        end
+    end
+}
+```
+
+### Adding a Projectile Preset
+
+Add to `assets/scripts/data/projectiles.lua`:
+
+```lua
+my_projectile = {
+    id = "my_projectile",
+    speed = 400,
+    damage_type = "fire",
+    movement = "straight",     -- straight, homing, arc, orbital
+    collision = "explode",     -- destroy, pierce, bounce, explode, pass_through, chain
+    explosion_radius = 60,
+    lifetime = 2000,
+    tags = { "Fire", "Projectile", "AoE" },
+}
+```
+
+### Standard Tags
+
+**Elements:** `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`
+**Mechanics:** `Projectile`, `AoE`, `Hazard`, `Summon`, `Buff`, `Debuff`
+**Playstyle:** `Mobility`, `Defense`, `Brute`
+
+### Validation & Testing
+
+```lua
+-- Validate all content (run in-game or standalone)
+dofile("assets/scripts/tools/content_validator.lua")
+
+-- ImGui Content Debug Panel shows:
+-- - Joker Tester: Add/remove jokers, trigger test events
+-- - Projectile Spawner: Spawn with live parameter tweaking
+-- - Tag Inspector: View tag counts and bonuses
+```
+
+### Extending the Systems
+
+All content systems are designed to be extensible. You can add new mechanics without modifying core code.
+
+#### Adding New Tags
+Tags are just strings. Add to any card/projectile and react to them in jokers:
+```lua
+-- In card: tags = { "MyNewTag" }
+-- In joker: if context.tags and context.tags.MyNewTag then return { damage_mult = 1.5 } end
+```
+
+#### Tag Synergy Thresholds
+Tags grant bonuses at breakpoints (3/5/7/9 cards with that tag). Defined in `wand/tag_evaluator.lua`:
+
+```lua
+-- Add new tag with synergy breakpoints:
+local TAG_BREAKPOINTS = {
+    MyNewTag = {
+        [3] = { type = "stat", stat = "damage_pct", value = 10 },       -- +10% damage
+        [5] = { type = "proc", proc_id = "my_custom_proc" },            -- Trigger proc
+        [7] = { type = "stat", stat = "crit_chance_pct", value = 15 },  -- +15% crit
+        [9] = { type = "proc", proc_id = "my_ultimate_proc" },          -- Ultimate proc
+    },
+    -- ... existing tags
+}
+```
+
+**Bonus types:**
+- `stat`: Modifies player stat (e.g., `damage_pct`, `crit_chance_pct`)
+- `proc`: Triggers a proc effect (implement handler in combat system)
+
+**Changing thresholds:** Edit `DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }` in tag_evaluator.lua.
+
+**API:**
+```lua
+local TagEvaluator = require("wand.tag_evaluator")
+TagEvaluator.get_thresholds("Fire")     -- Returns sorted threshold list
+TagEvaluator.get_breakpoints()          -- Returns copy of all tag definitions
+```
+
+#### Adding New Joker Events
+Event names are strings. Emit from any code, jokers react automatically:
+```lua
+local JokerSystem = require("wand.joker_system")
+local effects = JokerSystem.trigger_event("on_dodge", { player = player })
+```
+
+#### Adding New Card Behaviors
+Use BehaviorRegistry for complex logic:
+```lua
+local BehaviorRegistry = require("wand.card_behavior_registry")
+BehaviorRegistry.register("my_behavior", function(ctx) ... end)
+-- In card: behavior_id = "my_behavior"
+```
+
+#### Implementation Status Notes
+| System | Fully Implemented | Needs Implementation |
+|--------|------------------|---------------------|
+| Cards | ✅ All fields work | - |
+| Jokers | ✅ Events, aggregation | - |
+| Projectiles | ✅ Movement, collision | - |
+| Avatars | ✅ Unlock conditions | ⚠️ Effect application |
+
+See `docs/content-creation/` for detailed extensibility guides.
+
+---
+
 ## References
 
 - **Card Creation**: [gameplay.lua:577-1034](assets/scripts/core/gameplay.lua#L577-L1034)

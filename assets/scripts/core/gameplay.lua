@@ -1366,6 +1366,7 @@ function createNewCard(id, x, y, gameStateToApply)
     cardScript.category = category
     cardScript.cardID = id or "unknown"
     cardScript.selected = false
+    cardScript.skewSeed = math.random() * 10000
 
     -- copy over card definition data if it exists
     if not id then
@@ -1670,6 +1671,21 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_voucher")
     -- shaderPipelineComp:addPass("3d_skew_gold_seal")
     shaderPipelineComp:addPass("3d_skew_polychrome")
+    do
+        local passes = shaderPipelineComp.passes
+        local idx = passes and #passes
+        if idx and idx >= 1 then
+            local pass = passes[idx]
+            if pass and pass.shaderName == "3d_skew_polychrome" then
+                local seed = cardScript.skewSeed or math.random() * 10000
+                pass.customPrePassFunction = function()
+                    if globalShaderUniforms then
+                        globalShaderUniforms:set("3d_skew_polychrome", "rand_seed", seed)
+                    end
+                end
+            end
+        end
+    end
     -- shaderPipelineComp:addPass("3d_polychrome")
     -- shaderPipelineComp:addPass("material_card_overlay_new_dissolve")
 

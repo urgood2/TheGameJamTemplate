@@ -2629,6 +2629,24 @@ function handleNewDay()
   )
 end
 
+local TOOLTIP_FONT_NAME = "tooltip"
+local TOOLTIP_FONT_PATH = "fonts/en/JetBrainsMonoNerdFont-Regular.ttf"
+local TOOLTIP_FONT_SIZE = 44
+
+-- Ensure the named tooltip font is available and return it if so.
+function ensureTooltipFont()
+  if not (localization and localization.loadNamedFont) then
+    return nil
+  end
+  if not (localization.hasNamedFont and localization.hasNamedFont(TOOLTIP_FONT_NAME)) then
+    localization.loadNamedFont(TOOLTIP_FONT_NAME, TOOLTIP_FONT_PATH, TOOLTIP_FONT_SIZE)
+  end
+  if localization.hasNamedFont and localization.hasNamedFont(TOOLTIP_FONT_NAME) and localization.getNamedFont then
+    return localization.getNamedFont(TOOLTIP_FONT_NAME)
+  end
+  return nil
+end
+
 -- Conveniene function to drive your tooltip
 function showTooltip(titleText, bodyText)
   local titleEnt = globals.ui.tooltipTitleText
@@ -2638,6 +2656,18 @@ function showTooltip(titleText, bodyText)
   if not titleEnt or not bodyEnt or not boxEnt then
     error("showTooltip: Tooltip entities are not set up correctly!")
     return
+  end
+
+  local tooltipFont = ensureTooltipFont()
+  if tooltipFont then
+    local titleComp = component_cache.get(titleEnt, TextSystem.Text)
+    if titleComp then
+      titleComp.fontData = tooltipFont
+    end
+    local bodyComp = component_cache.get(bodyEnt, TextSystem.Text)
+    if bodyComp then
+      bodyComp.fontData = tooltipFont
+    end
   end
 
   -- 1) set the texts

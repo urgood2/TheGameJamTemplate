@@ -1813,11 +1813,15 @@ function ui_defs.generateTooltipUI()
     globals.ui.tooltipBodyText = tooltipBodyText.config.object
 
     -- Apply tooltip font if available to avoid per-frame fallback checks
-    local tooltipFont = (localization and localization.hasNamedFont and localization.hasNamedFont("tooltip"))
-        and localization.getNamedFont("tooltip")
+    local tooltipFont = ensureTooltipFont and ensureTooltipFont()
+    if not tooltipFont and localization and localization.hasNamedFont and localization.hasNamedFont("tooltip") and localization.getNamedFont then
+        tooltipFont = localization.getNamedFont("tooltip")
+    end
     if tooltipFont then
-        registry:get(tooltipTitleText.config.object, TextSystem.Text).fontData = tooltipFont
-        registry:get(tooltipBodyText.config.object, TextSystem.Text).fontData = tooltipFont
+        local titleTextComp = registry:get(tooltipTitleText.config.object, TextSystem.Text)
+        titleTextComp.fontData = tooltipFont
+        local bodyTextComp = registry:get(tooltipBodyText.config.object, TextSystem.Text)
+        bodyTextComp.fontData = tooltipFont
     end
     
     -- make vertical container for the tooltip

@@ -68,6 +68,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - add other versions of jetbrains font. also 
 
+- dropped frame issue with imgui & graphics commands lua side.
+
 - get things ready to add content.
 
 - sometimes the tutorial buttons to translucent, sometimes solid.

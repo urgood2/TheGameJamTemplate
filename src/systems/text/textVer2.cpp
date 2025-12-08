@@ -1659,7 +1659,11 @@ void setText(entt::entity textEntity, const std::string &text) {
   textComponent.rawText = text;
   textComponent.renderScale = 1.0f;
 
-  textComponent.fontData = localization::getFontData();
+  // Preserve existing font - only set default if no font was configured
+  // This allows custom fonts (e.g., tooltip font) to persist across setText calls
+  if (textComponent.fontData.font.texture.id == 0) {
+    textComponent.fontData = localization::getFontData();
+  }
 
   clearAllEffects(textEntity);
   deleteCharacters(textEntity);

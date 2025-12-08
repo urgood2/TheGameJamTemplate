@@ -53,6 +53,7 @@ local tooltipStyle = {
     muted = safeColor("gray", "light_gray"),
     label = safeColor("apricot_cream", "white"),
     value = safeColor("white", "white"),
+    fontName = "tooltip",
     padding = 10,
     outlineThickness = 2,
     maxWidth = 320,
@@ -93,6 +94,13 @@ TagSynergyPanel.layout = {
     marginTop = 120,
     panelWidth = 360
 }
+
+if localization and localization.loadNamedFont then
+    local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
+    if not alreadyLoaded then
+        localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 44)
+    end
+end
 
 local function clamp01(v)
     if v < 0 then return 0 end
@@ -223,6 +231,7 @@ local function makeLabelNode(text, color, fontSize)
             dsl.text(text, {
                 color = color or tooltipStyle.label,
                 fontSize = fontSize or 12,
+                fontName = tooltipStyle.fontName,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
             })
         }
@@ -236,15 +245,16 @@ local function makeValueNode(text, color, fontSize)
         - (tooltipStyle.padding or 0) * 2
         - (tooltipStyle.innerPadding or 0) * 2
     local lines = wrapTextToWidth(text, maxWidth, fontSize)
-    local children = {}
-    for _, line in ipairs(lines) do
-        children[#children + 1] = dsl.text(line, {
-            color = color or tooltipStyle.value,
-            fontSize = fontSize or 12,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
-        })
-    end
-    return dsl.vbox {
+        local children = {}
+        for _, line in ipairs(lines) do
+            children[#children + 1] = dsl.text(line, {
+                color = color or tooltipStyle.value,
+                fontSize = fontSize or 12,
+                fontName = tooltipStyle.fontName,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+            })
+        end
+        return dsl.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             padding = 0,

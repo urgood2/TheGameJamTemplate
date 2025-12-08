@@ -189,6 +189,8 @@ local function hideCardTooltip(entity)
 end
 local playerStatsTooltipEntity = nil
 local detailedStatsTooltipEntity = nil
+local playerStatsTooltipVersion = 0
+local detailedStatsTooltipVersion = 0
 local playerStatsSignalRegistered = false
 local makePlayerStatsTooltip
 local testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
@@ -264,6 +266,7 @@ local tooltipStyle = {
     -- Named font for tooltip text (loaded below)
     fontName = "tooltip"
 }
+local TOOLTIP_FONT_VERSION = 2
 
 -- Initialize tooltip font
 -- Load JetBrains Mono Nerd Font for tooltips at startup
@@ -301,7 +304,7 @@ local function makeTooltipTextDef(text, opts)
             text = tostring(text),
             color = opts.color or tooltipStyle.valueColor,
             fontSize = opts.fontSize or tooltipStyle.fontSize,
-            fontName = tooltipStyle.fontName,
+            fontName = opts.fontName or tooltipStyle.fontName,
             align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             shadow = opts.shadow or false
         }
@@ -320,6 +323,7 @@ local function makeTooltipPill(text, opts)
         color = opts.color or tooltipStyle.labelColor,
         fontSize = opts.fontSize,
         align = opts.textAlign,
+        fontName = opts.fontName or tooltipStyle.fontName,
         shadow = opts.shadow
     }
     return dsl.hbox {
@@ -339,6 +343,7 @@ local function makeTooltipValueBox(text, opts)
         color = opts.color or tooltipStyle.valueColor,
         fontSize = opts.fontSize,
         align = opts.textAlign or opts.align,
+        fontName = opts.fontName or tooltipStyle.fontName,
         shadow = opts.shadow
     }
     return dsl.hbox {
@@ -360,6 +365,34 @@ local function makeTooltipRow(label, value, opts)
             makeTooltipValueBox(value, opts.valueOpts)
         }
     }
+end
+
+local function destroyTooltipEntity(eid)
+    if eid and entity_cache.valid(eid) then
+        registry:destroy(eid)
+    end
+end
+
+local function cacheFetch(cache, key)
+    local entry = cache[key]
+    if not entry then return nil end
+    local eid = entry.eid or entry
+    local version = entry.version or 0
+    if (version ~= TOOLTIP_FONT_VERSION) or not entity_cache.valid(eid) then
+        destroyTooltipEntity(eid)
+        cache[key] = nil
+        return nil
+    end
+    return eid
+end
+
+local function cacheStore(cache, key, eid)
+    local existing = cache[key]
+    if existing then
+        destroyTooltipEntity(existing.eid or existing)
+    end
+    cache[key] = { eid = eid, version = TOOLTIP_FONT_VERSION }
+    return eid
 end
 
 -- Prevent tooltip boxes from animating from size 0 by snapping visual dimensions immediately.
@@ -3084,10 +3117,11 @@ function ensureCardTooltip(card_def, opts)
         cache = card_tooltip_disabled_cache
     end
 
-    if cache[cardId] then return cache[cardId] end
+    local cached = cacheFetch(cache, cardId)
+    if cached then return cached end
 
     local tooltip = makeCardTooltip(card_def, opts)
-    cache[cardId] = tooltip
+    cacheStore(cache, cardId, tooltip)
 
     layer_order_system.assignZIndexToEntity(
         tooltip,
@@ -3109,6 +3143,7 @@ local function destroyPlayerStatsTooltip()
         registry:destroy(playerStatsTooltipEntity)
     end
     playerStatsTooltipEntity = nil
+    playerStatsTooltipVersion = 0
 end
 
 local function collectPlayerStatsSnapshot()
@@ -3202,7 +3237,7 @@ end
 
 
 local function ensurePlayerStatsTooltip()
-    if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) then
+    if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) and playerStatsTooltipVersion == TOOLTIP_FONT_VERSION then
         return playerStatsTooltipEntity
     end
 
@@ -3212,6 +3247,7 @@ local function ensurePlayerStatsTooltip()
     if not tooltip then return nil end
 
     playerStatsTooltipEntity = tooltip
+    playerStatsTooltipVersion = TOOLTIP_FONT_VERSION
 
     layer_order_system.assignZIndexToEntity(
         tooltip,
@@ -3226,6 +3262,7 @@ local function destroyDetailedStatsTooltip()
         registry:destroy(detailedStatsTooltipEntity)
     end
     detailedStatsTooltipEntity = nil
+    detailedStatsTooltipVersion = 0
 end
 
 local function buildTwoColumnBody(rows, opts)
@@ -3473,7 +3510,7 @@ local function makeDetailedStatsTooltip(snapshot)
 end
 
 local function ensureDetailedStatsTooltip()
-    if detailedStatsTooltipEntity and entity_cache.valid(detailedStatsTooltipEntity) then
+    if detailedStatsTooltipEntity and entity_cache.valid(detailedStatsTooltipEntity) and detailedStatsTooltipVersion == TOOLTIP_FONT_VERSION then
         return detailedStatsTooltipEntity
     end
 
@@ -3483,6 +3520,7 @@ local function ensureDetailedStatsTooltip()
     if not tooltip then return nil end
 
     detailedStatsTooltipEntity = tooltip
+    detailedStatsTooltipVersion = TOOLTIP_FONT_VERSION
 
     layer_order_system.assignZIndexToEntity(
         tooltip,
@@ -4477,16 +4515,16 @@ function initPlanningPhase()
 
     -- make tooltip for each wand in WandEngine.wand_defs
     for id, wandDef in pairs(WandEngine.wand_defs) do
-        wand_tooltip_cache[wandDef.id] = makeWandTooltip(wandDef)
+        local tooltip = cacheStore(wand_tooltip_cache, wandDef.id, makeWandTooltip(wandDef))
 
         -- z_orders
         layer_order_system.assignZIndexToEntity(
-            wand_tooltip_cache[wandDef.id],
+            tooltip,
             z_orders.ui_tooltips
         )
 
         -- disable by default
-        clear_state_tags(wand_tooltip_cache[wandDef.id])
+        clear_state_tags(tooltip)
     end
 
 
@@ -8691,13 +8729,16 @@ function initPlanningUI()
                     local wandDef = thisBoardSet and thisBoardSet.wandDef
                     if not wandDef then return end
 
-                    for id, tooltipEntity in pairs(wand_tooltip_cache) do
+                    for id, entry in pairs(wand_tooltip_cache) do
+                        local tooltipEntity = cacheFetch(wand_tooltip_cache, id)
+                        if not tooltipEntity then goto continue end
                         if id == wandDef.id then
                             positionTooltipRightOfEntity(tooltipEntity, anchorBox, { gap = 10 })
                             add_state_tag(tooltipEntity, WAND_TOOLTIP_STATE)
                         else
                             clear_state_tags(tooltipEntity)
                         end
+                        ::continue::
                     end
 
                     activate_state(WAND_TOOLTIP_STATE)

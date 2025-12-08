@@ -54,6 +54,8 @@ function dsl.text(text, opts)
             tooltip         = opts.tooltip,
             hover           = opts.hover,
             fontSize        = opts.fontSize,
+            fontName        = opts.fontName,
+            shadow          = opts.shadow,
         }
     }
 end

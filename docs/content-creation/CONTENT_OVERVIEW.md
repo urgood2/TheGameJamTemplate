@@ -56,6 +56,19 @@ my_projectile = {
 }
 ```
 
+## ID Naming Conventions
+
+Different content types use different naming conventions for IDs and table keys:
+
+| Content Type | ID Convention | Example |
+|--------------|---------------|---------|
+| Cards | SCREAMING_SNAKE_CASE | `Cards.FIREBALL`, `id = "FIREBALL"` |
+| Jokers | snake_case | `pyromaniac = { id = "pyromaniac" }` |
+| Projectiles | snake_case | `basic_bolt = { id = "basic_bolt" }` |
+| Avatars | snake_case | `fire_mage = { name = "Fire Mage" }` |
+
+**Important:** The table key should match the `id` field (or `name` for avatars) to avoid validation warnings.
+
 ## Testing Your Content
 
 ### Validation

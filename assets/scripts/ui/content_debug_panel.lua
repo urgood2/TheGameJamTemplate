@@ -16,6 +16,7 @@ local ContentDebugPanel = {}
 local JokerSystem = nil
 local Projectiles = nil
 local ProjectileSystem = nil
+local component_cache = nil
 
 -- State
 local state = {
@@ -90,6 +91,10 @@ function ContentDebugPanel.init()
     -- Try to load ProjectileSystem
     local ok4, ps = pcall(require, "combat.projectile_system")
     if ok4 then ProjectileSystem = ps end
+
+    -- Try to load component_cache
+    local ok5, cc = pcall(require, "core.component_cache")
+    if ok5 then component_cache = cc end
 
     state.initialized = true
 end

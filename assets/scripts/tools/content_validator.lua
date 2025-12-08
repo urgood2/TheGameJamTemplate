@@ -8,6 +8,10 @@ Validates content definitions (cards, jokers, projectiles, avatars) for:
 - Known tag names
 - ID consistency
 
+Note: This validator does NOT enforce a strict schema for all field names to
+allow for extensibility. Custom fields (e.g., new card behaviors, projectile
+properties) are intentionally allowed. Only critical fields are validated.
+
 Usage:
   Standalone: dofile("assets/scripts/tools/content_validator.lua")
   Runtime: require("tools.content_validator").validate_all(true) -- warnings only

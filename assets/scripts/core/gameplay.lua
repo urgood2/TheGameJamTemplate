@@ -3732,6 +3732,9 @@ function initPlanningPhase()
     ensureShopSystemInitialized() -- make sure card defs carry metadata/tags before any cards spawn
 
     -- Validate content definitions (runtime check)
+    -- Note: Validation errors are non-blocking in dev builds to allow iteration.
+    -- Errors are logged to console for debugging. In production, consider making
+    -- validation failures block initialization if content integrity is critical.
     local ok, ContentValidator = pcall(require, "tools.content_validator")
     if ok and ContentValidator and ContentValidator.runtime_check then
         local validation_passed = ContentValidator.runtime_check()

@@ -152,7 +152,7 @@ local function createSprite(entry, defaultSprite, accent)
 
     local spriteId = entry.sprite or defaultSprite
     local entity = animation_system.createAnimatedObjectWithTransform(spriteId, true, 0, 0, nil, false)
-    if not entity or entity == entt_null or not (entity_cache.valid and entity_cache.valid(entity)) then
+    if not ensure_entity(entity) then
         return nil
     end
 

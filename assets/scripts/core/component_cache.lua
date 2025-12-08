@@ -65,7 +65,10 @@ function component_cache.begin_frame()
 end
 
 function component_cache.end_frame()
-    component_cache._frame_batched = false
+    -- Note: We intentionally keep _frame_batched = true until the next begin_frame().
+    -- This avoids redundant GetFrameCount() calls during draw phase or other code
+    -- that runs after update() but still in the same frame.
+    -- The cache will be properly cleared by begin_frame() at the start of the next frame.
 end
 
 ------------------------------------------------------------

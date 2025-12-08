@@ -84,7 +84,7 @@ end
 
 local function destroyIcon(icon)
     if not icon or not registry or not registry.valid then return end
-    if icon.entity and icon.entity ~= entt_null and entity_cache.valid(icon.entity) then
+    if ensure_entity(icon.entity) then
         registry:destroy(icon.entity)
     end
 end

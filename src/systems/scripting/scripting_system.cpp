@@ -104,7 +104,16 @@ namespace scripting
                 }
             }
         }
+
+        // Clear hooks before abandoning to prevent dangling references
+        script.hooks.update = sol::lua_nil;
+        script.hooks.on_collision = sol::lua_nil;
+
+        // Abandon the table reference, then set to nil for safety
+        // This ensures the ScriptComponent destructor won't try to clean up
+        // an already-abandoned reference
         script.self.abandon();
+        script.self = sol::lua_nil;
     }
 
     /**
@@ -119,7 +128,8 @@ namespace scripting
     void script_system_update(entt::registry &registry, float delta_time)
     {
         ZONE_SCOPED("scripting::script_system_update");
-        static auto view = registry.view<ScriptComponent>();
+        // Note: Don't use static view - it can become stale if registry structure changes
+        auto view = registry.view<ScriptComponent>();
         // for (auto [entity, script] : view.each()) {
             
         //     ZONE_SCOPED("scripting::script_system_update - per entity");

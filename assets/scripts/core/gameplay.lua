@@ -938,6 +938,10 @@ function createNewTriggerSlotCard(id, x, y, gameStateToApply)
     local card = createNewCard(nil, x, y, gameStateToApply)
 
     local cardScript = getScriptTableFromEntityID(card)
+    if not cardScript then
+        log_error("createNewTriggerSlotCard: Failed to get script for card entity")
+        return card
+    end
 
     WandEngine.apply_card_properties(cardScript, WandEngine.trigger_card_defs[id] or {})
 
@@ -1179,7 +1183,7 @@ function setUpCardAndWandStatDisplay()
         local isHoveredOverCard = false
 
 
-        if (globals.inputState.cursor_hovering_target and globals.inputState.cursor_hovering_target ~= entt_null and entity_cache.valid(globals.inputState.cursor_hovering_target)) then
+        if ensure_entity(globals.inputState.cursor_hovering_target) then
             for cardEid, cardScript in pairs(cards) do
                 if cardEid == globals.inputState.cursor_hovering_target then
                     isHoveredOverCard = true
@@ -1199,6 +1203,7 @@ function setUpCardAndWandStatDisplay()
         if isHoveredOverCard then
             -- if mousing over card, show card stats.
             local cardScript = getScriptTableFromEntityID(hovered)
+            if not cardScript then return end
 
             -- draw:
             -- id = "TEST_PROJECTILE_TIMER",
@@ -2492,7 +2497,7 @@ function fireActionCardsInBoard(boardEntityID)
     local pulseColorRampTable = palette.ramp_quantized("blue", "white", #board.cards)
     local index = 1
     for _, cardEid in ipairs(board.cards) do
-        if cardEid and cardEid ~= entt_null and entity_cache.valid(cardEid) then
+        if ensure_entity(cardEid) then
             local cardScript = getScriptTableFromEntityID(cardEid)
             if cardScript then
                 timer.after(
@@ -2637,12 +2642,12 @@ function setUpLogicTimers()
             if not is_state_active(PLANNING_STATE) then return end
 
             for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
-                if triggerBoardID and triggerBoardID ~= entt_null and entity_cache.valid(triggerBoardID) then
+                if ensure_entity(triggerBoardID) then
                     local triggerBoard = boards[triggerBoardID]
                     -- log_debug("checking trigger board:", triggerBoardID, "contains", triggerBoard and triggerBoard.cards and #triggerBoard.cards or 0, "cards")
                     if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
                         local triggerCardEid = triggerBoard.cards[1]
-                        if triggerCardEid and triggerCardEid ~= entt_null and entity_cache.valid(triggerCardEid) then
+                        if ensure_entity(triggerCardEid) then
                             local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
 
                             -- we have a trigger card in the board. we need to assemble a deck of action cards from the action board, and execute them based on the trigger type.
@@ -3923,6 +3928,7 @@ function initPlanningPhase()
             transform.InjectDynamicMotionDefault(e)
 
             local script = getScriptTableFromEntityID(e)
+            if not script then return end
 
             -- first check if the card belongs to one of the boards in the current board set.
             if not board_sets or #board_sets == 0 then return end
@@ -4019,8 +4025,12 @@ function initPlanningPhase()
                     log_debug("Planning phase nav: trigger L is down, swapping left")
                     -- get the board of the current focused entity
                     local selectedCardScript = getScriptTableFromEntityID(controller_focused_entity)
-                    local boardScript = getScriptTableFromEntityID(selectedCardScript.currentBoardEntity)
-                    boardScript:swapCardWithNeighbor(controller_focused_entity, -1)
+                    if selectedCardScript and selectedCardScript.currentBoardEntity then
+                        local boardScript = getScriptTableFromEntityID(selectedCardScript.currentBoardEntity)
+                        if boardScript and boardScript.swapCardWithNeighbor then
+                            boardScript:swapCardWithNeighbor(controller_focused_entity, -1)
+                        end
+                    end
                 else
                     log_debug("Planning phase nav: left")
                     controller_nav.navigate("planning-phase", "L")
@@ -4031,8 +4041,12 @@ function initPlanningPhase()
 
                     -- get the board of the current focused entity
                     local selectedCardScript = getScriptTableFromEntityID(controller_focused_entity)
-                    local boardScript = getScriptTableFromEntityID(selectedCardScript.currentBoardEntity)
-                    boardScript:swapCardWithNeighbor(controller_focused_entity, 1)
+                    if selectedCardScript and selectedCardScript.currentBoardEntity then
+                        local boardScript = getScriptTableFromEntityID(selectedCardScript.currentBoardEntity)
+                        if boardScript and boardScript.swapCardWithNeighbor then
+                            boardScript:swapCardWithNeighbor(controller_focused_entity, 1)
+                        end
+                    end
                 else
                     log_debug("Planning phase nav: right")
                     controller_nav.navigate("planning-phase", "R")
@@ -4079,7 +4093,7 @@ function initPlanningPhase()
 
     -- deal the cards out with dely & sound.
     for _, card in ipairs(cardsToChange) do
-        if card and card ~= entt_null and entity_cache.valid(card) then
+        if ensure_entity(card) then
             -- set the location of each card to an offscreen pos
             local t = component_cache.get(card, Transform)
             if t then
@@ -4093,7 +4107,7 @@ function initPlanningPhase()
 
     local cardDelay = 4.0 -- start X seconds after game init
     for _, card in ipairs(cardsToChange) do
-        if card and card ~= entt_null and entity_cache.valid(card) then
+        if ensure_entity(card) then
             timer.after(cardDelay, function()
                 local t = component_cache.get(card, Transform)
 
@@ -4723,6 +4737,7 @@ function initCombatSystem()
     -- store in player entity for easy access later
     assert(survivorEntity and entity_cache.valid(survivorEntity), "Survivor entity is not valid in combat system init!")
     local playerScript        = getScriptTableFromEntityID(survivorEntity)
+    assert(playerScript, "Failed to get script table for survivor entity in combat system init!")
     playerScript.combatTable  = hero
     combatActorToEntity[hero] = survivorEntity
 
@@ -7251,7 +7266,7 @@ end
 local function collectPlanningPeekTargets()
     local targets = {}
     local function add(eid)
-        if eid and eid ~= entt_null and entity_cache.valid(eid) then
+        if ensure_entity(eid) then
             table.insert(targets, eid)
         end
     end

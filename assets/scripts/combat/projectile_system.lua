@@ -1598,7 +1598,7 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     local lifetime = projectileScript.projectileLifetime
     local transform = component_cache.get(projectileEntity, Transform)
 
-    local otherIsValid = otherEntity and otherEntity ~= entt_null and entity_cache.valid(otherEntity)
+    local otherIsValid = ensure_entity(otherEntity)
     local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
     local isDamageable = targetGameObject ~= nil
     local now = os.clock()

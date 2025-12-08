@@ -145,9 +145,7 @@ function node:destroy_when(condition, opts)
   local timeout_handle = nil
 
   local function do_destroy()
-    if self._eid and (registry.valid and entity_cache.valid(self._eid) or true) then
-      -- If your binding lacks entity_cache.valid, the 'or true' makes this unconditional.
-      -- Remove that 'or true' if you have a working :valid.
+    if ensure_entity(self._eid) then
       registry:destroy(self._eid)
       self._eid = nil
     end

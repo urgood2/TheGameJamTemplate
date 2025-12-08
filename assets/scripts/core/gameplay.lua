@@ -2648,8 +2648,6 @@ function setUpLogicTimers()
                     if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
                         local triggerCardEid = triggerBoard.cards[1]
                         if ensure_entity(triggerCardEid) then
-                            local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
-
                             -- we have a trigger card in the board. we need to assemble a deck of action cards from the action board, and execute them based on the trigger type.
 
                             -- for now, just make sure that timer is running.
@@ -2675,8 +2673,6 @@ function setUpLogicTimers()
                                             return
                                         end
 
-                                        local triggerBoardScript = getScriptTableFromEntityID(currentSet
-                                            .trigger_board_id)
                                         log_debug("trigger_simul_timer fired for action board:", actionBoardID)
                                         log_debug("action board has", #actionBoard.cards, "cards")
                                         log_debug("Now simulating wand", currentSet.wandDef.id) -- wand def is stored in the set
@@ -4170,8 +4166,6 @@ function initPlanningPhase()
     --     end
     -- end
 
-
-    local testTable = getScriptTableFromEntityID(card1)
 
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()

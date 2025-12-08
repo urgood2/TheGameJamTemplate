@@ -2,6 +2,18 @@
 
 Projectile presets define reusable projectile configurations. Instead of specifying speed, movement, and collision behavior inline every time, you define a preset once and reference it from cards.
 
+## Implementation Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Preset definitions | ✅ Implemented | `data/projectiles.lua` |
+| Movement types | ✅ Implemented | straight, homing, arc, orbital |
+| Collision types | ✅ Implemented | destroy, pierce, bounce, explode, pass_through, chain |
+| **Custom movement** | ✅ Extensible | Via `movement = "custom"` + `update_func` |
+| **Custom fields** | ✅ Extensible | Any field name works |
+
+The projectile system is **fully extensible**. You can add custom fields and even define custom movement/collision functions.
+
 ## Quick Start
 
 Add to `assets/scripts/data/projectiles.lua`:
@@ -376,3 +388,127 @@ The projectile system will merge card damage with preset behavior.
    collision = "destroy",
    lifetime = 2000,
    ```
+
+## Extending the System
+
+### Adding Custom Fields
+
+You can add any field to a projectile preset. The spawner passes the full definition:
+
+```lua
+my_custom_proj = {
+    id = "my_custom_proj",
+    speed = 400,
+    movement = "straight",
+    collision = "destroy",
+    lifetime = 2000,
+
+    -- Custom fields
+    my_special_flag = true,
+    custom_data = { intensity = 5 },
+    tags = { "Projectile" },
+}
+```
+
+Access in your collision/update code:
+```lua
+if projectile.my_special_flag then
+    -- Do something special
+end
+```
+
+### Custom Movement Functions
+
+For movement patterns not covered by built-in types, use `movement = "custom"`:
+
+```lua
+spiral_projectile = {
+    id = "spiral_projectile",
+    speed = 300,
+    movement = "custom",
+    collision = "destroy",
+    lifetime = 3000,
+
+    -- Custom update function
+    update_func = function(self, dt)
+        -- self.age = time since spawn
+        -- self.x, self.y = current position
+        -- self.vx, self.vy = current velocity
+
+        local radius = 20 + self.age * 0.1
+        local angle = self.age * 5
+        self.x = self.x + math.cos(angle) * radius * dt
+        self.y = self.y + math.sin(angle) * radius * dt
+    end,
+
+    tags = { "Arcane", "Projectile" },
+}
+```
+
+### Adding New Movement Types
+
+To add a new built-in movement type:
+
+1. Add the handler in `combat/projectile_system.lua`:
+   ```lua
+   local movement_handlers = {
+       straight = function(proj, dt) ... end,
+       homing = function(proj, dt) ... end,
+       -- Add yours:
+       zigzag = function(proj, dt)
+           proj.zigzag_timer = (proj.zigzag_timer or 0) + dt
+           if proj.zigzag_timer > 0.2 then
+               proj.vy = -proj.vy
+               proj.zigzag_timer = 0
+           end
+       end,
+   }
+   ```
+
+2. Use it in presets:
+   ```lua
+   movement = "zigzag",
+   ```
+
+### Adding New Collision Types
+
+To add a new collision type:
+
+1. Add the handler in `combat/projectile_system.lua`:
+   ```lua
+   local collision_handlers = {
+       destroy = function(proj, target) ... end,
+       pierce = function(proj, target) ... end,
+       -- Add yours:
+       split = function(proj, target)
+           -- Spawn 3 smaller projectiles
+           for i = 1, 3 do
+               spawn_child_projectile(proj, i)
+           end
+           destroy_projectile(proj)
+       end,
+   }
+   ```
+
+2. Use it in presets:
+   ```lua
+   collision = "split",
+   split_count = 3,  -- Custom field for your handler
+   ```
+
+### Adding New Damage Types
+
+Damage types are strings. Add new ones freely:
+
+```lua
+damage_type = "chaos",
+```
+
+Then handle in your damage calculation:
+```lua
+if damage_type == "chaos" then
+    -- Random element, ignores resistances, etc.
+end
+```
+
+Standard types: `physical`, `fire`, `ice`, `lightning`, `poison`, `arcane`, `holy`, `void`

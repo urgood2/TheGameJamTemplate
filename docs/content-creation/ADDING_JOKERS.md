@@ -2,6 +2,18 @@
 
 Jokers are passive artifacts that react to game events and modify calculations. They're inspired by Balatro's Joker system - global observers that trigger on spell casts, damage calculations, and other events.
 
+## Implementation Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Joker definitions | ✅ Implemented | `data/jokers.lua` |
+| Event triggering | ✅ Implemented | `JokerSystem.trigger_event()` |
+| Effect aggregation | ✅ Implemented | Combines all joker effects |
+| **Custom events** | ✅ Extensible | Any event name works |
+| **Custom effects** | ✅ Extensible | Add fields to return table |
+
+The joker system is **fully extensible**. You can define new event types and new effect types without modifying the core system.
+
 ## Quick Start
 
 Add to `assets/scripts/data/jokers.lua`:
@@ -333,3 +345,98 @@ soul_harvest = {
    -- RIGHT
    my_joker = { id = "my_joker", ... }
    ```
+
+## Extending the System
+
+### Adding New Event Types
+
+Event names are just strings. To add a new event:
+
+1. **Call the event in your game code:**
+   ```lua
+   local JokerSystem = require("wand.joker_system")
+
+   -- In your dodge mechanic:
+   local effects = JokerSystem.trigger_event("on_dodge", {
+       player = player,
+       incoming_damage = 50,
+       dodge_type = "roll",
+   })
+
+   -- Handle any effects jokers return
+   if effects.heal then player.hp = player.hp + effects.heal end
+   ```
+
+2. **React to it in a joker:**
+   ```lua
+   nimble = {
+       id = "nimble",
+       name = "Nimble",
+       description = "Heal 5 HP when dodging",
+       rarity = "Uncommon",
+       calculate = function(self, context)
+           if context.event == "on_dodge" then
+               return { heal = 5, message = "Nimble!" }
+           end
+       end
+   }
+   ```
+
+No core system changes needed - just emit the event and jokers can react.
+
+### Adding New Effect Types
+
+Effect return values are aggregated by the system. Default aggregation:
+- `damage_mod`: summed
+- `damage_mult`: multiplied
+- `repeat_cast`: summed
+- `messages`: collected into array
+
+To add a new effect type:
+
+1. **Return it from your joker:**
+   ```lua
+   return { my_custom_effect = 10 }
+   ```
+
+2. **Handle it where you call `trigger_event`:**
+   ```lua
+   local effects = JokerSystem.trigger_event("on_spell_cast", context)
+
+   -- Handle built-in effects
+   local damage = base_damage + effects.damage_mod
+   damage = damage * effects.damage_mult
+
+   -- Handle your custom effect
+   if effects.my_custom_effect then
+       -- Do something with it
+   end
+   ```
+
+3. **Optionally, update aggregation** in `joker_system.lua`:
+   ```lua
+   -- In trigger_event():
+   if result.my_custom_effect then
+       aggregate.my_custom_effect = (aggregate.my_custom_effect or 0) + result.my_custom_effect
+   end
+   ```
+
+### Adding New Tags
+
+Tags are just strings on cards. To add a new tag:
+
+1. Add it to cards in `data/cards.lua`:
+   ```lua
+   my_card = {
+       tags = { "MyNewTag", "Projectile" },
+   }
+   ```
+
+2. React to it in jokers:
+   ```lua
+   if context.tags and context.tags.MyNewTag then
+       return { damage_mult = 1.5 }
+   end
+   ```
+
+The validator will warn about unknown tags, but they work. Add common tags to the validator's known list to suppress warnings.

@@ -646,6 +646,42 @@ dofile("assets/scripts/tools/content_validator.lua")
 -- - Tag Inspector: View tag counts and bonuses
 ```
 
+### Extending the Systems
+
+All content systems are designed to be extensible. You can add new mechanics without modifying core code.
+
+#### Adding New Tags
+Tags are just strings. Add to any card/projectile and react to them in jokers:
+```lua
+-- In card: tags = { "MyNewTag" }
+-- In joker: if context.tags and context.tags.MyNewTag then return { damage_mult = 1.5 } end
+```
+
+#### Adding New Joker Events
+Event names are strings. Emit from any code, jokers react automatically:
+```lua
+local JokerSystem = require("wand.joker_system")
+local effects = JokerSystem.trigger_event("on_dodge", { player = player })
+```
+
+#### Adding New Card Behaviors
+Use BehaviorRegistry for complex logic:
+```lua
+local BehaviorRegistry = require("wand.card_behavior_registry")
+BehaviorRegistry.register("my_behavior", function(ctx) ... end)
+-- In card: behavior_id = "my_behavior"
+```
+
+#### Implementation Status Notes
+| System | Fully Implemented | Needs Implementation |
+|--------|------------------|---------------------|
+| Cards | ✅ All fields work | - |
+| Jokers | ✅ Events, aggregation | - |
+| Projectiles | ✅ Movement, collision | - |
+| Avatars | ✅ Unlock conditions | ⚠️ Effect application |
+
+See `docs/content-creation/` for detailed extensibility guides.
+
 ---
 
 ## References

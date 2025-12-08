@@ -5,6 +5,18 @@ Cards are spells that go into wands. There are three types:
 - **Modifier** - Modifies the next action (damage boost, multicast, homing)
 - **Trigger** - Determines when the wand fires (timer, on dash, on bump)
 
+## Implementation Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Card definitions | ✅ Implemented | `data/cards.lua` |
+| Wand execution | ✅ Implemented | `wand/wand_executor.lua` |
+| Tag synergies | ✅ Implemented | Works with joker system |
+| **Custom behaviors** | ✅ Extensible | Via `BehaviorRegistry` |
+| **Custom fields** | ✅ Extensible | Any field name works |
+
+The card system is **fully extensible**. You can add custom fields to cards and create complex behaviors via the BehaviorRegistry.
+
 ## Quick Start
 
 Add to `assets/scripts/data/cards.lua`:
@@ -263,3 +275,119 @@ Cards.TEMPLATE_MULTICAST = {
    -- RIGHT (use damage_modifier instead)
    Cards.MY_MOD = { type = "modifier", damage_modifier = 10, ... }
    ```
+
+## Extending the System
+
+### Adding Custom Card Fields
+
+You can add any field to a card. The wand executor passes the full card definition to behaviors:
+
+```lua
+Cards.MY_CUSTOM_CARD = {
+    id = "MY_CUSTOM_CARD",
+    type = "action",
+    mana_cost = 10,
+    tags = { "Projectile" },
+
+    -- Standard fields
+    damage = 15,
+
+    -- Custom fields (your own)
+    my_custom_field = "some_value",
+    special_data = { foo = 1, bar = 2 },
+    test_label = "MY\ncustom",
+}
+```
+
+Then access it in your behavior:
+```lua
+if card.my_custom_field == "some_value" then
+    -- Do something special
+end
+```
+
+### Using BehaviorRegistry for Complex Logic
+
+For behaviors that need executable code (not just data), use the BehaviorRegistry:
+
+1. **Register a behavior:**
+   ```lua
+   local BehaviorRegistry = require("wand.card_behavior_registry")
+
+   BehaviorRegistry.register("chain_explosion", function(ctx)
+       local damage = ctx.damage
+       local radius = ctx.params.radius or 60
+       local maxChains = ctx.params.max_chains or 3
+
+       -- Your complex logic here
+       local chainsTriggered = 0
+       -- ... spawning explosions, finding targets, etc.
+
+       return chainsTriggered
+   end, "Chain explosions that spread to nearby enemies")
+   ```
+
+2. **Reference it from a card:**
+   ```lua
+   Cards.CHAIN_EXPLOSION_CARD = {
+       id = "CHAIN_EXPLOSION_CARD",
+       type = "action",
+       mana_cost = 20,
+       damage = 25,
+       behavior_id = "chain_explosion",  -- Reference the behavior
+       behavior_params = {               -- Pass parameters
+           radius = 80,
+           max_chains = 5,
+       },
+       tags = { "Fire", "AoE" },
+       test_label = "CHAIN\nexplosion",
+   }
+   ```
+
+3. **Execute in your wand code:**
+   ```lua
+   if card.behavior_id then
+       local ctx = {
+           damage = card.damage,
+           position = projectile_position,
+           params = card.behavior_params or {},
+       }
+       BehaviorRegistry.execute(card.behavior_id, ctx)
+   end
+   ```
+
+### Adding New Damage Types
+
+Damage types are strings. To add a new type:
+
+1. Use it in cards:
+   ```lua
+   damage_type = "void",
+   ```
+
+2. Handle it in damage calculation:
+   ```lua
+   if damage_type == "void" then
+       -- Void damage ignores armor, etc.
+   end
+   ```
+
+3. (Optional) Add to validator's known list to suppress warnings.
+
+### Adding New Tags
+
+Tags are just strings. To add a new tag:
+
+1. Add to cards:
+   ```lua
+   tags = { "MyNewTag", "Fire" },
+   ```
+
+2. React to it in jokers:
+   ```lua
+   if context.tags and context.tags.MyNewTag then
+       return { damage_mult = 1.5 }
+   end
+   ```
+
+Standard tags: `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`, `Projectile`, `AoE`, `Hazard`, `Summon`, `Buff`, `Debuff`, `Mobility`, `Defense`, `Brute`

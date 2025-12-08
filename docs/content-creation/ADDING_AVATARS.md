@@ -2,6 +2,18 @@
 
 Avatars are "Ascensions" or "Ultimate Forms" that players unlock mid-run. They provide powerful global rule changes that fundamentally alter gameplay.
 
+## Implementation Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Avatar definitions | ✅ Implemented | `data/avatars.lua` |
+| Unlock condition parsing | ✅ Implemented | Supports `OR_` prefix, `_tags` suffix |
+| Progress tracking | ✅ Implemented | `record_progress()`, `check_unlocks()` |
+| Equip state | ✅ Implemented | `equip()`, `get_equipped()` |
+| **Effect application** | ⚠️ NOT IMPLEMENTED | See [Implementing Effects](#implementing-effects) |
+
+The avatar system currently tracks unlock progress and equip state, but **does not apply effects when equipped**. The `effects` array is stored in the definition but requires runtime handlers to actually modify gameplay.
+
 ## Quick Start
 
 Add to `assets/scripts/data/avatars.lua`:
@@ -367,6 +379,103 @@ blood_god = {
    - Verify stat buffs apply
    - Trigger proc conditions
    - Test rule changes with actual gameplay
+
+## Implementing Effects
+
+The avatar system stores effect definitions but **does not apply them automatically**. You must add runtime handlers in the appropriate systems.
+
+### Adding a Stat Buff Effect
+
+Stat buffs require integration with the stat system. In `wand/avatar_system.lua`:
+
+```lua
+-- Add this function to apply stat buffs when equipped
+function AvatarSystem.apply_effects(player)
+    local avatarId = AvatarSystem.get_equipped(player)
+    if not avatarId then return end
+
+    local def = loadDefs()[avatarId]
+    if not def or not def.effects then return end
+
+    for _, effect in ipairs(def.effects) do
+        if effect.type == "stat_buff" then
+            -- Integration point: connect to your stat system
+            -- Example: player.stats[effect.stat] = (player.stats[effect.stat] or 0) + effect.value
+        end
+    end
+end
+```
+
+### Adding a Rule Change Effect
+
+Rule changes modify global game behavior. Check them where the rule applies:
+
+```lua
+-- In your combat/casting code:
+local function should_fire_spread()
+    local avatarId = AvatarSystem.get_equipped(globals.player)
+    if not avatarId then return false end
+
+    local def = require("data.avatars")[avatarId]
+    for _, effect in ipairs(def.effects or {}) do
+        if effect.type == "rule_change" and effect.rule == "fire_spreads" then
+            return true
+        end
+    end
+    return false
+end
+```
+
+### Adding a Proc Effect
+
+Procs require event hooks. The trigger names like `on_cast_4th` or `distance_moved_5m` need parsing:
+
+```lua
+-- Parse trigger string
+local function parse_trigger(trigger)
+    local nth = trigger:match("on_cast_(%d+)")
+    if nth then return "on_cast", tonumber(nth) end
+
+    local meters = trigger:match("distance_moved_(%d+)m")
+    if meters then return "distance", tonumber(meters) end
+
+    return trigger, nil
+end
+
+-- Hook into joker system events
+signal.register("on_spell_cast", function(context)
+    local avatarId = AvatarSystem.get_equipped(globals.player)
+    if not avatarId then return end
+
+    local def = require("data.avatars")[avatarId]
+    for _, effect in ipairs(def.effects or {}) do
+        if effect.type == "proc" then
+            local triggerType, value = parse_trigger(effect.trigger)
+            -- Check condition and execute effect
+        end
+    end
+end)
+```
+
+### Adding New Effect Types
+
+To add a completely new effect type:
+
+1. Define the effect in your avatar:
+   ```lua
+   { type = "my_custom_effect", custom_param = 100 }
+   ```
+
+2. Handle it in the appropriate system:
+   ```lua
+   for _, effect in ipairs(def.effects or {}) do
+       if effect.type == "my_custom_effect" then
+           -- Your custom logic
+       end
+   end
+   ```
+
+The system is fully extensible - any effect type string works, you just need to add the handler code.
 
 ## Common Mistakes
 

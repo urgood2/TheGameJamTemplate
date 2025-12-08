@@ -68,6 +68,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - get things ready to add content.
 
+- sometimes the tutorial buttons to translucent, sometimes solid.
+
 - can we move execution preview out of its window (so blank background), ditch the "execution preview" panel, and place it under the card inventories?
 
 - treasure opening sequence.

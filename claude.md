@@ -1,6 +1,57 @@
-# Claude Code Practices for This Project
+# CLAUDE.md
 
-This document contains important coding patterns and practices specific to this game engine codebase.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Build Commands
+
+```bash
+# Native builds (requires CMake 3.14+, C++20 toolchain, and just)
+just build-debug              # Debug build → ./build/raylib-cpp-cmake-template
+just build-release            # Release build
+just build-debug-fast         # Separate build dir (avoids cache churn)
+just build-release-fast
+just build-debug-ninja        # Ninja generator (faster)
+
+# Run the game
+./build/raylib-cpp-cmake-template
+
+# Tests (GoogleTest)
+just test                     # Run all tests
+just test-asan                # With AddressSanitizer
+
+# Web build (requires emsdk)
+just build-web                # Output: build-emc/index.html
+
+# Utilities
+just clean                    # Remove build directories
+just ccache-stats             # Show compiler cache stats
+just docs                     # Generate Doxygen documentation
+```
+
+## Architecture Overview
+
+**Engine**: C++20 + Lua game engine built on Raylib 5.5, using EnTT for ECS and Chipmunk for physics.
+
+### Core Structure
+- `src/core/` - Game loop (`game.cpp`), initialization (`init.cpp`), globals (`globals.cpp`)
+- `src/components/` - ECS component definitions (400+ components in `components.hpp`)
+- `src/systems/` - 37+ subsystems: ai, camera, collision, input, layer, physics, scripting, shaders, sound, ui, etc.
+- `src/util/` - Common headers (PCH), utilities, error handling
+- `assets/scripts/` - Lua gameplay code (core, combat, ui, ai, data)
+- `assets/shaders/` - 200+ GLSL shaders with platform variants
+
+### Key Subsystems
+| System | Location | Purpose |
+|--------|----------|---------|
+| **Layer** | `src/systems/layer/` | Render batching, shader grouping, depth sorting |
+| **Physics** | `src/systems/physics/` | Chipmunk wrapper, collision masks, sync modes |
+| **Scripting** | `src/systems/scripting/` | Lua VM (Sol2), hot-reload, engine bindings |
+| **Shaders** | `src/systems/shaders/` | Multi-pass pipeline, fullscreen effects |
+| **UI** | `src/systems/ui/` | Layouts, controller nav, localization |
+| **Combat** | `assets/scripts/combat/` | Card/ability system, wands, projectiles |
+
+### Dependency Injection
+Legacy `globals::` are being migrated to `EngineContext` (`src/core/engine_context.hpp`). Access via `globals::g_ctx`.
 
 ---
 
@@ -504,10 +555,11 @@ function createCustomEntity(x, y)
         signal.emit("entity_damaged", entity, { damage = 10 })
     end
 
-    -- Add physics
-    physics.create_physics_for_transform(globals.physicsWorld, entity, "dynamic")
-    physics.AddCollider(globals.physicsWorld, entity, MY_COLLISION_CATEGORY,
-        "circle", 16, 0, 0, 0, false)
+    -- Add physics (use correct API)
+    local PhysicsManager = require("core.physics_manager")
+    local world = PhysicsManager.get_world("world")
+    local config = { shape = "circle", tag = "custom", sensor = false, density = 1.0 }
+    physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
 
     -- Emit creation event
     signal.emit("entity_created", entity, { type = "custom" })
@@ -526,5 +578,16 @@ end
 
 ---
 
-**Last Updated**: 2025-11-21
-**Context**: Critical ordering requirement for script table initialization - data assignment MUST come before `attach_ecs()`
+## Testing
+
+Tests are in `tests/unit/` using GoogleTest. Key test files:
+- `test_engine_context.cpp` - Dependency injection
+- `test_physics_manager.cpp` - Physics initialization
+- `test_scripting_lifecycle.cpp` - Lua environment
+- `test_controller_nav.cpp` - Controller focus/selection
+- `test_error_handling.cpp` - C++/Lua error boundaries
+
+Run a single test:
+```bash
+./build/unit_tests --gtest_filter="TestSuite.TestName"
+```

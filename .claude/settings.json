@@ -3,8 +3,8 @@
     "allow": [
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:*)", // Wildcard to allow fetching from any domain
-      "Fetch(domain:*)" // For potential compatibility with older versions/aliases
+      "WebFetch(domain:*)",
+      "Fetch(domain:*)"
     ],
     "deny": []
   }

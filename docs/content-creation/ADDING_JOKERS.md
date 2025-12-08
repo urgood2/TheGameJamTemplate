@@ -68,7 +68,7 @@ end
 
 > **Implementation Note**: Only `on_spell_cast` is currently triggered in production code. Other events (`calculate_damage`, `on_wave_start`, `on_kill`) are documented for future use - you can add them by calling `JokerSystem.trigger_event()` where appropriate.
 
-#### `on_spell_cast` ✅ IMPLEMENTED
+#### `on_spell_cast` ✅ Implemented
 Triggers when a spell is cast. Location: `wand/wand_executor.lua:654-662`
 
 ```lua

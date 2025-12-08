@@ -3734,7 +3734,10 @@ function initPlanningPhase()
     -- Validate content definitions (runtime check)
     local ok, ContentValidator = pcall(require, "tools.content_validator")
     if ok and ContentValidator and ContentValidator.runtime_check then
-        ContentValidator.runtime_check()
+        local validation_passed = ContentValidator.runtime_check()
+        if not validation_passed then
+            log_warn("[Gameplay] Content validation found errors - check console output")
+        end
     end
 
     local CastFeedUI = require "ui.cast_feed_ui"

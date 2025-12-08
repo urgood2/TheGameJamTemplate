@@ -160,7 +160,7 @@ local function render_joker_tab()
 
     if ImGui.Button("Trigger on_spell_cast (Fire)") then
         if JokerSystem and JokerSystem.trigger_event then
-            state.joker_test_result = JokerSystem.trigger_event("on_spell_cast", {
+            local effects = JokerSystem.trigger_event("on_spell_cast", {
                 spell_type = "Mono-Element",
                 tags = { Fire = true },
                 tag_analysis = {
@@ -171,6 +171,7 @@ local function render_joker_tab()
                     is_multi_tag = false,
                 },
             })
+            state.joker_test_result = effects or { message = "No effects triggered" }
         else
             state.joker_test_result = { message = "JokerSystem not loaded" }
         end
@@ -179,7 +180,7 @@ local function render_joker_tab()
     ImGui.SameLine()
     if ImGui.Button("Trigger on_spell_cast (AoE)") then
         if JokerSystem and JokerSystem.trigger_event then
-            state.joker_test_result = JokerSystem.trigger_event("on_spell_cast", {
+            local effects = JokerSystem.trigger_event("on_spell_cast", {
                 spell_type = "Scatter Cast",
                 tags = { AoE = true, Fire = true },
                 tag_analysis = {
@@ -190,6 +191,7 @@ local function render_joker_tab()
                     is_multi_tag = true,
                 },
             })
+            state.joker_test_result = effects or { message = "No effects triggered" }
         else
             state.joker_test_result = { message = "JokerSystem not loaded" }
         end
@@ -331,10 +333,8 @@ function ContentDebugPanel.spawn_projectile(mode)
     -- Spawn projectile
     if ProjectileSystem and ProjectileSystem.spawn then
         local params = {
-            x = spawn_x,
-            y = spawn_y,
-            vx = dir_x * state.spawn_params.speed,
-            vy = dir_y * state.spawn_params.speed,
+            position = { x = spawn_x, y = spawn_y },
+            velocity = { x = dir_x * state.spawn_params.speed, y = dir_y * state.spawn_params.speed },
             damage = preset.data.damage or 10,
             damage_type = preset.data.damage_type or "physical",
             owner = globals and globals.player,

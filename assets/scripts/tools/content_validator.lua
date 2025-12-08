@@ -111,7 +111,14 @@ function ContentValidator.validate_card(key, card)
     elseif type(card.tags) ~= "table" then
         add_error("Card", id, "'tags' must be a table")
     else
+        -- Check for duplicate tags
+        local seen_tags = {}
         for _, tag in ipairs(card.tags) do
+            if seen_tags[tag] then
+                add_warning("Card", id, string.format("duplicate tag '%s'", tag))
+            end
+            seen_tags[tag] = true
+
             if not TAG_LOOKUP[tag] then
                 local similar = find_similar_tag(tag)
                 if similar then
@@ -290,7 +297,14 @@ function ContentValidator.validate_projectile(key, proj)
         if type(proj.tags) ~= "table" then
             add_error("Projectile", id, "'tags' must be a table")
         else
+            -- Check for duplicate tags
+            local seen_tags = {}
             for _, tag in ipairs(proj.tags) do
+                if seen_tags[tag] then
+                    add_warning("Projectile", id, string.format("duplicate tag '%s'", tag))
+                end
+                seen_tags[tag] = true
+
                 if not TAG_LOOKUP[tag] then
                     add_warning("Projectile", id, string.format("unknown tag '%s'", tag))
                 end

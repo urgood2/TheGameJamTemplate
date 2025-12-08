@@ -1874,9 +1874,17 @@ function ui_defs.generateTooltipUI()
     -- get transform for the tooltip UI box
     local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
     tooltipTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
+    tooltipTransform.visualX = tooltipTransform.actualX
+    tooltipTransform.visualY = tooltipTransform.actualY
+    tooltipTransform.visualW = tooltipTransform.actualW
+    tooltipTransform.visualH = tooltipTransform.actualH
     local uiBoxComp = registry:get(globals.ui.tooltipUIBox, UIBoxComponent)
     local uiTooltipRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
     uiTooltipRootTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
+    uiTooltipRootTransform.visualX = uiTooltipRootTransform.actualX
+    uiTooltipRootTransform.visualY = uiTooltipRootTransform.actualY
+    uiTooltipRootTransform.visualW = uiTooltipRootTransform.actualW
+    uiTooltipRootTransform.visualH = uiTooltipRootTransform.actualH
      
 end
 

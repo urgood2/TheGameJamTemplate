@@ -66,6 +66,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - make shop a really simple three-card thing, and we'll flesh out later after adding content.
 
+- add other versions of jetbrains font. also 
+
 - get things ready to add content.
 
 - sometimes the tutorial buttons to translucent, sometimes solid.

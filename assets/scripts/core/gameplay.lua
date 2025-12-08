@@ -246,16 +246,16 @@ local function unpack_rect_like(rectLike, fallbackTable)
 end
 
 local tooltipStyle = {
-    fontSize = 11,
+    fontSize = 18,
     labelBg = "black",
     idBg = "gold",
     idTextColor = "black",
     labelColor = "apricot_cream",
     valueColor = "white",
-    innerPadding = 1,
+    innerPadding = 0,
     rowPadding = 0,
-    labelColumnMinWidth = 180,
-    valueColumnMinWidth = 60,
+    labelColumnMinWidth = 120,
+    valueColumnMinWidth = 52,
     bgColor = Col(18, 22, 32, 235),
     innerColor = Col(28, 32, 44, 230),
     outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255),
@@ -268,7 +268,7 @@ local tooltipStyle = {
 if localization and localization.loadNamedFont then
     local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
     if not alreadyLoaded then
-        localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 32)
+        localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 44)
     end
 end
 
@@ -289,6 +289,19 @@ local function getTooltipFontAttr()
         return ";font=" .. tooltipStyle.fontName
     end
     return ""
+end
+
+-- Prevent tooltip boxes from animating from size 0 by snapping visual dimensions immediately.
+local function snapTooltipVisual(boxID)
+    if not boxID or not entity_cache.valid(boxID) then
+        return
+    end
+    local t = component_cache.get(boxID, Transform)
+    if not t then return end
+    t.visualX = t.actualX or t.visualX
+    t.visualY = t.actualY or t.visualY
+    t.visualW = t.actualW or t.visualW
+    t.visualH = t.actualH or t.visualH
 end
 
 local ensureCardTooltip -- forward declaration
@@ -2830,6 +2843,7 @@ function makeWandTooltip(wand_def)
 
     ui.box.RenewAlignment(registry, boxID)
     ui.box.set_draw_layer(boxID, "ui")
+    snapTooltipVisual(boxID)
 
     ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     remove_default_state_tag(boxID)
@@ -2870,8 +2884,7 @@ function makeCardTooltip(card_def, opts)
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-                padding = 0,
-                minWidth = labelColumnMinWidth
+                padding = 0
             },
             children = { labelDef }
         }
@@ -2884,8 +2897,7 @@ function makeCardTooltip(card_def, opts)
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-                padding = 0,
-                minWidth = valueColumnMinWidth
+                padding = 0
             },
             children = { valueDef }
         }
@@ -3021,6 +3033,7 @@ function makeCardTooltip(card_def, opts)
 
     ui.box.set_draw_layer(boxID, "ui")
     ui.box.RenewAlignment(registry, boxID)
+    snapTooltipVisual(boxID)
     -- ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
     ui.box.ClearStateTagsFromUIBox(boxID) -- remove all state tags from sub entities and box
     -- remove_default_state_tag(boxID)
@@ -3331,7 +3344,7 @@ local function makeDetailedStatsTooltip(snapshot)
     local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
     local rowPadding = tooltipStyle.rowPadding
     local outerPadding = tooltipStyle.innerPadding
-    local fontAttr = tooltipStyle.fontName and (";font=" .. tooltipStyle.fontName) or ""
+    local fontAttr = getTooltipFontAttr()
 
     local function makeLabelNode(label)
         local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. tooltipStyle.labelBg ..
@@ -3339,8 +3352,7 @@ local function makeDetailedStatsTooltip(snapshot)
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-                padding = 0,
-                minWidth = labelColumnMinWidth
+                padding = 0
             },
             children = { labelDef }
         }
@@ -3354,8 +3366,7 @@ local function makeDetailedStatsTooltip(snapshot)
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-                padding = 0,
-                minWidth = valueColumnMinWidth
+                padding = 0
             },
             children = { valueDef }
         }
@@ -3455,6 +3466,7 @@ local function makeDetailedStatsTooltip(snapshot)
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
     ui.box.set_draw_layer(boxID, "ui")
     ui.box.RenewAlignment(registry, boxID)
+    snapTooltipVisual(boxID)
     ui.box.ClearStateTagsFromUIBox(boxID)
 
     return boxID
@@ -3486,15 +3498,15 @@ function makePlayerStatsTooltip(snapshot)
     local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
     local rowPadding = tooltipStyle.rowPadding
     local outerPadding = tooltipStyle.innerPadding
+    local fontAttr = getTooltipFontAttr()
 
     local function makeLabelNode(label)
         local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. tooltipStyle.labelBg ..
-            ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+            ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. fontAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-                padding = 0,
-                minWidth = labelColumnMinWidth
+                padding = 0
             },
             children = { labelDef }
         }
@@ -3504,12 +3516,11 @@ function makePlayerStatsTooltip(snapshot)
         opts = opts or {}
         local valueColor = opts.color or tooltipStyle.valueColor
         local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. valueColor .. ";fontSize=" ..
-            globalFontSize .. noShadowAttr .. ")")
+            globalFontSize .. noShadowAttr .. fontAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-                padding = 0,
-                minWidth = valueColumnMinWidth
+                padding = 0
             },
             children = { valueDef }
         }
@@ -3592,6 +3603,7 @@ function makePlayerStatsTooltip(snapshot)
     local boxID = dsl.spawn({ x = 200, y = 200 }, root)
     ui.box.set_draw_layer(boxID, "ui")
     ui.box.RenewAlignment(registry, boxID)
+    snapTooltipVisual(boxID)
     ui.box.ClearStateTagsFromUIBox(boxID)
 
     return boxID

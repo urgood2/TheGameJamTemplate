@@ -31,6 +31,47 @@ function getScriptTableFromEntityID(eid)
     return scriptComp.self
 end
 
+--- Safely get a script table, with optional warning on failure.
+--- Use this when you expect the entity to have a script and want to log if it doesn't.
+--- @param eid number Entity ID
+--- @param warn_on_nil boolean? If true, logs a warning when script is not found (default: false)
+--- @return table|nil The script table or nil
+function safe_script_get(eid, warn_on_nil)
+    local script = getScriptTableFromEntityID(eid)
+    if not script and warn_on_nil then
+        log_debug(("safe_script_get: Script table missing for entity %s"):format(tostring(eid)))
+    end
+    return script
+end
+
+--- Safely get a field from an entity's script table.
+--- @param eid number Entity ID
+--- @param field string Field name to retrieve
+--- @param default any Default value if script or field is nil
+--- @return any The field value or default
+function script_field(eid, field, default)
+    local script = getScriptTableFromEntityID(eid)
+    if not script then return default end
+    local value = script[field]
+    if value == nil then return default end
+    return value
+end
+
+--- Check if an entity is valid and active.
+--- Consolidates the various entity validation patterns into one function.
+--- @param eid number Entity ID
+--- @return boolean True if entity is valid
+function ensure_entity(eid)
+    return eid and eid ~= entt_null and entity_cache.valid(eid)
+end
+
+--- Check if an entity is valid and has a script component.
+--- @param eid number Entity ID
+--- @return boolean True if entity is valid and has a script
+function ensure_scripted_entity(eid)
+    return ensure_entity(eid) and registry:has(eid, ScriptComponent)
+end
+
 
 --- Smoothly step the camera toward a target to avoid big-jump jitter.
 -- @param camName string   Name used with camera.Get(...)

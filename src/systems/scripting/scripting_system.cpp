@@ -52,15 +52,25 @@ namespace scripting
         assert(script.self.valid());
         script.hooks.update = script.self["update"]; // may not be valid if not defined
         script.hooks.on_collision = script.self["on_collision"];
-        // assert(script.hooks.update.valid());
-        assert(script.hooks.on_collision.valid());
+        // Note: hooks are optional - don't assert, just leave them invalid if not defined
+        if (!script.hooks.on_collision.valid()) {
+            spdlog::debug("Script for entity {} does not define on_collision hook",
+                         static_cast<uint32_t>(entity));
+        }
 
         script.self["id"] = sol::readonly_property([entity]
                                                    { return entity; });
         script.self["owner"] = std::ref(registry);
         script.self["__entity_id"] = static_cast<uint32_t>(entity);
-        if (auto &&f = script.self["init"]; f.valid())
-            f(script.self);
+        if (auto &&f = script.self["init"]; f.valid()) {
+            sol::protected_function pf = f;
+            auto result = pf(script.self);
+            if (!result.valid()) {
+                sol::error err = result;
+                spdlog::error("[Script Error] init() failed for entity {}: {}",
+                             static_cast<uint32_t>(entity), err.what());
+            }
+        }
         // inspect_script(script);
     }
 
@@ -84,8 +94,15 @@ namespace scripting
         lua_State *script_state = script.self.lua_state();
         lua_State *master_state = ai_system::masterStateLua.lua_state();
         if (script_state != nullptr && script_state == master_state) {
-            if (auto &&f = script.self["destroy"]; f.valid())
-                f(script.self);
+            if (auto &&f = script.self["destroy"]; f.valid()) {
+                sol::protected_function pf = f;
+                auto result = pf(script.self);
+                if (!result.valid()) {
+                    sol::error err = result;
+                    spdlog::error("[Script Error] destroy() failed for entity {}: {}",
+                                 static_cast<uint32_t>(entity), err.what());
+                }
+            }
         }
         script.self.abandon();
     }

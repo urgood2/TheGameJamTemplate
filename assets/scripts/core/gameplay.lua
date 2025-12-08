@@ -1675,9 +1675,9 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_polychrome")
     -- shaderPipelineComp:addPass("3d_skew_aurora")
     -- shaderPipelineComp:addPass("3d_skew_iridescent")
-    shaderPipelineComp:addPass("3d_skew_nebula")
+    -- shaderPipelineComp:addPass("3d_skew_nebula")
     -- shaderPipelineComp:addPass("3d_skew_plasma")
-    -- shaderPipelineComp:addPass("3d_skew_prismatic")
+    shaderPipelineComp:addPass("3d_skew_prismatic")
     -- shaderPipelineComp:addPass("3d_skew_thermal")
     
     -- shaderPipelineComp:addPass("3d_skew_crystalline")
@@ -1691,11 +1691,13 @@ function createNewCard(id, x, y, gameStateToApply)
         local idx = passes and #passes
         if idx and idx >= 1 then
             local pass = passes[idx]
-            if pass and pass.shaderName == "3d_skew_polychrome" then
+            -- Apply unique random seed to ALL 3d_skew shader variants
+            if pass and pass.shaderName and pass.shaderName:sub(1, 7) == "3d_skew" then
                 local seed = cardScript.skewSeed or math.random() * 10000
+                local shaderName = pass.shaderName
                 pass.customPrePassFunction = function()
                     if globalShaderUniforms then
-                        globalShaderUniforms:set("3d_skew_polychrome", "rand_seed", seed)
+                        globalShaderUniforms:set(shaderName, "rand_seed", seed)
                     end
                 end
             end

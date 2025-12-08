@@ -772,18 +772,18 @@ auto initLuaMasterState(sol::state &stateToInit,
 
   stateToInit.script("require(\"ai.init\")",
                      [](lua_State *, sol::protected_function_result pfr) {
-                       // pfr will contain things that went wrong, for either
-                       // loading or executing the script Can throw your own
-                       // custom error You can also just return it, and let the
-                       // call-site handle the error if necessary.
+                       if (!pfr.valid()) {
+                         sol::error err = pfr;
+                         spdlog::error("Failed to require ai.init: {}", err.what());
+                       }
                        return pfr;
                      });
   stateToInit.script("require(\"util.util\")",
                      [](lua_State *, sol::protected_function_result pfr) {
-                       // pfr will contain things that went wrong, for either
-                       // loading or executing the script Can throw your own
-                       // custom error You can also just return it, and let the
-                       // call-site handle the error if necessary.
+                       if (!pfr.valid()) {
+                         sol::error err = pfr;
+                         spdlog::error("Failed to require util.util: {}", err.what());
+                       }
                        return pfr;
                      });
 

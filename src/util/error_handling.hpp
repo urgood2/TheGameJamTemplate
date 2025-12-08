@@ -129,4 +129,43 @@ auto safeLuaCall(LuaFn&& fn, const std::string& ctx, Args&&... args)
     }
 }
 
+// ============================================================================
+// Lua Error Handling Macros
+// ============================================================================
+// Use these macros inside lambda bodies for Sol2 bindings to add error handling.
+// Sol2 doesn't work well with wrapper functions that hide the lambda signature,
+// so we use inline try-catch blocks instead.
+//
+// Example usage in a lambda binding:
+//   lua.set_function("myFunc", [](sol::object a) -> Vector2 {
+//       LUA_BINDING_TRY
+//           return Vector2{a.as<float>(), 0};
+//       LUA_BINDING_CATCH_RETURN(Vector2{0, 0})
+//   });
+//
+// For void functions:
+//   lua.set_function("myFunc", []() {
+//       LUA_BINDING_TRY
+//           doSomething();
+//       LUA_BINDING_CATCH_VOID
+//   });
+
+#define LUA_BINDING_TRY try {
+
+#define LUA_BINDING_CATCH_RETURN(default_value) \
+    } catch (const sol::error& e) { \
+        SPDLOG_ERROR("[Lua Binding Error]: {}", e.what()); \
+        return default_value; \
+    } catch (const std::exception& e) { \
+        SPDLOG_ERROR("[Lua Binding Error]: {}", e.what()); \
+        return default_value; \
+    }
+
+#define LUA_BINDING_CATCH_VOID \
+    } catch (const sol::error& e) { \
+        SPDLOG_ERROR("[Lua Binding Error]: {}", e.what()); \
+    } catch (const std::exception& e) { \
+        SPDLOG_ERROR("[Lua Binding Error]: {}", e.what()); \
+    }
+
 } // namespace util

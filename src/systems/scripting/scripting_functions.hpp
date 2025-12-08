@@ -69,8 +69,11 @@ namespace scripting {
      * Methods for setting and getting values in a given blackboard
      * ------------------------------------------------------
      */
-    extern auto setBlackBoardVector2(entt::entity entity, std::string key, Vector2 valueToSet) -> void;
-    extern auto getBlackBoardVector2(entt::entity entity, std::string key) -> std::optional<Vector2>;
+    extern auto setBlackboardVector2(entt::entity entity, std::string key, Vector2 valueToSet) -> void;
+    extern auto getBlackboardVector2(entt::entity entity, std::string key) -> std::optional<Vector2>;
+    // Deprecated aliases (backward compatibility)
+    inline auto setBlackBoardVector2(entt::entity entity, std::string key, Vector2 valueToSet) -> void { setBlackboardVector2(entity, key, valueToSet); }
+    inline auto getBlackBoardVector2(entt::entity entity, std::string key) -> std::optional<Vector2> { return getBlackboardVector2(entity, key); }
     extern auto setBlackboardFloat(entt::entity entity, std::string key, float valueToSet) -> void;
     extern auto getBlackboardFloat(entt::entity entity, std::string key) -> std::optional<float>;
     extern auto setBlackboardBool(entt::entity entity, std::string key, bool valueToSet) -> void;

@@ -268,6 +268,18 @@ lua.new_usertype<GameCamera>("GameCamera",
             "Set or clear the deadzone rectangle (world units).",
             false, false
         });
+        rec.record_method("GameCamera", MethodDef{
+            "SetDeadzone",
+            "---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@return nil",
+            "Set deadzone rectangle by x, y, width, height values.",
+            false, true
+        });
+        rec.record_method("GameCamera", MethodDef{
+            "SetDeadzone",
+            "---@param t {x: number, y: number, width: number, height: number}\n---@return nil",
+            "Set deadzone from a Lua table with x, y, width/w, height/h fields.",
+            false, true
+        });
 
         rec.record_method("GameCamera", MethodDef{
             "SetFollowStyle",
@@ -463,6 +475,18 @@ lua.new_usertype<GameCamera>("GameCamera",
             false, false
         });
         rec.record_method("GameCamera", MethodDef{
+            "SetBounds",
+            "---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@return nil",
+            "Set bounds rectangle by x, y, width, height values.",
+            false, true
+        });
+        rec.record_method("GameCamera", MethodDef{
+            "SetBounds",
+            "---@param t {x: number, y: number, width: number, height: number}\n---@return nil",
+            "Set bounds from a Lua table with x, y, width/w, height/h fields.",
+            false, true
+        });
+        rec.record_method("GameCamera", MethodDef{
             "SetBoundsPadding",
             "---@param padding number # extra screen-space leeway in pixels\n---@return nil",
             "Allow a little slack when clamping bounds (useful when bounds equal the viewport).",
@@ -532,11 +556,17 @@ lua.new_usertype<GameCamera>("GameCamera",
         "---@param name string\nRemove (destroy) a named camera.");
 
     // Get returns GameCamera* so Lua can call methods (manager keeps the shared_ptr alive)
+    // Safety: checks existence first and throws a clear error instead of crashing
     rec.bind_function(lua, path, "Get",
         [](const std::string& name) -> GameCamera* {
+            if (!camera_manager::Exists(name)) {
+                throw std::runtime_error("camera.Get: no camera named '" + name + "' exists. "
+                    "Call camera.Create() first or check with camera.Exists().");
+            }
             return camera_manager::Get(name).get();
         },
-        "---@param name string\n---@return GameCamera  # Borrowed pointer (owned by manager)\nFetch a camera by name.");
+        "---@param name string\n---@return GameCamera  # Borrowed pointer (owned by manager)\n"
+        "Fetch a camera by name. Throws if camera doesn't exist - use Exists() to check first.");
 
     rec.bind_function(lua, path, "Update",
         &camera_manager::Update,
@@ -548,8 +578,14 @@ lua.new_usertype<GameCamera>("GameCamera",
 
     rec.bind_function(lua, path, "Begin",
         sol::overload(
-            // Begin by name (recommended)
-            [](const std::string& name){ camera_manager::Begin(name); },
+            // Begin by name (recommended) - with existence check
+            [](const std::string& name){
+                if (!camera_manager::Exists(name)) {
+                    throw std::runtime_error("camera.Begin: no camera named '" + name + "' exists. "
+                        "Call camera.Create() first.");
+                }
+                camera_manager::Begin(name);
+            },
             // Begin by raw Camera2D* (advanced)
             [](Camera2D* cam){
                 if (!cam) throw std::runtime_error("camera.Begin: Camera2D* was nil");
@@ -558,7 +594,7 @@ lua.new_usertype<GameCamera>("GameCamera",
         ),
         "---@overload fun(name:string)\n"
         "---@overload fun(cam:Camera2D*)\n"
-        "Enter 2D mode with a named camera (or raw Camera2D).");
+        "Enter 2D mode with a named camera (or raw Camera2D). Throws if camera doesn't exist.");
 
     rec.bind_function(lua, path, "End",
         [](){ camera_manager::End(); },
@@ -567,6 +603,10 @@ lua.new_usertype<GameCamera>("GameCamera",
     // Convenience: with(name, fn) — RAII-like scope in Lua
     rec.bind_function(lua, path, "with",
         [](const std::string& name, sol::function fn){
+            if (!camera_manager::Exists(name)) {
+                throw std::runtime_error("camera.with: no camera named '" + name + "' exists. "
+                    "Call camera.Create() first.");
+            }
             camera_manager::Begin(name);
             // ensure End() even if fn errors
             sol::protected_function pfn = fn;
@@ -576,7 +616,7 @@ lua.new_usertype<GameCamera>("GameCamera",
                 throw std::runtime_error(std::string("camera.with callback error: ") + r.error());
             }
         },
-        "---@param name string\n---@param fn fun()\nRun fn inside Begin/End for the named camera.");
+        "---@param name string\n---@param fn fun()\nRun fn inside Begin/End for the named camera. Throws if camera doesn't exist.");
 }
 
 } // namespace bindings

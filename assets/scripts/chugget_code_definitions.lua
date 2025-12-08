@@ -681,6 +681,70 @@ function remove_state_tag(...) end
 function clear_state_tags(...) end
 
 ---
+--- Construct a Vector2 from x,y numbers or a table with x,y fields.
+---
+---@overload fun(x: number, y: number): Vector2
+---@overload fun(t: {x: number, y: number}): Vector2
+---@return Vector2
+function Vector2(...) end
+
+---
+--- Construct a Vector3 from x,y,z numbers or a table with x,y,z fields.
+---
+---@overload fun(x: number, y: number, z: number): Vector3
+---@overload fun(t: {x: number, y: number, z: number}): Vector3
+---@return Vector3
+function Vector3(...) end
+
+---
+--- Construct a Vector4 from x,y,z,w numbers or a table with x,y,z,w fields.
+---
+---@overload fun(x: number, y: number, z: number, w: number): Vector4
+---@overload fun(t: {x: number, y: number, z: number, w: number}): Vector4
+---@return Vector4
+function Vector4(...) end
+
+---
+--- Returns the smoothed delta time since the last frame in seconds.
+---
+---@return number
+function GetFrameTime(...) end
+
+---
+--- Returns the total elapsed time since the game started in seconds.
+---
+---@return number
+function GetTime(...) end
+
+---
+--- Returns the virtual screen width in pixels.
+---
+---@return integer
+function GetScreenWidth(...) end
+
+---
+--- Returns the virtual screen height in pixels.
+---
+---@return integer
+function GetScreenHeight(...) end
+
+---
+--- Converts a world position to screen coordinates using the given camera.
+---
+---@param position Vector2
+---@param camera Camera2D
+---@return Vector2
+function GetWorldToScreen2D(...) end
+
+---
+--- Converts a screen position to world coordinates using the given camera.
+---
+---@param position Vector2
+---@param camera Camera2D
+---@return Vector2
+function GetScreenToWorld2D(...) end
+
+---
 --- Fetches atlas texture + frame metadata for a sprite identifier.
 ---
 
@@ -5352,6 +5416,23 @@ function GameCamera:Follow(...) end
 function GameCamera:SetDeadzone(...) end
 
 ---
+--- Set deadzone rectangle by x, y, width, height values.
+---
+---@overload fun---@param x number
+---@param y number
+---@param w number
+---@param h number
+---@return nil
+function GameCamera:SetDeadzone(...) end
+
+---
+--- Set deadzone from a Lua table with x, y, width/w, height/h fields.
+---
+---@overload fun---@param t {x: number, y: number, width: number, height: number}
+---@return nil
+function GameCamera:SetDeadzone(...) end
+
+---
 --- Choose the follow behavior.
 ---
 ---@param style integer|camera.FollowStyle
@@ -5546,6 +5627,23 @@ function GameCamera:GetVisualTarget(...) end
 --- Set world-space clamp rectangle or disable when nil.
 ---
 ---@param rect Rectangle|nil # nil disables clamping
+---@return nil
+function GameCamera:SetBounds(...) end
+
+---
+--- Set bounds rectangle by x, y, width, height values.
+---
+---@overload fun---@param x number
+---@param y number
+---@param w number
+---@param h number
+---@return nil
+function GameCamera:SetBounds(...) end
+
+---
+--- Set bounds from a Lua table with x, y, width/w, height/h fields.
+---
+---@overload fun---@param t {x: number, y: number, width: number, height: number}
 ---@return nil
 function GameCamera:SetBounds(...) end
 
@@ -6003,6 +6101,18 @@ HIDFlags = {
     axis_cursor_enabled = bool  -- Axis-as-cursor enabled
 }
 
+
+---
+--- Raylib 2D camera structure for controlling viewport rendering.
+---
+---@class Camera2D
+Camera2D = {
+    offset = Vector2,  -- Camera offset (displacement from target)
+    target = Vector2,  -- Camera target (rotation and zoom origin)
+    rotation = number,  -- Camera rotation in degrees
+    zoom = number  -- Camera zoom (scaling), should be 1.0 by default
+}
+
 ---
 --- Creates a new transform entity with default parameters.
 ---
@@ -6432,7 +6542,7 @@ function camera.Remove(...) end
 ---
 ---@param name string
 ---@return GameCamera  # Borrowed pointer (owned by manager)
---- Fetch a camera by name.
+--- Fetch a camera by name. Throws if camera doesn't exist - use Exists() to check first.
 function camera.Get(...) end
 
 ---
@@ -6452,7 +6562,7 @@ function camera.UpdateAll(...) end
 ---
 ---@overload fun(name:string)
 ---@overload fun(cam:Camera2D*)
---- Enter 2D mode with a named camera (or raw Camera2D).
+--- Enter 2D mode with a named camera (or raw Camera2D). Throws if camera doesn't exist.
 function camera.Begin(...) end
 
 ---
@@ -6464,7 +6574,7 @@ function camera.End(...) end
 ---
 ---@param name string
 ---@param fn fun()
---- Run fn inside Begin/End for the named camera.
+--- Run fn inside Begin/End for the named camera. Throws if camera doesn't exist.
 function camera.with(...) end
 
 ---

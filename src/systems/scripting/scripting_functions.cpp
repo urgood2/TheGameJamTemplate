@@ -426,6 +426,12 @@ auto initLuaMasterState(sol::state &stateToInit,
   // In your Sol2 init (after registering luaDebugLogWrapper*):
   stateToInit.set_function(
       "log_debug", [](sol::this_state ts, sol::variadic_args va) {
+        // Validate: at least one argument required
+        if (va.size() == 0) {
+          SPDLOG_WARN("[log_debug] Called with no arguments - nothing to log");
+          return;
+        }
+
         sol::state_view L{ts};
         std::ostringstream oss;
 
@@ -438,6 +444,12 @@ auto initLuaMasterState(sol::state &stateToInit,
           e = static_cast<entt::entity>(it->as<int>());
           hasEntity = true;
           ++it;
+        }
+
+        // Validate: if entity was provided, need at least one more arg for message
+        if (hasEntity && it == va.end()) {
+          SPDLOG_WARN("[log_debug] Entity provided but no message - nothing to log");
+          return;
         }
 
         // Concatenate the rest
@@ -477,6 +489,12 @@ auto initLuaMasterState(sol::state &stateToInit,
 
   stateToInit.set_function(
       "log_error", [](sol::this_state ts, sol::variadic_args va) {
+        // Validate: at least one argument required
+        if (va.size() == 0) {
+          SPDLOG_WARN("[log_error] Called with no arguments - nothing to log");
+          return;
+        }
+
         sol::state_view L{ts};
         std::ostringstream oss;
 
@@ -489,6 +507,12 @@ auto initLuaMasterState(sol::state &stateToInit,
           e = static_cast<entt::entity>(it->as<int>());
           hasEntity = true;
           ++it;
+        }
+
+        // Validate: if entity was provided, need at least one more arg for message
+        if (hasEntity && it == va.end()) {
+          SPDLOG_WARN("[log_error] Entity provided but no message - nothing to log");
+          return;
         }
 
         // Concatenate the rest
@@ -593,8 +617,11 @@ auto initLuaMasterState(sol::state &stateToInit,
            "---@param entity Entity\n---@param key string\n---@return number",
            "Gets a float value from an entity's blackboard.", true, false});
 
-  stateToInit.set_function("setBlackboardVector2", setBlackBoardVector2);
-  stateToInit.set_function("getBlackboardVector2", getBlackBoardVector2);
+  stateToInit.set_function("setBlackboardVector2", setBlackboardVector2);
+  stateToInit.set_function("getBlackboardVector2", getBlackboardVector2);
+  // Deprecated aliases (backward compatibility) - TODO: remove in future version
+  stateToInit.set_function("setBlackBoardVector2", setBlackboardVector2);
+  stateToInit.set_function("getBlackBoardVector2", getBlackboardVector2);
   rec.record_free_function(
       {}, {"setBlackboardVector2",
            "---@param entity Entity\n---@param key string\n---@param value "
@@ -813,42 +840,52 @@ auto exposeGlobalsToLua(sol::state &lua) -> void {
   lua["globals"]["inputState"] = &inputStateRef;
 
   // Lightweight constructors for Raylib vector types (accept table {x=,y=} or
-  // positional floats).
+  // positional floats). Includes error handling for robustness.
   lua.set_function("Vector2", [](sol::object a, sol::object b) -> Vector2 {
-    if (a.is<sol::table>()) {
-      auto t = a.as<sol::table>();
-      return Vector2{t.get_or("x", 0.0f), t.get_or("y", 0.0f)};
+    try {
+      if (a.is<sol::table>()) {
+        auto t = a.as<sol::table>();
+        return Vector2{t.get_or("x", 0.0f), t.get_or("y", 0.0f)};
+      }
+      float x = a.is<float>() ? a.as<float>() : (a.is<int>() ? static_cast<float>(a.as<int>()) : 0.0f);
+      float y = b.is<float>() ? b.as<float>() : (b.is<int>() ? static_cast<float>(b.as<int>()) : 0.0f);
+      return Vector2{x, y};
+    } catch (const std::exception& e) {
+      SPDLOG_ERROR("[Vector2 Error]: {}", e.what());
+      return Vector2{0.0f, 0.0f};
     }
-    float x = a.is<float>() ? a.as<float>() : 0.0f;
-    float y = b.is<float>() ? b.as<float>() : 0.0f;
-    return Vector2{x, y};
   });
-  lua.set_function("Vector3",
-                   [](sol::object a, sol::object b, sol::object c) -> Vector3 {
-                     if (a.is<sol::table>()) {
-                       auto t = a.as<sol::table>();
-                       return Vector3{t.get_or("x", 0.0f), t.get_or("y", 0.0f),
-                                      t.get_or("z", 0.0f)};
-                     }
-                     float x = a.is<float>() ? a.as<float>() : 0.0f;
-                     float y = b.is<float>() ? b.as<float>() : 0.0f;
-                     float z = c.is<float>() ? c.as<float>() : 0.0f;
-                     return Vector3{x, y, z};
-                   });
-  lua.set_function("Vector4",
-                   [](sol::object a, sol::object b, sol::object c,
-                      sol::object d) -> Vector4 {
-                     if (a.is<sol::table>()) {
-                       auto t = a.as<sol::table>();
-                       return Vector4{t.get_or("x", 0.0f), t.get_or("y", 0.0f),
-                                      t.get_or("z", 0.0f), t.get_or("w", 0.0f)};
-                     }
-                     float x = a.is<float>() ? a.as<float>() : 0.0f;
-                     float y = b.is<float>() ? b.as<float>() : 0.0f;
-                     float z = c.is<float>() ? c.as<float>() : 0.0f;
-                     float w = d.is<float>() ? d.as<float>() : 0.0f;
-                     return Vector4{x, y, z, w};
-                   });
+  lua.set_function("Vector3", [](sol::object a, sol::object b, sol::object c) -> Vector3 {
+    try {
+      if (a.is<sol::table>()) {
+        auto t = a.as<sol::table>();
+        return Vector3{t.get_or("x", 0.0f), t.get_or("y", 0.0f), t.get_or("z", 0.0f)};
+      }
+      float x = a.is<float>() ? a.as<float>() : (a.is<int>() ? static_cast<float>(a.as<int>()) : 0.0f);
+      float y = b.is<float>() ? b.as<float>() : (b.is<int>() ? static_cast<float>(b.as<int>()) : 0.0f);
+      float z = c.is<float>() ? c.as<float>() : (c.is<int>() ? static_cast<float>(c.as<int>()) : 0.0f);
+      return Vector3{x, y, z};
+    } catch (const std::exception& e) {
+      SPDLOG_ERROR("[Vector3 Error]: {}", e.what());
+      return Vector3{0.0f, 0.0f, 0.0f};
+    }
+  });
+  lua.set_function("Vector4", [](sol::object a, sol::object b, sol::object c, sol::object d) -> Vector4 {
+    try {
+      if (a.is<sol::table>()) {
+        auto t = a.as<sol::table>();
+        return Vector4{t.get_or("x", 0.0f), t.get_or("y", 0.0f), t.get_or("z", 0.0f), t.get_or("w", 0.0f)};
+      }
+      float x = a.is<float>() ? a.as<float>() : (a.is<int>() ? static_cast<float>(a.as<int>()) : 0.0f);
+      float y = b.is<float>() ? b.as<float>() : (b.is<int>() ? static_cast<float>(b.as<int>()) : 0.0f);
+      float z = c.is<float>() ? c.as<float>() : (c.is<int>() ? static_cast<float>(c.as<int>()) : 0.0f);
+      float w = d.is<float>() ? d.as<float>() : (d.is<int>() ? static_cast<float>(d.as<int>()) : 0.0f);
+      return Vector4{x, y, z, w};
+    } catch (const std::exception& e) {
+      SPDLOG_ERROR("[Vector4 Error]: {}", e.what());
+      return Vector4{0.0f, 0.0f, 0.0f, 0.0f};
+    }
+  });
 
   /*
           Camera2D, defines position/orientation in 2d space
@@ -869,6 +906,36 @@ auto exposeGlobalsToLua(sol::state &lua) -> void {
   lua.new_usertype<Camera2D>("Camera2D", "offset", &Camera2D::offset, "target",
                              &Camera2D::target, "rotation", &Camera2D::rotation,
                              "zoom", &Camera2D::zoom);
+
+  // Document Camera2D usertype
+  {
+    auto& t = rec.add_type("Camera2D");
+    t.doc = "Raylib 2D camera structure for controlling viewport rendering.";
+    rec.record_property("Camera2D", {"offset", "Vector2", "Camera offset (displacement from target)"});
+    rec.record_property("Camera2D", {"target", "Vector2", "Camera target (rotation and zoom origin)"});
+    rec.record_property("Camera2D", {"rotation", "number", "Camera rotation in degrees"});
+    rec.record_property("Camera2D", {"zoom", "number", "Camera zoom (scaling), should be 1.0 by default"});
+  }
+
+  // Document Vector constructors
+  rec.record_free_function(
+      {}, {"Vector2",
+           "---@overload fun(x: number, y: number): Vector2\n"
+           "---@overload fun(t: {x: number, y: number}): Vector2\n"
+           "---@return Vector2",
+           "Construct a Vector2 from x,y numbers or a table with x,y fields.", true, false});
+  rec.record_free_function(
+      {}, {"Vector3",
+           "---@overload fun(x: number, y: number, z: number): Vector3\n"
+           "---@overload fun(t: {x: number, y: number, z: number}): Vector3\n"
+           "---@return Vector3",
+           "Construct a Vector3 from x,y,z numbers or a table with x,y,z fields.", true, false});
+  rec.record_free_function(
+      {}, {"Vector4",
+           "---@overload fun(x: number, y: number, z: number, w: number): Vector4\n"
+           "---@overload fun(t: {x: number, y: number, z: number, w: number}): Vector4\n"
+           "---@return Vector4",
+           "Construct a Vector4 from x,y,z,w numbers or a table with x,y,z,w fields.", true, false});
 
   // FIXME: remove this static camera2D object, and use the camera manager
   // isntead
@@ -897,9 +964,31 @@ auto exposeGlobalsToLua(sol::state &lua) -> void {
     return GetScreenToWorld2D(position, camera);
   };
 
+  // Document utility functions
+  rec.record_free_function(
+      {}, {"GetFrameTime", "---@return number",
+           "Returns the smoothed delta time since the last frame in seconds.", true, false});
+  rec.record_free_function(
+      {}, {"GetTime", "---@return number",
+           "Returns the total elapsed time since the game started in seconds.", true, false});
+  rec.record_free_function(
+      {}, {"GetScreenWidth", "---@return integer",
+           "Returns the virtual screen width in pixels.", true, false});
+  rec.record_free_function(
+      {}, {"GetScreenHeight", "---@return integer",
+           "Returns the virtual screen height in pixels.", true, false});
+  rec.record_free_function(
+      {}, {"GetWorldToScreen2D",
+           "---@param position Vector2\n---@param camera Camera2D\n---@return Vector2",
+           "Converts a world position to screen coordinates using the given camera.", true, false});
+  rec.record_free_function(
+      {}, {"GetScreenToWorld2D",
+           "---@param position Vector2\n---@param camera Camera2D\n---@return Vector2",
+           "Converts a screen position to world coordinates using the given camera.", true, false});
+
   rec.record_property(
       "globals",
-      {"camera", "nil", "Camera2D object used for rendering the game world."});
+      {"camera", "Camera2D", "Camera2D object used for rendering the game world."});
 
   // 3) entt::entity
   lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {
@@ -1149,7 +1238,7 @@ auto clearGoalWorldState(entt::entity entity) -> void {
  * ------------------------------------------------------
  */
 
-auto setBlackBoardVector2(entt::entity entity, std::string key,
+auto setBlackboardVector2(entt::entity entity, std::string key,
                           Vector2 valueToSet) -> void {
   if (!globals::getRegistry().valid(entity) || entity == entt::null) {
     SPDLOG_ERROR("Entity {} is not valid, cannot set blackboard vector2",
@@ -1163,7 +1252,7 @@ auto setBlackBoardVector2(entt::entity entity, std::string key,
   // static_cast<int>(entity), key, valueToSet.x, valueToSet.y);
 }
 
-auto getBlackBoardVector2(entt::entity entity, std::string key)
+auto getBlackboardVector2(entt::entity entity, std::string key)
     -> std::optional<Vector2> {
   if (!globals::getRegistry().valid(entity) || entity == entt::null) {
     SPDLOG_ERROR("Entity {} is not valid, cannot get blackboard vector2",

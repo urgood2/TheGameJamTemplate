@@ -1334,7 +1334,7 @@ end
 -- any card that goes in an action board. NOT TRIGGERS.
 -- retursn the entity ID of the created card
 function createNewCard(id, x, y, gameStateToApply)
-    local imageToUse = "trigger_card_placeholder.png"
+    local imageToUse = "sample_card.png"
     -- local imageToUse = "3500-TheRoguelike_1_10_alpha_293.png"
     -- local imageToUse = "b1822.png"
     -- if category == "action" then
@@ -1675,7 +1675,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_polychrome")
     -- shaderPipelineComp:addPass("3d_skew_aurora")
     -- shaderPipelineComp:addPass("3d_skew_iridescent")
-    -- shaderPipelineComp:addPass("3d_skew_nebula")
+    shaderPipelineComp:addPass("3d_skew_nebula")
     -- shaderPipelineComp:addPass("3d_skew_plasma")
     -- shaderPipelineComp:addPass("3d_skew_prismatic")
     -- shaderPipelineComp:addPass("3d_skew_thermal")
@@ -1683,7 +1683,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_crystalline")
     -- shaderPipelineComp:addPass("3d_skew_glitch")
     -- shaderPipelineComp:addPass("3d_skew_negative_tint")
-    shaderPipelineComp:addPass("3d_skew_oil_slick")
+    -- shaderPipelineComp:addPass("3d_skew_oil_slick")
     -- shaderPipelineComp:addPass("3d_skew_polka_dot")
     
     do

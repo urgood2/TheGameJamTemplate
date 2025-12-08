@@ -465,16 +465,6 @@
             }
         ]
     },
-    "locked_upgrade_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4132-TheRoguelike_1_10_alpha_925.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
     "crystal_anim": {
         "frames": [
             {
@@ -834,16 +824,5 @@
         "bg_color": "NONE"
       }
     ]
-  },
-  "locked_anim":
-    {
-        "frames": [
-        {
-            "sprite_UUID": "locked.png",
-            "duration_seconds": 5,
-            "fg_color": "NONE",
-            "bg_color": "NONE"
-        }
-        ]
-    }
+  }
 }

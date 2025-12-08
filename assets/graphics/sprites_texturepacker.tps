@@ -176,8 +176,6 @@
             <key type="filename">../../../../../Downloads/action_card_placeholder.png</key>
             <key type="filename">../../../../../Downloads/mod_card_placeholder.png</key>
             <key type="filename">../../../../../Downloads/trigger_card_placeholder.png</key>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Back/card_back_1.png</key>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</key>
             <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
             <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
             <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_2.png</key>
@@ -9707,91 +9705,6 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>13,13,25,25</rect>
-                <key>scale9Paddings</key>
-                <rect>13,13,25,25</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</key>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui1.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui10.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui11.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui12.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui13.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui14.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui15.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui16.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui17.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui18.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui19.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui2.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui20.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui21.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui22.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui23.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui24.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui25.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui26.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui27.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui28.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui29.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui3.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui30.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui31.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui32.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui33.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui34.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui35.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui36.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui37.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui38.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui39.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui4.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui40.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui41.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui42.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui43.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui44.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui45.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui46.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui47.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui48.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui5.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui6.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui7.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui8.png</key>
-            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui9.png</key>
-            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
-            <key type="filename">rounded_rect_very_small.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9Paddings</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
             <key type="filename">pre-packing-files_globbed/3325-TheRoguelike_1_10_alpha_118.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -10217,18 +10130,6 @@
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale7.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale8.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale9.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0001.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0002.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0003.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0004.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0005.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0006.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0007.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0008.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0009.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0010.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0011.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0012.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0001.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0002.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0003.png</key>
@@ -10244,6 +10145,8 @@
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0013.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0014.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0015.png</key>
+            <key type="filename">pre-packing-files_globbed/cards_and_celestial_objects/avatar_sample.png</key>
+            <key type="filename">pre-packing-files_globbed/cards_and_celestial_objects/joker_sample.png</key>
             <key type="filename">rounded_rect.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -10272,6 +10175,104 @@
                 <rect>2,2,4,4</rect>
                 <key>scale9Paddings</key>
                 <rect>2,2,4,4</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui1.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui10.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui11.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui12.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui13.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui14.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui15.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui16.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui17.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui18.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui19.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui2.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui20.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui21.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui22.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui23.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui24.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui25.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui26.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui27.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui28.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui29.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui3.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui30.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui31.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui32.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui33.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui34.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui35.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui36.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui37.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui38.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui39.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui4.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui40.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui41.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui42.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui43.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui44.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui45.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui46.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui47.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui48.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui5.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui6.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui7.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui8.png</key>
+            <key type="filename">pre-packing-files_globbed/roguelike_ui/roguelike_ui9.png</key>
+            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
+            <key type="filename">rounded_rect_very_small.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9Paddings</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/cards_and_celestial_objects/sample_card.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>20,32,40,64</rect>
+                <key>scale9Paddings</key>
+                <rect>20,32,40,64</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/cards_and_celestial_objects/sample_pack.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>21,39,42,77</rect>
+                <key>scale9Paddings</key>
+                <rect>21,39,42,77</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -12239,18 +12240,6 @@
                     <filename>pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</filename>
                     <filename>pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</filename>
                     <filename>pre-packing-files_globbed/socials/Socials 16x16_Discord.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0001.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0002.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0003.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0004.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0005.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0006.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0007.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0008.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0009.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0010.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0011.png</filename>
-                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0012.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0001.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0002.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0003.png</filename>
@@ -12266,16 +12255,12 @@
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0013.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0014.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0015.png</filename>
-                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</filename>
                     <filename>../../../../../Downloads/musicnote1.png</filename>
                     <filename>../../../../../Downloads/musicnote2.png</filename>
                     <filename>../../../../../Downloads/musicnote3.png</filename>
                     <filename>../../../../../Downloads/musicnote4.png</filename>
                     <filename>../../../../../Downloads/musicnote5.png</filename>
                     <filename>../../../../../Downloads/title3.png</filename>
-                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</filename>
-                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</filename>
-                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</filename>
                     <filename>pre-packing-files_globbed/jamegam51/Defended2.png</filename>
                     <filename>pre-packing-files_globbed/jamegam51/Defended3.png</filename>
                     <filename>pre-packing-files_globbed/jamegam51/Defended4.png</filename>
@@ -12284,11 +12269,11 @@
                     <filename>pre-packing-files_globbed/roguelike_ui</filename>
                     <filename>pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy</filename>
                     <filename>pre-packing-files_globbed/raven_fantasy_complete/32x32_ui_popups</filename>
-                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Back/card_back_1.png</filename>
                     <filename>../../../../../Downloads/action_card_placeholder.png</filename>
                     <filename>../../../../../Downloads/mod_card_placeholder.png</filename>
                     <filename>../../../../../Downloads/trigger_card_placeholder.png</filename>
                     <filename>pre-packing-files_globbed/Flairs/Default/flair_plus.png</filename>
+                    <filename>pre-packing-files_globbed/cards_and_celestial_objects</filename>
                 </array>
             </struct>
         </map>

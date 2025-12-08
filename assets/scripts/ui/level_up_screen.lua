@@ -24,7 +24,7 @@ LevelUpScreen._pausedGameplay = false
 LevelUpScreen._layout = {
     size = 132,
     spacing = 260,
-    sprite = "b3640.png",
+    sprite = "sample_pack.png",
     hitboxW = 220,
     hitboxH = 240,
 }

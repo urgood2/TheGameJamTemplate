@@ -40,8 +40,8 @@ AvatarJokerStrip.layout = {
     glowBaseAlpha = 55,
     glowPulseAlpha = 70,
     glowPulseSpeed = 1.6,
-    avatarSprite = "4165-TheRoguelike_1_10_alpha_958.png",
-    jokerSprite = "4169-TheRoguelike_1_10_alpha_962.png"
+    avatarSprite = "avatar_sample.png",
+    jokerSprite = "joker_sample.png"
 }
 
 local colors = {

@@ -74,9 +74,10 @@ void main()
                     + orbitVec;
 
     // Precompute tilt trig once per draw (constant across the quad) for UV correction.
+    // Negate to make card tilt TOWARD the mouse (edge near mouse goes into screen)
     float tiltStrength = abs(fov) * 2.0;
-    float tiltXFrag = mouseForce.y * tiltStrength;
-    float tiltYFrag = mouseForce.x * tiltStrength;
+    float tiltXFrag = -mouseForce.y * tiltStrength;
+    float tiltYFrag = -mouseForce.x * tiltStrength;
     tiltSin = vec2(sin(tiltXFrag), sin(tiltYFrag));
     tiltCos = vec2(cos(tiltXFrag), cos(tiltYFrag));
 
@@ -85,8 +86,9 @@ void main()
     angleFlat = rotation + jitter;
 
     // Build rotation matrix for pseudo-3D effect (geometry uses the legacy 0.5 tilt scale).
-    float tiltXGeom = mouseForce.y * 0.5;
-    float tiltYGeom = mouseForce.x * 0.5;
+    // Negate to make card tilt TOWARD the mouse (edge near mouse goes into screen)
+    float tiltXGeom = -mouseForce.y * 0.5;
+    float tiltYGeom = -mouseForce.x * 0.5;
     float cosX = cos(tiltXGeom);
     float sinX = sin(tiltXGeom);
     float cosY = cos(tiltYGeom);

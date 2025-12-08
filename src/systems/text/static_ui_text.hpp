@@ -435,6 +435,13 @@ namespace static_ui_text_system {
                     textSegmentDef.config.fontSize = *fontSize;
                 }
 
+                // font override?
+                if (auto fontName = getAttrString(segment.attributes, "font")) {
+                    textSegmentDef.config.fontName = *fontName;
+                } else if (auto fontNameAlt = getAttrString(segment.attributes, "fontName")) {
+                    textSegmentDef.config.fontName = *fontNameAlt;
+                }
+
                 // shadow override?
                 if (auto shadowStr = getAttrString(segment.attributes, "shadow")) {
                     textSegmentDef.config.shadow = !(*shadowStr == "false" || *shadowStr == "0");

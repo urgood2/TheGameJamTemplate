@@ -206,6 +206,7 @@ namespace ui
         std::optional<float> scale{1.0f};                                                // UI scale, also applies to text (not sure if it does to size?)
         std::optional<float> textSpacing; // optional spacing parameter for text in UI elements
         std::optional<float> fontSize; // Font size for text UI elements
+        std::optional<std::string> fontName; // Optional named font to use instead of the current language font
         std::optional<bool> focusWithObject;                                       // Ensures that when an associated object (e.g., an entity, card, or UI element) gains focus, the UI element also becomes focused. Typically used when a UI element represents an object in the game and should highlight/select the object when focused. Updates the object_focus_timer property.
         std::optional<bool> refreshMovement;                                       // Signals that an object's movement needs to be recalculated, if this config is attached to an object in a UI element. Also makes it update every frame
         std::optional<bool> no_recalc, non_recalc;                                 // Prevents automatic recalculation of UI layout
@@ -398,6 +399,11 @@ namespace ui
 
         Builder& addFontSize(const float& fontSize) {
             uiConfig.fontSize = fontSize;
+            return *this;
+        }
+
+        Builder& addFontName(const std::string& fontName) {
+            uiConfig.fontName = fontName;
             return *this;
         }
 

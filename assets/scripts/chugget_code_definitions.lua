@@ -9059,6 +9059,28 @@ function localization.getTextWidthWithCurrentFont(...) end
 function localization.loadFontData(...) end
 
 ---
+--- Loads a named font from a file path with the specified size.
+---
+---@param name string # The name to register the font under (e.g., 'tooltip').
+---@param path string # The file path to the font file (TTF/OTF).
+---@param size number # The font size to load.
+---@return nil
+function localization.loadNamedFont(...) end
+
+---
+--- Gets a named font by name, falling back to current language font.
+---
+---@return FontData # The font data for the named font, or current language font if not found.
+function localization.getNamedFont(...) end
+
+---
+--- Checks if a named font has been loaded.
+---
+---@param name string # The name of the font to check.
+---@return boolean # True if the named font exists.
+function localization.hasNamedFont(...) end
+
+---
 --- Registers a callback that executes after the current language changes.
 ---
 ---@param callback fun(newLanguageCode: string) # A function to call when the language changes.

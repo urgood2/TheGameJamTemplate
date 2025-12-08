@@ -61,6 +61,18 @@ namespace localization
 
   extern std::unordered_map<std::string, globals::FontData> languageFontData;
 
+  // Named font registry - for custom fonts like tooltip fonts
+  extern std::unordered_map<std::string, globals::FontData> namedFonts;
+  
+  /// Load a named font from file path with specified size
+  extern void loadNamedFont(const std::string& name, const std::string& path, float size);
+  
+  /// Get a named font by name, falls back to current language font if not found
+  extern const globals::FontData& getNamedFont(const std::string& name);
+  
+  /// Check if a named font exists
+  extern bool hasNamedFont(const std::string& name);
+
   // ==========================
   // Localization System API
   // ==========================

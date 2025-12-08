@@ -9,6 +9,7 @@
 #include "systems/reflection/reflection.hpp"
 #include "systems/text/textVer2.hpp"
 #include "core/globals.hpp"
+#include "systems/localization/localization.hpp"
 #include "systems/ui/ui_data.hpp"
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
@@ -21,6 +22,19 @@
 
 namespace ui
 {
+    namespace
+    {
+        // Resolve the font for a given UI configuration, falling back to the current language font.
+        const globals::FontData& resolveFontData(const UIConfig* config)
+        {
+            if (config && config->fontName && localization::hasNamedFont(config->fontName.value()))
+            {
+                return localization::getNamedFont(config->fontName.value());
+            }
+            return localization::getFontData();
+        }
+    }
+
     //TODO: update function registry for methods that replace transform-provided methods
 
     // TODO: two of these?
@@ -1325,6 +1339,7 @@ namespace ui
         auto *node =  &nodeComp;
         auto *transform =  &transformComp;
         auto *rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
+        const auto& fontData = resolveFontData(config);
 
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
@@ -1404,10 +1419,10 @@ namespace ui
         if (config->uiType == UITypeEnum::TEXT && config->scale)
         {
             ZONE_SCOPED("UI Element: Text Logic");
-            float rawScale = config->scale.value() * localization::getFontData().fontScale;
+            float rawScale = config->scale.value() * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
-            float textParallaxSX = node->shadowDisplacement->x * localization::getFontData().fontLoadedSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * localization::getFontData().fontLoadedSize * -0.03f * scaleFactor;
+            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
             
             //TODO: if scale is smaller, make the shadow height smaller too
 
@@ -1436,12 +1451,12 @@ namespace ui
                 {
                     Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
 
-                    float textX = localization::getFontData().fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-                    float textY = localization::getFontData().fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-                    float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-                    float spacing = config->textSpacing.value_or(localization::getFontData().spacing);   
+                    float textX = fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * fontData.fontScale;
+                    float textY = fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * fontData.fontScale;
+                    float fontScale = config->scale.value_or(1.0f) * fontData.fontScale;
+                    float spacing = config->textSpacing.value_or(fontData.spacing);   
 
-                    float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
+                    float scale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
                     // layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                     //     cmd->scaleX = scale;
                     //     cmd->scaleY = scale;
@@ -1455,12 +1470,12 @@ namespace ui
                     //     cmd->y = textY;
                     //     cmd->origin = {0, 0};
                     //     cmd->rotation = 0;
-                    //     cmd->fontSize = localization::getFontData().fontLoadedSize;
+                    //     cmd->fontSize = fontData.fontLoadedSize;
                     //     cmd->spacing = spacing;
                     //     cmd->color = shadowColor;
                     // }, zIndex);
-                    float fontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
-                    layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, fontSize, spacing, shadowColor);
+                    float fontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.fontLoadedSize;
+                    layer::TextPro(config->text.value().c_str(), fontData.font, textX, textY, {0, 0}, 0, fontSize, spacing, shadowColor);
                     
                     // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
                 }
@@ -1500,16 +1515,16 @@ namespace ui
             // float textX = localization::getFontData().fontRenderOffset.x * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             // float textY = localization::getFontData().fontRenderOffset.y * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             // float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-            float textX = localization::getFontData().fontRenderOffset.x;
-            float textY = localization::getFontData().fontRenderOffset.y;
-            float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
+            float textX = fontData.fontRenderOffset.x;
+            float textY = fontData.fontRenderOffset.y;
+            float scale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
             // layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
             //     cmd->scaleX = scale;
             //     cmd->scaleY = scale;
             // }, zIndex);
             layer::Scale(scale, scale);
 
-            float spacing = config->textSpacing.value_or(localization::getFontData().spacing);
+            float spacing = config->textSpacing.value_or(fontData.spacing);
             
             // layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, renderColor](layer::CmdTextPro *cmd) {
             //     cmd->text = text.c_str();
@@ -1518,12 +1533,12 @@ namespace ui
             //     cmd->y = textY;
             //     cmd->origin = {0, 0};
             //     cmd->rotation = 0;
-            //     cmd->fontSize = localization::getFontData().fontLoadedSize;
+            //     cmd->fontSize = fontData.fontLoadedSize;
             //     cmd->spacing = spacing;
             //     cmd->color = renderColor;
             // }, zIndex);
-            float fontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
-            layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, fontSize, spacing, renderColor);
+            float fontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.fontLoadedSize;
+            layer::TextPro(config->text.value().c_str(), fontData.font, textX, textY, {0, 0}, 0, fontSize, spacing, renderColor);
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
@@ -1694,14 +1709,14 @@ namespace ui
                 state->object_focus_timer.reset();
             }
         }
-        // draw input text (IMMEDIATE MODE)
+    // draw input text (IMMEDIATE MODE)
 if (config->uiType == UITypeEnum::INPUT_TEXT) {
     // Source
     auto& ti             = globals::getRegistry().get<ui::TextInput>(entity);
     const std::string& s = ti.text;
 
     // Font & knobs (match TEXT path)
-    auto& fd        = localization::getFontData();
+    const auto& fd        = fontData;
     const float uiScale   = config->scale.value_or(1.0f) * fd.fontScale * globals::getGlobalUIScaleFactor();
     const float spacing   = config->textSpacing.value_or(fd.spacing);
     Color renderColor     = BLACK;
@@ -1952,6 +1967,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         auto *node =  &nodeComp;
         auto *transform =  &transformComp;
         auto *rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
+        const auto& fontData = resolveFontData(config);
 
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
@@ -2040,10 +2056,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (config->uiType == UITypeEnum::TEXT && config->scale)
         {
             ZONE_SCOPED("UI Element: Text Logic");
-            float rawScale = config->scale.value() * localization::getFontData().fontScale;
+            float rawScale = config->scale.value() * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
-            float textParallaxSX = node->shadowDisplacement->x * localization::getFontData().fontLoadedSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * localization::getFontData().fontLoadedSize * -0.03f * scaleFactor;
+            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
             
             //TODO: if scale is smaller, make the shadow height smaller too
 
@@ -2073,25 +2089,26 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 {
                     Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
 
-                    float textX = localization::getFontData().fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-                    float textY = localization::getFontData().fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-                    float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-                    float spacing = config->textSpacing.value_or(localization::getFontData().spacing);   
+                    float textX = fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * fontData.fontScale;
+                    float textY = fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * fontData.fontScale;
+                    float fontScale = config->scale.value_or(1.0f) * fontData.fontScale;
+                    float spacing = config->textSpacing.value_or(fontData.spacing);   
 
-                    float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
+                    float scale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
                     layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                         cmd->scaleX = scale;
                         cmd->scaleY = scale;
                     }, zIndex);
                     
-                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, shadowColor](layer::CmdTextPro *cmd) {
+                    float fontSize = fontData.fontLoadedSize;
+                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = fontData.font, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
                         cmd->text = text.c_str();
                         cmd->font = font;
                         cmd->x = textX;
                         cmd->y = textY;
                         cmd->origin = {0, 0};
                         cmd->rotation = 0;
-                        cmd->fontSize = localization::getFontData().fontLoadedSize;
+                        cmd->fontSize = fontSize;
                         cmd->spacing = spacing;
                         cmd->color = shadowColor;
                     }, zIndex);
@@ -2129,24 +2146,25 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // float textX = localization::getFontData().fontRenderOffset.x * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             // float textY = localization::getFontData().fontRenderOffset.y * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
             // float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-            float textX = localization::getFontData().fontRenderOffset.x;
-            float textY = localization::getFontData().fontRenderOffset.y;
-            float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::getGlobalUIScaleFactor();
+            float textX = fontData.fontRenderOffset.x;
+            float textY = fontData.fontRenderOffset.y;
+            float scale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
             layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                 cmd->scaleX = scale;
                 cmd->scaleY = scale;
             }, zIndex);
 
-            float spacing = config->textSpacing.value_or(localization::getFontData().spacing);
+            float spacing = config->textSpacing.value_or(fontData.spacing);
             
-            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, renderColor](layer::CmdTextPro *cmd) {
+            float fontSize = fontData.fontLoadedSize;
+            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = fontData.font, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
                 cmd->text = text.c_str();
                 cmd->font = font;
                 cmd->x = textX;
                 cmd->y = textY;
                 cmd->origin = {0, 0};
                 cmd->rotation = 0;
-                cmd->fontSize = localization::getFontData().fontLoadedSize;
+                cmd->fontSize = fontSize;
                 cmd->spacing = spacing;
                 cmd->color = renderColor;
             }, zIndex);
@@ -2370,7 +2388,6 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             const std::string &displayText = textInput.text;  // (optionally mask if you add that feature)
 
             // Reuse same font + knobs you used for TEXT
-            auto &fontData   = localization::getFontData();
             float scale      = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
             float spacing    = config->textSpacing.value_or(fontData.spacing);
             Color renderColor = config->color.value();
@@ -2406,18 +2423,19 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 float textX  = fontData.fontRenderOffset.x;
                 float textY  = fontData.fontRenderOffset.y;
                 float s      = scale;
+                float fontSize = fontData.fontLoadedSize;
 
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [s](layer::CmdScale *cmd){ cmd->scaleX = s; cmd->scaleY = s; }, zIndex);
                 layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
                                                                 font = fontData.font,
-                                                                textX, textY, spacing, shadowColor](layer::CmdTextPro *cmd) {
+                                                                textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
                     cmd->text     = t.c_str();
                     cmd->font     = font;
                     cmd->x        = textX;
                     cmd->y        = textY;
                     cmd->origin   = {0, 0};
                     cmd->rotation = 0;
-                    cmd->fontSize = localization::getFontData().fontLoadedSize;
+                    cmd->fontSize = fontSize;
                     cmd->spacing  = spacing;
                     cmd->color    = shadowColor;
                 }, zIndex);
@@ -2439,6 +2457,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             float textX = fontData.fontRenderOffset.x;
             float textY = fontData.fontRenderOffset.y;
+            float fontSize = fontData.fontLoadedSize;
 
             layer::QueueCommand<layer::CmdScale>(layerPtr, [s = scale](layer::CmdScale *cmd){
                 cmd->scaleX = s; cmd->scaleY = s;
@@ -2446,14 +2465,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
                                                             font = fontData.font,
-                                                            textX, textY, spacing, renderColor](layer::CmdTextPro *cmd) {
+                                                            textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
                 cmd->text     = t.c_str();
                 cmd->font     = font;
                 cmd->x        = textX;
                 cmd->y        = textY;
                 cmd->origin   = {0, 0};
                 cmd->rotation = 0;
-                cmd->fontSize = localization::getFontData().fontLoadedSize;
+                cmd->fontSize = fontSize;
                 cmd->spacing  = spacing;
                 cmd->color    = renderColor;
             }, zIndex);

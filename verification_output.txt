@@ -1,0 +1,1905 @@
+[2025-12-07 23:20:48.667] [debug] [utilities.cpp:179] getRawAssetPathNoUUID()
+[2025-12-07 23:20:51.681] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(raws/colors.json)
+[2025-12-07 23:20:51.702] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(graphics/animations.json)
+[2025-12-07 23:20:51.705] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(config.json)
+[2025-12-07 23:20:51.706] [info] [telemetry.cpp:92] [telemetry] configured: enabled=true, host='https://us.i.posthog.com'
+[2025-12-07 23:20:51.707] [debug] [telemetry.cpp:152] [telemetry] stub event 'app_start' (1 props) -> 
+[2025-12-07 23:20:51.707] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/scripting_config.json)
+[2025-12-07 23:20:51.707] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/ai_worldstate.json)
+[2025-12-07 23:20:51.707] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/ai_actions.json)
+[2025-12-07 23:20:51.708] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(raws/ui_strings.json)
+[2025-12-07 23:20:51.708] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(raws/9patch.json)
+[2025-12-07 23:20:51.708] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(graphics/)
+[2025-12-07 23:20:51.757] [info] [init.cpp:438] Processed 'sprites-1.json', associated with 'sprites_atlas-1.png'
+[2025-12-07 23:20:53.172] [info] [init.cpp:438] Processed 'sprites-0.json', associated with 'sprites_atlas-0.png'
+[2025-12-07 23:20:53.275] [info] [init.cpp:438] Processed 'sprites-2.json', associated with 'sprites_atlas-2.png'
+[2025-12-07 23:20:53.279] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(raws/colors.json)
+[2025-12-07 23:20:53.283] [info] [init.cpp:354] Updated colors JSON saved to '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/colors.json'.
+[2025-12-07 23:20:53.284] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(all_uuids.json #auto_generated #verified.json)
+[2025-12-07 23:20:53.284] [debug] [uuid.hpp:45] Reading existing JSON file: '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/all_uuids.json #auto_generated #verified.json'
+[2025-12-07 23:20:56.225] [debug] [uuid.hpp:163] Writing merged JSON to file '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/all_uuids.json #auto_generated #verified.json'.
+[2025-12-07 23:20:56.644] [info] [uuid.hpp:167] UUID map successfully merged and dumped to '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/all_uuids.json #auto_generated #verified.json'.
+[2025-12-07 23:20:56.725] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(raws/colors.json)
+[2025-12-07 23:20:56.726] [info] [init.cpp:354] Updated colors JSON saved to '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/colors.json'.
+[2025-12-07 23:20:56.726] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(graphics/)
+[2025-12-07 23:20:56.760] [info] [init.cpp:438] Processed 'sprites-1.json', associated with 'sprites_atlas-1.png'
+[2025-12-07 23:20:57.584] [info] [init.cpp:438] Processed 'sprites-0.json', associated with 'sprites_atlas-0.png'
+[2025-12-07 23:20:57.642] [info] [init.cpp:438] Processed 'sprites-2.json', associated with 'sprites_atlas-2.png'
+INFO: Initializing raylib 5.5
+INFO: Platform backend: DESKTOP (GLFW)
+INFO: Supported raylib modules:
+INFO:     > rcore:..... loaded (mandatory)
+INFO:     > rlgl:...... loaded (mandatory)
+INFO:     > rshapes:... loaded (optional)
+INFO:     > rtextures:. loaded (optional)
+INFO:     > rtext:..... loaded (optional)
+INFO:     > rmodels:... loaded (optional)
+INFO:     > raudio:.... loaded (optional)
+INFO: DISPLAY: Device initialized successfully
+INFO:     > Display size: 1496 x 967
+INFO:     > Screen size:  1440 x 900
+INFO:     > Render size:  1440 x 900
+INFO:     > Viewport offsets: 0, 0
+INFO: GLAD: OpenGL extensions loaded successfully
+INFO: GL: Supported extensions count: 43
+INFO: GL: OpenGL device information:
+INFO:     > Vendor:   Apple
+INFO:     > Renderer: Apple M1 Pro
+INFO:     > Version:  4.1 Metal - 89.4
+INFO:     > GLSL:     4.10
+INFO: GL: VAO extension detected, VAO functions loaded successfully
+INFO: GL: NPOT textures extension detected, full NPOT textures supported
+INFO: GL: DXT compressed textures supported
+INFO: PLATFORM: DESKTOP (GLFW - Cocoa): Initialized successfully
+INFO: TEXTURE: [ID 1] Texture loaded successfully (1x1 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 1] Default texture loaded successfully
+INFO: SHADER: [ID 1] Vertex shader compiled successfully
+INFO: SHADER: [ID 2] Fragment shader compiled successfully
+INFO: SHADER: [ID 3] Program shader loaded successfully
+INFO: SHADER: [ID 3] Default shader loaded successfully
+INFO: RLGL: Render batch vertex buffers loaded successfully in RAM (CPU)
+INFO: RLGL: Render batch vertex buffers loaded successfully in VRAM (GPU)
+INFO: RLGL: Default OpenGL state initialized successfully
+INFO: TEXTURE: [ID 2] Texture loaded successfully (128x128 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Default font loaded successfully (224 glyphs)
+INFO: SYSTEM: Working Directory: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate
+[2025-12-07 23:20:57.927] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(gamecontrollerdb.txt)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/gamecontrollerdb.txt] Text file loaded successfully
+INFO: TEXTURE: [ID 3] Texture loaded successfully (512x1024 | R8G8B8A8 | 1 mipmaps)
+[2025-12-07 23:20:57.969] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(graphics/)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites_atlas-1.png] File loaded successfully
+INFO: IMAGE: Data loaded successfully (4096x4096 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 4] Texture loaded successfully (4096x4096 | R8G8B8A8 | 1 mipmaps)
+[2025-12-07 23:20:58.576] [info] [init.cpp:672] Loaded texture 'sprites_atlas-1.png' as UUID '1_atla_sprite'
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites_atlas-0.png] File loaded successfully
+INFO: IMAGE: Data loaded successfully (4096x4096 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Texture loaded successfully (4096x4096 | R8G8B8A8 | 1 mipmaps)
+[2025-12-07 23:20:58.933] [info] [init.cpp:672] Loaded texture 'sprites_atlas-0.png' as UUID '0_atla_sprite'
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites_atlas-2.png] File loaded successfully
+INFO: IMAGE: Data loaded successfully (2048x4096 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 6] Texture loaded successfully (2048x4096 | R8G8B8A8 | 1 mipmaps)
+[2025-12-07 23:20:59.196] [info] [init.cpp:672] Loaded texture 'sprites_atlas-2.png' as UUID '2_atla_sprite'
+[2025-12-07 23:20:59.196] [debug] [init.cpp:240] Starting load animation 3535_TheRoguelike_1_10_alpha_328_anim with UUID: 1_10_328_3535_alpha_anim_theroguelike
+[2025-12-07 23:20:59.197] [debug] [init.cpp:240] Starting load animation 3628_TheRoguelike_1_10_alpha_421_anim with UUID: 1_10_3628_421_alpha_anim_theroguelike
+[2025-12-07 23:20:59.198] [debug] [init.cpp:240] Starting load animation 3631_TheRoguelike_1_10_alpha_424_anim with UUID: 1_10_3631_424_alpha_anim_theroguelike
+[2025-12-07 23:20:59.198] [debug] [init.cpp:240] Starting load animation 3635_TheRoguelike_1_10_alpha_428_anim with UUID: 1_10_3635_428_alpha_anim_theroguelike
+[2025-12-07 23:20:59.198] [debug] [init.cpp:240] Starting load animation 3640_TheRoguelike_1_10_alpha_433_anim with UUID: 1_10_3640_433_alpha_anim_theroguelike
+[2025-12-07 23:20:59.198] [debug] [init.cpp:240] Starting load animation 3654_TheRoguelike_1_10_alpha_447_anim with UUID: 1_10_3654_447_alpha_anim_theroguelike
+[2025-12-07 23:20:59.198] [debug] [init.cpp:240] Starting load animation 3676_TheRoguelike_1_10_alpha_469_anim with UUID: 1_10_3676_469_alpha_anim_theroguelike
+[2025-12-07 23:20:59.198] [debug] [init.cpp:240] Starting load animation 3730_TheRoguelike_1_10_alpha_523_anim with UUID: 1_10_3730_523_alpha_anim_theroguelike
+[2025-12-07 23:20:59.199] [debug] [init.cpp:240] Starting load animation 3738_TheRoguelike_1_10_alpha_531_anim with UUID: 1_10_3738_531_alpha_anim_theroguelike
+[2025-12-07 23:20:59.199] [debug] [init.cpp:240] Starting load animation 3741_TheRoguelike_1_10_alpha_534_anim with UUID: 1_10_3741_534_alpha_anim_theroguelike
+[2025-12-07 23:20:59.199] [debug] [init.cpp:240] Starting load animation 3761_TheRoguelike_1_10_alpha_554_anim with UUID: 1_10_3761_554_alpha_anim_theroguelike
+[2025-12-07 23:20:59.199] [debug] [init.cpp:240] Starting load animation 3826_TheRoguelike_1_10_alpha_619_anim with UUID: 1_10_3826_619_alpha_anim_theroguelike
+[2025-12-07 23:20:59.199] [debug] [init.cpp:240] Starting load animation 3847_TheRoguelike_1_10_alpha_640_anim with UUID: 1_10_3847_640_alpha_anim_theroguelike
+[2025-12-07 23:20:59.199] [debug] [init.cpp:240] Starting load animation 3849_TheRoguelike_1_10_alpha_642_anim with UUID: 1_10_3849_642_alpha_anim_theroguelike
+[2025-12-07 23:20:59.199] [debug] [init.cpp:240] Starting load animation 3850_TheRoguelike_1_10_alpha_643_anim with UUID: 1_10_3850_643_alpha_anim_theroguelike
+[2025-12-07 23:20:59.200] [debug] [init.cpp:240] Starting load animation 3881_TheRoguelike_1_10_alpha_674_anim with UUID: 1_10_3881_674_alpha_anim_theroguelike
+[2025-12-07 23:20:59.200] [debug] [init.cpp:240] Starting load animation 3886_TheRoguelike_1_10_alpha_679_anim with UUID: 1_10_3886_679_alpha_anim_theroguelike
+[2025-12-07 23:20:59.200] [debug] [init.cpp:240] Starting load animation 3887_TheRoguelike_1_10_alpha_680_anim with UUID: 1_10_3887_680_alpha_anim_theroguelike
+[2025-12-07 23:20:59.200] [debug] [init.cpp:240] Starting load animation 3888_TheRoguelike_1_10_alpha_681_anim with UUID: 1_10_3888_681_alpha_anim_theroguelike
+[2025-12-07 23:20:59.200] [debug] [init.cpp:240] Starting load animation 3902_TheRoguelike_1_10_alpha_695_anim with UUID: 1_10_3902_695_alpha_anim_theroguelike
+[2025-12-07 23:20:59.200] [debug] [init.cpp:240] Starting load animation 3911_TheRoguelike_1_10_alpha_704_anim with UUID: 1_10_3911_704_alpha_anim_theroguelike
+[2025-12-07 23:20:59.201] [debug] [init.cpp:240] Starting load animation 3916_TheRoguelike_1_10_alpha_709_anim with UUID: 1_10_3916_709_alpha_anim_theroguelike
+[2025-12-07 23:20:59.201] [debug] [init.cpp:240] Starting load animation 4065_TheRoguelike_1_10_alpha_858_anim with UUID: 1_10_4065_858_alpha_anim_theroguelike
+[2025-12-07 23:20:59.201] [debug] [init.cpp:240] Starting load animation 4067_TheRoguelike_1_10_alpha_860_anim with UUID: 1_10_4067_860_alpha_anim_theroguelike
+[2025-12-07 23:20:59.202] [debug] [init.cpp:240] Starting load animation 4069_TheRoguelike_1_10_alpha_862_anim with UUID: 1_10_4069_862_alpha_anim_theroguelike
+[2025-12-07 23:20:59.202] [debug] [init.cpp:240] Starting load animation 4071_TheRoguelike_1_10_alpha_864_anim with UUID: 1_10_4071_864_alpha_anim_theroguelike
+[2025-12-07 23:20:59.202] [debug] [init.cpp:240] Starting load animation 4092_TheRoguelike_1_10_alpha_885_anim with UUID: 1_10_4092_885_alpha_anim_theroguelike
+[2025-12-07 23:20:59.202] [debug] [init.cpp:240] Starting load animation 4160_TheRoguelike_1_10_alpha_953_anim with UUID: 1_10_4160_953_alpha_anim_theroguelike
+[2025-12-07 23:20:59.203] [debug] [init.cpp:240] Starting load animation black_hole_anim with UUID: anim_black_hole
+[2025-12-07 23:20:59.203] [debug] [init.cpp:240] Starting load animation black_hole_particle_anim with UUID: anim_black_hole_particle
+[2025-12-07 23:20:59.203] [debug] [init.cpp:240] Starting load animation blue_whale9_anim with UUID: anim_blue_whale9
+[2025-12-07 23:20:59.203] [debug] [init.cpp:240] Starting load animation bluesky_icon_anim with UUID: anim_bluesky_icon
+[2025-12-07 23:20:59.204] [debug] [init.cpp:240] Starting load animation checkbox with UUID: checkbox
+[2025-12-07 23:20:59.204] [debug] [init.cpp:240] Starting load animation chip_anim with UUID: anim_chip
+[2025-12-07 23:20:59.204] [debug] [init.cpp:240] Starting load animation crystal_anim with UUID: anim_crystal
+[2025-12-07 23:20:59.204] [debug] [init.cpp:240] Starting load animation crystal_to_wafer_converterAnim with UUID: converteranim_crystal_to_wafer
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation discord_icon_anim with UUID: anim_discord_icon
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_000 with UUID: 000_anim_divider
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_001 with UUID: 001_anim_divider
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_002 with UUID: 002_anim_divider
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_003 with UUID: 003_anim_divider
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_004 with UUID: 004_anim_divider
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_005 with UUID: 005_anim_divider
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_fade_000 with UUID: 000_anim_divider_fade
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_fade_001 with UUID: 001_anim_divider_fade
+[2025-12-07 23:20:59.205] [debug] [init.cpp:240] Starting load animation divider_anim_fade_002 with UUID: 002_anim_divider_fade
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation divider_anim_fade_003 with UUID: 003_anim_divider_fade
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation divider_anim_fade_004 with UUID: 004_anim_divider_fade
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation divider_anim_fade_005 with UUID: 005_anim_divider_fade
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation dream_weaver_antenna_anim with UUID: anim_antenna_dream_weaver
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation dust_to_crystal_converterAnim with UUID: converteranim_crystal_dust_to
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation example_char with UUID: char_example
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation gathererMK2Anim with UUID: gatherermk2anim
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation gear_icon_anim with UUID: anim_gear_icon
+[2025-12-07 23:20:59.206] [debug] [init.cpp:240] Starting load animation idle_animation with UUID: animation_idle
+[2025-12-07 23:20:59.207] [debug] [init.cpp:240] Starting load animation keyboard_enter_outline_anim with UUID: anim_enter_keyboard_outline
+[2025-12-07 23:20:59.207] [debug] [init.cpp:240] Starting load animation keyboard_space_outline_anim with UUID: anim_keyboard_outline_space
+[2025-12-07 23:20:59.207] [debug] [init.cpp:240] Starting load animation krillHomeLargeAnim with UUID: krillhomelargeanim
+[2025-12-07 23:20:59.207] [debug] [init.cpp:240] Starting load animation krillHomeSmallAnim with UUID: krillhomesmallanim
+[2025-12-07 23:20:59.207] [debug] [init.cpp:240] Starting load animation krill_1_anim with UUID: 1_anim_krill
+[2025-12-07 23:20:59.207] [debug] [init.cpp:240] Starting load animation krill_2_anim with UUID: 2_anim_krill
+[2025-12-07 23:20:59.207] [debug] [init.cpp:240] Starting load animation krill_3_anim with UUID: 3_anim_krill
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation krill_4_anim with UUID: 4_anim_krill
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation left_arrow with UUID: arrow_left
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation locked_anim with UUID: anim_locked
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation locked_upgrade_anim with UUID: anim_locked_upgrade
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation mouse_left_outline_anim with UUID: anim_left_mouse_outline
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation mouse_right_outline_anim with UUID: anim_mouse_outline_right
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation resonance_beacon_anim with UUID: anim_beacon_resonance
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation right_arrow with UUID: arrow_right
+[2025-12-07 23:20:59.208] [debug] [init.cpp:240] Starting load animation song_essence_anim with UUID: anim_essence_song
+[2025-12-07 23:20:59.209] [debug] [init.cpp:240] Starting load animation sword_anim with UUID: anim_sword
+[2025-12-07 23:20:59.209] [debug] [init.cpp:240] Starting load animation wafer_anim with UUID: anim_wafer
+[2025-12-07 23:20:59.209] [debug] [init.cpp:240] Starting load animation wafer_to_chip_converterAnim with UUID: chip_converteranim_to_wafer
+[2025-12-07 23:20:59.211] [debug] [init.cpp:240] Starting load animation whale_dust_anim with UUID: anim_dust_whale
+[2025-12-07 23:20:59.211] [debug] [init.cpp:240] Starting load animation whale_song_essence_anim with UUID: anim_essence_song_whale
+INFO: AUDIO: Device initialized successfully
+INFO:     > Backend:       miniaudio | Core Audio
+INFO:     > Format:        32-bit IEEE Floating Point -> 32-bit IEEE Floating Point
+INFO:     > Channels:      2 -> 2
+INFO:     > Sample rate:   44100 -> 44100
+INFO:     > Periods size:  1323
+INFO: TIMER: Target time per frame: 8.333 milliseconds
+[2025-12-07 23:20:59.350] [debug] [init.cpp:851] Starting taskflow task INIT.
+[2025-12-07 23:20:59.369] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/tutorial)
+[2025-12-07 23:20:59.369] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/core)
+[2025-12-07 23:20:59.369] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/monobehavior)
+[2025-12-07 23:20:59.369] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/task)
+[2025-12-07 23:20:59.369] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/ai)
+[2025-12-07 23:20:59.369] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/register_tutorials.lua
+[2025-12-07 23:20:59.369] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_game.lua
+[2025-12-07 23:20:59.369] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_menu.lua
+[2025-12-07 23:20:59.369] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/base_functions.lua
+[2025-12-07 23:20:59.369] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/sample_tutorial.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/shader_uniforms.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/apply_card_modifications.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/card_metadata.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/type_defs.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/add_card_rarity_tags.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/main.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/render_layers.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_cache.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/stat_system.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/gameplay.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/timer.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/globals.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/z_orders.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/component_cache.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/timer_chain.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/card_eval_order_test.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_factory.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/shop_system.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script_v2.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task/task.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/init.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/worldstate_updaters.lua
+[2025-12-07 23:20:59.370] [debug] [ai_system.cpp:645] Found Lua file: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selector_engine.lua
+[2025-12-07 23:20:59.370] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/)
+[2025-12-07 23:20:59.371] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/core)
+[2025-12-07 23:20:59.371] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/init)
+[2025-12-07 23:20:59.371] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/monobehavior)
+[2025-12-07 23:20:59.371] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/external)
+[2025-12-07 23:20:59.371] [debug] [scripting_functions.cpp:116] Lua path set to: package.path = '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/?.lua;/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/?/?.lua;/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/?/?/?.lua;/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core?.lua;/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init?.lua;/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external?.lua;/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior?.lua;scripts/?/?.lua' .. package.path
+[2025-12-07 23:20:59.438] [info] [shader_draw_commands.cpp:286] Exposed shader_draw_commands to Lua
+[2025-12-07 23:20:59.493] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/register_tutorials.lua...
+[2025-12-07 23:20:59.494] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.494] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_game.lua...
+[2025-12-07 23:20:59.494] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.494] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_menu.lua...
+[2025-12-07 23:20:59.494] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.495] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/base_functions.lua...
+[2025-12-07 23:20:59.495] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.495] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/sample_tutorial.lua...
+[2025-12-07 23:20:59.495] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.498] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/shader_uniforms.lua...
+[2025-12-07 23:20:59.498] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+
+============================================================
+CARD RARITY AND TAG ASSIGNMENTS
+============================================================
+
+Action/Modifier Cards:
+  TEST_PROJECTILE                     [common    ] brute
+  ACTION_VACUUM_PROJECTILE            [rare      ] hazard, tactical
+  MOD_BIG_SLOW                        [uncommon  ] brute
+  ACTION_BOUNCE_TRIGGER               [rare      ] tactical
+  MOD_AUTO_AIM                        [uncommon  ] tactical
+  UTIL_SUMMON_ALLY                    [legendary ] tactical
+  UTIL_HEAL_AREA                      [uncommon  ] defense
+  MOD_IMMUNE_AND_ADD_CARD             [rare      ] defense, tactical
+  ACTION_SLOW_ORB                     [uncommon  ] brute, elemental
+  MOD_DAMAGE_UP                       [uncommon  ] brute
+  ACTION_HEAVY_OBJECT_PROJECTILE      [uncommon  ] brute
+  ACTION_TELEPORT_BOLT                [legendary ] mobility, tactical
+  ACTION_EXPLOSIVE_FIRE_PROJECTILE    [rare      ] brute, elemental, hazard
+  ACTION_PROJECTILE_TIMER_CAST        [uncommon  ] tactical
+  MOD_DOUBLE_SPELL                    [uncommon  ] tactical
+  TEST_MULTICAST_2                    [uncommon  ] tactical
+  TEST_PROJECTILE_TIMER               [uncommon  ] tactical
+  TEST_DAMAGE_BOOST                   [common    ] brute
+  TEST_PROJECTILE_TRIGGER             [uncommon  ] tactical
+  ACTION_BOUNCE_BALL                  [uncommon  ] brute, tactical
+  MOD_LONG_CAST                       [uncommon  ] tactical
+  META_CAST_ALL_AT_ONCE               [legendary ] tactical, brute
+  MULTI_DOUBLE_CAST                   [uncommon  ] tactical
+  MULTI_CIRCLE_FIVE_CAST              [legendary ] tactical, brute
+  MOD_TRIGGER_TIMER                   [rare      ] tactical
+  META_RECAST_FIRST                   [rare      ] tactical
+  UTIL_SHIELD_BUBBLE                  [rare      ] defense
+  ACTION_RICOCHET_PROJECTILE          [uncommon  ] tactical
+  UTIL_TELEPORT_TO_IMPACT             [rare      ] mobility
+  ACTION_FAST_ACCURATE_PROJECTILE     [common    ] tactical
+  MOD_TRIGGER_ON_HIT                  [rare      ] tactical
+  ACTION_BASIC_PROJECTILE             [common    ] brute
+  MULTI_TRIPLE_CAST                   [rare      ] tactical
+  MOD_FORCE_CRIT                      [uncommon  ] tactical, brute
+  ACTION_ADD_MANA                     [uncommon  ] tactical
+  ACTION_FLYING_CROSS                 [rare      ] brute, elemental
+  MOD_TRIGGER_ON_DEATH                [rare      ] hazard
+  META_APPLY_ALL_MODS_NEXT            [rare      ] tactical
+  MOD_RANDOM_MODIFIER                 [rare      ] tactical
+  MOD_WAND_REFRESH                    [rare      ] tactical
+  MOD_REDUCE_SPREAD                   [common    ] tactical
+  MOD_TELEPORT_CAST                   [rare      ] mobility, tactical
+  MOD_SHORT_LIFETIME                  [common    ] tactical
+  META_CONVERT_WEIGHT_TO_DAMAGE       [rare      ] brute, tactical
+  MOD_PHASE_SLOW                      [uncommon  ] mobility, tactical
+  MOD_EXPLOSIVE                       [rare      ] brute, hazard
+  MOD_BLOOD_TO_DAMAGE                 [legendary ] brute
+  MOD_SEEKING                         [uncommon  ] tactical
+  MOD_TRIPLE_SPELL                    [rare      ] tactical
+  ACTION_SPIKE_HAZARD_TIMER           [rare      ] hazard
+  MOD_HOMING                          [uncommon  ] tactical
+  MOD_SPEED_DOWN                      [common    ] tactical
+  MOD_SPEED_UP                        [common    ] mobility
+  MOD_HEAL_ON_HIT                     [uncommon  ] defense
+  ACTION_SUMMON_MINION                [rare      ] tactical
+
+Trigger Cards:
+  TEST_TRIGGER_ON_DASH                [uncommon  ] mobility
+  TEST_TRIGGER_EVERY_N_SECONDS        [common    ] 
+  TEST_TRIGGER_ON_DISTANCE_TRAVELED   [uncommon  ] mobility
+  TEST_TRIGGER_ON_BUMP_ENEMY          [uncommon  ] brute
+
+Rarity Distribution:
+  Common: 8
+  Uncommon: 21
+  Rare: 21
+  Legendary: 5
+  Total: 55
+
+============================================================
+
+============================================================
+GENERATING CARD MODIFICATIONS
+============================================================
+
+To add rarity and tags to cards, add these lines after the 'id' field:
+
+Example modification for ACTION_BASIC_PROJECTILE:
+  CardTemplates.ACTION_BASIC_PROJECTILE = {
+      id = "ACTION_BASIC_PROJECTILE",
+      rarity = "common",  -- ADD THIS
+      tags = {"brute"},   -- ADD THIS
+      type = "action",
+      ...
+
+
+Generated additions for all cards:
+------------------------------------------------------------
+-- TEST_PROJECTILE
+    rarity = "common",
+    tags = {"brute"},
+
+-- ACTION_VACUUM_PROJECTILE
+    rarity = "rare",
+    tags = {"hazard", "tactical"},
+
+-- MOD_BIG_SLOW
+    rarity = "uncommon",
+    tags = {"brute"},
+
+-- ACTION_BOUNCE_TRIGGER
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- MOD_AUTO_AIM
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- UTIL_SUMMON_ALLY
+    rarity = "legendary",
+    tags = {"tactical"},
+
+-- UTIL_HEAL_AREA
+    rarity = "uncommon",
+    tags = {"defense"},
+
+-- MOD_IMMUNE_AND_ADD_CARD
+    rarity = "rare",
+    tags = {"defense", "tactical"},
+
+-- ACTION_SLOW_ORB
+    rarity = "uncommon",
+    tags = {"brute", "elemental"},
+
+-- MOD_DAMAGE_UP
+    rarity = "uncommon",
+    tags = {"brute"},
+
+-- ACTION_HEAVY_OBJECT_PROJECTILE
+    rarity = "uncommon",
+    tags = {"brute"},
+
+-- ACTION_TELEPORT_BOLT
+    rarity = "legendary",
+    tags = {"mobility", "tactical"},
+
+-- ACTION_EXPLOSIVE_FIRE_PROJECTILE
+    rarity = "rare",
+    tags = {"brute", "elemental", "hazard"},
+
+-- ACTION_PROJECTILE_TIMER_CAST
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- MOD_DOUBLE_SPELL
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- TEST_MULTICAST_2
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- TEST_PROJECTILE_TIMER
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- TEST_DAMAGE_BOOST
+    rarity = "common",
+    tags = {"brute"},
+
+-- TEST_PROJECTILE_TRIGGER
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- ACTION_BOUNCE_BALL
+    rarity = "uncommon",
+    tags = {"brute", "tactical"},
+
+-- MOD_LONG_CAST
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- META_CAST_ALL_AT_ONCE
+    rarity = "legendary",
+    tags = {"tactical", "brute"},
+
+-- MULTI_DOUBLE_CAST
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- MULTI_CIRCLE_FIVE_CAST
+    rarity = "legendary",
+    tags = {"tactical", "brute"},
+
+-- MOD_TRIGGER_TIMER
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- META_RECAST_FIRST
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- UTIL_SHIELD_BUBBLE
+    rarity = "rare",
+    tags = {"defense"},
+
+-- ACTION_RICOCHET_PROJECTILE
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- UTIL_TELEPORT_TO_IMPACT
+    rarity = "rare",
+    tags = {"mobility"},
+
+-- ACTION_FAST_ACCURATE_PROJECTILE
+    rarity = "common",
+    tags = {"tactical"},
+
+-- MOD_TRIGGER_ON_HIT
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- ACTION_BASIC_PROJECTILE
+    rarity = "common",
+    tags = {"brute"},
+
+-- MULTI_TRIPLE_CAST
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- MOD_FORCE_CRIT
+    rarity = "uncommon",
+    tags = {"tactical", "brute"},
+
+-- ACTION_ADD_MANA
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- ACTION_FLYING_CROSS
+    rarity = "rare",
+    tags = {"brute", "elemental"},
+
+-- MOD_TRIGGER_ON_DEATH
+    rarity = "rare",
+    tags = {"hazard"},
+
+-- META_APPLY_ALL_MODS_NEXT
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- MOD_RANDOM_MODIFIER
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- MOD_WAND_REFRESH
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- MOD_REDUCE_SPREAD
+    rarity = "common",
+    tags = {"tactical"},
+
+-- MOD_TELEPORT_CAST
+    rarity = "rare",
+    tags = {"mobility", "tactical"},
+
+-- MOD_SHORT_LIFETIME
+    rarity = "common",
+    tags = {"tactical"},
+
+-- META_CONVERT_WEIGHT_TO_DAMAGE
+    rarity = "rare",
+    tags = {"brute", "tactical"},
+
+-- MOD_PHASE_SLOW
+    rarity = "uncommon",
+    tags = {"mobility", "tactical"},
+
+-- MOD_EXPLOSIVE
+    rarity = "rare",
+    tags = {"brute", "hazard"},
+
+-- MOD_BLOOD_TO_DAMAGE
+    rarity = "legendary",
+    tags = {"brute"},
+
+-- MOD_SEEKING
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- MOD_TRIPLE_SPELL
+    rarity = "rare",
+    tags = {"tactical"},
+
+-- ACTION_SPIKE_HAZARD_TIMER
+    rarity = "rare",
+    tags = {"hazard"},
+
+-- MOD_HOMING
+    rarity = "uncommon",
+    tags = {"tactical"},
+
+-- MOD_SPEED_DOWN
+    rarity = "common",
+    tags = {"tactical"},
+
+-- MOD_SPEED_UP
+    rarity = "common",
+    tags = {"mobility"},
+
+-- MOD_HEAL_ON_HIT
+    rarity = "uncommon",
+    tags = {"defense"},
+
+-- ACTION_SUMMON_MINION
+    rarity = "rare",
+    tags = {"tactical"},
+
+
+Trigger cards:
+------------------------------------------------------------
+-- TEST_TRIGGER_ON_DASH
+    rarity = "uncommon",
+    tags = {"mobility"},
+
+-- TEST_TRIGGER_EVERY_N_SECONDS
+    rarity = "common",
+    tags = {},
+
+-- TEST_TRIGGER_ON_DISTANCE_TRAVELED
+    rarity = "uncommon",
+    tags = {"mobility"},
+
+-- TEST_TRIGGER_ON_BUMP_ENEMY
+    rarity = "uncommon",
+    tags = {"brute"},
+
+============================================================
+✓ Modifications generated
+============================================================
+[2025-12-07 23:20:59.501] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/apply_card_modifications.lua...
+[2025-12-07 23:20:59.501] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.502] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/card_metadata.lua...
+[2025-12-07 23:20:59.502] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.505] [debug] [LUA]: [component_cache] Initialized global cache
+[2025-12-07 23:20:59.506] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/type_defs.lua...
+[2025-12-07 23:20:59.506] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+
+============================================================
+CARD RARITY AND TAG ASSIGNMENTS
+============================================================
+
+Action/Modifier Cards:
+  TEST_PROJECTILE                     [common    ] brute
+  ACTION_VACUUM_PROJECTILE            [rare      ] hazard, tactical
+  MOD_BIG_SLOW                        [uncommon  ] brute
+  ACTION_BOUNCE_TRIGGER               [rare      ] tactical
+  MOD_AUTO_AIM                        [uncommon  ] tactical
+  UTIL_SUMMON_ALLY                    [legendary ] tactical
+  UTIL_HEAL_AREA                      [uncommon  ] defense
+  MOD_IMMUNE_AND_ADD_CARD             [rare      ] defense, tactical
+  ACTION_SLOW_ORB                     [uncommon  ] brute, elemental
+  MOD_DAMAGE_UP                       [uncommon  ] brute
+  ACTION_HEAVY_OBJECT_PROJECTILE      [uncommon  ] brute
+  ACTION_TELEPORT_BOLT                [legendary ] mobility, tactical
+  ACTION_EXPLOSIVE_FIRE_PROJECTILE    [rare      ] brute, elemental, hazard
+  ACTION_PROJECTILE_TIMER_CAST        [uncommon  ] tactical
+  MOD_DOUBLE_SPELL                    [uncommon  ] tactical
+  TEST_MULTICAST_2                    [uncommon  ] tactical
+  TEST_PROJECTILE_TIMER               [uncommon  ] tactical
+  TEST_DAMAGE_BOOST                   [common    ] brute
+  TEST_PROJECTILE_TRIGGER             [uncommon  ] tactical
+  ACTION_BOUNCE_BALL                  [uncommon  ] brute, tactical
+  MOD_LONG_CAST                       [uncommon  ] tactical
+  META_CAST_ALL_AT_ONCE               [legendary ] tactical, brute
+  MULTI_DOUBLE_CAST                   [uncommon  ] tactical
+  MULTI_CIRCLE_FIVE_CAST              [legendary ] tactical, brute
+  MOD_TRIGGER_TIMER                   [rare      ] tactical
+  META_RECAST_FIRST                   [rare      ] tactical
+  UTIL_SHIELD_BUBBLE                  [rare      ] defense
+  ACTION_RICOCHET_PROJECTILE          [uncommon  ] tactical
+  UTIL_TELEPORT_TO_IMPACT             [rare      ] mobility
+  ACTION_FAST_ACCURATE_PROJECTILE     [common    ] tactical
+  MOD_TRIGGER_ON_HIT                  [rare      ] tactical
+  ACTION_BASIC_PROJECTILE             [common    ] brute
+  MULTI_TRIPLE_CAST                   [rare      ] tactical
+  MOD_FORCE_CRIT                      [uncommon  ] tactical, brute
+  ACTION_ADD_MANA                     [uncommon  ] tactical
+  ACTION_FLYING_CROSS                 [rare      ] brute, elemental
+  MOD_TRIGGER_ON_DEATH                [rare      ] hazard
+  META_APPLY_ALL_MODS_NEXT            [rare      ] tactical
+  MOD_RANDOM_MODIFIER                 [rare      ] tactical
+  MOD_WAND_REFRESH                    [rare      ] tactical
+  MOD_REDUCE_SPREAD                   [common    ] tactical
+  MOD_TELEPORT_CAST                   [rare      ] mobility, tactical
+  MOD_SHORT_LIFETIME                  [common    ] tactical
+  META_CONVERT_WEIGHT_TO_DAMAGE       [rare      ] brute, tactical
+  MOD_PHASE_SLOW                      [uncommon  ] mobility, tactical
+  MOD_EXPLOSIVE                       [rare      ] brute, hazard
+  MOD_BLOOD_TO_DAMAGE                 [legendary ] brute
+  MOD_SEEKING                         [uncommon  ] tactical
+  MOD_TRIPLE_SPELL                    [rare      ] tactical
+  ACTION_SPIKE_HAZARD_TIMER           [rare      ] hazard
+  MOD_HOMING                          [uncommon  ] tactical
+  MOD_SPEED_DOWN                      [common    ] tactical
+  MOD_SPEED_UP                        [common    ] mobility
+  MOD_HEAL_ON_HIT                     [uncommon  ] defense
+  ACTION_SUMMON_MINION                [rare      ] tactical
+
+Trigger Cards:
+  TEST_TRIGGER_ON_DASH                [uncommon  ] mobility
+  TEST_TRIGGER_EVERY_N_SECONDS        [common    ] 
+  TEST_TRIGGER_ON_DISTANCE_TRAVELED   [uncommon  ] mobility
+  TEST_TRIGGER_ON_BUMP_ENEMY          [uncommon  ] brute
+
+Rarity Distribution:
+  Common: 8
+  Uncommon: 21
+  Rare: 21
+  Legendary: 5
+  Total: 55
+
+============================================================
+[2025-12-07 23:20:59.508] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/add_card_rarity_tags.lua...
+[2025-12-07 23:20:59.508] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.512] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[2025-12-07 23:20:59.514] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[2025-12-07 23:20:59.515] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[2025-12-07 23:20:59.515] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[CardRegistry] Loaded 55 cards and 4 trigger cards.
+[2025-12-07 23:20:59.578] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/main.lua...
+[2025-12-07 23:20:59.578] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.579] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/render_layers.lua...
+[2025-12-07 23:20:59.579] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.579] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_cache.lua...
+[2025-12-07 23:20:59.579] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.580] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/stat_system.lua...
+[2025-12-07 23:20:59.580] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.596] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/gameplay.lua...
+[2025-12-07 23:20:59.596] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.596] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/timer.lua...
+[2025-12-07 23:20:59.596] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.597] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/globals.lua...
+[2025-12-07 23:20:59.597] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.597] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/z_orders.lua...
+[2025-12-07 23:20:59.597] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.597] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/component_cache.lua...
+[2025-12-07 23:20:59.597] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.598] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/timer_chain.lua...
+[2025-12-07 23:20:59.598] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.599] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/card_eval_order_test.lua...
+[2025-12-07 23:20:59.599] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.600] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_factory.lua...
+[2025-12-07 23:20:59.600] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.601] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/shop_system.lua...
+[2025-12-07 23:20:59.601] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.601] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script_v2.lua...
+[2025-12-07 23:20:59.601] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.601] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script.lua...
+[2025-12-07 23:20:59.601] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.602] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task/task.lua...
+[2025-12-07 23:20:59.602] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.602] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[2025-12-07 23:20:59.602] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[2025-12-07 23:20:59.602] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[2025-12-07 23:20:59.602] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts)
+[2025-12-07 23:20:59.602] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/init.lua...
+[2025-12-07 23:20:59.602] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.602] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/worldstate_updaters.lua...
+[2025-12-07 23:20:59.602] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.603] [debug] [scripting_functions.cpp:757] Loading file /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selector_engine.lua...
+[2025-12-07 23:20:59.603] [debug] [scripting_functions.cpp:769] Lua script file loading success.
+[2025-12-07 23:20:59.603] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(scripts/chugget_code_definitions.lua)
+[2025-12-07 23:20:59.603] [info] dump_lua_defs: writing '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget_code_definitions.lua'
+[2025-12-07 23:20:59.611] [info] finished '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget_code_definitions.lua'
+[2025-12-07 23:20:59.611] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/shaders.json)
+[2025-12-07 23:20:59.613] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_vertex.vs)
+[2025-12-07 23:20:59.613] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_vertex.vs
+[2025-12-07 23:20:59.613] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_fragment.fs)
+[2025-12-07 23:20:59.613] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 6] Program shader loaded successfully
+[2025-12-07 23:20:59.618] [info] [shader_system.cpp:543] Loaded shader: 3d_skew
+[2025-12-07 23:20:59.618] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_foil_vertex.vs)
+[2025-12-07 23:20:59.618] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_foil_vertex.vs
+[2025-12-07 23:20:59.618] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_foil_fragment.fs)
+[2025-12-07 23:20:59.618] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_foil_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_foil_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_foil_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 7] Program shader loaded successfully
+[2025-12-07 23:20:59.624] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_foil
+[2025-12-07 23:20:59.624] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_gold_seal_vertex.vs)
+[2025-12-07 23:20:59.624] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_gold_seal_vertex.vs
+[2025-12-07 23:20:59.624] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_gold_seal_fragment.fs)
+[2025-12-07 23:20:59.624] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_gold_seal_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_gold_seal_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_gold_seal_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 8] Program shader loaded successfully
+[2025-12-07 23:20:59.629] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_gold_seal
+[2025-12-07 23:20:59.630] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_holo_vertex.vs)
+[2025-12-07 23:20:59.630] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_holo_vertex.vs
+[2025-12-07 23:20:59.630] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_holo_fragment.fs)
+[2025-12-07 23:20:59.630] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_holo_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_holo_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_holo_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 9] Program shader loaded successfully
+[2025-12-07 23:20:59.636] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_holo
+[2025-12-07 23:20:59.636] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_hologram_vertex.vs)
+[2025-12-07 23:20:59.636] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_hologram_vertex.vs
+[2025-12-07 23:20:59.636] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_hologram_fragment.fs)
+[2025-12-07 23:20:59.636] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_hologram_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_hologram_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_hologram_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 10] Program shader loaded successfully
+[2025-12-07 23:20:59.642] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_hologram
+[2025-12-07 23:20:59.642] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_negative_vertex.vs)
+[2025-12-07 23:20:59.642] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_vertex.vs
+[2025-12-07 23:20:59.642] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_negative_fragment.fs)
+[2025-12-07 23:20:59.642] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 11] Program shader loaded successfully
+[2025-12-07 23:20:59.648] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_negative
+[2025-12-07 23:20:59.648] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_negative_shine_vertex.vs)
+[2025-12-07 23:20:59.648] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_shine_vertex.vs
+[2025-12-07 23:20:59.648] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_negative_shine_fragment.fs)
+[2025-12-07 23:20:59.648] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_shine_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_shine_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_negative_shine_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 12] Program shader loaded successfully
+[2025-12-07 23:20:59.654] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_negative_shine
+[2025-12-07 23:20:59.654] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_polychrome_vertex.vs)
+[2025-12-07 23:20:59.654] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_vertex.vs
+[2025-12-07 23:20:59.654] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_polychrome_fragment.fs)
+[2025-12-07 23:20:59.654] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_polychrome_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 13] Program shader loaded successfully
+[2025-12-07 23:20:59.659] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_polychrome
+[2025-12-07 23:20:59.659] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_voucher_vertex.vs)
+[2025-12-07 23:20:59.659] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_voucher_vertex.vs
+[2025-12-07 23:20:59.659] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/3d_skew_voucher_fragment.fs)
+[2025-12-07 23:20:59.659] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_voucher_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_voucher_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_voucher_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 14] Program shader loaded successfully
+[2025-12-07 23:20:59.664] [info] [shader_system.cpp:543] Loaded shader: 3d_skew_voucher
+[2025-12-07 23:20:59.664] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/atlas_outline_vertex.vs)
+[2025-12-07 23:20:59.664] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/atlas_outline_vertex.vs
+[2025-12-07 23:20:59.664] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/atlas_outline_fragment.fs)
+[2025-12-07 23:20:59.664] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/atlas_outline_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/atlas_outline_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/atlas_outline_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 15] Program shader loaded successfully
+[2025-12-07 23:20:59.666] [info] [shader_system.cpp:543] Loaded shader: atlas_outline
+[2025-12-07 23:20:59.666] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/bounce_wave_vertex.vs)
+[2025-12-07 23:20:59.666] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounce_wave_vertex.vs
+[2025-12-07 23:20:59.666] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/bounce_wave_fragment.fs)
+[2025-12-07 23:20:59.666] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounce_wave_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounce_wave_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounce_wave_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 16] Program shader loaded successfully
+[2025-12-07 23:20:59.668] [info] [shader_system.cpp:543] Loaded shader: bounce_wave
+[2025-12-07 23:20:59.668] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/bounding_battle_bg_vertex.vs)
+[2025-12-07 23:20:59.668] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounding_battle_bg_vertex.vs
+[2025-12-07 23:20:59.668] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/bounding_battle_bg_fragment.fs)
+[2025-12-07 23:20:59.668] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounding_battle_bg_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounding_battle_bg_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/bounding_battle_bg_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 17] Program shader loaded successfully
+[2025-12-07 23:20:59.670] [info] [shader_system.cpp:543] Loaded shader: bounding_battle_bg
+[2025-12-07 23:20:59.670] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/burn_2d_vertex.vs)
+[2025-12-07 23:20:59.670] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/burn_2d_vertex.vs
+[2025-12-07 23:20:59.670] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/burn_2d_fragment.fs)
+[2025-12-07 23:20:59.670] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/burn_2d_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/burn_2d_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/burn_2d_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 18] Program shader loaded successfully
+[2025-12-07 23:20:59.672] [info] [shader_system.cpp:543] Loaded shader: burn_2d
+[2025-12-07 23:20:59.672] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/chromatic_aberration_vertex.vs)
+[2025-12-07 23:20:59.672] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/chromatic_aberration_vertex.vs
+[2025-12-07 23:20:59.672] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/chromatic_aberration_fragment.fs)
+[2025-12-07 23:20:59.672] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/chromatic_aberration_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/chromatic_aberration_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/chromatic_aberration_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 19] Program shader loaded successfully
+[2025-12-07 23:20:59.674] [info] [shader_system.cpp:543] Loaded shader: chromatic_aberration
+[2025-12-07 23:20:59.674] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/crt_vertex.vs)
+[2025-12-07 23:20:59.674] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/crt_vertex.vs
+[2025-12-07 23:20:59.674] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/crt_fragment.fs)
+[2025-12-07 23:20:59.674] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/crt_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/crt_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/crt_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 20] Program shader loaded successfully
+[2025-12-07 23:20:59.678] [info] [shader_system.cpp:543] Loaded shader: crt
+[2025-12-07 23:20:59.678] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/custom_2d_light_vertex.vs)
+[2025-12-07 23:20:59.678] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_2d_light_vertex.vs
+[2025-12-07 23:20:59.678] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/custom_2d_light_fragment.fs)
+[2025-12-07 23:20:59.678] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_2d_light_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_2d_light_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_2d_light_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 21] Program shader loaded successfully
+[2025-12-07 23:20:59.679] [info] [shader_system.cpp:543] Loaded shader: custom_2d_light
+[2025-12-07 23:20:59.679] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/custom_polychrome_vertex.vs)
+[2025-12-07 23:20:59.680] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_vertex.vs
+[2025-12-07 23:20:59.680] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/custom_polychrome_fragment.fs)
+[2025-12-07 23:20:59.680] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 22] Program shader loaded successfully
+[2025-12-07 23:20:59.682] [info] [shader_system.cpp:543] Loaded shader: custom_polychrome
+[2025-12-07 23:20:59.682] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/darkened_blur_vertex.vs)
+[2025-12-07 23:20:59.682] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/darkened_blur_vertex.vs
+[2025-12-07 23:20:59.682] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/darkened_blur_fragment.fs)
+[2025-12-07 23:20:59.682] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/darkened_blur_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/darkened_blur_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/darkened_blur_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 23] Program shader loaded successfully
+[2025-12-07 23:20:59.683] [info] [shader_system.cpp:543] Loaded shader: darkened_blur
+[2025-12-07 23:20:59.683] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/discrete_clouds_vertex.vs)
+[2025-12-07 23:20:59.683] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/discrete_clouds_vertex.vs
+[2025-12-07 23:20:59.683] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/discrete_clouds_fragment.fs)
+[2025-12-07 23:20:59.683] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/discrete_clouds_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/discrete_clouds_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/discrete_clouds_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 24] Program shader loaded successfully
+[2025-12-07 23:20:59.685] [info] [shader_system.cpp:543] Loaded shader: discrete_clouds
+[2025-12-07 23:20:59.685] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/dissolve_burn_vertex.vs)
+[2025-12-07 23:20:59.685] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_vertex.vs
+[2025-12-07 23:20:59.685] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/dissolve_burn_fragment.fs)
+[2025-12-07 23:20:59.685] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 25] Program shader loaded successfully
+[2025-12-07 23:20:59.686] [info] [shader_system.cpp:543] Loaded shader: dissolve_burn
+[2025-12-07 23:20:59.686] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/dissolve_burn_edge_vertex.vs)
+[2025-12-07 23:20:59.686] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_edge_vertex.vs
+[2025-12-07 23:20:59.686] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/dissolve_burn_edge_fragment.fs)
+[2025-12-07 23:20:59.686] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_edge_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_edge_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/dissolve_burn_edge_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 26] Program shader loaded successfully
+[2025-12-07 23:20:59.687] [info] [shader_system.cpp:543] Loaded shader: dissolve_burn_edge
+[2025-12-07 23:20:59.687] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/drop_shadow_vertex.vs)
+[2025-12-07 23:20:59.687] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/drop_shadow_vertex.vs
+[2025-12-07 23:20:59.687] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/drop_shadow_fragment.fs)
+[2025-12-07 23:20:59.687] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/drop_shadow_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/drop_shadow_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/drop_shadow_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 27] Program shader loaded successfully
+[2025-12-07 23:20:59.688] [info] [shader_system.cpp:543] Loaded shader: drop_shadow
+[2025-12-07 23:20:59.688] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/edge_effect_vertex.vs)
+[2025-12-07 23:20:59.688] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_vertex.vs
+[2025-12-07 23:20:59.688] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/edge_effect_fragment.fs)
+[2025-12-07 23:20:59.688] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+INFO: SHADER: [ID 5] Fragment shader compiled successfully
+INFO: SHADER: [ID 28] Program shader loaded successfully
+[2025-12-07 23:20:59.690] [info] [shader_system.cpp:543] Loaded shader: edge_effect
+[2025-12-07 23:20:59.690] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/efficient_pixel_outline_vertex.vs)
+[2025-12-07 23:20:59.690] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_vertex.vs
+[2025-12-07 23:20:59.690] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/efficient_pixel_outline_fragment.fs)
+[2025-12-07 23:20:59.690] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Vertex shader compiled successfully
+WARNING: SHADER: [ID 5] Failed to compile fragment shader code
+WARNING: SHADER: [ID 5] Compile error: ERROR: 0:29: 'input' : Reserved word. 
+ERROR: 0:29: 'input' : syntax error: syntax error
+
+[2025-12-07 23:20:59.691] [error] [shader_system.cpp:512] [shader] efficient_pixel_outline: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outline_fragment.fs
+[2025-12-07 23:20:59.691] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/efficient_pixel_outlines_vertex.vs)
+[2025-12-07 23:20:59.691] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_vertex.vs
+[2025-12-07 23:20:59.691] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/efficient_pixel_outlines_fragment.fs)
+[2025-12-07 23:20:59.691] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 29] Vertex shader compiled successfully
+WARNING: SHADER: [ID 30] Failed to compile fragment shader code
+WARNING: SHADER: [ID 30] Compile error: ERROR: 0:27: 'input' : Reserved word. 
+ERROR: 0:27: 'input' : syntax error: syntax error
+
+[2025-12-07 23:20:59.692] [error] [shader_system.cpp:512] [shader] efficient_pixel_outlines: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/efficient_pixel_outlines_fragment.fs
+[2025-12-07 23:20:59.692] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/extensible_color_palette_vertex.vs)
+[2025-12-07 23:20:59.692] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/extensible_color_palette_vertex.vs
+[2025-12-07 23:20:59.692] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/extensible_color_palette_fragment.fs)
+[2025-12-07 23:20:59.692] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/extensible_color_palette_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/extensible_color_palette_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/extensible_color_palette_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 31] Vertex shader compiled successfully
+INFO: SHADER: [ID 32] Fragment shader compiled successfully
+INFO: SHADER: [ID 33] Program shader loaded successfully
+[2025-12-07 23:20:59.693] [info] [shader_system.cpp:543] Loaded shader: extensible_color_palette
+[2025-12-07 23:20:59.693] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fade_vertex.vs)
+[2025-12-07 23:20:59.693] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_vertex.vs
+[2025-12-07 23:20:59.693] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fade_fragment.fs)
+[2025-12-07 23:20:59.693] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 31] Vertex shader compiled successfully
+INFO: SHADER: [ID 32] Fragment shader compiled successfully
+INFO: SHADER: [ID 34] Program shader loaded successfully
+[2025-12-07 23:20:59.694] [info] [shader_system.cpp:543] Loaded shader: fade
+[2025-12-07 23:20:59.694] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fade_zoom_vertex.vs)
+[2025-12-07 23:20:59.694] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_vertex.vs
+[2025-12-07 23:20:59.694] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fade_zoom_fragment.fs)
+[2025-12-07 23:20:59.694] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 31] Vertex shader compiled successfully
+WARNING: SHADER: [ID 32] Failed to compile fragment shader code
+WARNING: SHADER: [ID 32] Compile error: ERROR: 0:14: 'void' : syntax error: syntax error
+
+[2025-12-07 23:20:59.695] [error] [shader_system.cpp:512] [shader] fade_zoom: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_fragment.fs
+[2025-12-07 23:20:59.695] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fireworks_vertex.vs)
+[2025-12-07 23:20:59.695] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_vertex.vs
+[2025-12-07 23:20:59.695] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fireworks_fragment.fs)
+[2025-12-07 23:20:59.695] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 35] Vertex shader compiled successfully
+INFO: SHADER: [ID 36] Fragment shader compiled successfully
+INFO: SHADER: [ID 37] Program shader loaded successfully
+[2025-12-07 23:20:59.697] [info] [shader_system.cpp:543] Loaded shader: fireworks
+[2025-12-07 23:20:59.697] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fireworks_2d_vertex.vs)
+[2025-12-07 23:20:59.697] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_2d_vertex.vs
+[2025-12-07 23:20:59.697] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/fireworks_2d_fragment.fs)
+[2025-12-07 23:20:59.697] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_2d_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_2d_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fireworks_2d_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 35] Vertex shader compiled successfully
+INFO: SHADER: [ID 36] Fragment shader compiled successfully
+INFO: SHADER: [ID 38] Program shader loaded successfully
+[2025-12-07 23:20:59.700] [info] [shader_system.cpp:543] Loaded shader: fireworks_2d
+[2025-12-07 23:20:59.700] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/flash_vertex.vs)
+[2025-12-07 23:20:59.700] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/flash_vertex.vs
+[2025-12-07 23:20:59.700] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/flash_fragment.fs)
+[2025-12-07 23:20:59.700] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/flash_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/flash_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/flash_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 35] Vertex shader compiled successfully
+INFO: SHADER: [ID 36] Fragment shader compiled successfully
+INFO: SHADER: [ID 39] Program shader loaded successfully
+[2025-12-07 23:20:59.701] [info] [shader_system.cpp:543] Loaded shader: flash
+[2025-12-07 23:20:59.701] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/foil_vertex.vs)
+[2025-12-07 23:20:59.701] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_vertex.vs
+[2025-12-07 23:20:59.701] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/foil_fragment.fs)
+[2025-12-07 23:20:59.701] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 35] Vertex shader compiled successfully
+INFO: SHADER: [ID 36] Fragment shader compiled successfully
+INFO: SHADER: [ID 40] Program shader loaded successfully
+[2025-12-07 23:20:59.705] [info] [shader_system.cpp:543] Loaded shader: foil
+[2025-12-07 23:20:59.705] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/gamejam_vertex.vs)
+[2025-12-07 23:20:59.705] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_vertex.vs
+[2025-12-07 23:20:59.705] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/gamejam_fragment.fs)
+[2025-12-07 23:20:59.705] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 35] Vertex shader compiled successfully
+INFO: SHADER: [ID 36] Fragment shader compiled successfully
+INFO: SHADER: [ID 41] Program shader loaded successfully
+[2025-12-07 23:20:59.707] [info] [shader_system.cpp:543] Loaded shader: gamejam
+[2025-12-07 23:20:59.707] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/glitch_vertex.vs)
+[2025-12-07 23:20:59.707] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glitch_vertex.vs
+[2025-12-07 23:20:59.707] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/glitch_fragment.fs)
+[2025-12-07 23:20:59.707] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glitch_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glitch_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glitch_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 35] Vertex shader compiled successfully
+INFO: SHADER: [ID 36] Fragment shader compiled successfully
+INFO: SHADER: [ID 42] Program shader loaded successfully
+[2025-12-07 23:20:59.708] [info] [shader_system.cpp:543] Loaded shader: glitch
+[2025-12-07 23:20:59.708] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/glow_vertex.vs)
+[2025-12-07 23:20:59.708] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_vertex.vs
+[2025-12-07 23:20:59.708] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/glow_fragment.fs)
+[2025-12-07 23:20:59.708] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 35] Vertex shader compiled successfully
+WARNING: SHADER: [ID 36] Failed to compile fragment shader code
+WARNING: SHADER: [ID 36] Compile error: ERROR: 0:27: Incompatible types in initialization (and no available implicit conversion)
+ERROR: 0:29: Use of undeclared identifier 'range'
+ERROR: 0:29: Use of undeclared identifier 'x'
+ERROR: 0:29: Use of undeclared identifier 'range'
+ERROR: 0:31: Use of undeclared identifier 'range'
+ERROR: 0:31: Use of undeclared identifier 'y'
+ERROR: 0:31: Use of undeclared identifier 'range'
+ERROR: 0:33: Use of undeclared identifier 'x'
+ERROR: 0:33: Use of undeclared identifier 'y'
+ERROR: 0:31: Use of undeclared identifier 'y'
+ERROR: 0:29: Use of undeclared identifier 'x'
+
+[2025-12-07 23:20:59.709] [error] [shader_system.cpp:512] [shader] glow: Shader id==0 for vs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_vertex.vs fs=/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_fragment.fs
+[2025-12-07 23:20:59.709] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/holo_vertex.vs)
+[2025-12-07 23:20:59.709] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_vertex.vs
+[2025-12-07 23:20:59.709] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/holo_fragment.fs)
+[2025-12-07 23:20:59.709] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 45] Program shader loaded successfully
+[2025-12-07 23:20:59.713] [info] [shader_system.cpp:543] Loaded shader: holo
+[2025-12-07 23:20:59.713] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/hologram_vertex.vs)
+[2025-12-07 23:20:59.713] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_vertex.vs
+[2025-12-07 23:20:59.713] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/hologram_fragment.fs)
+[2025-12-07 23:20:59.713] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 46] Program shader loaded successfully
+[2025-12-07 23:20:59.714] [info] [shader_system.cpp:543] Loaded shader: hologram
+[2025-12-07 23:20:59.714] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/hologram_2d_vertex.vs)
+[2025-12-07 23:20:59.714] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_2d_vertex.vs
+[2025-12-07 23:20:59.714] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/hologram_2d_fragment.fs)
+[2025-12-07 23:20:59.714] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_2d_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_2d_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/hologram_2d_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 47] Program shader loaded successfully
+[2025-12-07 23:20:59.715] [info] [shader_system.cpp:543] Loaded shader: hologram_2d
+[2025-12-07 23:20:59.716] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/infinite_scrolling_texture_vertex.vs)
+[2025-12-07 23:20:59.716] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/infinite_scrolling_texture_vertex.vs
+[2025-12-07 23:20:59.716] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/infinite_scrolling_texture_fragment.fs)
+[2025-12-07 23:20:59.716] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/infinite_scrolling_texture_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/infinite_scrolling_texture_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/infinite_scrolling_texture_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 48] Program shader loaded successfully
+[2025-12-07 23:20:59.717] [info] [shader_system.cpp:543] Loaded shader: infinite_scrolling_texture
+[2025-12-07 23:20:59.717] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/item_glow_vertex.vs)
+[2025-12-07 23:20:59.717] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/item_glow_vertex.vs
+[2025-12-07 23:20:59.717] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/item_glow_fragment.fs)
+[2025-12-07 23:20:59.717] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/item_glow_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/item_glow_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/item_glow_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 49] Program shader loaded successfully
+[2025-12-07 23:20:59.718] [info] [shader_system.cpp:543] Loaded shader: item_glow
+[2025-12-07 23:20:59.718] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/liquid_sphere_vertex.vs)
+[2025-12-07 23:20:59.718] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/liquid_sphere_vertex.vs
+[2025-12-07 23:20:59.718] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/liquid_sphere_fragment.fs)
+[2025-12-07 23:20:59.718] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/liquid_sphere_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/liquid_sphere_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/liquid_sphere_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 50] Program shader loaded successfully
+[2025-12-07 23:20:59.721] [info] [shader_system.cpp:543] Loaded shader: liquid_sphere
+[2025-12-07 23:20:59.721] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/material_card_overlay_vertex.vs)
+[2025-12-07 23:20:59.721] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_vertex.vs
+[2025-12-07 23:20:59.721] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/material_card_overlay_fragment.fs)
+[2025-12-07 23:20:59.721] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 51] Program shader loaded successfully
+[2025-12-07 23:20:59.725] [info] [shader_system.cpp:543] Loaded shader: material_card_overlay
+[2025-12-07 23:20:59.725] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/material_card_overlay_vertex.vs)
+[2025-12-07 23:20:59.725] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_vertex.vs
+[2025-12-07 23:20:59.725] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/material_card_overlay_new_dissolve_fragment.fs)
+[2025-12-07 23:20:59.725] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_new_dissolve_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/material_card_overlay_new_dissolve_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 52] Program shader loaded successfully
+[2025-12-07 23:20:59.733] [info] [shader_system.cpp:543] Loaded shader: material_card_overlay_new_dissolve
+[2025-12-07 23:20:59.733] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/negative_vertex.vs)
+[2025-12-07 23:20:59.733] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_vertex.vs
+[2025-12-07 23:20:59.733] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/negative_fragment.fs)
+[2025-12-07 23:20:59.733] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 53] Program shader loaded successfully
+[2025-12-07 23:20:59.737] [info] [shader_system.cpp:543] Loaded shader: negative
+[2025-12-07 23:20:59.737] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/negative_shine_vertex.vs)
+[2025-12-07 23:20:59.737] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_vertex.vs
+[2025-12-07 23:20:59.737] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/negative_shine_fragment.fs)
+[2025-12-07 23:20:59.737] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 54] Program shader loaded successfully
+[2025-12-07 23:20:59.739] [info] [shader_system.cpp:543] Loaded shader: negative_shine
+[2025-12-07 23:20:59.740] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/outer_space_donuts_bg_vertex.vs)
+[2025-12-07 23:20:59.740] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_vertex.vs
+[2025-12-07 23:20:59.740] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/outer_space_donuts_bg_fragment.fs)
+[2025-12-07 23:20:59.740] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 55] Program shader loaded successfully
+[2025-12-07 23:20:59.742] [info] [shader_system.cpp:543] Loaded shader: outer_space_donuts_bg
+[2025-12-07 23:20:59.742] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/palette_quantize_vertex.vs)
+[2025-12-07 23:20:59.743] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_quantize_vertex.vs
+[2025-12-07 23:20:59.743] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/palette_quantize_fragment.fs)
+[2025-12-07 23:20:59.743] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_quantize_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_quantize_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_quantize_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 56] Program shader loaded successfully
+[2025-12-07 23:20:59.744] [info] [shader_system.cpp:543] Loaded shader: palette_quantize
+[2025-12-07 23:20:59.744] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/palette_shader_vertex.vs)
+[2025-12-07 23:20:59.744] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_shader_vertex.vs
+[2025-12-07 23:20:59.744] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/palette_shader_fragment.fs)
+[2025-12-07 23:20:59.744] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_shader_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_shader_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_shader_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 57] Program shader loaded successfully
+[2025-12-07 23:20:59.746] [info] [shader_system.cpp:543] Loaded shader: palette_shader
+[2025-12-07 23:20:59.746] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/peaches_background_vertex.vs)
+[2025-12-07 23:20:59.746] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_vertex.vs
+[2025-12-07 23:20:59.746] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/peaches_background_fragment.fs)
+[2025-12-07 23:20:59.746] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 58] Program shader loaded successfully
+[2025-12-07 23:20:59.748] [info] [shader_system.cpp:543] Loaded shader: peaches_background
+[2025-12-07 23:20:59.748] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/perspective_warp_vertex.vs)
+[2025-12-07 23:20:59.748] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/perspective_warp_vertex.vs
+[2025-12-07 23:20:59.748] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/perspective_warp_fragment.fs)
+[2025-12-07 23:20:59.748] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/perspective_warp_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/perspective_warp_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/perspective_warp_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 59] Program shader loaded successfully
+[2025-12-07 23:20:59.750] [info] [shader_system.cpp:543] Loaded shader: perspective_warp
+[2025-12-07 23:20:59.750] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/pixel_art_gradient_vertex.vs)
+[2025-12-07 23:20:59.750] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_art_gradient_vertex.vs
+[2025-12-07 23:20:59.750] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/pixel_art_gradient_fragment.fs)
+[2025-12-07 23:20:59.750] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_art_gradient_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_art_gradient_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_art_gradient_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 60] Program shader loaded successfully
+[2025-12-07 23:20:59.751] [info] [shader_system.cpp:543] Loaded shader: pixel_art_gradient
+[2025-12-07 23:20:59.751] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/pixel_perfect_dissolve_vertex.vs)
+[2025-12-07 23:20:59.751] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_perfect_dissolve_vertex.vs
+[2025-12-07 23:20:59.751] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/pixel_perfect_dissolve_fragment.fs)
+[2025-12-07 23:20:59.751] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_perfect_dissolve_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_perfect_dissolve_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixel_perfect_dissolve_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 61] Program shader loaded successfully
+[2025-12-07 23:20:59.753] [info] [shader_system.cpp:543] Loaded shader: pixel_perfect_dissolve
+[2025-12-07 23:20:59.753] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/pixelate_image_vertex.vs)
+[2025-12-07 23:20:59.753] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixelate_image_vertex.vs
+[2025-12-07 23:20:59.753] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/pixelate_image_fragment.fs)
+[2025-12-07 23:20:59.753] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixelate_image_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixelate_image_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixelate_image_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 62] Program shader loaded successfully
+[2025-12-07 23:20:59.754] [info] [shader_system.cpp:543] Loaded shader: pixelate_image
+[2025-12-07 23:20:59.754] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/polychrome_vertex.vs)
+[2025-12-07 23:20:59.754] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_vertex.vs
+[2025-12-07 23:20:59.754] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/polychrome_fragment.fs)
+[2025-12-07 23:20:59.754] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 63] Program shader loaded successfully
+[2025-12-07 23:20:59.757] [info] [shader_system.cpp:543] Loaded shader: polychrome
+[2025-12-07 23:20:59.757] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/radial_shine_2d_vertex.vs)
+[2025-12-07 23:20:59.758] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_2d_vertex.vs
+[2025-12-07 23:20:59.758] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/radial_shine_2d_fragment.fs)
+[2025-12-07 23:20:59.758] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_2d_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_2d_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_2d_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 64] Program shader loaded successfully
+[2025-12-07 23:20:59.760] [info] [shader_system.cpp:543] Loaded shader: radial_shine_2d
+[2025-12-07 23:20:59.760] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/radial_shine_highlight_vertex.vs)
+[2025-12-07 23:20:59.760] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_highlight_vertex.vs
+[2025-12-07 23:20:59.760] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/radial_shine_highlight_fragment.fs)
+[2025-12-07 23:20:59.760] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_highlight_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_highlight_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/radial_shine_highlight_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 65] Program shader loaded successfully
+[2025-12-07 23:20:59.761] [info] [shader_system.cpp:543] Loaded shader: radial_shine_highlight
+[2025-12-07 23:20:59.761] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/rain_snow_vertex.vs)
+[2025-12-07 23:20:59.761] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/rain_snow_vertex.vs
+[2025-12-07 23:20:59.761] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/rain_snow_fragment.fs)
+[2025-12-07 23:20:59.762] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/rain_snow_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/rain_snow_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/rain_snow_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 66] Program shader loaded successfully
+[2025-12-07 23:20:59.763] [info] [shader_system.cpp:543] Loaded shader: rain_snow
+[2025-12-07 23:20:59.763] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/random_displacement_vertex.vs)
+[2025-12-07 23:20:59.763] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_vertex.vs
+[2025-12-07 23:20:59.763] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/random_displacement_fragment.fs)
+[2025-12-07 23:20:59.763] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 67] Program shader loaded successfully
+[2025-12-07 23:20:59.764] [info] [shader_system.cpp:543] Loaded shader: random_displacement
+[2025-12-07 23:20:59.764] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/random_displacement_anim_vertex.vs)
+[2025-12-07 23:20:59.764] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_vertex.vs
+[2025-12-07 23:20:59.764] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/random_displacement_anim_fragment.fs)
+[2025-12-07 23:20:59.764] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 68] Program shader loaded successfully
+[2025-12-07 23:20:59.766] [info] [shader_system.cpp:543] Loaded shader: random_displacement_anim
+[2025-12-07 23:20:59.766] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/sakura_overlay_vertex.vs)
+[2025-12-07 23:20:59.766] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_vertex.vs
+[2025-12-07 23:20:59.766] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/sakura_overlay_fragment.fs)
+[2025-12-07 23:20:59.766] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 69] Program shader loaded successfully
+[2025-12-07 23:20:59.770] [info] [shader_system.cpp:543] Loaded shader: sakura_overlay
+[2025-12-07 23:20:59.770] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/screen_tone_transition_vertex.vs)
+[2025-12-07 23:20:59.770] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/screen_tone_transition_vertex.vs
+[2025-12-07 23:20:59.770] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/screen_tone_transition_fragment.fs)
+[2025-12-07 23:20:59.770] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/screen_tone_transition_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/screen_tone_transition_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/screen_tone_transition_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 70] Program shader loaded successfully
+[2025-12-07 23:20:59.771] [info] [shader_system.cpp:543] Loaded shader: screen_tone_transition
+[2025-12-07 23:20:59.771] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/shockwave_vertex.vs)
+[2025-12-07 23:20:59.771] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shockwave_vertex.vs
+[2025-12-07 23:20:59.771] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/shockwave_fragment.fs)
+[2025-12-07 23:20:59.771] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shockwave_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shockwave_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shockwave_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 71] Program shader loaded successfully
+[2025-12-07 23:20:59.772] [info] [shader_system.cpp:543] Loaded shader: shockwave
+[2025-12-07 23:20:59.772] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/spectrum_circle_vertex.vs)
+[2025-12-07 23:20:59.772] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_vertex.vs
+[2025-12-07 23:20:59.772] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/spectrum_circle_fragment.fs)
+[2025-12-07 23:20:59.772] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 72] Program shader loaded successfully
+[2025-12-07 23:20:59.774] [info] [shader_system.cpp:543] Loaded shader: spectrum_circle
+[2025-12-07 23:20:59.774] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/spectrum_line_background_vertex.vs)
+[2025-12-07 23:20:59.774] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_line_background_vertex.vs
+[2025-12-07 23:20:59.774] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/spectrum_line_background_fragment.fs)
+[2025-12-07 23:20:59.774] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_line_background_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_line_background_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_line_background_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 73] Program shader loaded successfully
+[2025-12-07 23:20:59.775] [info] [shader_system.cpp:543] Loaded shader: spectrum_line_background
+[2025-12-07 23:20:59.775] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/spotlight_vertex.vs)
+[2025-12-07 23:20:59.775] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_vertex.vs
+[2025-12-07 23:20:59.775] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/spotlight_fragment.fs)
+[2025-12-07 23:20:59.775] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 74] Program shader loaded successfully
+[2025-12-07 23:20:59.777] [info] [shader_system.cpp:543] Loaded shader: spotlight
+[2025-12-07 23:20:59.777] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/squish_vertex.vs)
+[2025-12-07 23:20:59.777] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/squish_vertex.vs
+[2025-12-07 23:20:59.777] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/squish_fragment.fs)
+[2025-12-07 23:20:59.777] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/squish_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/squish_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/squish_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 75] Program shader loaded successfully
+[2025-12-07 23:20:59.780] [info] [shader_system.cpp:543] Loaded shader: squish
+[2025-12-07 23:20:59.780] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/starry_tunnel_vertex.vs)
+[2025-12-07 23:20:59.780] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/starry_tunnel_vertex.vs
+[2025-12-07 23:20:59.780] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/starry_tunnel_fragment.fs)
+[2025-12-07 23:20:59.780] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/starry_tunnel_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/starry_tunnel_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/starry_tunnel_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 76] Program shader loaded successfully
+[2025-12-07 23:20:59.783] [info] [shader_system.cpp:543] Loaded shader: starry_tunnel
+[2025-12-07 23:20:59.783] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/texture_liquid_vertex.vs)
+[2025-12-07 23:20:59.783] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/texture_liquid_vertex.vs
+[2025-12-07 23:20:59.783] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/texture_liquid_fragment.fs)
+[2025-12-07 23:20:59.783] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/texture_liquid_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/texture_liquid_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/texture_liquid_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 77] Program shader loaded successfully
+[2025-12-07 23:20:59.784] [info] [shader_system.cpp:543] Loaded shader: texture_liquid
+[2025-12-07 23:20:59.784] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/tile_grid_overlay_vertex.vs)
+[2025-12-07 23:20:59.784] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_vertex.vs
+[2025-12-07 23:20:59.784] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/tile_grid_overlay_fragment.fs)
+[2025-12-07 23:20:59.784] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 78] Program shader loaded successfully
+[2025-12-07 23:20:59.786] [info] [shader_system.cpp:543] Loaded shader: tile_grid_overlay
+[2025-12-07 23:20:59.786] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/vacuum_collapse_vertex.vs)
+[2025-12-07 23:20:59.786] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/vacuum_collapse_vertex.vs
+[2025-12-07 23:20:59.786] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/vacuum_collapse_fragment.fs)
+[2025-12-07 23:20:59.786] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/vacuum_collapse_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/vacuum_collapse_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/vacuum_collapse_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 79] Program shader loaded successfully
+[2025-12-07 23:20:59.787] [info] [shader_system.cpp:543] Loaded shader: vacuum_collapse
+[2025-12-07 23:20:59.787] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/voucher_sheen_vertex.vs)
+[2025-12-07 23:20:59.787] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_vertex.vs
+[2025-12-07 23:20:59.787] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/voucher_sheen_fragment.fs)
+[2025-12-07 23:20:59.787] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 80] Program shader loaded successfully
+[2025-12-07 23:20:59.790] [info] [shader_system.cpp:543] Loaded shader: voucher_sheen
+[2025-12-07 23:20:59.790] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/wind_vertex.vs)
+[2025-12-07 23:20:59.790] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wind_vertex.vs
+[2025-12-07 23:20:59.790] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/wind_fragment.fs)
+[2025-12-07 23:20:59.790] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wind_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wind_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wind_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 81] Program shader loaded successfully
+[2025-12-07 23:20:59.791] [info] [shader_system.cpp:543] Loaded shader: wind
+[2025-12-07 23:20:59.791] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/wobbly_vertex.vs)
+[2025-12-07 23:20:59.791] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_vertex.vs
+[2025-12-07 23:20:59.791] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/wobbly_fragment.fs)
+[2025-12-07 23:20:59.791] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 82] Program shader loaded successfully
+[2025-12-07 23:20:59.793] [info] [shader_system.cpp:543] Loaded shader: wobbly
+[2025-12-07 23:20:59.793] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/wobbly_grid_vertex.vs)
+[2025-12-07 23:20:59.793] [debug] [shader_system.cpp:492] Default Vertex path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_grid_vertex.vs
+[2025-12-07 23:20:59.793] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(shaders/wobbly_grid_fragment.fs)
+[2025-12-07 23:20:59.793] [debug] [shader_system.cpp:497] Default Fragment path: /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_grid_fragment.fs
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_grid_vertex.vs] Text file loaded successfully
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wobbly_grid_fragment.fs] Text file loaded successfully
+INFO: SHADER: [ID 43] Vertex shader compiled successfully
+INFO: SHADER: [ID 44] Fragment shader compiled successfully
+INFO: SHADER: [ID 83] Program shader loaded successfully
+[2025-12-07 23:20:59.795] [info] [shader_system.cpp:543] Loaded shader: wobbly_grid
+[2025-12-07 23:20:59.795] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/sounds.json)
+[2025-12-07 23:20:59.795] [debug] [sound_system.cpp:459] Got initial music volume: 0.5
+[2025-12-07 23:20:59.795] [debug] [sound_system.cpp:464] [SOUND] Loading category: effects
+[2025-12-07 23:20:59.796] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/UI_Click_Snappy_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Click_Snappy_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.796] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: button-click from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Click_Snappy_mono.wav
+[2025-12-07 23:20:59.796] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CHURCH_BELL_03_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CHURCH_BELL_03_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.798] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_activate from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CHURCH_BELL_03_mono.wav
+[2025-12-07 23:20:59.798] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/UIClick_Cartoon button 2.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIClick_Cartoon button 2.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+[2025-12-07 23:20:59.801] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_click from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIClick_Cartoon button 2.wav
+[2025-12-07 23:20:59.801] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CARDS_Deal_01_RR4_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR4_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.801] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_deal from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR4_mono.wav
+[2025-12-07 23:20:59.801] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/UIClick_Bright positive click 3.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIClick_Bright positive click 3.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (48000 Hz, 16 bit, 2 channels)
+[2025-12-07 23:20:59.803] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_focus from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIClick_Bright positive click 3.wav
+[2025-12-07 23:20:59.803] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CARDS_Deal_02_RR1_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_02_RR1_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.804] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_pick_up from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_02_RR1_mono.wav
+[2025-12-07 23:20:59.804] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CARDS_Deal_01_RR1_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR1_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.804] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_put_down_1 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR1_mono.wav
+[2025-12-07 23:20:59.804] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CARDS_Deal_01_RR2_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR2_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.805] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_put_down_2 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR2_mono.wav
+[2025-12-07 23:20:59.805] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CARDS_Deal_01_RR3_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR3_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.805] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_put_down_3 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR3_mono.wav
+[2025-12-07 23:20:59.805] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CARDS_Deal_01_RR4_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR4_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.805] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: card_put_down_4 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CARDS_Deal_01_RR4_mono.wav
+[2025-12-07 23:20:59.806] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Air_Slow_RR10_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Slow_RR10_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.806] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: dash_1 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Slow_RR10_mono.wav
+[2025-12-07 23:20:59.806] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Air_Super_Fast_RR1_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR1_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.806] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: dash_2 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR1_mono.wav
+[2025-12-07 23:20:59.806] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Air_Super_Fast_RR3_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR3_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.807] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: dash_3 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR3_mono.wav
+[2025-12-07 23:20:59.807] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Air_Super_Fast_RR4_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR4_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.807] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: dash_4 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR4_mono.wav
+[2025-12-07 23:20:59.807] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Air_Super_Fast_RR6_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR6_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.807] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: dash_5 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Super_Fast_RR6_mono.wav
+[2025-12-07 23:20:59.807] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Deep_Smooth_02_mono copy.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Deep_Smooth_02_mono copy.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.807] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: dash_6 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Deep_Smooth_02_mono copy.wav
+[2025-12-07 23:20:59.807] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Fast_03_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Fast_03_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.808] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: dash_7 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Fast_03_mono.wav
+[2025-12-07 23:20:59.808] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/AXE_Chop_Tree_Subtle_01_RR2_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/AXE_Chop_Tree_Subtle_01_RR2_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.808] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: fire_bolt from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/AXE_Chop_Tree_Subtle_01_RR2_mono.wav
+[2025-12-07 23:20:59.808] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/Gems Loot 1.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Gems Loot 1.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 2 channels)
+[2025-12-07 23:20:59.809] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: gain_exp_pickup from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Gems Loot 1.wav
+[2025-12-07 23:20:59.809] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/IMPACT_Stone_On_Stone_01_Subtle_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_01_Subtle_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.809] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: item_appear_1 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_01_Subtle_mono.wav
+[2025-12-07 23:20:59.810] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/IMPACT_Stone_On_Stone_02_Subtle_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_02_Subtle_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.810] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: item_appear_2 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_02_Subtle_mono.wav
+[2025-12-07 23:20:59.810] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/IMPACT_Stone_On_Stone_03_Subtle_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_03_Subtle_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.810] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: item_appear_3 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_03_Subtle_mono.wav
+[2025-12-07 23:20:59.810] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/IMPACT_Stone_On_Stone_04_Subtle_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_04_Subtle_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.810] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: item_appear_4 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/IMPACT_Stone_On_Stone_04_Subtle_mono.wav
+[2025-12-07 23:20:59.810] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/Casual Whoosh 8.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Casual Whoosh 8.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 2 channels)
+[2025-12-07 23:20:59.812] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: level_up from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Casual Whoosh 8.wav
+[2025-12-07 23:20:59.812] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/WHOOSH_Deep_Smooth_02_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Deep_Smooth_02_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.812] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: monster_appear_whoosh from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Deep_Smooth_02_mono.wav
+[2025-12-07 23:20:59.813] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/MECHANICS_Metal_Mechanism_05_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MECHANICS_Metal_Mechanism_05_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.813] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: place_trap from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MECHANICS_Metal_Mechanism_05_mono.wav
+[2025-12-07 23:20:59.813] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/CAMERA_DSLR_Dial_Rotate_03_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CAMERA_DSLR_Dial_Rotate_03_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.813] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: planning_card_activation from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CAMERA_DSLR_Dial_Rotate_03_mono.wav
+[2025-12-07 23:20:59.813] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/Default Strike 3.wav)
+WARNING: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Default Strike 3.wav] Failed to open file
+[2025-12-07 23:20:59.813] [error] [sound_system.cpp:474] [SOUND] Failed to load sound: player_hurt from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Default Strike 3.wav
+[2025-12-07 23:20:59.813] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/GORE_Deep_Short_Splat_02_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/GORE_Deep_Short_Splat_02_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.814] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: remove_area_triggered from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/GORE_Deep_Short_Splat_02_mono.wav
+[2025-12-07 23:20:59.814] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/UI_Animate_Whisper_Appear_stereo.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Animate_Whisper_Appear_stereo.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 2 channels)
+[2025-12-07 23:20:59.814] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: strength_bonus from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Animate_Whisper_Appear_stereo.wav
+[2025-12-07 23:20:59.814] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/TIME_WARP_Start_08_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/TIME_WARP_Start_08_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.815] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: time_back_to_normal from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/TIME_WARP_Start_08_mono.wav
+[2025-12-07 23:20:59.815] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/TIME_WARP_Stop_08_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/TIME_WARP_Stop_08_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.816] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: time_slow from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/TIME_WARP_Stop_08_mono.wav
+[2025-12-07 23:20:59.816] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/Ni Sound Dark Game Trailer Transitions Whoosh 01.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Ni Sound Dark Game Trailer Transitions Whoosh 01.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
+[2025-12-07 23:20:59.851] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: transition_whoosh from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Ni Sound Dark Game Trailer Transitions Whoosh 01.wav
+[2025-12-07 23:20:59.851] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/Ni Sound Dark Game Trailer Transitions Whoosh 02.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Ni Sound Dark Game Trailer Transitions Whoosh 02.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (96000 Hz, 16 bit, 2 channels)
+[2025-12-07 23:20:59.885] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: transition_whoosh_out from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Ni Sound Dark Game Trailer Transitions Whoosh 02.wav
+[2025-12-07 23:20:59.885] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/SNAP_Clean_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/SNAP_Clean_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.886] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: trigger_activate from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/SNAP_Clean_mono.wav
+[2025-12-07 23:20:59.886] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR01_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR01_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.887] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_1 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR01_mono.wav
+[2025-12-07 23:20:59.887] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR10_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR10_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.887] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_10 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR10_mono.wav
+[2025-12-07 23:20:59.887] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR02_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR02_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.888] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_2 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR02_mono.wav
+[2025-12-07 23:20:59.888] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR03_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR03_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.889] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_3 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR03_mono.wav
+[2025-12-07 23:20:59.889] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR04_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR04_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.889] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_4 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR04_mono.wav
+[2025-12-07 23:20:59.889] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR05_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR05_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.890] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_5 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR05_mono.wav
+[2025-12-07 23:20:59.890] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR06_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR06_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.890] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_6 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR06_mono.wav
+[2025-12-07 23:20:59.890] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR07_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR07_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.890] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_7 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR07_mono.wav
+[2025-12-07 23:20:59.890] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR08_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR08_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_8 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR08_mono.wav
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/FOOTSTEP_Rock_Walk_01_RR09_mono.wav)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR09_mono.wav] File loaded successfully
+INFO: WAVE: Data loaded successfully (44100 Hz, 16 bit, 1 channels)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:478] [SOUND] Loaded sound: walk_9 from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FOOTSTEP_Rock_Walk_01_RR09_mono.wav
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:464] [SOUND] Loading category: ui
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/Tranquil Tides.wav)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:496] [SOUND] Loaded music main-menu with file name: Tranquil Tides.wav
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/SMILETRON - Self Titled - 01 SANCTUM.ogg)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:496] [SOUND] Loaded music main-music-1 with file name: SMILETRON - Self Titled - 01 SANCTUM.ogg
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/SMILETRON - Self Titled - 02 ORACLE.ogg)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:496] [SOUND] Loaded music main-music-2 with file name: SMILETRON - Self Titled - 02 ORACLE.ogg
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/SMILETRON - Self Titled - 03 MICROCOSMIC.ogg)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:496] [SOUND] Loaded music main-music-3 with file name: SMILETRON - Self Titled - 03 MICROCOSMIC.ogg
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/SMILETRON - Self Titled - 04 GEMINI.ogg)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:496] [SOUND] Loaded music main-music-4 with file name: SMILETRON - Self Titled - 04 GEMINI.ogg
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/SMILETRON - Self Titled - 05 CERULEAN.ogg)
+[2025-12-07 23:20:59.891] [debug] [sound_system.cpp:496] [SOUND] Loaded music main-music-5 with file name: SMILETRON - Self Titled - 05 CERULEAN.ogg
+[2025-12-07 23:20:59.891] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(localization/)
+[2025-12-07 23:20:59.893] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(localization/)
+[2025-12-07 23:20:59.894] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(localization/fonts.json)
+[2025-12-07 23:20:59.895] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(fonts/en/Kenney Thick.ttf)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Kenney Thick.ttf] File loaded successfully
+INFO: TEXTURE: [ID 7] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (25 pixel size | 95 glyphs)
+[2025-12-07 23:20:59.897] [info] [localization.cpp:108] Loaded font '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Kenney Thick.ttf' (95 glyphs) for 'en_us'
+[2025-12-07 23:20:59.897] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(fonts/ko/Galmuri11-Bold.ttf)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/Galmuri11-Bold.ttf] File loaded successfully
+INFO: TEXTURE: [ID 8] Texture loaded successfully (8192x4096 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (32 pixel size | 11619 glyphs)
+[2025-12-07 23:21:00.124] [info] [localization.cpp:108] Loaded font '/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/Galmuri11-Bold.ttf' (11619 glyphs) for 'ko_kr'
+[2025-12-07 23:21:00.124] [debug] [init.cpp:882] Loading finished.
+INFO: TEXTURE: [ID 9] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 10] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 11] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 12] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 13] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 14] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 15] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 16] Texture loaded successfully (1280x800 | R8G8B8A8 | 1 mipmaps)
+Initializing cpSpace - Chipmunk v7.0.3 (Debug Enabled)
+Compile with -DNDEBUG defined to disable debug mode and runtime assertion checks
+[2025-12-07 23:21:00.129] [info] [physics_world.cpp:154] PhysicsWorld init: gravity=(0, 0), iters=10
+[2025-12-07 23:21:00.131] [info] [physics_world.cpp:1410] AddCollisionTag: 'WORLD' -> category=0x1, type=1
+[2025-12-07 23:21:00.131] [info] [physics_world.cpp:1410] AddCollisionTag: 'player' -> category=0x2, type=2
+[2025-12-07 23:21:00.131] [debug] [LUA]: Game initializing...
+[2025-12-07 23:21:00.131] [debug] [telemetry.cpp:152] [telemetry] stub event 'session_start' (2 props) -> 
+[2025-12-07 23:21:00.132] [debug] [telemetry.cpp:152] [telemetry] stub event 'lua_runtime_init' (2 props) -> 
+[2025-12-07 23:21:00.135] [info] [shader_system.cpp:649] Registered uniform update for shader: material_card_overlay
+[2025-12-07 23:21:00.135] [info] [shader_system.cpp:649] Registered uniform update for shader: material_card_overlay_new_dissolve
+[2025-12-07 23:21:00.136] [info] [shader_system.cpp:649] Registered uniform update for shader: tile_grid_overlay
+[2025-12-07 23:21:00.136] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(graphics/palettes/resurrect-64-1x.png)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/palettes/resurrect-64-1x.png] File loaded successfully
+INFO: IMAGE: Data loaded successfully (64x1 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 17] Texture loaded successfully (64x1 | R8G8B8A8 | 1 mipmaps)
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: custom_polychrome
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: random_displacement_anim
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: outer_space_donuts_bg
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: flash
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: crt
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: glitch
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: wind
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: vacuum_collapse
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: fireworks
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: starry_tunnel
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: item_glow
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: burn_2d
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: hologram_2d
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: wobbly
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: bounce_wave
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: radial_shine_2d
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_hologram
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_polychrome
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_foil
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_negative_shine
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_negative
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_holo
+[2025-12-07 23:21:00.137] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_voucher
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: 3d_skew_gold_seal
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: squish
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: peaches_background
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: foil
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: holo
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: polychrome
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: material_card_overlay
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: negative_shine
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: negative
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: spectrum_circle
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: spectrum_line_background
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: voucher_sheen
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: discrete_clouds
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: bounding_battle_bg
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: infinite_scrolling_texture
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: rain_snow
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: dissolve_burn
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: wobbly_grid
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: radial_shine_highlight
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: fireworks_2d
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: pixel_perfect_dissolve
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: random_displacement
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: hologram
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: liquid_sphere
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: texture_liquid
+[2025-12-07 23:21:00.138] [info] [shader_system.cpp:649] Registered uniform update for shader: fade
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate crt.iTime = 0.0
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate balatro_background.spin_rotation = 7.0205106735229
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate tile_grid_overlay.atlas = {userdata}
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate screen_tone_transition.screen_pixel_size = {table}
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate material_card_overlay.material_tint = {table}
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate material_card_overlay.burn_colour_1 = {table}
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate material_card_overlay.burn_colour_2 = {table}
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate material_card_overlay.dissolve = 0.0
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate material_card_overlay.grain_intensity = -1.9500000476837
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate material_card_overlay.sheen_strength = -1.4900000095367
+[2025-12-07 23:21:00.139] [debug] [LUA]: shader_uniforms.validate material_card_overlay.noise_amount = 1.1200000047684
+[2025-12-07 23:21:00.142] [debug] [telemetry.cpp:152] [telemetry] stub event 'scene_enter' (1 props) -> 
+INFO: STREAM: Initialized successfully (44100 Hz, 16 bit, Stereo)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Tranquil Tides.wav] Music file loaded successfully
+INFO:     > Sample rate:   44100 Hz
+INFO:     > Sample size:   16 bits
+INFO:     > Channels:      2 (Stereo)
+INFO:     > Total frames:  5210585
+[2025-12-07 23:21:00.143] [debug] Initializing effects for text.
+[2025-12-07 23:21:00.148] [debug] [box.cpp:189] UI element has ID: 0
+[2025-12-07 23:21:00.148] [debug] [box.cpp:189] UI element has ID: 0
+[2025-12-07 23:21:00.149] [debug] [box.cpp:189] UI element has ID: 1
+[2025-12-07 23:21:00.149] [debug] [box.cpp:189] UI element has ID: 0
+[2025-12-07 23:21:00.149] [debug] [box.cpp:189] UI element has ID: 1
+[2025-12-07 23:21:00.149] [debug] [box.cpp:189] UI element has ID: 2
+[2025-12-07 23:21:00.149] [debug] [box.cpp:189] UI element has ID: 0
+[2025-12-07 23:21:00.149] [debug] [box.cpp:189] UI element has ID: 1
+[2025-12-07 23:21:00.149] [debug] [box.cpp:189] UI element has ID: 3
+[2025-12-07 23:21:00.150] [debug] [box.cpp:189] UI element has ID: 0
+[2025-12-07 23:21:00.152] [debug] [box.cpp:936] Calculated content size for entity 83: (268.2, 30)
+[2025-12-07 23:21:00.152] [debug] [box.cpp:944] Calculated content size for container 76: (500, 50)
+[2025-12-07 23:21:00.152] [debug] [box.cpp:936] Calculated content size for entity 97: (32, 32)
+[2025-12-07 23:21:00.152] [debug] [box.cpp:936] Calculated content size for entity 104: (335.99997, 30)
+[2025-12-07 23:21:00.152] [debug] [box.cpp:944] Calculated content size for container 90: (500, 52)
+[2025-12-07 23:21:00.152] [debug] [box.cpp:936] Calculated content size for entity 118: (233.6, 30)
+[2025-12-07 23:21:00.152] [debug] [box.cpp:936] Calculated content size for entity 125: (32, 32)
+[2025-12-07 23:21:00.152] [debug] [box.cpp:944] Calculated content size for container 111: (295.6, 52)
+[2025-12-07 23:21:00.153] [debug] [box.cpp:936] Calculated content size for entity 139: (300, 50)
+[2025-12-07 23:21:00.153] [debug] [box.cpp:944] Calculated content size for container 132: (320, 72)
+[2025-12-07 23:21:00.153] [debug] [box.cpp:1427] Setting up scroll pane on entity 69
+[2025-12-07 23:21:00.153] [debug] [box.cpp:944] Calculated content size for container 69: (510, 200)
+[2025-12-07 23:21:00.153] [debug] [anim_system.cpp:557] UI Resize entity 41 | raw: (14, 14) | intrinsic: 2.2857144 | uiScale: 1 | final: (32, 32)
+[2025-12-07 23:21:00.153] [debug] [anim_system.cpp:557] UI Resize entity 48 | raw: (14, 14) | intrinsic: 2.2857144 | uiScale: 1 | final: (32, 32)
+[2025-12-07 23:21:00.154] [debug] [box.cpp:1272] Placed horizontal container entity 76 at (10, 10) with content size (500, 50)
+[2025-12-07 23:21:00.154] [debug] [box.cpp:1272] Placed horizontal container entity 90 at (10, 72) with content size (500, 52)
+[2025-12-07 23:21:00.154] [debug] [box.cpp:1272] Placed horizontal container entity 111 at (10, 136) with content size (295.6, 52)
+[2025-12-07 23:21:00.154] [debug] [box.cpp:1272] Placed horizontal container entity 132 at (10, 200) with content size (320, 72)
+[2025-12-07 23:21:00.155] [debug] [box.cpp:433]  
+| UIBox | - ID: N/A [entt-62] w/h: 520/200 UIElement children: 0 | LOC(350,800) OFF(0,0) OFF_ALN(0,0)  LayerOrder: 0
+  | SCROLL_PANE | - ID: N/A [entt-69] w/h: 520/200 UIElement children: 4 | LOC(350,800) OFF(0,0) OFF_ALN(350,800)  TreeOrder: 0
+    | HORIZONTAL_CONTAINER | - ID: 0 [entt-76] w/h: 500/50 UIElement children: 1 | LOC(360,810) OFF(10,10) OFF_ALN(350,800)  TreeOrder: 1
+      | OBJECT | - ID: 0 [entt-83] w/h: 268/30 UIElement children: 0 | LOC(475,820) OFF(125,20) OFF_ALN(350,800)  TreeOrder: 2 MovingText(27)--[LOC(0,0) OFF(0,0) OFF_ALN(0,0) MSTR(83) DIMS(268,30)] OBJ: Text TreeOrder: 3 LayerOrder: 0
+    | HORIZONTAL_CONTAINER | - ID: 1 [entt-90] w/h: 500/52 UIElement children: 2 | LOC(360,872) OFF(10,72) OFF_ALN(350,800)  TreeOrder: 3
+      | OBJECT | - ID: 0 [entt-97] w/h: 32/32 UIElement children: 0 | LOC(421,882) OFF(71,82) OFF_ALN(350,800)  TreeOrder: 4 AnimQueue(41)--[LOC(0,0) OFF(0,0) OFF_ALN(0,0) MSTR(97)] OBJ: AnimatedSprite TreeOrder: 5 LayerOrder: 0
+      | OBJECT | - ID: 1 [entt-104] w/h: 335/30 UIElement children: 0 | LOC(463,883) OFF(113,83) OFF_ALN(350,800)  TreeOrder: 5 MovingText(34)--[LOC(0,0) OFF(0,0) OFF_ALN(0,0) MSTR(104) DIMS(335,30)] OBJ: Text TreeOrder: 6 LayerOrder: 0
+    | HORIZONTAL_CONTAINER | - ID: 2 [entt-111] w/h: 295/52 UIElement children: 2 | LOC(462,936) OFF(112,136) OFF_ALN(350,800)  TreeOrder: 6
+      | OBJECT | - ID: 0 [entt-118] w/h: 233/30 UIElement children: 0 | LOC(472,947) OFF(122,147) OFF_ALN(350,800)  TreeOrder: 7 MovingText(55)--[LOC(0,0) OFF(0,0) OFF_ALN(0,0) MSTR(118) DIMS(233,30)] OBJ: Text TreeOrder: 8 LayerOrder: 0
+      | OBJECT | - ID: 1 [entt-125] w/h: 32/32 UIElement children: 0 | LOC(715,946) OFF(365,146) OFF_ALN(350,800)  TreeOrder: 8 AnimQueue(48)--[LOC(0,0) OFF(0,0) OFF_ALN(0,0) MSTR(125)] OBJ: AnimatedSprite TreeOrder: 9 LayerOrder: 0
+    | HORIZONTAL_CONTAINER | - ID: 3 [entt-132] w/h: 320/72 UIElement children: 1 | LOC(450,1000) OFF(100,200) OFF_ALN(350,800)  TreeOrder: 9
+      | INPUT_TEXT | - ID: 0 [entt-139] w/h: 300/50 UIElement children: 0 | LOC(460,1010) OFF(110,210) OFF_ALN(350,800)  TreeOrder: 10
+[2025-12-07 23:21:00.155] [debug] [ui.cpp:796] Initialized UI box 62 with config: x=350, y=800
+[2025-12-07 23:21:00.155] [debug] [ui.cpp:798] UI box 62 has UIBoxComponent
+[2025-12-07 23:21:00.156] [debug] [box.cpp:189] UI element has ID: 0
+[2025-12-07 23:21:00.156] [debug] [box.cpp:189] UI element has ID: 0
+[2025-12-07 23:21:00.156] [debug] [box.cpp:936] Calculated content size for entity 174: (205.99998, 15)
+[2025-12-07 23:21:00.156] [debug] [box.cpp:944] Calculated content size for container 167: (225.99998, 35)
+[2025-12-07 23:21:00.156] [debug] [box.cpp:944] Calculated content size for container 160: (235.99998, 47)
+[2025-12-07 23:21:00.156] [debug] [box.cpp:433]  
+| UIBox | - ID: N/A [entt-153] w/h: 245/57 UIElement children: 0 | LOC(350,800) OFF(0,0) OFF_ALN(0,0)  LayerOrder: 1
+  | ROOT | - ID: N/A [entt-160] w/h: 245/57 UIElement children: 1 | LOC(350,800) OFF(0,0) OFF_ALN(350,800)  TreeOrder: 0
+    | HORIZONTAL_CONTAINER | - ID: 0 [entt-167] w/h: 225/35 UIElement children: 1 | LOC(360,810) OFF(10,10) OFF_ALN(350,800)  TreeOrder: 1
+      | OBJECT | - ID: 0 [entt-174] w/h: 205/15 UIElement children: 0 | LOC(370,820) OFF(20,20) OFF_ALN(350,800)  TreeOrder: 2 MovingText(146)--[LOC(0,0) OFF(0,0) OFF_ALN(0,0) MSTR(174) DIMS(205,15)] OBJ: Text TreeOrder: 3 LayerOrder: 1
+[2025-12-07 23:21:00.156] [debug] [ui.cpp:796] Initialized UI box 153 with config: x=350, y=800
+[2025-12-07 23:21:00.156] [debug] [ui.cpp:798] UI box 153 has UIBoxComponent
+[2025-12-07 23:21:00.156] [info] [main.cpp:423] Starting game loop...
+[2025-12-07 23:21:00.160] [info] [game.cpp:1033] Game state changed: 0 -> 2
+[2025-12-07 23:21:00.267] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 520, height: 200
+[2025-12-07 23:21:00.268] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 500, height: 50
+[2025-12-07 23:21:00.270] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 500, height: 52
+[2025-12-07 23:21:00.270] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 295.6, height: 52
+[2025-12-07 23:21:00.271] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 320, height: 72
+[2025-12-07 23:21:00.271] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 300, height: 50
+[2025-12-07 23:21:00.271] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 245.99998, height: 57
+[2025-12-07 23:21:00.271] [debug] [element.cpp:1667] DrawSelf(): Drawing rectangle with width: 225.99998, height: 35
+[2025-12-07 23:21:00.444] [debug] [ai_system.cpp:1447] ---------- ai_system:: new goap ai tick ------------------
+[2025-12-07 23:21:01.122] [debug] [ai_system.cpp:1447] ---------- ai_system:: new goap ai tick ------------------
+[2025-12-07 23:21:01.944] [debug] [ai_system.cpp:1447] ---------- ai_system:: new goap ai tick ------------------
+[2025-12-07 23:21:02.049] [debug] [input_functions.cpp:2139] Left mouse button pressed at (867.4514, 430.2882)
+[2025-12-07 23:21:02.049] [debug] [input_functions.cpp:2159] Current designated hover target is valid
+[2025-12-07 23:21:02.049] [debug] [input_functions.cpp:2189] Press node can click, setting cursor down target
+[2025-12-07 23:21:02.155] [debug] [input_functions.cpp:2225] Left mouse button released at (867.3368, 430.2882)
+[2025-12-07 23:21:02.155] [debug] [input_functions.cpp:2237] Current designated hover target is valid for release
+[2025-12-07 23:21:02.155] [debug] [game.cpp:1066] UI button activated on entity 76 via button 0
+[2025-12-07 23:21:02.155] [debug] [input_functions.cpp:787] Cursor up time: 6.6951847, cursor down time: 6.5875735
+[2025-12-07 23:21:02.155] [debug] [input_functions.cpp:788] Cursor down target click timeout: 5
+[2025-12-07 23:21:02.155] [debug] [input_functions.cpp:793] Cursor movement distance : 0.11462402
+[2025-12-07 23:21:02.155] [debug] [input_functions.cpp:798] Cursor releasedEvent: cursor down target 76 has click enabled, registering as click
+[2025-12-07 23:21:02.157] [debug] [telemetry.cpp:152] [telemetry] stub event 'start_game_clicked' (1 props) -> 
+[2025-12-07 23:21:02.157] [debug] [input_functions.cpp:689] Clicked on entity 76
+[2025-12-07 23:21:02.762] [debug] [ai_system.cpp:1447] ---------- ai_system:: new goap ai tick ------------------
+[2025-12-07 23:21:03.145] [debug] [LUA]: Changing game state to IN_GAME
+Runtime:	Lua 5.4
+INFO: STREAM: Initialized successfully (44100 Hz, 16 bit, Stereo)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/SMILETRON - Self Titled - 01 SANCTUM.ogg] Music file loaded successfully
+INFO:     > Sample rate:   44100 Hz
+INFO:     > Sample size:   16 bits
+INFO:     > Channels:      2 (Stereo)
+INFO:     > Total frames:  21358703
+[2025-12-07 23:21:03.148] [debug] [LUA]: Initializing main game...
+[2025-12-07 23:21:03.148] [debug] [telemetry.cpp:152] [telemetry] stub event 'scene_enter' (1 props) -> 
+[CardMetadata] Registered 59 cards with shop
+[ShopSystem] Initialized
+[ShopSystem] Card pool: 59 cards
+[CastFeedUI] Initialized
+[SubcastDebugUI] Initialized (toggle with global DEBUG_SUBCAST)
+[2025-12-07 23:21:03.152] [error] Lua update failed: ...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:1586: attempt to index a nil value (global 'ShadowMode')
+stack traceback:
+	...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:1586: in function 'base.createNewCard'
+	...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:4043: in function 'base.initPlanningPhase'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:467: in function 'base.initMainGame'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:506: in function 'base.changeGameState'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:394: in field 'action'
+	...emplate/TheGameJamTemplate/assets/scripts/core/timer.lua:388: in function 'core/timer.update'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:650: in function <...Template/TheGameJamTemplate/assets/scripts/core/main.lua:628>
+[2025-12-07 23:21:03.153] [debug] [shader_pipeline.hpp:206] Initializing shader pipeline with dimensions: 108x124
+INFO: TEXTURE: [ID 18] Texture loaded successfully (108x124 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 9] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 9] Framebuffer object created successfully
+INFO: TEXTURE: [ID 19] Texture loaded successfully (108x124 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 10] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 10] Framebuffer object created successfully
+INFO: TEXTURE: [ID 20] Texture loaded successfully (108x124 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 11] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 11] Framebuffer object created successfully
+INFO: TEXTURE: [ID 21] Texture loaded successfully (108x124 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 12] Depth renderbuffer loaded successfully (32 bits)
+INFO: FBO: [ID 12] Framebuffer object created successfully
+[2025-12-07 23:21:03.153] [debug] [layer.cpp:4480] ShaderPipelineInit called with new size: 108x124
+[2025-12-07 23:21:03.213] [debug] [LUA]: Changing game state to IN_GAME
+Runtime:	Lua 5.4
+INFO: STREAM: Initialized successfully (44100 Hz, 16 bit, Stereo)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/SMILETRON - Self Titled - 01 SANCTUM.ogg] Music file loaded successfully
+INFO:     > Sample rate:   44100 Hz
+INFO:     > Sample size:   16 bits
+INFO:     > Channels:      2 (Stereo)
+INFO:     > Total frames:  21358703
+[2025-12-07 23:21:03.216] [debug] [LUA]: Initializing main game...
+[CastFeedUI] Initialized
+[2025-12-07 23:21:03.218] [error] Lua update failed: ...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:1586: attempt to index a nil value (global 'ShadowMode')
+stack traceback:
+	...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:1586: in function 'base.createNewCard'
+	...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:4043: in function 'base.initPlanningPhase'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:467: in function 'base.initMainGame'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:506: in function 'base.changeGameState'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:394: in field 'action'
+	...emplate/TheGameJamTemplate/assets/scripts/core/timer.lua:388: in function 'core/timer.update'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:650: in function <...Template/TheGameJamTemplate/assets/scripts/core/main.lua:628>
+[2025-12-07 23:21:03.255] [debug] [LUA]: Changing game state to IN_GAME
+Runtime:	Lua 5.4
+INFO: STREAM: Initialized successfully (44100 Hz, 16 bit, Stereo)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/SMILETRON - Self Titled - 01 SANCTUM.ogg] Music file loaded successfully
+INFO:     > Sample rate:   44100 Hz
+INFO:     > Sample size:   16 bits
+INFO:     > Channels:      2 (Stereo)
+INFO:     > Total frames:  21358703
+[2025-12-07 23:21:03.258] [debug] [LUA]: Initializing main game...
+[CastFeedUI] Initialized
+[2025-12-07 23:21:03.260] [error] Lua update failed: ...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:1586: attempt to index a nil value (global 'ShadowMode')
+stack traceback:
+	...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:1586: in function 'base.createNewCard'
+	...late/TheGameJamTemplate/assets/scripts/core/gameplay.lua:4043: in function 'base.initPlanningPhase'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:467: in function 'base.initMainGame'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:506: in function 'base.changeGameState'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:394: in field 'action'
+	...emplate/TheGameJamTemplate/assets/scripts/core/timer.lua:388: in function 'core/timer.update'
+	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:650: in function <...Template/TheGameJamTemplate/assets/scripts/core/main.lua:628>
+[2025-12-07 23:21:03.436] [critical] [crash_reporter.cpp:250] Crash report captured: crash_reports/crash_report_20251207_232103.json

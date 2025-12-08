@@ -251,8 +251,24 @@ local tooltipStyle = {
     valueColumnMinWidth = 60,
     bgColor = Col(18, 22, 32, 235),
     innerColor = Col(28, 32, 44, 230),
-    outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255)
+    outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255),
+    -- Named font for tooltip text (loaded below)
+    fontName = "tooltip"
 }
+
+-- Initialize tooltip font
+-- Load JetBrains Mono Nerd Font for tooltips at startup
+if localization and localization.loadNamedFont then
+    localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 32)
+end
+
+-- Helper to get the tooltip font (with fallback)
+local function getTooltipFont()
+    if localization and localization.hasNamedFont and localization.hasNamedFont(tooltipStyle.fontName) then
+        return localization.getNamedFont(tooltipStyle.fontName).font
+    end
+    return localization and localization.getFont and localization.getFont() or nil
+end
 
 local ensureCardTooltip -- forward declaration
 
@@ -2786,6 +2802,7 @@ function makeWandTooltip(wand_def)
 
     local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr   = ";shadow=false"
+    local fontAttr = tooltipStyle.fontName and (";font=" .. tooltipStyle.fontName) or ""
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2802,9 +2819,9 @@ function makeWandTooltip(wand_def)
         local formattedValue = valueFormatter and valueFormatter(value) or tostring(value)
         table.insert(lines,
             "[" .. label .. "](background=" .. tooltipStyle.labelBg .. ";color=" .. tooltipStyle.labelColor ..
-            ";fontSize=" .. globalFontSize .. noShadowAttr .. ") [" ..
+            ";fontSize=" .. globalFontSize .. noShadowAttr .. fontAttr .. ") [" ..
             formattedValue .. "](color=" .. tooltipStyle.valueColor .. ";fontSize=" .. globalFontSize .. noShadowAttr ..
-            ")")
+            fontAttr .. ")")
     end
 
     local lines = {}
@@ -2827,7 +2844,7 @@ function makeWandTooltip(wand_def)
 
     local idText = ui.definitions.getTextFromString("[id: " .. tostring(wand_def.id) .. "](background=" ..
         tooltipStyle.idBg .. ";color=" .. (tooltipStyle.idTextColor or tooltipStyle.labelColor) .. ";fontSize=" .. globalFontSize .. noShadowAttr ..
-        ")")
+        fontAttr .. ")")
 
     local v = dsl.vbox {
         config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -2877,6 +2894,7 @@ function makeCardTooltip(card_def, opts)
     local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
     local rowPadding = math.max(0, (tooltipStyle.rowPadding or 0) - 1)
     local outerPadding = tooltipStyle.innerPadding
+    local fontAttr = tooltipStyle.fontName and (";font=" .. tooltipStyle.fontName) or ""
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -2891,7 +2909,7 @@ function makeCardTooltip(card_def, opts)
         opts = opts or {}
         local background = opts.background or tooltipStyle.labelBg
         local color = opts.color or tooltipStyle.labelColor
-        local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. background .. ";color=" .. color .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. background .. ";color=" .. color .. ";fontSize=" .. globalFontSize .. noShadowAttr .. fontAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
@@ -2905,7 +2923,7 @@ function makeCardTooltip(card_def, opts)
     local function makeValueNode(value, opts)
         opts = opts or {}
         local valueColor = opts.color or tooltipStyle.valueColor
-        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. valueColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+        local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. valueColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. fontAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -2936,7 +2954,7 @@ function makeCardTooltip(card_def, opts)
     if cardId then
         local idPill = ui.definitions.getTextFromString("[id: " .. tostring(cardId) .. "](background=" ..
             tooltipStyle.idBg .. ";color=" .. (tooltipStyle.idTextColor or tooltipStyle.labelColor) .. ";fontSize=" .. globalFontSize ..
-            noShadowAttr .. ")")
+            noShadowAttr .. fontAttr .. ")")
         table.insert(rows, dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -2999,14 +3017,14 @@ function makeCardTooltip(card_def, opts)
             local rarityBg = rarityColors[rarity] or tooltipStyle.idBg
             table.insert(pillDefs, ui.definitions.getTextFromString(
                 "[" .. rarity .. "](background=" .. rarityBg .. ";color=white;fontSize=" .. globalFontSize ..
-                    noShadowAttr .. ")"))
+                    noShadowAttr .. fontAttr .. ")"))
         end
         if assignment.tags and #assignment.tags > 0 then
             for _, tag in ipairs(assignment.tags) do
                 local tagBg = tagColors[tag] or "dim_gray"
                 table.insert(pillDefs, ui.definitions.getTextFromString(
                     "[" .. tostring(tag) .. "](background=" .. tagBg .. ";color=white;fontSize=" .. globalFontSize ..
-                        noShadowAttr .. ")"))
+                        noShadowAttr .. fontAttr .. ")"))
             end
         end
         if #pillDefs > 0 then
@@ -3020,43 +3038,14 @@ function makeCardTooltip(card_def, opts)
         end
     end
 
-    local left, right = {}, {}
-    local half = math.ceil(#rows / 2)
-    for i, row in ipairs(rows) do
-        if i <= half then
-            table.insert(left, row)
-        else
-            table.insert(right, row)
-        end
-    end
-
-    local v = dsl.hbox {
+    -- Single column layout for card tooltips
+    local v = dsl.vbox {
         config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
             color = tooltipStyle.innerColor,
-            padding = outerPadding,
-            spacing = outerPadding
+            padding = outerPadding
         },
-        children = {
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                    color = tooltipStyle.innerColor,
-                    minWidth = 220
-                },
-                children = left
-            },
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                    color = tooltipStyle.innerColor,
-                    minWidth = 220
-                },
-                children = right
-            }
-        }
+        children = rows
     }
 
     local root = dsl.root {
@@ -3275,6 +3264,109 @@ local function buildTwoColumnBody(rows, opts)
     }
 end
 
+local function buildThreeColumnBody(rows, opts)
+    opts = opts or {}
+    local rowsPerCol = math.ceil(#rows / 3)
+    local col1, col2, col3 = {}, {}, {}
+
+    for i, row in ipairs(rows) do
+        if i <= rowsPerCol then
+            col1[#col1 + 1] = row
+        elseif i <= rowsPerCol * 2 then
+            col2[#col2 + 1] = row
+        else
+            col3[#col3 + 1] = row
+        end
+    end
+
+    return dsl.hbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            color = opts.innerColor,
+            padding = opts.padding or 0
+        },
+        children = {
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = col1
+            },
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = col2
+            },
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = col3
+            }
+        }
+    }
+end
+
+local function buildFourColumnBody(rows, opts)
+    opts = opts or {}
+    local rowsPerCol = math.ceil(#rows / 4)
+    local col1, col2, col3, col4 = {}, {}, {}, {}
+
+    for i, row in ipairs(rows) do
+        if i <= rowsPerCol then
+            col1[#col1 + 1] = row
+        elseif i <= rowsPerCol * 2 then
+            col2[#col2 + 1] = row
+        elseif i <= rowsPerCol * 3 then
+            col3[#col3 + 1] = row
+        else
+            col4[#col4 + 1] = row
+        end
+    end
+
+    return dsl.hbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            color = opts.innerColor,
+            padding = opts.padding or 0
+        },
+        children = {
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = col1
+            },
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = col2
+            },
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = col3
+            },
+            dsl.vbox {
+                config = {
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                    padding = 0,
+                },
+                children = col4
+            }
+        }
+    }
+end
+
 local function makeDetailedStatsTooltip(snapshot)
     local globalFontSize = tooltipStyle.fontSize
     local noShadowAttr = ";shadow=false"
@@ -3282,10 +3374,11 @@ local function makeDetailedStatsTooltip(snapshot)
     local valueColumnMinWidth = tooltipStyle.valueColumnMinWidth
     local rowPadding = tooltipStyle.rowPadding
     local outerPadding = tooltipStyle.innerPadding
+    local fontAttr = tooltipStyle.fontName and (";font=" .. tooltipStyle.fontName) or ""
 
     local function makeLabelNode(label)
         local labelDef = ui.definitions.getTextFromString("[" .. label .. "](background=" .. tooltipStyle.labelBg ..
-            ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. ")")
+            ";color=" .. tooltipStyle.labelColor .. ";fontSize=" .. globalFontSize .. noShadowAttr .. fontAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
@@ -3300,7 +3393,7 @@ local function makeDetailedStatsTooltip(snapshot)
         opts = opts or {}
         local valueColor = opts.color or tooltipStyle.valueColor
         local valueDef = ui.definitions.getTextFromString("[" .. tostring(value) .. "](color=" .. valueColor .. ";fontSize=" ..
-            globalFontSize .. noShadowAttr .. ")")
+            globalFontSize .. noShadowAttr .. fontAttr .. ")")
         return dsl.hbox {
             config = {
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
@@ -3385,7 +3478,7 @@ local function makeDetailedStatsTooltip(snapshot)
         addLine(rows, "status", "No stats", { color = "yellow" })
     end
 
-    local v = buildTwoColumnBody(rows, {
+    local v = buildFourColumnBody(rows, {
         innerColor = tooltipStyle.innerColor,
         padding = outerPadding
     })

@@ -65,33 +65,47 @@ my_avatar = {
 
 Avatars unlock when **any** condition is met. Use `OR_` prefix for alternative paths.
 
+> **Implementation Status**: The parsing logic for unlock conditions is fully implemented in `wand/avatar_system.lua`. However, most metrics require tracking calls that aren't yet in place.
+
 ### Metric-Based Unlocks
 
-| Metric | Description |
-|--------|-------------|
-| `kills_with_fire` | Enemies killed with fire damage |
-| `kills_with_ice` | Enemies killed with ice damage |
-| `kills_with_lightning` | Enemies killed with lightning damage |
-| `kills_with_poison` | Enemies killed with poison damage |
-| `damage_blocked` | Total damage blocked/absorbed |
-| `damage_dealt` | Total damage dealt |
-| `distance_moved` | Distance traveled (units) |
-| `crits_dealt` | Critical hits landed |
-| `mana_spent` | Total mana consumed |
-| `hp_lost` | Total HP lost |
-| `enemies_killed` | Total enemies killed |
-| `waves_completed` | Combat waves survived |
+| Metric | Status | Description |
+|--------|--------|-------------|
+| `kills` | ✅ Tracked | Generic kill count (`gameplay.lua:4785`) |
+| `damage_blocked` | ✅ Tracked | Total damage blocked (`gameplay.lua:4771`) |
+| `kills_with_fire` | ⚠️ Not tracked | Needs: `record_progress(player, "kills_with_fire", 1)` on fire kill |
+| `kills_with_ice` | ⚠️ Not tracked | Needs element-specific kill tracking |
+| `kills_with_lightning` | ⚠️ Not tracked | Needs element-specific kill tracking |
+| `kills_with_poison` | ⚠️ Not tracked | Needs element-specific kill tracking |
+| `damage_dealt` | ⚠️ Not connected | Tracked in wave_manager but not sent to avatar system |
+| `distance_moved` | ⚠️ Not tracked | Needs movement tracking integration |
+| `crits_dealt` | ⚠️ Not tracked | Needs crit event integration |
+| `mana_spent` | ⚠️ Not tracked | Needs mana system integration |
+| `hp_lost` | ⚠️ Not tracked | Needs damage taken integration |
+| `enemies_killed` | ⚠️ Not connected | Tracked in wave_manager but not sent to avatar system |
+| `waves_completed` | ⚠️ Not connected | Tracked in wave_manager but not sent to avatar system |
 
-### Tag-Based Unlocks
+**To add tracking for a metric**, call `AvatarSystem.record_progress()`:
+```lua
+local AvatarSystem = require("wand.avatar_system")
+-- In your kill handler:
+if damage_type == "fire" then
+    AvatarSystem.record_progress(playerScript, "kills_with_fire", 1)
+end
+```
 
-Use `OR_<tag>_tags = N` for tag threshold unlocks:
+### Tag-Based Unlocks ✅ FULLY IMPLEMENTED
+
+Use `OR_<tag>_tags = N` for tag threshold unlocks. This is **fully implemented** and working:
 
 ```lua
 unlock = {
-    kills_with_fire = 100,  -- Primary path
-    OR_fire_tags = 7,       -- Alternative: have 7+ Fire tags in deck
+    kills_with_fire = 100,  -- Primary path (needs metric tracking)
+    OR_fire_tags = 7,       -- Alternative: have 7+ Fire tags in deck ✅ WORKS
 }
 ```
+
+The `OR_` prefix and `_tags` suffix parsing is implemented in `avatar_system.lua:41-46, 59-63`.
 
 ### Examples
 
@@ -157,6 +171,35 @@ Common rules:
 - `move_casts_trigger_onhit` - Movement wands trigger on-hit effects
 - `summon_cast_share` - Summons copy your projectiles
 - `missing_hp_dmg` - Damage scales with missing HP
+
+**Adding Custom Rules**: Rule names are just strings. To add a new rule:
+
+1. Define it in your avatar:
+   ```lua
+   { type = "rule_change", rule = "my_custom_rule", desc = "Description" }
+   ```
+
+2. Check for it where the rule should apply:
+   ```lua
+   local function is_rule_active(rule_name)
+       local AvatarSystem = require("wand.avatar_system")
+       local avatarId = AvatarSystem.get_equipped(globals.player)
+       if not avatarId then return false end
+
+       local def = require("data.avatars")[avatarId]
+       for _, effect in ipairs(def.effects or {}) do
+           if effect.type == "rule_change" and effect.rule == rule_name then
+               return true
+           end
+       end
+       return false
+   end
+
+   -- Usage:
+   if is_rule_active("my_custom_rule") then
+       -- Apply custom behavior
+   end
+   ```
 
 ### Proc Effect
 

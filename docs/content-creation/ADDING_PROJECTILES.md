@@ -129,14 +129,16 @@ chain_damage_decay = 0.8, -- Damage multiplier per jump
 
 ### Special Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `suction_strength` | number | Pulls enemies toward projectile |
-| `suction_radius` | number | Pull effect range |
-| `leaves_hazard` | bool | Creates hazard zone at impact |
-| `hazard_duration` | number | Hazard lifetime (ms) |
-| `on_hit_effect` | string | Status effect applied ("burn", "freeze", "poison") |
-| `on_hit_duration` | number | Status effect duration (ms) |
+| Field | Type | Status | Description |
+|-------|------|--------|-------------|
+| `suction_strength` | number | ⚠️ NOT IMPL | Pulls enemies toward projectile |
+| `suction_radius` | number | ⚠️ NOT IMPL | Pull effect range |
+| `leaves_hazard` | bool | ⚠️ NOT IMPL | Creates hazard zone at impact |
+| `hazard_duration` | number | ⚠️ NOT IMPL | Hazard lifetime (ms) |
+| `on_hit_effect` | string | ⚠️ NOT IMPL | Status effect ("burn", "freeze", "poison") |
+| `on_hit_duration` | number | ⚠️ NOT IMPL | Status effect duration (ms) |
+
+> **Note**: These special fields are defined in data but require implementation in `projectile_system.lua`. See [Extending the System](#extending-the-system) for how to add them.
 
 ## Templates
 

@@ -66,61 +66,80 @@ end
 
 ### Event Types
 
-#### `on_spell_cast`
-Triggers when a spell is cast.
+> **Implementation Note**: Only `on_spell_cast` is currently triggered in production code. Other events (`calculate_damage`, `on_wave_start`, `on_kill`) are documented for future use - you can add them by calling `JokerSystem.trigger_event()` where appropriate.
+
+#### `on_spell_cast` ✅ IMPLEMENTED
+Triggers when a spell is cast. Location: `wand/wand_executor.lua:654-662`
 
 ```lua
 context = {
-    event = "on_spell_cast",
-    spell_type = "Mono-Element",  -- or "Twin Cast", "Chain Cast", etc.
-    tags = { Fire = true, Projectile = true },  -- tags in this cast
+    event = "on_spell_cast",           -- auto-set by joker_system.lua
+
+    -- Spell classification
+    spell_type = "Mono-Element",       -- "Simple Cast", "Twin Cast", "Scatter Cast",
+                                       -- "Precision Cast", "Rapid Fire", "Mono-Element",
+                                       -- "Combo Chain", "Heavy Barrage", "Chaos Cast"
+
+    -- Tags in this cast (hash table for fast lookup)
+    tags = { Fire = true, Projectile = true, AoE = true },
+
+    -- Detailed tag analysis (from spell_type_evaluator.lua)
     tag_analysis = {
-        diversity = 2,           -- number of distinct tags
-        primary_tag = "Fire",    -- most common tag
-        primary_count = 3,       -- count of primary tag
-        is_tag_heavy = true,     -- 3+ of same tag
-        is_multi_tag = false,    -- single action with 2+ tags
+        tag_counts = { Fire = 3, Ice = 2 },  -- tag name -> occurrence count
+        primary_tag = "Fire",                 -- most frequent tag
+        primary_count = 3,                    -- count of primary tag
+        diversity = 2,                        -- number of distinct tag types
+        total_tags = 5,                       -- total tag instances
+        is_tag_heavy = true,                  -- primary_count >= 3
+        is_mono_tag = false,                  -- diversity == 1
+        is_diverse = false,                   -- diversity >= 3
+        is_multi_tag = false,                 -- single action with 2+ tags
     },
-    player = { ... },            -- player state
+
+    -- Player reference
+    player = playerScript,             -- player entity or script table
+
+    -- Wand info
+    wand_id = "wand_1",                -- ID of the casting wand
 }
 ```
 
-#### `calculate_damage`
-Triggers when calculating damage (for multipliers).
+#### `calculate_damage` ⚠️ NOT YET TRIGGERED
+Defined in jokers but requires integration. Add trigger in damage calculation:
 
 ```lua
-context = {
-    event = "calculate_damage",
+-- To implement: call this in your damage pipeline
+local effects = JokerSystem.trigger_event("calculate_damage", {
     base_damage = 25,
     damage_type = "fire",
     tags = { Fire = true },
     player = {
         tag_counts = { Fire = 8, Projectile = 12 },
     },
-}
+})
 ```
 
-#### `on_wave_start`
-Triggers when a combat wave begins.
+#### `on_wave_start` ⚠️ NOT YET TRIGGERED
+Add trigger in wave manager:
 
 ```lua
-context = {
-    event = "on_wave_start",
+-- To implement: call this when wave starts
+local effects = JokerSystem.trigger_event("on_wave_start", {
     wave_number = 3,
     enemy_count = 10,
-}
+})
 ```
 
-#### `on_kill`
-Triggers when player kills an enemy.
+#### `on_kill` ⚠️ NOT YET TRIGGERED
+Add trigger in enemy death handler:
 
 ```lua
-context = {
-    event = "on_kill",
+-- To implement: call this on enemy death
+local effects = JokerSystem.trigger_event("on_kill", {
     enemy_type = "basic",
     damage_type = "fire",
     was_crit = true,
-}
+})
 ```
 
 ### Return Values

@@ -66,20 +66,22 @@ Cards.MY_FIREBALL = {
 
 ### Special Action Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `ricochet_count` | number | Bounces before despawning |
-| `trigger_on_collision` | bool | Casts next card on hit |
-| `trigger_on_timer` | bool | Casts next card after `timer_ms` |
-| `trigger_on_death` | bool | Casts next card when projectile expires |
-| `timer_ms` | number | Timer duration for trigger |
-| `gravity_affected` | bool | Projectile falls with gravity |
-| `homing_strength` | number | Tracking strength toward enemies |
-| `teleport_on_hit` | bool | Player teleports to impact point |
-| `leave_hazard` | bool | Creates hazard zone at impact |
-| `heal_amount` | number | HP restored (for heal cards) |
-| `shield_strength` | number | Shield HP granted |
-| `summon_entity` | string | Entity ID to summon |
+| Field | Type | Status | Description |
+|-------|------|--------|-------------|
+| `ricochet_count` | number | ✅ | Bounces before despawning (`wand_modifiers.lua:237`) |
+| `trigger_on_collision` | bool | ✅ | Casts next card on hit (`wand_executor.lua:595`) |
+| `trigger_on_timer` | bool | ✅ | Casts next card after `timer_ms` (`wand_executor.lua:853`) |
+| `trigger_on_death` | bool | ✅ | Casts next card when projectile expires (`wand_actions.lua:516`) |
+| `timer_ms` | number | ✅ | Timer duration for trigger (used with `trigger_on_timer`) |
+| `gravity_affected` | bool | ✅ | Projectile uses ARC movement (`wand_actions.lua:325`) |
+| `homing_strength` | number | ✅ | Tracking strength (1-15, applied in `wand_actions.lua:367`) |
+| `teleport_on_hit` | bool | ⚠️ STUB | Detection exists, execution needs implementation |
+| `leave_hazard` | bool | ⚠️ STUB | Detection exists, hazard system needs implementation |
+| `heal_amount` | number | ✅ | HP restored (`wand_actions.lua:564`) |
+| `shield_strength` | number | ✅ | Shield HP granted (`wand_actions.lua:580`) |
+| `summon_entity` | string | ⚠️ STUB | Detection exists, spawning system needs implementation |
+
+**How triggers work**: When a card has `trigger_on_collision`, `trigger_on_timer`, or `trigger_on_death`, the wand executor collects subsequent cards as a "sub-cast block" that fires when the trigger condition is met. The triggered cards inherit context from the triggering projectile.
 
 ### Modifier Card Fields
 
@@ -95,15 +97,15 @@ Cards.MY_FIREBALL = {
 
 ### Special Modifier Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `seek_strength` | number | Adds homing behavior |
-| `make_explosive` | bool | Adds explosion on impact |
-| `force_crit_next` | bool | Next action always crits |
-| `size_multiplier` | number | Projectile scale factor |
-| `heal_on_hit` | number | HP restored when projectile hits |
-| `auto_aim` | bool | Auto-targets nearest enemy |
-| `wand_refresh` | bool | Resets wand cooldown |
+| Field | Type | Status | Description |
+|-------|------|--------|-------------|
+| `seek_strength` | number | ✅ | Alias for homing (`wand_modifiers.lua:161`) |
+| `make_explosive` | bool | ✅ | Adds explosion on impact (`wand_modifiers.lua:230`) |
+| `force_crit_next` | bool | ✅ | Next action always crits (`wand_modifiers.lua:270`) |
+| `size_multiplier` | number | ✅ | Projectile scale factor (`wand_actions.lua:434`) |
+| `heal_on_hit` | number | ✅ | HP restored on hit (`wand_actions.lua:476`) |
+| `auto_aim` | bool | ✅ | Auto-targets nearest enemy (`wand_actions.lua:323`) |
+| `wand_refresh` | bool | ✅ | Resets wand cooldown |
 
 ### Trigger Card Fields
 

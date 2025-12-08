@@ -657,6 +657,35 @@ Tags are just strings. Add to any card/projectile and react to them in jokers:
 -- In joker: if context.tags and context.tags.MyNewTag then return { damage_mult = 1.5 } end
 ```
 
+#### Tag Synergy Thresholds
+Tags grant bonuses at breakpoints (3/5/7/9 cards with that tag). Defined in `wand/tag_evaluator.lua`:
+
+```lua
+-- Add new tag with synergy breakpoints:
+local TAG_BREAKPOINTS = {
+    MyNewTag = {
+        [3] = { type = "stat", stat = "damage_pct", value = 10 },       -- +10% damage
+        [5] = { type = "proc", proc_id = "my_custom_proc" },            -- Trigger proc
+        [7] = { type = "stat", stat = "crit_chance_pct", value = 15 },  -- +15% crit
+        [9] = { type = "proc", proc_id = "my_ultimate_proc" },          -- Ultimate proc
+    },
+    -- ... existing tags
+}
+```
+
+**Bonus types:**
+- `stat`: Modifies player stat (e.g., `damage_pct`, `crit_chance_pct`)
+- `proc`: Triggers a proc effect (implement handler in combat system)
+
+**Changing thresholds:** Edit `DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }` in tag_evaluator.lua.
+
+**API:**
+```lua
+local TagEvaluator = require("wand.tag_evaluator")
+TagEvaluator.get_thresholds("Fire")     -- Returns sorted threshold list
+TagEvaluator.get_breakpoints()          -- Returns copy of all tag definitions
+```
+
 #### Adding New Joker Events
 Event names are strings. Emit from any code, jokers react automatically:
 ```lua

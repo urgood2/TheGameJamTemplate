@@ -153,29 +153,31 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
 
-    // Negative/Sepia tint effect
-    // Convert to HSL, invert lightness, shift hue, add teal tint overlay
-    vec4 hslColor = HSL(base);
-
-    // Invert lightness based on negative_tint.x intensity
+    // True photographic negative effect
+    // Invert RGB colors directly for authentic negative look
     float invertStrength = clamp(negative_tint.x, 0.0, 1.0);
-    hslColor.z = mix(hslColor.z, 1.0 - hslColor.z, invertStrength);
 
-    // Shift hue toward sepia/vintage tones
-    // negative_tint.y controls the hue rotation amount
-    hslColor.x = mod(hslColor.x - 0.2 + negative_tint.y * 0.1, 1.0);
+    // True color inversion (1.0 - color)
+    vec3 invertedColor = vec3(1.0) - base.rgb;
 
-    // Desaturate slightly for vintage look
-    hslColor.y *= 0.7;
+    // Blend between original and inverted based on intensity
+    vec3 negativeColor = mix(base.rgb, invertedColor, invertStrength);
 
-    vec4 processed = RGB(hslColor);
+    // Optional: slight hue rotation for film negative aesthetic
+    // Real film negatives have orange mask, causing color shifts
+    // negative_tint.y controls optional color shift intensity
+    float hueShift = negative_tint.y * 0.15;
+    vec4 hslColor = HSL(vec4(negativeColor, 1.0));
+    hslColor.x = mod(hslColor.x + hueShift, 1.0);
 
-    // Add teal/cyan color overlay for that classic negative film look
-    // Teal RGB (79, 99, 103) creates a vintage film aesthetic similar to the reference shader
-    vec3 tealTint = vec3(79.0/255.0, 99.0/255.0, 103.0/255.0);
-    // Animated tint strength: base 0.6, oscillates ±0.2 for subtle pulsing effect
-    float tintStrength = 0.6 + 0.2 * sin(time * 0.5 + negative_tint.y);
-    vec3 tintedColor = processed.rgb + tintStrength * tealTint;
+    // Boost saturation slightly for punchy negative look
+    hslColor.y = min(hslColor.y * 1.2, 1.0);
+
+    vec3 tintedColor = RGB(hslColor).rgb;
+
+    // Subtle contrast boost for negative film feel
+    tintedColor = (tintedColor - 0.5) * 1.1 + 0.5;
+    tintedColor = clamp(tintedColor, 0.0, 1.0);
 
     // Reduce alpha for semi-transparent areas
     float alphaAdjust = base.a;
@@ -183,8 +185,8 @@ vec4 applyOverlay(vec2 atlasUV) {
         alphaAdjust = alphaAdjust / 3.0;
     }
 
-    float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
-    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0) * edgeMask;
+    // Use uniform mask (no radial variation) to avoid circular banding
+    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0);
 
     vec3 lit = mix(base.rgb, tintedColor, overlayMask);
     lit = clamp(lit * material_tint, 0.0, 1.0);

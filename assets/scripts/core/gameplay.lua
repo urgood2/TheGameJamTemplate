@@ -1158,7 +1158,8 @@ function setUpCardAndWandStatDisplay()
 
 
 
-    timer.run(function()
+    -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
+    timer.run_every_render_frame(function()
         -- bail if not shop or planning state
         if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
             return
@@ -1411,7 +1412,8 @@ function createNewCard(id, x, y, gameStateToApply)
 
     -- if card update timer doens't exist, add it.
     if not timer.get_timer_and_delay("card_render_timer") then
-        timer.run(function()
+        -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
+        timer.run_every_render_frame(function()
                 -- log_debug("Card Render Timer Tick")
                 -- tracy.zoneBeginN("Card Render Timer Tick") -- just some default depth to avoid bugs
                 -- bail if not shop or planning state
@@ -1671,12 +1673,18 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_voucher")
     -- shaderPipelineComp:addPass("3d_skew_gold_seal")
     -- shaderPipelineComp:addPass("3d_skew_polychrome")
-    shaderPipelineComp:addPass("3d_skew_aurora")
+    -- shaderPipelineComp:addPass("3d_skew_aurora")
     -- shaderPipelineComp:addPass("3d_skew_iridescent")
     -- shaderPipelineComp:addPass("3d_skew_nebula")
     -- shaderPipelineComp:addPass("3d_skew_plasma")
     -- shaderPipelineComp:addPass("3d_skew_prismatic")
     -- shaderPipelineComp:addPass("3d_skew_thermal")
+    
+    -- shaderPipelineComp:addPass("3d_skew_crystalline")
+    -- shaderPipelineComp:addPass("3d_skew_glitch")
+    -- shaderPipelineComp:addPass("3d_skew_negative_tint")
+    shaderPipelineComp:addPass("3d_skew_oil_slick")
+    -- shaderPipelineComp:addPass("3d_skew_polka_dot")
     
     do
         local passes = shaderPipelineComp.passes
@@ -3754,7 +3762,9 @@ function initPlanningPhase()
     
     MessageQueueUI.enqueueTest()
     
-    timer.run(function()
+    -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
+    -- timer.run() executes during fixed timestep which may skip frames
+    timer.run_every_render_frame(function()
         local dt = GetFrameTime()
 
         if CastFeedUI and is_state_active and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE)) then
@@ -4171,7 +4181,8 @@ function initPlanningPhase()
 
 
     -- board draw function, for all baords
-    timer.run(function()
+    -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
+    timer.run_every_render_frame(function()
         -- tracy.zoneBeginN("Planning Phase Board Draw") -- just some default depth to avoid bugs
 
         -- log_debug("Drawing board borders")
@@ -6559,6 +6570,7 @@ end
 -- call every frame
 function debugUI()
     -- open a window (returns shouldDraw)
+    -- NOTE: ImGui.End() must ALWAYS be called after ImGui.Begin(), regardless of return value
     if ImGui.Begin("Quick access") then
         if ImGui.Button("Goto Planning Phase") then
             startPlanningPhase()
@@ -6597,8 +6609,8 @@ function debugUI()
         if debugQuickAccessState.lastMessage then
             ImGui.Text(debugQuickAccessState.lastMessage)
         end
-        ImGui.End()
     end
+    ImGui.End() -- Must be called even if Begin() returns false
 
     renderCardSpawnerDebugUI()
 
@@ -8799,7 +8811,8 @@ function initPlanningUI()
 
     createWandSelectorButtons()
 
-    timer.run(function()
+    -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
+    timer.run_every_render_frame(function()
         if not is_state_active or not is_state_active(PLANNING_STATE) then return end
         if not planningUIEntities.wand_buttons then return end
 

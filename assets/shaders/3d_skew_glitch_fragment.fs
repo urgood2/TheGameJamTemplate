@@ -167,22 +167,29 @@ vec4 applyOverlay(vec2 atlasUV) {
     float tearY = step(0.5, hash(floor(t * 8.0)));
     float tearAmount = (hash(floor(uv.y * 20.0 + t * 15.0)) - 0.5) * 0.2 * tearY * glitchIntensity;
 
-    // Apply displacements to UV
-    vec2 glitchUV = sampleUV;
-    glitchUV.x += lineDisplace + tearAmount;
-    glitchUV.x += blockDisplace * burst2;
+    // Apply displacements in local sprite UV space to prevent atlas bleeding
+    vec2 glitchLocalUV = warpedLocal;
+    glitchLocalUV.x += lineDisplace + tearAmount;
+    glitchLocalUV.x += blockDisplace * burst2;
 
     // RGB channel splitting (chromatic aberration on steroids)
     float splitAmount = 0.01 + 0.03 * glitchIntensity * burstTotal;
     splitAmount += 0.02 * sin(uv.y * 100.0 + t * 50.0) * burst1;
 
-    vec2 uvR = glitchUV + vec2(splitAmount, 0.0);
-    vec2 uvG = glitchUV;
-    vec2 uvB = glitchUV - vec2(splitAmount, 0.0);
+    // Calculate offsets in local UV space and clamp to sprite boundaries
+    vec2 localR = glitchLocalUV + vec2(splitAmount, splitAmount * 0.3 * burst2);
+    vec2 localG = glitchLocalUV;
+    vec2 localB = glitchLocalUV + vec2(-splitAmount, -splitAmount * 0.3 * burst2);
 
-    // Vertical split variation
-    uvR.y += splitAmount * 0.3 * burst2;
-    uvB.y -= splitAmount * 0.3 * burst2;
+    // Clamp to sprite bounds to prevent atlas bleeding
+    localR = clamp(localR, 0.0, 1.0);
+    localG = clamp(localG, 0.0, 1.0);
+    localB = clamp(localB, 0.0, 1.0);
+
+    // Convert back to atlas coordinates
+    vec2 uvR = localToAtlas(localR);
+    vec2 uvG = localToAtlas(localG);
+    vec2 uvB = localToAtlas(localB);
 
     vec3 glitchColor;
     glitchColor.r = sampleTinted(uvR).r;

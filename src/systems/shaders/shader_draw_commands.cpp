@@ -252,10 +252,15 @@ void executeEntityPipelineWithCommands(
                shaderName == "3d_skew_hologram" ||
                shaderName == "3d_skew_iridescent" ||
                shaderName == "3d_skew_negative" ||
+               shaderName == "3d_skew_negative_tint" ||
                shaderName == "3d_skew_negative_shine" ||
                shaderName == "3d_skew_nebula" ||
+               shaderName == "3d_skew_crystalline" ||
+               shaderName == "3d_skew_glitch" ||
+               shaderName == "3d_skew_oil_slick" ||
                shaderName == "3d_skew_plasma" ||
                shaderName == "3d_skew_polychrome" ||
+               shaderName == "3d_skew_polka_dot" ||
                shaderName == "3d_skew_prismatic" ||
                shaderName == "3d_skew_thermal" ||
                shaderName == "3d_skew_voucher";

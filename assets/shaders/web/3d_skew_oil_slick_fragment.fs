@@ -134,10 +134,10 @@ vec3 thinFilmInterference(float thickness) {
     return vec3(r, g, b);
 }
 
-// More accurate thin-film model with viewing angle
-vec3 oilSlickColor(float thickness, float viewAngle) {
-    // Adjust thickness based on viewing angle (longer path at oblique angles)
-    float effectiveThickness = thickness / max(cos(viewAngle * 1.5), 0.3);
+// More accurate thin-film model - simplified without radial viewing angle
+vec3 oilSlickColor(float thickness, float flowVariation) {
+    // Use flow variation instead of radial viewing angle to avoid circular banding
+    float effectiveThickness = thickness * (1.0 + flowVariation * 0.3);
 
     // Multiple interference orders create richer colors
     vec3 color1 = thinFilmInterference(effectiveThickness);
@@ -196,51 +196,56 @@ vec4 applyOverlay(vec2 atlasUV) {
     float t = time * 0.3;
 
     // Simulate oil spreading/flowing on water
-    // Multiple layers of flowing noise create organic patterns
+    // Multiple layers of flowing noise create organic, non-radial patterns
     vec2 flowUV1 = uv * 3.0 + vec2(t * 0.2, t * 0.1);
     vec2 flowUV2 = uv * 5.0 - vec2(t * 0.15, t * 0.25);
     vec2 flowUV3 = uv * 2.0 + vec2(sin(t * 0.1) * 0.5, cos(t * 0.15) * 0.5);
+    vec2 flowUV4 = uv * 4.0 + vec2(t * 0.08, -t * 0.12);  // Additional flow layer
 
     float flow1 = fbm(flowUV1);
     float flow2 = fbm(flowUV2);
     float flow3 = fbm(flowUV3);
+    float flow4 = fbm(flowUV4);
 
     // Combine flows into oil film thickness variation
-    float thickness = (flow1 * 0.5 + flow2 * 0.3 + flow3 * 0.2);
+    // Use more flow layers to break up any remaining patterns
+    float thickness = (flow1 * 0.35 + flow2 * 0.25 + flow3 * 0.25 + flow4 * 0.15);
 
     // Add user control for base thickness
     thickness = thickness * (0.5 + oil_slick.x * 0.5) + oil_slick.y * 0.2;
 
-    // Simulate viewing angle based on UV position (like tilting the surface)
-    float viewAngle = length(uv - 0.5) * 0.8;
+    // Use flow-based variation instead of radial viewing angle to avoid circular banding
+    float flowVariation = (flow1 - flow2) * 2.0;
 
-    // Get interference color
-    vec3 slickColor = oilSlickColor(thickness * 4.0, viewAngle);
+    // Get interference color using flow-based variation
+    vec3 slickColor = oilSlickColor(thickness * 4.0, flowVariation);
 
-    // Add swirling patterns where oil pools
-    float swirl = sin(atan(uv.y - 0.5, uv.x - 0.5) * 3.0 + thickness * 10.0 + t) * 0.5 + 0.5;
-    vec3 swirlColor = oilSlickColor((thickness + swirl * 0.1) * 4.0, viewAngle);
-    slickColor = mix(slickColor, swirlColor, 0.3);
+    // Add flowing/swirling patterns where oil pools (non-radial)
+    // Use directional flow instead of radial atan
+    float swirl = sin(uv.x * 8.0 + uv.y * 6.0 + thickness * 10.0 + t * 2.0) * 0.5 + 0.5;
+    swirl *= sin(uv.x * 5.0 - uv.y * 7.0 + flow1 * 5.0 - t) * 0.5 + 0.5;
+    vec3 swirlColor = oilSlickColor((thickness + swirl * 0.15) * 4.0, flowVariation * 0.8);
+    slickColor = mix(slickColor, swirlColor, 0.35);
 
     // Dark regions where oil is thickest (absorbs light)
-    float darkness = smoothstep(0.6, 0.8, thickness);
-    slickColor = mix(slickColor, slickColor * 0.3, darkness * 0.5);
+    float darkness = smoothstep(0.55, 0.75, thickness);
+    slickColor = mix(slickColor, slickColor * 0.4, darkness * 0.4);
 
     // Bright specular highlights on the oil surface
     float specular = pow(flow1 * flow2, 3.0) * 2.0;
-    slickColor += vec3(1.0, 0.98, 0.95) * specular * 0.3;
+    slickColor += vec3(1.0, 0.98, 0.95) * specular * 0.25;
 
-    // Edge rainbow effect (oil often shows strongest colors at edges)
-    float edgeIntensity = smoothstep(0.3, 0.5, dist);
-    vec3 edgeColor = oilSlickColor(thickness * 5.0 + edgeIntensity, viewAngle + 0.2);
-    slickColor = mix(slickColor, edgeColor, edgeIntensity * 0.4);
+    // Edge color variation based on flow, not radial distance
+    float edgeFlow = smoothstep(0.3, 0.7, flow3);
+    vec3 edgeColor = oilSlickColor(thickness * 5.0 + edgeFlow * 0.5, flowVariation + 0.2);
+    slickColor = mix(slickColor, edgeColor, edgeFlow * 0.3);
 
-    // Blend with base image
-    float blendFactor = 0.6 + 0.2 * sin(thickness * 6.2831);
+    // Blend with base image - use smooth thickness gradient, not sinusoidal bands
+    float blendFactor = 0.55 + 0.25 * thickness;
     vec3 oilColor = mix(base.rgb * 0.7, slickColor, blendFactor);
 
-    float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
-    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0) * edgeMask;
+    // Use uniform mask (no radial variation) to avoid circular banding
+    float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0);
 
     vec3 lit = mix(base.rgb, oilColor, overlayMask);
     lit = clamp(lit * material_tint, 0.0, 1.0);

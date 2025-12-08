@@ -1310,6 +1310,11 @@ void SetUpShaderUniforms() {
   registerPseudo3DSkewVariant("3d_skew_plasma", "plasma");
   registerPseudo3DSkewVariant("3d_skew_prismatic", "prismatic");
   registerPseudo3DSkewVariant("3d_skew_thermal", "thermal");
+  registerPseudo3DSkewVariant("3d_skew_crystalline", "crystalline");
+  registerPseudo3DSkewVariant("3d_skew_glitch", "glitch");
+  registerPseudo3DSkewVariant("3d_skew_negative_tint", "negative_tint");
+  registerPseudo3DSkewVariant("3d_skew_oil_slick", "oil_slick");
+  registerPseudo3DSkewVariant("3d_skew_polka_dot", "polka_dot");
   // squish
   globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
   globalShaderUniforms.set("squish", "up_right", Vector2{1.0f, 0.0f});

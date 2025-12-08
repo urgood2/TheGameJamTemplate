@@ -194,9 +194,18 @@ vec4 applyOverlay(vec2 atlasUV) {
     float refractStrength = 0.02 * (1.0 + crystalline.x);
     vec2 refractDir = normalize(cellCenter - scaledUV / facetScale);
 
-    vec2 uvR = sampleUV + refractDir * refractStrength * 1.0;
-    vec2 uvG = sampleUV + refractDir * refractStrength * 0.5;
-    vec2 uvB = sampleUV - refractDir * refractStrength * 0.5;
+    // Convert refract direction from pattern space to local UV space, then to atlas
+    // Apply refraction in local sprite UV space and clamp to stay within sprite bounds
+    vec2 localRefractDir = refractDir * refractStrength;
+
+    // Get current local UV and apply offsets, clamping to sprite boundaries
+    vec2 localR = clamp(warpedLocal + localRefractDir * 1.0, 0.0, 1.0);
+    vec2 localG = clamp(warpedLocal + localRefractDir * 0.5, 0.0, 1.0);
+    vec2 localB = clamp(warpedLocal - localRefractDir * 0.5, 0.0, 1.0);
+
+    vec2 uvR = localToAtlas(localR);
+    vec2 uvG = localToAtlas(localG);
+    vec2 uvB = localToAtlas(localB);
 
     vec3 refractedColor;
     refractedColor.r = sampleTinted(uvR).r;

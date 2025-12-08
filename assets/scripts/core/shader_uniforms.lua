@@ -802,6 +802,11 @@ local function init_static_defaults()
     set_pseudo_3d_skew_defaults("3d_skew_plasma", "plasma")
     set_pseudo_3d_skew_defaults("3d_skew_prismatic", "prismatic")
     set_pseudo_3d_skew_defaults("3d_skew_thermal", "thermal")
+    set_pseudo_3d_skew_defaults("3d_skew_crystalline", "crystalline")
+    set_pseudo_3d_skew_defaults("3d_skew_glitch", "glitch")
+    set_pseudo_3d_skew_defaults("3d_skew_negative_tint", "negative_tint")
+    set_pseudo_3d_skew_defaults("3d_skew_oil_slick", "oil_slick")
+    set_pseudo_3d_skew_defaults("3d_skew_polka_dot", "polka_dot")
     -- squish
     set("squish", "up_left", Vector2{ x = 0.0, y = 0.0 })
     set("squish", "up_right", Vector2{ x = 1.0, y = 0.0 })
@@ -1269,110 +1274,37 @@ local function init_updates()
         set("holographic_card", "iTime", get_time())
     end)
 
-    register("3d_skew", function(_shader)
-        set("3d_skew", "iTime", get_time())
-        set("3d_skew", "time", get_time())
-        set("3d_skew", "mouse_screen_pos", get_mouse())
-        set("3d_skew", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
+    local pseudo_3d_skew_shaders = {
+        "3d_skew",
+        "3d_skew_hologram",
+        "3d_skew_polychrome",
+        "3d_skew_foil",
+        "3d_skew_negative_shine",
+        "3d_skew_negative",
+        "3d_skew_holo",
+        "3d_skew_voucher",
+        "3d_skew_gold_seal",
+        "3d_skew_aurora",
+        "3d_skew_iridescent",
+        "3d_skew_nebula",
+        "3d_skew_plasma",
+        "3d_skew_prismatic",
+        "3d_skew_thermal",
+        "3d_skew_crystalline",
+        "3d_skew_glitch",
+        "3d_skew_negative_tint",
+        "3d_skew_oil_slick",
+        "3d_skew_polka_dot",
+    }
 
-    register("3d_skew_hologram", function(_shader)
-        set("3d_skew_hologram", "iTime", get_time())
-        set("3d_skew_hologram", "time", get_time())
-        set("3d_skew_hologram", "mouse_screen_pos", get_mouse())
-        set("3d_skew_hologram", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_polychrome", function(_shader)
-        set("3d_skew_polychrome", "iTime", get_time())
-        set("3d_skew_polychrome", "time", get_time())
-        set("3d_skew_polychrome", "mouse_screen_pos", get_mouse())
-        set("3d_skew_polychrome", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_foil", function(_shader)
-        set("3d_skew_foil", "iTime", get_time())
-        set("3d_skew_foil", "time", get_time())
-        set("3d_skew_foil", "mouse_screen_pos", get_mouse())
-        set("3d_skew_foil", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_negative_shine", function(_shader)
-        set("3d_skew_negative_shine", "iTime", get_time())
-        set("3d_skew_negative_shine", "time", get_time())
-        set("3d_skew_negative_shine", "mouse_screen_pos", get_mouse())
-        set("3d_skew_negative_shine", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_negative", function(_shader)
-        set("3d_skew_negative", "iTime", get_time())
-        set("3d_skew_negative", "time", get_time())
-        set("3d_skew_negative", "mouse_screen_pos", get_mouse())
-        set("3d_skew_negative", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_holo", function(_shader)
-        set("3d_skew_holo", "iTime", get_time())
-        set("3d_skew_holo", "time", get_time())
-        set("3d_skew_holo", "mouse_screen_pos", get_mouse())
-        set("3d_skew_holo", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_voucher", function(_shader)
-        set("3d_skew_voucher", "iTime", get_time())
-        set("3d_skew_voucher", "time", get_time())
-        set("3d_skew_voucher", "mouse_screen_pos", get_mouse())
-        set("3d_skew_voucher", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_gold_seal", function(_shader)
-        set("3d_skew_gold_seal", "iTime", get_time())
-        set("3d_skew_gold_seal", "time", get_time())
-        set("3d_skew_gold_seal", "mouse_screen_pos", get_mouse())
-        set("3d_skew_gold_seal", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_aurora", function(_shader)
-        set("3d_skew_aurora", "iTime", get_time())
-        set("3d_skew_aurora", "time", get_time())
-        set("3d_skew_aurora", "mouse_screen_pos", get_mouse())
-        set("3d_skew_aurora", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_iridescent", function(_shader)
-        set("3d_skew_iridescent", "iTime", get_time())
-        set("3d_skew_iridescent", "time", get_time())
-        set("3d_skew_iridescent", "mouse_screen_pos", get_mouse())
-        set("3d_skew_iridescent", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_nebula", function(_shader)
-        set("3d_skew_nebula", "iTime", get_time())
-        set("3d_skew_nebula", "time", get_time())
-        set("3d_skew_nebula", "mouse_screen_pos", get_mouse())
-        set("3d_skew_nebula", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_plasma", function(_shader)
-        set("3d_skew_plasma", "iTime", get_time())
-        set("3d_skew_plasma", "time", get_time())
-        set("3d_skew_plasma", "mouse_screen_pos", get_mouse())
-        set("3d_skew_plasma", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_prismatic", function(_shader)
-        set("3d_skew_prismatic", "iTime", get_time())
-        set("3d_skew_prismatic", "time", get_time())
-        set("3d_skew_prismatic", "mouse_screen_pos", get_mouse())
-        set("3d_skew_prismatic", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
-
-    register("3d_skew_thermal", function(_shader)
-        set("3d_skew_thermal", "iTime", get_time())
-        set("3d_skew_thermal", "time", get_time())
-        set("3d_skew_thermal", "mouse_screen_pos", get_mouse())
-        set("3d_skew_thermal", "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
-    end)
+    for _, name in ipairs(pseudo_3d_skew_shaders) do
+        register(name, function(_shader)
+            set(name, "iTime", get_time())
+            set(name, "time", get_time())
+            set(name, "mouse_screen_pos", get_mouse())
+            set(name, "resolution", Vector2{ x = globals.screenWidth(), y = globals.screenHeight() })
+        end)
+    end
 
     register("squish", function(_shader)
         local t = get_time()

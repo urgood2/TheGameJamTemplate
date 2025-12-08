@@ -105,12 +105,18 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-// Circle mask function
+// Circle mask function - sharp edge circle test
 float circle(vec2 uv) {
     return 1.0 - step(0.5, distance(uv, vec2(0.5)));
 }
 
-// Radial gradient for shine effect
+// Soft circle for smooth blending
+float softCircle(vec2 uv, float softness) {
+    float d = distance(uv, vec2(0.5));
+    return 1.0 - smoothstep(0.5 - softness, 0.5, d);
+}
+
+// Radial gradient for shine effect - creates directional lighting on spheres
 float radialGradient(vec2 uv, float targetAngle, float gradientPower, float gradientRotation) {
     float angleToCenter = atan(0.5 - uv.y, 0.5 - uv.x);
     targetAngle += gradientRotation;
@@ -118,7 +124,7 @@ float radialGradient(vec2 uv, float targetAngle, float gradientPower, float grad
         sin(angleToCenter + targetAngle),
         sin(angleToCenter + targetAngle + 3.14159)
     );
-    distanceToAngle = pow(distanceToAngle, gradientPower);
+    distanceToAngle = pow(max(distanceToAngle, 0.0), gradientPower);
     return distanceToAngle;
 }
 
@@ -158,20 +164,22 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
 
-    // Polka dot / circle pattern effect
-    vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Polka dot pattern effect - 3D spherical dots with shine
+    // Use local sprite UV (0-1) for pattern to avoid atlas bleeding
+    vec2 uv = clampedLocal;
 
-    // Pattern parameters
-    float scale = 2.0 + polka_dot.x * 2.0;  // Dot density
-    float gradientPower = 8.0;
-    float gradientRotation = time * 0.3 + polka_dot.y;
+    // Pattern parameters - polka_dot.x controls scale, polka_dot.y controls animation/hue
+    float scale = 3.0 + polka_dot.x * 3.0;  // Dot density (3-6 dots across)
+    float gradientPower = 10.0;  // Sharper shine highlights
+    float gradientRotation = time * 0.4 + polka_dot.y * 2.0;  // Animated shine rotation
 
-    // Color palette - holographic/iridescent feel
-    vec3 colorBase = vec3(0.2, 0.1, 0.3);      // Deep purple base
-    vec3 colorShineA = vec3(0.0, 0.8, 0.9);    // Cyan shine
-    vec3 colorShineB = vec3(1.0, 0.4, 0.7);    // Pink shine
+    // Color palette for classic polka dot look
+    vec3 colorBase = vec3(0.15, 0.08, 0.25);     // Dark purple/navy base (dot shadow)
+    vec3 colorShineA = vec3(0.95, 0.3, 0.5);     // Hot pink primary shine
+    vec3 colorShineB = vec3(0.4, 0.9, 0.95);     // Cyan secondary shine
 
-    // Circle positions for tiled pattern (diamond arrangement)
+    // Circle positions for tiled pattern (diamond/offset arrangement)
+    // This creates a proper polka dot grid where dots are offset every other row
     const vec2 POSITIONS[4] = vec2[4](
         vec2(0.0, 0.5),
         vec2(0.5, 0.0),
@@ -182,27 +190,46 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec2 scaledUV = uv * scale;
     vec2 tiledUV = fract(scaledUV);
 
+    // Background color (between dots)
     vec3 patternColor = vec3(0.0);
+    float patternAlpha = 0.0;
 
     for (int i = 0; i < 4; i++) {
         vec2 offsetUV = tiledUV + POSITIONS[i];
 
+        // Build up sphere shading: base color + two directional shine highlights
         vec3 circleColor = colorBase;
-        circleColor = mix(circleColor, colorShineA, radialGradient(offsetUV, 0.0, gradientPower, gradientRotation));
-        circleColor = mix(circleColor, colorShineB, radialGradient(offsetUV, 1.5708, gradientPower, gradientRotation));
 
-        patternColor = mix(patternColor, circleColor, circle(offsetUV));
+        // Primary shine (from one direction)
+        float shine1 = radialGradient(offsetUV, 0.0, gradientPower, gradientRotation);
+        circleColor = mix(circleColor, colorShineA, shine1);
+
+        // Secondary shine (perpendicular direction) for iridescent look
+        float shine2 = radialGradient(offsetUV, 1.5708, gradientPower, gradientRotation);
+        circleColor = mix(circleColor, colorShineB, shine2);
+
+        // Add highlight spot at shine direction for 3D spherical look
+        float highlightStrength = max(shine1, shine2);
+        vec3 highlight = vec3(1.0) * pow(highlightStrength, 2.0) * 0.3;
+        circleColor += highlight;
+
+        // Use soft circle for smoother edges
+        float circleMask = softCircle(offsetUV, 0.05);
+        patternColor = mix(patternColor, circleColor, circleMask);
+        patternAlpha = max(patternAlpha, circleMask);
     }
 
-    // Apply hue shift based on position for extra iridescence
-    float hueShift = sin(uv.x * 3.14159 + time * 0.5) * cos(uv.y * 3.14159 - time * 0.3) * 0.15;
+    // Apply subtle hue variation across the sprite for visual interest
+    float hueShift = sin(uv.x * 6.2831 + time * 0.3) * cos(uv.y * 6.2831 - time * 0.2) * 0.08;
+    hueShift += polka_dot.y * 0.05;  // User-controlled hue offset
     vec3 patternHSV = rgb2hsv(patternColor);
-    patternHSV.x = fract(patternHSV.x + hueShift + polka_dot.y * 0.1);
+    patternHSV.x = fract(patternHSV.x + hueShift);
+    // Boost saturation for vivid polka dots
+    patternHSV.y = min(patternHSV.y * 1.3, 1.0);
     patternColor = hsv2rgb(patternHSV);
 
-    // Blend pattern with base image
-    float patternIntensity = length(patternColor);
-    vec3 blendedColor = mix(base.rgb, patternColor, patternIntensity * 0.7);
+    // Blend pattern with base image - stronger blend where dots are
+    vec3 blendedColor = mix(base.rgb, patternColor, patternAlpha * 0.85);
 
     float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
     float overlayMask = clamp(abs(grain_intensity) + abs(sheen_strength), 0.0, 1.0) * edgeMask;

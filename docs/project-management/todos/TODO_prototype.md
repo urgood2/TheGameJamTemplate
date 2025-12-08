@@ -82,7 +82,17 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     - an exciting shader background that is colorful and dynamic.
     - there should be three escalations, like fanfare, box jerking each time, which will modify the shader background color, maybe make it pulse.
     - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
+    -  maybe escalate the background with this? https://www.shadertoy.com/view/MdGGRW move it to the center, make it vary in color as the sound escalates, then show fireworks, then boom.
     - Then show the reward, with ambient animation.
+    - fireworks background https://www.shadertoy.com/view/4lfXRf
+    - confetti twister https://www.shadertoy.com/view/WsByRW
+    - existing ripple shader for opening impact 
+    - varied particles for opening impact
+    - shake box upon opening.
+    - some kind of rainbow streaknig as well?
+    - https://godotshaders.com/shader/2dradial-shine-2/ for shine
+    - godotshaders.com/shader/pixel-perfect-halo-radiant-glow/ for glow
+    
 
 - find assets. start designing better card graphics.
 

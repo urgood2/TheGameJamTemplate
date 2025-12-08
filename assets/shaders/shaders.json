@@ -188,6 +188,51 @@
             "fragment": "3d_skew_thermal_fragment.fs"
         }
     },
+    "3d_skew_crystalline": {
+        "vertex": "3d_skew_crystalline_vertex.vs",
+        "fragment": "3d_skew_crystalline_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_crystalline_vertex.vs",
+            "fragment": "web/3d_skew_crystalline_fragment.fs"
+        }
+    },
+    "3d_skew_glitch": {
+        "vertex": "3d_skew_glitch_vertex.vs",
+        "fragment": "3d_skew_glitch_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_glitch_vertex.vs",
+            "fragment": "web/3d_skew_glitch_fragment.fs"
+        }
+    },
+    "3d_skew_negative_tint": {
+        "vertex": "3d_skew_negative_tint_vertex.vs",
+        "fragment": "3d_skew_negative_tint_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_negative_tint_vertex.vs",
+            "fragment": "web/3d_skew_negative_tint_fragment.fs"
+        }
+    },
+    "3d_skew_oil_slick": {
+        "vertex": "3d_skew_oil_slick_vertex.vs",
+        "fragment": "3d_skew_oil_slick_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_oil_slick_vertex.vs",
+            "fragment": "web/3d_skew_oil_slick_fragment.fs"
+        }
+    },
+    "3d_skew_polka_dot": {
+        "vertex": "3d_skew_polka_dot_vertex.vs",
+        "fragment": "3d_skew_polka_dot_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_polka_dot_vertex.vs",
+            "fragment": "web/3d_skew_polka_dot_fragment.fs"
+        }
+    },
     "squish": {
         "vertex": "squish_vertex.vs",
         "fragment": "squish_fragment.fs",

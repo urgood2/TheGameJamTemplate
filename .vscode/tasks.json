@@ -8,12 +8,121 @@
 			"targets": [
 				"raylib-cpp-cmake-template"
 			],
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake template build task"
+		},
+		{
+			"label": "Web: Build",
+			"type": "shell",
+			"command": "just build-web",
+			"group": "build",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Web: Serve (itch.io-identical)",
+			"type": "shell",
+			"command": "python3",
+			"args": ["scripts/serve_web.py", "8080"],
+			"windows": {
+				"command": "python",
+				"args": ["scripts/serve_web.py", "8080"]
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": { "regexp": "^$" },
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^Serving web build",
+					"endsPattern": "^$"
+				}
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		{
+			"label": "Web: Build + Serve + Open Browser",
+			"dependsOn": ["Web: Build"],
+			"dependsOrder": "sequence",
+			"type": "shell",
+			"osx": {
+				"command": "bash",
+				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && open http://localhost:8080"]
+			},
+			"linux": {
+				"command": "bash",
+				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && xdg-open http://localhost:8080"]
+			},
+			"windows": {
+				"command": "cmd",
+				"args": ["/c", "start /b python scripts/serve_web.py 8080 && timeout /t 2 >nul && start http://localhost:8080"]
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": { "regexp": "^$" },
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^Serving",
+					"endsPattern": "^$"
+				}
+			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		{
+			"label": "Web: Serve Only (skip build)",
+			"type": "shell",
+			"osx": {
+				"command": "bash",
+				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && open http://localhost:8080"]
+			},
+			"linux": {
+				"command": "bash",
+				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && xdg-open http://localhost:8080"]
+			},
+			"windows": {
+				"command": "cmd",
+				"args": ["/c", "start /b python scripts/serve_web.py 8080 && timeout /t 2 >nul && start http://localhost:8080"]
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": { "regexp": "^$" },
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^Serving",
+					"endsPattern": "^$"
+				}
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		{
+			"label": "Web: Stop Server",
+			"type": "shell",
+			"command": "pkill",
+			"args": ["-f", "serve_web.py"],
+			"windows": {
+				"command": "taskkill",
+				"args": ["/f", "/im", "python.exe"]
+			},
 			"problemMatcher": [],
-			"detail": "CMake template build task"
+			"presentation": {
+				"reveal": "silent"
+			}
 		}
 	]
 }

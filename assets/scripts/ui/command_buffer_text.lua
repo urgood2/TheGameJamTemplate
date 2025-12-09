@@ -14,6 +14,14 @@
 
 local Node = require("monobehavior.behavior_script_v2")
 local component_cache = require("core.component_cache")
+local text_effects = require("ui.text_effects")
+-- Load all effect modules
+require("ui.text_effects.static")
+require("ui.text_effects.continuous")
+require("ui.text_effects.oneshot")
+require("ui.text_effects.juicy")
+require("ui.text_effects.magical")
+require("ui.text_effects.elemental")
 
 local CommandBufferText = Node:extend()
 
@@ -21,6 +29,13 @@ local unpack = table.unpack or unpack
 
 local DEFAULT_LINE_HEIGHT = 1.1
 local DEFAULT_COLOR = (Col and Col(255, 255, 255, 255)) or { r = 255, g = 255, b = 255, a = 255 }
+
+local function get_time()
+  if main_loop and main_loop.getTime then
+    return main_loop.getTime()
+  end
+  return os.clock()
+end
 
 local function measure_width(str, font_size, spacing)
   if localization and localization.getTextWidthWithCurrentFont then
@@ -364,15 +379,39 @@ function CommandBufferText:update(dt)
   local default_color = self.base_color
 
   for _, ch in ipairs(self.characters) do
+    -- Reset per-frame properties
     ch.ox, ch.oy = 0, 0
+    ch.rotation = 0
+    ch.scale = 1
+    ch.scaleX = 1
+    ch.scaleY = 1
+    ch.alpha = 255
     ch.color = nil
+    -- Don't reset: ch.effect_data (persistent), ch.codepoint, ch.created_at
 
     if ch.effects and #ch.effects > 0 then
+      -- Build context for effects
+      local ctx = {
+        time = get_time(),
+        char_count = #self.characters,
+        text_w = self.text_w,
+        text_h = self.text_h,
+        first_frame = self.first_frame,
+      }
+
       for _, eff in ipairs(ch.effects) do
         local name = eff[1]
-        local fn = name and self.text_effects[name]
-        if fn then
-          fn(self, dt or 0, ch, unpack(eff, 2))
+        -- Try registry first, then custom effects
+        local registered = text_effects.get(name)
+        if registered then
+          local args = {}
+          for i = 2, #eff do args[i-1] = eff[i] end
+          text_effects.apply(name, ctx, dt, ch, args)
+        else
+          local fn = name and self.text_effects[name]
+          if fn then
+            fn(self, dt or 0, ch, unpack(eff, 2))
+          end
         end
       end
     end

@@ -1,6 +1,7 @@
 // tests/unit/test_ownership.cpp
 #include <gtest/gtest.h>
 #include "core/ownership.hpp"
+#include "sol/sol.hpp"
 
 TEST(Ownership, ConstantsAreDefined) {
     EXPECT_FALSE(ownership::DISCORD_LINK.empty());
@@ -51,5 +52,48 @@ TEST(Ownership, ValidateDetectsTampering) {
     // Validate with wrong itch link - tampering detected
     ownership::resetTamperState();
     ownership::validate(std::string(ownership::DISCORD_LINK), "https://fake.itch.io/");
+    EXPECT_TRUE(ownership::isTamperDetected());
+}
+
+TEST(Ownership, LuaBindingsExist) {
+    sol::state lua;
+    lua.open_libraries(sol::lib::base, sol::lib::string);
+
+    ownership::registerLuaBindings(lua);
+
+    // Check that ownership table exists
+    sol::table ownership_table = lua["ownership"];
+    EXPECT_TRUE(ownership_table.valid());
+
+    // Check that getDiscordLink function exists and returns correct value
+    sol::function getDiscordLink = ownership_table["getDiscordLink"];
+    EXPECT_TRUE(getDiscordLink.valid());
+    std::string discordLink = getDiscordLink();
+    EXPECT_EQ(discordLink, ownership::DISCORD_LINK);
+
+    // Check that getItchLink function exists and returns correct value
+    sol::function getItchLink = ownership_table["getItchLink"];
+    EXPECT_TRUE(getItchLink.valid());
+    std::string itchLink = getItchLink();
+    EXPECT_EQ(itchLink, ownership::ITCH_LINK);
+
+    // Check that getBuildId function exists and returns correct value
+    sol::function getBuildId = ownership_table["getBuildId"];
+    EXPECT_TRUE(getBuildId.valid());
+    std::string buildId = getBuildId();
+    EXPECT_EQ(buildId, ownership::BUILD_ID);
+
+    // Check that validate function exists
+    sol::function validate = ownership_table["validate"];
+    EXPECT_TRUE(validate.valid());
+
+    // Test that validate function works
+    ownership::resetTamperState();
+    validate(std::string(ownership::DISCORD_LINK), std::string(ownership::ITCH_LINK));
+    EXPECT_FALSE(ownership::isTamperDetected());
+
+    // Test that validate detects tampering
+    ownership::resetTamperState();
+    validate("https://fake.discord.com", std::string(ownership::ITCH_LINK));
     EXPECT_TRUE(ownership::isTamperDetected());
 }

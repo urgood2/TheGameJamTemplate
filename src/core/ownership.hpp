@@ -4,6 +4,9 @@
 #include <string_view>
 #include <string>
 
+// Forward declaration for sol::state
+namespace sol { class state; }
+
 namespace ownership {
 
 // Compile-time constants - cannot be modified at runtime
@@ -41,5 +44,8 @@ const TamperState& getTamperState();
 
 // Reset tamper state (for testing)
 void resetTamperState();
+
+// Register Lua bindings for ownership validation
+void registerLuaBindings(sol::state& lua);
 
 }  // namespace ownership

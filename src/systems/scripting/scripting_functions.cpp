@@ -47,6 +47,8 @@
 #include "systems/telemetry/telemetry.hpp"
 #include "util/utilities.hpp"
 
+#include "core/ownership.hpp"
+
 #include "lua_hot_reload.hpp"
 
 #include "meta_helper.hpp"
@@ -266,6 +268,11 @@ auto initLuaMasterState(sol::state &stateToInit,
   // telemetry (stubbed sink; respects config flags)
   //---------------------------------------------------------
   telemetry::exposeToLua(stateToInit);
+
+  //---------------------------------------------------------
+  // ownership validation (game stealing prevention)
+  //---------------------------------------------------------
+  ownership::registerLuaBindings(stateToInit);
 
   //---------------------------------------------------------
   // LDtk helpers (config-driven, entity iteration)

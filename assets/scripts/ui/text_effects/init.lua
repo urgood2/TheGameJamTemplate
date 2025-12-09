@@ -64,6 +64,7 @@ function effects.rgb_to_hsv(r, g, b)
 end
 
 function effects.shift_hue(color, degrees)
+  if not color then return effects.colors.white end
   local h, s, v = effects.rgb_to_hsv(color.r, color.g, color.b)
   local r, g, b = effects.hsv_to_rgb(h + degrees, s, v)
   return Col(r, g, b, color.a)

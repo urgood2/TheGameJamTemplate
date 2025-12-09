@@ -15,9 +15,8 @@ effects.register("jelly", function(ctx, dt, char, squash, speed, stagger)
 
   -- Warm on squash, cool on stretch
   local hue_shift = wave * 15
-  if char.color then
-    char.color = effects.shift_hue(char.color, hue_shift)
-  end
+  local base_color = char.color or effects.colors.white
+  char.color = effects.shift_hue(base_color, hue_shift)
 end, { 0.3, 8, 0.2 })
 
 -- hop: Quick up-down hops
@@ -59,14 +58,13 @@ effects.register("swing", function(ctx, dt, char, angle, speed, stagger)
 
   -- Darken on back swing, lighten on forward
   local brightness = 1 + swing * 0.15
-  if char.color then
-    char.color = Col(
-      math.min(255, math.floor(char.color.r * brightness)),
-      math.min(255, math.floor(char.color.g * brightness)),
-      math.min(255, math.floor(char.color.b * brightness)),
-      char.color.a
-    )
-  end
+  local base_color = char.color or effects.colors.white
+  char.color = Col(
+    math.min(255, math.floor(base_color.r * brightness)),
+    math.min(255, math.floor(base_color.g * brightness)),
+    math.min(255, math.floor(base_color.b * brightness)),
+    base_color.a
+  )
 end, { 20, 3, 0.2 })
 
 -- tremble: Fast micro-shake with tint

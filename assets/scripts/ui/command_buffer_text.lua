@@ -411,6 +411,13 @@ function CommandBufferText:update(dt)
           local fn = name and self.text_effects[name]
           if fn then
             fn(self, dt or 0, ch, unpack(eff, 2))
+          else
+            -- Warn once per unknown effect
+            if not self._warned_effects then self._warned_effects = {} end
+            if not self._warned_effects[name] then
+              print("Warning: Unknown text effect '" .. tostring(name) .. "'")
+              self._warned_effects[name] = true
+            end
           end
         end
       end
@@ -447,7 +454,7 @@ function CommandBufferText:update(dt)
         c.font = font_ref
         c.x = 0
         c.y = 0
-        c.origin = { x = (ch.w or 0) / 2, y = (ch.h or 0) / 2 }
+        c.origin = { x = 0, y = 0 }
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1
@@ -461,7 +468,7 @@ function CommandBufferText:update(dt)
         c.font = font_ref
         c.x = draw_x
         c.y = draw_y
-        c.origin = { x = (ch.w or 0) / 2, y = (ch.h or 0) / 2 }
+        c.origin = { x = 0, y = 0 }
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1

@@ -39,12 +39,13 @@ end
 
 --- Alternative: Get ownership data without rendering
 --- Use this if you want to display links in your own custom UI
---- @return table { discord: string, itch: string, buildId: string }
+--- @return table { discord: string, itch: string, buildId: string, signature: string }
 function M.getData()
     return {
         discord = ownership.getDiscordLink(),
         itch = ownership.getItchLink(),
-        buildId = ownership.getBuildId()
+        buildId = ownership.getBuildId(),
+        signature = ownership.getBuildSignature()
     }
 end
 

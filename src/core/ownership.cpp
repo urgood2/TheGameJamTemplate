@@ -1,14 +1,23 @@
 #include "ownership.hpp"
 #include "sol/sol.hpp"
 #include "raylib.h"
+#include <atomic>
+#include <mutex>
 
 namespace ownership {
 
 namespace {
+    // Thread-safe tamper state
+    // The detected flag uses atomic for lock-free reads in the render loop
+    // The mutex protects the string members during validation
+    std::atomic<bool> g_tamperDetected{false};
+    std::mutex g_tamperStateMutex;
     TamperState g_tamperState;
 }
 
 void validate(const std::string& displayedDiscord, const std::string& displayedItch) {
+    std::lock_guard<std::mutex> lock(g_tamperStateMutex);
+
     g_tamperState.luaDiscordValue = displayedDiscord;
     g_tamperState.luaItchValue = displayedItch;
 
@@ -16,19 +25,24 @@ void validate(const std::string& displayedDiscord, const std::string& displayedI
     bool discordMatches = (displayedDiscord == DISCORD_LINK);
     bool itchMatches = (displayedItch == ITCH_LINK);
 
-    g_tamperState.detected = !(discordMatches && itchMatches);
+    bool detected = !(discordMatches && itchMatches);
+    g_tamperState.detected = detected;
+    g_tamperDetected.store(detected, std::memory_order_release);
 }
 
 bool isTamperDetected() {
-    return g_tamperState.detected;
+    return g_tamperDetected.load(std::memory_order_acquire);
 }
 
 const TamperState& getTamperState() {
+    std::lock_guard<std::mutex> lock(g_tamperStateMutex);
     return g_tamperState;
 }
 
 void resetTamperState() {
+    std::lock_guard<std::mutex> lock(g_tamperStateMutex);
     g_tamperState = TamperState{};
+    g_tamperDetected.store(false, std::memory_order_release);
 }
 
 void registerLuaBindings(sol::state& lua) {
@@ -46,6 +60,10 @@ void registerLuaBindings(sol::state& lua) {
 
     ownership_table.set_function("getBuildId", []() -> std::string {
         return std::string(BUILD_ID);
+    });
+
+    ownership_table.set_function("getBuildSignature", []() -> std::string {
+        return std::string(BUILD_SIGNATURE);
     });
 
     // Add validate function that calls the existing validate()
@@ -76,7 +94,8 @@ void registerLuaBindings(sol::state& lua) {
 }
 
 void renderTamperWarningIfNeeded(int screenWidth, int screenHeight) {
-    if (!g_tamperState.detected) {
+    // Use atomic for lock-free check in render loop
+    if (!g_tamperDetected.load(std::memory_order_acquire)) {
         return;
     }
 
@@ -112,12 +131,13 @@ void renderTamperWarningIfNeeded(int screenWidth, int screenHeight) {
     DrawText("Official sources:", boxX + padding, textY, fontSize, YELLOW);
 
     textY += fontSize + 10;
-    DrawText(TextFormat("Discord: %s", std::string(DISCORD_LINK).c_str()),
-             boxX + padding, textY, fontSize, SKYBLUE);
+    // Store strings in variables to avoid dangling pointers in TextFormat
+    std::string discordText = std::string("Discord: ") + std::string(DISCORD_LINK);
+    DrawText(discordText.c_str(), boxX + padding, textY, fontSize, SKYBLUE);
 
     textY += fontSize + 5;
-    DrawText(TextFormat("Itch.io: %s", std::string(ITCH_LINK).c_str()),
-             boxX + padding, textY, fontSize, SKYBLUE);
+    std::string itchText = std::string("Itch.io: ") + std::string(ITCH_LINK);
+    DrawText(itchText.c_str(), boxX + padding, textY, fontSize, SKYBLUE);
 
     textY += fontSize + 20;
     DrawText(TextFormat("Build ID: %s", BUILD_ID), boxX + padding, textY, fontSize - 2, GRAY);

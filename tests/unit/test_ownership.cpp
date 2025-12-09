@@ -83,6 +83,12 @@ TEST(Ownership, LuaBindingsExist) {
     std::string buildId = getBuildId();
     EXPECT_EQ(buildId, ownership::BUILD_ID);
 
+    // Check that getBuildSignature function exists and returns correct value
+    sol::function getBuildSignature = ownership_table["getBuildSignature"];
+    EXPECT_TRUE(getBuildSignature.valid());
+    std::string buildSignature = getBuildSignature();
+    EXPECT_EQ(buildSignature, ownership::BUILD_SIGNATURE);
+
     // Check that validate function exists
     sol::function validate = ownership_table["validate"];
     EXPECT_TRUE(validate.valid());

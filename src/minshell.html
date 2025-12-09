@@ -4,113 +4,424 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-    <title>raylib web game</title>
+    <title>Game</title>
 
-    <meta name="title" content="raylib web game">
-    <meta name="description" content="New raylib web videogame, developed using raylib videogames library">
-    <meta name="keywords" content="raylib, games, html5, programming, C, C++, library, learn, videogames">
-    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Game">
+    <meta name="description" content="Play this game in your browser">
+    <meta name="keywords" content="game, html5, browser, play">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="raylib web game">
-    <meta property="og:image:type" content="image/png">
-    <meta property="og:image" content="https://www.raylib.com/common/img/raylib_logo.png">
-    <meta property="og:site_name" content="raylib.com">
-    <meta property="og:url" content="https://www.raylib.com/games.html">
-    <meta property="og:description" content="New raylib web videogame, developed using raylib videogames library">
+    <!-- Prevent iOS zoom on double-tap -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Open Graph - customize these for your game -->
+    <meta property="og:title" content="Game">
+    <meta property="og:type" content="game">
+    <meta property="og:image" content="splash.png">
+    <meta property="og:description" content="Play this game in your browser">
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:site" content="@raysan5">
-    <meta name="twitter:title" content="raylib web game">
-    <meta name="twitter:image" content="https://www.raylib.com/common/raylib_logo.png">
-    <meta name="twitter:url" content="https://www.raylib.com/games.html">
-    <meta name="twitter:description" content="New raylib web game, developed using raylib videogames library">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Game">
+    <meta name="twitter:image" content="splash.png">
+    <meta name="twitter:description" content="Play this game in your browser">
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="https://www.raylib.com/favicon.ico">
+    <!-- Favicon - uses splash as fallback -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="splash.png">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            background-color: black;
+            padding: 0;
+            background-color: #0a0a0a;
             text-align: center;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         canvas.emscripten {
             border: 0;
-            background-color: black;
+            background-color: #0a0a0a;
+            display: block;
+            margin: 0 auto;
         }
 
+        /* Splash loading screen */
         #splash {
-            position: absolute;
+            position: fixed;
             z-index: 1000;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: black;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #splash.fade-out {
+            opacity: 0;
+            pointer-events: none;
         }
 
         #splash-image {
-            max-width: 80%;
-            max-height: 50%;
-            margin-bottom: 20px;
+            max-width: min(80%, 400px);
+            max-height: 40vh;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
         }
 
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        /* Progress bar container */
         #progress-container {
-            width: 70%;
-            height: 16px;
-            background-color: #333;
-            border-radius: 8px;
+            width: min(80%, 400px);
+            height: 8px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 4px;
             overflow: hidden;
-            margin-bottom: 8px;
+            margin-bottom: 16px;
+            position: relative;
         }
 
         #progress-bar {
             width: 0%;
             height: 100%;
-            background-color: #ffffff;
-            transition: width 0.2s ease;
+            background: linear-gradient(90deg, #4a9eff, #00d4ff, #4a9eff);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease-out;
+            animation: shimmer 2s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         #progress-text {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-bottom: 8px;
+            min-height: 20px;
+        }
+
+        #progress-stage {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            min-height: 18px;
+        }
+
+        /* Loading tips */
+        #loading-tips {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+            max-width: 80%;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Error overlay */
+        #error-overlay {
+            position: fixed;
+            z-index: 2000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10,10,10,0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #error-overlay.visible {
+            display: flex;
+        }
+
+        #error-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        #error-title {
+            color: #ff6b6b;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        #error-message {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .error-btn {
+            background: #4a9eff;
             color: white;
-            font-family: sans-serif;
+            border: none;
+            padding: 12px 32px;
             font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 6px;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .error-btn:hover {
+            background: #3a8eef;
+            transform: translateY(-1px);
+        }
+
+        .error-btn.secondary {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .error-btn.secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Fullscreen button */
+        #fullscreen-btn {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            z-index: 100;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.7);
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: none;
+        }
+
+        #fullscreen-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        #fullscreen-btn.visible {
+            display: block;
+        }
+
+        /* Hide output by default */
+        #output {
+            display: none;
+        }
+
+        /* Spinner for indeterminate loading */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .spinner.visible {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile-friendly adjustments */
+        @media (max-width: 600px) {
+            #splash-image {
+                max-width: 70%;
+                max-height: 30vh;
+            }
+
+            #loading-tips {
+                font-size: 12px;
+                bottom: 40px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Error overlay -->
+    <div id="error-overlay">
+        <div id="error-icon">⚠️</div>
+        <div id="error-title">Loading Error</div>
+        <div id="error-message">Something went wrong while loading the game.</div>
+        <div>
+            <button class="error-btn" onclick="location.reload()">Retry</button>
+            <button class="error-btn secondary" onclick="copyErrorToClipboard()">Copy Error Details</button>
+        </div>
+    </div>
+
     <!-- Splash loading screen -->
     <div id="splash">
-        <img id="splash-image" src="splash.png" alt="Loading..." />
+        <img id="splash-image" src="splash.png" alt="Loading..." onerror="this.style.display='none'" />
+        <div class="spinner" id="spinner"></div>
         <div id="progress-container">
             <div id="progress-bar"></div>
         </div>
-        <div id="progress-text">0%</div>
+        <div id="progress-text">Initializing...</div>
+        <div id="progress-stage"></div>
+        <div id="loading-tips"></div>
     </div>
 
     <!-- Canvas for the game -->
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
 
+    <!-- Fullscreen toggle -->
+    <button id="fullscreen-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶ Fullscreen</button>
+
     <p id="output"></p>
 
     <script>
+        // Loading tips to show during load
+        const loadingTips = [
+            "Tip: Press F10 anytime to generate a debug report",
+            "Loading game assets...",
+            "Preparing the experience...",
+            "Almost there...",
+        ];
+        let currentTipIndex = 0;
+        let tipInterval = null;
+
+        // Start rotating tips
+        function startTipRotation() {
+            const tipsEl = document.getElementById('loading-tips');
+            if (!tipsEl) return;
+
+            tipsEl.textContent = loadingTips[0];
+            tipInterval = setInterval(() => {
+                currentTipIndex = (currentTipIndex + 1) % loadingTips.length;
+                tipsEl.style.opacity = '0';
+                setTimeout(() => {
+                    tipsEl.textContent = loadingTips[currentTipIndex];
+                    tipsEl.style.opacity = '1';
+                }, 300);
+            }, 4000);
+        }
+
+        // Stop tip rotation
+        function stopTipRotation() {
+            if (tipInterval) {
+                clearInterval(tipInterval);
+                tipInterval = null;
+            }
+        }
+
+        // Error handling
+        let lastError = '';
+
+        function showError(title, message) {
+            lastError = `${title}: ${message}\n\nUser Agent: ${navigator.userAgent}\nURL: ${location.href}\nTime: ${new Date().toISOString()}`;
+
+            document.getElementById('error-title').textContent = title;
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-overlay').classList.add('visible');
+            document.getElementById('splash').classList.add('fade-out');
+            stopTipRotation();
+        }
+
+        function copyErrorToClipboard() {
+            navigator.clipboard.writeText(lastError).then(() => {
+                alert('Error details copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = lastError;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Error details copied to clipboard!');
+            });
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            const canvas = document.getElementById('canvas');
+            if (!document.fullscreenElement) {
+                (canvas.requestFullscreen || canvas.webkitRequestFullscreen || canvas.mozRequestFullScreen).call(canvas);
+            } else {
+                (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+            }
+        }
+
+        // Track loading start time for timeout detection
+        const loadStartTime = Date.now();
+        const LOAD_TIMEOUT_MS = 120000; // 2 minute timeout
+
+        // Check for loading timeout
+        function checkLoadTimeout() {
+            if (Date.now() - loadStartTime > LOAD_TIMEOUT_MS) {
+                showError('Loading Timeout', 'The game is taking too long to load. This might be due to a slow connection or a problem with the game files. Please try refreshing the page.');
+            }
+        }
+        const timeoutCheck = setInterval(checkLoadTimeout, 5000);
+
+        // Main Emscripten module configuration
         var Module = {
-            preRun: [],
+            preRun: [
+                function() {
+                    startTipRotation();
+                }
+            ],
             postRun: [
                 function () {
-                    // Hide splash screen after game is ready
+                    // Clear timeout check
+                    clearInterval(timeoutCheck);
+                    stopTipRotation();
+
+                    // Fade out splash screen
                     const splash = document.getElementById('splash');
-                    if (splash) splash.style.display = 'none';
+                    if (splash) {
+                        splash.classList.add('fade-out');
+                        setTimeout(() => {
+                            splash.style.display = 'none';
+                        }, 500);
+                    }
+
+                    // Show fullscreen button
+                    const fsBtn = document.getElementById('fullscreen-btn');
+                    if (fsBtn && document.fullscreenEnabled) {
+                        fsBtn.classList.add('visible');
+                    }
+
+                    // Focus canvas for input
+                    const canvas = document.getElementById('canvas');
+                    if (canvas) canvas.focus();
                 }
             ],
             print: (function () {
                 var element = document.getElementById('output');
-                if (element) element.value = ''; // clear browser cache
+                if (element) element.value = '';
                 return function (text) {
                     if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
                     console.log(text);
@@ -120,28 +431,79 @@
                     }
                 };
             })(),
+            printErr: function(text) {
+                console.error(text);
+                // Capture critical errors
+                if (text.includes('RuntimeError') || text.includes('abort') || text.includes('Assertion failed')) {
+                    showError('Runtime Error', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                }
+            },
             canvas: (function () {
                 return document.getElementById('canvas');
             })(),
             setStatus: function (text) {
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                const progressStage = document.getElementById('progress-stage');
+                const spinner = document.getElementById('spinner');
+
+                if (!progressBar || !progressText) return;
+
+                // Parse progress format: "Task (current/total)"
                 let match = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
                 if (match) {
-                    var percent = Math.floor((parseFloat(match[2]) / parseFloat(match[4])) * 100);
-                    document.getElementById('progress-bar').style.width = percent + '%';
-                    document.getElementById('progress-text').textContent = percent + '%';
-                } else {
-                    document.getElementById('progress-text').textContent = text;
+                    const task = match[1].trim();
+                    const current = parseFloat(match[2]);
+                    const total = parseFloat(match[4]);
+                    const percent = Math.floor((current / total) * 100);
+
+                    progressBar.style.width = percent + '%';
+                    progressText.textContent = percent + '%';
+                    progressStage.textContent = task || 'Loading...';
+
+                    if (spinner) spinner.classList.remove('visible');
+                } else if (text) {
+                    progressText.textContent = text;
+                    progressStage.textContent = '';
+
+                    // Show spinner for indeterminate states
+                    if (text.includes('...') && spinner) {
+                        spinner.classList.add('visible');
+                    }
                 }
             },
             totalDependencies: 0,
             monitorRunDependencies: function (left) {
                 this.totalDependencies = Math.max(this.totalDependencies, left);
-                Module.setStatus(left
-                    ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')'
-                    : 'All downloads complete.');
+                const loaded = this.totalDependencies - left;
+                const total = this.totalDependencies;
+
+                if (left === 0) {
+                    Module.setStatus('Starting game...');
+                } else {
+                    Module.setStatus('Loading assets (' + loaded + '/' + total + ')');
+                }
+            },
+            onAbort: function(what) {
+                showError('Fatal Error', 'The game crashed unexpectedly. Please try refreshing the page.\n\nDetails: ' + (what || 'Unknown error'));
             }
         };
-        Module.setStatus('Downloading...');
+
+        Module.setStatus('Initializing...');
+
+        // Global error handler
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Window error:', message, source, lineno, colno, error);
+            if (message.includes('memory') || message.includes('Memory')) {
+                showError('Out of Memory', 'The game ran out of memory. Try closing other browser tabs and refreshing.');
+            }
+            return false;
+        };
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled rejection:', event.reason);
+        });
     </script>
 
     {{{ SCRIPT }}}

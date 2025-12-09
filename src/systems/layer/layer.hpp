@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raylib.h"
+#include "rlgl.h"  // For rlDrawRenderBatchActive()
 
 #include <vector>
 #include <unordered_map>
@@ -58,10 +59,13 @@ namespace layer
             
             if (!renderStack.empty())
             {
+                // Flush any pending draw commands before switching render targets
+                // to prevent them from being rendered to the wrong target
+                rlDrawRenderBatchActive();
                 // End the currently active texture mode
                 EndTextureMode();
             }
-            
+
             renderStack.push(target);
             BeginTextureMode(target);
             
@@ -77,6 +81,9 @@ namespace layer
                 return;
             }
 
+            // Flush any pending draw commands before switching render targets
+            // to prevent them from being rendered to the wrong target
+            rlDrawRenderBatchActive();
             // End current texture mode
             EndTextureMode();
             
@@ -117,11 +124,14 @@ namespace layer
         {
             if (!renderStack.empty())
             {
+                // Flush any pending draw commands before switching render targets
+                // to prevent them from being rendered to the wrong target
+                rlDrawRenderBatchActive();
                 EndTextureMode();
             }
 
             while (!renderStack.empty()) renderStack.pop();
-            
+
             SPDLOG_WARN("Render stack force cleared");
         }
         

@@ -470,6 +470,59 @@ local function cacheStore(cache, key, eid)
     return eid
 end
 
+-- Cache for simple tooltips (keyed by string key)
+local simple_tooltip_cache = {}
+
+-- Ensure a simple tooltip exists (lazy init with caching)
+local function ensureSimpleTooltip(key, title, body, opts)
+    if not key then return nil end
+
+    local cached = cacheFetch(simple_tooltip_cache, key)
+    if cached then return cached end
+
+    local tooltip = makeSimpleTooltip(title, body, opts)
+    cacheStore(simple_tooltip_cache, key, tooltip)
+
+    layer_order_system.assignZIndexToEntity(
+        tooltip,
+        z_orders.ui_tooltips or 1000
+    )
+
+    return tooltip
+end
+
+-- Show a simple tooltip positioned above an entity
+local function showSimpleTooltipAbove(key, title, body, anchorEntity, opts)
+    local tooltip = ensureSimpleTooltip(key, title, body, opts)
+    if not tooltip then return nil end
+
+    centerTooltipAboveEntity(tooltip, anchorEntity)
+    return tooltip
+end
+
+-- Hide a simple tooltip (move offscreen, keep cached)
+local function hideSimpleTooltip(key)
+    local cached = simple_tooltip_cache[key]
+    if not cached then return end
+    local eid = cached.eid or cached
+    if eid and entity_cache.valid(eid) then
+        local t = component_cache.get(eid, Transform)
+        if t then
+            t.actualY = globals.screenHeight() + 100
+            t.visualY = t.actualY
+        end
+    end
+end
+
+-- Destroy all cached simple tooltips (for cleanup)
+local function destroyAllSimpleTooltips()
+    for key, entry in pairs(simple_tooltip_cache) do
+        local eid = entry.eid or entry
+        destroyTooltipEntity(eid)
+    end
+    simple_tooltip_cache = {}
+end
+
 -- Prevent tooltip boxes from animating from size 0 by snapping visual dimensions immediately.
 local function snapTooltipVisual(boxID)
     if not boxID or not entity_cache.valid(boxID) then

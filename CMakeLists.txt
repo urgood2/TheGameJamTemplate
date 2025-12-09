@@ -209,6 +209,16 @@ file(WRITE "${CMAKE_BINARY_DIR}/build_info.json"
   \"timestamp\": \"${BUILD_ISO_TIMESTAMP}\"
 }")
 
+# Target to append build info to release manifest (run manually for releases)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+    add_custom_target(append_release
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/append_release.py ${CMAKE_BINARY_DIR}/build_info.json
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Appending build to releases/manifest.json"
+    )
+endif()
+
 # ------------------------------------------------------------------
 # Dev ergonomics:
 #   - Set environment variable SKIP_ASSET_SCAN=1 to skip recursive asset walk at startup.

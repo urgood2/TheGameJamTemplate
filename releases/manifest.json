@@ -1,0 +1,12 @@
+{
+  "releases": [
+    {
+      "build_id": "c54e01fb2-20251209-134951",
+      "signature": "d67820853b2c8a1b126c54f6f8874eea0a512a7a91ca8e1fe274784618416be2",
+      "git_commit": "c54e01fb2",
+      "git_branch": "vk/ba0f-game-stealing-pr",
+      "timestamp": "2025-12-09T04:49:51Z",
+      "notes": ""
+    }
+  ]
+}

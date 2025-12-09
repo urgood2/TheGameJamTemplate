@@ -2885,11 +2885,15 @@ function cycleConverter(inc)
   local converterGameObject               = component_cache.get(converterEntity, GameObject)
   converterGameObject.methods.onHover     = function()
     log_debug("Converter entity hovered!")
-    showTooltip(title, body)
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove("converter_ui", title, body, converterEntity)
+    end
   end
   converterGameObject.methods.onStopHover = function()
     log_debug("Converter entity stopped hovering!")
-    -- hideTooltip()
+    if hideSimpleTooltip then
+      hideSimpleTooltip("converter_ui")
+    end
   end
 
   -- 4) immediately show it once
@@ -2944,10 +2948,14 @@ function cycleBuilding(inc)
   local converterEntity                   = globals.building_ui_animation_entity
   local converterGameObject               = component_cache.get(converterEntity, GameObject)
   converterGameObject.methods.onHover     = function()
-    showTooltip(title, body)
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove("building_ui", title, body, converterEntity)
+    end
   end
   converterGameObject.methods.onStopHover = function()
-    -- hideTooltip()
+    if hideSimpleTooltip then
+      hideSimpleTooltip("building_ui")
+    end
   end
 
   -- 4) immediately show it once
@@ -3104,15 +3112,20 @@ function buyConverterButtonCallback()
     log_debug("add on hover/stop hover methods to the converter entity")
     -- add on hover/stop hover methods to the building entity
     gameObjectComp.methods.onHover = function()
-      showTooltip(
-
-        localization.get(selectedConverter.ui_text_title),
-        localization.get(selectedConverter.ui_text_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "converter_" .. selectedConverter.id,
+          localization.get(selectedConverter.ui_text_title),
+          localization.get(selectedConverter.ui_text_body),
+          exampleConverter
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Converter entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("converter_" .. selectedConverter.id)
+      end
     end
   end
 end
@@ -3395,14 +3408,20 @@ function buyNewColonistHomeCallback()
     log_debug("add on hover/stop hover methods to the colonist home entity")
     -- add on hover/stop hover methods to the colonist home entity
     gameObjectComp.methods.onHover = function()
-      showTooltip(
-        localization.get(structureDef.ui_tooltip_title),
-        localization.get(structureDef.ui_tooltip_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "colonist_home",
+          localization.get(structureDef.ui_tooltip_title),
+          localization.get(structureDef.ui_tooltip_body),
+          colonistHomeEntity
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Colonist home entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("colonist_home")
+      end
     end
     
     -- spawn a new colonist at the colonist home
@@ -3522,14 +3541,20 @@ function buyNewDuplicatorCallback()
 
     -- add on hover/stop hover methods to the duplicator entity
     gameObjectComp.methods.onHover = function()
-      showTooltip(
-        localization.get(structureDef.ui_tooltip_title),
-        localization.get(structureDef.ui_tooltip_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "duplicator",
+          localization.get(structureDef.ui_tooltip_title),
+          localization.get(structureDef.ui_tooltip_body),
+          duplicatorEntity
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Duplicator entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("duplicator")
+      end
     end
   end
 end
@@ -3676,14 +3701,20 @@ function buyBuildingButtonCallback()
 
     gameObjectComp.methods.onHover = function()
       log_debug("Building entity hovered!")
-      showTooltip(
-        localization.get(selectedBuilding.ui_text_title),
-        localization.get(selectedBuilding.ui_text_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "building_" .. selectedBuilding.id,
+          localization.get(selectedBuilding.ui_text_title),
+          localization.get(selectedBuilding.ui_text_body),
+          buildingEntity
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Building entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("building_" .. selectedBuilding.id)
+      end
     end
 
 

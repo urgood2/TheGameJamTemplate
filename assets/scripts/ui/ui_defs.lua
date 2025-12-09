@@ -1571,10 +1571,19 @@ function ui_defs.generateUI()
         
             local relicGameObject = registry:get(ownedRelic.animation_entity, GameObject)
             relicGameObject.methods.onHover = function()
-                showTooltip(
-                localization.get(relicDef.localizationKeyName),
-                localization.get(relicDef.localizationKeyDesc)
-                )
+                if showSimpleTooltipAbove then
+                    showSimpleTooltipAbove(
+                        "relic_owned_" .. relicDef.id,
+                        localization.get(relicDef.localizationKeyName),
+                        localization.get(relicDef.localizationKeyDesc),
+                        ownedRelic.animation_entity
+                    )
+                end
+            end
+            relicGameObject.methods.onStopHover = function()
+                if hideSimpleTooltip then
+                    hideSimpleTooltip("relic_owned_" .. relicDef.id)
+                end
             end
             relicGameObject.state.hoverEnabled = true
             relicGameObject.state.collisionEnabled = true -- enable collision for the hover to work

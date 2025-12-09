@@ -27,3 +27,29 @@ TEST(Ownership, BuildIdHasExpectedFormat) {
     bool hasTimestamp = (buildId.length() > 15 && buildId.find('-') != std::string::npos);
     EXPECT_TRUE(isDevLocal || hasTimestamp);
 }
+
+TEST(Ownership, TamperStateDefaultsToNotDetected) {
+    ownership::TamperState state;
+    EXPECT_FALSE(state.detected);
+    EXPECT_TRUE(state.luaDiscordValue.empty());
+    EXPECT_TRUE(state.luaItchValue.empty());
+}
+
+TEST(Ownership, ValidateDetectsTampering) {
+    ownership::resetTamperState();
+
+    // Validate with correct values - no tampering
+    ownership::validate(std::string(ownership::DISCORD_LINK),
+                        std::string(ownership::ITCH_LINK));
+    EXPECT_FALSE(ownership::isTamperDetected());
+
+    // Validate with wrong Discord link - tampering detected
+    ownership::resetTamperState();
+    ownership::validate("https://discord.gg/fake", std::string(ownership::ITCH_LINK));
+    EXPECT_TRUE(ownership::isTamperDetected());
+
+    // Validate with wrong itch link - tampering detected
+    ownership::resetTamperState();
+    ownership::validate(std::string(ownership::DISCORD_LINK), "https://fake.itch.io/");
+    EXPECT_TRUE(ownership::isTamperDetected());
+}

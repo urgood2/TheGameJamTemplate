@@ -22,4 +22,24 @@ inline constexpr std::string_view ITCH_LINK = "https://chugget.itch.io/";
 inline const char* BUILD_ID = BUILD_ID_VALUE;
 inline const char* BUILD_SIGNATURE = BUILD_SIGNATURE_VALUE;
 
+// Tamper detection state
+struct TamperState {
+    bool detected = false;
+    std::string luaDiscordValue;
+    std::string luaItchValue;
+};
+
+// Validate displayed links against compile-time constants
+// Called from Lua after rendering ownership info
+void validate(const std::string& displayedDiscord, const std::string& displayedItch);
+
+// Check if tampering was detected
+bool isTamperDetected();
+
+// Get current tamper state (for rendering warning)
+const TamperState& getTamperState();
+
+// Reset tamper state (for testing)
+void resetTamperState();
+
 }  // namespace ownership

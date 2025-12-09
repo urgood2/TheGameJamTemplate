@@ -98,8 +98,6 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - use non serif font for reading. titles should have serifs. use bolded text with reason. text should have good contrast all the time.
 
-- figure out how to use the new balatro-based material shaders.
-
 
 - also apply some sort of texture shader to the ui (overlay)
 
@@ -126,6 +124,11 @@ tag system tooltips need work.
 - a rounded rect area for purchasing jokers.
 - a fancy dynamic text for "SHOP" somewhere prominent. 
 - please suggest other features from shop_system.lua
+
+
+- test the new shader implemnetation with player sprite.
+- test the new ldtk impl.
+- test the new ui impl, but we won't be using it this time.
 
 
 - right now, moving after dash is infinite, might want to make a mechanic from that.

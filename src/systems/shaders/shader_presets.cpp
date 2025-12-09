@@ -254,4 +254,51 @@ void addShaderPass(entt::registry& reg, entt::entity e,
     }
 }
 
+void exposeToLua(sol::state& lua, EngineContext* ctx) {
+    // Create shader_presets table with registry functions
+    sol::table sp = lua.create_named_table("shader_presets");
+
+    sp.set_function("loadFromFile", [&lua](const std::string& path) {
+        loadPresetsFromLuaFile(lua, path);
+    });
+
+    sp.set_function("hasPreset", &hasPreset);
+
+    sp.set_function("getPresetNames", []() {
+        std::vector<std::string> names;
+        for (const auto& [name, preset] : presetRegistry) {
+            names.push_back(name);
+        }
+        return names;
+    });
+
+    // Global functions for convenient access
+    lua.set_function("applyShaderPreset",
+        [&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {
+            sol::table tbl = overrides ? *overrides : lua.create_table();
+            applyShaderPreset(reg, e, name, tbl);
+        }
+    );
+
+    lua.set_function("addShaderPreset",
+        [&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {
+            sol::table tbl = overrides ? *overrides : lua.create_table();
+            addShaderPreset(reg, e, name, tbl);
+        }
+    );
+
+    lua.set_function("clearShaderPasses",
+        [](entt::registry& reg, entt::entity e) {
+            clearShaderPasses(reg, e);
+        }
+    );
+
+    lua.set_function("addShaderPass",
+        [&lua](entt::registry& reg, entt::entity e, const std::string& shaderName, sol::optional<sol::table> uniforms) {
+            sol::table tbl = uniforms ? *uniforms : lua.create_table();
+            addShaderPass(reg, e, shaderName, tbl);
+        }
+    );
+}
+
 }  // namespace shader_presets

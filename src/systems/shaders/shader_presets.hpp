@@ -8,6 +8,8 @@
 #include "entt/entt.hpp"
 #include "shader_pipeline.hpp"
 
+struct EngineContext;
+
 namespace shader_presets {
 
 struct ShaderPresetPass {
@@ -56,5 +58,8 @@ void clearShaderPasses(entt::registry& reg, entt::entity e);
 void addShaderPass(entt::registry& reg, entt::entity e,
                    const std::string& shaderName,
                    const sol::table& uniforms);
+
+// Lua binding function
+void exposeToLua(sol::state& lua, EngineContext* ctx = nullptr);
 
 }  // namespace shader_presets

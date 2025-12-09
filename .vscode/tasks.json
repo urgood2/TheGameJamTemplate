@@ -23,19 +23,27 @@
 				"panel": "shared"
 			}
 		},
-		{
-			"label": "Web: Serve (itch.io-identical)",
-			"type": "shell",
-			"command": "python3",
-			"args": ["scripts/serve_web.py", "8080"],
-			"windows": {
-				"command": "python",
-				"args": ["scripts/serve_web.py", "8080"]
-			},
-			"isBackground": true,
-			"problemMatcher": {
-				"pattern": { "regexp": "^$" },
-				"background": {
+        {
+            "label": "Web: Serve (itch.io-identical)",
+            "type": "shell",
+            "command": "bash",
+            "args": ["-c", "python3 scripts/serve_web.py 8080 & open http://localhost:8080"],
+            "windows": {
+                "command": "cmd",
+                "args": ["/c", "start /b python scripts/serve_web.py 8080 && start http://localhost:8080"]
+            },
+            "linux": {
+                "command": "bash",
+                "args": ["-c", "python3 scripts/serve_web.py 8080 & xdg-open http://localhost:8080"]
+            },
+            "osx": {
+                "command": "bash",
+                "args": ["-c", "python3 scripts/serve_web.py 8080 & open http://localhost:8080"]
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": { "regexp": "^$" },
+                "background": {
 					"activeOnStart": true,
 					"beginsPattern": "^Serving web build",
 					"endsPattern": "^$"
@@ -48,25 +56,25 @@
 		},
 		{
 			"label": "Web: Build + Serve + Open Browser",
-			"dependsOn": ["Web: Build"],
-			"dependsOrder": "sequence",
-			"type": "shell",
-			"osx": {
-				"command": "bash",
-				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && open http://localhost:8080"]
-			},
-			"linux": {
-				"command": "bash",
-				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && xdg-open http://localhost:8080"]
-			},
-			"windows": {
-				"command": "cmd",
-				"args": ["/c", "start /b python scripts/serve_web.py 8080 && timeout /t 2 >nul && start http://localhost:8080"]
-			},
-			"isBackground": true,
-			"problemMatcher": {
-				"pattern": { "regexp": "^$" },
-				"background": {
+            "dependsOn": ["Web: Build"],
+            "dependsOrder": "sequence",
+            "type": "shell",
+            "osx": {
+                "command": "bash",
+                "args": ["-c", "python3 scripts/serve_web.py 8080 & open http://localhost:8080"]
+            },
+            "linux": {
+                "command": "bash",
+                "args": ["-c", "python3 scripts/serve_web.py 8080 & xdg-open http://localhost:8080"]
+            },
+            "windows": {
+                "command": "cmd",
+                "args": ["/c", "start /b python scripts/serve_web.py 8080 && start http://localhost:8080"]
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": { "regexp": "^$" },
+                "background": {
 					"activeOnStart": true,
 					"beginsPattern": "^Serving",
 					"endsPattern": "^$"
@@ -81,25 +89,25 @@
 				"panel": "dedicated"
 			}
 		},
-		{
-			"label": "Web: Serve Only (skip build)",
-			"type": "shell",
-			"osx": {
-				"command": "bash",
-				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && open http://localhost:8080"]
-			},
-			"linux": {
-				"command": "bash",
-				"args": ["-c", "python3 scripts/serve_web.py 8080 & sleep 1 && xdg-open http://localhost:8080"]
-			},
-			"windows": {
-				"command": "cmd",
-				"args": ["/c", "start /b python scripts/serve_web.py 8080 && timeout /t 2 >nul && start http://localhost:8080"]
-			},
-			"isBackground": true,
-			"problemMatcher": {
-				"pattern": { "regexp": "^$" },
-				"background": {
+        {
+            "label": "Web: Serve Only (skip build)",
+            "type": "shell",
+            "osx": {
+                "command": "bash",
+                "args": ["-c", "python3 scripts/serve_web.py 8080 & open http://localhost:8080"]
+            },
+            "linux": {
+                "command": "bash",
+                "args": ["-c", "python3 scripts/serve_web.py 8080 & xdg-open http://localhost:8080"]
+            },
+            "windows": {
+                "command": "cmd",
+                "args": ["/c", "start /b python scripts/serve_web.py 8080 && start http://localhost:8080"]
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": { "regexp": "^$" },
+                "background": {
 					"activeOnStart": true,
 					"beginsPattern": "^Serving",
 					"endsPattern": "^$"

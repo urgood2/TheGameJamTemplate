@@ -28,6 +28,7 @@ add_executable(unit_tests
     unit/test_text_waiters.cpp
     unit/test_asset_validation.cpp
     unit/test_memory_safety.cpp
+    unit/test_ownership.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp

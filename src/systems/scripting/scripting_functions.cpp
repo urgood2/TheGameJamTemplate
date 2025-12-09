@@ -846,6 +846,162 @@ auto initLuaMasterState(sol::state &stateToInit,
       return result;
     });
 
+    // -------------------- Filtered and Y-Sorted Rendering --------------------
+
+    // Draw procedural layer with tile ID filtering
+    // Only draws tiles whose IDs are in the provided table
+    ldtk.set_function("draw_procedural_layer_filtered",
+        [](int layerIdx, const std::string& targetLayerName, sol::table tileIds,
+           sol::optional<float> offsetX, sol::optional<float> offsetY,
+           sol::optional<int> zLevel, sol::optional<float> opacity) {
+
+          auto layer = game::GetLayer(targetLayerName);
+          if (!layer) {
+            spdlog::warn("draw_procedural_layer_filtered: Layer '{}' not found", targetLayerName);
+            return;
+          }
+
+          // Convert Lua table to std::set
+          std::set<int> allowedTiles;
+          for (auto& pair : tileIds) {
+            if (pair.second.is<int>()) {
+              allowedTiles.insert(pair.second.as<int>());
+            }
+          }
+
+          ldtk_rule_import::DrawProceduralLayerFiltered(
+              layer,
+              layerIdx,
+              allowedTiles,
+              offsetX.value_or(0.0f),
+              offsetY.value_or(0.0f),
+              zLevel.value_or(0),
+              nullptr,
+              opacity.value_or(1.0f)
+          );
+        });
+
+    // Draw procedural layer with Y-based Z-sorting (for top-down games)
+    // Each row gets a different Z-level: z = base_z + row * z_per_row
+    ldtk.set_function("draw_procedural_layer_ysorted",
+        [](int layerIdx, const std::string& targetLayerName,
+           sol::optional<float> offsetX, sol::optional<float> offsetY,
+           sol::optional<int> baseZLevel, sol::optional<int> zPerRow,
+           sol::optional<float> opacity) {
+
+          auto layer = game::GetLayer(targetLayerName);
+          if (!layer) {
+            spdlog::warn("draw_procedural_layer_ysorted: Layer '{}' not found", targetLayerName);
+            return;
+          }
+
+          ldtk_rule_import::DrawProceduralLayerYSorted(
+              layer,
+              layerIdx,
+              offsetX.value_or(0.0f),
+              offsetY.value_or(0.0f),
+              baseZLevel.value_or(0),
+              zPerRow.value_or(1),
+              nullptr,
+              opacity.value_or(1.0f)
+          );
+        });
+
+    // Draw a single tile at a specific world position (for maximum control)
+    // Useful when iterating tile data from Lua and rendering selectively
+    ldtk.set_function("draw_tile",
+        [](int layerIdx, int tileId, const std::string& targetLayerName,
+           float worldX, float worldY, int zLevel,
+           sol::optional<bool> flipX, sol::optional<bool> flipY,
+           sol::optional<float> opacity) {
+
+          auto layer = game::GetLayer(targetLayerName);
+          if (!layer) {
+            spdlog::warn("draw_tile: Layer '{}' not found", targetLayerName);
+            return;
+          }
+
+          ldtk_rule_import::DrawSingleTile(
+              layer,
+              layerIdx,
+              tileId,
+              worldX,
+              worldY,
+              zLevel,
+              flipX.value_or(false),
+              flipY.value_or(false),
+              opacity.value_or(1.0f)
+          );
+        });
+
+    // Get all tile results for a layer as a table (for custom iteration/filtering)
+    ldtk.set_function("get_tile_grid", [&stateToInit](int layerIdx) {
+      sol::table result = stateToInit.create_table();
+
+      auto tileResults = ldtk_rule_import::GetAllTileResults(layerIdx);
+      result["width"] = tileResults.width;
+      result["height"] = tileResults.height;
+
+      // Create cells table
+      sol::table cells = stateToInit.create_table();
+      for (int y = 0; y < tileResults.height; ++y) {
+        for (int x = 0; x < tileResults.width; ++x) {
+          int idx = y * tileResults.width + x;
+          const auto& cellTiles = tileResults.cells[idx];
+
+          if (!cellTiles.empty()) {
+            sol::table cellTable = stateToInit.create_table();
+            int tileIdx = 1;
+            for (const auto& tile : cellTiles) {
+              sol::table tileTable = stateToInit.create_table();
+              tileTable["tile_id"] = tile.tile_id;
+              tileTable["flip_x"] = tile.flip_x;
+              tileTable["flip_y"] = tile.flip_y;
+              tileTable["alpha"] = tile.alpha;
+              tileTable["offset_x"] = tile.offset_x;
+              tileTable["offset_y"] = tile.offset_y;
+              cellTable[tileIdx++] = tileTable;
+            }
+            // Use x,y indexing: cells[y][x]
+            if (!cells[y].valid()) {
+              cells[y] = stateToInit.create_table();
+            }
+            cells[y][x] = cellTable;
+          }
+        }
+      }
+      result["cells"] = cells;
+
+      // Add helper method to get tiles at position
+      result["get"] = [&stateToInit, tileResults](sol::this_state L, int x, int y) -> sol::object {
+        if (x < 0 || x >= tileResults.width || y < 0 || y >= tileResults.height) {
+          return sol::lua_nil;
+        }
+        int idx = y * tileResults.width + x;
+        const auto& cellTiles = tileResults.cells[idx];
+        if (cellTiles.empty()) {
+          return sol::lua_nil;
+        }
+
+        sol::state_view lua(L);
+        sol::table cellTable = lua.create_table();
+        int tileIdx = 1;
+        for (const auto& tile : cellTiles) {
+          sol::table tileTable = lua.create_table();
+          tileTable["tile_id"] = tile.tile_id;
+          tileTable["flip_x"] = tile.flip_x;
+          tileTable["flip_y"] = tile.flip_y;
+          tileTable["alpha"] = tile.alpha;
+          tileTable["offset_x"] = tile.offset_x;
+          tileTable["offset_y"] = tile.offset_y;
+          cellTable[tileIdx++] = tileTable;
+        }
+        return cellTable;
+      };
+
+      return result;
+    });
+
     // -------------------- Signal Emission Support --------------------
     // Store signal emitter callback (expects: emitter(eventName, dataTable))
     static sol::function ldtkSignalEmitter;

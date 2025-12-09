@@ -292,6 +292,91 @@ ldtk.get_tileset_info(layerIdx)
 -- Returns: { tile_size = 16, width = 256, height = 256, image_path = "..." }
 ```
 
+### Filtered and Y-Sorted Rendering (Top-Down Games)
+```lua
+-- Draw only specific tile IDs (for separating floor vs wall-tops)
+ldtk.draw_procedural_layer_filtered(
+    layerIdx,           -- Layer index
+    targetLayerName,    -- Command buffer layer (e.g., "sprites")
+    tileIds,            -- Table of tile IDs to include: {7, 8, 15, 16}
+    offsetX,            -- Optional: X offset (default: 0)
+    offsetY,            -- Optional: Y offset (default: 0)
+    zLevel,             -- Optional: Z-order (default: 0)
+    opacity             -- Optional: Alpha 0.0-1.0 (default: 1.0)
+)
+
+-- Draw with Y-based Z-sorting (each row gets different Z)
+ldtk.draw_procedural_layer_ysorted(
+    layerIdx,           -- Layer index
+    targetLayerName,    -- Command buffer layer
+    offsetX,            -- Optional: X offset (default: 0)
+    offsetY,            -- Optional: Y offset (default: 0)
+    baseZLevel,         -- Optional: Starting Z (default: 0)
+    zPerRow,            -- Optional: Z increment per row (default: 1)
+    opacity             -- Optional: Alpha 0.0-1.0 (default: 1.0)
+)
+
+-- Draw a single tile at specific position (maximum control)
+ldtk.draw_tile(
+    layerIdx,           -- Layer index (for tileset lookup)
+    tileId,             -- Tile ID to draw
+    targetLayerName,    -- Command buffer layer
+    worldX, worldY,     -- World position
+    zLevel,             -- Z-order for sorting
+    flipX, flipY,       -- Optional: flip flags (default: false)
+    opacity             -- Optional: Alpha 0.0-1.0 (default: 1.0)
+)
+
+-- Get tile grid data for custom iteration
+local grid = ldtk.get_tile_grid(layerIdx)
+-- Returns: { width, height, cells, get = function(x,y) }
+-- cells[y][x] = {{tile_id, flip_x, flip_y, alpha, offset_x, offset_y}, ...}
+```
+
+### Top-Down Rendering Patterns
+
+**Pattern 1: Separate floor and wall-tops**
+```lua
+local FLOOR_TILES = {0, 1, 2, 3}
+local WALL_TOP_TILES = {10, 11, 12, 13}
+
+-- Floor renders behind everything
+ldtk.draw_procedural_layer_filtered(0, "sprites", FLOOR_TILES, ox, oy, -1000)
+
+-- Wall-tops render in front of everything
+ldtk.draw_procedural_layer_filtered(0, "sprites", WALL_TOP_TILES, ox, oy, 10000)
+```
+
+**Pattern 2: Y-sorted tiles for proper overlap**
+```lua
+-- Tiles at higher Y (lower on screen) render in front
+ldtk.draw_procedural_layer_ysorted(0, "sprites", ox, oy, 0, 1)
+```
+
+**Pattern 3: Custom tile rendering with entity interleaving**
+```lua
+local grid = ldtk.get_tile_grid(0)
+local tile_size = ldtk.get_tileset_info(0).tile_size
+
+for y = 0, grid.height - 1 do
+    local row_z = y * 10  -- Z based on row
+
+    -- Draw tiles for this row
+    local tiles = grid:get(0, y)  -- Get first column as example
+    if tiles then
+        for _, tile in ipairs(tiles) do
+            local world_y = oy + y * tile_size
+            ldtk.draw_tile(0, tile.tile_id, "sprites", ox, world_y, row_z)
+        end
+    end
+
+    -- Entities at this Y get Z between rows
+    for _, entity in ipairs(entities_at_row(y)) do
+        entity.z = row_z + 5  -- Between tile rows
+    end
+end
+```
+
 ### Layer Queries
 ```lua
 ldtk.get_layer_count()                    -- → number of layers

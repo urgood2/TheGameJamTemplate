@@ -23,6 +23,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <vector>
+#include <set>
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/layer/layer_order_system.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -1283,6 +1284,260 @@ inline void DrawAllProceduralLayers(
         DrawProceduralLayer(layerPtr, i, offsetX, offsetY, baseZLevel + i, viewOpt, opacity);
     }
 }
+
+// -------------------- Filtered and Y-Sorted Rendering --------------------
+
+// Draw procedural layer with tile ID filtering
+// Only draws tiles whose IDs are in the allowedTileIds set
+inline void DrawProceduralLayerFiltered(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    const std::set<int>& allowedTileIds,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int renderZLevel = 0,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) {
+        spdlog::warn("DrawProceduralLayerFiltered: No managed level - call apply_rules first");
+        return;
+    }
+
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        spdlog::warn("DrawProceduralLayerFiltered: Invalid layer index {}", layerIdx);
+        return;
+    }
+
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx >= static_cast<int>(layers.size())) return;
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) return;
+
+    const int tileSize = tileset->tileSize;
+
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    int gw = grid.getWidth();
+    int gh = grid.getHeight();
+
+    for (int y = 0; y < gh; ++y) {
+        for (int x = 0; x < gw; ++x) {
+            const auto& cellTiles = grid(x, y);
+            if (cellTiles.empty()) continue;
+
+            for (const auto& t : cellTiles) {
+                // Filter by tile ID
+                if (!allowedTileIds.empty() && allowedTileIds.find(t.tileId) == allowedTileIds.end()) {
+                    continue;
+                }
+
+                int16_t srcX, srcY;
+                tileset->getCoordinates(t.tileId, srcX, srcY);
+
+                Rectangle src {
+                    static_cast<float>(srcX * tileSize),
+                    static_cast<float>(srcY * tileSize),
+                    static_cast<float>(tileSize),
+                    static_cast<float>(tileSize)
+                };
+
+                float posX = offsetX + x * tileSize + t.posXOffset;
+                float posY = offsetY + y * tileSize + t.posYOffset;
+
+                if (viewOpt) {
+                    Rectangle dstRect{posX, posY, static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                    if (!ldtk_loader::RectsOverlap(dstRect, *viewOpt)) continue;
+                }
+
+                if (ldtkimport::TileFlags::isFlippedX(t.flags)) src.width = -src.width;
+                if (ldtkimport::TileFlags::isFlippedY(t.flags)) src.height = -src.height;
+
+                float tileAlpha = t.opacity / 100.0f;
+                unsigned char a = static_cast<unsigned char>(std::round(255.f * tileAlpha * opacity));
+                Color tint = { 255, 255, 255, a };
+
+                layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+                    [tex, src, posX, posY, tileSize, tint](layer::CmdTexturePro* cmd) {
+                        cmd->texture = tex;
+                        cmd->source = src;
+                        cmd->offsetX = posX;
+                        cmd->offsetY = posY;
+                        cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                        cmd->rotationCenter = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->color = tint;
+                    }, renderZLevel, layer::DrawCommandSpace::World);
+            }
+        }
+    }
+}
+
+// Draw procedural layer with Y-based Z-sorting (for top-down games)
+// Each row gets a different Z-level: z = baseZLevel + row * zPerRow
+inline void DrawProceduralLayerYSorted(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int baseZLevel = 0,
+    int zPerRow = 1,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) {
+        spdlog::warn("DrawProceduralLayerYSorted: No managed level - call apply_rules first");
+        return;
+    }
+
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        spdlog::warn("DrawProceduralLayerYSorted: Invalid layer index {}", layerIdx);
+        return;
+    }
+
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx >= static_cast<int>(layers.size())) return;
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) return;
+
+    const int tileSize = tileset->tileSize;
+
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    int gw = grid.getWidth();
+    int gh = grid.getHeight();
+
+    for (int y = 0; y < gh; ++y) {
+        // Y-sorted Z: higher Y = higher Z = rendered later (in front)
+        int rowZ = baseZLevel + y * zPerRow;
+
+        for (int x = 0; x < gw; ++x) {
+            const auto& cellTiles = grid(x, y);
+            if (cellTiles.empty()) continue;
+
+            for (const auto& t : cellTiles) {
+                int16_t srcX, srcY;
+                tileset->getCoordinates(t.tileId, srcX, srcY);
+
+                Rectangle src {
+                    static_cast<float>(srcX * tileSize),
+                    static_cast<float>(srcY * tileSize),
+                    static_cast<float>(tileSize),
+                    static_cast<float>(tileSize)
+                };
+
+                float posX = offsetX + x * tileSize + t.posXOffset;
+                float posY = offsetY + y * tileSize + t.posYOffset;
+
+                if (viewOpt) {
+                    Rectangle dstRect{posX, posY, static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                    if (!ldtk_loader::RectsOverlap(dstRect, *viewOpt)) continue;
+                }
+
+                if (ldtkimport::TileFlags::isFlippedX(t.flags)) src.width = -src.width;
+                if (ldtkimport::TileFlags::isFlippedY(t.flags)) src.height = -src.height;
+
+                float tileAlpha = t.opacity / 100.0f;
+                unsigned char a = static_cast<unsigned char>(std::round(255.f * tileAlpha * opacity));
+                Color tint = { 255, 255, 255, a };
+
+                layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+                    [tex, src, posX, posY, tileSize, tint](layer::CmdTexturePro* cmd) {
+                        cmd->texture = tex;
+                        cmd->source = src;
+                        cmd->offsetX = posX;
+                        cmd->offsetY = posY;
+                        cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                        cmd->rotationCenter = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->color = tint;
+                    }, rowZ, layer::DrawCommandSpace::World);
+            }
+        }
+    }
+}
+
+// Draw a single tile at a specific position (for maximum control)
+// Useful when iterating tile data from Lua and rendering selectively
+inline void DrawSingleTile(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    int tileId,
+    float worldX,
+    float worldY,
+    int zLevel,
+    bool flipX = false,
+    bool flipY = false,
+    float opacity = 1.0f)
+{
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(layers.size())) return;
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) return;
+
+    const int tileSize = tileset->tileSize;
+
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    int16_t srcX, srcY;
+    tileset->getCoordinates(tileId, srcX, srcY);
+
+    Rectangle src {
+        static_cast<float>(srcX * tileSize),
+        static_cast<float>(srcY * tileSize),
+        static_cast<float>(tileSize),
+        static_cast<float>(tileSize)
+    };
+
+    if (flipX) src.width = -src.width;
+    if (flipY) src.height = -src.height;
+
+    unsigned char a = static_cast<unsigned char>(std::round(255.f * opacity));
+    Color tint = { 255, 255, 255, a };
+
+    layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+        [tex, src, worldX, worldY, tileSize, tint](layer::CmdTexturePro* cmd) {
+            cmd->texture = tex;
+            cmd->source = src;
+            cmd->offsetX = worldX;
+            cmd->offsetY = worldY;
+            cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+            cmd->rotationCenter = {0, 0};
+            cmd->rotation = 0;
+            cmd->color = tint;
+        }, zLevel, layer::DrawCommandSpace::World);
+}
+
+// -------------------- Tileset Info --------------------
 
 // Get tileset info for a layer (useful for Lua to know tile size)
 struct TilesetInfo {

@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Sampling - Pixelation
 // Creates a pixelated/mosaic effect

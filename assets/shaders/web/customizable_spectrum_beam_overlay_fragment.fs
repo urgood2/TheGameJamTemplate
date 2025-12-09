@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // BATTLE TESTED, combine with a vertex shader.
 in vec2 fragTexCoord;

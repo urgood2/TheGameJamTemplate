@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Tone - Sepia
 // Applies a sepia tone effect with adjustable intensity

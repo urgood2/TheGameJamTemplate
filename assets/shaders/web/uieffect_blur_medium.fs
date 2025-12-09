@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Blur - Medium (9x9 kernel)
 // Medium quality Gaussian blur using a 9x9 kernel

@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // interpolated inputs
 in vec2 fragTexCoord;

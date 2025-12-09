@@ -9,6 +9,7 @@ A C++20 + Lua game-jam scaffold built on Raylib. It comes with a fast render pip
 - Layered render queue with shader batching, fullscreen effects, and web-compatible shader variants
 - Rich UI toolkit (layouts, localization, controller navigation, tooltips, typing text, scroll panes, progress bars)
 - Profiling and debug support (Tracy integration, Lua debugging hooks)
+- Ownership watermarking system to help prevent casual game theft on itch.io (see `docs/guides/OWNERSHIP_SYSTEM.md`)
 - Targets desktop and web (Emscripten) with shared assets
 
 ## Getting Started
@@ -83,6 +84,7 @@ Web users see a notification with a "Copy to Clipboard" button for easy sharing.
 ## Documentation
 - Full docs index: `docs/README.md`
 - Architecture overview: `docs/guides/SYSTEM_ARCHITECTURE.md`
+- Ownership system (game theft prevention): `docs/guides/OWNERSHIP_SYSTEM.md`
 - C++ documentation standards: `docs/guides/DOCUMENTATION_STANDARDS.md`
 - Error handling policy and Lua boundary coverage: `docs/guides/ERROR_HANDLING_POLICY.md` (see tests in `tests/unit/test_sound_system.cpp`, `tests/unit/test_text_waiters.cpp`, and controller nav focus/select tests in `tests/unit/test_controller_nav.cpp`)
 - Changelog: `CHANGELOG.md`

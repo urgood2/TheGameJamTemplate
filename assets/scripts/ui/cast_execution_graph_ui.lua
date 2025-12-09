@@ -35,6 +35,7 @@ CastExecutionGraphUI._lastFingerprint = nil
 CastExecutionGraphUI._activeTooltip = nil
 CastExecutionGraphUI._activeTooltipOwner = nil
 CastExecutionGraphUI._fallbackTooltipActive = false
+CastExecutionGraphUI._fallbackTooltipKey = nil
 
 local function resolveColor(name, fallback)
     local ok, c = pcall(util.getColor, name)
@@ -117,13 +118,16 @@ local function hideActiveTooltip(sourceEntity)
         end
     end
 
-    if CastExecutionGraphUI._fallbackTooltipActive and hideTooltip then
-        hideTooltip()
+    if CastExecutionGraphUI._fallbackTooltipActive and CastExecutionGraphUI._fallbackTooltipKey then
+        if hideSimpleTooltip then
+            hideSimpleTooltip(CastExecutionGraphUI._fallbackTooltipKey)
+        end
     end
 
     CastExecutionGraphUI._activeTooltip = nil
     CastExecutionGraphUI._activeTooltipOwner = nil
     CastExecutionGraphUI._fallbackTooltipActive = false
+    CastExecutionGraphUI._fallbackTooltipKey = nil
 end
 
 local function attachTooltip(config, tooltipData)
@@ -151,10 +155,14 @@ local function attachTooltip(config, tooltipData)
 
         go.methods.onHover = function()
             local shown = showCardTooltip(card, entity, label, body)
-            if not shown and label and showTooltip then
-                showTooltip(cleanLabel(label), cleanLabel(body))
-                CastExecutionGraphUI._activeTooltipOwner = entity
-                CastExecutionGraphUI._fallbackTooltipActive = true
+            if not shown and label then
+                local tooltipKey = "cast_graph_" .. tostring(entity)
+                if showSimpleTooltipAbove then
+                    showSimpleTooltipAbove(tooltipKey, cleanLabel(label), cleanLabel(body), entity)
+                    CastExecutionGraphUI._activeTooltipOwner = entity
+                    CastExecutionGraphUI._fallbackTooltipKey = tooltipKey
+                    CastExecutionGraphUI._fallbackTooltipActive = true
+                end
             elseif shown then
                 CastExecutionGraphUI._activeTooltipOwner = entity
             end

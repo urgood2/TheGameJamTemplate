@@ -2245,10 +2245,17 @@ function buyRelicFromSlot(slot)
   local gameObject = component_cache.get(relicAnimationEntity, GameObject)
   gameObject.methods.onHover = function()
     log_debug("Relic hovered: ", relicDef.id)
-    showTooltip(
-      localization.get(relicDef.localizationKeyName),
-      localization.get(relicDef.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "relic_" .. relicDef.id,
+        localization.get(relicDef.localizationKeyName),
+        localization.get(relicDef.localizationKeyDesc),
+        relicAnimationEntity
+      )
+    end
+  end
+  gameObject.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("relic_" .. relicDef.id) end
   end
   gameObject.state.hoverEnabled = true
   gameObject.state.collisionEnabled = true
@@ -2368,10 +2375,17 @@ function handleNewDay()
   local relicDef1 = relicDef
   gameObject1.methods.onHover = function()
     log_debug("Relic 1 hovered!")
-    showTooltip(
-      localization.get(relicDef1.localizationKeyName),
-      localization.get(relicDef1.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "shop_relic_1",
+        localization.get(relicDef1.localizationKeyName),
+        localization.get(relicDef1.localizationKeyDesc),
+        uiElement1
+      )
+    end
+  end
+  gameObject1.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("shop_relic_1") end
   end
   
   -- add button callback
@@ -2414,10 +2428,17 @@ function handleNewDay()
   local relicDef2 = relicDef
   gameObject2.methods.onHover = function()
     log_debug("Relic 2 hovered!")
-    showTooltip(
-      localization.get(relicDef2.localizationKeyName),
-      localization.get(relicDef2.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "shop_relic_2",
+        localization.get(relicDef2.localizationKeyName),
+        localization.get(relicDef2.localizationKeyDesc),
+        uiElement2
+      )
+    end
+  end
+  gameObject2.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("shop_relic_2") end
   end
   
   -- enable button
@@ -2459,10 +2480,17 @@ function handleNewDay()
   local relicDef3 = relicDef
   gameObject3.methods.onHover = function()
     log_debug("Relic 3 hovered!")
-    showTooltip(
-      localization.get(relicDef3.localizationKeyName),
-      localization.get(relicDef3.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "shop_relic_3",
+        localization.get(relicDef3.localizationKeyName),
+        localization.get(relicDef3.localizationKeyDesc),
+        uiElement3
+      )
+    end
+  end
+  gameObject3.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("shop_relic_3") end
   end
   -- add button callback
   local uieUIConfig3 = component_cache.get(uiElement3, UIConfig)
@@ -2670,82 +2698,6 @@ function handleNewDay()
   )
 end
 
-local TOOLTIP_FONT_NAME = "tooltip"
-local TOOLTIP_FONT_PATH = "fonts/en/JetBrainsMonoNerdFont-Regular.ttf"
-local TOOLTIP_FONT_SIZE = 44
-
--- Ensure the named tooltip font is available and return it if so.
-function ensureTooltipFont()
-  if not (localization and localization.loadNamedFont) then
-    return nil
-  end
-  if not (localization.hasNamedFont and localization.hasNamedFont(TOOLTIP_FONT_NAME)) then
-    localization.loadNamedFont(TOOLTIP_FONT_NAME, TOOLTIP_FONT_PATH, TOOLTIP_FONT_SIZE)
-  end
-  if localization.hasNamedFont and localization.hasNamedFont(TOOLTIP_FONT_NAME) and localization.getNamedFont then
-    return localization.getNamedFont(TOOLTIP_FONT_NAME)
-  end
-  return nil
-end
-
--- Conveniene function to drive your tooltip
-function showTooltip(titleText, bodyText)
-  local titleEnt = globals.ui.tooltipTitleText
-  local bodyEnt  = globals.ui.tooltipBodyText
-  local boxEnt   = globals.ui.tooltipUIBox
-
-  if not titleEnt or not bodyEnt or not boxEnt then
-    error("showTooltip: Tooltip entities are not set up correctly!")
-    return
-  end
-
-  local tooltipFont = ensureTooltipFont()
-  if tooltipFont then
-    local titleComp = component_cache.get(titleEnt, TextSystem.Text)
-    if titleComp then
-      titleComp.fontData = tooltipFont
-    end
-    local bodyComp = component_cache.get(bodyEnt, TextSystem.Text)
-    if bodyComp then
-      bodyComp.fontData = tooltipFont
-    end
-  end
-
-  -- 1) set the texts
-
-  TextSystem.Functions.setText(titleEnt, titleText)
-  TextSystem.Functions.clearAllEffects(titleEnt)            -- clear any previous effects
-  TextSystem.Functions.applyGlobalEffects(titleEnt, "slide;color=plum") -- apply the tooltip title effects
-  TextSystem.Functions.setText(bodyEnt, bodyText)
-  TextSystem.Functions.applyGlobalEffects(bodyEnt, "color=blue_midnight") -- apply the tooltip body effects
-
-  -- 2) re-calc the box layout to fit new text
-  ui.box.RenewAlignment(registry, boxEnt)
-
-  -- 3) grab transforms & dims
-  local mouseT           = component_cache.get(globals.cursor(), Transform)
-  local boxT             = component_cache.get(boxEnt, Transform)
-
-  local screenW, screenH = globals.screenWidth(), globals.screenHeight()
-
-  -- fallback if UIBox doesn’t carry dims
-  local w                = boxT.actualW
-  local h                = boxT.actualH
-
-  -- 4) position with offset
-  local x                = mouseT.actualX + 20
-  local y                = mouseT.actualY + 20
-
-  -- 5) clamp to screen bounds
-  boxT.actualX           = clamp(x, 0, screenW - w)
-  boxT.visualX           = boxT.actualX
-  boxT.actualY           = clamp(y, 0, screenH - h)
-  boxT.visualY           = boxT.actualY
-
-  -- 6) hard set size
-  boxT.visualW           = boxT.actualW
-  boxT.visualH           = boxT.actualH
-end
 
 function toggleShopWindow()
   if (globals.isShopOpen) then
@@ -2899,17 +2851,6 @@ function newTextPopup(textString, x, y, duration, effectString)
   end)
 end
 
-
-function hideTooltip()
-  if (globals.ui.tooltipUIBox == nil) then
-    -- log_debug("hideTooltip: tooltipUIBox is not set up, skipping")
-    return
-  end
-  local tooltipTransform = component_cache.get(globals.ui.tooltipUIBox, Transform)
-  tooltipTransform.actualY = globals.screenHeight()   -- move it out of the screen
-  tooltipTransform.visualY = tooltipTransform.actualY -- snap Y
-end
-
 -- increment converter ui index and set up ui. use 0 to just set up the ui without changing the index
 function cycleConverter(inc)
   -- 1) adjust the selected index by inc (can be  1, 0 or -1)
@@ -2944,11 +2885,15 @@ function cycleConverter(inc)
   local converterGameObject               = component_cache.get(converterEntity, GameObject)
   converterGameObject.methods.onHover     = function()
     log_debug("Converter entity hovered!")
-    showTooltip(title, body)
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove("converter_ui", title, body, converterEntity)
+    end
   end
   converterGameObject.methods.onStopHover = function()
     log_debug("Converter entity stopped hovering!")
-    -- hideTooltip()
+    if hideSimpleTooltip then
+      hideSimpleTooltip("converter_ui")
+    end
   end
 
   -- 4) immediately show it once
@@ -3003,10 +2948,14 @@ function cycleBuilding(inc)
   local converterEntity                   = globals.building_ui_animation_entity
   local converterGameObject               = component_cache.get(converterEntity, GameObject)
   converterGameObject.methods.onHover     = function()
-    showTooltip(title, body)
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove("building_ui", title, body, converterEntity)
+    end
   end
   converterGameObject.methods.onStopHover = function()
-    -- hideTooltip()
+    if hideSimpleTooltip then
+      hideSimpleTooltip("building_ui")
+    end
   end
 
   -- 4) immediately show it once
@@ -3163,15 +3112,20 @@ function buyConverterButtonCallback()
     log_debug("add on hover/stop hover methods to the converter entity")
     -- add on hover/stop hover methods to the building entity
     gameObjectComp.methods.onHover = function()
-      showTooltip(
-
-        localization.get(selectedConverter.ui_text_title),
-        localization.get(selectedConverter.ui_text_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "converter_" .. selectedConverter.id,
+          localization.get(selectedConverter.ui_text_title),
+          localization.get(selectedConverter.ui_text_body),
+          exampleConverter
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Converter entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("converter_" .. selectedConverter.id)
+      end
     end
   end
 end
@@ -3454,14 +3408,20 @@ function buyNewColonistHomeCallback()
     log_debug("add on hover/stop hover methods to the colonist home entity")
     -- add on hover/stop hover methods to the colonist home entity
     gameObjectComp.methods.onHover = function()
-      showTooltip(
-        localization.get(structureDef.ui_tooltip_title),
-        localization.get(structureDef.ui_tooltip_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "colonist_home",
+          localization.get(structureDef.ui_tooltip_title),
+          localization.get(structureDef.ui_tooltip_body),
+          colonistHomeEntity
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Colonist home entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("colonist_home")
+      end
     end
     
     -- spawn a new colonist at the colonist home
@@ -3581,14 +3541,20 @@ function buyNewDuplicatorCallback()
 
     -- add on hover/stop hover methods to the duplicator entity
     gameObjectComp.methods.onHover = function()
-      showTooltip(
-        localization.get(structureDef.ui_tooltip_title),
-        localization.get(structureDef.ui_tooltip_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "duplicator",
+          localization.get(structureDef.ui_tooltip_title),
+          localization.get(structureDef.ui_tooltip_body),
+          duplicatorEntity
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Duplicator entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("duplicator")
+      end
     end
   end
 end
@@ -3735,14 +3701,20 @@ function buyBuildingButtonCallback()
 
     gameObjectComp.methods.onHover = function()
       log_debug("Building entity hovered!")
-      showTooltip(
-        localization.get(selectedBuilding.ui_text_title),
-        localization.get(selectedBuilding.ui_text_body)
-      )
+      if showSimpleTooltipAbove then
+        showSimpleTooltipAbove(
+          "building_" .. selectedBuilding.id,
+          localization.get(selectedBuilding.ui_text_title),
+          localization.get(selectedBuilding.ui_text_body),
+          buildingEntity
+        )
+      end
     end
     gameObjectComp.methods.onStopHover = function()
       log_debug("Building entity stopped hovering!")
-      -- hideTooltip()
+      if hideSimpleTooltip then
+        hideSimpleTooltip("building_" .. selectedBuilding.id)
+      end
     end
 
 

@@ -258,7 +258,8 @@ local tooltipStyle = {
     innerPadding = 2,
     rowPadding = 0,
     textPadding = 1,
-    pillPadding = 4,
+    pillPadding = 2,
+    outerPadding = 6,
     labelColumnMinWidth = 120,
     valueColumnMinWidth = 52,
     bgColor = Col(18, 22, 32, 235),
@@ -299,6 +300,15 @@ end
 
 local function makeTooltipTextDef(text, opts)
     opts = opts or {}
+
+    -- If coded option is set, use getTextFromString for rich text parsing
+    if opts.coded and ui and ui.definitions and ui.definitions.getTextFromString then
+        return ui.definitions.getTextFromString(tostring(text), {
+            fontSize = opts.fontSize or tooltipStyle.fontSize,
+            fontName = opts.fontName or tooltipStyle.fontName
+        })
+    end
+
     return ui.definitions.def {
         type = "TEXT",
         config = {
@@ -325,7 +335,8 @@ local function makeTooltipPill(text, opts)
         fontSize = opts.fontSize,
         align = opts.textAlign,
         fontName = opts.fontName or tooltipStyle.fontName,
-        shadow = opts.shadow
+        shadow = opts.shadow,
+        coded = opts.coded
     }
     return dsl.hbox {
         config = cfg,
@@ -340,12 +351,14 @@ local function makeTooltipValueBox(text, opts)
         padding = opts.padding or tooltipStyle.textPadding
     }
     if opts.minWidth then cfg.minWidth = opts.minWidth end
+    if opts.maxWidth then cfg.maxWidth = opts.maxWidth end  -- NEW: support text wrapping
     local textOpts = {
         color = opts.color or tooltipStyle.valueColor,
         fontSize = opts.fontSize,
         align = opts.textAlign or opts.align,
         fontName = opts.fontName or tooltipStyle.fontName,
-        shadow = opts.shadow
+        shadow = opts.shadow,
+        coded = opts.coded  -- NEW: pass through coded option
     }
     return dsl.hbox {
         config = cfg,
@@ -374,6 +387,67 @@ local function destroyTooltipEntity(eid)
     end
 end
 
+-- Simple tooltip for title + description (jokers, avatars, relics, buttons)
+local function makeSimpleTooltip(title, body, opts)
+    opts = opts or {}
+    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding or 6
+    local rows = {}
+
+    -- Title pill (styled like card ID pill)
+    if title and title ~= "" then
+        table.insert(rows, makeTooltipPill(title, {
+            background = opts.titleBg or tooltipStyle.labelBg,
+            color = opts.titleColor or tooltipStyle.labelColor,
+            fontName = opts.titleFont or tooltipStyle.fontName,
+            fontSize = opts.titleFontSize or tooltipStyle.fontSize,
+            coded = opts.titleCoded
+        }))
+    end
+
+    -- Body text (wrapped, no pill background)
+    if body and body ~= "" then
+        table.insert(rows, makeTooltipValueBox(body, {
+            color = opts.bodyColor or tooltipStyle.valueColor,
+            fontName = opts.bodyFont or tooltipStyle.fontName,
+            fontSize = opts.bodyFontSize or tooltipStyle.fontSize,
+            coded = opts.bodyCoded,
+            maxWidth = opts.maxWidth or 250,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+        }))
+    end
+
+    -- Build with DSL (single column)
+    local v = dsl.vbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+            color = tooltipStyle.innerColor,
+            padding = outerPadding
+        },
+        children = rows
+    }
+
+    local root = dsl.root {
+        config = {
+            color = tooltipStyle.bgColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = outerPadding,
+            outlineThickness = 2,
+            outlineColor = tooltipStyle.outlineColor,
+            shadow = true
+        },
+        children = { v }
+    }
+
+    local boxID = dsl.spawn({ x = 200, y = 200 }, root)
+
+    ui.box.set_draw_layer(boxID, "ui")
+    ui.box.RenewAlignment(registry, boxID)
+    snapTooltipVisual(boxID)
+    ui.box.ClearStateTagsFromUIBox(boxID)
+
+    return boxID
+end
+
 local function cacheFetch(cache, key)
     local entry = cache[key]
     if not entry then return nil end
@@ -395,6 +469,66 @@ local function cacheStore(cache, key, eid)
     cache[key] = { eid = eid, version = TOOLTIP_FONT_VERSION }
     return eid
 end
+
+-- Cache for simple tooltips (keyed by string key)
+local simple_tooltip_cache = {}
+
+-- Ensure a simple tooltip exists (lazy init with caching)
+local function ensureSimpleTooltip(key, title, body, opts)
+    if not key then return nil end
+
+    local cached = cacheFetch(simple_tooltip_cache, key)
+    if cached then return cached end
+
+    local tooltip = makeSimpleTooltip(title, body, opts)
+    cacheStore(simple_tooltip_cache, key, tooltip)
+
+    layer_order_system.assignZIndexToEntity(
+        tooltip,
+        z_orders.ui_tooltips or 1000
+    )
+
+    return tooltip
+end
+
+-- Show a simple tooltip positioned above an entity
+local function showSimpleTooltipAbove(key, title, body, anchorEntity, opts)
+    local tooltip = ensureSimpleTooltip(key, title, body, opts)
+    if not tooltip then return nil end
+
+    centerTooltipAboveEntity(tooltip, anchorEntity)
+    return tooltip
+end
+
+-- Hide a simple tooltip (move offscreen, keep cached)
+local function hideSimpleTooltip(key)
+    local cached = simple_tooltip_cache[key]
+    if not cached then return end
+    local eid = cached.eid or cached
+    if eid and entity_cache.valid(eid) then
+        local t = component_cache.get(eid, Transform)
+        if t then
+            t.actualY = globals.screenHeight() + 100
+            t.visualY = t.actualY
+        end
+    end
+end
+
+-- Destroy all cached simple tooltips (for cleanup)
+local function destroyAllSimpleTooltips()
+    for key, entry in pairs(simple_tooltip_cache) do
+        local eid = entry.eid or entry
+        destroyTooltipEntity(eid)
+    end
+    simple_tooltip_cache = {}
+end
+
+-- Export new simple tooltip functions globally
+_G.makeSimpleTooltip = makeSimpleTooltip
+_G.ensureSimpleTooltip = ensureSimpleTooltip
+_G.showSimpleTooltipAbove = showSimpleTooltipAbove
+_G.hideSimpleTooltip = hideSimpleTooltip
+_G.destroyAllSimpleTooltips = destroyAllSimpleTooltips
 
 -- Prevent tooltip boxes from animating from size 0 by snapping visual dimensions immediately.
 local function snapTooltipVisual(boxID)
@@ -2995,7 +3129,7 @@ function makeCardTooltip(card_def, opts)
 
     local cardId = card_def.id or card_def.cardID
     local rowPadding = tooltipStyle.rowPadding
-    local outerPadding = tooltipStyle.innerPadding
+    local outerPadding = tooltipStyle.outerPadding or 6
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -3566,7 +3700,7 @@ local function ensureDetailedStatsTooltip()
 end
 function makePlayerStatsTooltip(snapshot)
     local rowPadding = tooltipStyle.rowPadding
-    local outerPadding = tooltipStyle.innerPadding
+    local outerPadding = tooltipStyle.outerPadding or 6
 
     local function addLine(rows, label, value, valueOpts)
         if value == nil then return end

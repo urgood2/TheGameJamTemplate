@@ -1154,4 +1154,160 @@ inline void CleanupManagedLevel() {
     internal_rule::levelPtr = nullptr;
 }
 
+// -------------------- Command Buffer Rendering for Procedural Tiles --------------------
+
+// Draw procedural tile grid layer to a command buffer layer
+// Uses the same pattern as ldtk_loader::DrawLayer but for procedurally generated tiles
+inline void DrawProceduralLayer(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int renderZLevel = 0,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) {
+        spdlog::warn("DrawProceduralLayer: No managed level - call apply_rules first");
+        return;
+    }
+
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        spdlog::warn("DrawProceduralLayer: Invalid layer index {}", layerIdx);
+        return;
+    }
+
+    // Get layer definition and tileset
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx >= static_cast<int>(layers.size())) {
+        spdlog::warn("DrawProceduralLayer: Layer index {} out of range", layerIdx);
+        return;
+    }
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) {
+        spdlog::warn("DrawProceduralLayer: No tileset for layer {}", layerIdx);
+        return;
+    }
+
+    const int tileSize = tileset->tileSize;
+
+    // Load tileset texture (use cache)
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    // Get the tile grid
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    int gw = grid.getWidth();
+    int gh = grid.getHeight();
+
+    // Iterate all cells and queue draw commands
+    for (int y = 0; y < gh; ++y) {
+        for (int x = 0; x < gw; ++x) {
+            const auto& cellTiles = grid(x, y);
+            if (cellTiles.empty()) continue;
+
+            // Draw all stacked tiles in the cell
+            for (const auto& t : cellTiles) {
+                // Calculate source rectangle from tile ID
+                int16_t srcX, srcY;
+                tileset->getCoordinates(t.tileId, srcX, srcY);
+
+                Rectangle src {
+                    static_cast<float>(srcX * tileSize),
+                    static_cast<float>(srcY * tileSize),
+                    static_cast<float>(tileSize),
+                    static_cast<float>(tileSize)
+                };
+
+                // Calculate destination position
+                float posX = offsetX + x * tileSize + t.posXOffset;
+                float posY = offsetY + y * tileSize + t.posYOffset;
+
+                // Frustum culling
+                if (viewOpt) {
+                    Rectangle dstRect{posX, posY, static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                    if (!ldtk_loader::RectsOverlap(dstRect, *viewOpt)) {
+                        continue;
+                    }
+                }
+
+                // Handle flip flags
+                if (ldtkimport::TileFlags::isFlippedX(t.flags)) src.width = -src.width;
+                if (ldtkimport::TileFlags::isFlippedY(t.flags)) src.height = -src.height;
+
+                // Calculate alpha (opacity from tile and layer)
+                float tileAlpha = t.opacity / 100.0f;
+                unsigned char a = static_cast<unsigned char>(std::round(255.f * tileAlpha * opacity));
+                Color tint = { 255, 255, 255, a };
+
+                // Queue the draw command
+                layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+                    [tex, src, posX, posY, tileSize, tint](layer::CmdTexturePro* cmd) {
+                        cmd->texture = tex;
+                        cmd->source = src;
+                        cmd->offsetX = posX;
+                        cmd->offsetY = posY;
+                        cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                        cmd->rotationCenter = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->color = tint;
+                    }, renderZLevel, layer::DrawCommandSpace::World);
+            }
+        }
+    }
+}
+
+// Draw all procedural layers (in correct order for proper z-ordering)
+inline void DrawAllProceduralLayers(
+    std::shared_ptr<layer::Layer> layerPtr,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int baseZLevel = 0,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) return;
+
+    size_t layerCount = internal_rule::levelPtr->getTileGridCount();
+
+    // Draw layers in reverse order (back to front, like normal LDTK rendering)
+    for (int i = static_cast<int>(layerCount) - 1; i >= 0; --i) {
+        DrawProceduralLayer(layerPtr, i, offsetX, offsetY, baseZLevel + i, viewOpt, opacity);
+    }
+}
+
+// Get tileset info for a layer (useful for Lua to know tile size)
+struct TilesetInfo {
+    int tileSize;
+    int width;  // in pixels
+    int height; // in pixels
+    std::string imagePath;
+};
+
+inline TilesetInfo GetTilesetInfoForLayer(int layerIdx) {
+    TilesetInfo info{0, 0, 0, ""};
+
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(layers.size())) {
+        return info;
+    }
+
+    auto* tileset = internal_rule::defFile.getTileset(layers[layerIdx].tilesetDefUid);
+    if (!tileset) return info;
+
+    info.tileSize = tileset->tileSize;
+    info.width = tileset->imageWidth;
+    info.height = tileset->imageHeight;
+    info.imagePath = tileset->imagePath;
+    return info;
+}
+
 } // namespace ldtk_rule_import

@@ -786,6 +786,66 @@ auto initLuaMasterState(sol::state &stateToInit,
       ldtk_rule_import::CleanupManagedLevel();
     });
 
+    // -------------------- Procedural Rendering API --------------------
+
+    // Draw a single procedural layer to the command buffer
+    // layerIdx: which tile grid layer to draw (from apply_rules output)
+    // targetLayer: which game layer to draw to ("sprites", "background", etc.)
+    ldtk.set_function("draw_procedural_layer",
+        [](int layerIdx, const std::string& targetLayerName,
+           sol::optional<float> offsetX, sol::optional<float> offsetY,
+           sol::optional<int> zLevel, sol::optional<float> opacity) {
+
+          auto layer = game::GetLayer(targetLayerName);
+          if (!layer) {
+            spdlog::warn("draw_procedural_layer: Layer '{}' not found", targetLayerName);
+            return;
+          }
+
+          ldtk_rule_import::DrawProceduralLayer(
+              layer,
+              layerIdx,
+              offsetX.value_or(0.0f),
+              offsetY.value_or(0.0f),
+              zLevel.value_or(0),
+              nullptr,  // viewOpt - TODO: could add camera culling
+              opacity.value_or(1.0f)
+          );
+        });
+
+    // Draw all procedural layers to the command buffer
+    ldtk.set_function("draw_all_procedural_layers",
+        [](const std::string& targetLayerName,
+           sol::optional<float> offsetX, sol::optional<float> offsetY,
+           sol::optional<int> baseZLevel, sol::optional<float> opacity) {
+
+          auto layer = game::GetLayer(targetLayerName);
+          if (!layer) {
+            spdlog::warn("draw_all_procedural_layers: Layer '{}' not found", targetLayerName);
+            return;
+          }
+
+          ldtk_rule_import::DrawAllProceduralLayers(
+              layer,
+              offsetX.value_or(0.0f),
+              offsetY.value_or(0.0f),
+              baseZLevel.value_or(0),
+              nullptr,  // viewOpt
+              opacity.value_or(1.0f)
+          );
+        });
+
+    // Get tileset info for a layer (tile size, dimensions, etc.)
+    ldtk.set_function("get_tileset_info", [&stateToInit](int layerIdx) {
+      auto info = ldtk_rule_import::GetTilesetInfoForLayer(layerIdx);
+      sol::table result = stateToInit.create_table();
+      result["tile_size"] = info.tileSize;
+      result["width"] = info.width;
+      result["height"] = info.height;
+      result["image_path"] = info.imagePath;
+      return result;
+    });
+
     // -------------------- Signal Emission Support --------------------
     // Store signal emitter callback (expects: emitter(eventName, dataTable))
     static sol::function ldtkSignalEmitter;

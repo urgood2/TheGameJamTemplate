@@ -149,16 +149,40 @@ local tiles = ldtk.apply_rules(grid, "TileLayer")
 --   }
 -- }
 
--- Step 3: Render or build colliders
-ldtk.render_tile_grid(tiles, "TileLayer")
+-- Step 3: Build colliders from the IntGrid
 ldtk.build_colliders_from_grid(grid, "world", "WORLD")
+
+-- Step 4: Render tiles using command buffer (call every frame in update/draw)
+ldtk.draw_all_procedural_layers("sprites", offsetX, offsetY, 0, 1.0)
+-- Or render specific layers:
+ldtk.draw_procedural_layer(0, "sprites", offsetX, offsetY, 0, 1.0)
+```
+
+### Rendering Workflow
+
+Procedural rendering uses the same command buffer pattern as normal LDTK rendering:
+
+1. **Queue Phase (Update)**: Call `draw_procedural_layer` or `draw_all_procedural_layers` to queue `CmdTexturePro` commands
+2. **Execute Phase (Render)**: Commands are drawn when the layer system executes its command buffers
+
+```lua
+-- In your update loop:
+function update_procedural_level(dt)
+    -- Generate tiles once
+    if not tiles then
+        tiles = ldtk.apply_rules(grid, "TileLayer")
+    end
+
+    -- Render every frame (commands are queued, executed during render)
+    ldtk.draw_all_procedural_layers("sprites", level_offset_x, level_offset_y)
+end
 ```
 
 ### C++ Work
 1. Expose `ldtk_rule_import::RunRules` with Lua-provided IntGrid
 2. Create `Level` object from Lua table at runtime
 3. Return tile results as nested Lua table
-4. Add `render_tile_grid` using existing layer rendering
+4. Add `DrawProceduralLayer` using existing layer command buffer (`layer::QueueCommand<CmdTexturePro>`)
 
 ---
 
@@ -239,8 +263,41 @@ ldtk.get_entities_by_name(levelName, entityName)   -- → {{x, y, fields}, ...}
 ### Procedural Rule Runner
 ```lua
 ldtk.apply_rules(gridTable, layerDefName)          -- → tileResultTable
-ldtk.render_tile_grid(tileResult, layerDefName)    -- renders to layer
 ldtk.build_colliders_from_grid(gridTable, worldName, tag)
+```
+
+### Procedural Rendering (Command Buffer)
+```lua
+-- Draw a single procedural layer to a named layer command buffer
+ldtk.draw_procedural_layer(
+    layerIdx,           -- Layer index (0-based) from apply_rules result
+    targetLayerName,    -- Command buffer layer name (e.g., "sprites")
+    offsetX,            -- Optional: X offset in pixels (default: 0)
+    offsetY,            -- Optional: Y offset in pixels (default: 0)
+    zLevel,             -- Optional: Z-order for rendering (default: 0)
+    opacity             -- Optional: Alpha multiplier 0.0-1.0 (default: 1.0)
+)
+
+-- Draw all procedural layers to a named layer command buffer
+ldtk.draw_all_procedural_layers(
+    targetLayerName,    -- Command buffer layer name (e.g., "sprites")
+    offsetX,            -- Optional: X offset in pixels (default: 0)
+    offsetY,            -- Optional: Y offset in pixels (default: 0)
+    baseZLevel,         -- Optional: Starting Z-order (default: 0)
+    opacity             -- Optional: Alpha multiplier 0.0-1.0 (default: 1.0)
+)
+
+-- Get tileset info for a layer (for custom rendering)
+ldtk.get_tileset_info(layerIdx)
+-- Returns: { tile_size = 16, width = 256, height = 256, image_path = "..." }
+```
+
+### Layer Queries
+```lua
+ldtk.get_layer_count()                    -- → number of layers
+ldtk.get_layer_name(layerIdx)             -- → layer name string
+ldtk.get_layer_type(layerIdx)             -- → "IntGrid", "AutoLayer", "Tiles", "Entities"
+ldtk.get_layer_grid_size(layerIdx)        -- → tile size in pixels
 ```
 
 ---

@@ -2367,6 +2367,21 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                             }
                             case ui::SpriteScaleMode::Tile: {
                                 // Tile to fill container
+                                // Performance warning: generates one draw command per tile
+                                int tilesX = static_cast<int>(std::ceil(visualW / srcRect.width));
+                                int tilesY = static_cast<int>(std::ceil(visualH / srcRect.height));
+                                int totalTiles = tilesX * tilesY;
+
+                                // Warn if tile count is excessive (reduces performance)
+                                if (totalTiles > 100) {
+                                    static bool warningShown = false;
+                                    if (!warningShown) {
+                                        SPDLOG_WARN("Tiling mode generating {} draw commands ({}x{} tiles) - consider using larger tiles or stretch mode for better performance",
+                                            totalTiles, tilesX, tilesY);
+                                        warningShown = true;
+                                    }
+                                }
+
                                 for (float y = 0; y < visualH; y += srcRect.height) {
                                     for (float x = 0; x < visualW; x += srcRect.width) {
                                         // Clip if needed at edges

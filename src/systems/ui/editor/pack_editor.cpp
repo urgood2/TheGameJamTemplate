@@ -528,7 +528,7 @@ bool loadPackManifest(PackEditorState& state, const std::string& path) {
         if (pack) {
             state.workingPack = *pack;
             state.atlasPath = pack->atlasPath;
-            state.atlas = pack->atlas;
+            state.atlas = getAtlasTexture(pack->atlasPath);  // Look up atlas from path
             state.packName = pack->name;
             state.statusMessage = "Loaded pack: " + pack->name;
             SPDLOG_INFO("Loaded UI pack into editor: {}", pack->name);

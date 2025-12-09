@@ -16,8 +16,11 @@ struct PackHandle {
 };
 
 /// Convert a RegionDef to a UIConfig for rendering
-UIConfig makeConfigFromRegion(const RegionDef& region, Texture2D* atlas) {
+UIConfig makeConfigFromRegion(const RegionDef& region, const std::string& atlasPath) {
     UIConfig config;
+
+    // Look up atlas texture from path
+    auto* atlas = getAtlasTexture(atlasPath);
 
     if (region.ninePatch.has_value()) {
         // 9-patch rendering
@@ -80,7 +83,7 @@ void exposePackToLua(::sol::state& lua) {
                 return sol::lua_nil;
             }
 
-            UIConfig config = makeConfigFromRegion(it->second, pack->atlas);
+            UIConfig config = makeConfigFromRegion(it->second, pack->atlasPath);
             return sol::make_object(lua, config);
         },
 
@@ -114,7 +117,7 @@ void exposePackToLua(::sol::state& lua) {
                 }
             }
 
-            UIConfig config = makeConfigFromRegion(*region, pack->atlas);
+            UIConfig config = makeConfigFromRegion(*region, pack->atlasPath);
             return sol::make_object(lua, config);
         },
 
@@ -145,7 +148,7 @@ void exposePackToLua(::sol::state& lua) {
                 return sol::lua_nil;
             }
 
-            UIConfig config = makeConfigFromRegion(*region, pack->atlas);
+            UIConfig config = makeConfigFromRegion(*region, pack->atlasPath);
             return sol::make_object(lua, config);
         },
 
@@ -176,7 +179,7 @@ void exposePackToLua(::sol::state& lua) {
                 return sol::lua_nil;
             }
 
-            UIConfig config = makeConfigFromRegion(*region, pack->atlas);
+            UIConfig config = makeConfigFromRegion(*region, pack->atlasPath);
             return sol::make_object(lua, config);
         },
 
@@ -207,7 +210,7 @@ void exposePackToLua(::sol::state& lua) {
                 return sol::lua_nil;
             }
 
-            UIConfig config = makeConfigFromRegion(*region, pack->atlas);
+            UIConfig config = makeConfigFromRegion(*region, pack->atlasPath);
             return sol::make_object(lua, config);
         },
 
@@ -233,7 +236,7 @@ void exposePackToLua(::sol::state& lua) {
                 region = &input.focus.value();
             }
 
-            UIConfig config = makeConfigFromRegion(*region, pack->atlas);
+            UIConfig config = makeConfigFromRegion(*region, pack->atlasPath);
             return sol::make_object(lua, config);
         },
 
@@ -251,7 +254,7 @@ void exposePackToLua(::sol::state& lua) {
                 return sol::lua_nil;
             }
 
-            UIConfig config = makeConfigFromRegion(it->second, pack->atlas);
+            UIConfig config = makeConfigFromRegion(it->second, pack->atlasPath);
             return sol::make_object(lua, config);
         }
     );

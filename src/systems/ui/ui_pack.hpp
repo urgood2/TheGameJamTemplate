@@ -56,8 +56,7 @@ struct InputDef {
 /// Complete UI asset pack
 struct UIAssetPack {
     std::string name;
-    std::string atlasPath;
-    Texture2D* atlas = nullptr;  // Pointer to texture in EngineContext::textureAtlas
+    std::string atlasPath;  // Atlas looked up via getAtlasTexture() to avoid pointer stability issues
 
     std::unordered_map<std::string, RegionDef> panels;
     std::unordered_map<std::string, ButtonDef> buttons;
@@ -70,6 +69,11 @@ struct UIAssetPack {
 
 /// Register a UI asset pack from a JSON manifest file
 bool registerPack(const std::string& name, const std::string& manifestPath);
+
+/// Unregister a UI asset pack and optionally unload its atlas texture
+/// @param name Pack name to unregister
+/// @param unloadTexture If true, unload the atlas texture (use carefully - may be shared)
+void unregisterPack(const std::string& name, bool unloadTexture = false);
 
 /// Get a registered pack by name, returns nullptr if not found
 UIAssetPack* getPack(const std::string& name);

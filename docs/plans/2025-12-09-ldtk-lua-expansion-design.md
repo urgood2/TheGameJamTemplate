@@ -183,13 +183,35 @@ local meta = ldtk.get_level_meta("Level_0")
 local exists = ldtk.level_exists("Level_99")
 ```
 
+### Signal Emission Support
+
+Set up a signal emitter callback to receive LDTK events:
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Connect LDTK events to signal library
+ldtk.set_signal_emitter(function(eventName, data)
+    signal.emit(eventName, data)
+end)
+
+-- Use set_active_level_with_signals for automatic signal emission
+ldtk.set_active_level_with_signals("Level_0", "world", true, true, "WORLD")
+
+-- Or manually emit entity spawned signals from your spawner
+ldtk.set_spawner(function(name, px, py, layerName, gx, gy, fields)
+    -- Create entity...
+    ldtk.emit_entity_spawned(name, px, py, layerName, { fields = fields })
+end)
+```
+
 ### Signals Emitted
 
 | Signal | Parameters | When |
 |--------|-----------|------|
-| `ldtk_level_loaded` | `levelName, meta` | After `set_active_level` completes |
-| `ldtk_colliders_built` | `levelName, count` | After colliders generated |
-| `ldtk_entity_spawned` | `entity, name, fields` | After each entity spawned |
+| `ldtk_level_loaded` | `{level_name, world_name, colliders_built, entities_spawned}` | After `set_active_level_with_signals` completes |
+| `ldtk_colliders_built` | `{level_name, world_name, physics_tag}` | After colliders generated (with signals) |
+| `ldtk_entity_spawned` | `{entity_name, px, py, layer, extra}` | When `emit_entity_spawned` called |
 
 ---
 

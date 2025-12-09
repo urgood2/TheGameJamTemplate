@@ -645,6 +645,224 @@ auto initLuaMasterState(sol::state &stateToInit,
       return result;
     });
 
+    // -------------------- Procedural Rule Runner API --------------------
+
+    // Apply LDtk auto-rules to a Lua-provided IntGrid
+    ldtk.set_function("apply_rules", [&stateToInit](sol::table gridTable, const std::string& layerName) {
+      // Extract grid dimensions and cells from Lua table
+      int width = gridTable.get_or("width", 0);
+      int height = gridTable.get_or("height", 0);
+      sol::table cells = gridTable.get_or("cells", sol::table());
+
+      if (width <= 0 || height <= 0) {
+        throw std::runtime_error("Invalid grid dimensions");
+      }
+
+      // Convert Lua table to vector
+      std::vector<int> cellValues;
+      cellValues.reserve(width * height);
+      for (int i = 1; i <= width * height; ++i) {
+        cellValues.push_back(cells.get_or(i, 0));
+      }
+
+      // Create level from IntGrid
+      ldtk_rule_import::CreateLevelFromIntGrid(width, height, cellValues);
+
+      // Run rules
+      ldtk_rule_import::RunRulesForLevel(layerName);
+
+      // Get layer index
+      int layerIdx = ldtk_rule_import::GetLayerIndex(layerName);
+      if (layerIdx < 0) {
+        throw std::runtime_error("Layer not found: " + layerName);
+      }
+
+      // Get results and convert to Lua table
+      auto results = ldtk_rule_import::GetAllTileResults(layerIdx);
+
+      sol::table output = stateToInit.create_table();
+      output["width"] = results.width;
+      output["height"] = results.height;
+
+      sol::table outputCells = stateToInit.create_table();
+      int idx = 1;
+      for (const auto& cellTiles : results.cells) {
+        sol::table cellTable = stateToInit.create_table();
+        int tileIdx = 1;
+        for (const auto& tile : cellTiles) {
+          sol::table tileTable = stateToInit.create_table();
+          tileTable["tile_id"] = tile.tile_id;
+          tileTable["flip_x"] = tile.flip_x;
+          tileTable["flip_y"] = tile.flip_y;
+          tileTable["alpha"] = tile.alpha;
+          tileTable["offset_x"] = tile.offset_x;
+          tileTable["offset_y"] = tile.offset_y;
+          cellTable[tileIdx++] = tileTable;
+        }
+        outputCells[idx++] = cellTable;
+      }
+      output["cells"] = outputCells;
+
+      return output;
+    });
+
+    // Build colliders from a Lua-provided IntGrid (without using LDtk level)
+    ldtk.set_function("build_colliders_from_grid",
+        [](sol::table gridTable, const std::string& worldName, sol::optional<std::string> tag) {
+      int width = gridTable.get_or("width", 0);
+      int height = gridTable.get_or("height", 0);
+      sol::table cells = gridTable.get_or("cells", sol::table());
+      std::string physicsTag = tag.value_or("WORLD");
+
+      if (width <= 0 || height <= 0) return;
+
+      auto* world = ldtk_loader::GetPhysicsWorld(worldName);
+      if (!world) {
+        spdlog::warn("build_colliders_from_grid: physics world '{}' not found", worldName);
+        return;
+      }
+
+      auto* R = ldtk_loader::internal_loader::registry;
+      if (!R) {
+        spdlog::warn("build_colliders_from_grid: registry not set");
+        return;
+      }
+
+      const int cellSize = 16; // Default cell size, could be made configurable
+
+      // Scan rows for horizontal runs of solid cells
+      for (int y = 0; y < height; ++y) {
+        int x = 0;
+        while (x < width) {
+          int idx = y * width + x + 1; // Lua 1-indexed
+          int val = cells.get_or(idx, 0);
+          if (val == 0) { ++x; continue; }
+
+          int runStart = x;
+          int runEnd = x;
+          while (runEnd + 1 < width) {
+            int nextIdx = y * width + (runEnd + 1) + 1;
+            if (cells.get_or(nextIdx, 0) == 0) break;
+            ++runEnd;
+          }
+          int runLen = (runEnd - runStart) + 1;
+
+          float w = (float)(runLen * cellSize);
+          float h = (float)cellSize;
+          float cx = runStart * cellSize + w * 0.5f;
+          float cy = y * cellSize + h * 0.5f;
+
+          entt::entity e = R->create();
+          R->emplace<PhysicsWorldRef>(e, worldName);
+          R->emplace<PhysicsLayer>(e, physicsTag);
+
+          world->AddCollider(e, physicsTag, "rectangle", w, h, -1, -1, false);
+          world->SetBodyPosition(e, cx, cy);
+
+          x = runEnd + 1;
+        }
+      }
+
+      if (globals::physicsManager) {
+        globals::physicsManager->markNavmeshDirty(worldName);
+      }
+    });
+
+    // Get layer information from loaded LDtk project
+    ldtk.set_function("get_layer_count", []() {
+      return ldtk_rule_import::GetLayerCount();
+    });
+
+    ldtk.set_function("get_layer_name", [](int layerIdx) {
+      return ldtk_rule_import::GetLayerName(layerIdx);
+    });
+
+    ldtk.set_function("get_layer_index", [](const std::string& layerName) {
+      return ldtk_rule_import::GetLayerIndex(layerName);
+    });
+
+    // Clean up managed level (optional, called automatically when apply_rules is called again)
+    ldtk.set_function("cleanup_procedural", []() {
+      ldtk_rule_import::CleanupManagedLevel();
+    });
+
+    // -------------------- Signal Emission Support --------------------
+    // Store signal emitter callback (expects: emitter(eventName, dataTable))
+    static sol::function ldtkSignalEmitter;
+
+    ldtk.set_function("set_signal_emitter", [](sol::function fn) {
+      ldtkSignalEmitter = fn;
+    });
+
+    // Helper to emit signals if emitter is set
+    auto emitLdtkSignal = [&stateToInit](const std::string& eventName, sol::table data) {
+      if (ldtkSignalEmitter.valid()) {
+        try {
+          ldtkSignalEmitter(eventName, data);
+        } catch (const std::exception& e) {
+          spdlog::warn("LDTK signal emission error for '{}': {}", eventName, e.what());
+        }
+      }
+    };
+
+    // Wrap set_active_level to emit signals
+    ldtk.set_function(
+        "set_active_level_with_signals",
+        [&stateToInit, emitLdtkSignal](const std::string &levelName, const std::string &worldName,
+           sol::optional<bool> rebuildColliders,
+           sol::optional<bool> spawnEntities, sol::optional<std::string> tag) {
+          bool doColliders = rebuildColliders.value_or(true);
+          bool doSpawn = spawnEntities.value_or(true);
+          std::string physicsTag = tag.value_or("WORLD");
+
+          ldtk_loader::SetActiveLevel(levelName, worldName, doColliders, doSpawn, physicsTag);
+
+          // Emit ldtk_level_loaded signal
+          sol::table levelData = stateToInit.create_table();
+          levelData["level_name"] = levelName;
+          levelData["world_name"] = worldName;
+          levelData["colliders_built"] = doColliders;
+          levelData["entities_spawned"] = doSpawn;
+
+          if (ldtkSignalEmitter.valid()) {
+            try {
+              ldtkSignalEmitter("ldtk_level_loaded", levelData);
+
+              if (doColliders) {
+                sol::table colliderData = stateToInit.create_table();
+                colliderData["level_name"] = levelName;
+                colliderData["world_name"] = worldName;
+                colliderData["physics_tag"] = physicsTag;
+                ldtkSignalEmitter("ldtk_colliders_built", colliderData);
+              }
+            } catch (const std::exception& e) {
+              spdlog::warn("LDTK signal emission error: {}", e.what());
+            }
+          }
+        });
+
+    // Convenience function to emit entity spawned signal (call from Lua spawner)
+    ldtk.set_function("emit_entity_spawned",
+        [&stateToInit](const std::string& entityName, float px, float py,
+                       const std::string& layerName, sol::optional<sol::table> extraData) {
+          if (!ldtkSignalEmitter.valid()) return;
+
+          sol::table data = stateToInit.create_table();
+          data["entity_name"] = entityName;
+          data["px"] = px;
+          data["py"] = py;
+          data["layer"] = layerName;
+          if (extraData.has_value()) {
+            data["extra"] = extraData.value();
+          }
+
+          try {
+            ldtkSignalEmitter("ldtk_entity_spawned", data);
+          } catch (const std::exception& e) {
+            spdlog::warn("LDTK entity_spawned signal error: {}", e.what());
+          }
+        });
+
     stateToInit["ldtk"] = ldtk;
     rec.record_property(
         "ldtk", {"load_config", "",
@@ -682,6 +900,36 @@ auto initLuaMasterState(sol::state &stateToInit,
                  "Returns the current active LDtk level name (or empty)."});
     rec.record_property("ldtk", {"has_active_level", "",
                                  "True if an active LDtk level is set."});
+    rec.record_property("ldtk", {"level_exists", "",
+                                 "Check if a level exists in the loaded project."});
+    rec.record_property("ldtk", {"get_level_bounds", "",
+                                 "Get bounds (x, y, width, height) for a level."});
+    rec.record_property("ldtk", {"get_level_meta", "",
+                                 "Get metadata (width, height, world_x, world_y, depth, bg_color) for a level."});
+    rec.record_property("ldtk", {"get_neighbors", "",
+                                 "Get neighboring levels (north, south, east, west, overlap)."});
+    rec.record_property("ldtk", {"get_entity_position", "",
+                                 "Get position of an entity by IID."});
+    rec.record_property("ldtk", {"get_entities_by_name", "",
+                                 "Get all entities with a given name, including fields."});
+    rec.record_property("ldtk", {"apply_rules", "",
+                                 "Apply LDtk auto-rules to a Lua IntGrid table, returning tile results."});
+    rec.record_property("ldtk", {"build_colliders_from_grid", "",
+                                 "Build physics colliders from a Lua IntGrid table."});
+    rec.record_property("ldtk", {"get_layer_count", "",
+                                 "Get number of layers in the LDtk project."});
+    rec.record_property("ldtk", {"get_layer_name", "",
+                                 "Get layer name by index."});
+    rec.record_property("ldtk", {"get_layer_index", "",
+                                 "Get layer index by name."});
+    rec.record_property("ldtk", {"cleanup_procedural", "",
+                                 "Clean up managed procedural level."});
+    rec.record_property("ldtk", {"set_signal_emitter", "",
+                                 "Set a callback for LDTK events: function(eventName, dataTable)."});
+    rec.record_property("ldtk", {"set_active_level_with_signals", "",
+                                 "Like set_active_level but emits ldtk_level_loaded and ldtk_colliders_built signals."});
+    rec.record_property("ldtk", {"emit_entity_spawned", "",
+                                 "Emit ldtk_entity_spawned signal (call from spawner callback)."});
   }
 
   //---------------------------------------------------------

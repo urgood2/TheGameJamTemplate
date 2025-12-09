@@ -446,6 +446,93 @@ function M.test_spawner_with_fields()
     end
 end
 
+-- Test 15: Signal Emission
+function M.test_signal_emission()
+    print("\n=== Test: Signal Emission ===")
+
+    local signals_received = {}
+
+    -- Set up signal emitter
+    ldtk.set_signal_emitter(function(eventName, data)
+        table.insert(signals_received, {
+            event = eventName,
+            data = data
+        })
+    end)
+
+    -- Test set_active_level_with_signals
+    local ok, err = pcall(function()
+        ldtk.set_active_level_with_signals("Level_0", "world", true, false, "WORLD")
+    end)
+
+    assert_test("set_active_level_with_signals succeeds", ok, err)
+
+    -- Check that signals were emitted
+    local level_loaded = false
+    local colliders_built = false
+
+    for _, sig in ipairs(signals_received) do
+        if sig.event == "ldtk_level_loaded" then
+            level_loaded = true
+            print(string.format("  ldtk_level_loaded: level_name=%s", sig.data.level_name or "nil"))
+        elseif sig.event == "ldtk_colliders_built" then
+            colliders_built = true
+            print(string.format("  ldtk_colliders_built: physics_tag=%s", sig.data.physics_tag or "nil"))
+        end
+    end
+
+    assert_test("ldtk_level_loaded signal received", level_loaded)
+    assert_test("ldtk_colliders_built signal received", colliders_built)
+
+    -- Test emit_entity_spawned
+    signals_received = {}
+
+    local ok2, err2 = pcall(function()
+        ldtk.emit_entity_spawned("TestEntity", 100, 200, "TestLayer", { custom = "data" })
+    end)
+
+    assert_test("emit_entity_spawned succeeds", ok2, err2)
+
+    local entity_spawned = false
+    for _, sig in ipairs(signals_received) do
+        if sig.event == "ldtk_entity_spawned" then
+            entity_spawned = true
+            print(string.format("  ldtk_entity_spawned: entity_name=%s, px=%.1f, py=%.1f",
+                sig.data.entity_name or "nil", sig.data.px or 0, sig.data.py or 0))
+        end
+    end
+
+    assert_test("ldtk_entity_spawned signal received", entity_spawned)
+
+    -- Clear signal emitter
+    ldtk.set_signal_emitter(function() end)
+end
+
+-- Test 16: Layer Query API
+function M.test_layer_query()
+    print("\n=== Test: Layer Query API ===")
+
+    local ok, err = pcall(function()
+        local count = ldtk.get_layer_count()
+        print(string.format("  Layer count: %d", count))
+        assert_test("get_layer_count returns number", type(count) == "number")
+
+        if count > 0 then
+            local name = ldtk.get_layer_name(0)
+            print(string.format("  First layer name: '%s'", name or "nil"))
+            assert_test("get_layer_name returns string", type(name) == "string")
+
+            local idx = ldtk.get_layer_index(name)
+            print(string.format("  Index for '%s': %d", name, idx))
+            assert_test("get_layer_index returns 0 for first layer", idx == 0)
+        end
+    end)
+
+    if not ok then
+        log_test("layer query API", false, err)
+    end
+end
+
 -- Run all tests
 function M.run_all()
     print("\n" .. string.rep("=", 60))
@@ -473,6 +560,10 @@ function M.run_all()
     M.test_get_entities_by_name()
     M.test_get_entity_position()
     M.test_spawner_with_fields()
+
+    -- Signal and procedural API tests
+    M.test_signal_emission()
+    M.test_layer_query()
 
     print("\n" .. string.rep("=", 60))
     print(string.format("RESULTS: %d passed, %d failed",

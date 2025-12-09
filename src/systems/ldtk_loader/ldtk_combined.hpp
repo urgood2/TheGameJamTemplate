@@ -989,4 +989,169 @@ inline void FloodFillGrid(int layerIdx,
     }
 }
 
+// -------------------- Lua-friendly Rule Runner API --------------------
+
+// Managed Level for procedural generation from Lua
+namespace internal_rule {
+    extern std::unique_ptr<Level> managedLevel;
+}
+
+// Create a Level from dimensions and IntGrid values
+inline void CreateLevelFromIntGrid(int width, int height, const std::vector<int>& cells) {
+    if (!internal_rule::managedLevel) {
+        internal_rule::managedLevel = std::make_unique<Level>();
+    }
+
+    // Convert int vector to intgridvalue_t vector
+    std::vector<intgridvalue_t> values;
+    values.reserve(cells.size());
+    for (int v : cells) {
+        values.push_back(static_cast<intgridvalue_t>(v));
+    }
+
+    internal_rule::managedLevel->setIntGrid(
+        static_cast<dimensions_t>(width),
+        static_cast<dimensions_t>(height),
+        std::move(values)
+    );
+
+    // Point internal level pointer to managed level
+    internal_rule::levelPtr = internal_rule::managedLevel.get();
+}
+
+// Set IntGrid cell value
+inline void SetIntGridCell(int x, int y, int value) {
+    if (!internal_rule::managedLevel) {
+        throw std::runtime_error("No managed level created - call CreateLevelFromIntGrid first");
+    }
+    internal_rule::managedLevel->setIntGrid(x, y, static_cast<intgridvalue_t>(value));
+}
+
+// Get number of layers defined in the LDtk project
+inline size_t GetLayerCount() {
+    return internal_rule::defFile.getLayers().size();
+}
+
+// Get layer name by index
+inline std::string GetLayerName(int layerIdx) {
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(layers.size())) {
+        return "";
+    }
+    return layers[layerIdx].name;
+}
+
+// Find layer index by name
+inline int GetLayerIndex(const std::string& layerName) {
+    const auto& layers = internal_rule::defFile.getLayers();
+    for (size_t i = 0; i < layers.size(); ++i) {
+        if (layers[i].name == layerName) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+// Structure for tile result
+struct TileResult {
+    int tile_id;
+    bool flip_x;
+    bool flip_y;
+    float alpha;
+    int offset_x;
+    int offset_y;
+};
+
+// Get tile results for a specific cell
+inline std::vector<TileResult> GetTileResultsAt(int layerIdx, int x, int y) {
+    std::vector<TileResult> results;
+
+    if (!internal_rule::levelPtr) return results;
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        return results;
+    }
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    // Check bounds manually
+    if (x < 0 || x >= grid.getWidth() || y < 0 || y >= grid.getHeight()) return results;
+
+    const auto& tiles = grid(x, y);
+    for (const auto& t : tiles) {
+        TileResult r;
+        r.tile_id = t.tileId;
+        r.flip_x = ldtkimport::TileFlags::isFlippedX(t.flags);
+        r.flip_y = ldtkimport::TileFlags::isFlippedY(t.flags);
+        r.alpha = t.opacity / 100.0f; // Convert from 0-100 to 0.0-1.0
+        r.offset_x = t.posXOffset;
+        r.offset_y = t.posYOffset;
+        results.push_back(r);
+    }
+
+    return results;
+}
+
+// Run rules and ensure tile grids are set up
+inline void RunRulesForLevel(const std::string& layerName) {
+    if (!internal_rule::managedLevel) {
+        throw std::runtime_error("No managed level - call CreateLevelFromIntGrid first");
+    }
+
+    // Find the layer index
+    int layerIdx = GetLayerIndex(layerName);
+    if (layerIdx < 0) {
+        throw std::runtime_error("Layer not found: " + layerName);
+    }
+
+    // Ensure we have enough tile grids
+    size_t layerCount = internal_rule::defFile.getLayers().size();
+    internal_rule::managedLevel->setTileGridCount(layerCount);
+
+    // Set layer UID for each tile grid
+    for (size_t i = 0; i < layerCount; ++i) {
+        internal_rule::managedLevel->getTileGridByIdx(i).setLayerUid(
+            internal_rule::defFile.getLayers()[i].uid
+        );
+    }
+
+    // Run the rules
+    RunRules(0);
+}
+
+// Get all tile results for a layer as a flat structure
+struct LayerTileResults {
+    int width;
+    int height;
+    std::vector<std::vector<TileResult>> cells; // One vector per cell
+};
+
+inline LayerTileResults GetAllTileResults(int layerIdx) {
+    LayerTileResults results;
+    results.width = 0;
+    results.height = 0;
+
+    if (!internal_rule::levelPtr) return results;
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        return results;
+    }
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    results.width = grid.getWidth();
+    results.height = grid.getHeight();
+    results.cells.reserve(results.width * results.height);
+
+    for (int y = 0; y < results.height; ++y) {
+        for (int x = 0; x < results.width; ++x) {
+            results.cells.push_back(GetTileResultsAt(layerIdx, x, y));
+        }
+    }
+
+    return results;
+}
+
+// Clean up managed level
+inline void CleanupManagedLevel() {
+    internal_rule::managedLevel.reset();
+    internal_rule::levelPtr = nullptr;
+}
+
 } // namespace ldtk_rule_import

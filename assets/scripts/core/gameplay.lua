@@ -335,7 +335,8 @@ local function makeTooltipPill(text, opts)
         fontSize = opts.fontSize,
         align = opts.textAlign,
         fontName = opts.fontName or tooltipStyle.fontName,
-        shadow = opts.shadow
+        shadow = opts.shadow,
+        coded = opts.coded
     }
     return dsl.hbox {
         config = cfg,

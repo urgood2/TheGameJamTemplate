@@ -16,6 +16,10 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
+// Per-card random seed for unique overlay variations
+// Expected range: [0.0, 1.0]
+// Used to offset animation phases, noise patterns, and color variations
+// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -149,23 +153,26 @@ vec4 applyOverlay(vec2 atlasUV) {
         return vec4(lit, alpha);
     }
 
-    // Glitch timing - creates bursts of glitches
-    float burst1 = glitchTrigger(t * glitchSpeed, 1.0);
-    float burst2 = glitchTrigger(t * glitchSpeed * 1.3, 2.0);
-    float burst3 = glitchTrigger(t * glitchSpeed * 0.7, 3.0);
+    // Per-card seed offset for unique glitch patterns
+    float seedOffset = rand_seed * 100.0;
+
+    // Glitch timing - creates bursts of glitches (with per-card seed variation)
+    float burst1 = glitchTrigger(t * glitchSpeed + seedOffset * 0.01, 1.0 + rand_seed);
+    float burst2 = glitchTrigger(t * glitchSpeed * 1.3 + seedOffset * 0.013, 2.0 + rand_seed);
+    float burst3 = glitchTrigger(t * glitchSpeed * 0.7 + seedOffset * 0.007, 3.0 + rand_seed);
     float burstTotal = max(burst1, max(burst2, burst3));
 
-    // Horizontal line displacement (VHS-style)
-    float lineNoise = hash(floor(uv.y * 50.0 + t * 30.0));
+    // Horizontal line displacement (VHS-style) with seed variation
+    float lineNoise = hash(floor(uv.y * 50.0 + t * 30.0 + seedOffset));
     float lineDisplace = (lineNoise - 0.5) * 0.1 * glitchIntensity * burstTotal;
 
-    // Block displacement
-    float blockSize = 8.0 + hash(floor(t * 5.0)) * 8.0;
-    float blockDisplace = (blockNoise(uv, blockSize) - 0.5) * 0.15 * glitchIntensity * burst1;
+    // Block displacement with seed variation
+    float blockSize = 8.0 + hash(floor(t * 5.0) + seedOffset * 0.1) * 8.0;
+    float blockDisplace = (blockNoise(uv + rand_seed * 0.5, blockSize) - 0.5) * 0.15 * glitchIntensity * burst1;
 
-    // Vertical tear/shift
-    float tearY = step(0.5, hash(floor(t * 8.0)));
-    float tearAmount = (hash(floor(uv.y * 20.0 + t * 15.0)) - 0.5) * 0.2 * tearY * glitchIntensity;
+    // Vertical tear/shift with seed variation
+    float tearY = step(0.5, hash(floor(t * 8.0) + seedOffset * 0.2));
+    float tearAmount = (hash(floor(uv.y * 20.0 + t * 15.0 + seedOffset)) - 0.5) * 0.2 * tearY * glitchIntensity;
 
     // Apply displacements in local sprite UV space to prevent atlas bleeding
     vec2 glitchLocalUV = warpedLocal;
@@ -200,34 +207,34 @@ vec4 applyOverlay(vec2 atlasUV) {
     float scanline = 0.95 + 0.05 * sin(uv.y * 400.0 + t * 10.0);
     glitchColor *= scanline;
 
-    // Occasional color inversion in blocks
-    float invertBlock = step(0.92, blockNoise(uv + t * 0.1, 12.0)) * burst1;
+    // Occasional color inversion in blocks (with seed variation)
+    float invertBlock = step(0.92, blockNoise(uv + t * 0.1 + rand_seed * 0.3, 12.0)) * burst1;
     glitchColor = mix(glitchColor, 1.0 - glitchColor, invertBlock);
 
     // Color quantization (reduce color depth for digital look)
     float quantize = 16.0 - 8.0 * burst2;
     glitchColor = floor(glitchColor * quantize) / quantize;
 
-    // Static noise overlay
-    float staticNoise = hash2(uv * 500.0 + t * 100.0);
+    // Static noise overlay (with seed variation)
+    float staticNoise = hash2(uv * 500.0 + t * 100.0 + rand_seed * 50.0);
     float staticIntensity = 0.05 + 0.15 * burstTotal * glitchIntensity;
     glitchColor = mix(glitchColor, vec3(staticNoise), staticIntensity);
 
-    // Horizontal noise bands
-    float bandY = floor(uv.y * 30.0 + t * 20.0);
-    float band = step(0.9, hash(bandY)) * burstTotal;
-    glitchColor = mix(glitchColor, vec3(hash(bandY + 0.5)), band * 0.5);
+    // Horizontal noise bands (with seed variation)
+    float bandY = floor(uv.y * 30.0 + t * 20.0 + seedOffset * 0.05);
+    float band = step(0.9, hash(bandY + seedOffset * 0.1)) * burstTotal;
+    glitchColor = mix(glitchColor, vec3(hash(bandY + 0.5 + seedOffset)), band * 0.5);
 
-    // Rolling bar (like old TV interference)
+    // Rolling bar (like old TV interference) with seed variation
     float rollSpeed = 2.0;
-    float rollPos = fract(t * rollSpeed * 0.1);
+    float rollPos = fract(t * rollSpeed * 0.1 + rand_seed * 0.5);
     float rollBar = smoothstep(0.0, 0.02, abs(uv.y - rollPos)) *
                     smoothstep(0.0, 0.02, abs(uv.y - rollPos - 1.0));
-    rollBar = 1.0 - (1.0 - rollBar) * 0.3 * step(0.7, hash(floor(t * 2.0)));
+    rollBar = 1.0 - (1.0 - rollBar) * 0.3 * step(0.7, hash(floor(t * 2.0) + seedOffset * 0.3));
     glitchColor *= rollBar;
 
-    // Occasional full-frame color shift
-    float colorShift = hash(floor(t * 4.0));
+    // Occasional full-frame color shift (with seed variation)
+    float colorShift = hash(floor(t * 4.0) + seedOffset * 0.2);
     if (colorShift > 0.95 && burstTotal > 0.5) {
         glitchColor = glitchColor.gbr;  // Rotate color channels
     } else if (colorShift > 0.9 && burstTotal > 0.5) {

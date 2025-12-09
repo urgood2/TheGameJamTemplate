@@ -16,6 +16,10 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
+// Per-card random seed for unique overlay variations
+// Expected range: [0.0, 1.0]
+// Used to offset animation phases, noise patterns, and color variations
+// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -173,8 +177,12 @@ vec4 applyOverlay(vec2 atlasUV) {
     float high = max(base.r, max(base.g, base.b));
     float delta = high * 0.5;
 
-    float fac = 0.3 + sin((uv.x * 450.0 + sin(gold_seal.r * 6.0) * 180.0) - 700.0 * gold_seal.r)
-                  - sin((uv.x * 190.0 + uv.y * 30.0) + 1080.3 * gold_seal.r);
+    // Per-card seed for unique gold seal patterns
+    float seedPhase = rand_seed * 6.2831;
+    float seedOffset = rand_seed * 100.0;
+
+    float fac = 0.3 + sin((uv.x * 450.0 + seedOffset + sin(gold_seal.r * 6.0 + seedPhase * 0.3) * 180.0) - 700.0 * gold_seal.r + seedPhase * 0.5)
+                  - sin((uv.x * 190.0 + uv.y * 30.0 + seedOffset * 0.7) + 1080.3 * gold_seal.r + seedPhase * 0.8);
 
     vec3 sealColor = vec3(
         max(base.r, (1.0 - base.r) * delta * fac + base.r),

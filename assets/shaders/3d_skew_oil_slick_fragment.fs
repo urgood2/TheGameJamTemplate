@@ -16,6 +16,10 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
+// Per-card random seed for unique overlay variations
+// Expected range: [0.0, 1.0]
+// Used to offset animation phases, noise patterns, and color variations
+// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -74,31 +78,31 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
-// Simplex-like noise for organic flow
-float hash(vec2 p) {
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 45.32);
+// Simplex-like noise for organic flow (seed parameter for per-card variation)
+float hash(vec2 p, float seed) {
+    p = fract(p * vec2(123.34, 456.21) + seed * vec2(78.91, 32.45));
+    p += dot(p, p + 45.32 + seed * 17.89);
     return fract(p.x * p.y);
 }
 
-float noise(vec2 p) {
+float noise(vec2 p, float seed) {
     vec2 i = floor(p);
     vec2 f = fract(p);
     f = f * f * (3.0 - 2.0 * f);
 
-    float a = hash(i);
-    float b = hash(i + vec2(1.0, 0.0));
-    float c = hash(i + vec2(0.0, 1.0));
-    float d = hash(i + vec2(1.0, 1.0));
+    float a = hash(i, seed);
+    float b = hash(i + vec2(1.0, 0.0), seed);
+    float c = hash(i + vec2(0.0, 1.0), seed);
+    float d = hash(i + vec2(1.0, 1.0), seed);
 
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-float fbm(vec2 p) {
+float fbm(vec2 p, float seed) {
     float value = 0.0;
     float amplitude = 0.5;
     for (int i = 0; i < 4; i++) {
-        value += amplitude * noise(p);
+        value += amplitude * noise(p, seed);
         p *= 2.0;
         amplitude *= 0.5;
     }
@@ -179,17 +183,20 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     float t = time * 0.3;
 
+    // Per-card seed for unique oil patterns
+    float seedOffset = rand_seed * 10.0;
+
     // Simulate oil spreading/flowing on water
     // Multiple layers of flowing noise create organic, non-radial patterns
-    vec2 flowUV1 = uv * 3.0 + vec2(t * 0.2, t * 0.1);
-    vec2 flowUV2 = uv * 5.0 - vec2(t * 0.15, t * 0.25);
-    vec2 flowUV3 = uv * 2.0 + vec2(sin(t * 0.1) * 0.5, cos(t * 0.15) * 0.5);
-    vec2 flowUV4 = uv * 4.0 + vec2(t * 0.08, -t * 0.12);  // Additional flow layer
+    vec2 flowUV1 = uv * 3.0 + vec2(t * 0.2 + seedOffset * 0.1, t * 0.1 + seedOffset * 0.15);
+    vec2 flowUV2 = uv * 5.0 - vec2(t * 0.15 - seedOffset * 0.08, t * 0.25 - seedOffset * 0.12);
+    vec2 flowUV3 = uv * 2.0 + vec2(sin(t * 0.1 + rand_seed * 3.14) * 0.5, cos(t * 0.15 + rand_seed * 2.71) * 0.5);
+    vec2 flowUV4 = uv * 4.0 + vec2(t * 0.08 + seedOffset * 0.05, -t * 0.12 + seedOffset * 0.07);
 
-    float flow1 = fbm(flowUV1);
-    float flow2 = fbm(flowUV2);
-    float flow3 = fbm(flowUV3);
-    float flow4 = fbm(flowUV4);
+    float flow1 = fbm(flowUV1, rand_seed);
+    float flow2 = fbm(flowUV2, rand_seed + 0.33);
+    float flow3 = fbm(flowUV3, rand_seed + 0.66);
+    float flow4 = fbm(flowUV4, rand_seed + 0.5);
 
     // Combine flows into oil film thickness variation
     // Use more flow layers to break up any remaining patterns

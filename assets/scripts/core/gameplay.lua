@@ -3129,7 +3129,7 @@ function makeCardTooltip(card_def, opts)
 
     local cardId = card_def.id or card_def.cardID
     local rowPadding = tooltipStyle.rowPadding
-    local outerPadding = tooltipStyle.innerPadding
+    local outerPadding = tooltipStyle.outerPadding or 6
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)

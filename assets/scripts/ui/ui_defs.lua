@@ -1011,8 +1011,17 @@ function ui_defs.generateUI()
     colonistHomeButtonGameObject.state.hoverEnabled = true -- enable hover for the colonist
     colonistHomeButtonGameObject.state.collisionEnabled = true -- enable collision for the colonist home button
     colonistHomeButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        showTooltip(localization.get("ui.colonist_home_tooltip_title"),
-            localization.get("ui.colonist_home_tooltip_body"))
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "colonist_home",
+                localization.get("ui.colonist_home_tooltip_title"),
+                localization.get("ui.colonist_home_tooltip_body"),
+                globals.ui.colonistHomeButton  -- the element being hovered
+            )
+        end
+    end
+    colonistHomeButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("colonist_home") end
     end
     
     -- align the structure placement UI box to the left side of the screen, and bottom

@@ -131,11 +131,23 @@ local function attachHover(eid, hover)
     go.state.collisionEnabled = true
 
     go.methods.onHover = function(_, hoveredOn, hovered)
-        showTooltip(localization.get(hover.title), localization.get(hover.body))
+        local tooltipKey = "dsl_hover_" .. tostring(eid)
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                tooltipKey,
+                localization.get(hover.title),
+                localization.get(hover.body),
+                eid
+            )
+        end
+        -- Store key for cleanup
+        go._tooltipKey = tooltipKey
     end
 
     go.methods.onStopHover = function()
-        hideTooltip()
+        if hideSimpleTooltip and go._tooltipKey then
+            hideSimpleTooltip(go._tooltipKey)
+        end
     end
 end
 

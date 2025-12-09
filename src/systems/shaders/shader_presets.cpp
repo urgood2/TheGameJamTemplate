@@ -1,0 +1,306 @@
+#include "shader_presets.hpp"
+#include "util/common_headers.hpp"
+
+namespace shader_presets {
+
+namespace {
+
+ShaderUniformValue tableToUniformValue(sol::object obj) {
+    if (obj.is<float>() || obj.is<double>()) {
+        return static_cast<float>(obj.as<double>());
+    }
+    if (obj.is<bool>()) {
+        return obj.as<bool>();
+    }
+    if (obj.is<int>()) {
+        return obj.as<int>();
+    }
+    if (obj.is<sol::table>()) {
+        auto t = obj.as<sol::table>();
+        size_t size = t.size();
+        if (size == 2) {
+            return Vector2{t[1].get<float>(), t[2].get<float>()};
+        }
+        if (size == 3) {
+            return Vector3{t[1].get<float>(), t[2].get<float>(), t[3].get<float>()};
+        }
+        if (size == 4) {
+            return Vector4{t[1].get<float>(), t[2].get<float>(), t[3].get<float>(), t[4].get<float>()};
+        }
+    }
+    SPDLOG_WARN("shader_presets: unsupported uniform value type");
+    return 0.0f;
+}
+
+void parseUniformsTable(sol::table uniformsTable, shaders::ShaderUniformSet& uniformSet) {
+    for (auto& [key, value] : uniformsTable) {
+        if (key.is<std::string>()) {
+            std::string uniformName = key.as<std::string>();
+            uniformSet.set(uniformName, tableToUniformValue(value));
+        }
+    }
+}
+
+bool isSkewShader(const std::string& shaderName) {
+    return shaderName.find("3d_skew") == 0;
+}
+
+bool needsAtlasUniformsForPass(const ShaderPreset& preset, const std::string& passName) {
+    if (preset.needsAtlasUniforms) return true;
+    return isSkewShader(passName);
+}
+
+shaders::ShaderUniformSet resolveUniforms(
+    const ShaderPreset& preset,
+    const std::string& passName,
+    const sol::table& overrides
+) {
+    shaders::ShaderUniformSet result;
+
+    // 1. Preset's shared uniforms (base defaults)
+    for (const auto& [name, value] : preset.uniforms.uniforms) {
+        result.set(name, value);
+    }
+
+    // 2. Preset's per-pass defaults
+    for (const auto& pass : preset.passes) {
+        if (pass.shaderName == passName) {
+            for (const auto& [name, value] : pass.defaultUniforms.uniforms) {
+                result.set(name, value);
+            }
+            break;
+        }
+    }
+
+    // 3. Override's top-level uniforms (all passes)
+    for (auto& [key, value] : overrides) {
+        if (key.is<std::string>() && !value.is<sol::table>()) {
+            std::string uniformName = key.as<std::string>();
+            result.set(uniformName, tableToUniformValue(value));
+        }
+    }
+
+    // 4. Override's per-pass uniforms
+    sol::optional<sol::table> passOverridesOpt = overrides[passName];
+    if (passOverridesOpt) {
+        parseUniformsTable(*passOverridesOpt, result);
+    }
+
+    return result;
+}
+
+}  // anonymous namespace
+
+void loadPresetsFromLuaState(sol::state& lua) {
+    sol::optional<sol::table> presetsTableOpt = lua["ShaderPresets"];
+    if (!presetsTableOpt) {
+        SPDLOG_WARN("shader_presets: ShaderPresets table not found");
+        return;
+    }
+
+    sol::table presetsTable = *presetsTableOpt;
+
+    for (auto& [key, value] : presetsTable) {
+        if (!key.is<std::string>() || !value.is<sol::table>()) {
+            continue;
+        }
+
+        std::string presetName = key.as<std::string>();
+        sol::table presetTable = value.as<sol::table>();
+
+        ShaderPreset preset;
+        preset.id = presetTable.get_or<std::string>("id", presetName);
+
+        // Parse passes array
+        sol::optional<sol::table> passesOpt = presetTable["passes"];
+        if (passesOpt) {
+            for (auto& [idx, passName] : *passesOpt) {
+                if (passName.is<std::string>()) {
+                    ShaderPresetPass pass;
+                    pass.shaderName = passName.as<std::string>();
+                    preset.passes.push_back(std::move(pass));
+                }
+            }
+        }
+
+        // Parse shared uniforms
+        sol::optional<sol::table> uniformsOpt = presetTable["uniforms"];
+        if (uniformsOpt) {
+            parseUniformsTable(*uniformsOpt, preset.uniforms);
+        }
+
+        // Parse per-pass uniforms
+        sol::optional<sol::table> passUniformsOpt = presetTable["pass_uniforms"];
+        if (passUniformsOpt) {
+            for (auto& pass : preset.passes) {
+                sol::optional<sol::table> passSpecificOpt = (*passUniformsOpt)[pass.shaderName];
+                if (passSpecificOpt) {
+                    parseUniformsTable(*passSpecificOpt, pass.defaultUniforms);
+                }
+            }
+        }
+
+        // Determine needsAtlasUniforms - explicit flag or auto-detect from 3d_skew
+        sol::optional<bool> needsAtlasOpt = presetTable["needs_atlas_uniforms"];
+        if (needsAtlasOpt) {
+            preset.needsAtlasUniforms = *needsAtlasOpt;
+        } else {
+            // Auto-detect: if any pass is a 3d_skew shader, enable atlas uniforms
+            for (const auto& pass : preset.passes) {
+                if (isSkewShader(pass.shaderName)) {
+                    preset.needsAtlasUniforms = true;
+                    break;
+                }
+            }
+        }
+
+        presetRegistry[presetName] = std::move(preset);
+        SPDLOG_DEBUG("shader_presets: loaded preset '{}'", presetName);
+    }
+
+    SPDLOG_INFO("shader_presets: loaded {} presets", presetRegistry.size());
+}
+
+void loadPresetsFromLuaFile(sol::state& lua, const std::string& path) {
+    auto result = lua.safe_script_file(path, sol::script_pass_on_error);
+    if (!result.valid()) {
+        sol::error err = result;
+        SPDLOG_ERROR("shader_presets: failed to load '{}': {}", path, err.what());
+        return;
+    }
+    // Assign the returned table to global ShaderPresets so loadPresetsFromLuaState can find it
+    lua["ShaderPresets"] = result;
+    loadPresetsFromLuaState(lua);
+}
+
+void applyShaderPreset(entt::registry& reg, entt::entity e,
+                       const std::string& presetName,
+                       const sol::table& overrides) {
+    const auto* preset = getPreset(presetName);
+    if (!preset) {
+        SPDLOG_WARN("shader_presets: preset '{}' not found", presetName);
+        return;
+    }
+
+    // Get or create pipeline component
+    auto& pipeline = reg.get_or_emplace<shader_pipeline::ShaderPipelineComponent>(e);
+    pipeline.passes.clear();  // replace mode
+
+    // Get or create uniform component
+    auto& uniformComp = reg.get_or_emplace<shaders::ShaderUniformComponent>(e);
+
+    for (const auto& presetPass : preset->passes) {
+        // Add pass to pipeline
+        shader_pipeline::ShaderPass pass;
+        pass.shaderName = presetPass.shaderName;
+        pass.enabled = true;
+        pass.injectAtlasUniforms = needsAtlasUniformsForPass(*preset, pass.shaderName);
+        pipeline.passes.push_back(pass);
+
+        // Resolve and store uniforms for this pass
+        auto resolved = resolveUniforms(*preset, pass.shaderName, overrides);
+        uniformComp.shaderUniforms[pass.shaderName] = resolved;
+    }
+}
+
+void addShaderPreset(entt::registry& reg, entt::entity e,
+                     const std::string& presetName,
+                     const sol::table& overrides) {
+    const auto* preset = getPreset(presetName);
+    if (!preset) {
+        SPDLOG_WARN("shader_presets: preset '{}' not found", presetName);
+        return;
+    }
+
+    // Get or create pipeline component (don't clear - append mode)
+    auto& pipeline = reg.get_or_emplace<shader_pipeline::ShaderPipelineComponent>(e);
+
+    // Get or create uniform component
+    auto& uniformComp = reg.get_or_emplace<shaders::ShaderUniformComponent>(e);
+
+    for (const auto& presetPass : preset->passes) {
+        shader_pipeline::ShaderPass pass;
+        pass.shaderName = presetPass.shaderName;
+        pass.enabled = true;
+        pass.injectAtlasUniforms = needsAtlasUniformsForPass(*preset, pass.shaderName);
+        pipeline.passes.push_back(pass);
+
+        auto resolved = resolveUniforms(*preset, pass.shaderName, overrides);
+        uniformComp.shaderUniforms[pass.shaderName] = resolved;
+    }
+}
+
+void clearShaderPasses(entt::registry& reg, entt::entity e) {
+    if (reg.all_of<shader_pipeline::ShaderPipelineComponent>(e)) {
+        auto& pipeline = reg.get<shader_pipeline::ShaderPipelineComponent>(e);
+        pipeline.passes.clear();
+    }
+}
+
+void addShaderPass(entt::registry& reg, entt::entity e,
+                   const std::string& shaderName,
+                   const sol::table& uniforms) {
+    auto& pipeline = reg.get_or_emplace<shader_pipeline::ShaderPipelineComponent>(e);
+
+    shader_pipeline::ShaderPass pass;
+    pass.shaderName = shaderName;
+    pass.enabled = true;
+    pass.injectAtlasUniforms = isSkewShader(shaderName);
+    pipeline.passes.push_back(pass);
+
+    if (uniforms.valid()) {
+        auto& uniformComp = reg.get_or_emplace<shaders::ShaderUniformComponent>(e);
+        shaders::ShaderUniformSet uniformSet;
+        parseUniformsTable(uniforms, uniformSet);
+        uniformComp.shaderUniforms[shaderName] = uniformSet;
+    }
+}
+
+void exposeToLua(sol::state& lua, EngineContext* ctx) {
+    // Create shader_presets table with registry functions
+    sol::table sp = lua.create_named_table("shader_presets");
+
+    sp.set_function("loadFromFile", [&lua](const std::string& path) {
+        loadPresetsFromLuaFile(lua, path);
+    });
+
+    sp.set_function("hasPreset", &hasPreset);
+
+    sp.set_function("getPresetNames", []() {
+        std::vector<std::string> names;
+        for (const auto& [name, preset] : presetRegistry) {
+            names.push_back(name);
+        }
+        return names;
+    });
+
+    // Global functions for convenient access
+    lua.set_function("applyShaderPreset",
+        [&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {
+            sol::table tbl = overrides ? *overrides : lua.create_table();
+            applyShaderPreset(reg, e, name, tbl);
+        }
+    );
+
+    lua.set_function("addShaderPreset",
+        [&lua](entt::registry& reg, entt::entity e, const std::string& name, sol::optional<sol::table> overrides) {
+            sol::table tbl = overrides ? *overrides : lua.create_table();
+            addShaderPreset(reg, e, name, tbl);
+        }
+    );
+
+    lua.set_function("clearShaderPasses",
+        [](entt::registry& reg, entt::entity e) {
+            clearShaderPasses(reg, e);
+        }
+    );
+
+    lua.set_function("addShaderPass",
+        [&lua](entt::registry& reg, entt::entity e, const std::string& shaderName, sol::optional<sol::table> uniforms) {
+            sol::table tbl = uniforms ? *uniforms : lua.create_table();
+            addShaderPass(reg, e, shaderName, tbl);
+        }
+    );
+}
+
+}  // namespace shader_presets

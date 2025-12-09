@@ -11,6 +11,7 @@
 #include "../random/random.hpp"
 #include "../shaders/shader_draw_commands.hpp"
 #include "../shaders/shader_pipeline.hpp"
+#include "../shaders/shader_presets.hpp"
 #include "../shaders/shader_system.hpp"
 #include "../sound/sound_system.hpp"
 #include "../text/textVer2.hpp"
@@ -235,6 +236,11 @@ auto initLuaMasterState(sol::state &stateToInit,
   // methods from shader_draw_commands.cpp. These can be called from lua✅
   //---------------------------------------------------------
   shader_draw_commands::exposeToLua(stateToInit);
+
+  //---------------------------------------------------------
+  // methods from shader_presets.cpp. These can be called from lua
+  //---------------------------------------------------------
+  shader_presets::exposeToLua(stateToInit, ctx);
 
   // ---------------------------------------------------------
   // methods from localization.cpp. These can be called from lua✅

@@ -44,6 +44,7 @@
 #include "core/graphics.hpp"
 #include "core/gui.hpp"
 #include "core/init.hpp"
+#include "core/ownership.hpp"
 
 #include "util/utilities.hpp" // global utilty methods
 
@@ -197,6 +198,9 @@ auto MainLoopRenderAbstraction(float dt) -> void {
     // draw nothing
     break;
   }
+
+  // Render tamper warning overlay last (so it cannot be covered by game rendering)
+  ownership::renderTamperWarningIfNeeded(GetScreenWidth(), GetScreenHeight());
 }
 
 auto updatePhysics(float dt, float alpha) -> void {

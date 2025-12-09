@@ -222,6 +222,15 @@ function CommandBufferText:_format_characters()
         ch.r = 0
         ch.ox, ch.oy = 0, 0
         ch.w, ch.h = space_w, line_height
+        -- NEW: Extended properties
+        ch.rotation = 0
+        ch.scale = 1
+        ch.scaleX = 1
+        ch.scaleY = 1
+        ch.alpha = 255
+        ch.codepoint = nil
+        ch.effect_data = {}
+        ch.effect_finished = nil
         cx = cx + space_w
       end
     else
@@ -230,6 +239,15 @@ function CommandBufferText:_format_characters()
       ch.r = 0
       ch.ox, ch.oy = 0, 0
       ch.w, ch.h = w, line_height
+      -- NEW: Extended properties
+      ch.rotation = 0
+      ch.scale = 1
+      ch.scaleX = 1
+      ch.scaleY = 1
+      ch.alpha = 255
+      ch.codepoint = nil
+      ch.effect_data = {}
+      ch.effect_finished = nil
       cx = cx + w
       if cx > self.w then
         cx = 0

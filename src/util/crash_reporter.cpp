@@ -496,56 +496,108 @@ void ShowCaptureNotification(const std::string& message) {
             document.head.appendChild(style);
         }
 
-        notification.innerHTML = `
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-                <span style="font-size: 24px;">📋</span>
-                <div>
-                    <div style="font-weight: 600; margin-bottom: 4px;">Debug Report Captured</div>
-                    <div style="color: rgba(255,255,255,0.7); font-size: 13px;">${msg}</div>
-                    <div style="margin-top: 12px; display: flex; gap: 8px;">
-                        <button id="crash-copy-btn" style="
-                            background: #4a9eff;
-                            color: white;
-                            border: none;
-                            padding: 6px 12px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-size: 12px;
-                        ">Copy to Clipboard</button>
-                        <button id="crash-dismiss-btn" style="
-                            background: rgba(255,255,255,0.1);
-                            color: rgba(255,255,255,0.8);
-                            border: none;
-                            padding: 6px 12px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            font-size: 12px;
-                        ">Dismiss</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Create content structure safely
+        const container = document.createElement('div');
+        container.style.cssText = 'display: flex; align-items: flex-start; gap: 12px;';
 
+        const icon = document.createElement('span');
+        icon.style.fontSize = '24px';
+        icon.textContent = '📋';
+
+        const contentDiv = document.createElement('div');
+
+        const title = document.createElement('div');
+        title.style.cssText = 'font-weight: 600; margin-bottom: 4px;';
+        title.textContent = 'Debug Report Captured';
+
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = 'color: rgba(255,255,255,0.7); font-size: 13px;';
+        messageDiv.textContent = msg; // Safe: uses textContent
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'margin-top: 12px; display: flex; gap: 8px;';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.id = 'crash-copy-btn';
+        copyBtn.style.cssText = `
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        `;
+        copyBtn.textContent = 'Copy to Clipboard';
+
+        const dismissBtn = document.createElement('button');
+        dismissBtn.id = 'crash-dismiss-btn';
+        dismissBtn.style.cssText = `
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        `;
+        dismissBtn.textContent = 'Dismiss';
+
+        buttonContainer.appendChild(copyBtn);
+        buttonContainer.appendChild(dismissBtn);
+
+        contentDiv.appendChild(title);
+        contentDiv.appendChild(messageDiv);
+        contentDiv.appendChild(buttonContainer);
+
+        container.appendChild(icon);
+        container.appendChild(contentDiv);
+
+        notification.appendChild(container);
         document.body.appendChild(notification);
 
-        // Handle copy button
-        const copyBtn = document.getElementById('crash-copy-btn');
-        if (copyBtn) {
-            copyBtn.onclick = function() {
-                // The C++ side will have already serialized the report
-                // We trigger the copy via a custom event
-                window.dispatchEvent(new CustomEvent('crashReportCopy'));
-                copyBtn.textContent = 'Copied!';
-                copyBtn.style.background = '#28a745';
-                setTimeout(function() {
-                    copyBtn.textContent = 'Copy to Clipboard';
-                    copyBtn.style.background = '#4a9eff';
-                }, 2000);
-            };
-        }
+        // Handle copy button - directly call clipboard API with the report
+        copyBtn.onclick = function() {
+            const reportText = UTF8ToString($0);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(reportText).then(function() {
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.style.background = '#28a745';
+                    setTimeout(function() {
+                        copyBtn.textContent = 'Copy to Clipboard';
+                        copyBtn.style.background = '#4a9eff';
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('Failed to copy to clipboard:', err);
+                    copyBtn.textContent = 'Failed';
+                    copyBtn.style.background = '#dc3545';
+                });
+            } else {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = reportText;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.style.background = '#28a745';
+                    setTimeout(function() {
+                        copyBtn.textContent = 'Copy to Clipboard';
+                        copyBtn.style.background = '#4a9eff';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                    copyBtn.textContent = 'Failed';
+                    copyBtn.style.background = '#dc3545';
+                }
+                document.body.removeChild(textarea);
+            }
+        };
 
         // Handle dismiss button
-        const dismissBtn = document.getElementById('crash-dismiss-btn');
         const dismissNotification = function() {
             notification.style.animation = 'slideOut 0.3s ease-in forwards';
             setTimeout(function() {
@@ -555,9 +607,7 @@ void ShowCaptureNotification(const std::string& message) {
             }, 300);
         };
 
-        if (dismissBtn) {
-            dismissBtn.onclick = dismissNotification;
-        }
+        dismissBtn.onclick = dismissNotification;
 
         // Auto-dismiss after 10 seconds
         setTimeout(dismissNotification, 10000);

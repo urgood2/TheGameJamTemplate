@@ -387,6 +387,67 @@ local function destroyTooltipEntity(eid)
     end
 end
 
+-- Simple tooltip for title + description (jokers, avatars, relics, buttons)
+local function makeSimpleTooltip(title, body, opts)
+    opts = opts or {}
+    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding or 6
+    local rows = {}
+
+    -- Title pill (styled like card ID pill)
+    if title and title ~= "" then
+        table.insert(rows, makeTooltipPill(title, {
+            background = opts.titleBg or tooltipStyle.labelBg,
+            color = opts.titleColor or tooltipStyle.labelColor,
+            fontName = opts.titleFont or tooltipStyle.fontName,
+            fontSize = opts.titleFontSize or tooltipStyle.fontSize,
+            coded = opts.titleCoded
+        }))
+    end
+
+    -- Body text (wrapped, no pill background)
+    if body and body ~= "" then
+        table.insert(rows, makeTooltipValueBox(body, {
+            color = opts.bodyColor or tooltipStyle.valueColor,
+            fontName = opts.bodyFont or tooltipStyle.fontName,
+            fontSize = opts.bodyFontSize or tooltipStyle.fontSize,
+            coded = opts.bodyCoded,
+            maxWidth = opts.maxWidth or 250,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+        }))
+    end
+
+    -- Build with DSL (single column)
+    local v = dsl.vbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+            color = tooltipStyle.innerColor,
+            padding = outerPadding
+        },
+        children = rows
+    }
+
+    local root = dsl.root {
+        config = {
+            color = tooltipStyle.bgColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = outerPadding,
+            outlineThickness = 2,
+            outlineColor = tooltipStyle.outlineColor,
+            shadow = true
+        },
+        children = { v }
+    }
+
+    local boxID = dsl.spawn({ x = 200, y = 200 }, root)
+
+    ui.box.set_draw_layer(boxID, "ui")
+    ui.box.RenewAlignment(registry, boxID)
+    snapTooltipVisual(boxID)
+    ui.box.ClearStateTagsFromUIBox(boxID)
+
+    return boxID
+end
+
 local function cacheFetch(cache, key)
     local entry = cache[key]
     if not entry then return nil end

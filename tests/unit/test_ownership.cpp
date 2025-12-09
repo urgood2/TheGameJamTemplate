@@ -97,3 +97,19 @@ TEST(Ownership, LuaBindingsExist) {
     validate("https://fake.discord.com", std::string(ownership::ITCH_LINK));
     EXPECT_TRUE(ownership::isTamperDetected());
 }
+
+TEST(Ownership, RenderWarningFunctionExists) {
+    // Just verify the function exists and is callable
+    // Actual rendering requires raylib context which we don't have in unit tests
+    ownership::resetTamperState();
+
+    // Should not crash when called with no tampering
+    ownership::renderTamperWarningIfNeeded(800, 600);
+
+    // Trigger tampering
+    ownership::validate("fake", "fake");
+    EXPECT_TRUE(ownership::isTamperDetected());
+
+    // Should not crash when tampering detected (would render in real context)
+    ownership::renderTamperWarningIfNeeded(800, 600);
+}

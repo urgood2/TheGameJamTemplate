@@ -48,4 +48,9 @@ void resetTamperState();
 // Register Lua bindings for ownership validation
 void registerLuaBindings(sol::state& lua);
 
+// Render tamper warning overlay if tampering detected
+// Call this at the end of your render loop (before EndDrawing)
+// screenWidth/screenHeight used to center the warning
+void renderTamperWarningIfNeeded(int screenWidth, int screenHeight);
+
 }  // namespace ownership

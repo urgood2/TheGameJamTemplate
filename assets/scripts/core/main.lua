@@ -601,18 +601,21 @@ function main.init()
         require("lldebugger").start()
     end
     
-    timer.every(0.2, function()
-        -- tracy.zoneBeginN("Tooltip Hide Timer Tick") -- just some default depth to avoid bugs
-        if entity_cache.valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
-            hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
-        end
-        -- tracy.zoneEnd()
-    end,
-    0, -- start immediately)
-    true,
-    nil, -- no "after" callback
-    "tooltip_hide_timer" -- unique tag for this timer
-    )
+    -- Legacy tooltip hide timer - no longer needed with DSL tooltips
+    -- Tooltips now hide via onStopHover handlers in the DSL system
+    -- This timer was used for mouse-following tooltips which are being phased out
+    -- timer.every(0.2, function()
+    --     -- tracy.zoneBeginN("Tooltip Hide Timer Tick") -- just some default depth to avoid bugs
+    --     if entity_cache.valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
+    --         hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
+    --     end
+    --     -- tracy.zoneEnd()
+    -- end,
+    -- 0, -- start immediately)
+    -- true,
+    -- nil, -- no "after" callback
+    -- "tooltip_hide_timer" -- unique tag for this timer
+    -- )
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
     

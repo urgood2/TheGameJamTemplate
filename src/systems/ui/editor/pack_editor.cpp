@@ -1,6 +1,7 @@
 #include "systems/ui/editor/pack_editor.hpp"
 #include "third_party/rlImGui/rlImGui.h"
 #include "util/common_headers.hpp"
+#include "core/engine_context.hpp"
 #include <fstream>
 #include <filesystem>
 #include <algorithm>

@@ -139,8 +139,8 @@
         "fragment": "3d_skew_aurora_fragment.fs",
 
         "web": {
-            "vertex": "3d_skew_aurora_vertex.vs",
-            "fragment": "3d_skew_aurora_fragment.fs"
+            "vertex": "web/3d_skew_aurora_vertex.vs",
+            "fragment": "web/3d_skew_aurora_fragment.fs"
         }
     },
     "3d_skew_iridescent": {
@@ -148,8 +148,8 @@
         "fragment": "3d_skew_iridescent_fragment.fs",
 
         "web": {
-            "vertex": "3d_skew_iridescent_vertex.vs",
-            "fragment": "3d_skew_iridescent_fragment.fs"
+            "vertex": "web/3d_skew_iridescent_vertex.vs",
+            "fragment": "web/3d_skew_iridescent_fragment.fs"
         }
     },
     "3d_skew_nebula": {
@@ -157,8 +157,8 @@
         "fragment": "3d_skew_nebula_fragment.fs",
 
         "web": {
-            "vertex": "3d_skew_nebula_vertex.vs",
-            "fragment": "3d_skew_nebula_fragment.fs"
+            "vertex": "web/3d_skew_nebula_vertex.vs",
+            "fragment": "web/3d_skew_nebula_fragment.fs"
         }
     },
     "3d_skew_plasma": {
@@ -166,8 +166,8 @@
         "fragment": "3d_skew_plasma_fragment.fs",
 
         "web": {
-            "vertex": "3d_skew_plasma_vertex.vs",
-            "fragment": "3d_skew_plasma_fragment.fs"
+            "vertex": "web/3d_skew_plasma_vertex.vs",
+            "fragment": "web/3d_skew_plasma_fragment.fs"
         }
     },
     "3d_skew_prismatic": {
@@ -175,8 +175,8 @@
         "fragment": "3d_skew_prismatic_fragment.fs",
 
         "web": {
-            "vertex": "3d_skew_prismatic_vertex.vs",
-            "fragment": "3d_skew_prismatic_fragment.fs"
+            "vertex": "web/3d_skew_prismatic_vertex.vs",
+            "fragment": "web/3d_skew_prismatic_fragment.fs"
         }
     },
     "3d_skew_thermal": {
@@ -184,8 +184,8 @@
         "fragment": "3d_skew_thermal_fragment.fs",
 
         "web": {
-            "vertex": "3d_skew_thermal_vertex.vs",
-            "fragment": "3d_skew_thermal_fragment.fs"
+            "vertex": "web/3d_skew_thermal_vertex.vs",
+            "fragment": "web/3d_skew_thermal_fragment.fs"
         }
     },
     "3d_skew_crystalline": {

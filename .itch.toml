@@ -1,0 +1,35 @@
+# itch.io configuration for web builds
+# This file is used by the itch app and butler for proper game configuration
+# See: https://itch.io/docs/itch/integrating/manifest.html
+
+[[actions]]
+name = "Play"
+path = "index.html"
+sandbox = true
+
+[[actions]]
+name = "Generate Debug Report"
+path = "index.html"
+args = ["--debug"]
+
+# Recommended itch.io embed settings for your game page:
+#
+# Frame Options:
+#   - Size: Match your game's resolution (e.g., 1280x720)
+#   - Scroll bars: Hide
+#   - Mobile friendly: Yes (if your game supports touch)
+#   - Click to load (itch.io) or Automatically start: Your choice
+#   - Fullscreen button: Show
+#
+# Embed Settings (on game page):
+#   <iframe
+#     src="https://itch.io/embed-upload/YOUR_UPLOAD_ID?color=1a1a2e"
+#     allowfullscreen="allowfullscreen"
+#     frameborder="0"
+#     width="1280"
+#     height="720"
+#   ></iframe>
+#
+# Recommended game page CSS to improve dark mode display:
+#   body { background: #0a0a0a; }
+#   .inner_column { max-width: 1300px; }

@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Sampling - Edge Detection
 // Detects edges using Sobel operator on luminance or alpha

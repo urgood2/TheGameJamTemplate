@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Edge - Shiny
 // Adds an animated shiny edge effect that rotates around the sprite

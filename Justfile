@@ -72,9 +72,17 @@ build-web-dist:
 	echo "Distribution ready in dist/web/"
 	du -sh dist/web/
 
-# Serve web build locally with itch.io-identical headers
+# Serve the web build locally for testing
 serve-web:
-	python3 scripts/serve_web.py 8080
+	#!/usr/bin/env bash
+	if [ -d "dist/web" ]; then
+		cd dist/web && python3 -m http.server 8000
+	elif [ -d "build-emc" ]; then
+		cd build-emc && python3 -m http.server 8000
+	else
+		echo "No web build found. Run 'just build-web' first."
+		exit 1
+	fi
 
 test:
 	cmake -B build -DENABLE_UNIT_TESTS=ON

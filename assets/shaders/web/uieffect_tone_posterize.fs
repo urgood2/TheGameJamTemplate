@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Tone - Posterize
 // Reduces the number of colors to create a poster-like effect

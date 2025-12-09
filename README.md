@@ -41,7 +41,39 @@ just test-asan            # address sanitizer
 Web build (Emscripten):
 ```bash
 just build-web            # requires emsdk in PATH and copies assets into build-emc
+just build-web-dist       # builds and creates gzipped distribution package
+just serve-web            # serves the web build locally on port 8000
 ```
+
+## Web Distribution (itch.io)
+
+The project includes automated deployment to itch.io via GitHub Actions:
+
+- **Trigger builds**: Include `[build]`, `[web]`, or `#build` in your commit message
+- **Channels**: `main` branch deploys to `web` channel, other branches to `web-dev`
+- **Optimizations**: WASM and data files are gzip-compressed for faster downloads
+
+### Loading Screen
+The web build features an animated loading screen with:
+- Progress bar with percentage display
+- Loading tips rotation
+- Error handling with retry button
+- Fullscreen toggle button
+
+### Customization
+1. Add `assets/splash.png` (recommended: 400x400px) for the loading splash image
+2. Add `assets/favicon.png` for the browser tab icon
+3. Edit `src/minshell.html` meta tags for SEO/social sharing
+
+## Crash Reporting
+
+Built-in crash reporting captures logs, stack traces, and system info:
+
+- **Desktop**: Reports saved to `crash_reports/` directory
+- **Web**: Downloads JSON file to browser + copies to clipboard
+- **Manual capture**: Press `F10` anytime to generate a debug report
+
+Web users see a notification with a "Copy to Clipboard" button for easy sharing.
 
 ## PostHog Metrics (optional)
 - Build with metrics: `cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_POSTHOG=ON` (native builds use libcurl; Web/Emscripten builds use browser fetch and don't need curl).

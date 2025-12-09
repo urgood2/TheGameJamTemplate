@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Tone - Grayscale
 // Converts the texture to grayscale with adjustable intensity

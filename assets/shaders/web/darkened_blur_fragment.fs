@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // Source: https://godotshaders.com/shader/darkened-blur
 // Converted from Godot to Raylib

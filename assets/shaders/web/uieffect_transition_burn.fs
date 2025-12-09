@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Transition - Burn
 // Burn transition effect with ember-like edges

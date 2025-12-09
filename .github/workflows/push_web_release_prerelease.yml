@@ -7,6 +7,7 @@ on:
 
 env:
   ITCH_PROJECT: chugget/testing
+  EMSDK_VERSION: "3.1.67"
 
 jobs:
   # ───────────────────────────────
@@ -70,28 +71,76 @@ jobs:
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 3.1.67
+          version: ${{ env.EMSDK_VERSION }}
           actions-cache-folder: "emsdk-cache"
 
-      - name: Clean FetchContent deps
-        run: rm -rf build-web/_deps
+      # Cache CMake build dependencies
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            build-web/_deps
+          key: cmake-deps-web-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            cmake-deps-web-${{ runner.os }}-
 
       - name: Configure CMake (Web)
         run: |
           emcmake cmake -S . -B build-web \
             -DPLATFORM=Web \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            -DITCH_BUILD_ID="${{ github.sha }}"
 
       - name: Build Web
-        run: emmake make -C build-web -j
+        run: emmake make -C build-web -j$(nproc)
 
       - name: Package Web build
         run: |
           mkdir -p dist/web
+
+          # Copy main build outputs
           cp build-web/index.html dist/web/
-          cp build-web/*.wasm dist/web/
           cp build-web/*.js dist/web/
+
+          # Copy and gzip WASM files for smaller downloads
+          for f in build-web/*.wasm; do
+            if [ -f "$f" ]; then
+              gzip -9 -c "$f" > "dist/web/$(basename "$f").gz"
+              echo "Compressed $(basename "$f"): $(stat -c%s "$f") -> $(stat -c%s "dist/web/$(basename "$f").gz") bytes"
+            fi
+          done
+
+          # Copy and gzip data files if they exist
+          for f in build-web/*.data; do
+            if [ -f "$f" ]; then
+              gzip -9 -c "$f" > "dist/web/$(basename "$f").gz"
+              echo "Compressed $(basename "$f"): $(stat -c%s "$f") -> $(stat -c%s "dist/web/$(basename "$f").gz") bytes"
+            fi
+          done
+
+          # Copy assets
           cp -R assets dist/web/
+
+          # Copy splash.png to root if it exists in assets
+          if [ -f "assets/splash.png" ]; then
+            cp assets/splash.png dist/web/
+          fi
+
+          # Copy favicon if it exists
+          if [ -f "assets/favicon.png" ]; then
+            cp assets/favicon.png dist/web/
+          fi
+
+          # Create build info file
+          echo "{\"build_id\": \"${{ github.sha }}\", \"build_time\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"branch\": \"${{ github.ref_name }}\"}" > dist/web/build_info.json
+
+          # List final package contents
+          echo "=== Package Contents ==="
+          ls -lah dist/web/
+          echo "=== Total Size ==="
+          du -sh dist/web/
+
+          # Create zip
           cd dist && zip -r web-build.zip web/
 
       - name: Upload web build (v4)
@@ -100,6 +149,7 @@ jobs:
           name: web-build
           path: dist/web-build.zip
           compression-level: 0
+          retention-days: 14
 
 
   # ───────────────────────────────
@@ -107,18 +157,11 @@ jobs:
   # ───────────────────────────────
   publish:
     name: Publish to itch.io
-    needs: [ build-web ]         # <── removed native dependency
+    needs: [ build-web ]
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-
-      # Native disabled → skip download
-      # - name: Download native build
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: native-linux
-      #     path: native
 
       - name: Download web build
         uses: actions/download-artifact@v4
@@ -146,20 +189,34 @@ jobs:
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
           else
-            echo "version=build-${GITHUB_SHA}" >> $GITHUB_OUTPUT
+            # Use short SHA for cleaner version display
+            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
+            echo "version=build-${SHORT_SHA}" >> $GITHUB_OUTPUT
           fi
-
-      # Native publish disabled
-      # - name: Publish native build
-      #   run: |
-      #     butler push native \
-      #       ${{ env.ITCH_PROJECT }}:linux \
-      #       --userversion ${{ steps.version.outputs.version }}
 
       - name: Publish web build
         run: |
+          echo "Publishing to ${{ env.ITCH_PROJECT }}:${{ steps.channel.outputs.channel }}"
+          echo "Version: ${{ steps.version.outputs.version }}"
+
           butler push web/web-build.zip \
             ${{ env.ITCH_PROJECT }}:${{ steps.channel.outputs.channel }} \
             --userversion ${{ steps.version.outputs.version }}
+
+          echo "::notice title=Published::Successfully published to itch.io (${{ steps.channel.outputs.channel }} channel)"
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+
+      - name: Create deployment summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Project | ${{ env.ITCH_PROJECT }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Channel | ${{ steps.channel.outputs.channel }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View your game at: https://${{ env.ITCH_PROJECT }}.itch.io" >> $GITHUB_STEP_SUMMARY

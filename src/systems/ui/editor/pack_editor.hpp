@@ -1,8 +1,8 @@
 #pragma once
 
-#include "imgui.h"
+#include "third_party/rlImGui/imgui.h"
 #include "raylib.h"
-#include "../ui_pack.hpp"
+#include "systems/ui/ui_pack.hpp"
 #include <string>
 #include <vector>
 #include <optional>

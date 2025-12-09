@@ -68,10 +68,17 @@ function spawnGoldDigger(x, y)
     gameObjectState.dragEnabled = true -- allow dragging the colonist
     nodeComp.methods.onHover = function()
         -- log_debug("krill hovered!")
-        showTooltip(
-            localization.get("ui.gold_digger_tooltip_title"), 
-        localization.get("ui.gold_digger_tooltip_body") -- tooltip body text
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "colonist_gold_digger",
+                localization.get("ui.gold_digger_tooltip_title"),
+                localization.get("ui.gold_digger_tooltip_body"), -- tooltip body text
+                colonist
+            )
+        end
+    end
+    nodeComp.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("colonist_gold_digger") end
     end
     
     local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
@@ -221,10 +228,17 @@ function spawnHealer(x, y)
     gameObjectState.dragEnabled = true -- allow dragging the colonist
     nodeComp.methods.onHover = function()
         -- log_debug("krill hovered!")
-        showTooltip(
-            localization.get("ui.healer_tooltip_title"), 
-        localization.get("ui.healer_tooltip_body") -- tooltip body text
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "colonist_healer",
+                localization.get("ui.healer_tooltip_title"),
+                localization.get("ui.healer_tooltip_body"), -- tooltip body text
+                colonist
+            )
+        end
+    end
+    nodeComp.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("colonist_healer") end
     end
     
     local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
@@ -353,10 +367,17 @@ function spawnDamageCushion(x, y)
     gameObjectState.dragEnabled = true -- allow dragging the colonist
     nodeComp.methods.onHover = function()
         -- log_debug("krill hovered!")
-        showTooltip(
-            localization.get("ui.damage_cushion_tooltip_title"), 
-        localization.get("ui.damage_cushion_tooltip_body") -- tooltip body text
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "colonist_damage_cushion",
+                localization.get("ui.damage_cushion_tooltip_title"),
+                localization.get("ui.damage_cushion_tooltip_body"), -- tooltip body text
+                colonist
+            )
+        end
+    end
+    nodeComp.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("colonist_damage_cushion") end
     end
     
     local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
@@ -494,10 +515,17 @@ function spawnNewColonist(x, y)
     gameObjectState.dragEnabled = true -- allow dragging the colonist
     nodeComp.methods.onHover = function()
         -- log_debug("krill hovered!")
-        showTooltip(
-            localization.get("ui.colonist_tooltip_title"), 
-        localization.get("ui.colonist_tooltip_body")
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "colonist_kobold",
+                localization.get("ui.colonist_tooltip_title"),
+                localization.get("ui.colonist_tooltip_body"),
+                colonist
+            )
+        end
+    end
+    nodeComp.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("colonist_kobold") end
     end
     
     nodeComp.methods.onRelease = function(registry, releasedOn, released)
@@ -952,10 +980,17 @@ function spawnNewKrill()
     gameObjectState.collisionEnabled = true
     nodeComp.methods.onHover = function()
         -- log_debug("krill hovered!")
-        showTooltip(
-            localization.get("ui.space_krill_title"), 
-            localization.get("ui.space_krill_body")
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "space_krill",
+                localization.get("ui.space_krill_title"),
+                localization.get("ui.space_krill_body"),
+                kr
+            )
+        end
+    end
+    nodeComp.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("space_krill") end
     end
     -- nodeComp.methods.onStopHover = function()
     --     -- log_debug("krill stopped hovering!")
@@ -1166,11 +1201,17 @@ function spawnNewWhale()
     
     methods.onHover = function()
         -- log_debug("whale hovered!")
-        showTooltip(
-            localization.get("ui.whale_title"), 
-            localization.get("ui.whale_body")
-        )
-        
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "whale",
+                localization.get("ui.whale_title"),
+                localization.get("ui.whale_body"),
+                bowser
+            )
+        end
+    end
+    methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("whale") end
     end
     -- methods.onStopHover = function()
     --     -- log_debug("whale stopped hovering!")

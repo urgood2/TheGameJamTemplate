@@ -647,32 +647,50 @@ function ui_defs.generateUI()
     goldDiggerButtonGameObject.state.hoverEnabled = true -- enable hover for the button
     goldDiggerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     goldDiggerButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        -- show the tooltip 
-        showTooltip(
-            localization.get("ui.gold_digger_button"), -- entity hovered on
-            localization.get("ui.gold_digger_tooltip_body") -- tooltip body
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "gold_digger_button",
+                localization.get("ui.gold_digger_button"),
+                localization.get("ui.gold_digger_tooltip_body"),
+                globals.ui.goldDiggerButtonElement
+            )
+        end
+    end
+    goldDiggerButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("gold_digger_button") end
     end
     local healerButtonGameObject = registry:get(globals.ui.healerButtonElement, GameObject)
     healerButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
     healerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     
     healerButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        -- show the tooltip 
-        showTooltip(
-            localization.get("ui.healer_button"), -- entity hovered only    
-            localization.get("ui.healer_tooltip_body") -- tooltip body
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "healer_button",
+                localization.get("ui.healer_button"),
+                localization.get("ui.healer_tooltip_body"),
+                globals.ui.healerButtonElement
+            )
+        end
+    end
+    healerButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("healer_button") end
     end
     local damageCushionButtonGameObject = registry:get(globals.ui.damageCushionButtonElement, GameObject)
     damageCushionButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
     damageCushionButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     damageCushionButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        -- show the tooltip 
-        showTooltip(
-            localization.get("ui.damage_cushion_button"), -- entity hovered on
-            localization.get("ui.damage_cushion_tooltip_body") -- tooltip body
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "damage_cushion_button",
+                localization.get("ui.damage_cushion_button"),
+                localization.get("ui.damage_cushion_tooltip_body"),
+                globals.ui.damageCushionButtonElement
+            )
+        end
+    end
+    damageCushionButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("damage_cushion_button") end
     end
     
     
@@ -993,8 +1011,17 @@ function ui_defs.generateUI()
     colonistHomeButtonGameObject.state.hoverEnabled = true -- enable hover for the colonist
     colonistHomeButtonGameObject.state.collisionEnabled = true -- enable collision for the colonist home button
     colonistHomeButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        showTooltip(localization.get("ui.colonist_home_tooltip_title"),
-            localization.get("ui.colonist_home_tooltip_body"))
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "colonist_home",
+                localization.get("ui.colonist_home_tooltip_title"),
+                localization.get("ui.colonist_home_tooltip_body"),
+                globals.ui.colonistHomeButton  -- the element being hovered
+            )
+        end
+    end
+    colonistHomeButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("colonist_home") end
     end
     
     -- align the structure placement UI box to the left side of the screen, and bottom
@@ -1544,10 +1571,19 @@ function ui_defs.generateUI()
         
             local relicGameObject = registry:get(ownedRelic.animation_entity, GameObject)
             relicGameObject.methods.onHover = function()
-                showTooltip(
-                localization.get(relicDef.localizationKeyName),
-                localization.get(relicDef.localizationKeyDesc)
-                )
+                if showSimpleTooltipAbove then
+                    showSimpleTooltipAbove(
+                        "relic_owned_" .. relicDef.id,
+                        localization.get(relicDef.localizationKeyName),
+                        localization.get(relicDef.localizationKeyDesc),
+                        ownedRelic.animation_entity
+                    )
+                end
+            end
+            relicGameObject.methods.onStopHover = function()
+                if hideSimpleTooltip then
+                    hideSimpleTooltip("relic_owned_" .. relicDef.id)
+                end
             end
             relicGameObject.state.hoverEnabled = true
             relicGameObject.state.collisionEnabled = true -- enable collision for the hover to work
@@ -1792,104 +1828,6 @@ function ui_defs.generateUI()
     -- snap x
     tutorialTransform.visualX = tutorialTransform.actualX
     tutorialTransform.actualY = globals.screenHeight() / 2 - tutorialTransform.actualH / 2
-end
-
-function ui_defs.generateTooltipUI()
-
-    -- tooltip ui box that will follow the mouse cursor
-    local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("sample tooltip title") end,  -- initial text
-        30.0,                                 -- font size
-        "rainbow"                       -- animation spec
-    )
-    registry:get(tooltipTitleText.config.object, TextSystem.Text).shadow_enabled = false -- disable shadow for the tooltip title text
-    globals.ui.tooltipTitleText = tooltipTitleText.config.object
-    local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("Sample tooltip body text") end,  -- initial text
-        30.0,                                 -- font size
-        "fade"                       -- animation spec
-)
-    registry:get(tooltipBodyText.config.object, TextSystem.Text).shadow_enabled = false -- disable shadow for the tooltip body text
-    globals.ui.tooltipBodyText = tooltipBodyText.config.object
-
-    -- Apply tooltip font if available to avoid per-frame fallback checks
-    local tooltipFont = ensureTooltipFont and ensureTooltipFont()
-    if not tooltipFont and localization and localization.hasNamedFont and localization.hasNamedFont("tooltip") and localization.getNamedFont then
-        tooltipFont = localization.getNamedFont("tooltip")
-    end
-    if tooltipFont then
-        local titleTextComp = registry:get(tooltipTitleText.config.object, TextSystem.Text)
-        titleTextComp.fontData = tooltipFont
-        local bodyTextComp = registry:get(tooltipBodyText.config.object, TextSystem.Text)
-        bodyTextComp.fontData = tooltipFont
-    end
-    
-    -- make vertical container for the tooltip
-    local tooltipContainer = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.VERTICAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("taupe_warm"))
-            :addMinHeight(50)
-            :addMinWidth(200)
-            :addPadding(2)
-            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(tooltipTitleText)
-    :addChild(tooltipBodyText)
-    :build()
-    -- make a new tooltip root
-    local tooltipRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("dusty_rose"))
-            :addMinHeight(50)
-            :addPadding(2)
-            :addShadow(true)
-            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(tooltipContainer)
-    :build()
-    
-    
-    
-    
-    
-    
-    
-    -- create a new UI box for the tooltip
-    
-    globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
-    
-    layer_order_system.assignZIndexToEntity(
-        globals.ui.tooltipUIBox, -- entity to assign z-index to
-        1000 -- z-index value, always show in front
-    )
-    
-    -- get transform for the tooltip UI box
-    local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
-    tooltipTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
-    tooltipTransform.visualX = tooltipTransform.actualX
-    tooltipTransform.visualY = tooltipTransform.actualY
-    tooltipTransform.visualW = tooltipTransform.actualW
-    tooltipTransform.visualH = tooltipTransform.actualH
-    local uiBoxComp = registry:get(globals.ui.tooltipUIBox, UIBoxComponent)
-    local uiTooltipRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
-    uiTooltipRootTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
-    uiTooltipRootTransform.visualX = uiTooltipRootTransform.actualX
-    uiTooltipRootTransform.visualY = uiTooltipRootTransform.actualY
-    uiTooltipRootTransform.visualW = uiTooltipRootTransform.actualW
-    uiTooltipRootTransform.visualH = uiTooltipRootTransform.actualH
-     
 end
 
 return ui_defs

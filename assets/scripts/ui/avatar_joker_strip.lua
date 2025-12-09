@@ -24,7 +24,7 @@ AvatarJokerStrip._avatarSig = ""
 AvatarJokerStrip._jokerSig = ""
 AvatarJokerStrip._layoutCache = nil
 AvatarJokerStrip._activeTooltipOwner = nil
-AvatarJokerStrip._fallbackHover = nil
+AvatarJokerStrip._activeTooltipKey = nil
 
 AvatarJokerStrip.layout = {
     margin = 14,
@@ -92,24 +92,14 @@ local function applyTooltip(entity, title, body)
     state.triggerOnReleaseEnabled = true
     state.clickEnabled = true
 
-    local function canShowTooltip()
-        return showTooltip
-            and globals and globals.ui
-            and globals.ui.tooltipTitleText
-            and globals.ui.tooltipBodyText
-            and globals.ui.tooltipUIBox
-    end
+    -- Generate a unique key for this tooltip
+    local tooltipKey = "avatar_joker_" .. tostring(entity)
 
     methods.onHover = function()
-        if canShowTooltip() then
-            showTooltip(title or "Unknown", body or "")
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(tooltipKey, title or "Unknown", body or "", entity)
             AvatarJokerStrip._activeTooltipOwner = entity
-        else
-            AvatarJokerStrip._fallbackHover = {
-                entity = entity,
-                title = title or "Unknown",
-                body = body or ""
-            }
+            AvatarJokerStrip._activeTooltipKey = tooltipKey
         end
     end
 
@@ -117,11 +107,11 @@ local function applyTooltip(entity, title, body)
         if AvatarJokerStrip._activeTooltipOwner and AvatarJokerStrip._activeTooltipOwner ~= entity then
             return
         end
-        if hideTooltip then hideTooltip() end
-        AvatarJokerStrip._activeTooltipOwner = nil
-        if AvatarJokerStrip._fallbackHover and AvatarJokerStrip._fallbackHover.entity == entity then
-            AvatarJokerStrip._fallbackHover = nil
+        if hideSimpleTooltip and AvatarJokerStrip._activeTooltipKey then
+            hideSimpleTooltip(AvatarJokerStrip._activeTooltipKey)
         end
+        AvatarJokerStrip._activeTooltipOwner = nil
+        AvatarJokerStrip._activeTooltipKey = nil
     end
 end
 
@@ -448,7 +438,7 @@ function AvatarJokerStrip.init(opts)
     AvatarJokerStrip._avatarSig = ""
     AvatarJokerStrip._jokerSig = ""
     AvatarJokerStrip._activeTooltipOwner = nil
-    AvatarJokerStrip._fallbackHover = nil
+    AvatarJokerStrip._activeTooltipKey = nil
     AvatarJokerStrip.setData(dummyData())
 end
 
@@ -578,65 +568,7 @@ function AvatarJokerStrip.draw()
         end, baseZ + 6, space)
     end
 
-    -- Fallback tooltip (only when shared tooltip UI isn't available)
-    if AvatarJokerStrip._fallbackHover and AvatarJokerStrip._fallbackHover.entity then
-        local anchor = AvatarJokerStrip._fallbackHover.entity
-        if registry and registry.valid and registry:valid(anchor) then
-            local t = component_cache.get(anchor, Transform)
-            if t then
-                local font = localization.getFont()
-                local label = AvatarJokerStrip._fallbackHover.title or "Unknown"
-                local body = AvatarJokerStrip._fallbackHover.body or ""
-                local labelSize = 14
-                local bodySize = 12
-                local padding = 8
-                local textW = math.max(
-                    localization.getTextWidthWithCurrentFont(label, labelSize, 1),
-                    localization.getTextWidthWithCurrentFont(body, bodySize, 1)
-                )
-                local w = textW + padding * 2
-                local h = padding * 2 + labelSize + bodySize + 6
-                local x = t.actualX + (t.actualW or AvatarJokerStrip.layout.cardW) * 0.5
-                local y = t.actualY - h - 6
-                local screenW = AvatarJokerStrip._layoutCache.avatar.screenW or 1920
-                local screenH = AvatarJokerStrip._layoutCache.avatar.screenH or 1080
-
-                -- Clamp
-                x = math.max(padding, math.min(x, screenW - padding - w))
-                y = math.max(padding, math.min(y, screenH - padding - h))
-
-                command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-                    c.x = x + w * 0.5
-                    c.y = y + h * 0.5
-                    c.w = w
-                    c.h = h
-                    c.rx = 8
-                    c.ry = 8
-                    c.color = Col(16, 16, 24, 230)
-                end, baseZ + 5, space)
-
-                command_buffer.queueDrawText(layers.ui, function(c)
-                    c.text = label
-                    c.font = font
-                    c.x = x + padding
-                    c.y = y + padding
-                    c.color = colors.text
-                    c.fontSize = labelSize
-                end, baseZ + 6, space)
-
-                command_buffer.queueDrawText(layers.ui, function(c)
-                    c.text = body
-                    c.font = font
-                    c.x = x + padding
-                    c.y = y + padding + labelSize + 2
-                    c.color = colors.muted
-                    c.fontSize = bodySize
-                end, baseZ + 6, space)
-            end
-        else
-            AvatarJokerStrip._fallbackHover = nil
-        end
-    end
+    -- Fallback tooltip removed - now using DSL-based simple tooltips
 end
 
 function AvatarJokerStrip.shutdown()

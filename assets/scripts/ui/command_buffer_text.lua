@@ -418,15 +418,56 @@ function CommandBufferText:update(dt)
 
     local draw_x = origin_x + (ch.x or 0) + (ch.ox or 0)
     local draw_y = origin_y + (ch.y or 0) + (ch.oy or 0)
+    local draw_char = ch.codepoint or ch.c
+    local draw_rotation = ch.rotation or 0
+    local draw_scale = (ch.scale or 1)
+    local draw_scaleX = draw_scale * (ch.scaleX or 1)
+    local draw_scaleY = draw_scale * (ch.scaleY or 1)
+    local draw_color = ch.color or default_color
+    if ch.alpha and ch.alpha < 255 then
+      draw_color = Col(draw_color.r, draw_color.g, draw_color.b, ch.alpha)
+    end
 
-    command_buffer.queueDrawText(layer_handle, function(c)
-      c.text = ch.c
-      c.font = font_ref
-      c.x = draw_x
-      c.y = draw_y
-      c.color = ch.color or default_color
-      c.fontSize = self.font_size
-    end, self.z or 0, self.render_space)
+    local needs_scale = draw_scaleX ~= 1 or draw_scaleY ~= 1
+    local char_z = self.z or 0
+
+    if needs_scale then
+      -- Use matrix transforms for scale
+      command_buffer.queuePushMatrix(layer_handle, function(c) end, char_z, self.render_space)
+      command_buffer.queueTranslate(layer_handle, function(c)
+        c.x = draw_x
+        c.y = draw_y
+      end, char_z, self.render_space)
+      command_buffer.queueScale(layer_handle, function(c)
+        c.x = draw_scaleX
+        c.y = draw_scaleY
+      end, char_z, self.render_space)
+      command_buffer.queueTextPro(layer_handle, function(c)
+        c.text = draw_char
+        c.font = font_ref
+        c.x = 0
+        c.y = 0
+        c.origin = { x = (ch.w or 0) / 2, y = (ch.h or 0) / 2 }
+        c.rotation = draw_rotation
+        c.fontSize = self.font_size
+        c.spacing = self.letter_spacing or 1
+        c.color = draw_color
+      end, char_z, self.render_space)
+      command_buffer.queuePopMatrix(layer_handle, function(c) end, char_z, self.render_space)
+    else
+      -- Simple case: just rotation, no scale
+      command_buffer.queueTextPro(layer_handle, function(c)
+        c.text = draw_char
+        c.font = font_ref
+        c.x = draw_x
+        c.y = draw_y
+        c.origin = { x = (ch.w or 0) / 2, y = (ch.h or 0) / 2 }
+        c.rotation = draw_rotation
+        c.fontSize = self.font_size
+        c.spacing = self.letter_spacing or 1
+        c.color = draw_color
+      end, char_z, self.render_space)
+    end
   end
 
   if self.first_frame then self.first_frame = false end

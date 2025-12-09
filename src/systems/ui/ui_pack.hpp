@@ -74,4 +74,10 @@ bool registerPack(const std::string& name, const std::string& manifestPath);
 /// Get a registered pack by name, returns nullptr if not found
 UIAssetPack* getPack(const std::string& name);
 
+// Forward declare for Lua
+namespace sol { class state; }
+
+/// Expose UI pack system to Lua
+void exposePackToLua(sol::state& lua);
+
 } // namespace ui

@@ -1,4 +1,5 @@
 #include "ui.hpp"
+#include "ui_pack.hpp"
 #include "sol/sol.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
@@ -925,6 +926,7 @@ namespace ui {
         // This is a duplicate key, but we'll record it again as the user provided it.
         rec.record_free_function({"ui", "box"}, {"ClampDimensionsToMinimumsIfPresent", "---@param uiConfig UIConfig\n---@param calcTransform table\n---@return nil", "Clamps the calculated transform dimensions to the configured minimums.", true, false});
 
-        
+        // UI Asset Pack system
+        exposePackToLua(lua);
     }
 }

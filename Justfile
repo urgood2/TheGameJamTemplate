@@ -2,7 +2,7 @@ help:
 	@just --list
 
 build-with-config config:
-	@mkdir -p build 
+	@mkdir -p build
 	@cd build && cmake .. -DENABLE_UNIT_TESTS=OFF
 	@cmake --build ./build --config {{config}} --target raylib-cpp-cmake-template -j 10 --
 

@@ -154,6 +154,71 @@ if(STRIP_LUA_COMMENTS_FOR_WEB)
     endif()
 endif()
 
+# =============================================================================
+# Build ID Generation for Ownership Tracking
+# =============================================================================
+execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_SHORT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(NOT GIT_COMMIT_SHORT)
+    set(GIT_COMMIT_SHORT "nogit")
+endif()
+
+execute_process(
+    COMMAND git rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(NOT GIT_BRANCH)
+    set(GIT_BRANCH "unknown")
+endif()
+
+string(TIMESTAMP BUILD_TIMESTAMP "%Y%m%d-%H%M%S")
+string(TIMESTAMP BUILD_ISO_TIMESTAMP "%Y-%m-%dT%H:%M:%SZ" UTC)
+
+set(OWNERSHIP_BUILD_ID "${GIT_COMMIT_SHORT}-${BUILD_TIMESTAMP}")
+
+# Generate signature (use a secret salt in production - store in env var)
+set(OWNERSHIP_SALT "$ENV{OWNERSHIP_SALT}")
+if(NOT OWNERSHIP_SALT)
+    set(OWNERSHIP_SALT "dev-salt-replace-in-production")
+endif()
+string(SHA256 OWNERSHIP_BUILD_SIGNATURE "${OWNERSHIP_BUILD_ID}-${OWNERSHIP_SALT}")
+
+message(STATUS "Build ID: ${OWNERSHIP_BUILD_ID}")
+message(STATUS "Build Signature: ${OWNERSHIP_BUILD_SIGNATURE}")
+
+add_compile_definitions(
+    BUILD_ID_VALUE="${OWNERSHIP_BUILD_ID}"
+    BUILD_SIGNATURE_VALUE="${OWNERSHIP_BUILD_SIGNATURE}"
+)
+
+# Generate build_info.json for release tracking
+file(WRITE "${CMAKE_BINARY_DIR}/build_info.json"
+"{
+  \"build_id\": \"${OWNERSHIP_BUILD_ID}\",
+  \"signature\": \"${OWNERSHIP_BUILD_SIGNATURE}\",
+  \"git_commit\": \"${GIT_COMMIT_SHORT}\",
+  \"git_branch\": \"${GIT_BRANCH}\",
+  \"timestamp\": \"${BUILD_ISO_TIMESTAMP}\"
+}")
+
+# Target to append build info to release manifest (run manually for releases)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+    add_custom_target(append_release
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/append_release.py ${CMAKE_BINARY_DIR}/build_info.json
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Appending build to releases/manifest.json"
+    )
+endif()
+
 # ------------------------------------------------------------------
 # Dev ergonomics:
 #   - Set environment variable SKIP_ASSET_SCAN=1 to skip recursive asset walk at startup.

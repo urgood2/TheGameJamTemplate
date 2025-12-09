@@ -58,6 +58,9 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 
 ## Guides & Tutorials
 
+### Security & Protection
+- [Ownership System](guides/OWNERSHIP_SYSTEM.md) - Game theft prevention and watermarking
+
 ### Shader Development
 - [Raylib Shader Guide](guides/shaders/RAYLIB_SHADER_GUIDE.md) - Writing shaders for Raylib
 - [Shader Snippets](guides/shaders/SHADER_SNIPPETS.md) - Reusable shader code
@@ -154,6 +157,6 @@ When adding new documentation:
 
 ---
 
-**Last Updated**: 2025-11-24
+**Last Updated**: 2025-12-09
 
 

@@ -18,3 +18,12 @@ TEST(Ownership, BuildSignatureIsDefined) {
     EXPECT_NE(ownership::BUILD_SIGNATURE, nullptr);
     EXPECT_GT(strlen(ownership::BUILD_SIGNATURE), 0);
 }
+
+TEST(Ownership, BuildIdHasExpectedFormat) {
+    // Format: <git-short-hash>-<YYYYMMDD>-<HHMMSS> or "dev-local"
+    std::string buildId = ownership::BUILD_ID;
+    // Either dev-local or matches pattern like "a3f2b1c-20250609-143052"
+    bool isDevLocal = (buildId == "dev-local");
+    bool hasTimestamp = (buildId.length() > 15 && buildId.find('-') != std::string::npos);
+    EXPECT_TRUE(isDevLocal || hasTimestamp);
+}

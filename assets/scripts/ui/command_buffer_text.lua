@@ -1,5 +1,6 @@
 -- Command-buffer friendly rich text renderer.
 -- Merges the character-effect mixin with the existing command_buffer + behavior_script_v2 flow.
+--
 -- Usage:
 --   local Text = require("ui.command_buffer_text")
 --   local t = Text({
@@ -11,6 +12,39 @@
 --   })
 --   -- If attached as a MonoBehaviour, update_all() will call :update(dt) automatically.
 --   -- Otherwise, call t:update(dt) yourself each frame.
+--
+-- ===============================================================================
+-- PERFORMANCE CHARACTERISTICS:
+-- ===============================================================================
+-- This renderer issues command buffer calls PER CHARACTER each frame.
+--
+-- Rendering Cost Breakdown:
+-- - Characters WITHOUT scale effects: 1 queueTextPro call per character
+-- - Characters WITH scale effects:    5 command buffer calls per character
+--   (queuePushMatrix, queueTranslate, queueScale, queueTextPro, queuePopMatrix)
+--
+-- Example Impact:
+-- - 100 characters with scale effects = 500 command buffer calls per frame
+-- - At 60 FPS, this is 30,000 command buffer calls per second
+--
+-- Profiling Recommendations:
+-- - Use Tracy zones (if available) to measure render time: tracy.ZoneBegin/End
+-- - Monitor command buffer queue length via command_buffer internals
+-- - Test with realistic text loads (50-200 characters with mixed effects)
+--
+-- Optimization Strategies (if performance issues arise):
+-- 1. Character batching: Group consecutive characters with identical transforms
+-- 2. Instanced rendering: Use a single draw call for all characters
+-- 3. Effect budgeting: Limit scale effects to N characters per text object
+-- 4. Culling: Skip effects for off-screen or alpha=0 characters
+-- 5. Object pooling: Reuse Col objects instead of creating new ones each frame
+--
+-- Current Bottlenecks:
+-- - Matrix operations are NOT batched (each character gets its own matrix stack)
+-- - Color objects are allocated every frame (creates GC pressure)
+-- - No spatial culling (all characters render even if off-screen)
+--
+-- ===============================================================================
 
 local Node = require("monobehavior.behavior_script_v2")
 local component_cache = require("core.component_cache")
@@ -350,6 +384,31 @@ function CommandBufferText:_format_characters()
 end
 
 function CommandBufferText:update(dt)
+  -- =========================================================================
+  -- PERFORMANCE PROFILING HOOK POINT
+  -- =========================================================================
+  -- To profile this function's performance, wrap it with Tracy zones:
+  --
+  --   if tracy then tracy.ZoneBeginN("TextEffectsUpdate") end
+  --   -- ... update logic ...
+  --   if tracy then tracy.ZoneEnd() end
+  --
+  -- Or use manual timing for platforms without Tracy:
+  --
+  --   local start_time = os.clock()
+  --   -- ... update logic ...
+  --   local elapsed = os.clock() - start_time
+  --   if elapsed > 0.002 then  -- Log if > 2ms
+  --     print(string.format("CommandBufferText slow frame: %.3fms", elapsed * 1000))
+  --   end
+  --
+  -- Metrics to track:
+  --   - Total update time (should be < 1-2ms for 100 characters)
+  --   - Command buffer calls issued (count queueTextPro calls)
+  --   - Matrix push/pop count (equals scaled character count)
+  --   - GC allocations (monitor Col object creation)
+  -- =========================================================================
+
   if self.dirty then
     self:rebuild()
   end
@@ -439,7 +498,29 @@ function CommandBufferText:update(dt)
     local char_z = self.z or 0
 
     if needs_scale then
-      -- Use matrix transforms for scale
+      -- =====================================================================
+      -- PERFORMANCE WARNING: Matrix Transform Path
+      -- =====================================================================
+      -- This path uses 5 command buffer calls per character to support scale.
+      -- This is required because Raylib's DrawTextPro doesn't support scale.
+      --
+      -- Cost per scaled character:
+      --   1. queuePushMatrix    - Save matrix state
+      --   2. queueTranslate     - Move to character position
+      --   3. queueScale         - Apply scale transform
+      --   4. queueTextPro       - Draw character at origin
+      --   5. queuePopMatrix     - Restore matrix state
+      --
+      -- Impact: For 50 characters with scale effects:
+      --   - 250 command buffer calls per frame
+      --   - Increased CPU time for matrix stack operations
+      --   - Potential batching breaks in the render pipeline
+      --
+      -- Optimization Opportunity:
+      --   - Batch consecutive characters with identical scale values
+      --   - Use a custom shader that supports per-character scale
+      --   - Render scaled text to texture once, then composite
+      -- =====================================================================
       command_buffer.queuePushMatrix(layer_handle, function(c) end, char_z, self.render_space)
       command_buffer.queueTranslate(layer_handle, function(c)
         c.x = draw_x
@@ -462,7 +543,8 @@ function CommandBufferText:update(dt)
       end, char_z, self.render_space)
       command_buffer.queuePopMatrix(layer_handle, function(c) end, char_z, self.render_space)
     else
-      -- Simple case: just rotation, no scale
+      -- Fast path: Single command buffer call for unscaled characters
+      -- This path should be used whenever possible for best performance
       command_buffer.queueTextPro(layer_handle, function(c)
         c.text = draw_char
         c.font = font_ref

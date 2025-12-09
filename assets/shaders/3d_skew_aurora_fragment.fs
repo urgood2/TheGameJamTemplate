@@ -16,6 +16,10 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
+// Per-card random seed for unique overlay variations
+// Expected range: [0.0, 1.0]
+// Used to offset animation phases, noise patterns, and color variations
+// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;

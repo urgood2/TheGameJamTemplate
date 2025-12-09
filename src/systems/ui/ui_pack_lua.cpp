@@ -1,6 +1,6 @@
+#include "sol/sol.hpp"
 #include "ui_pack.hpp"
 #include "ui_data.hpp"
-#include "sol/sol.hpp"
 #include "systems/scripting/binding_recorder.hpp"
 #include <spdlog/spdlog.h>
 
@@ -39,11 +39,26 @@ UIConfig makeConfigFromRegion(const RegionDef& region, Texture2D* atlas) {
 
 } // anonymous namespace
 
-void exposePackToLua(sol::state& lua) {
+void exposePackToLua(::sol::state& lua) {
     auto& rec = BindingRecorder::instance();
 
     // Get or create the 'ui' table
-    sol::table ui = lua["ui"].get_or_create<sol::table>();
+    ::sol::table ui = lua["ui"].get_or_create<::sol::table>();
+
+    //=========================================================
+    // SpriteScaleMode enum
+    //=========================================================
+    lua.new_enum<SpriteScaleMode>("SpriteScaleMode", {
+        {"Stretch", SpriteScaleMode::Stretch},
+        {"Tile", SpriteScaleMode::Tile},
+        {"Fixed", SpriteScaleMode::Fixed}
+    });
+
+    auto& scaleModeEnum = rec.add_type("SpriteScaleMode");
+    scaleModeEnum.doc = "Defines how sprites are scaled when rendered in UI elements.";
+    rec.record_property("SpriteScaleMode", {"Stretch", "0", "Scale sprite to fit container."});
+    rec.record_property("SpriteScaleMode", {"Tile", "1", "Repeat sprite to fill area."});
+    rec.record_property("SpriteScaleMode", {"Fixed", "2", "Draw at original size, centered."});
 
     //=========================================================
     // PackHandle usertype
@@ -52,7 +67,7 @@ void exposePackToLua(sol::state& lua) {
         sol::constructors<>(),
 
         // panel(name) -> UIConfig
-        "panel", [](PackHandle& handle, const std::string& name) -> sol::object {
+        "panel", [&lua](PackHandle& handle, const std::string& name) -> sol::object {
             auto* pack = getPack(handle.packName);
             if (!pack) {
                 SPDLOG_WARN("UI pack '{}' not found", handle.packName);
@@ -70,7 +85,7 @@ void exposePackToLua(sol::state& lua) {
         },
 
         // button(name, state?) -> UIConfig
-        "button", [](PackHandle& handle, const std::string& name,
+        "button", [&lua](PackHandle& handle, const std::string& name,
                      sol::optional<std::string> state) -> sol::object {
             auto* pack = getPack(handle.packName);
             if (!pack) {
@@ -104,7 +119,7 @@ void exposePackToLua(sol::state& lua) {
         },
 
         // progress_bar(name, part) -> UIConfig
-        "progress_bar", [](PackHandle& handle, const std::string& name,
+        "progress_bar", [&lua](PackHandle& handle, const std::string& name,
                           const std::string& part) -> sol::object {
             auto* pack = getPack(handle.packName);
             if (!pack) {
@@ -135,7 +150,7 @@ void exposePackToLua(sol::state& lua) {
         },
 
         // scrollbar(name, part) -> UIConfig
-        "scrollbar", [](PackHandle& handle, const std::string& name,
+        "scrollbar", [&lua](PackHandle& handle, const std::string& name,
                        const std::string& part) -> sol::object {
             auto* pack = getPack(handle.packName);
             if (!pack) {
@@ -166,7 +181,7 @@ void exposePackToLua(sol::state& lua) {
         },
 
         // slider(name, part) -> UIConfig
-        "slider", [](PackHandle& handle, const std::string& name,
+        "slider", [&lua](PackHandle& handle, const std::string& name,
                     const std::string& part) -> sol::object {
             auto* pack = getPack(handle.packName);
             if (!pack) {
@@ -197,7 +212,7 @@ void exposePackToLua(sol::state& lua) {
         },
 
         // input(name, state?) -> UIConfig
-        "input", [](PackHandle& handle, const std::string& name,
+        "input", [&lua](PackHandle& handle, const std::string& name,
                    sol::optional<std::string> state) -> sol::object {
             auto* pack = getPack(handle.packName);
             if (!pack) {
@@ -223,7 +238,7 @@ void exposePackToLua(sol::state& lua) {
         },
 
         // icon(name) -> UIConfig
-        "icon", [](PackHandle& handle, const std::string& name) -> sol::object {
+        "icon", [&lua](PackHandle& handle, const std::string& name) -> sol::object {
             auto* pack = getPack(handle.packName);
             if (!pack) {
                 SPDLOG_WARN("UI pack '{}' not found", handle.packName);
@@ -322,7 +337,7 @@ void exposePackToLua(sol::state& lua) {
         true, false
     });
 
-    ui.set_function("use_pack", [](const std::string& name) -> sol::object {
+    ui.set_function("use_pack", [&lua](const std::string& name) -> sol::object {
         auto* pack = getPack(name);
         if (!pack) {
             SPDLOG_WARN("UI pack '{}' not found", name);

@@ -68,4 +68,10 @@ struct UIAssetPack {
     std::unordered_map<std::string, RegionDef> icons;
 };
 
+/// Register a UI asset pack from a JSON manifest file
+bool registerPack(const std::string& name, const std::string& manifestPath);
+
+/// Get a registered pack by name, returns nullptr if not found
+UIAssetPack* getPack(const std::string& name);
+
 } // namespace ui

@@ -351,12 +351,14 @@ local function makeTooltipValueBox(text, opts)
         padding = opts.padding or tooltipStyle.textPadding
     }
     if opts.minWidth then cfg.minWidth = opts.minWidth end
+    if opts.maxWidth then cfg.maxWidth = opts.maxWidth end  -- NEW: support text wrapping
     local textOpts = {
         color = opts.color or tooltipStyle.valueColor,
         fontSize = opts.fontSize,
         align = opts.textAlign or opts.align,
         fontName = opts.fontName or tooltipStyle.fontName,
-        shadow = opts.shadow
+        shadow = opts.shadow,
+        coded = opts.coded  -- NEW: pass through coded option
     }
     return dsl.hbox {
         config = cfg,

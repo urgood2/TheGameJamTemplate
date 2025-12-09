@@ -647,32 +647,50 @@ function ui_defs.generateUI()
     goldDiggerButtonGameObject.state.hoverEnabled = true -- enable hover for the button
     goldDiggerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     goldDiggerButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        -- show the tooltip 
-        showTooltip(
-            localization.get("ui.gold_digger_button"), -- entity hovered on
-            localization.get("ui.gold_digger_tooltip_body") -- tooltip body
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "gold_digger_button",
+                localization.get("ui.gold_digger_button"),
+                localization.get("ui.gold_digger_tooltip_body"),
+                globals.ui.goldDiggerButtonElement
+            )
+        end
+    end
+    goldDiggerButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("gold_digger_button") end
     end
     local healerButtonGameObject = registry:get(globals.ui.healerButtonElement, GameObject)
     healerButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
     healerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     
     healerButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        -- show the tooltip 
-        showTooltip(
-            localization.get("ui.healer_button"), -- entity hovered only    
-            localization.get("ui.healer_tooltip_body") -- tooltip body
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "healer_button",
+                localization.get("ui.healer_button"),
+                localization.get("ui.healer_tooltip_body"),
+                globals.ui.healerButtonElement
+            )
+        end
+    end
+    healerButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("healer_button") end
     end
     local damageCushionButtonGameObject = registry:get(globals.ui.damageCushionButtonElement, GameObject)
     damageCushionButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
     damageCushionButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     damageCushionButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        -- show the tooltip 
-        showTooltip(
-            localization.get("ui.damage_cushion_button"), -- entity hovered on
-            localization.get("ui.damage_cushion_tooltip_body") -- tooltip body
-        )
+        if showSimpleTooltipAbove then
+            showSimpleTooltipAbove(
+                "damage_cushion_button",
+                localization.get("ui.damage_cushion_button"),
+                localization.get("ui.damage_cushion_tooltip_body"),
+                globals.ui.damageCushionButtonElement
+            )
+        end
+    end
+    damageCushionButtonGameObject.methods.onStopHover = function()
+        if hideSimpleTooltip then hideSimpleTooltip("damage_cushion_button") end
     end
     
     

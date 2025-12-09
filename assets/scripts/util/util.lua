@@ -2698,82 +2698,6 @@ function handleNewDay()
   )
 end
 
-local TOOLTIP_FONT_NAME = "tooltip"
-local TOOLTIP_FONT_PATH = "fonts/en/JetBrainsMonoNerdFont-Regular.ttf"
-local TOOLTIP_FONT_SIZE = 44
-
--- Ensure the named tooltip font is available and return it if so.
-function ensureTooltipFont()
-  if not (localization and localization.loadNamedFont) then
-    return nil
-  end
-  if not (localization.hasNamedFont and localization.hasNamedFont(TOOLTIP_FONT_NAME)) then
-    localization.loadNamedFont(TOOLTIP_FONT_NAME, TOOLTIP_FONT_PATH, TOOLTIP_FONT_SIZE)
-  end
-  if localization.hasNamedFont and localization.hasNamedFont(TOOLTIP_FONT_NAME) and localization.getNamedFont then
-    return localization.getNamedFont(TOOLTIP_FONT_NAME)
-  end
-  return nil
-end
-
--- Conveniene function to drive your tooltip
-function showTooltip(titleText, bodyText)
-  local titleEnt = globals.ui.tooltipTitleText
-  local bodyEnt  = globals.ui.tooltipBodyText
-  local boxEnt   = globals.ui.tooltipUIBox
-
-  if not titleEnt or not bodyEnt or not boxEnt then
-    error("showTooltip: Tooltip entities are not set up correctly!")
-    return
-  end
-
-  local tooltipFont = ensureTooltipFont()
-  if tooltipFont then
-    local titleComp = component_cache.get(titleEnt, TextSystem.Text)
-    if titleComp then
-      titleComp.fontData = tooltipFont
-    end
-    local bodyComp = component_cache.get(bodyEnt, TextSystem.Text)
-    if bodyComp then
-      bodyComp.fontData = tooltipFont
-    end
-  end
-
-  -- 1) set the texts
-
-  TextSystem.Functions.setText(titleEnt, titleText)
-  TextSystem.Functions.clearAllEffects(titleEnt)            -- clear any previous effects
-  TextSystem.Functions.applyGlobalEffects(titleEnt, "slide;color=plum") -- apply the tooltip title effects
-  TextSystem.Functions.setText(bodyEnt, bodyText)
-  TextSystem.Functions.applyGlobalEffects(bodyEnt, "color=blue_midnight") -- apply the tooltip body effects
-
-  -- 2) re-calc the box layout to fit new text
-  ui.box.RenewAlignment(registry, boxEnt)
-
-  -- 3) grab transforms & dims
-  local mouseT           = component_cache.get(globals.cursor(), Transform)
-  local boxT             = component_cache.get(boxEnt, Transform)
-
-  local screenW, screenH = globals.screenWidth(), globals.screenHeight()
-
-  -- fallback if UIBox doesn’t carry dims
-  local w                = boxT.actualW
-  local h                = boxT.actualH
-
-  -- 4) position with offset
-  local x                = mouseT.actualX + 20
-  local y                = mouseT.actualY + 20
-
-  -- 5) clamp to screen bounds
-  boxT.actualX           = clamp(x, 0, screenW - w)
-  boxT.visualX           = boxT.actualX
-  boxT.actualY           = clamp(y, 0, screenH - h)
-  boxT.visualY           = boxT.actualY
-
-  -- 6) hard set size
-  boxT.visualW           = boxT.actualW
-  boxT.visualH           = boxT.actualH
-end
 
 function toggleShopWindow()
   if (globals.isShopOpen) then
@@ -2925,17 +2849,6 @@ function newTextPopup(textString, x, y, duration, effectString)
       registry:destroy(entity)
     end
   end)
-end
-
-
-function hideTooltip()
-  if (globals.ui.tooltipUIBox == nil) then
-    -- log_debug("hideTooltip: tooltipUIBox is not set up, skipping")
-    return
-  end
-  local tooltipTransform = component_cache.get(globals.ui.tooltipUIBox, Transform)
-  tooltipTransform.actualY = globals.screenHeight()   -- move it out of the screen
-  tooltipTransform.visualY = tooltipTransform.actualY -- snap Y
 end
 
 -- increment converter ui index and set up ui. use 0 to just set up the ui without changing the index

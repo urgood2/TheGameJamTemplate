@@ -2245,10 +2245,17 @@ function buyRelicFromSlot(slot)
   local gameObject = component_cache.get(relicAnimationEntity, GameObject)
   gameObject.methods.onHover = function()
     log_debug("Relic hovered: ", relicDef.id)
-    showTooltip(
-      localization.get(relicDef.localizationKeyName),
-      localization.get(relicDef.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "relic_" .. relicDef.id,
+        localization.get(relicDef.localizationKeyName),
+        localization.get(relicDef.localizationKeyDesc),
+        relicAnimationEntity
+      )
+    end
+  end
+  gameObject.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("relic_" .. relicDef.id) end
   end
   gameObject.state.hoverEnabled = true
   gameObject.state.collisionEnabled = true
@@ -2368,10 +2375,17 @@ function handleNewDay()
   local relicDef1 = relicDef
   gameObject1.methods.onHover = function()
     log_debug("Relic 1 hovered!")
-    showTooltip(
-      localization.get(relicDef1.localizationKeyName),
-      localization.get(relicDef1.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "shop_relic_1",
+        localization.get(relicDef1.localizationKeyName),
+        localization.get(relicDef1.localizationKeyDesc),
+        uiElement1
+      )
+    end
+  end
+  gameObject1.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("shop_relic_1") end
   end
   
   -- add button callback
@@ -2414,10 +2428,17 @@ function handleNewDay()
   local relicDef2 = relicDef
   gameObject2.methods.onHover = function()
     log_debug("Relic 2 hovered!")
-    showTooltip(
-      localization.get(relicDef2.localizationKeyName),
-      localization.get(relicDef2.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "shop_relic_2",
+        localization.get(relicDef2.localizationKeyName),
+        localization.get(relicDef2.localizationKeyDesc),
+        uiElement2
+      )
+    end
+  end
+  gameObject2.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("shop_relic_2") end
   end
   
   -- enable button
@@ -2459,10 +2480,17 @@ function handleNewDay()
   local relicDef3 = relicDef
   gameObject3.methods.onHover = function()
     log_debug("Relic 3 hovered!")
-    showTooltip(
-      localization.get(relicDef3.localizationKeyName),
-      localization.get(relicDef3.localizationKeyDesc)
-    )
+    if showSimpleTooltipAbove then
+      showSimpleTooltipAbove(
+        "shop_relic_3",
+        localization.get(relicDef3.localizationKeyName),
+        localization.get(relicDef3.localizationKeyDesc),
+        uiElement3
+      )
+    end
+  end
+  gameObject3.methods.onStopHover = function()
+    if hideSimpleTooltip then hideSimpleTooltip("shop_relic_3") end
   end
   -- add button callback
   local uieUIConfig3 = component_cache.get(uiElement3, UIConfig)

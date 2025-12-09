@@ -300,6 +300,15 @@ end
 
 local function makeTooltipTextDef(text, opts)
     opts = opts or {}
+
+    -- If coded option is set, use getTextFromString for rich text parsing
+    if opts.coded and ui and ui.definitions and ui.definitions.getTextFromString then
+        return ui.definitions.getTextFromString(tostring(text), {
+            fontSize = opts.fontSize or tooltipStyle.fontSize,
+            fontName = opts.fontName or tooltipStyle.fontName
+        })
+    end
+
     return ui.definitions.def {
         type = "TEXT",
         config = {

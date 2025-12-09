@@ -523,6 +523,13 @@ local function destroyAllSimpleTooltips()
     simple_tooltip_cache = {}
 end
 
+-- Export new simple tooltip functions globally
+_G.makeSimpleTooltip = makeSimpleTooltip
+_G.ensureSimpleTooltip = ensureSimpleTooltip
+_G.showSimpleTooltipAbove = showSimpleTooltipAbove
+_G.hideSimpleTooltip = hideSimpleTooltip
+_G.destroyAllSimpleTooltips = destroyAllSimpleTooltips
+
 -- Prevent tooltip boxes from animating from size 0 by snapping visual dimensions immediately.
 local function snapTooltipVisual(boxID)
     if not boxID or not entity_cache.valid(boxID) then

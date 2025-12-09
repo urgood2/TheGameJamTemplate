@@ -1,0 +1,33 @@
+{
+  "name": "test_pack",
+  "version": "1.0",
+  "atlas": "test_atlas.png",
+
+  "panels": {
+    "simple": {
+      "region": [0, 0, 64, 64],
+      "9patch": [8, 8, 8, 8]
+    }
+  },
+
+  "buttons": {
+    "default": {
+      "normal": {
+        "region": [64, 0, 48, 16]
+      },
+      "hover": {
+        "region": [64, 16, 48, 16]
+      },
+      "pressed": {
+        "region": [64, 32, 48, 16]
+      }
+    }
+  },
+
+  "icons": {
+    "star": {
+      "region": [112, 0, 16, 16],
+      "scale_mode": "fixed"
+    }
+  }
+}

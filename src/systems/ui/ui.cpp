@@ -1,5 +1,6 @@
-#include "ui.hpp"
 #include "sol/sol.hpp"
+#include "ui.hpp"
+#include "ui_pack.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -193,12 +194,14 @@ namespace ui {
         // 12) UIStylingType Enum
         lua.new_enum<UIStylingType>("UIStylingType", {
             {"RoundedRectangle", UIStylingType::ROUNDED_RECTANGLE},
-            {"NinePatchBorders", UIStylingType::NINEPATCH_BORDERS}
+            {"NinePatchBorders", UIStylingType::NINEPATCH_BORDERS},
+            {"Sprite", UIStylingType::SPRITE}
         });
         auto& styleEnum = rec.add_type("UIStylingType");
         styleEnum.doc = "Defines how a UI element's background is styled.";
         rec.record_property("UIStylingType", {"RoundedRectangle", "0", "A simple rounded rectangle."});
         rec.record_property("UIStylingType", {"NinePatchBorders", "1", "A 9-patch texture for scalable borders."});
+        rec.record_property("UIStylingType", {"Sprite", "2", "A sprite texture with configurable scale mode."});
 
         // 13) UIConfig
         lua.new_usertype<UIConfig>("UIConfig",  sol::call_constructor, sol::constructors<UIConfig>(),
@@ -206,6 +209,9 @@ namespace ui {
             "stylingType",           &UIConfig::stylingType,
             "nPatchInfo",            &UIConfig::nPatchInfo,
             "nPatchSourceTexture",   &UIConfig::nPatchSourceTexture,
+            "spriteSourceTexture",   &UIConfig::spriteSourceTexture,
+            "spriteSourceRect",      &UIConfig::spriteSourceRect,
+            "spriteScaleMode",       &UIConfig::spriteScaleMode,
             // General
             "id",                    &UIConfig::id,
             "instanceType",          &UIConfig::instanceType,
@@ -326,6 +332,9 @@ namespace ui {
         rec.record_property("UIConfig", {"stylingType", "UIStylingType|nil", "The visual style of the element."});
         rec.record_property("UIConfig", {"nPatchInfo", "NPatchInfo|nil", "9-patch slicing information."});
         rec.record_property("UIConfig", {"nPatchSourceTexture", "string|nil", "Texture path for the 9-patch."});
+        rec.record_property("UIConfig", {"spriteSourceTexture", "Texture2D*|nil", "Pointer to the sprite source texture."});
+        rec.record_property("UIConfig", {"spriteSourceRect", "Rectangle|nil", "Source rectangle in the sprite texture."});
+        rec.record_property("UIConfig", {"spriteScaleMode", "SpriteScaleMode", "How the sprite should be scaled (default: Stretch)."});
         // General
         rec.record_property("UIConfig", {"id", "string|nil", "Unique identifier for this UI element."});
         rec.record_property("UIConfig", {"instanceType", "string|nil", "A specific instance type for categorization."});
@@ -925,6 +934,7 @@ namespace ui {
         // This is a duplicate key, but we'll record it again as the user provided it.
         rec.record_free_function({"ui", "box"}, {"ClampDimensionsToMinimumsIfPresent", "---@param uiConfig UIConfig\n---@param calcTransform table\n---@return nil", "Clamps the calculated transform dimensions to the configured minimums.", true, false});
 
-        
+        // UI Asset Pack system
+        exposePackToLua(lua);
     }
 }

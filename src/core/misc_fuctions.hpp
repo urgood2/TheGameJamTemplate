@@ -3,6 +3,7 @@
 #include "core/globals.hpp"
 #include "util/common_headers.hpp"
 #include "systems/transform/transform_functions.hpp"
+#include "systems/ui/editor/pack_editor.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -37,15 +38,16 @@ namespace game {
 
     inline void ShowDebugUI()
     {
+        static const float uiScales[] = { 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f };
+        static int currentScaleIndex = 2; // Default to 1.0f
+        static int previousScaleIndex = currentScaleIndex;
+        static int lastLoadingCountShown = 0;
+        static float fakeProgress = 0.0f;
+        static ui::editor::PackEditorState packEditorState;
+
         const bool debugWindowOpen = ImGui::Begin("DebugWindow");
         if (debugWindowOpen)
         {
-
-            static const float uiScales[] = { 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f };
-            static int currentScaleIndex = 2; // Default to 1.0f
-            static int previousScaleIndex = currentScaleIndex;
-            static int lastLoadingCountShown = 0;
-            static float fakeProgress = 0.0f;
 
             if (ImGui::BeginTabBar("Debug variables")) {
                 if (ImGui::BeginTabItem("Flags")) {
@@ -102,11 +104,21 @@ namespace game {
                                 static_cast<int>(globals::getLastCollisionB()));
                     ImGui::EndTabItem();
                 }
+                if (ImGui::BeginTabItem("UI Pack Editor")) {
+                    if (ImGui::Button("Open UI Pack Editor")) {
+                        packEditorState.isOpen = true;
+                    }
+                    ImGui::Text("Use this tool to create and edit UI asset packs");
+                    ImGui::EndTabItem();
+                }
                 ImGui::EndTabBar();
             }
         }
 
         ImGui::End();
+
+        // Render the UI Pack Editor window (outside the debug window)
+        ui::editor::renderPackEditor(packEditorState);
     }
 
 }

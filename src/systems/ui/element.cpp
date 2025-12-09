@@ -2341,6 +2341,85 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                         util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, std::nullopt, zIndex);
+                    else if (config->stylingType == ui::UIStylingType::SPRITE && config->spriteSourceTexture && config->spriteSourceRect)
+                    {
+                        auto* tex = config->spriteSourceTexture.value();
+                        auto srcRect = config->spriteSourceRect.value();
+
+                        // Validate texture pointer before use
+                        if (tex && tex->id != 0) {
+                            switch (config->spriteScaleMode) {
+                            case ui::SpriteScaleMode::Fixed: {
+                                // Draw at original size, centered
+                                float cx = (visualW - srcRect.width) / 2.0f;
+                                float cy = (visualH - srcRect.height) / 2.0f;
+                                layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, srcRect, cx, cy, color](layer::CmdTexturePro *cmd) {
+                                    cmd->texture = *tex;
+                                    cmd->source = srcRect;
+                                    cmd->offsetX = cx;
+                                    cmd->offsetY = cy;
+                                    cmd->size = {srcRect.width, srcRect.height};
+                                    cmd->rotationCenter = {0, 0};
+                                    cmd->rotation = 0.0f;
+                                    cmd->color = color;
+                                }, zIndex);
+                                break;
+                            }
+                            case ui::SpriteScaleMode::Tile: {
+                                // Tile to fill container
+                                // Performance warning: generates one draw command per tile
+                                int tilesX = static_cast<int>(std::ceil(visualW / srcRect.width));
+                                int tilesY = static_cast<int>(std::ceil(visualH / srcRect.height));
+                                int totalTiles = tilesX * tilesY;
+
+                                // Warn if tile count is excessive (reduces performance)
+                                if (totalTiles > 100) {
+                                    static bool warningShown = false;
+                                    if (!warningShown) {
+                                        SPDLOG_WARN("Tiling mode generating {} draw commands ({}x{} tiles) - consider using larger tiles or stretch mode for better performance",
+                                            totalTiles, tilesX, tilesY);
+                                        warningShown = true;
+                                    }
+                                }
+
+                                for (float y = 0; y < visualH; y += srcRect.height) {
+                                    for (float x = 0; x < visualW; x += srcRect.width) {
+                                        // Clip if needed at edges
+                                        float drawW = std::min(srcRect.width, visualW - x);
+                                        float drawH = std::min(srcRect.height, visualH - y);
+                                        Rectangle clippedSrc = {srcRect.x, srcRect.y, drawW, drawH};
+                                        layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, clippedSrc, x, y, drawW, drawH, color](layer::CmdTexturePro *cmd) {
+                                            cmd->texture = *tex;
+                                            cmd->source = clippedSrc;
+                                            cmd->offsetX = x;
+                                            cmd->offsetY = y;
+                                            cmd->size = {drawW, drawH};
+                                            cmd->rotationCenter = {0, 0};
+                                            cmd->rotation = 0.0f;
+                                            cmd->color = color;
+                                        }, zIndex);
+                                    }
+                                }
+                                break;
+                            }
+                            case ui::SpriteScaleMode::Stretch:
+                            default: {
+                                // Scale to fit
+                                layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, srcRect, visualW, visualH, color](layer::CmdTexturePro *cmd) {
+                                    cmd->texture = *tex;
+                                    cmd->source = srcRect;
+                                    cmd->offsetX = 0;
+                                    cmd->offsetY = 0;
+                                    cmd->size = {visualW, visualH};
+                                    cmd->rotationCenter = {0, 0};
+                                    cmd->rotation = 0.0f;
+                                    cmd->color = color;
+                                }, zIndex);
+                                break;
+                            }
+                            }
+                        }
+                    }
                 }
             }
             else

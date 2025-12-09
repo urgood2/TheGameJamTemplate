@@ -13,6 +13,7 @@
 #include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/reflection/reflection.hpp"
+#include "systems/ui/ui_pack.hpp"  // For SpriteScaleMode
 
 
 //Note: uibox is master to all ui elements within it, including the root element.
@@ -171,7 +172,8 @@ namespace ui
     // defines whether a specific ui element is drawn as a rounded rectangle or a 9-patch border
     enum class UIStylingType {
         ROUNDED_RECTANGLE,
-        NINEPATCH_BORDERS
+        NINEPATCH_BORDERS,
+        SPRITE  // New: texture region with scale_mode
     };
     
     // make tuple<NPatchInfo, Texture2D> a typename
@@ -187,7 +189,12 @@ namespace ui
         
         std::optional<NPatchInfo> nPatchInfo; // 9-patch data for the UI element. This is used when the stylingType is set to NINEPATCH_BORDERS. It contains information about the texture and how to draw it.
         std::optional<Texture2D> nPatchSourceTexture; // the atlas texture used for 9-patch.
-        
+
+        // Sprite rendering (for UI asset pack sprites)
+        std::optional<Texture2D*> spriteSourceTexture;
+        std::optional<Rectangle> spriteSourceRect;
+        SpriteScaleMode spriteScaleMode = SpriteScaleMode::Stretch;
+
         // General Properties
         std::optional<std::string> id;           // Unique identifier, used to store in children vector. If predefined in the definition stage, it will be maintained. Otherwise, children of an entity get a unique id starting at 0 and incrementing.
         std::optional<std::string> instanceType; // Instance type of the UI element

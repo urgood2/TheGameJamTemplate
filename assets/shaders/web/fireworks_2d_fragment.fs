@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 #define TAU 6.28318530718
 #define PI 3.14159265359

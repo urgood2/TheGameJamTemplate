@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Color Filter
 // Applies various color blend modes: multiply, additive, subtractive, replace

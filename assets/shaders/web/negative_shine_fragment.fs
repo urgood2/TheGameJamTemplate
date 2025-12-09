@@ -2,7 +2,6 @@
 precision mediump float;
 
 // negative_shine.fs
-precision mediump float;
 
 in vec2 fragTexCoord;
 in vec4 fragColor;

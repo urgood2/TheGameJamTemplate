@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-precision mediump float;
 
 // UIEffect: Transition - Dissolve
 // Dissolve transition with optional texture pattern

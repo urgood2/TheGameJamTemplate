@@ -106,27 +106,35 @@ bool registerPack(const std::string& name, const std::string& manifestPath) {
     // Get atlas path relative to manifest directory
     std::filesystem::path manifestDir = std::filesystem::path(manifestPath).parent_path();
     if (manifest.contains("atlas")) {
-        pack.atlasPath = (manifestDir / manifest["atlas"].get<std::string>()).string();
+        // Validate atlas path to prevent directory traversal attacks
+        std::filesystem::path atlasRelPath = manifest["atlas"].get<std::string>();
+
+        // Reject absolute paths or paths with parent directory references
+        if (atlasRelPath.is_absolute() || atlasRelPath.string().find("..") != std::string::npos) {
+            SPDLOG_ERROR("Invalid atlas path in manifest {}: path must be relative and cannot contain '..'", manifestPath);
+            return false;
+        }
+
+        pack.atlasPath = (manifestDir / atlasRelPath).string();
     }
 
     // Load texture if not already loaded
     if (!pack.atlasPath.empty()) {
         auto* existingTex = getAtlasTexture(pack.atlasPath);
         if (existingTex) {
-            pack.atlas = existingTex;
+            // Texture already loaded, will set pointer after pack is registered
         } else {
             // Load and cache the texture
             Texture2D tex = LoadTexture(pack.atlasPath.c_str());
             if (tex.id != 0) {
                 if (globals::g_ctx) {
                     globals::g_ctx->textureAtlas[pack.atlasPath] = tex;
-                    pack.atlas = &globals::g_ctx->textureAtlas[pack.atlasPath];
                 } else {
                     globals::textureAtlasMap[pack.atlasPath] = tex;
-                    pack.atlas = &globals::textureAtlasMap[pack.atlasPath];
                 }
             } else {
                 SPDLOG_ERROR("Failed to load UI pack atlas: {}", pack.atlasPath);
+                return false;
             }
         }
     }
@@ -177,10 +185,20 @@ bool registerPack(const std::string& name, const std::string& manifestPath) {
     // Store in registry
     if (globals::g_ctx) {
         globals::g_ctx->uiPacks[name] = std::move(pack);
+
+        // Safely retrieve atlas pointer after pack is stored (avoids dangling pointer from map rehashing)
+        auto& storedPack = globals::g_ctx->uiPacks[name];
+        if (!storedPack.atlasPath.empty()) {
+            auto texIt = globals::g_ctx->textureAtlas.find(storedPack.atlasPath);
+            if (texIt != globals::g_ctx->textureAtlas.end()) {
+                storedPack.atlas = &texIt->second;
+            }
+        }
+
         SPDLOG_INFO("Registered UI pack '{}' with {} panels, {} buttons, {} icons",
-            name, globals::g_ctx->uiPacks[name].panels.size(),
-            globals::g_ctx->uiPacks[name].buttons.size(),
-            globals::g_ctx->uiPacks[name].icons.size());
+            name, storedPack.panels.size(),
+            storedPack.buttons.size(),
+            storedPack.icons.size());
         return true;
     }
 

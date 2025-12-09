@@ -2346,7 +2346,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         auto* tex = config->spriteSourceTexture.value();
                         auto srcRect = config->spriteSourceRect.value();
 
-                        switch (config->spriteScaleMode) {
+                        // Validate texture pointer before use
+                        if (tex && tex->id != 0) {
+                            switch (config->spriteScaleMode) {
                             case ui::SpriteScaleMode::Fixed: {
                                 // Draw at original size, centered
                                 float cx = (visualW - srcRect.width) / 2.0f;
@@ -2399,6 +2401,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                                     cmd->color = color;
                                 }, zIndex);
                                 break;
+                            }
                             }
                         }
                     }

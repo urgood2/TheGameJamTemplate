@@ -457,7 +457,8 @@ void CopyToClipboard() {
 }
 
 void ShowCaptureNotification(const std::string& message) {
-    EM_ASM({
+    // Wrap the EM_ASM block in parentheses so commas inside CSS strings don't split args.
+    EM_ASM(({
         const msg = UTF8ToString($0);
 
         // Create notification element
@@ -611,7 +612,7 @@ void ShowCaptureNotification(const std::string& message) {
 
         // Auto-dismiss after 10 seconds
         setTimeout(dismissNotification, 10000);
-    }, message.c_str());
+    }), message.c_str());
 }
 #endif
 

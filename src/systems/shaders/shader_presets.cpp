@@ -45,6 +45,50 @@ bool isSkewShader(const std::string& shaderName) {
     return shaderName.find("3d_skew") == 0;
 }
 
+bool needsAtlasUniformsForPass(const ShaderPreset& preset, const std::string& passName) {
+    if (preset.needsAtlasUniforms) return true;
+    return isSkewShader(passName);
+}
+
+shaders::ShaderUniformSet resolveUniforms(
+    const ShaderPreset& preset,
+    const std::string& passName,
+    const sol::table& overrides
+) {
+    shaders::ShaderUniformSet result;
+
+    // 1. Preset's shared uniforms (base defaults)
+    for (const auto& [name, value] : preset.uniforms.uniforms) {
+        result.set(name, value);
+    }
+
+    // 2. Preset's per-pass defaults
+    for (const auto& pass : preset.passes) {
+        if (pass.shaderName == passName) {
+            for (const auto& [name, value] : pass.defaultUniforms.uniforms) {
+                result.set(name, value);
+            }
+            break;
+        }
+    }
+
+    // 3. Override's top-level uniforms (all passes)
+    for (auto& [key, value] : overrides) {
+        if (key.is<std::string>() && !value.is<sol::table>()) {
+            std::string uniformName = key.as<std::string>();
+            result.set(uniformName, tableToUniformValue(value));
+        }
+    }
+
+    // 4. Override's per-pass uniforms
+    sol::optional<sol::table> passOverridesOpt = overrides[passName];
+    if (passOverridesOpt) {
+        parseUniformsTable(*passOverridesOpt, result);
+    }
+
+    return result;
+}
+
 }  // anonymous namespace
 
 void loadPresetsFromLuaState(sol::state& lua) {
@@ -125,6 +169,89 @@ void loadPresetsFromLuaFile(sol::state& lua, const std::string& path) {
         return;
     }
     loadPresetsFromLuaState(lua);
+}
+
+void applyShaderPreset(entt::registry& reg, entt::entity e,
+                       const std::string& presetName,
+                       const sol::table& overrides) {
+    const auto* preset = getPreset(presetName);
+    if (!preset) {
+        SPDLOG_WARN("shader_presets: preset '{}' not found", presetName);
+        return;
+    }
+
+    // Get or create pipeline component
+    auto& pipeline = reg.get_or_emplace<shader_pipeline::ShaderPipelineComponent>(e);
+    pipeline.passes.clear();  // replace mode
+
+    // Get or create uniform component
+    auto& uniformComp = reg.get_or_emplace<shaders::ShaderUniformComponent>(e);
+
+    for (const auto& presetPass : preset->passes) {
+        // Add pass to pipeline
+        shader_pipeline::ShaderPass pass;
+        pass.shaderName = presetPass.shaderName;
+        pass.enabled = true;
+        pass.injectAtlasUniforms = needsAtlasUniformsForPass(*preset, pass.shaderName);
+        pipeline.passes.push_back(pass);
+
+        // Resolve and store uniforms for this pass
+        auto resolved = resolveUniforms(*preset, pass.shaderName, overrides);
+        uniformComp.shaderUniforms[pass.shaderName] = resolved;
+    }
+}
+
+void addShaderPreset(entt::registry& reg, entt::entity e,
+                     const std::string& presetName,
+                     const sol::table& overrides) {
+    const auto* preset = getPreset(presetName);
+    if (!preset) {
+        SPDLOG_WARN("shader_presets: preset '{}' not found", presetName);
+        return;
+    }
+
+    // Get or create pipeline component (don't clear - append mode)
+    auto& pipeline = reg.get_or_emplace<shader_pipeline::ShaderPipelineComponent>(e);
+
+    // Get or create uniform component
+    auto& uniformComp = reg.get_or_emplace<shaders::ShaderUniformComponent>(e);
+
+    for (const auto& presetPass : preset->passes) {
+        shader_pipeline::ShaderPass pass;
+        pass.shaderName = presetPass.shaderName;
+        pass.enabled = true;
+        pass.injectAtlasUniforms = needsAtlasUniformsForPass(*preset, pass.shaderName);
+        pipeline.passes.push_back(pass);
+
+        auto resolved = resolveUniforms(*preset, pass.shaderName, overrides);
+        uniformComp.shaderUniforms[pass.shaderName] = resolved;
+    }
+}
+
+void clearShaderPasses(entt::registry& reg, entt::entity e) {
+    if (reg.all_of<shader_pipeline::ShaderPipelineComponent>(e)) {
+        auto& pipeline = reg.get<shader_pipeline::ShaderPipelineComponent>(e);
+        pipeline.passes.clear();
+    }
+}
+
+void addShaderPass(entt::registry& reg, entt::entity e,
+                   const std::string& shaderName,
+                   const sol::table& uniforms) {
+    auto& pipeline = reg.get_or_emplace<shader_pipeline::ShaderPipelineComponent>(e);
+
+    shader_pipeline::ShaderPass pass;
+    pass.shaderName = shaderName;
+    pass.enabled = true;
+    pass.injectAtlasUniforms = isSkewShader(shaderName);
+    pipeline.passes.push_back(pass);
+
+    if (uniforms.valid()) {
+        auto& uniformComp = reg.get_or_emplace<shaders::ShaderUniformComponent>(e);
+        shaders::ShaderUniformSet uniformSet;
+        parseUniformsTable(uniforms, uniformSet);
+        uniformComp.shaderUniforms[shaderName] = uniformSet;
+    }
 }
 
 }  // namespace shader_presets

@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include "shader_system.hpp"
 #include "sol/sol.hpp"
+#include "entt/entt.hpp"
+#include "shader_pipeline.hpp"
 
 namespace shader_presets {
 
@@ -39,5 +41,20 @@ inline void clearPresets() {
 // Forward declarations for Lua loading functions
 void loadPresetsFromLuaState(sol::state& lua);
 void loadPresetsFromLuaFile(sol::state& lua, const std::string& path);
+
+// Entity API functions
+void applyShaderPreset(entt::registry& reg, entt::entity e,
+                       const std::string& presetName,
+                       const sol::table& overrides);
+
+void addShaderPreset(entt::registry& reg, entt::entity e,
+                     const std::string& presetName,
+                     const sol::table& overrides);
+
+void clearShaderPasses(entt::registry& reg, entt::entity e);
+
+void addShaderPass(entt::registry& reg, entt::entity e,
+                   const std::string& shaderName,
+                   const sol::table& uniforms);
 
 }  // namespace shader_presets

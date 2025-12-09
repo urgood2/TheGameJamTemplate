@@ -172,29 +172,35 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec4 hsl = HSL(0.5 * base + 0.5 * vec4(0.0, 0.0, 1.0, base.a));
 
     float t = holo.y * 7.221 + time;
-    vec2 floored_uv = floor(uv * texture_details.ba) / texture_details.ba;
-    vec2 uv_scaled_centered = (floored_uv - 0.5) * 250.0;
+    // Per-card seed offsets for unique holographic patterns
+    float seedPhase = rand_seed * 6.2831;
+    float seedOffset = rand_seed * 50.0;
 
-    vec2 field_part1 = uv_scaled_centered + 50.0 * vec2(sin(-t / 143.6340), cos(-t / 99.4324));
-    vec2 field_part2 = uv_scaled_centered + 50.0 * vec2(cos(t / 53.1532), cos(t / 61.4532));
-    vec2 field_part3 = uv_scaled_centered + 50.0 * vec2(sin(-t / 87.53218), sin(-t / 49.0000));
+    vec2 floored_uv = floor(uv * texture_details.ba) / texture_details.ba;
+    vec2 uv_scaled_centered = (floored_uv - 0.5) * 250.0 + vec2(seedOffset * 0.3, seedOffset * 0.5);
+
+    vec2 field_part1 = uv_scaled_centered + 50.0 * vec2(sin(-t / 143.6340 + seedPhase * 0.3), cos(-t / 99.4324 + seedPhase * 0.5));
+    vec2 field_part2 = uv_scaled_centered + 50.0 * vec2(cos(t / 53.1532 + seedPhase * 0.7), cos(t / 61.4532 + seedPhase * 0.4));
+    vec2 field_part3 = uv_scaled_centered + 50.0 * vec2(sin(-t / 87.53218 + seedPhase * 0.6), sin(-t / 49.0000 + seedPhase * 0.8));
 
     float field = (1.0 + (
-        cos(length(field_part1) / 19.483) +
-        sin(length(field_part2) / 33.155) * cos(field_part2.y / 15.73) +
-        cos(length(field_part3) / 27.193) * sin(field_part3.x / 21.92))) * 0.5;
+        cos(length(field_part1) / 19.483 + seedPhase * 0.2) +
+        sin(length(field_part2) / 33.155 + seedPhase * 0.15) * cos(field_part2.y / 15.73) +
+        cos(length(field_part3) / 27.193 + seedPhase * 0.25) * sin(field_part3.x / 21.92))) * 0.5;
 
-    float res = 0.5 + 0.5 * cos(holo.x * 2.612 + (field - 0.5) * 3.14);
+    float res = 0.5 + 0.5 * cos(holo.x * 2.612 + rand_seed * 0.5 + (field - 0.5) * 3.14);
 
     float low = min(base.r, min(base.g, base.b));
     float high = max(base.r, max(base.g, base.b));
     float delta = 0.2 + 0.3 * (high - low) + 0.1 * high;
 
     float gridsize = 0.79;
+    // Add seed-based offset to grid pattern for per-card variation
+    float gridSeedOffset = rand_seed * 3.14159;
     float fac = 0.5 * max(
-        max(max(0.0, 7.0 * abs(cos(uv.x * gridsize * 20.0)) - 6.0),
-            max(0.0, 7.0 * cos(uv.y * gridsize * 45.0 + uv.x * gridsize * 20.0) - 6.0)),
-        max(0.0, 7.0 * cos(uv.y * gridsize * 45.0 - uv.x * gridsize * 20.0) - 6.0));
+        max(max(0.0, 7.0 * abs(cos(uv.x * gridsize * 20.0 + gridSeedOffset)) - 6.0),
+            max(0.0, 7.0 * cos(uv.y * gridsize * 45.0 + uv.x * gridsize * 20.0 + gridSeedOffset * 1.3) - 6.0)),
+        max(0.0, 7.0 * cos(uv.y * gridsize * 45.0 - uv.x * gridsize * 20.0 + gridSeedOffset * 0.7) - 6.0));
 
     hsl.x = hsl.x + res + fac;
     hsl.y = hsl.y * 1.3;

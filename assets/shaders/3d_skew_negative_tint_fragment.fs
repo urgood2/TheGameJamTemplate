@@ -166,17 +166,21 @@ vec4 applyOverlay(vec2 atlasUV) {
     // Optional: slight hue rotation for film negative aesthetic
     // Real film negatives have orange mask, causing color shifts
     // negative_tint.y controls optional color shift intensity
-    float hueShift = negative_tint.y * 0.15;
+    // Per-card seed for unique hue offset (creates variety in negative look)
+    float seedHueOffset = rand_seed * 0.15;
+    float hueShift = negative_tint.y * 0.15 + seedHueOffset;
     vec4 hslColor = HSL(vec4(negativeColor, 1.0));
     hslColor.x = mod(hslColor.x + hueShift, 1.0);
 
-    // Boost saturation slightly for punchy negative look
-    hslColor.y = min(hslColor.y * 1.2, 1.0);
+    // Boost saturation slightly for punchy negative look (with subtle seed variation)
+    float satBoost = 1.2 + rand_seed * 0.1;
+    hslColor.y = min(hslColor.y * satBoost, 1.0);
 
     vec3 tintedColor = RGB(hslColor).rgb;
 
-    // Subtle contrast boost for negative film feel
-    tintedColor = (tintedColor - 0.5) * 1.1 + 0.5;
+    // Subtle contrast boost for negative film feel (with seed variation)
+    float contrastBoost = 1.1 + rand_seed * 0.05;
+    tintedColor = (tintedColor - 0.5) * contrastBoost + 0.5;
     tintedColor = clamp(tintedColor, 0.0, 1.0);
 
     // Reduce alpha for semi-transparent areas

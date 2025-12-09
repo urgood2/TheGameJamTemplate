@@ -168,6 +168,8 @@ void loadPresetsFromLuaFile(sol::state& lua, const std::string& path) {
         SPDLOG_ERROR("shader_presets: failed to load '{}': {}", path, err.what());
         return;
     }
+    // Assign the returned table to global ShaderPresets so loadPresetsFromLuaState can find it
+    lua["ShaderPresets"] = result;
     loadPresetsFromLuaState(lua);
 }
 

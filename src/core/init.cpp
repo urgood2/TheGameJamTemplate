@@ -19,6 +19,7 @@
 #include "../systems/localization/localization.hpp"
 #include "../systems/physics/physics_manager.hpp"
 #include "../systems/shaders/shader_system.hpp"
+#include "../systems/shaders/shader_presets.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/telemetry/telemetry.hpp"
 
@@ -850,6 +851,12 @@ auto base_init() -> void {
 auto initSystems() -> void {
   ai_system::init();
   shaders::loadShadersFromJSON("shaders/shaders.json");
+
+  // Load shader presets after shaders are loaded
+  if (globals::g_ctx) {
+    shader_presets::loadPresetsFromLuaFile(globals::g_ctx->lua, "assets/scripts/data/shader_presets.lua");
+  }
+
   sound_system::LoadFromJSON(util::getRawAssetPathNoUUID("sounds/sounds.json"));
 }
 

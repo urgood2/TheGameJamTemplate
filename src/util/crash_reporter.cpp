@@ -388,4 +388,181 @@ const std::string& LastSerializedReport() {
     return state().last_json;
 }
 
+std::string CreateSummary(const Report& report) {
+    std::ostringstream oss;
+    oss << "=== Crash Report ===" << "\n";
+    oss << "ID: " << report.id << "\n";
+    oss << "Time: " << report.timestamp << "\n";
+    oss << "Reason: " << report.reason << "\n";
+    oss << "Build: " << report.build_id << " (" << report.build_type << ")" << "\n";
+    oss << "Platform: " << report.platform << "\n";
+
+    if (!report.stacktrace.empty()) {
+        oss << "\n--- Stack Trace (top 5) ---" << "\n";
+        size_t count = std::min(report.stacktrace.size(), size_t{5});
+        for (size_t i = 0; i < count; ++i) {
+            oss << "  " << report.stacktrace[i] << "\n";
+        }
+        if (report.stacktrace.size() > 5) {
+            oss << "  ... and " << (report.stacktrace.size() - 5) << " more frames" << "\n";
+        }
+    }
+
+    if (!report.logs.empty()) {
+        oss << "\n--- Recent Logs (last 10) ---" << "\n";
+        size_t start = report.logs.size() > 10 ? report.logs.size() - 10 : 0;
+        for (size_t i = start; i < report.logs.size(); ++i) {
+            const auto& log = report.logs[i];
+            oss << "[" << log.level << "] " << log.message;
+        }
+    }
+
+    oss << "\n=== End Report ===" << "\n";
+    return oss.str();
+}
+
+#if defined(__EMSCRIPTEN__)
+void CopyToClipboard() {
+    const auto& json = state().last_json;
+    if (json.empty()) {
+        SPDLOG_WARN("No crash report to copy to clipboard");
+        return;
+    }
+
+    EM_ASM({
+        const text = UTF8ToString($0);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                console.log('Crash report copied to clipboard');
+            }).catch(function(err) {
+                console.error('Failed to copy to clipboard:', err);
+            });
+        } else {
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                console.log('Crash report copied to clipboard (fallback)');
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+    }, json.c_str());
+}
+
+void ShowCaptureNotification(const std::string& message) {
+    EM_ASM({
+        const msg = UTF8ToString($0);
+
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            z-index: 10000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 350px;
+            animation: slideIn 0.3s ease-out;
+        `;
+
+        // Add animation keyframes if not already added
+        if (!document.getElementById('crash-notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'crash-notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        notification.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <span style="font-size: 24px;">📋</span>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">Debug Report Captured</div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 13px;">${msg}</div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;">
+                        <button id="crash-copy-btn" style="
+                            background: #4a9eff;
+                            color: white;
+                            border: none;
+                            padding: 6px 12px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        ">Copy to Clipboard</button>
+                        <button id="crash-dismiss-btn" style="
+                            background: rgba(255,255,255,0.1);
+                            color: rgba(255,255,255,0.8);
+                            border: none;
+                            padding: 6px 12px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        ">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Handle copy button
+        const copyBtn = document.getElementById('crash-copy-btn');
+        if (copyBtn) {
+            copyBtn.onclick = function() {
+                // The C++ side will have already serialized the report
+                // We trigger the copy via a custom event
+                window.dispatchEvent(new CustomEvent('crashReportCopy'));
+                copyBtn.textContent = 'Copied!';
+                copyBtn.style.background = '#28a745';
+                setTimeout(function() {
+                    copyBtn.textContent = 'Copy to Clipboard';
+                    copyBtn.style.background = '#4a9eff';
+                }, 2000);
+            };
+        }
+
+        // Handle dismiss button
+        const dismissBtn = document.getElementById('crash-dismiss-btn');
+        const dismissNotification = function() {
+            notification.style.animation = 'slideOut 0.3s ease-in forwards';
+            setTimeout(function() {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        };
+
+        if (dismissBtn) {
+            dismissBtn.onclick = dismissNotification;
+        }
+
+        // Auto-dismiss after 10 seconds
+        setTimeout(dismissNotification, 10000);
+    }, message.c_str());
+}
+#endif
+
 } // namespace crash_reporter

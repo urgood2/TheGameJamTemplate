@@ -269,6 +269,13 @@ void RunGameLoop() {
         SPDLOG_WARN("Manual crash report captured but persistence is disabled "
                     "or failed.");
       }
+#if defined(__EMSCRIPTEN__)
+      // Show a nice notification on web with copy button
+      crash_reporter::ShowCaptureNotification(
+          "Press 'Copy to Clipboard' to share this report, or check your downloads.");
+      // Also copy to clipboard automatically for convenience
+      crash_reporter::CopyToClipboard();
+#endif
     }
 
     // ---------- Step 1: Measure REAL frame time ----------

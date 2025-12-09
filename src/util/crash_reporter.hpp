@@ -50,4 +50,16 @@ std::string SerializeReport(const Report& report);
 std::optional<std::string> PersistReport(const Report& report);
 const std::string& LastSerializedReport();
 
+// Easy sharing functions for web
+#if defined(__EMSCRIPTEN__)
+// Copy the last crash report to clipboard (web only)
+void CopyToClipboard();
+
+// Show a browser notification that a crash report was captured
+void ShowCaptureNotification(const std::string& message);
+#endif
+
+// Create a compact summary string for quick sharing
+std::string CreateSummary(const Report& report);
+
 } // namespace crash_reporter

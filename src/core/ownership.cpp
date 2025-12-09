@@ -53,6 +53,24 @@ void registerLuaBindings(sol::state& lua) {
         validate(displayedDiscord, displayedItch);
     });
 
+    // Create a metatable to make the table read-only
+    sol::table metatable = lua.create_table();
+
+    // Prevent modifications by throwing an error on __newindex
+    metatable[sol::meta_function::new_index] = [](sol::table, sol::object key, sol::object) {
+        std::string key_str = "unknown";
+        if (key.is<std::string>()) {
+            key_str = key.as<std::string>();
+        }
+        throw std::runtime_error("ownership table is read-only, cannot modify field: " + key_str);
+    };
+
+    // Prevent metatable modification
+    metatable[sol::meta_function::metatable] = "protected";
+
+    // Apply the metatable to the ownership table
+    ownership_table[sol::metatable_key] = metatable;
+
     // Register the table in the global namespace
     lua["ownership"] = ownership_table;
 }

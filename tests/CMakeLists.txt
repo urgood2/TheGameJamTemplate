@@ -28,6 +28,7 @@ add_executable(unit_tests
     unit/test_text_waiters.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/sound/sound_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/localization/localization.cpp
     ${CMAKE_SOURCE_DIR}/src/core/engine_context.cpp

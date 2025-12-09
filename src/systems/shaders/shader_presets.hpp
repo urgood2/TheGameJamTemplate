@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include "shader_system.hpp"
+#include "sol/sol.hpp"
 
 namespace shader_presets {
 
@@ -34,5 +35,9 @@ inline bool hasPreset(const std::string& name) {
 inline void clearPresets() {
     presetRegistry.clear();
 }
+
+// Forward declarations for Lua loading functions
+void loadPresetsFromLuaState(sol::state& lua);
+void loadPresetsFromLuaFile(sol::state& lua, const std::string& path);
 
 }  // namespace shader_presets

@@ -69,6 +69,14 @@ else()
     set(BUILD_TESTING OFF CACHE BOOL "Enable CTest and dependency tests" FORCE)
 endif()
 
+# AddressSanitizer - MUST be set before FetchContent so dependencies are built with ASAN
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+if(ENABLE_ASAN)
+    message(STATUS "AddressSanitizer enabled - applying to all targets")
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 # Prefer compiler cache when available to speed up rebuilds.
 find_program(CCACHE_PROGRAM ccache)
 if (CCACHE_PROGRAM)
@@ -1158,11 +1166,6 @@ if(ENABLE_UNIT_TESTS)
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS unit_tests
         COMMENT "Running unit test suite")
-endif()
-
-if(ENABLE_ASAN)
-    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
 endif()
 
 

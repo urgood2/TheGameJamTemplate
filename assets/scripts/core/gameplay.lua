@@ -3700,7 +3700,7 @@ local function ensureDetailedStatsTooltip()
 end
 function makePlayerStatsTooltip(snapshot)
     local rowPadding = tooltipStyle.rowPadding
-    local outerPadding = tooltipStyle.innerPadding
+    local outerPadding = tooltipStyle.outerPadding or 6
 
     local function addLine(rows, label, value, valueOpts)
         if value == nil then return end

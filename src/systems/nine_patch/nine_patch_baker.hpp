@@ -201,6 +201,8 @@ BakeNinePatchFromSprites(const NineSliceNames &names,
   drawSlice(F_b, dst_b);
   drawSlice(F_br, dst_br);
 
+  // Flush batched draw calls before switching render targets
+  rlDrawRenderBatchActive();
   EndTextureMode();
 
   // The baked texture we’ll reference for NPatch

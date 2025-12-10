@@ -1122,13 +1122,19 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     # NOTE: No DEPENDS - this is a post-processing target for already-built files.
     # In CI, the build is done directly with emcmake/emmake, so we don't need
     # to depend on compile_web_build (which would trigger the full build chain).
+    # Run these targets in order: rename_to_index -> inject_web_patch -> gzip_assets
     add_custom_target(rename_to_index
+        COMMAND ${CMAKE_COMMAND} -E echo "Checking for ${WEB_BUILD_DIR}/${PROJECT_NAME}.html..."
+        COMMAND test -f "${WEB_BUILD_DIR}/${PROJECT_NAME}.html" || (echo "ERROR: ${PROJECT_NAME}.html not found. Build the project first." && exit 1)
         COMMAND ${CMAKE_COMMAND} -E copy ${WEB_BUILD_DIR}/${PROJECT_NAME}.html ${WEB_OUTPUT_HTML}
         COMMENT "Renaming output HTML file to index.html"
     )
 
     # Inject snippet into <head> of index.html
+    # Requires rename_to_index to have been run first
     add_custom_target(inject_web_patch
+        COMMAND ${CMAKE_COMMAND} -E echo "Checking for ${WEB_OUTPUT_HTML}..."
+        COMMAND test -f "${WEB_OUTPUT_HTML}" || (echo "ERROR: index.html not found. Run rename_to_index first." && exit 1)
         COMMAND ${CMAKE_COMMAND} -E echo "Injecting custom HTML snippet into <head>..."
         COMMAND ${_inject_cmd}
         COMMENT "Patch index.html with custom <script> logic"
@@ -1155,7 +1161,11 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
 
     if(GZIP_EXE)
         # NOTE: No DEPENDS - this is a post-processing target for already-built files.
+        # Requires the web build to be complete (wasm and data files must exist)
         add_custom_target(gzip_assets
+            COMMAND ${CMAKE_COMMAND} -E echo "Checking for build outputs..."
+            COMMAND test -f "${WASM_FILE}" || (echo "ERROR: ${WASM_FILE} not found. Build the project first." && exit 1)
+            COMMAND test -f "${DATA_FILE}" || (echo "ERROR: ${DATA_FILE} not found. Build the project first." && exit 1)
             COMMAND ${CMAKE_COMMAND} -E echo "Gzipping WASM and DATA files..."
             COMMAND ${CMAKE_COMMAND} -E copy ${WASM_FILE} ${WASM_FILE}.orig
             COMMAND ${CMAKE_COMMAND} -E copy ${DATA_FILE} ${DATA_FILE}.orig

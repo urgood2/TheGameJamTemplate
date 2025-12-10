@@ -115,13 +115,13 @@ jobs:
         run: |
           mkdir -p dist/web
 
-          # Locate the generated html (raylib-cpp-cmake-template.html) and copy it as index.html
-          HTML_FILE=$(ls build-web/*.html | head -n 1)
-          if [ -z "$HTML_FILE" ]; then
-            echo "No HTML output found in build-web/"
+          # Copy the processed index.html (after rename_to_index + inject_web_patch)
+          # NOTE: Do NOT use the original raylib-cpp-cmake-template.html - it lacks the Pako injection
+          if [ ! -f build-web/index.html ]; then
+            echo "Error: build-web/index.html not found. Helper targets may have failed."
             exit 1
           fi
-          cp "$HTML_FILE" dist/web/index.html
+          cp build-web/index.html dist/web/index.html
 
           # Copy main build outputs
           cp build-web/*.js dist/web/

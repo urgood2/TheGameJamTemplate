@@ -10,7 +10,6 @@
 #include "util/utilities.hpp"
 #include "entt/entt.hpp"
 #include <raylib.h>
-#include "rlgl.h"
 #include "core/globals.hpp"
 #include "systems/physics/physics_manager.hpp"
 #include "systems/physics/physics_world.hpp"
@@ -903,7 +902,6 @@ inline void DrawGridLayer(int layerIdx, float scale = 1.0f) {
         }
     }
 
-    rlDrawRenderBatchActive();
     EndTextureMode();
 
     // present once, scaled

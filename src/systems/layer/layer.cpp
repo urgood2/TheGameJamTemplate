@@ -3002,8 +3002,6 @@ void DrawCustomLamdaToSpecificCanvas(const std::shared_ptr<Layer> layer,
 
   drawActions();
 
-  // Flush batched draw calls before switching render targets
-  rlDrawRenderBatchActive();
   EndTextureMode();
 }
 
@@ -3142,8 +3140,6 @@ void DrawCanvasOntoOtherLayerWithShader(
   if (shader.id != 0)
     EndShaderMode();
 
-  // Flush batched draw calls before switching render targets
-  rlDrawRenderBatchActive();
   EndTextureMode();
 }
 
@@ -3169,8 +3165,6 @@ void DrawCanvasOntoOtherLayer(const std::shared_ptr<Layer> &srcLayer,
       {x, y, src.texture.width * scaleX, src.texture.height * scaleY}, {0, 0},
       rotation, tint);
 
-  // Flush batched draw calls before switching render targets
-  rlDrawRenderBatchActive();
   EndTextureMode();
 }
 
@@ -3219,7 +3213,6 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
     // clear dst
     BeginTextureMode(layerPtr->canvases.at(dst));
     ClearBackground(BLANK);
-    rlDrawRenderBatchActive();
     EndTextureMode();
 
     layer::DrawCanvasOntoOtherLayerWithShader(layerPtr, // src layer
@@ -3237,7 +3230,6 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
     // clear original ping
     BeginTextureMode(layerPtr->canvases.at(canvasName));
     ClearBackground(BLANK);
-    rlDrawRenderBatchActive();
     EndTextureMode();
     layer::DrawCanvasOntoOtherLayer(layerPtr, src, layerPtr, canvasName, 0, 0,
                                     0, 1, 1, WHITE);

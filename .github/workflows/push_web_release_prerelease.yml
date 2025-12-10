@@ -100,17 +100,8 @@ jobs:
       - name: Build Web
         run: emmake make -C build-web -j$(nproc)
 
-      - name: Inject gzip loader into HTML
-        run: |
-          HTML_FILE=$(ls build-web/*.html | head -n 1)
-          if [ -z "$HTML_FILE" ]; then
-            echo "No HTML output found in build-web/"
-            exit 1
-          fi
-
-          cmake -DHTML_PATH="$HTML_FILE" \
-                -DSNIPPET_PATH=cmake/inject_snippet.html \
-                -P cmake/inject_snippet.cmake
+      - name: Run web helper targets (rename->index, inject snippet, gzip)
+        run: cmake --build build-web --target rename_to_index inject_web_patch gzip_assets
 
       - name: Package Web build
         run: |
@@ -127,24 +118,15 @@ jobs:
           # Copy main build outputs
           cp build-web/*.js dist/web/
 
-          # Copy and gzip WASM files for smaller downloads
-          for f in build-web/*.wasm; do
+          # Copy pre-gzipped wasm/data produced by helper targets
+          for f in build-web/*.wasm.gz build-web/*.data.gz; do
             if [ -f "$f" ]; then
-              gzip -9 -c "$f" > "dist/web/$(basename "$f").gz"
-              echo "Compressed $(basename "$f"): $(stat -c%s "$f") -> $(stat -c%s "dist/web/$(basename "$f").gz") bytes"
+              cp "$f" dist/web/
             fi
           done
 
-          # Copy and gzip data files if they exist
-          for f in build-web/*.data; do
-            if [ -f "$f" ]; then
-              gzip -9 -c "$f" > "dist/web/$(basename "$f").gz"
-              echo "Compressed $(basename "$f"): $(stat -c%s "$f") -> $(stat -c%s "dist/web/$(basename "$f").gz") bytes"
-            fi
-          done
-
-          # Copy assets
-          cp -R assets dist/web/
+          # Copy assets from the build tree (matches preload path)
+          cp -R build-web/assets dist/web/
 
           # Copy splash.png to root if it exists in assets
           if [ -f "assets/splash.png" ]; then

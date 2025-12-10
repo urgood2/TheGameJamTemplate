@@ -230,6 +230,63 @@
             display: block;
         }
 
+        /* F10 hint notification */
+        #f10-hint {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            z-index: 100;
+            background: rgba(30, 30, 40, 0.9);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        #f10-hint.visible {
+            display: flex;
+        }
+
+        #f10-hint.minimized {
+            padding: 6px 10px;
+            font-size: 11px;
+            opacity: 0.6;
+        }
+
+        #f10-hint.minimized:hover {
+            opacity: 1;
+        }
+
+        #f10-hint kbd {
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid rgba(74, 158, 255, 0.4);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #4a9eff;
+        }
+
+        #f10-hint .hint-close {
+            margin-left: 8px;
+            cursor: pointer;
+            opacity: 0.5;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        #f10-hint .hint-close:hover {
+            opacity: 1;
+        }
+
         /* Hide output by default */
         #output {
             display: none;
@@ -299,6 +356,12 @@
     <!-- Fullscreen toggle -->
     <button id="fullscreen-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶ Fullscreen</button>
 
+    <!-- F10 Debug hint -->
+    <div id="f10-hint">
+        <span>Press <kbd>F10</kbd> for debug report</span>
+        <span class="hint-close" onclick="dismissF10Hint()" title="Dismiss">×</span>
+    </div>
+
     <p id="output"></p>
 
     <script>
@@ -338,9 +401,59 @@
 
         // Error handling
         let lastError = '';
+        let crashReportJson = null;
 
-        function showError(title, message) {
-            lastError = `${title}: ${message}\n\nUser Agent: ${navigator.userAgent}\nURL: ${location.href}\nTime: ${new Date().toISOString()}`;
+        function generateCrashReport(title, message, stacktrace) {
+            const report = {
+                id: new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15),
+                timestamp: new Date().toISOString(),
+                reason: `${title}: ${message}`,
+                build_type: 'Web',
+                platform: 'Web/Emscripten',
+                user_agent: navigator.userAgent,
+                url: location.href,
+                screen: { width: screen.width, height: screen.height },
+                viewport: { width: window.innerWidth, height: window.innerHeight },
+                stacktrace: stacktrace || [],
+                performance: {
+                    memory: performance.memory ? {
+                        usedJSHeapSize: performance.memory.usedJSHeapSize,
+                        totalJSHeapSize: performance.memory.totalJSHeapSize,
+                        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+                    } : null,
+                    timing: performance.timing ? {
+                        loadTime: performance.timing.loadEventEnd - performance.timing.navigationStart,
+                        domContentLoaded: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart
+                    } : null
+                }
+            };
+            return report;
+        }
+
+        function downloadCrashReport(report) {
+            const json = JSON.stringify(report, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `crash_report_${report.id}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function showError(title, message, stacktrace) {
+            // Generate crash report
+            crashReportJson = generateCrashReport(title, message, stacktrace);
+            lastError = JSON.stringify(crashReportJson, null, 2);
+
+            // Auto-download crash report
+            try {
+                downloadCrashReport(crashReportJson);
+            } catch (e) {
+                console.error('Failed to auto-download crash report:', e);
+            }
 
             document.getElementById('error-title').textContent = title;
             document.getElementById('error-message').textContent = message;
@@ -374,6 +487,230 @@
             }
         }
 
+        // F10 Debug Report functionality
+        let f10HintDismissed = false;
+        let f10HintTimeout = null;
+
+        function showF10Hint() {
+            // Check if user has previously dismissed the hint
+            try {
+                f10HintDismissed = localStorage.getItem('f10HintDismissed') === 'true';
+            } catch(e) {}
+
+            if (f10HintDismissed) return;
+
+            const hint = document.getElementById('f10-hint');
+            if (hint) {
+                hint.classList.add('visible');
+                // Auto-minimize after 8 seconds
+                f10HintTimeout = setTimeout(() => {
+                    hint.classList.add('minimized');
+                }, 8000);
+            }
+        }
+
+        function dismissF10Hint() {
+            const hint = document.getElementById('f10-hint');
+            if (hint) {
+                hint.classList.remove('visible');
+                f10HintDismissed = true;
+                try {
+                    localStorage.setItem('f10HintDismissed', 'true');
+                } catch(e) {}
+            }
+            if (f10HintTimeout) {
+                clearTimeout(f10HintTimeout);
+                f10HintTimeout = null;
+            }
+        }
+
+        function generateDebugReport() {
+            const report = {
+                id: new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15),
+                timestamp: new Date().toISOString(),
+                type: 'debug_report',
+                reason: 'Manual debug report (F10)',
+                build_type: 'Web',
+                platform: 'Web/Emscripten',
+                user_agent: navigator.userAgent,
+                url: location.href,
+                screen: { width: screen.width, height: screen.height },
+                viewport: { width: window.innerWidth, height: window.innerHeight },
+                performance: {
+                    memory: performance.memory ? {
+                        usedJSHeapSize: performance.memory.usedJSHeapSize,
+                        totalJSHeapSize: performance.memory.totalJSHeapSize,
+                        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+                    } : null
+                },
+                webgl: getWebGLInfo()
+            };
+            return report;
+        }
+
+        function getWebGLInfo() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                if (!gl) return { error: 'WebGL not available' };
+                return {
+                    vendor: gl.getParameter(gl.VENDOR),
+                    renderer: gl.getParameter(gl.RENDERER),
+                    version: gl.getParameter(gl.VERSION)
+                };
+            } catch(e) {
+                return { error: e.message };
+            }
+        }
+
+        function showDebugReportNotification(report) {
+            const json = JSON.stringify(report, null, 2);
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.id = 'debug-notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+                color: #fff;
+                padding: 16px 24px;
+                border-radius: 8px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                z-index: 10000;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+                border: 1px solid rgba(255,255,255,0.1);
+                max-width: 350px;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            notification.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <span style="font-size: 24px;">📋</span>
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 4px;">Debug Report Generated</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 13px;">Report ID: ${report.id}</div>
+                        <div style="margin-top: 12px; display: flex; gap: 8px;">
+                            <button id="debug-copy-btn" style="
+                                background: #4a9eff;
+                                color: white;
+                                border: none;
+                                padding: 6px 12px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-size: 12px;
+                            ">Copy to Clipboard</button>
+                            <button id="debug-download-btn" style="
+                                background: rgba(255,255,255,0.1);
+                                color: rgba(255,255,255,0.8);
+                                border: none;
+                                padding: 6px 12px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-size: 12px;
+                            ">Download</button>
+                            <button id="debug-dismiss-btn" style="
+                                background: rgba(255,255,255,0.1);
+                                color: rgba(255,255,255,0.8);
+                                border: none;
+                                padding: 6px 12px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-size: 12px;
+                            ">×</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Copy button
+            document.getElementById('debug-copy-btn').onclick = function() {
+                navigator.clipboard.writeText(json).then(() => {
+                    this.textContent = 'Copied!';
+                    this.style.background = '#28a745';
+                    setTimeout(() => {
+                        this.textContent = 'Copy to Clipboard';
+                        this.style.background = '#4a9eff';
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback
+                    const textarea = document.createElement('textarea');
+                    textarea.value = json;
+                    textarea.style.cssText = 'position: fixed; opacity: 0;';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    this.textContent = 'Copied!';
+                    this.style.background = '#28a745';
+                });
+            };
+
+            // Download button
+            document.getElementById('debug-download-btn').onclick = function() {
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `debug_report_${report.id}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                this.textContent = 'Downloaded!';
+                setTimeout(() => {
+                    this.textContent = 'Download';
+                }, 2000);
+            };
+
+            // Dismiss button
+            const dismissNotification = function() {
+                notification.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            };
+
+            document.getElementById('debug-dismiss-btn').onclick = dismissNotification;
+
+            // Auto-dismiss after 15 seconds
+            setTimeout(dismissNotification, 15000);
+        }
+
+        // F10 key listener
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F10' || e.keyCode === 121) {
+                e.preventDefault();
+                const report = generateDebugReport();
+
+                // Try to get C++ crash reporter data if available
+                if (typeof Module !== 'undefined' && Module._crash_reporter_capture) {
+                    try {
+                        Module._crash_reporter_capture();
+                    } catch(err) {
+                        console.log('C++ crash reporter not available, using JS fallback');
+                    }
+                }
+
+                showDebugReportNotification(report);
+
+                // Flash the F10 hint to show it worked
+                const hint = document.getElementById('f10-hint');
+                if (hint && hint.classList.contains('visible')) {
+                    hint.style.borderColor = '#28a745';
+                    setTimeout(() => {
+                        hint.style.borderColor = '';
+                    }, 500);
+                }
+            }
+        });
+
         // Track loading start time for timeout detection
         const loadStartTime = Date.now();
         const LOAD_TIMEOUT_MS = 120000; // 2 minute timeout
@@ -399,24 +736,36 @@
                     clearInterval(timeoutCheck);
                     stopTipRotation();
 
-                    // Fade out splash screen
-                    const splash = document.getElementById('splash');
-                    if (splash) {
-                        splash.classList.add('fade-out');
-                        setTimeout(() => {
-                            splash.style.display = 'none';
-                        }, 500);
-                    }
+                    // Complete progress bar smoothly
+                    Module._targetProgress = 100;
+                    Module._lastProgressUpdate = Date.now();
 
-                    // Show fullscreen button
-                    const fsBtn = document.getElementById('fullscreen-btn');
-                    if (fsBtn && document.fullscreenEnabled) {
-                        fsBtn.classList.add('visible');
-                    }
+                    // Wait for progress animation to complete, then fade
+                    setTimeout(() => {
+                        Module._stopProgressAnimation();
 
-                    // Focus canvas for input
-                    const canvas = document.getElementById('canvas');
-                    if (canvas) canvas.focus();
+                        // Fade out splash screen
+                        const splash = document.getElementById('splash');
+                        if (splash) {
+                            splash.classList.add('fade-out');
+                            setTimeout(() => {
+                                splash.style.display = 'none';
+                            }, 500);
+                        }
+
+                        // Show fullscreen button and F10 hint
+                        const fsBtn = document.getElementById('fullscreen-btn');
+                        if (fsBtn && document.fullscreenEnabled) {
+                            fsBtn.classList.add('visible');
+                        }
+
+                        // Show F10 hint notification
+                        showF10Hint();
+
+                        // Focus canvas for input
+                        const canvas = document.getElementById('canvas');
+                        if (canvas) canvas.focus();
+                    }, 300);
                 }
             ],
             print: (function () {
@@ -435,12 +784,73 @@
                 console.error(text);
                 // Capture critical errors
                 if (text.includes('RuntimeError') || text.includes('abort') || text.includes('Assertion failed')) {
-                    showError('Runtime Error', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
+                    // Try to capture stack trace
+                    const stacktrace = [];
+                    try {
+                        const err = new Error();
+                        if (err.stack) {
+                            stacktrace.push(...err.stack.split('\n').slice(1));
+                        }
+                    } catch(e) {}
+                    stacktrace.push('C++ Error: ' + text);
+                    showError('Runtime Error', text.substring(0, 200) + (text.length > 200 ? '...' : ''), stacktrace);
                 }
             },
             canvas: (function () {
                 return document.getElementById('canvas');
             })(),
+            // Smooth progress tracking
+            _currentProgress: 0,
+            _targetProgress: 0,
+            _progressInterval: null,
+            _lastProgressUpdate: 0,
+            _progressPhase: 'init', // init, downloading, parsing, starting
+
+            _smoothProgress: function() {
+                const now = Date.now();
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+
+                if (!progressBar) return;
+
+                // Smoothly interpolate toward target
+                const diff = this._targetProgress - this._currentProgress;
+                if (Math.abs(diff) > 0.5) {
+                    // Ease toward target
+                    this._currentProgress += diff * 0.1;
+                } else {
+                    this._currentProgress = this._targetProgress;
+                }
+
+                // If stuck at same progress for too long, slowly advance
+                // This prevents the bar from appearing frozen
+                if (now - this._lastProgressUpdate > 2000 && this._currentProgress < 95) {
+                    // Slowly advance (max 0.5% per second when stuck)
+                    const stuckTime = now - this._lastProgressUpdate;
+                    const slowAdvance = Math.min(0.5 * (stuckTime / 1000), 5); // Max 5% advance
+                    this._currentProgress = Math.min(this._currentProgress + slowAdvance * 0.016, this._targetProgress + 10, 95);
+                }
+
+                const displayProgress = Math.floor(this._currentProgress);
+                progressBar.style.width = displayProgress + '%';
+                if (progressText) progressText.textContent = displayProgress + '%';
+            },
+
+            _startProgressAnimation: function() {
+                if (this._progressInterval) return;
+                const self = this;
+                this._progressInterval = setInterval(function() {
+                    self._smoothProgress();
+                }, 16); // ~60fps
+            },
+
+            _stopProgressAnimation: function() {
+                if (this._progressInterval) {
+                    clearInterval(this._progressInterval);
+                    this._progressInterval = null;
+                }
+            },
+
             setStatus: function (text) {
                 const progressBar = document.getElementById('progress-bar');
                 const progressText = document.getElementById('progress-text');
@@ -449,22 +859,45 @@
 
                 if (!progressBar || !progressText) return;
 
+                this._startProgressAnimation();
+                this._lastProgressUpdate = Date.now();
+
                 // Parse progress format: "Task (current/total)"
                 let match = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
                 if (match) {
                     const task = match[1].trim();
                     const current = parseFloat(match[2]);
                     const total = parseFloat(match[4]);
-                    const percent = Math.floor((current / total) * 100);
 
-                    progressBar.style.width = percent + '%';
-                    progressText.textContent = percent + '%';
+                    // Map different phases to progress ranges:
+                    // 0-70%: Downloading assets
+                    // 70-90%: Parsing/initializing
+                    // 90-100%: Starting game
+                    let percent;
+                    if (task.toLowerCase().includes('download')) {
+                        percent = (current / total) * 70;
+                        this._progressPhase = 'downloading';
+                    } else if (task.toLowerCase().includes('asset') || task.toLowerCase().includes('load')) {
+                        percent = 70 + (current / total) * 20;
+                        this._progressPhase = 'parsing';
+                    } else {
+                        percent = (current / total) * 100;
+                    }
+
+                    this._targetProgress = Math.max(this._targetProgress, percent);
                     progressStage.textContent = task || 'Loading...';
 
                     if (spinner) spinner.classList.remove('visible');
                 } else if (text) {
-                    progressText.textContent = text;
-                    progressStage.textContent = '';
+                    // Handle text-only status updates
+                    if (text.toLowerCase().includes('starting')) {
+                        this._targetProgress = 95;
+                        this._progressPhase = 'starting';
+                    } else if (text.toLowerCase().includes('running')) {
+                        this._targetProgress = 100;
+                    }
+
+                    progressStage.textContent = text;
 
                     // Show spinner for indeterminate states
                     if (text.includes('...') && spinner) {
@@ -479,13 +912,25 @@
                 const total = this.totalDependencies;
 
                 if (left === 0) {
+                    this._targetProgress = 95;
                     Module.setStatus('Starting game...');
                 } else {
+                    // Assets loading is mapped to 70-90% range
+                    const assetProgress = 70 + (loaded / total) * 20;
+                    this._targetProgress = Math.max(this._targetProgress, assetProgress);
                     Module.setStatus('Loading assets (' + loaded + '/' + total + ')');
                 }
             },
             onAbort: function(what) {
-                showError('Fatal Error', 'The game crashed unexpectedly. Please try refreshing the page.\n\nDetails: ' + (what || 'Unknown error'));
+                const stacktrace = [];
+                try {
+                    const err = new Error();
+                    if (err.stack) {
+                        stacktrace.push(...err.stack.split('\n').slice(1));
+                    }
+                } catch(e) {}
+                stacktrace.push('Abort reason: ' + (what || 'Unknown'));
+                showError('Fatal Error', 'The game crashed unexpectedly. Please try refreshing the page.\n\nDetails: ' + (what || 'Unknown error'), stacktrace);
             }
         };
 
@@ -494,8 +939,15 @@
         // Global error handler
         window.onerror = function(message, source, lineno, colno, error) {
             console.error('Window error:', message, source, lineno, colno, error);
+            const stacktrace = [];
+            if (error && error.stack) {
+                stacktrace.push(...error.stack.split('\n'));
+            }
+            stacktrace.push(`at ${source}:${lineno}:${colno}`);
             if (message.includes('memory') || message.includes('Memory')) {
-                showError('Out of Memory', 'The game ran out of memory. Try closing other browser tabs and refreshing.');
+                showError('Out of Memory', 'The game ran out of memory. Try closing other browser tabs and refreshing.', stacktrace);
+            } else {
+                showError('JavaScript Error', String(message).substring(0, 200), stacktrace);
             }
             return false;
         };

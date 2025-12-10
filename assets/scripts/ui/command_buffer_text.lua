@@ -1,5 +1,6 @@
 -- Command-buffer friendly rich text renderer.
 -- Merges the character-effect mixin with the existing command_buffer + behavior_script_v2 flow.
+--
 -- Usage:
 --   local Text = require("ui.command_buffer_text")
 --   local t = Text({
@@ -11,9 +12,50 @@
 --   })
 --   -- If attached as a MonoBehaviour, update_all() will call :update(dt) automatically.
 --   -- Otherwise, call t:update(dt) yourself each frame.
+--
+-- ===============================================================================
+-- PERFORMANCE CHARACTERISTICS:
+-- ===============================================================================
+-- This renderer issues command buffer calls PER CHARACTER each frame.
+--
+-- Rendering Cost Breakdown:
+-- - Characters WITHOUT scale effects: 1 queueTextPro call per character
+-- - Characters WITH scale effects:    5 command buffer calls per character
+--   (queuePushMatrix, queueTranslate, queueScale, queueTextPro, queuePopMatrix)
+--
+-- Example Impact:
+-- - 100 characters with scale effects = 500 command buffer calls per frame
+-- - At 60 FPS, this is 30,000 command buffer calls per second
+--
+-- Profiling Recommendations:
+-- - Use Tracy zones (if available) to measure render time: tracy.ZoneBegin/End
+-- - Monitor command buffer queue length via command_buffer internals
+-- - Test with realistic text loads (50-200 characters with mixed effects)
+--
+-- Optimization Strategies (if performance issues arise):
+-- 1. Character batching: Group consecutive characters with identical transforms
+-- 2. Instanced rendering: Use a single draw call for all characters
+-- 3. Effect budgeting: Limit scale effects to N characters per text object
+-- 4. Culling: Skip effects for off-screen or alpha=0 characters
+-- 5. Object pooling: Reuse Col objects instead of creating new ones each frame
+--
+-- Current Bottlenecks:
+-- - Matrix operations are NOT batched (each character gets its own matrix stack)
+-- - Color objects are allocated every frame (creates GC pressure)
+-- - No spatial culling (all characters render even if off-screen)
+--
+-- ===============================================================================
 
 local Node = require("monobehavior.behavior_script_v2")
 local component_cache = require("core.component_cache")
+local text_effects = require("ui.text_effects")
+-- Load all effect modules
+require("ui.text_effects.static")
+require("ui.text_effects.continuous")
+require("ui.text_effects.oneshot")
+require("ui.text_effects.juicy")
+require("ui.text_effects.magical")
+require("ui.text_effects.elemental")
 
 local CommandBufferText = Node:extend()
 
@@ -21,6 +63,13 @@ local unpack = table.unpack or unpack
 
 local DEFAULT_LINE_HEIGHT = 1.1
 local DEFAULT_COLOR = (Col and Col(255, 255, 255, 255)) or { r = 255, g = 255, b = 255, a = 255 }
+
+local function get_time()
+  if main_loop and main_loop.getTime then
+    return main_loop.getTime()
+  end
+  return os.clock()
+end
 
 local function measure_width(str, font_size, spacing)
   if localization and localization.getTextWidthWithCurrentFont then
@@ -222,6 +271,15 @@ function CommandBufferText:_format_characters()
         ch.r = 0
         ch.ox, ch.oy = 0, 0
         ch.w, ch.h = space_w, line_height
+        -- NEW: Extended properties
+        ch.rotation = 0
+        ch.scale = 1
+        ch.scaleX = 1
+        ch.scaleY = 1
+        ch.alpha = 255
+        ch.codepoint = nil
+        ch.effect_data = {}
+        ch.effect_finished = nil
         cx = cx + space_w
       end
     else
@@ -230,6 +288,15 @@ function CommandBufferText:_format_characters()
       ch.r = 0
       ch.ox, ch.oy = 0, 0
       ch.w, ch.h = w, line_height
+      -- NEW: Extended properties
+      ch.rotation = 0
+      ch.scale = 1
+      ch.scaleX = 1
+      ch.scaleY = 1
+      ch.alpha = 255
+      ch.codepoint = nil
+      ch.effect_data = {}
+      ch.effect_finished = nil
       cx = cx + w
       if cx > self.w then
         cx = 0
@@ -317,6 +384,31 @@ function CommandBufferText:_format_characters()
 end
 
 function CommandBufferText:update(dt)
+  -- =========================================================================
+  -- PERFORMANCE PROFILING HOOK POINT
+  -- =========================================================================
+  -- To profile this function's performance, wrap it with Tracy zones:
+  --
+  --   if tracy then tracy.ZoneBeginN("TextEffectsUpdate") end
+  --   -- ... update logic ...
+  --   if tracy then tracy.ZoneEnd() end
+  --
+  -- Or use manual timing for platforms without Tracy:
+  --
+  --   local start_time = os.clock()
+  --   -- ... update logic ...
+  --   local elapsed = os.clock() - start_time
+  --   if elapsed > 0.002 then  -- Log if > 2ms
+  --     print(string.format("CommandBufferText slow frame: %.3fms", elapsed * 1000))
+  --   end
+  --
+  -- Metrics to track:
+  --   - Total update time (should be < 1-2ms for 100 characters)
+  --   - Command buffer calls issued (count queueTextPro calls)
+  --   - Matrix push/pop count (equals scaled character count)
+  --   - GC allocations (monitor Col object creation)
+  -- =========================================================================
+
   if self.dirty then
     self:rebuild()
   end
@@ -346,30 +438,125 @@ function CommandBufferText:update(dt)
   local default_color = self.base_color
 
   for _, ch in ipairs(self.characters) do
+    -- Reset per-frame properties
     ch.ox, ch.oy = 0, 0
+    ch.rotation = 0
+    ch.scale = 1
+    ch.scaleX = 1
+    ch.scaleY = 1
+    ch.alpha = 255
     ch.color = nil
+    -- Don't reset: ch.effect_data (persistent), ch.codepoint, ch.created_at
 
     if ch.effects and #ch.effects > 0 then
+      -- Build context for effects
+      local ctx = {
+        time = get_time(),
+        char_count = #self.characters,
+        text_w = self.text_w,
+        text_h = self.text_h,
+        first_frame = self.first_frame,
+      }
+
       for _, eff in ipairs(ch.effects) do
         local name = eff[1]
-        local fn = name and self.text_effects[name]
-        if fn then
-          fn(self, dt or 0, ch, unpack(eff, 2))
+        -- Try registry first, then custom effects
+        local registered = text_effects.get(name)
+        if registered then
+          local args = {}
+          for i = 2, #eff do args[i-1] = eff[i] end
+          text_effects.apply(name, ctx, dt, ch, args)
+        else
+          local fn = name and self.text_effects[name]
+          if fn then
+            fn(self, dt or 0, ch, unpack(eff, 2))
+          else
+            -- Warn once per unknown effect
+            if not self._warned_effects then self._warned_effects = {} end
+            if not self._warned_effects[name] then
+              print("Warning: Unknown text effect '" .. tostring(name) .. "'")
+              self._warned_effects[name] = true
+            end
+          end
         end
       end
     end
 
     local draw_x = origin_x + (ch.x or 0) + (ch.ox or 0)
     local draw_y = origin_y + (ch.y or 0) + (ch.oy or 0)
+    local draw_char = ch.codepoint or ch.c
+    local draw_rotation = ch.rotation or 0
+    local draw_scale = (ch.scale or 1)
+    local draw_scaleX = draw_scale * (ch.scaleX or 1)
+    local draw_scaleY = draw_scale * (ch.scaleY or 1)
+    local draw_color = ch.color or default_color
+    if ch.alpha and ch.alpha < 255 then
+      draw_color = Col(draw_color.r, draw_color.g, draw_color.b, ch.alpha)
+    end
 
-    command_buffer.queueDrawText(layer_handle, function(c)
-      c.text = ch.c
-      c.font = font_ref
-      c.x = draw_x
-      c.y = draw_y
-      c.color = ch.color or default_color
-      c.fontSize = self.font_size
-    end, self.z or 0, self.render_space)
+    local needs_scale = draw_scaleX ~= 1 or draw_scaleY ~= 1
+    local char_z = self.z or 0
+
+    if needs_scale then
+      -- =====================================================================
+      -- PERFORMANCE WARNING: Matrix Transform Path
+      -- =====================================================================
+      -- This path uses 5 command buffer calls per character to support scale.
+      -- This is required because Raylib's DrawTextPro doesn't support scale.
+      --
+      -- Cost per scaled character:
+      --   1. queuePushMatrix    - Save matrix state
+      --   2. queueTranslate     - Move to character position
+      --   3. queueScale         - Apply scale transform
+      --   4. queueTextPro       - Draw character at origin
+      --   5. queuePopMatrix     - Restore matrix state
+      --
+      -- Impact: For 50 characters with scale effects:
+      --   - 250 command buffer calls per frame
+      --   - Increased CPU time for matrix stack operations
+      --   - Potential batching breaks in the render pipeline
+      --
+      -- Optimization Opportunity:
+      --   - Batch consecutive characters with identical scale values
+      --   - Use a custom shader that supports per-character scale
+      --   - Render scaled text to texture once, then composite
+      -- =====================================================================
+      command_buffer.queuePushMatrix(layer_handle, function(c) end, char_z, self.render_space)
+      command_buffer.queueTranslate(layer_handle, function(c)
+        c.x = draw_x
+        c.y = draw_y
+      end, char_z, self.render_space)
+      command_buffer.queueScale(layer_handle, function(c)
+        c.x = draw_scaleX
+        c.y = draw_scaleY
+      end, char_z, self.render_space)
+      command_buffer.queueTextPro(layer_handle, function(c)
+        c.text = draw_char
+        c.font = font_ref
+        c.x = 0
+        c.y = 0
+        c.origin = { x = 0, y = 0 }
+        c.rotation = draw_rotation
+        c.fontSize = self.font_size
+        c.spacing = self.letter_spacing or 1
+        c.color = draw_color
+      end, char_z, self.render_space)
+      command_buffer.queuePopMatrix(layer_handle, function(c) end, char_z, self.render_space)
+    else
+      -- Fast path: Single command buffer call for unscaled characters
+      -- This path should be used whenever possible for best performance
+      command_buffer.queueTextPro(layer_handle, function(c)
+        c.text = draw_char
+        c.font = font_ref
+        c.x = draw_x
+        c.y = draw_y
+        c.origin = { x = 0, y = 0 }
+        c.rotation = draw_rotation
+        c.fontSize = self.font_size
+        c.spacing = self.letter_spacing or 1
+        c.color = draw_color
+      end, char_z, self.render_space)
+    end
   end
 
   if self.first_frame then self.first_frame = false end

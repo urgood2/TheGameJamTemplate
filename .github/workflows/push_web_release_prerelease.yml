@@ -125,8 +125,12 @@ jobs:
             fi
           done
 
-          # Copy assets from the build tree (matches preload path)
-          cp -R build-web/assets dist/web/
+          # Optional: copy splash/favicon to root (tiny files)
+          for f in assets/splash.png assets/favicon.png; do
+            if [ -f "$f" ]; then
+              cp "$f" dist/web/
+            fi
+          done
 
           # Copy splash.png to root if it exists in assets
           if [ -f "assets/splash.png" ]; then

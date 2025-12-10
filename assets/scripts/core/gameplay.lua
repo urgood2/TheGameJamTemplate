@@ -3673,8 +3673,17 @@ function StatTooltipSystem.makeRow(key, snapshot, opts)
 
     return makeTooltipRow(label, formatted, {
         rowPadding = opts.rowPadding or tooltipStyle.rowPadding,
-        labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
-        valueOpts = { color = color },
+        labelOpts = {
+            background = tooltipStyle.labelBg,
+            color = tooltipStyle.labelColor,
+            padding = opts.pillPadding or tooltipStyle.pillPadding,
+            fontSize = opts.fontSize
+        },
+        valueOpts = {
+            color = color,
+            padding = opts.textPadding or tooltipStyle.textPadding,
+            fontSize = opts.fontSize
+        },
         align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
     })
 end
@@ -3739,8 +3748,17 @@ function StatTooltipSystem.buildElementalRows(perType, opts)
             local clr = opts.colorCode and (displayVal > 0 and "green" or (displayVal < 0 and "red" or (tooltipStyle.valueColor or "white"))) or tooltipStyle.valueColor
             local r = makeTooltipRow(t .. " " .. suffix, fmt, {
                 rowPadding = opts.rowPadding or tooltipStyle.rowPadding,
-                labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
-                valueOpts = { color = clr },
+                labelOpts = {
+                    background = tooltipStyle.labelBg,
+                    color = tooltipStyle.labelColor,
+                    padding = opts.pillPadding or tooltipStyle.pillPadding,
+                    fontSize = opts.fontSize
+                },
+                valueOpts = {
+                    color = clr,
+                    padding = opts.textPadding or tooltipStyle.textPadding,
+                    fontSize = opts.fontSize
+                },
                 align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
             })
             if r then rows[#rows + 1] = r end
@@ -3789,15 +3807,28 @@ local function buildTwoColumnBody(rows, opts) return buildNColumnBody(rows, 2, o
 local function buildFourColumnBody(rows, opts) return buildNColumnBody(rows, 4, opts) end
 
 local function makeDetailedStatsTooltip(snapshot)
-    local outerPadding = tooltipStyle.outerPadding or 10
-    local opts = { colorCode = true, showHeaders = true, showZeros = true, rowPadding = tooltipStyle.rowPadding }
+    -- Compressed styling for detailed stats
+    local compactPadding = 4
+    local compactRowPadding = 1
+    local compactFontSize = 20
+    local opts = {
+        colorCode = true,
+        showHeaders = true,  -- Show section headers
+        showZeros = true,
+        rowPadding = compactRowPadding,
+        fontSize = compactFontSize,
+        pillPadding = 2,
+        headerFontSize = 14,
+        headerPadding = 2,
+        textPadding = 1
+    }
 
     local rows = {}
     if not snapshot then
         rows[1] = makeTooltipRow("status", "Stats unavailable", {
-            rowPadding = tooltipStyle.rowPadding,
-            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
-            valueOpts = { color = "red" },
+            rowPadding = compactRowPadding,
+            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor, padding = 2 },
+            valueOpts = { color = "red", padding = 1 },
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
         })
     else
@@ -3811,21 +3842,22 @@ local function makeDetailedStatsTooltip(snapshot)
 
     if #rows == 0 then
         rows[1] = makeTooltipRow("status", "No stats", {
-            rowPadding = tooltipStyle.rowPadding,
-            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
-            valueOpts = { color = "yellow" },
+            rowPadding = compactRowPadding,
+            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor, padding = 2 },
+            valueOpts = { color = "yellow", padding = 1 },
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
         })
     end
 
-    local v = buildFourColumnBody(rows, { innerColor = tooltipStyle.innerColor, padding = outerPadding })
+    -- Use 5 columns for more compact layout
+    local v = buildNColumnBody(rows, 5, { innerColor = tooltipStyle.innerColor, padding = compactPadding, columnPadding = 2 })
 
     local root = dsl.root {
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = outerPadding,
-            outlineThickness = 2,
+            padding = compactPadding,
+            outlineThickness = 1,
             outlineColor = tooltipStyle.outlineColor,
             shadow = true
         },

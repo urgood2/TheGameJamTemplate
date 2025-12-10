@@ -42,6 +42,7 @@ build-web:
 	echo "Build complete! Files are in build-emc/"
 
 # Build web with gzip compression for deployment
+# This matches the CI workflow for parity
 build-web-dist:
 	#!/usr/bin/env bash
 	set -e
@@ -50,20 +51,23 @@ build-web-dist:
 	echo "Creating distribution package..."
 	mkdir -p dist/web
 
-	# Copy HTML and JS
-	cp build-emc/index.html dist/web/
+	# Rename HTML to index.html (matches CI rename_to_index target)
+	cp build-emc/raylib-cpp-cmake-template.html dist/web/index.html
+
+	# Inject gzip decompression snippet into index.html (matches CI inject_web_patch target)
+	cmake -DHTML_PATH="dist/web/index.html" -DSNIPPET_PATH="cmake/inject_snippet.html" -P cmake/inject_snippet.cmake
+
+	# Copy JS
 	cp build-emc/*.js dist/web/
 
-	# Gzip WASM and data files
+	# Gzip WASM and data files (matches CI gzip_assets target)
 	for f in build-emc/*.wasm build-emc/*.data; do
 		if [ -f "$f" ]; then
-			gzip -9 -c "$f" > "dist/web/$(basename "$f").gz"
+			gzip -9 -kf "$f"
+			cp "${f}.gz" dist/web/
 			echo "Compressed $(basename "$f")"
 		fi
 	done
-
-	# Copy assets
-	cp -R assets dist/web/
 
 	# Copy splash if it exists
 	[ -f "assets/splash.png" ] && cp assets/splash.png dist/web/

@@ -1,5 +1,6 @@
 #pragma once
 #include "raylib.h"
+#include "rlgl.h"
 #include <utility>
 #include <string>
 #include <vector>
@@ -224,18 +225,22 @@ namespace shader_pipeline {
 
         BeginTextureMode(ping);
         ClearBackground(opaqueColor);
+        rlDrawRenderBatchActive();
         EndTextureMode();
 
         BeginTextureMode(pong);
         ClearBackground(opaqueColor);
+        rlDrawRenderBatchActive();
         EndTextureMode();
 
         BeginTextureMode(baseCache);
         ClearBackground(opaqueColor);
+        rlDrawRenderBatchActive();
         EndTextureMode();
 
         BeginTextureMode(postPassCache);
         ClearBackground(opaqueColor);
+        rlDrawRenderBatchActive();
         EndTextureMode();
     }
 

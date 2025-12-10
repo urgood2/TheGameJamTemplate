@@ -403,3 +403,18 @@ ldtk.get_layer_grid_size(layerIdx)        -- → tile size in pixels
 2. Integration test: load level, spawn door entity, verify fields accessible
 3. Integration test: procedural grid → apply_rules → verify tile output
 4. End-to-end: door transition between two levels
+
+---
+
+## Thread Safety & Usage Constraints
+
+### Single-Threaded Requirement
+The procedural generation APIs (`apply_rules`, `get_tile_grid`, `draw_procedural_layer*`) use internal global state (`internal_rule::managedLevel`) and are **NOT thread-safe**. All LDTK Lua API calls must be made from the main Lua thread.
+
+### Spawner Lifecycle
+The `set_spawner` callback stores a reference to the Lua function. If the Lua state is destroyed before the spawner is cleared, behavior is undefined. Best practice:
+- Call `ldtk.set_spawner(nil)` before Lua state shutdown
+- Or ensure level loading completes before any Lua teardown
+
+### Layer Index Stability
+Layer indices (0-based) are determined by the order in the LDtk project file. If you reorder layers in LDtk, previously saved Lua code using numeric indices will break. For stability, store layer names and use `get_layer_index(name)` lookups when possible.

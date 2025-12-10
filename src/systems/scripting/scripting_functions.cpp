@@ -503,13 +503,19 @@ auto initLuaMasterState(sol::state &stateToInit,
       stored = fn;
       ldtk_loader::SetEntitySpawner(
           [fn, &stateToInit, entityFieldsToLua](const ldtk::Entity &ent, entt::registry & /*R*/) {
-            if (!fn.valid())
-              return;
-            const auto pos = ent.getPosition();
-            const auto grid = ent.getGridPosition();
-            sol::table fields = entityFieldsToLua(stateToInit, ent);
-            fn(ent.getName(), (float)pos.x, (float)pos.y, ent.layer->getName(),
-               grid.x, grid.y, fields);
+            try {
+              if (!fn.valid())
+                return;
+              const auto pos = ent.getPosition();
+              const auto grid = ent.getGridPosition();
+              sol::table fields = entityFieldsToLua(stateToInit, ent);
+              fn(ent.getName(), (float)pos.x, (float)pos.y, ent.layer->getName(),
+                 grid.x, grid.y, fields);
+            } catch (const std::exception &e) {
+              spdlog::error("LDtk entity spawner error for '{}': {}", ent.getName(), e.what());
+            } catch (...) {
+              spdlog::error("LDtk entity spawner unknown error for '{}'", ent.getName());
+            }
           });
       ldtk_loader::SetRegistry(globals::getRegistry());
     });

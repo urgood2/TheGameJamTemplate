@@ -93,6 +93,9 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DITCH_BUILD_ID="${{ github.sha }}"
 
+      - name: Copy assets into web build tree
+        run: cmake --build build-web --target copy_assets
+
       - name: Build Web
         run: emmake make -C build-web -j$(nproc)
 

@@ -184,7 +184,7 @@ jobs:
       - name: Determine itch channel
         id: channel
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+          if [[ "${GITHUB_REF_NAME}" == "main" || "${GITHUB_REF_NAME}" == "master" ]]; then
             echo "channel=web" >> $GITHUB_OUTPUT
           else
             echo "channel=web-dev" >> $GITHUB_OUTPUT

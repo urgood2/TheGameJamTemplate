@@ -23,6 +23,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <vector>
+#include <set>
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/layer/layer_order_system.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -654,6 +655,159 @@ inline size_t GetCachedTilesetCount() {
     return internal_loader::tilesetCache.size();
 }
 
+// -------------------- Level Query Helpers --------------------
+
+struct LevelBounds {
+    float x, y, width, height;
+};
+
+inline LevelBounds GetLevelBounds(const std::string& levelName) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+    return LevelBounds{
+        (float)level.position.x,
+        (float)level.position.y,
+        (float)level.size.x,
+        (float)level.size.y
+    };
+}
+
+struct LevelMeta {
+    int width, height;
+    int world_x, world_y;
+    int depth;
+    ldtk::Color bg_color;
+};
+
+inline LevelMeta GetLevelMeta(const std::string& levelName) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+    return LevelMeta{
+        level.size.x,
+        level.size.y,
+        level.position.x,
+        level.position.y,
+        level.depth,
+        level.bg_color
+    };
+}
+
+inline bool LevelExists(const std::string& levelName) {
+    try {
+        const auto& world = internal_loader::project.getWorld();
+        world.getLevel(levelName);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+struct NeighborData {
+    std::string north;
+    std::string south;
+    std::string east;
+    std::string west;
+    std::vector<std::string> overlap;
+};
+
+inline NeighborData GetNeighbors(const std::string& levelName) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    NeighborData result;
+
+    auto getFirst = [](const std::vector<const ldtk::Level*>& vec) -> std::string {
+        return vec.empty() ? "" : vec[0]->name;
+    };
+
+    result.north = getFirst(level.getNeighbours(ldtk::Dir::North));
+    result.south = getFirst(level.getNeighbours(ldtk::Dir::South));
+    result.east = getFirst(level.getNeighbours(ldtk::Dir::East));
+    result.west = getFirst(level.getNeighbours(ldtk::Dir::West));
+
+    for (const auto* neighbor : level.getNeighbours(ldtk::Dir::Overlap)) {
+        result.overlap.push_back(neighbor->name);
+    }
+
+    return result;
+}
+
+// -------------------- Entity Query Helpers --------------------
+
+struct EntityInfo {
+    std::string name;
+    std::string iid;
+    float x, y;
+    int grid_x, grid_y;
+    int width, height;
+    std::string layer;
+    std::vector<std::string> tags;
+};
+
+inline std::vector<EntityInfo> GetEntitiesByName(const std::string& levelName, const std::string& entityName) {
+    std::vector<EntityInfo> result;
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            if (ent.getName() == entityName) {
+                EntityInfo info;
+                info.name = ent.getName();
+                info.iid = ent.iid.str();
+                info.x = (float)ent.getPosition().x;
+                info.y = (float)ent.getPosition().y;
+                info.grid_x = ent.getGridPosition().x;
+                info.grid_y = ent.getGridPosition().y;
+                info.width = ent.getSize().x;
+                info.height = ent.getSize().y;
+                info.layer = layer.getName();
+                info.tags = ent.getTags();
+                result.push_back(info);
+            }
+        }
+    }
+    return result;
+}
+
+struct EntityPosition {
+    float x, y;
+    bool found;
+};
+
+inline EntityPosition GetEntityPositionByIID(const std::string& levelName, const std::string& iid) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            if (ent.iid.str() == iid) {
+                return EntityPosition{
+                    (float)ent.getPosition().x,
+                    (float)ent.getPosition().y,
+                    true
+                };
+            }
+        }
+    }
+    return EntityPosition{0, 0, false};
+}
+
+// Get raw Entity reference for field extraction (used by Lua bindings)
+inline const ldtk::Entity* GetEntityByIID(const std::string& levelName, const std::string& iid) {
+    const auto& world = internal_loader::project.getWorld();
+    const auto& level = world.getLevel(levelName);
+
+    for (const auto& layer : level.allLayers()) {
+        for (const auto& ent : layer.allEntities()) {
+            if (ent.iid.str() == iid) {
+                return &ent;
+            }
+        }
+    }
+    return nullptr;
+}
+
 } // namespace ldtk_loader
 
 // ----------------------------------------------------
@@ -834,6 +988,581 @@ inline void FloodFillGrid(int layerIdx,
             }
         }
     }
+}
+
+// -------------------- Lua-friendly Rule Runner API --------------------
+
+// Managed Level for procedural generation from Lua
+namespace internal_rule {
+    extern std::unique_ptr<Level> managedLevel;
+}
+
+// Create a Level from dimensions and IntGrid values
+inline void CreateLevelFromIntGrid(int width, int height, const std::vector<int>& cells) {
+    if (!internal_rule::managedLevel) {
+        internal_rule::managedLevel = std::make_unique<Level>();
+    }
+
+    // Convert int vector to intgridvalue_t vector
+    std::vector<intgridvalue_t> values;
+    values.reserve(cells.size());
+    for (int v : cells) {
+        values.push_back(static_cast<intgridvalue_t>(v));
+    }
+
+    internal_rule::managedLevel->setIntGrid(
+        static_cast<dimensions_t>(width),
+        static_cast<dimensions_t>(height),
+        std::move(values)
+    );
+
+    // Point internal level pointer to managed level
+    internal_rule::levelPtr = internal_rule::managedLevel.get();
+}
+
+// Set IntGrid cell value
+inline void SetIntGridCell(int x, int y, int value) {
+    if (!internal_rule::managedLevel) {
+        throw std::runtime_error("No managed level created - call CreateLevelFromIntGrid first");
+    }
+    internal_rule::managedLevel->setIntGrid(x, y, static_cast<intgridvalue_t>(value));
+}
+
+// Get number of layers defined in the LDtk project
+inline size_t GetLayerCount() {
+    return internal_rule::defFile.getLayers().size();
+}
+
+// Get layer name by index
+inline std::string GetLayerName(int layerIdx) {
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(layers.size())) {
+        return "";
+    }
+    return layers[layerIdx].name;
+}
+
+// Find layer index by name
+inline int GetLayerIndex(const std::string& layerName) {
+    const auto& layers = internal_rule::defFile.getLayers();
+    for (size_t i = 0; i < layers.size(); ++i) {
+        if (layers[i].name == layerName) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+// Structure for tile result
+struct TileResult {
+    int tile_id;
+    bool flip_x;
+    bool flip_y;
+    float alpha;
+    int offset_x;
+    int offset_y;
+};
+
+// Get tile results for a specific cell
+inline std::vector<TileResult> GetTileResultsAt(int layerIdx, int x, int y) {
+    std::vector<TileResult> results;
+
+    if (!internal_rule::levelPtr) return results;
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        return results;
+    }
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    // Check bounds manually
+    if (x < 0 || x >= grid.getWidth() || y < 0 || y >= grid.getHeight()) return results;
+
+    const auto& tiles = grid(x, y);
+    for (const auto& t : tiles) {
+        TileResult r;
+        r.tile_id = t.tileId;
+        r.flip_x = ldtkimport::TileFlags::isFlippedX(t.flags);
+        r.flip_y = ldtkimport::TileFlags::isFlippedY(t.flags);
+        r.alpha = t.opacity / 100.0f; // Convert from 0-100 to 0.0-1.0
+        r.offset_x = t.posXOffset;
+        r.offset_y = t.posYOffset;
+        results.push_back(r);
+    }
+
+    return results;
+}
+
+// Run rules and ensure tile grids are set up
+inline void RunRulesForLevel(const std::string& layerName) {
+    if (!internal_rule::managedLevel) {
+        throw std::runtime_error("No managed level - call CreateLevelFromIntGrid first");
+    }
+
+    // Find the layer index
+    int layerIdx = GetLayerIndex(layerName);
+    if (layerIdx < 0) {
+        throw std::runtime_error("Layer not found: " + layerName);
+    }
+
+    // Ensure we have enough tile grids
+    size_t layerCount = internal_rule::defFile.getLayers().size();
+    internal_rule::managedLevel->setTileGridCount(layerCount);
+
+    // Set layer UID for each tile grid
+    for (size_t i = 0; i < layerCount; ++i) {
+        internal_rule::managedLevel->getTileGridByIdx(i).setLayerUid(
+            internal_rule::defFile.getLayers()[i].uid
+        );
+    }
+
+    // Run the rules
+    RunRules(0);
+}
+
+// Get all tile results for a layer as a flat structure
+struct LayerTileResults {
+    int width;
+    int height;
+    std::vector<std::vector<TileResult>> cells; // One vector per cell
+};
+
+inline LayerTileResults GetAllTileResults(int layerIdx) {
+    LayerTileResults results;
+    results.width = 0;
+    results.height = 0;
+
+    if (!internal_rule::levelPtr) return results;
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        return results;
+    }
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    results.width = grid.getWidth();
+    results.height = grid.getHeight();
+    results.cells.reserve(results.width * results.height);
+
+    for (int y = 0; y < results.height; ++y) {
+        for (int x = 0; x < results.width; ++x) {
+            results.cells.push_back(GetTileResultsAt(layerIdx, x, y));
+        }
+    }
+
+    return results;
+}
+
+// Clean up managed level
+inline void CleanupManagedLevel() {
+    internal_rule::managedLevel.reset();
+    internal_rule::levelPtr = nullptr;
+}
+
+// -------------------- Command Buffer Rendering for Procedural Tiles --------------------
+
+// Draw procedural tile grid layer to a command buffer layer
+// Uses the same pattern as ldtk_loader::DrawLayer but for procedurally generated tiles
+inline void DrawProceduralLayer(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int renderZLevel = 0,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) {
+        spdlog::warn("DrawProceduralLayer: No managed level - call apply_rules first");
+        return;
+    }
+
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        spdlog::warn("DrawProceduralLayer: Invalid layer index {}", layerIdx);
+        return;
+    }
+
+    // Get layer definition and tileset
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx >= static_cast<int>(layers.size())) {
+        spdlog::warn("DrawProceduralLayer: Layer index {} out of range", layerIdx);
+        return;
+    }
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) {
+        spdlog::warn("DrawProceduralLayer: No tileset for layer {}", layerIdx);
+        return;
+    }
+
+    const int tileSize = tileset->tileSize;
+
+    // Load tileset texture (use cache)
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    // Get the tile grid
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    int gw = grid.getWidth();
+    int gh = grid.getHeight();
+
+    // Iterate all cells and queue draw commands
+    for (int y = 0; y < gh; ++y) {
+        for (int x = 0; x < gw; ++x) {
+            const auto& cellTiles = grid(x, y);
+            if (cellTiles.empty()) continue;
+
+            // Draw all stacked tiles in the cell
+            for (const auto& t : cellTiles) {
+                // Calculate source rectangle from tile ID
+                int16_t srcX, srcY;
+                tileset->getCoordinates(t.tileId, srcX, srcY);
+
+                Rectangle src {
+                    static_cast<float>(srcX * tileSize),
+                    static_cast<float>(srcY * tileSize),
+                    static_cast<float>(tileSize),
+                    static_cast<float>(tileSize)
+                };
+
+                // Calculate destination position
+                float posX = offsetX + x * tileSize + t.posXOffset;
+                float posY = offsetY + y * tileSize + t.posYOffset;
+
+                // Frustum culling
+                if (viewOpt) {
+                    Rectangle dstRect{posX, posY, static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                    if (!ldtk_loader::RectsOverlap(dstRect, *viewOpt)) {
+                        continue;
+                    }
+                }
+
+                // Handle flip flags
+                if (ldtkimport::TileFlags::isFlippedX(t.flags)) src.width = -src.width;
+                if (ldtkimport::TileFlags::isFlippedY(t.flags)) src.height = -src.height;
+
+                // Calculate alpha (opacity from tile and layer)
+                float tileAlpha = t.opacity / 100.0f;
+                unsigned char a = static_cast<unsigned char>(std::round(255.f * tileAlpha * opacity));
+                Color tint = { 255, 255, 255, a };
+
+                // Queue the draw command
+                layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+                    [tex, src, posX, posY, tileSize, tint](layer::CmdTexturePro* cmd) {
+                        cmd->texture = tex;
+                        cmd->source = src;
+                        cmd->offsetX = posX;
+                        cmd->offsetY = posY;
+                        cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                        cmd->rotationCenter = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->color = tint;
+                    }, renderZLevel, layer::DrawCommandSpace::World);
+            }
+        }
+    }
+}
+
+// Draw all procedural layers (in correct order for proper z-ordering)
+inline void DrawAllProceduralLayers(
+    std::shared_ptr<layer::Layer> layerPtr,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int baseZLevel = 0,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) return;
+
+    size_t layerCount = internal_rule::levelPtr->getTileGridCount();
+
+    // Draw layers in reverse order (back to front, like normal LDTK rendering)
+    for (int i = static_cast<int>(layerCount) - 1; i >= 0; --i) {
+        DrawProceduralLayer(layerPtr, i, offsetX, offsetY, baseZLevel + i, viewOpt, opacity);
+    }
+}
+
+// -------------------- Filtered and Y-Sorted Rendering --------------------
+
+// Draw procedural layer with tile ID filtering
+// Only draws tiles whose IDs are in the allowedTileIds set
+inline void DrawProceduralLayerFiltered(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    const std::set<int>& allowedTileIds,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int renderZLevel = 0,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) {
+        spdlog::warn("DrawProceduralLayerFiltered: No managed level - call apply_rules first");
+        return;
+    }
+
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        spdlog::warn("DrawProceduralLayerFiltered: Invalid layer index {}", layerIdx);
+        return;
+    }
+
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx >= static_cast<int>(layers.size())) return;
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) return;
+
+    const int tileSize = tileset->tileSize;
+
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    int gw = grid.getWidth();
+    int gh = grid.getHeight();
+
+    for (int y = 0; y < gh; ++y) {
+        for (int x = 0; x < gw; ++x) {
+            const auto& cellTiles = grid(x, y);
+            if (cellTiles.empty()) continue;
+
+            for (const auto& t : cellTiles) {
+                // Filter by tile ID
+                if (!allowedTileIds.empty() && allowedTileIds.find(t.tileId) == allowedTileIds.end()) {
+                    continue;
+                }
+
+                int16_t srcX, srcY;
+                tileset->getCoordinates(t.tileId, srcX, srcY);
+
+                Rectangle src {
+                    static_cast<float>(srcX * tileSize),
+                    static_cast<float>(srcY * tileSize),
+                    static_cast<float>(tileSize),
+                    static_cast<float>(tileSize)
+                };
+
+                float posX = offsetX + x * tileSize + t.posXOffset;
+                float posY = offsetY + y * tileSize + t.posYOffset;
+
+                if (viewOpt) {
+                    Rectangle dstRect{posX, posY, static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                    if (!ldtk_loader::RectsOverlap(dstRect, *viewOpt)) continue;
+                }
+
+                if (ldtkimport::TileFlags::isFlippedX(t.flags)) src.width = -src.width;
+                if (ldtkimport::TileFlags::isFlippedY(t.flags)) src.height = -src.height;
+
+                float tileAlpha = t.opacity / 100.0f;
+                unsigned char a = static_cast<unsigned char>(std::round(255.f * tileAlpha * opacity));
+                Color tint = { 255, 255, 255, a };
+
+                layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+                    [tex, src, posX, posY, tileSize, tint](layer::CmdTexturePro* cmd) {
+                        cmd->texture = tex;
+                        cmd->source = src;
+                        cmd->offsetX = posX;
+                        cmd->offsetY = posY;
+                        cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                        cmd->rotationCenter = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->color = tint;
+                    }, renderZLevel, layer::DrawCommandSpace::World);
+            }
+        }
+    }
+}
+
+// Draw procedural layer with Y-based Z-sorting (for top-down games)
+// Each row gets a different Z-level: z = baseZLevel + row * zPerRow
+inline void DrawProceduralLayerYSorted(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    float offsetX = 0.0f,
+    float offsetY = 0.0f,
+    int baseZLevel = 0,
+    int zPerRow = 1,
+    const Rectangle* viewOpt = nullptr,
+    float opacity = 1.0f)
+{
+    if (!internal_rule::levelPtr) {
+        spdlog::warn("DrawProceduralLayerYSorted: No managed level - call apply_rules first");
+        return;
+    }
+
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(internal_rule::levelPtr->getTileGridCount())) {
+        spdlog::warn("DrawProceduralLayerYSorted: Invalid layer index {}", layerIdx);
+        return;
+    }
+
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx >= static_cast<int>(layers.size())) return;
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) return;
+
+    const int tileSize = tileset->tileSize;
+
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    auto& grid = internal_rule::levelPtr->getTileGridByIdx(layerIdx);
+    int gw = grid.getWidth();
+    int gh = grid.getHeight();
+
+    for (int y = 0; y < gh; ++y) {
+        // Y-sorted Z: higher Y = higher Z = rendered later (in front)
+        int rowZ = baseZLevel + y * zPerRow;
+
+        for (int x = 0; x < gw; ++x) {
+            const auto& cellTiles = grid(x, y);
+            if (cellTiles.empty()) continue;
+
+            for (const auto& t : cellTiles) {
+                int16_t srcX, srcY;
+                tileset->getCoordinates(t.tileId, srcX, srcY);
+
+                Rectangle src {
+                    static_cast<float>(srcX * tileSize),
+                    static_cast<float>(srcY * tileSize),
+                    static_cast<float>(tileSize),
+                    static_cast<float>(tileSize)
+                };
+
+                float posX = offsetX + x * tileSize + t.posXOffset;
+                float posY = offsetY + y * tileSize + t.posYOffset;
+
+                if (viewOpt) {
+                    Rectangle dstRect{posX, posY, static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                    if (!ldtk_loader::RectsOverlap(dstRect, *viewOpt)) continue;
+                }
+
+                if (ldtkimport::TileFlags::isFlippedX(t.flags)) src.width = -src.width;
+                if (ldtkimport::TileFlags::isFlippedY(t.flags)) src.height = -src.height;
+
+                float tileAlpha = t.opacity / 100.0f;
+                unsigned char a = static_cast<unsigned char>(std::round(255.f * tileAlpha * opacity));
+                Color tint = { 255, 255, 255, a };
+
+                layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+                    [tex, src, posX, posY, tileSize, tint](layer::CmdTexturePro* cmd) {
+                        cmd->texture = tex;
+                        cmd->source = src;
+                        cmd->offsetX = posX;
+                        cmd->offsetY = posY;
+                        cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                        cmd->rotationCenter = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->color = tint;
+                    }, rowZ, layer::DrawCommandSpace::World);
+            }
+        }
+    }
+}
+
+// Draw a single tile at a specific position (for maximum control)
+// Useful when iterating tile data from Lua and rendering selectively
+inline void DrawSingleTile(
+    std::shared_ptr<layer::Layer> layerPtr,
+    int layerIdx,
+    int tileId,
+    float worldX,
+    float worldY,
+    int zLevel,
+    bool flipX = false,
+    bool flipY = false,
+    float opacity = 1.0f)
+{
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(layers.size())) return;
+
+    const auto& layerDef = layers[layerIdx];
+    auto* tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
+    if (!tileset) return;
+
+    const int tileSize = tileset->tileSize;
+
+    std::string path = internal_rule::assetDirectory.empty()
+                       ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+
+    if (!internal_rule::textureCache.count(path)) {
+        internal_rule::textureCache[path] = LoadTexture(util::getAssetPathUUIDVersion(path).c_str());
+    }
+    const Texture2D& tex = internal_rule::textureCache[path];
+
+    int16_t srcX, srcY;
+    tileset->getCoordinates(tileId, srcX, srcY);
+
+    Rectangle src {
+        static_cast<float>(srcX * tileSize),
+        static_cast<float>(srcY * tileSize),
+        static_cast<float>(tileSize),
+        static_cast<float>(tileSize)
+    };
+
+    if (flipX) src.width = -src.width;
+    if (flipY) src.height = -src.height;
+
+    unsigned char a = static_cast<unsigned char>(std::round(255.f * opacity));
+    Color tint = { 255, 255, 255, a };
+
+    layer::QueueCommand<layer::CmdTexturePro>(layerPtr,
+        [tex, src, worldX, worldY, tileSize, tint](layer::CmdTexturePro* cmd) {
+            cmd->texture = tex;
+            cmd->source = src;
+            cmd->offsetX = worldX;
+            cmd->offsetY = worldY;
+            cmd->size = {static_cast<float>(tileSize), static_cast<float>(tileSize)};
+            cmd->rotationCenter = {0, 0};
+            cmd->rotation = 0;
+            cmd->color = tint;
+        }, zLevel, layer::DrawCommandSpace::World);
+}
+
+// -------------------- Tileset Info --------------------
+
+// Get tileset info for a layer (useful for Lua to know tile size)
+struct TilesetInfo {
+    int tileSize;
+    int width;  // in pixels
+    int height; // in pixels
+    std::string imagePath;
+};
+
+inline TilesetInfo GetTilesetInfoForLayer(int layerIdx) {
+    TilesetInfo info{0, 0, 0, ""};
+
+    const auto& layers = internal_rule::defFile.getLayers();
+    if (layerIdx < 0 || layerIdx >= static_cast<int>(layers.size())) {
+        return info;
+    }
+
+    auto* tileset = internal_rule::defFile.getTileset(layers[layerIdx].tilesetDefUid);
+    if (!tileset) return info;
+
+    info.tileSize = tileset->tileSize;
+    info.width = tileset->imageWidth;
+    info.height = tileset->imageHeight;
+    info.imagePath = tileset->imagePath;
+    return info;
 }
 
 } // namespace ldtk_rule_import

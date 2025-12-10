@@ -21,7 +21,7 @@ namespace ldtk_loader {
 namespace ldtk_rule_import {
 
     using namespace ldtkimport;
-    
+
     namespace internal_rule {
         LdtkDefFile defFile;
     #if !defined(NDEBUG) && LDTK_IMPORT_DEBUG_RULE > 0
@@ -31,5 +31,6 @@ namespace ldtk_rule_import {
         RenderTexture2D renderer{};
         std::unordered_map<std::string, Texture2D> textureCache;
         std::string assetDirectory;
+        std::unique_ptr<Level> managedLevel{nullptr};
     }
 }    

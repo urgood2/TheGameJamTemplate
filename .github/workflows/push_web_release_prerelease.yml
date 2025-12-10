@@ -76,6 +76,11 @@ jobs:
           version: ${{ env.EMSDK_VERSION }}
           actions-cache-folder: "emsdk-cache"
 
+      - name: Export EMSDK paths for helper targets
+        run: |
+          echo "EMSDK_PATH=${EMSDK}" >> "$GITHUB_ENV"
+          echo "EMSCRIPTEN_PATH=${EMSDK}/upstream/emscripten" >> "$GITHUB_ENV"
+
       # Cache CMake build dependencies
       - name: Cache CMake dependencies
         uses: actions/cache@v4

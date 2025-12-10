@@ -107,6 +107,10 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
 
+- when web crashes, there is no way to get the crash report easily, the screen stops working and that's it. maybe auto-download crash report?
+- running... loading bar freezes at 70% while game loads. 
+- 
+
 tag system tooltips need work.
 
 - probably make a prompt guideline based on my current scripts.

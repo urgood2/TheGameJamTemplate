@@ -3690,6 +3690,8 @@ end
 
 function StatTooltipSystem.makeSectionHeader(groupId, opts)
     opts = opts or {}
+    -- Don't use string.upper() as it doesn't handle UTF-8 properly
+    local label = StatTooltipSystem.getGroupLabel(groupId)
     return dsl.hbox {
         config = {
             color = opts.headerBg or tooltipStyle.labelBg,
@@ -3698,7 +3700,7 @@ function StatTooltipSystem.makeSectionHeader(groupId, opts)
             outlineThickness = 0
         },
         children = {
-            dsl.text(string.upper(StatTooltipSystem.getGroupLabel(groupId)), {
+            dsl.text(label, {
                 fontSize = opts.headerFontSize or 10,
                 color = opts.headerColor or tooltipStyle.labelColor,
                 shadow = false
@@ -3716,7 +3718,7 @@ function StatTooltipSystem.buildRows(statKeys, snapshot, opts)
         local group = def and def.group or "other"
 
         if opts.showHeaders and group ~= currentGroup then
-            if currentGroup then rows[#rows + 1] = dsl.hbox { config = { padding = 2 }, children = {} } end
+            -- Note: removed empty spacer hbox as it was rendering as a rectangle
             rows[#rows + 1] = StatTooltipSystem.makeSectionHeader(group, opts)
             currentGroup = group
         end
@@ -3850,7 +3852,8 @@ local function makeDetailedStatsTooltip(snapshot)
     end
 
     -- Use 5 columns for more compact layout
-    local v = buildNColumnBody(rows, 5, { innerColor = tooltipStyle.innerColor, padding = compactPadding, columnPadding = 2 })
+    -- Note: padding only on root to prevent overflow, inner body has no extra padding
+    local v = buildNColumnBody(rows, 5, { innerColor = tooltipStyle.innerColor, padding = 0, columnPadding = 2 })
 
     local root = dsl.root {
         config = {
@@ -3894,13 +3897,19 @@ local function ensureDetailedStatsTooltip()
     return tooltip
 end
 function makePlayerStatsTooltip(snapshot)
-    local innerPad = tooltipStyle.innerPadding or 6
-    local opts = { colorCode = true, showHeaders = true, rowPadding = tooltipStyle.rowPadding }
+    local innerPad = 10  -- Increased padding for better fit
+    local opts = {
+        colorCode = true,
+        showHeaders = true,
+        rowPadding = 2,
+        headerFontSize = 12,
+        headerPadding = 2
+    }
 
     local rows = {}
     if not snapshot then
         rows[1] = makeTooltipRow("status", "Stats unavailable", {
-            rowPadding = tooltipStyle.rowPadding,
+            rowPadding = 2,
             labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
             valueOpts = { color = "red" },
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
@@ -3912,14 +3921,15 @@ function makePlayerStatsTooltip(snapshot)
 
     if #rows == 0 then
         rows[1] = makeTooltipRow("status", "No stats", {
-            rowPadding = tooltipStyle.rowPadding,
+            rowPadding = 2,
             labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
             valueOpts = { color = "yellow" },
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
         })
     end
 
-    local v = buildTwoColumnBody(rows, { innerColor = tooltipStyle.innerColor, padding = innerPad })
+    -- Use 3 columns for better layout, padding only on root
+    local v = buildNColumnBody(rows, 3, { innerColor = tooltipStyle.innerColor, padding = 0, columnPadding = 4 })
 
     local root = dsl.root {
         config = {

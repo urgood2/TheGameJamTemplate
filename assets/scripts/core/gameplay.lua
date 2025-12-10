@@ -255,15 +255,15 @@ local tooltipStyle = {
     idTextColor = "black",
     labelColor = "apricot_cream",
     valueColor = "white",
-    innerPadding = 4,
+    innerPadding = 6,
     rowPadding = 2,
     textPadding = 2,
     pillPadding = 4,
     outerPadding = 10,
     labelColumnMinWidth = 140,
     valueColumnMinWidth = 80,
-    bgColor = Col(18, 22, 32, 240),
-    innerColor = Col(28, 32, 44, 235),
+    bgColor = Col(18, 22, 32, 255),       -- Fully opaque
+    innerColor = Col(28, 32, 44, 255),    -- Fully opaque
     outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255),
     -- Named font for tooltip text (loaded below)
     fontName = "tooltip"
@@ -435,12 +435,13 @@ local function makeSimpleTooltip(title, body, opts)
     end
 
     -- Build with DSL (single column)
+    local innerPad = tooltipStyle.innerPadding or 6
     local v = dsl.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             color = tooltipStyle.innerColor,
-            padding = outerPadding,
-            spacing = 6
+            padding = innerPad,
+            spacing = innerPad
         },
         children = rows
     }
@@ -449,7 +450,7 @@ local function makeSimpleTooltip(title, body, opts)
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = outerPadding,
+            padding = innerPad,
             outlineThickness = 2,
             outlineColor = tooltipStyle.outlineColor,
             shadow = true
@@ -514,6 +515,15 @@ end
 local function showSimpleTooltipAbove(key, title, body, anchorEntity, opts)
     local tooltip = ensureSimpleTooltip(key, title, body, opts)
     if not tooltip then return nil end
+
+    -- Add state tags so the tooltip is visible in the current game state
+    -- (makeSimpleTooltip clears state tags, so we must reapply them)
+    if ui and ui.box and ui.box.AddStateTagToUIBox then
+        ui.box.ClearStateTagsFromUIBox(tooltip)
+        if PLANNING_STATE then ui.box.AddStateTagToUIBox(tooltip, PLANNING_STATE) end
+        if ACTION_STATE then ui.box.AddStateTagToUIBox(tooltip, ACTION_STATE) end
+        if SHOP_STATE then ui.box.AddStateTagToUIBox(tooltip, SHOP_STATE) end
+    end
 
     centerTooltipAboveEntity(tooltip, anchorEntity)
     return tooltip
@@ -3136,7 +3146,7 @@ function makeCardTooltip(card_def, opts)
 
     local cardId = card_def.id or card_def.cardID
     local rowPadding = tooltipStyle.rowPadding
-    local outerPadding = tooltipStyle.outerPadding or 6
+    local innerPad = tooltipStyle.innerPadding or 6
 
     -- Helper function to check if value should be excluded
     local function shouldExclude(value)
@@ -3185,6 +3195,25 @@ function makeCardTooltip(card_def, opts)
 
     -- Always show ID and type
     addLine(rows, "type", card_def.type)
+
+    -- Show description if available (important for trigger cards)
+    if card_def.description and card_def.description ~= "" then
+        addLine(rows, "effect", card_def.description)
+    end
+
+    -- For trigger cards, show trigger-specific info
+    if card_def.type == "trigger" then
+        if card_def.trigger_type then
+            addLine(rows, "trigger", card_def.trigger_type)
+        end
+        if card_def.trigger_interval then
+            addLine(rows, "interval", string.format("%.1fs", card_def.trigger_interval / 1000))
+        end
+        if card_def.trigger_distance then
+            addLine(rows, "distance", card_def.trigger_distance)
+        end
+    end
+
     addLine(rows, "max uses", card_def.max_uses)
     addLine(rows, "mana cost", card_def.mana_cost)
     addLine(rows, "damage", card_def.damage)
@@ -3253,7 +3282,7 @@ function makeCardTooltip(card_def, opts)
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             color = tooltipStyle.innerColor,
-            padding = outerPadding
+            padding = innerPad
         },
         children = rows
     }
@@ -3262,7 +3291,7 @@ function makeCardTooltip(card_def, opts)
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = outerPadding,
+            padding = innerPad,
             outlineThickness = 2,
             outlineColor = tooltipStyle.outlineColor,
             shadow = true
@@ -3313,6 +3342,10 @@ function ensureCardTooltip(card_def, opts)
     clear_state_tags(tooltip)
     return tooltip
 end
+
+-- Export card tooltip functions globally
+_G.makeCardTooltip = makeCardTooltip
+_G.ensureCardTooltip = ensureCardTooltip
 
 local function destroyPlayerStatsTooltip()
     if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) then
@@ -3584,7 +3617,7 @@ end
 
 local function makeDetailedStatsTooltip(snapshot)
     local rowPadding = tooltipStyle.rowPadding
-    local outerPadding = tooltipStyle.innerPadding
+    local outerPadding = tooltipStyle.outerPadding or 10
 
     local function addLine(rows, label, value, valueOpts)
         if value == nil then return end
@@ -3707,7 +3740,7 @@ local function ensureDetailedStatsTooltip()
 end
 function makePlayerStatsTooltip(snapshot)
     local rowPadding = tooltipStyle.rowPadding
-    local outerPadding = tooltipStyle.outerPadding or 6
+    local innerPad = tooltipStyle.innerPadding or 6
 
     local function addLine(rows, label, value, valueOpts)
         if value == nil then return end
@@ -3767,14 +3800,14 @@ function makePlayerStatsTooltip(snapshot)
 
     local v = buildTwoColumnBody(rows, {
         innerColor = tooltipStyle.innerColor,
-        padding = outerPadding
+        padding = innerPad
     })
 
     local root = dsl.root {
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = outerPadding,
+            padding = innerPad,
             outlineThickness = 2,
             outlineColor = tooltipStyle.outlineColor,
             shadow = true

@@ -924,6 +924,9 @@ TriggerCards.TEST_TRIGGER_EVERY_N_SECONDS = {
     mana_cost = 0,
     weight = 0,
     tags = {},
+    description = "Casts spells automatically every few seconds",
+    trigger_type = "time",
+    trigger_interval = 2000,
     test_label = "TRIGGER\nevery\nN\nseconds",
 }
 
@@ -934,6 +937,8 @@ TriggerCards.TEST_TRIGGER_ON_BUMP_ENEMY = {
     mana_cost = 0,
     weight = 0,
     tags = { "Brute" },
+    description = "Casts spells when you collide with an enemy",
+    trigger_type = "collision",
     test_label = "TRIGGER\non\nbump\nenemy",
 }
 
@@ -944,6 +949,8 @@ TriggerCards.TEST_TRIGGER_ON_DASH = {
     mana_cost = 0,
     weight = 0,
     tags = { "Mobility" },
+    description = "Casts spells when you dash",
+    trigger_type = "dash",
     test_label = "TRIGGER\non\ndash",
 }
 
@@ -954,6 +961,9 @@ TriggerCards.TEST_TRIGGER_ON_DISTANCE_TRAVELED = {
     mana_cost = 0,
     weight = 0,
     tags = { "Mobility" },
+    description = "Casts spells after traveling a certain distance",
+    trigger_type = "movement",
+    trigger_distance = 200,
     test_label = "TRIGGER\non\ndistance\ntraveled",
 }
 

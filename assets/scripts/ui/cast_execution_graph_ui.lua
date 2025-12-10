@@ -75,9 +75,15 @@ end
 local function showCardTooltip(card, anchorEntity, fallbackLabel, fallbackBody)
     if not card then return nil end
     local cardId = tooltipCardId(card)
-    if not cardId or not card_tooltip_cache then return nil end
+    if not cardId then return nil end
 
-    local tooltip = card_tooltip_cache[cardId]
+    -- Try to get or create the tooltip using ensureCardTooltip (creates if not cached)
+    local tooltip = nil
+    if ensureCardTooltip then
+        tooltip = ensureCardTooltip(card)
+    elseif card_tooltip_cache then
+        tooltip = card_tooltip_cache[cardId]
+    end
     if not tooltip then return nil end
 
     if centerTooltipAboveEntity then
@@ -92,11 +98,16 @@ local function showCardTooltip(card, anchorEntity, fallbackLabel, fallbackBody)
         end
     end
 
-    if add_state_tag then add_state_tag(tooltip, CARD_TOOLTIP_STATE) end
-    if activate_state then activate_state(CARD_TOOLTIP_STATE) end
+    -- Add state tags so the tooltip is visible in the current game state
     if ui and ui.box and ui.box.AddStateTagToUIBox then
-        ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE)
+        ui.box.ClearStateTagsFromUIBox(tooltip)
+        if PLANNING_STATE then ui.box.AddStateTagToUIBox(tooltip, PLANNING_STATE) end
+        if ACTION_STATE then ui.box.AddStateTagToUIBox(tooltip, ACTION_STATE) end
+        if SHOP_STATE then ui.box.AddStateTagToUIBox(tooltip, SHOP_STATE) end
+        if CARD_TOOLTIP_STATE then ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE) end
     end
+    if add_state_tag and CARD_TOOLTIP_STATE then add_state_tag(tooltip, CARD_TOOLTIP_STATE) end
+    if activate_state and CARD_TOOLTIP_STATE then activate_state(CARD_TOOLTIP_STATE) end
 
     previously_hovered_tooltip = tooltip
     CastExecutionGraphUI._activeTooltip = tooltip

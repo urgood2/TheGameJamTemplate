@@ -582,6 +582,9 @@ local function computeLayoutCache()
             }
         end
 
+        -- Calculate the max width for text before it overlaps with indicators
+        local textMaxWidth = indicatorLeft - rowLeft - 24  -- 12px left margin + 12px gap
+
         rows[#rows + 1] = {
             entry = entry,
             top = rowTop,
@@ -589,7 +592,8 @@ local function computeLayoutCache()
             rowLeft = rowLeft,
             rowWidth = rowWidth,
             rowHeight = rowH,
-            segments = segments
+            segments = segments,
+            textMaxWidth = textMaxWidth
         }
     end
 
@@ -945,30 +949,6 @@ function TagSynergyPanel.draw()
             c.y = rowCenterY - 16
             c.color = accent
             c.fontSize = nameSize
-        end, baseZ + 2, space)
-
-        -- Subtitle: count + next threshold hint
-        local nextThreshold = nil
-        for _, threshold in ipairs(entry.thresholds) do
-            if entry.count < threshold then
-                nextThreshold = threshold
-                break
-            end
-        end
-        local subtitle = nil
-        if nextThreshold then
-            subtitle = string.format("%d cards · %d to next", entry.count, math.max(0, nextThreshold - entry.count))
-        else
-            subtitle = string.format("%d cards · fully online", entry.count)
-        end
-
-        command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = subtitle
-            c.font = font
-            c.x = row.rowLeft + 12
-            c.y = rowCenterY + 6
-            c.color = colors.text
-            c.fontSize = subtitleSize
         end, baseZ + 2, space)
 
         for _, seg in ipairs(row.segments or {}) do

@@ -295,3 +295,36 @@
 
 12/04/2025
   - Prototyping a `material_card_overlay_new_dissolve` pass (native + web) with dissolve/burn controls, default uniform registration, rotation support, and initial shader draw command batching helpers; card pipeline can be pointed at the new pass for testing.
+
+12/05/2025
+  - Added a suite of 3D skew card shaders (hologram, foil, negative shine, polychrome, voucher, gold seal) with new uniform controls.
+  - Aligned dissolve shader parameters with the Godot reference, improved shadow lift during drag, and merged material + skew shading updates.
+  - Fixed sticker rendering issues.
+
+12/06/2025
+  - Polished the skew pipeline: refined polychrome handling, added gold-seal variants, and refreshed projectile VFX.
+  - Added outlines to health and experience bars for better combat readability.
+  - Cleaned up tooltip padding/player stats tooltip logic and main menu UI draw layers.
+
+12/07/2025
+  - Combat plumbing: player attack signals, low-health tracking, and equipped avatar retrieval now available.
+  - Start-game button now uses layer shaders; main menu flow and shader uniform retrieval got performance cleanups.
+  - Simplified shader angle calculations and main-loop timer updates.
+
+12/08/2025
+  - Expanded the 3D skew shader set with additional variants/web versions and smoother overlay/glitch gating.
+  - Improved the tooltip system (font management, spacing fixes), addressed review feedback, and refactored code for readability.
+  - Updated Claude Code review/PR assistant workflows.
+
+12/09/2025
+  - Shipped a UI asset pack system: manifest parser, asset pack registry, SPRITE styling with scale modes, Lua bindings, tests, and an ImGui pack editor.
+  - Added a shader preset registry with Lua loading/startup presets, integration tests, and design docs.
+  - Unified tooltips onto the DSL with new simple tooltip APIs, cache/lifecycle helpers, coded/font options, and migrated existing UIs.
+  - Implemented ownership/tamper detection (build IDs/signatures, validation state, warning overlay, Lua bindings) with docs and improved web distribution/automation.
+  - Delivered a text effects system with a registry, extensive effect set, demo script, and performance guidance.
+  - Extended LDTK Lua integration: design doc, field extraction/queries, procedural rule runner with signals, and command-buffer tile rendering including filtered/Y-sorted paths.
+
+12/10/2025
+  - Merged the LDTK integration work and added exception-handling/thread-safety notes.
+  - Updated Emscripten linker flags for better exception support and fixed web serve commands for cross-platform use.
+  - Landed the text effects branch and synced master.

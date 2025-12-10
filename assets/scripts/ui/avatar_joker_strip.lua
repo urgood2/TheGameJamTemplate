@@ -32,14 +32,10 @@ AvatarJokerStrip.layout = {
     spacing = 8,
     cardW = 48,
     cardH = 64,
-    labelSize = 14,
+    labelSize = 16,
     bgRadius = 12,
     rotateAmplitude = 6,
     floatSpeed = 1.3,
-    glowPadding = 8,
-    glowBaseAlpha = 55,
-    glowPulseAlpha = 70,
-    glowPulseSpeed = 1.6,
     avatarSprite = "avatar_sample.png",
     jokerSprite = "joker_sample.png"
 }
@@ -303,32 +299,6 @@ local function drawSprites(list, z, space)
     end
 end
 
-local function drawGlow(list, accent, z, space)
-    if not command_buffer or not layers or not list then return end
-    local layout = AvatarJokerStrip.layout
-    local pulseTime = now() * layout.glowPulseSpeed
-
-    for i, item in ipairs(list) do
-        if item.entity and registry and registry.valid and registry:valid(item.entity) then
-            local t = component_cache.get(item.entity, Transform)
-            if t then
-                local pulse = 0.5 + 0.5 * math.sin(pulseTime + i * 0.8)
-                local alpha = layout.glowBaseAlpha + layout.glowPulseAlpha * pulse
-                local color = accent or colors.jokerAccent
-                command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-                    c.x = t.actualX + (t.actualW or layout.cardW) * 0.5
-                    c.y = t.actualY + (t.actualH or layout.cardH) * 0.5
-                    c.w = (t.actualW or layout.cardW) + layout.glowPadding * 2
-                    c.h = (t.actualH or layout.cardH) + layout.glowPadding * 2
-                    c.rx = layout.bgRadius + 4
-                    c.ry = layout.bgRadius + 4
-                    c.color = Col(color.r, color.g, color.b, math.min(255, math.max(0, math.floor(alpha))))
-                end, z, space or layer.DrawCommandSpace.Screen)
-            end
-        end
-    end
-end
-
 local function drawGroup(box, accent, label, baseZ)
     if not command_buffer or not layers then return end
     local space = layer.DrawCommandSpace.Screen
@@ -467,8 +437,6 @@ function AvatarJokerStrip.draw()
 
     drawGroup(AvatarJokerStrip._layoutCache.avatar, colors.avatarAccent, "Avatars", baseZ)
     drawGroup(AvatarJokerStrip._layoutCache.joker, colors.jokerAccent, "Jokers", baseZ)
-
-    drawGlow(AvatarJokerStrip.jokerSprites, colors.jokerAccent, baseZ + 2, space)
 
     drawSprites(AvatarJokerStrip.avatarSprites, baseZ + 3, space)
     drawSprites(AvatarJokerStrip.jokerSprites, baseZ + 3, space)

@@ -531,10 +531,19 @@ namespace game
         game::physicsWorld.reset();
         layer::UnloadAllLayers();
         ClearLayers();
+
+        // Reset graphics state that persists across layers
+        layer::render_stack_switch_internal::ForceClear(); // clear render stack to avoid stale render targets
+        shader_pipeline::ShaderPipelineUnload(); // unload shader pipeline render textures (re-inits on first use)
+        EndBlendMode(); // reset OpenGL blend mode to default
+        EndShaderMode(); // reset any active shader
+        game::fullscreenShaders.clear(); // clear fullscreen shader list (fixes colors/transparency after reload)
+
         clear_layer_shaders("ui_layer");
         clear_layer_shaders("sprites");
-        clear_layer_shaders("background");  
+        clear_layer_shaders("background");
         shaders::unloadShaders(); // drops shader callbacks/uniforms tied to Lua
+        shaders::loadShadersFromJSON("shaders/shaders.json"); // reload shaders after unloading
         controller_nav::NavManager::instance().reset();
         
         // clear lua state and re-load

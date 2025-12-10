@@ -45,8 +45,8 @@ local colors = {
 }
 
 local tooltipStyle = {
-    bg = Col(16, 18, 26, 235),
-    inner = Col(24, 26, 36, 230),
+    bg = Col(16, 18, 26, 240),
+    inner = Col(24, 26, 36, 235),
     outline = safeColor("apricot_cream", "white"),
     title = safeColor("apricot", "white"),
     text = safeColor("white"),
@@ -54,13 +54,15 @@ local tooltipStyle = {
     label = safeColor("apricot_cream", "white"),
     value = safeColor("white", "white"),
     fontName = "tooltip",
-    padding = 10,
+    padding = 12,
     outlineThickness = 2,
-    maxWidth = 320,
-    labelColumnMinWidth = 140,
-    valueColumnMinWidth = 160,
-    rowPadding = 4,
-    innerPadding = 8,
+    maxWidth = 400,
+    labelColumnMinWidth = 160,
+    valueColumnMinWidth = 200,
+    rowPadding = 6,
+    innerPadding = 10,
+    fontSize = 16,
+    titleFontSize = 20,
 }
 
 local tag_palette = {
@@ -92,7 +94,7 @@ TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
     marginX = 22,
     marginTop = 120,
-    panelWidth = 360
+    panelWidth = 420
 }
 
 if localization and localization.loadNamedFont then
@@ -230,7 +232,7 @@ local function makeLabelNode(text, color, fontSize)
         children = {
             dsl.text(text, {
                 color = color or tooltipStyle.label,
-                fontSize = fontSize or 12,
+                fontSize = fontSize or tooltipStyle.fontSize or 16,
                 fontName = tooltipStyle.fontName,
                 align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
             })
@@ -240,21 +242,22 @@ end
 
 local function makeValueNode(text, color, fontSize)
     if not text or text == "" then return nil end
-    local maxWidth = (tooltipStyle.maxWidth or 320)
+    local effectiveFontSize = fontSize or tooltipStyle.fontSize or 16
+    local maxWidth = (tooltipStyle.maxWidth or 400)
         - (tooltipStyle.labelColumnMinWidth or 0)
         - (tooltipStyle.padding or 0) * 2
         - (tooltipStyle.innerPadding or 0) * 2
-    local lines = wrapTextToWidth(text, maxWidth, fontSize)
-        local children = {}
-        for _, line in ipairs(lines) do
-            children[#children + 1] = dsl.text(line, {
-                color = color or tooltipStyle.value,
-                fontSize = fontSize or 12,
-                fontName = tooltipStyle.fontName,
-                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
-            })
-        end
-        return dsl.vbox {
+    local lines = wrapTextToWidth(text, maxWidth, effectiveFontSize)
+    local children = {}
+    for _, line in ipairs(lines) do
+        children[#children + 1] = dsl.text(line, {
+            color = color or tooltipStyle.value,
+            fontSize = effectiveFontSize,
+            fontName = tooltipStyle.fontName,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+        })
+    end
+    return dsl.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             padding = 0,
@@ -267,7 +270,7 @@ end
 local function buildTooltipDef(title, rows, accent)
     local children = {}
 
-    local titleNode = makeLabelNode(title, accent or tooltipStyle.title, 16)
+    local titleNode = makeLabelNode(title, accent or tooltipStyle.title, tooltipStyle.titleFontSize or 20)
     if titleNode then
         children[#children + 1] = titleNode
     end
@@ -835,7 +838,7 @@ local function drawSegment(left, top, width, height, fill, accent, tag, threshol
 
     if threshold then
         local label = tostring(threshold)
-        local fontSize = 11
+        local fontSize = 13
         local w = localization.getTextWidthWithCurrentFont(label, fontSize, 1)
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = label
@@ -913,7 +916,7 @@ function TagSynergyPanel.draw()
         c.x = layoutCache.panelLeft + layoutCache.paddingX
         c.y = layoutCache.panelTop + layoutCache.paddingY - 2
         c.color = colors.header
-        c.fontSize = 18
+        c.fontSize = 22
     end, baseZ + 2, space)
 
     for _, row in ipairs(layoutCache.rows or {}) do
@@ -921,8 +924,8 @@ function TagSynergyPanel.draw()
         local rowCenterY = row.centerY
         local accent = colorForTag(entry.tag)
         local pulse = TagSynergyPanel._pulses[entry.tag] or 0
-        local nameSize = 18 * (1 + pulse * 0.08)
-        local subtitleSize = 12
+        local nameSize = 20 * (1 + pulse * 0.08)
+        local subtitleSize = 14
 
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
             c.x = row.rowLeft + row.rowWidth * 0.5

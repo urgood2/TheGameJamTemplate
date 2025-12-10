@@ -249,21 +249,21 @@ local function unpack_rect_like(rectLike, fallbackTable)
 end
 
 local tooltipStyle = {
-    fontSize = 18,
+    fontSize = 22,
     labelBg = "black",
     idBg = "gold",
     idTextColor = "black",
     labelColor = "apricot_cream",
     valueColor = "white",
-    innerPadding = 2,
-    rowPadding = 0,
-    textPadding = 1,
-    pillPadding = 2,
-    outerPadding = 6,
-    labelColumnMinWidth = 120,
-    valueColumnMinWidth = 52,
-    bgColor = Col(18, 22, 32, 235),
-    innerColor = Col(28, 32, 44, 230),
+    innerPadding = 4,
+    rowPadding = 2,
+    textPadding = 2,
+    pillPadding = 4,
+    outerPadding = 10,
+    labelColumnMinWidth = 140,
+    valueColumnMinWidth = 80,
+    bgColor = Col(18, 22, 32, 240),
+    innerColor = Col(28, 32, 44, 235),
     outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255),
     -- Named font for tooltip text (loaded below)
     fontName = "tooltip"
@@ -406,17 +406,18 @@ end
 -- Simple tooltip for title + description (jokers, avatars, relics, buttons)
 local function makeSimpleTooltip(title, body, opts)
     opts = opts or {}
-    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding or 6
+    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding or 10
     local rows = {}
 
-    -- Title pill (styled like card ID pill)
+    -- Title pill (styled like card ID pill) - slightly larger font
     if title and title ~= "" then
         table.insert(rows, makeTooltipPill(title, {
             background = opts.titleBg or tooltipStyle.labelBg,
             color = opts.titleColor or tooltipStyle.labelColor,
             fontName = opts.titleFont or tooltipStyle.fontName,
-            fontSize = opts.titleFontSize or tooltipStyle.fontSize,
-            coded = opts.titleCoded
+            fontSize = opts.titleFontSize or (tooltipStyle.fontSize + 2),
+            coded = opts.titleCoded,
+            padding = tooltipStyle.pillPadding
         }))
     end
 
@@ -427,8 +428,9 @@ local function makeSimpleTooltip(title, body, opts)
             fontName = opts.bodyFont or tooltipStyle.fontName,
             fontSize = opts.bodyFontSize or tooltipStyle.fontSize,
             coded = opts.bodyCoded,
-            maxWidth = opts.maxWidth or 250,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+            maxWidth = opts.maxWidth or 320,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = 4
         }))
     end
 
@@ -437,7 +439,8 @@ local function makeSimpleTooltip(title, body, opts)
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             color = tooltipStyle.innerColor,
-            padding = outerPadding
+            padding = outerPadding,
+            spacing = 6
         },
         children = rows
     }

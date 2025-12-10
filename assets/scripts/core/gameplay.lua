@@ -387,6 +387,22 @@ local function destroyTooltipEntity(eid)
     end
 end
 
+-- Forward declare shared tooltip positioning helpers (used by DSL tooltips and other UIs)
+local centerTooltipAboveEntity
+
+-- Prevent tooltip boxes from animating from size 0 by snapping visual dimensions immediately.
+local function snapTooltipVisual(boxID)
+    if not boxID or not entity_cache.valid(boxID) then
+        return
+    end
+    local t = component_cache.get(boxID, Transform)
+    if not t then return end
+    t.visualX = t.actualX or t.visualX
+    t.visualY = t.actualY or t.visualY
+    t.visualW = t.actualW or t.visualW
+    t.visualH = t.actualH or t.visualH
+end
+
 -- Simple tooltip for title + description (jokers, avatars, relics, buttons)
 local function makeSimpleTooltip(title, body, opts)
     opts = opts or {}
@@ -530,21 +546,6 @@ _G.showSimpleTooltipAbove = showSimpleTooltipAbove
 _G.hideSimpleTooltip = hideSimpleTooltip
 _G.destroyAllSimpleTooltips = destroyAllSimpleTooltips
 
--- Prevent tooltip boxes from animating from size 0 by snapping visual dimensions immediately.
-local function snapTooltipVisual(boxID)
-    if not boxID or not entity_cache.valid(boxID) then
-        return
-    end
-    local t = component_cache.get(boxID, Transform)
-    if not t then return end
-    t.visualX = t.actualX or t.visualX
-    t.visualY = t.actualY or t.visualY
-    t.visualW = t.actualW or t.visualW
-    t.visualH = t.actualH or t.visualH
-end
-
-local ensureCardTooltip -- forward declaration
-
 local function centerTooltipAboveEntity(tooltipEntity, targetEntity, offset)
     if not tooltipEntity or not targetEntity then return end
     if not entity_cache.valid(tooltipEntity) or not entity_cache.valid(targetEntity) then return end
@@ -582,6 +583,9 @@ local function centerTooltipAboveEntity(tooltipEntity, targetEntity, offset)
     tooltipTransform.visualX = tooltipTransform.actualX
     tooltipTransform.visualY = tooltipTransform.actualY
 end
+_G.centerTooltipAboveEntity = centerTooltipAboveEntity
+
+local ensureCardTooltip -- forward declaration
 
 local function positionTooltipRightOfEntity(tooltipEntity, targetEntity, opts)
     if not tooltipEntity or not targetEntity then return end

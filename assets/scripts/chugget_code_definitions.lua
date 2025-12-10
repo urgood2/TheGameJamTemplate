@@ -3977,7 +3977,8 @@ InventoryGridTileComponent = {
 ---@class UIStylingType
 UIStylingType = {
     RoundedRectangle = 0,  -- A simple rounded rectangle.
-    NinePatchBorders = 1  -- A 9-patch texture for scalable borders.
+    NinePatchBorders = 1,  -- A 9-patch texture for scalable borders.
+    Sprite = 2  -- A sprite texture with configurable scale mode.
 }
 
 
@@ -3992,6 +3993,12 @@ UIConfig = {
     nPatchInfo = nil,  -- 9-patch slicing information.
     ---@type string|nil
     nPatchSourceTexture = nil,  -- Texture path for the 9-patch.
+    ---@type Texture2D*|nil
+    spriteSourceTexture = nil,  -- Pointer to the sprite source texture.
+    ---@type Rectangle|nil
+    spriteSourceRect = nil,  -- Source rectangle in the sprite texture.
+    ---@type SpriteScaleMode
+    spriteScaleMode = nil,  -- How the sprite should be scaled (default: Stretch).
     ---@type string|nil
     id = nil,  -- Unique identifier for this UI element.
     ---@type string|nil
@@ -4158,6 +4165,10 @@ UIConfig = {
     prev_ref_value = nil,  -- The previous referenced value.
     ---@type string|nil
     text = nil,  -- Static text content.
+    ---@type number|nil
+    fontSize = nil,  -- Override font size for this element.
+    ---@type string|nil
+    fontName = nil,  -- Named font to use instead of the language default.
     ---@type string|nil
     language = nil,  -- Language key for localization.
     ---@type boolean|nil
@@ -4291,6 +4302,20 @@ function UIConfigBuilder:addScale(...) end
 ---@param spacing number
 ---@return self
 function UIConfigBuilder:addTextSpacing(...) end
+
+---
+--- Sets the font size for text elements.
+---
+---@param fontSize number
+---@return self
+function UIConfigBuilder:addFontSize(...) end
+
+---
+--- Sets a named font to use for text elements.
+---
+---@param fontName string
+---@return self
+function UIConfigBuilder:addFontName(...) end
 
 ---
 --- Sets if focus is tied to the game object.
@@ -4964,6 +4989,79 @@ ui.element = {
 ---@class ui.box
 ui.box = {
 }
+
+
+---
+--- Defines how sprites are scaled when rendered in UI elements.
+---
+---@class SpriteScaleMode
+SpriteScaleMode = {
+    Stretch = 0,  -- Scale sprite to fit container.
+    Tile = 1,  -- Repeat sprite to fill area.
+    Fixed = 2  -- Draw at original size, centered.
+}
+
+
+---
+--- Handle to a registered UI asset pack for accessing themed UI elements.
+---
+---@class PackHandle
+PackHandle = {
+}
+
+---
+--- Gets configuration for a panel element from this pack.
+---
+---@param name string # Name of the panel
+---@return UIConfig|nil
+function PackHandle:panel(...) end
+
+---
+--- Gets configuration for a button element in a specific state.
+---
+---@param name string # Name of the button
+---@param state? string # State: 'normal', 'hover', 'pressed', 'disabled'
+---@return UIConfig|nil
+function PackHandle:button(...) end
+
+---
+--- Gets configuration for a progress bar component.
+---
+---@param name string # Name of the progress bar
+---@param part string # Part: 'background' or 'fill'
+---@return UIConfig|nil
+function PackHandle:progress_bar(...) end
+
+---
+--- Gets configuration for a scrollbar component.
+---
+---@param name string # Name of the scrollbar
+---@param part string # Part: 'track' or 'thumb'
+---@return UIConfig|nil
+function PackHandle:scrollbar(...) end
+
+---
+--- Gets configuration for a slider component.
+---
+---@param name string # Name of the slider
+---@param part string # Part: 'track' or 'thumb'
+---@return UIConfig|nil
+function PackHandle:slider(...) end
+
+---
+--- Gets configuration for an input field in a specific state.
+---
+---@param name string # Name of the input field
+---@param state? string # State: 'normal' or 'focus'
+---@return UIConfig|nil
+function PackHandle:input(...) end
+
+---
+--- Gets configuration for an icon element.
+---
+---@param name string # Name of the icon
+---@return UIConfig|nil
+function PackHandle:icon(...) end
 
 
 ---
@@ -11271,6 +11369,21 @@ function transform.RemoveEntity(...) end
 ---@param jiggleAmount number
 ---@return nil
 function transform.setJiggleOnHover(...) end
+
+---
+--- Registers a UI asset pack from a JSON manifest file.
+---
+---@param name string # Unique name for the pack
+---@param manifestPath string # Path to the JSON manifest file
+---@return boolean # True if registration succeeded
+function ui.register_pack(...) end
+
+---
+--- Gets a handle to a registered UI asset pack.
+---
+---@param name string # Name of the registered pack
+---@return PackHandle|nil # Handle to the pack, or nil if not found
+function ui.use_pack(...) end
 
 ---
 --- Handles alignment for an entire UI tree.

@@ -430,6 +430,8 @@ namespace ui {
         rec.record_property("UIConfig", {"ref_value", "any|nil", "A referenced value."});
         rec.record_property("UIConfig", {"prev_ref_value", "any|nil", "The previous referenced value."});
         rec.record_property("UIConfig", {"text", "string|nil", "Static text content."});
+        rec.record_property("UIConfig", {"fontSize", "number|nil", "Override font size for this element."});
+        rec.record_property("UIConfig", {"fontName", "string|nil", "Named font to use instead of the language default."});
         rec.record_property("UIConfig", {"language", "string|nil", "Language key for localization."});
         rec.record_property("UIConfig", {"verticalText", "boolean|nil", "If true, text is rendered vertically."});
         // Popups
@@ -467,6 +469,8 @@ namespace ui {
             "addOffset",                      &UIConfig::Builder::addOffset,
             "addScale",                       &UIConfig::Builder::addScale,
             "addTextSpacing",                 &UIConfig::Builder::addTextSpacing,
+            "addFontSize",                    &UIConfig::Builder::addFontSize,
+            "addFontName",                    &UIConfig::Builder::addFontName,
             "addFocusWithObject",             &UIConfig::Builder::addFocusWithObject,
             "addRefreshMovement",             &UIConfig::Builder::addRefreshMovement,
             "addNoMovementWhenDragged",       &UIConfig::Builder::addNoMovementWhenDragged,
@@ -572,6 +576,8 @@ namespace ui {
         rec.record_method("UIConfigBuilder", {"addOffset", "---@param offset Vector2\n---@return self", "Sets the transform offset.", false, false});
         rec.record_method("UIConfigBuilder", {"addScale", "---@param scale number\n---@return self", "Sets the scale.", false, false});
         rec.record_method("UIConfigBuilder", {"addTextSpacing", "---@param spacing number\n---@return self", "Sets text character spacing.", false, false});
+        rec.record_method("UIConfigBuilder", {"addFontSize", "---@param fontSize number\n---@return self", "Sets the font size for text elements.", false, false});
+        rec.record_method("UIConfigBuilder", {"addFontName", "---@param fontName string\n---@return self", "Sets a named font to use for text elements.", false, false});
         rec.record_method("UIConfigBuilder", {"addFocusWithObject", "---@param focus boolean\n---@return self", "Sets if focus is tied to the game object.", false, false});
         rec.record_method("UIConfigBuilder", {"addRefreshMovement", "---@param refresh boolean\n---@return self", "Sets if movement should be refreshed.", false, false});
         rec.record_method("UIConfigBuilder", {"addNoMovementWhenDragged", "---@param noMove boolean\n---@return self", "Prevents movement while dragged.", false, false});

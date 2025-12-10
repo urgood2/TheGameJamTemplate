@@ -794,6 +794,7 @@ namespace ui
                     .addText(tooltip.title.value_or("Tooltip Title"))
                     .addColor(WHITE)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .addFontName("tooltip")
                     .addScale(0.4f)
                     .build())
             .build();
@@ -804,6 +805,7 @@ namespace ui
                     .addText(tooltip.text.value_or("Tooltip Content"))
                     .addColor(WHITE)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .addFontName("tooltip")
                     .addScale(0.4f)
                     .build())
             .build();

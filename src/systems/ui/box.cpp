@@ -152,10 +152,22 @@ namespace ui
             if (def.type == UITypeEnum::TEXT && config && config->text)
             {
                 float scale = config->scale.value_or(1.0f);
+
+                // Get the appropriate font data - check for named font first
+                const globals::FontData& fontData = [](const UIConfig* config) -> const globals::FontData& {
+                    if (config && config->fontName) {
+                        const auto& fontName = config->fontName.value();
+                        if (localization::hasNamedFont(fontName)) {
+                            return localization::getNamedFont(fontName);
+                        }
+                    }
+                    return localization::getFontData();
+                }(config);
+
                 // Use custom fontSize if specified, otherwise use default
-                float baseFontSize = config->fontSize.has_value() ? config->fontSize.value() : localization::getFontData().fontLoadedSize;
-                float fontSize = baseFontSize * scale * localization::getFontData().fontScale;
-                auto [w, h] = MeasureTextEx(localization::getFontData().font, config->text->c_str(), fontSize, localization::getFontData().spacing);
+                float baseFontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.fontLoadedSize;
+                float fontSize = baseFontSize * scale * fontData.fontScale;
+                auto [w, h] = MeasureTextEx(fontData.font, config->text->c_str(), fontSize, fontData.spacing);
                 if (config->verticalText.value_or(false))
                     std::swap(w, h);
                 // FIXME: testing, commenting out
@@ -1677,10 +1689,21 @@ namespace ui
             if (!uiConfig.language)
                 uiConfig.language = globals::language;
 
+            // Get the appropriate font data - check for named font first
+            const globals::FontData& fontData = [](const UIConfig& cfg) -> const globals::FontData& {
+                if (cfg.fontName) {
+                    const auto& fontName = cfg.fontName.value();
+                    if (localization::hasNamedFont(fontName)) {
+                        return localization::getNamedFont(fontName);
+                    }
+                }
+                return localization::getFontData();
+            }(uiConfig);
+
             // Use custom fontSize if specified, otherwise use default
-            float baseFontSize = uiConfig.fontSize.has_value() ? uiConfig.fontSize.value() : localization::getFontData().fontLoadedSize;
-            float fontSize = baseFontSize * scaleFactor * localization::getFontData().fontScale;
-            auto [measuredWidth, measuredHeight] = MeasureTextEx(localization::getFontData().font, uiConfig.text.value().c_str(), fontSize, localization::getFontData().spacing);
+            float baseFontSize = uiConfig.fontSize.has_value() ? uiConfig.fontSize.value() : fontData.fontLoadedSize;
+            float fontSize = baseFontSize * scaleFactor * fontData.fontScale;
+            auto [measuredWidth, measuredHeight] = MeasureTextEx(fontData.font, uiConfig.text.value().c_str(), fontSize, fontData.spacing);
 
             calcCurrentNodeTransform.w = measuredWidth;
             calcCurrentNodeTransform.h = measuredHeight;

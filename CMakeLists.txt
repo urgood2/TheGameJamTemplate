@@ -1119,15 +1119,16 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     )
 
     # Target to rename the output HTML to index.html
+    # NOTE: No DEPENDS - this is a post-processing target for already-built files.
+    # In CI, the build is done directly with emcmake/emmake, so we don't need
+    # to depend on compile_web_build (which would trigger the full build chain).
     add_custom_target(rename_to_index
-        DEPENDS compile_web_build
         COMMAND ${CMAKE_COMMAND} -E copy ${WEB_BUILD_DIR}/${PROJECT_NAME}.html ${WEB_OUTPUT_HTML}
         COMMENT "Renaming output HTML file to index.html"
     )
 
     # Inject snippet into <head> of index.html
     add_custom_target(inject_web_patch
-        DEPENDS rename_to_index
         COMMAND ${CMAKE_COMMAND} -E echo "Injecting custom HTML snippet into <head>..."
         COMMAND ${_inject_cmd}
         COMMENT "Patch index.html with custom <script> logic"
@@ -1153,8 +1154,8 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     endif()
 
     if(GZIP_EXE)
+        # NOTE: No DEPENDS - this is a post-processing target for already-built files.
         add_custom_target(gzip_assets
-            DEPENDS inject_web_patch
             COMMAND ${CMAKE_COMMAND} -E echo "Gzipping WASM and DATA files..."
             COMMAND ${CMAKE_COMMAND} -E copy ${WASM_FILE} ${WASM_FILE}.orig
             COMMAND ${CMAKE_COMMAND} -E copy ${DATA_FILE} ${DATA_FILE}.orig

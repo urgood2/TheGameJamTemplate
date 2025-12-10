@@ -106,7 +106,10 @@ jobs:
         run: emmake make -C build-web -j$(nproc)
 
       - name: Run web helper targets (rename->index, inject snippet, gzip)
-        run: cmake --build build-web --target rename_to_index inject_web_patch gzip_assets
+        run: |
+          cmake --build build-web --target rename_to_index
+          cmake --build build-web --target inject_web_patch
+          cmake --build build-web --target gzip_assets
 
       - name: Package Web build
         run: |

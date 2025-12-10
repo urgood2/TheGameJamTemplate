@@ -287,6 +287,230 @@
             opacity: 1;
         }
 
+        /* Audio prompt overlay */
+        #audio-prompt {
+            position: fixed;
+            z-index: 150;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        #audio-prompt.visible {
+            display: flex;
+        }
+
+        #audio-prompt-content {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            padding: 24px 32px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        #audio-prompt-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        #audio-prompt-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        #audio-prompt-hint {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+
+        /* Keyboard shortcuts overlay */
+        #shortcuts-overlay {
+            position: fixed;
+            z-index: 200;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        #shortcuts-overlay.visible {
+            display: flex;
+        }
+
+        #shortcuts-content {
+            background: linear-gradient(135deg, #1e1e2e 0%, #0a0a0a 100%);
+            padding: 24px 32px;
+            border-radius: 12px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #shortcuts-title {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shortcut-section {
+            margin-bottom: 16px;
+        }
+
+        .shortcut-section-title {
+            color: #4a9eff;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .shortcut-row:last-child {
+            border-bottom: none;
+        }
+
+        .shortcut-keys {
+            display: flex;
+            gap: 4px;
+        }
+
+        .shortcut-keys kbd {
+            background: rgba(74, 158, 255, 0.15);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #4a9eff;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .shortcut-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+
+        #shortcuts-close-hint {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        /* Share button and toolbar */
+        #game-toolbar {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 100;
+            display: none;
+            gap: 8px;
+        }
+
+        #game-toolbar.visible {
+            display: flex;
+        }
+
+        .toolbar-btn {
+            background: rgba(30, 30, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(50, 50, 60, 0.95);
+            border-color: rgba(74, 158, 255, 0.4);
+            color: white;
+        }
+
+        .toolbar-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Share menu dropdown */
+        #share-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 0;
+            min-width: 160px;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #share-menu.visible {
+            display: block;
+        }
+
+        .share-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .share-option:hover {
+            background: rgba(74, 158, 255, 0.15);
+            color: white;
+        }
+
+        .share-option-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
         /* Hide output by default */
         #output {
             display: none;
@@ -360,6 +584,90 @@
     <div id="f10-hint">
         <span>Press <kbd>F10</kbd> for debug report</span>
         <span class="hint-close" onclick="dismissF10Hint()" title="Dismiss">×</span>
+    </div>
+
+    <!-- Game toolbar (share, help) -->
+    <div id="game-toolbar">
+        <button class="toolbar-btn" onclick="toggleShortcutsOverlay()" title="Keyboard Shortcuts (?)">⌨ Help</button>
+        <div style="position: relative;">
+            <button class="toolbar-btn" onclick="toggleShareMenu()" title="Share">📤 Share</button>
+            <div id="share-menu">
+                <div class="share-option" onclick="captureScreenshot()">
+                    <span class="share-option-icon">📷</span>
+                    <span>Screenshot</span>
+                </div>
+                <div class="share-option" onclick="copyGameLink()">
+                    <span class="share-option-icon">🔗</span>
+                    <span>Copy Link</span>
+                </div>
+                <div class="share-option" onclick="nativeShare()" id="native-share-option" style="display: none;">
+                    <span class="share-option-icon">📱</span>
+                    <span>Share...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio prompt overlay -->
+    <div id="audio-prompt" onclick="resumeAudio()">
+        <div id="audio-prompt-content">
+            <div id="audio-prompt-icon">🔊</div>
+            <div id="audio-prompt-text">Click to Enable Audio</div>
+            <div id="audio-prompt-hint">Audio was blocked by your browser</div>
+        </div>
+    </div>
+
+    <!-- Keyboard shortcuts overlay -->
+    <div id="shortcuts-overlay" onclick="closeShortcutsOverlay(event)">
+        <div id="shortcuts-content" onclick="event.stopPropagation()">
+            <div id="shortcuts-title">⌨️ Keyboard Shortcuts</div>
+
+            <div class="shortcut-section">
+                <div class="shortcut-section-title">Movement</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>
+                    <span class="shortcut-desc">Move</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
+                    <span class="shortcut-desc">Move (alternate)</span>
+                </div>
+            </div>
+
+            <div class="shortcut-section">
+                <div class="shortcut-section-title">Actions</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>Space</kbd></span>
+                    <span class="shortcut-desc">Primary action</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>E</kbd></span>
+                    <span class="shortcut-desc">Interact</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>Tab</kbd></span>
+                    <span class="shortcut-desc">Toggle menu</span>
+                </div>
+            </div>
+
+            <div class="shortcut-section">
+                <div class="shortcut-section-title">System</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>F10</kbd></span>
+                    <span class="shortcut-desc">Debug report</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>?</kbd></span>
+                    <span class="shortcut-desc">Show this help</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>Esc</kbd></span>
+                    <span class="shortcut-desc">Pause / Close menu</span>
+                </div>
+            </div>
+
+            <div id="shortcuts-close-hint">Press <kbd>?</kbd> or <kbd>Esc</kbd> or click outside to close</div>
+        </div>
     </div>
 
     <p id="output"></p>
@@ -683,8 +991,9 @@
             setTimeout(dismissNotification, 15000);
         }
 
-        // F10 key listener
+        // F10 key listener and other hotkeys
         document.addEventListener('keydown', function(e) {
+            // F10 - Debug report
             if (e.key === 'F10' || e.keyCode === 121) {
                 e.preventDefault();
                 const report = generateDebugReport();
@@ -709,7 +1018,338 @@
                     }, 500);
                 }
             }
+
+            // ? or / - Show keyboard shortcuts (when not typing in input)
+            if ((e.key === '?' || (e.key === '/' && e.shiftKey)) && !isInputFocused()) {
+                e.preventDefault();
+                toggleShortcutsOverlay();
+            }
+
+            // Escape - Close shortcuts overlay
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('shortcuts-overlay');
+                if (overlay && overlay.classList.contains('visible')) {
+                    overlay.classList.remove('visible');
+                    e.preventDefault();
+                }
+                // Close share menu
+                const shareMenu = document.getElementById('share-menu');
+                if (shareMenu && shareMenu.classList.contains('visible')) {
+                    shareMenu.classList.remove('visible');
+                }
+            }
         });
+
+        function isInputFocused() {
+            const active = document.activeElement;
+            return active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+        }
+
+        // ============================================
+        // Audio Context Resume Handler
+        // ============================================
+        let audioContextChecked = false;
+        let audioResumeAttempted = false;
+
+        function checkAudioContext() {
+            if (audioContextChecked) return;
+            audioContextChecked = true;
+
+            // Check for Emscripten's audio context (SDL audio or miniaudio)
+            const checkInterval = setInterval(() => {
+                let audioCtx = null;
+
+                // Try to find the audio context
+                if (typeof Module !== 'undefined') {
+                    // SDL2 audio context
+                    if (Module.SDL2 && Module.SDL2.audioContext) {
+                        audioCtx = Module.SDL2.audioContext;
+                    }
+                    // miniaudio context
+                    if (Module.miniaudio && Module.miniaudio.device && Module.miniaudio.device.webaudio) {
+                        audioCtx = Module.miniaudio.device.webaudio.audioContext;
+                    }
+                }
+
+                // Also check window for any AudioContext
+                if (!audioCtx && window.AudioContext) {
+                    // Try to detect any suspended audio contexts
+                    const contexts = [];
+                    if (window._audioContext) contexts.push(window._audioContext);
+                    if (window.audioContext) contexts.push(window.audioContext);
+
+                    for (const ctx of contexts) {
+                        if (ctx && ctx.state === 'suspended') {
+                            audioCtx = ctx;
+                            break;
+                        }
+                    }
+                }
+
+                if (audioCtx && audioCtx.state === 'suspended' && !audioResumeAttempted) {
+                    clearInterval(checkInterval);
+                    showAudioPrompt();
+                } else if (audioCtx && audioCtx.state === 'running') {
+                    clearInterval(checkInterval);
+                }
+            }, 500);
+
+            // Stop checking after 10 seconds
+            setTimeout(() => clearInterval(checkInterval), 10000);
+        }
+
+        function showAudioPrompt() {
+            const prompt = document.getElementById('audio-prompt');
+            if (prompt) {
+                prompt.classList.add('visible');
+            }
+        }
+
+        function resumeAudio() {
+            audioResumeAttempted = true;
+            const prompt = document.getElementById('audio-prompt');
+            if (prompt) {
+                prompt.classList.remove('visible');
+            }
+
+            // Resume all possible audio contexts
+            const resumeContext = (ctx) => {
+                if (ctx && ctx.state === 'suspended') {
+                    ctx.resume().then(() => {
+                        console.log('Audio context resumed');
+                    }).catch(err => {
+                        console.warn('Failed to resume audio context:', err);
+                    });
+                }
+            };
+
+            // SDL2
+            if (typeof Module !== 'undefined' && Module.SDL2 && Module.SDL2.audioContext) {
+                resumeContext(Module.SDL2.audioContext);
+            }
+
+            // miniaudio
+            if (typeof Module !== 'undefined' && Module.miniaudio && Module.miniaudio.device && Module.miniaudio.device.webaudio) {
+                resumeContext(Module.miniaudio.device.webaudio.audioContext);
+            }
+
+            // Any global contexts
+            if (window._audioContext) resumeContext(window._audioContext);
+            if (window.audioContext) resumeContext(window.audioContext);
+
+            // Focus canvas
+            const canvas = document.getElementById('canvas');
+            if (canvas) canvas.focus();
+        }
+
+        // Also try to resume on any user interaction
+        function setupAudioResumeOnInteraction() {
+            const resumeOnce = () => {
+                resumeAudio();
+                document.removeEventListener('click', resumeOnce);
+                document.removeEventListener('keydown', resumeOnce);
+                document.removeEventListener('touchstart', resumeOnce);
+            };
+
+            document.addEventListener('click', resumeOnce, { once: true });
+            document.addEventListener('keydown', resumeOnce, { once: true });
+            document.addEventListener('touchstart', resumeOnce, { once: true });
+        }
+
+        // ============================================
+        // Keyboard Shortcuts Overlay
+        // ============================================
+        function toggleShortcutsOverlay() {
+            const overlay = document.getElementById('shortcuts-overlay');
+            if (overlay) {
+                overlay.classList.toggle('visible');
+            }
+        }
+
+        function closeShortcutsOverlay(event) {
+            // Close only if clicking on the backdrop, not the content
+            if (event.target.id === 'shortcuts-overlay') {
+                const overlay = document.getElementById('shortcuts-overlay');
+                if (overlay) {
+                    overlay.classList.remove('visible');
+                }
+            }
+        }
+
+        // ============================================
+        // Share / Screenshot Functions
+        // ============================================
+        let shareMenuOpen = false;
+
+        function toggleShareMenu() {
+            const menu = document.getElementById('share-menu');
+            if (menu) {
+                shareMenuOpen = !shareMenuOpen;
+                menu.classList.toggle('visible', shareMenuOpen);
+            }
+        }
+
+        // Close share menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('share-menu');
+            const btn = e.target.closest('.toolbar-btn');
+            if (menu && shareMenuOpen && !menu.contains(e.target) && (!btn || !btn.textContent.includes('Share'))) {
+                menu.classList.remove('visible');
+                shareMenuOpen = false;
+            }
+        });
+
+        function captureScreenshot() {
+            const canvas = document.getElementById('canvas');
+            if (!canvas) {
+                console.error('Canvas not found');
+                return;
+            }
+
+            // Close share menu
+            toggleShareMenu();
+
+            try {
+                // Get canvas data as PNG
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        console.error('Failed to create blob from canvas');
+                        return;
+                    }
+
+                    // Create download link
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
+                    link.href = url;
+                    link.download = `screenshot_${timestamp}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+
+                    // Show feedback
+                    showToast('Screenshot saved!');
+                }, 'image/png');
+            } catch (err) {
+                console.error('Screenshot failed:', err);
+                showToast('Screenshot failed');
+            }
+        }
+
+        function copyGameLink() {
+            toggleShareMenu();
+
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('Link copied!');
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = window.location.href;
+                textarea.style.cssText = 'position: fixed; opacity: 0;';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('Link copied!');
+            });
+        }
+
+        function nativeShare() {
+            toggleShareMenu();
+
+            const canvas = document.getElementById('canvas');
+            if (navigator.share) {
+                // Try to share with screenshot
+                if (navigator.canShare && canvas) {
+                    canvas.toBlob(async function(blob) {
+                        if (blob) {
+                            const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+                            const shareData = {
+                                title: document.title || 'Game',
+                                text: 'Check out this game!',
+                                url: window.location.href,
+                                files: [file]
+                            };
+
+                            if (navigator.canShare(shareData)) {
+                                try {
+                                    await navigator.share(shareData);
+                                } catch (err) {
+                                    if (err.name !== 'AbortError') {
+                                        // Fallback without file
+                                        shareWithoutFile();
+                                    }
+                                }
+                            } else {
+                                shareWithoutFile();
+                            }
+                        } else {
+                            shareWithoutFile();
+                        }
+                    }, 'image/png');
+                } else {
+                    shareWithoutFile();
+                }
+            }
+        }
+
+        function shareWithoutFile() {
+            navigator.share({
+                title: document.title || 'Game',
+                text: 'Check out this game!',
+                url: window.location.href
+            }).catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.log('Share cancelled or failed');
+                }
+            });
+        }
+
+        function showToast(message) {
+            // Remove existing toast
+            const existing = document.getElementById('toast-notification');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'toast-notification';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(40, 167, 69, 0.95);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 6px;
+                font-size: 14px;
+                z-index: 10000;
+                animation: toastIn 0.3s ease-out;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // Add animation keyframes if not exists
+            if (!document.getElementById('toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'toast-styles';
+                style.textContent = `
+                    @keyframes toastIn {
+                        from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // Auto-remove after 2 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
 
         // Track loading start time for timeout detection
         const loadStartTime = Date.now();
@@ -759,8 +1399,26 @@
                             fsBtn.classList.add('visible');
                         }
 
+                        // Show game toolbar (share, help buttons)
+                        const toolbar = document.getElementById('game-toolbar');
+                        if (toolbar) {
+                            toolbar.classList.add('visible');
+                        }
+
+                        // Enable native share option if supported
+                        if (navigator.share) {
+                            const nativeShareOpt = document.getElementById('native-share-option');
+                            if (nativeShareOpt) {
+                                nativeShareOpt.style.display = 'flex';
+                            }
+                        }
+
                         // Show F10 hint notification
                         showF10Hint();
+
+                        // Check for audio context issues (browsers block autoplay)
+                        checkAudioContext();
+                        setupAudioResumeOnInteraction();
 
                         // Focus canvas for input
                         const canvas = document.getElementById('canvas');

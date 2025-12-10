@@ -452,6 +452,9 @@ namespace game
     // ============================================================
     //  SHARED UNIFIED SHADER PIPELINE (ping-pong)
     // ============================================================
+    // Applies shaders by alternating between mainCanvas and tempCanvas.
+    // After an odd number of passes, result is in tempCanvas and must be
+    // copied back to mainCanvas (with clearing to prevent stale data bleed).
 
     inline void run_shader_pipeline(
         std::shared_ptr<layer::Layer> layer,
@@ -479,6 +482,11 @@ namespace game
 
         // Ensure result ends up back in mainCanvas
         if (src != mainCanvas) {
+            // Clear destination before drawing (prevents stale content bleed-through)
+            BeginTextureMode(layer->canvases.at(mainCanvas));
+            ClearBackground(BLANK);
+            EndTextureMode();
+
             layer::DrawCanvasOntoOtherLayer(
                 layer,
                 src,

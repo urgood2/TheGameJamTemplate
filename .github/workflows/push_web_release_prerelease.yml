@@ -94,12 +94,31 @@ jobs:
       - name: Build Web
         run: emmake make -C build-web -j$(nproc)
 
+      - name: Inject gzip loader into HTML
+        run: |
+          HTML_FILE=$(ls build-web/*.html | head -n 1)
+          if [ -z "$HTML_FILE" ]; then
+            echo "No HTML output found in build-web/"
+            exit 1
+          fi
+
+          cmake -DHTML_PATH="$HTML_FILE" \
+                -DSNIPPET_PATH=cmake/inject_snippet.html \
+                -P cmake/inject_snippet.cmake
+
       - name: Package Web build
         run: |
           mkdir -p dist/web
 
+          # Locate the generated html (raylib-cpp-cmake-template.html) and copy it as index.html
+          HTML_FILE=$(ls build-web/*.html | head -n 1)
+          if [ -z "$HTML_FILE" ]; then
+            echo "No HTML output found in build-web/"
+            exit 1
+          fi
+          cp "$HTML_FILE" dist/web/index.html
+
           # Copy main build outputs
-          cp build-web/index.html dist/web/
           cp build-web/*.js dist/web/
 
           # Copy and gzip WASM files for smaller downloads

@@ -37,6 +37,10 @@ CastExecutionGraphUI._activeTooltipOwner = nil
 CastExecutionGraphUI._fallbackTooltipActive = false
 CastExecutionGraphUI._fallbackTooltipKey = nil
 
+-- Pending hover handlers to apply after spawn (workaround for initFunc not being called)
+local pendingTooltips = {}
+local tooltipCounter = 0
+
 local function resolveColor(name, fallback)
     local ok, c = pcall(util.getColor, name)
     if ok and c then return c end
@@ -133,7 +137,6 @@ end
 local function attachTooltip(config, tooltipData)
     if not tooltipData then return config end
 
-    local prevInit = config.initFunc
     local card = tooltipData.card
     local label = tooltipData.label
     local body = tooltipData.body or ""
@@ -142,38 +145,76 @@ local function attachTooltip(config, tooltipData)
     config.canCollide = true
     config.collideable = true
 
-    config.initFunc = function(registry, entity)
-        if prevInit then prevInit(registry, entity) end
+    -- Generate a unique tooltip ID and store data for post-spawn application
+    tooltipCounter = tooltipCounter + 1
+    local tooltipId = "cast_graph_tooltip_" .. tooltipCounter
+    config.id = tooltipId  -- Mark this config with an ID we can find later
 
-        local go = registry:get(entity, GameObject)
-        if not go then return end
+    pendingTooltips[tooltipId] = {
+        card = card,
+        label = label,
+        body = body
+    }
 
-        go.state.hoverEnabled = true
-        go.state.collisionEnabled = true
-        go.state.triggerOnReleaseEnabled = true
-        go.state.clickEnabled = true
+    return config
+end
 
-        go.methods.onHover = function()
-            local shown = showCardTooltip(card, entity, label, body)
-            if not shown and label then
-                local tooltipKey = "cast_graph_" .. tostring(entity)
-                if showSimpleTooltipAbove then
-                    showSimpleTooltipAbove(tooltipKey, cleanLabel(label), cleanLabel(body), entity)
-                    CastExecutionGraphUI._activeTooltipOwner = entity
-                    CastExecutionGraphUI._fallbackTooltipKey = tooltipKey
-                    CastExecutionGraphUI._fallbackTooltipActive = true
-                end
-            elseif shown then
+-- Apply hover handlers to an entity based on stored tooltip data
+local function applyHoverToEntity(entity, tooltipData)
+    if not entity or not registry:valid(entity) then return end
+
+    local go = registry:get(entity, GameObject)
+    if not go then return end
+
+    local card = tooltipData.card
+    local label = tooltipData.label
+    local body = tooltipData.body
+
+    go.state.hoverEnabled = true
+    go.state.collisionEnabled = true
+    go.state.triggerOnReleaseEnabled = true
+    go.state.clickEnabled = true
+
+    go.methods.onHover = function()
+        local shown = showCardTooltip(card, entity, label, body)
+        if not shown and label then
+            local tooltipKey = "cast_graph_" .. tostring(entity)
+            if showSimpleTooltipAbove then
+                showSimpleTooltipAbove(tooltipKey, cleanLabel(label), cleanLabel(body), entity)
                 CastExecutionGraphUI._activeTooltipOwner = entity
+                CastExecutionGraphUI._fallbackTooltipKey = tooltipKey
+                CastExecutionGraphUI._fallbackTooltipActive = true
             end
-        end
-
-        go.methods.onStopHover = function()
-            hideActiveTooltip(entity)
+        elseif shown then
+            CastExecutionGraphUI._activeTooltipOwner = entity
         end
     end
 
-    return config
+    go.methods.onStopHover = function()
+        hideActiveTooltip(entity)
+    end
+end
+
+-- Recursively apply pending hover handlers to all entities in the UI tree
+local function applyPendingHovers(entity)
+    if not entity or not registry:valid(entity) then return end
+
+    -- Check if this entity has a UIConfig with a tooltip ID
+    local uiConfig = registry:try_get(entity, UIConfig)
+    if uiConfig and uiConfig.id then
+        local tooltipData = pendingTooltips[uiConfig.id]
+        if tooltipData then
+            applyHoverToEntity(entity, tooltipData)
+        end
+    end
+
+    -- Traverse children
+    local go = registry:get(entity, GameObject)
+    if go and go.children then
+        for _, child in ipairs(go.children) do
+            applyPendingHovers(child)
+        end
+    end
 end
 
 local function abbreviateLabel(label)
@@ -453,6 +494,8 @@ end
 
 function CastExecutionGraphUI.clear()
     CastExecutionGraphUI._lastFingerprint = nil
+    pendingTooltips = {}
+    tooltipCounter = 0
     destroyBox()
 end
 
@@ -479,10 +522,22 @@ function CastExecutionGraphUI.render(blocks, opts)
 
     destroyBox()
 
+    -- Clear pending tooltips before building new UI
+    pendingTooltips = {}
+    tooltipCounter = 0
+
     local root = buildRoot(blocks, opts or {})
 
     CastExecutionGraphUI.currentBox = dsl.spawn(CastExecutionGraphUI.position, root, "ui",
         (z_orders.ui_tooltips or 0) + 5)
+
+    -- Apply hover handlers after spawn (workaround for initFunc not being called via makeConfigFromTable)
+    if CastExecutionGraphUI.currentBox and registry:valid(CastExecutionGraphUI.currentBox) then
+        local uiBoxComp = registry:try_get(CastExecutionGraphUI.currentBox, UIBoxComponent)
+        if uiBoxComp and uiBoxComp.uiRoot then
+            applyPendingHovers(uiBoxComp.uiRoot)
+        end
+    end
 
     if ui.box.set_draw_layer then
         ui.box.set_draw_layer(CastExecutionGraphUI.currentBox, "ui")

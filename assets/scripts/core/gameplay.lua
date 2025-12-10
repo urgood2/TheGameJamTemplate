@@ -549,7 +549,7 @@ _G.showSimpleTooltipAbove = showSimpleTooltipAbove
 _G.hideSimpleTooltip = hideSimpleTooltip
 _G.destroyAllSimpleTooltips = destroyAllSimpleTooltips
 
-local function centerTooltipAboveEntity(tooltipEntity, targetEntity, offset)
+centerTooltipAboveEntity = function(tooltipEntity, targetEntity, offset)
     if not tooltipEntity or not targetEntity then return end
     if not entity_cache.valid(tooltipEntity) or not entity_cache.valid(targetEntity) then return end
 

@@ -254,10 +254,11 @@ void handle_fatal(const std::string& reason) {
                                 {"platform", report.platform},
                                 {"session_id", telemetry::SessionId()}});
         const auto path = persist_report_internal(report);
+        const auto summary = CreateSummary(report);
         if (path) {
-            SPDLOG_CRITICAL("Crash report captured: {}", *path);
+            SPDLOG_CRITICAL("Crash report captured: {}\n{}", *path, summary);
         } else {
-            SPDLOG_CRITICAL("Crash report captured (no file path available).");
+            SPDLOG_CRITICAL("Crash report captured (no file path available).\n{}", summary);
         }
     } catch (...) {
         SPDLOG_CRITICAL("Crash reporter failed while handling fatal event.");

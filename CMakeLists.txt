@@ -1046,18 +1046,45 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
         else()
             set(_shell_prefix bash)
         endif()
-        set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
-        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
-        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
+
+        # Allow CI to rely on setup-emsdk env without requiring an explicit EMSDK_PATH
+        if(NOT EMSDK_PATH AND DEFINED ENV{EMSDK})
+            set(EMSDK_PATH "$ENV{EMSDK}")
+        endif()
+        if(NOT EMSCRIPTEN_PATH AND DEFINED ENV{EMSDK})
+            set(EMSCRIPTEN_PATH "$ENV{EMSDK}/upstream/emscripten")
+        endif()
+
+        set(_emsdk_env_cmd "")
+        if(EMSDK_PATH AND EXISTS "${EMSDK_PATH}/emsdk_env.sh")
+            set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
+        endif()
+
+        if(EMSCRIPTEN_PATH)
+            set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
+            set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
+        else()
+            set(_emcmake_cmd "emcmake")
+            set(_emmake_cmd "emmake")
+        endif()
         set(_inject_cmd
             powershell -ExecutionPolicy Bypass -NoProfile -File "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.ps1" `
                 -HtmlPath "${WEB_OUTPUT_HTML}" `
                 -SnippetPath "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html"
         )
     else()
-        set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
-        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
-        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
+        set(_emsdk_env_cmd "")
+        if(EMSDK_PATH AND EXISTS "${EMSDK_PATH}/emsdk_env.sh")
+            set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
+        endif()
+
+        if(EMSCRIPTEN_PATH)
+            set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
+            set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
+        else()
+            set(_emcmake_cmd "emcmake")
+            set(_emmake_cmd "emmake")
+        endif()
         set(_inject_cmd
             ${CMAKE_COMMAND} -DHTML_PATH="${WEB_OUTPUT_HTML}" -DSNIPPET_PATH="${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html" -P "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.cmake"
         )

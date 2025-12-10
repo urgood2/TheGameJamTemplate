@@ -3474,228 +3474,351 @@ local function destroyDetailedStatsTooltip()
     detailedStatsTooltipVersion = 0
 end
 
-local function buildTwoColumnBody(rows, opts)
-    opts = opts or {}
-    local leftCount = math.ceil(#rows / 2)
-    local left, right = {}, {}
+-- ============================================================================
+-- STAT TOOLTIP SYSTEM - Declarative stat definitions and helpers
+-- ============================================================================
+-- All stat tooltip configuration and helpers are stored in a single table
+-- to avoid hitting Lua's 200 local variable limit
 
-    for i, row in ipairs(rows) do
-        if i <= leftCount then
-            left[#left + 1] = row
-        else
-            right[#right + 1] = row
-        end
+StatTooltipSystem = {
+    -- Format types
+    FORMAT = { INT = "int", FLOAT = "float", PCT = "pct", RANGE = "range", FRACTION = "fraction" },
+
+    -- Snapshot hash cache for lazy updates
+    playerStatsHash = nil,
+    detailedStatsHash = nil,
+
+    -- Stats to show in basic tooltip
+    BASIC_STATS = {
+        "level", "health", "health_regen", "xp",
+        "physique", "cunning", "spirit",
+        "offensive_ability", "defensive_ability",
+        "damage", "attack_speed", "cast_speed",
+        "cooldown_reduction", "skill_energy_cost_reduction",
+        "all_damage_pct", "life_steal_pct", "crit_damage_pct",
+        "dodge_chance_pct", "armor",
+        "run_speed", "move_speed_pct"
+    },
+
+    -- Stats to show in detailed tooltip
+    DETAILED_STATS = {
+        "experience_gained_pct", "weapon_damage_pct",
+        "block_chance_pct", "block_amount", "block_recovery_reduction_pct",
+        "percent_absorb_pct", "flat_absorb", "armor_absorption_bonus_pct",
+        "healing_received_pct", "reflect_damage_pct",
+        "penetration_all_pct", "armor_penetration_pct",
+        "max_resist_cap_pct", "min_resist_cap_pct", "damage_taken_reduction_pct",
+        "burn_damage_pct", "burn_tick_rate_pct", "damage_vs_frozen_pct",
+        "buff_duration_pct", "buff_effect_pct",
+        "chain_targets", "on_move_proc_frequency_pct",
+        "hazard_radius_pct", "hazard_damage_pct", "hazard_duration",
+        "max_poison_stacks_pct",
+        "summon_hp_pct", "summon_damage_pct", "summon_persistence",
+        "barrier_refresh_rate_pct", "health_pct", "melee_damage_pct", "melee_crit_chance_pct"
+    },
+
+    -- Group labels
+    GROUPS = {
+        core = "Core", attributes = "Attributes", combat = "Combat",
+        offense = "Offense", defense = "Defense", utility = "Utility",
+        movement = "Movement", status = "Status", buffs = "Buffs",
+        special = "Special", hazard = "Hazard", summon = "Summon", elemental = "Elemental"
+    },
+
+    -- Stats where positive values are bad (inverted color)
+    REVERSED_STATS = { damage_taken_reduction_pct = true }
+}
+
+-- Stat definitions (using short format refs)
+local SF = StatTooltipSystem.FORMAT
+StatTooltipSystem.DEFS = {
+    level = { label = "stats.level", format = SF.INT, group = "core" },
+    health = { label = "stats.health", format = SF.FRACTION, keys = {"hp", "max_hp"}, group = "core" },
+    health_regen = { label = "stats.health_regen", format = SF.FLOAT, suffix = "/s", group = "core" },
+    xp = { label = "stats.xp", format = SF.FRACTION, keys = {"xp", "xp_to_next"}, group = "core" },
+    physique = { label = "stats.physique", format = SF.INT, group = "attributes" },
+    cunning = { label = "stats.cunning", format = SF.INT, group = "attributes" },
+    spirit = { label = "stats.spirit", format = SF.INT, group = "attributes" },
+    offensive_ability = { label = "stats.offensive_ability", format = SF.INT, group = "combat" },
+    defensive_ability = { label = "stats.defensive_ability", format = SF.INT, group = "combat" },
+    damage = { label = "stats.damage", format = SF.RANGE, keys = {"weapon_min", "weapon_max"}, group = "combat" },
+    attack_speed = { label = "stats.attack_speed", format = SF.FLOAT, suffix = "/s", group = "combat" },
+    cast_speed = { label = "stats.cast_speed", format = SF.FLOAT, suffix = "/s", group = "combat" },
+    all_damage_pct = { label = "stats.all_damage", format = SF.PCT, group = "offense" },
+    weapon_damage_pct = { label = "stats.weapon_damage", format = SF.PCT, group = "offense" },
+    crit_damage_pct = { label = "stats.crit_damage", format = SF.PCT, group = "offense" },
+    life_steal_pct = { label = "stats.life_steal", format = SF.PCT, group = "offense" },
+    penetration_all_pct = { label = "stats.penetration_all", format = SF.PCT, group = "offense" },
+    armor_penetration_pct = { label = "stats.armor_penetration", format = SF.PCT, group = "offense" },
+    armor = { label = "stats.armor", format = SF.INT, group = "defense" },
+    dodge_chance_pct = { label = "stats.dodge", format = SF.PCT, group = "defense" },
+    block_chance_pct = { label = "stats.block_chance", format = SF.PCT, group = "defense" },
+    block_amount = { label = "stats.block_amount", format = SF.INT, group = "defense" },
+    block_recovery_reduction_pct = { label = "stats.block_recovery", format = SF.PCT, group = "defense" },
+    percent_absorb_pct = { label = "stats.absorb_pct", format = SF.PCT, group = "defense" },
+    flat_absorb = { label = "stats.absorb_flat", format = SF.INT, group = "defense" },
+    armor_absorption_bonus_pct = { label = "stats.armor_absorb_bonus", format = SF.PCT, group = "defense" },
+    damage_taken_reduction_pct = { label = "stats.damage_reduction", format = SF.PCT, group = "defense" },
+    reflect_damage_pct = { label = "stats.reflect_damage", format = SF.PCT, group = "defense" },
+    max_resist_cap_pct = { label = "stats.max_resist_cap", format = SF.PCT, group = "defense" },
+    min_resist_cap_pct = { label = "stats.min_resist_cap", format = SF.PCT, group = "defense" },
+    cooldown_reduction = { label = "stats.cooldown_reduction", format = SF.PCT, group = "utility" },
+    skill_energy_cost_reduction = { label = "stats.skill_cost_reduction", format = SF.PCT, group = "utility" },
+    experience_gained_pct = { label = "stats.xp_gain", format = SF.PCT, group = "utility" },
+    healing_received_pct = { label = "stats.healing_received", format = SF.PCT, group = "utility" },
+    run_speed = { label = "stats.run_speed", format = SF.FLOAT, group = "movement" },
+    move_speed_pct = { label = "stats.move_speed", format = SF.PCT, group = "movement" },
+    burn_damage_pct = { label = "stats.burn_damage", format = SF.PCT, group = "status" },
+    burn_tick_rate_pct = { label = "stats.burn_tick_rate", format = SF.PCT, group = "status" },
+    damage_vs_frozen_pct = { label = "stats.vs_frozen_damage", format = SF.PCT, group = "status" },
+    max_poison_stacks_pct = { label = "stats.max_poison_stacks", format = SF.PCT, group = "status" },
+    buff_duration_pct = { label = "stats.buff_duration", format = SF.PCT, group = "buffs" },
+    buff_effect_pct = { label = "stats.buff_effect", format = SF.PCT, group = "buffs" },
+    chain_targets = { label = "stats.chain_targets", format = SF.INT, group = "special" },
+    on_move_proc_frequency_pct = { label = "stats.on_move_proc", format = SF.PCT, group = "special" },
+    hazard_radius_pct = { label = "stats.hazard_radius", format = SF.PCT, group = "hazard" },
+    hazard_damage_pct = { label = "stats.hazard_damage", format = SF.PCT, group = "hazard" },
+    hazard_duration = { label = "stats.hazard_duration", format = SF.INT, group = "hazard" },
+    summon_hp_pct = { label = "stats.summon_hp", format = SF.PCT, group = "summon" },
+    summon_damage_pct = { label = "stats.summon_damage", format = SF.PCT, group = "summon" },
+    summon_persistence = { label = "stats.summon_persistence", format = SF.INT, group = "summon" },
+    barrier_refresh_rate_pct = { label = "stats.barrier_refresh", format = SF.PCT, group = "defense" },
+    health_pct = { label = "stats.health_bonus", format = SF.PCT, group = "core" },
+    melee_damage_pct = { label = "stats.melee_damage", format = SF.PCT, group = "offense" },
+    melee_crit_chance_pct = { label = "stats.melee_crit", format = SF.PCT, group = "offense" },
+}
+
+-- Helper functions as methods
+function StatTooltipSystem.computeHash(snapshot)
+    if not snapshot then return "nil" end
+    local parts = {}
+    for k, v in pairs(snapshot) do
+        if k ~= "per_type" then parts[#parts + 1] = k .. "=" .. tostring(v) end
+    end
+    table.sort(parts)
+    return table.concat(parts, "|")
+end
+
+function StatTooltipSystem.getLabel(key)
+    local def = StatTooltipSystem.DEFS[key]
+    if def and def.label and localization then
+        local loc = localization.get(def.label)
+        if loc and loc ~= def.label then return loc end
+    end
+    return key:gsub("_pct$", ""):gsub("_", " ")
+end
+
+function StatTooltipSystem.getGroupLabel(groupId)
+    if localization then
+        local loc = localization.get("stats.group." .. groupId)
+        if loc and loc ~= "stats.group." .. groupId then return loc end
+    end
+    return StatTooltipSystem.GROUPS[groupId] or groupId:gsub("^%l", string.upper)
+end
+
+function StatTooltipSystem.formatValue(key, value, snapshot, showZeros)
+    local def = StatTooltipSystem.DEFS[key]
+    local F = StatTooltipSystem.FORMAT
+
+    if not def then
+        return type(value) == "number" and tostring(math.floor(value + 0.5)) or tostring(value)
     end
 
+    if def.format == F.FRACTION and def.keys then
+        local v1, v2 = snapshot[def.keys[1]], snapshot[def.keys[2]]
+        return (v1 and v2) and string.format("%d / %d", math.floor(v1 + 0.5), math.floor(v2 + 0.5)) or nil
+    end
+
+    if def.format == F.RANGE and def.keys then
+        local v1, v2 = snapshot[def.keys[1]], snapshot[def.keys[2]]
+        return (v1 and v2) and string.format("%d - %d", math.floor(v1 + 0.5), math.floor(v2 + 0.5)) or nil
+    end
+
+    -- Skip nil/zero values unless showZeros is true
+    local isZero = value == nil or (type(value) == "number" and math.abs(value) < 0.0001)
+    if isZero and not showZeros then return nil end
+
+    -- Use 0 for display if value is nil
+    local displayValue = value or 0
+
+    if def.format == F.PCT then return string.format("%d%%", math.floor(displayValue + 0.5))
+    elseif def.format == F.FLOAT then return string.format("%.1f%s", displayValue, def.suffix or "")
+    elseif def.format == F.INT then return tostring(math.floor(displayValue + 0.5))
+    end
+    return tostring(displayValue)
+end
+
+function StatTooltipSystem.getValueColor(key, value)
+    if type(value) ~= "number" then return tooltipStyle.valueColor or "white" end
+    if value > 0 then return "green" end
+    if value < 0 then return "red" end
+    return tooltipStyle.valueColor or "white"
+end
+
+function StatTooltipSystem.makeRow(key, snapshot, opts)
+    opts = opts or {}
+    local def = StatTooltipSystem.DEFS[key]
+    local value = (def and def.keys) and snapshot[def.keys[1]] or snapshot[key]
+
+    -- Skip nil/zero values unless showZeros is true
+    local isZero = value == nil or (type(value) == "number" and math.abs(value) < 0.0001)
+    if isZero and not opts.showZeros then return nil end
+
+    local formatted = StatTooltipSystem.formatValue(key, value, snapshot, opts.showZeros)
+    if not formatted then return nil end
+
+    local label = StatTooltipSystem.getLabel(key)
+    local displayValue = value or 0
+    local color = opts.colorCode and StatTooltipSystem.getValueColor(key, displayValue) or (tooltipStyle.valueColor or "white")
+
+    return makeTooltipRow(label, formatted, {
+        rowPadding = opts.rowPadding or tooltipStyle.rowPadding,
+        labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
+        valueOpts = { color = color },
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+    })
+end
+
+function StatTooltipSystem.makeSectionHeader(groupId, opts)
+    opts = opts or {}
     return dsl.hbox {
         config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
-            color = opts.innerColor,
-            padding = opts.padding or 0
+            color = opts.headerBg or tooltipStyle.labelBg,
+            padding = opts.headerPadding or 3,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            outlineThickness = 0
         },
         children = {
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = left
-            },
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = right
-            }
+            dsl.text(string.upper(StatTooltipSystem.getGroupLabel(groupId)), {
+                fontSize = opts.headerFontSize or 10,
+                color = opts.headerColor or tooltipStyle.labelColor,
+                shadow = false
+            })
         }
     }
 end
 
-local function buildThreeColumnBody(rows, opts)
+function StatTooltipSystem.buildRows(statKeys, snapshot, opts)
     opts = opts or {}
-    local rowsPerCol = math.ceil(#rows / 3)
-    local col1, col2, col3 = {}, {}, {}
+    local rows, currentGroup = {}, nil
 
+    for _, key in ipairs(statKeys) do
+        local def = StatTooltipSystem.DEFS[key]
+        local group = def and def.group or "other"
+
+        if opts.showHeaders and group ~= currentGroup then
+            if currentGroup then rows[#rows + 1] = dsl.hbox { config = { padding = 2 }, children = {} } end
+            rows[#rows + 1] = StatTooltipSystem.makeSectionHeader(group, opts)
+            currentGroup = group
+        end
+
+        local row = StatTooltipSystem.makeRow(key, snapshot, opts)
+        if row then rows[#rows + 1] = row end
+    end
+    return rows
+end
+
+function StatTooltipSystem.buildElementalRows(perType, opts)
+    opts = opts or {}
+    local rows = {}
+    if not perType or #perType == 0 then return rows end
+
+    if opts.showHeaders then
+        rows[#rows + 1] = StatTooltipSystem.makeSectionHeader("elemental", opts)
+    end
+
+    for _, entry in ipairs(perType) do
+        local t = entry.type or "?"
+        local function addRow(suffix, val)
+            -- Skip nil/zero values unless showZeros is true
+            local isZero = not val or math.abs(val) < 0.01
+            if isZero and not opts.showZeros then return end
+
+            local displayVal = val or 0
+            local fmt = suffix:match("%%") and string.format("%d%%", math.floor(displayVal + 0.5)) or tostring(math.floor(displayVal + 0.5))
+            local clr = opts.colorCode and (displayVal > 0 and "green" or (displayVal < 0 and "red" or (tooltipStyle.valueColor or "white"))) or tooltipStyle.valueColor
+            local r = makeTooltipRow(t .. " " .. suffix, fmt, {
+                rowPadding = opts.rowPadding or tooltipStyle.rowPadding,
+                labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
+                valueOpts = { color = clr },
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+            })
+            if r then rows[#rows + 1] = r end
+        end
+        addRow("dmg", entry.dmg)
+        addRow("dmg %", entry.mod)
+        addRow("resist", entry.resist)
+        addRow("dur %", entry.duration)
+    end
+    return rows
+end
+
+-- Unified N-column layout builder (single function replaces 3 old ones)
+local function buildNColumnBody(rows, columnCount, opts)
+    opts = opts or {}
+    columnCount = columnCount or 2
+    if #rows == 0 then return dsl.vbox { config = { padding = 0 }, children = {} } end
+
+    local columns = {}
+    for i = 1, columnCount do columns[i] = {} end
+
+    local rowsPerCol = math.ceil(#rows / columnCount)
     for i, row in ipairs(rows) do
-        if i <= rowsPerCol then
-            col1[#col1 + 1] = row
-        elseif i <= rowsPerCol * 2 then
-            col2[#col2 + 1] = row
-        else
-            col3[#col3 + 1] = row
+        local colIdx = math.min(math.ceil(i / rowsPerCol), columnCount)
+        columns[colIdx][#columns[colIdx] + 1] = row
+    end
+
+    local children = {}
+    for _, col in ipairs(columns) do
+        if #col > 0 then
+            children[#children + 1] = dsl.vbox {
+                config = { align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP), padding = opts.columnPadding or 0 },
+                children = col
+            }
         end
     end
 
     return dsl.hbox {
-        config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
-            color = opts.innerColor,
-            padding = opts.padding or 0
-        },
-        children = {
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = col1
-            },
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = col2
-            },
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = col3
-            }
-        }
+        config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP), color = opts.innerColor, padding = opts.padding or 0 },
+        children = children
     }
 end
 
-local function buildFourColumnBody(rows, opts)
-    opts = opts or {}
-    local rowsPerCol = math.ceil(#rows / 4)
-    local col1, col2, col3, col4 = {}, {}, {}, {}
-
-    for i, row in ipairs(rows) do
-        if i <= rowsPerCol then
-            col1[#col1 + 1] = row
-        elseif i <= rowsPerCol * 2 then
-            col2[#col2 + 1] = row
-        elseif i <= rowsPerCol * 3 then
-            col3[#col3 + 1] = row
-        else
-            col4[#col4 + 1] = row
-        end
-    end
-
-    return dsl.hbox {
-        config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
-            color = opts.innerColor,
-            padding = opts.padding or 0
-        },
-        children = {
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = col1
-            },
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = col2
-            },
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = col3
-            },
-            dsl.vbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                    padding = 0,
-                },
-                children = col4
-            }
-        }
-    }
-end
+-- Compatibility aliases
+local function buildTwoColumnBody(rows, opts) return buildNColumnBody(rows, 2, opts) end
+local function buildFourColumnBody(rows, opts) return buildNColumnBody(rows, 4, opts) end
 
 local function makeDetailedStatsTooltip(snapshot)
-    local rowPadding = tooltipStyle.rowPadding
     local outerPadding = tooltipStyle.outerPadding or 10
-
-    local function addLine(rows, label, value, valueOpts)
-        if value == nil then return end
-        if type(value) == "number" and math.abs(value) < 0.0001 then return end
-        local row = makeTooltipRow(label, value, {
-            rowPadding = rowPadding,
-            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
-            valueOpts = valueOpts,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
-        })
-        if row then
-            table.insert(rows, row)
-        end
-    end
-
-    local function pct(val)
-        if val == nil then return nil end
-        return string.format("%d%%", math.floor(val + 0.5))
-    end
+    local opts = { colorCode = true, showHeaders = true, showZeros = true, rowPadding = tooltipStyle.rowPadding }
 
     local rows = {}
-
     if not snapshot then
-        addLine(rows, "status", "Stats unavailable", { color = "red" })
+        rows[1] = makeTooltipRow("status", "Stats unavailable", {
+            rowPadding = tooltipStyle.rowPadding,
+            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
+            valueOpts = { color = "red" },
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+        })
     else
-        addLine(rows, "xp gain", pct(snapshot.experience_gained_pct))
-        addLine(rows, "weapon dmg %", pct(snapshot.weapon_damage_pct))
-        addLine(rows, "block chance", pct(snapshot.block_chance_pct))
-        addLine(rows, "block amount", snapshot.block_amount)
-        addLine(rows, "block recovery", pct(snapshot.block_recovery_reduction_pct))
-        addLine(rows, "absorb %", pct(snapshot.percent_absorb_pct))
-        addLine(rows, "absorb flat", snapshot.flat_absorb)
-        addLine(rows, "armor absorb bonus", pct(snapshot.armor_absorption_bonus_pct))
-        addLine(rows, "healing received", pct(snapshot.healing_received_pct))
-        addLine(rows, "reflect dmg", pct(snapshot.reflect_damage_pct))
-        addLine(rows, "penetration all", pct(snapshot.penetration_all_pct))
-        addLine(rows, "armor penetration", pct(snapshot.armor_penetration_pct))
-        addLine(rows, "max resist cap", pct(snapshot.max_resist_cap_pct))
-        addLine(rows, "min resist cap", pct(snapshot.min_resist_cap_pct))
-        addLine(rows, "damage taken reduction", pct(snapshot.damage_taken_reduction_pct))
-        addLine(rows, "burn dmg %", pct(snapshot.burn_damage_pct))
-        addLine(rows, "burn tick rate %", pct(snapshot.burn_tick_rate_pct))
-        addLine(rows, "vs frozen dmg %", pct(snapshot.damage_vs_frozen_pct))
-        addLine(rows, "buff duration", pct(snapshot.buff_duration_pct))
-        addLine(rows, "buff effect", pct(snapshot.buff_effect_pct))
-        addLine(rows, "chain targets", snapshot.chain_targets)
-        addLine(rows, "on-move proc freq", pct(snapshot.on_move_proc_frequency_pct))
-        addLine(rows, "hazard radius", pct(snapshot.hazard_radius_pct))
-        addLine(rows, "hazard damage", pct(snapshot.hazard_damage_pct))
-        addLine(rows, "hazard duration", snapshot.hazard_duration)
-        addLine(rows, "max poison stacks", pct(snapshot.max_poison_stacks_pct))
-        addLine(rows, "summon hp", pct(snapshot.summon_hp_pct))
-        addLine(rows, "summon damage", pct(snapshot.summon_damage_pct))
-        addLine(rows, "summon persistence", snapshot.summon_persistence)
-        addLine(rows, "barrier refresh", pct(snapshot.barrier_refresh_rate_pct))
-        addLine(rows, "health %", pct(snapshot.health_pct))
-        addLine(rows, "melee dmg %", pct(snapshot.melee_damage_pct))
-        addLine(rows, "melee crit %", pct(snapshot.melee_crit_chance_pct))
+        -- Build main stat rows using the new system
+        rows = StatTooltipSystem.buildRows(StatTooltipSystem.DETAILED_STATS, snapshot, opts)
 
-        if snapshot.per_type then
-            for _, entry in ipairs(snapshot.per_type) do
-                local labelPrefix = entry.type
-                addLine(rows, labelPrefix .. " dmg", entry.dmg)
-                addLine(rows, labelPrefix .. " dmg %", pct(entry.mod))
-                addLine(rows, labelPrefix .. " resist", pct(entry.resist))
-                addLine(rows, labelPrefix .. " dur %", pct(entry.duration))
-            end
-        end
+        -- Add elemental/per-type stats in a separate section
+        local elementalRows = StatTooltipSystem.buildElementalRows(snapshot.per_type, opts)
+        for _, r in ipairs(elementalRows) do rows[#rows + 1] = r end
     end
 
     if #rows == 0 then
-        addLine(rows, "status", "No stats", { color = "yellow" })
+        rows[1] = makeTooltipRow("status", "No stats", {
+            rowPadding = tooltipStyle.rowPadding,
+            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
+            valueOpts = { color = "yellow" },
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+        })
     end
 
-    local v = buildFourColumnBody(rows, {
-        innerColor = tooltipStyle.innerColor,
-        padding = outerPadding
-    })
+    local v = buildFourColumnBody(rows, { innerColor = tooltipStyle.innerColor, padding = outerPadding })
 
     local root = dsl.root {
         config = {
@@ -3739,69 +3862,32 @@ local function ensureDetailedStatsTooltip()
     return tooltip
 end
 function makePlayerStatsTooltip(snapshot)
-    local rowPadding = tooltipStyle.rowPadding
     local innerPad = tooltipStyle.innerPadding or 6
-
-    local function addLine(rows, label, value, valueOpts)
-        if value == nil then return end
-        local row = makeTooltipRow(label, value, {
-            rowPadding = rowPadding,
-            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
-            valueOpts = valueOpts,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
-        })
-        if row then
-            table.insert(rows, row)
-        end
-    end
-
-    local function pct(val)
-        if val == nil then return nil end
-        return string.format("%d%%", math.floor(val + 0.5))
-    end
+    local opts = { colorCode = true, showHeaders = true, rowPadding = tooltipStyle.rowPadding }
 
     local rows = {}
-
     if not snapshot then
-        addLine(rows, "status", "Stats unavailable", { color = "red" })
+        rows[1] = makeTooltipRow("status", "Stats unavailable", {
+            rowPadding = tooltipStyle.rowPadding,
+            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
+            valueOpts = { color = "red" },
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+        })
     else
-        addLine(rows, "level", snapshot.level)
-        if snapshot.hp and snapshot.max_hp then
-            addLine(rows, "health", string.format("%d / %d", math.floor(snapshot.hp + 0.5), math.floor(snapshot.max_hp + 0.5)))
-        end
-        addLine(rows, "health regen", snapshot.health_regen and string.format("%.1f/s", snapshot.health_regen))
-        if snapshot.xp and snapshot.xp_to_next then
-            addLine(rows, "xp", string.format("%d / %d", math.floor(snapshot.xp + 0.5), math.floor(snapshot.xp_to_next + 0.5)))
-        end
-        addLine(rows, "physique", snapshot.physique)
-        addLine(rows, "cunning", snapshot.cunning)
-        addLine(rows, "spirit", snapshot.spirit)
-        addLine(rows, "offensive ability", snapshot.offensive_ability)
-        addLine(rows, "defensive ability", snapshot.defensive_ability)
-        if snapshot.weapon_min and snapshot.weapon_max then
-            addLine(rows, "damage", string.format("%d - %d", math.floor(snapshot.weapon_min + 0.5), math.floor(snapshot.weapon_max + 0.5)))
-        end
-        addLine(rows, "attack speed", snapshot.attack_speed and string.format("%.2f/s", snapshot.attack_speed))
-        addLine(rows, "cast speed", snapshot.cast_speed and string.format("%.2f/s", snapshot.cast_speed))
-        addLine(rows, "cooldown reduction", pct(snapshot.cooldown_reduction))
-        addLine(rows, "skill cost reduction", pct(snapshot.skill_energy_cost_reduction))
-        addLine(rows, "all damage", pct(snapshot.all_damage_pct))
-        addLine(rows, "life steal", pct(snapshot.life_steal_pct))
-        addLine(rows, "crit dmg", pct(snapshot.crit_damage_pct))
-        addLine(rows, "dodge", pct(snapshot.dodge_chance_pct))
-        addLine(rows, "armor", snapshot.armor)
-        addLine(rows, "run speed", snapshot.run_speed and string.format("%.1f", snapshot.run_speed))
-        addLine(rows, "move speed", pct(snapshot.move_speed_pct))
+        -- Build stat rows using the new declarative system
+        rows = StatTooltipSystem.buildRows(StatTooltipSystem.BASIC_STATS, snapshot, opts)
     end
 
     if #rows == 0 then
-        addLine(rows, "status", "No stats", { color = "yellow" })
+        rows[1] = makeTooltipRow("status", "No stats", {
+            rowPadding = tooltipStyle.rowPadding,
+            labelOpts = { background = tooltipStyle.labelBg, color = tooltipStyle.labelColor },
+            valueOpts = { color = "yellow" },
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+        })
     end
 
-    local v = buildTwoColumnBody(rows, {
-        innerColor = tooltipStyle.innerColor,
-        padding = innerPad
-    })
+    local v = buildTwoColumnBody(rows, { innerColor = tooltipStyle.innerColor, padding = innerPad })
 
     local root = dsl.root {
         config = {

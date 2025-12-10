@@ -91,6 +91,7 @@ jobs:
           emcmake cmake -S . -B build-web \
             -DPLATFORM=Web \
             -DCMAKE_BUILD_TYPE=Release \
+            -DWEB_BUILD_DIR="${{ github.workspace }}/build-web" \
             -DITCH_BUILD_ID="${{ github.sha }}"
 
       - name: Copy assets into web build tree

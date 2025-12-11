@@ -1,14 +1,15 @@
 #version 300 es
 precision mediump float;
 
+
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform vec2 regionRate;
 uniform vec2 pivot;
 
-flat in vec2 tiltSin;
-flat in vec2 tiltCos;
+in mat3 invRotMat;
+in vec2 worldMouseUV;
 flat in float angleFlat;
 
 uniform sampler2D texture0;
@@ -16,10 +17,6 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
-// Per-card random seed for unique overlay variations
-// Expected range: [0.0, 1.0]
-// Used to offset animation phases, noise patterns, and color variations
-// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -74,6 +71,18 @@ vec2 localToAtlas(vec2 localUV) {
     return (uGridRect.xy + localUV * uGridRect.zw) / uImageSize;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 34.345);
+    return fract(p.x * p.y);
+}
+
 vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
@@ -121,16 +130,18 @@ vec4 applyOverlay(vec2 atlasUV) {
     float dist = length(centered);
     vec2 dir = dist > 0.0001 ? centered / dist : vec2(0.0);
 
-    vec2 uvOutward = centered + dir * progress * spread_strength;
-    uvOutward += distortion_strength * vec2(
+    vec2 displaced = centered + dir * progress * spread_strength;
+    displaced += distortion_strength * vec2(
         sin(dist * 20.0 - time * 10.0),
         cos(dist * 20.0 - time * 8.0)
     ) * progress;
 
-    vec2 warpedLocal = uvOutward + vec2(0.5);
-    vec2 sampleUV = localToAtlas(warpedLocal);
-
+    vec2 warpedLocal = displaced + vec2(0.5);
     vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
+
+    vec2 sampleUV = localToAtlas(clampedLocal);
+
+    vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
 
     // Glitch / Digital distortion effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
@@ -147,35 +158,45 @@ vec4 applyOverlay(vec2 atlasUV) {
         vec3 lit = clamp(base.rgb * material_tint, 0.0, 1.0);
         float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
         float alpha = base.a * alphaFactor;
+
+        float edgeDistance = length(warpedLocal - clampedLocal);
+        float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
+
+        if (!shadow && burn_colour_1.a > 0.01) {
+            vec3 burnMix = burn_colour_1.rgb;
+            if (burn_colour_2.a > 0.01) {
+                float t = clamp(edgeDistance / 0.04, 0.0, 1.0);
+                burnMix = mix(burn_colour_1.rgb, burn_colour_2.rgb, t);
+            }
+            lit = mix(lit, burnMix, clamp(burnMask * burn_colour_1.a, 0.0, 1.0));
+        }
+
         if (shadow) {
             return vec4(vec3(0.0), alpha * 0.35);
         }
         return vec4(lit, alpha);
     }
 
-    // Per-card seed offset for unique glitch patterns
-    float seedOffset = rand_seed * 100.0;
-
-    // Glitch timing - creates bursts of glitches (with per-card seed variation)
-    float burst1 = glitchTrigger(t * glitchSpeed + seedOffset * 0.01, 1.0 + rand_seed);
-    float burst2 = glitchTrigger(t * glitchSpeed * 1.3 + seedOffset * 0.013, 2.0 + rand_seed);
-    float burst3 = glitchTrigger(t * glitchSpeed * 0.7 + seedOffset * 0.007, 3.0 + rand_seed);
+    // Glitch timing - creates bursts of glitches
+    float burst1 = glitchTrigger(t * glitchSpeed, 1.0);
+    float burst2 = glitchTrigger(t * glitchSpeed * 1.3, 2.0);
+    float burst3 = glitchTrigger(t * glitchSpeed * 0.7, 3.0);
     float burstTotal = max(burst1, max(burst2, burst3));
 
-    // Horizontal line displacement (VHS-style) with seed variation
-    float lineNoise = hash(floor(uv.y * 50.0 + t * 30.0 + seedOffset));
+    // Horizontal line displacement (VHS-style)
+    float lineNoise = hash(floor(uv.y * 50.0 + t * 30.0));
     float lineDisplace = (lineNoise - 0.5) * 0.1 * glitchIntensity * burstTotal;
 
-    // Block displacement with seed variation
-    float blockSize = 8.0 + hash(floor(t * 5.0) + seedOffset * 0.1) * 8.0;
-    float blockDisplace = (blockNoise(uv + rand_seed * 0.5, blockSize) - 0.5) * 0.15 * glitchIntensity * burst1;
+    // Block displacement
+    float blockSize = 8.0 + hash(floor(t * 5.0)) * 8.0;
+    float blockDisplace = (blockNoise(uv, blockSize) - 0.5) * 0.15 * glitchIntensity * burst1;
 
-    // Vertical tear/shift with seed variation
-    float tearY = step(0.5, hash(floor(t * 8.0) + seedOffset * 0.2));
-    float tearAmount = (hash(floor(uv.y * 20.0 + t * 15.0 + seedOffset)) - 0.5) * 0.2 * tearY * glitchIntensity;
+    // Vertical tear/shift
+    float tearY = step(0.5, hash(floor(t * 8.0)));
+    float tearAmount = (hash(floor(uv.y * 20.0 + t * 15.0)) - 0.5) * 0.2 * tearY * glitchIntensity;
 
     // Apply displacements in local sprite UV space to prevent atlas bleeding
-    vec2 glitchLocalUV = warpedLocal;
+    vec2 glitchLocalUV = clampedLocal;
     glitchLocalUV.x += lineDisplace + tearAmount;
     glitchLocalUV.x += blockDisplace * burst2;
 
@@ -207,34 +228,34 @@ vec4 applyOverlay(vec2 atlasUV) {
     float scanline = 0.95 + 0.05 * sin(uv.y * 400.0 + t * 10.0);
     glitchColor *= scanline;
 
-    // Occasional color inversion in blocks (with seed variation)
-    float invertBlock = step(0.92, blockNoise(uv + t * 0.1 + rand_seed * 0.3, 12.0)) * burst1;
+    // Occasional color inversion in blocks
+    float invertBlock = step(0.92, blockNoise(uv + t * 0.1, 12.0)) * burst1;
     glitchColor = mix(glitchColor, 1.0 - glitchColor, invertBlock);
 
     // Color quantization (reduce color depth for digital look)
     float quantize = 16.0 - 8.0 * burst2;
     glitchColor = floor(glitchColor * quantize) / quantize;
 
-    // Static noise overlay (with seed variation)
-    float staticNoise = hash2(uv * 500.0 + t * 100.0 + rand_seed * 50.0);
+    // Static noise overlay
+    float staticNoise = hash2(uv * 500.0 + t * 100.0);
     float staticIntensity = 0.05 + 0.15 * burstTotal * glitchIntensity;
     glitchColor = mix(glitchColor, vec3(staticNoise), staticIntensity);
 
-    // Horizontal noise bands (with seed variation)
-    float bandY = floor(uv.y * 30.0 + t * 20.0 + seedOffset * 0.05);
-    float band = step(0.9, hash(bandY + seedOffset * 0.1)) * burstTotal;
-    glitchColor = mix(glitchColor, vec3(hash(bandY + 0.5 + seedOffset)), band * 0.5);
+    // Horizontal noise bands
+    float bandY = floor(uv.y * 30.0 + t * 20.0);
+    float band = step(0.9, hash(bandY)) * burstTotal;
+    glitchColor = mix(glitchColor, vec3(hash(bandY + 0.5)), band * 0.5);
 
-    // Rolling bar (like old TV interference) with seed variation
+    // Rolling bar (like old TV interference)
     float rollSpeed = 2.0;
-    float rollPos = fract(t * rollSpeed * 0.1 + rand_seed * 0.5);
+    float rollPos = fract(t * rollSpeed * 0.1);
     float rollBar = smoothstep(0.0, 0.02, abs(uv.y - rollPos)) *
                     smoothstep(0.0, 0.02, abs(uv.y - rollPos - 1.0));
-    rollBar = 1.0 - (1.0 - rollBar) * 0.3 * step(0.7, hash(floor(t * 2.0) + seedOffset * 0.3));
+    rollBar = 1.0 - (1.0 - rollBar) * 0.3 * step(0.7, hash(floor(t * 2.0)));
     glitchColor *= rollBar;
 
-    // Occasional full-frame color shift (with seed variation)
-    float colorShift = hash(floor(t * 4.0) + seedOffset * 0.2);
+    // Occasional full-frame color shift
+    float colorShift = hash(floor(t * 4.0));
     if (colorShift > 0.95 && burstTotal > 0.5) {
         glitchColor = glitchColor.gbr;  // Rotate color channels
     } else if (colorShift > 0.9 && burstTotal > 0.5) {
@@ -253,6 +274,18 @@ vec4 applyOverlay(vec2 atlasUV) {
     float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
     float alpha = base.a * alphaFactor;
 
+    float edgeDistance = length(warpedLocal - clampedLocal);
+    float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
+
+    if (!shadow && burn_colour_1.a > 0.01) {
+        vec3 burnMix = burn_colour_1.rgb;
+        if (burn_colour_2.a > 0.01) {
+            float t = clamp(edgeDistance / 0.04, 0.0, 1.0);
+            burnMix = mix(burn_colour_1.rgb, burn_colour_2.rgb, t);
+        }
+        lit = mix(lit, burnMix, clamp(burnMask * burn_colour_1.a, 0.0, 1.0));
+    }
+
     if (shadow) {
         return vec4(vec3(0.0), alpha * 0.35);
     }
@@ -263,47 +296,28 @@ vec4 applyOverlay(vec2 atlasUV) {
 void main()
 {
     vec2 uv = fragTexCoord;
+    float t = tan(radians(fov) / 2.0);
+    vec2 centered = (uv - pivot) / regionRate;
 
-    bool identityAtlas = abs(regionRate.x - 1.0) < 0.0001 &&
-                         abs(regionRate.y - 1.0) < 0.0001 &&
-                         abs(pivot.x) < 0.0001 &&
-                         abs(pivot.y) < 0.0001;
+    vec3 p = invRotMat * vec3(centered - 0.5, 0.5 / t);
+    float v = (0.5 / t) + 0.5;
+    p.xy *= v * invRotMat[2].z;
+    vec2 o = v * invRotMat[2].xy;
+
+    if (cull_back > 0.5 && p.z <= 0.0) discard;
+
+    uv = (p.xy / p.z) - o + 0.5;
+
+    float asp = regionRate.y / regionRate.x;
+    uv.y *= asp;
 
     float angle = angleFlat;
+    uv = rotate(uv, vec2(0.5), angle);
+    uv.y /= asp;
 
-    if (identityAtlas || uv_passthrough > 0.5) {
-        vec2 rotated = rotate(uv, vec2(0.5), angle);
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
 
-        float inset = 0.0035;
-        vec2 clamped = clamp(rotated, vec2(inset), vec2(1.0 - inset));
-        vec2 finalUV = identityAtlas
-            ? clamped
-            : (pivot + clamped * regionRate);
-        finalColor = applyOverlay(finalUV);
-    } else {
-        float cosX = tiltCos.x;
-        float cosY = tiltCos.y;
-        float sinX = tiltSin.x;
-        float sinY = tiltSin.y;
+    vec2 finalUV = pivot + uv * regionRate;
 
-        vec2 centered = (uv - pivot) / regionRate;
-        vec2 localCentered = centered - vec2(0.5);
-        vec2 correctedUV = localCentered;
-        correctedUV.x /= max(cosY, 0.5);
-        correctedUV.y /= max(cosX, 0.5);
-        correctedUV.x -= sinY * 0.1;
-        correctedUV.y -= sinX * 0.1;
-        uv = correctedUV + vec2(0.5);
-
-        float asp = regionRate.y / regionRate.x;
-        uv.y *= asp;
-
-        uv = rotate(uv, vec2(0.5), angle);
-        uv.y /= asp;
-
-        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
-
-        vec2 finalUV = pivot + uv * regionRate;
-        finalColor = applyOverlay(finalUV);
-    }
+    finalColor = applyOverlay(finalUV);
 }

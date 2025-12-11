@@ -467,24 +467,6 @@
             "fragment": "web/fireworks_fragment.fs"
         }
     },
-    "explosion_background": {
-        "vertex": "explosion_background_vertex.vs",
-        "fragment": "explosion_background_fragment.fs",
-
-        "web": {
-            "vertex": "web/explosion_background_vertex.vs",
-            "fragment": "web/explosion_background_fragment.fs"
-        }
-    },
-    "confetti_twister": {
-        "vertex": "confetti_twister_vertex.vs",
-        "fragment": "confetti_twister_fragment.fs",
-
-        "web": {
-            "vertex": "web/confetti_twister_vertex.vs",
-            "fragment": "web/confetti_twister_fragment.fs"
-        }
-    },
     "vacuum_collapse": {
         "vertex": "vacuum_collapse_vertex.vs",
         "fragment": "vacuum_collapse_fragment.fs",

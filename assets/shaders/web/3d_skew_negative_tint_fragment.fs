@@ -1,14 +1,15 @@
 #version 300 es
 precision mediump float;
 
+
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform vec2 regionRate;
 uniform vec2 pivot;
 
-flat in vec2 tiltSin;
-flat in vec2 tiltCos;
+in mat3 invRotMat;
+in vec2 worldMouseUV;
 flat in float angleFlat;
 
 uniform sampler2D texture0;
@@ -16,10 +17,6 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
-// Per-card random seed for unique overlay variations
-// Expected range: [0.0, 1.0]
-// Used to offset animation phases, noise patterns, and color variations
-// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -72,6 +69,18 @@ vec2 getSpriteUV(vec2 uv) {
 
 vec2 localToAtlas(vec2 localUV) {
     return (uGridRect.xy + localUV * uGridRect.zw) / uImageSize;
+}
+
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 34.345);
+    return fract(p.x * p.y);
 }
 
 vec4 sampleTinted(vec2 uv) {
@@ -145,17 +154,19 @@ vec4 applyOverlay(vec2 atlasUV) {
     float dist = length(centered);
     vec2 dir = dist > 0.0001 ? centered / dist : vec2(0.0);
 
-    vec2 uvOutward = centered + dir * progress * spread_strength;
-    uvOutward += distortion_strength * vec2(
+    vec2 displaced = centered + dir * progress * spread_strength;
+    displaced += distortion_strength * vec2(
         sin(dist * 20.0 - time * 10.0),
         cos(dist * 20.0 - time * 8.0)
     ) * progress;
 
-    vec2 warpedLocal = uvOutward + vec2(0.5);
-    vec2 sampleUV = localToAtlas(warpedLocal);
+    vec2 warpedLocal = displaced + vec2(0.5);
+    vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
+
+    vec2 sampleUV = localToAtlas(clampedLocal);
     vec4 base = sampleTinted(sampleUV);
 
-    vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
+    vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
 
     // True photographic negative effect
     // Invert RGB colors directly for authentic negative look
@@ -170,21 +181,17 @@ vec4 applyOverlay(vec2 atlasUV) {
     // Optional: slight hue rotation for film negative aesthetic
     // Real film negatives have orange mask, causing color shifts
     // negative_tint.y controls optional color shift intensity
-    // Per-card seed for unique hue offset (creates variety in negative look)
-    float seedHueOffset = rand_seed * 0.15;
-    float hueShift = negative_tint.y * 0.15 + seedHueOffset;
+    float hueShift = negative_tint.y * 0.15;
     vec4 hslColor = HSL(vec4(negativeColor, 1.0));
     hslColor.x = mod(hslColor.x + hueShift, 1.0);
 
-    // Boost saturation slightly for punchy negative look (with subtle seed variation)
-    float satBoost = 1.2 + rand_seed * 0.1;
-    hslColor.y = min(hslColor.y * satBoost, 1.0);
+    // Boost saturation slightly for punchy negative look
+    hslColor.y = min(hslColor.y * 1.2, 1.0);
 
     vec3 tintedColor = RGB(hslColor).rgb;
 
-    // Subtle contrast boost for negative film feel (with seed variation)
-    float contrastBoost = 1.1 + rand_seed * 0.05;
-    tintedColor = (tintedColor - 0.5) * contrastBoost + 0.5;
+    // Subtle contrast boost for negative film feel
+    tintedColor = (tintedColor - 0.5) * 1.1 + 0.5;
     tintedColor = clamp(tintedColor, 0.0, 1.0);
 
     // Reduce alpha for semi-transparent areas
@@ -202,6 +209,18 @@ vec4 applyOverlay(vec2 atlasUV) {
     float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
     float alpha = alphaAdjust * alphaFactor;
 
+    float edgeDistance = length(warpedLocal - clampedLocal);
+    float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
+
+    if (!shadow && burn_colour_1.a > 0.01) {
+        vec3 burnMix = burn_colour_1.rgb;
+        if (burn_colour_2.a > 0.01) {
+            float t = clamp(edgeDistance / 0.04, 0.0, 1.0);
+            burnMix = mix(burn_colour_1.rgb, burn_colour_2.rgb, t);
+        }
+        lit = mix(lit, burnMix, clamp(burnMask * burn_colour_1.a, 0.0, 1.0));
+    }
+
     if (shadow) {
         return vec4(vec3(0.0), alpha * 0.35);
     }
@@ -212,47 +231,28 @@ vec4 applyOverlay(vec2 atlasUV) {
 void main()
 {
     vec2 uv = fragTexCoord;
+    float t = tan(radians(fov) / 2.0);
+    vec2 centered = (uv - pivot) / regionRate;
 
-    bool identityAtlas = abs(regionRate.x - 1.0) < 0.0001 &&
-                         abs(regionRate.y - 1.0) < 0.0001 &&
-                         abs(pivot.x) < 0.0001 &&
-                         abs(pivot.y) < 0.0001;
+    vec3 p = invRotMat * vec3(centered - 0.5, 0.5 / t);
+    float v = (0.5 / t) + 0.5;
+    p.xy *= v * invRotMat[2].z;
+    vec2 o = v * invRotMat[2].xy;
+
+    if (cull_back > 0.5 && p.z <= 0.0) discard;
+
+    uv = (p.xy / p.z) - o + 0.5;
+
+    float asp = regionRate.y / regionRate.x;
+    uv.y *= asp;
 
     float angle = angleFlat;
+    uv = rotate(uv, vec2(0.5), angle);
+    uv.y /= asp;
 
-    if (identityAtlas || uv_passthrough > 0.5) {
-        vec2 rotated = rotate(uv, vec2(0.5), angle);
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
 
-        float inset = 0.0035;
-        vec2 clamped = clamp(rotated, vec2(inset), vec2(1.0 - inset));
-        vec2 finalUV = identityAtlas
-            ? clamped
-            : (pivot + clamped * regionRate);
-        finalColor = applyOverlay(finalUV);
-    } else {
-        float cosX = tiltCos.x;
-        float cosY = tiltCos.y;
-        float sinX = tiltSin.x;
-        float sinY = tiltSin.y;
+    vec2 finalUV = pivot + uv * regionRate;
 
-        vec2 centered = (uv - pivot) / regionRate;
-        vec2 localCentered = centered - vec2(0.5);
-        vec2 correctedUV = localCentered;
-        correctedUV.x /= max(cosY, 0.5);
-        correctedUV.y /= max(cosX, 0.5);
-        correctedUV.x -= sinY * 0.1;
-        correctedUV.y -= sinX * 0.1;
-        uv = correctedUV + vec2(0.5);
-
-        float asp = regionRate.y / regionRate.x;
-        uv.y *= asp;
-
-        uv = rotate(uv, vec2(0.5), angle);
-        uv.y /= asp;
-
-        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
-
-        vec2 finalUV = pivot + uv * regionRate;
-        finalColor = applyOverlay(finalUV);
-    }
+    finalColor = applyOverlay(finalUV);
 }

@@ -1384,34 +1384,6 @@ void SetUpShaderUniforms() {
   globalShaderUniforms.set("peaches_background", "movement_randomness",
                            16.2f); // Tweak live
 
-  // === Fireworks Background Shader ===
-  globalShaderUniforms.set("fireworks_background", "resolution",
-                           Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
-  shaders::registerUniformUpdate("fireworks_background", [](Shader &shader) {
-    globalShaderUniforms.set("fireworks_background", "iTime",
-                             (float)main_loop::getTime());
-  });
-
-  // Particle settings
-  globalShaderUniforms.set("fireworks_background", "num_particles", 75);
-  globalShaderUniforms.set("fireworks_background", "num_fireworks", 5);
-  globalShaderUniforms.set("fireworks_background", "time_scale", 1.0f);
-  globalShaderUniforms.set("fireworks_background", "gravity_strength", 0.1f);
-  globalShaderUniforms.set("fireworks_background", "brightness", 1.0f);
-  globalShaderUniforms.set("fireworks_background", "particle_size", 50.0f);
-  globalShaderUniforms.set("fireworks_background", "spread", 1.5f);
-  globalShaderUniforms.set("fireworks_background", "color_power", 1.25f);
-
-  // Flag effect (disabled by default)
-  globalShaderUniforms.set("fireworks_background", "flag_enable", 0.0f);
-  globalShaderUniforms.set("fireworks_background", "flag_color_top",
-                           Vector3{1.0f, 1.0f, 1.0f});
-  globalShaderUniforms.set("fireworks_background", "flag_color_bottom",
-                           Vector3{1.0f, 0.0f, 0.0f});
-  globalShaderUniforms.set("fireworks_background", "flag_wave_speed", 1.0f);
-  globalShaderUniforms.set("fireworks_background", "flag_wave_amp", 0.1f);
-  globalShaderUniforms.set("fireworks_background", "flag_brightness", 0.15f);
-
   // fade_zoom transition
   globalShaderUniforms.set("fade_zoom", "progress",
                            0.0f); // Animate from 0 to 1

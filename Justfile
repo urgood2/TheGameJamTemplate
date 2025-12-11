@@ -34,15 +34,41 @@ build-web:
 
 	mkdir -p build-emc
 
-	# Ensure asset folder is copied
-	rm -rf build-emc/assets || true
-	cp -R assets build-emc/assets
+	# Copy assets with exclusions (parity with CMake)
+	python3 scripts/copy_assets.py assets build-emc/assets
 
 	cd build-emc
 	emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3" -DCMAKE_EXECUTABLE_SUFFIX=".html"
 	emmake make -j"${WEB_JOBS}"
 
 	echo "Build complete! Files are in build-emc/"
+
+# Web build with Lua comment stripping (smaller payload)
+build-web-release:
+	#!/usr/bin/env bash
+	set -e
+
+	: "${WEB_JOBS:=2}"
+
+	# Activate Emscripten
+	if [ -f "/usr/lib/emsdk/emsdk_env.sh" ]; then
+		source "/usr/lib/emsdk/emsdk_env.sh"
+	elif [ -f "$HOME/emsdk/emsdk_env.sh" ]; then
+		source "$HOME/emsdk/emsdk_env.sh"
+	else
+		echo "Warning: emsdk_env.sh not found, assuming emcc is in PATH"
+	fi
+
+	mkdir -p build-emc
+
+	# Copy assets with exclusions AND Lua stripping
+	python3 scripts/copy_assets.py assets build-emc/assets --strip-lua
+
+	cd build-emc
+	emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3"
+	emmake make -j"${WEB_JOBS}"
+
+	echo "Release build complete! Files are in build-emc/"
 
 # Build web with gzip compression for deployment
 # This matches the CI workflow for parity

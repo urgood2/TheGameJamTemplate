@@ -1727,6 +1727,39 @@ function createNewCard(id, x, y, gameStateToApply)
                             goto continue
                         end
 
+                        -- Shop card hover scale animation
+                        if cardScript.isShopCard then
+                            local dt = (GetFrameTime and GetFrameTime()) or 0.016
+                            local lerpSpeed = 12 * dt
+                            cardScript.hoverScale = cardScript.hoverScale + (cardScript.targetHoverScale - cardScript.hoverScale) * lerpSpeed
+
+                            -- Apply scale to transform
+                            local t = component_cache.get(eid, Transform)
+                            if t then
+                                local baseW = cardW or 100
+                                local baseH = cardH or 140
+                                t.actualW = baseW * cardScript.hoverScale
+                                t.actualH = baseH * cardScript.hoverScale
+                            end
+
+                            -- Update dissolve shader uniform
+                            if cardScript.dissolveAmount > 0 then
+                                local shaderPipelineComp = component_cache.get(eid, shader_pipeline.ShaderPipelineComponent)
+                                if shaderPipelineComp and shaderPipelineComp.passes and #shaderPipelineComp.passes > 0 then
+                                    local pass = shaderPipelineComp.passes[1]
+                                    if pass and pass.shaderName then
+                                        local existingPrePass = pass.customPrePassFunction
+                                        pass.customPrePassFunction = function()
+                                            if existingPrePass then existingPrePass() end
+                                            if globalShaderUniforms then
+                                                globalShaderUniforms:set(pass.shaderName, "dissolve", cardScript.dissolveAmount)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+
                         local go = component_cache.get(eid, GameObject)
                         if go then
                             go.state.isBeingFocused = cardScript.selected and true or false

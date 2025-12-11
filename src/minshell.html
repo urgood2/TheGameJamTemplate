@@ -556,7 +556,54 @@
         </div>
     </div>
 
-    <!-- Keyboard shortcuts overlay -->
+    <!--
+    ========================================================================
+    KEYBOARD SHORTCUTS OVERLAY - CUSTOMIZATION GUIDE
+    ========================================================================
+
+    This overlay shows keyboard controls to players. Press '?' in-game to open.
+
+    STRUCTURE:
+    - Each .shortcut-section is a category (Movement, Actions, etc.)
+    - Each .shortcut-row contains keys and description
+    - Use <kbd> tags for individual keys
+
+    TO ADD A NEW SHORTCUT:
+    ┌────────────────────────────────────────────────────────────────────┐
+    │ <div class="shortcut-row">                                         │
+    │     <span class="shortcut-keys"><kbd>KEY</kbd></span>              │
+    │     <span class="shortcut-desc">Description</span>                 │
+    │ </div>                                                             │
+    └────────────────────────────────────────────────────────────────────┘
+
+    TO ADD MULTIPLE KEYS (e.g., combos or alternatives):
+    ┌────────────────────────────────────────────────────────────────────┐
+    │ <span class="shortcut-keys">                                       │
+    │     <kbd>Shift</kbd><kbd>Click</kbd>                               │
+    │ </span>                                                            │
+    └────────────────────────────────────────────────────────────────────┘
+
+    TO ADD A NEW SECTION:
+    ┌────────────────────────────────────────────────────────────────────┐
+    │ <div class="shortcut-section">                                     │
+    │     <div class="shortcut-section-title">Section Name</div>         │
+    │     <!-- shortcut-rows go here -->                                 │
+    │ </div>                                                             │
+    └────────────────────────────────────────────────────────────────────┘
+
+    COMMON KEY SYMBOLS:
+    - Arrow keys: ↑ ↓ ← →
+    - Special keys: Space, Tab, Esc, Enter, Shift, Ctrl, Alt
+    - Function keys: F1, F2, ... F12
+    - Mouse: LMB, RMB, Click
+
+    STYLING (defined in <style> section above):
+    - .shortcut-section-title: Category header (blue, uppercase)
+    - .shortcut-keys kbd: Individual key styling (blue border/bg)
+    - .shortcut-desc: Description text (gray)
+
+    ========================================================================
+    -->
     <div id="shortcuts-overlay" onclick="closeShortcutsOverlay(event)">
         <div id="shortcuts-content" onclick="event.stopPropagation()">
             <div id="shortcuts-title">⌨️ Keyboard Shortcuts</div>

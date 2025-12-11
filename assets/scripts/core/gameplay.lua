@@ -667,6 +667,19 @@ local shop_system_initialized = false
 local shop_board_id = nil
 local shop_buy_board_id = nil
 local shop_card_entities = {} -- Track shop card entity IDs for cleanup
+
+local function clearShopCardEntities()
+    for _, eid in ipairs(shop_card_entities) do
+        if eid and entity_cache.valid(eid) then
+            -- Remove from cards table
+            cards[eid] = nil
+            -- Destroy entity
+            registry:destroy(eid)
+        end
+    end
+    shop_card_entities = {}
+end
+
 local active_shop_instance = nil
 local AVATAR_PURCHASE_COST = 10
 local ensureShopSystemInitialized -- forward declaration so planning init can ensure metadata before card spawn

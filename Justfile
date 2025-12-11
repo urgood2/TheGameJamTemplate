@@ -59,7 +59,28 @@ build-web:
 
 	# Ensure asset folder is copied (matches CMake copy_assets target)
 	rm -rf {{WEB_BUILD_DIR}}/assets || true
-	cp -R assets {{WEB_BUILD_DIR}}/assets
+
+	# Copy assets with filtering (matches CMake copy_assets logic)
+	# Skip: .DS_Store, graphics/pre-packing-files_globbed, scripts_archived/,
+	#       chugget_code_definitions.lua, siralim_data/, docs/
+	find assets -type f \
+		! -name '.DS_Store' \
+		! -path '*graphics/pre-packing-files_globbed*' \
+		! -path '*scripts_archived/*' \
+		! -name 'chugget_code_definitions.lua' \
+		! -path '*siralim_data/*' \
+		! -path '*docs/*' \
+		| while read -r src; do
+		dest="{{WEB_BUILD_DIR}}/$src"
+		mkdir -p "$(dirname "$dest")"
+
+		# Strip Lua comments for release-like builds (matches STRIP_LUA_COMMENTS_FOR_WEB)
+		if [[ "$src" == *.lua ]] && command -v python3 >/dev/null 2>&1 && [ -f "scripts/strip_lua_comments.py" ]; then
+			python3 scripts/strip_lua_comments.py "$src" "$dest"
+		else
+			cp "$src" "$dest"
+		fi
+	done
 
 	cd {{WEB_BUILD_DIR}}
 

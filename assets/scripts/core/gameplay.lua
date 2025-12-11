@@ -717,6 +717,35 @@ local function createShopCard(offering, slotIndex, x, y)
     cardScript.targetHoverScale = 1.0
     cardScript.dissolveAmount = 0.0
 
+    -- Override hover behavior for shop cards
+    local nodeComp = registry:get(cardEntity, GameObject)
+    if nodeComp then
+        -- Disable drag for shop cards (buy via button only)
+        nodeComp.state.dragEnabled = false
+
+        local originalOnHover = nodeComp.methods.onHover
+        nodeComp.methods.onHover = function()
+            -- Call original hover for tooltip
+            if originalOnHover then
+                originalOnHover()
+            end
+
+            -- Set hover state for scaling
+            cardScript.isHoveredForShop = true
+            cardScript.targetHoverScale = 1.1
+        end
+
+        nodeComp.methods.onHoverEnd = function()
+            cardScript.isHoveredForShop = false
+            cardScript.targetHoverScale = 1.0
+        end
+
+        -- Disable click-to-select for shop cards
+        nodeComp.methods.onClick = function()
+            -- Do nothing - purchase via buy button only
+        end
+    end
+
     -- Track entity for cleanup
     table.insert(shop_card_entities, cardEntity)
 

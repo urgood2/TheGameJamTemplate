@@ -120,3 +120,6 @@ build-release-ninja:
 
 docs:
 	doxygen Doxyfile
+
+publish-web build_id="":
+	@powershell -ExecutionPolicy Bypass -NoProfile -File scripts/publish_web.ps1 {{build_id}}

@@ -667,184 +667,6 @@ local shop_system_initialized = false
 local shop_board_id = nil
 local shop_buy_board_id = nil
 local shop_card_entities = {} -- Track shop card entity IDs for cleanup
-
-local function clearShopCardEntities()
-    for _, eid in ipairs(shop_card_entities) do
-        if eid and entity_cache.valid(eid) then
-            -- Remove from cards table
-            cards[eid] = nil
-            -- Destroy entity
-            registry:destroy(eid)
-        end
-    end
-    shop_card_entities = {}
-end
-
-local function createShopCard(offering, slotIndex, x, y)
-    if not offering or offering.isEmpty then
-        return nil
-    end
-
-    local cardDef = offering.cardDef
-    local cardId = cardDef and cardDef.id
-    if not cardId then
-        return nil
-    end
-
-    -- Create card entity using existing function
-    local cardEntity = createNewCard(cardId, x, y, SHOP_STATE)
-    if not cardEntity then
-        return nil
-    end
-
-    -- Get script table
-    local cardScript = getScriptTableFromEntityID(cardEntity)
-    if not cardScript then
-        return nil
-    end
-
-    -- Mark as shop card with slot index
-    cardScript.isShopCard = true
-    cardScript.shop_slot = slotIndex
-    cardScript.shop_cost = offering.cost
-    cardScript.shop_rarity = offering.rarity
-
-    -- Store buy button entity reference (will be created on hover)
-    cardScript.buyButtonEntity = nil
-    cardScript.buyButtonVisible = false
-    cardScript.isHoveredForShop = false
-    cardScript.hoverScale = 1.0
-    cardScript.targetHoverScale = 1.0
-    cardScript.dissolveAmount = 0.0
-
-    -- Override hover behavior for shop cards
-    local nodeComp = registry:get(cardEntity, GameObject)
-    if nodeComp then
-        -- Disable drag for shop cards (buy via button only)
-        nodeComp.state.dragEnabled = false
-
-        local originalOnHover = nodeComp.methods.onHover
-        nodeComp.methods.onHover = function()
-            -- Call original hover for tooltip
-            if originalOnHover then
-                originalOnHover()
-            end
-
-            -- Set hover state for scaling
-            cardScript.isHoveredForShop = true
-            cardScript.targetHoverScale = 1.1
-
-            -- Create or show buy button
-            if not cardScript.buyButtonEntity or not entity_cache.valid(cardScript.buyButtonEntity) then
-                cardScript.buyButtonEntity = createShopBuyButton(cardEntity, cardScript)
-            end
-
-            if cardScript.buyButtonEntity then
-                add_state_tag(cardScript.buyButtonEntity, SHOP_STATE)
-                cardScript.buyButtonVisible = true
-            end
-        end
-
-        nodeComp.methods.onHoverEnd = function()
-            cardScript.isHoveredForShop = false
-            cardScript.targetHoverScale = 1.0
-
-            -- Hide buy button (delay slightly so clicks register)
-            timer.after(0.1, function()
-                if not cardScript.isHoveredForShop and cardScript.buyButtonEntity and entity_cache.valid(cardScript.buyButtonEntity) then
-                    remove_state_tag(cardScript.buyButtonEntity, SHOP_STATE)
-                    cardScript.buyButtonVisible = false
-                end
-            end, "shop_hide_button_" .. tostring(cardEntity), "ui")
-        end
-
-        -- Disable click-to-select for shop cards
-        nodeComp.methods.onClick = function()
-            -- Do nothing - purchase via buy button only
-        end
-    end
-
-    -- Track entity for cleanup
-    table.insert(shop_card_entities, cardEntity)
-
-    return cardEntity
-end
-
-local function createShopBuyButton(cardEntity, cardScript)
-    if not cardEntity or not cardScript then
-        return nil
-    end
-
-    local cost = cardScript.shop_cost or 0
-    local canAfford = (globals.currency or 0) >= cost
-    local buttonColor = canAfford and util.getColor("green") or util.getColor("fiery_red")
-    local textColor = util.getColor("white")
-
-    local buttonText = ui.definitions.getNewTextEntry(
-        string.format("%dg", cost),
-        18.0,
-        "color=white"
-    )
-
-    local buttonDef = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addId("shop_buy_button_" .. tostring(cardEntity))
-                :addColor(buttonColor)
-                :addEmboss(3.0)
-                :addHover(true)
-                :addPadding(8)
-                :addMinWidth(60)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
-                :addButtonCallback(function()
-                    -- Attempt purchase
-                    local success = tryPurchaseShopCard(cardScript)
-                    if success then
-                        -- Trigger dissolve animation
-                        cardScript.dissolveAmount = 0.01 -- Start dissolve
-                        timer.tween_fields(0.3, cardScript, { dissolveAmount = 1.0 }, Easing.inOutCubic.f, function()
-                            -- After dissolve, remove card
-                            if cardEntity and entity_cache.valid(cardEntity) then
-                                cards[cardEntity] = nil
-                                registry:destroy(cardEntity)
-                                -- Remove from tracking
-                                for i, eid in ipairs(shop_card_entities) do
-                                    if eid == cardEntity then
-                                        table.remove(shop_card_entities, i)
-                                        break
-                                    end
-                                end
-                            end
-                        end, "shop_dissolve_" .. tostring(cardEntity), "ui")
-                    end
-                end)
-                :build()
-        )
-        :addChild(buttonText)
-        :build()
-
-    local buttonEntity = ui.box.Initialize({ x = 0, y = 0 }, buttonDef)
-
-    -- Position below card
-    local cardTransform = component_cache.get(cardEntity, Transform)
-    if cardTransform and buttonEntity then
-        local buttonTransform = component_cache.get(buttonEntity, Transform)
-        if buttonTransform then
-            buttonTransform.actualX = cardTransform.actualX + (cardTransform.actualW or 0) / 2 - (buttonTransform.actualW or 30) / 2
-            buttonTransform.actualY = cardTransform.actualY + (cardTransform.actualH or 0) + 4
-            buttonTransform.visualX = buttonTransform.actualX
-            buttonTransform.visualY = buttonTransform.actualY
-        end
-    end
-
-    -- Add state tag
-    ui.box.AssignStateTagsToUIBox(buttonEntity, SHOP_STATE)
-    remove_default_state_tag(buttonEntity)
-
-    return buttonEntity
-end
-
 local active_shop_instance = nil
 local AVATAR_PURCHASE_COST = 10
 local ensureShopSystemInitialized -- forward declaration so planning init can ensure metadata before card spawn
@@ -1499,14 +1321,6 @@ function setUpCardAndWandStatDisplay()
             return
         end
 
-        -- Update currency display during shop
-        if is_state_active(SHOP_STATE) then
-            local CurrencyDisplay = require("ui.currency_display")
-            CurrencyDisplay.setAmount(globals.currency or 0)
-            CurrencyDisplay.update(dt)
-            CurrencyDisplay.draw()
-        end
-
         -- TODO: controller prompts
 
         -- get current board set
@@ -1826,39 +1640,6 @@ function createNewCard(id, x, y, gameStateToApply)
                         -- bail if entity not active
                         if not entity_cache.active(eid) then
                             goto continue
-                        end
-
-                        -- Shop card hover scale animation
-                        if cardScript.isShopCard then
-                            local dt = (GetFrameTime and GetFrameTime()) or 0.016
-                            local lerpSpeed = 12 * dt
-                            cardScript.hoverScale = cardScript.hoverScale + (cardScript.targetHoverScale - cardScript.hoverScale) * lerpSpeed
-
-                            -- Apply scale to transform
-                            local t = component_cache.get(eid, Transform)
-                            if t then
-                                local baseW = cardW or 100
-                                local baseH = cardH or 140
-                                t.actualW = baseW * cardScript.hoverScale
-                                t.actualH = baseH * cardScript.hoverScale
-                            end
-
-                            -- Update dissolve shader uniform
-                            if cardScript.dissolveAmount > 0 then
-                                local shaderPipelineComp = component_cache.get(eid, shader_pipeline.ShaderPipelineComponent)
-                                if shaderPipelineComp and shaderPipelineComp.passes and #shaderPipelineComp.passes > 0 then
-                                    local pass = shaderPipelineComp.passes[1]
-                                    if pass and pass.shaderName then
-                                        local existingPrePass = pass.customPrePassFunction
-                                        pass.customPrePassFunction = function()
-                                            if existingPrePass then existingPrePass() end
-                                            if globalShaderUniforms then
-                                                globalShaderUniforms:set(pass.shaderName, "dissolve", cardScript.dissolveAmount)
-                                            end
-                                        end
-                                    end
-                                end
-                            end
                         end
 
                         local go = component_cache.get(eid, GameObject)
@@ -6755,14 +6536,6 @@ function startShopPhase()
     activate_state(SHOP_STATE)
     activate_state("default_state") -- just for defaults, keep them open
 
-    -- Initialize currency display for shop
-    local CurrencyDisplay = require("ui.currency_display")
-    CurrencyDisplay.init({
-        amount = globals.currency or 0,
-        x = globals.screenWidth() - 240,
-        y = 520
-    })
-
     remove_layer_shader("sprites", "pixelate_image")
 
     PhysicsManager.enable_step("world", false)
@@ -7821,56 +7594,7 @@ local function collectPlanningPeekTargets()
     return targets
 end
 
--- Shop UI functions removed (setPlanningPeekMode, togglePlanningPeek, formatShopLabel)
-
-local function populateShopBoard(shop)
-    if not shop or not shop.offerings then
-        return
-    end
-
-    -- Clear existing shop cards
-    clearShopCardEntities()
-
-    -- Get shop board position and size
-    local shopBoard = boards[shop_board_id]
-    if not shopBoard then
-        log_debug("[Shop] No shop board found")
-        return
-    end
-
-    local boardTransform = component_cache.get(shop_board_id, Transform)
-    if not boardTransform then
-        return
-    end
-
-    local boardX = boardTransform.actualX or 100
-    local boardY = boardTransform.actualY or 100
-    local boardW = boardTransform.actualW or 800
-    local boardH = boardTransform.actualH or 400
-
-    -- Card layout: 5 cards in horizontal row
-    local numSlots = #shop.offerings
-    local cardWidth = cardW or 100 -- use global cardW
-    local cardHeight = cardH or 140 -- use global cardH
-    local padding = 20
-    local totalCardsWidth = numSlots * cardWidth + (numSlots - 1) * padding
-    local startX = boardX + (boardW - totalCardsWidth) / 2
-    local cardY = boardY + 60 -- offset from top for label
-
-    for i, offering in ipairs(shop.offerings) do
-        local cardX = startX + (i - 1) * (cardWidth + padding)
-
-        if not offering.isEmpty and not offering.sold then
-            local cardEntity = createShopCard(offering, i, cardX, cardY)
-            if cardEntity then
-                -- Add to shop board
-                addCardToBoard(cardEntity, shop_board_id)
-            end
-        end
-    end
-
-    log_debug("[Shop] Populated shop board with", #shop_card_entities, "cards")
-end
+-- Shop UI functions removed (setPlanningPeekMode, togglePlanningPeek, formatShopLabel, populateShopBoard)
 
 function regenerateShopState()
     ensureShopSystemInitialized()
@@ -7897,7 +7621,7 @@ function regenerateShopState()
 
     setShopLocked(false)
 
-    populateShopBoard(active_shop_instance)
+    -- populateShopBoard removed - rebuild shop UI handles this
 end
 
 function rerollActiveShop()

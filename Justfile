@@ -14,7 +14,28 @@ build-release:
 
 clean:
 	@rm -rf build || true
+	@rm -rf build-emc || true
+	@rm -rf dist || true
 	@rm -rf out || true
+	@rm -f raylib-cpp-cmake-template_web.zip || true
+
+# Clean only web-specific output files (matches CMake clean_web_build target)
+clean-web:
+	@rm -f build-emc/index.html || true
+	@rm -f build-emc/raylib-cpp-cmake-template.html || true
+	@rm -f build-emc/raylib-cpp-cmake-template.js || true
+	@rm -f build-emc/raylib-cpp-cmake-template.wasm || true
+	@rm -f build-emc/raylib-cpp-cmake-template.data || true
+	@rm -f build-emc/*.gz || true
+
+# Project configuration (matches CMakeLists.txt)
+PROJECT_NAME := "raylib-cpp-cmake-template"
+ITCH_USER := env_var_or_default("ITCH_USER", "chugget")
+ITCH_PAGE := env_var_or_default("ITCH_PAGE", "testing")
+WEB_BUILD_DIR := "build-emc"
+
+# Emscripten linker flags (matches CMakeLists.txt _emscripten_link_flags)
+EMSCRIPTEN_LINK_FLAGS := "-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sDISABLE_EXCEPTION_CATCHING=0 -sLEGACY_VM_SUPPORT=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1"
 
 build-web:
 	#!/usr/bin/env bash
@@ -24,7 +45,9 @@ build-web:
 	: "${WEB_JOBS:=2}"
 
 	# Activate Emscripten (adjust path as needed for your system)
-	if [ -f "/usr/lib/emsdk/emsdk_env.sh" ]; then
+	if [ -n "${EMSDK:-}" ] && [ -f "${EMSDK}/emsdk_env.sh" ]; then
+		source "${EMSDK}/emsdk_env.sh"
+	elif [ -f "/usr/lib/emsdk/emsdk_env.sh" ]; then
 		source "/usr/lib/emsdk/emsdk_env.sh"
 	elif [ -f "$HOME/emsdk/emsdk_env.sh" ]; then
 		source "$HOME/emsdk/emsdk_env.sh"
@@ -32,17 +55,76 @@ build-web:
 		echo "Warning: emsdk_env.sh not found, assuming emcc is in PATH"
 	fi
 
-	mkdir -p build-emc
+	mkdir -p {{WEB_BUILD_DIR}}
 
-	# Ensure asset folder is copied
-	rm -rf build-emc/assets || true
-	cp -R assets build-emc/assets
+	# Ensure asset folder is copied (matches CMake copy_assets target)
+	rm -rf {{WEB_BUILD_DIR}}/assets || true
+	cp -R assets {{WEB_BUILD_DIR}}/assets
 
-	cd build-emc
-	emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3" -DCMAKE_EXECUTABLE_SUFFIX=".html"
+	cd {{WEB_BUILD_DIR}}
+
+	# Configure with Emscripten (matches CMake _configure_args)
+	# Uses RelWithDebInfo for debug symbols in source maps
+	emcmake cmake .. \
+		-DPLATFORM=Web \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_EXE_LINKER_FLAGS="{{EMSCRIPTEN_LINK_FLAGS}}" \
+		-DCMAKE_EXECUTABLE_SUFFIX=.html \
+		-DCCACHE_PROGRAM= \
+		-DCMAKE_C_COMPILER_LAUNCHER= \
+		-DCMAKE_CXX_COMPILER_LAUNCHER=
+
 	emmake make -j"${WEB_JOBS}"
 
-	echo "Build complete! Files are in build-emc/"
+	echo "Build complete! Files are in {{WEB_BUILD_DIR}}/"
+
+# Rename output HTML to index.html (matches CMake rename_to_index target)
+rename-to-index:
+	#!/usr/bin/env bash
+	set -e
+	echo "Checking for {{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.html..."
+	if [ ! -f "{{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.html" ]; then
+		echo "ERROR: {{PROJECT_NAME}}.html not found. Build the project first."
+		exit 1
+	fi
+	cp "{{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.html" "{{WEB_BUILD_DIR}}/index.html"
+	echo "Renamed to index.html"
+
+# Inject snippet into <head> of index.html (matches CMake inject_web_patch target)
+inject-web-patch:
+	#!/usr/bin/env bash
+	set -e
+	echo "Checking for {{WEB_BUILD_DIR}}/index.html..."
+	if [ ! -f "{{WEB_BUILD_DIR}}/index.html" ]; then
+		echo "ERROR: index.html not found. Run 'just rename-to-index' first."
+		exit 1
+	fi
+	echo "Injecting custom HTML snippet into <head>..."
+	cmake -DHTML_PATH="{{WEB_BUILD_DIR}}/index.html" -DSNIPPET_PATH="cmake/inject_snippet.html" -P cmake/inject_snippet.cmake
+
+# Gzip WASM and DATA files (matches CMake gzip_assets target)
+gzip-assets:
+	#!/usr/bin/env bash
+	set -e
+	WASM_FILE="{{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.wasm"
+	DATA_FILE="{{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.data"
+
+	echo "Checking for build outputs..."
+	if [ ! -f "$WASM_FILE" ]; then
+		echo "ERROR: $WASM_FILE not found. Build the project first."
+		exit 1
+	fi
+	if [ ! -f "$DATA_FILE" ]; then
+		echo "ERROR: $DATA_FILE not found. Build the project first."
+		exit 1
+	fi
+
+	echo "Gzipping WASM and DATA files..."
+	cp "$WASM_FILE" "${WASM_FILE}.orig"
+	cp "$DATA_FILE" "${DATA_FILE}.orig"
+	gzip -kf "$WASM_FILE"
+	gzip -kf "$DATA_FILE"
+	echo "Compressed .wasm and .data files"
 
 # Build web with gzip compression for deployment
 # This matches the CI workflow for parity
@@ -55,16 +137,16 @@ build-web-dist:
 	mkdir -p dist/web
 
 	# Rename HTML to index.html (matches CI rename_to_index target)
-	cp build-emc/raylib-cpp-cmake-template.html dist/web/index.html
+	cp {{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.html dist/web/index.html
 
 	# Inject gzip decompression snippet into index.html (matches CI inject_web_patch target)
 	cmake -DHTML_PATH="dist/web/index.html" -DSNIPPET_PATH="cmake/inject_snippet.html" -P cmake/inject_snippet.cmake
 
 	# Copy JS
-	cp build-emc/*.js dist/web/
+	cp {{WEB_BUILD_DIR}}/*.js dist/web/
 
 	# Gzip WASM and data files (matches CI gzip_assets target)
-	for f in build-emc/*.wasm build-emc/*.data; do
+	for f in {{WEB_BUILD_DIR}}/*.wasm {{WEB_BUILD_DIR}}/*.data; do
 		if [ -f "$f" ]; then
 			gzip -9 -kf "$f"
 			cp "${f}.gz" dist/web/
@@ -79,60 +161,83 @@ build-web-dist:
 	echo "Distribution ready in dist/web/"
 	du -sh dist/web/
 
+# Post-process web build: rename, inject patch, gzip, and create zip
+# (matches CMake workflow: rename_to_index -> inject_web_patch -> gzip_assets -> zip)
 web-postprocess:
 	#!/usr/bin/env bash
 	set -e
 
-	html="build-emc/raylib-cpp-cmake-template.html"
-	out="build-emc/index.html"
+	html="{{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.html"
+	out="{{WEB_BUILD_DIR}}/index.html"
 
 	if [ ! -f "$html" ]; then
 		echo "Missing $html. Run 'just build-web' first."
 		exit 1
 	fi
 
+	# rename_to_index
 	cp "$html" "$out"
+
+	# inject_web_patch
 	cmake -DHTML_PATH="$out" -DSNIPPET_PATH="cmake/inject_snippet.html" -P cmake/inject_snippet.cmake
 
-	gzip -9 -kf "build-emc/raylib-cpp-cmake-template.wasm"
-	gzip -9 -kf "build-emc/raylib-cpp-cmake-template.data"
+	# gzip_assets
+	gzip -9 -kf "{{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.wasm"
+	gzip -9 -kf "{{WEB_BUILD_DIR}}/{{PROJECT_NAME}}.data"
 
+	# zip_web_build (matches CMake zip_web_build target)
 	(
-		cd build-emc
-		cmake -E tar "cf" ../raylib-cpp-cmake-template_web.zip --format=zip \
+		cd {{WEB_BUILD_DIR}}
+		cmake -E tar "cf" ../{{PROJECT_NAME}}_web.zip --format=zip \
 			index.html \
-			raylib-cpp-cmake-template.wasm.gz \
-			raylib-cpp-cmake-template.data.gz \
-			raylib-cpp-cmake-template.js
+			{{PROJECT_NAME}}.wasm.gz \
+			{{PROJECT_NAME}}.data.gz \
+			{{PROJECT_NAME}}.js \
+			assets
 	)
+	echo "Created {{PROJECT_NAME}}_web.zip"
 
+# Push web build to itch.io (matches CMake push_web_build target)
 push-web:
 	#!/usr/bin/env bash
 	set -e
 
 	: "${WEB_JOBS:=2}"
 
+	just clean-web
 	just build-web
 	just web-postprocess
 
-	itch_user="${ITCH_USER:-chugget}"
-	itch_page="${ITCH_PAGE:-testing}"
-	version="${CRASH_REPORT_BUILD_ID:-$(git describe --tags --always --dirty 2>/dev/null || echo dev)}"
+	itch_user="{{ITCH_USER}}"
+	itch_page="{{ITCH_PAGE}}"
+
+	# Version handling matches CMakeLists.txt CRASH_REPORT_BUILD_ID logic:
+	# 1. ITCH_BUILD_ID env var
+	# 2. TELEMETRY_BUILD_ID env var
+	# 3. BUILD_ID env var
+	# 4. git describe --tags --always --dirty
+	# 5. fallback to "dev"
+	version="${ITCH_BUILD_ID:-}"
+	if [ -z "$version" ]; then version="${TELEMETRY_BUILD_ID:-}"; fi
+	if [ -z "$version" ]; then version="${BUILD_ID:-}"; fi
+	if [ -z "$version" ]; then version="${CRASH_REPORT_BUILD_ID:-}"; fi
+	if [ -z "$version" ]; then version="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"; fi
 
 	if ! command -v butler >/dev/null 2>&1; then
 		echo "butler is not on PATH. Install and login first."
 		exit 1
 	fi
 
-	butler push raylib-cpp-cmake-template_web.zip "${itch_user}/${itch_page}:web" --userversion "${version}"
+	echo "Pushing to ${itch_user}/${itch_page}:web with version ${version}"
+	butler push {{PROJECT_NAME}}_web.zip "${itch_user}/${itch_page}:web" --userversion "${version}"
 
 # Serve the web build locally for testing
 serve-web:
 	#!/usr/bin/env bash
 	if [ -d "dist/web" ]; then
 		cd dist/web && python3 -m http.server 8000
-	elif [ -d "build-emc" ]; then
-		cd build-emc && python3 -m http.server 8000
+	elif [ -d "{{WEB_BUILD_DIR}}" ]; then
+		cd {{WEB_BUILD_DIR}} && python3 -m http.server 8000
 	else
 		echo "No web build found. Run 'just build-web' first."
 		exit 1

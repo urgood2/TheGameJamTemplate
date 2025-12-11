@@ -145,12 +145,19 @@ push-web:
 	itch_page="${ITCH_PAGE:-testing}"
 	version="${CRASH_REPORT_BUILD_ID:-$(git describe --tags --always --dirty 2>/dev/null || echo dev)}"
 
-	if ! command -v butler >/dev/null 2>&1; then
-		echo "butler is not on PATH. Install and login first."
+	# Find butler: check PATH first, then common install locations
+	if command -v butler >/dev/null 2>&1; then
+		BUTLER="butler"
+	elif [ -x "$HOME/Library/Application Support/itch/broth/butler/versions/15.24.0/butler" ]; then
+		BUTLER="$HOME/Library/Application Support/itch/broth/butler/versions/15.24.0/butler"
+	elif [ -x "$HOME/Library/Application Support/itch/apps/butler/butler" ]; then
+		BUTLER="$HOME/Library/Application Support/itch/apps/butler/butler"
+	else
+		echo "butler not found. Install via itch.io app or add to PATH."
 		exit 1
 	fi
 
-	butler push raylib-cpp-cmake-template_web.zip "${itch_user}/${itch_page}:web" --userversion "${version}"
+	"$BUTLER" push raylib-cpp-cmake-template_web.zip "${itch_user}/${itch_page}:web" --userversion "${version}"
 
 # Serve the web build locally for testing
 serve-web:

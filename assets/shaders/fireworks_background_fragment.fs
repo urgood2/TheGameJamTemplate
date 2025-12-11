@@ -52,6 +52,9 @@ vec3 pow3(vec3 v, float p) {
 
 // ----------------------------------------------------------------------------
 // Fireworks effect
+// WARNING: Loop bounds are compile-time constants for GPU compatibility.
+// Early break based on uniforms may not optimize on all hardware.
+// Max cost: 8 fireworks x 100 particles = 800 iterations per pixel
 // ----------------------------------------------------------------------------
 vec3 fireworks(vec2 p, int maxParticles, int maxFireworks) {
     vec3 color = vec3(0.0);

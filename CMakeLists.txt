@@ -1310,7 +1310,7 @@ if (EMSCRIPTEN)
     # Tell Emscripten to build an .html file.
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Os -fexceptions")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -Os -Wall -s TOTAL_MEMORY=512MB -s FORCE_FILESYSTEM=1 -sDISABLE_EXCEPTION_CATCHING=0 -sLEGACY_VM_SUPPORT=0 -sIMPORTED_MEMORY=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -sEXPORTED_FUNCTIONS=_main,_malloc,_free --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -Os -Wall -s TOTAL_MEMORY=512MB -s FORCE_FILESYSTEM=1 -sDISABLE_EXCEPTION_CATCHING=0 -sLEGACY_VM_SUPPORT=0 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32,HEAP32,HEAPU8 -sEXPORTED_FUNCTIONS=_main,_malloc,_free --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 endif()
 

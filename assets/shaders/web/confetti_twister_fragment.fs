@@ -1,7 +1,8 @@
-#version 330 core
+#version 300 es
+precision mediump float;
 
 // 3D confetti twister effect with rotating layers
-// Source: Shadertoy (ported to Raylib GLSL 330)
+// Source: Shadertoy (ported to Raylib GLSL ES 300)
 // Performance note: Heavy raymarching - 156 steps
 
 in vec2 fragTexCoord;
@@ -59,7 +60,7 @@ TraceResult trace(vec3 ro, vec3 rd) {
         float a = 3.14 / 2.0;
         p.yz *= mat2(vec2(sin(a), cos(a)), vec2(-cos(a), sin(a)));
 
-        // Time-based rotation on XY plane (6.26 ~= 2*PI for full rotation)
+        // Time-based rotation on XY plane
         float aa = sin(iTime / 4.0) * 6.26;
         p.xy *= mat2(vec2(sin(aa), cos(aa)), vec2(-cos(aa), sin(aa)));
 
@@ -68,7 +69,7 @@ TraceResult trace(vec3 ro, vec3 rd) {
 
         id = round(p / rc1).xyz;
 
-        // Per-layer rotation based on z-depth (6.28 ~= 2*PI)
+        // Per-layer rotation based on z-depth
         float pa = sin(id.z + iTime * id.z * 0.05) * 6.28;
 
         // z-layer interval scale - creates breathing effect

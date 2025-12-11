@@ -1,7 +1,8 @@
-#version 330 core
+#version 300 es
+precision mediump float;
 
 // Raymarched 3D explosion background effect
-// Source: Shadertoy (ported to Raylib GLSL 330)
+// Source: Shadertoy (ported to Raylib GLSL ES 300)
 // Performance note: Heavy raymarching - 48 steps
 
 in vec2 fragTexCoord;
@@ -16,7 +17,7 @@ uniform vec2 iResolution;
 out vec4 finalColor;
 
 // Cell state variables - used to communicate state from map() to main
-// This pattern is inherited from the source Shadertoy shader for raymarching
+// This pattern is inherited from the source Shadertoy shader
 vec4 cellColor = vec4(0.0, 0.0, 0.0, 0.0);
 vec3 cellPosition = vec3(0.0, 0.0, 0.0);
 float cellRandom = 0.0;

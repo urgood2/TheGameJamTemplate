@@ -1043,32 +1043,55 @@
             // Close share menu
             toggleShareMenu();
 
-            try {
-                // Get canvas data as PNG
-                canvas.toBlob(function(blob) {
-                    if (!blob) {
-                        console.error('Failed to create blob from canvas');
-                        return;
-                    }
+            // For WebGL canvases without preserveDrawingBuffer, we need to capture
+            // during the render loop. Use requestAnimationFrame to capture right
+            // after the next frame is drawn.
+            requestAnimationFrame(function() {
+                try {
+                    // Get canvas data as PNG
+                    canvas.toBlob(function(blob) {
+                        if (!blob || blob.size < 1000) {
+                            // Blob is empty or too small - WebGL buffer was cleared
+                            // Try alternative: create a 2D canvas copy
+                            console.log('Direct capture failed, trying 2D fallback');
+                            try {
+                                const tempCanvas = document.createElement('canvas');
+                                tempCanvas.width = canvas.width;
+                                tempCanvas.height = canvas.height;
+                                const ctx = tempCanvas.getContext('2d');
+                                ctx.drawImage(canvas, 0, 0);
+                                tempCanvas.toBlob(function(fallbackBlob) {
+                                    if (fallbackBlob && fallbackBlob.size > 1000) {
+                                        downloadScreenshotBlob(fallbackBlob);
+                                    } else {
+                                        showToast('Screenshot failed - WebGL buffer cleared');
+                                    }
+                                }, 'image/png');
+                            } catch (e) {
+                                showToast('Screenshot failed');
+                            }
+                            return;
+                        }
+                        downloadScreenshotBlob(blob);
+                    }, 'image/png');
+                } catch (err) {
+                    console.error('Screenshot failed:', err);
+                    showToast('Screenshot failed');
+                }
+            });
+        }
 
-                    // Create download link
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
-                    link.href = url;
-                    link.download = `screenshot_${timestamp}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-
-                    // Show feedback
-                    showToast('Screenshot saved!');
-                }, 'image/png');
-            } catch (err) {
-                console.error('Screenshot failed:', err);
-                showToast('Screenshot failed');
-            }
+        function downloadScreenshotBlob(blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
+            link.href = url;
+            link.download = `screenshot_${timestamp}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Screenshot saved!');
         }
 
         function copyGameLink() {
@@ -1199,9 +1222,20 @@
 
         // Main Emscripten module configuration
         var Module = {
+            // Enable preserveDrawingBuffer for screenshots
+            preinitializedWebGLContext: null,
             preRun: [
                 function() {
                     startTipRotation();
+                    // Override WebGL context creation to enable preserveDrawingBuffer
+                    const originalGetContext = HTMLCanvasElement.prototype.getContext;
+                    HTMLCanvasElement.prototype.getContext = function(type, attrs) {
+                        if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
+                            attrs = attrs || {};
+                            attrs.preserveDrawingBuffer = true;
+                        }
+                        return originalGetContext.call(this, type, attrs);
+                    };
                 }
             ],
             postRun: [

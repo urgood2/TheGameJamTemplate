@@ -257,6 +257,14 @@ local function init_static_defaults()
     set("fireworks", "s11", 0.80)
     set("fireworks", "speed", 2.00)
 
+    -- explosion_background (raymarched 3D explosion effect)
+    set("explosion_background", "iResolution", Vector2{ x = VIRTUAL_W, y = VIRTUAL_H })
+    set("explosion_background", "iTime", 0.0)
+
+    -- confetti_twister (3D confetti twister effect)
+    set("confetti_twister", "iResolution", Vector2{ x = VIRTUAL_W, y = VIRTUAL_H })
+    set("confetti_twister", "iTime", 0.0)
+
     -- starry_tunnel
     set("starry_tunnel", "m", 12)
     set("starry_tunnel", "n", 40)
@@ -1212,6 +1220,14 @@ local function init_updates()
 
     register("fireworks", function(_shader)
         set("fireworks", "iTime", get_time())
+    end)
+
+    register("explosion_background", function(_shader)
+        set("explosion_background", "iTime", get_time())
+    end)
+
+    register("confetti_twister", function(_shader)
+        set("confetti_twister", "iTime", get_time())
     end)
 
     register("starry_tunnel", function(_shader)

@@ -328,3 +328,14 @@
   - Merged the LDTK integration work and added exception-handling/thread-safety notes.
   - Updated Emscripten linker flags for better exception support and fixed web serve commands for cross-platform use.
   - Landed the text effects branch and synced master.
+  - Fixed intermittent render flicker by adding batch flushes around manual render-target switches in layer/shader pipeline.
+  - Improved web build CI: conditional emsdk sourcing, LFS asset fetching, HTML injection patching, and itch.io packaging tweaks.
+  - Enhanced tooltips with better padding, visibility, and readability; added card descriptions and trigger types.
+
+12/11/2025
+  - Shop UI implementation: card entity tracking, createShopCard with shop-specific properties, populateShopBoard rendering, hover behavior with scale/dissolve animations, buy button integration, control bar with lock/reroll buttons, and currency display.
+  - Refactored shader uniform defaults; updated grille size and scanline density for improved CRT effects.
+  - Added tooltip customization for avatar/joker strip with hover functionality and drop shadows for UI depth.
+  - Enhanced transform functions to support screen and world space conversions.
+  - Added web build post-processing and deployment scripts with parallelism controls.
+  - Gameplay code refactoring and localization string updates.

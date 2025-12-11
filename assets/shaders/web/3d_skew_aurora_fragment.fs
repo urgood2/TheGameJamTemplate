@@ -1,15 +1,14 @@
 #version 300 es
 precision mediump float;
 
-
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform vec2 regionRate;
 uniform vec2 pivot;
 
-in mat3 invRotMat;
-in vec2 worldMouseUV;
+flat in vec2 tiltSin;
+flat in vec2 tiltCos;
 flat in float angleFlat;
 
 uniform sampler2D texture0;
@@ -17,6 +16,10 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
+// Per-card random seed for unique overlay variations
+// Expected range: [0.0, 1.0]
+// Used to offset animation phases, noise patterns, and color variations
+// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -122,10 +125,12 @@ vec4 HSL(vec4 c) {
 }
 
 // Simplex-like noise for aurora curtain waves
-float auroraWave(vec2 p, float t) {
-    float wave1 = sin(p.x * 3.0 + t * 0.7) * cos(p.y * 2.0 - t * 0.5);
-    float wave2 = sin(p.x * 5.0 - t * 0.9 + 1.5) * cos(p.y * 3.0 + t * 0.3);
-    float wave3 = sin(p.x * 2.0 + t * 0.4 + 3.0) * cos(p.y * 4.0 - t * 0.6);
+float auroraWave(vec2 p, float t, float seed) {
+    // Use seed to create unique phase offsets per card
+    float seedPhase = seed * 6.2831;  // Convert seed to radians
+    float wave1 = sin(p.x * 3.0 + t * 0.7 + seedPhase) * cos(p.y * 2.0 - t * 0.5 + seedPhase * 0.7);
+    float wave2 = sin(p.x * 5.0 - t * 0.9 + 1.5 + seedPhase * 1.3) * cos(p.y * 3.0 + t * 0.3 + seedPhase * 0.5);
+    float wave3 = sin(p.x * 2.0 + t * 0.4 + 3.0 + seedPhase * 0.9) * cos(p.y * 4.0 - t * 0.6 + seedPhase * 1.1);
     return (wave1 + wave2 * 0.5 + wave3 * 0.25) / 1.75;
 }
 
@@ -168,13 +173,14 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     float t = aurora.y * 1.5 + time * 0.8;
 
-    // Create vertical curtain bands
-    float curtainX = uv.x * 6.0 + aurora.x * 2.0;
-    float curtainWave = auroraWave(vec2(curtainX, uv.y * 2.0), t);
+    // Create vertical curtain bands with per-card seed offset
+    float seedPhase = rand_seed * 6.2831;
+    float curtainX = uv.x * 6.0 + aurora.x * 2.0 + rand_seed * 3.0;
+    float curtainWave = auroraWave(vec2(curtainX, uv.y * 2.0), t, rand_seed);
 
     // Vertical flow - colors flow upward like real aurora
-    float verticalFlow = sin(uv.y * 8.0 - t * 2.0 + curtainWave * 2.0);
-    float verticalFlow2 = sin(uv.y * 12.0 - t * 2.5 + curtainWave * 1.5 + 1.0);
+    float verticalFlow = sin(uv.y * 8.0 - t * 2.0 + curtainWave * 2.0 + seedPhase * 0.5);
+    float verticalFlow2 = sin(uv.y * 12.0 - t * 2.5 + curtainWave * 1.5 + 1.0 + seedPhase * 0.7);
 
     // Combine for main aurora intensity
     float auroraIntensity = (0.5 + 0.5 * curtainWave) * (0.6 + 0.4 * verticalFlow);
@@ -184,12 +190,12 @@ vec4 applyOverlay(vec2 atlasUV) {
     float heightFade = smoothstep(0.0, 0.7, uv.y);
     auroraIntensity *= 0.4 + 0.6 * heightFade;
 
-    // Aurora colors: cycle through greens, teals, and magentas
-    float hueBase = 0.45 + aurora.x * 0.1; // Start in cyan-green range
+    // Aurora colors: cycle through greens, teals, and magentas (offset by seed for variety)
+    float hueBase = 0.45 + aurora.x * 0.1 + rand_seed * 0.2; // Start in cyan-green range, varied per card
     float hueShift = curtainWave * 0.15 + verticalFlow * 0.1;
 
     // Occasionally shift to magenta/pink
-    float magentaZone = smoothstep(0.6, 0.8, sin(curtainX * 0.5 + t * 0.3));
+    float magentaZone = smoothstep(0.6, 0.8, sin(curtainX * 0.5 + t * 0.3 + seedPhase * 0.4));
     hueShift += magentaZone * 0.4; // Shift toward magenta
 
     vec4 baseHSL = HSL(base);
@@ -221,28 +227,47 @@ vec4 applyOverlay(vec2 atlasUV) {
 void main()
 {
     vec2 uv = fragTexCoord;
-    float t = tan(radians(fov) / 2.0);
-    vec2 centered = (uv - pivot) / regionRate;
 
-    vec3 p = invRotMat * vec3(centered - 0.5, 0.5 / t);
-    float v = (0.5 / t) + 0.5;
-    p.xy *= v * invRotMat[2].z;
-    vec2 o = v * invRotMat[2].xy;
-
-    if (cull_back > 0.5 && p.z <= 0.0) discard;
-
-    uv = (p.xy / p.z) - o + 0.5;
-
-    float asp = regionRate.y / regionRate.x;
-    uv.y *= asp;
+    bool identityAtlas = abs(regionRate.x - 1.0) < 0.0001 &&
+                         abs(regionRate.y - 1.0) < 0.0001 &&
+                         abs(pivot.x) < 0.0001 &&
+                         abs(pivot.y) < 0.0001;
 
     float angle = angleFlat;
-    uv = rotate(uv, vec2(0.5), angle);
-    uv.y /= asp;
 
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+    if (identityAtlas || uv_passthrough > 0.5) {
+        vec2 rotated = rotate(uv, vec2(0.5), angle);
 
-    vec2 finalUV = pivot + uv * regionRate;
+        float inset = 0.0035;
+        vec2 clamped = clamp(rotated, vec2(inset), vec2(1.0 - inset));
+        vec2 finalUV = identityAtlas
+            ? clamped
+            : (pivot + clamped * regionRate);
+        finalColor = applyOverlay(finalUV);
+    } else {
+        float cosX = tiltCos.x;
+        float cosY = tiltCos.y;
+        float sinX = tiltSin.x;
+        float sinY = tiltSin.y;
 
-    finalColor = applyOverlay(finalUV);
+        vec2 centered = (uv - pivot) / regionRate;
+        vec2 localCentered = centered - vec2(0.5);
+        vec2 correctedUV = localCentered;
+        correctedUV.x /= max(cosY, 0.5);
+        correctedUV.y /= max(cosX, 0.5);
+        correctedUV.x -= sinY * 0.1;
+        correctedUV.y -= sinX * 0.1;
+        uv = correctedUV + vec2(0.5);
+
+        float asp = regionRate.y / regionRate.x;
+        uv.y *= asp;
+
+        uv = rotate(uv, vec2(0.5), angle);
+        uv.y /= asp;
+
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+
+        vec2 finalUV = pivot + uv * regionRate;
+        finalColor = applyOverlay(finalUV);
+    }
 }

@@ -65,7 +65,7 @@ build-web-release:
 	python3 scripts/copy_assets.py assets build-emc/assets --strip-lua
 
 	cd build-emc
-	emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3"
+	emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3" -DCMAKE_EXECUTABLE_SUFFIX=".html"
 	emmake make -j"${WEB_JOBS}"
 
 	echo "Release build complete! Files are in build-emc/"
@@ -75,7 +75,7 @@ build-web-release:
 build-web-dist:
 	#!/usr/bin/env bash
 	set -e
-	just build-web
+	just build-web-release
 
 	echo "Creating distribution package..."
 	mkdir -p dist/web

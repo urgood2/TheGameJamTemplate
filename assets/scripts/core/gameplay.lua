@@ -680,6 +680,49 @@ local function clearShopCardEntities()
     shop_card_entities = {}
 end
 
+local function createShopCard(offering, slotIndex, x, y)
+    if not offering or offering.isEmpty then
+        return nil
+    end
+
+    local cardDef = offering.cardDef
+    local cardId = cardDef and cardDef.id
+    if not cardId then
+        return nil
+    end
+
+    -- Create card entity using existing function
+    local cardEntity = createNewCard(cardId, x, y, SHOP_STATE)
+    if not cardEntity then
+        return nil
+    end
+
+    -- Get script table
+    local cardScript = getScriptTableFromEntityID(cardEntity)
+    if not cardScript then
+        return nil
+    end
+
+    -- Mark as shop card with slot index
+    cardScript.isShopCard = true
+    cardScript.shop_slot = slotIndex
+    cardScript.shop_cost = offering.cost
+    cardScript.shop_rarity = offering.rarity
+
+    -- Store buy button entity reference (will be created on hover)
+    cardScript.buyButtonEntity = nil
+    cardScript.buyButtonVisible = false
+    cardScript.isHoveredForShop = false
+    cardScript.hoverScale = 1.0
+    cardScript.targetHoverScale = 1.0
+    cardScript.dissolveAmount = 0.0
+
+    -- Track entity for cleanup
+    table.insert(shop_card_entities, cardEntity)
+
+    return cardEntity
+end
+
 local active_shop_instance = nil
 local AVATAR_PURCHASE_COST = 10
 local ensureShopSystemInitialized -- forward declaration so planning init can ensure metadata before card spawn

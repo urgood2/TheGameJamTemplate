@@ -132,11 +132,9 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
     return colonistHomeTextDef
 end
 
--- Builds the shop/relic UI without relying on generateUI.
--- COMMENTED OUT: Rebuild shop UI from scratch
---[[
-local function buildShopUI()
-    if globals.ui.weatherShopUIBox then
+-- Builds the shop control bar UI (lock and reroll buttons)
+local function buildShopControlBar()
+    if globals.ui.shopControlBar then
         return
     end
 
@@ -145,165 +143,148 @@ local function buildShopUI()
     globals.shopUIState.rerollCost = globals.shopUIState.rerollCost or ShopSystem.config.baseRerollCost
     globals.shopUIState.rerollCount = globals.shopUIState.rerollCount or 0
     globals.shopUIState.locked = globals.shopUIState.locked or false
-    globals.shopUIState.peekPlanning = globals.shopUIState.peekPlanning or false
 
-    globals.ui.shopLockIcons = {}
-    globals.ui.setLockIconsVisible = function() end
-
-    local function buildShopButton(textEntry, callback, id, color)
-        return UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                    :addId(id or "")
-                    :addColor(color or util.getColor("dusty_rose"))
-                    :addEmboss(3.0)
-                    :addHover(true)
-                    :addPadding(6)
-                    :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
-                    :addButtonCallback(callback)
-                    :build()
-            )
-            :addChild(textEntry)
-            :build()
-    end
-
+    -- Lock button text
     globals.ui.shopLockButtonText = ui.definitions.getNewDynamicTextEntry(
         function()
-            return globals.shopUIState.locked and "Unlock shop" or "Lock shop"
+            return globals.shopUIState.locked and "Unlock All" or "Lock All"
         end,
-        18.0,
-        "color=apricot_cream"
+        16.0,
+        "color=white"
     )
+
+    -- Reroll button text
     globals.ui.shopRerollButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return string.format("Reshuffle (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5)) end,
-        18.0,
-        "color=apricot_cream"
-    )
-    globals.ui.shopPeekButtonText = ui.definitions.getNewDynamicTextEntry(
         function()
-            return globals.shopUIState.peekPlanning and "Hide planning boards" or "Peek planning boards"
+            return string.format("Reroll (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5))
         end,
-        18.0,
-        "color=apricot_cream"
+        16.0,
+        "color=white"
     )
 
-    local function refreshRerollText()
-        if globals.ui.shopRerollButtonText and globals.ui.shopRerollButtonText.config then
-            TextSystem.Functions.setText(
-                globals.ui.shopRerollButtonText.config.object,
-                string.format("Reshuffle (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5))
-            )
-        end
-    end
-
-    local function refreshLockText()
+    local function refreshTexts()
         if globals.ui.shopLockButtonText and globals.ui.shopLockButtonText.config then
-            local nextLabel = globals.shopUIState.locked and "Unlock shop" or "Lock shop"
-            TextSystem.Functions.setText(globals.ui.shopLockButtonText.config.object, nextLabel)
+            local label = globals.shopUIState.locked and "Unlock All" or "Lock All"
+            TextSystem.Functions.setText(globals.ui.shopLockButtonText.config.object, label)
+        end
+        if globals.ui.shopRerollButtonText and globals.ui.shopRerollButtonText.config then
+            local label = string.format("Reroll (%dg)", math.floor(globals.shopUIState.rerollCost + 0.5))
+            TextSystem.Functions.setText(globals.ui.shopRerollButtonText.config.object, label)
         end
     end
 
-    local function refreshPeekText()
-        if globals.ui.shopPeekButtonText and globals.ui.shopPeekButtonText.config then
-            local label = globals.shopUIState.peekPlanning and "Hide planning boards" or "Peek planning boards"
-            TextSystem.Functions.setText(globals.ui.shopPeekButtonText.config.object, label)
-        end
-    end
-
-    local lockButton = buildShopButton(globals.ui.shopLockButtonText, function()
-        local nextLocked = not globals.shopUIState.locked
-        if setShopLocked then
-            setShopLocked(nextLocked)
-        else
-            globals.shopUIState.locked = nextLocked
-        end
-        playSoundEffect("effects", "button-click")
-        refreshLockText()
-    end, "shop_lock_button")
-
-    local rerollButton = buildShopButton(globals.ui.shopRerollButtonText, function()
-        local spend = math.floor(globals.shopUIState.rerollCost + 0.5)
-        local success = rerollActiveShop and rerollActiveShop()
-        if not success then
-            playSoundEffect("effects", "cannot-buy")
-            local message = "Need more gold to reroll"
-            if not (getActiveShop and getActiveShop()) then
-                message = "Shop not available"
-            end
-            newTextPopup(
-                message,
-                globals.screenWidth() / 2,
-                globals.screenHeight() / 2 - 60,
-                1.2,
-                "color=fiery_red"
-            )
-            return
-        end
-        refreshRerollText()
-        newTextPopup(
-            string.format("Rerolled shop for %dg", spend),
-            globals.screenWidth() / 2,
-            globals.screenHeight() / 2 - 120,
-            1.3,
-            "color=marigold"
+    -- Lock button
+    local lockButton = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addId("shop_lock_button")
+                :addColor(util.getColor("dusty_rose"))
+                :addEmboss(3.0)
+                :addHover(true)
+                :addPadding(8)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+                :addButtonCallback(function()
+                    local nextLocked = not globals.shopUIState.locked
+                    if setShopLocked then
+                        setShopLocked(nextLocked)
+                    else
+                        globals.shopUIState.locked = nextLocked
+                    end
+                    playSoundEffect("effects", "button-click")
+                    refreshTexts()
+                end)
+                :build()
         )
-    end, "shop_reroll_button")
+        :addChild(globals.ui.shopLockButtonText)
+        :build()
 
-    local peekButton = buildShopButton(globals.ui.shopPeekButtonText, function()
-        if togglePlanningPeek then
-            togglePlanningPeek()
-        end
-        refreshPeekText()
-    end, "shop_peek_button", util.getColor("dusty_rose"))
+    -- Reroll button
+    local rerollButton = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addId("shop_reroll_button")
+                :addColor(util.getColor("marigold"))
+                :addEmboss(3.0)
+                :addHover(true)
+                :addPadding(8)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+                :addButtonCallback(function()
+                    local success = rerollActiveShop and rerollActiveShop()
+                    if not success then
+                        playSoundEffect("effects", "cannot-buy")
+                        newTextPopup(
+                            "Need more gold",
+                            globals.screenWidth() / 2,
+                            globals.screenHeight() / 2 - 60,
+                            1.2,
+                            "color=fiery_red"
+                        )
+                        return
+                    end
+                    playSoundEffect("effects", "button-click")
+                    refreshTexts()
+                    -- Refresh shop board
+                    if populateShopBoard and getActiveShop then
+                        populateShopBoard(getActiveShop())
+                    end
+                end)
+                :build()
+        )
+        :addChild(globals.ui.shopRerollButtonText)
+        :build()
 
+    -- Button row container
     local buttonRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("taupe_warm"))
                 :addEmboss(4.0)
-                :addPadding(6)
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
+                :addPadding(10)
+                :addGap(16)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
                 :build()
         )
         :addChild(lockButton)
         :addChild(rerollButton)
-        :addChild(peekButton)
         :build()
 
+    -- Root container
     local root = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
-                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_TOP))
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP))
                 :build()
         )
         :addChild(buttonRow)
         :build()
 
-    globals.ui.weatherShopUIBox = ui.box.Initialize({x = 0, y = 0}, root)
-    local t = registry:get(globals.ui.weatherShopUIBox, Transform)
-    local margin = 12
-    t.actualX = math.max(margin, globals.screenWidth() / 2 - (t.actualW or 0) / 2)
-    t.visualX = t.actualX
-    t.actualY = margin
-    t.visualY = t.actualY
-    ui.box.AssignStateTagsToUIBox(globals.ui.weatherShopUIBox, SHOP_STATE)
-    remove_default_state_tag(globals.ui.weatherShopUIBox)
+    globals.ui.shopControlBar = ui.box.Initialize({ x = 0, y = 0 }, root)
 
-    globals.ui.refreshShopUIFromInstance = function()
-        refreshRerollText()
-        refreshLockText()
-        refreshPeekText()
-        ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox)
+    -- Position at bottom of shop board area
+    local t = registry:get(globals.ui.shopControlBar, Transform)
+    if t then
+        t.actualX = globals.screenWidth() / 2 - (t.actualW or 100) / 2
+        t.actualY = 520 -- Below shop board (100 + 400 + 20)
+        t.visualX = t.actualX
+        t.visualY = t.actualY
+    end
+
+    ui.box.AssignStateTagsToUIBox(globals.ui.shopControlBar, SHOP_STATE)
+    remove_default_state_tag(globals.ui.shopControlBar)
+
+    globals.ui.refreshShopUIFromInstance = function(shop)
+        refreshTexts()
+        ui.box.RenewAlignment(registry, globals.ui.shopControlBar)
     end
 end
---]]
 
 function ui_defs.generateShopUI()
-    -- buildShopUI() -- COMMENTED OUT: Rebuild shop UI from scratch
+    buildShopControlBar()
 end
 
 function ui_defs.generateUI()

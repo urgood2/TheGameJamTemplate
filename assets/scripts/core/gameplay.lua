@@ -7650,7 +7650,56 @@ local function collectPlanningPeekTargets()
     return targets
 end
 
--- Shop UI functions removed (setPlanningPeekMode, togglePlanningPeek, formatShopLabel, populateShopBoard)
+-- Shop UI functions removed (setPlanningPeekMode, togglePlanningPeek, formatShopLabel)
+
+local function populateShopBoard(shop)
+    if not shop or not shop.offerings then
+        return
+    end
+
+    -- Clear existing shop cards
+    clearShopCardEntities()
+
+    -- Get shop board position and size
+    local shopBoard = boards[shop_board_id]
+    if not shopBoard then
+        log_debug("[Shop] No shop board found")
+        return
+    end
+
+    local boardTransform = component_cache.get(shop_board_id, Transform)
+    if not boardTransform then
+        return
+    end
+
+    local boardX = boardTransform.actualX or 100
+    local boardY = boardTransform.actualY or 100
+    local boardW = boardTransform.actualW or 800
+    local boardH = boardTransform.actualH or 400
+
+    -- Card layout: 5 cards in horizontal row
+    local numSlots = #shop.offerings
+    local cardWidth = cardW or 100 -- use global cardW
+    local cardHeight = cardH or 140 -- use global cardH
+    local padding = 20
+    local totalCardsWidth = numSlots * cardWidth + (numSlots - 1) * padding
+    local startX = boardX + (boardW - totalCardsWidth) / 2
+    local cardY = boardY + 60 -- offset from top for label
+
+    for i, offering in ipairs(shop.offerings) do
+        local cardX = startX + (i - 1) * (cardWidth + padding)
+
+        if not offering.isEmpty and not offering.sold then
+            local cardEntity = createShopCard(offering, i, cardX, cardY)
+            if cardEntity then
+                -- Add to shop board
+                addCardToBoard(cardEntity, shop_board_id)
+            end
+        end
+    end
+
+    log_debug("[Shop] Populated shop board with", #shop_card_entities, "cards")
+end
 
 function regenerateShopState()
     ensureShopSystemInitialized()
@@ -7677,7 +7726,7 @@ function regenerateShopState()
 
     setShopLocked(false)
 
-    -- populateShopBoard removed - rebuild shop UI handles this
+    populateShopBoard(active_shop_instance)
 end
 
 function rerollActiveShop()

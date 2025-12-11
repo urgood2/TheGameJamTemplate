@@ -66,10 +66,10 @@ build-web:
 	find assets -type f \
 		! -name '.DS_Store' \
 		! -path '*graphics/pre-packing-files_globbed*' \
-		! -path '*scripts_archived/*' \
+		! -path '*/scripts_archived/*' \
 		! -name 'chugget_code_definitions.lua' \
-		! -path '*siralim_data/*' \
-		! -path '*docs/*' \
+		! -path '*/siralim_data/*' \
+		! -path '*/docs/*' \
 		| while read -r src; do
 		dest="{{WEB_BUILD_DIR}}/$src"
 		mkdir -p "$(dirname "$dest")"

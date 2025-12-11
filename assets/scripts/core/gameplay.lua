@@ -752,6 +752,81 @@ local function createShopCard(offering, slotIndex, x, y)
     return cardEntity
 end
 
+local function createShopBuyButton(cardEntity, cardScript)
+    if not cardEntity or not cardScript then
+        return nil
+    end
+
+    local cost = cardScript.shop_cost or 0
+    local canAfford = (globals.currency or 0) >= cost
+    local buttonColor = canAfford and util.getColor("green") or util.getColor("fiery_red")
+    local textColor = util.getColor("white")
+
+    local buttonText = ui.definitions.getNewTextEntry(
+        string.format("%dg", cost),
+        18.0,
+        "color=white"
+    )
+
+    local buttonDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addId("shop_buy_button_" .. tostring(cardEntity))
+                :addColor(buttonColor)
+                :addEmboss(3.0)
+                :addHover(true)
+                :addPadding(8)
+                :addMinWidth(60)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+                :addButtonCallback(function()
+                    -- Attempt purchase
+                    local success = tryPurchaseShopCard(cardScript)
+                    if success then
+                        -- Trigger dissolve animation
+                        cardScript.dissolveAmount = 0.01 -- Start dissolve
+                        timer.tween_fields(0.3, cardScript, { dissolveAmount = 1.0 }, Easing.inOutCubic.f, function()
+                            -- After dissolve, remove card
+                            if cardEntity and entity_cache.valid(cardEntity) then
+                                cards[cardEntity] = nil
+                                registry:destroy(cardEntity)
+                                -- Remove from tracking
+                                for i, eid in ipairs(shop_card_entities) do
+                                    if eid == cardEntity then
+                                        table.remove(shop_card_entities, i)
+                                        break
+                                    end
+                                end
+                            end
+                        end, "shop_dissolve_" .. tostring(cardEntity), "ui")
+                    end
+                end)
+                :build()
+        )
+        :addChild(buttonText)
+        :build()
+
+    local buttonEntity = ui.box.Initialize({ x = 0, y = 0 }, buttonDef)
+
+    -- Position below card
+    local cardTransform = component_cache.get(cardEntity, Transform)
+    if cardTransform and buttonEntity then
+        local buttonTransform = component_cache.get(buttonEntity, Transform)
+        if buttonTransform then
+            buttonTransform.actualX = cardTransform.actualX + (cardTransform.actualW or 0) / 2 - (buttonTransform.actualW or 30) / 2
+            buttonTransform.actualY = cardTransform.actualY + (cardTransform.actualH or 0) + 4
+            buttonTransform.visualX = buttonTransform.actualX
+            buttonTransform.visualY = buttonTransform.actualY
+        end
+    end
+
+    -- Add state tag
+    ui.box.AssignStateTagsToUIBox(buttonEntity, SHOP_STATE)
+    remove_default_state_tag(buttonEntity)
+
+    return buttonEntity
+end
+
 local active_shop_instance = nil
 local AVATAR_PURCHASE_COST = 10
 local ensureShopSystemInitialized -- forward declaration so planning init can ensure metadata before card spawn

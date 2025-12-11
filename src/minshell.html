@@ -649,6 +649,7 @@
         // Error handling
         let lastError = '';
         let crashReportJson = null;
+        let crashReportDownloaded = false; // Guard to prevent multiple downloads
 
         function generateCrashReport(title, message, stacktrace) {
             const report = {
@@ -691,15 +692,20 @@
         }
 
         function showError(title, message, stacktrace) {
-            // Generate crash report
-            crashReportJson = generateCrashReport(title, message, stacktrace);
-            lastError = JSON.stringify(crashReportJson, null, 2);
+            // Generate crash report (only if not already generated)
+            if (!crashReportJson) {
+                crashReportJson = generateCrashReport(title, message, stacktrace);
+                lastError = JSON.stringify(crashReportJson, null, 2);
+            }
 
-            // Auto-download crash report
-            try {
-                downloadCrashReport(crashReportJson);
-            } catch (e) {
-                console.error('Failed to auto-download crash report:', e);
+            // Auto-download crash report (only once)
+            if (!crashReportDownloaded) {
+                crashReportDownloaded = true;
+                try {
+                    downloadCrashReport(crashReportJson);
+                } catch (e) {
+                    console.error('Failed to auto-download crash report:', e);
+                }
             }
 
             document.getElementById('error-title').textContent = title;

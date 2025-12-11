@@ -287,58 +287,6 @@
             opacity: 1;
         }
 
-        /* Audio prompt overlay */
-        #audio-prompt {
-            position: fixed;
-            z-index: 150;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-
-        #audio-prompt.visible {
-            display: flex;
-        }
-
-        #audio-prompt-content {
-            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-            padding: 24px 32px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: popIn 0.3s ease-out;
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        #audio-prompt-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-
-        #audio-prompt-text {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-
-        #audio-prompt-hint {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 12px;
-        }
-
         /* Keyboard shortcuts overlay */
         #shortcuts-overlay {
             position: fixed;
@@ -605,15 +553,6 @@
                     <span>Share...</span>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Audio prompt overlay -->
-    <div id="audio-prompt" onclick="resumeAudio()">
-        <div id="audio-prompt-content">
-            <div id="audio-prompt-icon">🔊</div>
-            <div id="audio-prompt-text">Click to Enable Audio</div>
-            <div id="audio-prompt-hint">Audio was blocked by your browser</div>
         </div>
     </div>
 
@@ -1046,117 +985,6 @@
         }
 
         // ============================================
-        // Audio Context Resume Handler
-        // ============================================
-        let audioContextChecked = false;
-        let audioResumeAttempted = false;
-
-        function checkAudioContext() {
-            if (audioContextChecked) return;
-            audioContextChecked = true;
-
-            // Check for Emscripten's audio context (SDL audio or miniaudio)
-            const checkInterval = setInterval(() => {
-                let audioCtx = null;
-
-                // Try to find the audio context
-                if (typeof Module !== 'undefined') {
-                    // SDL2 audio context
-                    if (Module.SDL2 && Module.SDL2.audioContext) {
-                        audioCtx = Module.SDL2.audioContext;
-                    }
-                    // miniaudio context
-                    if (Module.miniaudio && Module.miniaudio.device && Module.miniaudio.device.webaudio) {
-                        audioCtx = Module.miniaudio.device.webaudio.audioContext;
-                    }
-                }
-
-                // Also check window for any AudioContext
-                if (!audioCtx && window.AudioContext) {
-                    // Try to detect any suspended audio contexts
-                    const contexts = [];
-                    if (window._audioContext) contexts.push(window._audioContext);
-                    if (window.audioContext) contexts.push(window.audioContext);
-
-                    for (const ctx of contexts) {
-                        if (ctx && ctx.state === 'suspended') {
-                            audioCtx = ctx;
-                            break;
-                        }
-                    }
-                }
-
-                if (audioCtx && audioCtx.state === 'suspended' && !audioResumeAttempted) {
-                    clearInterval(checkInterval);
-                    showAudioPrompt();
-                } else if (audioCtx && audioCtx.state === 'running') {
-                    clearInterval(checkInterval);
-                }
-            }, 500);
-
-            // Stop checking after 10 seconds
-            setTimeout(() => clearInterval(checkInterval), 10000);
-        }
-
-        function showAudioPrompt() {
-            const prompt = document.getElementById('audio-prompt');
-            if (prompt) {
-                prompt.classList.add('visible');
-            }
-        }
-
-        function resumeAudio() {
-            audioResumeAttempted = true;
-            const prompt = document.getElementById('audio-prompt');
-            if (prompt) {
-                prompt.classList.remove('visible');
-            }
-
-            // Resume all possible audio contexts
-            const resumeContext = (ctx) => {
-                if (ctx && ctx.state === 'suspended') {
-                    ctx.resume().then(() => {
-                        console.log('Audio context resumed');
-                    }).catch(err => {
-                        console.warn('Failed to resume audio context:', err);
-                    });
-                }
-            };
-
-            // SDL2
-            if (typeof Module !== 'undefined' && Module.SDL2 && Module.SDL2.audioContext) {
-                resumeContext(Module.SDL2.audioContext);
-            }
-
-            // miniaudio
-            if (typeof Module !== 'undefined' && Module.miniaudio && Module.miniaudio.device && Module.miniaudio.device.webaudio) {
-                resumeContext(Module.miniaudio.device.webaudio.audioContext);
-            }
-
-            // Any global contexts
-            if (window._audioContext) resumeContext(window._audioContext);
-            if (window.audioContext) resumeContext(window.audioContext);
-
-            // Focus canvas
-            const canvas = document.getElementById('canvas');
-            if (canvas) canvas.focus();
-        }
-
-        // Also try to resume on any user interaction
-        function setupAudioResumeOnInteraction() {
-            const resumeOnce = () => {
-                resumeAudio();
-                document.removeEventListener('click', resumeOnce);
-                document.removeEventListener('keydown', resumeOnce);
-                document.removeEventListener('touchstart', resumeOnce);
-            };
-
-            document.addEventListener('click', resumeOnce, { once: true });
-            document.addEventListener('keydown', resumeOnce, { once: true });
-            document.addEventListener('touchstart', resumeOnce, { once: true });
-        }
-
-        // ============================================
         // Keyboard Shortcuts Overlay
         // ============================================
         function toggleShortcutsOverlay() {
@@ -1415,10 +1243,6 @@
 
                         // Show F10 hint notification
                         showF10Hint();
-
-                        // Check for audio context issues (browsers block autoplay)
-                        checkAudioContext();
-                        setupAudioResumeOnInteraction();
 
                         // Focus canvas for input
                         const canvas = document.getElementById('canvas');

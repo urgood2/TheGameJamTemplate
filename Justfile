@@ -41,9 +41,6 @@ build-web:
 	#!/usr/bin/env bash
 	set -e
 
-	# Allow limiting parallelism (default 2 to keep RAM down on web builds).
-	: "${WEB_JOBS:=2}"
-
 	# Activate Emscripten (adjust path as needed for your system)
 	if [ -n "${EMSDK:-}" ] && [ -f "${EMSDK}/emsdk_env.sh" ]; then
 		source "${EMSDK}/emsdk_env.sh"
@@ -95,7 +92,9 @@ build-web:
 		-DCMAKE_C_COMPILER_LAUNCHER= \
 		-DCMAKE_CXX_COMPILER_LAUNCHER=
 
-	emmake make -j"${WEB_JOBS}"
+	cd build-emc
+	emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3" -DCMAKE_EXECUTABLE_SUFFIX=".html"
+	emmake make -j$(nproc)
 
 	echo "Build complete! Files are in {{WEB_BUILD_DIR}}/"
 

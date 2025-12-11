@@ -110,19 +110,6 @@ function CurrencyDisplay.draw()
     local accentRadiusX = accentWidth * 0.5
     local accentRadiusY = math.min(radius + outlineWidth, accentHeight * 0.5)
 
-    -- Drop shadow layer (offset down-right)
-    local shadowOffset = 4
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-        c.x = centerX + shadowOffset
-        c.y = centerY + shadowOffset
-        c.w = w + outlineWidth * 2
-        c.h = h + outlineWidth * 2
-        c.rx = radius + outlineWidth
-        c.ry = radius + outlineWidth
-        c.color = Col(0, 0, 0, 80)
-    end, baseZ - 1, space)
-
-    -- Outline layer
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = centerX
         c.y = centerY

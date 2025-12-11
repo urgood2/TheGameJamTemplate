@@ -17,6 +17,7 @@ out vec4 finalColor;
 
 // Cell state variables - used to communicate state from map() to main
 // This pattern is inherited from the source Shadertoy shader for raymarching
+// Note: cellColor is set but not read - kept for parity with source shader
 vec4 cellColor = vec4(0.0, 0.0, 0.0, 0.0);
 vec3 cellPosition = vec3(0.0, 0.0, 0.0);
 float cellRandom = 0.0;

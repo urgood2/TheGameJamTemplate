@@ -12,7 +12,6 @@ uniform vec4 colDiffuse;
 
 uniform float iTime;
 uniform vec2 iResolution;
-uniform vec2 iMouse;
 
 out vec4 finalColor;
 

@@ -263,7 +263,6 @@ local function init_static_defaults()
 
     -- confetti_twister (3D confetti twister effect)
     set("confetti_twister", "iResolution", Vector2{ x = VIRTUAL_W, y = VIRTUAL_H })
-    set("confetti_twister", "iMouse", Vector2{ x = 0.0, y = 0.0 })
     set("confetti_twister", "iTime", 0.0)
 
     -- starry_tunnel
@@ -1229,7 +1228,6 @@ local function init_updates()
 
     register("confetti_twister", function(_shader)
         set("confetti_twister", "iTime", get_time())
-        set("confetti_twister", "iMouse", get_mouse())
     end)
 
     register("starry_tunnel", function(_shader)

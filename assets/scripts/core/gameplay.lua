@@ -1499,6 +1499,14 @@ function setUpCardAndWandStatDisplay()
             return
         end
 
+        -- Update currency display during shop
+        if is_state_active(SHOP_STATE) then
+            local CurrencyDisplay = require("ui.currency_display")
+            CurrencyDisplay.setAmount(globals.currency or 0)
+            CurrencyDisplay.update(dt)
+            CurrencyDisplay.draw()
+        end
+
         -- TODO: controller prompts
 
         -- get current board set
@@ -6746,6 +6754,14 @@ function startShopPhase()
 
     activate_state(SHOP_STATE)
     activate_state("default_state") -- just for defaults, keep them open
+
+    -- Initialize currency display for shop
+    local CurrencyDisplay = require("ui.currency_display")
+    CurrencyDisplay.init({
+        amount = globals.currency or 0,
+        x = globals.screenWidth() - 240,
+        y = 520
+    })
 
     remove_layer_shader("sprites", "pixelate_image")
 

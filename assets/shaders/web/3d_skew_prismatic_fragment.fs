@@ -1,15 +1,14 @@
 #version 300 es
 precision mediump float;
 
-
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform vec2 regionRate;
 uniform vec2 pivot;
 
-in mat3 invRotMat;
-in vec2 worldMouseUV;
+flat in vec2 tiltSin;
+flat in vec2 tiltCos;
 flat in float angleFlat;
 
 uniform sampler2D texture0;
@@ -17,6 +16,10 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
+// Per-card random seed for unique overlay variations
+// Expected range: [0.0, 1.0]
+// Used to offset animation phases, noise patterns, and color variations
+// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -121,7 +124,7 @@ vec4 HSL(vec4 c) {
 }
 
 // Calculate distance to nearest facet edge
-float facetPattern(vec2 uv, float t) {
+float facetPattern(vec2 uv, float t, float seed) {
     // Create angular facets like a cut gem
     vec2 centered = uv - 0.5;
     float angle = atan(centered.y, centered.x);
@@ -131,16 +134,17 @@ float facetPattern(vec2 uv, float t) {
     float numFacets = 8.0;
     float facetAngle = 3.14159 * 2.0 / numFacets;
 
-    // Rotating facet boundaries
-    float rotatedAngle = angle + t * 0.3 + prismatic.x * 0.5;
+    // Rotating facet boundaries with per-card seed offset
+    float seedPhase = seed * 6.2831;
+    float rotatedAngle = angle + t * 0.3 + prismatic.x * 0.5 + seedPhase * 0.5;
     float facetIndex = floor(rotatedAngle / facetAngle);
     float facetFrac = fract(rotatedAngle / facetAngle);
 
     // Distance to facet edge (creates sharp lines)
     float edgeDist = min(facetFrac, 1.0 - facetFrac);
 
-    // Concentric rings for internal reflections
-    float rings = fract(radius * 6.0 - t * 0.5);
+    // Concentric rings for internal reflections with seed variation
+    float rings = fract(radius * 6.0 - t * 0.5 + seed * 0.3);
     float ringEdge = min(rings, 1.0 - rings);
 
     return min(edgeDist, ringEdge * 2.0);
@@ -184,32 +188,34 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
 
     float t = prismatic.y * 2.0 + time;
+    // Per-card seed for unique prismatic patterns
+    float seedPhase = rand_seed * 6.2831;
 
     // Get facet pattern
-    float facet = facetPattern(uv, t);
+    float facet = facetPattern(uv, t, rand_seed);
 
     // Rainbow dispersion along facet edges
     vec2 uvCentered = uv - 0.5;
     float angle = atan(uvCentered.y, uvCentered.x);
     float radius = length(uvCentered);
 
-    // Hue based on angle (like light splitting through prism)
+    // Hue based on angle (like light splitting through prism) with seed offset
     float baseHue = (angle / 6.28318 + 0.5); // 0-1 around the circle
-    baseHue += prismatic.x * 0.3; // Shift with control
+    baseHue += prismatic.x * 0.3 + rand_seed * 0.25; // Shift with control and seed
     baseHue += t * 0.1; // Slow rotation
 
     // Sharper rainbow at edges
     float edgeIntensity = 1.0 - smoothstep(0.0, 0.15, facet);
 
-    // Internal light caustics
-    float caustic1 = sin(radius * 20.0 + angle * 3.0 - t * 2.0);
-    float caustic2 = sin(radius * 15.0 - angle * 5.0 + t * 1.5);
+    // Internal light caustics with seed variation
+    float caustic1 = sin(radius * 20.0 + angle * 3.0 - t * 2.0 + seedPhase * 0.4);
+    float caustic2 = sin(radius * 15.0 - angle * 5.0 + t * 1.5 + seedPhase * 0.6);
     float caustics = (caustic1 * caustic2 + 1.0) * 0.5;
     caustics = pow(caustics, 3.0);
 
-    // Sparkle highlights at facet intersections
+    // Sparkle highlights at facet intersections with seed offset
     float sparkle = pow(1.0 - facet, 8.0);
-    sparkle *= 0.5 + 0.5 * sin(t * 8.0 + angle * 12.0);
+    sparkle *= 0.5 + 0.5 * sin(t * 8.0 + angle * 12.0 + seedPhase * 0.8);
 
     // Combine effects
     vec4 baseHSL = HSL(base);
@@ -258,28 +264,47 @@ vec4 applyOverlay(vec2 atlasUV) {
 void main()
 {
     vec2 uv = fragTexCoord;
-    float t = tan(radians(fov) / 2.0);
-    vec2 centered = (uv - pivot) / regionRate;
 
-    vec3 p = invRotMat * vec3(centered - 0.5, 0.5 / t);
-    float v = (0.5 / t) + 0.5;
-    p.xy *= v * invRotMat[2].z;
-    vec2 o = v * invRotMat[2].xy;
-
-    if (cull_back > 0.5 && p.z <= 0.0) discard;
-
-    uv = (p.xy / p.z) - o + 0.5;
-
-    float asp = regionRate.y / regionRate.x;
-    uv.y *= asp;
+    bool identityAtlas = abs(regionRate.x - 1.0) < 0.0001 &&
+                         abs(regionRate.y - 1.0) < 0.0001 &&
+                         abs(pivot.x) < 0.0001 &&
+                         abs(pivot.y) < 0.0001;
 
     float angle = angleFlat;
-    uv = rotate(uv, vec2(0.5), angle);
-    uv.y /= asp;
 
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+    if (identityAtlas || uv_passthrough > 0.5) {
+        vec2 rotated = rotate(uv, vec2(0.5), angle);
 
-    vec2 finalUV = pivot + uv * regionRate;
+        float inset = 0.0035;
+        vec2 clamped = clamp(rotated, vec2(inset), vec2(1.0 - inset));
+        vec2 finalUV = identityAtlas
+            ? clamped
+            : (pivot + clamped * regionRate);
+        finalColor = applyOverlay(finalUV);
+    } else {
+        float cosX = tiltCos.x;
+        float cosY = tiltCos.y;
+        float sinX = tiltSin.x;
+        float sinY = tiltSin.y;
 
-    finalColor = applyOverlay(finalUV);
+        vec2 centered = (uv - pivot) / regionRate;
+        vec2 localCentered = centered - vec2(0.5);
+        vec2 correctedUV = localCentered;
+        correctedUV.x /= max(cosY, 0.5);
+        correctedUV.y /= max(cosX, 0.5);
+        correctedUV.x -= sinY * 0.1;
+        correctedUV.y -= sinX * 0.1;
+        uv = correctedUV + vec2(0.5);
+
+        float asp = regionRate.y / regionRate.x;
+        uv.y *= asp;
+
+        uv = rotate(uv, vec2(0.5), angle);
+        uv.y /= asp;
+
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+
+        vec2 finalUV = pivot + uv * regionRate;
+        finalColor = applyOverlay(finalUV);
+    }
 }

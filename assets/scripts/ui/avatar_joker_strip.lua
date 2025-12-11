@@ -93,7 +93,10 @@ local function applyTooltip(entity, title, body)
 
     methods.onHover = function()
         if showSimpleTooltipAbove then
-            showSimpleTooltipAbove(tooltipKey, title or "Unknown", body or "", entity)
+            showSimpleTooltipAbove(tooltipKey, title or "Unknown", body or "", entity, {
+                titleFontSize = 28,
+                bodyFontSize = 26
+            })
             AvatarJokerStrip._activeTooltipOwner = entity
             AvatarJokerStrip._activeTooltipKey = tooltipKey
         end
@@ -304,6 +307,18 @@ local function drawGroup(box, accent, label, baseZ)
     local space = layer.DrawCommandSpace.Screen
     local radius = AvatarJokerStrip.layout.bgRadius
     local font = localization.getFont()
+
+    -- Drop shadow layer (offset down-right)
+    local shadowOffset = 4
+    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        c.x = box.x + box.w * 0.5 + shadowOffset
+        c.y = box.y + box.h * 0.5 + shadowOffset
+        c.w = box.w + 4
+        c.h = box.h + 4
+        c.rx = radius + 2
+        c.ry = radius + 2
+        c.color = Col(0, 0, 0, 80)
+    end, baseZ - 1, space)
 
     -- Outline layer (slightly larger)
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)

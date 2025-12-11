@@ -54,6 +54,9 @@ bool envFlagSet(const char *name) {
 } // namespace
 
 void scanAssetsFolderAndAddAllPaths() {
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] scanAssetsFolderAndAddAllPaths() start");
+#endif
   const bool skipScan =
       (SKIP_ASSET_SCAN_DEFAULT != 0) || envFlagSet("SKIP_ASSET_SCAN");
   if (skipScan) {
@@ -64,6 +67,7 @@ void scanAssetsFolderAndAddAllPaths() {
   }
 #ifdef __EMSCRIPTEN__
   auto folderPath = "assets";
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] Using assets folder path: assets");
 #else
   // read in all items & folders from assets folder for uuid checking &
   // generation
@@ -74,12 +78,18 @@ void scanAssetsFolderAndAddAllPaths() {
   std::vector<std::string> subpaths;
 
   try {
+#ifdef __EMSCRIPTEN__
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] Starting directory iteration...");
+#endif
     // Use a recursive_directory_iterator to go through subfolders as well.
     for (const auto &entry :
          std::filesystem::recursive_directory_iterator(folderPath)) {
       // Convert the path to a string and add it to our vector
       subpaths.push_back(entry.path().string());
     }
+#ifdef __EMSCRIPTEN__
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] Directory iteration complete, found %zu paths", subpaths.size());
+#endif
 
     // Print out all the subpaths we collected
     for (const auto &pathStr : subpaths) {
@@ -88,9 +98,15 @@ void scanAssetsFolderAndAddAllPaths() {
   } catch (const std::filesystem::filesystem_error &e) {
     // Handle errors (e.g., invalid path, permission issues)
     SPDLOG_ERROR("Filesystem error: {}", e.what());
+#ifdef __EMSCRIPTEN__
+    emscripten_log(EM_LOG_ERROR, "[DIAG] Filesystem error: %s", e.what());
+#endif
   } catch (const std::exception &e) {
     // Handle any other exceptions
     SPDLOG_ERROR("Error: {}", e.what());
+#ifdef __EMSCRIPTEN__
+    emscripten_log(EM_LOG_ERROR, "[DIAG] Exception: %s", e.what());
+#endif
   }
 
   std::unordered_set<std::string> seenPaths;
@@ -790,6 +806,9 @@ static void onColliderDestroyed(entt::registry &R, entt::entity e) {
  * @return void
  */
 auto base_init() -> void {
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] base_init() start");
+#endif
 
   // logging setup
   spdlog::set_level(spdlog::level::trace);
@@ -797,11 +816,20 @@ auto base_init() -> void {
   // load root json and other data init from json
 
   scanAssetsFolderAndAddAllPaths();
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] scanAssetsFolderAndAddAllPaths complete");
+#endif
 
   loadJSONData();
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] loadJSONData complete");
+#endif
   loadColorsFromJSON();
   loadInSpriteFramesFromJSON();
   loadConfigFileValues(); // should be called after loadJSONData()
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] loadConfigFileValues complete");
+#endif
   // in general, loadConfigFileValues() should be called before any pertinent
   // values are used
 
@@ -811,6 +839,9 @@ auto base_init() -> void {
   if (globals::g_ctx) {
     globals::g_ctx->physicsManager = globals::physicsManager;
   }
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] PhysicsManager created");
+#endif
 
   // set up physics component destruction
   globals::getRegistry()
@@ -820,6 +851,9 @@ auto base_init() -> void {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
   InitWindow(globals::getScreenWidth(), globals::getScreenHeight(), "Game");
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] InitWindow complete");
+#endif
 
   // fixes mac input bug.
   SetGamepadMappings(LoadFileText(
@@ -829,13 +863,22 @@ auto base_init() -> void {
   rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
   initGUI();
   loadTextures();
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] loadTextures complete");
+#endif
   // load animations map (spriteFrames and colors must be initialized before
   // this part)
   loadAnimationsFromJSON();
   // InitAudioDevice(); done in audioManager
   loadSounds();
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] loadSounds complete");
+#endif
 
   initECS();
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] initECS complete");
+#endif
 
   // Get the current time
   auto now = std::chrono::system_clock::now();
@@ -843,6 +886,9 @@ auto base_init() -> void {
   std::time_t now_c = std::chrono::system_clock::to_time_t(now);
   // Use it as a seed for random number generation
   Random::seed(now_c);
+#ifdef __EMSCRIPTEN__
+  emscripten_log(EM_LOG_CONSOLE, "[DIAG] base_init() complete");
+#endif
 }
 
 // Initializes the necessary systems for the application to run.

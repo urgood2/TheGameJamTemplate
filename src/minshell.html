@@ -390,11 +390,14 @@
         var Module = {
             preRun: [
                 function() {
+                    console.log('[DIAG-JS] preRun hook executing');
                     startTipRotation();
+                    console.log('[DIAG-JS] preRun hook complete');
                 }
             ],
             postRun: [
                 function () {
+                    console.log('[DIAG-JS] postRun hook executing - game initialized successfully');
                     // Clear timeout check
                     clearInterval(timeoutCheck);
                     stopTipRotation();
@@ -479,8 +482,12 @@
                 const total = this.totalDependencies;
 
                 if (left === 0) {
+                    console.log('[DIAG-JS] All dependencies loaded, starting game...');
                     Module.setStatus('Starting game...');
                 } else {
+                    if (loaded % 10 === 0 || loaded === 1) {
+                        console.log('[DIAG-JS] Loading dependencies: ' + loaded + '/' + total);
+                    }
                     Module.setStatus('Loading assets (' + loaded + '/' + total + ')');
                 }
             },
@@ -490,6 +497,7 @@
         };
 
         Module.setStatus('Initializing...');
+        console.log('[DIAG-JS] Module object initialized, status set to Initializing...');
 
         // Global error handler
         window.onerror = function(message, source, lineno, colno, error) {

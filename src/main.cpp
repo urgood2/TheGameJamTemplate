@@ -393,21 +393,38 @@ void RunGameLoop() {
   // game init
   // --------------------------------------------------------------------------------------
 
+#if defined(__EMSCRIPTEN__)
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] main() entered");
+#endif
+
   crash_reporter::Config crashConfig{};
 #if defined(__EMSCRIPTEN__)
     crashConfig.enable_file_output = false;
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] crash_reporter config set");
 #else
   crashConfig.enable_browser_download = false;
 #endif
     crashConfig.build_id = CRASH_REPORT_BUILD_ID;
     crash_reporter::Init(crashConfig);
+#if defined(__EMSCRIPTEN__)
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] crash_reporter::Init done");
+#endif
 
     auto engineCtx = createEngineContext("config.json");
     globals::setEngineContext(engineCtx.get());
+#if defined(__EMSCRIPTEN__)
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] engineCtx created");
+#endif
 
     init::base_init();
+#if defined(__EMSCRIPTEN__)
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] init::base_init() done");
+#endif
     crash_reporter::AttachSinkToLogger(spdlog::default_logger());
     layer::InitDispatcher();
+#if defined(__EMSCRIPTEN__)
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] layer::InitDispatcher() done");
+#endif
 
     main_loop::initMainLoopData(
         std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
@@ -416,11 +433,17 @@ void RunGameLoop() {
     SetExitKey(-1);
 
     init::startInit();
+#if defined(__EMSCRIPTEN__)
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] init::startInit() done");
+#endif
 
     input::Init(globals::getInputState(), globals::getRegistry(),
                 globals::g_ctx);
 
     game::init();
+#if defined(__EMSCRIPTEN__)
+    emscripten_log(EM_LOG_CONSOLE, "[DIAG] game::init() done - entering main loop");
+#endif
 
 #ifdef __EMSCRIPTEN__
     telemetry::SetVisibilityChangeCallback([](const std::string &reason, bool visible) {

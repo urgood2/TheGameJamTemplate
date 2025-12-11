@@ -20,7 +20,6 @@
 #include "systems/physics/transform_physics_hook.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
-#include "systems/camera/camera_manager.hpp"
 
 #include "core/globals.hpp"
 #include "sol/types.hpp"
@@ -2090,7 +2089,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &transform = registry->get<Transform>(e);
         auto &role = registry->get<InheritedProperties>(e);
         auto &node = registry->get<GameObject>(e);
-
+        
         if (registry->valid(node.container) == false || node.container == entt::null)
         {
             // SPDLOG_DEBUG("Entity {} has no valid container. Click offset not set.", static_cast<int>(e));
@@ -2098,31 +2097,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
         auto &containerTransform = registry->get<Transform>(node.container);
 
-        // Check if entity is in screen space or world space
-        bool isScreenSpace = registry->any_of<collision::ScreenSpaceCollisionMarker>(e) ||
-                             registry->any_of<ui::ObjectAttachedToUITag>(e);
-
-        // Convert click point to world coordinates for world-space entities
-        if (!isScreenSpace)
-        {
-            auto worldCam = camera_manager::Get("world_camera");
-            if (worldCam)
-            {
-                Vector2 worldPos = GetScreenToWorld2D(point, worldCam->cam);
-                tempOffsetPoint.x = worldPos.x;
-                tempOffsetPoint.y = worldPos.y;
-            }
-            else
-            {
-                tempOffsetPoint.x = point.x;
-                tempOffsetPoint.y = point.y;
-            }
-        }
-        else
-        {
-            tempOffsetPoint.x = point.x;
-            tempOffsetPoint.y = point.y;
-        }
+        tempOffsetPoint.x = point.x;
+        tempOffsetPoint.y = point.y;
 
         // Translate to the Middle of the Container
         tempOffsetTranslation.x = -containerTransform.getActualW() * 0.5;
@@ -2171,35 +2147,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         Vector2 dragCursorTransform{};
         Vector2 dragCursorTranslation{};
 
-        // Get cursor position - convert to world space for world entities
-        Vector2 cursorScreenPos = {cursorTransform.getActualX(), cursorTransform.getActualY()};
-
-        // Check if this entity is in screen space or world space
-        bool isScreenSpace = registry->any_of<collision::ScreenSpaceCollisionMarker>(e) ||
-                             registry->any_of<ui::ObjectAttachedToUITag>(e);
-
-        if (!isScreenSpace)
-        {
-            // World-space entity: convert cursor from screen to world coordinates
-            auto worldCam = camera_manager::Get("world_camera");
-            if (worldCam)
-            {
-                Vector2 worldPos = GetScreenToWorld2D(cursorScreenPos, worldCam->cam);
-                dragCursorTransform.x = worldPos.x;
-                dragCursorTransform.y = worldPos.y;
-            }
-            else
-            {
-                dragCursorTransform.x = cursorScreenPos.x;
-                dragCursorTransform.y = cursorScreenPos.y;
-            }
-        }
-        else
-        {
-            // Screen-space entity: use cursor position directly
-            dragCursorTransform.x = cursorScreenPos.x;
-            dragCursorTransform.y = cursorScreenPos.y;
-        }
+        dragCursorTransform.x = cursorTransform.getActualX();
+        dragCursorTransform.y = cursorTransform.getActualY();
 
         dragCursorTranslation.x = -myContainerTransform.getActualW() * 0.5;
         dragCursorTranslation.y = -myContainerTransform.getActualH() * 0.5;

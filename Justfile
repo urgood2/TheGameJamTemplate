@@ -20,9 +20,6 @@ build-web:
 	#!/usr/bin/env bash
 	set -e
 
-	# Allow limiting parallelism (default 2 to keep RAM down on web builds).
-	: "${WEB_JOBS:=2}"
-
 	# Activate Emscripten (adjust path as needed for your system)
 	if [ -f "/usr/lib/emsdk/emsdk_env.sh" ]; then
 		source "/usr/lib/emsdk/emsdk_env.sh"
@@ -40,7 +37,7 @@ build-web:
 
 	cd build-emc
 	emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3" -DCMAKE_EXECUTABLE_SUFFIX=".html"
-	emmake make -j"${WEB_JOBS}"
+	emmake make -j$(nproc)
 
 	echo "Build complete! Files are in build-emc/"
 
@@ -78,53 +75,6 @@ build-web-dist:
 
 	echo "Distribution ready in dist/web/"
 	du -sh dist/web/
-
-web-postprocess:
-	#!/usr/bin/env bash
-	set -e
-
-	html="build-emc/raylib-cpp-cmake-template.html"
-	out="build-emc/index.html"
-
-	if [ ! -f "$html" ]; then
-		echo "Missing $html. Run 'just build-web' first."
-		exit 1
-	fi
-
-	cp "$html" "$out"
-	cmake -DHTML_PATH="$out" -DSNIPPET_PATH="cmake/inject_snippet.html" -P cmake/inject_snippet.cmake
-
-	gzip -9 -kf "build-emc/raylib-cpp-cmake-template.wasm"
-	gzip -9 -kf "build-emc/raylib-cpp-cmake-template.data"
-
-	(
-		cd build-emc
-		cmake -E tar "cf" ../raylib-cpp-cmake-template_web.zip --format=zip \
-			index.html \
-			raylib-cpp-cmake-template.wasm.gz \
-			raylib-cpp-cmake-template.data.gz \
-			raylib-cpp-cmake-template.js
-	)
-
-push-web:
-	#!/usr/bin/env bash
-	set -e
-
-	: "${WEB_JOBS:=2}"
-
-	just build-web
-	just web-postprocess
-
-	itch_user="${ITCH_USER:-chugget}"
-	itch_page="${ITCH_PAGE:-testing}"
-	version="${CRASH_REPORT_BUILD_ID:-$(git describe --tags --always --dirty 2>/dev/null || echo dev)}"
-
-	if ! command -v butler >/dev/null 2>&1; then
-		echo "butler is not on PATH. Install and login first."
-		exit 1
-	fi
-
-	butler push raylib-cpp-cmake-template_web.zip "${itch_user}/${itch_page}:web" --userversion "${version}"
 
 # Serve the web build locally for testing
 serve-web:

@@ -733,11 +733,29 @@ local function createShopCard(offering, slotIndex, x, y)
             -- Set hover state for scaling
             cardScript.isHoveredForShop = true
             cardScript.targetHoverScale = 1.1
+
+            -- Create or show buy button
+            if not cardScript.buyButtonEntity or not entity_cache.valid(cardScript.buyButtonEntity) then
+                cardScript.buyButtonEntity = createShopBuyButton(cardEntity, cardScript)
+            end
+
+            if cardScript.buyButtonEntity then
+                add_state_tag(cardScript.buyButtonEntity, SHOP_STATE)
+                cardScript.buyButtonVisible = true
+            end
         end
 
         nodeComp.methods.onHoverEnd = function()
             cardScript.isHoveredForShop = false
             cardScript.targetHoverScale = 1.0
+
+            -- Hide buy button (delay slightly so clicks register)
+            timer.after(0.1, function()
+                if not cardScript.isHoveredForShop and cardScript.buyButtonEntity and entity_cache.valid(cardScript.buyButtonEntity) then
+                    remove_state_tag(cardScript.buyButtonEntity, SHOP_STATE)
+                    cardScript.buyButtonVisible = false
+                end
+            end, "shop_hide_button_" .. tostring(cardEntity), "ui")
         end
 
         -- Disable click-to-select for shop cards

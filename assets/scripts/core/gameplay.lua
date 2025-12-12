@@ -152,6 +152,7 @@ local cardW, cardH = 80, 112 -- these are reset on init.
 
 
 -- save game state strings
+REWARD_OPENING_STATE = "REWARD_OPENING"
 PLANNING_STATE = "PLANNING"
 ACTION_STATE = "SURVIVORS"
 SHOP_STATE = "SHOP"
@@ -8839,6 +8840,116 @@ planningUIEntities = {
 
 function initNewItemRewardText()
     
+    -- clear states, enable REWARD_OPENING_STATE
+    clear_states()
+    activate_state(REWARD_OPENING_STATE)
+    
+    -- - darken screen.
+    
+    -- local BackgroundFadeType = Node:extend()
+    
+    -- BackgroundFadeType.duration = 0.5
+    -- BackgroundFadeType.age = 0.0
+    
+    -- -- make it fade to black
+    -- function BackgroundFadeType:update(dt)
+    --     self.age = (self.age or 0) + dt  -- Increment age manually!
+    --     local fade = math.min(1.0, self.age / self.duration)
+    --     log_debug("Background fade age:", self.age, "fade:", fade)
+    --     command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+    --         c.x = globals.screenWidth() / 2
+    --         c.y = globals.screenHeight() / 2
+    --         c.w = globals.screenWidth()
+    --         c.h = globals.screenHeight()
+    --         c.rx = 0
+    --         c.ry = 0
+    --         -- fade to black
+    --         c.color = Col(0, 0, 0, math.floor(255 * fade))
+    --     end, z_orders.background, layer.DrawCommandSpace.Screen)
+    -- end
+    
+    -- local backgroundFadeNode = BackgroundFadeType {}
+    -- backgroundFadeNode:attach_ecs { create_new = true }
+    -- add_state_tag(backgroundFadeNode:handle(), REWARD_OPENING_STATE)
+    -- remove_default_state_tag(backgroundFadeNode:handle())
+
+
+    -- TODO; remember to remove later.
+    
+    
+    
+
+    
+    
+    -- - show a chest. it should start to shake, and halo of particles from behind it shoud expand and spin.
+        -- frame0012.png
+    
+        -- make chest sprite, shake it, release particles.
+    
+    -- make animated entity
+    local chestEntity = animation_system.createAnimatedObjectWithTransform(
+        "frame0012.png", -- animation ID
+        true              -- use animation, not sprite identifier, if false
+    )
+    -- resize to 300 x 300
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        chestEntity,
+        300, 300 -- target width and height
+    )
+    -- position it in the center of the screen
+    local chestTransform = component_cache.get(chestEntity, Transform)
+    chestTransform.actualX = globals.screenWidth() / 2 - chestTransform.actualW / 2
+    chestTransform.actualY = globals.screenHeight() / 2 - chestTransform.actualH / 2
+    -- snap it to the visual position
+    chestTransform.visualX = chestTransform.actualX
+    chestTransform.visualY = chestTransform.actualY
+    -- give it 3d_skew_polychrome shader
+    local pipelineComp = registry:emplace(chestEntity, shader_pipeline.ShaderPipelineComponent)
+    pipelineComp:addPass("3d_skew_polychrome")
+    -- give entity REWARD_OPENING_STATE
+    add_state_tag(chestEntity, REWARD_OPENING_STATE)
+    -- remove default state tag
+    remove_default_state_tag(chestEntity)
+    
+    -- set z order to above background
+    local chestZOrder = z_orders.background + 10
+    layer_order_system.assignZIndexToEntity(chestEntity, chestZOrder)
+    
+    -- - an exciting shader background that is colorful and dynamic.
+    add_layer_shader("background", "spectrum_line_background")
+    remove_layer_shader("background", "peaches_background")
+    
+        -- the explosion shader.
+        
+    -- remove background shader
+    
+        
+    -- - there should be three escalations, like fanfare, box jerking each time, which will modify the shader background color, maybe make it pulse.
+    
+        -- need sound for this. also three escalating booom boom boom.
+        -- pulse the explosion shader.
+        
+    -- - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
+    
+        -- ripple shader. 
+        -- flash shader on entity to turn it white.
+        -- chest open sound + stinger.
+        -- particles everywhere. + fireworks shader.
+        
+    -- dissolve the reward away. 
+    
+    -- pop in the reward, make it float up and down.
+        
+    -- -  maybe escalate the background with this? https://www.shadertoy.com/view/MdGGRW move it to the center, make it vary in color as the sound escalates, then show fireworks, then boom.
+    -- - Then show the reward, with ambient animation.
+    -- - fireworks background https://www.shadertoy.com/view/4lfXRf
+    -- - confetti twister https://www.shadertoy.com/view/WsByRW
+    -- - existing ripple shader for opening impact 
+    -- - varied particles for opening impact
+    -- - shake box upon opening.
+    -- - some kind of rainbow streaknig as well?
+    -- - https://godotshaders.com/shader/2dradial-shine-2/ for shine
+    -- - godotshaders.com/shader/pixel-perfect-halo-radiant-glow/ for glow
 end
 
 function initPlanningUI()

@@ -883,61 +883,29 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     endif()
 
     # Copy assets into the web output tree to match expected /assets layout.
-    add_custom_target(copy_assets
-        COMMENT "Copying asset files to web build directory"
-    )
-
-    add_custom_command(
-        TARGET copy_assets PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E remove_directory "${WEB_BUILD_DIR}/assets"
-        COMMENT "Clearing existing web assets directory for fresh copy"
-    )
-
-    file(GLOB_RECURSE ASSET_FILES RELATIVE ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets/*)
-
-    set(_is_release_like FALSE)
-    if(CMAKE_BUILD_TYPE MATCHES "Rel" OR CMAKE_BUILD_TYPE MATCHES "MinSizeRel" OR CMAKE_BUILD_TYPE MATCHES "Release")
-        set(_is_release_like TRUE)
-    endif()
-
-    foreach(ASSET_FILE ${ASSET_FILES})
-        # Skip junk files and dev-only archives to keep itch.io upload under file count limits
-        if(ASSET_FILE MATCHES "\\.DS_Store$"
-           OR ASSET_FILE MATCHES "graphics/pre-packing-files_globbed"
-           OR ASSET_FILE MATCHES "(/|^)scripts_archived/"
-           OR ASSET_FILE MATCHES "chugget_code_definitions\\.lua$"
-           OR ASSET_FILE MATCHES "(/|^)siralim_data(/|$)"
-           OR ASSET_FILE MATCHES "(/|^)docs(/|$)")
-            continue()
-        endif()
-
-        get_filename_component(DEST_DIR "${WEB_BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
-        set(_should_strip_lua FALSE)
-        if(STRIP_LUA_COMMENTS_FOR_WEB AND Python3_Interpreter_FOUND AND _is_release_like)
-            if(ASSET_FILE MATCHES "\\.lua$")
-                set(_should_strip_lua TRUE)
+    # Uses shared Python script for parity with justfile.
+    if(Python3_Interpreter_FOUND)
+        set(_strip_lua_flag "")
+        if(STRIP_LUA_COMMENTS_FOR_WEB)
+            set(_is_release_like FALSE)
+            if(CMAKE_BUILD_TYPE MATCHES "Rel" OR CMAKE_BUILD_TYPE MATCHES "MinSizeRel" OR CMAKE_BUILD_TYPE MATCHES "Release")
+                set(_is_release_like TRUE)
+            endif()
+            if(_is_release_like)
+                set(_strip_lua_flag "--strip-lua")
             endif()
         endif()
 
-        if(_should_strip_lua)
-            add_custom_command(
-                TARGET copy_assets POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
-                COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/strip_lua_comments.py"
-                        "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
-                        "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
-                COMMENT "Stripping Lua comments: ${ASSET_FILE}"
-            )
-        else()
-            add_custom_command(
-                TARGET copy_assets POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E copy
-                        "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
-                        "${WEB_BUILD_DIR}/assets/${ASSET_FILE}"
-            )
-        endif()
-    endforeach()
+        add_custom_target(copy_assets
+            COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/scripts/copy_assets.py"
+                    "${CMAKE_SOURCE_DIR}/assets"
+                    "${WEB_BUILD_DIR}/assets"
+                    ${_strip_lua_flag}
+            COMMENT "Copying assets to web build directory (exclusions + optional Lua stripping)"
+        )
+    else()
+        message(WARNING "Python3 not found - copy_assets target unavailable. Web builds require Python3.")
+    endif()
 endif()
 
 ##########################################################################################

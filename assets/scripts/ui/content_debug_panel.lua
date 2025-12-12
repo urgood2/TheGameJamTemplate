@@ -502,6 +502,17 @@ function ContentDebugPanel.render()
         elseif state.current_tab == 3 then
             render_tag_tab()
         end
+
+        -- Misc section
+        ImGui.Separator()
+        ImGui.Text("Misc:")
+        if ImGui.Button("Init New Item Reward") then
+            if initNewItemRewardText then
+                initNewItemRewardText()
+            else
+                print("[ContentDebugPanel] initNewItemRewardText not found")
+            end
+        end
     end
     ImGui.End()
 end

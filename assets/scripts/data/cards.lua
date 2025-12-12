@@ -12,6 +12,29 @@ Tags (for joker synergies):
 
 local Cards = {}
 
+
+Cards.MY_FIREBALL = {
+    -- Required fields
+    id = "MY_FIREBALL",              -- Must match table key
+    type = "action",                  -- "action", "modifier", or "trigger"
+    mana_cost = 12,
+    tags = { "Fire", "Projectile" },
+    test_label = "MY\nfireball",     -- Display label (use \n for line breaks)
+
+    -- Action-specific fields
+    damage = 25,
+    damage_type = "fire",            -- fire/ice/lightning/poison/arcane/holy/void/magic
+    projectile_speed = 400,
+    lifetime = 2000,                 -- ms
+    radius_of_effect = 50,           -- 0 = no AoE
+
+    -- Optional fields
+    spread_angle = 0,                -- Degrees for spread shots
+    cast_delay = 0,                  -- ms delay before cast
+    homing_strength = 0,             -- 0-15 for homing
+    ricochet_count = 0,              -- Bounces
+}
+
 -- Action Cards
 Cards.TEST_PROJECTILE = {
     id = "TEST_PROJECTILE",

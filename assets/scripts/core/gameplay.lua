@@ -8840,32 +8840,40 @@ planningUIEntities = {
 
 function initNewItemRewardText()
     
-    -- clear states, enable "REWARD_OPENING_STATE"
+    -- clear states, enable REWARD_OPENING_STATE
     clear_states()
-    activate_state("REWARD_OPENING_STATE")
+    activate_state(REWARD_OPENING_STATE)
     
     -- - darken screen.
     
-    local BackgroundFadeType = Node:extend()
+    -- local BackgroundFadeType = Node:extend()
     
-    BackgroundFadeType.duration = 0.5
+    -- BackgroundFadeType.duration = 0.5
+    -- BackgroundFadeType.age = 0.0
     
-    -- make it fade to black
-    function BackgroundFadeType:update(dt)
-        local fade = math.min(1.0, self.age / self.duration)
-        command_buffer.queueDrawCenteredFilledRect(layers.sprites, function(c)
-            c.x = globals.screenWidth() / 2
-            c.y = globals.screenHeight() / 2
-            c.w = globals.screenWidth()
-            c.h = globals.screenHeight()
-            c.color = Col(0, 0, 0, fade * 255)
-        end, z_orders.ui + 10, layer.DrawCommandSpace.World)
-    end
+    -- -- make it fade to black
+    -- function BackgroundFadeType:update(dt)
+    --     self.age = (self.age or 0) + dt  -- Increment age manually!
+    --     local fade = math.min(1.0, self.age / self.duration)
+    --     log_debug("Background fade age:", self.age, "fade:", fade)
+    --     command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+    --         c.x = globals.screenWidth() / 2
+    --         c.y = globals.screenHeight() / 2
+    --         c.w = globals.screenWidth()
+    --         c.h = globals.screenHeight()
+    --         c.rx = 0
+    --         c.ry = 0
+    --         -- fade to black
+    --         c.color = Col(0, 0, 0, math.floor(255 * fade))
+    --     end, z_orders.background, layer.DrawCommandSpace.Screen)
+    -- end
     
-    local backgroundFadeNode = BackgroundFadeType {}
-    backgroundFadeNode:attach_ecs { create_new = true }
-    add_state_tag(backgroundFadeNode:handle(), REWARD_OPENING_STATE)
-    
+    -- local backgroundFadeNode = BackgroundFadeType {}
+    -- backgroundFadeNode:attach_ecs { create_new = true }
+    -- add_state_tag(backgroundFadeNode:handle(), REWARD_OPENING_STATE)
+    -- remove_default_state_tag(backgroundFadeNode:handle())
+
+
     -- TODO; remember to remove later.
     
     
@@ -8898,8 +8906,14 @@ function initNewItemRewardText()
     -- give it 3d_skew_polychrome shader
     local pipelineComp = registry:emplace(chestEntity, shader_pipeline.ShaderPipelineComponent)
     pipelineComp:addPass("3d_skew_polychrome")
+    -- give entity REWARD_OPENING_STATE
+    add_state_tag(chestEntity, REWARD_OPENING_STATE)
+    -- remove default state tag
+    remove_default_state_tag(chestEntity)
     
-    
+    -- set z order to above background
+    local chestZOrder = z_orders.background + 10
+    layer_order_system.assignZIndexToEntity(chestEntity, chestZOrder)
     
     -- - an exciting shader background that is colorful and dynamic.
     add_layer_shader("background", "spectrum_line_background")

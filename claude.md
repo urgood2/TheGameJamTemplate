@@ -721,6 +721,236 @@ See `docs/content-creation/` for detailed extensibility guides.
 
 ---
 
+## UI DSL Pattern
+
+### Declarative UI with ui_syntax_sugar
+
+Use the DSL for building UIs instead of manual box construction:
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+local myUI = dsl.root {
+    config = {
+        color = util.getColor("blackberry"),
+        padding = 10,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
+    },
+    children = {
+        dsl.vbox {
+            config = { spacing = 6, padding = 6 },
+            children = {
+                dsl.text("Title", { fontSize = 24, color = "white" }),
+                dsl.hbox {
+                    config = { spacing = 4 },
+                    children = {
+                        dsl.anim("sprite_id", { w = 40, h = 40, shadow = true }),
+                        dsl.text("Subtitle", { fontSize = 16 })
+                    }
+                }
+            }
+        }
+    }
+}
+
+-- Spawn the UI
+local boxID = dsl.spawn({ x = 200, y = 200 }, myUI)
+```
+
+### DSL Functions
+
+- `dsl.root {}` - Root container
+- `dsl.vbox {}` - Vertical layout
+- `dsl.hbox {}` - Horizontal layout
+- `dsl.text(text, opts)` - Text element
+- `dsl.anim(id, opts)` - Animated sprite wrapper
+- `dsl.dynamicText(fn, fontSize, effect, opts)` - Auto-updating text
+- `dsl.grid(rows, cols, generator)` - Uniform grid
+- `dsl.spawn(pos, defNode, layerName, zIndex)` - Create UI entity
+
+### Hover/Tooltip Support
+
+```lua
+dsl.text("Button", {
+    hover = {
+        title = "Button Title",
+        body = "Button description"
+    },
+    onClick = function() print("clicked") end
+})
+```
+
+---
+
+## Module Structure Pattern
+
+### Standard Lua Module Layout
+
+```lua
+-- File: assets/scripts/systems/my_system.lua
+
+local MySystem = {}
+
+-- Require dependencies at top
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
+local signal = require("external.hump.signal")
+
+-- Exposed state
+MySystem.config = { ... }
+MySystem.active_entities = {}
+
+-- Internal state (local)
+local _internal_state = {}
+
+-- Private functions (prefix with _)
+local function _privateHelper()
+    -- ...
+end
+
+-- Public API
+function MySystem.initialize()
+    -- ...
+end
+
+function MySystem.update(dt)
+    -- ...
+end
+
+function MySystem.getEntityData(entity)
+    if not entity_cache.valid(entity) then return nil end
+    return MySystem.active_entities[entity]
+end
+
+-- Return module at end
+return MySystem
+```
+
+---
+
+## Naming Conventions
+
+### Variables
+```lua
+-- Entity identifiers
+local entityID, eid, entity
+
+-- Components
+local transform, t          -- Transform
+local gameObj, go           -- GameObject
+local animComp              -- AnimationQueueComponent
+
+-- UI
+local boxID                 -- UI Box identifier
+
+-- State
+local isActive, _isActive   -- Boolean flags
+local isBeingDragged        -- Boolean state
+```
+
+### Functions
+```lua
+-- Private functions: underscore prefix
+local function _privateHelper() end
+
+-- Public API: PascalCase or camelCase
+function MySystem.doSomething() end
+function MySystem.GetEntityData() end
+
+-- Callbacks: on* prefix
+nodeComp.methods.onClick = function() end
+nodeComp.methods.onHover = function() end
+```
+
+### Constants
+```lua
+-- SCREAMING_SNAKE_CASE for constants
+local PLANNING_STATE = "planning"
+local ACTION_STATE = "action"
+local MAX_HEALTH = 100
+```
+
+---
+
+## Common Idioms
+
+### Safe Access Pattern
+```lua
+-- Always check existence before accessing
+if transform then
+    transform.actualX = x
+end
+
+if not eid or not entity_cache.valid(eid) then
+    return
+end
+
+-- Nil coalescing for defaults
+local value = (obj and obj.field) or default_value
+
+-- Type checking before call
+if type(callback) == "function" then
+    callback()
+end
+```
+
+### Localize Globals for Performance
+```lua
+-- At top of file, localize frequently-used globals
+local registry = _G.registry
+local math_floor = math.floor
+local table_insert = table.insert
+```
+
+### Global Exports
+```lua
+-- Expose utilities globally when needed across files
+_G.makeSimpleTooltip = makeSimpleTooltip
+_G.isEnemyEntity = isEnemyEntity
+
+-- Feature flags
+local DEBUG_MODE = rawget(_G, "DEBUG_MODE") or false
+```
+
+### Singleton Pattern
+```lua
+-- Prevent re-initialization
+if _G.__MY_SYSTEM__ then
+    return _G.__MY_SYSTEM__
+end
+
+local MySystem = {}
+_G.__MY_SYSTEM__ = MySystem
+-- ... rest of module
+return MySystem
+```
+
+### Weak Tables for Auto-Cleanup
+```lua
+-- Entities auto-removed when GC'd
+local entityToData = setmetatable({}, { __mode = "k" })
+```
+
+---
+
+## Common Events
+
+Events used throughout the codebase (emit with `signal.emit()`, handle with `signal.register()`):
+
+| Event | Parameters | Purpose |
+|-------|------------|---------|
+| `"avatar_unlocked"` | `avatarId` | Avatar unlock |
+| `"tag_threshold_discovered"` | `tagName, threshold` | Tag synergy discovery |
+| `"on_player_attack"` | `targetEntity` | Player attacks |
+| `"on_low_health"` | `healthPercent` | Health drops low |
+| `"on_dash"` | `direction` | Player dashes |
+| `"on_bump_enemy"` | `enemyEntity` | Collision with enemy |
+| `"player_level_up"` | `{ xp, level }` | Level progression |
+| `"deck_changed"` | `{ source }` | Inventory modification |
+| `"stats_recomputed"` | `nil` | Stats recalculated |
+
+---
+
 ## Testing
 
 Tests are in `tests/unit/` using GoogleTest. Key test files:

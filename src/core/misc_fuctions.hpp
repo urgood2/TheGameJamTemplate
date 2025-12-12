@@ -2,6 +2,7 @@
 
 #include "core/globals.hpp"
 #include "util/common_headers.hpp"
+#include "util/error_handling.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/ui/editor/pack_editor.hpp"
 

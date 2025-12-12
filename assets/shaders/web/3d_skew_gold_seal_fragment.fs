@@ -1,15 +1,14 @@
 #version 300 es
 precision mediump float;
 
-
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
 uniform vec2 regionRate;
 uniform vec2 pivot;
 
-in mat3 invRotMat;
-in vec2 worldMouseUV;
+flat in vec2 tiltSin;
+flat in vec2 tiltCos;
 flat in float angleFlat;
 
 uniform sampler2D texture0;
@@ -17,6 +16,10 @@ uniform vec4 colDiffuse;
 uniform float fov;
 uniform float cull_back;
 uniform float rand_trans_power;
+// Per-card random seed for unique overlay variations
+// Expected range: [0.0, 1.0]
+// Used to offset animation phases, noise patterns, and color variations
+// so that cards with the same effect type don't look identical
 uniform float rand_seed;
 uniform float rotation;
 uniform float iTime;
@@ -49,16 +52,16 @@ uniform vec4  gold_seal;
 out vec4 finalColor;
 
 // 2D rotation helper
-vec2 rotate(vec2 uv, vec2 pivot, float angle)
+vec2 rotate(vec2 uv, vec2 pivotPt, float angle)
 {
     float s = sin(angle);
     float c = cos(angle);
-    uv -= pivot;
+    uv -= pivotPt;
     uv = vec2(
         c * uv.x - s * uv.y,
         s * uv.x + c * uv.y
     );
-    uv += pivot;
+    uv += pivotPt;
     return uv;
 }
 
@@ -148,24 +151,24 @@ vec4 applyOverlay(vec2 atlasUV) {
         return sampleTinted(atlasUV);
     }
 
+    // Godot-style dissolve: push pixels outward with wobble, then fade alpha.
     float progress = clamp(dissolve, 0.0, 1.0);
     vec2 localUV = getSpriteUV(atlasUV);
     vec2 centered = localUV - 0.5;
     float dist = length(centered);
     vec2 dir = dist > 0.0001 ? centered / dist : vec2(0.0);
 
-    vec2 displaced = centered + dir * progress * spread_strength;
-    displaced += distortion_strength * vec2(
+    vec2 uvOutward = centered + dir * progress * spread_strength;
+    uvOutward += distortion_strength * vec2(
         sin(dist * 20.0 - time * 10.0),
         cos(dist * 20.0 - time * 8.0)
     ) * progress;
 
-    vec2 warpedLocal = displaced + vec2(0.5);
-    vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
-
-    vec2 sampleUV = localToAtlas(clampedLocal);
+    vec2 warpedLocal = uvOutward + vec2(0.5);
+    vec2 sampleUV = localToAtlas(warpedLocal);
     vec4 base = sampleTinted(sampleUV);
 
+    vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
     vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
 
     // Gold seal overlay: brighten channels based on oscillating bands.
@@ -174,8 +177,12 @@ vec4 applyOverlay(vec2 atlasUV) {
     float high = max(base.r, max(base.g, base.b));
     float delta = high * 0.5;
 
-    float fac = 0.3 + sin((uv.x * 450.0 + sin(gold_seal.r * 6.0) * 180.0) - 700.0 * gold_seal.r)
-                  - sin((uv.x * 190.0 + uv.y * 30.0) + 1080.3 * gold_seal.r);
+    // Per-card seed for unique gold seal patterns
+    float seedPhase = rand_seed * 6.2831;
+    float seedOffset = rand_seed * 100.0;
+
+    float fac = 0.3 + sin((uv.x * 450.0 + seedOffset + sin(gold_seal.r * 6.0 + seedPhase * 0.3) * 180.0) - 700.0 * gold_seal.r + seedPhase * 0.5)
+                  - sin((uv.x * 190.0 + uv.y * 30.0 + seedOffset * 0.7) + 1080.3 * gold_seal.r + seedPhase * 0.8);
 
     vec3 sealColor = vec3(
         max(base.r, (1.0 - base.r) * delta * fac + base.r),
@@ -193,18 +200,6 @@ vec4 applyOverlay(vec2 atlasUV) {
     float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
     alpha *= alphaFactor;
 
-    float edgeDistance = length(warpedLocal - clampedLocal);
-    float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
-
-    if (!shadow && burn_colour_1.a > 0.01) {
-        vec3 burnMix = burn_colour_1.rgb;
-        if (burn_colour_2.a > 0.01) {
-            float t = clamp(edgeDistance / 0.04, 0.0, 1.0);
-            burnMix = mix(burn_colour_1.rgb, burn_colour_2.rgb, t);
-        }
-        lit = mix(lit, burnMix, clamp(burnMask * burn_colour_1.a, 0.0, 1.0));
-    }
-
     if (shadow) {
         return vec4(vec3(0.0), alpha * 0.35);
     }
@@ -215,28 +210,52 @@ vec4 applyOverlay(vec2 atlasUV) {
 void main()
 {
     vec2 uv = fragTexCoord;
-    float t = tan(radians(fov) / 2.0);
-    vec2 centered = (uv - pivot) / regionRate;
 
-    vec3 p = invRotMat * vec3(centered - 0.5, 0.5 / t);
-    float v = (0.5 / t) + 0.5;
-    p.xy *= v * invRotMat[2].z;
-    vec2 o = v * invRotMat[2].xy;
+    bool identityAtlas = abs(regionRate.x - 1.0) < 0.0001 &&
+                         abs(regionRate.y - 1.0) < 0.0001 &&
+                         abs(pivot.x) < 0.0001 &&
+                         abs(pivot.y) < 0.0001;
 
-    if (cull_back > 0.5 && p.z <= 0.0) discard;
-
-    uv = (p.xy / p.z) - o + 0.5;
-
-    float asp = regionRate.y / regionRate.x;
-    uv.y *= asp;
-
+    // Apply ambient jitter to all passes (including text) so overlay text follows card wobble.
     float angle = angleFlat;
-    uv = rotate(uv, vec2(0.5), angle);
-    uv.y /= asp;
 
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+    if (identityAtlas || uv_passthrough > 0.5) {
+        // Passthrough: rely on vertex-stage skew for motion; clamp UVs to stay inside
+        // the intended region (identity or atlas sub-rect). Apply the ambient
+        // rotation jitter so text/stickers follow rand_trans_power motion.
+        vec2 rotated = rotate(uv, vec2(0.5), angle);
 
-    vec2 finalUV = pivot + uv * regionRate;
+        float inset = 0.0035; // tiny padding to reduce bleed
+        vec2 clamped = clamp(rotated, vec2(inset), vec2(1.0 - inset));
+        vec2 finalUV = identityAtlas
+            ? clamped
+            : (pivot + clamped * regionRate);
+        finalColor = applyOverlay(finalUV);
+    } else {
+        // Full atlas-aware path for sprites.
+        float cosX = tiltCos.x;
+        float cosY = tiltCos.y;
+        float sinX = tiltSin.x;
+        float sinY = tiltSin.y;
 
-    finalColor = applyOverlay(finalUV);
+        vec2 centered = (uv - pivot) / regionRate;
+        vec2 localCentered = centered - vec2(0.5);
+        vec2 correctedUV = localCentered;
+        correctedUV.x /= max(cosY, 0.5);
+        correctedUV.y /= max(cosX, 0.5);
+        correctedUV.x -= sinY * 0.1;
+        correctedUV.y -= sinX * 0.1;
+        uv = correctedUV + vec2(0.5);
+
+        float asp = regionRate.y / regionRate.x;
+        uv.y *= asp;
+
+        uv = rotate(uv, vec2(0.5), angle);
+        uv.y /= asp;
+
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+
+        vec2 finalUV = pivot + uv * regionRate;
+        finalColor = applyOverlay(finalUV);
+    }
 }

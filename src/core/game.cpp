@@ -16,6 +16,7 @@
 
 #include "../util/utilities.hpp"
 #include "../util/error_handling.hpp"
+#include "../util/crash_reporter.hpp"
 
 #include "graphics.hpp"
 #include "globals.hpp"
@@ -1066,6 +1067,21 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
                 } else if (ev.keyCode == KEY_F4) {
                     globals::setDrawPhysicsDebug(!globals::drawPhysicsDebug);
                     SPDLOG_INFO("Physics debug toggled via event bus: {}", globals::drawPhysicsDebug);
+                } else if (ev.keyCode == KEY_F10) {
+                    // Generate debug report
+                    SPDLOG_INFO("F10 pressed - generating debug report");
+                    if (crash_reporter::IsEnabled()) {
+                        auto report = crash_reporter::CaptureReport("Manual debug report (F10)", true);
+                        crash_reporter::SerializeReport(report);
+#if defined(__EMSCRIPTEN__)
+                        crash_reporter::ShowCaptureNotification("Debug report ready. Press 'Copy' to share.");
+#else
+                        auto path = crash_reporter::PersistReport(report);
+                        if (path) {
+                            SPDLOG_INFO("Debug report saved to: {}", *path);
+                        }
+#endif
+                    }
                 }
             });
             bus.subscribe<events::UIScaleChanged>([](const events::UIScaleChanged& ev) {

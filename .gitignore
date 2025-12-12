@@ -2602,4 +2602,6 @@ src/third_party/fmt/support/.gradle/buildOutputCleanup/buildOutputCleanup.lock
 src/third_party/fmt/support/.gradle/buildOutputCleanup/cache.properties
 src/third_party/fmt/support/.gradle/vcs-1/gc.properties
 build_attempt.log
+
+# Git worktrees
 .worktrees/

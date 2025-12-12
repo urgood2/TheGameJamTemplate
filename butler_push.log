@@ -1,8 +1,0 @@
-∙ For channel `web`: last build is 1461291, downloading its signature
-∙ Pushing 272.58 MiB (5 files, 2 dirs, 0 symlinks)
-▐                   ▌   0.00%                                                   ▐░░░░               ▌   0.00%  - network idle, 220.88 MiB left                  ▐░░░░░░░░░          ▌   0.00%  - network idle, 161.49 MiB left                  ▐░░░░░░░░░░░░░      ▌   0.00%  - network idle, 102.29 MiB left                  ▐░░░░░░░░░░░░░░░░░░ ▌   0.00%  - network idle, 40.54 MiB left                   ▐░░░░░░░░░░░░░░░░░░░░▌   0.00%  - network idle, 3.35 MiB left                   ▐███████░░░░░░░░░░░░░▌  32.57%  - network idle, 2.26 MiB left                   ▐███████░░░░░░░░░░░░░▌  33.50%  - network idle, 2.23 MiB left                   ▐█████████░░░░░░░░░░░▌  42.80%  - network idle, 1.92 MiB left                   ▐███████████░░░░░░░░░▌  53.97%  - network idle, 1.55 MiB left                   ▐████████████████░░░░▌  76.30%  @ 1.28 MiB/s, 815.03 KiB left                   ▐████████████████████▌ 100.00%  - almost there                                  ▐████████████████████▌ 100.00%  - almost there                                  ▐████████████████████▌ 100.00%  - almost there                                  ▐████████████████████▌ 100.00%  finalizing build                                ▐████████████████████▌ 100.00%  finalizing build                                                                                                                √ Re-used 98.77% of old, added 3.36 MiB fresh data
-√ 3.36 MiB patch (98.77% savings)
-∙ Build is now processing, should be up in a bit.
-
-Use the `butler status chugget/testing:web` for more information.
-

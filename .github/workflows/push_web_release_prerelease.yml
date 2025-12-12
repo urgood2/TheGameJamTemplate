@@ -7,7 +7,6 @@ on:
 
 env:
   ITCH_PROJECT: chugget/testing
-  EMSDK_VERSION: "3.1.67"
 
 jobs:
   # ───────────────────────────────
@@ -20,8 +19,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          lfs: true
 
       - name: Install system dependencies
         run: |
@@ -73,93 +70,28 @@ jobs:
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v14
         with:
-          version: ${{ env.EMSDK_VERSION }}
+          version: 3.1.67
           actions-cache-folder: "emsdk-cache"
 
-      - name: Export EMSDK paths for helper targets
-        run: |
-          echo "EMSDK_PATH=${EMSDK}" >> "$GITHUB_ENV"
-          echo "EMSCRIPTEN_PATH=${EMSDK}/upstream/emscripten" >> "$GITHUB_ENV"
-
-      # Cache CMake build dependencies
-      - name: Cache CMake dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            build-web/_deps
-          key: cmake-deps-web-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
-          restore-keys: |
-            cmake-deps-web-${{ runner.os }}-
+      - name: Clean FetchContent deps
+        run: rm -rf build-web/_deps
 
       - name: Configure CMake (Web)
         run: |
           emcmake cmake -S . -B build-web \
             -DPLATFORM=Web \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DWEB_BUILD_DIR="${{ github.workspace }}/build-web" \
-            -DITCH_BUILD_ID="${{ github.sha }}"
-
-      - name: Copy assets into web build tree
-        run: cmake --build build-web --target copy_assets
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Web
-        run: emmake make -C build-web -j$(nproc)
-
-      - name: Run web helper targets (rename->index, inject snippet, gzip)
-        run: |
-          cmake --build build-web --target rename_to_index
-          cmake --build build-web --target inject_web_patch
-          cmake --build build-web --target gzip_assets
+        run: emmake make -C build-web -j
 
       - name: Package Web build
         run: |
           mkdir -p dist/web
-
-          # Copy the processed index.html (after rename_to_index + inject_web_patch)
-          # NOTE: Do NOT use the original raylib-cpp-cmake-template.html - it lacks the Pako injection
-          if [ ! -f build-web/index.html ]; then
-            echo "Error: build-web/index.html not found. Helper targets may have failed."
-            exit 1
-          fi
-          cp build-web/index.html dist/web/index.html
-
-          # Copy main build outputs
+          cp build-web/index.html dist/web/
+          cp build-web/*.wasm dist/web/
           cp build-web/*.js dist/web/
-
-          # Copy pre-gzipped wasm/data produced by helper targets
-          for f in build-web/*.wasm.gz build-web/*.data.gz; do
-            if [ -f "$f" ]; then
-              cp "$f" dist/web/
-            fi
-          done
-
-          # Optional: copy splash/favicon to root (tiny files)
-          for f in assets/splash.png assets/favicon.png; do
-            if [ -f "$f" ]; then
-              cp "$f" dist/web/
-            fi
-          done
-
-          # Copy splash.png to root if it exists in assets
-          if [ -f "assets/splash.png" ]; then
-            cp assets/splash.png dist/web/
-          fi
-
-          # Copy favicon if it exists
-          if [ -f "assets/favicon.png" ]; then
-            cp assets/favicon.png dist/web/
-          fi
-
-          # Create build info file
-          echo "{\"build_id\": \"${{ github.sha }}\", \"build_time\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"branch\": \"${{ github.ref_name }}\"}" > dist/web/build_info.json
-
-          # List final package contents
-          echo "=== Package Contents ==="
-          ls -lah dist/web/
-          echo "=== Total Size ==="
-          du -sh dist/web/
-
-          # Create zip
+          cp -R assets dist/web/
           cd dist && zip -r web-build.zip web/
 
       - name: Upload web build (v4)
@@ -168,7 +100,6 @@ jobs:
           name: web-build
           path: dist/web-build.zip
           compression-level: 0
-          retention-days: 14
 
 
   # ───────────────────────────────
@@ -176,11 +107,18 @@ jobs:
   # ───────────────────────────────
   publish:
     name: Publish to itch.io
-    needs: [ build-web ]
+    needs: [ build-web ]         # <── removed native dependency
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+
+      # Native disabled → skip download
+      # - name: Download native build
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: native-linux
+      #     path: native
 
       - name: Download web build
         uses: actions/download-artifact@v4
@@ -196,7 +134,7 @@ jobs:
       - name: Determine itch channel
         id: channel
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" || "${GITHUB_REF_NAME}" == "master" ]]; then
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "channel=web" >> $GITHUB_OUTPUT
           else
             echo "channel=web-dev" >> $GITHUB_OUTPUT
@@ -208,34 +146,20 @@ jobs:
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
           else
-            # Use short SHA for cleaner version display
-            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
-            echo "version=build-${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "version=build-${GITHUB_SHA}" >> $GITHUB_OUTPUT
           fi
+
+      # Native publish disabled
+      # - name: Publish native build
+      #   run: |
+      #     butler push native \
+      #       ${{ env.ITCH_PROJECT }}:linux \
+      #       --userversion ${{ steps.version.outputs.version }}
 
       - name: Publish web build
         run: |
-          echo "Publishing to ${{ env.ITCH_PROJECT }}:${{ steps.channel.outputs.channel }}"
-          echo "Version: ${{ steps.version.outputs.version }}"
-
           butler push web/web-build.zip \
             ${{ env.ITCH_PROJECT }}:${{ steps.channel.outputs.channel }} \
             --userversion ${{ steps.version.outputs.version }}
-
-          echo "::notice title=Published::Successfully published to itch.io (${{ steps.channel.outputs.channel }} channel)"
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-
-      - name: Create deployment summary
-        run: |
-          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Project | ${{ env.ITCH_PROJECT }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Channel | ${{ steps.channel.outputs.channel }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Version | ${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "View your game at: https://${{ env.ITCH_PROJECT }}.itch.io" >> $GITHUB_STEP_SUMMARY

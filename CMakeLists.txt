@@ -69,14 +69,6 @@ else()
     set(BUILD_TESTING OFF CACHE BOOL "Enable CTest and dependency tests" FORCE)
 endif()
 
-# AddressSanitizer - MUST be set before FetchContent so dependencies are built with ASAN
-option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
-if(ENABLE_ASAN)
-    message(STATUS "AddressSanitizer enabled - applying to all targets")
-    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
-endif()
-
 # Prefer compiler cache when available to speed up rebuilds.
 find_program(CCACHE_PROGRAM ccache)
 if (CCACHE_PROGRAM)
@@ -152,71 +144,6 @@ if(STRIP_LUA_COMMENTS_FOR_WEB)
     if(NOT Python3_Interpreter_FOUND)
         message(WARNING "STRIP_LUA_COMMENTS_FOR_WEB is ON but Python3 interpreter not found; Lua assets will be copied without stripping comments.")
     endif()
-endif()
-
-# =============================================================================
-# Build ID Generation for Ownership Tracking
-# =============================================================================
-execute_process(
-    COMMAND git rev-parse --short HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_COMMIT_SHORT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-)
-if(NOT GIT_COMMIT_SHORT)
-    set(GIT_COMMIT_SHORT "nogit")
-endif()
-
-execute_process(
-    COMMAND git rev-parse --abbrev-ref HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_BRANCH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-)
-if(NOT GIT_BRANCH)
-    set(GIT_BRANCH "unknown")
-endif()
-
-string(TIMESTAMP BUILD_TIMESTAMP "%Y%m%d-%H%M%S")
-string(TIMESTAMP BUILD_ISO_TIMESTAMP "%Y-%m-%dT%H:%M:%SZ" UTC)
-
-set(OWNERSHIP_BUILD_ID "${GIT_COMMIT_SHORT}-${BUILD_TIMESTAMP}")
-
-# Generate signature (use a secret salt in production - store in env var)
-set(OWNERSHIP_SALT "$ENV{OWNERSHIP_SALT}")
-if(NOT OWNERSHIP_SALT)
-    set(OWNERSHIP_SALT "dev-salt-replace-in-production")
-endif()
-string(SHA256 OWNERSHIP_BUILD_SIGNATURE "${OWNERSHIP_BUILD_ID}-${OWNERSHIP_SALT}")
-
-message(STATUS "Build ID: ${OWNERSHIP_BUILD_ID}")
-message(STATUS "Build Signature: ${OWNERSHIP_BUILD_SIGNATURE}")
-
-add_compile_definitions(
-    BUILD_ID_VALUE="${OWNERSHIP_BUILD_ID}"
-    BUILD_SIGNATURE_VALUE="${OWNERSHIP_BUILD_SIGNATURE}"
-)
-
-# Generate build_info.json for release tracking
-file(WRITE "${CMAKE_BINARY_DIR}/build_info.json"
-"{
-  \"build_id\": \"${OWNERSHIP_BUILD_ID}\",
-  \"signature\": \"${OWNERSHIP_BUILD_SIGNATURE}\",
-  \"git_commit\": \"${GIT_COMMIT_SHORT}\",
-  \"git_branch\": \"${GIT_BRANCH}\",
-  \"timestamp\": \"${BUILD_ISO_TIMESTAMP}\"
-}")
-
-# Target to append build info to release manifest (run manually for releases)
-find_package(Python3 COMPONENTS Interpreter)
-if(Python3_FOUND)
-    add_custom_target(append_release
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/append_release.py ${CMAKE_BINARY_DIR}/build_info.json
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Appending build to releases/manifest.json"
-    )
 endif()
 
 # ------------------------------------------------------------------
@@ -1046,54 +973,25 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
         else()
             set(_shell_prefix bash)
         endif()
-
-        # Allow CI to rely on setup-emsdk env without requiring an explicit EMSDK_PATH
-        if(NOT EMSDK_PATH AND DEFINED ENV{EMSDK})
-            set(EMSDK_PATH "$ENV{EMSDK}")
-        endif()
-        if(NOT EMSCRIPTEN_PATH AND DEFINED ENV{EMSDK})
-            set(EMSCRIPTEN_PATH "$ENV{EMSDK}/upstream/emscripten")
-        endif()
-
-        set(_emsdk_env_cmd "")
-        if(EMSDK_PATH)
-            set(_emsdk_env_cmd "if [ -f \"${EMSDK_PATH}/emsdk_env.sh\" ]; then source \"${EMSDK_PATH}/emsdk_env.sh\"; fi;")
-        endif()
-
-        if(EMSCRIPTEN_PATH)
-            set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
-            set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
-        else()
-            set(_emcmake_cmd "emcmake")
-            set(_emmake_cmd "emmake")
-        endif()
+        set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
+        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
+        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
         set(_inject_cmd
             powershell -ExecutionPolicy Bypass -NoProfile -File "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.ps1" `
                 -HtmlPath "${WEB_OUTPUT_HTML}" `
                 -SnippetPath "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html"
         )
     else()
-        set(_emsdk_env_cmd "")
-        if(EMSDK_PATH)
-            set(_emsdk_env_cmd "if [ -f \"${EMSDK_PATH}/emsdk_env.sh\" ]; then source \"${EMSDK_PATH}/emsdk_env.sh\"; fi;")
-        endif()
-
-        if(EMSCRIPTEN_PATH)
-            set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
-            set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
-        else()
-            set(_emcmake_cmd "emcmake")
-            set(_emmake_cmd "emmake")
-        endif()
+        set(_emsdk_env_cmd "source \"${EMSDK_PATH}/emsdk_env.sh\" &&")
+        set(_emcmake_cmd "\"${EMSCRIPTEN_PATH}/emcmake\"")
+        set(_emmake_cmd "\"${EMSCRIPTEN_PATH}/emmake\"")
         set(_inject_cmd
             ${CMAKE_COMMAND} -DHTML_PATH="${WEB_OUTPUT_HTML}" -DSNIPPET_PATH="${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html" -P "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.cmake"
         )
         set(_shell_prefix bash)
     endif()
 
-    # Avoid generating source maps for web release builds; they slow the link
-    # step and have triggered wasm-opt parse failures in our pipeline.
-    set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -sASSERTIONS=1 -sDISABLE_EXCEPTION_CATCHING=0 -sLEGACY_VM_SUPPORT=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32,HEAP32,HEAPU8")
+    set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1")
     set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\"${_emscripten_link_flags}\" -DCMAKE_EXECUTABLE_SUFFIX=.html -DCCACHE_PROGRAM= -DCMAKE_C_COMPILER_LAUNCHER= -DCMAKE_CXX_COMPILER_LAUNCHER=")
 
     # Target to activate emsdk
@@ -1121,22 +1019,15 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     )
 
     # Target to rename the output HTML to index.html
-    # NOTE: No DEPENDS - this is a post-processing target for already-built files.
-    # In CI, the build is done directly with emcmake/emmake, so we don't need
-    # to depend on compile_web_build (which would trigger the full build chain).
-    # Run these targets in order: rename_to_index -> inject_web_patch -> gzip_assets
     add_custom_target(rename_to_index
-        COMMAND ${CMAKE_COMMAND} -E echo "Checking for ${WEB_BUILD_DIR}/${PROJECT_NAME}.html..."
-        COMMAND test -f "${WEB_BUILD_DIR}/${PROJECT_NAME}.html" || (echo "ERROR: ${PROJECT_NAME}.html not found. Build the project first." && exit 1)
+        DEPENDS compile_web_build
         COMMAND ${CMAKE_COMMAND} -E copy ${WEB_BUILD_DIR}/${PROJECT_NAME}.html ${WEB_OUTPUT_HTML}
         COMMENT "Renaming output HTML file to index.html"
     )
 
     # Inject snippet into <head> of index.html
-    # Requires rename_to_index to have been run first
     add_custom_target(inject_web_patch
-        COMMAND ${CMAKE_COMMAND} -E echo "Checking for ${WEB_OUTPUT_HTML}..."
-        COMMAND test -f "${WEB_OUTPUT_HTML}" || (echo "ERROR: index.html not found. Run rename_to_index first." && exit 1)
+        DEPENDS rename_to_index
         COMMAND ${CMAKE_COMMAND} -E echo "Injecting custom HTML snippet into <head>..."
         COMMAND ${_inject_cmd}
         COMMENT "Patch index.html with custom <script> logic"
@@ -1162,12 +1053,8 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     endif()
 
     if(GZIP_EXE)
-        # NOTE: No DEPENDS - this is a post-processing target for already-built files.
-        # Requires the web build to be complete (wasm and data files must exist)
         add_custom_target(gzip_assets
-            COMMAND ${CMAKE_COMMAND} -E echo "Checking for build outputs..."
-            COMMAND test -f "${WASM_FILE}" || (echo "ERROR: ${WASM_FILE} not found. Build the project first." && exit 1)
-            COMMAND test -f "${DATA_FILE}" || (echo "ERROR: ${DATA_FILE} not found. Build the project first." && exit 1)
+            DEPENDS inject_web_patch
             COMMAND ${CMAKE_COMMAND} -E echo "Gzipping WASM and DATA files..."
             COMMAND ${CMAKE_COMMAND} -E copy ${WASM_FILE} ${WASM_FILE}.orig
             COMMAND ${CMAKE_COMMAND} -E copy ${DATA_FILE} ${DATA_FILE}.orig
@@ -1273,6 +1160,11 @@ if(ENABLE_UNIT_TESTS)
         COMMENT "Running unit test suite")
 endif()
 
+if(ENABLE_ASAN)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 
 ##########################################################################################
 # Project build settings
@@ -1306,14 +1198,10 @@ endif()
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
 
 if (EMSCRIPTEN)
-    # Clean out any legacy flags left from older configurations that block exception handling.
-    string(REPLACE "-sNO_DISABLE_EXCEPTION_CATCHING=0" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-
     # Tell Emscripten to build an .html file.
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Os -fexceptions")
-    # Disable HTML minification to avoid html-minifier-terser failures during web link.
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -Os -Wall -s TOTAL_MEMORY=512MB -s FORCE_FILESYSTEM=1 -sDISABLE_EXCEPTION_CATCHING=0 -sLEGACY_VM_SUPPORT=0 -sIMPORTED_MEMORY=1 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPF32,HEAP32,HEAPU8 -sEXPORTED_FUNCTIONS=_main,_malloc,_free --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html -sMINIFY_HTML=0")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Os")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -Os -Wall -s TOTAL_MEMORY=512MB -s FORCE_FILESYSTEM=1 --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 endif()
 

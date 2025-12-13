@@ -191,10 +191,9 @@ build-web: copy-web-assets
 	EMSDK_PATH=$(just _get-emsdk-path)
 	echo "=== Using EMSDK at: $EMSDK_PATH ==="
 
-	# Source emsdk environment and activate latest (match CMakeLists.txt activate_emsdk target)
+	# Source emsdk environment (use whatever version is already activated)
 	source "$EMSDK_PATH/emsdk_env.sh"
-	echo "=== Activating emsdk latest ==="
-	emsdk activate latest --permanent
+	echo "=== Using emsdk version: $(emcc --version | head -1) ==="
 
 	mkdir -p {{web_build_dir}}
 	cd {{web_build_dir}}
@@ -353,7 +352,7 @@ build-web-quick: copy-web-assets
 
 	EMSDK_PATH=$(just _get-emsdk-path)
 	source "$EMSDK_PATH/emsdk_env.sh"
-	emsdk activate latest --permanent
+	echo "=== Using emsdk version: $(emcc --version | head -1) ==="
 
 	mkdir -p {{web_build_dir}}
 	cd {{web_build_dir}}
@@ -401,3 +400,167 @@ web-sizes:
 	else
 		echo "  No distribution zip found"
 	fi
+
+# =============================================================================
+# Sprite Atlas Automation
+# =============================================================================
+
+# Tool paths (auto-detected)
+texturepacker_exe := "/Applications/TexturePacker.app/Contents/MacOS/TexturePacker"
+
+# Asset paths
+aseprite_source := "assets/auto_export_assets.aseprite"
+export_dir := "assets/graphics/auto-exported-sprites-from-aseprite"
+tps_file := "assets/graphics/sprites_texturepacker.tps"
+
+# Detect Aseprite path (checks common locations)
+@_get-aseprite-path:
+	#!/usr/bin/env bash
+	# 1. Check user Applications
+	if [ -x "$HOME/Applications/Aseprite.app/Contents/MacOS/aseprite" ]; then
+		echo "$HOME/Applications/Aseprite.app/Contents/MacOS/aseprite"
+		exit 0
+	fi
+	# 2. Check Steam installation
+	steam_path="$HOME/Library/Application Support/Steam/steamapps/common/Aseprite/Aseprite.app/Contents/MacOS/aseprite"
+	if [ -x "$steam_path" ]; then
+		echo "$steam_path"
+		exit 0
+	fi
+	# 3. Check system Applications
+	if [ -x "/Applications/Aseprite.app/Contents/MacOS/aseprite" ]; then
+		echo "/Applications/Aseprite.app/Contents/MacOS/aseprite"
+		exit 0
+	fi
+	# 4. Check Desktop (sometimes used for testing)
+	if [ -x "$HOME/Desktop/Aseprite.app/Contents/MacOS/aseprite" ]; then
+		echo "$HOME/Desktop/Aseprite.app/Contents/MacOS/aseprite"
+		exit 0
+	fi
+	echo "ERROR: Aseprite not found" >&2
+	exit 1
+
+# Check if sprite tools are available
+check-sprite-tools:
+	#!/usr/bin/env bash
+	set -e
+	echo "=== Checking sprite tools ==="
+
+	# Check Aseprite
+	aseprite_path=$(just _get-aseprite-path 2>/dev/null) || {
+		echo "  ✗ Aseprite not found"
+		echo "    Checked: ~/Applications, Steam, /Applications, ~/Desktop"
+		exit 1
+	}
+	echo "  ✓ Aseprite: $aseprite_path"
+	"$aseprite_path" --version 2>/dev/null || true
+
+	# Check TexturePacker
+	if [ -x "{{texturepacker_exe}}" ]; then
+		echo "  ✓ TexturePacker: {{texturepacker_exe}}"
+		"{{texturepacker_exe}}" --version 2>/dev/null || true
+	else
+		echo "  ✗ TexturePacker not found at {{texturepacker_exe}}"
+		exit 1
+	fi
+
+	# Check source file exists
+	if [ -f "{{aseprite_source}}" ]; then
+		echo "  ✓ Source file: {{aseprite_source}}"
+	else
+		echo "  ✗ Source file not found: {{aseprite_source}}"
+		exit 1
+	fi
+
+	# Check TPS file exists
+	if [ -f "{{tps_file}}" ]; then
+		echo "  ✓ TPS file: {{tps_file}}"
+	else
+		echo "  ✗ TPS file not found: {{tps_file}}"
+		exit 1
+	fi
+
+	echo "=== All sprite tools ready ==="
+
+# Export sprites from Aseprite (all layers as separate PNGs)
+export-aseprite: check-sprite-tools
+	#!/usr/bin/env bash
+	set -e
+
+	aseprite_path=$(just _get-aseprite-path)
+
+	echo "=== Exporting Aseprite layers to {{export_dir}} ==="
+
+	# Create output directory if needed
+	mkdir -p "{{export_dir}}"
+
+	# Export all layers as separate PNGs
+	"$aseprite_path" -b "{{aseprite_source}}" \
+		--all-layers \
+		--save-as "{{export_dir}}/{layer}.png"
+
+	# Verify at least one file was exported
+	file_count=$(ls -1 "{{export_dir}}"/*.png 2>/dev/null | wc -l | tr -d ' ')
+	if [ "$file_count" -eq 0 ]; then
+		echo "ERROR: No files exported from Aseprite"
+		exit 1
+	fi
+
+	echo "=== Exported $file_count layer(s) ==="
+	ls -lh "{{export_dir}}"/*.png
+
+# Rebuild texture atlas (smart folder auto-detects new files)
+rebuild-atlas:
+	#!/usr/bin/env bash
+	set -e
+
+	echo "=== Rebuilding texture atlas from {{tps_file}} ==="
+
+	if [ ! -x "{{texturepacker_exe}}" ]; then
+		echo "ERROR: TexturePacker not found at {{texturepacker_exe}}"
+		exit 1
+	fi
+
+	"{{texturepacker_exe}}" "{{tps_file}}"
+
+	# Verify output files were generated
+	if [ ! -f "assets/graphics/sprites_atlas-0.png" ]; then
+		echo "ERROR: Atlas generation failed - sprites_atlas-0.png not found"
+		exit 1
+	fi
+
+	echo "=== Atlas rebuild complete ==="
+	ls -lh assets/graphics/sprites_atlas-*.png
+	ls -lh assets/graphics/sprites-*.json
+
+# Full pipeline: export from Aseprite + rebuild atlas
+update-sprites: export-aseprite rebuild-atlas
+	@echo "=== Sprite pipeline complete ==="
+
+# Watch for Aseprite file changes and auto-rebuild (requires fswatch)
+watch-sprites:
+	#!/usr/bin/env bash
+
+	# Check if fswatch is available
+	if ! command -v fswatch &>/dev/null; then
+		echo "ERROR: fswatch not installed"
+		echo "  Install with: brew install fswatch"
+		exit 1
+	fi
+
+	echo "=== Watching {{aseprite_source}} for changes ==="
+	echo "  Press Ctrl+C to stop"
+
+	# Use -l for latency (debounce) to avoid triggering mid-save
+	fswatch -l 2.0 -o "{{aseprite_source}}" | while read; do
+		echo ""
+		echo "=== Change detected, rebuilding sprites ==="
+		just update-sprites || echo "Build failed, waiting for next change..."
+	done
+
+# Clean auto-exported sprites
+clean-sprites:
+	#!/usr/bin/env bash
+	echo "=== Cleaning auto-exported sprites ==="
+	rm -f "{{export_dir}}"/*.png "{{export_dir}}"/*.json 2>/dev/null || true
+	echo "=== Clean complete ==="

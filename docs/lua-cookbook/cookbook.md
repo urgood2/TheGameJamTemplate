@@ -1682,3 +1682,523 @@ end
 **Gotcha:** Follow the order: Create sprite → Position → Create physics → Configure properties → Set sync mode → Setup collision masks.
 
 \newpage
+
+# Rendering & Shaders
+
+This chapter covers the shader system, draw commands, and rendering pipeline for visual effects, text rendering, and custom graphics.
+
+## Add Shader to Entity
+
+\label{recipe:add-shader}
+
+**When to use:** Apply visual effects to entities (holo cards, glows, dissolves, iridescent effects).
+
+```lua
+local ShaderBuilder = require("core.shader_builder")
+
+-- Basic shader application
+ShaderBuilder.for_entity(entity)
+    :add("3d_skew_holo")
+    :apply()
+```
+
+*— from core/shader_builder.lua:9-11*
+
+**Real usage example:**
+
+```lua
+-- From tests/shader_builder_visual_test.lua:131
+ShaderBuilder.for_entity(entity1)
+    :add("flash")
+    :apply()
+
+-- From tests/shader_builder_visual_test.lua:142
+ShaderBuilder.for_entity(entity2)
+    :add("glow_fragment", { glow_intensity = 2.0 })
+    :apply()
+```
+
+**Gotcha:** The shader name must match a shader file in `assets/shaders/` (e.g., "3d_skew_holo" → `3d_skew_holo_fragment.fs` + `3d_skew_holo_vertex.vs`).
+
+---
+
+## Stack Multiple Shaders
+
+\label{recipe:stack-shaders}
+
+**When to use:** Combine multiple visual effects on one entity (e.g., holo + dissolve for card destruction).
+
+```lua
+local ShaderBuilder = require("core.shader_builder")
+
+-- Stack shaders (executed in order)
+ShaderBuilder.for_entity(entity)
+    :add("3d_skew_holo", { sheen_strength = 1.5 })
+    :add("dissolve", { dissolve = 0.5 })
+    :apply()
+
+-- Clear and rebuild shader pipeline
+ShaderBuilder.for_entity(entity)
+    :clear()
+    :add("3d_skew_prismatic")
+    :apply()
+```
+
+*— from core/shader_builder.lua:14-23*
+
+**Gotcha:** Shader order matters! Earlier shaders process first, later shaders see the transformed output.
+
+**Gotcha:** Use `:clear()` to remove all existing shaders before applying new ones.
+
+---
+
+## Set Shader Uniforms
+
+**When to use:** Control shader parameters (colors, intensities, animation speeds).
+
+```lua
+local ShaderBuilder = require("core.shader_builder")
+
+-- Uniforms via add() options
+ShaderBuilder.for_entity(entity)
+    :add("3d_skew_holo", {
+        sheen_strength = 1.5,
+        sheen_speed = 2.0
+    })
+    :apply()
+
+-- Per-uniform override
+ShaderBuilder.for_entity(entity)
+    :add("3d_skew_holo")
+    :withUniform("3d_skew_holo", "sheen_speed", 2.0)
+    :apply()
+```
+
+*— from core/shader_builder.lua:14-29*
+
+**Real usage example:**
+
+```lua
+-- From tests/shader_builder_visual_test.lua:142
+ShaderBuilder.for_entity(entity2)
+    :add("glow_fragment", { glow_intensity = 2.0 })
+    :apply()
+```
+
+**Gotcha:** Uniform names must match the shader's GLSL uniform declarations. Check the `.fs` shader file to see what uniforms are available.
+
+---
+
+## Shader Families
+
+**When to use:** Work with shader groups that share common uniforms (3d_skew_*, liquid_*, etc.).
+
+```lua
+local ShaderBuilder = require("core.shader_builder")
+
+-- Check if a shader belongs to a family
+local family = ShaderBuilder.get_shader_family("3d_skew_holo")
+print(family)  -- "3d_skew"
+
+-- Get all registered families
+local families = ShaderBuilder.get_families()
+for prefix, config in pairs(families) do
+    print(prefix, config.uniforms)
+end
+
+-- Register a custom shader family
+ShaderBuilder.register_family("energy", {
+    uniforms = { "pulse_speed", "glow_intensity" },
+    defaults = { pulse_speed = 1.0 }
+})
+```
+
+*— from core/shader_builder.lua:56-87, 227-244*
+
+**Built-in families:**
+
+- `3d_skew` — Card shaders (regionRate, pivot, quad_center, quad_size, uv_passthrough, tilt_enabled, card_rotation)
+- `liquid` — Fluid effects (wave_speed, wave_amplitude, distortion)
+
+**Real usage example:**
+
+```lua
+-- From tests/shader_builder_visual_test.lua:26
+ShaderBuilder.register_family("glow", {
+    uniforms = { "glow_intensity", "glow_color" },
+    defaults = { glow_intensity = 1.0 }
+})
+
+-- From tests/shader_builder_visual_test.lua:37
+ShaderBuilder.register_family("flash", {
+    uniforms = { "flash_color", "flash_intensity" },
+    defaults = { flash_intensity = 1.0 }
+})
+```
+
+**Gotcha:** Family detection is prefix-based. A shader named "3d_skew_holo" matches the "3d_skew" family automatically.
+
+**Gotcha:** Family defaults are applied automatically when you add a shader from that family.
+
+---
+
+## Draw Text (Command Buffer)
+
+\label{recipe:draw-text}
+
+**When to use:** Draw text to a layer (UI labels, tooltips, HUD).
+
+```lua
+local draw = require("core.draw")
+
+-- Basic text (uses smart defaults)
+draw.textPro(layer, {
+    text = "Hello",
+    font = myFont,  -- optional (uses default if omitted)
+    x = 100,
+    y = 200,
+    fontSize = 16,  -- optional (default: 16)
+    color = WHITE,  -- optional (default: WHITE)
+})
+
+-- With rotation and origin
+draw.textPro(layer, {
+    text = "Rotated",
+    x = 100,
+    y = 200,
+    rotation = math.rad(45),
+    origin = { x = 0.5, y = 0.5 },  -- center pivot
+}, 0, layer.DrawCommandSpace.Screen)
+```
+
+*— from core/draw.lua:23-28, 228*
+
+**Gotcha:** The `font` field expects a Font object (from localization.getFont() or loaded via C++). Omit it to use the default font.
+
+**Gotcha:** `rotation` is in radians, not degrees. Use `math.rad(degrees)` to convert.
+
+---
+
+## Draw Shapes (Command Buffer)
+
+**When to use:** Draw primitives for debugging, UI backgrounds, or effects.
+
+```lua
+local draw = require("core.draw")
+
+-- Rectangle
+draw.rectangle(layer, {
+    x = 100,
+    y = 200,
+    width = 50,
+    height = 30,
+    color = RED
+})
+
+-- Circle
+draw.circleFilled(layer, {
+    x = 100,
+    y = 200,
+    radius = 20,
+    color = BLUE
+})
+
+-- Line
+draw.line(layer, {
+    startX = 0,
+    startY = 0,
+    endX = 100,
+    endY = 100,
+    color = GREEN,
+    thickness = 2
+})
+
+-- Rectangle with rotation
+draw.rectanglePro(layer, {
+    rect = { x = 100, y = 200, width = 50, height = 30 },
+    origin = { x = 25, y = 15 },  -- center
+    rotation = math.rad(45),
+    color = YELLOW
+})
+```
+
+*— from core/draw.lua:235-270*
+
+**Gotcha:** `rectanglePro` uses a `rect` table with `{x, y, width, height}`, not separate parameters.
+
+---
+
+## Local Draw Commands (Inside Shader Pipeline)
+
+**When to use:** Draw graphics that render inside an entity's shader pipeline (e.g., text on a card with shaders applied).
+
+```lua
+local draw = require("core.draw")
+
+-- Text that goes through entity's shaders
+draw.local_command(entity, "text_pro", {
+    text = "hello",
+    font = localization.getFont(),
+    x = 10,
+    y = 20,
+    fontSize = 20,
+    color = WHITE
+}, { z = 1, preset = "shaded_text" })
+
+-- Rectangle inside shader pipeline
+draw.local_command(entity, "draw_rectangle", {
+    x = 0,
+    y = 0,
+    width = 64,
+    height = 64,
+    color = RED
+}, { z = -1 })  -- z < 0 renders before sprite
+```
+
+*— from core/draw.lua:53-58, 287-348*
+
+**Real usage example:**
+
+```lua
+-- From tests/shader_ergonomics_test.lua:449
+draw.local_command(test_entity4, "text_pro", {
+    text = "local text",
+    font = localization.getFont(),
+    x = 10, y = 20,
+    fontSize = 20,
+    color = WHITE
+}, { z = 1, preset = "shaded_text" })
+```
+
+**Gotcha:** `z` determines render order relative to the entity's sprite. Negative values render before the sprite, non-negative values render after.
+
+**Gotcha:** Local commands are part of the entity's shader pipeline. If the entity has shaders applied, the local commands will be processed through those shaders too.
+
+---
+
+## Render Presets
+
+**When to use:** Use named presets for common render configurations instead of repeating options.
+
+```lua
+local draw = require("core.draw")
+
+-- Shaded text preset (textPass + uvPassthrough)
+draw.local_command(entity, "text_pro", {
+    text = "hello",
+    x = 10, y = 20
+}, { preset = "shaded_text" })
+
+-- Sticker preset (stickerPass + uvPassthrough)
+draw.local_command(entity, "texture_pro", {
+    texture = myTexture,
+    dest = { x = 0, y = 0, width = 64, height = 64 }
+}, { preset = "sticker" })
+
+-- World space preset
+draw.local_command(entity, "text_pro", {
+    text = "world",
+    x = 100, y = 200
+}, { preset = "world" })
+
+-- Screen space preset
+draw.local_command(entity, "text_pro", {
+    text = "screen",
+    x = 100, y = 200
+}, { preset = "screen" })
+```
+
+*— from core/draw.lua:168-183*
+
+**Built-in presets:**
+
+- `"shaded_text"` — textPass=true, uvPassthrough=true (for text that goes through 3d_skew shaders)
+- `"sticker"` — stickerPass=true, uvPassthrough=true
+- `"world"` — space=World (coordinates in world space)
+- `"screen"` — space=Screen (coordinates in screen space)
+
+**Register custom presets:**
+
+```lua
+draw.register_preset("my_preset", {
+    textPass = true,
+    uvPassthrough = false,
+    space = layer.DrawCommandSpace.Screen
+})
+```
+
+*— from core/draw.lua:368-375*
+
+**Gotcha:** Preset options are applied first, then explicit options override them. So you can use a preset and still customize individual fields.
+
+---
+
+## Z-Ordering
+
+**When to use:** Control rendering order (which entities/UI appear in front).
+
+```lua
+local z_orders = require("core.z_orders")
+
+-- Use named z-order constants
+local baseZ = z_orders.ui_tooltips  -- 900
+local cardZ = z_orders.card         -- 101
+local topCardZ = z_orders.top_card  -- 200 (for dragging)
+
+-- Assign z-index to entity
+layer_order_system.assignZIndexToEntity(entity, z_orders.ui_transition + 10)
+
+-- Draw command with z-index
+draw.textPro(layer, { text = "hello", x = 100, y = 200 }, z_orders.card_text)
+```
+
+*— from core/z_orders.lua:2-21*
+
+**Available z-order constants:**
+
+```lua
+z_orders = {
+    -- Card scene
+    background = 0,
+    board = 100,
+    card = 101,
+    top_card = 200,      -- dragging card
+    card_text = 250,
+
+    -- Game scene
+    projectiles = 10,
+    player_vfx = 20,
+    enemies = 30,
+
+    -- General
+    particle_vfx = 0,
+    player_char = 1,
+    ui_transition = 1000,  -- modal screens
+    ui_tooltips = 900,
+}
+```
+
+**Real usage example:**
+
+```lua
+-- From ui/level_up_screen.lua:165
+z = (z_orders.ui_transition or 1000) + 40
+
+-- From ui/currency_display.lua:104
+local baseZ = (z_orders.ui_tooltips or 0) - 4
+```
+
+**Gotcha:** Higher z-values render in front of lower z-values. UI elements typically use z > 900 to appear above gameplay.
+
+**Gotcha:** Always use the named constants from `z_orders` instead of magic numbers. This makes rendering order easier to understand and maintain.
+
+---
+
+## Global Shader Uniforms
+
+**When to use:** Set shader uniforms that apply globally (time, mouse position, screen resolution).
+
+```lua
+-- Set global uniform (affects all shaders using this uniform)
+globalShaderUniforms:set("dissolve", "dissolve", 0.5)
+
+-- Per-shader uniform via shader_builder automatically handles this
+ShaderBuilder.for_entity(entity)
+    :add("dissolve", { dissolve = 0.5 })
+    :apply()
+```
+
+*— from core/shader_uniforms.lua:64-66*
+
+**Gotcha:** Global uniforms are set via the `globalShaderUniforms` C++ binding. ShaderBuilder wraps this for convenience.
+
+**Gotcha:** Uniforms set via `globalShaderUniforms` persist across frames until changed. Use ShaderBuilder for per-entity uniforms.
+
+---
+
+## Draw Command Defaults
+
+**When to use:** Understand what values are used when you omit parameters.
+
+```lua
+local draw = require("core.draw")
+
+-- Get defaults for a command type
+local defaults = draw.get_defaults("text_pro")
+-- Returns: { origin = {x=0, y=0}, rotation = 0, fontSize = 16, spacing = 1, color = WHITE }
+
+-- These are equivalent:
+draw.textPro(layer, { text = "hello", x = 100, y = 200 })
+draw.textPro(layer, {
+    text = "hello",
+    x = 100, y = 200,
+    origin = { x = 0, y = 0 },
+    rotation = 0,
+    fontSize = 16,
+    spacing = 1,
+    color = WHITE
+})
+```
+
+*— from core/draw.lua:101-160, 377-397*
+
+**Available defaults:**
+
+- `textPro` — origin={0,0}, rotation=0, fontSize=16, spacing=1, color=WHITE
+- `rectangle` — color=WHITE
+- `texturePro` — origin={0,0}, rotation=0, tint=WHITE
+- `rectanglePro` — origin={0,0}, rotation=0, color=WHITE
+- `rectangleLinesPro` — origin={0,0}, rotation=0, color=WHITE, lineThick=1
+
+**Gotcha:** Both camelCase (`textPro`) and snake_case (`text_pro`) variants have defaults. Use camelCase for command buffer wrappers, snake_case for local_command types.
+
+---
+
+## Complete Shader + Draw Example
+
+**When to use:** Create a card with shaders and custom text rendering.
+
+```lua
+local ShaderBuilder = require("core.shader_builder")
+local draw = require("core.draw")
+local animation_system = require("core.animation_system")
+local component_cache = require("core.component_cache")
+
+function createShaderCard(x, y)
+    -- 1. Create entity with sprite
+    local entity = animation_system.createAnimatedObjectWithTransform("card_back", true)
+
+    -- 2. Position entity
+    local transform = component_cache.get(entity, Transform)
+    if transform then
+        transform.actualX = x
+        transform.actualY = y
+        transform.actualW = 64
+        transform.actualH = 96
+    end
+
+    -- 3. Apply shaders
+    ShaderBuilder.for_entity(entity)
+        :add("3d_skew_holo", { sheen_strength = 1.2 })
+        :apply()
+
+    -- 4. Add local text (renders through shaders)
+    draw.local_command(entity, "text_pro", {
+        text = "FIRE\nCARD",
+        font = localization.getFont(),
+        x = 32,  -- center of 64px card
+        y = 48,
+        fontSize = 12,
+        color = WHITE,
+        origin = { x = 0.5, y = 0.5 }
+    }, { z = 1, preset = "shaded_text" })
+
+    return entity
+end
+```
+
+*— Combined pattern from core/shader_builder.lua, core/draw.lua, tests/shader_builder_visual_test.lua*
+
+**Gotcha:** Follow the order: Create sprite → Position → Apply shaders → Add local draw commands. Local commands added before shaders may not render correctly.
+
+\newpage

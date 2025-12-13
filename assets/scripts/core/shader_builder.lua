@@ -41,6 +41,12 @@ Design:
 
 local ShaderBuilder = {}
 
+-- Localize globals for performance
+local registry = _G.registry
+local shader_pipeline = _G.shader_pipeline
+local globalShaderUniforms = _G.globalShaderUniforms
+local entity_cache = require("core.entity_cache")
+
 --------------------------------------------------------------------------------
 -- SHADER FAMILY REGISTRY
 --------------------------------------------------------------------------------
@@ -127,6 +133,11 @@ end
 -- @param entity userdata - EnTT entity handle
 -- @return table - Builder instance with fluent API
 function ShaderBuilder.for_entity(entity)
+    -- Validate entity per CLAUDE.md Entity Validation pattern
+    if not entity_cache.valid(entity) then
+        error("ShaderBuilder.for_entity: invalid entity")
+    end
+
     return {
         _entity = entity,
         _passes = {},
@@ -172,7 +183,7 @@ function ShaderBuilder.for_entity(entity)
                 comp:addPass(shaderName)
 
                 -- Detect family and inject uniforms
-                local familyPrefix, familyConfig = detect_family(shaderName)
+                local familyPrefix = detect_family(shaderName)
                 if familyPrefix then
                     inject_family_uniforms(shaderName, familyPrefix, self._uniforms)
                 end

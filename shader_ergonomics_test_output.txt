@@ -1,0 +1,75 @@
+=== SHADER ERGONOMICS TEST OUTPUT ===
+
+PASS: detect_family returns correct prefix for '3d_skew_holo'
+PASS: detect_family returns correct prefix for '3d_skew_prismatic'
+PASS: detect_family returns correct prefix for 'liquid_wave'
+PASS: detect_family returns nil for unknown shader
+PASS: detect_family returns nil for partial prefix '3d'
+PASS: get_families returns non-nil
+PASS: get_families includes '3d_skew' family
+PASS: get_families includes 'liquid' family
+PASS: get_families returns copy (original not modified)
+PASS: register_family successfully adds new family
+PASS: Registered family appears in get_families
+PASS: Registered family has correct defaults
+PASS: for_entity creates builder instance
+PASS: Builder has add method
+PASS: Builder has withUniform method
+PASS: Builder has apply method
+PASS: Builder has clear method
+PASS: add method returns self for chaining
+PASS: withUniform method returns self for chaining
+PASS: clear method returns self for chaining
+PASS: apply method returns entity
+PASS: apply creates ShaderPipelineComponent
+PASS: apply adds correct number of passes
+PASS: First pass is '3d_skew_holo'
+PASS: Second pass is 'dissolve'
+PASS: Custom uniform sheen_strength set correctly
+PASS: Custom uniform sheen_speed set correctly
+PASS: clear removes all passes
+PASS: for_entity throws error for invalid entity
+PASS: get_defaults returns defaults for 'textPro'
+PASS: textPro defaults has fontSize = 16
+PASS: textPro defaults has spacing = 1
+PASS: textPro defaults has origin table
+PASS: textPro origin.x = 0
+PASS: textPro origin.y = 0
+PASS: get_defaults returns defaults for 'text_pro' (snake_case)
+PASS: text_pro defaults has fontSize = 16
+PASS: get_defaults returns defaults for 'rectangle'
+PASS: rectangle defaults has 'color' key
+PASS: get_defaults returns nil for unknown command type
+PASS: get_defaults returns copy (original not modified)
+PASS: get_presets returns non-nil
+PASS: get_presets includes 'shaded_text'
+PASS: get_presets includes 'sticker'
+PASS: get_presets includes 'world'
+PASS: get_presets includes 'screen'
+PASS: shaded_text has textPass = true
+PASS: shaded_text has uvPassthrough = true
+PASS: world preset has space = World
+PASS: register_preset adds new preset
+PASS: Custom preset has correct textPass
+PASS: Custom preset has correct space
+PASS: local_command calls add_local_command
+PASS: Command type is 'text_pro'
+PASS: Props.text = 'hello'
+PASS: Props.fontSize = 16 (from defaults)
+PASS: z defaults to 0
+PASS: space defaults to Screen
+PASS: shaded_text preset sets textPass = true
+PASS: shaded_text preset sets uvPassthrough = true
+PASS: Explicit option overrides preset
+PASS: Preset value used when not overridden
+PASS: Custom fontSize overrides default
+PASS: Default spacing preserved
+PASS: Default origin table preserved
+PASS: Custom z value used
+PASS: Custom space value used
+PASS: local_command throws error for nil entity
+PASS: local_command throws error for entity without _id
+PASS: local_command throws error for invalid command type
+
+=== SUMMARY ===
+Total: 70 | Passed: 70 | Failed: 0

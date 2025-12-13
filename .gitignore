@@ -72,6 +72,7 @@ compile_commands.json
 *apk*
 android.*
 
+build-release/
 build-helper-web/
 cardgameSource-main 2/
 /build-emc2/

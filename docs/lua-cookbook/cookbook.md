@@ -106,7 +106,7 @@ end
 | **Timers & Events** | |
 | Delay an action | \pageref{recipe:timer-after} |
 | Repeat an action | \pageref{recipe:timer-every} |
-| Chain actions in sequence | \pageref{recipe:timer-sequence} |
+| Synchronize with physics steps | \pageref{recipe:timer-physics} |
 | Emit and handle events | \pageref{recipe:signals} |
 | **Rendering & Shaders** | |
 | Add shader to entity | \pageref{recipe:add-shader} |
@@ -501,12 +501,14 @@ local go = component_cache.get(entity, GameObject)
 
 ## Timer Options API (Advanced)
 
+**Note:** These are proposed wrapper patterns from CLAUDE.md, not actual functions. Use the standard `timer.after()` and `timer.every()` shown above.
+
 **When to use:** Clearer than positional parameters for complex timers.
 
 ```lua
 local timer = require("core.timer")
 
--- After with options
+-- After with options (PROPOSED PATTERN - not implemented)
 timer.after_opts({
     delay = 2.0,
     action = function() print("done") end,
@@ -514,7 +516,7 @@ timer.after_opts({
     group = "gameplay"
 })
 
--- Every with options
+-- Every with options (PROPOSED PATTERN - not implemented)
 timer.every_opts({
     delay = 0.5,
     action = updateHealth,
@@ -524,7 +526,7 @@ timer.every_opts({
     group = "gameplay"
 })
 
--- Cooldown (only runs when condition is true)
+-- Cooldown (PROPOSED PATTERN - not implemented)
 timer.cooldown_opts({
     delay = 1.0,
     condition = function() return canAttack end,

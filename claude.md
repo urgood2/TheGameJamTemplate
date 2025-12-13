@@ -389,6 +389,90 @@ animation_system.resizeAnimationObjectsInEntityToFit(
 
 ---
 
+## Shader Builder API
+
+### Fluent Shader Composition
+
+```lua
+local ShaderBuilder = require("core.shader_builder")
+
+-- Basic usage
+ShaderBuilder.for_entity(entity)
+    :add("3d_skew_holo")
+    :apply()
+
+-- With custom uniforms
+ShaderBuilder.for_entity(entity)
+    :add("3d_skew_holo", { sheen_strength = 1.5 })
+    :add("dissolve", { dissolve = 0.5 })
+    :apply()
+
+-- Clear and rebuild
+ShaderBuilder.for_entity(entity)
+    :clear()
+    :add("3d_skew_prismatic")
+    :apply()
+```
+
+### Shader Families
+
+Convention-based prefix detection. Shaders with matching prefix get family defaults:
+- `3d_skew_*`: Card shaders (regionRate, pivot, etc.)
+- `liquid_*`: Fluid effects (wave_speed, wave_amplitude, distortion)
+
+Register custom families:
+```lua
+ShaderBuilder.register_family("energy", {
+    uniforms = { "pulse_speed", "glow_intensity" },
+    defaults = { pulse_speed = 1.0 },
+})
+```
+
+---
+
+## Draw Commands API
+
+### Table-Based Command Buffer Wrappers
+
+```lua
+local draw = require("core.draw")
+
+-- Before (verbose callback)
+command_buffer.queueTextPro(layer, function(c)
+    c.text = "hello"
+    c.x, c.y = 100, 200
+    c.fontSize = 16
+    c.color = WHITE
+end, z, space)
+
+-- After (table-based with defaults)
+draw.textPro(layer, { text = "hello", x = 100, y = 200 }, z, space)
+```
+
+### Local Commands (Shader Pipeline)
+
+```lua
+-- Before (9 positional params)
+shader_draw_commands.add_local_command(
+    registry, eid, "text_pro", fn, 1, space, true, false, false
+)
+
+-- After (props + opts)
+draw.local_command(eid, "text_pro", {
+    text = "hello", x = 10, y = 20, fontSize = 20,
+}, { z = 1, preset = "shaded_text" })
+```
+
+### Render Presets
+
+Named presets for common configurations:
+- `"shaded_text"`: textPass=true, uvPassthrough=true
+- `"sticker"`: stickerPass=true, uvPassthrough=true
+- `"world"`: space=World
+- `"screen"`: space=Screen
+
+---
+
 ## Timer System
 
 ### Using Timers

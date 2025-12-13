@@ -53,6 +53,7 @@ end
 
 -- Expose helpers globally for other modules (planning/action/shop phases).
 _G.record_telemetry = record_telemetry
+
 _G.telemetry_session_id = function()
     if type(telemetry) == "table" and type(telemetry.session_id) == "function" then
         return telemetry.session_id()

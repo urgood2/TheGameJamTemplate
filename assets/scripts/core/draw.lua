@@ -78,6 +78,20 @@ local shader_draw_commands = _G.shader_draw_commands
 local layer = _G.layer
 local registry = _G.registry
 
+-- Entity validation
+local entity_cache = require("core.entity_cache")
+
+-- Valid command types for local_command validation
+local VALID_COMMAND_TYPES = {
+    text_pro = true,
+    draw_rectangle = true,
+    texture_pro = true,
+    draw_circle_filled = true,
+    draw_line = true,
+    rectangle_pro = true,
+    rectangle_lines_pro = true,
+}
+
 --------------------------------------------------------------------------------
 -- DEFAULT VALUES
 --------------------------------------------------------------------------------
@@ -271,6 +285,16 @@ draw.rectangleLinesPro = make_queue_wrapper("DrawRectangleLinesPro", DEFAULTS.re
 --   - stickerPass: Force sticker pass rendering
 --   - preset: Named preset ("shaded_text", "sticker", "world", "screen")
 function draw.local_command(entity, cmdType, props, opts)
+    -- Validate entity
+    if not entity_cache.valid(entity) then
+        error("draw.local_command: invalid entity")
+    end
+
+    -- Validate command type
+    if not VALID_COMMAND_TYPES[cmdType] then
+        error(string.format("draw.local_command: invalid command type '%s'", tostring(cmdType)))
+    end
+
     opts = opts or {}
 
     -- Apply preset if specified

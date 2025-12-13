@@ -6509,6 +6509,7 @@ function startPlanningPhase()
     -- debug
 
     print("States active:", is_state_active(PLANNING_STATE), is_state_active(ACTION_STATE), is_state_active(SHOP_STATE))
+
 end
 
 function startShopPhase()

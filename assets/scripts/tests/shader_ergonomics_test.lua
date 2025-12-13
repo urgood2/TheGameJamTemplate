@@ -494,6 +494,23 @@ draw.local_command(test_entity4, "text_pro", {
 assert_eq(last_add_local_command_call.z, 5, "Custom z value used")
 assert_eq(last_add_local_command_call.space, "World", "Custom space value used")
 
+-- Test 33: local_command throws error for invalid entity
+local invalid_entity_ok, invalid_entity_err = pcall(function()
+    draw.local_command(nil, "text_pro", { text = "fail" })
+end)
+assert_eq(invalid_entity_ok, false, "local_command throws error for nil entity")
+
+local invalid_entity_ok2, invalid_entity_err2 = pcall(function()
+    draw.local_command({ no_id = true }, "text_pro", { text = "fail" })
+end)
+assert_eq(invalid_entity_ok2, false, "local_command throws error for entity without _id")
+
+-- Test 34: local_command throws error for invalid command type
+local invalid_cmd_ok, invalid_cmd_err = pcall(function()
+    draw.local_command(test_entity4, "invalid_command", { text = "fail" })
+end)
+assert_eq(invalid_cmd_ok, false, "local_command throws error for invalid command type")
+
 --------------------------------------------------------------------------------
 -- TEST SUMMARY
 --------------------------------------------------------------------------------

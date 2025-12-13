@@ -339,3 +339,20 @@
   - Enhanced transform functions to support screen and world space conversions.
   - Added web build post-processing and deployment scripts with parallelism controls.
   - Gameplay code refactoring and localization string updates.
+
+12/12/2025
+  - Added unified copy_assets.py script for CMake/justfile parity with proper exclusions and Lua stripping for web builds.
+  - Reverted web build to pre-regression baseline to stabilize deployment pipeline.
+  - Added publish-web just command with helper script and auto-detection of butler in itch.io install locations.
+  - Designed web loading screen and error handling documentation.
+
+12/13/2025
+  - Implemented ShaderBuilder fluent API for shader composition with family registry (3d_skew, liquid), convention-based prefix detection, and automatic uniform injection.
+  - Added draw.lua with table-based command buffer wrappers (textPro, rectangle, texturePro, etc.) and render presets for common configurations.
+  - Completed EmmyLua binding annotations for 100% coverage across 1102 C++ → Lua bindings, enabling full autocomplete and type checking.
+  - Added Aseprite to TexturePacker automation workflow with justfile recipes for export, rebuild, watch, and clean operations.
+  - Added sprite atlas workflow documentation and fixed Emscripten link flags for WebGL compatibility.
+  - Added comprehensive integration tests for shader ergonomics.
+
+12/14/2025
+  - Cleaned up temporary visual test hooks from draw module and shader integration work.

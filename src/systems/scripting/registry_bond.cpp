@@ -5,6 +5,7 @@
 #include "entt/entity/registry.hpp"
 #include "entt/entity/runtime_view.hpp"
 #include "meta_helper.hpp"
+#include "binding_recorder.hpp"
 #include <set>
 
 #include "scripting_system.hpp"
@@ -58,6 +59,12 @@ namespace scripting
             }
         );
 
+        auto& rec = BindingRecorder::instance();
+        rec.add_type("entt.runtime_view").doc = "A runtime view for iterating entities with specific components";
+        rec.record_property("entt.runtime_view", {"size_hint", "---@param self runtime_view\n---@return integer", "Returns the number of entities in the view"});
+        rec.record_property("entt.runtime_view", {"contains", "---@param self runtime_view\n---@param entity Entity\n---@return boolean", "Checks if entity is in the view"});
+        rec.record_property("entt.runtime_view", {"each", "---@param self runtime_view\n---@param callback fun(entity: Entity)", "Iterates all entities in the view"});
+
         using namespace entt::literals;
 
         entt_module.new_usertype<entt::registry>("registry",
@@ -83,7 +90,6 @@ namespace scripting
                     return entt::to_version(entity);
             },
 
-            // In open_registry, inside the entt::registry usertype
             "emplace",
             [](entt::registry &self, entt::entity entity, const sol::table &comp_type, sol::this_state s) -> sol::object {
                 if (!comp_type.valid()) return sol::make_object(s, sol::lua_nil);
@@ -100,11 +106,9 @@ namespace scripting
 
                 return sol::make_object(s, sol::lua_nil);
             },
-            
-            // --- ADD THE NEW DEDICATED FUNCTION BINDING ---
-            // This is the function your Lua script will now call.
+
             "add_script", &add_script_component,
-            
+
             "remove",
             [](entt::registry &self, entt::entity entity, const sol::object &type_or_id) {
                 const auto maybe_any =
@@ -150,7 +154,7 @@ namespace scripting
             "runtime_view",
             [](entt::registry &self, const sol::variadic_args &va) {
                 const auto types = collect_types(va);
-                
+
                 auto view = entt::runtime_view{};
                 for (auto &&[componentId, storage]: self.storage()) {
                 if (types.find(componentId) != types.cend()) {
@@ -160,6 +164,25 @@ namespace scripting
                 return view;
             }
         );
+
+        // Document registry methods
+        rec.add_type("entt.registry").doc = "The main entity-component registry";
+        rec.record_property("entt.registry", {"new", "---@return registry", "Creates a new registry"});
+        rec.record_property("entt.registry", {"size", "---@param self entt.registry\n---@return integer # Total count of entities (alive + dead)", "Returns the total number of entities in the registry"});
+        rec.record_property("entt.registry", {"alive", "---@param self entt.registry\n---@return integer # Count of alive entities", "Returns the number of alive entities in the registry"});
+        rec.record_property("entt.registry", {"valid", "---@param self registry\n---@param entity Entity\n---@return boolean # True if entity is valid", "Checks if an entity is valid"});
+        rec.record_property("entt.registry", {"current", "---@param self registry\n---@param entity Entity\n---@return integer # Current version of the entity", "Gets the current version of an entity"});
+        rec.record_property("entt.registry", {"create", "---@param self entt.registry\n---@return Entity # Newly created entity", "Creates a new entity"});
+        rec.record_property("entt.registry", {"destroy", "---@param self registry\n---@param entity Entity\n---@return integer # Version of destroyed entity", "Destroys an entity"});
+        rec.record_property("entt.registry", {"emplace", "---@param self registry\n---@param entity Entity\n---@param comp_type table\n---@return table|nil # The emplaced component or nil if failed", "Emplaces a component on an entity"});
+        rec.record_property("entt.registry", {"add_script", "---@param self registry\n---@param entity Entity\n---@param script_table table\n---@return nil", "Adds a script component to an entity"});
+        rec.record_property("entt.registry", {"remove", "---@param self registry\n---@param entity Entity\n---@param type_or_id table|integer\n---@return integer # Number of components removed", "Removes a component from an entity"});
+        rec.record_property("entt.registry", {"has", "---@param self registry\n---@param entity Entity\n---@param type_or_id table|integer\n---@return boolean # True if entity has the component", "Checks if an entity has a component"});
+        rec.record_property("entt.registry", {"any_of", "---@param self registry\n---@param entity Entity\n---@vararg table|integer\n---@return boolean # True if entity has any of the components", "Checks if an entity has any of the specified components"});
+        rec.record_property("entt.registry", {"get", "---@param self registry\n---@param entity Entity\n---@param type_or_id table|integer\n---@return table|nil # The component or nil if not found", "Gets a component from an entity"});
+        rec.record_property("entt.registry", {"clear", "---@param self entt.registry\n---@overload fun(self: entt.registry): nil\n---@param type_or_id? table|integer\n---@return nil", "Clears all entities or components of a specific type"});
+        rec.record_property("entt.registry", {"orphan", "---@param self entt.registry\n---@param entity Entity\n---@return boolean # True if entity has no components", "Checks if an entity has no components (is an orphan)"});
+        rec.record_property("entt.registry", {"runtime_view", "---@param self registry\n---@vararg table|integer\n---@return runtime_view # A view containing matching entities", "Creates a runtime view for iterating entities with specific components"});
         // clang-format on
 
         return entt_module;

@@ -164,7 +164,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
         // ------------------------------
         rec.record_free_function(path, {
             "set_collision_tags",
-            "---@param world physics.PhysicsWorld\n---@param tags string[]",
+            "---@param world physics.PhysicsWorld\n---@param tags string[]\n---@return nil",
             "Defines ordered collision tags (also initializes trigger tags, categories, and type ids).",
             true, false
         });
@@ -177,7 +177,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
         // ------------------------------
         rec.record_free_function(path, {
             "enable_collision_between_many",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]\n---@return nil",
             "Enables collision between tagA and each tag in tags.", true, false
         });
         physics_table.set_function("enable_collision_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
@@ -186,7 +186,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
         rec.record_free_function(path, {
             "disable_collision_between_many",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]\n---@return nil",
             "Disables collision between tagA and each tag in tags.", true, false
         });
         physics_table.set_function("disable_collision_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
@@ -196,7 +196,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
         // Back-compat single or list (auto-dispatch on arg type)
         rec.record_free_function(path, {
             "enable_collision_between",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]\n---@return nil",
             "Enable collision for a single pair or a list in one call.", true, false
         });
         physics_table.set_function("enable_collision_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
@@ -206,7 +206,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
         rec.record_free_function(path, {
             "disable_collision_between",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]\n---@return nil",
             "Disable collision for a single pair or a list in one call.", true, false
         });
         physics_table.set_function("disable_collision_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
@@ -219,7 +219,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
         // ------------------------------
         rec.record_free_function(path, {
             "enable_trigger_between_many",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]\n---@return nil",
             "Marks pairs (tagA, tag) as triggers (sensors) so they do not resolve collisions.", true, false
         });
         physics_table.set_function("enable_trigger_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
@@ -228,7 +228,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
         rec.record_free_function(path, {
             "disable_trigger_between_many",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]\n---@return nil",
             "Unmarks triggers for each (tagA, tag).", true, false
         });
         physics_table.set_function("disable_trigger_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
@@ -238,7 +238,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
         // Back-compat single or list (auto-dispatch on arg type)
         rec.record_free_function(path, {
             "enable_trigger_between",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]\n---@return nil",
             "Enable triggers for a single pair or a list in one call.", true, false
         });
         physics_table.set_function("enable_trigger_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
@@ -248,7 +248,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
         rec.record_free_function(path, {
             "disable_trigger_between",
-            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]\n---@return nil",
             "Disable triggers for a single pair or a list in one call.", true, false
         });
         physics_table.set_function("disable_trigger_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
@@ -261,17 +261,17 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
         // ------------------------------
         rec.record_free_function(path, {
             "update_collision_masks_for",
-            "---@param world physics.PhysicsWorld\n---@param tag string\n---@param collidable_tags string[]",
+            "---@param world physics.PhysicsWorld\n---@param tag string\n---@param collidable_tags string[]\n---@return nil",
             "Rewrites the mask list for one tag and reapplies filters to existing shapes of that category.", true, false
         });
         physics_table.set_function("update_collision_masks_for", [tbl_to_strings](PhysicsWorld &W, const std::string &tag, sol::table collidable){
             W.UpdateCollisionMasks(tag, tbl_to_strings(collidable));
         });
-        
+
         // ReapplyAllFilters()
         rec.record_free_function(path, {
             "reapply_all_filters",
-            "---@param world physics.PhysicsWorld",
+            "---@param world physics.PhysicsWorld\n---@return nil",
             "Re-applies collision filters to all shapes based on their current tags.", true, false
         });
         physics_table.set_function("reapply_all_filters", [](PhysicsWorld &W){
@@ -396,7 +396,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
     // ---------- Attach body/shape to entity ----------
     rec.record_free_function(path, {
         "SetEntityToShape",
-        "---@param shape lightuserdata @ cpShape*\n---@param e entt.entity",
+        "---@param shape lightuserdata @ cpShape*\n---@param e entt.entity\n---@return nil",
         "Stores an entity ID in shape->userData.",
         true, false
     });
@@ -404,7 +404,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
     rec.record_free_function(path, {
         "SetEntityToBody",
-        "---@param body lightuserdata @ cpBody*\n---@param e entt.entity",
+        "---@param body lightuserdata @ cpBody*\n---@param e entt.entity\n---@return nil",
         "Stores an entity ID in body->userData.",
         true, false
     });
@@ -515,7 +515,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
     // ---------- Body kinematics / forces ----------
     rec.record_free_function(path, {
         "SetVelocity",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param vx number\n---@param vy number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param vx number\n---@param vy number\n---@return nil",
         "Sets linear velocity on the entity's body.",
         true, false
     });
@@ -544,7 +544,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
     };
     rec.record_free_function(path, {
         "SetSleepTimeThreshold",
-        "---@param world physics.PhysicsWorld\n---@param t number",
+        "---@param world physics.PhysicsWorld\n---@param t number\n---@return nil",
         "Sets the cpSpace sleep time threshold.",
         true, false
     });
@@ -573,7 +573,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
     rec.record_free_function(path, {
         "SetAngularVelocity",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param av number @ radians/sec",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param av number @ radians/sec\n---@return nil",
         "Sets angular velocity on the entity's body.",
         true, false
     });
@@ -581,7 +581,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
     rec.record_free_function(path, {
         "ApplyForce",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fx number\n---@param fy number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fx number\n---@param fy number\n---@return nil",
         "Applies a force at the body's current position.",
         true, false
     });
@@ -589,7 +589,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
     
     rec.record_free_function(path, {
         "ApplyAngularImpulse",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularImpulse number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularImpulse number\n---@return nil",
         "Applies an angular impulse to the body's current angular velocity.",
         true, false
     });
@@ -597,7 +597,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
     rec.record_free_function(path, {
         "ApplyImpulse",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param ix number\n---@param iy number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param ix number\n---@param iy number\n---@return nil",
         "Applies an impulse at the body's current position.",
         true, false
     });
@@ -605,7 +605,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
     rec.record_free_function(path, {
         "ApplyTorque",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param torque number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param torque number\n---@return nil",
         "Applies a simple 2-point torque pair to spin the body.",
         true, false
     });
@@ -613,7 +613,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
     rec.record_free_function(path, {
         "SetDamping",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param linear number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param linear number\n---@return nil",
         "Scales current velocity by (1 - linear). Simple linear damping helper.",
         true, false
     });
@@ -621,7 +621,7 @@ inline void expose_physics_to_lua(sol::state& lua, EngineContext* ctx = globals:
 
     rec.record_free_function(path, {
         "SetGlobalDamping",
-        "---@param world physics.PhysicsWorld\n---@param damping number",
+        "---@param world physics.PhysicsWorld\n---@param damping number\n---@return nil",
         "Sets cpSpace global damping.",
         true, false
     });
@@ -667,7 +667,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetPosition",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param x number\n---@param y number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param x number\n---@param y number\n---@return nil",
         "Sets the body's position directly.",
         true, false
     });
@@ -683,7 +683,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetAngle",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param radians number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param radians number\n---@return nil",
         "Sets the body's angle (radians).",
         true, false
     });
@@ -691,7 +691,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetRestitution",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param restitution number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param restitution number\n---@return nil",
         "Sets elasticity on ALL shapes owned by this entity (primary + extras).",
         true, false
     });
@@ -699,7 +699,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetFriction",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param friction number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param friction number\n---@return nil",
         "Sets friction on ALL shapes owned by this entity (primary + extras).",
         true, false
     });
@@ -707,7 +707,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetAwake",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param awake boolean",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param awake boolean\n---@return nil",
         "Wakes or sleeps the body.",
         true, false
     });
@@ -723,7 +723,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetMass",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param mass number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param mass number\n---@return nil",
         "Sets body mass.",
         true, false
     });
@@ -731,7 +731,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetBullet",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param isBullet boolean",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param isBullet boolean\n---@return nil",
         "Enables high-iteration + slop tuning on the world and custom velocity update for the body.",
         true, false
     });
@@ -739,12 +739,12 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "SetFixedRotation",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fixed boolean",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fixed boolean\n---@return nil",
         "If true, sets the moment to INFINITY (lock rotation).",
         true, false
     });
     lua["physics"]["SetFixedRotation"] = &PhysicsWorld::SetFixedRotation;
-    
+
     lua["physics"]["SetMoment"] = [defaultRegistry](PhysicsWorld& W, entt::entity e, float moment) {
         auto& registryRef = W.registry ? *W.registry : *defaultRegistry;
         auto &collider = registryRef.get<ColliderComponent>(e);
@@ -752,14 +752,14 @@ rec.bind_function(lua, path, "set_arrive_radius",
     };
     rec.record_free_function(path, {
         "SetMoment",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param moment number",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param moment number\n---@return nil",
         "Sets the body's moment of inertia.",
         true, false
     });
 
     rec.record_free_function(path, {
         "SetBodyType",
-        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param bodyType 'static'|'kinematic'|'dynamic'",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param bodyType 'static'|'kinematic'|'dynamic'\n---@return nil",
         "Switch the Chipmunk body type for the entity.",
         true, false
     });
@@ -770,7 +770,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "arb_set_number",
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @ cpArbiter*\n---@param key string\n---@param value number",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @ cpArbiter*\n---@param key string\n---@param value number\n---@return nil",
         "Attach a transient number to an arbiter for the duration of contact.",
         true, false
     });
@@ -798,7 +798,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "arb_set_bool",
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @ cpArbiter*\n---@param key string\n---@param value boolean",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @ cpArbiter*\n---@param key string\n---@param value boolean\n---@return nil",
         "Attach a transient boolean to an arbiter.",
         true, false
     });
@@ -826,7 +826,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "arb_set_ptr",
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @ cpArbiter*\n---@param key string\n---@param value lightuserdata",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @ cpArbiter*\n---@param key string\n---@param value lightuserdata\n---@return nil",
         "Attach a transient pointer (lightuserdata) to an arbiter.",
         true, false
     });
@@ -866,7 +866,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
     // ---------- Lua collision handler registration (new ones) ----------
     rec.record_free_function(path, {
         "on_pair_begin",
-        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil\n---@return nil",
         "Registers a begin callback for the pair (tagA, tagB). Return false to reject contact.",
         true, false
     });
@@ -877,7 +877,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "on_pair_separate",
-        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata)",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata)\n---@return nil",
         "Registers a separate callback for the pair (tagA, tagB).",
         true, false
     });
@@ -888,7 +888,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "on_wildcard_begin",
-        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata):boolean|nil\n---@return nil",
         "Registers a begin wildcard callback for a single tag (fires for any counterpart).",
         true, false
     });
@@ -899,7 +899,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "on_wildcard_separate",
-        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata)",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata)\n---@return nil",
         "Registers a separate wildcard callback for a single tag (fires for any counterpart).",
         true, false
     });
@@ -910,7 +910,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "on_pair_presolve",
-        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil\n---@return nil",
         "Registers a pre-solve callback for the pair (tagA, tagB). Return false to reject contact.",
         true, false
     });
@@ -921,7 +921,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "on_pair_postsolve",
-        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata)",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata)\n---@return nil",
         "Registers a post-solve callback for the pair (tagA, tagB).",
         true, false
     });
@@ -932,7 +932,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "on_wildcard_presolve",
-        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata):boolean|nil\n---@return nil",
         "Registers a pre-solve wildcard callback for a single tag (fires for any counterpart).",
         true, false
     });
@@ -943,7 +943,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "on_wildcard_postsolve",
-        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata)",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata)\n---@return nil",
         "Registers a post-solve wildcard callback for a single tag (fires for any counterpart).",
         true, false
     });
@@ -954,7 +954,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "clear_pair_handlers",
-        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@return nil",
         "Clears registered Lua pre/postsolve for that pair.",
         true, false
     });
@@ -963,7 +963,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
 
     rec.record_free_function(path, {
         "clear_wildcard_handlers",
-        "---@param world physics.PhysicsWorld\n---@param tag string",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@return nil",
         "Clears registered Lua pre/postsolve for that tag wildcard.",
         true, false
     });
@@ -1843,7 +1843,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param maxSpeed number\n"
         "---@param maxForce number\n"
         "---@param maxTurnRate number @radians/sec (default 2π)\n"
-        "---@param turnMul number @turn responsiveness multiplier (default 2.0)",
+        "---@param turnMul number @turn responsiveness multiplier (default 2.0)\n"
+        "---@return nil",
         "Attach and initialize a SteerableComponent with speed/force/turn caps.");
 
 
@@ -1860,7 +1861,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param e entt.entity\n"
         "---@param target {x:number,y:number}|(number,number)\n"
         "---@param decel number @arrival deceleration factor\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Seek a world point (Chipmunk coords) with adjustable deceleration and blend weight.");
 
     rec.bind_function(lua, path, "flee_point",
@@ -1871,7 +1873,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param e entt.entity\n"
         "---@param threat {x:number,y:number}\n"
         "---@param panicDist number @only flee if within this distance\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Flee from a point if within panicDist (Chipmunk coords).");
 
     rec.bind_function(lua, path, "wander",
@@ -1883,7 +1886,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param jitter number @per-step target jitter\n"
         "---@param radius number @wander circle radius\n"
         "---@param distance number @circle forward distance\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Classic wander on a projected circle (Chipmunk/world coordinates).");
 
     rec.bind_function(lua, path, "separate",
@@ -1896,7 +1900,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param e entt.entity\n"
         "---@param separationRadius number\n"
         "---@param neighbors entt.entity[] @Lua array/table of entities\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Repulsive boids term; pushes away when too close.");
 
     rec.bind_function(lua, path, "align",
@@ -1909,7 +1914,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param e entt.entity\n"
         "---@param neighbors entt.entity[] @Lua array/table of entities\n"
         "---@param alignRadius number\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Boids alignment (match headings of nearby agents).");
 
     rec.bind_function(lua, path, "cohesion",
@@ -1922,7 +1928,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param e entt.entity\n"
         "---@param neighbors entt.entity[] @Lua array/table of entities\n"
         "---@param cohesionRadius number\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Boids cohesion (seek the local group center).");
 
     rec.bind_function(lua, path, "pursuit",
@@ -1930,7 +1937,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param r entt.registry&\n"
         "---@param e entt.entity\n"
         "---@param target entt.entity @entity to predict and chase\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Predict target future position and seek it (pursuit).");
 
     rec.bind_function(lua, path, "evade",
@@ -1938,7 +1946,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param r entt.registry&\n"
         "---@param e entt.entity\n"
         "---@param pursuer entt.entity @entity to predict and flee from\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Predict pursuer future position and flee it (evade).");
 
     rec.bind_function(lua, path, "set_path",
@@ -1948,7 +1957,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param r entt.registry&\n"
         "---@param e entt.entity\n"
         "---@param points { {x:number,y:number}, ... } @Lua array of waypoints (Chipmunk coords)\n"
-        "---@param arriveRadius number @advance when within this radius",
+        "---@param arriveRadius number @advance when within this radius\n"
+        "---@return nil",
         "Define waypoints to follow and an arrival radius.");
 
     rec.bind_function(lua, path, "path_follow",
@@ -1956,7 +1966,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param r entt.registry&\n"
         "---@param e entt.entity\n"
         "---@param decel number @arrival deceleration factor\n"
-        "---@param weight number @blend weight",
+        "---@param weight number @blend weight\n"
+        "---@return nil",
         "Seek current waypoint; auto-advance when within arriveRadius.");
 
     rec.bind_function(lua, path, "apply_force",
@@ -1965,7 +1976,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param e entt.entity\n"
         "---@param f number @force magnitude (world units)\n"
         "---@param radians number @direction in radians\n"
-        "---@param seconds number @duration seconds",
+        "---@param seconds number @duration seconds\n"
+        "---@return nil",
         "Apply a world-space force that linearly decays to zero over <seconds>.");
 
     rec.bind_function(lua, path, "apply_impulse",
@@ -1974,7 +1986,8 @@ inline void expose_steering_to_lua(sol::state& lua, EngineContext* ctx = globals
         "---@param e entt.entity\n"
         "---@param f number @impulse-per-second magnitude\n"
         "---@param radians number @direction in radians\n"
-        "---@param seconds number @duration seconds",
+        "---@param seconds number @duration seconds\n"
+        "---@return nil",
         "Apply a constant per-frame impulse (f / sec) for <seconds> in world space.");
 }
 
@@ -2098,7 +2111,7 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
     rec.record_property("PhysicsManagerUD",
         {"step_all", "", "---@param dt number"});
     rec.record_property("PhysicsManagerUD",
-        {"draw_all", "", ""});
+        {"draw_all", "---@param self PhysicsManagerUD\n---@return nil", "Debug-draws all physics worlds that are active and have debug draw enabled"});
     rec.record_property("PhysicsManagerUD",
         {"move_entity_to_world", "", "---@param e entt.entity\n---@param dst string"});
     rec.record_property("PhysicsManagerUD",
@@ -2216,8 +2229,8 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
         {"PhysicsManager"},
         {
             "draw_all",
-            "---@return void",
-            "Debug-draw all worlds that are active and have debug draw enabled.",
+            "---@return nil",
+            "Debug-draws all physics worlds that are active and have debug draw enabled",
             true, false
         });
 

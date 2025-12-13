@@ -600,9 +600,9 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
     rec.record_property("NavManagerUD",
         {"update", "", "---@param dt number"});
     rec.record_property("NavManagerUD",
-        {"validate", "", ""});
+        {"validate", "", "---@param self NavManagerUD\n---@return nil"});
     rec.record_property("NavManagerUD",
-        {"debug_print_state", "", ""});
+        {"debug_print_state", "", "---@param self NavManagerUD\n---@return nil"});
     rec.record_property("NavManagerUD",
         {"create_group", "", "---@param name string"});
     rec.record_property("NavManagerUD",
@@ -640,7 +640,7 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
     rec.record_property("NavManagerUD",
         {"pop_focus_group", "", ""});
     rec.record_property("NavManagerUD",
-        {"current_focus_group", "", "---@return string"});
+        {"current_focus_group", "", "---@param self NavManagerUD\n---@return string"});
 
     // -------------------------------------------------------------------------
     // Global table controller_nav
@@ -653,101 +653,118 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
     nav["ud"] = &NM; // expose userdata handle
 
     // convenience wrappers
-    nav.set_function("create_group",        [&](const string& n){ NM.create_group(n); });
-    nav.set_function("create_layer",        [&](const string& n){ NM.create_layer(n); });
-    nav.set_function("add_group_to_layer",  [&](const string& l, const string& g){ NM.add_group_to_layer(l, g); });
-    nav.set_function("navigate",            [&](const string& g, const string& d){ 
-        auto& reg = globals::getRegistry();
-        auto& state = globals::getInputState();
-        NM.navigate(reg, state, g, d); 
-    });
-    nav.set_function("select_current",      [&](const string& g){ 
-        auto& reg = globals::getRegistry();
-        NM.select_current(reg, g); 
-    });
-    nav.set_function("set_entity_enabled",  [&](entt::entity e, bool enabled){ NM.set_entity_enabled(e, enabled); });
-    nav.set_function("debug_print_state",   [&]{ NM.debug_print_state(); });
-    nav.set_function("validate",            [&]{ NM.validate(); });
-    nav.set_function("current_focus_group", [&]{ return NM.current_focus_group(); });
+    rec.bind_function(lua, {"controller_nav"}, "create_group",
+        [&](const string& n){ NM.create_group(n); },
+        "---@param n string\n"
+        "---@return nil",
+        "Create a navigation group.");
+    rec.bind_function(lua, {"controller_nav"}, "create_layer",
+        [&](const string& n){ NM.create_layer(n); },
+        "---@param n string\n"
+        "---@return nil",
+        "Create a navigation layer.");
+    rec.bind_function(lua, {"controller_nav"}, "add_group_to_layer",
+        [&](const string& l, const string& g){ NM.add_group_to_layer(l, g); },
+        "---@param l string\n"
+        "---@param g string\n"
+        "---@return nil",
+        "Attach an existing group to a layer.");
+    rec.bind_function(lua, {"controller_nav"}, "navigate",
+        [&](const string& g, const string& d){
+            auto& reg = globals::getRegistry();
+            auto& state = globals::getInputState();
+            NM.navigate(reg, state, g, d);
+        },
+        "---@param g string\n"
+        "---@param d string\n"
+        "---@return nil",
+        "Navigate within or across groups.");
+    rec.bind_function(lua, {"controller_nav"}, "select_current",
+        [&](const string& g){
+            auto& reg = globals::getRegistry();
+            NM.select_current(reg, g);
+        },
+        "---@param g string\n"
+        "---@return nil",
+        "Trigger the select callback for the currently focused entity.");
+    rec.bind_function(lua, {"controller_nav"}, "set_entity_enabled",
+        [&](entt::entity e, bool enabled){ NM.set_entity_enabled(e, enabled); },
+        "---@param e entt.entity\n"
+        "---@param enabled boolean\n"
+        "---@return nil",
+        "Enable or disable a specific entity for navigation.");
+    rec.bind_function(lua, {"controller_nav"}, "debug_print_state",
+        [&]{ NM.debug_print_state(); },
+        "---@return nil",
+        "Print debug info on groups/layers.");
+    rec.bind_function(lua, {"controller_nav"}, "validate",
+        [&]{ NM.validate(); },
+        "---@return nil",
+        "Validate layer/group configuration.");
+    rec.bind_function(lua, {"controller_nav"}, "current_focus_group",
+        [&]{ return NM.current_focus_group(); },
+        "---@return string",
+        "Return the currently focused group.");
 
-    rec.record_free_function({"controller_nav"},
-        {"create_group", "---@param name string", "Create a navigation group.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"create_layer", "---@param name string", "Create a navigation layer.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"add_group_to_layer", "---@param layer string\n---@param group string",
-            "Attach an existing group to a layer.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"navigate", "---@param group string\n---@param dir 'L'|'R'|'U'|'D'",
-            "Navigate within or across groups.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"select_current", "---@param group string",
-            "Trigger the select callback for the currently focused entity.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"set_entity_enabled", "---@param e entt.entity\n---@param enabled boolean",
-            "Enable or disable a specific entity for navigation.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"debug_print_state", "", "Print debug info on groups/layers.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"validate", "", "Validate layer/group configuration.", true, false});
-    rec.record_free_function({"controller_nav"},
-        {"current_focus_group", "---@return string", "Return the currently focused group.", true, false});
-        
-    nav.set_function("set_group_callbacks", [&](const std::string& group, sol::table tbl) {
-        auto& mgr = controller_nav::NavManager::instance();
-        if (!mgr.groups.contains(group)) return;
-        auto& g = mgr.groups[group];
-        if (tbl["on_focus"].valid())   g.callbacks.on_focus   = tbl["on_focus"];
-        if (tbl["on_unfocus"].valid()) g.callbacks.on_unfocus = tbl["on_unfocus"];
-        if (tbl["on_select"].valid())  g.callbacks.on_select  = tbl["on_select"];
-    });
-    rec.record_free_function({"controller_nav"},
-        {"set_group_callbacks",
-        "---@param group string\n---@param tbl table {on_focus:function|nil, on_unfocus:function|nil, on_select:function|nil}",
-        "Set Lua callbacks for a specific navigation group.", true, false});
-        
-    nav.set_function("link_groups", [&](const std::string& from, sol::table dirs) {
-        auto& mgr = controller_nav::NavManager::instance();
-        if (!mgr.groups.contains(from)) return;
-        auto& g = mgr.groups[from];
-        if (dirs["up"].valid())    g.upGroup    = dirs["up"];
-        if (dirs["down"].valid())  g.downGroup  = dirs["down"];
-        if (dirs["left"].valid())  g.leftGroup  = dirs["left"];
-        if (dirs["right"].valid()) g.rightGroup = dirs["right"];
-    });
-    rec.record_free_function({"controller_nav"},
-        {"link_groups",
-        "---@param from string\n---@param dirs table {up:string|nil, down:string|nil, left:string|nil, right:string|nil}",
-        "Link a group's navigation directions to other groups.", true, false});
-        
-    nav.set_function("set_group_mode", [&](const std::string& group, const std::string& mode) {
-        auto& mgr = controller_nav::NavManager::instance();
-        if (!mgr.groups.contains(group)) return;
-        mgr.groups[group].spatial = (mode == "spatial");
-    });
-    rec.record_free_function({"controller_nav"},
-        {"set_group_mode",
-        "---@param group string\n---@param mode 'spatial'|'linear'", "Toggle navigation mode for the group.", true, false});
-        
-    nav.set_function("set_wrap", [&](const std::string& group, bool wrap) {
-        auto& mgr = controller_nav::NavManager::instance();
-        if (!mgr.groups.contains(group)) return;
-        mgr.groups[group].wrap = wrap;
-    });
-    rec.record_free_function({"controller_nav"},
-        {"set_wrap", "---@param group string\n---@param wrap boolean", "Enable or disable wrap-around navigation.", true, false});
-        
-    nav.set_function("focus_entity", [&](entt::entity e) { 
-        auto& state = globals::getInputState();
-        state.cursor_focused_target = e; 
-    }); 
-    rec.record_free_function({"controller_nav"}, {"focus_entity", "---@param e entt.entity", "Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.", true, false});
-        
-        
+    rec.bind_function(lua, {"controller_nav"}, "set_group_callbacks",
+        [&](const std::string& group, sol::table tbl) {
+            auto& mgr = controller_nav::NavManager::instance();
+            if (!mgr.groups.contains(group)) return;
+            auto& g = mgr.groups[group];
+            if (tbl["on_focus"].valid())   g.callbacks.on_focus   = tbl["on_focus"];
+            if (tbl["on_unfocus"].valid()) g.callbacks.on_unfocus = tbl["on_unfocus"];
+            if (tbl["on_select"].valid())  g.callbacks.on_select  = tbl["on_select"];
+        },
+        "---@param group string\n"
+        "---@param tbl table\n"
+        "---@return nil",
+        "Set Lua callbacks for a specific navigation group.");
 
+    rec.bind_function(lua, {"controller_nav"}, "link_groups",
+        [&](const std::string& from, sol::table dirs) {
+            auto& mgr = controller_nav::NavManager::instance();
+            if (!mgr.groups.contains(from)) return;
+            auto& g = mgr.groups[from];
+            if (dirs["up"].valid())    g.upGroup    = dirs["up"];
+            if (dirs["down"].valid())  g.downGroup  = dirs["down"];
+            if (dirs["left"].valid())  g.leftGroup  = dirs["left"];
+            if (dirs["right"].valid()) g.rightGroup = dirs["right"];
+        },
+        "---@param from string\n"
+        "---@param dirs table\n"
+        "---@return nil",
+        "Link a group's navigation directions to other groups.");
 
+    rec.bind_function(lua, {"controller_nav"}, "set_group_mode",
+        [&](const std::string& group, const std::string& mode) {
+            auto& mgr = controller_nav::NavManager::instance();
+            if (!mgr.groups.contains(group)) return;
+            mgr.groups[group].spatial = (mode == "spatial");
+        },
+        "---@param group string\n"
+        "---@param mode string\n"
+        "---@return nil",
+        "Toggle navigation mode for the group.");
 
+    rec.bind_function(lua, {"controller_nav"}, "set_wrap",
+        [&](const std::string& group, bool wrap) {
+            auto& mgr = controller_nav::NavManager::instance();
+            if (!mgr.groups.contains(group)) return;
+            mgr.groups[group].wrap = wrap;
+        },
+        "---@param group string\n"
+        "---@param wrap boolean\n"
+        "---@return nil",
+        "Enable or disable wrap-around navigation.");
+
+    rec.bind_function(lua, {"controller_nav"}, "focus_entity",
+        [&](entt::entity e) {
+            auto& state = globals::getInputState();
+            state.cursor_focused_target = e;
+        },
+        "---@param e entt.entity\n"
+        "---@return nil",
+        "Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.");
 }
-
 
 } // namespace controller_nav

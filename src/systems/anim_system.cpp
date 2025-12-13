@@ -115,7 +115,7 @@ auto exposeToLua(sol::state &lua) -> void {
       &animation_system::setFGColorForAllAnimationObjects,
       "---@param e entt.entity # Target entity\n"
       "---@param fgColor Color # Foreground color to set\n"
-      "Sets the foreground color for all animation objects in an entity",
+      "---@return nil",
       "Sets the foreground color for all animation objects in an entity");
 
   // createAnimatedObjectWithTransform(defaultAnimationIDOrSpriteUUID: string,

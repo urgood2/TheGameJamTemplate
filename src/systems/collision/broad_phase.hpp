@@ -334,9 +334,10 @@ namespace collision {
                 auto &f = globals::getRegistry().get<collision::CollisionFilter>(e);
                 f.category |= collision::getTagBit(tag);
             },
-            "---@param e entt.entity               # Entity whose filter to modify\n"
-            "---@param tag string                   # Name of the tag to add\n"
-            "---| Adds the given tag bit to this entity’s filter.category, so it *is* also that tag."
+            "---@param e entt.entity\n"
+            "---@param tag string\n"
+            "---@return nil",
+            "Adds the given tag bit to this entity's filter.category, so it *is* also that tag."
         );
 
         // 3) Helper: setCollisionMask(entt.entity, ...)
@@ -350,9 +351,10 @@ namespace collision {
                     f.mask |= collision::getTagBit(tag);
                 }
             },
-            "---@param e entt.entity               # Entity whose filter to modify\n"
-            "---@param ... string                   # One or more tag names\n"
-            "---| Replaces the entity’s filter.mask with the OR of all specified tags."
+            "---@param e entt.entity\n"
+            "---@param ... string\n"
+            "---@return nil",
+            "Replaces the entity's filter.mask with the OR of all specified tags."
         );
 
         // 4) Optional: helper to *replace* category bits (clear then OR) if you want exclusivity
@@ -361,9 +363,10 @@ namespace collision {
                 auto &f = globals::getRegistry().get<collision::CollisionFilter>(e);
                 f.category  = collision::getTagBit(tag);
             },
-            "---@param e entt.entity               # Entity whose filter to reset\n"
-            "---@param tag string                   # The sole tag name\n"
-            "---| Clears all category bits, then sets only this one."
+            "---@param e entt.entity\n"
+            "---@param tag string\n"
+            "---@return nil",
+            "Clears all category bits, then sets only this one."
         );
     }
     

@@ -402,49 +402,49 @@ namespace shader_pipeline {
         rec.record_free_function(
             {"shader_pipeline.ShaderPipelineComponent"},
             {"addPass",
-            "---@param name string\n---@return nil",
+            "---@param self ShaderPipelineComponent\n---@param name string\n---@return nil",
             "Add a new pass at the end"}
         );
 
         rec.record_free_function(
             {"shader_pipeline.ShaderPipelineComponent"},
             {"removePass",
-            "---@param name string\n---@return boolean",
+            "---@param self ShaderPipelineComponent\n---@param name string\n---@return boolean",
             "Remove a pass by name"}
         );
 
         rec.record_free_function(
             {"shader_pipeline.ShaderPipelineComponent"},
             {"togglePass",
-            "---@param name string\n---@return boolean",
+            "---@param self ShaderPipelineComponent\n---@param name string\n---@return boolean",
             "Toggle a pass enabled/disabled"}
         );
 
         rec.record_free_function(
             {"shader_pipeline.ShaderPipelineComponent"},
             {"addOverlay",
-            "---@param src OverlayInputSource\n---@param name string\n---@param blend? BlendMode\n---@return nil",
+            "---@param self ShaderPipelineComponent\n---@param src OverlayInputSource\n---@param name string\n---@param blend? BlendMode\n---@return ShaderOverlayDraw",
             "Add a new overlay; blend mode is optional"}
         );
 
         rec.record_free_function(
             {"shader_pipeline.ShaderPipelineComponent"},
             {"removeOverlay",
-            "---@param name string\n---@return boolean",
+            "---@param self ShaderPipelineComponent\n---@param name string # The name of the overlay to remove\n---@return boolean # True if removed, false if not found",
             "Remove an overlay by name"}
         );
 
         rec.record_free_function(
             {"shader_pipeline.ShaderPipelineComponent"},
             {"toggleOverlay",
-            "---@param name string\n---@return boolean",
+            "---@param self ShaderPipelineComponent\n---@param name string # The name of the overlay to toggle\n---@return boolean # The new enabled state (true if enabled, false if disabled)",
             "Toggle an overlay on/off"}
         );
 
         rec.record_free_function(
             {"shader_pipeline.ShaderPipelineComponent"},
             {"clearAll",
-            "---@return nil",
+            "---@param self ShaderPipelineComponent\n---@return nil",
             "Clear both passes and overlays"}
         );
         // 6) Helper to convert table to ShaderUniformValue

@@ -155,32 +155,42 @@ namespace scripting
             
         rec.record_method("scheduler", {
             "size",
+            "---@param self scheduler\n"
             "---@return integer",
             "Returns the number of processes in the scheduler."
         });
         rec.record_method("scheduler", {
             "empty",
+            "---@param self scheduler\n"
             "---@return boolean",
             "Checks if the scheduler has no processes."
         });
         rec.record_method("scheduler", {
             "clear",
+            "---@param self scheduler\n"
             "---@return nil",
             "Clears all processes from the scheduler."
         });
         rec.record_method("scheduler", {
             "attach",
-            "---@param process table # The Lua table representing the process.\n---@param ... table # Optional child processes to chain.\n",
+            "---@param self scheduler\n"
+            "---@param process table\n"
+            "---@param ... table\n"
+            "---@return nil",
             "Attaches a script process to the scheduler, optionally chaining child processes."
         });
         rec.record_method("scheduler", {
             "update",
-            "---@param delta_time number # The time elapsed since the last update.\n---@param data any # Optional data to pass to the process.\n",
+            "---@param self scheduler\n"
+            "---@param delta_time number\n"
+            "---@return nil",
             "Updates all processes in the scheduler, passing the elapsed time and optional data."
         });
         rec.record_method("scheduler", {
             "abort",
-            "---@overload fun():void\n---@overload fun(terminate: boolean):void\n",
+            "---@param self scheduler\n"
+            "---@param terminate? boolean\n"
+            "---@return nil",
             "Aborts all processes in the scheduler. If `terminate` is true, it will terminate all processes immediately."
         });
 

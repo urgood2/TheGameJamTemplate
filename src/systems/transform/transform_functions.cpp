@@ -2519,7 +2519,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
         // Recorder: Transform
         auto& tDef = rec.add_type("Transform", /*is_data_class=*/true);
         tDef.doc = "Manages an entity's position, size, rotation, and scale, with spring dynamics for smooth visual updates.";
-        rec.record_method("Transform", {"updateCachedValues", "---@overload fun(self, force:boolean)\n---@overload fun(self, x:Spring, y:Spring, w:Spring, h:Spring, r:Spring, s:Spring, force:boolean)", "Updates cached transform values.", false, false});
+        rec.record_method("Transform", {"updateCachedValues", "---@param self Transform\n---@overload fun(self:Transform, force:boolean)\n---@overload fun(self:Transform, x:Spring, y:Spring, w:Spring, h:Spring, r:Spring, s:Spring, force:boolean)\n---@return nil", "Updates cached transform values.", false, false});
         rec.record_property("Transform", {"actualX", "number", "The logical X position."});
         rec.record_property("Transform", {"visualX", "number", "The visual (spring-interpolated) X position."});
         rec.record_property("Transform", {"actualY", "number", "The logical Y position."});
@@ -2529,19 +2529,19 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
         rec.record_property("Transform", {"actualH", "number", "The logical height."});
         rec.record_property("Transform", {"visualH", "number", "The visual height."});
         rec.record_property("Transform", {"rotation", "number", "The logical rotation in degrees."});
-        rec.record_method("Transform", {"visualR", "---@return number", "Gets the visual rotation.", false, false});
-        rec.record_method("Transform", {"visualRWithMotion", "---@return number", "Gets the visual rotation including dynamic motion.", false, false});
+        rec.record_method("Transform", {"visualR", "---@param self Transform\n---@return number", "Gets the visual rotation.", false, false});
+        rec.record_method("Transform", {"visualRWithMotion", "---@param self Transform\n---@return number", "Gets the visual rotation including dynamic motion.", false, false});
         rec.record_property("Transform", {"scale", "number", "The logical scale multiplier."});
-        rec.record_method("Transform", {"visualS", "---@return number", "Gets the visual scale.", false, false});
-        rec.record_method("Transform", {"visualSWithMotion", "---@return number", "Gets the visual scale including dynamic motion.", false, false});
-        rec.record_method("Transform", {"xSpring", "---@return Spring", "Gets the X position spring.", false, false});
-        rec.record_method("Transform", {"ySpring", "---@return Spring", "Gets the Y position spring.", false, false});
-        rec.record_method("Transform", {"wSpring", "---@return Spring", "Gets the width spring.", false, false});
-        rec.record_method("Transform", {"hSpring", "---@return Spring", "Gets the height spring.", false, false});
-        rec.record_method("Transform", {"rSpring", "---@return Spring", "Gets the rotation spring.", false, false});
-        rec.record_method("Transform", {"sSpring", "---@return Spring", "Gets the scale spring.", false, false});
-        rec.record_method("Transform", {"hoverBufferX", "---@return number", "Gets the X-axis hover buffer.", false, false});
-        rec.record_method("Transform", {"hoverBufferY", "---@return number", "Gets the Y-axis hover buffer.", false, false});
+        rec.record_method("Transform", {"visualS", "---@param self Transform\n---@return number", "Gets the visual scale.", false, false});
+        rec.record_method("Transform", {"visualSWithMotion", "---@param self Transform\n---@return number", "Gets the visual scale including dynamic motion.", false, false});
+        rec.record_method("Transform", {"xSpring", "---@param self Transform\n---@return Spring", "Gets the X position spring.", false, false});
+        rec.record_method("Transform", {"ySpring", "---@param self Transform\n---@return Spring", "Gets the Y position spring.", false, false});
+        rec.record_method("Transform", {"wSpring", "---@param self Transform\n---@return Spring", "Gets the width spring.", false, false});
+        rec.record_method("Transform", {"hSpring", "---@param self Transform\n---@return Spring", "Gets the height spring.", false, false});
+        rec.record_method("Transform", {"rSpring", "---@param self Transform\n---@return Spring", "Gets the rotation spring.", false, false});
+        rec.record_method("Transform", {"sSpring", "---@param self Transform\n---@return Spring", "Gets the scale spring.", false, false});
+        rec.record_method("Transform", {"hoverBufferX", "---@param self Transform\n---@return number", "Gets the X-axis hover buffer.", false, false});
+        rec.record_method("Transform", {"hoverBufferY", "---@param self Transform\n---@return number", "Gets the Y-axis hover buffer.", false, false});
 
 
         //=========================================================
@@ -2702,7 +2702,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     rec.record_method("InheritedPropertiesBuilder", {"addScaleBond", "---@param bond InheritedPropertiesSync\n---@return self", "Sets the scale bond.", false, false});
     rec.record_method("InheritedPropertiesBuilder", {"addAlignment", "---@param flags AlignmentFlag\n---@return self", "Sets the alignment flags.", false, false});
     rec.record_method("InheritedPropertiesBuilder", {"addAlignmentOffset", "---@param offset Vector2\n---@return self", "Sets the alignment offset.", false, false});
-    rec.record_method("InheritedPropertiesBuilder", {"build", "---@return InheritedProperties", "Constructs the final InheritedProperties object.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"build", "---@param self InheritedPropertiesBuilder\n---@return InheritedProperties", "Constructs the final InheritedProperties object.", false, false});
 
 
     //=========================================================

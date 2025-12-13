@@ -208,8 +208,23 @@ namespace scripting
                 "count_tasks", &ScriptComponent::count_tasks,
                 "type_id", []() { return entt::type_hash<ScriptComponent>::value(); }
             );
-            
-            
+
+            auto& sc_type = rec.add_type("ScriptComponent");
+            sc_type.doc = "Component that manages Lua script execution for an entity.";
+            rec.record_method("ScriptComponent", {
+                "count_tasks",
+                "---@param self ScriptComponent\n"
+                "---@return integer # Number of active tasks",
+                "Returns the number of active tasks in the script component."
+            });
+            rec.record_method("ScriptComponent", {
+                "add_task",
+                "---@param self ScriptComponent\n"
+                "---@param task_fn function\n"
+                "---@return nil",
+                "Adds a task function to the script component."
+            });
+            rec.record_property("ScriptComponent", {"self", "table", "The Lua table containing the script's data and methods."});
 
             // Global function to get ScriptComponent from entity ID
             lua["get_script_component"] = [&](uint32_t entity_id) -> ScriptComponent& {
@@ -348,11 +363,12 @@ namespace scripting
                 "Creates and returns a view for iterating over entities that have all specified components."
             });
             
-            // --- 2. Document the structure of a Lua script component ---
+            // --- 2. Document the Lua script interface ---
             // This defines the "interface" that C++ expects from your Lua tables.
-            
-            auto& script_interface = rec.add_type("ScriptComponent", true);
-            script_interface.doc = "The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these methods.";
+            // NOTE: Using ScriptInterface to avoid duplicate @class ScriptComponent declaration
+
+            auto& script_interface = rec.add_type("ScriptInterface");
+            script_interface.doc = "The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these callbacks: init(), update(dt), destroy().";
             
             // --- Global Scripting Functions ---
             rec.record_free_function({}, {
@@ -362,26 +378,13 @@ namespace scripting
                 "Retrieves the ScriptComponent for a given entity ID."
             });
             
-            // --- Added ScriptComponent Methods ---
-            rec.record_method("ScriptComponent", {
-                "add_task",
-                "---@param task coroutine\n"
-                "---@return nil",
-                "Adds a new coroutine to this script's task list."
-            });
-            
-            rec.record_method("ScriptComponent", {
-                "count_tasks",
-                "---@return integer",
-                "Returns the number of active coroutines on this script."
-            });
-        
-            rec.record_property("ScriptComponent", {"id", "nil", "Entity: (Read-only) The entity handle this script is attached to. Injected by the system."});
-            rec.record_property("ScriptComponent", {"owner", "nil", "registry: (Read-only) A reference to the C++ registry. Injected by the system."});
-            
-            rec.record_property("ScriptComponent", {"init", "nil", "function(): Optional function called once when the script is attached to an entity."});
-            rec.record_property("ScriptComponent", {"update", "nil", "function(dt: number): Function called every frame."});
-            rec.record_property("ScriptComponent", {"destroy", "nil", "function(): Optional function called just before the entity is destroyed."});
+            // --- ScriptInterface properties (for Lua script tables) ---
+            rec.record_property("ScriptInterface", {"id", "nil", "Entity: (Read-only) The entity handle this script is attached to. Injected by the system."});
+            rec.record_property("ScriptInterface", {"owner", "nil", "registry: (Read-only) A reference to the C++ registry. Injected by the system."});
+
+            rec.record_property("ScriptInterface", {"init", "nil", "function(): Optional function called once when the script is attached to an entity."});
+            rec.record_property("ScriptInterface", {"update", "nil", "function(dt: number): Function called every frame."});
+            rec.record_property("ScriptInterface", {"destroy", "nil", "function(): Optional function called just before the entity is destroyed."});
 
 
         }

@@ -363,8 +363,9 @@ namespace game
             // quadtree.box overloads
             rec.record_method("quadtree", {
                 "box",
-                "---@overload fun(left:number, top:number, width:number, height:number): Box\n"
-                "---@overload fun(tbl:Box): Box\n"
+                "---@param self quadtree\n"
+                "---@overload fun(self:quadtree, left:number, top:number, width:number, height:number): Box\n"
+                "---@overload fun(self:quadtree, tbl:Box): Box\n"
                 "---@return Box",
                 "Creates a Box from numbers or from a table with {left, top, width, height}."
             });
@@ -374,6 +375,7 @@ namespace game
             // clear()
             rec.record_method("WorldQuadtree", {
                 "clear",
+                "---@param self WorldQuadtree\n"
                 "---@return nil",
                 "Removes all entities from the quadtree."
             });
@@ -405,6 +407,7 @@ namespace game
             // find_all_intersections() -> { {Entity, Entity}, ... }
             rec.record_method("WorldQuadtree", {
                 "find_all_intersections",
+                "---@param self WorldQuadtree\n"
                 "---@return Entity[][]",
                 "Returns a list of intersecting pairs as 2-element arrays {a, b}."
             });
@@ -412,6 +415,7 @@ namespace game
             // get_bounds() -> Box
             rec.record_method("WorldQuadtree", {
                 "get_bounds",
+                "---@param self WorldQuadtree\n"
                 "---@return Box",
                 "Returns the overall bounds of the quadtree space."
             });

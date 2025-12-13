@@ -1475,10 +1475,10 @@ auto initLuaMasterState(sol::state &stateToInit,
                            game::remove_fullscreen_shader);
 
   rec.record_free_function(
-      {""}, {"add_fullscreen_shader", "---@param shaderName string\n",
+      {""}, {"add_fullscreen_shader", "---@param shaderName string\n---@return nil",
              "Adds a fullscreen shader to the game.", true, false});
   rec.record_free_function(
-      {""}, {"remove_fullscreen_shader", "---@param shaderName string\n",
+      {""}, {"remove_fullscreen_shader", "---@param shaderName string\n---@return nil",
              "Removes a fullscreen shader from the game.", true, false});
 
   // ------------------------------------------------------
@@ -1596,6 +1596,10 @@ auto exposeGlobalsToLua(sol::state &lua) -> void {
   // bind the OpenURL(const char *url) method
   lua.set_function("OpenURL",
                    [](const std::string &url) { OpenURL(url.c_str()); });
+  rec.record_free_function(
+      {}, {"OpenURL",
+           "---@param url string\n---@return nil",
+           "Opens a URL in the default system browser.", true, false});
 
   lua["globals"].get_or_create<sol::table>();
 

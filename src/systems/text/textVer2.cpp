@@ -130,49 +130,49 @@ auto exposeToLua(sol::state &lua) -> void {
     auto &td = rec.add_type("TextSystem.Character");
     td.doc = "Represents one rendered character in the text system";
 
-    // Helper lambda to reduce repetition
-    auto record_field = [&](const char *name, const char *desc) {
+    // Helper lambda to reduce repetition with proper type annotations
+    auto record_field = [&](const char *name, const char *luaType, const char *desc) {
       rec.record_method(
           "TextSystem.Character",
-          MethodDef{name, std::string{"---@return any "} + name + " # " + desc,
+          MethodDef{name, std::string{"---@param self TextSystem.Character\n---@return "} + luaType + " # " + desc,
                     std::string{"Gets the "} + desc,
                     /*is_static=*/false,
                     /*is_overload=*/false});
     };
 
-    record_field("value", "character value");
-    record_field("overrideCodepoint", "override codepoint");
-    record_field("rotation", "rotation angle");
-    record_field("scale", "scale factor");
-    record_field("size", "glyph size");
-    record_field("shadowDisplacement", "shadow displacement");
-    record_field("shadowHeight", "shadow height");
-    record_field("scaleXModifier", "X-axis scale modifier");
-    record_field("scaleYModifier", "Y-axis scale modifier");
-    record_field("color", "tint color");
-    record_field("offsets", "per-glyph offsets");
-    record_field("shadowDisplacementOffsets", "per-glyph shadow offsets");
-    record_field("scaleModifiers", "per-glyph scale modifiers");
-    record_field("customData", "user-defined data");
-    record_field("offset", "global offset");
-    record_field("effects", "applied effects list");
-    record_field("parsedEffectArguments", "parsed effect arguments");
-    record_field("index", "character index");
-    record_field("lineNumber", "line number");
-    record_field("firstFrame", "first frame timestamp");
-    record_field("tags", "attached tags");
-    record_field("pop_in", "pop-in flag");
-    record_field("pop_in_delay", "pop-in delay time");
-    record_field("createdTime", "creation timestamp");
-    record_field("parentText", "parent text object");
-    record_field("isFinalCharacterInText", "is final character in its text");
-    record_field("effectFinished", "effect finished flag");
-    record_field("isImage", "is an image glyph");
-    record_field("imageShadowEnabled", "image shadow enabled");
-    record_field("spriteUUID", "sprite UUID");
-    record_field("imageScale", "image scale factor");
-    record_field("fgTint", "foreground tint");
-    record_field("bgTint", "background tint");
+    record_field("value", "integer", "Unicode codepoint value of this character");
+    record_field("overrideCodepoint", "integer?", "Optional override codepoint to display instead of value");
+    record_field("rotation", "number", "Rotation angle in radians");
+    record_field("scale", "number", "Uniform scale factor for both X and Y axes");
+    record_field("size", "Vector2", "Glyph size (width and height)");
+    record_field("shadowDisplacement", "Vector2", "Shadow offset from character position");
+    record_field("shadowHeight", "number", "Shadow depth/height offset");
+    record_field("scaleXModifier", "number?", "Optional additional X-axis scale modifier");
+    record_field("scaleYModifier", "number?", "Optional additional Y-axis scale modifier");
+    record_field("color", "Color", "Character tint color");
+    record_field("offsets", "table<string, Vector2>", "Per-effect position offsets");
+    record_field("shadowDisplacementOffsets", "table<string, Vector2>", "Per-effect shadow displacement offsets");
+    record_field("scaleModifiers", "table<string, number>", "Per-effect scale multipliers");
+    record_field("customData", "table<string, number>", "Custom data storage for effects");
+    record_field("offset", "Vector2", "Base position offset");
+    record_field("effects", "table<string, function>", "Map of active effect functions");
+    record_field("parsedEffectArguments", "ParsedEffectArguments", "Parsed effect arguments structure");
+    record_field("index", "integer", "Character index in parent text");
+    record_field("lineNumber", "integer", "Line number this character appears on");
+    record_field("firstFrame", "boolean", "True only on first frame after character activation");
+    record_field("tags", "table<string, boolean>", "Set of string tags for identifying this character");
+    record_field("pop_in", "number?", "Pop-in animation state (0 to 1), deprecated");
+    record_field("pop_in_delay", "number?", "Delay before pop-in animation starts");
+    record_field("createdTime", "number", "Timestamp when character was created");
+    record_field("parentText", "TextSystem.Text", "Reference to parent Text object");
+    record_field("isFinalCharacterInText", "boolean", "True if this is the last character in the text");
+    record_field("effectFinished", "table<string, boolean>", "Map tracking completion state of effects");
+    record_field("isImage", "boolean", "True if this character is an image sprite");
+    record_field("imageShadowEnabled", "boolean", "Enable shadow rendering for image characters");
+    record_field("spriteUUID", "string", "Sprite UUID for image characters");
+    record_field("imageScale", "number", "Scale multiplier for image characters");
+    record_field("fgTint", "Color", "Foreground tint color");
+    record_field("bgTint", "Color", "Background tint color");
   }
 
   //
@@ -216,34 +216,34 @@ auto exposeToLua(sol::state &lua) -> void {
     auto &td = rec.add_type("TextSystem.Text");
     td.doc = "Main text object with content, layout, and effects";
 
-    auto R = [&](const char *name) {
+    auto R = [&](const char *name, const char *luaType, const char *desc) {
       rec.record_method(
           "TextSystem.Text",
           MethodDef{name,
-                    std::string{"---@return any "} + name + " # raw value",
-                    std::string{"Gets the raw "} + name,
+                    std::string{"---@param self TextSystem.Text\n---@return "} + luaType + " # " + desc,
+                    std::string{"Gets the "} + desc,
                     /*is_static=*/false,
                     /*is_overload=*/false});
     };
-    R("get_value_callback");
-    R("onStringContentUpdatedOrChangedViaCallback");
-    R("effectStringsToApplyGloballyOnTextChange");
-    R("onFinishedEffect");
-    R("pop_in_enabled");
-    R("shadow_enabled");
-    R("width");
-    R("height");
-    R("rawText");
-    R("characters");
-    R("fontData");
-    R("fontSize");
-    R("wrapEnabled");
-    R("wrapWidth");
-    R("prevRenderScale");
-    R("renderScale");
-    R("createdTime");
-    R("effectStartTime");
-    R("applyTransformRotationAndScale");
+    R("get_value_callback", "function?", "Callback function to dynamically get text value");
+    R("onStringContentUpdatedOrChangedViaCallback", "function?", "Callback invoked after text content changes via callback or setText");
+    R("effectStringsToApplyGloballyOnTextChange", "string[]", "Effect strings applied to all characters when text updates");
+    R("onFinishedEffect", "function?", "Callback triggered when last character finishes its effect");
+    R("pop_in_enabled", "boolean", "Enable pop-in animation (deprecated)");
+    R("shadow_enabled", "boolean", "Enable shadow rendering for characters");
+    R("width", "number", "Total width of rendered text");
+    R("height", "number", "Total height of rendered text");
+    R("rawText", "string", "Raw text string with effect tags");
+    R("characters", "TextSystem.Character[]", "Array of generated character objects");
+    R("fontData", "FontData", "Font data configuration");
+    R("fontSize", "number", "Font size in pixels");
+    R("wrapEnabled", "boolean", "Enable text wrapping");
+    R("wrapWidth", "number", "Maximum width before wrapping");
+    R("prevRenderScale", "number", "Previous render scale (for change detection)");
+    R("renderScale", "number", "Current render scale multiplier");
+    R("createdTime", "number", "Timestamp when text was created");
+    R("effectStartTime", "table<string, number>", "Map of effect names to start times");
+    R("applyTransformRotationAndScale", "boolean", "Apply parent transform rotation and scale");
   }
 
   // 5a) TextAlignment sub-enum
@@ -310,24 +310,37 @@ auto exposeToLua(sol::state &lua) -> void {
     rec.add_type("TextSystem.Builders");
     auto &td = rec.add_type("TextSystem.Builders.TextBuilder");
     td.doc = "Fluent builder for creating TextSystem.Text objects";
-    auto Rb = [&](const char *name) {
+
+    // Builder methods that return self for chaining
+    auto RbChain = [&](const char *name, const char *paramType, const char *paramDesc) {
       rec.record_method(
           "TextSystem.Builders.TextBuilder",
-          MethodDef{name, std::string{"---@param v any # argument for "} + name,
-                    std::string{"Builder method "} + name,
+          MethodDef{name,
+                    std::string{"---@param value "} + paramType + " # " + paramDesc + "\n---@return TextSystem.Builders.TextBuilder # Returns self for method chaining",
+                    std::string{"Sets "} + paramDesc,
                     /*is_static=*/false,
                     /*is_overload=*/false});
     };
-    Rb("setRawText");
-    Rb("setFontData");
-    Rb("setOnFinishedEffect");
-    Rb("setFontSize");
-    Rb("setWrapWidth");
-    Rb("setAlignment");
-    Rb("setWrapMode");
-    Rb("setCreatedTime");
-    Rb("setPopInEnabled");
-    Rb("build");
+
+    RbChain("setRawText", "string", "the raw text string (may include effect tags)");
+    RbChain("setFontData", "FontData", "the font data configuration");
+    RbChain("setOnFinishedEffect", "function", "callback triggered when effect finishes");
+    RbChain("setFontSize", "number", "the font size in pixels");
+    RbChain("setWrapWidth", "number", "the maximum width before text wrapping");
+    RbChain("setAlignment", "TextSystem.TextAlignment", "the text alignment mode");
+    RbChain("setWrapMode", "TextSystem.TextWrapMode", "the text wrap mode");
+    RbChain("setCreatedTime", "number", "the creation timestamp");
+    RbChain("setPopInEnabled", "boolean", "whether pop-in animation is enabled");
+
+    // build() returns a Text object, not the builder
+    rec.record_method(
+        "TextSystem.Builders.TextBuilder",
+        MethodDef{"build",
+                  "---@param self TextSystem.Builders.TextBuilder\n"
+                  "---@return TextSystem.Text # The constructed Text object",
+                  "Builds and returns the configured Text object",
+                  /*is_static=*/false,
+                  /*is_overload=*/false});
   }
   // 7) Functions subtable
   sol::table funcs = lua.create_table();

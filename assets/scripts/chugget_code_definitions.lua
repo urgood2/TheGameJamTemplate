@@ -681,6 +681,13 @@ function remove_state_tag(...) end
 function clear_state_tags(...) end
 
 ---
+--- Opens a URL in the default system browser.
+---
+---@param url string
+---@return nil
+function OpenURL(...) end
+
+---
 --- Construct a Vector2 from x,y numbers or a table with x,y fields.
 ---
 ---@overload fun(x: number, y: number): Vector2
@@ -765,17 +772,17 @@ function setPaletteTexture(...) end
 
 
 ---
----
----@class entt
-entt = {
-}
-
-
----
---- An iterable view over a set of entities that have all the given components.
+--- A runtime view for iterating entities with specific components
 ---
 ---@class entt.runtime_view
 entt.runtime_view = {
+    size_hint = ---@param self runtime_view
+---@return integer,  -- Returns the number of entities in the view
+    contains = ---@param self runtime_view
+---@param entity Entity
+---@return boolean,  -- Checks if entity is in the view
+    each = ---@param self runtime_view
+---@param callback fun(entity: Entity)  -- Iterates all entities in the view
 }
 
 ---
@@ -800,10 +807,60 @@ function entt.runtime_view:each(...) end
 
 
 ---
---- The main container for all entities and components in the ECS world.
+--- The main entity-component registry
 ---
 ---@class entt.registry
 entt.registry = {
+    new = ---@return registry,  -- Creates a new registry
+    size = ---@param self entt.registry
+---@return integer # Total count of entities (alive + dead),  -- Returns the total number of entities in the registry
+    alive = ---@param self entt.registry
+---@return integer # Count of alive entities,  -- Returns the number of alive entities in the registry
+    valid = ---@param self registry
+---@param entity Entity
+---@return boolean # True if entity is valid,  -- Checks if an entity is valid
+    current = ---@param self registry
+---@param entity Entity
+---@return integer # Current version of the entity,  -- Gets the current version of an entity
+    create = ---@param self entt.registry
+---@return Entity # Newly created entity,  -- Creates a new entity
+    destroy = ---@param self registry
+---@param entity Entity
+---@return integer # Version of destroyed entity,  -- Destroys an entity
+    emplace = ---@param self registry
+---@param entity Entity
+---@param comp_type table
+---@return table|nil # The emplaced component or nil if failed,  -- Emplaces a component on an entity
+    add_script = ---@param self registry
+---@param entity Entity
+---@param script_table table
+---@return nil,  -- Adds a script component to an entity
+    remove = ---@param self registry
+---@param entity Entity
+---@param type_or_id table|integer
+---@return integer # Number of components removed,  -- Removes a component from an entity
+    has = ---@param self registry
+---@param entity Entity
+---@param type_or_id table|integer
+---@return boolean # True if entity has the component,  -- Checks if an entity has a component
+    any_of = ---@param self registry
+---@param entity Entity
+---@vararg table|integer
+---@return boolean # True if entity has any of the components,  -- Checks if an entity has any of the specified components
+    get = ---@param self registry
+---@param entity Entity
+---@param type_or_id table|integer
+---@return table|nil # The component or nil if not found,  -- Gets a component from an entity
+    clear = ---@param self entt.registry
+---@overload fun(self: entt.registry): nil
+---@param type_or_id? table|integer
+---@return nil,  -- Clears all entities or components of a specific type
+    orphan = ---@param self entt.registry
+---@param entity Entity
+---@return boolean # True if entity has no components,  -- Checks if an entity has no components (is an orphan)
+    runtime_view = ---@param self registry
+---@vararg table|integer
+---@return runtime_view # A view containing matching entities  -- Creates a runtime view for iterating entities with specific components
 }
 
 ---
@@ -926,34 +983,63 @@ function entt.registry:runtime_view(...) end
 
 
 ---
---- The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these methods.
+--- Component that manages Lua script execution for an entity.
 ---
 ---@class ScriptComponent
 ScriptComponent = {
-    ---@type nil
-    id = nil,  -- Entity: (Read-only) The entity handle this script is attached to. Injected by the system.
-    ---@type nil
-    owner = nil,  -- registry: (Read-only) A reference to the C++ registry. Injected by the system.
-    ---@type nil
-    init = nil,  -- function(): Optional function called once when the script is attached to an entity.
-    ---@type nil
-    update = nil,  -- function(dt: number): Function called every frame.
-    ---@type nil
-    destroy = nil  -- function(): Optional function called just before the entity is destroyed.
+    self = table  -- The Lua table containing the script's data and methods.
 }
 
 ---
---- Adds a new coroutine to this script's task list.
+--- Returns the number of active tasks in the script component.
 ---
----@param task coroutine
+---@param self ScriptComponent
+---@return integer # Number of active tasks
+function ScriptComponent:count_tasks(...) end
+
+---
+--- Adds a task function to the script component.
+---
+---@param self ScriptComponent
+---@param task_fn function
 ---@return nil
 function ScriptComponent:add_task(...) end
 
+
 ---
---- Returns the number of active coroutines on this script.
 ---
----@return integer
-function ScriptComponent:count_tasks(...) end
+---@class entt
+entt = {
+}
+
+
+---
+--- An iterable view over a set of entities that have all the given components.
+---
+---@class entt.runtime_view
+entt.runtime_view = {
+}
+
+
+---
+--- The main container for all entities and components in the ECS world.
+---
+---@class entt.registry
+entt.registry = {
+}
+
+
+---
+--- The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these callbacks: init(), update(dt), destroy().
+---
+---@class ScriptInterface
+ScriptInterface = {
+    id = nil,  -- Entity: (Read-only) The entity handle this script is attached to. Injected by the system.
+    owner = nil,  -- registry: (Read-only) A reference to the C++ registry. Injected by the system.
+    init = nil,  -- function(): Optional function called once when the script is attached to an entity.
+    update = nil,  -- function(dt: number): Function called every frame.
+    destroy = nil  -- function(): Optional function called just before the entity is destroyed.
+}
 
 
 ---
@@ -963,15 +1049,17 @@ ai = {
 }
 
 ---
---- This is useful for debugging or when you want to temporarily halt AI processing.
+--- Pauses the AI system, preventing any updates or actions from being processed.
 ---
----Pauses the AI system, preventing any updates or actions from being processed.
+---@param self ai
+---@return nil
 function ai:pause_ai_system(...) end
 
 ---
---- This allows the AI system to continue processing updates and actions.
+--- Resumes the AI system after it has been paused.
 ---
----Resumes the AI system after it has been paused.
+---@param self ai
+---@return nil
 function ai:resume_ai_system(...) end
 
 ---
@@ -1118,40 +1206,47 @@ scheduler = {
 ---
 --- Returns the number of processes in the scheduler.
 ---
+---@param self scheduler
 ---@return integer
 function scheduler:size(...) end
 
 ---
 --- Checks if the scheduler has no processes.
 ---
+---@param self scheduler
 ---@return boolean
 function scheduler:empty(...) end
 
 ---
 --- Clears all processes from the scheduler.
 ---
+---@param self scheduler
 ---@return nil
 function scheduler:clear(...) end
 
 ---
 --- Attaches a script process to the scheduler, optionally chaining child processes.
 ---
----@param process table # The Lua table representing the process.
----@param ... table # Optional child processes to chain.
+---@param self scheduler
+---@param process table
+---@param ... table
+---@return nil
 function scheduler:attach(...) end
 
 ---
 --- Updates all processes in the scheduler, passing the elapsed time and optional data.
 ---
----@param delta_time number # The time elapsed since the last update.
----@param data any # Optional data to pass to the process.
+---@param self scheduler
+---@param delta_time number
+---@return nil
 function scheduler:update(...) end
 
 ---
 --- Aborts all processes in the scheduler. If `terminate` is true, it will terminate all processes immediately.
 ---
----@overload fun():void
----@overload fun(terminate: boolean):void
+---@param self scheduler
+---@param terminate? boolean
+---@return nil
 function scheduler:abort(...) end
 
 
@@ -1181,8 +1276,10 @@ Entity = {
 ---@class NavManagerUD
 NavManagerUD = {
     update = nil,  -- ---@param dt number
-    validate = nil,
-    debug_print_state = nil,
+    validate = nil,  -- ---@param self NavManagerUD
+---@return nil
+    debug_print_state = nil,  -- ---@param self NavManagerUD
+---@return nil
     create_group = nil,  -- ---@param name string
     add_entity = nil,  -- ---@param group string
 ---@param e entt.entity
@@ -1210,7 +1307,8 @@ NavManagerUD = {
     pop_layer = nil,
     push_focus_group = nil,  -- ---@param name string
     pop_focus_group = nil,
-    current_focus_group = nil  -- ---@return string
+    current_focus_group = nil  -- ---@param self NavManagerUD
+---@return string
 }
 
 
@@ -1254,201 +1352,234 @@ TextSystem.Character = {
 }
 
 ---
---- Gets the character value
+--- Gets the Unicode codepoint value of this character
 ---
----@return any value # character value
+---@param self TextSystem.Character
+---@return integer # Unicode codepoint value of this character
 function TextSystem.Character:value(...) end
 
 ---
---- Gets the override codepoint
+--- Gets the Optional override codepoint to display instead of value
 ---
----@return any overrideCodepoint # override codepoint
+---@param self TextSystem.Character
+---@return integer? # Optional override codepoint to display instead of value
 function TextSystem.Character:overrideCodepoint(...) end
 
 ---
---- Gets the rotation angle
+--- Gets the Rotation angle in radians
 ---
----@return any rotation # rotation angle
+---@param self TextSystem.Character
+---@return number # Rotation angle in radians
 function TextSystem.Character:rotation(...) end
 
 ---
---- Gets the scale factor
+--- Gets the Uniform scale factor for both X and Y axes
 ---
----@return any scale # scale factor
+---@param self TextSystem.Character
+---@return number # Uniform scale factor for both X and Y axes
 function TextSystem.Character:scale(...) end
 
 ---
---- Gets the glyph size
+--- Gets the Glyph size (width and height)
 ---
----@return any size # glyph size
+---@param self TextSystem.Character
+---@return Vector2 # Glyph size (width and height)
 function TextSystem.Character:size(...) end
 
 ---
---- Gets the shadow displacement
+--- Gets the Shadow offset from character position
 ---
----@return any shadowDisplacement # shadow displacement
+---@param self TextSystem.Character
+---@return Vector2 # Shadow offset from character position
 function TextSystem.Character:shadowDisplacement(...) end
 
 ---
---- Gets the shadow height
+--- Gets the Shadow depth/height offset
 ---
----@return any shadowHeight # shadow height
+---@param self TextSystem.Character
+---@return number # Shadow depth/height offset
 function TextSystem.Character:shadowHeight(...) end
 
 ---
---- Gets the X-axis scale modifier
+--- Gets the Optional additional X-axis scale modifier
 ---
----@return any scaleXModifier # X-axis scale modifier
+---@param self TextSystem.Character
+---@return number? # Optional additional X-axis scale modifier
 function TextSystem.Character:scaleXModifier(...) end
 
 ---
---- Gets the Y-axis scale modifier
+--- Gets the Optional additional Y-axis scale modifier
 ---
----@return any scaleYModifier # Y-axis scale modifier
+---@param self TextSystem.Character
+---@return number? # Optional additional Y-axis scale modifier
 function TextSystem.Character:scaleYModifier(...) end
 
 ---
---- Gets the tint color
+--- Gets the Character tint color
 ---
----@return any color # tint color
+---@param self TextSystem.Character
+---@return Color # Character tint color
 function TextSystem.Character:color(...) end
 
 ---
---- Gets the per-glyph offsets
+--- Gets the Per-effect position offsets
 ---
----@return any offsets # per-glyph offsets
+---@param self TextSystem.Character
+---@return table<string, Vector2> # Per-effect position offsets
 function TextSystem.Character:offsets(...) end
 
 ---
---- Gets the per-glyph shadow offsets
+--- Gets the Per-effect shadow displacement offsets
 ---
----@return any shadowDisplacementOffsets # per-glyph shadow offsets
+---@param self TextSystem.Character
+---@return table<string, Vector2> # Per-effect shadow displacement offsets
 function TextSystem.Character:shadowDisplacementOffsets(...) end
 
 ---
---- Gets the per-glyph scale modifiers
+--- Gets the Per-effect scale multipliers
 ---
----@return any scaleModifiers # per-glyph scale modifiers
+---@param self TextSystem.Character
+---@return table<string, number> # Per-effect scale multipliers
 function TextSystem.Character:scaleModifiers(...) end
 
 ---
---- Gets the user-defined data
+--- Gets the Custom data storage for effects
 ---
----@return any customData # user-defined data
+---@param self TextSystem.Character
+---@return table<string, number> # Custom data storage for effects
 function TextSystem.Character:customData(...) end
 
 ---
---- Gets the global offset
+--- Gets the Base position offset
 ---
----@return any offset # global offset
+---@param self TextSystem.Character
+---@return Vector2 # Base position offset
 function TextSystem.Character:offset(...) end
 
 ---
---- Gets the applied effects list
+--- Gets the Map of active effect functions
 ---
----@return any effects # applied effects list
+---@param self TextSystem.Character
+---@return table<string, function> # Map of active effect functions
 function TextSystem.Character:effects(...) end
 
 ---
---- Gets the parsed effect arguments
+--- Gets the Parsed effect arguments structure
 ---
----@return any parsedEffectArguments # parsed effect arguments
+---@param self TextSystem.Character
+---@return ParsedEffectArguments # Parsed effect arguments structure
 function TextSystem.Character:parsedEffectArguments(...) end
 
 ---
---- Gets the character index
+--- Gets the Character index in parent text
 ---
----@return any index # character index
+---@param self TextSystem.Character
+---@return integer # Character index in parent text
 function TextSystem.Character:index(...) end
 
 ---
---- Gets the line number
+--- Gets the Line number this character appears on
 ---
----@return any lineNumber # line number
+---@param self TextSystem.Character
+---@return integer # Line number this character appears on
 function TextSystem.Character:lineNumber(...) end
 
 ---
---- Gets the first frame timestamp
+--- Gets the True only on first frame after character activation
 ---
----@return any firstFrame # first frame timestamp
+---@param self TextSystem.Character
+---@return boolean # True only on first frame after character activation
 function TextSystem.Character:firstFrame(...) end
 
 ---
---- Gets the attached tags
+--- Gets the Set of string tags for identifying this character
 ---
----@return any tags # attached tags
+---@param self TextSystem.Character
+---@return table<string, boolean> # Set of string tags for identifying this character
 function TextSystem.Character:tags(...) end
 
 ---
---- Gets the pop-in flag
+--- Gets the Pop-in animation state (0 to 1), deprecated
 ---
----@return any pop_in # pop-in flag
+---@param self TextSystem.Character
+---@return number? # Pop-in animation state (0 to 1), deprecated
 function TextSystem.Character:pop_in(...) end
 
 ---
---- Gets the pop-in delay time
+--- Gets the Delay before pop-in animation starts
 ---
----@return any pop_in_delay # pop-in delay time
+---@param self TextSystem.Character
+---@return number? # Delay before pop-in animation starts
 function TextSystem.Character:pop_in_delay(...) end
 
 ---
---- Gets the creation timestamp
+--- Gets the Timestamp when character was created
 ---
----@return any createdTime # creation timestamp
+---@param self TextSystem.Character
+---@return number # Timestamp when character was created
 function TextSystem.Character:createdTime(...) end
 
 ---
---- Gets the parent text object
+--- Gets the Reference to parent Text object
 ---
----@return any parentText # parent text object
+---@param self TextSystem.Character
+---@return TextSystem.Text # Reference to parent Text object
 function TextSystem.Character:parentText(...) end
 
 ---
---- Gets the is final character in its text
+--- Gets the True if this is the last character in the text
 ---
----@return any isFinalCharacterInText # is final character in its text
+---@param self TextSystem.Character
+---@return boolean # True if this is the last character in the text
 function TextSystem.Character:isFinalCharacterInText(...) end
 
 ---
---- Gets the effect finished flag
+--- Gets the Map tracking completion state of effects
 ---
----@return any effectFinished # effect finished flag
+---@param self TextSystem.Character
+---@return table<string, boolean> # Map tracking completion state of effects
 function TextSystem.Character:effectFinished(...) end
 
 ---
---- Gets the is an image glyph
+--- Gets the True if this character is an image sprite
 ---
----@return any isImage # is an image glyph
+---@param self TextSystem.Character
+---@return boolean # True if this character is an image sprite
 function TextSystem.Character:isImage(...) end
 
 ---
---- Gets the image shadow enabled
+--- Gets the Enable shadow rendering for image characters
 ---
----@return any imageShadowEnabled # image shadow enabled
+---@param self TextSystem.Character
+---@return boolean # Enable shadow rendering for image characters
 function TextSystem.Character:imageShadowEnabled(...) end
 
 ---
---- Gets the sprite UUID
+--- Gets the Sprite UUID for image characters
 ---
----@return any spriteUUID # sprite UUID
+---@param self TextSystem.Character
+---@return string # Sprite UUID for image characters
 function TextSystem.Character:spriteUUID(...) end
 
 ---
---- Gets the image scale factor
+--- Gets the Scale multiplier for image characters
 ---
----@return any imageScale # image scale factor
+---@param self TextSystem.Character
+---@return number # Scale multiplier for image characters
 function TextSystem.Character:imageScale(...) end
 
 ---
---- Gets the foreground tint
+--- Gets the Foreground tint color
 ---
----@return any fgTint # foreground tint
+---@param self TextSystem.Character
+---@return Color # Foreground tint color
 function TextSystem.Character:fgTint(...) end
 
 ---
---- Gets the background tint
+--- Gets the Background tint color
 ---
----@return any bgTint # background tint
+---@param self TextSystem.Character
+---@return Color # Background tint color
 function TextSystem.Character:bgTint(...) end
 
 
@@ -1460,117 +1591,136 @@ TextSystem.Text = {
 }
 
 ---
---- Gets the raw get_value_callback
+--- Gets the Callback function to dynamically get text value
 ---
----@return any get_value_callback # raw value
+---@param self TextSystem.Text
+---@return function? # Callback function to dynamically get text value
 function TextSystem.Text:get_value_callback(...) end
 
 ---
---- Gets the raw onStringContentUpdatedOrChangedViaCallback
+--- Gets the Callback invoked after text content changes via callback or setText
 ---
----@return any onStringContentUpdatedOrChangedViaCallback # raw value
+---@param self TextSystem.Text
+---@return function? # Callback invoked after text content changes via callback or setText
 function TextSystem.Text:onStringContentUpdatedOrChangedViaCallback(...) end
 
 ---
---- Gets the raw effectStringsToApplyGloballyOnTextChange
+--- Gets the Effect strings applied to all characters when text updates
 ---
----@return any effectStringsToApplyGloballyOnTextChange # raw value
+---@param self TextSystem.Text
+---@return string[] # Effect strings applied to all characters when text updates
 function TextSystem.Text:effectStringsToApplyGloballyOnTextChange(...) end
 
 ---
---- Gets the raw onFinishedEffect
+--- Gets the Callback triggered when last character finishes its effect
 ---
----@return any onFinishedEffect # raw value
+---@param self TextSystem.Text
+---@return function? # Callback triggered when last character finishes its effect
 function TextSystem.Text:onFinishedEffect(...) end
 
 ---
---- Gets the raw pop_in_enabled
+--- Gets the Enable pop-in animation (deprecated)
 ---
----@return any pop_in_enabled # raw value
+---@param self TextSystem.Text
+---@return boolean # Enable pop-in animation (deprecated)
 function TextSystem.Text:pop_in_enabled(...) end
 
 ---
---- Gets the raw shadow_enabled
+--- Gets the Enable shadow rendering for characters
 ---
----@return any shadow_enabled # raw value
+---@param self TextSystem.Text
+---@return boolean # Enable shadow rendering for characters
 function TextSystem.Text:shadow_enabled(...) end
 
 ---
---- Gets the raw width
+--- Gets the Total width of rendered text
 ---
----@return any width # raw value
+---@param self TextSystem.Text
+---@return number # Total width of rendered text
 function TextSystem.Text:width(...) end
 
 ---
---- Gets the raw height
+--- Gets the Total height of rendered text
 ---
----@return any height # raw value
+---@param self TextSystem.Text
+---@return number # Total height of rendered text
 function TextSystem.Text:height(...) end
 
 ---
---- Gets the raw rawText
+--- Gets the Raw text string with effect tags
 ---
----@return any rawText # raw value
+---@param self TextSystem.Text
+---@return string # Raw text string with effect tags
 function TextSystem.Text:rawText(...) end
 
 ---
---- Gets the raw characters
+--- Gets the Array of generated character objects
 ---
----@return any characters # raw value
+---@param self TextSystem.Text
+---@return TextSystem.Character[] # Array of generated character objects
 function TextSystem.Text:characters(...) end
 
 ---
---- Gets the raw fontData
+--- Gets the Font data configuration
 ---
----@return any fontData # raw value
+---@param self TextSystem.Text
+---@return FontData # Font data configuration
 function TextSystem.Text:fontData(...) end
 
 ---
---- Gets the raw fontSize
+--- Gets the Font size in pixels
 ---
----@return any fontSize # raw value
+---@param self TextSystem.Text
+---@return number # Font size in pixels
 function TextSystem.Text:fontSize(...) end
 
 ---
---- Gets the raw wrapEnabled
+--- Gets the Enable text wrapping
 ---
----@return any wrapEnabled # raw value
+---@param self TextSystem.Text
+---@return boolean # Enable text wrapping
 function TextSystem.Text:wrapEnabled(...) end
 
 ---
---- Gets the raw wrapWidth
+--- Gets the Maximum width before wrapping
 ---
----@return any wrapWidth # raw value
+---@param self TextSystem.Text
+---@return number # Maximum width before wrapping
 function TextSystem.Text:wrapWidth(...) end
 
 ---
---- Gets the raw prevRenderScale
+--- Gets the Previous render scale (for change detection)
 ---
----@return any prevRenderScale # raw value
+---@param self TextSystem.Text
+---@return number # Previous render scale (for change detection)
 function TextSystem.Text:prevRenderScale(...) end
 
 ---
---- Gets the raw renderScale
+--- Gets the Current render scale multiplier
 ---
----@return any renderScale # raw value
+---@param self TextSystem.Text
+---@return number # Current render scale multiplier
 function TextSystem.Text:renderScale(...) end
 
 ---
---- Gets the raw createdTime
+--- Gets the Timestamp when text was created
 ---
----@return any createdTime # raw value
+---@param self TextSystem.Text
+---@return number # Timestamp when text was created
 function TextSystem.Text:createdTime(...) end
 
 ---
---- Gets the raw effectStartTime
+--- Gets the Map of effect names to start times
 ---
----@return any effectStartTime # raw value
+---@param self TextSystem.Text
+---@return table<string, number> # Map of effect names to start times
 function TextSystem.Text:effectStartTime(...) end
 
 ---
---- Gets the raw applyTransformRotationAndScale
+--- Gets the Apply parent transform rotation and scale
 ---
----@return any applyTransformRotationAndScale # raw value
+---@param self TextSystem.Text
+---@return boolean # Apply parent transform rotation and scale
 function TextSystem.Text:applyTransformRotationAndScale(...) end
 
 
@@ -1611,63 +1761,73 @@ TextSystem.Builders.TextBuilder = {
 }
 
 ---
---- Builder method setRawText
+--- Sets the raw text string (may include effect tags)
 ---
----@param v any # argument for setRawText
+---@param value string # the raw text string (may include effect tags)
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setRawText(...) end
 
 ---
---- Builder method setFontData
+--- Sets the font data configuration
 ---
----@param v any # argument for setFontData
+---@param value FontData # the font data configuration
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setFontData(...) end
 
 ---
---- Builder method setOnFinishedEffect
+--- Sets callback triggered when effect finishes
 ---
----@param v any # argument for setOnFinishedEffect
+---@param value function # callback triggered when effect finishes
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setOnFinishedEffect(...) end
 
 ---
---- Builder method setFontSize
+--- Sets the font size in pixels
 ---
----@param v any # argument for setFontSize
+---@param value number # the font size in pixels
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setFontSize(...) end
 
 ---
---- Builder method setWrapWidth
+--- Sets the maximum width before text wrapping
 ---
----@param v any # argument for setWrapWidth
+---@param value number # the maximum width before text wrapping
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setWrapWidth(...) end
 
 ---
---- Builder method setAlignment
+--- Sets the text alignment mode
 ---
----@param v any # argument for setAlignment
+---@param value TextSystem.TextAlignment # the text alignment mode
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setAlignment(...) end
 
 ---
---- Builder method setWrapMode
+--- Sets the text wrap mode
 ---
----@param v any # argument for setWrapMode
+---@param value TextSystem.TextWrapMode # the text wrap mode
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setWrapMode(...) end
 
 ---
---- Builder method setCreatedTime
+--- Sets the creation timestamp
 ---
----@param v any # argument for setCreatedTime
+---@param value number # the creation timestamp
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setCreatedTime(...) end
 
 ---
---- Builder method setPopInEnabled
+--- Sets whether pop-in animation is enabled
 ---
----@param v any # argument for setPopInEnabled
+---@param value boolean # whether pop-in animation is enabled
+---@return TextSystem.Builders.TextBuilder # Returns self for method chaining
 function TextSystem.Builders.TextBuilder:setPopInEnabled(...) end
 
 ---
---- Builder method build
+--- Builds and returns the configured Text object
 ---
----@param v any # argument for build
+---@param self TextSystem.Builders.TextBuilder
+---@return TextSystem.Text # The constructed Text object
 function TextSystem.Builders.TextBuilder:build(...) end
 
 
@@ -3146,8 +3306,10 @@ shaders.ShaderUniformSet = {
 ---
 --- Sets or updates a uniform value by name within the set.
 ---
+---@param self shaders.ShaderUniformSet
 ---@param name string # The name of the uniform to set.
 ---@param value any # The value to set (e.g., number, boolean, Vector2, Texture2D, etc.).
+---@return nil
 function shaders.ShaderUniformSet:set(...) end
 
 ---
@@ -3168,17 +3330,29 @@ shaders.ShaderUniformComponent = {
 ---
 --- Sets a static uniform value for a specific shader within this component.
 ---
+---@param self shaders.ShaderUniformComponent
 ---@param shaderName string # The name of the shader this uniform belongs to.
 ---@param uniformName string # The name of the uniform to set.
 ---@param value any # The value to assign to the uniform.
+---@return nil
 function shaders.ShaderUniformComponent:set(...) end
 
 ---
 --- Registers a callback to dynamically compute and apply uniforms for an entity.
 ---
+---@param self shaders.ShaderUniformComponent
 ---@param shaderName string # The shader this callback applies to.
 ---@param callback fun(shader: Shader, entity: Entity) # A function called just before rendering the entity.
+---@return nil
 function shaders.ShaderUniformComponent:registerEntityUniformCallback(...) end
+
+---
+--- Gets a uniform value from a shader within this component by shader and uniform name.
+---
+---@param shaderName string # The name of the shader.
+---@param uniformName string # The name of the uniform to retrieve.
+---@return any|nil # The value of the uniform, or nil if not found.
+function shaders.ShaderUniformComponent:get(...) end
 
 ---
 --- Returns the underlying ShaderUniformSet for a specific shader, or nil if not found.
@@ -3193,6 +3367,7 @@ function shaders.ShaderUniformComponent:getSet(...) end
 ---@param shader Shader # The target shader.
 ---@param shaderName string # The name of the shader configuration to apply.
 ---@param entity Entity # The entity to source dynamic uniform values from.
+---@return nil
 function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
 
 
@@ -3223,24 +3398,28 @@ shader_draw_commands.DrawCommandBatch = {
 ---
 --- Start recording draw commands into the batch.
 ---
+---@param self DrawCommandBatch
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:beginRecording(...) end
 
 ---
 --- Stop recording draw commands.
 ---
+---@param self DrawCommandBatch
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:endRecording(...) end
 
 ---
 --- Check if currently recording commands.
 ---
+---@param self DrawCommandBatch
 ---@return boolean
 function shader_draw_commands.DrawCommandBatch:recording(...) end
 
 ---
 --- Add a command to begin using a shader.
 ---
+---@param self DrawCommandBatch
 ---@param shaderName string
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:addBeginShader(...) end
@@ -3248,12 +3427,14 @@ function shader_draw_commands.DrawCommandBatch:addBeginShader(...) end
 ---
 --- Add a command to end the current shader.
 ---
+---@param self DrawCommandBatch
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:addEndShader(...) end
 
 ---
 --- Queue a texture draw using the source rect size at the given position.
 ---
+---@param self DrawCommandBatch
 ---@param texture Texture2D
 ---@param sourceRect Rectangle
 ---@param position Vector2
@@ -3264,6 +3445,7 @@ function shader_draw_commands.DrawCommandBatch:addDrawTexture(...) end
 ---
 --- Add a command to draw text.
 ---
+---@param self DrawCommandBatch
 ---@param text string
 ---@param position Vector2
 ---@param fontSize number
@@ -3276,6 +3458,7 @@ function shader_draw_commands.DrawCommandBatch:addDrawText(...) end
 ---
 --- Add a custom function to be executed inside the batch (runs during render).
 ---
+---@param self DrawCommandBatch
 ---@param func fun()
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:addCustomCommand(...) end
@@ -3283,6 +3466,7 @@ function shader_draw_commands.DrawCommandBatch:addCustomCommand(...) end
 ---
 --- Apply a ShaderUniformSet to the currently active shader inside the batch.
 ---
+---@param self DrawCommandBatch
 ---@param shaderName string
 ---@param uniforms ShaderUniformSet
 ---@return nil
@@ -3291,24 +3475,28 @@ function shader_draw_commands.DrawCommandBatch:addSetUniforms(...) end
 ---
 --- Execute all recorded commands in order.
 ---
+---@param self DrawCommandBatch
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:execute(...) end
 
 ---
 --- Optimize command order to minimize shader state changes.
 ---
+---@param self DrawCommandBatch
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:optimize(...) end
 
 ---
 --- Clear all commands from the batch.
 ---
+---@param self DrawCommandBatch
 ---@return nil
 function shader_draw_commands.DrawCommandBatch:clear(...) end
 
 ---
 --- Get the number of commands in the batch.
 ---
+---@param self DrawCommandBatch
 ---@return integer
 function shader_draw_commands.DrawCommandBatch:size(...) end
 
@@ -3375,79 +3563,93 @@ Transform = {
 ---
 --- Updates cached transform values.
 ---
----@overload fun(self, force:boolean)
----@overload fun(self, x:Spring, y:Spring, w:Spring, h:Spring, r:Spring, s:Spring, force:boolean)
+---@param self Transform
+---@overload fun(self:Transform, force:boolean)
+---@overload fun(self:Transform, x:Spring, y:Spring, w:Spring, h:Spring, r:Spring, s:Spring, force:boolean)
+---@return nil
 function Transform:updateCachedValues(...) end
 
 ---
 --- Gets the visual rotation.
 ---
+---@param self Transform
 ---@return number
 function Transform:visualR(...) end
 
 ---
 --- Gets the visual rotation including dynamic motion.
 ---
+---@param self Transform
 ---@return number
 function Transform:visualRWithMotion(...) end
 
 ---
 --- Gets the visual scale.
 ---
+---@param self Transform
 ---@return number
 function Transform:visualS(...) end
 
 ---
 --- Gets the visual scale including dynamic motion.
 ---
+---@param self Transform
 ---@return number
 function Transform:visualSWithMotion(...) end
 
 ---
 --- Gets the X position spring.
 ---
+---@param self Transform
 ---@return Spring
 function Transform:xSpring(...) end
 
 ---
 --- Gets the Y position spring.
 ---
+---@param self Transform
 ---@return Spring
 function Transform:ySpring(...) end
 
 ---
 --- Gets the width spring.
 ---
+---@param self Transform
 ---@return Spring
 function Transform:wSpring(...) end
 
 ---
 --- Gets the height spring.
 ---
+---@param self Transform
 ---@return Spring
 function Transform:hSpring(...) end
 
 ---
 --- Gets the rotation spring.
 ---
+---@param self Transform
 ---@return Spring
 function Transform:rSpring(...) end
 
 ---
 --- Gets the scale spring.
 ---
+---@param self Transform
 ---@return Spring
 function Transform:sSpring(...) end
 
 ---
 --- Gets the X-axis hover buffer.
 ---
+---@param self Transform
 ---@return number
 function Transform:hoverBufferX(...) end
 
 ---
 --- Gets the Y-axis hover buffer.
 ---
+---@param self Transform
 ---@return number
 function Transform:hoverBufferY(...) end
 
@@ -3643,6 +3845,7 @@ function InheritedPropertiesBuilder:addAlignmentOffset(...) end
 ---
 --- Constructs the final InheritedProperties object.
 ---
+---@param self InheritedPropertiesBuilder
 ---@return InheritedProperties
 function InheritedPropertiesBuilder:build(...) end
 
@@ -4901,6 +5104,7 @@ function UIConfigBuilder:addNPatchSourceTexture(...) end
 ---
 --- Constructs the final UIConfig object.
 ---
+---@param self UIConfigBuilder
 ---@return UIConfig
 function UIConfigBuilder:build(...) end
 
@@ -4929,7 +5133,7 @@ UIElementTemplateNodeBuilder = {
 ---
 --- Creates a new builder instance.
 ---
----@return self
+---@return UIElementTemplateNodeBuilder
 function UIElementTemplateNodeBuilder.create(...) end
 
 ---
@@ -4963,6 +5167,7 @@ function UIElementTemplateNodeBuilder:addChildren(...) end
 ---
 --- Builds the final template node.
 ---
+---@param self UIElementTemplateNodeBuilder
 ---@return UIElementTemplateNode
 function UIElementTemplateNodeBuilder:build(...) end
 
@@ -5081,43 +5286,68 @@ spring = {
 ---
 --- Create entity, attach Spring, return both.
 ---
----(entity, Spring) make(Registry, number value, number k, number d, table? opts)
+---@param registry Registry
+---@param value number
+---@param k number
+---@param d number
+---@param opts table|nil
+---@return entity, Spring
 function spring:make(...) end
 
 ---
 --- Get existing Spring on entity, or create and attach if missing.
 ---
----Spring get_or_make(Registry, entity, number value, number k, number d, table? opts)
+---@param registry Registry
+---@param entity entity
+---@param value number
+---@param k number
+---@param d number
+---@param opts table|nil
+---@return Spring
 function spring:get_or_make(...) end
 
 ---
 --- Get existing Spring on entity; errors if missing.
 ---
----Spring get(Registry, entity)
+---@param registry Registry
+---@param entity entity
+---@return Spring
 function spring:get(...) end
 
 ---
 --- Attach or replace Spring on an existing entity.
 ---
----Spring attach(Registry, entity, number value, number k, number d, table? opts)
+---@param registry Registry
+---@param entity entity
+---@param value number
+---@param k number
+---@param d number
+---@param opts table|nil
+---@return Spring
 function spring:attach(...) end
 
 ---
 --- Update all Spring components in the registry.
 ---
----void(Registry, number dt)
+---@param registry Registry
+---@param dt number
+---@return nil
 function spring:update_all(...) end
 
 ---
 --- Update a single Spring.
 ---
----void(Spring, number dt)
+---@param spring Spring
+---@param dt number
+---@return nil
 function spring:update(...) end
 
 ---
 --- Set target without touching k/d.
 ---
----void(Spring, number target)
+---@param spring Spring
+---@param target number
+---@return nil
 function spring:set_target(...) end
 
 
@@ -5142,37 +5372,54 @@ Spring = {
 ---
 --- Impulse-like tug on current value.
 ---
----void(number force, number? k, number? d)
+---@param self Spring
+---@param force number
+---@param k number|nil
+---@param d number|nil
+---@return nil
 function Spring:pull(...) end
 
 ---
 --- Move anchor with spring params.
 ---
----void(number target, number k, number d)
+---@param self Spring
+---@param target number
+---@param k number
+---@param d number
+---@return nil
 function Spring:animate_to(...) end
 
 ---
 --- Time-based targeting with easing.
 ---
----void(number target, number T, function? easing, number? k0, number? d0)
+---@param self Spring
+---@param target number
+---@param time_to_target number
+---@param easing fun(x: number): number|nil
+---@param k0 number|nil
+---@param d0 number|nil
+---@return nil
 function Spring:animate_to_time(...) end
 
 ---
 --- Enable updates.
 ---
----void()
+---@param self Spring
+---@return nil
 function Spring:enable(...) end
 
 ---
 --- Disable updates.
 ---
----void()
+---@param self Spring
+---@return nil
 function Spring:disable(...) end
 
 ---
 --- Snap value to target; zero velocity.
 ---
----void()
+---@param self Spring
+---@return nil
 function Spring:snap_to_target(...) end
 
 
@@ -5185,6 +5432,7 @@ WorldQuadtree = {
 ---
 --- Removes all entities from the quadtree.
 ---
+---@param self WorldQuadtree
 ---@return nil
 function WorldQuadtree:clear(...) end
 
@@ -5212,12 +5460,14 @@ function WorldQuadtree:query(...) end
 ---
 --- Returns a list of intersecting pairs as 2-element arrays {a, b}.
 ---
+---@param self WorldQuadtree
 ---@return Entity[][]
 function WorldQuadtree:find_all_intersections(...) end
 
 ---
 --- Returns the overall bounds of the quadtree space.
 ---
+---@param self WorldQuadtree
 ---@return Box
 function WorldQuadtree:get_bounds(...) end
 
@@ -5242,8 +5492,9 @@ quadtree = {
 ---
 --- Creates a Box from numbers or from a table with {left, top, width, height}.
 ---
----@overload fun(left:number, top:number, width:number, height:number): Box
----@overload fun(tbl:Box): Box
+---@param self quadtree
+---@overload fun(self:quadtree, left:number, top:number, width:number, height:number): Box
+---@overload fun(self:quadtree, tbl:Box): Box
 ---@return Box
 function quadtree:box(...) end
 
@@ -5381,7 +5632,8 @@ PhysicsManagerUD = {
     enable_debug_draw = nil,  -- ---@param name string
 ---@param on boolean
     step_all = nil,  -- ---@param dt number
-    draw_all = nil,
+    draw_all = ---@param self PhysicsManagerUD
+---@return nil,  -- Debug-draws all physics worlds that are active and have debug draw enabled
     move_entity_to_world = nil,  -- ---@param e entt.entity
 ---@param dst string
     get_nav_config = nil,  -- ---@param world string
@@ -5447,20 +5699,23 @@ GameCamera = {
 ---
 --- Enter 2D mode using this camera.
 ---
+---@param self GameCamera
 ---@return nil
 function GameCamera:Begin(...) end
 
 ---
 --- End 2D mode for this camera.
 ---
+---@param self GameCamera
 ---@return nil
 function GameCamera:End(...) end
 
 ---
---- Instantly move the camera’s actual position to (x, y), skipping smoothing.
+--- Instantly move the camera's actual position to (x, y), skipping smoothing.
 --- Resets spring values/velocities, clears shakes, and suppresses follow logic for a couple frames.
 --- Use when teleporting or hard-setting camera position.
 ---
+---@param self GameCamera
 ---@param x number
 ---@param y number
 ---@return nil
@@ -5469,13 +5724,16 @@ function GameCamera:SnapActualTo(...) end
 ---
 --- End 2D mode, then draw an overlay using the given Layer.
 ---
----@overload fun(layer:Layer):nil
+---@overload fun---@param self GameCamera
+---@param layer Layer
+---@return nil
 function GameCamera:End(...) end
 
 ---
 --- Single-call smooth move to (x, y). Zeroes velocity, boosts damping briefly to prevent jitter on big jumps,
 --- and suppresses follow/deadzone for a few frames. Restores tuning automatically.
 ---
+---@param self GameCamera
 ---@param x number
 ---@param y number
 ---@param frames integer @frames of boosted damping (default 8)
@@ -5488,6 +5746,7 @@ function GameCamera:SetActualTargetSmooth(...) end
 ---
 --- Nudge the camera target immediately by (dx, dy).
 ---
+---@param self GameCamera
 ---@param dx number
 ---@param dy number
 ---@return nil
@@ -5496,12 +5755,15 @@ function GameCamera:Move(...) end
 ---
 --- Nudge the camera target by a vector.
 ---
----@overload fun(delta:Vector2):nil
+---@overload fun---@param self GameCamera
+---@param delta Vector2
+---@return nil
 function GameCamera:Move(...) end
 
 ---
 --- Set the world-space follow target (enables deadzone logic).
 ---
+---@param self GameCamera
 ---@param worldPos Vector2
 ---@return nil
 function GameCamera:Follow(...) end
@@ -5509,6 +5771,7 @@ function GameCamera:Follow(...) end
 ---
 --- Set or clear the deadzone rectangle (world units).
 ---
+---@param self GameCamera
 ---@param rect Rectangle|nil # nil disables deadzone
 ---@return nil
 function GameCamera:SetDeadzone(...) end
@@ -5516,7 +5779,8 @@ function GameCamera:SetDeadzone(...) end
 ---
 --- Set deadzone rectangle by x, y, width, height values.
 ---
----@overload fun---@param x number
+---@overload fun---@param self GameCamera
+---@param x number
 ---@param y number
 ---@param w number
 ---@param h number
@@ -5526,13 +5790,15 @@ function GameCamera:SetDeadzone(...) end
 ---
 --- Set deadzone from a Lua table with x, y, width/w, height/h fields.
 ---
----@overload fun---@param t {x: number, y: number, width: number, height: number}
+---@overload fun---@param self GameCamera
+---@param t {x: number, y: number, width: number, height: number}
 ---@return nil
 function GameCamera:SetDeadzone(...) end
 
 ---
 --- Choose the follow behavior.
 ---
+---@param self GameCamera
 ---@param style integer|camera.FollowStyle
 ---@return nil
 function GameCamera:SetFollowStyle(...) end
@@ -5540,6 +5806,7 @@ function GameCamera:SetFollowStyle(...) end
 ---
 --- Higher t snaps faster; lower t is smoother.
 ---
+---@param self GameCamera
 ---@param t number # 0..1 smoothing toward follow target
 ---@return nil
 function GameCamera:SetFollowLerp(...) end
@@ -5547,6 +5814,7 @@ function GameCamera:SetFollowLerp(...) end
 ---
 --- Lead the camera ahead of movement.
 ---
+---@param self GameCamera
 ---@param lead Vector2
 ---@return nil
 function GameCamera:SetFollowLead(...) end
@@ -5554,12 +5822,16 @@ function GameCamera:SetFollowLead(...) end
 ---
 --- Lead the camera by components.
 ---
----@overload fun(x:number, y:number):nil
+---@overload fun---@param self GameCamera
+---@param x number
+---@param y number
+---@return nil
 function GameCamera:SetFollowLead(...) end
 
 ---
 --- Fullscreen flash of the given color.
 ---
+---@param self GameCamera
 ---@param duration number
 ---@param color Color
 ---@return nil
@@ -5568,6 +5840,7 @@ function GameCamera:Flash(...) end
 ---
 --- Fade to color; optional callback invoked when fade completes.
 ---
+---@param self GameCamera
 ---@param duration number
 ---@param color Color
 ---@param cb? fun():nil
@@ -5577,6 +5850,7 @@ function GameCamera:Fade(...) end
 ---
 --- Noise-based screenshake.
 ---
+---@param self GameCamera
 ---@param amplitude number
 ---@param duration number
 ---@param frequency? number
@@ -5586,6 +5860,7 @@ function GameCamera:Shake(...) end
 ---
 --- Kick the offset spring system with an impulse.
 ---
+---@param self GameCamera
 ---@param intensity number
 ---@param angle number # radians
 ---@param stiffness number
@@ -5596,6 +5871,7 @@ function GameCamera:SpringShake(...) end
 ---
 --- Set spring-target zoom (smoothed).
 ---
+---@param self GameCamera
 ---@param z number
 ---@return nil
 function GameCamera:SetActualZoom(...) end
@@ -5603,6 +5879,7 @@ function GameCamera:SetActualZoom(...) end
 ---
 --- Set immediate zoom (unsmoothed).
 ---
+---@param self GameCamera
 ---@param z number
 ---@return nil
 function GameCamera:SetVisualZoom(...) end
@@ -5610,18 +5887,21 @@ function GameCamera:SetVisualZoom(...) end
 ---
 --- Current spring-target zoom.
 ---
+---@param self GameCamera
 ---@return number
 function GameCamera:GetActualZoom(...) end
 
 ---
 --- Current immediate zoom.
 ---
+---@param self GameCamera
 ---@return number
 function GameCamera:GetVisualZoom(...) end
 
 ---
 --- Set spring-target rotation (radians).
 ---
+---@param self GameCamera
 ---@param radians number
 ---@return nil
 function GameCamera:SetActualRotation(...) end
@@ -5629,6 +5909,7 @@ function GameCamera:SetActualRotation(...) end
 ---
 --- Set immediate rotation (radians).
 ---
+---@param self GameCamera
 ---@param radians number
 ---@return nil
 function GameCamera:SetVisualRotation(...) end
@@ -5636,18 +5917,21 @@ function GameCamera:SetVisualRotation(...) end
 ---
 --- Current spring-target rotation (radians).
 ---
+---@param self GameCamera
 ---@return number
 function GameCamera:GetActualRotation(...) end
 
 ---
 --- Current immediate rotation (radians).
 ---
+---@param self GameCamera
 ---@return number
 function GameCamera:GetVisualRotation(...) end
 
 ---
 --- Set spring-target offset.
 ---
+---@param self GameCamera
 ---@param offset Vector2
 ---@return nil
 function GameCamera:SetActualOffset(...) end
@@ -5655,12 +5939,16 @@ function GameCamera:SetActualOffset(...) end
 ---
 --- Set spring-target offset by components.
 ---
----@overload fun(x:number, y:number):nil
+---@overload fun---@param self GameCamera
+---@param x number
+---@param y number
+---@return nil
 function GameCamera:SetActualOffset(...) end
 
 ---
 --- Set immediate offset.
 ---
+---@param self GameCamera
 ---@param offset Vector2
 ---@return nil
 function GameCamera:SetVisualOffset(...) end
@@ -5668,24 +5956,30 @@ function GameCamera:SetVisualOffset(...) end
 ---
 --- Set immediate offset by components.
 ---
----@overload fun(x:number, y:number):nil
+---@overload fun---@param self GameCamera
+---@param x number
+---@param y number
+---@return nil
 function GameCamera:SetVisualOffset(...) end
 
 ---
 --- Current spring-target offset.
 ---
+---@param self GameCamera
 ---@return Vector2
 function GameCamera:GetActualOffset(...) end
 
 ---
 --- Current immediate offset.
 ---
+---@param self GameCamera
 ---@return Vector2
 function GameCamera:GetVisualOffset(...) end
 
 ---
 --- Set spring-target position.
 ---
+---@param self GameCamera
 ---@param world Vector2
 ---@return nil
 function GameCamera:SetActualTarget(...) end
@@ -5693,12 +5987,16 @@ function GameCamera:SetActualTarget(...) end
 ---
 --- Set spring-target position by components.
 ---
----@overload fun(x:number, y:number):nil
+---@overload fun---@param self GameCamera
+---@param x number
+---@param y number
+---@return nil
 function GameCamera:SetActualTarget(...) end
 
 ---
 --- Set immediate position.
 ---
+---@param self GameCamera
 ---@param world Vector2
 ---@return nil
 function GameCamera:SetVisualTarget(...) end
@@ -5706,24 +6004,30 @@ function GameCamera:SetVisualTarget(...) end
 ---
 --- Set immediate position by components.
 ---
----@overload fun(x:number, y:number):nil
+---@overload fun---@param self GameCamera
+---@param x number
+---@param y number
+---@return nil
 function GameCamera:SetVisualTarget(...) end
 
 ---
 --- Current spring-target position.
 ---
+---@param self GameCamera
 ---@return Vector2
 function GameCamera:GetActualTarget(...) end
 
 ---
 --- Current immediate position.
 ---
+---@param self GameCamera
 ---@return Vector2
 function GameCamera:GetVisualTarget(...) end
 
 ---
 --- Set world-space clamp rectangle or disable when nil.
 ---
+---@param self GameCamera
 ---@param rect Rectangle|nil # nil disables clamping
 ---@return nil
 function GameCamera:SetBounds(...) end
@@ -5731,7 +6035,8 @@ function GameCamera:SetBounds(...) end
 ---
 --- Set bounds rectangle by x, y, width, height values.
 ---
----@overload fun---@param x number
+---@overload fun---@param self GameCamera
+---@param x number
 ---@param y number
 ---@param w number
 ---@param h number
@@ -5741,13 +6046,15 @@ function GameCamera:SetBounds(...) end
 ---
 --- Set bounds from a Lua table with x, y, width/w, height/h fields.
 ---
----@overload fun---@param t {x: number, y: number, width: number, height: number}
+---@overload fun---@param self GameCamera
+---@param t {x: number, y: number, width: number, height: number}
 ---@return nil
 function GameCamera:SetBounds(...) end
 
 ---
 --- Allow a little slack when clamping bounds (useful when bounds equal the viewport).
 ---
+---@param self GameCamera
 ---@param padding number # extra screen-space leeway in pixels
 ---@return nil
 function GameCamera:SetBoundsPadding(...) end
@@ -5755,6 +6062,7 @@ function GameCamera:SetBoundsPadding(...) end
 ---
 --- Enable/disable damping on the offset spring.
 ---
+---@param self GameCamera
 ---@param enabled boolean
 ---@return nil
 function GameCamera:SetOffsetDampingEnabled(...) end
@@ -5762,12 +6070,14 @@ function GameCamera:SetOffsetDampingEnabled(...) end
 ---
 --- Whether offset damping is enabled.
 ---
+---@param self GameCamera
 ---@return boolean
 function GameCamera:IsOffsetDampingEnabled(...) end
 
 ---
 --- Enable/disable strafe tilt effect.
 ---
+---@param self GameCamera
 ---@param enabled boolean
 ---@return nil
 function GameCamera:SetStrafeTiltEnabled(...) end
@@ -5775,18 +6085,21 @@ function GameCamera:SetStrafeTiltEnabled(...) end
 ---
 --- Whether strafe tilt is enabled.
 ---
+---@param self GameCamera
 ---@return boolean
 function GameCamera:IsStrafeTiltEnabled(...) end
 
 ---
 --- Mouse position in world space using this camera.
 ---
+---@param self GameCamera
 ---@return Vector2
 function GameCamera:GetMouseWorld(...) end
 
 ---
 --- Advance springs, effects, follow, and bounds by dt seconds.
 ---
+---@param self GameCamera
 ---@param dt number
 ---@return nil
 function GameCamera:Update(...) end
@@ -6221,12 +6534,14 @@ function create_transform_entity(...) end
 --- Adds a fullscreen shader to the game.
 ---
 ---@param shaderName string
+---@return nil
 function add_fullscreen_shader(...) end
 
 ---
 --- Removes a fullscreen shader from the game.
 ---
 ---@param shaderName string
+---@return nil
 function remove_fullscreen_shader(...) end
 
 ---
@@ -6283,9 +6598,9 @@ function PhysicsManager.enable_debug_draw(...) end
 function PhysicsManager.step_all(...) end
 
 ---
---- Debug-draw all worlds that are active and have debug draw enabled.
+--- Debug-draws all physics worlds that are active and have debug draw enabled
 ---
----@return void
+---@return nil
 function PhysicsManager.draw_all(...) end
 
 ---
@@ -6516,7 +6831,7 @@ function animation_system.getNinepatchUIBorderInfo(...) end
 ---
 ---@param e entt.entity # Target entity
 ---@param fgColor Color # Foreground color to set
---- Sets the foreground color for all animation objects in an entity
+---@return nil
 function animation_system.setFGColorForAllAnimationObjects(...) end
 
 ---
@@ -6620,6 +6935,7 @@ function animation_system.resizeAnimationObjectToFit(...) end
 ---
 ---@param name string               # Unique camera name
 ---@param registry entt.registry*   # Pointer to your ECS registry
+---@return nil
 --- Create or overwrite a named GameCamera.
 function camera.Create(...) end
 
@@ -6633,6 +6949,7 @@ function camera.Exists(...) end
 ---
 ---
 ---@param name string
+---@return nil
 --- Remove (destroy) a named camera.
 function camera.Remove(...) end
 
@@ -6647,31 +6964,36 @@ function camera.Get(...) end
 ---
 ---@param name string
 ---@param dt number
+---@return nil
 --- Update a single camera.
 function camera.Update(...) end
 
 ---
 ---
 ---@param dt number
+---@return nil
 --- Update all cameras.
 function camera.UpdateAll(...) end
 
 ---
+--- Enter 2D mode with a named camera (or raw Camera2D). Throws if camera doesn't exist.
 ---
 ---@overload fun(name:string)
 ---@overload fun(cam:Camera2D*)
---- Enter 2D mode with a named camera (or raw Camera2D). Throws if camera doesn't exist.
+---@return nil
 function camera.Begin(...) end
 
 ---
----
 --- End the current camera (handles nesting).
+---
+---@return nil
 function camera.End(...) end
 
 ---
 ---
 ---@param name string
 ---@param fn fun()
+---@return nil
 --- Run fn inside Begin/End for the named camera. Throws if camera doesn't exist.
 function camera.with(...) end
 
@@ -6700,24 +7022,27 @@ function collision.create_collider_for_entity(...) end
 function collision.CheckCollisionBetweenTransforms(...) end
 
 ---
+--- Adds the given tag bit to this entity's filter.category, so it *is* also that tag.
 ---
----@param e entt.entity               # Entity whose filter to modify
----@param tag string                   # Name of the tag to add
----| Adds the given tag bit to this entity’s filter.category, so it *is* also that tag.
+---@param e entt.entity
+---@param tag string
+---@return nil
 function collision.setCollisionCategory(...) end
 
 ---
+--- Replaces the entity's filter.mask with the OR of all specified tags.
 ---
----@param e entt.entity               # Entity whose filter to modify
----@param ... string                   # One or more tag names
----| Replaces the entity’s filter.mask with the OR of all specified tags.
+---@param e entt.entity
+---@param ... string
+---@return nil
 function collision.setCollisionMask(...) end
 
 ---
+--- Clears all category bits, then sets only this one.
 ---
----@param e entt.entity               # Entity whose filter to reset
----@param tag string                   # The sole tag name
----| Clears all category bits, then sets only this one.
+---@param e entt.entity
+---@param tag string
+---@return nil
 function collision.resetCollisionCategory(...) end
 
 ---
@@ -8029,33 +8354,38 @@ function command_buffer.executeDrawBatchedEntities(...) end
 ---
 --- Create a navigation group.
 ---
----@param name string
+---@param n string
+---@return nil
 function controller_nav.create_group(...) end
 
 ---
 --- Create a navigation layer.
 ---
----@param name string
+---@param n string
+---@return nil
 function controller_nav.create_layer(...) end
 
 ---
 --- Attach an existing group to a layer.
 ---
----@param layer string
----@param group string
+---@param l string
+---@param g string
+---@return nil
 function controller_nav.add_group_to_layer(...) end
 
 ---
 --- Navigate within or across groups.
 ---
----@param group string
----@param dir 'L'|'R'|'U'|'D'
+---@param g string
+---@param d string
+---@return nil
 function controller_nav.navigate(...) end
 
 ---
 --- Trigger the select callback for the currently focused entity.
 ---
----@param group string
+---@param g string
+---@return nil
 function controller_nav.select_current(...) end
 
 ---
@@ -8063,16 +8393,19 @@ function controller_nav.select_current(...) end
 ---
 ---@param e entt.entity
 ---@param enabled boolean
+---@return nil
 function controller_nav.set_entity_enabled(...) end
 
 ---
 --- Print debug info on groups/layers.
 ---
+---@return nil
 function controller_nav.debug_print_state(...) end
 
 ---
 --- Validate layer/group configuration.
 ---
+---@return nil
 function controller_nav.validate(...) end
 
 ---
@@ -8085,21 +8418,24 @@ function controller_nav.current_focus_group(...) end
 --- Set Lua callbacks for a specific navigation group.
 ---
 ---@param group string
----@param tbl table {on_focus:function|nil, on_unfocus:function|nil, on_select:function|nil}
+---@param tbl table
+---@return nil
 function controller_nav.set_group_callbacks(...) end
 
 ---
 --- Link a group's navigation directions to other groups.
 ---
 ---@param from string
----@param dirs table {up:string|nil, down:string|nil, left:string|nil, right:string|nil}
+---@param dirs table
+---@return nil
 function controller_nav.link_groups(...) end
 
 ---
 --- Toggle navigation mode for the group.
 ---
 ---@param group string
----@param mode 'spatial'|'linear'
+---@param mode string
+---@return nil
 function controller_nav.set_group_mode(...) end
 
 ---
@@ -8107,12 +8443,14 @@ function controller_nav.set_group_mode(...) end
 ---
 ---@param group string
 ---@param wrap boolean
+---@return nil
 function controller_nav.set_wrap(...) end
 
 ---
 --- Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.
 ---
 ---@param e entt.entity
+---@return nil
 function controller_nav.focus_entity(...) end
 
 ---
@@ -9220,7 +9558,6 @@ function localization.setFallbackLanguage(...) end
 --- Returns the currently active language code.
 ---
 ---@return string # The currently active language code.
----Gets the currently active language code. This is useful for checking which language is currently set.
 function localization.getCurrentLanguage(...) end
 
 ---
@@ -9247,7 +9584,7 @@ function localization.getFontData(...) end
 ---
 --- Gets the font data for the current language.
 ---
----@return FontData # The font for the current language.
+---@return Font
 function localization.getFont(...) end
 
 ---
@@ -9278,7 +9615,8 @@ function localization.loadNamedFont(...) end
 ---
 --- Gets a named font by name, falling back to current language font.
 ---
----@return FontData # The font data for the named font, or current language font if not found.
+---@param name string
+---@return FontData
 function localization.getNamedFont(...) end
 
 ---
@@ -9313,22 +9651,23 @@ function particle.EmitParticles(...) end
 ---
 --- Attaches an existing emitter to another entity, with optional offset.
 ---
----@param emitter entt::entity---@param target entt::entity---@param opts table? # { offset = Vector2 }
+---@param emitter entt.entity
+---@param target entt.entity
+---@param opts table? # { offset = Vector2 }
+---@return nil
 function particle.AttachEmitter(...) end
 
 ---
 --- Destroys all live particles.
 ---
----@return void
----Destroys every live particle in the registry.
+---@return nil
 function particle.WipeAll(...) end
 
 ---
 --- Destroys all particles with the given string tag.
 ---
----@param tag string # The tag to match
----@return void
----Destroys only those particles whose ParticleTag.name == tag.
+---@param tag string
+---@return nil
 function particle.WipeTagged(...) end
 
 ---
@@ -9377,6 +9716,7 @@ function particle.CreateParticle(...) end
 ---
 ---@param world physics.PhysicsWorld
 ---@param tags string[]
+---@return nil
 function physics.set_collision_tags(...) end
 
 ---
@@ -9385,6 +9725,7 @@ function physics.set_collision_tags(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tags string[]
+---@return nil
 function physics.enable_collision_between_many(...) end
 
 ---
@@ -9393,6 +9734,7 @@ function physics.enable_collision_between_many(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tags string[]
+---@return nil
 function physics.disable_collision_between_many(...) end
 
 ---
@@ -9401,6 +9743,7 @@ function physics.disable_collision_between_many(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tagB_or_list string|string[]
+---@return nil
 function physics.enable_collision_between(...) end
 
 ---
@@ -9409,6 +9752,7 @@ function physics.enable_collision_between(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tagB_or_list string|string[]
+---@return nil
 function physics.disable_collision_between(...) end
 
 ---
@@ -9417,6 +9761,7 @@ function physics.disable_collision_between(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tags string[]
+---@return nil
 function physics.enable_trigger_between_many(...) end
 
 ---
@@ -9425,6 +9770,7 @@ function physics.enable_trigger_between_many(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tags string[]
+---@return nil
 function physics.disable_trigger_between_many(...) end
 
 ---
@@ -9433,6 +9779,7 @@ function physics.disable_trigger_between_many(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tagB_or_list string|string[]
+---@return nil
 function physics.enable_trigger_between(...) end
 
 ---
@@ -9441,6 +9788,7 @@ function physics.enable_trigger_between(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tagB_or_list string|string[]
+---@return nil
 function physics.disable_trigger_between(...) end
 
 ---
@@ -9449,12 +9797,14 @@ function physics.disable_trigger_between(...) end
 ---@param world physics.PhysicsWorld
 ---@param tag string
 ---@param collidable_tags string[]
+---@return nil
 function physics.update_collision_masks_for(...) end
 
 ---
 --- Re-applies collision filters to all shapes based on their current tags.
 ---
 ---@param world physics.PhysicsWorld
+---@return nil
 function physics.reapply_all_filters(...) end
 
 ---
@@ -9516,6 +9866,7 @@ function physics.GetObjectsInArea(...) end
 ---
 ---@param shape lightuserdata @ cpShape*
 ---@param e entt.entity
+---@return nil
 function physics.SetEntityToShape(...) end
 
 ---
@@ -9523,6 +9874,7 @@ function physics.SetEntityToShape(...) end
 ---
 ---@param body lightuserdata @ cpBody*
 ---@param e entt.entity
+---@return nil
 function physics.SetEntityToBody(...) end
 
 ---
@@ -9598,6 +9950,7 @@ function physics.get_shape_bb(...) end
 ---@param e entt.entity
 ---@param vx number
 ---@param vy number
+---@return nil
 function physics.SetVelocity(...) end
 
 ---
@@ -9613,6 +9966,7 @@ function physics.IsSleeping(...) end
 ---
 ---@param world physics.PhysicsWorld
 ---@param t number
+---@return nil
 function physics.SetSleepTimeThreshold(...) end
 
 ---
@@ -9636,6 +9990,7 @@ function physics.GetVelocity(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param av number @ radians/sec
+---@return nil
 function physics.SetAngularVelocity(...) end
 
 ---
@@ -9645,6 +10000,7 @@ function physics.SetAngularVelocity(...) end
 ---@param e entt.entity
 ---@param fx number
 ---@param fy number
+---@return nil
 function physics.ApplyForce(...) end
 
 ---
@@ -9653,6 +10009,7 @@ function physics.ApplyForce(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param angularImpulse number
+---@return nil
 function physics.ApplyAngularImpulse(...) end
 
 ---
@@ -9662,6 +10019,7 @@ function physics.ApplyAngularImpulse(...) end
 ---@param e entt.entity
 ---@param ix number
 ---@param iy number
+---@return nil
 function physics.ApplyImpulse(...) end
 
 ---
@@ -9670,6 +10028,7 @@ function physics.ApplyImpulse(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param torque number
+---@return nil
 function physics.ApplyTorque(...) end
 
 ---
@@ -9678,6 +10037,7 @@ function physics.ApplyTorque(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param linear number
+---@return nil
 function physics.SetDamping(...) end
 
 ---
@@ -9685,6 +10045,7 @@ function physics.SetDamping(...) end
 ---
 ---@param world physics.PhysicsWorld
 ---@param damping number
+---@return nil
 function physics.SetGlobalDamping(...) end
 
 ---
@@ -9721,6 +10082,7 @@ function physics.GetPosition(...) end
 ---@param e entt.entity
 ---@param x number
 ---@param y number
+---@return nil
 function physics.SetPosition(...) end
 
 ---
@@ -9737,6 +10099,7 @@ function physics.GetAngle(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param radians number
+---@return nil
 function physics.SetAngle(...) end
 
 ---
@@ -9745,6 +10108,7 @@ function physics.SetAngle(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param restitution number
+---@return nil
 function physics.SetRestitution(...) end
 
 ---
@@ -9753,6 +10117,7 @@ function physics.SetRestitution(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param friction number
+---@return nil
 function physics.SetFriction(...) end
 
 ---
@@ -9761,6 +10126,7 @@ function physics.SetFriction(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param awake boolean
+---@return nil
 function physics.SetAwake(...) end
 
 ---
@@ -9777,6 +10143,7 @@ function physics.GetMass(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param mass number
+---@return nil
 function physics.SetMass(...) end
 
 ---
@@ -9785,6 +10152,7 @@ function physics.SetMass(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param isBullet boolean
+---@return nil
 function physics.SetBullet(...) end
 
 ---
@@ -9793,6 +10161,7 @@ function physics.SetBullet(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param fixed boolean
+---@return nil
 function physics.SetFixedRotation(...) end
 
 ---
@@ -9801,6 +10170,7 @@ function physics.SetFixedRotation(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param moment number
+---@return nil
 function physics.SetMoment(...) end
 
 ---
@@ -9809,6 +10179,7 @@ function physics.SetMoment(...) end
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
 ---@param bodyType 'static'|'kinematic'|'dynamic'
+---@return nil
 function physics.SetBodyType(...) end
 
 ---
@@ -9818,6 +10189,7 @@ function physics.SetBodyType(...) end
 ---@param arb lightuserdata @ cpArbiter*
 ---@param key string
 ---@param value number
+---@return nil
 function physics.arb_set_number(...) end
 
 ---
@@ -9837,6 +10209,7 @@ function physics.arb_get_number(...) end
 ---@param arb lightuserdata @ cpArbiter*
 ---@param key string
 ---@param value boolean
+---@return nil
 function physics.arb_set_bool(...) end
 
 ---
@@ -9856,6 +10229,7 @@ function physics.arb_get_bool(...) end
 ---@param arb lightuserdata @ cpArbiter*
 ---@param key string
 ---@param value lightuserdata
+---@return nil
 function physics.arb_set_ptr(...) end
 
 ---
@@ -9880,6 +10254,7 @@ function physics.clear_all_worlds(...) end
 ---@param tagA string
 ---@param tagB string
 ---@param fn fun(arb:lightuserdata):boolean|nil
+---@return nil
 function physics.on_pair_begin(...) end
 
 ---
@@ -9889,6 +10264,7 @@ function physics.on_pair_begin(...) end
 ---@param tagA string
 ---@param tagB string
 ---@param fn fun(arb:lightuserdata)
+---@return nil
 function physics.on_pair_separate(...) end
 
 ---
@@ -9897,6 +10273,7 @@ function physics.on_pair_separate(...) end
 ---@param world physics.PhysicsWorld
 ---@param tag string
 ---@param fn fun(arb:lightuserdata):boolean|nil
+---@return nil
 function physics.on_wildcard_begin(...) end
 
 ---
@@ -9905,6 +10282,7 @@ function physics.on_wildcard_begin(...) end
 ---@param world physics.PhysicsWorld
 ---@param tag string
 ---@param fn fun(arb:lightuserdata)
+---@return nil
 function physics.on_wildcard_separate(...) end
 
 ---
@@ -9914,6 +10292,7 @@ function physics.on_wildcard_separate(...) end
 ---@param tagA string
 ---@param tagB string
 ---@param fn fun(arb:lightuserdata):boolean|nil
+---@return nil
 function physics.on_pair_presolve(...) end
 
 ---
@@ -9923,6 +10302,7 @@ function physics.on_pair_presolve(...) end
 ---@param tagA string
 ---@param tagB string
 ---@param fn fun(arb:lightuserdata)
+---@return nil
 function physics.on_pair_postsolve(...) end
 
 ---
@@ -9931,6 +10311,7 @@ function physics.on_pair_postsolve(...) end
 ---@param world physics.PhysicsWorld
 ---@param tag string
 ---@param fn fun(arb:lightuserdata):boolean|nil
+---@return nil
 function physics.on_wildcard_presolve(...) end
 
 ---
@@ -9939,6 +10320,7 @@ function physics.on_wildcard_presolve(...) end
 ---@param world physics.PhysicsWorld
 ---@param tag string
 ---@param fn fun(arb:lightuserdata)
+---@return nil
 function physics.on_wildcard_postsolve(...) end
 
 ---
@@ -9947,6 +10329,7 @@ function physics.on_wildcard_postsolve(...) end
 ---@param world physics.PhysicsWorld
 ---@param tagA string
 ---@param tagB string
+---@return nil
 function physics.clear_pair_handlers(...) end
 
 ---
@@ -9954,6 +10337,7 @@ function physics.clear_pair_handlers(...) end
 ---
 ---@param world physics.PhysicsWorld
 ---@param tag string
+---@return nil
 function physics.clear_wildcard_handlers(...) end
 
 ---
@@ -10830,6 +11214,7 @@ function shader_pipeline.ShaderPipelineComponent.addOverlay(...) end
 ---
 --- Add a new pass at the end
 ---
+---@param self ShaderPipelineComponent
 ---@param name string
 ---@return nil
 function shader_pipeline.ShaderPipelineComponent.addPass(...) end
@@ -10837,6 +11222,7 @@ function shader_pipeline.ShaderPipelineComponent.addPass(...) end
 ---
 --- Remove a pass by name
 ---
+---@param self ShaderPipelineComponent
 ---@param name string
 ---@return boolean
 function shader_pipeline.ShaderPipelineComponent.removePass(...) end
@@ -10844,6 +11230,7 @@ function shader_pipeline.ShaderPipelineComponent.removePass(...) end
 ---
 --- Toggle a pass enabled/disabled
 ---
+---@param self ShaderPipelineComponent
 ---@param name string
 ---@return boolean
 function shader_pipeline.ShaderPipelineComponent.togglePass(...) end
@@ -10851,29 +11238,33 @@ function shader_pipeline.ShaderPipelineComponent.togglePass(...) end
 ---
 --- Add a new overlay; blend mode is optional
 ---
+---@param self ShaderPipelineComponent
 ---@param src OverlayInputSource
 ---@param name string
 ---@param blend? BlendMode
----@return nil
+---@return ShaderOverlayDraw
 function shader_pipeline.ShaderPipelineComponent.addOverlay(...) end
 
 ---
 --- Remove an overlay by name
 ---
----@param name string
----@return boolean
+---@param self ShaderPipelineComponent
+---@param name string # The name of the overlay to remove
+---@return boolean # True if removed, false if not found
 function shader_pipeline.ShaderPipelineComponent.removeOverlay(...) end
 
 ---
 --- Toggle an overlay on/off
 ---
----@param name string
----@return boolean
+---@param self ShaderPipelineComponent
+---@param name string # The name of the overlay to toggle
+---@return boolean # The new enabled state (true if enabled, false if disabled)
 function shader_pipeline.ShaderPipelineComponent.toggleOverlay(...) end
 
 ---
 --- Clear both passes and overlays
 ---
+---@param self ShaderPipelineComponent
 ---@return nil
 function shader_pipeline.ShaderPipelineComponent.clearAll(...) end
 
@@ -10888,7 +11279,7 @@ function shaders.ApplyUniformsToShader(...) end
 ---
 --- Loads and compiles shaders from a JSON file.
 ---
----@param path string # Filepath to the JSON definition file.
+---@param path string
 ---@return nil
 function shaders.loadShadersFromJSON(...) end
 
@@ -10901,7 +11292,7 @@ function shaders.unloadShaders(...) end
 ---
 --- Globally forces all shader effects off or on, overriding individual settings.
 ---
----@param disabled boolean # True to disable all shaders, false to re-enable them.
+---@param disabled boolean
 ---@return nil
 function shaders.disableAllShadersViaOverride(...) end
 
@@ -10914,7 +11305,7 @@ function shaders.hotReloadShaders(...) end
 ---
 --- Begins a full-screen shader mode, e.g., for post-processing effects.
 ---
----@param shaderName string # The name of the shader to begin as a full-screen effect.
+---@param shaderName string
 ---@return nil
 function shaders.setShaderMode(...) end
 
@@ -10927,15 +11318,15 @@ function shaders.unsetShaderMode(...) end
 ---
 --- Retrieves a loaded shader by its unique name.
 ---
----@param name string # The unique name of the shader.
----@return Shader|nil # The shader object, or nil if not found.
+---@param name string
+---@return Shader|nil
 function shaders.getShader(...) end
 
 ---
 --- Registers a global callback to update a specific uniform's value across all shaders that use it.
 ---
----@param uniformName string # The uniform to target (e.g., 'time').
----@param callback fun():any # A function that returns the latest value for the uniform.
+---@param uniformName string
+---@param callback fun():any
 ---@return nil
 function shaders.registerUniformUpdate(...) end
 
@@ -10948,7 +11339,7 @@ function shaders.updateAllShaderUniforms(...) end
 ---
 --- Updates internal shader state, such as timers for built-in 'time' uniforms.
 ---
----@param dt number # Delta time since the last frame.
+---@param dt number
 ---@return nil
 function shaders.updateShaders(...) end
 
@@ -10978,6 +11369,7 @@ function shaders.TryApplyUniforms(...) end
 ---@param maxForce number
 ---@param maxTurnRate number @radians/sec (default 2π)
 ---@param turnMul number @turn responsiveness multiplier (default 2.0)
+---@return nil
 function steering.make_steerable(...) end
 
 ---
@@ -10988,6 +11380,7 @@ function steering.make_steerable(...) end
 ---@param target {x:number,y:number}|(number,number)
 ---@param decel number @arrival deceleration factor
 ---@param weight number @blend weight
+---@return nil
 function steering.seek_point(...) end
 
 ---
@@ -10998,6 +11391,7 @@ function steering.seek_point(...) end
 ---@param threat {x:number,y:number}
 ---@param panicDist number @only flee if within this distance
 ---@param weight number @blend weight
+---@return nil
 function steering.flee_point(...) end
 
 ---
@@ -11009,6 +11403,7 @@ function steering.flee_point(...) end
 ---@param radius number @wander circle radius
 ---@param distance number @circle forward distance
 ---@param weight number @blend weight
+---@return nil
 function steering.wander(...) end
 
 ---
@@ -11019,6 +11414,7 @@ function steering.wander(...) end
 ---@param separationRadius number
 ---@param neighbors entt.entity[] @Lua array/table of entities
 ---@param weight number @blend weight
+---@return nil
 function steering.separate(...) end
 
 ---
@@ -11029,6 +11425,7 @@ function steering.separate(...) end
 ---@param neighbors entt.entity[] @Lua array/table of entities
 ---@param alignRadius number
 ---@param weight number @blend weight
+---@return nil
 function steering.align(...) end
 
 ---
@@ -11039,6 +11436,7 @@ function steering.align(...) end
 ---@param neighbors entt.entity[] @Lua array/table of entities
 ---@param cohesionRadius number
 ---@param weight number @blend weight
+---@return nil
 function steering.cohesion(...) end
 
 ---
@@ -11048,6 +11446,7 @@ function steering.cohesion(...) end
 ---@param e entt.entity
 ---@param target entt.entity @entity to predict and chase
 ---@param weight number @blend weight
+---@return nil
 function steering.pursuit(...) end
 
 ---
@@ -11057,6 +11456,7 @@ function steering.pursuit(...) end
 ---@param e entt.entity
 ---@param pursuer entt.entity @entity to predict and flee from
 ---@param weight number @blend weight
+---@return nil
 function steering.evade(...) end
 
 ---
@@ -11066,6 +11466,7 @@ function steering.evade(...) end
 ---@param e entt.entity
 ---@param points { {x:number,y:number}, ... } @Lua array of waypoints (Chipmunk coords)
 ---@param arriveRadius number @advance when within this radius
+---@return nil
 function steering.set_path(...) end
 
 ---
@@ -11075,6 +11476,7 @@ function steering.set_path(...) end
 ---@param e entt.entity
 ---@param decel number @arrival deceleration factor
 ---@param weight number @blend weight
+---@return nil
 function steering.path_follow(...) end
 
 ---
@@ -11085,6 +11487,7 @@ function steering.path_follow(...) end
 ---@param f number @force magnitude (world units)
 ---@param radians number @direction in radians
 ---@param seconds number @duration seconds
+---@return nil
 function steering.apply_force(...) end
 
 ---
@@ -11095,6 +11498,7 @@ function steering.apply_force(...) end
 ---@param f number @impulse-per-second magnitude
 ---@param radians number @direction in radians
 ---@param seconds number @duration seconds
+---@return nil
 function steering.apply_impulse(...) end
 
 ---

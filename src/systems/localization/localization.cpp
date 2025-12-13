@@ -278,9 +278,7 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
       // Lua signature: getCurrentLanguage() -> string
       []() -> std::string { return localization::getCurrentLanguage(); },
       // Lua-facing documentation
-      "---@return string # The currently active language code.\n"
-      "---Gets the currently active language code. This is useful for checking "
-      "which language is currently set.",
+      "---@return string # The currently active language code.",
       "Returns the currently active language code.");
 
   // get
@@ -345,14 +343,13 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   // getFontData
   rec.bind_function(
       lua, path, "getFontData", &localization::getFontData,
-      "---@return FontData # A handle to the font data for the current "
-      "language.",
+      "---@return FontData # A handle to the font data for the current language.",
       "Retrieves font data associated with the current language.");
 
   rec.bind_function(
       lua, path, "getFont",
       []() -> Font { return localization::getFontData().font; },
-      "---@return FontData # The font for the current language.\n",
+      "---@return Font",
       "Gets the font data for the current language.");
 
   rec.bind_function(
@@ -393,8 +390,8 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   // getNamedFont
   rec.bind_function(
       lua, path, "getNamedFont", &localization::getNamedFont,
-      "---@return FontData # The font data for the named font, or current "
-      "language font if not found.",
+      "---@param name string\n"
+      "---@return FontData",
       "Gets a named font by name, falling back to current language font.");
 
   // hasNamedFont

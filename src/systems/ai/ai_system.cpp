@@ -956,8 +956,9 @@ namespace ai_system
             
         rec.record_method("ai", {
             "pause_ai_system",
-            "---Pauses the AI system, preventing any updates or actions from being processed.",
-            "This is useful for debugging or when you want to temporarily halt AI processing."
+            "---@param self ai\n"
+            "---@return nil",
+            "Pauses the AI system, preventing any updates or actions from being processed."
         });
         ai.set_function(
             "resume_ai_system",
@@ -967,8 +968,9 @@ namespace ai_system
             });
         rec.record_method("ai", {
             "resume_ai_system",
-            "---Resumes the AI system after it has been paused.",
-            "This allows the AI system to continue processing updates and actions."
+            "---@param self ai\n"
+            "---@return nil",
+            "Resumes the AI system after it has been paused."
         });
         // 2) Move each binding into ai:
         ai.set_function("set_worldstate", [](entt::entity e, std::string key, bool value)

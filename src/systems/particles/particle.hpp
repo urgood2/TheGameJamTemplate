@@ -1561,23 +1561,20 @@ inline void exposeToLua(sol::state &lua) {
   rec.bind_function(
       lua, particlePath, "AttachEmitter", luaAttachParticleEmitter,
       // docstring for Lua
-      "---@param emitter entt::entity"
-      "---@param target entt::entity"
-      "---@param opts table? # { offset = Vector2 }",
+      "---@param emitter entt.entity\n"
+      "---@param target entt.entity\n"
+      "---@param opts table? # { offset = Vector2 }\n"
+      "---@return nil",
       "Attaches an existing emitter to another entity, with optional offset.");
 
   rec.bind_function(lua, particlePath, "WipeAll", &particle::WipeAll,
-                    // docstring for Lua
-                    "---@return void\n"
-                    "---Destroys every live particle in the registry.",
+                    "---@return nil",
                     "Destroys all live particles.");
 
   rec.bind_function(
       lua, particlePath, "WipeTagged", &particle::WipeTagged,
-      // docstring for Lua
-      "---@param tag string # The tag to match\n"
-      "---@return void\n"
-      "---Destroys only those particles whose ParticleTag.name == tag.",
+      "---@param tag string\n"
+      "---@return nil",
       "Destroys all particles with the given string tag.");
 
   // 1) overload CreateParticleEmitter to take an options-table

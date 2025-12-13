@@ -942,78 +942,78 @@ void exposeToLua(sol::state& lua) {
     // Document methods
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "beginRecording",
-        "---@return nil",
+        "---@param self DrawCommandBatch\n---@return nil",
         "Start recording draw commands into the batch."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "endRecording",
-        "---@return nil",
+        "---@param self DrawCommandBatch\n---@return nil",
         "Stop recording draw commands."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "recording",
-        "---@return boolean",
+        "---@param self DrawCommandBatch\n---@return boolean",
         "Check if currently recording commands."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addBeginShader",
-        "---@param shaderName string\n---@return nil",
+        "---@param self DrawCommandBatch\n---@param shaderName string\n---@return nil",
         "Add a command to begin using a shader."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addEndShader",
-        "---@return nil",
+        "---@param self DrawCommandBatch\n---@return nil",
         "Add a command to end the current shader."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addDrawTexture",
-        "---@param texture Texture2D\n---@param sourceRect Rectangle\n---@param position Vector2\n---@param tint? Color\n---@return nil",
+        "---@param self DrawCommandBatch\n---@param texture Texture2D\n---@param sourceRect Rectangle\n---@param position Vector2\n---@param tint? Color\n---@return nil",
         "Queue a texture draw using the source rect size at the given position."
     });
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addDrawText",
-        "---@param text string\n---@param position Vector2\n---@param fontSize number\n---@param spacing number\n---@param color? Color\n---@param font? Font\n---@return nil",
+        "---@param self DrawCommandBatch\n---@param text string\n---@param position Vector2\n---@param fontSize number\n---@param spacing number\n---@param color? Color\n---@param font? Font\n---@return nil",
         "Add a command to draw text."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addCustomCommand",
-        "---@param func fun()\n---@return nil",
+        "---@param self DrawCommandBatch\n---@param func fun()\n---@return nil",
         "Add a custom function to be executed inside the batch (runs during render)."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "addSetUniforms",
-        "---@param shaderName string\n---@param uniforms ShaderUniformSet\n---@return nil",
+        "---@param self DrawCommandBatch\n---@param shaderName string\n---@param uniforms ShaderUniformSet\n---@return nil",
         "Apply a ShaderUniformSet to the currently active shader inside the batch."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "execute",
-        "---@return nil",
+        "---@param self DrawCommandBatch\n---@return nil",
         "Execute all recorded commands in order."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "optimize",
-        "---@return nil",
+        "---@param self DrawCommandBatch\n---@return nil",
         "Optimize command order to minimize shader state changes."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "clear",
-        "---@return nil",
+        "---@param self DrawCommandBatch\n---@return nil",
         "Clear all commands from the batch."
     });
 
     rec.record_method("shader_draw_commands.DrawCommandBatch", {
         "size",
-        "---@return integer",
+        "---@param self DrawCommandBatch\n---@return integer",
         "Get the number of commands in the batch."
     });
 

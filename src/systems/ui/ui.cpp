@@ -661,7 +661,7 @@ namespace ui {
         rec.record_method("UIConfigBuilder", {"addStylingType", "---@param type UIStylingType\n---@return self", "Sets the styling type.", false, false});
         rec.record_method("UIConfigBuilder", {"addNPatchInfo", "---@param info NPatchInfo\n---@return self", "Sets the 9-patch info.", false, false});
         rec.record_method("UIConfigBuilder", {"addNPatchSourceTexture", "---@param texture string\n---@return self", "Sets the 9-patch texture.", false, false});
-        rec.record_method("UIConfigBuilder", {"build", "---@return UIConfig", "Constructs the final UIConfig object.", false, false});
+        rec.record_method("UIConfigBuilder", {"build", "---@param self UIConfigBuilder\n---@return UIConfig", "Constructs the final UIConfig object.", false, false});
 
         //=========================================================
         // Part 2: UI Templating
@@ -701,12 +701,12 @@ namespace ui {
         );
         auto& tNodeBuilder = rec.add_type("UIElementTemplateNodeBuilder");
         tNodeBuilder.doc = "A fluent builder for creating UI template trees.";
-        rec.record_method("UIElementTemplateNodeBuilder", {"create", "---@return self", "Creates a new builder instance.", true, false});
+        rec.record_method("UIElementTemplateNodeBuilder", {"create", "---@return UIElementTemplateNodeBuilder", "Creates a new builder instance.", true, false});
         rec.record_method("UIElementTemplateNodeBuilder", {"addType", "---@param type UITypeEnum\n---@return self", "Sets the node's UI type.", false, false});
         rec.record_method("UIElementTemplateNodeBuilder", {"addConfig", "---@param config UIConfig\n---@return self", "Sets the node's config.", false, false});
         rec.record_method("UIElementTemplateNodeBuilder", {"addChild", "---@param child UIElementTemplateNode\n---@return self", "Adds a child template node.", false, false});
         rec.record_method("UIElementTemplateNodeBuilder", {"addChildren", "---@param children table<integer, UIElementTemplateNode>\n---@return self", "Adds multiple child template nodes from a Lua table.", false, false});
-        rec.record_method("UIElementTemplateNodeBuilder", {"build", "---@return UIElementTemplateNode", "Builds the final template node.", false, false});
+        rec.record_method("UIElementTemplateNodeBuilder", {"build", "---@param self UIElementTemplateNodeBuilder\n---@return UIElementTemplateNode", "Builds the final template node.", false, false});
 
 
         //==== UIElement methods ====

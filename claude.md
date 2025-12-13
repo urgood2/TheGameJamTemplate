@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow Reminders
+
+- **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill to have a fresh agent review the implementation before considering the work complete.
+
 ## Build Commands
 
 ```bash

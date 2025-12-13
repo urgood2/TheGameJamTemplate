@@ -260,7 +260,8 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   layerTbl.set_function("RemoveLayerFromCanvas", &layer::RemoveLayerFromCanvas);
 
   rec.bind_function(lua, {"layer"}, "SortLayers", &layer::SortLayers,
-                    "---@return nil", "Sorts all layers by their Z-index.");
+                    "---@return nil",
+                    "Sorts all layers by their Z-index.");
 
   rec.bind_function(
       lua, {"layer"}, "UpdateLayerZIndex", &layer::UpdateLayerZIndex,
@@ -347,15 +348,18 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
                     "Clears draw commands for a specific layer.");
 
   rec.bind_function(lua, {"layer"}, "ClearAllDrawCommands",
-                    &layer::ClearAllDrawCommands, "---@return nil",
+                    &layer::ClearAllDrawCommands,
+                    "---@return nil",
                     "Clears all draw commands from all layers.");
 
   rec.bind_function(
-      lua, {"layer"}, "Begin", &layer::Begin, "---@return nil",
+      lua, {"layer"}, "Begin", &layer::Begin,
+      "---@return nil",
       "Begins drawing to all canvases. (Calls BeginTextureMode on all).");
 
   rec.bind_function(
-      lua, {"layer"}, "End", &layer::End, "---@return nil",
+      lua, {"layer"}, "End", &layer::End,
+      "---@return nil",
       "Ends drawing to all canvases. (Calls EndTextureMode on all).");
 
   rec.bind_function(

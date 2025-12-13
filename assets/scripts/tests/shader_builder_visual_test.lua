@@ -59,12 +59,10 @@ local function create_test_sprite(x, y, label)
     -- Try to create an animated entity with a common sprite
     local entity = nil
 
-    -- Try different sprite sources
+    -- Try different sprite sources (actual IDs from codebase)
     local sprite_options = {
-        "card_back",           -- Card back sprite
-        "chest",               -- Chest sprite
-        "player_idle",         -- Player sprite
-        "default_sprite",      -- Fallback
+        "frame0012.png",       -- Chest sprite (from gameplay.lua:8892)
+        "b8090.png",           -- EXP pickup sprite (from gameplay.lua:707)
     }
 
     for _, sprite_id in ipairs(sprite_options) do

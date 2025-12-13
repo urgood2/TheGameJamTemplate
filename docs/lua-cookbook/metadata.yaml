@@ -1,0 +1,31 @@
+title: "Lua API Cookbook"
+subtitle: "TheGameJamTemplate Quick Reference"
+author: "Auto-generated from codebase"
+date: 2025-12-14
+documentclass: report
+classoption:
+  - oneside
+geometry:
+  - margin=1in
+  - headheight=14pt
+fontsize: 11pt
+mainfont: "Helvetica Neue"
+sansfont: "Helvetica Neue"
+monofont: "Menlo"
+monofontoptions:
+  - Scale=0.85
+linkcolor: "blue"
+urlcolor: "blue"
+toc: true
+toc-depth: 2
+numbersections: true
+highlight-style: tango
+header-includes:
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[L]{\leftmark}
+  - \fancyhead[R]{\thepage}
+  - \fancyfoot[C]{}
+  - \usepackage{awesomebox}
+  - \usepackage{listings}
+  - \lstset{breaklines=true, basicstyle=\ttfamily\small}

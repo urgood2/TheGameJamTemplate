@@ -85,6 +85,7 @@ local registry = _G.registry
 --------------------------------------------------------------------------------
 
 local DEFAULTS = {
+    -- camelCase keys (for draw.textPro, draw.rectangle, etc.)
     textPro = {
         origin = { x = 0, y = 0 },
         rotation = 0,
@@ -108,6 +109,35 @@ local DEFAULTS = {
         color = WHITE,
     },
     rectangleLinesPro = {
+        origin = { x = 0, y = 0 },
+        rotation = 0,
+        color = WHITE,
+        lineThick = 1,
+    },
+    -- snake_case aliases (for draw.local_command command types)
+    text_pro = {
+        origin = { x = 0, y = 0 },
+        rotation = 0,
+        fontSize = 16,
+        spacing = 1,
+        color = WHITE,
+    },
+    draw_rectangle = {
+        color = WHITE,
+    },
+    texture_pro = {
+        origin = { x = 0, y = 0 },
+        rotation = 0,
+        tint = WHITE,
+    },
+    draw_circle_filled = {},
+    draw_line = {},
+    rectangle_pro = {
+        origin = { x = 0, y = 0 },
+        rotation = 0,
+        color = WHITE,
+    },
+    rectangle_lines_pro = {
         origin = { x = 0, y = 0 },
         rotation = 0,
         color = WHITE,

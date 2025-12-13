@@ -10645,6 +10645,21 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/rewards/frame0012.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>18,12,36,24</rect>
+                <key>scale9Paddings</key>
+                <rect>18,12,36,24</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/test_char_woman.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -12274,6 +12289,8 @@
                     <filename>../../../../../Downloads/trigger_card_placeholder.png</filename>
                     <filename>pre-packing-files_globbed/Flairs/Default/flair_plus.png</filename>
                     <filename>pre-packing-files_globbed/cards_and_celestial_objects</filename>
+                    <filename>pre-packing-files_globbed/rewards/frame0012.png</filename>
+                    <filename>auto-exported-sprites-from-aseprite</filename>
                 </array>
             </struct>
         </map>

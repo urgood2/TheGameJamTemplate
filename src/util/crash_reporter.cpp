@@ -29,6 +29,7 @@
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
 #include <emscripten/stack.h>
+#include <emscripten/html5.h>
 #endif
 
 namespace crash_reporter {
@@ -91,6 +92,8 @@ struct State {
     std::atomic<bool> handling_fatal{false};
     std::terminate_handler previous_terminate{nullptr};
     bool initialized{false};
+    GameStateCallback game_state_callback;
+    std::chrono::steady_clock::time_point session_start{std::chrono::steady_clock::now()};
 };
 
 State& state() {
@@ -321,6 +324,10 @@ bool IsEnabled() {
     return state().initialized && state().config.enabled;
 }
 
+void SetGameStateCallback(GameStateCallback cb) {
+    state().game_state_callback = std::move(cb);
+}
+
 void AttachSinkToLogger(const std::shared_ptr<spdlog::logger>& logger) {
     auto& s = state();
     if (!logger || !s.sink) {
@@ -354,6 +361,50 @@ Report CaptureReport(const std::string& reason, bool include_stacktrace) {
         report.logs = state().sink->snapshot();
     }
 
+    // Call game state callback if registered
+    if (state().game_state_callback) {
+        try {
+            state().game_state_callback(report);
+        } catch (const std::exception& e) {
+            SPDLOG_WARN("Game state callback failed: {}", e.what());
+        }
+    }
+
+    // Calculate session duration
+    auto now_steady = std::chrono::steady_clock::now();
+    report.session_duration_sec = std::chrono::duration<double>(
+        now_steady - state().session_start).count();
+
+#if defined(__EMSCRIPTEN__)
+    // Capture browser info
+    report.browser_info = reinterpret_cast<const char*>(EM_ASM_PTR({
+        var str = navigator.userAgent;
+        var len = lengthBytesUTF8(str) + 1;
+        var buf = _malloc(len);
+        stringToUTF8(str, buf, len);
+        return buf;
+    }));
+
+    // Capture WebGL renderer
+    report.webgl_renderer = reinterpret_cast<const char*>(EM_ASM_PTR({
+        var canvas = document.getElementById('canvas');
+        if (!canvas) return _malloc(1);
+        var gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (!gl) return _malloc(1);
+        var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        var renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
+        var len = lengthBytesUTF8(renderer) + 1;
+        var buf = _malloc(len);
+        stringToUTF8(renderer, buf, len);
+        return buf;
+    }));
+
+    // Estimate memory usage (Emscripten heap)
+    report.estimated_memory_mb = EM_ASM_INT({
+        return Math.round(HEAP8.length / (1024 * 1024));
+    });
+#endif
+
     return report;
 }
 
@@ -367,6 +418,18 @@ std::string SerializeReport(const Report& report) {
     j["platform"] = report.platform;
     j["thread_id"] = report.thread_id;
     j["stacktrace"] = report.stacktrace;
+
+    // Game state
+    j["current_scene"] = report.current_scene;
+    j["player_position"] = report.player_position;
+    j["entity_count"] = report.entity_count;
+    j["lua_script_context"] = report.lua_script_context;
+
+    // Web-specific
+    j["browser_info"] = report.browser_info;
+    j["webgl_renderer"] = report.webgl_renderer;
+    j["estimated_memory_mb"] = report.estimated_memory_mb;
+    j["session_duration_sec"] = report.session_duration_sec;
 
     auto& logs = j["logs"] = json::array();
     for (const auto& entry : report.logs) {
@@ -532,6 +595,22 @@ void ShowCaptureNotification(const std::string& message) {
         `;
         copyBtn.textContent = 'Copy to Clipboard';
 
+        const reportBtn = document.createElement('button');
+        reportBtn.id = 'crash-report-btn';
+        reportBtn.style.cssText = `
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        `;
+        reportBtn.textContent = 'Report Bug';
+        reportBtn.onclick = function() {
+            window.open('https://chugget.itch.io/testing/community', '_blank');
+        };
+
         const dismissBtn = document.createElement('button');
         dismissBtn.id = 'crash-dismiss-btn';
         dismissBtn.style.cssText = `
@@ -546,6 +625,7 @@ void ShowCaptureNotification(const std::string& message) {
         dismissBtn.textContent = 'Dismiss';
 
         buttonContainer.appendChild(copyBtn);
+        buttonContainer.appendChild(reportBtn);
         buttonContainer.appendChild(dismissBtn);
 
         contentDiv.appendChild(title);

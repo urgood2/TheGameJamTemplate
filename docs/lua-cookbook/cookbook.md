@@ -1003,3 +1003,682 @@ end
 **Gotcha:** Follow the order: Create → Script Setup → Attach → Position → Interactivity → State Tags.
 
 \newpage
+
+# Physics
+
+This chapter covers physics integration using Chipmunk2D: creating physics bodies, collision detection, applying forces, and physics constraints.
+
+## Get Physics World
+
+\label{recipe:get-physics-world}
+
+**When to use:** Before any physics operation (required for most physics functions).
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Get the physics world (required for most physics operations)
+local world = PhysicsManager.get_world("world")
+if not world then
+    log_warn("Physics world not available")
+    return
+end
+
+-- Use world with physics functions
+physics.SetBullet(world, entity, true)
+physics.GetVelocity(world, entity)
+```
+
+*— from core/physics_manager.lua (C++ binding), usage in core/gameplay.lua:2377*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:2377
+local world = PhysicsManager.get_world("world")
+
+local info = { shape = "circle", tag = "bullet", sensor = false, density = 1.0, inflate_px = -4 }
+physics.create_physics_for_transform(registry,
+    physics_manager_instance,
+    node:handle(),
+    "world",
+    info
+)
+```
+
+**Gotcha:** Always use `PhysicsManager.get_world("world")` instead of `globals.physicsWorld` (deprecated).
+
+**Gotcha:** The world parameter is the first argument to most physics property setters (SetVelocity, SetBullet, etc.).
+
+---
+
+## Create Physics Body
+
+\label{recipe:add-physics}
+
+**When to use:** Add physics collision and movement to an entity.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Get world reference
+local world = PhysicsManager.get_world("world")
+
+-- Configure physics body
+local config = {
+    shape = "circle",        -- "circle", "rectangle", "polygon", "chain"
+    tag = "enemy",           -- collision tag for this entity
+    sensor = false,          -- sensor = no physical response (ghost collision)
+    density = 1.0,           -- mass density
+    inflate_px = -4          -- shrink hitbox by 4px (negative = shrink, positive = expand)
+}
+
+-- Create physics body (uses globals from runtime)
+physics.create_physics_for_transform(
+    registry,                -- global registry
+    physics_manager_instance, -- global physics_manager instance
+    entity,
+    "world",                 -- physics world identifier
+    config
+)
+```
+
+*— from combat/projectile_system.lua:774-780, core/gameplay.lua:2380-2385*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:7104
+local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = -5 }
+physics.create_physics_for_transform(registry,
+    physics_manager_instance,
+    survivorEntity,
+    "world",
+    info
+)
+
+-- From combat/projectile_system.lua:765
+local config = {
+    shape = params.shape or "circle",
+    tag = ProjectileSystem.COLLISION_CATEGORY,
+    sensor = params.sensor or false,
+    density = params.density or 1.0
+}
+physics.create_physics_for_transform(
+    registry,
+    physics_manager_instance,
+    entity,
+    "world",
+    config
+)
+```
+
+**Gotcha:** Don't pass the world object to `create_physics_for_transform` — it takes the world *name* ("world") as a string.
+
+**Gotcha:** The `inflate_px` parameter shrinks (negative) or expands (positive) the hitbox. Use negative values to prevent pixel-perfect collision issues.
+
+---
+
+## Set Collision Tags and Masks
+
+\label{recipe:collision-masks}
+
+**When to use:** Configure which physics entities can collide with each other (per-entity, not global).
+
+**CRITICAL:** Collision masks are set **per entity** when creating physics bodies, not globally in system initialization.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Enable bidirectional collision between tags
+physics.enable_collision_between_many(world, "projectile", { "enemy", "WORLD" })
+physics.enable_collision_between_many(world, "enemy", { "projectile" })
+
+-- Update collision masks for both tags (required!)
+physics.update_collision_masks_for(world, "projectile", { "enemy", "WORLD" })
+physics.update_collision_masks_for(world, "enemy", { "projectile" })
+```
+
+*— from combat/projectile_system.lua:812-822, core/gameplay.lua:2391-2394*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:2391
+physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", { "bullet" })
+physics.enable_collision_between_many(PhysicsManager.get_world("world"), "bullet", { "enemy" })
+physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", { "bullet" })
+physics.update_collision_masks_for(PhysicsManager.get_world("world"), "bullet", { "enemy" })
+
+-- From core/gameplay.lua:7113
+physics.enable_collision_between_many(world, "WORLD", { "player", "projectile", "enemy" })
+physics.enable_collision_between_many(world, "player", { "WORLD" })
+physics.enable_collision_between_many(world, "projectile", { "WORLD" })
+physics.enable_collision_between_many(world, "pickup", { "player" })
+physics.enable_collision_between_many(world, "player", { "pickup" })
+
+physics.update_collision_masks_for(world, "player", { "WORLD" })
+physics.update_collision_masks_for(world, "enemy", { "WORLD" })
+physics.update_collision_masks_for(world, "WORLD", { "player", "enemy" })
+```
+
+**Gotcha:** You must call both `enable_collision_between_many` AND `update_collision_masks_for` for collisions to work.
+
+**Gotcha:** Collision setup is bidirectional. If A should collide with B, you must enable A→B and B→A.
+
+**Gotcha:** The special "WORLD" tag is used for static geometry and screen bounds.
+
+---
+
+## Enable Bullet Mode (High-Speed Collision)
+
+\label{recipe:bullet-mode}
+
+**When to use:** Prevent fast-moving objects from tunneling through collision geometry.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Enable continuous collision detection for fast objects
+physics.SetBullet(world, entity, true)
+```
+
+*— from combat/projectile_system.lua:784, core/gameplay.lua:2397*
+
+**Real usage example:**
+
+```lua
+-- From combat/projectile_system.lua:784
+physics.SetBullet(world, entity, true)
+
+-- From core/gameplay.lua:2397
+physics.SetBullet(world, node:handle(), true)
+```
+
+**Gotcha:** Only use bullet mode for genuinely fast-moving objects (projectiles, dashes) — it's more expensive than normal collision detection.
+
+---
+
+## Set Physics Sync Mode
+
+**When to use:** Control whether physics or Transform is the authority for entity position.
+
+```lua
+-- Physics drives position (common for physics-simulated objects)
+physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+
+-- Transform drives position (for kinematic objects)
+physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativeTransform)
+```
+
+*— from combat/projectile_system.lua:801-806, core/gameplay.lua:7058*
+
+**Real usage example:**
+
+```lua
+-- From combat/projectile_system.lua:801
+local syncMode = physics.PhysicsSyncMode.AuthoritativePhysics
+if params.movementType == ProjectileSystem.MovementType.ORBITAL
+    or params.movementType == ProjectileSystem.MovementType.ARC then
+    syncMode = physics.PhysicsSyncMode.AuthoritativeTransform
+end
+physics.set_sync_mode(registry, entity, syncMode)
+
+-- From core/gameplay.lua:7058
+physics.set_sync_mode(registry, maskEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
+```
+
+**Gotcha:** Use `AuthoritativePhysics` when physics simulation controls movement. Use `AuthoritativeTransform` when you manually update Transform (e.g., scripted motion, orbital movement).
+
+---
+
+## Set Physics Properties
+
+**When to use:** Configure friction, bounciness, rotation, and other physical properties.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Friction (0.0 = no friction, 1.0 = high friction)
+physics.SetFriction(world, entity, 0.0)
+
+-- Restitution / bounciness (0.0 = no bounce, 1.0 = perfect bounce)
+physics.SetRestitution(world, entity, 0.5)
+
+-- Fixed rotation (lock rotation axis)
+physics.SetFixedRotation(world, entity, true)
+
+-- Or use helper for transform-based fixed rotation
+physics.use_transform_fixed_rotation(registry, entity)
+
+-- Body type ("static", "dynamic", "kinematic")
+physics.SetBodyType(world, entity, "dynamic")
+
+-- Mass (kg)
+physics.SetMass(world, entity, 1.0)
+
+-- Moment of inertia (rotational resistance)
+physics.SetMoment(world, entity, 0.01)
+
+-- Damping (linear velocity damping)
+physics.SetDamping(world, entity, 0.3)
+```
+
+*— from combat/projectile_system.lua:787-793, core/gameplay.lua:7002-7017*
+
+**Real usage example:**
+
+```lua
+-- From combat/projectile_system.lua:787
+physics.SetFriction(world, entity, params.friction or 0.0)
+physics.SetRestitution(world, entity, params.restitution or 0.5)
+
+if params.fixedRotation ~= false then
+    physics.SetFixedRotation(world, entity, true)
+end
+
+-- From core/gameplay.lua:7002
+physics.SetBodyType(world, maskEntity, "dynamic")
+physics.SetMass(world, maskEntity, 0.01)
+physics.SetMoment(world, maskEntity, 0.01)
+```
+
+**Gotcha:** `SetFixedRotation` prevents rotation completely. For player characters and projectiles, this is usually desired.
+
+**Gotcha:** Damping applies to both linear and angular velocity. Higher values slow objects down faster.
+
+---
+
+## Get/Set Velocity
+
+**When to use:** Read or modify entity velocity directly.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Get velocity (returns {x, y} table)
+local vel = physics.GetVelocity(world, entity)
+print("Speed:", vel.x, vel.y)
+
+-- Set velocity
+physics.SetVelocity(world, entity, vx, vy)
+```
+
+*— from core/gameplay.lua:2400-2418, combat/projectile_system.lua:859*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:2400
+local v = physics.GetVelocity(world, survivorEntity)
+local vx = v.x
+local vy = v.y
+local speed = 300.0
+
+-- Normalize and scale direction
+if vx ~= 0 or vy ~= 0 then
+    local mag = math.sqrt(vx * vx + vy * vy)
+    vx = (vx / mag) * speed
+    vy = (vy / mag) * speed
+end
+
+physics.SetVelocity(world, node:handle(), vx, vy)
+
+-- From combat/projectile_system.lua:859
+physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
+```
+
+**Gotcha:** `GetVelocity` returns a table with `x` and `y` fields, not separate values.
+
+**Gotcha:** `SetVelocity` takes separate `vx, vy` parameters, not a table.
+
+---
+
+## Get Position/Angle from Physics
+
+**When to use:** Read physics body position/rotation (useful when physics is authoritative).
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Get position from physics body
+local pos = physics.GetPosition(world, entity)
+print("Position:", pos.x, pos.y)
+
+-- Get rotation angle (radians)
+local angle = physics.GetAngle(world, entity)
+```
+
+*— from core/gameplay.lua:6957-7065*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:6957
+local ipos = physics.GetPosition(world, e)
+
+-- From core/gameplay.lua:7065
+local bodyAngle = physics.GetAngle(world, maskEntity)
+local t = component_cache.get(maskEntity, Transform)
+t.actualR = math.deg(bodyAngle)  -- Convert radians to degrees for Transform
+```
+
+**Gotcha:** `GetAngle` returns radians, but Transform.actualR expects degrees. Convert with `math.deg()`.
+
+---
+
+## Apply Forces and Impulses
+
+**When to use:** Apply physics forces (continuous) or impulses (instant velocity change).
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Apply impulse (instant velocity change)
+physics.ApplyImpulse(world, entity, impulseX, impulseY)
+
+-- Apply force (gradual acceleration)
+physics.ApplyForce(world, entity, forceX, forceY)
+```
+
+*— from core/gameplay.lua:8238, combat/projectile_system.lua:1571*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:8238
+local DASH_STRENGTH = 150
+physics.ApplyImpulse(world, survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
+
+-- From combat/projectile_system.lua:1571
+local ENEMY_HIT_RECOIL_FORCE = 100
+physics.ApplyImpulse(world, targetEntity, dirX * ENEMY_HIT_RECOIL_FORCE, dirY * ENEMY_HIT_RECOIL_FORCE)
+```
+
+**Gotcha:** Impulses are instant velocity changes (use for dashes, knockback). Forces are gradual (use for wind, thrust).
+
+**Gotcha:** Both functions take world-space directional vectors, not angles.
+
+---
+
+## Physics Joints (Advanced)
+
+**When to use:** Connect two physics bodies with constraints (e.g., ragdoll, chains, pendulums).
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Pivot joint (hinge at a point)
+local pivotJoint = physics.add_pivot_joint_world(
+    world,
+    parentEntity,
+    childEntity,
+    { x = worldX, y = worldY }  -- Anchor point in world coordinates
+)
+
+-- Damped rotary spring (rotational spring between bodies)
+local rotarySpring = physics.add_damped_rotary_spring(
+    world,
+    parentEntity,
+    childEntity,
+    0,      -- Rest angle (radians)
+    6000,   -- Stiffness (higher = stiffer)
+    5       -- Damping (higher = less oscillation)
+)
+
+-- Damped spring (linear spring)
+local spring = physics.add_damped_spring(
+    world,
+    parentEntity,
+    { x = 0, y = 0 },    -- Anchor on parent (local coords)
+    childEntity,
+    { x = 0, y = 0 },    -- Anchor on child (local coords)
+    0,                   -- Rest length
+    500,                 -- Stiffness
+    10                   -- Damping
+)
+
+-- Slide joint (constrained distance)
+local slideJoint = physics.add_slide_joint(
+    world,
+    parentEntity,
+    { x = 0, y = 0 },    -- Anchor on parent
+    childEntity,
+    { x = 0, y = 0 },    -- Anchor on child
+    0,                   -- Min distance
+    10                   -- Max distance
+)
+```
+
+*— from core/gameplay.lua:7010-7055*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:7010 (jointed mask system)
+local pivotJoint = physics.add_pivot_joint_world(
+    world,
+    parentEntity,
+    maskEntity,
+    { x = maskT.actualX + maskT.actualW / 2, y = maskT.actualY + maskT.actualH / 2 }
+)
+
+physics.SetMoment(world, maskEntity, 0.01) -- Keep inertia tiny
+
+local rotarySpring = physics.add_damped_rotary_spring(
+    world,
+    parentEntity,
+    maskEntity,
+    0,    -- Rest angle (upright)
+    6000, -- Stiffness (lower = more floppy)
+    5     -- Damping
+)
+```
+
+**Gotcha:** Joints require both entities to have physics bodies.
+
+**Gotcha:** Pivot joints use world coordinates for the anchor point, while spring/slide joints use local coordinates relative to each body.
+
+---
+
+## Add Screen Bounds
+
+**When to use:** Create invisible walls around the play area.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Create static physics boundaries
+physics.add_screen_bounds(
+    PhysicsManager.get_world("world"),
+    left,
+    top,
+    right,
+    bottom,
+    thickness,  -- wall thickness
+    "WORLD"     -- collision tag
+)
+```
+
+*— from core/gameplay.lua:7134-7141*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:7134
+local wallThickness = SCREEN_BOUND_THICKNESS or 30
+physics.add_screen_bounds(
+    PhysicsManager.get_world("world"),
+    SCREEN_BOUND_LEFT - wallThickness,
+    SCREEN_BOUND_TOP - wallThickness,
+    SCREEN_BOUND_RIGHT + wallThickness,
+    SCREEN_BOUND_BOTTOM + wallThickness,
+    wallThickness,
+    "WORLD"
+)
+```
+
+**Gotcha:** Screen bounds are static bodies with the specified collision tag. Make sure entities have collision masks set up to collide with "WORLD".
+
+---
+
+## Query Physics World
+
+**When to use:** Find physics entities at a point or in an area.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+
+-- Point query (find nearest entity at point)
+if physics and physics.point_query_nearest and physics.entity_from_ptr then
+    local nearestHit = physics.point_query_nearest(world, { x = px, y = py }, radius)
+    if nearestHit and nearestHit.shape then
+        local hitEntity = physics.entity_from_ptr(nearestHit.shape)
+        -- Use hitEntity
+    end
+end
+
+-- Area query (find all entities in rectangle)
+if physics.GetObjectsInArea then
+    local candidates = physics.GetObjectsInArea(world, x1, y1, width, height)
+    for _, entity in ipairs(candidates or {}) do
+        local pos = physics.GetPosition(world, entity)
+        -- Use entity and pos
+    end
+end
+```
+
+*— from core/gameplay.lua:762-782, core/gameplay.lua:6952-6957*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:768
+local nearestHit = physics.point_query_nearest(world, { x = px, y = py }, radius)
+if nearestHit and nearestHit.shape then
+    local hitEntity = physics.entity_from_ptr(nearestHit.shape)
+    -- Found entity at cursor position
+end
+
+-- From core/gameplay.lua:6952
+local candidates = physics.GetObjectsInArea(world, x1, y1, x2, y2)
+for _, e in ipairs(candidates or {}) do
+    if entity_cache.valid(e) then
+        local ipos = physics.GetPosition(world, e)
+        -- Process entity in area
+    end
+end
+```
+
+**Gotcha:** Always check if `nearestHit.shape` exists before calling `entity_from_ptr`.
+
+**Gotcha:** `GetObjectsInArea` may return nil if no entities found. Use `candidates or {}` to avoid errors.
+
+---
+
+## Enable/Disable Physics Stepping
+
+**When to use:** Pause physics simulation (e.g., during UI screens or cutscenes).
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Pause physics
+PhysicsManager.enable_step("world", false)
+
+-- Resume physics
+PhysicsManager.enable_step("world", true)
+```
+
+*— from ui/level_up_screen.lua:94-103*
+
+**Real usage example:**
+
+```lua
+-- From ui/level_up_screen.lua:94
+if PhysicsManager and PhysicsManager.enable_step then
+    PhysicsManager.enable_step("world", false)  -- Pause during level up screen
+end
+
+-- From ui/level_up_screen.lua:102
+if PhysicsManager and PhysicsManager.enable_step then
+    PhysicsManager.enable_step("world", true)   -- Resume when closing screen
+end
+```
+
+**Gotcha:** Don't forget to re-enable physics stepping when closing UI screens or the game will freeze!
+
+---
+
+## Complete Physics Setup Pattern
+
+**When to use:** Create a fully-configured physics entity from scratch.
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+local animation_system = require("core.animation_system")
+local component_cache = require("core.component_cache")
+
+function createPhysicsEntity(x, y)
+    -- 1. Create entity with sprite
+    local entity = animation_system.createAnimatedObjectWithTransform("kobold", true)
+
+    -- 2. Position entity
+    local transform = component_cache.get(entity, Transform)
+    if transform then
+        transform.actualX = x
+        transform.actualY = y
+        transform.actualW = 64
+        transform.actualH = 64
+    end
+
+    -- 3. Create physics body
+    local world = PhysicsManager.get_world("world")
+    local config = {
+        shape = "circle",
+        tag = "enemy",
+        sensor = false,
+        density = 1.0,
+        inflate_px = -4
+    }
+    physics.create_physics_for_transform(
+        registry,
+        physics_manager_instance,
+        entity,
+        "world",
+        config
+    )
+
+    -- 4. Configure physics properties
+    physics.SetBullet(world, entity, true)  -- High-speed collision detection
+    physics.SetFriction(world, entity, 0.0)
+    physics.SetRestitution(world, entity, 0.5)
+    physics.SetFixedRotation(world, entity, true)
+
+    -- 5. Set sync mode
+    physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+
+    -- 6. Setup collision masks
+    physics.enable_collision_between_many(world, "enemy", { "player", "projectile" })
+    physics.enable_collision_between_many(world, "player", { "enemy" })
+    physics.enable_collision_between_many(world, "projectile", { "enemy" })
+    physics.update_collision_masks_for(world, "enemy", { "player", "projectile" })
+    physics.update_collision_masks_for(world, "player", { "enemy" })
+
+    return entity
+end
+```
+
+*— Combined pattern from core/gameplay.lua:7104-7123, combat/projectile_system.lua:765-822*
+
+**Gotcha:** Follow the order: Create sprite → Position → Create physics → Configure properties → Set sync mode → Setup collision masks.
+
+\newpage

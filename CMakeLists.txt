@@ -959,7 +959,8 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
         set(_shell_prefix bash)
     endif()
 
-    set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1")
+    # NOTE: -sFULL_ES2=1 required for raylib's client-side vertex arrays (fixes "cb is undefined" WebGL error)
+    set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1")
     set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\"${_emscripten_link_flags}\" -DCMAKE_EXECUTABLE_SUFFIX=.html -DCCACHE_PROGRAM= -DCMAKE_C_COMPILER_LAUNCHER= -DCMAKE_CXX_COMPILER_LAUNCHER=")
 
     # Target to activate emsdk
@@ -1169,7 +1170,8 @@ if (EMSCRIPTEN)
     # Tell Emscripten to build an .html file.
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Os")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -Os -Wall -s TOTAL_MEMORY=512MB -s FORCE_FILESYSTEM=1 --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
+    # NOTE: -sFULL_ES2=1 required for raylib's client-side vertex arrays (fixes "cb is undefined" WebGL error)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sASSERTIONS=1 -sWASM=1 -Os -Wall -sTOTAL_MEMORY=512MB -sFORCE_FILESYSTEM=1 --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 endif()
 

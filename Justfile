@@ -202,7 +202,8 @@ build-web: copy-web-assets
 	# NOTE: --closure 1 removed because miniaudio/telemetry JS isn't closure-compatible
 	# NOTE: -sDISABLE_EXCEPTION_CATCHING=0 enables C++ exceptions (needed for nlohmann::json)
 	# NOTE: EXPORTED_RUNTIME_METHODS needed for audio (HEAPF32) and telemetry (stringToUTF8OnStack)
-	LINK_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sDISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -sEXPORTED_RUNTIME_METHODS=HEAPF32,HEAPF64,HEAP8,HEAP16,HEAP32,HEAPU8,HEAPU16,HEAPU32,stringToUTF8OnStack,UTF8ToString,stringToUTF8,lengthBytesUTF8"
+	# NOTE: -sFULL_ES2=1 required for raylib's client-side vertex arrays (fixes "cb is undefined" WebGL error)
+	LINK_FLAGS="-sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sDISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -sEXPORTED_RUNTIME_METHODS=HEAPF32,HEAPF64,HEAP8,HEAP16,HEAP32,HEAPU8,HEAPU16,HEAPU32,stringToUTF8OnStack,UTF8ToString,stringToUTF8,lengthBytesUTF8"
 
 	echo "=== Configuring CMake with Emscripten ==="
 	# Match CMakeLists.txt line 963 configure args

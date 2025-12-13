@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
+**Prefer incremental builds** to reduce build time. Avoid `just clean` or full rebuilds unless necessary. The build system (CMake) handles incremental compilation automatically.
+
 ```bash
 # Native builds (requires CMake 3.14+, C++20 toolchain, and just)
 just build-debug              # Debug build → ./build/raylib-cpp-cmake-template

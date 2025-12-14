@@ -27,23 +27,27 @@ The cookbook contains **75 recipes** organized into **14 chapters**:
 
 ### Prerequisites
 
-Install pandoc and LaTeX:
+Install pandoc and a LaTeX distribution:
 
 ```bash
 # Install pandoc
 brew install pandoc
 
-# Install MacTeX (minimal, no GUI)
-brew install --cask mactex-no-gui
+# Option A: TinyTeX (recommended, ~100MB, no sudo)
+curl -sL "https://yihui.org/tinytex/install-bin-unix.sh" | sh
+~/Library/TinyTeX/bin/universal-darwin/tlmgr install fancyhdr awesomebox listings fontawesome5
 
-# Verify installation
-pandoc --version
-which pdflatex
+# Option B: MacTeX (full install, ~5GB, requires sudo)
+brew install --cask mactex-no-gui
 ```
 
 ### Build Command
 
 ```bash
+# From project root
+just docs-cookbook
+
+# Or directly
 cd docs/lua-cookbook
 ./build.sh
 ```
@@ -110,7 +114,7 @@ docs/lua-cookbook/
 ├── metadata.yaml      # Pandoc metadata (title, author, date)
 ├── build.sh           # PDF generation script
 └── output/
-    └── cookbook.pdf   # Generated PDF (gitignored)
+    └── lua-cookbook.pdf   # Generated PDF (gitignored)
 ```
 
 ## Contributing

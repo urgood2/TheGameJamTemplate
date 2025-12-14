@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill to have a fresh agent review the implementation before considering the work complete.
 
+- **Save progress before context compaction.** When context is running low and compaction/summarization is imminent, always commit work-in-progress and document the current state so the next session can pick up exactly where we left off. This includes:
+  - Committing any uncommitted changes (even WIP commits)
+  - Noting the current task and next steps in a todo file or commit message
+  - Pushing to remote so progress isn't lost
+
 ## Notifications
 
 When you need to notify the user or ask for permission/input, use terminal-notifier:

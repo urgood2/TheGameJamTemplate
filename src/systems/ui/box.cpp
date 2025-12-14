@@ -37,12 +37,6 @@ namespace ui
     // TODO: update function registry for methods that replace transform-provided methods
 
     // TODO: make sure all methods take into account that children can be uiboxes as well
-    
-    inline float effectivePadding(const UIConfig& c) {
-        return c.padding.value_or(globals::getSettings().uiPadding)
-            * c.scale.value()
-            * globals::getGlobalUIScaleFactor();
-    }
 
     void LogChildrenOrder(entt::registry &registry, entt::entity parent)
     {

@@ -98,3 +98,105 @@ TEST_F(UILayoutTest, EffectivePadding_CombinedScales) {
     // Should be: 5.0f * 1.5f * 2.0f = 15.0f
     EXPECT_FLOAT_EQ(result, 15.0f);
 }
+
+// ============================================================
+// Alignment Flag Conflict Detection Tests
+// ============================================================
+
+#include "systems/transform/transform.hpp"
+
+using Align = transform::InheritedProperties::Alignment;
+
+// Test: No conflict with single flag
+TEST_F(UILayoutTest, AlignmentFlags_SingleFlag_NoConflict) {
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(Align::VERTICAL_CENTER, &conflict);
+
+    EXPECT_FALSE(hasConflict);
+    EXPECT_TRUE(conflict.empty());
+}
+
+// Test: Valid combination (H_CENTER + V_CENTER)
+TEST_F(UILayoutTest, AlignmentFlags_ValidCombination) {
+    int flags = Align::HORIZONTAL_CENTER | Align::VERTICAL_CENTER;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_FALSE(hasConflict);
+}
+
+// Test: Vertical conflict (CENTER + BOTTOM)
+TEST_F(UILayoutTest, AlignmentFlags_VerticalConflict_CenterBottom) {
+    int flags = Align::VERTICAL_CENTER | Align::VERTICAL_BOTTOM;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_TRUE(hasConflict);
+    EXPECT_FALSE(conflict.empty());
+}
+
+// Test: Vertical conflict (CENTER + TOP)
+TEST_F(UILayoutTest, AlignmentFlags_VerticalConflict_CenterTop) {
+    int flags = Align::VERTICAL_CENTER | Align::VERTICAL_TOP;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_TRUE(hasConflict);
+}
+
+// Test: Vertical conflict (TOP + BOTTOM)
+TEST_F(UILayoutTest, AlignmentFlags_VerticalConflict_TopBottom) {
+    int flags = Align::VERTICAL_TOP | Align::VERTICAL_BOTTOM;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_TRUE(hasConflict);
+}
+
+// Test: Horizontal conflict (CENTER + LEFT)
+TEST_F(UILayoutTest, AlignmentFlags_HorizontalConflict_CenterLeft) {
+    int flags = Align::HORIZONTAL_CENTER | Align::HORIZONTAL_LEFT;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_TRUE(hasConflict);
+}
+
+// Test: Horizontal conflict (CENTER + RIGHT)
+TEST_F(UILayoutTest, AlignmentFlags_HorizontalConflict_CenterRight) {
+    int flags = Align::HORIZONTAL_CENTER | Align::HORIZONTAL_RIGHT;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_TRUE(hasConflict);
+}
+
+// Test: Horizontal conflict (LEFT + RIGHT)
+TEST_F(UILayoutTest, AlignmentFlags_HorizontalConflict_LeftRight) {
+    int flags = Align::HORIZONTAL_LEFT | Align::HORIZONTAL_RIGHT;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_TRUE(hasConflict);
+}
+
+// Test: Multiple conflicts detected
+TEST_F(UILayoutTest, AlignmentFlags_MultipleConflicts) {
+    int flags = Align::VERTICAL_CENTER | Align::VERTICAL_BOTTOM | Align::HORIZONTAL_LEFT | Align::HORIZONTAL_RIGHT;
+    std::string conflict;
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, &conflict);
+
+    EXPECT_TRUE(hasConflict);
+    // Should report at least one conflict
+    EXPECT_FALSE(conflict.empty());
+}
+
+// Test: nullptr for conflict description is safe
+TEST_F(UILayoutTest, AlignmentFlags_NullptrDescription) {
+    int flags = Align::VERTICAL_CENTER | Align::VERTICAL_BOTTOM;
+
+    // Should not crash
+    bool hasConflict = ui::hasConflictingAlignmentFlags(flags, nullptr);
+
+    EXPECT_TRUE(hasConflict);
+}

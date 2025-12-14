@@ -12,6 +12,7 @@
 #include "core/globals.hpp"
 
 #include "input.hpp"
+#include "input_constants.hpp"
 #include "input_function_data.hpp"
 
 #include "systems/transform/transform_functions.hpp"
@@ -282,7 +283,11 @@ namespace input
             // printf("Gamepad name: %s\n", GetGamepadName(0));
             // printf("Axis count: %d\n", GetGamepadAxisCount(0));
             // SPDLOG_DEBUG("Axis movements: Lx={} Ly={} Rx={} Ry={} LT={} RT={}", axisLeftX, axisLeftY, axisRightX, axisRightY, axisLT, axisRT);
-            if (abs(axisLeftX) > 0.2f || abs(axisLeftY) > 0.2f || abs(axisRightX) > 0.2f || abs(axisRightY) > 0.2f || axisLT > -1.f || axisRT > -1.f)
+            if (abs(axisLeftX) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
+                abs(axisLeftY) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
+                abs(axisRightX) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
+                abs(axisRightY) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
+                axisLT > -1.f || axisRT > -1.f)
             {
                 SetCurrentGamepad(inputState, GetGamepadName(0), 0);
                 
@@ -311,9 +316,9 @@ namespace input
     {
         Vector2 mousePos = globals::getScaledMousePositionCached();
 
-        // Movement threshold (1px)
-        bool moved = std::fabs(mousePos.x - state.cursor_position.x) > 1.0f ||
-                    std::fabs(mousePos.y - state.cursor_position.y) > 1.0f;
+        // Movement threshold
+        bool moved = std::fabs(mousePos.x - state.cursor_position.x) > constants::MOUSE_MOVEMENT_THRESHOLD ||
+                    std::fabs(mousePos.y - state.cursor_position.y) > constants::MOUSE_MOVEMENT_THRESHOLD;
 
         // Buttons or wheel
         bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) ||
@@ -375,7 +380,7 @@ namespace input
         MarkEntitiesCollidingWithCursor(registry, inputState, {transform.getVisualX(), transform.getVisualY()});
         
         // static entt::entity activeScrollPane = entt::null;
-        static const float scrollSpeed = 10.0f;
+        static const float scrollSpeed = constants::SCROLL_SPEED;
         // apply scrollpane movement & mousewheel input action polling
         {
             const float mouseWheelMove = GetMouseWheelMove();
@@ -781,10 +786,10 @@ namespace input
             // TODO: de-nest this horrible code
             if (registry.valid(inputState.cursor_down_target))
             {
-                if (!inputState.cursor_down_target_click_timeout || inputState.cursor_down_target_click_timeout.value_or(0.05f) * main_loop::mainLoop.timescale > inputState.cursor_up_time - inputState.cursor_down_time)
+                if (!inputState.cursor_down_target_click_timeout || inputState.cursor_down_target_click_timeout.value_or(constants::DEFAULT_CLICK_TIMEOUT) * main_loop::mainLoop.timescale > inputState.cursor_up_time - inputState.cursor_down_time)
                 {
                     SPDLOG_DEBUG("Cursor up time: {}, cursor down time: {}", inputState.cursor_up_time, inputState.cursor_down_time);
-                    SPDLOG_DEBUG("Cursor down target click timeout: {}", inputState.cursor_down_target_click_timeout.value_or(0.05f) * main_loop::mainLoop.timescale);
+                    SPDLOG_DEBUG("Cursor down target click timeout: {}", inputState.cursor_down_target_click_timeout.value_or(constants::DEFAULT_CLICK_TIMEOUT) * main_loop::mainLoop.timescale);
                     // cursor hasn't moved enough
 
                     if (Vector2Distance(inputState.cursor_down_position.value(), inputState.cursor_up_position.value()) < CURSOR_MINIMUM_MOVEMENT_DISTANCE)
@@ -1038,7 +1043,7 @@ namespace input
         // frame_set, when true, resets "frame" lock after 0.1s
         if (inputState.activeInputLocks.at("frame_lock_reset_next_frame"))
         {
-            timer::TimerSystem::timer_after(0.1f, [&inputState](std::optional<float> notImportant)
+            timer::TimerSystem::timer_after(constants::OVERLAY_MENU_FRAME_LOCK_DURATION, [&inputState](std::optional<float> notImportant)
                                             { inputState.activeInputLocks["frame"] = false; });
         }
 
@@ -1467,17 +1472,17 @@ namespace input
             float l_stick_y = GetGamepadAxisMovement(state.gamepad.id, GAMEPAD_AXIS_LEFT_Y);
 
             // If something is being dragged, treat the left stick as cursor input
-            if (registry.valid(state.cursor_dragging_target) && (std::abs(l_stick_x) + std::abs(l_stick_y)) > 0.1f)
+            if (registry.valid(state.cursor_dragging_target) && (std::abs(l_stick_x) + std::abs(l_stick_y)) > constants::LEFT_STICK_DEADZONE)
             {
                 axisInterpretation = InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR; // Cursor movement detected
 
-                // Deadzone handling for left stick (10%)
-                if (std::abs(l_stick_x) < 0.1f)
+                // Deadzone handling for left stick
+                if (std::abs(l_stick_x) < constants::LEFT_STICK_DEADZONE)
                     l_stick_x = 0;
-                if (std::abs(l_stick_y) < 0.1f)
+                if (std::abs(l_stick_y) < constants::LEFT_STICK_DEADZONE)
                     l_stick_y = 0;
-                l_stick_x += (l_stick_x > 0 ? -0.1f : 0.0f) + (l_stick_x < 0 ? 0.1f : 0.0f);
-                l_stick_y += (l_stick_y > 0 ? -0.1f : 0.0f) + (l_stick_y < 0 ? 0.1f : 0.0f);
+                l_stick_x += (l_stick_x > 0 ? -constants::LEFT_STICK_DEADZONE : 0.0f) + (l_stick_x < 0 ? constants::LEFT_STICK_DEADZONE : 0.0f);
+                l_stick_y += (l_stick_y > 0 ? -constants::LEFT_STICK_DEADZONE : 0.0f) + (l_stick_y < 0 ? constants::LEFT_STICK_DEADZONE : 0.0f);
 
                 // Modify the cursor position based on left stick values
                 auto &transform = registry.get<transform::Transform>(globals::getCursorEntity());
@@ -1493,7 +1498,7 @@ namespace input
                 // Treat the left stick as a directional pad (dpad) input
                 auto &axisButton = state.axis_buttons["left_stick"];
                 axisButton.current = axisButton.previous;
-                if ((std::abs(l_stick_x) + std::abs(l_stick_y)) > 0.5f)
+                if ((std::abs(l_stick_x) + std::abs(l_stick_y)) > constants::LEFT_STICK_DPAD_ACTIVATION_THRESHOLD)
                 {
                     axisInterpretation = InputDeviceInputCategory::GAMEPAD_BUTTON; // Left stick is a button
 
@@ -1501,7 +1506,7 @@ namespace input
                                              ? (l_stick_x > 0 ? dpadRight : dpadLeft)
                                              : (l_stick_y > 0 ? dpadDown : dpadUp);
                 }
-                else if ((std::abs(l_stick_x) + std::abs(l_stick_y)) < 0.3f)
+                else if ((std::abs(l_stick_x) + std::abs(l_stick_y)) < constants::LEFT_STICK_DPAD_RELEASE_THRESHOLD)
                 {
                     axisButton.current.reset();
                 }
@@ -1513,7 +1518,7 @@ namespace input
             float r_stick_x = GetGamepadAxisMovement(state.gamepad.id, GAMEPAD_AXIS_RIGHT_X);
             float r_stick_y = GetGamepadAxisMovement(state.gamepad.id, GAMEPAD_AXIS_RIGHT_Y);
 
-            const float deadzone = 0.2f; // Right stick deadzone (20%)
+            const float deadzone = constants::RIGHT_STICK_DEADZONE;
 
             float mag = std::sqrt(std::pow(r_stick_x, 2) + std::pow(r_stick_y, 2));
             if (mag > deadzone)
@@ -1551,20 +1556,20 @@ namespace input
             axisButtonRTrigger.current = state.axis_buttons["right_trigger"].previous;
 
             // Handle the triggers as button presses
-            if (l_trig > 0.5f)
+            if (l_trig > constants::TRIGGER_ACTIVATION_THRESHOLD)
             {
                 axisButtonLTrigger.current = leftTrigger;
             }
-            else if (l_trig < 0.3f)
+            else if (l_trig < constants::TRIGGER_RELEASE_THRESHOLD)
             {
                 axisButtonLTrigger.current.reset();
             }
 
-            if (r_trig > 0.5f)
+            if (r_trig > constants::TRIGGER_ACTIVATION_THRESHOLD)
             {
                 axisButtonRTrigger.current = rightTrigger;
             }
-            else if (r_trig < 0.3f)
+            else if (r_trig < constants::TRIGGER_RELEASE_THRESHOLD)
             {
                 axisButtonRTrigger.current.reset();
             }
@@ -1696,10 +1701,10 @@ namespace input
         // Handle directional button repeat behavior
         if ((button == GAMEPAD_BUTTON_LEFT_FACE_LEFT || button == GAMEPAD_BUTTON_LEFT_FACE_RIGHT || button == GAMEPAD_BUTTON_LEFT_FACE_UP || button == GAMEPAD_BUTTON_LEFT_FACE_DOWN) && !state.no_holdcap)
         {
-            state.repress_timer = state.repress_timer > 0.0f ? state.repress_timer : 0.3f;
+            state.repress_timer = state.repress_timer > 0.0f ? state.repress_timer : constants::BUTTON_REPEAT_INITIAL_DELAY;
             if (state.gamepadHeldButtonDurations[button] > state.repress_timer)
             {
-                state.repress_timer = 0.1f;                      // Shorter delay for subsequent repeats
+                state.repress_timer = constants::BUTTON_REPEAT_SUBSEQUENT_DELAY;
                 state.gamepadHeldButtonDurations[button] = 0.0f; // Reset hold time
                 ButtonPressUpdate(registry, state, button, dt);  // Trigger button press action
 
@@ -1718,7 +1723,7 @@ namespace input
         }
 
         // Set repress timer
-        state.repress_timer = 0.3f;
+        state.repress_timer = constants::BUTTON_REPEAT_INITIAL_DELAY;
 
         // Remove button from tracking
         state.gamepadHeldButtonDurations.erase(button);
@@ -1882,8 +1887,8 @@ namespace input
             // Handle the "R" key specifically
             if (key == KEY_R && !globals::getIsGamePaused())
             {
-                // If the key has been held for more than 0.7 seconds
-                if (state.heldKeyDurations[key] > 0.7f)
+                // If the key has been held for more than the reset duration
+                if (state.heldKeyDurations[key] > constants::KEY_HOLD_RESET_DURATION)
                 {
                     // Do something - TODO: reset state?
 
@@ -2489,8 +2494,8 @@ namespace input
                         auto &funnelTransform = registry.get<transform::Transform>(funnelEntity);
 
                         state.focus_cursor_pos = {
-                            funnelTransform.getActualX() + 0.5f * funnelTransform.getActualW(),
-                            funnelTransform.getActualY() + 0.5f * funnelTransform.getActualH()};
+                            funnelTransform.getActualX() + constants::CENTER_POSITION_MULTIPLIER * funnelTransform.getActualW(),
+                            funnelTransform.getActualY() + constants::CENTER_POSITION_MULTIPLIER * funnelTransform.getActualH()};
                     }
 
                     // If there’s no currently focused target but a valid hovering target, use its focus position.
@@ -2535,8 +2540,8 @@ namespace input
 
                         // focus_vec is the vector pointing from the cursor to the center of the node
                         Vector2 focus_vec = {
-                            targetNodePos.x + 0.5f * targetNodeTransform.getActualW() - state.focus_cursor_pos->x,
-                            targetNodePos.y + 0.5f * targetNodeTransform.getActualH() - state.focus_cursor_pos->y};
+                            targetNodePos.x + constants::CENTER_POSITION_MULTIPLIER * targetNodeTransform.getActualW() - state.focus_cursor_pos->x,
+                            targetNodePos.y + constants::CENTER_POSITION_MULTIPLIER * targetNodeTransform.getActualH() - state.focus_cursor_pos->y};
 
                         if (dir && dir.value() == "D" || dir.value() == "U")
                         { // debug downward dir
@@ -2555,18 +2560,18 @@ namespace input
                         {
                             if (uiConfig.focusArgs->nav == "wide")
                             {
-                                if (focus_vec.y > 0.1f && dir == "D")
+                                if (focus_vec.y > constants::FOCUS_VECTOR_THRESHOLD && dir == "D")
                                     eligible = true;
-                                else if (focus_vec.y < -0.1f && dir == "U")
+                                else if (focus_vec.y < -constants::FOCUS_VECTOR_THRESHOLD && dir == "U")
                                     eligible = true;
                                 else if (std::abs(focus_vec.y) < targetNodeTransform.getActualH() / 2)
                                     eligible = true;
                             }
                             else if (uiConfig.focusArgs->nav == "tall")
                             {
-                                if (focus_vec.x > 0.1f && dir == "R")
+                                if (focus_vec.x > constants::FOCUS_VECTOR_THRESHOLD && dir == "R")
                                     eligible = true;
-                                else if (focus_vec.x < -0.1f && dir == "L")
+                                else if (focus_vec.x < -constants::FOCUS_VECTOR_THRESHOLD && dir == "L")
                                     eligible = true;
                                 else if (std::abs(focus_vec.x) < targetNodeTransform.getActualW() / 2)
                                     eligible = true;
@@ -2647,7 +2652,7 @@ namespace input
 
             if (state.cursor_focused_target != state.cursor_prev_focused_target)
             {
-                globals::getVibration() += 0.7f;
+                globals::getVibration() += constants::FOCUS_VIBRATION_INTENSITY;
             }
         }
         else
@@ -2683,7 +2688,7 @@ namespace input
         // LATER: not entirely sure I understand this. Need to review
         if (inputType == "press" && (button == GAMEPAD_BUTTON_LEFT_FACE_LEFT || button == GAMEPAD_BUTTON_LEFT_FACE_RIGHT) &&
             registry.valid(focused) && registry.valid(state.cursor_dragging_target) &&
-            state.gamepadHeldButtonDurations.at(xboxAButton) != 0 /** A for xbox */ > 0 && state.gamepadHeldButtonDurations[xboxAButton] < 0.12f &&
+            state.gamepadHeldButtonDurations.at(xboxAButton) != 0 /** A for xbox */ > 0 && state.gamepadHeldButtonDurations[xboxAButton] < constants::BUTTON_HOLD_COYOTE_TIME &&
             focusedObjectHasEncompassingArea && focusedObjectCanBeHighlightedInItsArea)
         {
             ProcessLeftMouseButtonRelease(registry, state);                      // Release cursor
@@ -2830,27 +2835,27 @@ namespace input
                     if (button == dpadLeft)
                     {
                         state.no_holdcap = true;
-                        if (inputType == "hold" && state.gamepadHeldButtonDurations[button] > 0.2f)
+                        if (inputType == "hold" && state.gamepadHeldButtonDurations[button] > constants::SLIDER_HOLD_ACTIVATION_TIME)
                         {
                             // TODO: change
-                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], -dt * state.gamepadHeldButtonDurations[button] * 0.6f);
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], -dt * state.gamepadHeldButtonDurations[button] * constants::SLIDER_CONTINUOUS_MULTIPLIER);
                         }
                         if (inputType == "press")
                         {
-                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], -0.01f);
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], -constants::SLIDER_DISCRETE_STEP);
                         }
                         ret = true;
                     }
                     else if (button == dpadRight)
                     {
                         state.no_holdcap = true;
-                        if (inputType == "hold" && state.gamepadHeldButtonDurations[button] > 0.2f)
+                        if (inputType == "hold" && state.gamepadHeldButtonDurations[button] > constants::SLIDER_HOLD_ACTIVATION_TIME)
                         {
-                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], dt * state.gamepadHeldButtonDurations[button] * 0.6f);
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], dt * state.gamepadHeldButtonDurations[button] * constants::SLIDER_CONTINUOUS_MULTIPLIER);
                         }
                         if (inputType == "press")
                         {
-                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], 0.01f);
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], constants::SLIDER_DISCRETE_STEP);
                         }
                         ret = true;
                     }
@@ -2861,7 +2866,7 @@ namespace input
         // Apply vibration if input was handled
         if (ret)
         {
-            globals::getVibration() += 1;
+            globals::getVibration() += constants::ACTION_VIBRATION_INTENSITY;
         }
         return ret;
     }
@@ -3722,7 +3727,7 @@ namespace input
             ActionBinding b;
             b.device = to_device(t.get_or<std::string>("device", "keyboard"));
             b.trigger = to_trigger(t.get_or<std::string>("trigger", "Pressed"));
-            b.threshold = t.get_or("threshold", 0.5f);
+            b.threshold = t.get_or("threshold", constants::INPUT_BINDING_DEFAULT_THRESHOLD);
             b.context = t.get_or<std::string>("context", "global");
             b.chord_group = t.get_or<std::string>("chord_group", "");
 

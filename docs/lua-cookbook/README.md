@@ -48,7 +48,7 @@ cd docs/lua-cookbook
 ./build.sh
 ```
 
-The PDF will be generated at `docs/lua-cookbook/output/cookbook.pdf`.
+The PDF will be generated at `docs/lua-cookbook/output/lua-cookbook.pdf`.
 
 ### Build Script
 

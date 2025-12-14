@@ -858,7 +858,7 @@ namespace ui
         AssertThat(node, Is().Not().EqualTo(nullptr));
         AssertThat(transform, Is().Not().EqualTo(nullptr));
 
-        float padding = uiConfig->padding.value_or(globals::getUiPadding());
+        float padding = uiConfig->effectivePadding();
         float max_w = 0.f, max_h = 0.f;
 
         // If no children or `no_fill` is true, return current size
@@ -1090,7 +1090,7 @@ namespace ui
             AssertThat(node, Is().Not().EqualTo(nullptr));
             AssertThat(transform, Is().Not().EqualTo(nullptr));
 
-            float padding = config->padding.value_or(globals::getUiPadding());
+            float padding = config->effectivePadding();
 
             //TODO: this should probably only be added to the offsets once every tree?
             float uiBoxOffsetX = (uiBoxOffset.has_value() && isRoot) ? uiBoxOffset->x : 0;

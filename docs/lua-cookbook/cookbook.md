@@ -120,8 +120,19 @@ end
 | Spawn projectile | \pageref{recipe:spawn-projectile} |
 | Configure projectile behavior | \pageref{recipe:projectile-config} |
 | **Cards & Wands** | |
-| Define a new card | \pageref{recipe:define-card} |
-| Define a joker | \pageref{recipe:define-joker} |
+| Define action card | \pageref{recipe:card-action} |
+| Define modifier card | \pageref{recipe:card-modifier} |
+| Define trigger card | \pageref{recipe:card-trigger} |
+| Define joker | \pageref{recipe:joker-define} |
+| Trigger joker events | \pageref{recipe:joker-trigger} |
+| Add/remove jokers | \pageref{recipe:joker-manage} |
+| Execute wand | \pageref{recipe:wand-execute} |
+| Define tag synergies | \pageref{recipe:tag-synergy} |
+| Evaluate tag bonuses | \pageref{recipe:tag-evaluate} |
+| Register custom behavior | \pageref{recipe:behavior-register} |
+| Aggregate modifiers | \pageref{recipe:modifier-aggregate} |
+| Detect spell type | \pageref{recipe:spell-type} |
+| Register wand trigger | \pageref{recipe:wand-trigger} |
 | **AI** | |
 | Create AI entity | \pageref{recipe:ai-entity} |
 | Define AI action | \pageref{recipe:ai-action} |
@@ -3516,5 +3527,894 @@ end)
 **Gotcha:** Use `explosionDamageMult` to balance AoE vs direct damage.
 
 **Gotcha:** `fixedRotation = false` makes grenade tumble realistically.
+
+\newpage
+# Chapter 7: Wand & Cards
+
+\label{chapter:wand-cards}
+
+*Spellcasting system with cards, modifiers, triggers, and jokers.*
+
+---
+
+## Overview
+
+The Wand & Cards system is a deck-building spellcasting engine where:
+- **Cards** define actions (spells), modifiers (buffs), and triggers (conditions)
+- **Wands** execute cards in sequence when triggers fire
+- **Jokers** are passive artifacts that react to events
+- **Tags** provide synergy bonuses at breakpoints (3/5/7/9 cards)
+- **Spell Types** classify cast patterns (Simple, Twin, Mono-Element, etc.)
+
+**Key modules:**
+- `data/cards.lua` — Card registry
+- `data/jokers.lua` — Joker registry
+- `wand/wand_executor.lua` — Orchestrates casting
+- `wand/wand_modifiers.lua` — Modifier aggregation
+- `wand/wand_triggers.lua` — Trigger system
+- `wand/joker_system.lua` — Joker event handling
+- `wand/tag_evaluator.lua` — Tag synergy thresholds
+- `wand/spell_type_evaluator.lua` — Cast pattern detection
+- `wand/card_behavior_registry.lua` — Custom behaviors
+
+---
+
+## Define a Basic Action Card
+
+\label{recipe:card-action}
+
+**When to use:** Add a new projectile spell to the game.
+
+```lua
+-- In assets/scripts/data/cards.lua
+
+Cards.MY_LIGHTNING_BOLT = {
+    -- Required fields
+    id = "MY_LIGHTNING_BOLT",        -- Must match table key
+    type = "action",                  -- "action", "modifier", or "trigger"
+    mana_cost = 15,
+    tags = { "Lightning", "Projectile" },
+    test_label = "LIGHTNING\nbolt",   -- Display label (use \n for line breaks)
+
+    -- Action-specific fields
+    damage = 30,
+    damage_type = "lightning",        -- fire/ice/lightning/poison/arcane/holy/void
+    projectile_speed = 600,
+    lifetime = 2000,                  -- milliseconds
+    radius_of_effect = 0,             -- 0 = no AoE, >0 = explosion radius
+
+    -- Optional fields
+    spread_angle = 0,                 -- Degrees for spread shots
+    cast_delay = 50,                  -- ms delay before cast
+    homing_strength = 0,              -- 0-15 for homing
+    ricochet_count = 0,               -- Bounces off walls
+    timer_ms = 0,                     -- Timer trigger (0 = none)
+}
+```
+
+*— Pattern from data/cards.lua:16-36*
+
+**Gotcha:** `id` must exactly match the table key (`Cards.MY_LIGHTNING_BOLT` → `id = "MY_LIGHTNING_BOLT"`).
+
+**Gotcha:** `test_label` uses `\n` for line breaks in UI, not actual newlines.
+
+**Gotcha:** `radius_of_effect = 0` means single-target; any value > 0 creates AoE explosion.
+
+---
+
+## Define a Modifier Card
+
+\label{recipe:card-modifier}
+
+**When to use:** Create a card that modifies other spells (speed, damage, multicast).
+
+```lua
+-- In assets/scripts/data/cards.lua
+
+Cards.MOD_TRIPLE_DAMAGE = {
+    id = "MOD_TRIPLE_DAMAGE",
+    type = "modifier",                -- Modifier type
+    mana_cost = 20,
+    tags = { "Buff" },
+    test_label = "TRIPLE\ndamage",
+
+    -- Modifier fields
+    damage_modifier = 0,              -- Flat bonus (additive)
+    damage_multiplier = 3.0,          -- Multiplicative bonus
+
+    -- Can also modify:
+    speed_modifier = 0,               -- Additive speed
+    speed_multiplier = 1.0,           -- Multiplicative speed
+    spread_modifier = 0,              -- Additive spread angle
+    lifetime_modifier = 0,            -- Additive lifetime (ms)
+    lifetime_multiplier = 1.0,
+    critical_hit_chance_modifier = 0, -- Additive crit %
+}
+
+-- Multicast example
+Cards.MOD_MULTICAST_5 = {
+    id = "MOD_MULTICAST_5",
+    type = "modifier",
+    mana_cost = 25,
+    tags = { "Arcane" },
+    test_label = "5x\nCAST",
+
+    -- Multicast
+    multicast_count = 5,              -- Number of projectiles
+    spread_angle = 45,                -- Total spread arc (degrees)
+    circular_pattern = false,         -- true = 360° circle
+}
+```
+
+*— Pattern from data/cards.lua:108-123, 458-489*
+
+**Gotcha:** Modifiers apply to ALL actions after them in the wand sequence.
+
+**Gotcha:** `damage_modifier` is additive (`+10`), `damage_multiplier` is multiplicative (`×2.0`).
+
+**Gotcha:** `multicast_count` fires multiple projectiles simultaneously with `spread_angle` arc.
+
+---
+
+## Define a Trigger Card
+
+\label{recipe:card-trigger}
+
+**When to use:** Create a card that fires when conditions are met (timer, collision, death).
+
+```lua
+-- In assets/scripts/data/cards.lua
+
+Cards.MOD_TRIGGER_ON_HIT = {
+    id = "MOD_TRIGGER_ON_HIT",
+    type = "modifier",                -- Triggers are modifiers
+    mana_cost = 15,
+    tags = { "Arcane" },
+    test_label = "trigger\nON HIT",
+
+    -- Trigger on collision
+    trigger_on_collision = true,
+
+    -- Cards after this trigger when projectile hits
+}
+
+Cards.MOD_TRIGGER_TIMER = {
+    id = "MOD_TRIGGER_TIMER",
+    type = "modifier",
+    mana_cost = 12,
+    tags = { "Arcane" },
+    test_label = "trigger\nTIMER",
+
+    -- Timer trigger
+    timer_ms = 1000,                  -- Fire after 1 second
+
+    -- Cards after this trigger when timer expires
+}
+
+Cards.MOD_TRIGGER_ON_DEATH = {
+    id = "MOD_TRIGGER_ON_DEATH",
+    type = "modifier",
+    mana_cost = 18,
+    tags = { "Void" },
+    test_label = "trigger\nON DEATH",
+
+    -- Trigger when projectile is destroyed
+    trigger_on_death = true,
+}
+```
+
+*— Pattern from data/cards.lua:403-456*
+
+**Gotcha:** Trigger cards split the wand into blocks: [before trigger] → [after trigger fires].
+
+**Gotcha:** Actions after a trigger execute at the trigger position, not cast position.
+
+**Gotcha:** Multiple triggers can chain: timer → hit → death creates 3 sub-casts.
+
+---
+
+## Define a Joker (Passive Artifact)
+
+\label{recipe:joker-define}
+
+**When to use:** Create a passive modifier that reacts to game events.
+
+```lua
+-- In assets/scripts/data/jokers.lua
+
+local Jokers = {
+    -- Damage boost for Fire spells
+    pyromaniac = {
+        id = "pyromaniac",
+        name = "Pyromaniac",
+        description = "+10 Damage to Fire spells.",
+        rarity = "Common",              -- Common/Uncommon/Rare/Epic/Legendary
+
+        calculate = function(self, context)
+            if context.event == "on_spell_cast" then
+                if context.tags and context.tags.Fire then
+                    return {
+                        damage_mod = 10,    -- Flat bonus
+                        message = "Pyromaniac!"
+                    }
+                end
+            end
+        end
+    },
+
+    -- Scaling with tag counts
+    tag_master = {
+        id = "tag_master",
+        name = "Tag Master",
+        description = "+1% Damage for every Tag you have.",
+        rarity = "Uncommon",
+
+        calculate = function(self, context)
+            if context.event == "calculate_damage" then
+                local tag_count = 0
+                if context.player and context.player.tag_counts then
+                    for _, count in pairs(context.player.tag_counts) do
+                        tag_count = tag_count + count
+                    end
+                end
+
+                if tag_count > 0 then
+                    return {
+                        damage_mult = 1 + (tag_count * 0.01),  -- Multiplicative
+                        message = "Tag Master (" .. tag_count .. "%)"
+                    }
+                end
+            end
+        end
+    },
+
+    -- Special effect
+    echo_chamber = {
+        id = "echo_chamber",
+        name = "Echo Chamber",
+        description = "Twin Casts trigger twice.",
+        rarity = "Rare",
+
+        calculate = function(self, context)
+            if context.event == "on_spell_cast" then
+                if context.spell_type == "Twin Cast" then
+                    return {
+                        repeat_cast = 1,    -- Cast again
+                        message = "Echo!"
+                    }
+                end
+            end
+        end
+    },
+}
+
+return Jokers
+```
+
+*— Pattern from data/jokers.lua:8-97*
+
+**Gotcha:** `calculate()` is called with `self` as first parameter (use `self, context`).
+
+**Gotcha:** Return nil if joker doesn't apply to this event (not an empty table).
+
+**Gotcha:** `damage_mod` is additive, `damage_mult` is multiplicative (stacks with others).
+
+---
+
+## Trigger Joker Events
+
+\label{recipe:joker-trigger}
+
+**When to use:** Fire joker calculations from game code.
+
+```lua
+local JokerSystem = require("wand.joker_system")
+
+-- Trigger when spell is cast
+local effects = JokerSystem.trigger_event("on_spell_cast", {
+    spell_type = "Twin Cast",
+    tags = { Fire = true, Projectile = true },
+    damage = 50,
+    player = playerEntity
+})
+
+-- Apply aggregated effects
+local finalDamage = damage + effects.damage_mod
+finalDamage = finalDamage * effects.damage_mult
+
+-- Show messages
+for _, msg in ipairs(effects.messages) do
+    print(msg.joker .. ": " .. msg.text)
+end
+
+-- Repeat cast if requested
+for i = 1, effects.repeat_cast do
+    castSpellAgain()
+end
+
+-- Common events:
+-- "on_spell_cast" — when casting starts
+-- "calculate_damage" — before damage is dealt
+-- "on_player_attack" — when player attacks
+-- "on_low_health" — health drops below threshold
+-- "on_dash" — player dashes
+-- "on_pickup" — item collected
+```
+
+*— Pattern from wand/joker_system.lua:42-75*
+
+**Gotcha:** Aggregate fields start at default values (damage_mod=0, damage_mult=1).
+
+**Gotcha:** Multiple jokers stack: two +10 damage jokers = +20 total.
+
+**Gotcha:** `effects.messages` is a list of `{ joker = name, text = message }` tables.
+
+---
+
+## Add/Remove Jokers
+
+\label{recipe:joker-manage}
+
+**When to use:** Give player jokers or remove them dynamically.
+
+```lua
+local JokerSystem = require("wand.joker_system")
+
+-- Add a joker to player inventory
+JokerSystem.add_joker("pyromaniac")
+JokerSystem.add_joker("tag_master")
+
+-- Remove a joker
+JokerSystem.remove_joker("pyromaniac")
+
+-- Clear all jokers (for testing/reset)
+JokerSystem.clear_jokers()
+
+-- Check active jokers
+for _, joker in ipairs(JokerSystem.jokers) do
+    print("Active:", joker.name)
+end
+
+-- Get joker definition
+local def = JokerSystem.definitions["pyromaniac"]
+if def then
+    print(def.name, def.description, def.rarity)
+end
+```
+
+*— Pattern from wand/joker_system.lua:16-40*
+
+**Gotcha:** `add_joker()` takes the joker ID string, not the definition table.
+
+**Gotcha:** Adding the same joker twice creates two instances (intentional for stacking).
+
+**Gotcha:** Jokers are global — they affect all spells, not per-wand.
+
+---
+
+## Execute a Wand
+
+\label{recipe:wand-execute}
+
+**When to use:** Trigger a wand to cast its spell sequence.
+
+```lua
+local WandExecutor = require("wand.wand_executor")
+
+-- Register a wand with cards
+local wandId = "player_wand"
+WandExecutor.activeWands[wandId] = {
+    id = wandId,
+    cards = {
+        "MOD_TRIPLE_DAMAGE",      -- Modifier
+        "MY_LIGHTNING_BOLT",       -- Action
+        "MOD_TRIGGER_ON_HIT",      -- Trigger (splits here)
+        "ACTION_EXPLOSIVE_FIRE_PROJECTILE"  -- Trigger payload
+    },
+    trigger = {
+        type = "on_player_attack",
+        params = {}
+    },
+    mana_capacity = 100,
+    recharge_rate = 5,            -- mana/sec
+    cast_delay = 0.1,             -- seconds between casts
+    charges = -1,                 -- -1 = infinite
+}
+
+-- Execute the wand
+local success = WandExecutor.execute(wandId, "on_player_attack")
+
+if success then
+    print("Wand cast successfully!")
+else
+    print("Cast failed (cooldown, mana, or charges)")
+end
+
+-- Check if wand can cast
+if WandExecutor.canCast(wandId) then
+    WandExecutor.execute(wandId)
+end
+```
+
+*— Pattern from wand/wand_executor.lua:209-228*
+
+**Gotcha:** `execute()` returns false if on cooldown, out of mana, or out of charges.
+
+**Gotcha:** Cards execute in order: modifiers → action → trigger → [trigger payload].
+
+**Gotcha:** `triggerType` parameter should match the wand's trigger type for debugging.
+
+---
+
+## Define Tag Synergies
+
+\label{recipe:tag-synergy}
+
+**When to use:** Create bonuses when player has 3/5/7/9 cards with a tag.
+
+```lua
+-- In assets/scripts/wand/tag_evaluator.lua (TAG_BREAKPOINTS table)
+
+local TAG_BREAKPOINTS = {
+    Fire = {
+        [3] = { type = "stat", stat = "burn_damage_pct", value = 10 },
+        [5] = { type = "stat", stat = "burn_tick_rate_pct", value = 15 },
+        [7] = { type = "proc", proc_id = "burn_explosion_on_kill" },
+        [9] = { type = "proc", proc_id = "burn_spread" }
+    },
+
+    MyNewTag = {
+        [3] = { type = "stat", stat = "damage_pct", value = 10 },       -- +10% damage
+        [5] = { type = "proc", proc_id = "my_custom_proc" },            -- Trigger proc
+        [7] = { type = "stat", stat = "crit_chance_pct", value = 15 },  -- +15% crit
+        [9] = { type = "proc", proc_id = "my_ultimate_proc" },          -- Ultimate proc
+    },
+}
+
+-- Bonus types:
+-- - "stat": Modifies player stat (damage_pct, crit_chance_pct, move_speed_pct, etc.)
+-- - "proc": Triggers a proc effect (implement handler in combat system)
+
+-- Default thresholds (can change):
+local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
+```
+
+*— Pattern from wand/tag_evaluator.lua:8-87*
+
+**Gotcha:** Tag names are case-sensitive and should start with capital letter.
+
+**Gotcha:** Thresholds check exact count: 3, 5, 7, 9 cards (not "at least 3").
+
+**Gotcha:** `proc` bonuses require implementation in combat system to have effect.
+
+---
+
+## Evaluate Tag Bonuses
+
+\label{recipe:tag-evaluate}
+
+**When to use:** Check what bonuses a deck gets from tag synergies.
+
+```lua
+local TagEvaluator = require("wand.tag_evaluator")
+
+-- Count tags in deck
+local deck = {
+    "MY_FIREBALL",           -- tags: Fire, Projectile
+    "MY_LIGHTNING_BOLT",     -- tags: Lightning, Projectile
+    "ACTION_EXPLOSIVE_FIRE_PROJECTILE",  -- tags: Fire, Projectile, AoE
+}
+
+local tagCounts = TagEvaluator.count_tags(deck)
+-- Result: { Fire = 2, Lightning = 1, Projectile = 3, AoE = 1 }
+
+-- Get active bonuses
+local bonuses = TagEvaluator.evaluate_deck(deck)
+-- Result: {
+--   Projectile = {
+--     count = 3,
+--     thresholds_met = { 3 },  -- Hit the 3-card threshold
+--     bonuses = { { type = "stat", stat = "damage_pct", value = 10 } }
+--   }
+-- }
+
+-- Get thresholds for a tag
+local thresholds = TagEvaluator.get_thresholds("Fire")
+-- Result: { 3, 5, 7, 9 }
+
+-- Check if tag has synergy
+if TagEvaluator.has_synergy("Fire") then
+    print("Fire tag has breakpoint bonuses!")
+end
+```
+
+*— Pattern from wand/tag_evaluator.lua:103-247*
+
+**Gotcha:** Tags are normalized: `"fire"` → `"Fire"`, `" Lightning "` → `"Lightning"`.
+
+**Gotcha:** Invalid tags (nil, empty string) are skipped, not errored.
+
+**Gotcha:** `count_tags()` only counts cards that exist in card registry.
+
+---
+
+## Register Custom Behavior
+
+\label{recipe:behavior-register}
+
+**When to use:** Add complex card logic that can't be expressed with fields.
+
+```lua
+local BehaviorRegistry = require("wand.card_behavior_registry")
+
+-- Register a complex behavior
+BehaviorRegistry.register("chain_explosion", function(ctx)
+    local explosions = 0
+    local maxChains = ctx.params.max_chains or 3
+
+    local function explode(position, damage)
+        if explosions >= maxChains then return end
+
+        -- Find enemies in radius
+        local targets = findEnemiesInRadius(position, ctx.params.radius)
+        for _, target in ipairs(targets) do
+            dealDamage(target, damage)
+
+            -- Recursive chain
+            if math.random(100) <= ctx.params.chain_chance then
+                explosions = explosions + 1
+                explode(target.position, damage * ctx.params.damage_mult)
+            end
+        end
+    end
+
+    explode(ctx.position, ctx.damage)
+end, "Recursive chain explosions")
+
+-- Execute behavior
+local context = {
+    position = { x = 100, y = 200 },
+    damage = 50,
+    params = {
+        max_chains = 5,
+        radius = 80,
+        chain_chance = 50,       -- 50% chance per target
+        damage_mult = 0.7,       -- 70% damage per chain
+    }
+}
+
+BehaviorRegistry.execute("chain_explosion", context)
+
+-- Use in card definition
+Cards.CHAIN_EXPLOSION = {
+    id = "CHAIN_EXPLOSION",
+    type = "action",
+    -- ... other fields ...
+    behavior_id = "chain_explosion",
+    behavior_params = {
+        max_chains = 5,
+        radius = 80,
+        chain_chance = 50,
+        damage_mult = 0.7,
+    }
+}
+```
+
+*— Pattern from wand/card_behavior_registry.lua:14-91*
+
+**Gotcha:** Behaviors are global — register once at init, not per card.
+
+**Gotcha:** Context structure is custom — define what your behavior needs.
+
+**Gotcha:** Use `ctx.params` for card-specific parameters (max_chains, radius, etc.).
+
+---
+
+## Aggregate Modifiers
+
+\label{recipe:modifier-aggregate}
+
+**When to use:** Combine multiple modifier cards into final stats.
+
+```lua
+local WandModifiers = require("wand.wand_modifiers")
+
+-- Create empty aggregate
+local agg = WandModifiers.createAggregate()
+-- Result: { speedMultiplier = 1.0, damageMultiplier = 1.0, ... }
+
+-- Add modifier cards
+local modifiers = {
+    { speed_modifier = 50, damage_multiplier = 2.0 },
+    { damage_modifier = 10, spread_modifier = 5 },
+    { multicast_count = 3, spread_angle = 30 },
+}
+
+for _, mod in ipairs(modifiers) do
+    WandModifiers.addModifier(agg, mod)
+end
+
+-- Apply to action card
+local action = {
+    projectile_speed = 400,
+    damage = 25,
+    spread_angle = 0,
+}
+
+WandModifiers.applyToAction(agg, action)
+
+-- Result:
+-- action.projectile_speed = 450  (base 400 + modifier 50)
+-- action.damage = 60             (base 25 × multiplier 2.0 + modifier 10)
+-- action.spread_angle = 5        (base 0 + modifier 5)
+-- action.multicastCount = 3
+```
+
+*— Pattern from wand/wand_modifiers.lua:28-100*
+
+**Gotcha:** Modifiers are additive first, then multiplicative: `(base + bonus) × multiplier`.
+
+**Gotcha:** `multicastCount` defaults to 1 (single shot) if no multicast modifier.
+
+**Gotcha:** Aggregates are mutable — `addModifier()` modifies in place.
+
+---
+
+## Detect Spell Type
+
+\label{recipe:spell-type}
+
+**When to use:** Classify a cast block as "Twin Cast", "Mono-Element", etc.
+
+```lua
+local SpellTypeEvaluator = require("wand.spell_type_evaluator")
+
+-- Analyze a cast block
+local block = {
+    actions = {
+        { id = "MY_FIREBALL", tags = {"Fire", "Projectile"}, damage = 25 },
+    },
+    modifiers = {
+        multicastCount = 2,
+        spreadAngleBonus = 0,
+    }
+}
+
+local spellType = SpellTypeEvaluator.evaluate(block)
+-- Result: "Twin Cast" (1 action, multicast x2)
+
+-- Available spell types:
+-- - "Simple Cast"      — 1 action, 0 modifiers
+-- - "Twin Cast"        — 1 action, multicast x2
+-- - "Scatter Cast"     — 1 action, multicast >2 + spread
+-- - "Precision Cast"   — 1 action, speed/damage up, no spread
+-- - "Rapid Fire"       — 1 action, low cast delay
+-- - "Mono-Element"     — 3+ actions, same element tag
+-- - "Combo Chain"      — 3+ actions, different types
+-- - "Heavy Barrage"    — 3+ actions, high cost/damage
+-- - "Chaos Cast"       — Fallback / mixed
+
+-- Use in jokers
+local Jokers = {
+    echo_chamber = {
+        calculate = function(self, context)
+            if context.spell_type == "Twin Cast" then
+                return { repeat_cast = 1 }  -- Cast twice!
+            end
+        end
+    }
+}
+```
+
+*— Pattern from wand/spell_type_evaluator.lua:5-95*
+
+**Gotcha:** Spell type is determined by first matching pattern (order matters).
+
+**Gotcha:** Single-action casts check multicast → speed/damage → delay.
+
+**Gotcha:** Multi-action casts check element tags → type diversity → cost/damage.
+
+---
+
+## Register Wand Trigger
+
+\label{recipe:wand-trigger}
+
+**When to use:** Fire wand automatically when events occur (attack, timer, low health).
+
+```lua
+local WandTriggers = require("wand.wand_triggers")
+local WandExecutor = require("wand.wand_executor")
+
+-- Initialize trigger system (once at startup)
+WandTriggers.init()
+
+-- Register timer trigger (fires every N seconds)
+WandTriggers.register(
+    "auto_wand",              -- wandId
+    {
+        type = "every_N_seconds",
+        interval = 2.0        -- Fire every 2 seconds
+    },
+    function(wandId)
+        WandExecutor.execute(wandId, "timer")
+    end,
+    {
+        canCast = function()
+            return is_state_active(ACTION_STATE)
+        end
+    }
+)
+
+-- Register event trigger (fires on game event)
+WandTriggers.register(
+    "attack_wand",
+    {
+        type = "on_player_attack"
+    },
+    function(wandId)
+        WandExecutor.execute(wandId, "on_player_attack")
+    end
+)
+
+-- Other trigger types:
+-- - "every_N_seconds" — Timer-based
+-- - "on_player_attack" — Player attacks
+-- - "on_bump_enemy" — Collision with enemy
+-- - "on_dash" — Player dashes
+-- - "on_low_health" — Health below threshold
+-- - "on_pickup" — Item collected
+-- - "on_distance_traveled" — Distance threshold
+
+-- Update trigger system (every frame)
+WandTriggers.update(dt)
+
+-- Cleanup (on shutdown)
+WandTriggers.cleanup()
+```
+
+*— Pattern from wand/wand_triggers.lua:91-110, 150-220*
+
+**Gotcha:** Call `WandTriggers.init()` once at startup, `cleanup()` on shutdown.
+
+**Gotcha:** `canCast` callback optional — checks if wand should fire (state, cooldown, etc.).
+
+**Gotcha:** Timer triggers use `timer` system — ensure it's updated each frame.
+
+---
+
+## Complete Example: Custom Spell
+
+**When to use:** Combine cards, modifiers, and jokers for complex spell behavior.
+
+```lua
+-- Step 1: Define cards
+-- In assets/scripts/data/cards.lua
+
+Cards.CHAIN_LIGHTNING = {
+    id = "CHAIN_LIGHTNING",
+    type = "action",
+    mana_cost = 20,
+    damage = 20,
+    damage_type = "lightning",
+    projectile_speed = 800,
+    lifetime = 1000,
+    radius_of_effect = 0,
+    tags = { "Lightning", "Projectile", "Arcane" },
+    test_label = "CHAIN\nlightning",
+
+    -- Custom fields
+    chain_targets = 3,
+    chain_range = 150,
+}
+
+Cards.MOD_ARC_SPREAD = {
+    id = "MOD_ARC_SPREAD",
+    type = "modifier",
+    mana_cost = 15,
+    tags = { "Arcane" },
+    test_label = "ARC\nspread",
+
+    multicast_count = 5,
+    spread_angle = 60,
+    circular_pattern = false,
+}
+
+-- Step 2: Define joker
+-- In assets/scripts/data/jokers.lua
+
+lightning_amplifier = {
+    id = "lightning_amplifier",
+    name = "Lightning Amplifier",
+    description = "+25% damage to Lightning spells with 3+ targets hit.",
+    rarity = "Rare",
+
+    calculate = function(self, context)
+        if context.event == "on_spell_hit" then
+            if context.tags and context.tags.Lightning then
+                if context.targets_hit and context.targets_hit >= 3 then
+                    return {
+                        damage_mult = 1.25,
+                        message = "Lightning Amplifier!"
+                    }
+                end
+            end
+        end
+    end
+}
+
+-- Step 3: Setup wand
+-- In game code
+
+local WandExecutor = require("wand.wand_executor")
+local WandTriggers = require("wand.wand_triggers")
+local JokerSystem = require("wand.joker_system")
+
+-- Add joker to player
+JokerSystem.add_joker("lightning_amplifier")
+
+-- Register wand
+WandExecutor.activeWands["lightning_wand"] = {
+    id = "lightning_wand",
+    cards = {
+        "MOD_ARC_SPREAD",     -- 5-way spread
+        "CHAIN_LIGHTNING",    -- Lightning bolt
+    },
+    trigger = {
+        type = "on_player_attack"
+    },
+    mana_capacity = 100,
+    recharge_rate = 10,
+    cast_delay = 0.2,
+    charges = -1,
+}
+
+-- Register trigger
+WandTriggers.register(
+    "lightning_wand",
+    { type = "on_player_attack" },
+    function(wandId)
+        WandExecutor.execute(wandId, "on_player_attack")
+    end
+)
+
+-- Step 4: Handle execution
+local signal = require("external.hump.signal")
+
+signal.register("projectile_hit", function(projectile, target, damage)
+    local script = getScriptTableFromEntityID(projectile)
+    if not script or script.cardId ~= "CHAIN_LIGHTNING" then return end
+
+    -- Count targets hit
+    script.targetsHit = (script.targetsHit or 0) + 1
+
+    -- Trigger joker event after 3+ hits
+    if script.targetsHit >= 3 then
+        local effects = JokerSystem.trigger_event("on_spell_hit", {
+            tags = { Lightning = true, Projectile = true },
+            targets_hit = script.targetsHit,
+        })
+
+        -- Apply bonus damage
+        damage = damage * effects.damage_mult
+
+        -- Show messages
+        for _, msg in ipairs(effects.messages) do
+            showFloatingText(target, msg.text)
+        end
+    end
+end)
+
+-- Result: Player attack fires 5 lightning bolts in arc, each chains to 3 targets,
+-- and joker boosts damage by 25% after hitting 3+ enemies.
+```
+
+*— Combined pattern from data/cards.lua, data/jokers.lua, wand/wand_executor.lua*
+
+**Gotcha:** Joker events must be triggered manually in game code (not automatic).
+
+**Gotcha:** Card custom fields (chain_targets, chain_range) need implementation in projectile system.
+
+**Gotcha:** `targetsHit` tracking requires script table on projectile entity.
 
 \newpage

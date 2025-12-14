@@ -14,6 +14,21 @@
 			},
 			"problemMatcher": [],
 			"detail": "CMake template build task"
+		},
+		{
+			"label": "Watch Sprites",
+			"type": "shell",
+			"command": "just watch-sprites",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "silent",
+				"panel": "dedicated",
+				"showReuseMessage": false
+			},
+			"runOptions": {
+				"runOn": "folderOpen"
+			}
 		}
 	]
 }

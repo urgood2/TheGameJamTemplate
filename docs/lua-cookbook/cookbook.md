@@ -3366,8 +3366,8 @@ ProjectileSystem.spawn({
     -- Physics properties
     restitution = 0.5,   -- bounciness (0 = no bounce, 1 = perfect bounce)
     friction = 0.1,      -- surface friction
-    gravityScale = 0,    # gravity multiplier (0 = no gravity)
-    fixedRotation = true # lock rotation (for sprites that shouldn't rotate)
+    gravityScale = 0,    -- gravity multiplier (0 = no gravity)
+    fixedRotation = true -- lock rotation (for sprites that shouldn't rotate)
 })
 ```
 

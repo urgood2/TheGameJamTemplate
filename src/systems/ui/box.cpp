@@ -724,7 +724,7 @@ namespace ui
                     
                 }
 
-                if (alignmentFlags & transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT)
+                else if (alignmentFlags & transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT)
                 {
                     if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
                     {
@@ -737,13 +737,19 @@ namespace ui
                         auto xLoc = selfContentOffset.x + selfContentDimensions.x - childDimensions.x;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
                     }
-                    
+
                     else if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
                         // do nothing
                     }
                 }
+                // HORIZONTAL_LEFT is default, no action needed
 
-                if (alignmentFlags & transform::InheritedProperties::Alignment::VERTICAL_BOTTOM)
+                // Vertical alignment: VERTICAL_CENTER takes priority over VERTICAL_BOTTOM
+                // (VERTICAL_TOP is default, no action needed)
+                // Note: Can't use else-if directly because horizontal alignment code is between
+                // VERTICAL_CENTER and VERTICAL_BOTTOM blocks, so we use explicit guard
+                if ((alignmentFlags & transform::InheritedProperties::Alignment::VERTICAL_BOTTOM) &&
+                    !(alignmentFlags & transform::InheritedProperties::Alignment::VERTICAL_CENTER))
                 {
                     if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
                     {

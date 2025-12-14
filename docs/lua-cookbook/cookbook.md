@@ -4,74 +4,37 @@ title: Lua API Cookbook
 
 # Quick Start
 
-**New to the engine?** Here's how to create a game entity from scratch in 30 seconds.
+**New to the engine?** Here's how to create a game entity from scratch in 10 seconds.
 
 ```lua
--- 1. Load required modules
-local Node = require("monobehavior.behavior_script_v2")
-local animation_system = require("core.animation_system")
-local component_cache = require("core.component_cache")
-local physics = require("physics.physics_lua_api")
-local PhysicsManager = require("core.physics_manager")
+-- 1. Load modules (or use imports.all() - see below)
+local EntityBuilder = require("core.entity_builder")
+local PhysicsBuilder = require("core.physics_builder")
 
--- 2. Create an entity with a sprite
-local entity = animation_system.createAnimatedObjectWithTransform(
-    "kobold",  -- animation/sprite ID
-    true       -- use animation (true) vs sprite identifier (false)
-)
+-- 2. Create entity with everything in one call
+local entity, script = EntityBuilder.create({
+    sprite = "kobold",
+    position = { x = 100, y = 200 },
+    size = { 64, 64 },
+    data = { health = 100, faction = "enemy", damage = 10 },
+    interactive = {
+        click = function(reg, clickedEntity)
+            print("Clicked entity:", clickedEntity)
+            local script = getScriptTableFromEntityID(clickedEntity)
+            if script then
+                script.health = script.health - 10
+                print("Health remaining:", script.health)
+            end
+        end
+    }
+})
 
--- 3. Initialize script table for custom data (BEFORE attach_ecs!)
-local EntityType = Node:extend()
-local script = EntityType {}
-
--- Assign data to script table
-script.health = 100
-script.faction = "enemy"
-script.customData = { damage = 10 }
-
--- Attach to entity (call LAST, after data assignment)
-script:attach_ecs { create_new = false, existing_entity = entity }
-
--- 4. Position the entity
-local transform = component_cache.get(entity, Transform)
-if transform then
-    transform.actualX = 100
-    transform.actualY = 200
-    transform.actualW = 64
-    transform.actualH = 64
-end
-
--- 5. Add physics (optional)
-local config = {
-    shape = "rectangle",
-    tag = "enemy",
-    sensor = false,
-    density = 1.0,
-    inflate_px = -4  -- shrink hitbox slightly
-}
-physics.create_physics_for_transform(
-    registry,                -- global registry
-    physics_manager_instance, -- global physics manager
-    entity,
-    "world",                 -- physics world identifier
-    config
-)
-
--- Update collision masks for this tag
-local world = PhysicsManager.get_world("world")
-physics.update_collision_masks_for(world, "enemy", { "player", "projectile" })
-
--- 6. Add interactivity (optional)
-local nodeComp = registry:get(entity, GameObject)
-nodeComp.state.clickEnabled = true
-nodeComp.methods.onClick = function(reg, clickedEntity)
-    print("Clicked entity:", clickedEntity)
-    local script = getScriptTableFromEntityID(clickedEntity)
-    if script then
-        script.health = script.health - 10
-        print("Health remaining:", script.health)
-    end
-end
+-- 3. Add physics in one call
+PhysicsBuilder.for_entity(entity)
+    :rectangle()
+    :tag("enemy")
+    :collideWith({ "player", "projectile" })
+    :apply()
 ```
 
 **That's it!** The entity now:
@@ -80,9 +43,27 @@ end
 - Has physics and collisions
 - Responds to clicks
 
+**New builders reduce 60+ lines to 15 lines!**
+
+### Alternative: Manual Pattern (Old Way)
+
+See the Entity Creation and Physics chapters for the low-level manual patterns if you need more control.
+
+### Using Imports Bundle
+
+```lua
+-- Load common modules in one line
+local imports = require("core.imports")
+local EntityBuilder, PhysicsBuilder = imports.entity()[3], imports.physics()[2]
+-- Or: local i = imports.all()  -- i.EntityBuilder, i.PhysicsBuilder
+
+-- Even simpler:
+local component_cache, entity_cache, timer, signal = imports.core()
+```
+
 **Critical rules:**
-1. Always assign data to script table BEFORE calling `attach_ecs()`
-2. Always use `PhysicsManager.get_world("world")` instead of `globals.physicsWorld`
+1. Always assign data to script table BEFORE calling `attach_ecs()` (EntityBuilder does this for you!)
+2. Always use `PhysicsManager.get_world("world")` instead of `globals.physicsWorld` (PhysicsBuilder does this for you!)
 3. Always validate entities before use: `if not entity_cache.valid(entity) then return end`
 4. Use `signal.emit()` for events, not `publishLuaEvent()`
 
@@ -160,6 +141,57 @@ local entity_cache = require("core.entity_cache")
 *— Path convention: dots for directories, matches filesystem under assets/scripts/*
 
 **Gotcha:** Don't use `require("assets.scripts.core.timer")` — paths are relative to assets/scripts/.
+
+---
+
+## Import Bundles (Reduce Boilerplate)
+
+\label{recipe:imports}
+
+**When to use:** Tired of typing 5-10 require statements at the top of every file? Use import bundles.
+
+```lua
+local imports = require("core.imports")
+
+-- Core bundle (most common - 5 modules)
+local component_cache, entity_cache, timer, signal, z_orders = imports.core()
+
+-- Entity creation bundle (3 modules)
+local Node, animation_system, EntityBuilder = imports.entity()
+
+-- Physics bundle (2 modules)
+local PhysicsManager, PhysicsBuilder = imports.physics()
+
+-- UI bundle (3 modules)
+local dsl, z_orders, util = imports.ui()
+
+-- Shader bundle (2 modules)
+local ShaderBuilder, draw = imports.shaders()
+
+-- Everything as a table (for selective access)
+local i = imports.all()
+-- Access: i.timer, i.signal, i.EntityBuilder, i.PhysicsBuilder, etc.
+```
+
+*— from core/imports.lua*
+
+**Real usage example:**
+
+```lua
+-- Old way (verbose)
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
+local timer = require("core.timer")
+local signal = require("external.hump.signal")
+local z_orders = require("core.z_orders")
+
+-- New way (one line!)
+local component_cache, entity_cache, timer, signal, z_orders = imports.core()
+```
+
+**Gotcha:** Import bundles return values in a fixed order. Use multiple assignment to unpack them.
+
+**Gotcha:** Some modules (like PhysicsManager) may be nil if not available in the current context.
 
 ---
 
@@ -512,32 +544,28 @@ local go = component_cache.get(entity, GameObject)
 
 ## Timer Options API (Advanced)
 
-**Note:** These are proposed wrapper patterns from CLAUDE.md, not actual functions. Use the standard `timer.after()` and `timer.every()` shown above.
-
 **When to use:** Clearer than positional parameters for complex timers.
 
 ```lua
 local timer = require("core.timer")
 
--- After with options (PROPOSED PATTERN - not implemented)
+-- After with options
 timer.after_opts({
     delay = 2.0,
     action = function() print("done") end,
-    tag = "my_timer",
-    group = "gameplay"
+    tag = "my_timer"
 })
 
--- Every with options (PROPOSED PATTERN - not implemented)
+-- Every with options
 timer.every_opts({
     delay = 0.5,
     action = updateHealth,
     times = 10,           -- 0 = infinite
     immediate = true,     -- run once immediately
-    tag = "health_update",
-    group = "gameplay"
+    tag = "health_update"
 })
 
--- Cooldown (PROPOSED PATTERN - not implemented)
+-- Cooldown
 timer.cooldown_opts({
     delay = 1.0,
     condition = function() return canAttack end,
@@ -547,9 +575,11 @@ timer.cooldown_opts({
 })
 ```
 
-*— Note: These are wrapper functions around timer.after/every/cooldown with named parameters*
+*— Documented in CLAUDE.md, wrapper functions around timer.after/every/cooldown with named parameters*
 
 **Gotcha:** Options API uses table syntax. Don't forget the curly braces!
+
+**Gotcha:** These are convenience wrappers. You can always fall back to the positional parameter versions (`timer.after()`, `timer.every()`, etc.) if preferred.
 
 \newpage
 
@@ -557,11 +587,124 @@ timer.cooldown_opts({
 
 This chapter covers how to create and configure game entities with sprites, data, interactivity, and physics.
 
-## Create Entity with Sprite
+## EntityBuilder (Recommended)
+
+\label{recipe:entity-builder}
+
+**When to use:** Creating entities with common patterns. Reduces 15-30 lines to 3-5 lines.
+
+### EntityBuilder.create() - Static API
+
+**Best for:** One-shot entity creation with all options.
+
+```lua
+local EntityBuilder = require("core.entity_builder")
+
+-- Full options
+local entity, script = EntityBuilder.create({
+    sprite = "kobold",
+    position = { x = 100, y = 200 },  -- or { 100, 200 }
+    size = { 64, 64 },                -- width, height
+    shadow = true,
+    data = { health = 100, faction = "enemy" },
+    interactive = {
+        hover = { title = "Enemy", body = "A dangerous kobold" },
+        click = function(reg, eid) print("clicked!") end,
+        drag = true,
+        collision = true
+    },
+    state = PLANNING_STATE,
+    shaders = { "3d_skew_holo", { "dissolve", { dissolve = 0.5 } } }
+})
+```
+
+*— from core/entity_builder.lua:137-227*
+
+**Gotcha:** Data is assigned BEFORE attach_ecs automatically — no need to worry about the order!
+
+**Gotcha:** The `script` return value is only present if you passed `data` option. Otherwise it's nil.
+
+---
+
+### EntityBuilder.simple() - Minimal Version
+
+**Best for:** Quick entity creation with just sprite + position.
+
+```lua
+local EntityBuilder = require("core.entity_builder")
+
+-- Minimal version (sprite, x, y, w, h)
+local entity = EntityBuilder.simple("kobold", 100, 200, 64, 64)
+```
+
+*— from core/entity_builder.lua:236-243*
+
+---
+
+### EntityBuilder.interactive() - Interactive Entities
+
+**Best for:** Creating buttons, clickable items, draggable objects.
+
+```lua
+local EntityBuilder = require("core.entity_builder")
+
+local entity, script = EntityBuilder.interactive({
+    sprite = "button",
+    position = { 100, 100 },
+    size = { 80, 40 },
+    hover = { title = "Click me", body = "Description" },
+    click = function(reg, eid)
+        print("Button clicked!")
+    end,
+    drag = true  -- enable dragging
+})
+```
+
+*— from core/entity_builder.lua:249-261*
+
+---
+
+### EntityBuilder.new() - Fluent API
+
+**Best for:** Step-by-step construction with escape hatches for manual operations.
+
+```lua
+local EntityBuilder = require("core.entity_builder")
+
+-- Fluent chaining
+local builder = EntityBuilder.new("kobold")
+    :at(100, 200)
+    :size(64, 64)
+    :shadow(true)
+    :withData({ health = 100 })
+    :withHover("Enemy", "A dangerous kobold")
+    :onClick(function(reg, eid) print("clicked!") end)
+
+-- ESCAPE HATCH: Get entity before finishing
+local entity = builder:getEntity()
+
+-- Manual operations
+local transform = builder:getTransform()
+transform.actualR = math.rad(45)  -- rotate 45 degrees
+
+-- Continue building
+builder:withShaders({ "3d_skew_holo" })
+
+-- Finalize
+local entity, script = builder:build()
+```
+
+*— from core/entity_builder.lua:276-368*
+
+**Gotcha:** Escape hatches (`getEntity()`, `getTransform()`, `getGameObject()`, `getScript()`) return raw objects — mix builder + manual operations freely!
+
+---
+
+## Create Entity with Sprite (Manual Pattern)
 
 \label{recipe:entity-sprite}
 
-**When to use:** Every time you need a visible game object (characters, items, UI elements).
+**When to use:** Need low-level control or EntityBuilder doesn't fit your use case.
 
 ```lua
 local animation_system = require("core.animation_system")
@@ -1019,11 +1162,110 @@ end
 
 This chapter covers physics integration using Chipmunk2D: creating physics bodies, collision detection, applying forces, and physics constraints.
 
-## Get Physics World
+## PhysicsBuilder (Recommended)
+
+\label{recipe:physics-builder}
+
+**When to use:** Adding physics to entities. Reduces 10-15 lines to 3-5 lines.
+
+### PhysicsBuilder.for_entity() - Fluent API
+
+**Best for:** Setting up physics with method chaining.
+
+```lua
+local PhysicsBuilder = require("core.physics_builder")
+
+-- Fluent API
+PhysicsBuilder.for_entity(entity)
+    :circle()                           -- or :rectangle()
+    :tag("projectile")
+    :bullet()                           -- high-speed collision detection
+    :friction(0)
+    :restitution(0.5)                   -- bounciness
+    :fixedRotation()                    -- lock rotation
+    :syncMode("physics")                -- "physics" or "transform"
+    :collideWith({ "enemy", "WORLD" })
+    :apply()
+```
+
+*— from core/physics_builder.lua:275-319*
+
+**All available methods:**
+
+| Method | Description |
+|--------|-------------|
+| `:circle()` | Circle collider shape |
+| `:rectangle()` | Rectangle collider shape |
+| `:shape(name)` | Custom shape name |
+| `:tag(string)` | Collision tag |
+| `:sensor(bool)` | Is sensor (no physical response) |
+| `:density(number)` | Body density |
+| `:friction(number)` | Surface friction (0-1) |
+| `:restitution(number)` | Bounciness (0-1) |
+| `:bullet(bool)` | CCD for fast objects |
+| `:fixedRotation(bool)` | Lock rotation |
+| `:syncMode(string)` | "physics" or "transform" |
+| `:collideWith(table)` | Tags to collide with |
+| `:world(name)` | Physics world name (default "world") |
+| `:apply()` | Apply all settings |
+
+**Gotcha:** Must call `:apply()` to finalize the physics setup!
+
+---
+
+### PhysicsBuilder.quick() - Options Table
+
+**Best for:** One-shot physics setup with an options table.
+
+```lua
+local PhysicsBuilder = require("core.physics_builder")
+
+-- Quick setup
+PhysicsBuilder.quick(entity, {
+    shape = "circle",
+    tag = "projectile",
+    bullet = true,
+    friction = 0,
+    collideWith = { "enemy", "WORLD" }
+})
+```
+
+*— from core/physics_builder.lua:303-319*
+
+---
+
+### Escape Hatches
+
+**PhysicsBuilder provides escape hatches for manual operations:**
+
+```lua
+local builder = PhysicsBuilder.for_entity(entity)
+    :circle()
+    :tag("projectile")
+
+-- Get raw objects for manual operations
+local world = builder:getWorld()        -- physics world
+local entity = builder:getEntity()      -- entity ID
+local config = builder:getConfig()      -- current config table
+
+-- Manual operations
+physics.SetLinearDamping(world, entity, 0.5)
+
+-- Then continue with builder
+builder:apply()
+```
+
+*— from core/physics_builder.lua:150-188*
+
+**Gotcha:** Escape hatches return raw objects — no opaque wrappers! Mix builder + manual operations freely.
+
+---
+
+## Get Physics World (Manual Pattern)
 
 \label{recipe:get-physics-world}
 
-**When to use:** Before any physics operation (required for most physics functions).
+**When to use:** Need low-level control or PhysicsBuilder doesn't fit your use case.
 
 ```lua
 local PhysicsManager = require("core.physics_manager")
@@ -1063,11 +1305,11 @@ physics.create_physics_for_transform(registry,
 
 ---
 
-## Create Physics Body
+## Create Physics Body (Manual Pattern)
 
 \label{recipe:add-physics}
 
-**When to use:** Add physics collision and movement to an entity.
+**When to use:** Need low-level control or PhysicsBuilder doesn't fit your use case.
 
 ```lua
 local PhysicsManager = require("core.physics_manager")

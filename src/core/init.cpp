@@ -29,6 +29,10 @@
 #include <cstdlib>
 #include <unordered_set>
 
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+#endif
+
 namespace init {
 
 // Prefer context-backed atlas textures when available, with legacy fallback.
@@ -908,6 +912,15 @@ auto startInit() -> void {
 
   SPDLOG_DEBUG("Loading finished.");
   globals::setCurrentGameState(GameState::MAIN_MENU);
+
+#if defined(__EMSCRIPTEN__)
+  // Signal to the web shell that the game is ready (triggers loading screen fade-out)
+  EM_ASM({
+    if (typeof window.gameReady === 'function') {
+      window.gameReady();
+    }
+  });
+#endif
 }
 
 // Function to save the UUID map to a file

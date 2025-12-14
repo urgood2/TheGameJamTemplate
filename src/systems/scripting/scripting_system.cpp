@@ -2,6 +2,7 @@
 #include <chrono>
 #include "util/common_headers.hpp" // common headers like json, spdlog, tracy etc.
 #include "scripting_system.hpp"
+#include "util/crash_reporter.hpp"
 
 #include "registry_bond.hpp"
 
@@ -449,6 +450,53 @@ namespace scripting
             …it will call your open_registry function (a C++ function that likely registers some Lua tables or bindings), and the returned Lua table becomes the result of require("registry").
             */
             lua.require("registry", sol::c_call<AUTO_ARG(&open_registry)>, false);
+
+            // Register crash reporter game state callback
+            crash_reporter::SetGameStateCallback([&registry, &lua](crash_reporter::Report& report) {
+                // Set current scene from game state
+                auto gameState = globals::getCurrentGameState();
+                switch (gameState) {
+                    case GameState::MAIN_MENU: report.current_scene = "MAIN_MENU"; break;
+                    case GameState::LOADING_SCREEN: report.current_scene = "LOADING_SCREEN"; break;
+                    case GameState::MAIN_GAME: report.current_scene = "MAIN_GAME"; break;
+                    case GameState::GAME_OVER: report.current_scene = "GAME_OVER"; break;
+                    default: report.current_scene = "UNKNOWN"; break;
+                }
+
+                // Get entity count (active entities = size - free slots)
+                const auto& storage = registry.storage<entt::entity>();
+                report.entity_count = static_cast<int>(storage.size() - storage.free_list());
+
+                // Try to get player position from Lua globals
+                try {
+                    sol::table player = lua["player"];
+                    if (player.valid()) {
+                        sol::optional<float> x = player["x"];
+                        sol::optional<float> y = player["y"];
+                        if (x && y) {
+                            report.player_position = std::to_string(*x) + "," + std::to_string(*y);
+                        }
+                    }
+                } catch (...) {
+                    // Ignore errors - player may not exist
+                }
+
+                // Try to get Lua script context from debug info
+                try {
+                    lua_State* L = lua.lua_state();
+                    lua_Debug ar;
+                    if (lua_getstack(L, 1, &ar)) {
+                        lua_getinfo(L, "Sln", &ar);
+                        std::ostringstream ctx;
+                        if (ar.source) ctx << ar.source;
+                        if (ar.name) ctx << ":" << ar.name;
+                        if (ar.currentline > 0) ctx << ":" << ar.currentline;
+                        report.lua_script_context = ctx.str();
+                    }
+                } catch (...) {
+                    // Ignore errors
+                }
+            });
         }
 
         /**

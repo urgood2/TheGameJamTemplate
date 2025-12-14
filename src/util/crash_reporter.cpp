@@ -29,7 +29,6 @@
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
 #include <emscripten/stack.h>
-#include <emscripten/html5.h>
 #endif
 
 namespace crash_reporter {
@@ -376,28 +375,36 @@ Report CaptureReport(const std::string& reason, bool include_stacktrace) {
         now_steady - state().session_start).count();
 
 #if defined(__EMSCRIPTEN__)
-    // Capture browser info
-    report.browser_info = reinterpret_cast<const char*>(EM_ASM_PTR({
-        var str = navigator.userAgent;
-        var len = lengthBytesUTF8(str) + 1;
-        var buf = _malloc(len);
-        stringToUTF8(str, buf, len);
-        return buf;
-    }));
+    // Capture browser info (must free the malloc'd buffer after copying)
+    {
+        char* browser_ptr = reinterpret_cast<char*>(EM_ASM_PTR({
+            var str = navigator.userAgent;
+            var len = lengthBytesUTF8(str) + 1;
+            var buf = _malloc(len);
+            stringToUTF8(str, buf, len);
+            return buf;
+        }));
+        report.browser_info = browser_ptr;
+        std::free(browser_ptr);
+    }
 
-    // Capture WebGL renderer
-    report.webgl_renderer = reinterpret_cast<const char*>(EM_ASM_PTR({
-        var canvas = document.getElementById('canvas');
-        if (!canvas) return _malloc(1);
-        var gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-        if (!gl) return _malloc(1);
-        var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        var renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
-        var len = lengthBytesUTF8(renderer) + 1;
-        var buf = _malloc(len);
-        stringToUTF8(renderer, buf, len);
-        return buf;
-    }));
+    // Capture WebGL renderer (must free the malloc'd buffer after copying)
+    {
+        char* webgl_ptr = reinterpret_cast<char*>(EM_ASM_PTR({
+            var canvas = document.getElementById('canvas');
+            if (!canvas) return _malloc(1);
+            var gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+            if (!gl) return _malloc(1);
+            var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            var renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
+            var len = lengthBytesUTF8(renderer) + 1;
+            var buf = _malloc(len);
+            stringToUTF8(renderer, buf, len);
+            return buf;
+        }));
+        report.webgl_renderer = webgl_ptr;
+        std::free(webgl_ptr);
+    }
 
     // Estimate memory usage (Emscripten heap)
     report.estimated_memory_mb = EM_ASM_INT({

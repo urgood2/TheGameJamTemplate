@@ -5785,3 +5785,582 @@ local breakpoints = TagEvaluator.get_breakpoints()
 **Gotcha:** Thresholds are cumulative (7-tag bonus includes 3 and 5 bonuses).
 
 \newpage
+
+\newpage
+
+# Chapter 10: Utilities & External Libraries
+
+## hump/signal: Full API
+
+\label{recipe:signal-api}
+
+**When to use:** Event system for decoupling components (pub/sub pattern).
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Emit event (any arguments)
+signal.emit("event_name", arg1, arg2, ...)
+signal.emit("projectile_hit", projectileEntity, { damage = 50 })
+signal.emit("player_level_up")
+
+-- Register handler
+signal.register("event_name", function(arg1, arg2, ...)
+    -- Handle event
+end)
+
+-- Remove specific handler
+local handler = function() print("test") end
+signal.register("my_event", handler)
+signal.remove("my_event", handler)
+
+-- Clear all handlers for event(s)
+signal.clear("event_name")
+signal.clear("event1", "event2", "event3")  -- clear multiple
+
+-- Pattern matching (regex-like)
+signal.emitPattern("^on_.*", data)           -- emit all events starting with "on_"
+signal.registerPattern("^on_.*", handler)    -- register for all "on_" events
+signal.removePattern("^on_.*", handler)      -- remove from pattern
+signal.clearPattern("^on_.*")                -- clear all matching events
+
+-- Check if event has listeners
+if signal.exists("my_event") then
+    print("Event has listeners")
+end
+```
+
+*— from external/hump/signal.lua*
+
+**Convention:** First parameter is the entity, second is a data table:
+
+```lua
+signal.emit("projectile_spawned", entity, {
+    owner = ownerEntity,
+    position = { x = 100, y = 200 },
+    damage = 50
+})
+```
+
+**Gotcha:** Handlers run in arbitrary order; don't assume execution sequence.
+
+**Gotcha:** Use `signal.emit()`, NOT `publishLuaEvent()` (deprecated C++ binding).
+
+**Provenance:** See gameplay.lua:3569-3625 for event usage patterns.
+
+---
+
+## lume: Math & Random
+
+\label{recipe:lume-math}
+
+**When to use:** Common math operations and random number utilities.
+
+```lua
+local lume = require("external.lume")
+
+-- Clamp value between min and max
+local health = lume.clamp(damage, 0, 100)
+
+-- Round to nearest increment
+local rounded = lume.round(42.7, 1)     -- 43
+local snapped = lume.round(47, 10)      -- 50
+
+-- Sign of number (-1, 0, or 1)
+local direction = lume.sign(velocity)
+
+-- Linear interpolation
+local pos = lume.lerp(startPos, endPos, 0.5)  -- halfway between
+
+-- Smooth interpolation (ease in/out)
+local smoothPos = lume.smooth(a, b, 0.3)
+
+-- Ping-pong (0-1-0 cycle)
+local oscillate = lume.pingpong(time)
+
+-- Distance between two points
+local dist = lume.distance(x1, y1, x2, y2)
+local distSquared = lume.distance(x1, y1, x2, y2, true)  -- faster (no sqrt)
+
+-- Angle between two points (radians)
+local angle = lume.angle(x1, y1, x2, y2)
+
+-- Vector from angle and magnitude
+local x, y = lume.vector(angle, magnitude)
+
+-- Random number
+local val = lume.random(1, 100)         -- integer 1-100
+local val = lume.random(5.0, 10.0)      -- float 5.0-10.0
+local val = lume.random(10)             -- integer 1-10
+
+-- Random choice from table
+local item = lume.randomchoice({ "fire", "ice", "lightning" })
+
+-- Weighted random choice
+local item = lume.weightedchoice({
+    { "common", 70 },
+    { "rare", 25 },
+    { "legendary", 5 }
+})
+```
+
+*— from external/lume.lua*
+
+**Gotcha:** `lume.random()` uses Lua's math.random; seed with `math.randomseed()` if needed.
+
+---
+
+## lume: Table Operations
+
+\label{recipe:lume-tables}
+
+**When to use:** Array/table manipulation without boilerplate.
+
+```lua
+local lume = require("external.lume")
+
+-- Find element in array (returns index or nil)
+local idx = lume.find(enemies, targetEnemy)
+if lume.find(globals.colonists, entity) then
+    print("Is a colonist")
+end
+
+-- Push values to array (like table.insert but returns table)
+lume.push(myArray, value1, value2, value3)
+
+-- Remove value from array (removes first match)
+lume.remove(enemies, deadEnemy)
+
+-- Clear table (removes all keys)
+lume.clear(myTable)
+
+-- Extend table with values from other tables
+lume.extend(allColonists, globals.colonists)
+lume.extend(target, source1, source2)  -- merge multiple
+
+-- Shuffle array in-place
+lume.shuffle(deck)
+
+-- Sort with custom comparator
+lume.sort(entities, function(a, b)
+    return a.priority > b.priority
+end)
+
+-- Create array from varargs
+local arr = lume.array(1, 2, 3, 4)  -- { 1, 2, 3, 4 }
+
+-- Filter array (returns new table)
+local alive = lume.filter(enemies, function(e)
+    return e.health > 0
+end)
+
+-- Reject (inverse of filter)
+local dead = lume.reject(enemies, function(e)
+    return e.health > 0
+end)
+
+-- Map (transform each element)
+local healthValues = lume.map(enemies, function(e)
+    return e.health
+end)
+
+-- Check if all elements match predicate
+if lume.all(enemies, function(e) return e.health > 0 end) then
+    print("All enemies alive")
+end
+
+-- Check if any element matches predicate
+if lume.any(enemies, function(e) return e.isBoss end) then
+    print("Boss present")
+end
+
+-- Reduce (fold/accumulate)
+local totalHealth = lume.reduce(enemies, function(sum, e)
+    return sum + e.health
+end, 0)
+
+-- Unique values (removes duplicates)
+local uniqueTags = lume.unique({ "fire", "ice", "fire", "lightning" })
+-- Result: { "fire", "ice", "lightning" }
+
+-- Merge tables (creates new table with all key-value pairs)
+local combined = lume.merge(defaults, overrides)
+
+-- Concatenate arrays (creates new array)
+local all = lume.concat(array1, array2, array3)
+```
+
+*— from external/lume.lua*
+
+**Gotcha:** `lume.find()` is for arrays (indexed tables), not key-value tables.
+
+**Gotcha:** Most functions return new tables; use in-place variants (`shuffle`, `clear`) for mutation.
+
+**Provenance:** See gameplay.lua:2110, 2610, 7984 for usage examples.
+
+---
+
+## Global Helpers: Entity Validation
+
+\label{recipe:global-helpers}
+
+**When to use:** These functions are available globally after util.lua loads.
+
+```lua
+-- Validate entity exists
+if ensure_entity(eid) then
+    -- entity is valid and not entt_null
+end
+
+-- Validate entity has script component
+if ensure_scripted_entity(eid) then
+    -- entity is valid AND has ScriptComponent
+end
+
+-- Safe script table access
+local script = safe_script_get(eid)           -- returns nil if missing
+local script = safe_script_get(eid, true)     -- logs warning if missing
+
+-- Safe field access with default
+local health = script_field(eid, "health", 100)  -- returns 100 if missing
+local name = script_field(eid, "name", "Unknown")
+```
+
+*— from util/util.lua:39-73*
+
+**Replace verbose patterns:**
+
+```lua
+-- OLD (verbose)
+if not entity or entity == entt_null or not entity_cache.valid(entity) then
+    return
+end
+
+-- NEW (use the helper!)
+if not ensure_entity(entity) then return end
+```
+
+**Gotcha:** `ensure_entity()` checks validity; `ensure_scripted_entity()` also checks for ScriptComponent.
+
+**Gotcha:** `script_field()` returns the default if the script OR field is nil; check both cases.
+
+---
+
+## Global Helpers: Logging
+
+\label{recipe:logging}
+
+**When to use:** Debug output with log levels (defined in C++, exposed to Lua).
+
+```lua
+-- Log levels (from least to most severe)
+log_debug("Position:", x, y)           -- Verbose debugging info
+log_info("Game started")                -- General information
+log_warn("Enemy not found")             -- Warning (non-critical)
+log_error("Failed to load asset")       -- Error (critical)
+
+-- Multiple arguments are concatenated
+log_debug("Entity", eid, "at", x, y)
+-- Output: "Entity 42 at 100 200"
+
+-- Format strings
+log_debug(("Health: %d/%d"):format(current, max))
+```
+
+*— from chugget_code_definitions.lua:385-405 (stubs), C++ bindings in scripting system*
+
+**Gotcha:** Log functions accept varargs but don't auto-format; use `string.format()` for structured output.
+
+**Gotcha:** `log_debug()` may be compiled out in release builds; use `log_info()` for important messages.
+
+---
+
+## util: Color Lookup
+
+\label{recipe:util-colors}
+
+**When to use:** Get predefined color by name (C++ color palette).
+
+```lua
+local util = require("util.util")  -- Usually not needed (often available globally)
+
+-- Get color by name
+local white = util.getColor("white")
+local red = util.getColor("red")
+local custom = util.getColor("apricot_cream")
+
+-- Named colors (from color palette JSON)
+local colors = {
+    util.getColor("white"),
+    util.getColor("black"),
+    util.getColor("red"),
+    util.getColor("green"),
+    util.getColor("blue"),
+    util.getColor("cyan"),
+    util.getColor("magenta"),
+    util.getColor("yellow"),
+    util.getColor("gray"),
+    util.getColor("orange"),
+    util.getColor("pink"),
+    util.getColor("purple"),
+    -- Custom palette colors:
+    util.getColor("apricot_cream"),
+    util.getColor("mint_green"),
+    util.getColor("gold"),
+    util.getColor("blackberry"),
+}
+
+-- Use in draw commands or UI
+local COLOR_READY = util.getColor("green")
+local COLOR_COOLDOWN = util.getColor("gray")
+
+-- Color has methods
+local color = util.getColor("white")
+color:setAlpha(128)  -- 50% transparent
+```
+
+*— from util/util.lua (C++ binding), usage in ui/wand_cooldown_ui.lua:1-4*
+
+**Gotcha:** Color names are case-insensitive but prefer lowercase for consistency.
+
+**Gotcha:** Returns a Color object (C++ userdata), not a table; use Color methods for manipulation.
+
+**Provenance:** Color palette defined in `assets/graphics/colors.json` (or loaded from C++).
+
+---
+
+## util: Camera Smooth Pan
+
+\label{recipe:util-camera}
+
+**When to use:** Gradually move camera to target position (avoids jumps).
+
+```lua
+-- Smooth pan to target
+camera_smooth_pan_to("main", targetX, targetY, {
+    increments = 5,        -- number of steps (default: 2)
+    interval = 0.01,       -- seconds between steps (default: 0.005)
+    tag = "cam_move",      -- timer tag for cancellation
+    after = function()     -- callback when complete
+        print("Camera arrived")
+    end
+})
+```
+
+*— from util/util.lua:76-134*
+
+**Gotcha:** Uses timer.every internally; calling again with same tag cancels previous pan.
+
+**Gotcha:** Camera must exist; logs error if not found.
+
+---
+
+## util: Particle Helpers
+
+\label{recipe:util-particles}
+
+**When to use:** Spawn visual effects quickly (wrappers around particle system).
+
+```lua
+-- Radial burst (particles expand outward in all directions)
+particle.spawnRadialParticles(x, y, count, seconds, {
+    minRadius = 0,
+    maxRadius = 100,
+    minSpeed = 100,
+    maxSpeed = 300,
+    minScale = 5,
+    maxScale = 15,
+    colors = { util.getColor("red"), util.getColor("orange") },
+    gravity = 200,
+    lifetimeJitter = 0.2,  -- ±20% variance
+    scaleJitter = 0.3,
+    rotationSpeed = 90,    -- degrees/sec
+    rotationJitter = 0.5,
+    easing = "cubic",
+    space = "world",
+    z = 100
+})
+
+-- Image burst (uses sprites/animations instead of circles)
+particle.spawnImageBurst(x, y, count, seconds, "spark", {
+    minSpeed = 100,
+    maxSpeed = 250,
+    size = 16,
+    useSpriteNotAnimation = false,  -- true = sprite ID, false = animation ID
+    spriteUUID = "sprite_uuid",     -- if using sprite
+    loop = false,
+    easing = "quad",
+    space = "screen"
+})
+
+-- Ring (particles arranged in circle)
+particle.spawnRing(x, y, count, seconds, radius, {
+    colors = { util.getColor("cyan") },
+    expandFactor = 0.5,  -- ring grows by 50%
+    size = 8,
+    easing = "cubic",
+    space = "world"
+})
+
+-- Rectangle area (particles spawn randomly inside rectangle)
+particle.spawnRectAreaParticles(x, y, w, h, count, seconds, {
+    minSpeed = 50,
+    maxSpeed = 200,
+    minScale = 4,
+    maxScale = 10,
+    angleSpread = 360,   -- degrees
+    baseAngle = 0,
+    colors = { util.getColor("white") }
+})
+
+-- Directional cone (particles shoot in direction with spread)
+particle.spawnDirectionalCone(Vec2(x, y), count, seconds, {
+    direction = Vec2(0, -1),  -- upward
+    spread = 30,              -- degrees
+    minSpeed = 100,
+    maxSpeed = 300,
+    minScale = 3,
+    maxScale = 8,
+    gravity = 100,
+    colors = { util.getColor("yellow") }
+})
+```
+
+*— from util/util.lua:143-497*
+
+**Gotcha:** All particle functions use options tables; most fields have sensible defaults.
+
+**Gotcha:** `space` can be "world" (moves with camera) or "screen" (fixed to viewport).
+
+**Gotcha:** Easing names come from util/easing.lua (e.g., "linear", "quad", "cubic", "bounce").
+
+---
+
+## knife: Functional Chaining
+
+\label{recipe:knife-chain}
+
+**When to use:** Fluent functional programming on arrays/iterables.
+
+```lua
+local chain = require("external.knife.chain")
+
+-- Method chaining on arrays
+local result = chain(myArray)
+    :filter(function(x) return x > 10 end)
+    :map(function(x) return x * 2 end)
+    :take(5)
+    :result()
+
+-- Works with iterators
+local result = chain(pairs(myTable))
+    :map(function(k, v) return v end)
+    :filter(function(v) return v.active end)
+    :result()
+```
+
+*— from external/knife/chain.lua*
+
+**Gotcha:** Must call `:result()` at the end to get the final table/value.
+
+**Gotcha:** Less common in this codebase than lume; prefer lume for consistency.
+
+---
+
+## forma: Not Used
+
+\label{recipe:forma}
+
+**When to use:** Don't use (present in codebase but unused).
+
+The `external/forma` library exists but is not actively used. Stick to lume/knife for functional programming.
+
+---
+
+## Common Event Names
+
+\label{recipe:common-events}
+
+**When to use:** Standard events emitted throughout the engine.
+
+| Event | Parameters | Purpose |
+|-------|------------|---------|
+| `"avatar_unlocked"` | `avatarId` | Avatar unlock |
+| `"tag_threshold_discovered"` | `{ tagName, threshold }` | Tag synergy discovery |
+| `"spell_type_discovered"` | `{ spell_type }` | Spell type discovery |
+| `"deck_changed"` | `{ source }` | Inventory modification |
+| `"player_level_up"` | `nil` | Level progression |
+| `"stats_recomputed"` | `nil` | Stats recalculated |
+| `"on_spell_cast"` | `{ ... }` | Spell cast event |
+| `"on_joker_trigger"` | `{ jokerName, ... }` | Joker effect triggered |
+| `"on_player_attack"` | `{ target }` | Player attacks |
+| `"on_low_health"` | `{ healthPercent }` | Health drops low |
+| `"on_dash"` | `{ player }` | Player dashes |
+| `"on_bump_enemy"` | `enemyEntity` | Collision with enemy |
+| `"on_pickup"` | `pickupEntity` | Item collected |
+| `"projectile_spawned"` | `entity, { owner, ... }` | Projectile created |
+| `"projectile_hit"` | `entity, { target, ... }` | Projectile collision |
+| `"projectile_exploded"` | `entity, { radius, ... }` | Projectile explosion |
+
+*— from gameplay.lua:57-76, 3569-3625, combat/projectile_system.lua:731, 1632, 1749*
+
+**Usage:**
+
+```lua
+-- Listen to multiple related events
+signal.register("on_spell_cast", handleSpellCast)
+signal.register("on_joker_trigger", handleJokerTrigger)
+signal.register("tag_threshold_discovered", handleTagDiscovery)
+
+-- Clean up when system shuts down
+signal.clear("on_spell_cast", "on_joker_trigger", "tag_threshold_discovered")
+```
+
+**Gotcha:** Event names are strings; typos won't error but handlers won't fire.
+
+**Gotcha:** Some events pass entity as first param, others pass data table; check usage examples.
+
+---
+
+## Easing Functions
+
+\label{recipe:easing}
+
+**When to use:** Smooth interpolation for animations and transitions.
+
+```lua
+local Easing = require("util.easing")
+
+-- Available easing curves
+local easings = {
+    "linear",
+    "quad",      -- quadratic
+    "cubic",
+    "quart",     -- quartic
+    "quint",     -- quintic
+    "sine",
+    "expo",      -- exponential
+    "circ",      -- circular
+    "back",      -- overshoots then settles
+    "elastic",   -- bounces like spring
+    "bounce"
+}
+
+-- Each has .f (ease function) and .d (derivative)
+local t = 0.5  -- progress 0.0-1.0
+local eased = Easing.cubic.f(t)        -- ease value
+local velocity = Easing.cubic.d(t)     -- rate of change
+
+-- Use in animations
+local progress = math.min(age / lifetime, 1)
+local eased = Easing.bounce.f(progress)
+local currentScale = startScale + (endScale - startScale) * eased
+```
+
+*— from util/easing.lua, used in util/util.lua particle functions*
+
+**Gotcha:** Easing functions expect input in range [0, 1]; clamp before calling.
+
+**Gotcha:** `.d` (derivative) is useful for velocity-based effects (like particles).
+
+---

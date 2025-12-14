@@ -917,7 +917,7 @@ namespace ui
         auto &uiConfig = registry.get<UIConfig>(uiElement);
         auto &uiState = registry.get<UIState>(uiElement);
         LocalTransform calcCurrentNodeTransform{}; // Stores transformed values for current node
-        float padding = uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+        float padding = uiConfig.effectivePadding();
 
         // Step 2: Process nodes in bottom-up order (ensuring child elements are always processed before parents), including the root element
         for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
@@ -1257,8 +1257,8 @@ namespace ui
 
         // cache transform before adding children
         auto transformCache = runningTransform;
-        runningTransform.x += uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
-        runningTransform.y += uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+        runningTransform.x += uiConfig.effectivePadding();
+        runningTransform.y += uiConfig.effectivePadding();
         // for each child, do the same thing.
         for (auto childEntry : node.orderedChildren)
         {
@@ -1289,24 +1289,24 @@ namespace ui
                 runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
             }
 
-            runningTransform.y += uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            runningTransform.y += uiConfig.effectivePadding();
         }
         else if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && parentType == UITypeEnum::HORIZONTAL_CONTAINER)
         {
             // runningTransform.y += uiState.contentDimensions->y + uiConfig.emboss.value_or(0.f) + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            runningTransform.x += uiState.contentDimensions->x + uiConfig.effectivePadding();
         }
         else if (isVertContainer(registry, uiElement) && !isVertContainer(registry, parent))
         { // make sure my parent wasn't the same type
 
             // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            runningTransform.x += uiState.contentDimensions->x + uiConfig.effectivePadding();
         }
         else if (isVertContainer(registry, uiElement) && isVertContainer(registry, parent))
         {
 
             // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.y += uiState.contentDimensions->y + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            runningTransform.y += uiState.contentDimensions->y + uiConfig.effectivePadding() + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
         }
     }
 
@@ -1359,14 +1359,14 @@ namespace ui
             {
                 runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
             }
-            runningTransform.y += uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            runningTransform.y += uiConfig.effectivePadding();
             // SPDLOG_DEBUG("Incrementing y by {} for entity {}", uiState.contentDimensions->y + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor() + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor(), static_cast<int>(uiElement));
         }
         else
         {
             // increment x with padding as necessary.
             // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            runningTransform.x += uiState.contentDimensions->x + uiConfig.effectivePadding();
             // SPDLOG_DEBUG("Incrementing x by {} for entity {}", uiState.contentDimensions->x + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor(), static_cast<int>(uiElement));
         }
     }
@@ -1402,7 +1402,7 @@ namespace ui
         auto &uiState = registry.get<UIState>(uiElement);
         float max_w = 0.f, max_h = 0.f;
         float accumulated_w = 0.f, accumulated_h = 0.f;
-        float padding = uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value();
+        float padding = uiConfig.effectivePadding();
         float factor = scale.value_or(1.0f);
         
         
@@ -1470,7 +1470,7 @@ namespace ui
 
             // Vertical scroll range
             scr.minOffset = 0.f;
-            scr.maxOffset = std::max(0.f, scr.contentSize.y - scr.viewportSize.y) + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            scr.maxOffset = std::max(0.f, scr.contentSize.y - scr.viewportSize.y) + uiConfig.effectivePadding();
 
             // Clamp any existing offset
             scr.offset = std::clamp(scr.offset, scr.minOffset, scr.maxOffset);

@@ -21,7 +21,7 @@ local component_cache = nil
 -- State
 local state = {
     initialized = false,
-    current_tab = 1,  -- 1=Jokers, 2=Projectiles, 3=Tags
+    current_tab = 1,  -- 1=Jokers, 2=Projectiles, 3=Tags, 4=Cards
 
     -- Joker tab state
     joker_list = {},
@@ -41,6 +41,16 @@ local state = {
     -- Tag tab state
     tag_counts = {},
     spell_type_info = nil,
+
+    -- Cards tab state (Tab 4)
+    card_list = {},
+    card_filter_text = "",
+    card_filter_tag = nil,      -- nil = all, or specific tag
+    card_sort_by = "name",      -- "name", "mana", "damage", "type"
+    card_sort_asc = true,
+    selected_card = nil,
+    available_tags = {},
+    test_cast_result = nil,
 }
 
 --===========================================================================
@@ -96,7 +106,131 @@ function ContentDebugPanel.init()
     local ok5, cc = pcall(require, "core.component_cache")
     if ok5 then component_cache = cc end
 
+    -- Load cards
+    local ok_cards, cards_data = pcall(require, "data.cards")
+    if ok_cards then
+        state.card_list = {}
+        local tag_set = {}
+
+        for key, card in pairs(cards_data) do
+            if type(card) == "table" and card.id then
+                local entry = {
+                    id = card.id,
+                    type = card.type or "action",
+                    mana_cost = card.mana_cost or 0,
+                    damage = card.damage or 0,
+                    damage_type = card.damage_type or "physical",
+                    tags = card.tags or {},
+                    sprite = card.sprite or card.test_label or "card_back",
+                    data = card,
+                }
+                table.insert(state.card_list, entry)
+
+                -- Collect unique tags
+                for _, tag in ipairs(entry.tags) do
+                    tag_set[tag] = true
+                end
+            end
+        end
+
+        -- Build sorted tag list
+        state.available_tags = {}
+        for tag, _ in pairs(tag_set) do
+            table.insert(state.available_tags, tag)
+        end
+        table.sort(state.available_tags)
+    end
+
     state.initialized = true
+end
+
+--===========================================================================
+-- CARDS TAB HELPERS
+--===========================================================================
+local function sort_cards()
+    local sort_key = state.card_sort_by
+    local asc = state.card_sort_asc
+
+    table.sort(state.card_list, function(a, b)
+        local va, vb
+        if sort_key == "name" then
+            va, vb = a.id:lower(), b.id:lower()
+        elseif sort_key == "mana" then
+            va, vb = a.mana_cost, b.mana_cost
+        elseif sort_key == "damage" then
+            va, vb = a.damage, b.damage
+        elseif sort_key == "type" then
+            va, vb = a.type, b.type
+        else
+            va, vb = a.id:lower(), b.id:lower()
+        end
+
+        if asc then
+            return va < vb
+        else
+            return va > vb
+        end
+    end)
+end
+
+local function card_matches_filter(card)
+    -- Text filter
+    if state.card_filter_text ~= "" then
+        local filter_lower = state.card_filter_text:lower()
+        if not card.id:lower():find(filter_lower, 1, true) then
+            return false
+        end
+    end
+
+    -- Tag filter
+    if state.card_filter_tag then
+        local has_tag = false
+        for _, tag in ipairs(card.tags) do
+            if tag == state.card_filter_tag then
+                has_tag = true
+                break
+            end
+        end
+        if not has_tag then
+            return false
+        end
+    end
+
+    return true
+end
+
+local function test_cast_card(card)
+    -- Simulate casting this card with current jokers/tags
+    local result = { messages = {}, damage_mod = 0, damage_mult = 1.0 }
+
+    if JokerSystem and JokerSystem.trigger_event then
+        -- Build context
+        local tag_table = {}
+        for _, tag in ipairs(card.tags) do
+            tag_table[tag] = true
+        end
+
+        local effects = JokerSystem.trigger_event("on_spell_cast", {
+            spell_type = #card.tags == 1 and "Mono-Element" or "Multi-Tag",
+            tags = tag_table,
+            card = card.data,
+        })
+
+        if effects then
+            result.damage_mod = effects.damage_mod or 0
+            result.damage_mult = effects.damage_mult or 1.0
+            if effects.message then
+                table.insert(result.messages, effects.message)
+            end
+        end
+    end
+
+    -- Calculate final damage
+    local base_damage = card.damage or 0
+    result.final_damage = math.floor(base_damage * result.damage_mult + result.damage_mod)
+    result.base_damage = base_damage
+
+    return result
 end
 
 --===========================================================================
@@ -367,6 +501,205 @@ function ContentDebugPanel.spawn_projectile(mode)
 end
 
 --===========================================================================
+-- CARDS TAB
+--===========================================================================
+local function render_cards_tab()
+    if not ImGui then return end
+
+    -- Filter row
+    local text_changed, new_text = ImGui.InputText("Search##cards", state.card_filter_text or "", 64)
+    if text_changed then
+        state.card_filter_text = new_text
+    end
+
+    ImGui.SameLine()
+
+    -- Tag filter dropdown
+    local tag_options = { "All Tags" }
+    local current_tag_idx = 1
+    for i, tag in ipairs(state.available_tags) do
+        table.insert(tag_options, tag)
+        if tag == state.card_filter_tag then
+            current_tag_idx = i + 1
+        end
+    end
+
+    ImGui.SetNextItemWidth(100)
+    local tag_changed, new_tag_idx = ImGui.Combo("##tag_filter", current_tag_idx, tag_options, #tag_options)
+    if tag_changed then
+        state.card_filter_tag = new_tag_idx == 1 and nil or tag_options[new_tag_idx]
+    end
+
+    -- Sort buttons
+    ImGui.SameLine()
+    ImGui.Text("Sort:")
+    ImGui.SameLine()
+
+    local sort_options = { "name", "mana", "damage", "type" }
+    for _, opt in ipairs(sort_options) do
+        local label = opt
+        if state.card_sort_by == opt then
+            label = state.card_sort_asc and (opt .. " ▲") or (opt .. " ▼")
+        end
+        if ImGui.SmallButton(label) then
+            if state.card_sort_by == opt then
+                state.card_sort_asc = not state.card_sort_asc
+            else
+                state.card_sort_by = opt
+                state.card_sort_asc = true
+            end
+            sort_cards()
+        end
+        ImGui.SameLine()
+    end
+    ImGui.NewLine()
+
+    ImGui.Separator()
+
+    -- Count matching cards
+    local match_count = 0
+    for _, card in ipairs(state.card_list) do
+        if card_matches_filter(card) then
+            match_count = match_count + 1
+        end
+    end
+    ImGui.Text(string.format("Cards: %d / %d", match_count, #state.card_list))
+
+    ImGui.Separator()
+
+    -- Card list (scrollable)
+    ImGui.BeginChild("CardsList", 0, 200, true)
+
+    for _, card in ipairs(state.card_list) do
+        if card_matches_filter(card) then
+            ImGui.PushID(card.id)
+
+            -- Type badge color
+            local badge = "[" .. card.type:sub(1,3):upper() .. "]"
+
+            -- Selectable row
+            local is_selected = state.selected_card and state.selected_card.id == card.id
+            local label = string.format("%s %s  (%d mana)", badge, card.id, card.mana_cost)
+
+            if ImGui.Selectable(label, is_selected) then
+                state.selected_card = card
+                state.test_cast_result = nil
+            end
+
+            -- Quick tooltip
+            if ImGui.IsItemHovered() then
+                ImGui.BeginTooltip()
+                ImGui.Text(card.id)
+                if card.damage > 0 then
+                    ImGui.Text(string.format("Damage: %d %s", card.damage, card.damage_type))
+                end
+                if #card.tags > 0 then
+                    ImGui.Text("Tags: " .. table.concat(card.tags, ", "))
+                end
+                ImGui.EndTooltip()
+            end
+
+            ImGui.PopID()
+        end
+    end
+
+    ImGui.EndChild()
+
+    -- Selected card details
+    if state.selected_card then
+        ImGui.Separator()
+
+        local card = state.selected_card
+
+        -- Sprite preview (placeholder - would need actual sprite rendering)
+        ImGui.BeginChild("CardPreview", 100, 140, true)
+        ImGui.TextDisabled("[Sprite]")
+        ImGui.TextDisabled(card.sprite or "?")
+        ImGui.EndChild()
+
+        ImGui.SameLine()
+
+        -- Stats
+        ImGui.BeginChild("CardStats", 0, 140, false)
+        ImGui.Text(card.id)
+        ImGui.TextDisabled(string.format("Type: %s | Mana: %d", card.type, card.mana_cost))
+
+        if card.damage > 0 then
+            ImGui.Text(string.format("Damage: %d (%s)", card.damage, card.damage_type))
+        end
+
+        if card.data.projectile_speed then
+            ImGui.Text(string.format("Speed: %d | Lifetime: %dms",
+                card.data.projectile_speed, card.data.lifetime or 0))
+        end
+
+        if card.data.radius_of_effect and card.data.radius_of_effect > 0 then
+            ImGui.Text(string.format("AoE Radius: %d", card.data.radius_of_effect))
+        end
+
+        if #card.tags > 0 then
+            ImGui.Text("Tags: " .. table.concat(card.tags, ", "))
+        end
+        ImGui.EndChild()
+
+        ImGui.Separator()
+
+        -- Action buttons
+        if ImGui.Button("Add to Inventory") then
+            if addCardToInventory then
+                addCardToInventory(card.id)
+                print("[Cards] Added to inventory: " .. card.id)
+            else
+                print("[Cards] addCardToInventory not available")
+            end
+        end
+
+        ImGui.SameLine()
+
+        if ImGui.Button("Spawn at Cursor") then
+            if globals and globals.mouseX then
+                local ok, EntityBuilder = pcall(require, "core.entity_builder")
+                if ok then
+                    EntityBuilder.create({
+                        sprite = card.sprite or "card_back",
+                        position = { x = globals.mouseX, y = globals.mouseY },
+                        size = { 64, 96 },
+                        data = { card_id = card.id },
+                    })
+                    print("[Cards] Spawned card entity")
+                end
+            end
+        end
+
+        ImGui.SameLine()
+
+        if ImGui.Button("Test Cast") then
+            state.test_cast_result = test_cast_card(card)
+        end
+
+        -- Test cast results
+        if state.test_cast_result then
+            ImGui.Separator()
+            ImGui.Text("Test Cast Result:")
+
+            local r = state.test_cast_result
+            ImGui.Text(string.format("  Base: %d → Final: %d", r.base_damage, r.final_damage))
+
+            if r.damage_mod ~= 0 then
+                ImGui.Text(string.format("  + damage_mod: %+d", r.damage_mod))
+            end
+            if r.damage_mult ~= 1.0 then
+                ImGui.Text(string.format("  × damage_mult: %.2f", r.damage_mult))
+            end
+
+            for _, msg in ipairs(r.messages) do
+                ImGui.TextDisabled("  → " .. msg)
+            end
+        end
+    end
+end
+
+--===========================================================================
 -- TAG TAB
 --===========================================================================
 local function render_tag_tab()
@@ -491,6 +824,10 @@ function ContentDebugPanel.render()
         if ImGui.Button(state.current_tab == 3 and "[Tags]" or "Tags") then
             state.current_tab = 3
         end
+        ImGui.SameLine()
+        if ImGui.Button(state.current_tab == 4 and "[Cards]" or "Cards") then
+            state.current_tab = 4
+        end
 
         ImGui.Separator()
 
@@ -501,6 +838,8 @@ function ContentDebugPanel.render()
             render_projectile_tab()
         elseif state.current_tab == 3 then
             render_tag_tab()
+        elseif state.current_tab == 4 then
+            render_cards_tab()
         end
 
         -- Misc section

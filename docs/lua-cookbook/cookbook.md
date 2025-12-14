@@ -96,7 +96,7 @@ end
 |------|------|
 | **Creating Things** | |
 | Create entity with sprite | \pageref{recipe:entity-sprite} |
-| Create entity with physics | \pageref{recipe:entity-physics} |
+| Create entity with physics | \pageref{recipe:add-physics} |
 | Create interactive entity (hover/click) | \pageref{recipe:entity-interactive} |
 | Initialize script table for data | \pageref{recipe:script-table} |
 | **Movement & Physics** | |
@@ -118,7 +118,7 @@ end
 | Create grid layout | \pageref{recipe:ui-grid} |
 | **Combat** | |
 | Spawn projectile | \pageref{recipe:spawn-projectile} |
-| Configure projectile behavior | \pageref{recipe:projectile-config} |
+| Configure projectile behavior | \pageref{recipe:projectile-preset} |
 | **Cards & Wands** | |
 | Define action card | \pageref{recipe:card-action} |
 | Define modifier card | \pageref{recipe:card-modifier} |
@@ -134,7 +134,7 @@ end
 | Detect spell type | \pageref{recipe:spell-type} |
 | Register wand trigger | \pageref{recipe:wand-trigger} |
 | **AI** | |
-| Create AI entity | \pageref{recipe:ai-entity} |
+| Create AI entity | \pageref{recipe:ai-entity-type} |
 | Define AI action | \pageref{recipe:ai-action} |
 
 \newpage

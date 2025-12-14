@@ -2948,3 +2948,573 @@ local ui = dsl.root {
 ```
 
 \newpage
+
+\newpage
+
+# Combat & Projectiles
+
+This chapter covers the projectile system for spawning, moving, and destroying projectiles with various behaviors.
+
+## Spawn Basic Projectile
+
+\label{recipe:spawn-projectile}
+
+**When to use:** Fire a simple straight-line projectile.
+
+```lua
+local ProjectileSystem = require("combat.projectile_system")
+
+-- Spawn straight projectile
+local entity = ProjectileSystem.spawn({
+    -- Position & direction
+    position = { x = 100, y = 200 },
+    positionIsCenter = true,  -- position is center, not top-left
+    angle = math.pi / 4,      -- direction in radians
+    
+    -- Movement
+    movementType = ProjectileSystem.MovementType.STRAIGHT,
+    baseSpeed = 400,          -- pixels per second
+    
+    -- Damage
+    damage = 25,
+    damageType = "fire",
+    owner = playerEntity,     -- who spawned this projectile
+    
+    -- Collision
+    collisionBehavior = ProjectileSystem.CollisionBehavior.DESTROY,
+    
+    -- Lifetime
+    lifetime = 3.0,           -- seconds before auto-despawn
+    
+    -- Visual
+    sprite = "fireball_anim",
+    size = 16,                -- base size in pixels
+    shadow = true
+})
+```
+
+*— from combat/projectile_system.lua:411-480*
+
+**Gotcha:** `position` is top-left by default. Set `positionIsCenter = true` to spawn at center coordinates.
+
+**Gotcha:** `angle` is in radians, not degrees. Use `math.rad(degrees)` to convert.
+
+---
+
+## Helper: Quick Spawn
+
+**When to use:** Spawn basic projectile without verbose options.
+
+```lua
+local ProjectileSystem = require("combat.projectile_system")
+
+-- Quick spawn straight projectile
+ProjectileSystem.spawnBasic(x, y, angle, speed, damage, owner)
+
+-- Quick spawn homing projectile
+ProjectileSystem.spawnHoming(x, y, targetEntity, speed, damage, owner)
+
+-- Quick spawn arc projectile (affected by gravity)
+ProjectileSystem.spawnArc(x, y, angle, speed, damage, owner)
+```
+
+*— from combat/projectile_system.lua:1819-1865*
+
+---
+
+## Movement Types
+
+\label{recipe:projectile-movement}
+
+**When to use:** Choose projectile movement pattern.
+
+### Straight Movement
+
+```lua
+ProjectileSystem.spawn({
+    position = { x = x, y = y },
+    angle = angle,
+    movementType = ProjectileSystem.MovementType.STRAIGHT,
+    baseSpeed = 400
+})
+```
+
+*— Travels in a straight line at constant speed*
+
+### Homing Movement
+
+```lua
+ProjectileSystem.spawn({
+    position = { x = x, y = y },
+    movementType = ProjectileSystem.MovementType.HOMING,
+    homingTarget = enemyEntity,
+    baseSpeed = 300,
+    homingStrength = 10.0,  -- turn rate (higher = faster turning)
+    homingMaxSpeed = 500    -- max speed when chasing
+})
+```
+
+*— from combat/projectile_examples.lua:74-90*
+
+**Gotcha:** Homing requires a valid target entity. Check `entity_cache.valid(target)` before spawning.
+
+**Gotcha:** Higher `homingStrength` = sharper turns. Use 5-15 for most cases.
+
+### Arc Movement (Gravity)
+
+```lua
+ProjectileSystem.spawn({
+    position = { x = x, y = y },
+    angle = angle,
+    movementType = ProjectileSystem.MovementType.ARC,
+    baseSpeed = 400,
+    gravityScale = 1.8  -- gravity multiplier (1.0 = normal, >1 = heavier)
+})
+```
+
+*— from combat/projectile_examples.lua:240-249*
+
+**Gotcha:** Arc projectiles are affected by gravity. Use for grenades, arrows with drop, etc.
+
+### Orbital Movement
+
+```lua
+ProjectileSystem.spawn({
+    position = { x = centerX, y = centerY },
+    movementType = ProjectileSystem.MovementType.ORBITAL,
+    orbitCenter = { x = centerX, y = centerY },
+    orbitRadius = 80,       -- distance from center
+    orbitSpeed = 3.0,       -- radians/second
+    orbitAngle = 0          -- starting angle
+})
+```
+
+*— from combat/projectile_examples.lua:285-305*
+
+**Real usage:** Orbital shields, rotating projectiles around player/entity.
+
+---
+
+## Collision Behaviors
+
+\label{recipe:projectile-collision}
+
+**When to use:** Define what happens when projectile hits something.
+
+### Destroy on Hit
+
+```lua
+collisionBehavior = ProjectileSystem.CollisionBehavior.DESTROY
+```
+
+*— Default behavior. Projectile is destroyed on first collision.*
+
+### Pierce Through Enemies
+
+```lua
+collisionBehavior = ProjectileSystem.CollisionBehavior.PIERCE,
+pierceCount = 0,          -- current pierce count
+maxPierceCount = 3        -- destroy after piercing 3 enemies
+```
+
+*— from combat/projectile_examples.lua:142-160*
+
+**Gotcha:** Set `pierceCount = 0` initially, `maxPierceCount` controls how many enemies it can pierce.
+
+### Bounce Off Surfaces
+
+```lua
+collisionBehavior = ProjectileSystem.CollisionBehavior.BOUNCE,
+bounceCount = 0,
+maxBounces = 5,
+bounceDampening = 0.9  -- lose 10% speed per bounce
+```
+
+*— from combat/projectile_examples.lua:189-209*
+
+**Real usage:** Bouncing projectiles that ricochet off walls/enemies.
+
+### Explode on Impact (AoE)
+
+```lua
+collisionBehavior = ProjectileSystem.CollisionBehavior.EXPLODE,
+explosionRadius = 100,         -- radius in pixels
+explosionDamageMult = 1.2      -- damage multiplier for explosion
+```
+
+*— from combat/projectile_examples.lua:240-259*
+
+**Gotcha:** Explosion damage = `damage * damageMultiplier * explosionDamageMult`
+
+**Real usage:** Grenades, fireballs, area-of-effect projectiles.
+
+### Pass Through (No Collision)
+
+```lua
+collisionBehavior = ProjectileSystem.CollisionBehavior.PASS_THROUGH
+```
+
+*— Projectile ignores collision but can still deal damage.*
+
+---
+
+## Event Callbacks
+
+\label{recipe:projectile-callbacks}
+
+**When to use:** React to projectile lifecycle events.
+
+```lua
+ProjectileSystem.spawn({
+    -- ... other params ...
+    
+    onSpawn = function(entity, params)
+        print("Projectile spawned:", entity)
+        -- Spawn particle trail
+        -- Play spawn sound
+    end,
+    
+    onHit = function(projectile, target, data)
+        print("Hit target:", target)
+        -- Apply status effect
+        -- Play hit sound
+        -- Reduce damage on pierce
+        data.damageMultiplier = data.damageMultiplier * 0.8
+    end,
+    
+    onDestroy = function(entity, data)
+        print("Projectile destroyed")
+        -- Spawn particles
+        -- Clean up references
+    end
+})
+```
+
+*— from combat/projectile_examples.lua:47-63*
+
+**Gotcha:** `onHit` is called BEFORE damage is applied. Modify `data.damageMultiplier` to change damage.
+
+**Gotcha:** `onDestroy` is called when projectile is removed for any reason (timeout, hit, out of bounds).
+
+---
+
+## Lifetime Control
+
+\label{recipe:projectile-lifetime}
+
+**When to use:** Control when projectiles despawn.
+
+```lua
+ProjectileSystem.spawn({
+    -- Time-based despawn
+    lifetime = 3.0,  -- seconds
+    
+    -- Distance-based despawn
+    maxDistance = 500,  -- pixels from spawn point
+    
+    -- Hit-count based despawn
+    maxHits = 5  -- destroy after hitting 5 entities
+})
+```
+
+*— from combat/projectile_system.lua:234-266*
+
+**Gotcha:** All three conditions are checked. Projectile despawns when ANY condition is met.
+
+**Gotcha:** Default lifetime varies by movement type (straight: 5s, homing: 10s, orbital: 12s).
+
+---
+
+## Damage & Modifiers
+
+\label{recipe:projectile-damage}
+
+**When to use:** Configure projectile damage properties.
+
+```lua
+ProjectileSystem.spawn({
+    -- Base damage
+    damage = 50,
+    damageType = "fire",  -- "physical", "fire", "ice", "lightning", etc.
+    
+    -- Multipliers (applied to damage)
+    damageMultiplier = 1.5,
+    speedMultiplier = 1.2,
+    sizeMultiplier = 1.1,
+    
+    -- Owner & faction
+    owner = playerEntity,
+    faction = "player",  -- "player", "enemy", "neutral"
+    
+    -- Modifiers from cards/wand system
+    modifiers = {
+        explosionOnHit = true,
+        chainLightning = { count = 3, range = 100 }
+    }
+})
+```
+
+*— from combat/projectile_system.lua:161-189*
+
+**Gotcha:** `damageMultiplier` affects final damage calculation. Use for scaling with stats.
+
+**Gotcha:** `faction` controls friendly fire. Set to prevent hitting allies.
+
+---
+
+## Projectile Presets
+
+\label{recipe:projectile-preset}
+
+**When to use:** Define reusable projectile configurations.
+
+Define in `assets/scripts/data/projectiles.lua`:
+
+```lua
+local Projectiles = {
+    my_fireball = {
+        id = "my_fireball",
+        speed = 400,
+        damage_type = "fire",
+        movement = "straight",
+        collision = "explode",
+        explosion_radius = 60,
+        lifetime = 2000,  -- milliseconds
+        on_hit_effect = "burn",
+        on_hit_duration = 3000,
+        tags = { "Fire", "Projectile", "AoE" }
+    },
+    
+    ice_shard = {
+        id = "ice_shard",
+        speed = 600,
+        damage_type = "ice",
+        movement = "straight",
+        collision = "pierce",
+        pierce_count = 2,
+        lifetime = 1800,
+        on_hit_effect = "freeze",
+        on_hit_duration = 1000,
+        tags = { "Ice", "Projectile" }
+    }
+}
+
+return Projectiles
+```
+
+*— from data/projectiles.lua:1-65*
+
+**Preset fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `speed` | number | Base speed (pixels/sec) |
+| `damage_type` | string | Element/damage type |
+| `movement` | string | "straight", "homing", "arc", "orbital" |
+| `collision` | string | "destroy", "pierce", "bounce", "explode" |
+| `explosion_radius` | number | AoE radius (for explode) |
+| `pierce_count` | number | Max pierce count |
+| `bounce_count` | number | Max bounce count |
+| `lifetime` | number | Max lifetime (milliseconds) |
+| `on_hit_effect` | string | Status effect to apply |
+| `on_hit_duration` | number | Effect duration (ms) |
+| `tags` | table | Tags for joker synergies |
+
+**Standard tags:**
+- **Elements:** `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`
+- **Mechanics:** `Projectile`, `AoE`, `Hazard`
+
+---
+
+## Collision Targets
+
+\label{recipe:projectile-targets}
+
+**When to use:** Control what projectiles can collide with.
+
+```lua
+ProjectileSystem.spawn({
+    -- Collide with specific tags
+    collideWithTags = { "enemy", "WORLD" },
+    
+    -- OR use default target + world
+    targetCollisionTag = "enemy",  -- default target
+    collideWithWorld = true        -- also collide with world bounds
+})
+```
+
+*— from combat/projectile_system.lua:299-323*
+
+**Gotcha:** By default, projectiles collide with "enemy" and "WORLD".
+
+**Gotcha:** Use `collideWithTags` to override all collision targets.
+
+**Gotcha:** Set `collideWithWorld = false` to pass through walls/boundaries.
+
+---
+
+## Physics Integration
+
+**When to use:** Add physics properties to projectiles.
+
+```lua
+ProjectileSystem.spawn({
+    -- Physics (enabled by default)
+    usePhysics = true,
+    
+    -- Physics properties
+    restitution = 0.5,   -- bounciness (0 = no bounce, 1 = perfect bounce)
+    friction = 0.1,      -- surface friction
+    gravityScale = 0,    # gravity multiplier (0 = no gravity)
+    fixedRotation = true # lock rotation (for sprites that shouldn't rotate)
+})
+```
+
+*— from combat/projectile_examples.lua:220-223*
+
+**Gotcha:** `usePhysics = false` to disable physics integration (manual movement only).
+
+**Gotcha:** `fixedRotation = false` makes projectile rotate based on velocity direction.
+
+---
+
+## Events & Signals
+
+\label{recipe:projectile-signals}
+
+**When to use:** React to projectile events across systems.
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Listen for projectile spawned
+signal.register("projectile_spawned", function(entity, data)
+    print("Projectile spawned:", entity)
+    print("Owner:", data.owner)
+    print("Damage:", data.damage)
+end)
+
+-- Listen for projectile hit
+signal.register("projectile_hit", function(projectile, target, damage)
+    print("Projectile", projectile, "hit", target, "for", damage)
+end)
+
+-- Listen for projectile exploded
+signal.register("projectile_exploded", function(entity, data)
+    print("Explosion at:", data.position.x, data.position.y)
+    print("Radius:", data.radius)
+    print("Damage:", data.damage)
+    -- Camera shake
+    -- Spawn particles
+end)
+
+-- Listen for projectile destroyed
+signal.register("projectile_destroyed", function(entity, data)
+    print("Projectile destroyed, reason:", data.reason)
+    -- "timeout", "hit_count", "bounce_depleted", "world_bounds", etc.
+end)
+```
+
+*— from combat/projectile_system.lua:1749-1797*
+
+**Events emitted:**
+- `"projectile_spawned"` (entity, data) — when projectile is created
+- `"projectile_hit"` (projectile, target, damage) — when projectile hits entity
+- `"projectile_exploded"` (entity, {position, radius, damage, owner}) — when explosion occurs
+- `"projectile_destroyed"` (entity, {owner, reason}) — when projectile is removed
+
+---
+
+## Complete Example: Custom Grenade
+
+**When to use:** Combine all features for complex projectile behavior.
+
+```lua
+local ProjectileSystem = require("combat.projectile_system")
+local signal = require("external.hump.signal")
+
+function spawnGrenade(x, y, targetX, targetY, owner)
+    -- Calculate angle and distance
+    local dx = targetX - x
+    local dy = targetY - y
+    local angle = math.atan(dy, dx)
+    local distance = math.sqrt(dx * dx + dy * dy)
+    
+    -- Spawn arc projectile with explosion
+    local entity = ProjectileSystem.spawn({
+        -- Position
+        position = { x = x, y = y },
+        positionIsCenter = true,
+        angle = angle,
+        
+        -- Movement (arc with gravity)
+        movementType = ProjectileSystem.MovementType.ARC,
+        baseSpeed = 400,
+        gravityScale = 1.8,
+        
+        -- Damage
+        damage = 50,
+        damageType = "fire",
+        owner = owner,
+        
+        -- Collision (explode on impact)
+        collisionBehavior = ProjectileSystem.CollisionBehavior.EXPLODE,
+        explosionRadius = 100,
+        explosionDamageMult = 1.2,
+        
+        -- Lifetime
+        lifetime = 5.0,
+        
+        -- Visual
+        sprite = "grenade_sprite.png",
+        size = 16,
+        shadow = true,
+        fixedRotation = false,  -- tumbles through air
+        
+        -- Callbacks
+        onSpawn = function(eid, params)
+            print("Grenade launched!")
+            -- Play throw sound
+        end,
+        
+        onHit = function(projectile, target, data)
+            print("Grenade impact!")
+            -- Play explosion sound
+            -- Camera shake
+        end,
+        
+        onDestroy = function(eid, data)
+            print("Grenade cleanup")
+        end
+    })
+    
+    return entity
+end
+
+-- Listen for explosion to apply effects
+signal.register("projectile_exploded", function(entity, data)
+    local script = getScriptTableFromEntityID(entity)
+    if not script then return end
+    
+    -- Apply screen shake
+    if camera then
+        camera.shake(0.5, 10)
+    end
+    
+    -- Spawn particle burst
+    if particle then
+        particle.createExplosion(data.position.x, data.position.y, data.radius)
+    end
+end)
+```
+
+*— Combined pattern from combat/projectile_examples.lua:239-276*
+
+**Gotcha:** Arc projectiles need higher `baseSpeed` to reach distant targets.
+
+**Gotcha:** Use `explosionDamageMult` to balance AoE vs direct damage.
+
+**Gotcha:** `fixedRotation = false` makes grenade tumble realistically.
+
+\newpage

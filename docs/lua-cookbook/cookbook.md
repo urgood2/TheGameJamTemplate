@@ -6364,3 +6364,223 @@ local currentScale = startScale + (endScale - startScale) * eased
 **Gotcha:** `.d` (derivative) is useful for velocity-based effects (like particles).
 
 ---
+\newpage
+\appendix
+
+# Appendix A: Function Index
+
+\label{appendix:function-index}
+
+Alphabetical listing of all documented functions and APIs.
+
+| Function | Module | Recipe |
+|----------|--------|--------|
+| `add_state_tag()` | `util.lua` | \pageref{recipe:validate-entity} |
+| `component_cache.get()` | `core.component_cache` | \pageref{recipe:get-component} |
+| `dsl.anim()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
+| `dsl.dynamic()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
+| `dsl.grid()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-grid} |
+| `dsl.hbox()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
+| `dsl.root()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
+| `dsl.spawn()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
+| `dsl.text()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
+| `dsl.vbox()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
+| `ensure_entity()` | `util.lua` | \pageref{recipe:global-helpers} |
+| `ensure_scripted_entity()` | `util.lua` | \pageref{recipe:global-helpers} |
+| `entity_cache.active()` | `core.entity_cache` | \pageref{recipe:validate-entity} |
+| `entity_cache.valid()` | `core.entity_cache` | \pageref{recipe:validate-entity} |
+| `EntityBuilder.create()` | `core.entity_builder` | \pageref{recipe:entity-sprite} |
+| `EntityBuilder.interactive()` | `core.entity_builder` | \pageref{recipe:entity-interactive} |
+| `EntityBuilder.simple()` | `core.entity_builder` | \pageref{recipe:entity-sprite} |
+| `getScriptTableFromEntityID()` | `util.lua` | \pageref{recipe:script-table} |
+| `is_state_active()` | `util.lua` | \pageref{recipe:validate-entity} |
+| `JokerSystem.add_joker()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
+| `JokerSystem.clear_jokers()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
+| `JokerSystem.definitions` | `wand.joker_system` | \pageref{recipe:joker-define} |
+| `JokerSystem.remove_joker()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
+| `JokerSystem.trigger_event()` | `wand.joker_system` | \pageref{recipe:joker-trigger} |
+| `knife.chain()` | `external.knife.chain` | \pageref{recipe:knife-chain} |
+| `lume.*` | `external.lume` | \pageref{recipe:lume-tables}, \pageref{recipe:lume-math} |
+| `PhysicsBuilder.for_entity()` | `core.physics_builder` | \pageref{recipe:add-physics} |
+| `PhysicsBuilder.quick()` | `core.physics_builder` | \pageref{recipe:add-physics} |
+| `physics.create_physics_for_transform()` | `physics.physics_lua_api` | \pageref{recipe:get-physics-world} |
+| `physics.enable_collision_between_many()` | `physics.physics_lua_api` | \pageref{recipe:collision-masks} |
+| `physics.set_sync_mode()` | `physics.physics_lua_api` | \pageref{recipe:get-physics-world} |
+| `physics.SetBullet()` | `physics.physics_lua_api` | \pageref{recipe:bullet-mode} |
+| `physics.update_collision_masks_for()` | `physics.physics_lua_api` | \pageref{recipe:collision-masks} |
+| `PhysicsManager.get_world()` | `core.physics_manager` | \pageref{recipe:get-physics-world} |
+| `ProjectileSystem.spawn()` | `combat.projectile_system` | \pageref{recipe:spawn-projectile} |
+| `remove_default_state_tag()` | `util.lua` | \pageref{recipe:validate-entity} |
+| `safe_script_get()` | `util.lua` | \pageref{recipe:safe-script} |
+| `script_field()` | `util.lua` | \pageref{recipe:global-helpers} |
+| `ShaderBuilder.for_entity()` | `core.shader_builder` | \pageref{recipe:add-shader} |
+| `ShaderBuilder.register_family()` | `core.shader_builder` | \pageref{recipe:define-shader-preset} |
+| `signal.emit()` | `external.hump.signal` | \pageref{recipe:signals} |
+| `signal.register()` | `external.hump.signal` | \pageref{recipe:signals} |
+| `signal.clear()` | `external.hump.signal` | \pageref{recipe:signal-api} |
+| `signal.remove()` | `external.hump.signal` | \pageref{recipe:signal-api} |
+| `TagEvaluator.count_tags()` | `wand.tag_evaluator` | \pageref{recipe:tag-evaluate} |
+| `TagEvaluator.evaluate_deck()` | `wand.tag_evaluator` | \pageref{recipe:tag-evaluate} |
+| `TagEvaluator.get_breakpoints()` | `wand.tag_evaluator` | \pageref{recipe:tag-synergy} |
+| `TagEvaluator.get_thresholds()` | `wand.tag_evaluator` | \pageref{recipe:tag-synergy} |
+| `timer.after()` | `core.timer` | \pageref{recipe:timer-after} |
+| `timer.after_opts()` | `core.timer` | \pageref{recipe:timer-after} |
+| `timer.cancel()` | `core.timer` | \pageref{recipe:timer-after} |
+| `timer.cooldown_opts()` | `core.timer` | \pageref{recipe:timer-after} |
+| `timer.every()` | `core.timer` | \pageref{recipe:timer-every} |
+| `timer.every_opts()` | `core.timer` | \pageref{recipe:timer-every} |
+| `timer.every_physics_step()` | `core.timer` | \pageref{recipe:timer-physics} |
+| `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
+| `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |
+
+\newpage
+
+# Appendix B: Common Patterns Cheat Sheet
+
+\label{appendix:cheat-sheet}
+
+## Entity Lifecycle
+
+```lua
+-- Create entity with sprite
+local entity, script = EntityBuilder.create({
+    sprite = "my_sprite",
+    position = { x = 100, y = 200 },
+    data = { health = 100 }  -- Assigned before attach_ecs
+})
+
+-- Validate before use
+if not ensure_entity(entity) then return end
+
+-- Get script table
+local script = safe_script_get(entity)
+if script then script.health = script.health - 10 end
+
+-- Destroy
+registry:destroy(entity)
+```
+
+## Defensive Access
+
+```lua
+-- Safe component access
+local transform = component_cache.get(entity, Transform)
+if transform then
+    transform.actualX = x
+end
+
+-- Safe script access with default
+local damage = script_field(entity, "damage", 0)
+
+-- Safe entity validation
+if not entity_cache.valid(entity) then return end
+```
+
+## Timer Patterns
+
+```lua
+-- One-shot
+timer.after_opts({ delay = 2.0, action = fn, tag = "my_timer" })
+
+-- Repeating
+timer.every_opts({ delay = 1.0, action = fn, times = 5 })
+
+-- Physics-synced
+timer.every_physics_step(function(dt) updatePhysics(dt) end)
+
+-- Cancel
+timer.cancel("my_timer")
+```
+
+## Event System
+
+```lua
+-- Emit event
+signal.emit("event_name", entity, { data = "value" })
+
+-- Listen
+signal.register("event_name", function(entity, data)
+    print("Event fired:", data.data)
+end)
+
+-- Cleanup
+signal.clear("event_name")
+```
+
+## Physics Quick
+
+```lua
+-- Add physics
+PhysicsBuilder.quick(entity, {
+    shape = "circle",
+    tag = "projectile",
+    bullet = true,
+    collideWith = { "enemy", "WORLD" }
+})
+
+-- Fluent API
+PhysicsBuilder.for_entity(entity)
+    :circle():tag("player"):bullet():fixedRotation()
+    :collideWith({"enemy"}):apply()
+```
+
+## UI Quick
+
+```lua
+-- Build UI tree
+local ui = dsl.root {
+    config = { padding = 10 },
+    children = {
+        dsl.vbox {
+            config = { spacing = 6 },
+            children = {
+                dsl.text("Title", { fontSize = 24 }),
+                dsl.hbox {
+                    children = {
+                        dsl.anim("icon", { w = 32, h = 32 }),
+                        dsl.text("Subtitle")
+                    }
+                }
+            }
+        }
+    }
+}
+
+-- Spawn
+local boxID = dsl.spawn({ x = 100, y = 100 }, ui)
+```
+
+## Content Creation Quick
+
+```lua
+-- Define card
+Cards.MY_CARD = {
+    id = "MY_CARD",
+    type = "action",
+    mana_cost = 10,
+    damage = 25,
+    tags = { "Fire", "Projectile" }
+}
+
+-- Define joker
+my_joker = {
+    id = "my_joker",
+    calculate = function(self, ctx)
+        if ctx.tags and ctx.tags.Fire then
+            return { damage_mod = 10 }
+        end
+    end
+}
+
+-- Spawn projectile
+ProjectileSystem.spawn({
+    owner = player,
+    position = { x = x, y = y },
+    velocity = { x = vx, y = vy },
+    preset = "fireball"  -- or inline config
+})
+```
+
+---
+
+*End of Cookbook*

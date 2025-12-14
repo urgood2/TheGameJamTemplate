@@ -2202,3 +2202,749 @@ end
 **Gotcha:** Follow the order: Create sprite → Position → Apply shaders → Add local draw commands. Local commands added before shaders may not render correctly.
 
 \newpage
+
+# UI System
+
+This chapter covers the declarative UI DSL for building layouts, tooltips, grids, and interactive UI elements.
+
+## UI DSL: Basic Structure
+
+\label{recipe:ui-dsl}
+
+**When to use:** Build UI layouts declaratively instead of manually positioning elements.
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Create a UI definition
+local myUI = dsl.root {
+    config = {
+        color = util.getColor("blackberry"),
+        padding = 10,
+        align = bit.bor(
+            AlignmentFlag.HORIZONTAL_CENTER,
+            AlignmentFlag.VERTICAL_CENTER
+        )
+    },
+    children = {
+        dsl.vbox {
+            config = { spacing = 6, padding = 6 },
+            children = {
+                dsl.text("Title", { fontSize = 24, color = "white" }),
+                dsl.text("Subtitle", { fontSize = 16, color = "white" })
+            }
+        }
+    }
+}
+
+-- Spawn at position
+local boxID = dsl.spawn({ x = 200, y = 200 }, myUI)
+```
+
+*— from ui/ui_syntax_sugar.lua:36-39, 176-193*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:3119
+local root = dsl.root {
+    config = {
+        color = tooltipStyle.bgColor,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        padding = tooltipStyle.innerPadding,
+        outlineThickness = 2,
+        outlineColor = tooltipStyle.outlineColor,
+        shadow = true,
+    },
+    children = { v }
+}
+
+local boxID = dsl.spawn({ x = 200, y = 200 }, root)
+```
+
+**Gotcha:** All DSL functions return UI definition tables — they don't create entities until you call `dsl.spawn()`.
+
+**Gotcha:** `config` is where you set layout properties (padding, spacing, alignment, colors). `children` is an array of child UI elements.
+
+---
+
+## DSL: Vertical Layout
+
+**When to use:** Stack UI elements vertically (menus, lists, tooltips).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Vertical box with spacing
+dsl.vbox {
+    config = {
+        spacing = 6,  -- space between children
+        padding = 4,  -- internal padding
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP)
+    },
+    children = {
+        dsl.text("Item 1"),
+        dsl.text("Item 2"),
+        dsl.text("Item 3")
+    }
+}
+```
+
+*— from ui/ui_syntax_sugar.lua:31-34*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:3112
+local v = dsl.vbox {
+    config = {
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+        color = tooltipStyle.innerColor,
+        padding = tooltipStyle.innerPadding
+    },
+    children = rows
+}
+```
+
+**Gotcha:** Children are laid out top to bottom. First child is at the top, last child at the bottom.
+
+---
+
+## DSL: Horizontal Layout
+
+**When to use:** Arrange UI elements side by side (button groups, stat displays, icon rows).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Horizontal box
+dsl.hbox {
+    config = {
+        spacing = 4,
+        padding = 4,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+    },
+    children = {
+        dsl.text("HP:"),
+        dsl.text("100", { color = "red" })
+    }
+}
+```
+
+*— from ui/ui_syntax_sugar.lua:26-29*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:3077
+table.insert(rows, dsl.hbox {
+    config = {
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        padding = tooltipStyle.rowPadding
+    },
+    children = {
+        makeTooltipPill("id: " .. tostring(wand_def.id), {
+            background = tooltipStyle.idBg,
+            color = tooltipStyle.idTextColor or tooltipStyle.labelColor
+        })
+    }
+})
+```
+
+**Gotcha:** Children are laid out left to right. First child is leftmost, last child is rightmost.
+
+---
+
+## DSL: Text Element
+
+**When to use:** Display static or dynamic text in UI.
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Simple text
+dsl.text("Hello World", { fontSize = 16, color = "white" })
+
+-- Text with custom styling
+dsl.text("Important!", {
+    fontSize = 24,
+    color = "red",
+    fontName = "bold",
+    shadow = true
+})
+
+-- Text with hover tooltip
+dsl.text("Hover me", {
+    fontSize = 16,
+    hover = {
+        title = "Tooltip Title",
+        body = "Detailed description here"
+    }
+})
+
+-- Text with click handler
+dsl.text("Click me", {
+    fontSize = 16,
+    onClick = function()
+        print("Text clicked!")
+    end
+})
+```
+
+*— from ui/ui_syntax_sugar.lua:44-61*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:342-346
+return dsl.hbox {
+    config = cfg,
+    children = { makeTooltipTextDef(text, textOpts) }
+}
+```
+
+**Gotcha:** Color can be a string (color name from util.getColor) or a Color object.
+
+**Gotcha:** Default alignment is HORIZONTAL_CENTER | VERTICAL_CENTER. Override with the `align` option.
+
+---
+
+## DSL: Animated Sprite
+
+**When to use:** Embed animated sprites in UI (icons, decorations, item previews).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Sprite in UI
+dsl.anim("kobold", {
+    w = 40,
+    h = 40,
+    shadow = true  -- enable drop shadow
+})
+
+-- Larger sprite without shadow
+dsl.anim("fireball_icon", {
+    w = 64,
+    h = 64,
+    shadow = false
+})
+```
+
+*— from ui/ui_syntax_sugar.lua:99-119*
+
+**Real usage example:**
+
+```lua
+-- From ui/ui_syntax_sugar.lua:96-97 (inline comment examples)
+-- dsl.anim("sprite.png",  { sprite = true,  w = 40, h = 40, shadow = false })
+-- dsl.anim("walk_anim",   { sprite = false, w = 64, h = 64 })
+```
+
+**Gotcha:** The sprite ID must exist in the animation system (loaded from assets).
+
+**Gotcha:** `shadow` defaults to `true`. Set `shadow = false` to disable the drop shadow.
+
+**Gotcha:** The `isAnimation` option determines whether to treat the ID as an animation (true, default) or a raw sprite identifier (false).
+
+---
+
+## DSL: Dynamic Text
+
+**When to use:** Text that updates automatically based on game state (health bars, timers, scores).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Dynamic text with function
+dsl.dynamicText(
+    function()
+        return "Health: " .. player.health
+    end,
+    16,      -- fontSize
+    "",      -- effect (text effect name, or "" for none)
+    {}       -- additional opts
+)
+
+-- With text effect
+dsl.dynamicText(
+    function()
+        return "LEVEL UP!"
+    end,
+    24,
+    "juicy",  -- bouncy text effect
+    { color = "gold" }
+)
+
+-- With auto-alignment refresh
+dsl.dynamicText(
+    function()
+        return "Score: " .. getScore()
+    end,
+    20,
+    "",
+    {
+        autoAlign = true,
+        alignRate = 0.5  -- check alignment every 0.5s
+    }
+)
+```
+
+*— from ui/ui_syntax_sugar.lua:67-88*
+
+**Gotcha:** The function is called every frame to get the current text. Keep it lightweight!
+
+**Gotcha:** `autoAlign` triggers re-alignment when text width changes. Only use if the text length varies significantly.
+
+---
+
+## DSL: Grid Layout
+
+\label{recipe:ui-grid}
+
+**When to use:** Create uniform grids of UI elements (item inventories, skill trees, card grids).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- 3x4 grid of items
+local grid = dsl.grid(3, 4, function(row, col)
+    return dsl.text(string.format("(%d,%d)", row, col))
+end)
+
+-- Grid of sprites
+local iconGrid = dsl.grid(2, 3, function(row, col)
+    local index = (row - 1) * 3 + col
+    return dsl.anim("icon_" .. index, { w = 32, h = 32 })
+end)
+
+-- Use grid in UI
+local myUI = dsl.root {
+    config = { padding = 10 },
+    children = grid  -- grid is already an array of rows
+}
+```
+
+*— from ui/ui_syntax_sugar.lua:204-220*
+
+**Real usage example:**
+
+```lua
+-- From ui/ui_syntax_sugar.lua:200-202 (inline comment example)
+-- local grid = dsl.grid(3, 4, function(r, c)
+--     return dsl.anim("icon_"..(r*c), { w = 48, h = 48 })
+-- end)
+```
+
+**Gotcha:** The generator function receives `(row, col)` with 1-based indexing (row 1 = top, col 1 = left).
+
+**Gotcha:** `dsl.grid()` returns an array of horizontal rows. You can insert it directly into a vbox's `children`.
+
+---
+
+## Spawning UI
+
+**When to use:** Create the actual UI entity from a definition.
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Basic spawn (minimal params)
+local boxID = dsl.spawn({ x = 200, y = 200 }, myUIDefinition)
+
+-- With layer name and z-index
+local boxID = dsl.spawn(
+    { x = 200, y = 200 },
+    myUIDefinition,
+    "ui",     -- layer name
+    100       -- z-index (higher renders in front)
+)
+
+-- With resize callback
+local boxID = dsl.spawn(
+    { x = 200, y = 200 },
+    myUIDefinition,
+    "ui",
+    100,
+    {
+        onBoxResize = function(boxEntity)
+            print("UI box resized!")
+        end
+    }
+)
+```
+
+*— from ui/ui_syntax_sugar.lua:176-193*
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:3130
+local boxID = dsl.spawn({ x = 200, y = 200 }, root)
+
+-- Set layer and state after spawn
+ui.box.set_draw_layer(boxID, "ui")
+ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
+remove_default_state_tag(boxID)
+```
+
+**Gotcha:** `dsl.spawn()` returns the box entity ID, not the definition.
+
+**Gotcha:** Layer assignment can be done either via `dsl.spawn()` or by calling `ui.box.set_draw_layer()` afterward.
+
+**Gotcha:** Z-index only applies if you specify a layer name. Without a layer, z-ordering is undefined.
+
+---
+
+## Tooltips
+
+\label{recipe:tooltip}
+
+**When to use:** Show information on hover for any UI element.
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Tooltip on text
+dsl.text("Item Name", {
+    fontSize = 16,
+    hover = {
+        title = "Sword of Fire",
+        body = "Deals 50 fire damage",
+        id = "unique_tooltip_id"  -- optional
+    }
+})
+
+-- Tooltip on sprite
+dsl.anim("sword_icon", {
+    w = 40,
+    h = 40,
+    hover = {
+        title = "Legendary Sword",
+        body = "A very powerful weapon"
+    }
+})
+
+-- Custom tooltip positioning and styling
+dsl.text("Info", {
+    hover = {
+        title = "Details",
+        body = "Long description that wraps...",
+        id = "info_tooltip"
+    },
+    onClick = function()
+        print("Clicked!")
+    end
+})
+```
+
+*— from ui/ui_syntax_sugar.lua:126-152, 158-171*
+
+**Real usage example:**
+
+```lua
+-- Tooltips are attached via hover handlers internally
+-- When DSL spawns the UI, it calls dsl.applyHoverRecursive(entity)
+-- which scans all children for .hover config
+```
+
+**Gotcha:** Tooltips use the global `showSimpleTooltipAbove()` and `hideSimpleTooltip()` functions. These must be available at runtime.
+
+**Gotcha:** The tooltip appears when you hover, disappears when you stop hovering. The system handles this automatically.
+
+**Gotcha:** Tooltip `title` and `body` are passed through `localization.get()` for translation support.
+
+---
+
+## Click Handlers on UI Elements
+
+**When to use:** Make UI elements respond to clicks (buttons, cards, interactive icons).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Clickable text
+dsl.text("Start Game", {
+    fontSize = 20,
+    color = "white",
+    onClick = function()
+        startGame()
+    end
+})
+
+-- Button with hover and click
+dsl.text("Shop", {
+    fontSize = 18,
+    hover = {
+        title = "Shop",
+        body = "Buy items and upgrades"
+    },
+    onClick = function()
+        openShop()
+    end
+})
+
+-- Interactive sprite
+dsl.anim("close_button", {
+    w = 32,
+    h = 32,
+    onClick = function()
+        closeWindow()
+    end
+})
+```
+
+*— from ui/ui_syntax_sugar.lua:44-61 (onClick via buttonCallback)*
+
+**Gotcha:** Click handlers are set via the `onClick` option in `dsl.text()` config.
+
+**Gotcha:** The handler is called immediately when clicked — no entity ID parameter is passed to the callback.
+
+**Gotcha:** To make sprites clickable, you need to set up GameObject callbacks manually after spawning (DSL doesn't auto-enable clicks for sprites).
+
+---
+
+## Text Effects
+
+**When to use:** Add visual flair to text (bounces, glows, color shifts).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Dynamic text with effect
+dsl.dynamicText(
+    function() return "COMBO!" end,
+    24,
+    "juicy",  -- effect name
+    { color = "yellow" }
+)
+
+-- Other available effects:
+-- "static"     - No animation (default)
+-- "juicy"      - Bounce/scale effects
+-- "magical"    - Sparkle/glow
+-- "elemental"  - Fire/ice/etc themed
+-- "continuous" - Looping animations
+-- "oneshot"    - Play-once animations
+```
+
+*— from ui/ui_syntax_sugar.lua:67-88, ui/text_effects/init.lua:98-134*
+
+**Available text effects:**
+
+- `continuous.lua` — Looping effects (wave, pulse, rainbow)
+- `elemental.lua` — Element-themed effects (fire, ice, electric)
+- `juicy.lua` — Bouncy, game-feel effects
+- `magical.lua` — Sparkle, glow, mystic effects
+- `oneshot.lua` — Play-once effects (fade in, pop)
+- `static.lua` — No animation (default)
+
+**Gotcha:** Text effects are only available via `dsl.dynamicText()`, not regular `dsl.text()`.
+
+**Gotcha:** Effects are defined in `ui/text_effects/` and registered via `effects.register()`. Check those files to see available effect names.
+
+---
+
+## UI Box Alignment Flags
+
+**When to use:** Control how UI elements align within their containers.
+
+```lua
+-- Common alignment combinations
+local align_topleft = bit.bor(
+    AlignmentFlag.HORIZONTAL_LEFT,
+    AlignmentFlag.VERTICAL_TOP
+)
+
+local align_center = bit.bor(
+    AlignmentFlag.HORIZONTAL_CENTER,
+    AlignmentFlag.VERTICAL_CENTER
+)
+
+local align_bottomright = bit.bor(
+    AlignmentFlag.HORIZONTAL_RIGHT,
+    AlignmentFlag.VERTICAL_BOTTOM
+)
+
+-- Use in config
+dsl.vbox {
+    config = {
+        align = align_center,
+        padding = 10
+    },
+    children = { ... }
+}
+```
+
+**Available alignment flags:**
+
+- Horizontal: `HORIZONTAL_LEFT`, `HORIZONTAL_CENTER`, `HORIZONTAL_RIGHT`
+- Vertical: `VERTICAL_TOP`, `VERTICAL_CENTER`, `VERTICAL_BOTTOM`
+
+**Real usage example:**
+
+```lua
+-- From core/gameplay.lua:3078
+config = {
+    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+    padding = tooltipStyle.rowPadding
+}
+```
+
+**Gotcha:** Always use `bit.bor()` to combine flags, not `+` or `|`.
+
+**Gotcha:** Alignment affects how children are positioned within the box, not the box itself.
+
+---
+
+## Complete UI Example (Tooltip)
+
+**When to use:** Build a fully-styled tooltip with multiple rows.
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+local bit = require("bit")
+
+function createItemTooltip(item)
+    local rows = {}
+
+    -- Title row
+    table.insert(rows, dsl.hbox {
+        config = { padding = 4 },
+        children = {
+            dsl.anim(item.icon, { w = 32, h = 32 }),
+            dsl.text(item.name, { fontSize = 18, color = "gold" })
+        }
+    })
+
+    -- Stats rows
+    table.insert(rows, dsl.hbox {
+        config = { padding = 2 },
+        children = {
+            dsl.text("Damage:", { fontSize = 14, color = "white" }),
+            dsl.text(tostring(item.damage), { fontSize = 14, color = "red" })
+        }
+    })
+
+    -- Build tooltip
+    local v = dsl.vbox {
+        config = {
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+            color = util.getColor("blackberry"),
+            padding = 8,
+            spacing = 4
+        },
+        children = rows
+    }
+
+    local root = dsl.root {
+        config = {
+            color = util.getColor("black"),
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            padding = 4,
+            outlineThickness = 2,
+            outlineColor = util.getColor("white"),
+            shadow = true
+        },
+        children = { v }
+    }
+
+    -- Spawn at position
+    local boxID = dsl.spawn({ x = 200, y = 200 }, root, "ui", 900)
+
+    -- Finalize
+    ui.box.RenewAlignment(registry, boxID)
+    ui.box.AssignStateTagsToUIBox(boxID, PLANNING_STATE)
+    remove_default_state_tag(boxID)
+
+    return boxID
+end
+```
+
+*— Combined pattern from core/gameplay.lua:3075-3140*
+
+**Gotcha:** Call `ui.box.RenewAlignment()` after spawning to ensure proper layout before rendering.
+
+**Gotcha:** Assign state tags so the UI only appears in the correct game states.
+
+**Gotcha:** Use `remove_default_state_tag()` to prevent the UI from appearing in all states.
+
+---
+
+## UI DSL Color Options
+
+**When to use:** Style UI boxes with colors, outlines, and shadows.
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+dsl.root {
+    config = {
+        color = util.getColor("blackberry"),     -- background color
+        outlineThickness = 2,                    -- border width
+        outlineColor = util.getColor("white"),   -- border color
+        shadow = true,                           -- enable drop shadow
+        padding = 10,
+        -- ... other options
+    },
+    children = { ... }
+}
+```
+
+**Gotcha:** `color` sets the background fill color of the box.
+
+**Gotcha:** `outlineThickness = 0` disables the border.
+
+**Gotcha:** `shadow = true` adds a subtle drop shadow for depth.
+
+---
+
+## Nested Layouts
+
+**When to use:** Build complex UIs with multiple levels of nesting.
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+local ui = dsl.root {
+    config = { padding = 10 },
+    children = {
+        dsl.vbox {
+            config = { spacing = 8 },
+            children = {
+                dsl.text("Player Stats", { fontSize = 20 }),
+                dsl.hbox {
+                    config = { spacing = 4 },
+                    children = {
+                        dsl.text("HP:"),
+                        dsl.text("100", { color = "red" })
+                    }
+                },
+                dsl.hbox {
+                    config = { spacing = 4 },
+                    children = {
+                        dsl.text("MP:"),
+                        dsl.text("50", { color = "blue" })
+                    }
+                },
+                dsl.grid(2, 2, function(r, c)
+                    return dsl.anim("skill_icon", { w = 32, h = 32 })
+                end)
+            }
+        }
+    }
+}
+```
+
+**Gotcha:** Deep nesting can make definitions hard to read. Consider extracting sub-components into local variables:
+
+```lua
+local statsRow = dsl.hbox { ... }
+local skillGrid = dsl.grid(2, 2, ...)
+
+local ui = dsl.root {
+    children = { statsRow, skillGrid }
+}
+```
+
+\newpage

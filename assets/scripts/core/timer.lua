@@ -90,6 +90,7 @@ function timer.after(delay, action, tag, group)
     action = action,
     group = group,
   }
+  return tag
 end
 
 function timer.cooldown(delay, condition, action, times, after, tag, group)
@@ -107,6 +108,7 @@ function timer.cooldown(delay, condition, action, times, after, tag, group)
     multiplier = 1,
     group = group,
   }
+  return tag
 end
 
 function timer.every(delay, action, times, immediate, after, tag, group)
@@ -125,6 +127,73 @@ function timer.every(delay, action, times, immediate, after, tag, group)
     group = group,
   }
   if immediate then action() end
+  return tag
+end
+
+--------------------------------------------------------
+-- Options-Table API (Ergonomic alternatives)
+--------------------------------------------------------
+
+--- Options-table variant of timer.after
+--- @param opts table { delay, action, tag?, group? }
+--- @return string tag The timer tag
+function timer.after_opts(opts)
+    assert(opts.delay, "timer.after_opts: delay required")
+    assert(opts.action, "timer.after_opts: action required")
+    return timer.after(opts.delay, opts.action, opts.tag, opts.group)
+end
+
+--- Options-table variant of timer.every
+--- @param opts table { delay, action, times?, immediate?, after?, tag?, group? }
+--- @return string tag The timer tag
+function timer.every_opts(opts)
+    assert(opts.delay, "timer.every_opts: delay required")
+    assert(opts.action, "timer.every_opts: action required")
+    return timer.every(
+        opts.delay,
+        opts.action,
+        opts.times or 0,
+        opts.immediate or false,
+        opts.after,
+        opts.tag,
+        opts.group
+    )
+end
+
+--- Options-table variant of timer.cooldown
+--- @param opts table { delay, condition, action, times?, after?, tag?, group? }
+--- @return string tag The timer tag
+function timer.cooldown_opts(opts)
+    assert(opts.delay, "timer.cooldown_opts: delay required")
+    assert(opts.condition, "timer.cooldown_opts: condition required")
+    assert(opts.action, "timer.cooldown_opts: action required")
+    return timer.cooldown(
+        opts.delay,
+        opts.condition,
+        opts.action,
+        opts.times or 0,
+        opts.after,
+        opts.tag,
+        opts.group
+    )
+end
+
+--- Options-table variant of timer.for_time
+--- @param opts table { delay, action, after?, tag?, group? }
+--- @return string tag The timer tag
+function timer.for_time_opts(opts)
+    assert(opts.delay, "timer.for_time_opts: delay required")
+    assert(opts.action, "timer.for_time_opts: action required")
+    return timer.for_time(opts.delay, opts.action, opts.after, opts.tag, opts.group)
+end
+
+--- Create a new TimerChain for fluent sequential timing
+--- Convenience wrapper for require("core.timer_chain").new()
+--- @param group string? Optional group name
+--- @return TimerChain
+function timer.sequence(group)
+    local TimerChain = require("core.timer_chain")
+    return TimerChain.new(group)
 end
 
 function timer.every_step(start_delay, end_delay, times, action, immediate, step_method, after, tag, group)
@@ -166,6 +235,7 @@ function timer.for_time(delay, action, after, tag, group)
     after = after or empty_function,
     group = group,
   }
+  return tag
 end
 
 --------------------------------------------------------

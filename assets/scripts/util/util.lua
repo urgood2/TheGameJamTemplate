@@ -3948,3 +3948,19 @@ function util.deep_copy(orig, copies)
 
     return copy
 end
+
+--------------------------------------------------------
+-- GLOBAL EXPORTS
+--------------------------------------------------------
+-- These helpers are used frequently enough to warrant global access.
+-- See CLAUDE.md for documentation on each function.
+
+_G.ensure_entity = ensure_entity
+_G.ensure_scripted_entity = ensure_scripted_entity
+_G.safe_script_get = safe_script_get
+_G.script_field = script_field
+
+-- Re-export getScriptTableFromEntityID (already global, but ensure it)
+if not _G.getScriptTableFromEntityID then
+    _G.getScriptTableFromEntityID = getScriptTableFromEntityID
+end

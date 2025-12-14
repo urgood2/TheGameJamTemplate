@@ -6,6 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill to have a fresh agent review the implementation before considering the work complete.
 
+## Notifications
+
+When you need to notify the user or ask for permission/input, use terminal-notifier:
+
+```bash
+terminal-notifier -title "Claude Code" -message "Your message here"
+```
+
+Use this for:
+- Asking for user input/decisions
+- Notifying completion of long-running tasks
+- Permission requests
+- Any situation where user attention is needed
+
 ## Build Commands
 
 **Prefer incremental builds** to reduce build time. Avoid `just clean` or full rebuilds unless necessary. The build system (CMake) handles incremental compilation automatically.
@@ -470,6 +484,222 @@ Named presets for common configurations:
 - `"sticker"`: stickerPass=true, uvPassthrough=true
 - `"world"`: space=World
 - `"screen"`: space=Screen
+
+---
+
+## Entity Builder API
+
+### Fluent Entity Creation
+
+```lua
+local EntityBuilder = require("core.entity_builder")
+
+-- Full options
+local entity, script = EntityBuilder.create({
+    sprite = "kobold",
+    position = { x = 100, y = 200 },  -- or { 100, 200 }
+    size = { 64, 64 },
+    shadow = true,
+    data = { health = 100, faction = "enemy" },
+    interactive = {
+        hover = { title = "Enemy", body = "A dangerous kobold" },
+        click = function(reg, eid) print("clicked!") end,
+        drag = true,
+        collision = true
+    },
+    state = PLANNING_STATE,
+    shaders = { "3d_skew_holo" }
+})
+
+-- Simple version (just sprite + position)
+local entity = EntityBuilder.simple("kobold", 100, 200, 64, 64)
+
+-- Interactive with hover tooltip
+local entity, script = EntityBuilder.interactive({
+    sprite = "button",
+    position = { 100, 100 },
+    hover = { title = "Click me", body = "Description" },
+    click = function() print("clicked!") end
+})
+```
+
+### EntityBuilder.create Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `sprite` | string | Animation/sprite ID |
+| `position` | table | `{ x, y }` or `{ x = n, y = n }` |
+| `size` | table | `{ w, h }` (default: 32x32) |
+| `shadow` | boolean | Enable shadow (default: false) |
+| `data` | table | Script table data (assigned before attach_ecs) |
+| `interactive` | table | Interaction config (see below) |
+| `state` | string | State tag to add |
+| `shaders` | table | List of shader names |
+
+### Interactive Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `hover` | table | `{ title, body, id? }` for tooltip |
+| `click` | function | onClick callback |
+| `drag` | boolean/function | Enable drag or custom handler |
+| `stopDrag` | function | onStopDrag callback |
+| `collision` | boolean | Enable collision |
+
+---
+
+## Physics Builder API
+
+### Fluent Physics Setup
+
+```lua
+local PhysicsBuilder = require("core.physics_builder")
+
+-- Fluent API
+PhysicsBuilder.for_entity(entity)
+    :circle()                           -- or :rectangle()
+    :tag("projectile")
+    :bullet()                           -- high-speed collision detection
+    :friction(0)
+    :fixedRotation()
+    :syncMode("physics")                -- or "transform"
+    :collideWith({ "enemy", "WORLD" })
+    :apply()
+
+-- Quick setup with options table
+PhysicsBuilder.quick(entity, {
+    shape = "circle",
+    tag = "projectile",
+    bullet = true,
+    collideWith = { "enemy", "WORLD" }
+})
+```
+
+### PhysicsBuilder Methods
+
+| Method | Description |
+|--------|-------------|
+| `:circle()` | Circle collider shape |
+| `:rectangle()` | Rectangle collider shape |
+| `:tag(string)` | Collision tag |
+| `:sensor(bool)` | Is sensor (no physical response) |
+| `:density(number)` | Body density |
+| `:friction(number)` | Surface friction |
+| `:restitution(number)` | Bounciness |
+| `:bullet(bool)` | CCD for fast objects |
+| `:fixedRotation(bool)` | Lock rotation |
+| `:syncMode(string)` | "physics" or "transform" |
+| `:collideWith(table)` | Tags to collide with |
+| `:apply()` | Apply all settings |
+
+---
+
+## Timer Options API
+
+### Options-Table Variants
+
+```lua
+local timer = require("core.timer")
+
+-- Clearer than positional parameters
+timer.after_opts({
+    delay = 2.0,
+    action = function() print("done") end,
+    tag = "my_timer"
+})
+
+timer.every_opts({
+    delay = 0.5,
+    action = updateHealth,
+    times = 10,           -- 0 = infinite
+    immediate = true,     -- run once immediately
+    tag = "health_update"
+})
+
+timer.cooldown_opts({
+    delay = 1.0,
+    condition = function() return canAttack end,
+    action = doAttack,
+    tag = "attack_cd"
+})
+```
+
+### Timer Sequences (Fluent Chaining)
+
+```lua
+-- Avoid nested timer.after calls
+timer.sequence("animation")
+    :wait(0.5)
+    :do_now(function() print("start") end)
+    :wait(0.3)
+    :do_now(function() print("middle") end)
+    :wait(0.2)
+    :do_now(function() print("end") end)
+    :onComplete(function() print("done!") end)
+    :start()
+```
+
+---
+
+## Global Helper Functions
+
+These functions are available globally after util.lua loads:
+
+```lua
+-- Entity validation (use instead of manual nil checks)
+if ensure_entity(eid) then
+    -- entity is valid
+end
+
+if ensure_scripted_entity(eid) then
+    -- entity is valid AND has ScriptComponent
+end
+
+-- Safe script access
+local script = safe_script_get(eid)           -- returns nil if missing
+local script = safe_script_get(eid, true)     -- logs warning if missing
+
+-- Safe field access with default
+local health = script_field(eid, "health", 100)  -- returns 100 if missing
+```
+
+### Replace This Pattern
+
+```lua
+-- OLD (verbose)
+if not entity or entity == entt_null or not entity_cache.valid(entity) then
+    return
+end
+
+-- NEW (use the helper!)
+if not ensure_entity(entity) then return end
+```
+
+---
+
+## Imports Bundle
+
+Reduce repetitive requires with bundled imports:
+
+```lua
+local imports = require("core.imports")
+
+-- Core bundle (most common set)
+local component_cache, entity_cache, timer, signal, z_orders = imports.core()
+
+-- Entity creation
+local Node, animation_system, EntityBuilder = imports.entity()
+
+-- Physics
+local PhysicsManager, PhysicsBuilder = imports.physics()
+
+-- UI
+local dsl, z_orders, util = imports.ui()
+
+-- Everything as a table
+local i = imports.all()
+print(i.timer, i.EntityBuilder, i.signal)
+```
 
 ---
 

@@ -58,6 +58,19 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
     // ---------------------------------------------------------
     // redirect the output of the console to the game log
     // This is not perfect, and it changes the default logger in the middle of everything so i don't know if it's a good idea
+
+    namespace {
+        std::string escape_lua_string(const std::string& s) {
+            std::string result;
+            for (char c : s) {
+                if (c == '\'') result += "\\'";
+                else if (c == '\\') result += "\\\\";
+                else result += c;
+            }
+            return result;
+        }
+    }
+
     auto initConsole() -> void
     {
 
@@ -285,6 +298,139 @@ static ImU32 LerpColor(ImU32 c1, ImU32 c2, float t) {
                 sol::error err = result;
                 consolePtr->System().Log(csys::ItemType::ERROR) << "Lua Error: " << err.what() << csys::endl;
             } });
+
+        // Spawn command - spawn entities at cursor (defaults to mouse position)
+        consolePtr->System().RegisterCommand("spawn",
+            "Spawns an entity at mouse. Usage: spawn <type> <preset>. Types: enemy, projectile, pickup, effect",
+            [](const std::string& type, const std::string& preset) {
+                std::string lua_code = "local spawn = require('core.spawn'); ";
+                lua_code += "local x, y = globals.mouseX or 0, globals.mouseY or 0; ";
+                std::string escaped_preset = escape_lua_string(preset);
+
+                if (type == "enemy") {
+                    lua_code += "return spawn.enemy('" + escaped_preset + "', x, y)";
+                } else if (type == "projectile") {
+                    lua_code += "return spawn.projectile('" + escaped_preset + "', x, y)";
+                } else if (type == "pickup") {
+                    lua_code += "return spawn.pickup('" + escaped_preset + "', x, y)";
+                } else if (type == "effect") {
+                    lua_code += "return spawn.effect('" + escaped_preset + "', x, y)";
+                } else {
+                    consolePtr->System().Log(csys::ItemType::ERROR) << "Unknown spawn type: " << type << csys::endl;
+                    return;
+                }
+
+                try {
+                    auto result = ai_system::masterStateLua.script(lua_code);
+                    if (result.valid()) {
+                        consolePtr->System().Log(csys::ItemType::INFO) << "Spawned " << type << " '" << preset << "'" << csys::endl;
+                    }
+                } catch (const std::exception& e) {
+                    consolePtr->System().Log(csys::ItemType::ERROR) << "Spawn error: " << e.what() << csys::endl;
+                }
+            },
+            csys::Arg<csys::String>("type"),
+            csys::Arg<csys::String>("preset")
+        );
+
+        // Stat command - modify player stats
+        consolePtr->System().RegisterCommand("stat",
+            "Modify player stat. Usage: stat <name> <value> OR stat <name> +<delta>",
+            [](const std::string& stat_name, const std::string& value_str) {
+                std::string escaped_stat_name = escape_lua_string(stat_name);
+                std::string escaped_value_str = escape_lua_string(value_str);
+                std::string lua_code;
+                if (!value_str.empty() && (value_str[0] == '+' || value_str[0] == '-')) {
+                    lua_code = "if globals.player and globals.player.stats then "
+                               "globals.player.stats:add_base('" + escaped_stat_name + "', " + escaped_value_str + "); "
+                               "return tostring(globals.player.stats:get('" + escaped_stat_name + "')) end";
+                } else {
+                    lua_code = "if globals.player and globals.player.stats then "
+                               "local raw = globals.player.stats:get_raw('" + escaped_stat_name + "'); "
+                               "if raw then raw.base = " + escaped_value_str + "; end; "
+                               "return tostring(globals.player.stats:get('" + escaped_stat_name + "')) end";
+                }
+
+                try {
+                    auto result = ai_system::masterStateLua.script(lua_code);
+                    if (result.valid()) {
+                        consolePtr->System().Log(csys::ItemType::INFO)
+                            << stat_name << " = " << result.get<std::string>() << csys::endl;
+                    }
+                } catch (const std::exception& e) {
+                    consolePtr->System().Log(csys::ItemType::ERROR) << "Stat error: " << e.what() << csys::endl;
+                }
+            },
+            csys::Arg<csys::String>("stat_name"),
+            csys::Arg<csys::String>("value")
+        );
+
+        // Heal command (full heal, no parameters)
+        consolePtr->System().RegisterCommand("heal",
+            "Heal player to full. Usage: heal",
+            []() {
+                std::string lua_code = "if globals.player_state then "
+                                       "globals.player_state.health = globals.player_state.max_health; "
+                                       "return 'Full heal' end";
+
+                try {
+                    auto result = ai_system::masterStateLua.script(lua_code);
+                    consolePtr->System().Log(csys::ItemType::INFO) << "Healed: " << result.get<std::string>() << csys::endl;
+                } catch (const std::exception& e) {
+                    consolePtr->System().Log(csys::ItemType::ERROR) << e.what() << csys::endl;
+                }
+            }
+        );
+
+        // Gold command
+        consolePtr->System().RegisterCommand("gold",
+            "Add gold. Usage: gold <amount>",
+            [](int amount) {
+                std::string lua_code = "globals.currency = (globals.currency or 0) + " +
+                                       std::to_string(amount) + "; return globals.currency";
+                try {
+                    auto result = ai_system::masterStateLua.script(lua_code);
+                    consolePtr->System().Log(csys::ItemType::INFO) << "Gold: " << result.get<int>() << csys::endl;
+                } catch (const std::exception& e) {
+                    consolePtr->System().Log(csys::ItemType::ERROR) << e.what() << csys::endl;
+                }
+            },
+            csys::Arg<int>("amount")
+        );
+
+        // Joker add command
+        consolePtr->System().RegisterCommand("joker",
+            "Add/remove joker. Usage: joker <action> <id>. Actions: add, remove, list (list needs no id)",
+            [](const std::string& action, const std::string& joker_id) {
+                std::string escaped_joker_id = escape_lua_string(joker_id);
+                std::string lua_code;
+                if (action == "add") {
+                    lua_code = "local js = require('wand.joker_system'); "
+                               "if js.add_joker then js.add_joker('" + escaped_joker_id + "'); return 'Added' end";
+                } else if (action == "remove") {
+                    lua_code = "local js = require('wand.joker_system'); "
+                               "if js.remove_joker then js.remove_joker('" + escaped_joker_id + "'); return 'Removed' end";
+                } else if (action == "list") {
+                    lua_code = "local js = require('wand.joker_system'); "
+                               "local result = ''; "
+                               "if js.jokers then for _, j in ipairs(js.jokers) do "
+                               "result = result .. j.id .. ', ' end end; "
+                               "return result ~= '' and result or 'No active jokers'";
+                } else {
+                    consolePtr->System().Log(csys::ItemType::ERROR) << "Unknown action: " << action << csys::endl;
+                    return;
+                }
+
+                try {
+                    auto result = ai_system::masterStateLua.script(lua_code);
+                    consolePtr->System().Log(csys::ItemType::INFO) << result.get<std::string>() << csys::endl;
+                } catch (const std::exception& e) {
+                    consolePtr->System().Log(csys::ItemType::ERROR) << e.what() << csys::endl;
+                }
+            },
+            csys::Arg<csys::String>("action"),
+            csys::Arg<csys::String>("joker_id")
+        );
     }
 
     // ---------------------------------------------------------

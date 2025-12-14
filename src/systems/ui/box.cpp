@@ -582,6 +582,14 @@ namespace ui
             }
 
             auto alignmentFlags = uiConfig.alignmentFlags.value();
+
+            // Check for conflicting alignment flags
+            std::string conflictDesc;
+            if (hasConflictingAlignmentFlags(alignmentFlags, &conflictDesc)) {
+                spdlog::warn("[UI] Conflicting alignment flags on entity {}: {}",
+                             static_cast<uint32_t>(entity), conflictDesc);
+            }
+
             std::string alignmentString = "";
             if (alignmentFlags & transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                 alignmentString += "VERTICAL_CENTER ";

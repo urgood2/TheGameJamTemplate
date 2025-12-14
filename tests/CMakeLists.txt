@@ -50,6 +50,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/physics/physics_world.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
 )
 
 target_include_directories(unit_tests PRIVATE

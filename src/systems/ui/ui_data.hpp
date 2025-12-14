@@ -976,6 +976,9 @@ namespace ui
                    transform::GameObject,
                    transform::Transform
                  >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>)) globalUIGroup;
-    
-    
+
+    // Detect conflicting alignment flags (e.g., VERTICAL_CENTER | VERTICAL_BOTTOM)
+    // Returns true if conflicts exist, optionally fills conflictDescription with details
+    bool hasConflictingAlignmentFlags(int flags, std::string* conflictDescription = nullptr);
+
 }

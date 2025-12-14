@@ -52,6 +52,17 @@ just watch-sprites
 
 The watcher monitors `assets/auto_export_assets.aseprite` and automatically runs `just update-sprites` when the file is saved (with 2-second debounce).
 
+### VS Code Auto-Start
+
+The sprite watcher starts automatically when you open the workspace in VS Code. This is configured via `.vscode/tasks.json` with `runOn: folderOpen`.
+
+**First-time setup:** VS Code will prompt "This workspace has tasks that run on folder open. Do you want to allow them to run?" — click **Allow and Run**.
+
+**Manual control:**
+- Stop: Click trash icon on the "Watch Sprites" terminal tab
+- Start: `Cmd+Shift+P` → "Tasks: Run Task" → "Watch Sprites"
+- View output: Check the "Watch Sprites" tab in Terminal panel
+
 ## Layer Naming Rules
 
 - Layer names become sprite identifiers (e.g., layer "player_idle" → sprite "player_idle")

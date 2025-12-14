@@ -4418,3 +4418,570 @@ end)
 **Gotcha:** `targetsHit` tracking requires script table on projectile entity.
 
 \newpage
+
+# Chapter 8: AI System
+
+The AI system uses GOAP (Goal-Oriented Action Planning) with:
+- **Entity types**: Define initial worldstate and goal state
+- **Blackboard**: Per-entity storage for AI state (hunger, health, cooldowns)
+- **Actions**: Reusable behaviors with preconditions, postconditions, and execution logic
+- **Goal selectors**: Choose current goal based on worldstate (desire, veto, hysteresis)
+- **Worldstate updaters**: Update worldstate from blackboard/sensory data each frame
+
+## Define AI Entity Type
+
+\label{recipe:ai-entity-type}
+
+**When to use:** Create a new AI archetype with initial worldstate and default goal.
+
+```lua
+-- File: assets/scripts/ai/entity_types/gold_digger.lua
+return {
+    initial = {
+        hungry = true,
+        enemyvisible = false,
+        resourceAvailable = false,
+        underAttack = false,
+        candigforgold = true  -- can dig for gold
+    },
+    goal = {
+        hungry = false  -- default goal: satisfy hunger
+    }
+}
+```
+
+*— Pattern from ai/entity_types/gold_digger.lua*
+
+**Gotcha:** `initial` defines the starting worldstate atoms (all boolean or comparable values).
+
+**Gotcha:** `goal` defines the default target state for GOAP planner.
+
+**Gotcha:** Entity type filename must match the ID used when spawning AI entities.
+
+---
+
+## Initialize AI Blackboard
+
+\label{recipe:ai-blackboard-init}
+
+**When to use:** Set up entity-specific AI state (hunger, health, timers).
+
+```lua
+-- File: assets/scripts/ai/blackboard_init/healer.lua
+return function(entity)
+    local bb = ai.get_blackboard(entity)
+
+    -- Set initial values
+    bb:set_float("hunger", 0.5)
+    bb:set_float("health", 5)
+    bb:set_float("max_health", 10)
+    bb:set_float("last_heal_time", 0)
+
+    log_debug("Blackboard initialized for healer entity: " .. tostring(entity))
+end
+```
+
+*— Pattern from ai/blackboard_init/healer.lua*
+
+**Gotcha:** Blackboard uses typed setters: `set_float()`, `set_int()`, `set_string()`, `set_bool()`.
+
+**Gotcha:** This function is called once when the AI entity is created.
+
+**Gotcha:** Use global helpers like `setBlackboardFloat(entity, "hunger", 0.5)` for convenience.
+
+---
+
+## Define AI Action
+
+\label{recipe:ai-action}
+
+**When to use:** Create reusable AI behavior (wander, attack, heal).
+
+```lua
+-- File: assets/scripts/ai/actions/eat.lua
+return {
+    name = "eat",
+    cost = 1,  -- GOAP planning cost (lower = preferred)
+
+    -- Preconditions: when this action is available
+    pre = { hungry = true },
+
+    -- Postconditions: worldstate after action completes
+    post = { hungry = false },
+
+    -- Called once when action starts
+    start = function(e)
+        log_debug("Entity", e, "is eating.")
+    end,
+
+    -- Called each frame while action runs
+    -- Must return ActionResult.SUCCESS, RUNNING, or FAILURE
+    update = function(e, dt)
+        log_debug("Entity", e, "eat update.")
+        wait(1.0)  -- coroutine: wait 1 second
+
+        local bb = ai.get_blackboard(e)
+        bb:set_float("hunger", bb:get_float("hunger") + 0.5)
+
+        return ActionResult.SUCCESS
+    end,
+
+    -- Called once when action completes
+    finish = function(e)
+        log_debug("Done eating: entity", e)
+    end
+}
+```
+
+*— Pattern from ai/actions/eat.lua*
+
+**Gotcha:** Action `name` must be unique (used for GOAP planning).
+
+**Gotcha:** `update()` can use `wait()`, `coroutine.yield()`, or return immediately.
+
+**Gotcha:** Preconditions/postconditions are matched against worldstate, not blackboard.
+
+---
+
+## AI Action with Coroutine
+
+\label{recipe:ai-action-coroutine}
+
+**When to use:** Long-running AI behavior (wander to location, cast spell).
+
+```lua
+-- File: assets/scripts/ai/actions/wander.lua
+return {
+    name = "wander",
+    cost = 5,  -- higher cost = less preferred
+    pre = { wander = false },
+    post = { wander = true },
+
+    start = function(e)
+        log_debug("Entity", e, "is wandering.")
+    end,
+
+    update = function(e, dt)
+        log_debug("Entity", e, "wander update.")
+        wait(1.0)
+
+        -- Pick random destination
+        local goalLoc = Vec2(
+            random_utils.random_float(0, globals.screenWidth()),
+            random_utils.random_float(0, globals.screenHeight())
+        )
+
+        -- Start walk animation
+        startEntityWalkMotion(e)
+
+        -- Loop until destination reached
+        while true do
+            if moveEntityTowardGoalOneIncrement(e, goalLoc, dt) == false then
+                log_debug("Entity", e, "has reached the wander target location.")
+                break
+            end
+        end
+
+        return ActionResult.SUCCESS
+    end,
+
+    finish = function(e)
+        log_debug("Done wandering: entity", e)
+    end
+}
+```
+
+*— Pattern from ai/actions/wander.lua*
+
+**Gotcha:** Use `while true` loops with `coroutine.yield()` or engine helpers for multi-frame behavior.
+
+**Gotcha:** Higher `cost` makes action less desirable in GOAP planning.
+
+---
+
+## AI Action with Abort
+
+\label{recipe:ai-action-abort}
+
+**When to use:** Action that watches worldstate and aborts if conditions change.
+
+```lua
+-- File: assets/scripts/ai/actions/dig_for_gold.lua
+return {
+    name = "digforgold",
+    cost = 1,
+    pre = { candigforgold = true },
+    post = { candigforgold = false },
+
+    -- React to worldstate changes (abort if these atoms change)
+    watch = { "hungry", "duplicator_available", "underAttack" },
+
+    start = function(e)
+        log_debug("Entity", e, "is digging for gold.")
+    end,
+
+    update = function(e, dt)
+        log_debug("Entity", e, "dig update.")
+
+        local doneDigging = false
+
+        -- Shake animation with particles
+        timer.every(0.5,
+            function()
+                if not registry:valid(e) or e == entt_null then
+                    log_debug("Entity", e, "is no longer valid, stopping dig action.")
+                    return ActionResult.FAILURE
+                end
+
+                local transform = registry:get(e, Transform)
+                local offsetX = math.sin(os.clock() * 10) * 30
+                transform.visualX = transform.visualX + offsetX
+
+                playSoundEffect("effects", "dig-sound")
+                spawnCircularBurstParticles(
+                    transform.visualX + transform.visualW / 2,
+                    transform.visualY + transform.visualH / 2,
+                    3, 0.5
+                )
+            end,
+            5,    -- 5 times
+            true, -- immediate
+            function() doneDigging = true end
+        )
+
+        -- Wait for animation
+        while true do
+            if doneDigging then break
+            else coroutine.yield() end
+        end
+
+        -- Spawn gold coin, play effects...
+        setBlackboardFloat(e, "last_dig_time", GetTime())
+
+        return ActionResult.SUCCESS
+    end,
+
+    finish = function(e)
+        log_debug("Done digging: entity", e)
+    end,
+
+    -- Called when planner aborts this action mid-run
+    abort = function(e, reason)
+        log_debug("digforgold abort on", e, "reason:", tostring(reason))
+        -- Stop timers, clear particles, unlock resources, etc.
+    end,
+}
+```
+
+*— Pattern from ai/actions/dig_for_gold.lua*
+
+**Gotcha:** `watch` defines worldstate atoms that trigger abort if changed mid-action.
+
+**Gotcha:** `abort()` must clean up timers, particles, and any resources the action acquired.
+
+**Gotcha:** Use `watch = "*"` to react to any worldstate change.
+
+---
+
+## Define Goal Selector
+
+\label{recipe:ai-goal-selector}
+
+**When to use:** Choose which goal the AI should pursue based on worldstate.
+
+```lua
+-- File: assets/scripts/ai/goal_selectors/healer.lua
+return function(entity)
+    if ai.get_worldstate(entity, "canhealother") then
+        ai.set_goal(entity, { canhealother = false })  -- use heal_other action
+    else
+        ai.set_goal(entity, { wander = true })  -- use wander action (idle)
+    end
+end
+```
+
+*— Pattern from ai/goal_selectors/healer.lua*
+
+**Gotcha:** Goal selector runs each frame to pick the current goal dynamically.
+
+**Gotcha:** Call `ai.set_goal()` with the target worldstate (GOAP planner finds actions to reach it).
+
+**Gotcha:** Simple selectors use if/else logic; complex selectors use desire + hysteresis.
+
+---
+
+## Goal Selector with Engine
+
+\label{recipe:ai-goal-selector-engine}
+
+**When to use:** Advanced goal selection with desire functions, hysteresis, and band arbitration.
+
+```lua
+-- File: assets/scripts/ai/goal_selectors/gold_digger.lua
+local selector = require("ai.goal_selector_engine")
+
+return function(e)
+    local def = ai.get_entity_ai_def(e)
+
+    -- Use shared policy/goals by default
+    def.policy = def.policy or ai.policy
+    def.goals  = def.goals  or ai.goals
+
+    -- (Optional) Per-type tweaks:
+    -- def.policy.band_rank = { COMBAT=4, SURVIVAL=3, WORK=3, IDLE=1 }
+    -- def.goals.DIG_FOR_GOLD.persist = 0.10
+
+    log_debug("Gold Digger Goal Selector for entity " .. tostring(e))
+
+    selector.select_and_apply(e)
+end
+```
+
+*— Pattern from ai/goal_selectors/gold_digger.lua*
+
+**Global goal definitions (from ai/init.lua):**
+
+```lua
+ai.policy = {
+    band_rank = { COMBAT=4, SURVIVAL=3, WORK=2, IDLE=1 }
+}
+
+ai.goals = {
+    DIG_FOR_GOLD = {
+        band = "WORK",
+        persist = 0.08,  -- hysteresis: stick to current goal
+
+        -- Desire function: 0.0 = no desire, 1.0 = max desire
+        desire = function(e, S)
+            return ai.get_worldstate(e, "candigforgold") and 1.0 or 0.0
+        end,
+
+        -- Veto function: return true to block this goal
+        veto = function(e, S)
+            -- return ai.get_worldstate(e, "underAttack")
+        end,
+
+        -- Apply goal: set target worldstate
+        on_apply = function(e)
+            ai.set_goal(e, { candigforgold = false })
+        end
+    },
+
+    WANDER = {
+        band = "IDLE",
+        persist = 0.05,
+        desire = function(e, S) return 0.2 end,
+        on_apply = function(e)
+            ai.patch_worldstate(e, "wander", false)  -- clear sticky toggle
+            ai.set_goal(e, { wander = true })
+        end
+    },
+}
+```
+
+*— Pattern from ai/init.lua*
+
+**Gotcha:** `persist` adds hysteresis (prevents goal thrashing by boosting current goal's desire).
+
+**Gotcha:** `band_rank` prioritizes goal categories (COMBAT > SURVIVAL > WORK > IDLE).
+
+**Gotcha:** Higher-ranked bands can override if their desire is >= 0.4.
+
+---
+
+## Define Worldstate Updater
+
+\label{recipe:ai-worldstate-updater}
+
+**When to use:** Update worldstate from blackboard or sensory data each frame.
+
+```lua
+-- File: assets/scripts/ai/worldstate_updaters.lua
+return {
+    hunger_check = function(entity, dt)
+        local bb = ai.get_blackboard(entity)
+
+        if not bb:contains("hunger") then
+            log_debug("Hunger key not found in blackboard for entity: " .. tostring(entity))
+            return
+        end
+
+        local hunger = bb:get_float("hunger")
+        bb:set_float("hunger", hunger - dt * 0.01)  -- decrement over time
+
+        if hunger < 0 then hunger = 0 end
+
+        if hunger < 0.3 then
+            ai.set_worldstate(entity, "hungry", true)
+            log_debug("Entity " .. tostring(entity) .. " is hungry.")
+        end
+    end,
+
+    can_heal_other = function(entity, dt)
+        if not blackboardContains(entity, "last_heal_time") then return end
+
+        local heal_time = getBlackboardFloat(entity, "last_heal_time")
+        local heal_cooldown = findInTable(globals.creature_defs, "id", "healer").heal_cooldown_seconds or 10
+
+        if (GetTime() - heal_time) < heal_cooldown then
+            ai.set_worldstate(entity, "canhealother", false)
+            log_debug("can_heal_other: Entity " .. tostring(entity) .. " cannot heal yet.")
+        else
+            ai.set_worldstate(entity, "canhealother", true)
+            log_debug("can_heal_other: Entity " .. tostring(entity) .. " can heal now.")
+        end
+    end,
+
+    can_dig_for_gold = function(entity, dt)
+        if not blackboardContains(entity, "last_dig_time") then return end
+
+        local dig_time = getBlackboardFloat(entity, "last_dig_time")
+        local dig_cooldown = findInTable(globals.creature_defs, "id", "gold_digger").dig_cooldown_seconds or 10
+
+        if (GetTime() - dig_time) < dig_cooldown then
+            ai.set_worldstate(entity, "candigforgold", false)
+            log_debug("can_dig_for_gold: Entity " .. tostring(entity) .. " cannot dig for gold yet.")
+        else
+            ai.set_worldstate(entity, "candigforgold", true)
+            log_debug("can_dig_for_gold: Entity " .. tostring(entity) .. " can dig for gold now.")
+        end
+    end,
+}
+```
+
+*— Pattern from ai/worldstate_updaters.lua*
+
+**Gotcha:** Worldstate updaters run every frame for each AI entity.
+
+**Gotcha:** Use `ai.set_worldstate(entity, "atom", value)` to update worldstate atoms.
+
+**Gotcha:** Blackboard stores continuous values (hunger, health); worldstate stores discrete atoms (hungry = true/false).
+
+---
+
+## AI System Flow
+
+\label{recipe:ai-system-flow}
+
+**When to use:** Understand how the AI system executes each frame.
+
+**Frame-by-frame execution:**
+
+1. **Worldstate updaters** run (update worldstate from blackboard/sensory data)
+2. **Goal selector** runs (choose current goal based on worldstate)
+3. **GOAP planner** finds action sequence to reach goal (if needed)
+4. **Current action** `update()` runs (executes behavior, returns SUCCESS/RUNNING/FAILURE)
+5. **Action completes** → postconditions applied to worldstate → next action starts
+6. **Worldstate change detected** (if action has `watch` list) → abort current action → replan
+
+**Example flow for gold_digger:**
+
+```
+Frame 1:
+  - worldstate_updaters.can_dig_for_gold() sets candigforgold=true (cooldown expired)
+  - goal_selector sets goal { candigforgold = false }
+  - GOAP planner finds action "digforgold" (pre: candigforgold=true, post: candigforgold=false)
+  - Action "digforgold" start() called
+
+Frames 2-50:
+  - Action "digforgold" update() runs (coroutine yields each frame)
+  - Shake animation, particles, sound effects
+
+Frame 51:
+  - Action "digforgold" update() returns ActionResult.SUCCESS
+  - Action "digforgold" finish() called
+  - Postcondition applied: candigforgold=false
+  - GOAP planner has no more actions → goal reached
+
+Frame 52:
+  - worldstate_updaters.can_dig_for_gold() sets candigforgold=false (cooldown active)
+  - goal_selector sets goal { wander = true } (fallback to IDLE)
+  - GOAP planner finds action "wander"
+  - Action "wander" start() called
+```
+
+**Gotcha:** If worldstate changes mid-action (e.g., `hungry` becomes true while digging), action is aborted and replanned.
+
+**Gotcha:** Actions with `watch = "*"` abort on any worldstate change; `watch = { "hungry" }` aborts only if `hungry` changes.
+
+---
+
+## AI API Reference
+
+\label{recipe:ai-api}
+
+**When to use:** Quick reference for AI system functions.
+
+**Blackboard API:**
+
+```lua
+-- C++ API (typed)
+local bb = ai.get_blackboard(entity)
+bb:set_float("hunger", 0.5)
+bb:set_int("gold", 100)
+bb:set_string("target", "enemy_123")
+bb:set_bool("alert", true)
+
+local hunger = bb:get_float("hunger")
+local gold = bb:get_int("gold")
+local target = bb:get_string("target")
+local alert = bb:get_bool("alert")
+
+local hasHunger = bb:contains("hunger")
+
+-- Lua helpers (use these for convenience)
+setBlackboardFloat(entity, "hunger", 0.5)
+setBlackboardInt(entity, "gold", 100)
+setBlackboardString(entity, "target", "enemy_123")
+
+local hunger = getBlackboardFloat(entity, "hunger")
+local gold = getBlackboardInt(entity, "gold")
+local target = getBlackboardString(entity, "target")
+
+local hasHunger = blackboardContains(entity, "hunger")
+```
+
+**Worldstate API:**
+
+```lua
+-- Set worldstate atom
+ai.set_worldstate(entity, "hungry", true)
+ai.set_worldstate(entity, "candigforgold", false)
+
+-- Get worldstate atom
+local hungry = ai.get_worldstate(entity, "hungry")
+local canDig = ai.get_worldstate(entity, "candigforgold")
+
+-- Patch worldstate (update without replacing entire state)
+ai.patch_worldstate(entity, "wander", false)
+
+-- Set goal (target worldstate for GOAP planner)
+ai.set_goal(entity, { hungry = false })
+ai.set_goal(entity, { candigforgold = false, wander = true })
+```
+
+**Entity definition API:**
+
+```lua
+-- Get entity's AI definition (per-entity table with policy/goals)
+local def = ai.get_entity_ai_def(entity)
+
+-- Customize per-entity policy/goals
+def.policy = { band_rank = { COMBAT=4, SURVIVAL=3, WORK=2, IDLE=1 } }
+def.goals = ai.goals  -- use shared goals
+def.goals.DIG_FOR_GOLD.persist = 0.15  -- increase hysteresis for this entity
+```
+
+**Action result enums:**
+
+```lua
+return ActionResult.SUCCESS   -- action completed successfully
+return ActionResult.RUNNING   -- action still in progress
+return ActionResult.FAILURE   -- action failed
+```
+
+**Gotcha:** Blackboard stores entity-specific data; worldstate stores planner-visible atoms.
+
+**Gotcha:** Goal selector runs every frame; GOAP planner runs only when goal changes or action completes.
+
+\newpage

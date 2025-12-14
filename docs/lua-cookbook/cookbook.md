@@ -4985,3 +4985,803 @@ return ActionResult.FAILURE   -- action failed
 **Gotcha:** Goal selector runs every frame; GOAP planner runs only when goal changes or action completes.
 
 \newpage
+
+# Chapter 9: Data Definitions
+
+\label{chapter:data-definitions}
+
+This chapter documents the structure of centralized data files that define game content: cards, jokers, projectiles, avatars, and shader presets. All data files are located in `assets/scripts/data/`.
+
+**Key Principles:**
+
+- **Centralized registry**: Each data file exports a single table containing all definitions
+- **ID consistency**: Table keys must match the `id` field
+- **Tag-based synergies**: Tags enable joker bonuses and tag threshold synergies
+- **Extensibility**: Custom fields are allowed; validator only checks critical fields
+
+**Validation:**
+
+Use `assets/scripts/tools/content_validator.lua` to validate all content:
+
+```lua
+-- Standalone validation
+dofile("assets/scripts/tools/content_validator.lua")
+
+-- Runtime validation (warnings only)
+local ContentValidator = require("tools.content_validator")
+ContentValidator.validate_all(true)
+```
+
+---
+
+## Define Action Card
+
+\label{recipe:define-action-card}
+
+**When to use:** Adding a new spell that casts projectiles or creates effects.
+
+**Pattern:** Action cards define projectiles, AoE effects, and hazards. They are the "casting" portion of a wand.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/cards.lua
+
+Cards.MY_FIREBALL = {
+    -- Required fields
+    id = "MY_FIREBALL",              -- Must match table key
+    type = "action",                  -- "action", "modifier", or "trigger"
+    mana_cost = 12,
+    tags = { "Fire", "Projectile" },
+    test_label = "MY\nfireball",     -- Display label (use \n for line breaks)
+
+    -- Action-specific fields
+    damage = 25,
+    damage_type = "fire",            -- fire/ice/lightning/poison/arcane/holy/void/magic
+    projectile_speed = 400,
+    lifetime = 2000,                 -- ms
+    radius_of_effect = 50,           -- 0 = no AoE
+
+    -- Optional fields
+    spread_angle = 0,                -- Degrees for spread shots
+    cast_delay = 0,                  -- ms delay before cast
+    homing_strength = 0,             -- 0-15 for homing
+    ricochet_count = 0,              -- Bounces
+    max_uses = -1,                   -- -1 = infinite
+    weight = 1,                      -- Spawn weight for random generation
+}
+```
+
+**Action card fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier (must match table key) |
+| `type` | string | "action" |
+| `mana_cost` | number | Mana cost to cast |
+| `tags` | table | Tag list for joker synergies |
+| `test_label` | string | Display label (use `\n` for line breaks) |
+| `damage` | number | Base damage |
+| `damage_type` | string | fire/ice/lightning/poison/arcane/holy/void/magic |
+| `projectile_speed` | number | Projectile velocity |
+| `lifetime` | number | Projectile lifetime in milliseconds |
+| `radius_of_effect` | number | AoE radius (0 = no AoE) |
+| `spread_angle` | number | Degrees for spread shots |
+| `cast_delay` | number | Milliseconds delay before cast |
+| `homing_strength` | number | 0-15 for homing behavior |
+| `ricochet_count` | number | Number of bounces |
+| `max_uses` | number | -1 = infinite, N = limited uses |
+| `weight` | number | Spawn weight for random generation |
+| `timer_ms` | number | Timer trigger interval (for timed effects) |
+
+**Provenance:** See `assets/scripts/data/cards.lua:15-42` for template, `cards.lua:60-102` for complete example.
+
+**Gotcha:** `id` field must match table key. Validator warns if they don't match.
+
+**Gotcha:** `test_label` uses `\n` for line breaks, not literal newlines.
+
+**Gotcha:** `radius_of_effect = 0` means no AoE; set to positive value for area damage.
+
+---
+
+## Define Modifier Card
+
+\label{recipe:define-modifier-card}
+
+**When to use:** Adding modifiers that affect subsequent action cards in the wand.
+
+**Pattern:** Modifier cards apply buffs/debuffs to actions that follow them in the wand sequence.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/cards.lua
+
+Cards.MOD_DAMAGE_UP = {
+    id = "MOD_DAMAGE_UP",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 6,
+
+    -- Modifier fields (additive bonuses)
+    damage_modifier = 10,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 5,
+
+    -- Modifier behavior
+    multicast_count = 1,         -- How many times to cast next action
+    revisit_limit = 2,           -- How many actions this modifier affects
+
+    weight = 2,
+    tags = { "Buff", "Brute" },
+    test_label = "MOD\ndamage\nup",
+}
+```
+
+**Modifier card fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier (must match table key) |
+| `type` | string | "modifier" |
+| `mana_cost` | number | Mana cost to cast |
+| `tags` | table | Tag list for joker synergies |
+| `test_label` | string | Display label |
+| `damage_modifier` | number | Additive damage bonus |
+| `spread_modifier` | number | Additive spread bonus (negative = tighter) |
+| `speed_modifier` | number | Additive speed multiplier |
+| `lifetime_modifier` | number | Additive lifetime multiplier |
+| `critical_hit_chance_modifier` | number | Additive crit chance % |
+| `seek_strength` | number | Homing strength (0-15) |
+| `multicast_count` | number | How many times to cast next action |
+| `revisit_limit` | number | How many actions this modifier affects |
+| `teleport_cast_from_enemy` | boolean | Cast from nearest enemy position |
+| `health_sacrifice_ratio` | number | % of health to sacrifice |
+| `damage_bonus_ratio` | number | Damage bonus per sacrificed health |
+| `wand_refresh` | boolean | Reset wand to beginning |
+
+**Provenance:** See `assets/scripts/data/cards.lua:302-395` for examples.
+
+**Gotcha:** Modifiers apply to the next `revisit_limit` actions in the wand sequence.
+
+**Gotcha:** `multicast_count` repeats the next action N times (simultaneous or looped, depending on avatar).
+
+---
+
+## Define Trigger Card
+
+\label{recipe:define-trigger-card}
+
+**When to use:** Adding trigger conditions that auto-cast wands.
+
+**Pattern:** Trigger cards define when a wand should automatically cast (e.g., every N seconds, on hit).
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/cards.lua
+
+Cards.TRIGGER_TIMER = {
+    id = "every_N_seconds",
+    type = "trigger",
+    max_uses = -1,
+    mana_cost = 0,
+    weight = 0,
+    tags = {},
+    description = "Casts spells automatically every few seconds",
+
+    -- Trigger-specific fields
+    trigger_interval = 2.0,      -- Seconds between auto-casts
+    trigger_event = "timer",     -- "timer", "on_hit", "on_kill", etc.
+}
+```
+
+**Trigger card fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `type` | string | "trigger" |
+| `mana_cost` | number | Mana cost (usually 0) |
+| `tags` | table | Tag list |
+| `description` | string | Human-readable description |
+| `trigger_interval` | number | Seconds between auto-casts |
+| `trigger_event` | string | "timer", "on_hit", "on_kill", etc. |
+
+**Provenance:** See `assets/scripts/data/cards.lua:945-965` for examples.
+
+**Gotcha:** Trigger cards are typically assigned to wands, not directly cast.
+
+---
+
+## Define Joker
+
+\label{recipe:define-joker}
+
+**When to use:** Adding passive artifacts that modify gameplay rules or provide bonuses.
+
+**Pattern:** Jokers use a `calculate()` function that reacts to events and returns modifier tables.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/jokers.lua
+
+Jokers.pyromaniac = {
+    id = "pyromaniac",
+    name = "Pyromaniac",
+    description = "+10 Damage to Mono-Element (Fire) Spells.",
+    rarity = "Common",
+
+    calculate = function(self, context)
+        -- React to spell cast events
+        if context.event == "on_spell_cast" then
+            if context.spell_type == "Mono-Element" and
+               context.tags and context.tags.Fire then
+                return {
+                    damage_mod = 10,
+                    message = "Pyromaniac!"
+                }
+            end
+        end
+    end
+}
+```
+
+**Joker fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier (must match table key) |
+| `name` | string | Display name |
+| `description` | string | Human-readable description |
+| `rarity` | string | "Common", "Uncommon", "Rare", "Epic", "Legendary" |
+| `calculate` | function | Event handler returning modifiers |
+
+**Context parameter:**
+
+The `context` table passed to `calculate()` contains:
+
+```lua
+{
+    event = "on_spell_cast",        -- Event type
+    spell_type = "Mono-Element",    -- Spell classification
+    tags = { Fire = true },         -- Tag presence map
+    player = { tag_counts = {...} }, -- Player state
+    damage = 100,                   -- Base damage (for calculate_damage)
+}
+```
+
+**Return value:**
+
+Return a table with modifier fields:
+
+```lua
+{
+    damage_mod = 10,           -- Additive damage
+    damage_mult = 1.5,         -- Multiplicative damage
+    repeat_cast = 1,           -- Repeat cast N times
+    message = "Joker name!"    -- Visual feedback message
+}
+```
+
+**Common events:**
+
+- `"on_spell_cast"`: When spell is cast
+- `"calculate_damage"`: Before damage calculation
+- `"on_hit"`: When projectile hits
+- `"on_kill"`: When enemy dies
+
+**Provenance:** See `assets/scripts/data/jokers.lua:10-75` for examples.
+
+**Gotcha:** `calculate()` may be called multiple times per event; ensure idempotent logic.
+
+**Gotcha:** Return `nil` if joker doesn't apply to current event (don't return empty table).
+
+---
+
+## Define Projectile Preset
+
+\label{recipe:define-projectile-preset}
+
+**When to use:** Creating reusable projectile configurations for cards.
+
+**Pattern:** Projectile presets define visual and behavioral properties. Reference via `projectile_preset` field in cards.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/projectiles.lua
+
+Projectiles.fireball = {
+    id = "fireball",
+    speed = 400,
+    damage_type = "fire",
+    movement = "straight",
+    collision = "explode",
+    explosion_radius = 60,
+    lifetime = 2000,
+
+    -- On-hit effects
+    on_hit_effect = "burn",
+    on_hit_duration = 3000,
+
+    tags = { "Fire", "Projectile", "AoE" },
+}
+```
+
+**Projectile fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `speed` | number | Projectile velocity |
+| `damage_type` | string | fire/ice/lightning/poison/arcane/holy/void/magic |
+| `movement` | string | "straight", "homing", "arc", "orbital", "custom" |
+| `collision` | string | "destroy", "pierce", "bounce", "explode", "pass_through", "chain" |
+| `lifetime` | number | Milliseconds before despawn |
+| `explosion_radius` | number | AoE radius (for collision="explode") |
+| `pierce_count` | number | How many enemies to pierce |
+| `chain_count` | number | How many enemies to chain to |
+| `chain_range` | number | Chain range in pixels |
+| `chain_damage_decay` | number | Damage multiplier per chain (0.7 = 30% reduction) |
+| `homing_strength` | number | 0-15 homing intensity |
+| `on_hit_effect` | string | "burn", "freeze", "poison", etc. |
+| `on_hit_duration` | number | Effect duration in milliseconds |
+| `tags` | table | Tag list |
+
+**Valid movement types:**
+
+- `"straight"`: Linear trajectory
+- `"homing"`: Seeks nearest enemy
+- `"arc"`: Parabolic trajectory
+- `"orbital"`: Circles around caster
+- `"custom"`: Requires custom behavior script
+
+**Valid collision types:**
+
+- `"destroy"`: Despawn on hit
+- `"pierce"`: Pass through N enemies
+- `"bounce"`: Ricochet off walls/enemies
+- `"explode"`: Create AoE explosion
+- `"pass_through"`: Ignore collisions
+- `"chain"`: Jump to nearby enemies
+
+**Provenance:** See `assets/scripts/data/projectiles.lua:14-80` for examples.
+
+**Gotcha:** `explosion_radius` only applies if `collision = "explode"`.
+
+**Gotcha:** `chain_damage_decay` is multiplicative (0.7 = 70% of previous damage).
+
+---
+
+## Define Avatar
+
+\label{recipe:define-avatar}
+
+**When to use:** Creating powerful mid-run transformations with global rule changes.
+
+**Pattern:** Avatars unlock based on session stats and provide permanent effects.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/avatars.lua
+
+Avatars.wildfire = {
+    name = "Avatar of Wildfire",
+    description = "Your flames consume everything.",
+
+    -- Unlock Condition (Session-based)
+    unlock = {
+        kills_with_fire = 100,
+        OR_fire_tags = 7
+    },
+
+    -- Global Effects
+    effects = {
+        {
+            type = "rule_change",
+            rule = "multicast_loops",
+            desc = "Multicast modifiers now Loop the cast block instead of simultaneous cast."
+        },
+        {
+            type = "stat_buff",
+            stat = "hazard_tick_rate_pct",
+            value = 100  -- 2x tick speed
+        }
+    }
+}
+```
+
+**Avatar fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Display name |
+| `description` | string | Flavor text |
+| `unlock` | table | Unlock conditions |
+| `effects` | table | List of effect definitions |
+
+**Unlock condition patterns:**
+
+```lua
+-- Single condition
+unlock = {
+    kills_with_fire = 100
+}
+
+-- OR condition (either satisfies)
+unlock = {
+    kills_with_fire = 100,
+    OR_fire_tags = 7
+}
+
+-- Multiple OR conditions
+unlock = {
+    damage_blocked = 5000,
+    OR_defense_tags = 7
+}
+```
+
+**Effect types:**
+
+**Rule Change:**
+
+```lua
+{
+    type = "rule_change",
+    rule = "multicast_loops",
+    desc = "Multicast modifiers now Loop the cast block instead of simultaneous cast."
+}
+```
+
+**Stat Buff:**
+
+```lua
+{
+    type = "stat_buff",
+    stat = "hazard_tick_rate_pct",
+    value = 100  -- +100% = 2x tick speed
+}
+```
+
+**Proc Effect:**
+
+```lua
+{
+    type = "proc",
+    trigger = "on_cast_4th",
+    effect = "global_barrier",
+    value = 10  -- 10% HP barrier
+}
+```
+
+**Common unlock stats:**
+
+- `kills_with_fire`, `kills_with_ice`, etc.
+- `damage_blocked`, `damage_dealt`
+- `distance_moved`, `mana_spent`
+- `crits_dealt`, `hp_lost`
+- Tag counts: `fire_tags`, `defense_tags`, `mobility_tags`, etc.
+
+**Common rule changes:**
+
+- `"multicast_loops"`: Multicast loops instead of simultaneous
+- `"summons_inherit_block"`: Summons inherit block/thorns
+- `"move_casts_trigger_onhit"`: Movement-triggered wands apply on-hit effects
+- `"crit_chains"`: Crits chain to nearby enemies
+- `"summon_cast_share"`: Summons copy your projectiles
+- `"missing_hp_dmg"`: Damage scales with missing HP
+
+**Provenance:** See `assets/scripts/data/avatars.lua:3-137` for all avatars.
+
+**Gotcha:** Avatar effects are session-persistent once unlocked.
+
+**Gotcha:** Unlock conditions use `OR_` prefix for alternative requirements.
+
+---
+
+## Define Shader Preset
+
+\label{recipe:define-shader-preset}
+
+**When to use:** Creating reusable shader configurations for visual effects.
+
+**Pattern:** Shader presets define one or more shader passes with uniforms.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/shader_presets.lua
+
+ShaderPresets.holographic = {
+    id = "holographic",
+    passes = {"3d_skew_holo"},
+    uniforms = {
+        sheen_strength = 0.8,
+        sheen_speed = 1.2,
+        sheen_width = 0.3,
+    },
+}
+
+-- Multi-pass preset
+ShaderPresets.legendary_card = {
+    id = "legendary_card",
+    passes = {"3d_skew_holo", "3d_skew_foil"},
+    uniforms = {
+        sheen_strength = 1.0,
+    },
+    pass_uniforms = {
+        ["3d_skew_foil"] = {
+            sheen_speed = 0.5,
+        },
+    },
+}
+```
+
+**Shader preset fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `passes` | table | List of shader names (applied in order) |
+| `uniforms` | table | Uniforms applied to all passes |
+| `pass_uniforms` | table | Per-pass uniform overrides |
+| `needs_atlas_uniforms` | boolean | Auto-inject atlas uniforms (auto-detected for 3d_skew_*) |
+
+**Usage:**
+
+```lua
+-- Replace all passes with preset
+applyShaderPreset(registry, entity, "holographic", {
+    sheen_strength = 1.0,  -- override uniform
+})
+
+-- Append preset passes to existing
+addShaderPreset(registry, entity, "glow", { intensity = 1.5 })
+
+-- Clear all passes
+clearShaderPasses(registry, entity)
+
+-- Add single pass directly
+addShaderPass(registry, entity, "outline", { thickness = 2.0 })
+```
+
+**Common shader families:**
+
+- `3d_skew_*`: Card shaders (holo, foil, polychrome, negative, prismatic)
+- `liquid_*`: Fluid effects (oil, water, lava)
+- `dissolve`: Card destruction effect
+
+**Provenance:** See `assets/scripts/data/shader_presets.lua:20-85` for examples.
+
+**Gotcha:** `pass_uniforms` allows per-pass customization in multi-pass presets.
+
+**Gotcha:** Shader families with `3d_skew_` prefix auto-detect `needs_atlas_uniforms = true`.
+
+---
+
+## Validate Content Definitions
+
+\label{recipe:validate-content}
+
+**When to use:** After adding/modifying cards, jokers, projectiles, avatars, or shader presets.
+
+**Pattern:** Use the content validator to catch errors and warnings.
+
+**Example:**
+
+```lua
+-- Standalone validation (run in-game or via dofile)
+dofile("assets/scripts/tools/content_validator.lua")
+
+-- Runtime validation (warnings only, no errors)
+local ContentValidator = require("tools.content_validator")
+local results = ContentValidator.validate_all(true)  -- true = warnings only
+
+-- Check results
+if #results.errors > 0 then
+    for _, err in ipairs(results.errors) do
+        print(string.format("[%s] %s: %s", err.type, err.id, err.message))
+    end
+end
+
+if #results.warnings > 0 then
+    for _, warn in ipairs(results.warnings) do
+        print(string.format("[%s] %s: %s", warn.type, warn.id, warn.message))
+    end
+end
+```
+
+**What it validates:**
+
+**Cards:**
+- Required fields: `id`, `type`, `mana_cost`, `tags`
+- Valid `type`: "action", "modifier", "trigger"
+- Valid `damage_type`: fire/ice/lightning/poison/arcane/holy/void/magic
+- ID matches table key
+- Unknown tags (suggests similar valid tags)
+
+**Jokers:**
+- Required fields: `id`, `name`, `description`, `rarity`, `calculate`
+- Valid `rarity`: Common, Uncommon, Rare, Epic, Legendary
+- `calculate` is a function
+- ID matches table key
+
+**Projectiles:**
+- Required fields: `id`, `speed`, `movement`, `collision`
+- Valid `movement`: straight, homing, arc, orbital, custom
+- Valid `collision`: destroy, pierce, bounce, explode, pass_through, chain
+- Valid `damage_type`
+
+**Avatars:**
+- Required fields: `name`, `description`, `unlock`, `effects`
+- `unlock` is a table
+- `effects` is a non-empty table
+
+**Output:**
+
+```
+[Card] MY_FIREBALL: unknown tag 'Fyre' (did you mean 'Fire'?)
+[Joker] pyromaniac: missing required field 'rarity'
+[Projectile] my_proj: invalid movement type 'zigzag' (expected: straight, homing, arc, orbital, custom)
+```
+
+**Provenance:** See `assets/scripts/tools/content_validator.lua:1-300` for full implementation.
+
+**Gotcha:** Validator allows custom fields for extensibility. Only critical fields are validated.
+
+**Gotcha:** Unknown tags generate warnings with suggestions (fuzzy matching by lowercasing).
+
+---
+
+## Standard Tag Reference
+
+\label{recipe:standard-tags}
+
+**When to use:** Choosing tags for cards/projectiles.
+
+**Pattern:** Use standard tags for joker synergies and tag threshold bonuses.
+
+**Element Tags:**
+
+- `"Fire"`: Fire damage and burning effects
+- `"Ice"`: Ice damage and freezing effects
+- `"Lightning"`: Lightning damage and chaining
+- `"Poison"`: Poison damage and DoT
+- `"Arcane"`: Magical effects
+- `"Holy"`: Divine damage
+- `"Void"`: Dark/shadow damage
+
+**Mechanic Tags:**
+
+- `"Projectile"`: Fires projectiles
+- `"AoE"`: Area of effect damage
+- `"Hazard"`: Creates hazards (pools, zones)
+- `"Summon"`: Spawns allies
+- `"Buff"`: Positive modifier
+- `"Debuff"`: Negative modifier
+
+**Playstyle Tags:**
+
+- `"Mobility"`: Movement-related
+- `"Defense"`: Defensive/blocking
+- `"Brute"`: High damage, direct combat
+
+**Tag Synergies:**
+
+Tags grant bonuses at breakpoints (3/5/7/9 cards with that tag). See `assets/scripts/wand/tag_evaluator.lua` for thresholds.
+
+**Example:**
+
+```lua
+-- Card with multiple tags
+Cards.EXPLOSIVE_FIREBALL = {
+    id = "EXPLOSIVE_FIREBALL",
+    type = "action",
+    tags = { "Fire", "Projectile", "AoE" },  -- Synergizes with Fire/AoE jokers
+    -- ...
+}
+```
+
+**Provenance:** See `assets/scripts/tools/content_validator.lua:19-27` for tag list.
+
+**Gotcha:** Tags are case-sensitive. Use exact capitalization.
+
+**Gotcha:** Custom tags are allowed but won't benefit from threshold bonuses unless added to `tag_evaluator.lua`.
+
+---
+
+## Extend Tag System
+
+\label{recipe:extend-tag-system}
+
+**When to use:** Adding new tag synergies with breakpoint bonuses.
+
+**Pattern:** Define breakpoints in `tag_evaluator.lua` to grant bonuses at 3/5/7/9 card counts.
+
+**Example:**
+
+```lua
+-- In assets/scripts/wand/tag_evaluator.lua
+
+local TAG_BREAKPOINTS = {
+    -- Existing tags...
+    Fire = {
+        [3] = { type = "stat", stat = "damage_pct", value = 10 },
+        [5] = { type = "proc", proc_id = "fire_spread" },
+        [7] = { type = "stat", stat = "burn_duration_pct", value = 50 },
+        [9] = { type = "proc", proc_id = "fire_avatar" },
+    },
+
+    -- New custom tag
+    MyNewTag = {
+        [3] = { type = "stat", stat = "damage_pct", value = 10 },       -- +10% damage
+        [5] = { type = "proc", proc_id = "my_custom_proc" },            -- Trigger proc
+        [7] = { type = "stat", stat = "crit_chance_pct", value = 15 },  -- +15% crit
+        [9] = { type = "proc", proc_id = "my_ultimate_proc" },          -- Ultimate proc
+    },
+}
+```
+
+**Bonus types:**
+
+**Stat Bonus:**
+
+```lua
+{
+    type = "stat",
+    stat = "damage_pct",  -- Stat name (must exist in player stats)
+    value = 10            -- Bonus value
+}
+```
+
+**Proc Bonus:**
+
+```lua
+{
+    type = "proc",
+    proc_id = "fire_spread"  -- Proc identifier (implement handler in combat system)
+}
+```
+
+**Common stat names:**
+
+- `damage_pct`: Damage percentage
+- `crit_chance_pct`: Critical hit chance
+- `cast_speed`: Cast speed multiplier
+- `hazard_tick_rate_pct`: Hazard tick rate
+- `burn_duration_pct`: Burn effect duration
+
+**Changing thresholds:**
+
+Edit `DEFAULT_THRESHOLDS` in `tag_evaluator.lua`:
+
+```lua
+local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }  -- Default breakpoints
+```
+
+**API:**
+
+```lua
+local TagEvaluator = require("wand.tag_evaluator")
+
+-- Get sorted threshold list for a tag
+local thresholds = TagEvaluator.get_thresholds("Fire")  -- { 3, 5, 7, 9 }
+
+-- Get all tag breakpoint definitions (read-only copy)
+local breakpoints = TagEvaluator.get_breakpoints()
+```
+
+**Provenance:** See CLAUDE.md "Tag Synergy Thresholds" section.
+
+**Gotcha:** Proc effects require implementing handlers in the combat system.
+
+**Gotcha:** Stat names must exist in player stat system; invalid names silently fail.
+
+**Gotcha:** Thresholds are cumulative (7-tag bonus includes 3 and 5 bonuses).
+
+\newpage

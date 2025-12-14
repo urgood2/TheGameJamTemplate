@@ -609,11 +609,11 @@ namespace ui
             auto selfContentOffset = role.offset.value_or(Vector2{0, 0});
 
             // subtract padding from content dimensions
-            selfContentDimensions.x -= 2 * uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
-            selfContentDimensions.y -= 2 * uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            selfContentDimensions.x -= 2 * uiConfig.effectivePadding();
+            selfContentDimensions.y -= 2 * uiConfig.effectivePadding();
             // add padding to content offset
-            selfContentOffset.x += uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
-            selfContentOffset.y += uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+            selfContentOffset.x += uiConfig.effectivePadding();
+            selfContentOffset.y += uiConfig.effectivePadding();
 
             int childCounter = 0;
 
@@ -684,9 +684,9 @@ namespace ui
                         // self's padded context area / 2 - (sum of all child heights + (child count - 1) * padding) / 2
                         // -> y starting location
                         // increment y starting location by child's width + padding each time
-                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (sumOfAllChildHeights + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor()) / 2 + runningYOffset;
+                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (sumOfAllChildHeights + (node.orderedChildren.size() - 1) * uiConfig.effectivePadding()) / 2 + runningYOffset;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
-                        runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+                        runningYOffset += childDimensions.y + uiConfig.effectivePadding();
                     }
                     else if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
                         // do nothing
@@ -700,9 +700,9 @@ namespace ui
                         // self's padded context area / 2 - (sum of all child widths + (child count - 1) * padding) / 2
                         // -> x starting location
                         // increment x starting location by child's width + padding each time
-                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x / 2) - (sumOfAllChildWidths + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor()) / 2 + runningXOffset;
+                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x / 2) - (sumOfAllChildWidths + (node.orderedChildren.size() - 1) * uiConfig.effectivePadding()) / 2 + runningXOffset;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
-                        runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+                        runningXOffset += childDimensions.x + uiConfig.effectivePadding();
                     }
                     else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
                     {
@@ -720,9 +720,9 @@ namespace ui
                 {
                     if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
                     {
-                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x) - (sumOfAllChildWidths + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor()) + runningXOffset;
+                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x) - (sumOfAllChildWidths + (node.orderedChildren.size() - 1) * uiConfig.effectivePadding()) + runningXOffset;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
-                        runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+                        runningXOffset += childDimensions.x + uiConfig.effectivePadding();
                     }
                     else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
                     {
@@ -748,9 +748,9 @@ namespace ui
                         // self's padded context offset + self's padded content height - child's height
                         // -> y starting location
                         // increment y starting location by child's height + padding + emboss (if present) each time
-                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y) - (sumOfAllChildHeights + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor()) + runningYOffset;
+                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y) - (sumOfAllChildHeights + (node.orderedChildren.size() - 1) * uiConfig.effectivePadding()) + runningYOffset;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
-                        runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::getSettings().uiPadding) * uiConfig.scale.value() * globals::getGlobalUIScaleFactor();
+                        runningYOffset += childDimensions.y + uiConfig.effectivePadding();
                     }
                     
                     else if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {

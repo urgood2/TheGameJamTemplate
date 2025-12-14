@@ -255,6 +255,48 @@
             text-shadow: 0 0 10px rgba(136, 136, 170, 0.3);
         }
 
+        /* Floating Card Suits Animation */
+        .floating-suits-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 150px;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% {
+                transform: translateY(-140px) rotate(15deg);
+                opacity: 0;
+            }
+        }
+
+        .floating-suit {
+            position: absolute;
+            bottom: 0;
+            font-size: 18px;
+            color: #4a6cd4;
+            opacity: 0;
+            animation: floatUp 4s ease-in-out infinite;
+            text-shadow: 0 0 8px rgba(100, 140, 230, 0.4);
+        }
+
+        .floating-suit:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .floating-suit:nth-child(2) { left: 30%; animation-delay: 0.8s; }
+        .floating-suit:nth-child(3) { left: 50%; animation-delay: 1.6s; }
+        .floating-suit:nth-child(4) { left: 70%; animation-delay: 2.4s; }
+        .floating-suit:nth-child(5) { left: 90%; animation-delay: 3.2s; }
+
         /* ============================================
            DEV CONSOLE OVERLAY
            ============================================ */
@@ -375,6 +417,15 @@
 <body>
     <!-- Splash loading screen -->
     <div id="splash">
+        <!-- Floating card suits background animation -->
+        <div class="floating-suits-container">
+            <span class="floating-suit">♠</span>
+            <span class="floating-suit">♥</span>
+            <span class="floating-suit">♦</span>
+            <span class="floating-suit">♣</span>
+            <span class="floating-suit">♠</span>
+        </div>
+
         <div class="loading-container pixel-rounded">
             <img id="splash-image" src="splash.png" alt="~ ~ ~" />
             <div id="progress-container">

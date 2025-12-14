@@ -57,6 +57,48 @@
             image-rendering: crisp-edges;
         }
 
+        /* Pixelated rounded corners via clip-path */
+        .pixel-rounded {
+            border-radius: 0 !important;
+            clip-path: polygon(
+                0 8px,
+                2px 8px, 2px 4px,
+                4px 4px, 4px 2px,
+                8px 2px, 8px 0,
+                calc(100% - 8px) 0,
+                calc(100% - 8px) 2px, calc(100% - 4px) 2px,
+                calc(100% - 4px) 4px, calc(100% - 2px) 4px,
+                calc(100% - 2px) 8px, 100% 8px,
+                100% calc(100% - 8px),
+                calc(100% - 2px) calc(100% - 8px), calc(100% - 2px) calc(100% - 4px),
+                calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) calc(100% - 2px),
+                calc(100% - 8px) calc(100% - 2px), calc(100% - 8px) 100%,
+                8px 100%,
+                8px calc(100% - 2px), 4px calc(100% - 2px),
+                4px calc(100% - 4px), 2px calc(100% - 4px),
+                2px calc(100% - 8px), 0 calc(100% - 8px)
+            );
+        }
+
+        /* Small variant for buttons */
+        .pixel-rounded-sm {
+            border-radius: 0 !important;
+            clip-path: polygon(
+                0 4px,
+                2px 4px, 2px 2px,
+                4px 2px, 4px 0,
+                calc(100% - 4px) 0,
+                calc(100% - 4px) 2px, calc(100% - 2px) 2px,
+                calc(100% - 2px) 4px, 100% 4px,
+                100% calc(100% - 4px),
+                calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+                calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%,
+                4px 100%,
+                4px calc(100% - 2px), 2px calc(100% - 2px),
+                2px calc(100% - 4px), 0 calc(100% - 4px)
+            );
+        }
+
         /* ============================================
            CANVAS
            ============================================ */
@@ -148,6 +190,14 @@
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+            /* Alt text fallback styling */
+            color: #8888aa;
+            font-size: 14px;
+            letter-spacing: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
         }
 
         /* Progress Bar Container */
@@ -319,8 +369,8 @@
 <body>
     <!-- Splash loading screen -->
     <div id="splash">
-        <div class="loading-container">
-            <img id="splash-image" src="splash.png" alt="Loading..." />
+        <div class="loading-container pixel-rounded">
+            <img id="splash-image" src="splash.png" alt="~ ~ ~" />
             <div id="progress-container">
                 <div id="progress-bar" class="loading"></div>
             </div>

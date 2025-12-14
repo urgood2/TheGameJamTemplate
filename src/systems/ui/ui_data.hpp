@@ -321,6 +321,14 @@ namespace ui
         std::optional<bool> noRole;          // Prevents the element from being assigned a role in the layout.
         std::optional<transform::InheritedProperties> role; // Role component for UI
 
+        // Calculate effective padding with scale factors applied
+        // Centralizes: padding.value_or(globals::getSettings().uiPadding) * scale.value_or(1.0f) * globals::getGlobalUIScaleFactor()
+        float effectivePadding() const {
+            return padding.value_or(globals::getSettings().uiPadding)
+                * scale.value_or(1.0f)
+                * globals::getGlobalUIScaleFactor();
+        }
+
         struct Builder;
     };
     

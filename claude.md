@@ -6,6 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill to have a fresh agent review the implementation before considering the work complete.
 
+## Notifications
+
+When you need to notify the user or ask for permission/input, use terminal-notifier:
+
+```bash
+terminal-notifier -title "Claude Code" -message "Your message here"
+```
+
+Use this for:
+- Asking for user input/decisions
+- Notifying completion of long-running tasks
+- Permission requests
+- Any situation where user attention is needed
+
 ## Build Commands
 
 **Prefer incremental builds** to reduce build time. Avoid `just clean` or full rebuilds unless necessary. The build system (CMake) handles incremental compilation automatically.

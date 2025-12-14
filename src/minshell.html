@@ -57,6 +57,48 @@
             image-rendering: crisp-edges;
         }
 
+        /* Pixelated rounded corners via clip-path */
+        .pixel-rounded {
+            border-radius: 0 !important;
+            clip-path: polygon(
+                0 8px,
+                2px 8px, 2px 4px,
+                4px 4px, 4px 2px,
+                8px 2px, 8px 0,
+                calc(100% - 8px) 0,
+                calc(100% - 8px) 2px, calc(100% - 4px) 2px,
+                calc(100% - 4px) 4px, calc(100% - 2px) 4px,
+                calc(100% - 2px) 8px, 100% 8px,
+                100% calc(100% - 8px),
+                calc(100% - 2px) calc(100% - 8px), calc(100% - 2px) calc(100% - 4px),
+                calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) calc(100% - 2px),
+                calc(100% - 8px) calc(100% - 2px), calc(100% - 8px) 100%,
+                8px 100%,
+                8px calc(100% - 2px), 4px calc(100% - 2px),
+                4px calc(100% - 4px), 2px calc(100% - 4px),
+                2px calc(100% - 8px), 0 calc(100% - 8px)
+            );
+        }
+
+        /* Small variant for buttons */
+        .pixel-rounded-sm {
+            border-radius: 0 !important;
+            clip-path: polygon(
+                0 4px,
+                2px 4px, 2px 2px,
+                4px 2px, 4px 0,
+                calc(100% - 4px) 0,
+                calc(100% - 4px) 2px, calc(100% - 2px) 2px,
+                calc(100% - 2px) 4px, 100% 4px,
+                100% calc(100% - 4px),
+                calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+                calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%,
+                4px 100%,
+                4px calc(100% - 2px), 2px calc(100% - 2px),
+                2px calc(100% - 4px), 0 calc(100% - 4px)
+            );
+        }
+
         /* ============================================
            CANVAS
            ============================================ */
@@ -148,6 +190,14 @@
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+            /* Alt text fallback styling */
+            color: #8888aa;
+            font-size: 14px;
+            letter-spacing: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
         }
 
         /* Progress Bar Container */
@@ -156,7 +206,7 @@
             height: 20px;
             background: #0a0a14;
             border: 2px solid #3a3a5a;
-            border-radius: 10px;
+            border-radius: 0;
             overflow: hidden;
             margin-bottom: 12px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
@@ -166,18 +216,24 @@
         #progress-bar {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, #4a6cd4 0%, #6a8ce4 50%, #4a6cd4 100%);
-            background-size: 200% 100%;
-            border-radius: 8px;
+            border-radius: 0;
             transition: width 0.3s ease;
-            box-shadow:
-                0 0 10px rgba(100, 140, 230, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            /* Pixelated segments - 8px chunks with 2px gaps */
+            background: repeating-linear-gradient(
+                90deg,
+                #4a6cd4 0px,
+                #4a6cd4 8px,
+                #3a5cc4 8px,
+                #3a5cc4 10px
+            );
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            box-shadow: 0 0 10px rgba(100, 140, 230, 0.5);
         }
 
         /* Pulsing animation during loading */
         #progress-bar.loading {
-            animation: progressPulse 1.5s ease-in-out infinite, progressShine 2s linear infinite;
+            animation: progressPulse 1.5s ease-in-out infinite;
         }
 
         @keyframes progressPulse {
@@ -198,6 +254,48 @@
             text-transform: uppercase;
             text-shadow: 0 0 10px rgba(136, 136, 170, 0.3);
         }
+
+        /* Floating Card Suits Animation */
+        .floating-suits-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 150px;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% {
+                transform: translateY(-140px) rotate(15deg);
+                opacity: 0;
+            }
+        }
+
+        .floating-suit {
+            position: absolute;
+            bottom: 0;
+            font-size: 18px;
+            color: #4a6cd4;
+            opacity: 0;
+            animation: floatUp 4s ease-in-out infinite;
+            text-shadow: 0 0 8px rgba(100, 140, 230, 0.4);
+        }
+
+        .floating-suit:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .floating-suit:nth-child(2) { left: 30%; animation-delay: 0.8s; }
+        .floating-suit:nth-child(3) { left: 50%; animation-delay: 1.6s; }
+        .floating-suit:nth-child(4) { left: 70%; animation-delay: 2.4s; }
+        .floating-suit:nth-child(5) { left: 90%; animation-delay: 3.2s; }
 
         /* ============================================
            DEV CONSOLE OVERLAY
@@ -303,6 +401,160 @@
         }
 
         /* ============================================
+           DEBUG BUTTON
+           ============================================ */
+        .debug-btn {
+            position: fixed;
+            bottom: 12px;
+            left: 12px;
+            z-index: 8000;
+
+            background: #2a2a4a;
+            color: #8888aa;
+            border: 2px solid #3a3a5a;
+            padding: 8px 12px;
+
+            font-family: 'PixelFont', 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .debug-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .debug-btn:hover {
+            background: #3a3a5a;
+            color: #aaaacc;
+            box-shadow: 0 0 12px rgba(100, 140, 230, 0.3);
+        }
+
+        @keyframes crashPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 80, 80, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(220, 80, 80, 0); }
+        }
+
+        .debug-btn.crash-alert {
+            animation: crashPulse 1s ease-in-out 3;
+            border-color: #dd4444;
+        }
+
+        /* ============================================
+           DEBUG MODAL
+           ============================================ */
+        .debug-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .debug-modal.open {
+            display: flex;
+        }
+
+        .debug-modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .debug-modal-content {
+            position: relative;
+            background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+            border: 3px solid #3a3a5a;
+            padding: 0;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .debug-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 2px solid #3a3a5a;
+            color: #8888aa;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .debug-modal-close {
+            background: none;
+            border: none;
+            color: #666688;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .debug-modal-close:hover {
+            color: #aaaacc;
+        }
+
+        .debug-modal-body {
+            padding: 20px;
+        }
+
+        .debug-modal-body p {
+            color: #8888aa;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0 0 20px 0;
+        }
+
+        .debug-action-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+
+            background: #2a2a4a;
+            color: #aaaacc;
+            border: 2px solid #3a3a5a;
+            border-radius: 0;
+
+            font-family: 'PixelFont', 'Courier New', monospace;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-align: left;
+            cursor: pointer;
+
+            transition: all 0.15s ease;
+        }
+
+        .debug-action-btn:hover {
+            background: #3a3a5a;
+            color: #ffffff;
+            border-color: #4a6cd4;
+        }
+
+        .debug-action-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .debug-action-btn.success {
+            background: #2a4a2a;
+            border-color: #3a6a3a;
+        }
+
+        /* ============================================
            ANIMATIONS
            ============================================ */
         @keyframes fadeIn {
@@ -319,8 +571,17 @@
 <body>
     <!-- Splash loading screen -->
     <div id="splash">
-        <div class="loading-container">
-            <img id="splash-image" src="splash.png" alt="Loading..." />
+        <!-- Floating card suits background animation -->
+        <div class="floating-suits-container">
+            <span class="floating-suit">♠</span>
+            <span class="floating-suit">♥</span>
+            <span class="floating-suit">♦</span>
+            <span class="floating-suit">♣</span>
+            <span class="floating-suit">♠</span>
+        </div>
+
+        <div class="loading-container pixel-rounded">
+            <img id="splash-image" src="splash.png" alt="~ ~ ~" />
             <div id="progress-container">
                 <div id="progress-bar" class="loading"></div>
             </div>
@@ -346,6 +607,35 @@
         <div id="dev-console-logs"></div>
         <div id="dev-console-footer">
             <span id="console-stats">Logs: 0 | Press ` or F12 to toggle</span>
+        </div>
+    </div>
+
+    <!-- Debug Button -->
+    <button id="debug-btn" class="debug-btn pixel-rounded-sm" title="Capture Debug Report">
+        🐛 ?
+    </button>
+
+    <!-- Debug Modal -->
+    <div id="debug-modal" class="debug-modal">
+        <div class="debug-modal-backdrop" id="debug-modal-backdrop"></div>
+        <div class="debug-modal-content pixel-rounded">
+            <div class="debug-modal-header">
+                <span>🐛 DEBUG REPORT</span>
+                <button class="debug-modal-close" id="debug-modal-close">✕</button>
+            </div>
+            <div class="debug-modal-body">
+                <p>A debug report has been captured. Share this with the developer to help fix issues.</p>
+
+                <button class="debug-action-btn" id="debug-copy">
+                    📋 COPY TO CLIPBOARD
+                </button>
+                <button class="debug-action-btn" id="debug-download">
+                    💾 DOWNLOAD REPORT
+                </button>
+                <button class="debug-action-btn" id="debug-report">
+                    🐞 REPORT BUG ON ITCH.IO
+                </button>
+            </div>
         </div>
     </div>
 
@@ -499,6 +789,11 @@
                 console.log('[DevConsole] Startup phase ended, switching to runtime log buffer');
             };
 
+            // Expose logs for debug report capture
+            window._getConsoleLogs = function() {
+                return [...startupLogs, ...runtimeLogs];
+            };
+
             // Initialize
             if (consoleOpen) {
                 devConsole.classList.add('open');
@@ -542,6 +837,9 @@
                 setTimeout(function() {
                     splash.classList.add('fade-out');
                     canvas.classList.add('visible');
+
+                    // Show debug button
+                    document.getElementById('debug-btn').classList.add('visible');
 
                     // Remove splash from DOM after animation
                     setTimeout(function() {
@@ -615,6 +913,143 @@
 
             Module.setStatus('DOWNLOADING...');
             console.log('[Loading] Web shell initialized');
+        })();
+
+        // ============================================
+        // DEBUG MODAL SYSTEM
+        // ============================================
+        (function() {
+            const debugBtn = document.getElementById('debug-btn');
+            const debugModal = document.getElementById('debug-modal');
+            const debugModalBackdrop = document.getElementById('debug-modal-backdrop');
+            const debugModalClose = document.getElementById('debug-modal-close');
+            const debugCopy = document.getElementById('debug-copy');
+            const debugDownload = document.getElementById('debug-download');
+            const debugReport = document.getElementById('debug-report');
+
+            let lastReport = null;
+
+            function openModal() {
+                debugModal.classList.add('open');
+            }
+
+            function closeModal() {
+                debugModal.classList.remove('open');
+            }
+
+            function captureReport() {
+                // Capture console logs
+                const logs = window._getConsoleLogs ? window._getConsoleLogs() : [];
+
+                lastReport = {
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    url: window.location.href,
+                    screen: { width: screen.width, height: screen.height },
+                    viewport: { width: window.innerWidth, height: window.innerHeight },
+                    logs: logs.slice(-200) // Last 200 log entries
+                };
+
+                // Try to get WebGL info
+                try {
+                    const canvas = document.getElementById('canvas');
+                    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                            lastReport.webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                        }
+                    }
+                } catch (e) {
+                    lastReport.webglRenderer = 'unknown';
+                }
+
+                return lastReport;
+            }
+
+            function getReportText() {
+                if (!lastReport) captureReport();
+                return JSON.stringify(lastReport, null, 2);
+            }
+
+            // Debug button click
+            debugBtn.addEventListener('click', function() {
+                captureReport();
+                openModal();
+            });
+
+            // Close handlers
+            debugModalClose.addEventListener('click', closeModal);
+            debugModalBackdrop.addEventListener('click', closeModal);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && debugModal.classList.contains('open')) {
+                    closeModal();
+                }
+            });
+
+            // Copy to clipboard
+            debugCopy.addEventListener('click', function() {
+                const text = getReportText();
+                navigator.clipboard.writeText(text).then(function() {
+                    debugCopy.textContent = '✓ COPIED!';
+                    debugCopy.classList.add('success');
+                    setTimeout(function() {
+                        debugCopy.textContent = '📋 COPY TO CLIPBOARD';
+                        debugCopy.classList.remove('success');
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('Copy failed:', err);
+                    debugCopy.textContent = '✗ FAILED';
+                    setTimeout(function() {
+                        debugCopy.textContent = '📋 COPY TO CLIPBOARD';
+                    }, 2000);
+                });
+            });
+
+            // Download report
+            debugDownload.addEventListener('click', function() {
+                const text = getReportText();
+                const blob = new Blob([text], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'debug_report_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                debugDownload.textContent = '✓ DOWNLOADED!';
+                debugDownload.classList.add('success');
+                setTimeout(function() {
+                    debugDownload.textContent = '💾 DOWNLOAD REPORT';
+                    debugDownload.classList.remove('success');
+                }, 2000);
+            });
+
+            // Report bug
+            debugReport.addEventListener('click', function() {
+                window.open('https://chugget.itch.io/testing/community', '_blank');
+            });
+
+            // Expose for C++ crash reporter
+            window.openDebugModal = function() {
+                captureReport();
+                debugBtn.classList.add('crash-alert');
+                setTimeout(function() {
+                    debugBtn.classList.remove('crash-alert');
+                }, 3000);
+                openModal();
+            };
+
+            // Expose function to set report from C++
+            window.setDebugReport = function(reportJson) {
+                try {
+                    lastReport = JSON.parse(reportJson);
+                } catch (e) {
+                    lastReport = { raw: reportJson };
+                }
+            };
         })();
     </script>
 

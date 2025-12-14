@@ -1,7 +1,3 @@
----
-title: Lua API Cookbook
----
-
 # Quick Start
 
 **New to the engine?** Here's how to create a game entity from scratch in 10 seconds.
@@ -142,7 +138,7 @@ local entity_cache = require("core.entity_cache")
 
 **Gotcha:** Don't use `require("assets.scripts.core.timer")` — paths are relative to assets/scripts/.
 
----
+***
 
 ## Import Bundles (Reduce Boilerplate)
 
@@ -193,7 +189,7 @@ local component_cache, entity_cache, timer, signal, z_orders = imports.core()
 
 **Gotcha:** Some modules (like PhysicsManager) may be nil if not available in the current context.
 
----
+***
 
 ## Validating Entities
 
@@ -245,7 +241,7 @@ if ensure_entity(globals.inputState.cursor_hovering_target) then
 end
 ```
 
----
+***
 
 ## Getting Components
 
@@ -285,7 +281,7 @@ local animComp = component_cache.get(icon, AnimationQueueComponent)
 local go = component_cache.get(entity, GameObject)
 ```
 
----
+***
 
 ## Timer: Delayed Action
 
@@ -329,7 +325,7 @@ timer.after(
 )
 ```
 
----
+***
 
 ## Timer: Repeating Action
 
@@ -378,7 +374,7 @@ end)
 
 **Gotcha:** If `times` is 0 or nil, the timer runs forever until cancelled.
 
----
+***
 
 ## Timer: Physics Step
 
@@ -407,7 +403,7 @@ timer.cancel_physics_step("my_physics_timer")
 
 **Gotcha:** Physics step timers are separate from regular timers. Use `cancel_physics_step()`, not `cancel()`.
 
----
+***
 
 ## Signals: Emit Event
 
@@ -445,7 +441,7 @@ signal.emit("on_spell_cast", {
 })
 ```
 
----
+***
 
 ## Signals: Handle Event
 
@@ -467,7 +463,7 @@ end)
 
 **Gotcha:** Use `signal.emit()`, NOT `publishLuaEvent()` (deprecated).
 
----
+***
 
 ## Safe Script Table Access
 
@@ -510,7 +506,7 @@ function script_field(eid, field, default)
 end
 ```
 
----
+***
 
 ## Common Pattern: Defensive Entity Access
 
@@ -540,7 +536,7 @@ local go = component_cache.get(entity, GameObject)
 -- ... use go safely
 ```
 
----
+***
 
 ## Timer Options API (Advanced)
 
@@ -624,7 +620,7 @@ local entity, script = EntityBuilder.create({
 
 **Gotcha:** The `script` return value is only present if you passed `data` option. Otherwise it's nil.
 
----
+***
 
 ### EntityBuilder.simple() - Minimal Version
 
@@ -639,7 +635,7 @@ local entity = EntityBuilder.simple("kobold", 100, 200, 64, 64)
 
 *— from core/entity_builder.lua:236-243*
 
----
+***
 
 ### EntityBuilder.interactive() - Interactive Entities
 
@@ -662,7 +658,7 @@ local entity, script = EntityBuilder.interactive({
 
 *— from core/entity_builder.lua:249-261*
 
----
+***
 
 ### EntityBuilder.new() - Fluent API
 
@@ -698,7 +694,7 @@ local entity, script = builder:build()
 
 **Gotcha:** Escape hatches (`getEntity()`, `getTransform()`, `getGameObject()`, `getScript()`) return raw objects — mix builder + manual operations freely!
 
----
+***
 
 ## Create Entity with Sprite (Manual Pattern)
 
@@ -757,7 +753,7 @@ e = animation_system.createAnimatedObjectWithTransform(
 
 **Gotcha:** `createAnimatedObjectWithTransform()` creates the entity AND adds Transform, GameObject, and animation components automatically. Don't manually emplace these!
 
----
+***
 
 ## Initialize Script Table
 
@@ -816,7 +812,7 @@ cardScript:attach_ecs { create_new = false, existing_entity = card }
 
 **Gotcha:** Don't call `getScriptTableFromEntityID()` immediately after `attach_ecs()` — it may return nil. Use the script variable you already have instead.
 
----
+***
 
 ## Script Table with Update Loop
 
@@ -863,7 +859,7 @@ end
 
 **Gotcha:** The update function is ONLY called if the entity has an active state tag matching the current game state. See "Managing State Tags" below.
 
----
+***
 
 ## Add Interactivity (Hover/Click)
 
@@ -931,7 +927,7 @@ end
 
 **Gotcha:** Enable the interaction modes (`clickEnabled`, `hoverEnabled`, etc.) or callbacks won't fire!
 
----
+***
 
 ## Add State Tags
 
@@ -972,7 +968,7 @@ end
 
 **Gotcha:** Entities without active state tags won't render or update. By default, entities get a DEFAULT state tag. Use `remove_default_state_tag()` if you want explicit state control.
 
----
+***
 
 ## Script Table with Auto-Destroy
 
@@ -1026,7 +1022,7 @@ effect:destroy_when(condition, {
 
 **Gotcha:** The watcher timer is automatically cancelled if the entity is destroyed externally.
 
----
+***
 
 ## Chainable Script Setup
 
@@ -1065,7 +1061,7 @@ local transition = TransitionType {}
 
 **Gotcha:** All chainable methods return `self`, so order matters. Always call `:attach_ecs()` before methods that need the entity ID.
 
----
+***
 
 ## Pure Script Entities (No Graphics)
 
@@ -1096,7 +1092,7 @@ manager:addStateTag(PLANNING_STATE)
 
 **Gotcha:** These entities have no Transform or visual components. Use them for logic only.
 
----
+***
 
 ## Complete Entity Creation Pattern
 
@@ -1154,7 +1150,7 @@ end
 
 *— Combined pattern from core/gameplay.lua:1509-1600, core/entity_factory.lua:38-196*
 
-**Gotcha:** Follow the order: Create → Script Setup → Attach → Position → Interactivity → State Tags.
+**Gotcha:** Follow the order: Create -> Script Setup -> Attach -> Position -> Interactivity -> State Tags.
 
 \newpage
 
@@ -1211,7 +1207,7 @@ PhysicsBuilder.for_entity(entity)
 
 **Gotcha:** Must call `:apply()` to finalize the physics setup!
 
----
+***
 
 ### PhysicsBuilder.quick() - Options Table
 
@@ -1232,7 +1228,7 @@ PhysicsBuilder.quick(entity, {
 
 *— from core/physics_builder.lua:303-319*
 
----
+***
 
 ### Escape Hatches
 
@@ -1259,7 +1255,7 @@ builder:apply()
 
 **Gotcha:** Escape hatches return raw objects — no opaque wrappers! Mix builder + manual operations freely.
 
----
+***
 
 ## Get Physics World (Manual Pattern)
 
@@ -1303,7 +1299,7 @@ physics.create_physics_for_transform(registry,
 
 **Gotcha:** The world parameter is the first argument to most physics property setters (SetVelocity, SetBullet, etc.).
 
----
+***
 
 ## Create Physics Body (Manual Pattern)
 
@@ -1370,7 +1366,7 @@ physics.create_physics_for_transform(
 
 **Gotcha:** The `inflate_px` parameter shrinks (negative) or expands (positive) the hitbox. Use negative values to prevent pixel-perfect collision issues.
 
----
+***
 
 ## Set Collision Tags and Masks
 
@@ -1418,11 +1414,11 @@ physics.update_collision_masks_for(world, "WORLD", { "player", "enemy" })
 
 **Gotcha:** You must call both `enable_collision_between_many` AND `update_collision_masks_for` for collisions to work.
 
-**Gotcha:** Collision setup is bidirectional. If A should collide with B, you must enable A→B and B→A.
+**Gotcha:** Collision setup is bidirectional. If A should collide with B, you must enable A->B and B->A.
 
 **Gotcha:** The special "WORLD" tag is used for static geometry and screen bounds.
 
----
+***
 
 ## Enable Bullet Mode (High-Speed Collision)
 
@@ -1452,7 +1448,7 @@ physics.SetBullet(world, node:handle(), true)
 
 **Gotcha:** Only use bullet mode for genuinely fast-moving objects (projectiles, dashes) — it's more expensive than normal collision detection.
 
----
+***
 
 ## Set Physics Sync Mode
 
@@ -1485,7 +1481,7 @@ physics.set_sync_mode(registry, maskEntity, physics.PhysicsSyncMode.Authoritativ
 
 **Gotcha:** Use `AuthoritativePhysics` when physics simulation controls movement. Use `AuthoritativeTransform` when you manually update Transform (e.g., scripted motion, orbital movement).
 
----
+***
 
 ## Set Physics Properties
 
@@ -1543,7 +1539,7 @@ physics.SetMoment(world, maskEntity, 0.01)
 
 **Gotcha:** Damping applies to both linear and angular velocity. Higher values slow objects down faster.
 
----
+***
 
 ## Get/Set Velocity
 
@@ -1589,7 +1585,7 @@ physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
 
 **Gotcha:** `SetVelocity` takes separate `vx, vy` parameters, not a table.
 
----
+***
 
 ## Get Position/Angle from Physics
 
@@ -1623,7 +1619,7 @@ t.actualR = math.deg(bodyAngle)  -- Convert radians to degrees for Transform
 
 **Gotcha:** `GetAngle` returns radians, but Transform.actualR expects degrees. Convert with `math.deg()`.
 
----
+***
 
 ## Apply Forces and Impulses
 
@@ -1658,7 +1654,7 @@ physics.ApplyImpulse(world, targetEntity, dirX * ENEMY_HIT_RECOIL_FORCE, dirY * 
 
 **Gotcha:** Both functions take world-space directional vectors, not angles.
 
----
+***
 
 ## Physics Joints (Advanced)
 
@@ -1739,7 +1735,7 @@ local rotarySpring = physics.add_damped_rotary_spring(
 
 **Gotcha:** Pivot joints use world coordinates for the anchor point, while spring/slide joints use local coordinates relative to each body.
 
----
+***
 
 ## Add Screen Bounds
 
@@ -1780,7 +1776,7 @@ physics.add_screen_bounds(
 
 **Gotcha:** Screen bounds are static bodies with the specified collision tag. Make sure entities have collision masks set up to collide with "WORLD".
 
----
+***
 
 ## Query Physics World
 
@@ -1835,7 +1831,7 @@ end
 
 **Gotcha:** `GetObjectsInArea` may return nil if no entities found. Use `candidates or {}` to avoid errors.
 
----
+***
 
 ## Enable/Disable Physics Stepping
 
@@ -1869,7 +1865,7 @@ end
 
 **Gotcha:** Don't forget to re-enable physics stepping when closing UI screens or the game will freeze!
 
----
+***
 
 ## Complete Physics Setup Pattern
 
@@ -1932,7 +1928,7 @@ end
 
 *— Combined pattern from core/gameplay.lua:7104-7123, combat/projectile_system.lua:765-822*
 
-**Gotcha:** Follow the order: Create sprite → Position → Create physics → Configure properties → Set sync mode → Setup collision masks.
+**Gotcha:** Follow the order: Create sprite -> Position -> Create physics -> Configure properties -> Set sync mode -> Setup collision masks.
 
 \newpage
 
@@ -1971,9 +1967,9 @@ ShaderBuilder.for_entity(entity2)
     :apply()
 ```
 
-**Gotcha:** The shader name must match a shader file in `assets/shaders/` (e.g., "3d_skew_holo" → `3d_skew_holo_fragment.fs` + `3d_skew_holo_vertex.vs`).
+**Gotcha:** The shader name must match a shader file in `assets/shaders/` (e.g., "3d_skew_holo" -> `3d_skew_holo_fragment.fs` + `3d_skew_holo_vertex.vs`).
 
----
+***
 
 ## Stack Multiple Shaders
 
@@ -2003,7 +1999,7 @@ ShaderBuilder.for_entity(entity)
 
 **Gotcha:** Use `:clear()` to remove all existing shaders before applying new ones.
 
----
+***
 
 ## Set Shader Uniforms
 
@@ -2040,7 +2036,7 @@ ShaderBuilder.for_entity(entity2)
 
 **Gotcha:** Uniform names must match the shader's GLSL uniform declarations. Check the `.fs` shader file to see what uniforms are available.
 
----
+***
 
 ## Shader Families
 
@@ -2093,7 +2089,7 @@ ShaderBuilder.register_family("flash", {
 
 **Gotcha:** Family defaults are applied automatically when you add a shader from that family.
 
----
+***
 
 ## Draw Text (Command Buffer)
 
@@ -2130,7 +2126,7 @@ draw.textPro(layer, {
 
 **Gotcha:** `rotation` is in radians, not degrees. Use `math.rad(degrees)` to convert.
 
----
+***
 
 ## Draw Shapes (Command Buffer)
 
@@ -2179,7 +2175,7 @@ draw.rectanglePro(layer, {
 
 **Gotcha:** `rectanglePro` uses a `rect` table with `{x, y, width, height}`, not separate parameters.
 
----
+***
 
 ## Local Draw Commands (Inside Shader Pipeline)
 
@@ -2227,7 +2223,7 @@ draw.local_command(test_entity4, "text_pro", {
 
 **Gotcha:** Local commands are part of the entity's shader pipeline. If the entity has shaders applied, the local commands will be processed through those shaders too.
 
----
+***
 
 ## Render Presets
 
@@ -2284,7 +2280,7 @@ draw.register_preset("my_preset", {
 
 **Gotcha:** Preset options are applied first, then explicit options override them. So you can use a preset and still customize individual fields.
 
----
+***
 
 ## Z-Ordering
 
@@ -2345,7 +2341,7 @@ local baseZ = (z_orders.ui_tooltips or 0) - 4
 
 **Gotcha:** Always use the named constants from `z_orders` instead of magic numbers. This makes rendering order easier to understand and maintain.
 
----
+***
 
 ## Global Shader Uniforms
 
@@ -2367,7 +2363,7 @@ ShaderBuilder.for_entity(entity)
 
 **Gotcha:** Uniforms set via `globalShaderUniforms` persist across frames until changed. Use ShaderBuilder for per-entity uniforms.
 
----
+***
 
 ## Draw Command Defaults
 
@@ -2405,7 +2401,7 @@ draw.textPro(layer, {
 
 **Gotcha:** Both camelCase (`textPro`) and snake_case (`text_pro`) variants have defaults. Use camelCase for command buffer wrappers, snake_case for local_command types.
 
----
+***
 
 ## Complete Shader + Draw Example
 
@@ -2452,7 +2448,7 @@ end
 
 *— Combined pattern from core/shader_builder.lua, core/draw.lua, tests/shader_builder_visual_test.lua*
 
-**Gotcha:** Follow the order: Create sprite → Position → Apply shaders → Add local draw commands. Local commands added before shaders may not render correctly.
+**Gotcha:** Follow the order: Create sprite -> Position -> Apply shaders -> Add local draw commands. Local commands added before shaders may not render correctly.
 
 \newpage
 
@@ -2519,7 +2515,7 @@ local boxID = dsl.spawn({ x = 200, y = 200 }, root)
 
 **Gotcha:** `config` is where you set layout properties (padding, spacing, alignment, colors). `children` is an array of child UI elements.
 
----
+***
 
 ## DSL: Vertical Layout
 
@@ -2561,7 +2557,7 @@ local v = dsl.vbox {
 
 **Gotcha:** Children are laid out top to bottom. First child is at the top, last child at the bottom.
 
----
+***
 
 ## DSL: Horizontal Layout
 
@@ -2606,7 +2602,7 @@ table.insert(rows, dsl.hbox {
 
 **Gotcha:** Children are laid out left to right. First child is leftmost, last child is rightmost.
 
----
+***
 
 ## DSL: Text Element
 
@@ -2660,7 +2656,7 @@ return dsl.hbox {
 
 **Gotcha:** Default alignment is HORIZONTAL_CENTER | VERTICAL_CENTER. Override with the `align` option.
 
----
+***
 
 ## DSL: Animated Sprite
 
@@ -2700,7 +2696,7 @@ dsl.anim("fireball_icon", {
 
 **Gotcha:** The `isAnimation` option determines whether to treat the ID as an animation (true, default) or a raw sprite identifier (false).
 
----
+***
 
 ## DSL: Dynamic Text
 
@@ -2749,7 +2745,7 @@ dsl.dynamicText(
 
 **Gotcha:** `autoAlign` triggers re-alignment when text width changes. Only use if the text length varies significantly.
 
----
+***
 
 ## DSL: Grid Layout
 
@@ -2793,7 +2789,7 @@ local myUI = dsl.root {
 
 **Gotcha:** `dsl.grid()` returns an array of horizontal rows. You can insert it directly into a vbox's `children`.
 
----
+***
 
 ## Spawning UI
 
@@ -2847,7 +2843,7 @@ remove_default_state_tag(boxID)
 
 **Gotcha:** Z-index only applies if you specify a layer name. Without a layer, z-ordering is undefined.
 
----
+***
 
 ## Tooltips
 
@@ -2907,7 +2903,7 @@ dsl.text("Info", {
 
 **Gotcha:** Tooltip `title` and `body` are passed through `localization.get()` for translation support.
 
----
+***
 
 ## Click Handlers on UI Elements
 
@@ -2955,7 +2951,7 @@ dsl.anim("close_button", {
 
 **Gotcha:** To make sprites clickable, you need to set up GameObject callbacks manually after spawning (DSL doesn't auto-enable clicks for sprites).
 
----
+***
 
 ## Text Effects
 
@@ -2996,7 +2992,7 @@ dsl.dynamicText(
 
 **Gotcha:** Effects are defined in `ui/text_effects/` and registered via `effects.register()`. Check those files to see available effect names.
 
----
+***
 
 ## UI Box Alignment Flags
 
@@ -3048,7 +3044,7 @@ config = {
 
 **Gotcha:** Alignment affects how children are positioned within the box, not the box itself.
 
----
+***
 
 ## Complete UI Example (Tooltip)
 
@@ -3122,7 +3118,7 @@ end
 
 **Gotcha:** Use `remove_default_state_tag()` to prevent the UI from appearing in all states.
 
----
+***
 
 ## UI DSL Color Options
 
@@ -3150,7 +3146,7 @@ dsl.root {
 
 **Gotcha:** `shadow = true` adds a subtle drop shadow for depth.
 
----
+***
 
 ## Nested Layouts
 
@@ -3252,7 +3248,7 @@ local entity = ProjectileSystem.spawn({
 
 **Gotcha:** `angle` is in radians, not degrees. Use `math.rad(degrees)` to convert.
 
----
+***
 
 ## Helper: Quick Spawn
 
@@ -3273,7 +3269,7 @@ ProjectileSystem.spawnArc(x, y, angle, speed, damage, owner)
 
 *— from combat/projectile_system.lua:1819-1865*
 
----
+***
 
 ## Movement Types
 
@@ -3346,7 +3342,7 @@ ProjectileSystem.spawn({
 
 **Real usage:** Orbital shields, rotating projectiles around player/entity.
 
----
+***
 
 ## Collision Behaviors
 
@@ -3409,7 +3405,7 @@ collisionBehavior = ProjectileSystem.CollisionBehavior.PASS_THROUGH
 
 *— Projectile ignores collision but can still deal damage.*
 
----
+***
 
 ## Event Callbacks
 
@@ -3449,7 +3445,7 @@ ProjectileSystem.spawn({
 
 **Gotcha:** `onDestroy` is called when projectile is removed for any reason (timeout, hit, out of bounds).
 
----
+***
 
 ## Lifetime Control
 
@@ -3476,7 +3472,7 @@ ProjectileSystem.spawn({
 
 **Gotcha:** Default lifetime varies by movement type (straight: 5s, homing: 10s, orbital: 12s).
 
----
+***
 
 ## Damage & Modifiers
 
@@ -3513,7 +3509,7 @@ ProjectileSystem.spawn({
 
 **Gotcha:** `faction` controls friendly fire. Set to prevent hitting allies.
 
----
+***
 
 ## Projectile Presets
 
@@ -3578,7 +3574,7 @@ return Projectiles
 - **Elements:** `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`
 - **Mechanics:** `Projectile`, `AoE`, `Hazard`
 
----
+***
 
 ## Collision Targets
 
@@ -3605,7 +3601,7 @@ ProjectileSystem.spawn({
 
 **Gotcha:** Set `collideWithWorld = false` to pass through walls/boundaries.
 
----
+***
 
 ## Physics Integration
 
@@ -3630,7 +3626,7 @@ ProjectileSystem.spawn({
 
 **Gotcha:** `fixedRotation = false` makes projectile rotate based on velocity direction.
 
----
+***
 
 ## Events & Signals
 
@@ -3677,7 +3673,7 @@ end)
 - `"projectile_exploded"` (entity, {position, radius, damage, owner}) — when explosion occurs
 - `"projectile_destroyed"` (entity, {owner, reason}) — when projectile is removed
 
----
+***
 
 ## Complete Example: Custom Grenade
 
@@ -3777,7 +3773,7 @@ end)
 
 *Spellcasting system with cards, modifiers, triggers, and jokers.*
 
----
+***
 
 ## Overview
 
@@ -3799,7 +3795,7 @@ The Wand & Cards system is a deck-building spellcasting engine where:
 - `wand/spell_type_evaluator.lua` — Cast pattern detection
 - `wand/card_behavior_registry.lua` — Custom behaviors
 
----
+***
 
 ## Define a Basic Action Card
 
@@ -3836,13 +3832,13 @@ Cards.MY_LIGHTNING_BOLT = {
 
 *— Pattern from data/cards.lua:16-36*
 
-**Gotcha:** `id` must exactly match the table key (`Cards.MY_LIGHTNING_BOLT` → `id = "MY_LIGHTNING_BOLT"`).
+**Gotcha:** `id` must exactly match the table key (`Cards.MY_LIGHTNING_BOLT` -> `id = "MY_LIGHTNING_BOLT"`).
 
 **Gotcha:** `test_label` uses `\n` for line breaks in UI, not actual newlines.
 
 **Gotcha:** `radius_of_effect = 0` means single-target; any value > 0 creates AoE explosion.
 
----
+***
 
 ## Define a Modifier Card
 
@@ -3896,7 +3892,7 @@ Cards.MOD_MULTICAST_5 = {
 
 **Gotcha:** `multicast_count` fires multiple projectiles simultaneously with `spread_angle` arc.
 
----
+***
 
 ## Define a Trigger Card
 
@@ -3947,13 +3943,13 @@ Cards.MOD_TRIGGER_ON_DEATH = {
 
 *— Pattern from data/cards.lua:403-456*
 
-**Gotcha:** Trigger cards split the wand into blocks: [before trigger] → [after trigger fires].
+**Gotcha:** Trigger cards split the wand into blocks: [before trigger] -> [after trigger fires].
 
 **Gotcha:** Actions after a trigger execute at the trigger position, not cast position.
 
-**Gotcha:** Multiple triggers can chain: timer → hit → death creates 3 sub-casts.
+**Gotcha:** Multiple triggers can chain: timer -> hit -> death creates 3 sub-casts.
 
----
+***
 
 ## Define a Joker (Passive Artifact)
 
@@ -4041,7 +4037,7 @@ return Jokers
 
 **Gotcha:** `damage_mod` is additive, `damage_mult` is multiplicative (stacks with others).
 
----
+***
 
 ## Trigger Joker Events
 
@@ -4091,7 +4087,7 @@ end
 
 **Gotcha:** `effects.messages` is a list of `{ joker = name, text = message }` tables.
 
----
+***
 
 ## Add/Remove Jokers
 
@@ -4132,7 +4128,7 @@ end
 
 **Gotcha:** Jokers are global — they affect all spells, not per-wand.
 
----
+***
 
 ## Execute a Wand
 
@@ -4182,11 +4178,11 @@ end
 
 **Gotcha:** `execute()` returns false if on cooldown, out of mana, or out of charges.
 
-**Gotcha:** Cards execute in order: modifiers → action → trigger → [trigger payload].
+**Gotcha:** Cards execute in order: modifiers -> action -> trigger -> [trigger payload].
 
 **Gotcha:** `triggerType` parameter should match the wand's trigger type for debugging.
 
----
+***
 
 ## Define Tag Synergies
 
@@ -4229,7 +4225,7 @@ local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
 
 **Gotcha:** `proc` bonuses require implementation in combat system to have effect.
 
----
+***
 
 ## Evaluate Tag Bonuses
 
@@ -4272,13 +4268,13 @@ end
 
 *— Pattern from wand/tag_evaluator.lua:103-247*
 
-**Gotcha:** Tags are normalized: `"fire"` → `"Fire"`, `" Lightning "` → `"Lightning"`.
+**Gotcha:** Tags are normalized: `"fire"` -> `"Fire"`, `" Lightning "` -> `"Lightning"`.
 
 **Gotcha:** Invalid tags (nil, empty string) are skipped, not errored.
 
 **Gotcha:** `count_tags()` only counts cards that exist in card registry.
 
----
+***
 
 ## Register Custom Behavior
 
@@ -4350,7 +4346,7 @@ Cards.CHAIN_EXPLOSION = {
 
 **Gotcha:** Use `ctx.params` for card-specific parameters (max_chains, radius, etc.).
 
----
+***
 
 ## Aggregate Modifiers
 
@@ -4400,7 +4396,7 @@ WandModifiers.applyToAction(agg, action)
 
 **Gotcha:** Aggregates are mutable — `addModifier()` modifies in place.
 
----
+***
 
 ## Detect Spell Type
 
@@ -4452,11 +4448,11 @@ local Jokers = {
 
 **Gotcha:** Spell type is determined by first matching pattern (order matters).
 
-**Gotcha:** Single-action casts check multicast → speed/damage → delay.
+**Gotcha:** Single-action casts check multicast -> speed/damage -> delay.
 
-**Gotcha:** Multi-action casts check element tags → type diversity → cost/damage.
+**Gotcha:** Multi-action casts check element tags -> type diversity -> cost/damage.
 
----
+***
 
 ## Register Wand Trigger
 
@@ -4523,7 +4519,7 @@ WandTriggers.cleanup()
 
 **Gotcha:** Timer triggers use `timer` system — ensure it's updated each frame.
 
----
+***
 
 ## Complete Example: Custom Spell
 
@@ -4700,7 +4696,7 @@ return {
 
 **Gotcha:** Entity type filename must match the ID used when spawning AI entities.
 
----
+***
 
 ## Initialize AI Blackboard
 
@@ -4731,7 +4727,7 @@ end
 
 **Gotcha:** Use global helpers like `setBlackboardFloat(entity, "hunger", 0.5)` for convenience.
 
----
+***
 
 ## Define AI Action
 
@@ -4783,7 +4779,7 @@ return {
 
 **Gotcha:** Preconditions/postconditions are matched against worldstate, not blackboard.
 
----
+***
 
 ## AI Action with Coroutine
 
@@ -4839,7 +4835,7 @@ return {
 
 **Gotcha:** Higher `cost` makes action less desirable in GOAP planning.
 
----
+***
 
 ## AI Action with Abort
 
@@ -4923,7 +4919,7 @@ return {
 
 **Gotcha:** Use `watch = "*"` to react to any worldstate change.
 
----
+***
 
 ## Define Goal Selector
 
@@ -4950,7 +4946,7 @@ end
 
 **Gotcha:** Simple selectors use if/else logic; complex selectors use desire + hysteresis.
 
----
+***
 
 ## Goal Selector with Engine
 
@@ -5029,7 +5025,7 @@ ai.goals = {
 
 **Gotcha:** Higher-ranked bands can override if their desire is >= 0.4.
 
----
+***
 
 ## Define Worldstate Updater
 
@@ -5099,7 +5095,7 @@ return {
 
 **Gotcha:** Blackboard stores continuous values (hunger, health); worldstate stores discrete atoms (hungry = true/false).
 
----
+***
 
 ## AI System Flow
 
@@ -5113,8 +5109,8 @@ return {
 2. **Goal selector** runs (choose current goal based on worldstate)
 3. **GOAP planner** finds action sequence to reach goal (if needed)
 4. **Current action** `update()` runs (executes behavior, returns SUCCESS/RUNNING/FAILURE)
-5. **Action completes** → postconditions applied to worldstate → next action starts
-6. **Worldstate change detected** (if action has `watch` list) → abort current action → replan
+5. **Action completes** -> postconditions applied to worldstate -> next action starts
+6. **Worldstate change detected** (if action has `watch` list) -> abort current action -> replan
 
 **Example flow for gold_digger:**
 
@@ -5133,7 +5129,7 @@ Frame 51:
   - Action "digforgold" update() returns ActionResult.SUCCESS
   - Action "digforgold" finish() called
   - Postcondition applied: candigforgold=false
-  - GOAP planner has no more actions → goal reached
+  - GOAP planner has no more actions -> goal reached
 
 Frame 52:
   - worldstate_updaters.can_dig_for_gold() sets candigforgold=false (cooldown active)
@@ -5146,7 +5142,7 @@ Frame 52:
 
 **Gotcha:** Actions with `watch = "*"` abort on any worldstate change; `watch = { "hungry" }` aborts only if `hungry` changes.
 
----
+***
 
 ## AI API Reference
 
@@ -5254,7 +5250,7 @@ local ContentValidator = require("tools.content_validator")
 ContentValidator.validate_all(true)
 ```
 
----
+***
 
 ## Define Action Card
 
@@ -5324,7 +5320,7 @@ Cards.MY_FIREBALL = {
 
 **Gotcha:** `radius_of_effect = 0` means no AoE; set to positive value for area damage.
 
----
+***
 
 ## Define Modifier Card
 
@@ -5390,7 +5386,7 @@ Cards.MOD_DAMAGE_UP = {
 
 **Gotcha:** `multicast_count` repeats the next action N times (simultaneous or looped, depending on avatar).
 
----
+***
 
 ## Define Trigger Card
 
@@ -5436,7 +5432,7 @@ Cards.TRIGGER_TIMER = {
 
 **Gotcha:** Trigger cards are typically assigned to wands, not directly cast.
 
----
+***
 
 ## Define Joker
 
@@ -5522,7 +5518,7 @@ Return a table with modifier fields:
 
 **Gotcha:** Return `nil` if joker doesn't apply to current event (don't return empty table).
 
----
+***
 
 ## Define Projectile Preset
 
@@ -5597,7 +5593,7 @@ Projectiles.fireball = {
 
 **Gotcha:** `chain_damage_decay` is multiplicative (0.7 = 70% of previous damage).
 
----
+***
 
 ## Define Avatar
 
@@ -5724,7 +5720,7 @@ unlock = {
 
 **Gotcha:** Unlock conditions use `OR_` prefix for alternative requirements.
 
----
+***
 
 ## Define Shader Preset
 
@@ -5804,7 +5800,7 @@ addShaderPass(registry, entity, "outline", { thickness = 2.0 })
 
 **Gotcha:** Shader families with `3d_skew_` prefix auto-detect `needs_atlas_uniforms = true`.
 
----
+***
 
 ## Validate Content Definitions
 
@@ -5878,7 +5874,7 @@ end
 
 **Gotcha:** Unknown tags generate warnings with suggestions (fuzzy matching by lowercasing).
 
----
+***
 
 ## Standard Tag Reference
 
@@ -5935,7 +5931,7 @@ Cards.EXPLOSIVE_FIREBALL = {
 
 **Gotcha:** Custom tags are allowed but won't benefit from threshold bonuses unless added to `tag_evaluator.lua`.
 
----
+***
 
 ## Extend Tag System
 
@@ -6090,7 +6086,7 @@ signal.emit("projectile_spawned", entity, {
 
 **Provenance:** See gameplay.lua:3569-3625 for event usage patterns.
 
----
+***
 
 ## lume: Math & Random
 
@@ -6150,7 +6146,7 @@ local item = lume.weightedchoice({
 
 **Gotcha:** `lume.random()` uses Lua's math.random; seed with `math.randomseed()` if needed.
 
----
+***
 
 ## lume: Table Operations
 
@@ -6240,7 +6236,7 @@ local all = lume.concat(array1, array2, array3)
 
 **Provenance:** See gameplay.lua:2110, 2610, 7984 for usage examples.
 
----
+***
 
 ## Global Helpers: Entity Validation
 
@@ -6286,7 +6282,7 @@ if not ensure_entity(entity) then return end
 
 **Gotcha:** `script_field()` returns the default if the script OR field is nil; check both cases.
 
----
+***
 
 ## Global Helpers: Logging
 
@@ -6315,7 +6311,7 @@ log_debug(("Health: %d/%d"):format(current, max))
 
 **Gotcha:** `log_debug()` may be compiled out in release builds; use `log_info()` for important messages.
 
----
+***
 
 ## util: Color Lookup
 
@@ -6369,7 +6365,7 @@ color:setAlpha(128)  -- 50% transparent
 
 **Provenance:** Color palette defined in `assets/graphics/colors.json` (or loaded from C++).
 
----
+***
 
 ## util: Camera Smooth Pan
 
@@ -6395,7 +6391,7 @@ camera_smooth_pan_to("main", targetX, targetY, {
 
 **Gotcha:** Camera must exist; logs error if not found.
 
----
+***
 
 ## util: Particle Helpers
 
@@ -6476,7 +6472,7 @@ particle.spawnDirectionalCone(Vec2(x, y), count, seconds, {
 
 **Gotcha:** Easing names come from util/easing.lua (e.g., "linear", "quad", "cubic", "bounce").
 
----
+***
 
 ## knife: Functional Chaining
 
@@ -6507,7 +6503,7 @@ local result = chain(pairs(myTable))
 
 **Gotcha:** Less common in this codebase than lume; prefer lume for consistency.
 
----
+***
 
 ## forma: Not Used
 
@@ -6517,7 +6513,7 @@ local result = chain(pairs(myTable))
 
 The `external/forma` library exists but is not actively used. Stick to lume/knife for functional programming.
 
----
+***
 
 ## Common Event Names
 
@@ -6562,7 +6558,7 @@ signal.clear("on_spell_cast", "on_joker_trigger", "tag_threshold_discovered")
 
 **Gotcha:** Some events pass entity as first param, others pass data table; check usage examples.
 
----
+***
 
 ## Easing Functions
 
@@ -6605,7 +6601,7 @@ local currentScale = startScale + (endScale - startScale) * eased
 
 **Gotcha:** `.d` (derivative) is useful for velocity-based effects (like particles).
 
----
+***
 \newpage
 \appendix
 
@@ -6823,6 +6819,6 @@ ProjectileSystem.spawn({
 })
 ```
 
----
+***
 
 *End of Cookbook*

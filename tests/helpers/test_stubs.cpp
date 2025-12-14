@@ -13,6 +13,7 @@
 #include "systems/physics/physics_manager.hpp"
 #include "systems/ui/element.hpp"
 #include "systems/ui/box.hpp"
+#include "systems/ui/editor/pack_editor.hpp"
 #include "systems/timer/timer.hpp"
 #include "third_party/navmesh/source/path_finder.h"
 
@@ -41,6 +42,9 @@ namespace element {
     void Click(entt::registry&, entt::entity) {}
     void Release(entt::registry&, entt::entity, entt::entity) {}
     void StopHover(entt::registry&, entt::entity) {}
+}
+namespace editor {
+    void renderPackEditor(PackEditorState&) {}
 }
 } // namespace ui
 

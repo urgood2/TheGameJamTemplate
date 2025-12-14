@@ -444,7 +444,7 @@ extern std::optional<bool> noModCursorStack; // TODO: document this
 
 struct Settings {
   bool shadowsOn = true;
-  float uiPadding = 10.0f;
+  float uiPadding = 4.0f;  // Unified with globals::uiPadding (was 10.0f)
 };
 
 extern Settings settings;

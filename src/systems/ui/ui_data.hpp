@@ -321,6 +321,14 @@ namespace ui
         std::optional<bool> noRole;          // Prevents the element from being assigned a role in the layout.
         std::optional<transform::InheritedProperties> role; // Role component for UI
 
+        // Calculate effective padding with scale factors applied
+        // Centralizes: padding.value_or(globals::getSettings().uiPadding) * scale.value_or(1.0f) * globals::getGlobalUIScaleFactor()
+        float effectivePadding() const {
+            return padding.value_or(globals::getSettings().uiPadding)
+                * scale.value_or(1.0f)
+                * globals::getGlobalUIScaleFactor();
+        }
+
         struct Builder;
     };
     
@@ -968,6 +976,9 @@ namespace ui
                    transform::GameObject,
                    transform::Transform
                  >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>)) globalUIGroup;
-    
-    
+
+    // Detect conflicting alignment flags (e.g., VERTICAL_CENTER | VERTICAL_BOTTOM)
+    // Returns true if conflicts exist, optionally fills conflictDescription with details
+    bool hasConflictingAlignmentFlags(int flags, std::string* conflictDescription = nullptr);
+
 }

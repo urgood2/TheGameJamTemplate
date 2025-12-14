@@ -29,6 +29,7 @@ add_executable(unit_tests
     unit/test_asset_validation.cpp
     unit/test_memory_safety.cpp
     unit/test_ownership.cpp
+    unit/test_ui_layout.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -49,6 +50,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/physics/physics_world.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
 )
 
 target_include_directories(unit_tests PRIVATE

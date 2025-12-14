@@ -38,15 +38,17 @@ function imports.core()
         require("core.z_orders")
 end
 
---- Entity creation bundle (3 modules)
+--- Entity creation bundle (4 modules)
 --- @return table Node (behavior_script_v2)
 --- @return table animation_system (may be nil if not available)
 --- @return table EntityBuilder
+--- @return table spawn
 function imports.entity()
     return
         require("monobehavior.behavior_script_v2"),
         _G.animation_system,
-        require("core.entity_builder")
+        require("core.entity_builder"),
+        require("core.spawn")
 end
 
 --- Physics bundle (2 modules)
@@ -86,7 +88,7 @@ end
 --- @return table All imports keyed by name
 function imports.all()
     local component_cache, entity_cache, timer, signal, z_orders = imports.core()
-    local Node, animation_system, EntityBuilder = imports.entity()
+    local Node, animation_system, EntityBuilder, spawn = imports.entity()
     local PhysicsManager, PhysicsBuilder = imports.physics()
 
     return {
@@ -101,6 +103,7 @@ function imports.all()
         Node = Node,
         animation_system = animation_system,
         EntityBuilder = EntityBuilder,
+        spawn = spawn,
 
         -- Physics
         PhysicsManager = PhysicsManager,

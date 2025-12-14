@@ -31,6 +31,7 @@ local TagSynergyPanel = require("ui.tag_synergy_panel")
 local AvatarJokerStrip = require("ui.avatar_joker_strip")
 local LevelUpScreen = require("ui.level_up_screen")
 local ContentDebugPanel = require("ui.content_debug_panel")
+local CombatDebugPanel = require("ui.combat_debug_panel")
 local LEVEL_UP_MODAL_DELAY = 0.5
 local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
@@ -6932,6 +6933,11 @@ function debugUI()
     -- Content Debug Panel (Jokers, Projectiles, Tags)
     if ContentDebugPanel and ContentDebugPanel.render then
         ContentDebugPanel.render()
+    end
+
+    -- Combat Debug Panel (Stats, Combat, Defense, etc.)
+    if CombatDebugPanel and CombatDebugPanel.render then
+        CombatDebugPanel.render()
     end
 end
 

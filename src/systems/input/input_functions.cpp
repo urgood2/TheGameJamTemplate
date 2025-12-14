@@ -2,6 +2,7 @@
 #include "input_lua_bindings.hpp"
 #include "input_keyboard.hpp"
 #include "input_gamepad.hpp"
+#include "input_hid.hpp"
 
 #include "raylib.h"
 
@@ -44,19 +45,6 @@ using namespace snowhouse; // assert
 // TODO: cursor stacks also need to be tested after ui
 namespace input
 {
-    // Hide/show cursor only when a window exists (tests may run headless).
-    static void SafeHideCursor()
-    {
-        if (IsWindowReady())
-            HideCursor();
-    }
-
-    static void SafeShowCursor()
-    {
-        if (IsWindowReady())
-            ShowCursor();
-    }
-
     // Resolve input state and registry, preferring the EngineContext when available.
     static EngineContext* resolveCtx(EngineContext* ctx) {
         return ctx ? ctx : globals::g_ctx;
@@ -126,7 +114,7 @@ namespace input
         {
             if (IsKeyDown(key))
             {
-                ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::KEYBOARD);
+                hid::reconfigure_device_info(inputState, InputDeviceInputCategory::KEYBOARD);
                 ProcessKeyboardKeyDown(inputState, (KeyboardKey)key);
                 if (!keyDownLastFrame[key]) {
                     keyDownLastFrame[key] = true;
@@ -138,7 +126,7 @@ namespace input
             }
             if (IsKeyReleased(key))
             {
-                ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::KEYBOARD);
+                hid::reconfigure_device_info(inputState, InputDeviceInputCategory::KEYBOARD);
                 ProcessKeyboardKeyRelease(inputState, (KeyboardKey)key);
                 keyDownLastFrame[key] = false;
             }
@@ -147,7 +135,7 @@ namespace input
         // poll touch? LATER: implement touch
         if (GetTouchPointCount() > 0)
         {
-            ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::TOUCH);
+            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::TOUCH);
         }
 
         // poll mouse buttons
@@ -165,14 +153,14 @@ namespace input
 
         if (mouseDetectDownFirstFrameLeft)
         { // this should only register first time the button is held down
-            ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
             Vector2 mousePos = globals::getScaledMousePositionCached();
             EnqueueLeftMouseButtonPress(inputState, mousePos.x, mousePos.y);
             bus.publish(events::MouseClicked{mousePos, MOUSE_LEFT_BUTTON});
         }
         if (mouseDetectDownFirstFrameRight)
         {
-            ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
             Vector2 mousePos = globals::getScaledMousePositionCached();
             // TODO: right mouse handling isn't really configured, need to add
             EnqueRightMouseButtonPress(inputState, mousePos.x, mousePos.y);
@@ -180,7 +168,7 @@ namespace input
         }
         if (mosueLeftDownCurrentFrame == false && mouseLeftDownLastFrame == true)
         { // release only for left button
-            ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
             Vector2 mousePos = globals::getScaledMousePositionCached();
             ProcessLeftMouseButtonRelease(registry, inputState, mousePos.x, mousePos.y, ctx);
         }
@@ -192,13 +180,13 @@ namespace input
         // poll mouse movement
         if (GetMouseDelta().x != 0 || GetMouseDelta().y != 0)
         {
-            ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
         }
         
         // poll mouse wheel
         if (GetMouseWheelMove() != 0)
         {
-            ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
             input::DispatchRaw(inputState,
             InputDeviceInputCategory::GAMEPAD_AXIS, // intentionally using gamepad axis category here to represent mouse wheel as an axis
             AXIS_MOUSE_WHEEL_Y,
@@ -225,14 +213,14 @@ namespace input
 
                 if (gamepadButtonDetectDownFirstFrame)
                 {
-                    SetCurrentGamepad(inputState, GetGamepadName(0), 0);
-                    ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
+                    hid::set_current_gamepad(inputState, GetGamepadName(0), 0);
+                    hid::reconfigure_device_info(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
                     ProcessButtonPress(inputState, (GamepadButton)button, ctx);
                 }
                 if (gamepadButtonDetectUpFirstFrame)
                 {
-                    SetCurrentGamepad(inputState, GetGamepadName(0), 0);
-                    ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
+                    hid::set_current_gamepad(inputState, GetGamepadName(0), 0);
+                    hid::reconfigure_device_info(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
                     ProcessButtonRelease(inputState, (GamepadButton)button, ctx);
                 }
 
@@ -255,13 +243,13 @@ namespace input
                 abs(axisRightY) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
                 axisLT > -1.f || axisRT > -1.f)
             {
-                SetCurrentGamepad(inputState, GetGamepadName(0), 0);
+                hid::set_current_gamepad(inputState, GetGamepadName(0), 0);
                 
                 // SPDLOG_DEBUG("Axis movement detected! Lx={} Ly={}", axisLeftX, axisLeftY);
                 // SPDLOG_INFO("Axes: {}", GetGamepadAxisCount(0));
 
                 
-                ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_AXIS);
+                hid::reconfigure_device_info(inputState, InputDeviceInputCategory::GAMEPAD_AXIS);
                 UpdateGamepadAxisInput(inputState, registry, dt, ctx);
             }
         }
@@ -326,7 +314,7 @@ namespace input
         // SPDLOG_DEBUG("Final category is {}", magic_enum::enum_name(finalCategory));
 
         if (finalCategory != InputDeviceInputCategory::NONE) {
-            ReconfigureInputDeviceInfo(inputState, finalCategory);
+            hid::reconfigure_device_info(inputState, finalCategory);
         }
 
         // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt, ctx);
@@ -334,7 +322,7 @@ namespace input
 
         handleRawInput(registry, inputState, dt, ctx);
 
-        // ReconfigureInputDeviceInfo(inputState, finalCategory);
+        // hid::reconfigure_device_info(inputState, finalCategory);
 
         // button/key updates
         PropagateButtonAndKeyUpdates(inputState, registry, dt);
@@ -1023,155 +1011,6 @@ namespace input
             inputState.overlay_menu_active_timer = 0.0f;
     }
 
-    // The universal controller for what type of HID Device the player is using to interact with the game. The game should be able to handle switching to any viable HID at any time
-    // axis_cursor, axis, button, mouse, touch
-    auto ReconfigureInputDeviceInfo(InputState &state, InputDeviceInputCategory category, const GamepadButton button) -> void
-    {
-        if (category == InputDeviceInputCategory::NONE || category == state.hid.last_type)
-            return;
-
-
-        const bool isControllerInput =
-            category == InputDeviceInputCategory::GAMEPAD_AXIS ||
-            category == InputDeviceInputCategory::GAMEPAD_BUTTON ||
-            category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR;
-
-        const bool isMouseKeyboardTouch =
-            category == InputDeviceInputCategory::KEYBOARD ||
-            category == InputDeviceInputCategory::MOUSE ||
-            category == InputDeviceInputCategory::TOUCH;
-
-        //----------------------------------------------------------
-        // CONTROLLER INPUT: Enable controller mode persistently
-        //----------------------------------------------------------
-        if (isControllerInput)
-        {
-            if (!state.hid.controller_enabled)
-            {
-                SPDLOG_DEBUG("Switching to controller input: {}", magic_enum::enum_name(category));
-                SafeHideCursor();
-            }
-
-            state.hid.controller_enabled = true;
-            state.hid.last_type = category;
-            state.hid.dpad_enabled = true;
-            state.hid.pointer_enabled = (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
-            state.hid.axis_cursor_enabled = (category == InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
-            state.hid.mouse_enabled = false;
-            state.hid.touch_enabled = false;
-            return;
-        }
-
-        //----------------------------------------------------------
-        // MOUSE / KEYBOARD / TOUCH INPUT: Disable controller mode
-        //----------------------------------------------------------
-        if (isMouseKeyboardTouch && state.hid.controller_enabled)
-        {
-            SPDLOG_DEBUG("Switching away from controller input to {}", magic_enum::enum_name(category));
-
-            state.hid.controller_enabled = false;
-            state.hid.last_type = category;
-            state.hid.dpad_enabled = (category == InputDeviceInputCategory::KEYBOARD);
-            state.hid.pointer_enabled = (category == InputDeviceInputCategory::MOUSE || category == InputDeviceInputCategory::TOUCH);
-            state.hid.mouse_enabled = (category == InputDeviceInputCategory::MOUSE);
-            state.hid.touch_enabled = (category == InputDeviceInputCategory::TOUCH);
-            state.hid.axis_cursor_enabled = false;
-
-            // clear controller metadata
-            state.gamepad.console.clear();
-            state.gamepad.object.clear();
-            state.gamepad.mapping.clear();
-            state.gamepad.name.clear();
-
-            // restore cursor
-            SafeShowCursor();
-
-            // unfocus UI
-            auto& reg = resolveRegistry();
-            auto view = reg.view<transform::GameObject, ui::UIConfig>();
-            for (auto entity : view)
-                view.get<transform::GameObject>(entity).state.isBeingFocused = false;
-        }
-    }
-
-
-    auto UpdateUISprites(const std::string &console_type) -> void
-    {
-        // LATER: implement later if needed
-        //  Update sprites based on console type (e.g., load textures, modify UI)
-        if (console_type == "Nintendo")
-        {
-            // Set Nintendo-specific icons
-        }
-        else if (console_type == "PlayStation")
-        {
-            // Set PlayStation-specific icons
-        }
-        else
-        {
-            // Default to Xbox
-        }
-    }
-
-    std::string DeduceConsoleFromGamepad(int gamepadIndex)
-    {
-        if (!IsGamepadAvailable(gamepadIndex))
-            return "No Gamepad";
-
-        std::string gamepadName = GetGamepadName(gamepadIndex);
-
-        // Gamepad name patterns for different consoles
-        std::map<std::string, std::string> gamepadPatterns = {
-            {"PS", "PlayStation"},
-            {"Sony", "PlayStation"},
-            {"DualShock", "PlayStation"},
-            {"DualSense", "PlayStation"},
-            {"Wireless Controller", "PlayStation"}, // DualSense controller
-            {"Nintendo", "Nintendo"},
-            {"Switch", "Nintendo"},
-            {"Joy-Con", "Nintendo"},
-            {"Pro Controller", "Nintendo"},
-            {"Xbox", "Xbox"},
-            {"XInput", "Xbox"},
-            {"Elite", "Xbox"},
-            {"360", "Xbox"},
-        };
-
-        for (const auto &[pattern, console] : gamepadPatterns)
-        {
-            if (gamepadName.find(pattern) != std::string::npos)
-            {
-                return console;
-            }
-        }
-
-        return "Unknown Console"; // Default case
-    }
-
-    auto SetCurrentGamepad(InputState &state, const std::string &gamepad_object, int gamepadID) -> void
-    {
-        if (state.gamepad.object != gamepad_object)
-        {
-            state.gamepad.object = gamepad_object;
-
-            // Get mapping string and name
-            // state.gamepad.mapping = getGamepadMappingString(gamepad_object);
-            state.gamepad.name = GetGamepadName(gamepadID);
-
-            // Determine the console type
-            std::string console_type = DeduceConsoleFromGamepad(gamepadID);
-            if (state.gamepad.console != console_type)
-            {
-                state.gamepad.console = console_type;
-
-                // Update UI elements based on console type (e.g., sprites)
-                UpdateUISprites(state.gamepad.console);
-            }
-            
-            state.gamepad.id = gamepadID;
-
-        }
-    }
 
     auto SetCurrentCursorPosition(entt::registry &registry, InputState &state) -> void
     {

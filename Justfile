@@ -84,6 +84,10 @@ ccache-stats:
 docs:
 	doxygen Doxyfile
 
+# Build Lua API Cookbook PDF
+docs-cookbook:
+	cd docs/lua-cookbook && ./build.sh
+
 # =============================================================================
 # Web Build - Individual Steps (match CMakeLists.txt targets)
 # =============================================================================

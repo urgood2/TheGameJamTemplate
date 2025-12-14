@@ -45,6 +45,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/uuid/uuid.cpp
     ${CMAKE_SOURCE_DIR}/src/util/crash_reporter.cpp
     ${CMAKE_SOURCE_DIR}/src/util/utilities.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/input/input_actions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_function_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/entity_gamestate_management/entity_gamestate_management.cpp

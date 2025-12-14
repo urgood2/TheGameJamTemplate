@@ -3,9 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-
     <title>raylib web game</title>
-
     <meta name="title" content="raylib web game">
     <meta name="description" content="New raylib web videogame, developed using raylib videogames library">
     <meta name="keywords" content="raylib, games, html5, programming, C, C++, library, learn, videogames">
@@ -31,66 +29,303 @@
     <link rel="shortcut icon" href="https://www.raylib.com/favicon.ico">
 
     <style>
-        body {
-            margin: 0;
-            background-color: black;
-            text-align: center;
+        /* ============================================
+           BALATRO-STYLE WEB SHELL
+           - Pixelated aesthetic
+           - Rounded containers with glow
+           - CRT scanlines
+           - Two-phase loading with smooth transitions
+           ============================================ */
+
+        @font-face {
+            font-family: 'PixelFont';
+            src: local('Courier New'), local('Consolas'), local('monospace');
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #0a0a12 0%, #151525 50%, #0a0a12 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'PixelFont', 'Courier New', Consolas, monospace;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* ============================================
+           CANVAS
+           ============================================ */
         canvas.emscripten {
             border: 0;
             background-color: black;
+            display: block;
+            margin: 0 auto;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
         }
 
+        canvas.emscripten.visible {
+            opacity: 1;
+        }
+
+        #output {
+            display: none;
+        }
+
+        /* ============================================
+           SPLASH SCREEN - Balatro Aesthetic
+           ============================================ */
         #splash {
-            position: absolute;
+            position: fixed;
             z-index: 1000;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: black;
+            background: linear-gradient(180deg, #0a0a12 0%, #151525 50%, #0a0a12 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #splash.visible {
+            opacity: 1;
+        }
+
+        #splash.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* CRT Scanlines Overlay */
+        #splash::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Loading Container - Rounded Rectangle with Glow */
+        .loading-container {
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+            border: 3px solid #2a2a4a;
+            border-radius: 16px;
+            padding: 32px 48px;
+            box-shadow:
+                0 0 20px rgba(100, 100, 200, 0.15),
+                0 0 60px rgba(80, 80, 160, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
         }
 
         #splash-image {
-            max-width: 80%;
-            max-height: 50%;
-            margin-bottom: 20px;
+            max-width: 100%;
+            max-height: 120px;
+            margin-bottom: 24px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
         }
 
+        /* Progress Bar Container */
         #progress-container {
-            width: 70%;
-            height: 16px;
-            background-color: #333;
-            border-radius: 8px;
+            width: 100%;
+            height: 20px;
+            background: #0a0a14;
+            border: 2px solid #3a3a5a;
+            border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
+        /* Progress Bar Fill */
         #progress-bar {
             width: 0%;
             height: 100%;
-            background-color: #ffffff;
-            transition: width 0.2s ease;
+            background: linear-gradient(90deg, #4a6cd4 0%, #6a8ce4 50%, #4a6cd4 100%);
+            background-size: 200% 100%;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+            box-shadow:
+                0 0 10px rgba(100, 140, 230, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
+        /* Pulsing animation during loading */
+        #progress-bar.loading {
+            animation: progressPulse 1.5s ease-in-out infinite, progressShine 2s linear infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { opacity: 0.85; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes progressShine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Progress Text */
         #progress-text {
-            color: white;
-            font-family: sans-serif;
-            font-size: 16px;
+            color: #8888aa;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(136, 136, 170, 0.3);
+        }
+
+        /* ============================================
+           DEV CONSOLE OVERLAY
+           ============================================ */
+        #dev-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            max-height: 400px;
+            min-height: 200px;
+            background: rgba(10, 10, 18, 0.95);
+            border-top: 2px solid #3a3a5a;
+            z-index: 9000;
+            display: none;
+            flex-direction: column;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 12px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #dev-console.open {
+            display: flex;
+        }
+
+        #dev-console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        #dev-console-title {
+            color: #8888aa;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #dev-console-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .console-btn {
+            background: #2a2a4a;
+            color: #aaaacc;
+            border: 1px solid #4a4a6a;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .console-btn:hover {
+            background: #3a3a5a;
+            color: #ffffff;
+        }
+
+        #dev-console-logs {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px;
+            scrollbar-width: thin;
+            scrollbar-color: #3a3a5a #0a0a14;
+        }
+
+        #dev-console-logs::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #dev-console-logs::-webkit-scrollbar-track {
+            background: #0a0a14;
+        }
+
+        #dev-console-logs::-webkit-scrollbar-thumb {
+            background: #3a3a5a;
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .log-entry.info { color: #8888aa; }
+        .log-entry.warn { color: #ddaa44; }
+        .log-entry.error { color: #dd4444; }
+        .log-entry.debug { color: #666688; }
+
+        #dev-console-footer {
+            padding: 6px 12px;
+            background: #0a0a14;
+            border-top: 1px solid #2a2a3a;
+            color: #666688;
+            font-size: 10px;
+        }
+
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
     </style>
 </head>
 <body>
     <!-- Splash loading screen -->
     <div id="splash">
-        <img id="splash-image" src="splash.png" alt="Loading..." />
-        <div id="progress-container">
-            <div id="progress-bar"></div>
+        <div class="loading-container">
+            <img id="splash-image" src="splash.png" alt="Loading..." />
+            <div id="progress-container">
+                <div id="progress-bar" class="loading"></div>
+            </div>
+            <div id="progress-text">DOWNLOADING...</div>
         </div>
-        <div id="progress-text">0%</div>
     </div>
 
     <!-- Canvas for the game -->
@@ -98,50 +333,289 @@
 
     <p id="output"></p>
 
+    <!-- Dev Console Overlay -->
+    <div id="dev-console">
+        <div id="dev-console-header">
+            <span id="dev-console-title">Developer Console</span>
+            <div id="dev-console-buttons">
+                <button class="console-btn" id="console-copy">Copy All</button>
+                <button class="console-btn" id="console-clear">Clear</button>
+                <button class="console-btn" id="console-close">Close</button>
+            </div>
+        </div>
+        <div id="dev-console-logs"></div>
+        <div id="dev-console-footer">
+            <span id="console-stats">Logs: 0 | Press ` or F12 to toggle</span>
+        </div>
+    </div>
+
     <script>
-        var Module = {
-            preRun: [],
-            postRun: [
-                function () {
-                    // Hide splash screen after game is ready
-                    const splash = document.getElementById('splash');
-                    if (splash) splash.style.display = 'none';
-                }
-            ],
-            print: (function () {
-                var element = document.getElementById('output');
-                if (element) element.value = ''; // clear browser cache
-                return function (text) {
-                    if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                    console.log(text);
-                    if (element) {
-                        element.value += text + "\n";
-                        element.scrollTop = element.scrollHeight;
-                    }
-                };
-            })(),
-            canvas: (function () {
-                return document.getElementById('canvas');
-            })(),
-            setStatus: function (text) {
-                let match = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-                if (match) {
-                    var percent = Math.floor((parseFloat(match[2]) / parseFloat(match[4])) * 100);
-                    document.getElementById('progress-bar').style.width = percent + '%';
-                    document.getElementById('progress-text').textContent = percent + '%';
-                } else {
-                    document.getElementById('progress-text').textContent = text;
-                }
-            },
-            totalDependencies: 0,
-            monitorRunDependencies: function (left) {
-                this.totalDependencies = Math.max(this.totalDependencies, left);
-                Module.setStatus(left
-                    ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')'
-                    : 'All downloads complete.');
+        // ============================================
+        // DEV CONSOLE LOG SYSTEM
+        // 5000 startup entries (preserved)
+        // 500 runtime entries (rolling)
+        // ============================================
+        (function() {
+            const MAX_STARTUP_LOGS = 5000;
+            const MAX_RUNTIME_LOGS = 500;
+
+            let startupLogs = [];
+            let runtimeLogs = [];
+            let isStartupPhase = true;
+            let consoleOpen = sessionStorage.getItem('devConsoleOpen') === 'true';
+
+            const logsContainer = document.getElementById('dev-console-logs');
+            const devConsole = document.getElementById('dev-console');
+            const statsEl = document.getElementById('console-stats');
+
+            function getLogLevel(args) {
+                const text = args.join(' ').toLowerCase();
+                if (text.includes('error') || text.includes('exception') || text.includes('failed')) return 'error';
+                if (text.includes('warn')) return 'warn';
+                if (text.includes('debug')) return 'debug';
+                return 'info';
             }
-        };
-        Module.setStatus('Downloading...');
+
+            function formatTimestamp() {
+                const now = new Date();
+                return now.toLocaleTimeString('en-US', { hour12: false }) + '.' +
+                       String(now.getMilliseconds()).padStart(3, '0');
+            }
+
+            function addLogEntry(level, args) {
+                const entry = {
+                    timestamp: formatTimestamp(),
+                    level: level,
+                    message: args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')
+                };
+
+                if (isStartupPhase) {
+                    if (startupLogs.length < MAX_STARTUP_LOGS) {
+                        startupLogs.push(entry);
+                    }
+                } else {
+                    runtimeLogs.push(entry);
+                    if (runtimeLogs.length > MAX_RUNTIME_LOGS) {
+                        runtimeLogs.shift();
+                    }
+                }
+
+                if (consoleOpen) {
+                    appendLogToDOM(entry);
+                }
+
+                updateStats();
+            }
+
+            function appendLogToDOM(entry) {
+                const div = document.createElement('div');
+                div.className = 'log-entry ' + entry.level;
+                div.textContent = '[' + entry.timestamp + '] ' + entry.message;
+                logsContainer.appendChild(div);
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+
+            function renderAllLogs() {
+                logsContainer.innerHTML = '';
+                startupLogs.forEach(appendLogToDOM);
+                runtimeLogs.forEach(appendLogToDOM);
+            }
+
+            function updateStats() {
+                const total = startupLogs.length + runtimeLogs.length;
+                statsEl.textContent = 'Logs: ' + total + ' (startup: ' + startupLogs.length +
+                                     ', runtime: ' + runtimeLogs.length + ') | Press ` or F12 to toggle';
+            }
+
+            // Intercept console methods
+            const originalLog = console.log;
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            const originalDebug = console.debug;
+
+            console.log = function() {
+                originalLog.apply(console, arguments);
+                addLogEntry(getLogLevel(Array.from(arguments)), Array.from(arguments));
+            };
+
+            console.warn = function() {
+                originalWarn.apply(console, arguments);
+                addLogEntry('warn', Array.from(arguments));
+            };
+
+            console.error = function() {
+                originalError.apply(console, arguments);
+                addLogEntry('error', Array.from(arguments));
+            };
+
+            console.debug = function() {
+                originalDebug.apply(console, arguments);
+                addLogEntry('debug', Array.from(arguments));
+            };
+
+            // Toggle console
+            function toggleConsole() {
+                consoleOpen = !consoleOpen;
+                sessionStorage.setItem('devConsoleOpen', consoleOpen);
+                if (consoleOpen) {
+                    devConsole.classList.add('open');
+                    renderAllLogs();
+                } else {
+                    devConsole.classList.remove('open');
+                }
+            }
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '`' || (e.key === 'F12' && !e.ctrlKey && !e.shiftKey)) {
+                    e.preventDefault();
+                    toggleConsole();
+                }
+            });
+
+            // Button handlers
+            document.getElementById('console-copy').addEventListener('click', function() {
+                const allLogs = [...startupLogs, ...runtimeLogs];
+                const text = allLogs.map(e => '[' + e.timestamp + '] [' + e.level.toUpperCase() + '] ' + e.message).join('\n');
+                navigator.clipboard.writeText(text).then(function() {
+                    const btn = document.getElementById('console-copy');
+                    btn.textContent = 'Copied!';
+                    setTimeout(function() { btn.textContent = 'Copy All'; }, 1500);
+                });
+            });
+
+            document.getElementById('console-clear').addEventListener('click', function() {
+                runtimeLogs = [];
+                logsContainer.innerHTML = '';
+                startupLogs.forEach(appendLogToDOM);
+                updateStats();
+            });
+
+            document.getElementById('console-close').addEventListener('click', toggleConsole);
+
+            // Expose function to end startup phase
+            window._endStartupPhase = function() {
+                isStartupPhase = false;
+                console.log('[DevConsole] Startup phase ended, switching to runtime log buffer');
+            };
+
+            // Initialize
+            if (consoleOpen) {
+                devConsole.classList.add('open');
+            }
+            updateStats();
+        })();
+
+        // ============================================
+        // TWO-PHASE LOADING SYSTEM
+        // Phase 1: WASM/Assets Download (0-90%)
+        // Phase 2: Game Initialization (90-100%)
+        // ============================================
+        (function() {
+            const splash = document.getElementById('splash');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const canvas = document.getElementById('canvas');
+
+            let downloadComplete = false;
+
+            // Fade in splash on load
+            setTimeout(function() {
+                splash.classList.add('visible');
+            }, 50);
+
+            // Game ready signal - called from C++ when Lua init is complete
+            window.gameReady = function() {
+                console.log('[Loading] Game ready signal received');
+
+                // End startup phase for dev console
+                if (window._endStartupPhase) {
+                    window._endStartupPhase();
+                }
+
+                // Complete progress to 100%
+                progressBar.style.width = '100%';
+                progressBar.classList.remove('loading');
+                progressText.textContent = 'READY';
+
+                // Fade out splash, fade in canvas
+                setTimeout(function() {
+                    splash.classList.add('fade-out');
+                    canvas.classList.add('visible');
+
+                    // Remove splash from DOM after animation
+                    setTimeout(function() {
+                        splash.style.display = 'none';
+                    }, 500);
+                }, 200);
+            };
+
+            // Module configuration
+            window.Module = {
+                preRun: [],
+                postRun: [
+                    function() {
+                        console.log('[Loading] postRun callback executed');
+                        // If gameReady hasn't been called yet, the game is still initializing
+                        if (!downloadComplete) {
+                            downloadComplete = true;
+                        }
+                    }
+                ],
+                print: (function() {
+                    var element = document.getElementById('output');
+                    if (element) element.value = '';
+                    return function(text) {
+                        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                        console.log(text);
+                        if (element) {
+                            element.value += text + "\n";
+                            element.scrollTop = element.scrollHeight;
+                        }
+                    };
+                })(),
+                canvas: (function() {
+                    return document.getElementById('canvas');
+                })(),
+                setStatus: function(text) {
+                    // Parse Emscripten progress format: "Downloading... (123/456)"
+                    let match = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+                    if (match) {
+                        // Scale download progress to 0-90%
+                        var rawPercent = (parseFloat(match[2]) / parseFloat(match[4]));
+                        var scaledPercent = Math.floor(rawPercent * 90);
+                        progressBar.style.width = scaledPercent + '%';
+
+                        if (scaledPercent >= 90) {
+                            downloadComplete = true;
+                            progressText.textContent = 'STARTING...';
+                        }
+                    } else if (text.toLowerCase().includes('complete') || text === '') {
+                        // Download complete, waiting for game init
+                        if (!downloadComplete) {
+                            downloadComplete = true;
+                            progressBar.style.width = '90%';
+                            progressText.textContent = 'STARTING...';
+                        }
+                    } else if (text) {
+                        // Other status messages
+                        progressText.textContent = text.toUpperCase();
+                    }
+                },
+                totalDependencies: 0,
+                monitorRunDependencies: function(left) {
+                    this.totalDependencies = Math.max(this.totalDependencies, left);
+                    if (left === 0 && !downloadComplete) {
+                        Module.setStatus('');
+                    } else {
+                        Module.setStatus('PREPARING... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')');
+                    }
+                }
+            };
+
+            Module.setStatus('DOWNLOADING...');
+            console.log('[Loading] Web shell initialized');
+        })();
     </script>
 
     {{{ SCRIPT }}}

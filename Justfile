@@ -371,12 +371,9 @@ build-web-quick: copy-web-assets
 	echo "=== Quick web build complete (no gzip) ==="
 	echo "  Serve with: python3 -m http.server -d {{web_build_dir}} 8080"
 
-# Serve web build locally for testing
+# Serve web build locally for testing (itch.io-identical environment)
 serve-web port="8080":
-	#!/usr/bin/env bash
-	echo "=== Serving {{web_build_dir}} on http://localhost:{{port}} ==="
-	echo "  Press Ctrl+C to stop"
-	python3 -m http.server -d {{web_build_dir}} {{port}}
+	python3 scripts/serve_web.py {{port}}
 
 # Show web build sizes
 web-sizes:

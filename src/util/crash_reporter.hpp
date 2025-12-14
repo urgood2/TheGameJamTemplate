@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -10,6 +11,9 @@ class logger;
 } // namespace spdlog
 
 namespace crash_reporter {
+
+// Itch.io community URL for bug reports
+constexpr const char* ITCH_COMMUNITY_URL = "https://chugget.itch.io/testing/community";
 
 struct LogEntry {
     std::string timestamp;
@@ -27,6 +31,18 @@ struct Report {
     std::string thread_id;
     std::vector<std::string> stacktrace;
     std::vector<LogEntry> logs;
+
+    // Game state (populated by callback)
+    std::string current_scene;
+    std::string player_position;
+    int entity_count{0};
+    std::string lua_script_context;
+
+    // Web-specific
+    std::string browser_info;
+    std::string webgl_renderer;
+    size_t estimated_memory_mb{0};
+    double session_duration_sec{0.0};
 };
 
 struct Config {
@@ -61,5 +77,9 @@ void ShowCaptureNotification(const std::string& message);
 
 // Create a compact summary string for quick sharing
 std::string CreateSummary(const Report& report);
+
+// Game state callback - register to populate game-specific fields at capture time
+using GameStateCallback = std::function<void(Report&)>;
+void SetGameStateCallback(GameStateCallback cb);
 
 } // namespace crash_reporter

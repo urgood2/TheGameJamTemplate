@@ -444,6 +444,11 @@ function timer.update(dt, is_render_frame)
                 if not t.fixed_delay then
                     t.delay = resolve_delay(t.unresolved_delay)
                 end
+                -- Defensive: ensure t.times is a number (catch misplaced tag arguments)
+                if type(t.times) ~= "number" then
+                    log_warn("Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
+                    t.times = 0
+                end
                 if t.times > 0 then
                     t.times = t.times - 1
                     if t.times <= 0 then
@@ -467,6 +472,11 @@ function timer.update(dt, is_render_frame)
                 if not t.fixed_delay then
                     t.delay = resolve_delay(t.unresolved_delay)
                 end
+                -- Defensive: ensure t.times is a number (catch misplaced tag arguments)
+                if type(t.times) ~= "number" then
+                    log_warn("Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
+                    t.times = 0
+                end
                 if t.times > 0 then
                     t.times = t.times - 1
                     if t.times <= 0 then
@@ -482,6 +492,11 @@ function timer.update(dt, is_render_frame)
                 t.action()
                 t.timer = t.timer - delays[t.index]
                 t.index = t.index + 1
+                -- Defensive: ensure t.times is a number (catch misplaced tag arguments)
+                if type(t.times) ~= "number" then
+                    log_warn("Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
+                    t.times = 0
+                end
                 if t.times > 0 then
                     t.times = t.times - 1
                     if t.times <= 0 then

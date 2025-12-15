@@ -8418,7 +8418,7 @@ local animation_system = require("core.animation_system")
 -- Create entity with animation
 local entity = animation_system.createAnimatedObjectWithTransform(
     "kobold",  -- Animation ID or sprite UUID
-    true,      -- true = animation ID, false = sprite UUID
+    true,      -- true = use first param as animation ID, false = generate animation from sprite UUID
     100,       -- x position (optional, default: 0)
     200,       -- y position (optional, default: 0)
     nil,       -- shader config function (optional)
@@ -8431,11 +8431,13 @@ local entity = animation_system.createAnimatedObjectWithTransform(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `defaultAnimationIDOrSpriteUUID` | `string` | Required | Animation ID or sprite UUID |
-| `generateNewAnimFromSprite` | `boolean` | `false` | Use animation ID (`true`) or sprite UUID (`false`) |
+| `generateNewAnimFromSprite` | `boolean` | `false` | `true` = use first param as animation ID, `false` = generate animation from sprite UUID |
 | `x` | `number` | `0` | Initial x position |
 | `y` | `number` | `0` | Initial y position |
 | `shaderPassConfigFunc` | `function` | `nil` | Custom shader setup callback |
 | `shadowEnabled` | `boolean` | `true` | Enable drop shadow |
+
+> **Note:** Despite the parameter name, `generateNewAnimFromSprite=true` means "use as animation ID" (no generation), while `false` means "generate a new animation from a sprite UUID."
 
 **What this function creates:**
 

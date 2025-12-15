@@ -10,8 +10,7 @@ local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
 local elite_modifiers = require("data.elite_modifiers")
 
--- Physics
-local PhysicsManager = require("core.physics_manager")
+-- Physics (PhysicsManager is a global exposed by C++, not a Lua module)
 
 local EnemyFactory = {}
 

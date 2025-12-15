@@ -10953,6 +10953,188 @@ lua["globals"]["camera"] = []() -> Camera2D & { return std::ref(camera2D); };
 
 ***
 
+## Entity Alias System
+
+\label{recipe:entity-alias}
+
+The entity alias system provides named lookups for important entities, allowing you to retrieve entities by string identifiers instead of storing entity handles globally. This is useful for referencing key entities like the player, boss enemies, or UI containers across different systems.
+
+### Setting an Alias
+
+Assign a string alias to an entity using `setEntityAlias()`:
+
+```lua
+-- Create player entity
+local player = animation_system.createAnimatedObjectWithTransform("player_sprite", true)
+
+-- Assign alias for later retrieval
+setEntityAlias("player", player)
+
+-- Alias a boss entity
+local boss = createBossEnemy()
+setEntityAlias("current_boss", boss)
+
+-- Alias UI container
+local inventoryUI = createInventoryPanel()
+setEntityAlias("inventory_panel", inventoryUI)
+```
+
+**Function Signature:**
+```lua
+setEntityAlias(alias, entity)
+-- alias: string - The name to use for lookup
+-- entity: Entity - The entity to alias (must be valid)
+```
+
+**Validation:** The function validates that the entity is valid before setting the alias. Invalid or null entities will log an error and be rejected.
+
+### Getting Entity by Alias
+
+Retrieve an entity by its alias using `getEntityByAlias()`:
+
+```lua
+-- Retrieve player entity from anywhere in code
+local player = getEntityByAlias("player")
+if player ~= entt_null then
+    local transform = component_cache.get(player, Transform)
+    print("Player position:", transform.actualX, transform.actualY)
+end
+
+-- Check if boss exists
+local boss = getEntityByAlias("current_boss")
+if boss == entt_null then
+    print("No boss currently active")
+else
+    -- Boss exists, do something
+    applyDamage(boss, 100)
+end
+```
+
+**Function Signature:**
+```lua
+local entity = getEntityByAlias(alias)
+-- alias: string - The alias to look up
+-- Returns: Entity - The aliased entity, or entt_null if not found
+```
+
+**Note:** `getEntityByAlias()` returns `entt_null` if the alias doesn't exist. Always check the result before using.
+
+### Common Patterns
+
+**Player Entity:**
+```lua
+-- Set player alias during initialization
+function initPlayer()
+    local player = createPlayerEntity()
+    setEntityAlias("player", player)
+    return player
+end
+
+-- Retrieve player from any system
+function damagePlayer(amount)
+    local player = getEntityByAlias("player")
+    if ensure_entity(player) then
+        applyDamage(player, amount)
+    end
+end
+```
+
+**Boss Entity:**
+```lua
+-- Set boss alias when spawning
+function spawnBoss(bossType)
+    local boss = createBossEntity(bossType)
+    setEntityAlias("current_boss", boss)
+    signal.emit("boss_spawned", boss)
+end
+
+-- Clear boss alias when defeated
+signal.register("boss_defeated", function(bossEntity)
+    -- Alias still points to dead entity, can be overwritten
+    -- or you can set it to null to indicate no boss
+    local currentBoss = getEntityByAlias("current_boss")
+    if currentBoss == bossEntity then
+        -- No API to remove alias, but it will be overwritten by next boss
+        print("Current boss defeated")
+    end
+end)
+```
+
+**UI Containers:**
+```lua
+-- Alias UI panels for cross-system access
+function createGameUI()
+    local healthBar = createHealthBarPanel()
+    setEntityAlias("ui_healthbar", healthBar)
+
+    local inventory = createInventoryPanel()
+    setEntityAlias("ui_inventory", inventory)
+
+    local minimap = createMinimapPanel()
+    setEntityAlias("ui_minimap", minimap)
+end
+
+-- Update UI from any system
+function updateHealthDisplay(currentHealth, maxHealth)
+    local healthBar = getEntityByAlias("ui_healthbar")
+    if ensure_entity(healthBar) then
+        local script = getScriptTableFromEntityID(healthBar)
+        if script then
+            script.currentHealth = currentHealth
+            script.maxHealth = maxHealth
+        end
+    end
+end
+```
+
+### Lifecycle Considerations
+
+**Entity Destruction:**
+- The alias map does NOT automatically remove aliases when entities are destroyed
+- If an aliased entity is destroyed, the alias will point to an invalid entity
+- Always validate entities returned from `getEntityByAlias()` using `ensure_entity()` or `entity_cache.valid()`
+
+```lua
+-- Safe usage pattern
+local boss = getEntityByAlias("current_boss")
+if ensure_entity(boss) then
+    -- Entity exists and is valid
+    applyDamage(boss, 50)
+else
+    -- Entity was destroyed or alias doesn't exist
+    print("No valid boss entity")
+end
+```
+
+**Alias Reuse:**
+- Aliases can be reassigned by calling `setEntityAlias()` with the same alias name
+- This is useful for "current_boss" or "active_npc" patterns where the entity changes
+
+```lua
+-- First boss
+local boss1 = spawnBoss("goblin_king")
+setEntityAlias("current_boss", boss1)
+
+-- Later, after boss1 is defeated, spawn new boss
+local boss2 = spawnBoss("dragon")
+setEntityAlias("current_boss", boss2)  -- Overwrites previous alias
+```
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `setEntityAlias()` | alias: string, entity: Entity | nil | Assigns a string alias to a valid entity |
+| `getEntityByAlias()` | alias: string | Entity \| nil | Retrieves entity by alias, returns `entt_null` if not found |
+
+### Related Systems
+
+- **Entity Validation** (Recipe \pageref{recipe:validate-entity}): Use `ensure_entity()` to validate aliased entities
+- **Component Cache** (Recipe \pageref{recipe:component-cache}): Access components on aliased entities
+- **Signal System** (Recipe \pageref{recipe:signal-system}): Emit events when important aliased entities change
+
+***
+
 \newpage
 \appendix
 

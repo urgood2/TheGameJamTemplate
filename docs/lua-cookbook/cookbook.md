@@ -9145,6 +9145,361 @@ physics.update_collision_masks_for(world, "enemy", { "projectile" })
 
 ***
 
+## AI Blackboard API
+
+\label{recipe:ai-blackboard}
+
+The AI Blackboard is a per-entity key-value store for AI agent state and memory. It provides type-safe storage for common data types (float, int, bool, string, Vector2) and integrates with GOAP (Goal-Oriented Action Planning) systems for behavior planning. Use the blackboard to store agent state, target information, decision-making data, and any per-entity AI memory.
+
+### What is the Blackboard?
+
+The blackboard pattern is a shared memory system used in AI for storing and retrieving information that multiple behaviors or systems need to access. In this engine, each AI entity with a `GOAPComponent` has its own blackboard instance.
+
+**Use cases:**
+
+- **Target tracking**: Store current target entity, position, distance
+- **State memory**: Remember last seen player position, patrol waypoints
+- **Behavior flags**: Track if agent is alerted, investigating, retreating
+- **Decision data**: Store calculated values used across multiple AI frames
+- **Communication**: Share information between AI behaviors/actions
+
+**Key features:**
+
+- **Type-safe**: Separate functions for each data type prevent type errors
+- **Per-entity**: Each AI agent has its own isolated blackboard
+- **Optional returns**: Get functions return `nil` if key doesn't exist (safe to check)
+- **GOAP integration**: Works alongside world state for planning systems
+
+### Supported Data Types
+
+The blackboard supports five data types:
+
+| Type | Set Function | Get Function | Use Case |
+|------|--------------|--------------|----------|
+| `float` | `setBlackboardFloat()` | `getBlackboardFloat()` | Health percentages, distances, timers |
+| `int` | `setBlackboardInt()` | `getBlackboardInt()` | Entity IDs, counts, enums |
+| `bool` | `setBlackboardBool()` | `getBlackboardBool()` | State flags, conditions |
+| `string` | `setBlackboardString()` | `getBlackboardString()` | State names, target types |
+| `Vector2` | `setBlackboardVector2()` | `getBlackboardVector2()` | Positions, velocities, directions |
+
+### Setting Values
+
+All set functions follow the same pattern: `set[Type](entity, key, value)`
+
+```lua
+-- Store target position
+setBlackboardVector2(enemyEntity, "last_seen_player_pos", { x = 100, y = 200 })
+
+-- Store alert state
+setBlackboardBool(enemyEntity, "is_alerted", true)
+
+-- Store target entity ID
+setBlackboardInt(enemyEntity, "target_entity", playerEntity)
+
+-- Store distance to target
+setBlackboardFloat(enemyEntity, "distance_to_target", 150.5)
+
+-- Store current behavior state
+setBlackboardString(enemyEntity, "behavior_state", "patrolling")
+```
+
+**Notes:**
+
+- Entity must have a `GOAPComponent` (added when AI system is initialized)
+- Setting a key that already exists will overwrite the previous value
+- Keys are strings and can be any valid identifier
+
+### Getting Values
+
+All get functions return `nil` if the key doesn't exist, allowing safe conditional checks:
+
+```lua
+-- Check if entity has a target
+local targetID = getBlackboardInt(enemyEntity, "target_entity")
+if targetID then
+    -- Entity has a target, use it
+    local targetPos = component_cache.get(targetID, Transform)
+    -- ...
+end
+
+-- Get last seen position with fallback
+local lastSeenPos = getBlackboardVector2(enemyEntity, "last_seen_player_pos")
+if not lastSeenPos then
+    -- Never seen player, use default patrol position
+    lastSeenPos = { x = 0, y = 0 }
+end
+
+-- Check alert state (defaults to false if not set)
+local isAlerted = getBlackboardBool(enemyEntity, "is_alerted")
+if isAlerted then
+    -- Agent is alerted, play alert behavior
+end
+
+-- Get distance (with nil check)
+local distance = getBlackboardFloat(enemyEntity, "distance_to_target")
+if distance and distance < 50 then
+    -- Close enough to attack
+end
+```
+
+**Important:** Always check for `nil` when getting values, or ensure the key is always set before reading.
+
+### Complete AI Agent Example
+
+Combining blackboard with component access and AI logic:
+
+```lua
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
+
+function updateEnemyAI(enemyEntity, dt)
+    -- Validate entity
+    if not entity_cache.valid(enemyEntity) then return end
+
+    -- Get player position
+    local playerEntity = getBlackboardInt(enemyEntity, "target_entity")
+    if not playerEntity then
+        -- No target set, enter patrol mode
+        setBlackboardString(enemyEntity, "behavior_state", "patrol")
+        return
+    end
+
+    -- Calculate distance to player
+    local enemyTransform = component_cache.get(enemyEntity, Transform)
+    local playerTransform = component_cache.get(playerEntity, Transform)
+
+    if not enemyTransform or not playerTransform then return end
+
+    local dx = playerTransform.actualX - enemyTransform.actualX
+    local dy = playerTransform.actualY - enemyTransform.actualY
+    local distance = math.sqrt(dx * dx + dy * dy)
+
+    -- Store distance in blackboard
+    setBlackboardFloat(enemyEntity, "distance_to_target", distance)
+
+    -- Update last seen position
+    setBlackboardVector2(enemyEntity, "last_seen_player_pos", {
+        x = playerTransform.actualX,
+        y = playerTransform.actualY
+    })
+
+    -- Behavior logic based on distance
+    if distance < 50 then
+        setBlackboardString(enemyEntity, "behavior_state", "attack")
+        setBlackboardBool(enemyEntity, "is_alerted", true)
+    elseif distance < 200 then
+        setBlackboardString(enemyEntity, "behavior_state", "pursue")
+        setBlackboardBool(enemyEntity, "is_alerted", true)
+    else
+        -- Return to patrol if player escapes
+        setBlackboardString(enemyEntity, "behavior_state", "patrol")
+        setBlackboardBool(enemyEntity, "is_alerted", false)
+    end
+end
+```
+
+### World State for GOAP Planning
+
+The blackboard stores arbitrary data, but GOAP systems also use **world state** - boolean key-value pairs representing the state of the world and goals. Use world state for planning, blackboard for memory.
+
+**Current World State** (what is true right now):
+
+```lua
+-- Set current state facts
+setCurrentWorldStateValue(entity, "has_weapon", true)
+setCurrentWorldStateValue(entity, "enemy_visible", false)
+setCurrentWorldStateValue(entity, "at_cover", true)
+
+-- Read current state
+local hasWeapon = getCurrentWorldStateValue(entity, "has_weapon")  -- true/false
+
+-- Clear all current world state
+clearCurrentWorldState(entity)
+```
+
+**Goal World State** (what the agent wants to be true):
+
+```lua
+-- Set goal conditions
+setGoalWorldStateValue(entity, "enemy_dead", true)
+setGoalWorldStateValue(entity, "has_ammo", true)
+
+-- Read goal state
+local wantsEnemyDead = getGoalWorldStateValue(entity, "enemy_dead")  -- true/false
+
+-- Clear all goal world state
+clearGoalWorldState(entity)
+```
+
+**When to use each:**
+
+| System | Data Type | Use Case |
+|--------|-----------|----------|
+| **Blackboard** | Any (float, int, bool, string, Vector2) | Agent memory, target data, calculated values |
+| **Current World State** | Bool only | Facts about the world for GOAP planning |
+| **Goal World State** | Bool only | Desired outcome for GOAP planner |
+
+**GOAP integration example:**
+
+```lua
+-- Blackboard: Store where the enemy is
+setBlackboardVector2(entity, "enemy_position", { x = 100, y = 200 })
+setBlackboardInt(entity, "enemy_entity_id", enemyID)
+
+-- World State: Facts for planning
+setCurrentWorldStateValue(entity, "enemy_visible", true)
+setCurrentWorldStateValue(entity, "has_weapon", true)
+setCurrentWorldStateValue(entity, "in_range", false)
+
+-- Goal State: What we want to achieve
+setGoalWorldStateValue(entity, "enemy_dead", true)
+
+-- GOAP planner will create action sequence to make "enemy_dead" true
+-- Actions will use blackboard data (enemy position, ID) during execution
+```
+
+### Common Patterns
+
+**Pattern 1: Target tracking**
+
+```lua
+-- Store target when acquiring
+local function acquireTarget(aiEntity, targetEntity)
+    setBlackboardInt(aiEntity, "target_id", targetEntity)
+    setBlackboardBool(aiEntity, "has_target", true)
+
+    local targetTransform = component_cache.get(targetEntity, Transform)
+    if targetTransform then
+        setBlackboardVector2(aiEntity, "target_pos", {
+            x = targetTransform.actualX,
+            y = targetTransform.actualY
+        })
+    end
+end
+
+-- Clear target when lost
+local function loseTarget(aiEntity)
+    setBlackboardBool(aiEntity, "has_target", false)
+    -- Keep last known position for investigation
+end
+```
+
+**Pattern 2: State machine with blackboard**
+
+```lua
+local function updateStateMachine(entity)
+    local state = getBlackboardString(entity, "state") or "idle"
+
+    if state == "idle" then
+        -- Check for target
+        if getBlackboardBool(entity, "has_target") then
+            setBlackboardString(entity, "state", "chase")
+        end
+    elseif state == "chase" then
+        local distance = getBlackboardFloat(entity, "distance_to_target")
+        if distance and distance < 50 then
+            setBlackboardString(entity, "state", "attack")
+        elseif not getBlackboardBool(entity, "has_target") then
+            setBlackboardString(entity, "state", "idle")
+        end
+    elseif state == "attack" then
+        -- Attack logic...
+    end
+end
+```
+
+**Pattern 3: Behavior timers**
+
+```lua
+-- Start a timer
+setBlackboardFloat(entity, "attack_cooldown", 2.0)
+
+-- Update and check timer
+local function updateTimers(entity, dt)
+    local cooldown = getBlackboardFloat(entity, "attack_cooldown")
+    if cooldown then
+        cooldown = cooldown - dt
+        if cooldown <= 0 then
+            -- Cooldown finished
+            setBlackboardBool(entity, "can_attack", true)
+            -- Remove timer
+            setBlackboardFloat(entity, "attack_cooldown", 0)
+        else
+            setBlackboardFloat(entity, "attack_cooldown", cooldown)
+        end
+    end
+end
+```
+
+### Common Gotchas
+
+**Gotcha 1:** Entity must have GOAPComponent
+
+```lua
+-- WRONG: Using blackboard on entity without GOAPComponent
+local entity = registry:create()
+setBlackboardInt(entity, "health", 100)  -- Crash! No GOAPComponent
+
+-- CORRECT: Ensure entity has GOAPComponent (usually added by AI system init)
+-- Or add manually:
+registry:emplace(entity, GOAPComponent)
+setBlackboardInt(entity, "health", 100)
+```
+
+**Gotcha 2:** Type mismatch
+
+```lua
+-- WRONG: Storing float, retrieving as int
+setBlackboardFloat(entity, "value", 10.5)
+local value = getBlackboardInt(entity, "value")  -- Returns nil (type mismatch)
+
+-- CORRECT: Use matching types
+setBlackboardFloat(entity, "value", 10.5)
+local value = getBlackboardFloat(entity, "value")  -- Returns 10.5
+```
+
+**Gotcha 3:** Forgetting nil checks
+
+```lua
+-- WRONG: Assuming key always exists
+local distance = getBlackboardFloat(entity, "distance")
+if distance < 50 then  -- Crash if distance is nil!
+    -- ...
+end
+
+-- CORRECT: Check for nil
+local distance = getBlackboardFloat(entity, "distance")
+if distance and distance < 50 then
+    -- ...
+end
+```
+
+**Gotcha 4:** Confusing blackboard with world state
+
+```lua
+-- WRONG: Trying to store Vector2 in world state
+setCurrentWorldStateValue(entity, "position", { x = 10, y = 20 })  -- Error! Only accepts bool
+
+-- CORRECT: Use blackboard for complex types
+setBlackboardVector2(entity, "position", { x = 10, y = 20 })
+
+-- World state is for boolean facts only
+setCurrentWorldStateValue(entity, "at_position", true)
+```
+
+### Integration with AI System
+
+The blackboard works seamlessly with the AI system documented in **Chapter 8: AI System**. While Chapter 8 covers behavior trees, GOAP planning, and AI architecture, this section focuses specifically on the data storage API.
+
+**Quick reference:**
+
+- **Chapter 8**: AI behavior implementation, planning algorithms, action execution
+- **This section**: Data storage API for AI agents (blackboard, world state)
+
+Use the blackboard to store data that AI behaviors need to access and modify, and world state for GOAP planning conditions.
+
+***
+
 \newpage
 \appendix
 

@@ -9500,6 +9500,605 @@ Use the blackboard to store data that AI behaviors need to access and modify, an
 
 ***
 
+## Card Discovery & Progression
+
+\label{recipe:card-discovery}
+
+The Card Discovery & Progression system provides roguelike meta-progression by tracking player discoveries across runs. It records tag thresholds reached, spell types cast, tag patterns encountered, and avatar unlocks. These discoveries persist between runs, creating "Balatro-style" celebration moments when players hit milestones for the first time.
+
+### What is Tracked?
+
+The discovery system tracks three main categories:
+
+1. **Tag Thresholds**: When a player reaches 3/5/7/9 cards with the same tag (e.g., Fire, Defense, Mobility)
+2. **Spell Types**: When a player casts specific spell patterns (e.g., "Twin Cast", "Mono-Element", "Combo Chain")
+3. **Tag Patterns**: Future system for curated card combinations with special names
+4. **Avatar Unlocks**: Character unlocks based on tag thresholds or gameplay metrics
+
+All discoveries are stored persistently in `player.tag_discoveries` and can be saved/loaded between sessions.
+
+### Discovery Journal - Viewing Discoveries
+
+The `DiscoveryJournal` provides a UI-friendly interface to view and query all player discoveries.
+
+**Getting organized summary:**
+
+```lua
+local DiscoveryJournal = require("wand.discovery_journal")
+
+-- Get summary for UI display
+local summary = DiscoveryJournal.getSummary(player)
+
+-- summary.stats contains:
+--   total_discoveries - Total count
+--   tag_thresholds - Count of tag threshold discoveries
+--   spell_types - Count of spell type discoveries
+--   tag_patterns - Count of tag pattern discoveries
+
+print("Total discoveries:", summary.stats.total_discoveries)
+
+-- summary.tag_thresholds is an array of:
+for _, discovery in ipairs(summary.tag_thresholds) do
+    print(discovery.display_name)  -- e.g., "Fire x3"
+    print(discovery.tag)           -- "Fire"
+    print(discovery.threshold)     -- 3
+    print(discovery.timestamp)     -- Unix timestamp
+end
+
+-- summary.spell_types is an array of spell type discoveries
+for _, discovery in ipairs(summary.spell_types) do
+    print(discovery.spell_type)    -- e.g., "Twin Cast"
+    print(discovery.timestamp)
+end
+```
+
+**Getting recent discoveries (for notification feed):**
+
+```lua
+-- Get last 10 discoveries
+local recent = DiscoveryJournal.getRecent(player, 10)
+
+for _, discovery in ipairs(recent) do
+    if discovery.type == "tag_threshold" then
+        print("Discovered:", discovery.tag, "x" .. discovery.threshold)
+    elseif discovery.type == "spell_type" then
+        print("Discovered:", discovery.spell_type)
+    end
+end
+```
+
+**Checking specific discoveries:**
+
+```lua
+-- Check if player has discovered a specific tag threshold
+local hasFirex5 = DiscoveryJournal.hasDiscovered(player, "tag_threshold", "Fire", 5)
+
+-- Check if player has discovered a spell type
+local hasTwinCast = DiscoveryJournal.hasDiscovered(player, "spell_type", "Twin Cast")
+
+-- Get completion percentage for a category
+local completion = DiscoveryJournal.getCompletionPercentage(
+    player,
+    "tag_thresholds",
+    36  -- Total possible (6 tags × 4 thresholds + 12 elements × 4)
+)
+print("Tag threshold completion:", completion .. "%")
+```
+
+### Tag Discovery System - Tracking Milestones
+
+The `TagDiscoverySystem` is the underlying tracker that detects and records new discoveries. It's automatically called by the wand and tag evaluation systems.
+
+**Manual tag threshold checking:**
+
+```lua
+local TagDiscoverySystem = require("wand.tag_discovery_system")
+
+-- Check for new tag threshold discoveries
+-- tag_counts is a table of tag -> count (e.g., { Fire = 5, Defense = 3 })
+local newDiscoveries = TagDiscoverySystem.checkTagThresholds(player, tag_counts)
+
+-- newDiscoveries is an array of newly discovered thresholds
+for _, discovery in ipairs(newDiscoveries) do
+    print("NEW:", discovery.tag, "x" .. discovery.threshold)
+    print("Current count:", discovery.count)
+
+    -- Signal is automatically emitted:
+    -- signal.emit("tag_threshold_discovered", { tag, threshold, count })
+end
+```
+
+**Spell type discovery during casting:**
+
+```lua
+-- Check if spell type is new (called by WandExecutor during cast)
+local discovery = TagDiscoverySystem.checkSpellType(player, "Twin Cast")
+
+if discovery then
+    print("First time casting:", discovery.spell_type)
+    -- Signal automatically emitted: signal.emit("spell_type_discovered", { spell_type })
+end
+```
+
+**Discovery statistics:**
+
+```lua
+local stats = TagDiscoverySystem.getStats(player)
+print("Total:", stats.total_discoveries)
+print("Tag thresholds:", stats.tag_thresholds)
+print("Spell types:", stats.spell_types)
+print("Tag patterns:", stats.tag_patterns)
+```
+
+**Get all discoveries by type:**
+
+```lua
+-- Get all tag threshold discoveries
+local thresholds = TagDiscoverySystem.getDiscoveriesByType(player, "tag_threshold")
+
+-- Get all spell type discoveries
+local spellTypes = TagDiscoverySystem.getDiscoveriesByType(player, "spell_type")
+```
+
+**Clear discoveries (for testing):**
+
+```lua
+TagDiscoverySystem.clearDiscoveries(player)
+```
+
+### Spell Type Evaluator - Identifying Patterns
+
+The `SpellTypeEvaluator` analyzes a cast block (list of actions and modifiers) and identifies the spell pattern being cast. This is the "Poker Hand" equivalent for the wand system.
+
+**Spell type categories:**
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `Simple Cast` | 1 action, no modifiers | Single fireball |
+| `Twin Cast` | 1 action, multicast x2 | Two projectiles |
+| `Scatter Cast` | 1 action, multicast > 2 + spread | Shotgun pattern |
+| `Precision Cast` | 1 action, speed/damage mod, no spread | Sniper shot |
+| `Rapid Fire` | 1 action, low cast delay | Machine gun |
+| `Mono-Element` | 3+ actions, same element | All Fire spells |
+| `Combo Chain` | 3+ actions, different types | Fire + Ice + Lightning |
+| `Heavy Barrage` | 3+ actions, high cost/damage | Expensive spell combo |
+| `Chaos Cast` | Fallback for undefined patterns | Mixed/unusual combos |
+
+**Evaluating spell types:**
+
+```lua
+local SpellTypeEvaluator = require("wand.spell_type_evaluator")
+
+-- Cast block from wand execution
+local block = {
+    actions = {
+        { id = "FIREBALL", tags = { "Fire", "Projectile" }, mana_cost = 10 },
+        { id = "ICE_SHARD", tags = { "Ice", "Projectile" }, mana_cost = 8 }
+    },
+    modifiers = {
+        multicastCount = 1,
+        projectile_speed_multiplier = 1.0,
+        damage_multiplier = 1.5,
+        cast_delay_multiplier = 1.0
+    }
+}
+
+local spellType = SpellTypeEvaluator.evaluate(block)
+print("Spell type:", spellType)  -- e.g., "Combo Chain"
+
+-- Check for discovery
+TagDiscoverySystem.checkSpellType(player, spellType)
+```
+
+**Analyzing tag composition:**
+
+```lua
+-- Get detailed tag metrics for the cast
+local tagAnalysis = SpellTypeEvaluator.analyzeTags(block.actions)
+
+print("Primary tag:", tagAnalysis.primary_tag)        -- Most common tag
+print("Primary count:", tagAnalysis.primary_count)    -- How many times
+print("Diversity:", tagAnalysis.diversity)            -- Number of distinct tags
+print("Total tags:", tagAnalysis.total_tags)          -- Total tag instances
+
+-- Threshold flags for joker reactions
+if tagAnalysis.is_tag_heavy then
+    print("3+ actions with same tag!")
+end
+
+if tagAnalysis.is_mono_tag then
+    print("All actions share one tag!")
+end
+
+if tagAnalysis.is_diverse then
+    print("3+ different tag types!")
+end
+```
+
+### Card Synergy System - Set Bonuses
+
+The `CardSynergy` system detects tag-based sets and curated combos, applying bonuses when thresholds are met. This works alongside the discovery system.
+
+**Detecting active sets:**
+
+```lua
+local CardSynergy = require("wand.card_synergy_system")
+
+-- Detect tag counts from card list
+local cardList = {
+    { id = "FIREBALL", tags = { "Fire", "Projectile" } },
+    { id = "FLAME_WALL", tags = { "Fire", "Hazard" } },
+    { id = "INFERNO", tags = { "Fire", "AoE" } }
+}
+
+local tagCounts = CardSynergy.detectSets(cardList)
+-- Returns: { Fire = 3, Projectile = 1, Hazard = 1, AoE = 1 }
+
+-- Get active bonuses (thresholds: 3, 6, 9)
+local activeBonuses = CardSynergy.getActiveBonuses(tagCounts)
+
+for tagName, bonusData in pairs(activeBonuses) do
+    print("Active:", tagName, "tier", bonusData.tier)
+    print("Description:", bonusData.bonus.description)
+end
+```
+
+**Getting bonus info for UI:**
+
+```lua
+local bonusInfo = CardSynergy.getActiveBonusInfo(tagCounts)
+
+for _, info in ipairs(bonusInfo) do
+    print(info.displayName)   -- "Mobility"
+    print(info.tier)          -- 3, 6, or 9
+    print(info.count)         -- Actual card count
+    print(info.description)   -- "Swift Caster I: +10% cast speed, ..."
+    print(info.color)         -- "#4A90E2"
+    print(info.icon)          -- "icon_mobility"
+end
+```
+
+**Checking progress to next tier:**
+
+```lua
+local nextThreshold, cardsNeeded = CardSynergy.getProgressToNextTier("Fire", 4)
+if nextThreshold then
+    print("Need", cardsNeeded, "more Fire cards to reach tier", nextThreshold)
+else
+    print("Already at max tier!")
+end
+```
+
+**Detecting curated combos:**
+
+```lua
+-- Check for specific card combinations
+local activeCombos = CardSynergy.detectCuratedCombos(cardList)
+
+for _, comboId in ipairs(activeCombos) do
+    local comboDef = CardSynergy.curatedCombos[comboId]
+    print("Active combo:", comboDef.name)
+    print("Effect:", comboDef.description)
+end
+```
+
+### Avatar System - Character Unlocks
+
+The `AvatarSystem` tracks unlock progress for playable avatars based on tag thresholds and gameplay metrics.
+
+**Checking unlocks:**
+
+```lua
+local AvatarSystem = require("wand.avatar_system")
+
+-- Check for new unlocks (called when deck changes or metrics update)
+local newUnlocks = AvatarSystem.check_unlocks(player, {
+    tag_counts = { Fire = 7, Defense = 5 },  -- Optional tag counts
+    metrics = { kills = 100, wins = 5 }      -- Optional metrics (falls back to player.avatar_progress)
+})
+
+-- newUnlocks is an array of avatar IDs
+for _, avatarId in ipairs(newUnlocks) do
+    print("Unlocked avatar:", avatarId)
+    -- Signal automatically emitted: signal.emit("avatar_unlocked", { avatar_id })
+end
+```
+
+**Recording progress:**
+
+```lua
+-- Increment a metric and check for unlocks
+local newUnlocks = AvatarSystem.record_progress(
+    player,
+    "kills_with_fire",  -- Metric name
+    1,                  -- Delta (amount to add)
+    { tag_counts = player.tag_counts }  -- Optional context
+)
+```
+
+**Equipping avatars:**
+
+```lua
+-- Equip an already-unlocked avatar
+local success, error = AvatarSystem.equip(player, "fire_mage")
+
+if not success then
+    print("Cannot equip:", error)  -- "avatar_locked"
+end
+
+-- Get currently equipped avatar
+local equippedId = AvatarSystem.get_equipped(player)
+if equippedId then
+    print("Playing as:", equippedId)
+end
+```
+
+**Avatar unlock conditions (data-driven):**
+
+Avatars are defined in `assets/scripts/data/avatars.lua` with unlock conditions:
+
+```lua
+-- Example avatar definition
+fire_mage = {
+    id = "fire_mage",
+    name = "Fire Mage",
+    unlock = {
+        fire_tags = 7,           -- Primary condition: 7+ Fire tags
+        OR_wins = 3              -- Alternative: 3 wins
+    }
+}
+
+-- Unlock logic:
+-- - Primary path: ALL non-OR conditions must be met
+-- - Alternative path: ANY OR_ condition is sufficient
+-- Player unlocks if (primary_path OR alternative_path)
+```
+
+### Events Emitted
+
+The discovery and progression systems emit signals for UI notifications:
+
+| Event | Parameters | When Emitted |
+|-------|------------|--------------|
+| `"tag_threshold_discovered"` | `{ tag, threshold, count }` | First time reaching tag threshold |
+| `"spell_type_discovered"` | `{ spell_type }` | First time casting spell type |
+| `"tag_pattern_discovered"` | `{ pattern_id, pattern_name }` | First time encountering tag pattern |
+| `"avatar_unlocked"` | `{ avatar_id }` | Avatar unlock conditions met |
+
+**Listening to events:**
+
+```lua
+local signal = require("external.hump.signal")
+
+signal.register("tag_threshold_discovered", function(data)
+    print("NEW DISCOVERY:", data.tag, "x" .. data.threshold)
+    print("You now have", data.count, data.tag, "cards!")
+    -- Show celebration UI
+end)
+
+signal.register("spell_type_discovered", function(data)
+    print("NEW SPELL TYPE:", data.spell_type)
+    -- Show tutorial or achievement
+end)
+
+signal.register("avatar_unlocked", function(data)
+    print("AVATAR UNLOCKED:", data.avatar_id)
+    -- Show unlock animation
+end)
+```
+
+### Persistence - Save/Load
+
+**Exporting discoveries for save file:**
+
+```lua
+-- Get all discoveries in save-friendly format
+local saveData = DiscoveryJournal.exportForSave(player)
+
+-- saveData is a table that can be serialized to JSON/file
+-- Structure: { ["tag_Fire_3"] = { type, tag, threshold, timestamp }, ... }
+```
+
+**Importing discoveries from save file:**
+
+```lua
+-- Load discoveries from save data
+DiscoveryJournal.importFromSave(player, saveData)
+
+-- Player's tag_discoveries table is now populated
+```
+
+**Avatar progress persistence:**
+
+```lua
+-- Avatar state is stored in player.avatar_state:
+player.avatar_state = {
+    unlocked = { fire_mage = true, ice_mage = true },
+    equipped = "fire_mage"
+}
+
+-- Avatar progress metrics in player.avatar_progress:
+player.avatar_progress = {
+    kills_with_fire = 50,
+    wins = 3,
+    distance_traveled = 1000
+}
+```
+
+### Integration Example - Complete Flow
+
+```lua
+local TagDiscoverySystem = require("wand.tag_discovery_system")
+local DiscoveryJournal = require("wand.discovery_journal")
+local CardSynergy = require("wand.card_synergy_system")
+local AvatarSystem = require("wand.avatar_system")
+local signal = require("external.hump.signal")
+
+-- Called when player's deck changes
+function onDeckChanged(player, cardList)
+    -- Detect tag counts
+    local tagCounts = CardSynergy.detectSets(cardList)
+
+    -- Check for new tag threshold discoveries
+    local newThresholds = TagDiscoverySystem.checkTagThresholds(player, tagCounts)
+
+    -- Check for avatar unlocks
+    local newAvatars = AvatarSystem.check_unlocks(player, {
+        tag_counts = tagCounts
+    })
+
+    -- Apply set bonuses
+    CardSynergy.applySetBonuses(player, tagCounts)
+
+    -- Update UI with discoveries
+    local summary = DiscoveryJournal.getSummary(player)
+    updateDiscoveryUI(summary)
+end
+
+-- Called during wand execution
+function onSpellCast(player, castBlock)
+    -- Evaluate spell type
+    local SpellTypeEvaluator = require("wand.spell_type_evaluator")
+    local spellType = SpellTypeEvaluator.evaluate(castBlock)
+
+    -- Check for spell type discovery
+    local discovery = TagDiscoverySystem.checkSpellType(player, spellType)
+
+    if discovery then
+        -- First time casting this spell type!
+        signal.emit("spell_type_discovered", discovery)
+    end
+end
+
+-- Listen for discovery events
+signal.register("tag_threshold_discovered", function(data)
+    -- Show celebration popup
+    showDiscoveryPopup(string.format("%s x%d Discovered!", data.tag, data.threshold))
+end)
+
+signal.register("avatar_unlocked", function(data)
+    showAvatarUnlockAnimation(data.avatar_id)
+end)
+```
+
+### Common Patterns
+
+**Pattern 1: Discovery notification feed**
+
+```lua
+-- Show recent discoveries in UI
+local function updateDiscoveryFeed(player)
+    local recent = DiscoveryJournal.getRecent(player, 5)
+
+    for i, discovery in ipairs(recent) do
+        local text = ""
+        if discovery.type == "tag_threshold" then
+            text = string.format("%s x%d", discovery.tag, discovery.threshold)
+        elseif discovery.type == "spell_type" then
+            text = discovery.spell_type
+        end
+
+        displayNotification(text, discovery.timestamp)
+    end
+end
+```
+
+**Pattern 2: Progress bar to next tier**
+
+```lua
+-- Show progress to next Fire tag tier
+local function getTagProgress(tagCounts, tagName)
+    local count = tagCounts[tagName] or 0
+    local nextThreshold, needed = CardSynergy.getProgressToNextTier(tagName, count)
+
+    if nextThreshold then
+        return {
+            current = count,
+            next = nextThreshold,
+            progress = count / nextThreshold,
+            cardsNeeded = needed
+        }
+    else
+        return { maxed = true }
+    end
+end
+```
+
+**Pattern 3: First-time tutorial triggers**
+
+```lua
+-- Show tutorial when player discovers certain spell types
+signal.register("spell_type_discovered", function(data)
+    if data.spell_type == "Twin Cast" then
+        showTutorial("multicast_modifiers")
+    elseif data.spell_type == "Mono-Element" then
+        showTutorial("elemental_synergy")
+    end
+end)
+```
+
+### Common Gotchas
+
+**Gotcha 1:** Discovery tracking requires player table with tag_discoveries
+
+```lua
+-- WRONG: Using entity ID directly
+local discoveries = TagDiscoverySystem.checkTagThresholds(playerEntityID, tagCounts)
+
+-- CORRECT: Pass player table (script table or entity with discoveries)
+local player = getScriptTableFromEntityID(playerEntityID)
+local discoveries = TagDiscoverySystem.checkTagThresholds(player, tagCounts)
+```
+
+**Gotcha 2:** Tag thresholds are 3/5/7/9 by default
+
+```lua
+-- These thresholds trigger discoveries:
+-- 3, 5, 7, 9 (defined in TagDiscoverySystem.DISCOVERY_THRESHOLDS)
+
+-- If you have 4 Fire cards, only the x3 discovery triggers
+-- You need 5 cards for the next discovery
+```
+
+**Gotcha 3:** Discoveries are persistent - never discovered twice
+
+```lua
+-- Once discovered, won't trigger again
+TagDiscoverySystem.checkTagThresholds(player, { Fire = 5 })  -- Discovers Fire x3, Fire x5
+TagDiscoverySystem.checkTagThresholds(player, { Fire = 5 })  -- Returns empty array
+
+-- To reset for testing:
+TagDiscoverySystem.clearDiscoveries(player)
+```
+
+**Gotcha 4:** Spell type evaluation requires properly formatted block
+
+```lua
+-- WRONG: Missing required fields
+local block = { actions = { card1, card2 } }
+local spellType = SpellTypeEvaluator.evaluate(block)  -- May return nil or "Chaos Cast"
+
+-- CORRECT: Include modifiers aggregate
+local block = {
+    actions = { card1, card2 },
+    modifiers = {
+        multicastCount = 1,
+        projectile_speed_multiplier = 1.0,
+        damage_multiplier = 1.0,
+        cast_delay_multiplier = 1.0
+    }
+}
+```
+
+### Related Systems
+
+- **Tag Evaluator** (`wand.tag_evaluator`): Calculates tag bonuses at thresholds (documented in CLAUDE.md)
+- **Wand Executor** (`wand.wand_executor`): Executes spell casts and calls spell type evaluation
+- **Joker System** (`wand.joker_system`): Reacts to tag counts and spell types (Chapter 10)
+- **Card Registry** (`wand.card_registry`): Card definitions with tags (Chapter 10)
+
+***
+
 \newpage
 \appendix
 

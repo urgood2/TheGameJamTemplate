@@ -1,6 +1,44 @@
--- assets/scripts/combat/enemy_factory.lua
--- Creates enemies from definitions and wires up with combat system
--- Pattern matches gameplay.lua:8626-8791
+--[[
+================================================================================
+ENEMY FACTORY - Enemy Creation with Combat System Integration
+================================================================================
+Creates enemy entities from definitions in data/enemies.lua and integrates
+them with the combat system (stats, weapons, health UI).
+
+PUBLIC API:
+    EnemyFactory.spawn(enemy_type, position, modifiers)
+        enemy_type: string  -- Key from data/enemies.lua (e.g., "goblin")
+        position: {x, y}    -- Spawn coordinates
+        modifiers: string[] -- Optional elite modifiers from data/elite_modifiers.lua
+        Returns: entity, ctx
+
+    EnemyFactory.kill(e, ctx)
+        e: entity           -- Enemy entity to kill
+        ctx: table          -- Context returned from spawn()
+        Triggers on_death callback and cleanup
+
+USAGE:
+    local EnemyFactory = require("combat.enemy_factory")
+
+    -- Spawn basic enemy
+    local enemy, ctx = EnemyFactory.spawn("goblin", { x = 100, y = 200 })
+
+    -- Spawn elite enemy with modifiers
+    local elite, ctx = EnemyFactory.spawn("goblin", { x = 100, y = 200 }, { "armored", "fast" })
+
+    -- Kill enemy (triggers on_death, cleanup, signals)
+    EnemyFactory.kill(enemy, ctx)
+
+INTEGRATION:
+    - Adds entity to ACTION_STATE
+    - Creates combat actor with stats
+    - Registers in enemyHealthUiState for HP bars
+    - Sets up physics body with "enemy" tag
+    - Registers steering for movement
+    - Calls on_spawn from enemy definition
+
+Dependencies: data/enemies.lua, data/elite_modifiers.lua, combat/wave_helpers.lua
+]]
 
 local signal = require("external.hump.signal")
 local component_cache = require("core.component_cache")

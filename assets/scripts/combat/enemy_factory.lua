@@ -1,18 +1,28 @@
 -- assets/scripts/combat/enemy_factory.lua
--- Creates enemies from definitions and wires up callbacks
+-- Creates enemies from definitions and wires up with combat system
+-- Pattern matches gameplay.lua:8626-8791
 
 local signal = require("external.hump.signal")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local timer = require("core.timer")
+local Node = require("monobehavior.behavior_script_v2")
 
 local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
 local elite_modifiers = require("data.elite_modifiers")
 
--- Physics (PhysicsManager is a global exposed by C++, not a Lua module)
-
 local EnemyFactory = {}
+
+-- Basic monster weapon (same as gameplay.lua)
+local basic_monster_weapon = {
+    id = 'basic_monster_weapon',
+    slot = 'sword1',
+    mods = {
+        { stat = 'weapon_min', base = 6 },
+        { stat = 'weapon_max', base = 10 },
+    },
+}
 
 --============================================
 -- ENEMY CREATION
@@ -23,7 +33,7 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
 
     local def = enemies[enemy_type]
     if not def then
-        log_warn("Unknown enemy type: " .. tostring(enemy_type))
+        print("[EnemyFactory] Unknown enemy type: " .. tostring(enemy_type))
         return nil, nil
     end
 
@@ -34,7 +44,7 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
     )
 
     if not e or not entity_cache.valid(e) then
-        log_warn("Failed to create enemy entity for: " .. enemy_type)
+        print("[EnemyFactory] Failed to create enemy entity for: " .. enemy_type)
         return nil, nil
     end
 
@@ -85,7 +95,7 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         end
     end
 
-    -- Store context
+    -- Store context in WaveHelpers for wave system tracking
     WaveHelpers.set_enemy_ctx(e, ctx)
 
     -- Set position
@@ -104,7 +114,7 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
     animation_system.resizeAnimationObjectsInEntityToFit(e, ctx.size[1], ctx.size[2])
 
     -- Give physics body (CRITICAL: must match gameplay.lua pattern)
-    local world = PhysicsManager.get_world("world")
+    local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
     if world then
         local info = {
             shape = "rectangle",
@@ -139,31 +149,93 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         steering.make_steerable(registry, e, 3000.0, 30000.0, math.pi * 2.0, 2.0)
     end
 
-    -- Setup collision callbacks
-    EnemyFactory.setup_collision(e, ctx)
+    --============================================
+    -- COMBAT SYSTEM INTEGRATION (matches gameplay.lua:8708-8739)
+    --============================================
 
-    -- Setup signal listeners for this enemy
-    EnemyFactory.setup_signals(e, ctx)
+    -- Create combat actor
+    local combatActor = nil
+    local combatCtx = rawget(_G, "combat_context")
+
+    if combatCtx and combatCtx._make_actor and CombatSystem and CombatSystem.Game then
+        combatActor = combatCtx._make_actor(
+            enemy_type,
+            combatCtx.stat_defs,
+            CombatSystem.Game.Content.attach_attribute_derivations
+        )
+        combatActor.side = 2  -- Enemy side
+
+        -- Set up stats from definition
+        combatActor.stats:add_base('health', ctx.hp)
+        combatActor.stats:add_base('offensive_ability', 10)
+        combatActor.stats:add_base('defensive_ability', 10)
+        combatActor.stats:add_base('armor', 0)
+        combatActor.stats:add_base('armor_absorption_bonus_pct', 0)
+        combatActor.stats:add_base('fire_resist_pct', 0)
+        combatActor.stats:add_base('dodge_chance_pct', 0)
+        combatActor.stats:recompute()
+
+        -- Equip basic weapon
+        if CombatSystem.Game.ItemSystem and CombatSystem.Game.ItemSystem.equip then
+            CombatSystem.Game.ItemSystem.equip(combatCtx, combatActor, basic_monster_weapon)
+        end
+    end
+
+    -- Create Node script with combatTable (matches gameplay.lua:8735-8739)
+    local enemyScriptNode = Node {}
+    enemyScriptNode.combatTable = combatActor
+    enemyScriptNode.waveCtx = ctx  -- Store wave context for custom behaviors
+    enemyScriptNode:attach_ecs { create_new = false, existing_entity = e }
+
+    -- Register combat actor mappings (CRITICAL for projectile damage)
+    if combatActor then
+        if _G.combatActorToEntity then
+            _G.combatActorToEntity[combatActor] = e
+        end
+    end
+
+    -- Register in enemyHealthUiState (CRITICAL: required for isEnemyEntity() to work)
+    if _G.enemyHealthUiState then
+        _G.enemyHealthUiState[e] = {
+            actor = combatActor,
+            visibleUntil = 0,
+        }
+    end
+
+    --============================================
+    -- STEERING UPDATE (matches gameplay.lua:8770-8790)
+    --============================================
+
+    -- Physics step update for steering-based movement
+    local steeringTimerTag = "wave_enemy_steering_" .. tostring(e)
+    timer.every_physics_step(function()
+        if not entity_cache.valid(e) then return false end  -- Cancel timer
+        if isLevelUpModalActive and isLevelUpModalActive() then return end
+
+        local playerLocation = { x = 0, y = 0 }
+        local playerT = survivorEntity and component_cache.get(survivorEntity, Transform)
+        if playerT then
+            playerLocation.x = playerT.actualX + playerT.actualW / 2
+            playerLocation.y = playerT.actualY + playerT.actualH / 2
+        end
+
+        -- Seek player with steering (matches gameplay.lua pattern)
+        if steering and steering.seek_point then
+            steering.seek_point(registry, e, playerLocation, 1.0, 0.5)
+            steering.wander(registry, e, 300.0, 300.0, 150.0, 3)
+        end
+    end, steeringTimerTag)
+
+    ctx._steering_timer_tag = steeringTimerTag
 
     -- Apply elite visual if needed
     if ctx.is_elite then
         WaveHelpers.set_shader(e, "elite_glow")
     end
 
-    -- Run on_spawn
+    -- Run on_spawn callback from definition
     if def.on_spawn then
         def.on_spawn(e, ctx, WaveHelpers)
-    end
-
-    -- Register in enemyHealthUiState (CRITICAL: required for isEnemyEntity() to work)
-    -- This enables auto-aim, projectile targeting, and health bar display
-    if _G.enemyHealthUiState then
-        _G.enemyHealthUiState[e] = {
-            actor = nil,  -- No combat actor yet, but entry needed for isEnemyEntity()
-            visibleUntil = 0,
-            -- Store our ctx for wave system health tracking
-            wave_ctx = ctx,
-        }
     end
 
     -- Emit spawned event
@@ -173,95 +245,23 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
 end
 
 --============================================
--- COLLISION SETUP
+-- ENEMY DEATH (called by wave director on enemy_killed signal)
 --============================================
 
-function EnemyFactory.setup_collision(e, ctx)
-    local gameObj = registry:get(e, GameObject)
-    if not gameObj then return end
-
-    gameObj.state.collisionEnabled = true
-
-    -- Collision callbacks must use ScriptComponent via registry:add_script()
-    -- (gameObj.methods only supports onClick, onHover, onDrag, etc.)
-    local CollisionScript = {
-        on_collision = function(self, other_entity)
-            if not survivorEntity or other_entity ~= survivorEntity then return end
-            if not entity_cache.valid(e) then return end
-
-            -- Call on_contact_player if defined
-            if ctx.on_contact_player then
-                ctx.on_contact_player(e, ctx, WaveHelpers)
-            end
-
-            -- Deal contact damage
-            if ctx.damage and ctx.damage > 0 then
-                WaveHelpers.deal_damage_to_player(ctx.damage)
-
-                if ctx.on_hit_player then
-                    ctx.on_hit_player(e, ctx, { damage = ctx.damage, target = survivorEntity }, WaveHelpers)
-                end
-            end
-        end
-    }
-    registry:add_script(e, CollisionScript)
-end
-
---============================================
--- SIGNAL SETUP
---============================================
-
-function EnemyFactory.setup_signals(e, ctx)
-    -- Listen for damage to this enemy
-    local damage_handler = function(target, hit_info)
-        if target ~= e then return end
-        if not entity_cache.valid(e) then return end
-        if ctx.invulnerable then return end
-
-        -- Apply damage reduction if any
-        local damage = hit_info.damage
-        if ctx.damage_reduction then
-            damage = damage * (1 - ctx.damage_reduction)
-        end
-
-        -- Update HP
-        ctx.hp = ctx.hp - damage
-
-        -- Call on_hit callback
-        if ctx.on_hit then
-            ctx.on_hit(e, ctx, hit_info, WaveHelpers)
-        end
-
-        -- Check for death
-        if ctx.hp <= 0 then
-            EnemyFactory.kill(e, ctx, hit_info)
-        end
-    end
-
-    -- Register with unique key so we can unregister later
-    signal.register("on_entity_damaged", damage_handler)
-    ctx._damage_handler = damage_handler
-end
-
---============================================
--- ENEMY DEATH
---============================================
-
-function EnemyFactory.kill(e, ctx, hit_info)
+function EnemyFactory.kill(e, ctx)
     if not entity_cache.valid(e) then return end
 
-    local death_info = {
-        killer = hit_info and hit_info.source or nil,
-        damage_type = hit_info and hit_info.damage_type or "unknown",
-        overkill = math.abs(ctx.hp),
-    }
-
     -- Call on_death callback
-    if ctx.on_death then
-        ctx.on_death(e, ctx, death_info, WaveHelpers)
+    if ctx and ctx.on_death then
+        ctx.on_death(e, ctx, {}, WaveHelpers)
     end
 
-    -- Cleanup timers tagged with this entity
+    -- Cancel steering timer
+    if ctx and ctx._steering_timer_tag then
+        timer.cancel(ctx._steering_timer_tag)
+    end
+
+    -- Cleanup other timers tagged with this entity
     timer.cancel("enemy_" .. e)
     timer.cancel("enemy_" .. e .. "_dash")
     timer.cancel("enemy_" .. e .. "_trap")
@@ -272,18 +272,18 @@ function EnemyFactory.kill(e, ctx, hit_info)
     timer.cancel("elite_" .. e .. "_regen")
     timer.cancel("elite_" .. e .. "_teleport")
 
-    -- Unregister signal handler
-    if ctx._damage_handler then
-        signal.remove("on_entity_damaged", ctx._damage_handler)
-    end
-
-    -- Emit death signal
-    signal.emit("enemy_killed", e, ctx)
-
     -- Remove from enemyHealthUiState
     if _G.enemyHealthUiState then
         _G.enemyHealthUiState[e] = nil
     end
+
+    -- Remove from combatActorToEntity
+    if ctx and ctx.combatActor and _G.combatActorToEntity then
+        _G.combatActorToEntity[ctx.combatActor] = nil
+    end
+
+    -- Emit death signal for wave director
+    signal.emit("enemy_killed", e, ctx)
 
     -- Destroy entity
     if entity_cache.valid(e) then

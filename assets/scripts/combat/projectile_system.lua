@@ -1700,16 +1700,8 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
         }(ctx, sourceCombatActor or targetCombatActor, targetCombatActor)
         return targetCombatActor, sourceCombatActor
     else
-        -- Fallback for entities without combat actors (e.g., wave system enemies)
-        -- Emit on_entity_damaged signal which wave system listens for
-        local finalDamage = data.damage * data.damageMultiplier
-        local dmgType = data.damageType or "physical"
-        signal.emit("on_entity_damaged", targetEntity, {
-            damage = finalDamage,
-            damage_type = dmgType,
-            source = data.owner,
-            projectile = projectileEntity,
-        })
+        -- No combat actor found - entity won't take damage
+        -- This can happen for non-combat entities (decorations, etc.)
         return nil, nil
     end
 end

@@ -50,6 +50,21 @@ local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
 local elite_modifiers = require("data.elite_modifiers")
 
+---@class EnemyContext
+---@field type string Enemy type from data/enemies.lua
+---@field hp number Current health
+---@field max_hp number Maximum health
+---@field speed number Movement speed
+---@field damage number Contact damage
+---@field size {[1]: number, [2]: number} Width, height
+---@field entity number Entity ID
+---@field is_elite boolean Has elite modifiers
+---@field modifiers string[] Applied modifier names
+---@field invulnerable boolean Damage immunity flag
+---@field on_death fun(e: number, ctx: EnemyContext, helpers: table)? Death callback
+---@field on_hit fun(e: number, ctx: EnemyContext, damage: number, helpers: table)? Hit callback
+---@field on_contact_player fun(e: number, ctx: EnemyContext, helpers: table)? Player contact callback
+
 local EnemyFactory = {}
 
 -- Basic monster weapon (same as gameplay.lua)
@@ -66,6 +81,11 @@ local basic_monster_weapon = {
 -- ENEMY CREATION
 --============================================
 
+---@param enemy_type string Key from data/enemies.lua
+---@param position {x: number, y: number} Spawn position
+---@param modifiers string[]? Elite modifier names from data/elite_modifiers.lua
+---@return number? entity Entity ID (nil on failure)
+---@return EnemyContext? ctx Enemy context (nil on failure)
 function EnemyFactory.spawn(enemy_type, position, modifiers)
     modifiers = modifiers or {}
 
@@ -286,6 +306,8 @@ end
 -- ENEMY DEATH (called by wave director on enemy_killed signal)
 --============================================
 
+---@param e number Enemy entity ID
+---@param ctx EnemyContext? Enemy context from spawn()
 function EnemyFactory.kill(e, ctx)
     if not entity_cache.valid(e) then return end
 

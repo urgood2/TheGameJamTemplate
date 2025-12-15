@@ -5,6 +5,9 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local timer = require("core.timer")
 
+-- Localize globals for performance
+local GetFrameTime = _G.GetFrameTime
+
 local WaveHelpers = {}
 
 --============================================
@@ -26,10 +29,11 @@ end
 --============================================
 
 function WaveHelpers.get_player_position()
-    if not survivorEntity or not entity_cache.valid(survivorEntity) then
+    -- Note: survivorEntity is a global that can change, so we access it directly each time
+    if not _G.survivorEntity or not entity_cache.valid(_G.survivorEntity) then
         return { x = 0, y = 0 }
     end
-    local transform = component_cache.get(survivorEntity, Transform)
+    local transform = component_cache.get(_G.survivorEntity, Transform)
     if not transform then return { x = 0, y = 0 } end
     return { x = transform.actualX, y = transform.actualY }
 end
@@ -138,19 +142,23 @@ function WaveHelpers.dash_toward_player(e, dash_speed, duration)
 
     -- Dash over duration
     local elapsed = 0
-    local tag = "dash_" .. e .. "_" .. tostring(math.random(10000))
+    local tag = "dash_" .. tostring(e) .. "_" .. tostring(math.random(10000))
 
-    timer.every(0.016, function()
-        if not entity_cache.valid(e) then return false end
-        elapsed = elapsed + 0.016
-        if elapsed >= duration then return false end
+    timer.every_opts({
+        delay = 0.016,
+        action = function()
+            if not entity_cache.valid(e) then return false end
+            elapsed = elapsed + 0.016
+            if elapsed >= duration then return false end
 
-        local t = component_cache.get(e, Transform)
-        if t then
-            t.actualX = t.actualX + dir_x * dash_speed * 0.016
-            t.actualY = t.actualY + dir_y * dash_speed * 0.016
-        end
-    end, tag)
+            local t = component_cache.get(e, Transform)
+            if t then
+                t.actualX = t.actualX + dir_x * dash_speed * 0.016
+                t.actualY = t.actualY + dir_y * dash_speed * 0.016
+            end
+        end,
+        tag = tag
+    })
 end
 
 return WaveHelpers

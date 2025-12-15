@@ -356,3 +356,19 @@
 
 12/14/2025
   - Cleaned up temporary visual test hooks from draw module and shader integration work.
+  - Implemented Balatro-style web loading screen with CRT scanlines, pulsing progress bar, dev console overlay (backtick toggle), and two-phase loading (download + game init).
+  - Added local dev server script (serve_web.py) with itch.io-identical headers for WASM/SharedArrayBuffer support.
+  - Added web debug modal with copy/download/report actions and persistent debug button.
+  - Implemented spawn system with Combat Debug Panel for enemy spawning and testing.
+  - Added console commands for fast iteration: spawn, stat, heal, gold, joker.
+  - Added Cards tab to Content Debug Panel with sprite preview, sort/filter, and test cast functionality.
+  - Fixed UI alignment flag handling to be deterministic; added effectivePadding() method and conflict detection tests.
+  - Added VS Code auto-start for sprite watcher on workspace open.
+  - Expanded Lua cookbook with EntityBuilder, PhysicsBuilder, imports APIs, and PDF generation recipe.
+
+12/15/2025
+  - Expanded Lua cookbook with 12 new sections: Spawn System, Shop System, Stat System, LDtk Integration, Loot System, Animation System, Physics Manager, AI Blackboard, Card Discovery, Input System, Screen/Camera Globals, Game Control, Entity Alias System, Avatar System, and Combat State Machine.
+  - Added optional sprite field to cards, jokers, and avatars for custom sprite assignment with fallback defaults.
+  - Created 26 custom card sprite images (12 action, 10 modifier, 4 trigger) and assigned them to card definitions.
+  - Updated createNewCard to check both card_defs and trigger_card_defs and hide text overlay/sticker for cards with custom sprites.
+  - Code review polish and documentation updates.

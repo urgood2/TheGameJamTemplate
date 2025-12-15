@@ -446,7 +446,7 @@ function timer.update(dt, is_render_frame)
                 end
                 -- Defensive: ensure t.times is a number (catch misplaced tag arguments)
                 if type(t.times) ~= "number" then
-                    log_warn("Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
+                    print("[WARN] Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
                     t.times = 0
                 end
                 if t.times > 0 then
@@ -474,7 +474,7 @@ function timer.update(dt, is_render_frame)
                 end
                 -- Defensive: ensure t.times is a number (catch misplaced tag arguments)
                 if type(t.times) ~= "number" then
-                    log_warn("Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
+                    print("[WARN] Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
                     t.times = 0
                 end
                 if t.times > 0 then
@@ -494,7 +494,7 @@ function timer.update(dt, is_render_frame)
                 t.index = t.index + 1
                 -- Defensive: ensure t.times is a number (catch misplaced tag arguments)
                 if type(t.times) ~= "number" then
-                    log_warn("Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
+                    print("[WARN] Timer '" .. tostring(tag) .. "' has non-numeric 'times' field: " .. tostring(t.times) .. " - fixing to 0")
                     t.times = 0
                 end
                 if t.times > 0 then

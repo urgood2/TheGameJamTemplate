@@ -134,6 +134,11 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         registry:emplace(e, shader_pipeline.ShaderPipelineComponent)
     end
 
+    -- Make steerable for physics-based movement (matches gameplay.lua pattern)
+    if steering and steering.make_steerable then
+        steering.make_steerable(registry, e, 3000.0, 30000.0, math.pi * 2.0, 2.0)
+    end
+
     -- Setup collision callbacks
     EnemyFactory.setup_collision(e, ctx)
 

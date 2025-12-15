@@ -77,8 +77,8 @@ local state = {
         acid = 80, vitality = 80, aether = 80, chaos = 80, poison = 80,
     },
     absorb = {
-        amount = 0,
-        remaining = 0,
+        percent = 0,
+        flat = 0,
     },
 
     -- Damage preview
@@ -441,81 +441,56 @@ end
 -- DEFENSE TAB FUNCTIONS
 --===========================================================================
 function CombatDebugPanel.sync_defense_from_player()
-    if not globals or not globals.player_stats then return end
+    if not PlayerStatsAccessor then return end
 
-    local ps = globals.player_stats
+    -- Core defense stats (using correct names)
+    state.defense_stats.armor = PlayerStatsAccessor.get('armor')
+    state.defense_stats.dodge_chance_pct = PlayerStatsAccessor.get('dodge_chance_pct')
+    state.defense_stats.block_chance_pct = PlayerStatsAccessor.get('block_chance_pct')
+    state.defense_stats.block_amount = PlayerStatsAccessor.get('block_amount')
+    state.defense_stats.block_recovery_reduction_pct = PlayerStatsAccessor.get('block_recovery_reduction_pct')
 
-    -- Sync defense stats
-    if ps.armor then state.defense_stats.armor = ps.armor.total or 0 end
-    if ps.dodge_chance_pct then state.defense_stats.dodge_chance_pct = ps.dodge_chance_pct.total or 0 end
-    if ps.block_chance_pct then state.defense_stats.block_chance_pct = ps.block_chance_pct.total or 0 end
-    if ps.block_amount then state.defense_stats.block_amount = ps.block_amount.total or 0 end
-    if ps.block_recovery_reduction_pct then state.defense_stats.block_recovery_reduction_pct = ps.block_recovery_reduction_pct.total or 50 end
-
-    -- Sync resistances
-    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
+    -- Resistances (correct suffix: _resist_pct)
+    local damage_types = PlayerStatsAccessor.get_damage_types()
+    state.resistances = {}
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resist_pct"
-        if ps[key] then
-            state.resistances[dtype] = ps[key].total or 0
-        end
+        state.resistances[dtype] = PlayerStatsAccessor.get(dtype .. '_resist_pct')
     end
 
-    -- Sync resist caps
+    -- Resist caps
+    state.resist_caps = {}
     for _, dtype in ipairs(damage_types) do
-        local key = "max_" .. dtype .. "_resist_cap_pct"
-        if ps[key] then
-            state.resist_caps[dtype] = ps[key].total or 80
-        end
+        local cap = 80 + PlayerStatsAccessor.get('max_' .. dtype .. '_resist_cap_pct')
+        state.resist_caps[dtype] = math.min(100, cap)
     end
 
-    -- Sync absorb
-    if ps.absorb_amount then state.absorb.amount = ps.absorb_amount.total or 0 end
-    if ps.absorb_remaining then state.absorb.remaining = ps.absorb_remaining.total or 0 end
+    -- Absorb
+    state.absorb.percent = PlayerStatsAccessor.get('percent_absorb_pct')
+    state.absorb.flat = PlayerStatsAccessor.get('flat_absorb')
 
-    print("[Combat] Synced defense stats from player")
+    print("[CombatDebugPanel] Synced defense from player")
 end
 
 function CombatDebugPanel.apply_defense_to_player()
-    if not globals or not globals.player_stats then return end
+    if not PlayerStatsAccessor then return end
 
-    local ps = globals.player_stats
+    -- Core defense stats
+    PlayerStatsAccessor.set_base('armor', state.defense_stats.armor)
+    PlayerStatsAccessor.set_base('dodge_chance_pct', state.defense_stats.dodge_chance_pct)
+    PlayerStatsAccessor.set_base('block_chance_pct', state.defense_stats.block_chance_pct)
+    PlayerStatsAccessor.set_base('block_amount', state.defense_stats.block_amount)
+    PlayerStatsAccessor.set_base('block_recovery_reduction_pct', state.defense_stats.block_recovery_reduction_pct)
 
-    -- Apply defense stats
-    if ps.armor then ps.armor.base = state.defense_stats.armor end
-    if ps.dodge_chance_pct then ps.dodge_chance_pct.base = state.defense_stats.dodge_chance_pct end
-    if ps.block_chance_pct then ps.block_chance_pct.base = state.defense_stats.block_chance_pct end
-    if ps.block_amount then ps.block_amount.base = state.defense_stats.block_amount end
-    if ps.block_recovery_reduction_pct then ps.block_recovery_reduction_pct.base = state.defense_stats.block_recovery_reduction_pct end
-
-    -- Apply resistances
-    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
-    for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resist_pct"
-        if ps[key] then
-            ps[key].base = state.resistances[dtype]
-        end
+    -- Resistances
+    for dtype, value in pairs(state.resistances) do
+        PlayerStatsAccessor.set_base(dtype .. '_resist_pct', value)
     end
 
-    -- Apply resist caps
-    for _, dtype in ipairs(damage_types) do
-        local key = "max_" .. dtype .. "_resist_cap_pct"
-        if ps[key] then
-            ps[key].base = state.resist_caps[dtype]
-        end
-    end
+    -- Absorb
+    PlayerStatsAccessor.set_base('percent_absorb_pct', state.absorb.percent or 0)
+    PlayerStatsAccessor.set_base('flat_absorb', state.absorb.flat or 0)
 
-    -- Apply absorb
-    if ps.absorb_amount then ps.absorb_amount.base = state.absorb.amount end
-    if ps.absorb_remaining then ps.absorb_remaining.base = state.absorb.remaining end
-
-    -- Emit signal for stat recalculation
-    local ok, signal = pcall(require, "external.hump.signal")
-    if ok then
-        signal.emit("stats_recomputed")
-    end
-
-    print("[Combat] Applied defense stats to player")
+    print("[CombatDebugPanel] Applied defense to player")
 end
 
 --===========================================================================

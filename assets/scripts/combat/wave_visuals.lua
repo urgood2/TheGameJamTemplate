@@ -1,0 +1,205 @@
+-- assets/scripts/combat/wave_visuals.lua
+-- Visual feedback handlers for wave system
+
+local signal = require("external.hump.signal")
+local timer = require("core.timer")
+local entity_cache = require("core.entity_cache")
+local component_cache = require("core.component_cache")
+local animation_system = require("core.animation_system")
+
+local WaveVisuals = {}
+
+--============================================
+-- TELEGRAPH MARKER
+--============================================
+
+local active_telegraphs = {}
+
+signal.register("spawn_telegraph", function(data)
+    local x = data.x
+    local y = data.y
+    local duration = data.duration or 1.0
+    local enemy_type = data.enemy_type
+
+    -- Create a simple pulsing circle entity
+    -- Using a generic marker sprite (replace with your actual asset)
+    local marker = animation_system.createAnimatedObjectWithTransform(
+        "telegraph_marker",  -- Replace with actual sprite name
+        true
+    )
+
+    if not marker or not entity_cache.valid(marker) then
+        -- Fallback: just log it
+        log_info("Telegraph at " .. x .. ", " .. y .. " for " .. tostring(enemy_type))
+        return
+    end
+
+    -- Position
+    local transform = component_cache.get(marker, Transform)
+    if transform then
+        transform.actualX = x
+        transform.actualY = y
+        transform.actualW = 40
+        transform.actualH = 40
+    end
+
+    -- Pulse animation via scale
+    local elapsed = 0
+    local pulse_speed = 8
+
+    timer.every(0.016, function()
+        if not entity_cache.valid(marker) then return false end
+        elapsed = elapsed + 0.016
+
+        if elapsed >= duration then
+            registry:destroy(marker)
+            return false
+        end
+
+        -- Pulse scale
+        local scale = 1.0 + math.sin(elapsed * pulse_speed) * 0.2
+        local t = component_cache.get(marker, Transform)
+        if t then
+            t.actualW = 40 * scale
+            t.actualH = 40 * scale
+        end
+
+        -- Fade in urgency near end
+        -- Could add shader/color change here
+    end, "telegraph_pulse_" .. marker)
+
+    active_telegraphs[marker] = true
+end)
+
+--============================================
+-- FLOATING TEXT
+--============================================
+
+signal.register("show_floating_text", function(data)
+    local text = data.text
+    local style = data.style or "default"
+    local x = data.x
+    local y = data.y
+
+    -- Default position: center of screen
+    if not x then
+        x = (globals.screenWidth or 800) / 2
+    end
+    if not y then
+        y = (globals.screenHeight or 600) / 3
+    end
+
+    -- Style configurations
+    local styles = {
+        wave_announce = { fontSize = 32, color = "white", duration = 1.5, rise = 30 },
+        elite_announce = { fontSize = 40, color = "red", duration = 2.0, rise = 20 },
+        stage_complete = { fontSize = 36, color = "gold", duration = 2.0, rise = 40 },
+        default = { fontSize = 24, color = "white", duration = 1.5, rise = 20 },
+    }
+
+    local cfg = styles[style] or styles.default
+
+    -- Create text entity (simplified - adapt to your UI system)
+    -- This is a placeholder - integrate with your actual text rendering
+    log_info("[FLOATING TEXT] " .. text .. " (style: " .. style .. ")")
+
+    -- If you have a UI text system, use it here:
+    -- local textEntity = ui.createFloatingText(text, x, y, cfg)
+
+    -- For now, emit a signal that UI layer can handle
+    signal.emit("ui_floating_text", {
+        text = text,
+        x = x,
+        y = y,
+        fontSize = cfg.fontSize,
+        color = cfg.color,
+        duration = cfg.duration,
+        rise = cfg.rise,
+    })
+end)
+
+--============================================
+-- PARTICLES (placeholder)
+--============================================
+
+signal.register("spawn_particles", function(data)
+    local effect = data.effect
+    local x = data.x
+    local y = data.y
+
+    -- Integrate with your particle system
+    log_info("[PARTICLES] " .. effect .. " at " .. x .. ", " .. y)
+
+    -- Example: signal.emit("create_particle_effect", effect, x, y)
+end)
+
+--============================================
+-- SCREEN SHAKE (placeholder)
+--============================================
+
+signal.register("screen_shake", function(data)
+    local duration = data.duration or 0.3
+    local intensity = data.intensity or 5
+
+    -- Integrate with your camera system
+    log_info("[SCREEN SHAKE] duration=" .. duration .. " intensity=" .. intensity)
+
+    -- Example: camera.shake(duration, intensity)
+end)
+
+--============================================
+-- EXPLOSION VISUAL (placeholder)
+--============================================
+
+signal.register("explosion", function(data)
+    local x = data.x
+    local y = data.y
+    local radius = data.radius
+    local damage = data.damage
+
+    -- Visual effect
+    signal.emit("spawn_particles", { effect = "explosion", x = x, y = y })
+    signal.emit("screen_shake", { duration = 0.2, intensity = radius / 20 })
+
+    -- Damage to player if in range
+    if survivorEntity and entity_cache.valid(survivorEntity) then
+        local transform = component_cache.get(survivorEntity, Transform)
+        if transform then
+            local dx = transform.actualX - x
+            local dy = transform.actualY - y
+            local dist = math.sqrt(dx * dx + dy * dy)
+
+            if dist <= radius then
+                signal.emit("damage_player", damage)
+            end
+        end
+    end
+end)
+
+--============================================
+-- TRAP SPAWN (placeholder)
+--============================================
+
+signal.register("spawn_trap", function(data)
+    local x = data.x
+    local y = data.y
+    local damage = data.damage
+    local lifetime = data.lifetime
+
+    -- Create trap entity (simplified)
+    log_info("[TRAP] spawned at " .. x .. ", " .. y .. " (damage=" .. damage .. ", lifetime=" .. lifetime .. ")")
+
+    -- Implement trap entity creation based on your entity system
+    -- Should have collision with player, deal damage on contact, despawn after lifetime
+end)
+
+--============================================
+-- INIT
+--============================================
+
+function WaveVisuals.init()
+    -- Any initialization needed
+    log_info("WaveVisuals initialized")
+end
+
+return WaveVisuals

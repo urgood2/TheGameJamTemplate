@@ -172,6 +172,69 @@ local Projectiles = {
         lifetime = 500,
         tags = { "Holy", "Projectile" },
     },
+
+    --===========================================================================
+    -- ENEMY PROJECTILES
+    --===========================================================================
+    enemy_basic_shot = {
+        id = "enemy_basic_shot",
+        speed = 300,
+        damage_type = "physical",
+        movement = "straight",
+        collision = "destroy",
+        lifetime = 3000,
+        enemy = true,
+        tags = { "Projectile" },
+    },
+
+    enemy_fireball = {
+        id = "enemy_fireball",
+        speed = 250,
+        damage_type = "fire",
+        movement = "straight",
+        collision = "destroy",
+        lifetime = 2500,
+        on_hit_effect = "burn",
+        on_hit_duration = 2000,
+        enemy = true,
+        tags = { "Fire", "Projectile" },
+    },
+
+    enemy_ice_shard = {
+        id = "enemy_ice_shard",
+        speed = 350,
+        damage_type = "ice",
+        movement = "straight",
+        collision = "destroy",
+        lifetime = 2000,
+        on_hit_effect = "freeze",
+        on_hit_duration = 1500,
+        enemy = true,
+        tags = { "Ice", "Projectile" },
+    },
+
+    enemy_homing_orb = {
+        id = "enemy_homing_orb",
+        speed = 200,
+        damage_type = "arcane",
+        movement = "homing",
+        homing_strength = 4,
+        collision = "destroy",
+        lifetime = 4000,
+        enemy = true,
+        tags = { "Arcane", "Projectile" },
+    },
+
+    enemy_spread_shot = {
+        id = "enemy_spread_shot",
+        speed = 280,
+        damage_type = "physical",
+        movement = "straight",
+        collision = "destroy",
+        lifetime = 2000,
+        enemy = true,
+        tags = { "Projectile" },
+    },
 }
 
 return Projectiles

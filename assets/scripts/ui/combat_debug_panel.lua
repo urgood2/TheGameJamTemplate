@@ -51,15 +51,15 @@ local state = {
     },
     damage_modifiers = {
         physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
-        acid = 0, vitality = 0, aether = 0, chaos = 0, poison = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0,
     },
     dot_durations = {
-        bleed = 1.0, trauma = 1.0, burn = 1.0, frostburn = 1.0,
-        electrocute = 1.0, poison = 1.0, vitality_decay = 1.0,
+        bleed = 0, trauma = 0, burn = 0, frostburn = 0,
+        electrocute = 0, poison = 0, vitality_decay = 0,
     },
     penetration = {
         physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
-        acid = 0, vitality = 0, aether = 0, chaos = 0, poison = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0,
     },
 
     -- Tab 3: Defense
@@ -72,11 +72,11 @@ local state = {
     },
     resistances = {
         physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
-        acid = 0, vitality = 0, aether = 0, chaos = 0, poison = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0,
     },
     resist_caps = {
         physical = 80, pierce = 80, fire = 80, cold = 80, lightning = 80,
-        acid = 80, vitality = 80, aether = 80, chaos = 80, poison = 80,
+        acid = 80, vitality = 80, aether = 80, chaos = 80,
     },
     absorb = {
         percent = 0,
@@ -888,10 +888,12 @@ local function render_combat_tab()
 
     local off = state.offense_stats
 
-    off.base_damage, _ = ImGui.SliderInt("Base Damage", off.base_damage, 0, 100)
-    off.attack_speed, _ = ImGui.SliderFloat("Attack Speed", off.attack_speed, 0.1, 3.0, "%.2f")
-    off.crit_chance, _ = ImGui.SliderInt("Crit Chance %", off.crit_chance, 0, 100)
-    off.crit_damage, _ = ImGui.SliderInt("Crit Damage %", off.crit_damage, 100, 500)
+    off.weapon_min, _ = ImGui.SliderInt("Weapon Min", off.weapon_min or 18, 0, 100)
+    off.weapon_max, _ = ImGui.SliderInt("Weapon Max", off.weapon_max or 25, 0, 200)
+    off.attack_speed, _ = ImGui.SliderFloat("Attack Speed", off.attack_speed or 1.0, 0.1, 3.0, "%.2f")
+    off.crit_damage_pct, _ = ImGui.SliderInt("Crit Damage %", off.crit_damage_pct or 50, 0, 300)
+    off.all_damage_pct, _ = ImGui.SliderInt("All Damage %", off.all_damage_pct or 0, -50, 200)
+    off.life_steal_pct, _ = ImGui.SliderInt("Life Steal %", off.life_steal_pct or 0, 0, 100)
 
     ImGui.Separator()
 
@@ -899,15 +901,17 @@ local function render_combat_tab()
     ImGui.Text("DAMAGE MODIFIERS (% bonus)")
     ImGui.Separator()
 
-    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
+    -- Direct damage types only (not DoT types)
+    local direct_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos" }
 
     -- Display in columns for better layout
     ImGui.Columns(3, "dmg_mod_cols", false)
-    for _, dtype in ipairs(damage_types) do
+    for _, dtype in ipairs(direct_types) do
         ImGui.PushID("dmg_" .. dtype)
         local val = state.damage_modifiers[dtype] or 0
         ImGui.SetNextItemWidth(80)
-        local new_val, c = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
+        local display = dtype:sub(1,1):upper() .. dtype:sub(2)
+        local new_val, c = ImGui.InputInt(display, val)
         if c then
             state.damage_modifiers[dtype] = math.max(-100, math.min(200, new_val))
         end
@@ -919,15 +923,16 @@ local function render_combat_tab()
     ImGui.Separator()
 
     -- SECTION C: DoT Durations
-    ImGui.Text("DOT DURATION MULTIPLIERS")
+    ImGui.Text("DOT DURATION MODIFIERS (%)")
     ImGui.Separator()
 
     local dot_types = { "bleed", "trauma", "burn", "frostburn", "electrocute", "poison", "vitality_decay" }
     for _, dot in ipairs(dot_types) do
         ImGui.PushID("dot_" .. dot)
-        local val = state.dot_durations[dot] or 1.0
+        local val = state.dot_durations[dot] or 0
         ImGui.SetNextItemWidth(120)
-        local new_val, c = ImGui.SliderFloat(dot:sub(1,1):upper() .. dot:sub(2), val, 0.5, 3.0, "%.1fx")
+        local display = dot:sub(1,1):upper() .. dot:sub(2):gsub("_", " ")
+        local new_val, c = ImGui.SliderFloat(display, val, -50, 200, "%.0f%%")
         if c then state.dot_durations[dot] = new_val end
         ImGui.PopID()
     end
@@ -938,12 +943,16 @@ local function render_combat_tab()
     ImGui.Text("PENETRATION (% resist reduction)")
     ImGui.Separator()
 
+    -- Use same direct damage types as damage modifiers
+    local penetration_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos" }
+
     ImGui.Columns(3, "pen_cols", false)
-    for _, dtype in ipairs(damage_types) do
+    for _, dtype in ipairs(penetration_types) do
         ImGui.PushID("pen_" .. dtype)
         local val = state.penetration[dtype] or 0
         ImGui.SetNextItemWidth(80)
-        local new_val, c = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
+        local display = dtype:sub(1,1):upper() .. dtype:sub(2)
+        local new_val, c = ImGui.InputInt(display, val)
         if c then
             state.penetration[dtype] = math.max(0, math.min(100, new_val))
         end

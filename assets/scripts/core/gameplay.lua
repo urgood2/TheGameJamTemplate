@@ -6,6 +6,7 @@ local palette = require("color.palette")
 local TimerChain = require("core.timer_chain")
 local Easing = require("util.easing")
 local CombatSystem = require("combat.combat_system")
+local WaveTestInit = require("combat.wave_test_init")  -- Wave system test integration
 local ShopSystem = require("core.shop_system")
 local CardMetadata = require("core.card_metadata")
 local CardRarityTags = require("core.add_card_rarity_tags")
@@ -6451,8 +6452,10 @@ function startActionPhase()
 
 
     -- debug
-
     print("States active:", is_state_active(PLANNING_STATE), is_state_active(ACTION_STATE), is_state_active(SHOP_STATE))
+
+    -- Emit signal for systems that need to react to action phase
+    signal.emit("action_phase_started")
 end
 
 function startPlanningPhase()

@@ -5,7 +5,6 @@ local signal = require("external.hump.signal")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local timer = require("core.timer")
-local animation_system = require("core.animation_system")
 
 local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")

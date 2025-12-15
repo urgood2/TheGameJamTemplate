@@ -1698,6 +1698,26 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
             components = { { type = dmgType, amount = finalDamage } },
             tags = { projectile = true }
         }(ctx, sourceCombatActor or targetCombatActor, targetCombatActor)
+
+        -- Emit joker event if player was hit by enemy projectile
+        if data.faction == "enemy" and targetCombatActor and targetCombatActor.side == 1 then
+            local JokerSystem = require("wand.joker_system")
+            local effects = JokerSystem.trigger_event("on_player_damaged", {
+                damage = finalDamage,
+                damage_type = dmgType,
+                source = "enemy_projectile",
+                attacker = data.owner,
+                player = targetCombatActor,
+            })
+
+            -- Track avatar progress
+            local AvatarSystem = require("wand.avatar_system")
+            local playerScript = getScriptTableFromEntityID(targetEntity)
+            if playerScript then
+                AvatarSystem.record_progress(playerScript, "hp_lost", finalDamage)
+            end
+        end
+
         return targetCombatActor, sourceCombatActor
     else
         -- throw an exception

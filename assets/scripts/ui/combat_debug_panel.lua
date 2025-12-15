@@ -1038,13 +1038,156 @@ local function render_defense_tab()
     ImGui.Separator()
 
     local abs = state.absorb
-    abs.amount, _ = ImGui.SliderInt("Absorb Amount", abs.amount, 0, 50)
+    abs.percent, _ = ImGui.SliderInt("Percent Absorb %", abs.percent, 0, 50)
+    abs.flat, _ = ImGui.SliderInt("Flat Absorb", abs.flat, 0, 100)
 
-    -- Remaining is display-only
-    ImGui.Text(string.format("  Remaining: %d / %d", abs.remaining, abs.amount))
+    ImGui.Separator()
 
-    if ImGui.SmallButton("Refill Absorb") then
-        abs.remaining = abs.amount
+    -- SECTION E: Damage Preview
+    ImGui.Text("DAMAGE PREVIEW")
+    ImGui.Separator()
+
+    local preview = state.damage_preview
+
+    -- Input for incoming damage
+    ImGui.SetNextItemWidth(100)
+    local new_incoming, incoming_changed = ImGui.InputInt("Incoming Damage", preview.incoming)
+    if incoming_changed then
+        preview.incoming = math.max(1, new_incoming)
+    end
+
+    -- Damage type combo box
+    ImGui.SameLine()
+    ImGui.SetNextItemWidth(100)
+    local damage_type_list = { "physical", "fire", "cold", "lightning", "acid", "pierce" }
+    local current_type_idx = 1
+    for i, dtype in ipairs(damage_type_list) do
+        if dtype == preview.damage_type then
+            current_type_idx = i
+            break
+        end
+    end
+    local new_type_idx, type_changed = ImGui.Combo("Type", current_type_idx, damage_type_list, #damage_type_list)
+    if type_changed then
+        preview.damage_type = damage_type_list[new_type_idx]
+    end
+
+    -- Calculate preview on input change or button press
+    local should_calculate = false
+    ImGui.SameLine()
+    if ImGui.Button("Calculate") then
+        should_calculate = true
+    end
+
+    if should_calculate or incoming_changed or type_changed then
+        if PlayerStatsAccessor and PlayerStatsAccessor.preview_damage then
+            preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(preview.incoming, preview.damage_type)
+        else
+            preview.result = preview.incoming
+            preview.breakdown = { final = preview.incoming }
+        end
+    end
+
+    -- Display final damage with color coding
+    local reduction_pct = 0
+    if preview.incoming > 0 then
+        reduction_pct = ((preview.incoming - preview.result) / preview.incoming) * 100
+    end
+
+    ImGui.Text("Final Damage:")
+    ImGui.SameLine()
+
+    -- Color: green if >50% reduced, yellow if >25%, red otherwise
+    local color = { 1.0, 0.3, 0.3, 1 } -- red
+    if reduction_pct > 50 then
+        color = { 0.2, 1.0, 0.2, 1 } -- green
+    elseif reduction_pct > 25 then
+        color = { 1.0, 0.9, 0.2, 1 } -- yellow
+    end
+
+    ImGui.TextColored(color[1], color[2], color[3], color[4],
+        string.format("%.1f (%.1f%% reduced)", preview.result, reduction_pct))
+
+    -- Quick test buttons
+    ImGui.Separator()
+    if ImGui.SmallButton("Test 100 Physical") then
+        preview.incoming = 100
+        preview.damage_type = "physical"
+        preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(100, "physical")
+    end
+    ImGui.SameLine()
+    if ImGui.SmallButton("Test 100 Fire") then
+        preview.incoming = 100
+        preview.damage_type = "fire"
+        preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(100, "fire")
+    end
+    ImGui.SameLine()
+    if ImGui.SmallButton("Test 500 Physical") then
+        preview.incoming = 500
+        preview.damage_type = "physical"
+        preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(500, "physical")
+    end
+
+    -- Collapsible damage breakdown section
+    if ImGui.CollapsingHeader("Damage Breakdown") then
+        local bd = preview.breakdown
+        if bd and bd.final then
+            ImGui.Text(string.format("  Raw Damage: %.1f", bd.raw or preview.incoming))
+
+            -- Dodge
+            if bd.dodge_chance and bd.dodge_chance > 0 then
+                ImGui.Text(string.format("  Dodge Chance: %.1f%%", bd.dodge_chance))
+                ImGui.Text(string.format("    After dodge (expected): %.1f", bd.after_dodge_expected or 0))
+            end
+
+            -- Armor
+            if bd.armor and bd.armor > 0 then
+                ImGui.Text(string.format("  Armor: %d (mitigation: %.1f)", bd.armor, bd.armor_mitigation or 0))
+                ImGui.Text(string.format("    After armor: %.1f", bd.after_armor or 0))
+            elseif bd.after_armor then
+                ImGui.Text(string.format("  After armor: %.1f", bd.after_armor))
+            end
+
+            -- Resistance
+            if bd.resistance then
+                ImGui.Text(string.format("  Resistance: %.1f%%", bd.resistance))
+                ImGui.Text(string.format("    After resist: %.1f", bd.after_resist or 0))
+            end
+
+            -- Damage reduction
+            if bd.damage_reduction and bd.damage_reduction > 0 then
+                ImGui.Text(string.format("  Damage Reduction: %.1f%%", bd.damage_reduction))
+            end
+            if bd.type_damage_reduction and bd.type_damage_reduction > 0 then
+                ImGui.Text(string.format("  Type-specific DR: %.1f%%", bd.type_damage_reduction))
+            end
+            if bd.after_dr then
+                ImGui.Text(string.format("    After DR: %.1f", bd.after_dr))
+            end
+
+            -- Percent absorb
+            if bd.percent_absorb and bd.percent_absorb > 0 then
+                ImGui.Text(string.format("  Percent Absorb: %.1f%%", bd.percent_absorb))
+                ImGui.Text(string.format("    After percent absorb: %.1f", bd.after_percent_absorb or 0))
+            end
+
+            -- Block
+            if bd.block_chance and bd.block_chance > 0 then
+                ImGui.Text(string.format("  Block: %.1f%% chance, %d amount", bd.block_chance, bd.block_amount or 0))
+                ImGui.Text(string.format("    After block (expected): %.1f", bd.after_block_expected or 0))
+            end
+
+            -- Flat absorb
+            if bd.flat_absorb and bd.flat_absorb > 0 then
+                ImGui.Text(string.format("  Flat Absorb: %d", bd.flat_absorb))
+            end
+
+            ImGui.Separator()
+            ImGui.TextColored(color[1], color[2], color[3], color[4],
+                string.format("  FINAL DAMAGE: %.1f", bd.final))
+        else
+            ImGui.TextDisabled("  (calculate damage first)")
+        end
     end
 end
 

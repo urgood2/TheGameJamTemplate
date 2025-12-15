@@ -9705,6 +9705,64 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">auto-exported-sprites-from-aseprite/Layer 1.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/Testing Layer.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/Trigger Card Base.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/card base.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/trigger-every-5.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/trigger-on-bump.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/trigger-on-dash.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/trigger-on-distance-travelled.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>250,250,500,500</rect>
+                <key>scale9Paddings</key>
+                <rect>250,250,500,500</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-add-mana.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-basic-projectile.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-bounce-trigger.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-explosive-fire-projectile.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-flying-cross.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-heal-area.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-projectile-timer-cast.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-richochet-projectile.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-shield-bubble.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-teleport-bolt.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-teleport-to-impact.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/action-vacuum-projectile.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-big-slow.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-blood-to-damage.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-damage-up.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-explosive.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-force-crit.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-heal-on-hit.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-homing.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-multi-double-cast.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-trigger-on-hit.png</key>
+            <key type="filename">auto-exported-sprites-from-aseprite/mod-trigger-on-timer.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>500,500,1000,1000</rect>
+                <key>scale9Paddings</key>
+                <rect>500,500,1000,1000</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/3325-TheRoguelike_1_10_alpha_118.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>

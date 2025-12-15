@@ -160,6 +160,7 @@ Cards.ACTION_BASIC_PROJECTILE = {
     weight = 1,
     tags = { "Projectile" },
     test_label = "ACTION\nbasic\nprojectile",
+    sprite = "action-basic-projectile.png",
 }
 
 Cards.ACTION_FAST_ACCURATE_PROJECTILE = {
@@ -226,6 +227,7 @@ Cards.ACTION_EXPLOSIVE_FIRE_PROJECTILE = {
     weight = 3,
     tags = { "Fire", "Projectile", "AoE" },
     test_label = "ACTION\nexplosive\nfire\nprojectile",
+    sprite = "action-explosive-fire-projectile.png",
 }
 
 Cards.ACTION_RICOCHET_PROJECTILE = {
@@ -249,6 +251,7 @@ Cards.ACTION_RICOCHET_PROJECTILE = {
     weight = 2,
     tags = { "Projectile" },
     test_label = "ACTION\nricochet\nprojectile",
+    sprite = "action-richochet-projectile.png",
 }
 
 Cards.ACTION_HEAVY_OBJECT_PROJECTILE = {
@@ -295,6 +298,7 @@ Cards.ACTION_VACUUM_PROJECTILE = {
     weight = 3,
     tags = { "Void", "Projectile", "AoE" },
     test_label = "ACTION\nvacuum\nprojectile",
+    sprite = "action-vacuum-projectile.png",
 }
 
 -- Modifier Cards
@@ -382,6 +386,7 @@ Cards.MOD_DAMAGE_UP = {
     revisit_limit = 2,
     tags = { "Buff", "Brute" },
     test_label = "MOD\ndamage\nup",
+    sprite = "mod-damage-up.png",
 }
 
 Cards.MOD_SHORT_LIFETIME = {
@@ -417,6 +422,7 @@ Cards.MOD_TRIGGER_ON_HIT = {
     revisit_limit = 1,
     tags = { "Arcane" },
     test_label = "MOD\ntrigger\non\nhit",
+    sprite = "mod-trigger-on-hit.png",
 }
 
 Cards.MOD_TRIGGER_TIMER = {
@@ -435,6 +441,7 @@ Cards.MOD_TRIGGER_TIMER = {
     revisit_limit = 1,
     tags = { "Arcane" },
     test_label = "MOD\ntrigger\ntimer",
+    sprite = "mod-trigger-on-timer.png",
 }
 
 Cards.MOD_TRIGGER_ON_DEATH = {
@@ -470,6 +477,7 @@ Cards.MULTI_DOUBLE_CAST = {
     weight = 2,
     tags = { "Arcane" },
     test_label = "MULTI\ndouble\ncast",
+    sprite = "mod-multi-double-cast.png",
 }
 
 Cards.MULTI_TRIPLE_CAST = {
@@ -517,6 +525,7 @@ Cards.UTIL_TELEPORT_TO_IMPACT = {
     weight = 3,
     tags = { "Mobility", "Arcane" },
     test_label = "UTIL\nteleport\nto\nimpact",
+    sprite = "action-teleport-to-impact.png",
 }
 
 Cards.UTIL_HEAL_AREA = {
@@ -531,6 +540,7 @@ Cards.UTIL_HEAL_AREA = {
     weight = 2,
     tags = { "Buff", "AoE", "Holy" },
     test_label = "UTIL\nheal\narea",
+    sprite = "action-heal-area.png",
 }
 
 Cards.UTIL_SHIELD_BUBBLE = {
@@ -545,6 +555,7 @@ Cards.UTIL_SHIELD_BUBBLE = {
     weight = 3,
     tags = { "Defense", "Buff", "AoE" },
     test_label = "UTIL\nshield\nbubble",
+    sprite = "action-shield-bubble.png",
 }
 
 Cards.UTIL_SUMMON_ALLY = {
@@ -621,6 +632,7 @@ Cards.ACTION_ADD_MANA = {
     weight = 3,
     tags = { "Arcane", "Buff" },
     test_label = "ACTION\nadd\nmana",
+    sprite = "action-add-mana.png",
 }
 
 -- Ball that bounces 3 times
@@ -658,6 +670,7 @@ Cards.ACTION_BOUNCE_TRIGGER = {
     weight = 3,
     tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nbounce\ntrigger",
+    sprite = "action-bounce-trigger.png",
 }
 
 -- Leave spike hazard, cast another spell after X seconds
@@ -695,6 +708,7 @@ Cards.ACTION_FLYING_CROSS = {
     weight = 4,
     tags = { "Holy", "Projectile" },
     test_label = "ACTION\nflying\ncross",
+    sprite = "action-flying-cross.png",
 }
 
 -- Bolt that teleports you to target location on hit
@@ -714,6 +728,7 @@ Cards.ACTION_TELEPORT_BOLT = {
     weight = 4,
     tags = { "Arcane", "Projectile", "Mobility" },
     test_label = "ACTION\nteleport\nbolt",
+    sprite = "action-teleport-bolt.png",
 }
 
 -- Basic projectile that launches another spell after timer
@@ -733,6 +748,7 @@ Cards.ACTION_PROJECTILE_TIMER_CAST = {
     weight = 2,
     tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nprojectile\ntimer\ncast",
+    sprite = "action-projectile-timer-cast.png",
 }
 
 -- Summon minion that wanders and attacks
@@ -786,6 +802,7 @@ Cards.MOD_FORCE_CRIT = {
     weight = 2,
     tags = { "Buff", "Brute" },
     test_label = "MOD\nforce\ncrit",
+    sprite = "mod-force-crit.png",
 }
 
 -- Greatly increase size but reduce speed
@@ -799,6 +816,7 @@ Cards.MOD_BIG_SLOW = {
     weight = 2,
     tags = { "Brute", "Projectile" },
     test_label = "MOD\nbig\nslow",
+    sprite = "mod-big-slow.png",
 }
 
 -- Immunity + add 1 card to cast block
@@ -824,6 +842,7 @@ Cards.MOD_HEAL_ON_HIT = {
     weight = 2,
     tags = { "Buff", "Holy" },
     test_label = "MOD\nheal\non\nhit",
+    sprite = "mod-heal-on-hit.png",
 }
 
 -- Cast random modifier from wand
@@ -860,6 +879,7 @@ Cards.MOD_HOMING = {
     weight = 2,
     tags = { "Arcane", "Projectile" },
     test_label = "MOD\nhoming",
+    sprite = "mod-homing.png",
 }
 
 -- Explosive projectile
@@ -873,6 +893,7 @@ Cards.MOD_EXPLOSIVE = {
     weight = 3,
     tags = { "Fire", "AoE" },
     test_label = "MOD\nexplosive",
+    sprite = "mod-explosive.png",
 }
 
 -- Slow phasing projectile
@@ -923,6 +944,7 @@ Cards.MOD_BLOOD_TO_DAMAGE = {
     weight = 4,
     tags = { "Brute", "Void" },
     test_label = "MOD\nblood\nto\ndamage",
+    sprite = "mod-blood-to-damage.png",
 }
 
 -- Wand refresh
@@ -952,6 +974,7 @@ TriggerCards.TEST_TRIGGER_EVERY_N_SECONDS = {
     trigger_type = "time",
     trigger_interval = 2000,
     test_label = "TRIGGER\nevery\nN\nseconds",
+    sprite = "trigger-every-5.png",
 }
 
 TriggerCards.TEST_TRIGGER_ON_BUMP_ENEMY = {
@@ -964,6 +987,7 @@ TriggerCards.TEST_TRIGGER_ON_BUMP_ENEMY = {
     description = "Casts spells when you collide with an enemy",
     trigger_type = "collision",
     test_label = "TRIGGER\non\nbump\nenemy",
+    sprite = "trigger-on-bump.png",
 }
 
 TriggerCards.TEST_TRIGGER_ON_DASH = {
@@ -976,6 +1000,7 @@ TriggerCards.TEST_TRIGGER_ON_DASH = {
     description = "Casts spells when you dash",
     trigger_type = "dash",
     test_label = "TRIGGER\non\ndash",
+    sprite = "trigger-on-dash.png",
 }
 
 TriggerCards.TEST_TRIGGER_ON_DISTANCE_TRAVELED = {
@@ -989,6 +1014,7 @@ TriggerCards.TEST_TRIGGER_ON_DISTANCE_TRAVELED = {
     trigger_type = "movement",
     trigger_distance = 200,
     test_label = "TRIGGER\non\ndistance\ntraveled",
+    sprite = "trigger-on-distance-travelled.png",
 }
 
 return {

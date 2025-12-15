@@ -1089,7 +1089,7 @@ end
 
 -- creates a new trigger slot card. these go in trigger boards ONLY.
 function createNewTriggerSlotCard(id, x, y, gameStateToApply)
-    local card = createNewCard(nil, x, y, gameStateToApply)
+    local card = createNewCard(id, x, y, gameStateToApply)
 
     local cardScript = getScriptTableFromEntityID(card)
     if not cardScript then
@@ -1493,7 +1493,7 @@ end
 -- any card that goes in an action board. NOT TRIGGERS.
 -- retursn the entity ID of the created card
 function createNewCard(id, x, y, gameStateToApply)
-    local card_def = WandEngine.card_defs[id] or {}
+    local card_def = WandEngine.card_defs[id] or WandEngine.trigger_card_defs[id] or {}
     local imageToUse = card_def.sprite or "sample_card.png"
     -- local imageToUse = "3500-TheRoguelike_1_10_alpha_293.png"
     -- local imageToUse = "b1822.png"
@@ -1675,48 +1675,51 @@ function createNewCard(id, x, y, gameStateToApply)
                             local isOverCapacity = isCardOverCapacity(cardScript, eid)
                             cardScript.isDisabled = isOverCapacity
 
-                            -- inject card label into the batched shader pipeline (local space, shaded)
-                            shader_draw_commands.add_local_command(
-                                registry, eid, "text_pro",
-                                function(c)
-                                    c.text = cardScript.test_label or "unknown"
-                                    c.font = localization.getFont()
-                                    c.x = t.visualW * 0.1
-                                    c.y = t.visualH * 0.1
-                                    c.origin = _G.Vector2 and _G.Vector2(0, 0) or { x = 0, y = 0 }
-                                    c.rotation = 0
-                                    c.fontSize = 20.0
-                                    c.spacing = 1.0
-                                    c.color = colorToUse
-                                end,
-                                1, -- z >= 0 to draw after sprite
-                                layer.DrawCommandSpace.World, -- keep in world space with the card
-                                true -- force text pass (uses uv_passthrough in 3d_skew)
-                            )
-
-                            if testStickerInfo then
+                            -- only show text label and sticker for cards without custom sprites
+                            if not cardScript.sprite then
+                                -- inject card label into the batched shader pipeline (local space, shaded)
                                 shader_draw_commands.add_local_command(
-                                    registry, eid, "texture_pro",
+                                    registry, eid, "text_pro",
                                     function(c)
-                                        local size = (t and t.visualW or 32) * 0.22
-                                        local vec = (_G.Vector2 and _G.Vector2(size, size)) or { x = size, y = size }
-                                        local center = (_G.Vector2 and _G.Vector2(size * 0.5, size * 0.5)) or { x = size * 0.5, y = size * 0.5 }
-                                        c.texture = testStickerInfo.atlas
-                                        local x, y, w, h = unpack_rect_like(testStickerInfo.gridRect, testStickerInfo.frame)
-                                        c.source = make_rect(x, y, w, h)
-                                        c.offsetX = (t and t.visualW or 0) * 0.5 - size * 0.5
-                                        c.offsetY = (t and t.visualH or 0) * 0.1
-                                        c.size = vec
-                                        c.rotationCenter = center
+                                        c.text = cardScript.test_label or "unknown"
+                                        c.font = localization.getFont()
+                                        c.x = t.visualW * 0.1
+                                        c.y = t.visualH * 0.1
+                                        c.origin = _G.Vector2 and _G.Vector2(0, 0) or { x = 0, y = 0 }
                                         c.rotation = 0
-                                        c.color = (_G.WHITE or Col(255, 255, 255, 255))
+                                        c.fontSize = 20.0
+                                        c.spacing = 1.0
+                                        c.color = colorToUse
                                     end,
-                                    2, -- draw above the text label
-                                    layer.DrawCommandSpace.World,
-                                    false, -- text pass (leave false; we use sticker pass instead)
-                                    true, -- force uv_passthrough in 3d_skew to clamp within atlas subrect
-                                    true -- sticker pass: identity atlas, after overlays
+                                    1, -- z >= 0 to draw after sprite
+                                    layer.DrawCommandSpace.World, -- keep in world space with the card
+                                    true -- force text pass (uses uv_passthrough in 3d_skew)
                                 )
+
+                                if testStickerInfo then
+                                    shader_draw_commands.add_local_command(
+                                        registry, eid, "texture_pro",
+                                        function(c)
+                                            local size = (t and t.visualW or 32) * 0.22
+                                            local vec = (_G.Vector2 and _G.Vector2(size, size)) or { x = size, y = size }
+                                            local center = (_G.Vector2 and _G.Vector2(size * 0.5, size * 0.5)) or { x = size * 0.5, y = size * 0.5 }
+                                            c.texture = testStickerInfo.atlas
+                                            local x, y, w, h = unpack_rect_like(testStickerInfo.gridRect, testStickerInfo.frame)
+                                            c.source = make_rect(x, y, w, h)
+                                            c.offsetX = (t and t.visualW or 0) * 0.5 - size * 0.5
+                                            c.offsetY = (t and t.visualH or 0) * 0.1
+                                            c.size = vec
+                                            c.rotationCenter = center
+                                            c.rotation = 0
+                                            c.color = (_G.WHITE or Col(255, 255, 255, 255))
+                                        end,
+                                        2, -- draw above the text label
+                                        layer.DrawCommandSpace.World,
+                                        false, -- text pass (leave false; we use sticker pass instead)
+                                        true, -- force uv_passthrough in 3d_skew to clamp within atlas subrect
+                                        true -- sticker pass: identity atlas, after overlays
+                                    )
+                                end
                             end
 
                             -- slightly above the card sprite

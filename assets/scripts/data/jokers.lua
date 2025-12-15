@@ -12,6 +12,7 @@ local Jokers = {
         name = "Pyromaniac",
         description = "+10 Damage to Mono-Element (Fire) Spells.",
         rarity = "Common",
+        sprite = "joker_pyromaniac",  -- Optional: custom sprite (falls back to joker_sample.png)
         calculate = function(self, context)
             if context.event == "on_spell_cast" then
                 if context.spell_type == "Mono-Element" and context.tags and context.tags.Fire then

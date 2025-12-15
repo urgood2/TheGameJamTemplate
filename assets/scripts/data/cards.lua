@@ -20,6 +20,7 @@ Cards.MY_FIREBALL = {
     mana_cost = 12,
     tags = { "Fire", "Projectile" },
     test_label = "MY\nfireball",     -- Display label (use \n for line breaks)
+    sprite = "fireball_icon",         -- Optional: custom sprite (falls back to sample_card.png)
 
     -- Action-specific fields
     damage = 25,

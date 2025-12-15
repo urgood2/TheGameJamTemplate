@@ -171,7 +171,7 @@ local function rebuildSprites()
     AvatarJokerStrip.jokerSprites = {}
 
     for _, a in ipairs(AvatarJokerStrip.avatars or {}) do
-        local entity = createSprite(a, AvatarJokerStrip.layout.avatarSprite, colors.avatarAccent)
+        local entity = createSprite(a, a.sprite or AvatarJokerStrip.layout.avatarSprite, colors.avatarAccent)
         if entity then
             table.insert(AvatarJokerStrip.avatarSprites, {
                 id = a.id,
@@ -184,7 +184,7 @@ local function rebuildSprites()
     end
 
     for _, j in ipairs(AvatarJokerStrip.jokers or {}) do
-        local entity = createSprite(j, AvatarJokerStrip.layout.jokerSprite, colors.jokerAccent)
+        local entity = createSprite(j, j.sprite or AvatarJokerStrip.layout.jokerSprite, colors.jokerAccent)
         if entity then
             table.insert(AvatarJokerStrip.jokerSprites, {
                 id = j.id,

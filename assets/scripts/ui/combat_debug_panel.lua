@@ -974,10 +974,10 @@ local function render_defense_tab()
     local def = state.defense_stats
 
     def.armor, _ = ImGui.SliderInt("Armor", def.armor, 0, 500)
-    def.dodge_chance_pct, _ = ImGui.SliderInt("Dodge Chance %", def.dodge_chance_pct, 0, 75)
-    def.block_chance_pct, _ = ImGui.SliderInt("Block Chance %", def.block_chance_pct, 0, 75)
+    def.dodge_chance_pct, _ = ImGui.SliderInt("Dodge %", def.dodge_chance_pct, 0, 75)
+    def.block_chance_pct, _ = ImGui.SliderInt("Block %", def.block_chance_pct, 0, 75)
     def.block_amount, _ = ImGui.SliderInt("Block Amount", def.block_amount, 0, 100)
-    def.block_recovery_reduction_pct, _ = ImGui.SliderInt("Block Recovery Reduction %", def.block_recovery_reduction_pct, 0, 100)
+    def.block_recovery_reduction_pct, _ = ImGui.SliderInt("Block Recovery %", def.block_recovery_reduction_pct, 0, 100)
 
     ImGui.Separator()
 
@@ -985,9 +985,10 @@ local function render_defense_tab()
     ImGui.Text("RESISTANCES")
     ImGui.Separator()
 
-    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
+    -- Direct damage types for resistances (not DoT types)
+    local resist_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos" }
 
-    for _, dtype in ipairs(damage_types) do
+    for _, dtype in ipairs(resist_types) do
         ImGui.PushID("res_" .. dtype)
 
         local res = state.resistances[dtype] or 0
@@ -1019,7 +1020,7 @@ local function render_defense_tab()
     -- SECTION C: Resist Caps (collapsible)
     if ImGui.CollapsingHeader("Resist Caps (Advanced)") then
         ImGui.Columns(3, "cap_cols", false)
-        for _, dtype in ipairs(damage_types) do
+        for _, dtype in ipairs(resist_types) do
             ImGui.PushID("cap_" .. dtype)
             local cap = state.resist_caps[dtype] or 80
             ImGui.SetNextItemWidth(60)

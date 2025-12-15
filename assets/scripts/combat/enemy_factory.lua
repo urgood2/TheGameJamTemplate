@@ -10,6 +10,9 @@ local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
 local elite_modifiers = require("data.elite_modifiers")
 
+-- Physics
+local PhysicsManager = require("core.physics_manager")
+
 local EnemyFactory = {}
 
 --============================================
@@ -35,6 +38,10 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         log_warn("Failed to create enemy entity for: " .. enemy_type)
         return nil, nil
     end
+
+    -- Add state tag so enemy updates/renders during action phase
+    add_state_tag(e, ACTION_STATE)
+    remove_default_state_tag(e)
 
     -- Build context from definition
     local ctx = {
@@ -89,10 +96,44 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         transform.actualY = position.y
         transform.actualW = ctx.size[1]
         transform.actualH = ctx.size[2]
+        -- Snap visual to actual (prevents interpolation from spawn point)
+        transform.visualX = transform.actualX
+        transform.visualY = transform.actualY
     end
 
     -- Resize animation
     animation_system.resizeAnimationObjectsInEntityToFit(e, ctx.size[1], ctx.size[2])
+
+    -- Give physics body (CRITICAL: must match gameplay.lua pattern)
+    local world = PhysicsManager.get_world("world")
+    if world then
+        local info = {
+            shape = "rectangle",
+            tag = "enemy",
+            sensor = false,
+            density = 1.0,
+            inflate_px = -4
+        }
+        physics.create_physics_for_transform(
+            registry,
+            physics_manager_instance,
+            e,
+            "world",
+            info
+        )
+
+        -- Update collision masks so enemies collide with player and other enemies
+        physics.update_collision_masks_for(world, "enemy", { "player", "enemy", "bullet" })
+        physics.update_collision_masks_for(world, "player", { "enemy" })
+        physics.update_collision_masks_for(world, "bullet", { "enemy" })
+    else
+        print("[EnemyFactory] WARNING: Physics world not available!")
+    end
+
+    -- Add shader pipeline for proper rendering
+    if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
+        registry:emplace(e, shader_pipeline.ShaderPipelineComponent)
+    end
 
     -- Setup collision callbacks
     EnemyFactory.setup_collision(e, ctx)
@@ -108,6 +149,17 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
     -- Run on_spawn
     if def.on_spawn then
         def.on_spawn(e, ctx, WaveHelpers)
+    end
+
+    -- Register in enemyHealthUiState (CRITICAL: required for isEnemyEntity() to work)
+    -- This enables auto-aim, projectile targeting, and health bar display
+    if _G.enemyHealthUiState then
+        _G.enemyHealthUiState[e] = {
+            actor = nil,  -- No combat actor yet, but entry needed for isEnemyEntity()
+            visibleUntil = 0,
+            -- Store our ctx for wave system health tracking
+            wave_ctx = ctx,
+        }
     end
 
     -- Emit spawned event
@@ -126,24 +178,29 @@ function EnemyFactory.setup_collision(e, ctx)
 
     gameObj.state.collisionEnabled = true
 
-    gameObj.methods.onCollision = function(other_entity)
-        if other_entity ~= survivorEntity then return end
-        if not entity_cache.valid(e) then return end
+    -- Collision callbacks must use ScriptComponent via registry:add_script()
+    -- (gameObj.methods only supports onClick, onHover, onDrag, etc.)
+    local CollisionScript = {
+        on_collision = function(self, other_entity)
+            if not survivorEntity or other_entity ~= survivorEntity then return end
+            if not entity_cache.valid(e) then return end
 
-        -- Call on_contact_player if defined
-        if ctx.on_contact_player then
-            ctx.on_contact_player(e, ctx, WaveHelpers)
-        end
+            -- Call on_contact_player if defined
+            if ctx.on_contact_player then
+                ctx.on_contact_player(e, ctx, WaveHelpers)
+            end
 
-        -- Deal contact damage
-        if ctx.damage and ctx.damage > 0 then
-            WaveHelpers.deal_damage_to_player(ctx.damage)
+            -- Deal contact damage
+            if ctx.damage and ctx.damage > 0 then
+                WaveHelpers.deal_damage_to_player(ctx.damage)
 
-            if ctx.on_hit_player then
-                ctx.on_hit_player(e, ctx, { damage = ctx.damage, target = survivorEntity }, WaveHelpers)
+                if ctx.on_hit_player then
+                    ctx.on_hit_player(e, ctx, { damage = ctx.damage, target = survivorEntity }, WaveHelpers)
+                end
             end
         end
-    end
+    }
+    registry:add_script(e, CollisionScript)
 end
 
 --============================================
@@ -218,6 +275,11 @@ function EnemyFactory.kill(e, ctx, hit_info)
 
     -- Emit death signal
     signal.emit("enemy_killed", e, ctx)
+
+    -- Remove from enemyHealthUiState
+    if _G.enemyHealthUiState then
+        _G.enemyHealthUiState[e] = nil
+    end
 
     -- Destroy entity
     if entity_cache.valid(e) then

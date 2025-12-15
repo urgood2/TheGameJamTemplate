@@ -6,6 +6,7 @@
 #include "input_cursor.hpp"
 #include "input_cursor_events.hpp"
 #include "input_focus.hpp"
+#include "input_polling.hpp"
 
 #include "raylib.h"
 
@@ -108,154 +109,8 @@ namespace input
 
     auto PollInput(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void
     {
-        auto& bus = resolveEventBus(ctx);
-
-        // keyboard input polling
-        // ---------------- Keyboard Input ----------------
-        static std::vector<bool> keyDownLastFrame(KEY_KP_EQUAL + 1, false);
-        for (int key = 0; key <= KEY_KP_EQUAL; key++)
-        {
-            if (IsKeyDown(key))
-            {
-                hid::reconfigure_device_info(inputState, InputDeviceInputCategory::KEYBOARD);
-                ProcessKeyboardKeyDown(inputState, (KeyboardKey)key);
-                if (!keyDownLastFrame[key]) {
-                    keyDownLastFrame[key] = true;
-                    const bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
-                    const bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
-                    const bool alt = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT);
-                    bus.publish(events::KeyPressed{key, shift, ctrl, alt});
-                }
-            }
-            if (IsKeyReleased(key))
-            {
-                hid::reconfigure_device_info(inputState, InputDeviceInputCategory::KEYBOARD);
-                ProcessKeyboardKeyRelease(inputState, (KeyboardKey)key);
-                keyDownLastFrame[key] = false;
-            }
-        }
-
-        // poll touch? LATER: implement touch
-        if (GetTouchPointCount() > 0)
-        {
-            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::TOUCH);
-        }
-
-        // poll mouse buttons
-        static bool mouseLeftDownLastFrame = false, mouseRightDownLastFrame = false,
-                    mosueLeftDownCurrentFrame = false, mouseRightDownCurrentFrame = false;
-
-        mosueLeftDownCurrentFrame = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
-        mouseRightDownCurrentFrame = IsMouseButtonDown(MOUSE_RIGHT_BUTTON);
-
-        bool mouseDetectDownFirstFrameLeft = mosueLeftDownCurrentFrame && !mouseLeftDownLastFrame;
-        bool mouseDetectDownFirstFrameRight = mouseRightDownCurrentFrame && !mouseRightDownLastFrame;
-
-        // SPDLOG_DEBUG("Current frame - Mouse left down: {} right down: {}", mosueLeftDownCurrentFrame, mouseRightDownCurrentFrame);
-        // SPDLOG_DEBUG("Last frame - Mouse left down: {} right down: {}", mouseLeftDownLastFrame, mouseRightDownLastFrame);
-
-        if (mouseDetectDownFirstFrameLeft)
-        { // this should only register first time the button is held down
-            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = globals::getScaledMousePositionCached();
-            EnqueueLeftMouseButtonPress(inputState, mousePos.x, mousePos.y);
-            bus.publish(events::MouseClicked{mousePos, MOUSE_LEFT_BUTTON});
-        }
-        if (mouseDetectDownFirstFrameRight)
-        {
-            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = globals::getScaledMousePositionCached();
-            // TODO: right mouse handling isn't really configured, need to add
-            EnqueRightMouseButtonPress(inputState, mousePos.x, mousePos.y);
-            bus.publish(events::MouseClicked{mousePos, MOUSE_RIGHT_BUTTON});
-        }
-        if (mosueLeftDownCurrentFrame == false && mouseLeftDownLastFrame == true)
-        { // release only for left button
-            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
-            Vector2 mousePos = globals::getScaledMousePositionCached();
-            ProcessLeftMouseButtonRelease(registry, inputState, mousePos.x, mousePos.y, ctx);
-        }
-
-        mouseLeftDownLastFrame = mosueLeftDownCurrentFrame;
-        mouseRightDownLastFrame = mouseRightDownCurrentFrame;
-        // no middle mouse
-
-        // poll mouse movement
-        if (GetMouseDelta().x != 0 || GetMouseDelta().y != 0)
-        {
-            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
-        }
-        
-        // poll mouse wheel
-        if (GetMouseWheelMove() != 0)
-        {
-            hid::reconfigure_device_info(inputState, InputDeviceInputCategory::MOUSE);
-            input::DispatchRaw(inputState,
-            InputDeviceInputCategory::GAMEPAD_AXIS, // intentionally using gamepad axis category here to represent mouse wheel as an axis
-            AXIS_MOUSE_WHEEL_Y,
-            /*down*/ true,
-            /*value*/ GetMouseWheelMove());
-        }
-
-        // poll gamepad
-        if (IsGamepadAvailable(0))
-        { // just the one gamepad
-
-            struct GamepadButtonState
-            {
-                bool downLastFrame = false, downCurrentFrame = false;
-            };
-            static std::unordered_map<GamepadButton, GamepadButtonState> gamepadButtonStates;
-
-            for (int button = GamepadButton::GAMEPAD_BUTTON_LEFT_FACE_UP; button <= GAMEPAD_BUTTON_RIGHT_THUMB; button++)
-            {
-                gamepadButtonStates[(GamepadButton)button].downCurrentFrame = IsGamepadButtonDown(0, (GamepadButton)button);
-
-                bool gamepadButtonDetectDownFirstFrame = gamepadButtonStates[(GamepadButton)button].downCurrentFrame && !gamepadButtonStates[(GamepadButton)button].downLastFrame;
-                bool gamepadButtonDetectUpFirstFrame = !gamepadButtonStates[(GamepadButton)button].downCurrentFrame && gamepadButtonStates[(GamepadButton)button].downLastFrame;
-
-                if (gamepadButtonDetectDownFirstFrame)
-                {
-                    hid::set_current_gamepad(inputState, GetGamepadName(0), 0);
-                    hid::reconfigure_device_info(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
-                    ProcessButtonPress(inputState, (GamepadButton)button, ctx);
-                }
-                if (gamepadButtonDetectUpFirstFrame)
-                {
-                    hid::set_current_gamepad(inputState, GetGamepadName(0), 0);
-                    hid::reconfigure_device_info(inputState, InputDeviceInputCategory::GAMEPAD_BUTTON, (GamepadButton)button);
-                    ProcessButtonRelease(inputState, (GamepadButton)button, ctx);
-                }
-
-                gamepadButtonStates[(GamepadButton)button].downLastFrame = gamepadButtonStates[(GamepadButton)button].downCurrentFrame;
-            }
-
-            // // Detect joystick movement
-            float axisLeftX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
-            float axisLeftY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
-            float axisRightX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_X);
-            float axisRightY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_Y);
-            float axisLT = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_TRIGGER);
-            float axisRT = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_TRIGGER);
-            // printf("Gamepad name: %s\n", GetGamepadName(0));
-            // printf("Axis count: %d\n", GetGamepadAxisCount(0));
-            // SPDLOG_DEBUG("Axis movements: Lx={} Ly={} Rx={} Ry={} LT={} RT={}", axisLeftX, axisLeftY, axisRightX, axisRightY, axisLT, axisRT);
-            if (abs(axisLeftX) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
-                abs(axisLeftY) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
-                abs(axisRightX) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
-                abs(axisRightY) > constants::GAMEPAD_AXIS_MOVEMENT_THRESHOLD ||
-                axisLT > -1.f || axisRT > -1.f)
-            {
-                hid::set_current_gamepad(inputState, GetGamepadName(0), 0);
-                
-                // SPDLOG_DEBUG("Axis movement detected! Lx={} Ly={}", axisLeftX, axisLeftY);
-                // SPDLOG_INFO("Axes: {}", GetGamepadAxisCount(0));
-
-                
-                hid::reconfigure_device_info(inputState, InputDeviceInputCategory::GAMEPAD_AXIS);
-                UpdateGamepadAxisInput(inputState, registry, dt, ctx);
-            }
-        }
+        // Delegate to the polling abstraction
+        polling::poll_all_inputs(registry, inputState, dt, ctx);
     }
 
     auto handleRawInput(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void
@@ -271,24 +126,8 @@ namespace input
     
     auto DetectMouseActivity(InputState &state) -> InputDeviceInputCategory
     {
-        Vector2 mousePos = globals::getScaledMousePositionCached();
-
-        // Movement threshold
-        bool moved = std::fabs(mousePos.x - state.cursor_position.x) > constants::MOUSE_MOVEMENT_THRESHOLD ||
-                    std::fabs(mousePos.y - state.cursor_position.y) > constants::MOUSE_MOVEMENT_THRESHOLD;
-
-        // Buttons or wheel
-        bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON) ||
-                    IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) ||
-                    GetMouseWheelMove() != 0.0f;
-
-        if (moved || clicked)
-        {
-            state.cursor_position = mousePos; // keep in sync
-            return InputDeviceInputCategory::MOUSE;
-        }
-
-        return InputDeviceInputCategory::NONE;
+        // Delegate to the polling abstraction
+        return polling::detect_mouse_activity(state);
     }
 
     auto Update(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void

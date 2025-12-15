@@ -915,6 +915,7 @@ Cards.MY_FIREBALL = {
     radius_of_effect = 50,     -- AoE radius (0 = no AoE)
     tags = { "Fire", "Projectile", "AoE" },
     test_label = "MY\nfireball",
+    sprite = "fireball_icon",  -- Optional: custom sprite (default: sample_card.png)
 }
 ```
 
@@ -928,6 +929,7 @@ my_joker = {
     name = "My Joker",
     description = "+10 damage to Fire spells",
     rarity = "Common",         -- Common, Uncommon, Rare, Epic, Legendary
+    sprite = "joker_my_joker", -- Optional: custom sprite (default: joker_sample.png)
     calculate = function(self, context)
         if context.event == "on_spell_cast" and context.tags and context.tags.Fire then
             return { damage_mod = 10, message = "My Joker!" }

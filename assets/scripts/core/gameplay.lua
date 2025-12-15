@@ -1493,7 +1493,8 @@ end
 -- any card that goes in an action board. NOT TRIGGERS.
 -- retursn the entity ID of the created card
 function createNewCard(id, x, y, gameStateToApply)
-    local imageToUse = "sample_card.png"
+    local card_def = WandEngine.card_defs[id] or {}
+    local imageToUse = card_def.sprite or "sample_card.png"
     -- local imageToUse = "3500-TheRoguelike_1_10_alpha_293.png"
     -- local imageToUse = "b1822.png"
     -- if category == "action" then

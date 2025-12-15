@@ -565,16 +565,6 @@
       }
     ]
   },
-  "3535_TheRoguelike_1_10_alpha_328_anim": {
-    "frames": [
-      {
-        "sprite_UUID": "3535-TheRoguelike_1_10_alpha_328.png",
-        "duration_seconds": 5,
-        "fg_color": "NONE",
-        "bg_color": "NONE"
-      }
-    ]
-  },
   "4067_TheRoguelike_1_10_alpha_860_anim": {
     "frames": [
       {

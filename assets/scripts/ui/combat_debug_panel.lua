@@ -808,7 +808,7 @@ local function render_stats_tab()
     for _, stat in ipairs(state.core_stats) do
         ImGui.PushID("core_" .. stat.name)
 
-        local changed, new_value = ImGui.SliderInt(stat.display, stat.value, stat.min, stat.max)
+        local new_value, changed = ImGui.SliderInt(stat.display, stat.value, stat.min, stat.max)
         if changed then
             stat.value = new_value
             any_changed = true
@@ -865,8 +865,7 @@ local function render_stats_tab()
         state.player_level = state.player_level + 1
     end
 
-    local xp_changed
-    xp_changed, state.player_xp = ImGui.InputInt("XP", state.player_xp)
+    state.player_xp, _ = ImGui.InputInt("XP", state.player_xp)
 
     -- Presets
     ImGui.Separator()
@@ -923,12 +922,11 @@ local function render_combat_tab()
     ImGui.Separator()
 
     local off = state.offense_stats
-    local changed
 
-    changed, off.base_damage = ImGui.SliderInt("Base Damage", off.base_damage, 0, 100)
-    changed, off.attack_speed = ImGui.SliderFloat("Attack Speed", off.attack_speed, 0.1, 3.0, "%.2f")
-    changed, off.crit_chance = ImGui.SliderInt("Crit Chance %", off.crit_chance, 0, 100)
-    changed, off.crit_damage = ImGui.SliderInt("Crit Damage %", off.crit_damage, 100, 500)
+    off.base_damage, _ = ImGui.SliderInt("Base Damage", off.base_damage, 0, 100)
+    off.attack_speed, _ = ImGui.SliderFloat("Attack Speed", off.attack_speed, 0.1, 3.0, "%.2f")
+    off.crit_chance, _ = ImGui.SliderInt("Crit Chance %", off.crit_chance, 0, 100)
+    off.crit_damage, _ = ImGui.SliderInt("Crit Damage %", off.crit_damage, 100, 500)
 
     ImGui.Separator()
 
@@ -944,7 +942,7 @@ local function render_combat_tab()
         ImGui.PushID("dmg_" .. dtype)
         local val = state.damage_modifiers[dtype] or 0
         ImGui.SetNextItemWidth(80)
-        local c, new_val = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
+        local new_val, c = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
         if c then
             state.damage_modifiers[dtype] = math.max(-100, math.min(200, new_val))
         end
@@ -964,7 +962,7 @@ local function render_combat_tab()
         ImGui.PushID("dot_" .. dot)
         local val = state.dot_durations[dot] or 1.0
         ImGui.SetNextItemWidth(120)
-        local c, new_val = ImGui.SliderFloat(dot:sub(1,1):upper() .. dot:sub(2), val, 0.5, 3.0, "%.1fx")
+        local new_val, c = ImGui.SliderFloat(dot:sub(1,1):upper() .. dot:sub(2), val, 0.5, 3.0, "%.1fx")
         if c then state.dot_durations[dot] = new_val end
         ImGui.PopID()
     end
@@ -980,7 +978,7 @@ local function render_combat_tab()
         ImGui.PushID("pen_" .. dtype)
         local val = state.penetration[dtype] or 0
         ImGui.SetNextItemWidth(80)
-        local c, new_val = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
+        local new_val, c = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
         if c then
             state.penetration[dtype] = math.max(0, math.min(100, new_val))
         end
@@ -1009,12 +1007,11 @@ local function render_defense_tab()
     ImGui.Separator()
 
     local def = state.defense_stats
-    local changed
 
-    changed, def.armor = ImGui.SliderInt("Armor", def.armor, 0, 500)
-    changed, def.dodge = ImGui.SliderInt("Dodge %", def.dodge, 0, 75)
-    changed, def.block = ImGui.SliderInt("Block %", def.block, 0, 75)
-    changed, def.block_reduction = ImGui.SliderInt("Block Reduction %", def.block_reduction, 0, 100)
+    def.armor, _ = ImGui.SliderInt("Armor", def.armor, 0, 500)
+    def.dodge, _ = ImGui.SliderInt("Dodge %", def.dodge, 0, 75)
+    def.block, _ = ImGui.SliderInt("Block %", def.block, 0, 75)
+    def.block_reduction, _ = ImGui.SliderInt("Block Reduction %", def.block_reduction, 0, 100)
 
     ImGui.Separator()
 
@@ -1036,7 +1033,7 @@ local function render_defense_tab()
 
         -- Slider
         ImGui.SetNextItemWidth(100)
-        local c, new_res = ImGui.SliderInt("##res", res, -50, cap)
+        local new_res, c = ImGui.SliderInt("##res", res, -50, cap)
         if c then state.resistances[dtype] = new_res end
 
         ImGui.SameLine()
@@ -1060,7 +1057,7 @@ local function render_defense_tab()
             ImGui.PushID("cap_" .. dtype)
             local cap = state.resist_caps[dtype] or 80
             ImGui.SetNextItemWidth(60)
-            local c, new_cap = ImGui.InputInt(dtype:sub(1,3), cap)
+            local new_cap, c = ImGui.InputInt(dtype:sub(1,3), cap)
             if c then state.resist_caps[dtype] = math.max(50, math.min(100, new_cap)) end
             ImGui.PopID()
             ImGui.NextColumn()
@@ -1075,7 +1072,7 @@ local function render_defense_tab()
     ImGui.Separator()
 
     local abs = state.absorb
-    changed, abs.amount = ImGui.SliderInt("Absorb Amount", abs.amount, 0, 50)
+    abs.amount, _ = ImGui.SliderInt("Absorb Amount", abs.amount, 0, 50)
 
     -- Remaining is display-only
     ImGui.Text(string.format("  Remaining: %d / %d", abs.remaining, abs.amount))
@@ -1104,7 +1101,7 @@ local function render_relics_tab()
     ImGui.Separator()
 
     ImGui.SetNextItemWidth(100)
-    local changed, new_gold = ImGui.InputInt("Gold", state.gold)
+    local new_gold, changed = ImGui.InputInt("Gold", state.gold)
     if changed then state.gold = math.max(0, new_gold) end
 
     ImGui.SameLine()
@@ -1293,7 +1290,7 @@ local function render_jokers_tab()
     for i, r in ipairs(rarities) do
         if r == state.joker_rarity_filter then current_idx = i break end
     end
-    local changed, new_idx = ImGui.Combo("Rarity", current_idx, rarities, #rarities)
+    local new_idx, changed = ImGui.Combo("Rarity", current_idx, rarities, #rarities)
     if changed then state.joker_rarity_filter = rarities[new_idx] end
 
     ImGui.BeginChild("AvailableJokers", 0, 120, true)
@@ -1337,7 +1334,7 @@ local function render_jokers_tab()
     for i, e in ipairs(TEST_EVENTS) do
         if e == state.test_event_type then evt_idx = i break end
     end
-    local evt_changed, new_evt_idx = ImGui.Combo("Event", evt_idx, TEST_EVENTS, #TEST_EVENTS)
+    local new_evt_idx, evt_changed = ImGui.Combo("Event", evt_idx, TEST_EVENTS, #TEST_EVENTS)
     if evt_changed then state.test_event_type = TEST_EVENTS[new_evt_idx] end
 
     ImGui.SameLine()
@@ -1603,7 +1600,7 @@ local function render_wand_tab()
         if t == state.deck_type_filter then type_idx = i break end
     end
     ImGui.SetNextItemWidth(80)
-    local type_changed, new_type_idx = ImGui.Combo("Type", type_idx, types, #types)
+    local new_type_idx, type_changed = ImGui.Combo("Type", type_idx, types, #types)
     if type_changed then state.deck_type_filter = types[new_type_idx] end
 
     ImGui.BeginChild("AddCards", 0, 120, true)
@@ -1703,13 +1700,13 @@ local function render_status_tab()
     ImGui.ProgressBar(hp_pct, 150, 16, string.format("%d / %d", state.current_hp, state.max_hp))
     ImGui.SameLine()
     ImGui.SetNextItemWidth(60)
-    local _, new_hp = ImGui.InputInt("##hp", state.current_hp)
+    local new_hp, _ = ImGui.InputInt("##hp", state.current_hp)
     state.current_hp = math.max(0, math.min(state.max_hp, new_hp))
     ImGui.SameLine()
     ImGui.Text("/")
     ImGui.SameLine()
     ImGui.SetNextItemWidth(60)
-    local _, new_max_hp = ImGui.InputInt("##maxhp", state.max_hp)
+    local new_max_hp, _ = ImGui.InputInt("##maxhp", state.max_hp)
     state.max_hp = math.max(1, new_max_hp)
 
     -- Energy bar
@@ -1719,13 +1716,13 @@ local function render_status_tab()
     ImGui.ProgressBar(energy_pct, 150, 16, string.format("%d / %d", state.current_energy, state.max_energy))
     ImGui.SameLine()
     ImGui.SetNextItemWidth(60)
-    local _, new_energy = ImGui.InputInt("##energy", state.current_energy)
+    local new_energy, _ = ImGui.InputInt("##energy", state.current_energy)
     state.current_energy = math.max(0, math.min(state.max_energy, new_energy))
     ImGui.SameLine()
     ImGui.Text("/")
     ImGui.SameLine()
     ImGui.SetNextItemWidth(60)
-    local _, new_max_energy = ImGui.InputInt("##maxenergy", state.max_energy)
+    local new_max_energy, _ = ImGui.InputInt("##maxenergy", state.max_energy)
     state.max_energy = math.max(1, new_max_energy)
 
     -- Quick buttons
@@ -1761,7 +1758,7 @@ local function render_status_tab()
     local buff_names = {}
     for _, b in ipairs(BUFF_TYPES) do table.insert(buff_names, b.name) end
     ImGui.SetNextItemWidth(100)
-    local buff_changed, new_buff = ImGui.Combo("##addbuff", state.selected_buff, buff_names, #buff_names)
+    local new_buff, buff_changed = ImGui.Combo("##addbuff", state.selected_buff, buff_names, #buff_names)
     if buff_changed then state.selected_buff = new_buff end
     ImGui.SameLine()
     if ImGui.SmallButton("Add Buff") then
@@ -1806,7 +1803,7 @@ local function render_status_tab()
     local debuff_names = {}
     for _, d in ipairs(DEBUFF_TYPES) do table.insert(debuff_names, d.name) end
     ImGui.SetNextItemWidth(100)
-    local debuff_changed, new_debuff = ImGui.Combo("##adddebuff", state.selected_debuff, debuff_names, #debuff_names)
+    local new_debuff, debuff_changed = ImGui.Combo("##adddebuff", state.selected_debuff, debuff_names, #debuff_names)
     if debuff_changed then state.selected_debuff = new_debuff end
     ImGui.SameLine()
     if ImGui.SmallButton("Add Debuff") then
@@ -1850,11 +1847,11 @@ local function render_status_tab()
     state.selected_dot = state.selected_dot or 1
     state.new_dot_dps = state.new_dot_dps or 10
     ImGui.SetNextItemWidth(80)
-    local dot_changed, new_dot = ImGui.Combo("##adddot", state.selected_dot, DOT_TYPES, #DOT_TYPES)
+    local new_dot, dot_changed = ImGui.Combo("##adddot", state.selected_dot, DOT_TYPES, #DOT_TYPES)
     if dot_changed then state.selected_dot = new_dot end
     ImGui.SameLine()
     ImGui.SetNextItemWidth(50)
-    local _, new_dps = ImGui.InputInt("DPS##dotdps", state.new_dot_dps)
+    local new_dps, _ = ImGui.InputInt("DPS##dotdps", state.new_dot_dps)
     state.new_dot_dps = math.max(1, new_dps)
     ImGui.SameLine()
     if ImGui.SmallButton("Add DoT") then

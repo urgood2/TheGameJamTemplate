@@ -64,6 +64,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- flip a card to see upgrate level & tags
+
 - use new aseprite workflow to design my own versions of cards.
 
 - make shop a really simple three-card thing, and we'll flesh out later after adding content.

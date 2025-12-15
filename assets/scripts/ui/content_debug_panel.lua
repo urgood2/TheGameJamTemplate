@@ -373,8 +373,7 @@ local function render_projectile_tab()
     end
 
     if #preset_names > 0 then
-        local changed
-        changed, state.selected_preset = ImGui.Combo("##preset", state.selected_preset, preset_names, #preset_names)
+        state.selected_preset, _ = ImGui.Combo("##preset", state.selected_preset, preset_names, #preset_names)
 
         local selected = state.projectile_presets[state.selected_preset]
         if selected then
@@ -390,20 +389,16 @@ local function render_projectile_tab()
     ImGui.Text("Parameter Overrides:")
 
     -- Speed slider
-    local speed_changed
-    speed_changed, state.spawn_params.speed = ImGui.SliderInt("Speed", state.spawn_params.speed, 100, 1500)
+    state.spawn_params.speed, _ = ImGui.SliderInt("Speed", state.spawn_params.speed, 100, 1500)
 
     -- Homing strength slider
-    local homing_changed
-    homing_changed, state.spawn_params.homing_strength = ImGui.SliderInt("Homing", state.spawn_params.homing_strength, 0, 15)
+    state.spawn_params.homing_strength, _ = ImGui.SliderInt("Homing", state.spawn_params.homing_strength, 0, 15)
 
     -- Bounce count slider
-    local bounce_changed
-    bounce_changed, state.spawn_params.bounce_count = ImGui.SliderInt("Bounces", state.spawn_params.bounce_count, 0, 10)
+    state.spawn_params.bounce_count, _ = ImGui.SliderInt("Bounces", state.spawn_params.bounce_count, 0, 10)
 
     -- Explosion radius slider
-    local explode_changed
-    explode_changed, state.spawn_params.explosion_radius = ImGui.SliderInt("Explosion", state.spawn_params.explosion_radius, 0, 200)
+    state.spawn_params.explosion_radius, _ = ImGui.SliderInt("Explosion", state.spawn_params.explosion_radius, 0, 200)
 
     ImGui.Separator()
     ImGui.Text("Spawn:")
@@ -525,7 +520,7 @@ local function render_cards_tab()
     end
 
     ImGui.SetNextItemWidth(100)
-    local tag_changed, new_tag_idx = ImGui.Combo("##tag_filter", current_tag_idx, tag_options, #tag_options)
+    local new_tag_idx, tag_changed = ImGui.Combo("##tag_filter", current_tag_idx, tag_options, #tag_options)
     if tag_changed then
         state.card_filter_tag = new_tag_idx == 1 and nil or tag_options[new_tag_idx]
     end

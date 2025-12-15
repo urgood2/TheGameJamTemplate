@@ -8092,6 +8092,316 @@ return LevelManager
 
 ***
 
+## Loot System
+
+\label{recipe:loot-system}
+
+The Loot System manages the spawning and collection of loot drops from defeated enemies, including XP orbs, gold, health potions, ability cards, and equipment. It provides configurable loot tables, multiple collection modes (auto-collect, click, magnet), and integrates with the combat system's event bus and leveling mechanics.
+
+### Creating a Loot System
+
+Initialize a loot system with configuration options:
+
+```lua
+local LootSystem = require("combat.loot_system")
+
+local loot_system = LootSystem.new({
+    combat_context = combat_ctx,        -- Combat context (for event bus)
+    player_entity = player_eid,         -- Player entity ID
+    loot_tables = {                     -- Custom loot tables (optional)
+        goblin = {
+            gold = { min = 1, max = 3, chance = 100 },
+            xp = { base = 10, variance = 2, chance = 100 },
+            items = {
+                { type = "health_potion", chance = 10 }
+            }
+        }
+    },
+    default_collection_mode = LootSystem.CollectionModes.AUTO_COLLECT,  -- or CLICK, MAGNET
+    magnet_range = 150,                 -- Range for magnet collection (pixels)
+    despawn_time = 30,                  -- Auto-despawn timeout (seconds)
+    on_loot_collected = function(player, loot_type, amount)
+        print("Collected", amount, loot_type)
+    end
+})
+```
+
+**Configuration Fields:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `combat_context` | `table` | Required | Combat context with event bus |
+| `player_entity` | `entity_id` | Required | Player entity for collection |
+| `loot_tables` | `table` | Auto-generated | Loot tables per enemy type |
+| `default_collection_mode` | `string` | `"auto_collect"` | Collection mode (see below) |
+| `magnet_range` | `number` | `150` | Magnet attraction range (pixels) |
+| `despawn_time` | `number` | `30` | Auto-despawn timeout (seconds) |
+| `on_loot_collected` | `function` | `nil` | Callback on collection |
+
+### Loot Types
+
+The system supports five loot types:
+
+```lua
+-- Access via LootSystem.LootTypes
+LootSystem.LootTypes.GOLD            -- Currency
+LootSystem.LootTypes.XP_ORB          -- Experience points
+LootSystem.LootTypes.HEALTH_POTION   -- Restores 50 HP
+LootSystem.LootTypes.CARD            -- Ability card
+LootSystem.LootTypes.ITEM            -- Equipment item
+```
+
+### Collection Modes
+
+Three collection modes control how players interact with loot:
+
+```lua
+-- Auto-collect: Immediate collection after 0.3s delay
+LootSystem.CollectionModes.AUTO_COLLECT
+
+-- Click-to-collect: Player must click loot entity
+LootSystem.CollectionModes.CLICK
+
+-- Magnet: Loot flies towards player when in range
+LootSystem.CollectionModes.MAGNET
+```
+
+**Collection Mode Behavior:**
+
+| Mode | Interaction | Use Case |
+|------|-------------|----------|
+| `AUTO_COLLECT` | Automatic after delay | Fast-paced action games |
+| `CLICK` | Manual click required | Strategic looting decisions |
+| `MAGNET` | Attracts within range | Hybrid: intentional movement |
+
+### Spawning Loot
+
+Spawn loot when enemies die:
+
+```lua
+-- Spawn loot from loot table
+loot_system:spawn_loot_for_enemy(
+    "goblin",                -- Enemy type (looks up loot table)
+    { x = 300, y = 200 },    -- Spawn position
+    combat_context           -- Optional combat context
+)
+
+-- Spawn specific loot types manually
+loot_system:spawn_gold({ x = 100, y = 100 }, 5)           -- 5 gold
+loot_system:spawn_xp({ x = 100, y = 100 }, 25)            -- 25 XP
+loot_system:spawn_item({ x = 100, y = 100 }, "card_rare") -- Rare card
+```
+
+### Loot Tables
+
+Define loot tables for enemy types:
+
+```lua
+local loot_tables = {
+    goblin = {
+        gold = { min = 1, max = 3, chance = 100 },        -- Always drops 1-3 gold
+        xp = { base = 10, variance = 2, chance = 100 },   -- Always drops 8-12 XP
+        items = {
+            { type = "health_potion", chance = 10 }       -- 10% chance for potion
+        }
+    },
+    orc = {
+        gold = { min = 3, max = 7, chance = 100 },
+        xp = { base = 25, variance = 5, chance = 100 },
+        items = {
+            { type = "health_potion", chance = 15 },
+            { type = "card_common", chance = 5 }
+        }
+    },
+    boss = {
+        gold = { min = 20, max = 50, chance = 100 },
+        xp = { base = 100, variance = 20, chance = 100 },
+        items = {
+            { type = "card_rare", chance = 50 },
+            { type = "card_uncommon", chance = 100 },
+            { type = "health_potion", chance = 100 }
+        }
+    },
+    unknown = {
+        gold = { min = 1, max = 2, chance = 80 },         -- Fallback for unknown enemies
+        xp = { base = 5, variance = 1, chance = 80 }
+    }
+}
+```
+
+**Loot Table Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `gold.min` | `number` | Minimum gold drop |
+| `gold.max` | `number` | Maximum gold drop |
+| `gold.chance` | `number` | Drop chance (0-100) |
+| `xp.base` | `number` | Base XP amount |
+| `xp.variance` | `number` | Random variance (+/-) |
+| `xp.chance` | `number` | Drop chance (0-100) |
+| `items` | `table` | Array of item drops |
+| `items[n].type` | `string` | Loot type or item ID |
+| `items[n].chance` | `number` | Drop chance (0-100) |
+
+### Integration with Combat System
+
+Hook up loot spawning to enemy death events:
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Register enemy death handler
+signal.register("OnEnemyDeath", function(enemy_entity, enemy_data)
+    local transform = component_cache.get(enemy_entity, Transform)
+    if transform then
+        local position = {
+            x = transform.actualX + transform.actualW * 0.5,
+            y = transform.actualY + transform.actualH * 0.5
+        }
+
+        -- Spawn loot based on enemy type
+        local enemy_type = enemy_data.type or "unknown"
+        loot_system:spawn_loot_for_enemy(enemy_type, position, combat_context)
+    end
+end)
+```
+
+### Event System
+
+The loot system emits events via the combat context event bus:
+
+```lua
+-- Register event handlers
+if combat_context.bus then
+    combat_context.bus:on("OnLootDropped", function(data)
+        -- data: { loot_entity, loot_type, amount, position }
+        print("Loot dropped:", data.loot_type, "at", data.position.x, data.position.y)
+    end)
+
+    combat_context.bus:on("OnLootCollected", function(data)
+        -- data: { player, loot_type, amount }
+        print("Player collected:", data.amount, data.loot_type)
+    end)
+end
+```
+
+**Events Emitted:**
+
+| Event | Data | Description |
+|-------|------|-------------|
+| `OnLootDropped` | `{ loot_entity, loot_type, amount, position }` | Loot spawned |
+| `OnLootCollected` | `{ player, loot_type, amount }` | Loot collected |
+
+### Cleanup
+
+Clean up all active loot (useful for level transitions):
+
+```lua
+-- Despawn all loot entities
+loot_system:cleanup_all_loot()
+```
+
+### Complete Example
+
+Full integration with combat system:
+
+```lua
+local LootSystem = require("combat.loot_system")
+local signal = require("external.hump.signal")
+local component_cache = require("core.component_cache")
+
+-- Custom loot tables
+local loot_tables = {
+    skeleton = {
+        gold = { min = 2, max = 5, chance = 100 },
+        xp = { base = 15, variance = 3, chance = 100 },
+        items = {
+            { type = "health_potion", chance = 8 },
+            { type = "card_common", chance = 3 }
+        }
+    },
+    dragon = {
+        gold = { min = 50, max = 100, chance = 100 },
+        xp = { base = 500, variance = 50, chance = 100 },
+        items = {
+            { type = "card_legendary", chance = 25 },
+            { type = "card_rare", chance = 100 },
+            { type = "health_potion", chance = 100 }
+        }
+    }
+}
+
+-- Initialize loot system
+local loot_system = LootSystem.new({
+    combat_context = combat_ctx,
+    player_entity = player_eid,
+    loot_tables = loot_tables,
+    default_collection_mode = LootSystem.CollectionModes.MAGNET,
+    magnet_range = 200,
+    despawn_time = 60,
+    on_loot_collected = function(player, loot_type, amount)
+        -- Play sound effect
+        if loot_type == LootSystem.LootTypes.GOLD then
+            playSound("coin_pickup")
+        elseif loot_type == LootSystem.LootTypes.XP_ORB then
+            playSound("xp_gain")
+        end
+    end
+})
+
+-- Hook up enemy death event
+signal.register("OnEnemyDeath", function(enemy_entity, enemy_data)
+    local transform = component_cache.get(enemy_entity, Transform)
+    if not transform then return end
+
+    local position = {
+        x = transform.actualX + transform.actualW * 0.5,
+        y = transform.actualY + transform.actualH * 0.5
+    }
+
+    loot_system:spawn_loot_for_enemy(enemy_data.type or "unknown", position, combat_ctx)
+end)
+
+-- Clean up on level transition
+signal.register("OnLevelTransition", function()
+    loot_system:cleanup_all_loot()
+end)
+```
+
+### API Reference
+
+**Constructor:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `LootSystem.new(config)` | `table` | `LootSystem` | Create new loot system |
+
+**Loot Spawning:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `spawn_loot_for_enemy(type, pos, ctx)` | `string, table, table` | - | Spawn loot from table |
+| `spawn_gold(pos, amount)` | `table, number` | - | Spawn gold drops |
+| `spawn_xp(pos, amount)` | `table, number` | `entity_id` | Spawn XP orb |
+| `spawn_item(pos, item_type)` | `table, string` | `entity_id` | Spawn item drop |
+
+**Management:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `cleanup_all_loot()` | - | - | Despawn all active loot |
+| `despawn_loot(entity_id)` | `entity_id` | - | Despawn specific loot |
+
+**Internal Helpers:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_default_loot_tables()` | - | `table` | Get built-in loot tables |
+| `roll_chance(chance)` | `number` | `boolean` | Roll percentage (0-100) |
+| `collect_loot(eid, type, amount)` | `entity_id, string, number` | - | Apply loot collection |
+
+***
+
 \newpage
 \appendix
 

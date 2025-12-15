@@ -102,6 +102,11 @@ end
 -- @param incoming_damage number raw damage
 -- @param damage_type string e.g. 'physical', 'fire'
 -- @return number damage after defenses, table breakdown
+--
+-- NOTE: This is a defender-side preview. Limitations:
+-- - Does not include attacker penetration effects
+-- - Does not include active RR (Resistance Reduction) debuffs
+-- - Probabilistic effects (dodge, block) shown as expected values
 function PlayerStatsAccessor.preview_damage(incoming_damage, damage_type)
     local stats = PlayerStatsAccessor.get_stats()
     if not stats then
@@ -112,64 +117,69 @@ function PlayerStatsAccessor.preview_damage(incoming_damage, damage_type)
     local breakdown = { raw = incoming_damage }
     local damage = incoming_damage
 
+    -- Correct damage flow order per combat_system.lua:
+    -- dodge → armor → resist → DR → percent_absorb → block → flat_absorb
+
     -- 1. Dodge chance (probabilistic - show expected value)
     local dodge = stats:get('dodge_chance_pct') or 0
     dodge = math.min(75, math.max(0, dodge)) -- cap at 75%
     breakdown.dodge_chance = dodge
-    local expected_after_dodge = damage * (1 - dodge / 100)
-    breakdown.after_dodge_expected = expected_after_dodge
+    damage = damage * (1 - dodge / 100)
+    breakdown.after_dodge_expected = damage
 
-    -- 2. Block (probabilistic + flat reduction)
-    local block_chance = stats:get('block_chance_pct') or 0
-    local block_amount = stats:get('block_amount') or 0
-    breakdown.block_chance = block_chance
-    breakdown.block_amount = block_amount
-    -- Expected: (1 - block%) * damage + block% * max(0, damage - block_amount)
-    local blocked_damage = math.max(0, damage - block_amount)
-    local expected_after_block = (1 - block_chance/100) * damage + (block_chance/100) * blocked_damage
-    breakdown.after_block_expected = expected_after_block
-
-    -- 3. Armor (physical only)
-    local after_armor = expected_after_block
+    -- 2. Armor (physical only)
     if damage_type == 'physical' then
         local armor = stats:get('armor') or 0
         local armor_absorption = 0.70 * (1 + (stats:get('armor_absorption_bonus_pct') or 0) / 100)
-        local mitigation = math.min(expected_after_block, armor) * armor_absorption
-        after_armor = expected_after_block - mitigation
+        local mitigation = math.min(damage, armor) * armor_absorption
+        damage = damage - mitigation
         breakdown.armor = armor
         breakdown.armor_mitigation = mitigation
     end
-    breakdown.after_armor = after_armor
+    breakdown.after_armor = damage
 
-    -- 4. Resistance
+    -- 3. Resistance
     local resist_key = damage_type .. '_resist_pct'
     local resist = stats:get(resist_key) or 0
     local max_cap = 100 + (stats:get('max_resist_cap_pct') or 0)
     local min_cap = -100 + (stats:get('min_resist_cap_pct') or 0)
     resist = math.max(min_cap, math.min(max_cap, resist))
     breakdown.resistance = resist
-    local after_resist = after_armor * (1 - resist / 100)
-    breakdown.after_resist = after_resist
+    damage = damage * (1 - resist / 100)
+    breakdown.after_resist = damage
 
-    -- 5. Damage reduction
+    -- 4. Damage reduction
     local dr = stats:get('damage_taken_reduction_pct') or 0
     local type_dr_key = 'damage_taken_' .. damage_type .. '_reduction_pct'
     local type_dr = stats:get(type_dr_key) or 0
-    local after_dr = after_resist * (1 - dr / 100) * (1 - type_dr / 100)
+    damage = damage * (1 - dr / 100) * (1 - type_dr / 100)
     breakdown.damage_reduction = dr
     breakdown.type_damage_reduction = type_dr
-    breakdown.after_dr = after_dr
+    breakdown.after_dr = damage
 
-    -- 6. Absorb
+    -- 5. Percent absorb
     local pct_absorb = stats:get('percent_absorb_pct') or 0
-    local flat_absorb = stats:get('flat_absorb') or 0
-    local after_pct = after_dr * (1 - pct_absorb / 100)
-    local final = math.max(0, after_pct - flat_absorb)
+    damage = damage * (1 - pct_absorb / 100)
     breakdown.percent_absorb = pct_absorb
-    breakdown.flat_absorb = flat_absorb
-    breakdown.final = final
+    breakdown.after_percent_absorb = damage
 
-    return final, breakdown
+    -- 6. Block (probabilistic + flat reduction) - AFTER percent_absorb
+    local block_chance = stats:get('block_chance_pct') or 0
+    local block_amount = stats:get('block_amount') or 0
+    breakdown.block_chance = block_chance
+    breakdown.block_amount = block_amount
+    -- Expected: (1 - block%) * damage + block% * max(0, damage - block_amount)
+    local blocked_damage = math.max(0, damage - block_amount)
+    damage = (1 - block_chance/100) * damage + (block_chance/100) * blocked_damage
+    breakdown.after_block_expected = damage
+
+    -- 7. Flat absorb (final stage)
+    local flat_absorb = stats:get('flat_absorb') or 0
+    damage = math.max(0, damage - flat_absorb)
+    breakdown.flat_absorb = flat_absorb
+    breakdown.final = damage
+
+    return damage, breakdown
 end
 
 return PlayerStatsAccessor

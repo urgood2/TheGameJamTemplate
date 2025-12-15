@@ -11374,6 +11374,450 @@ end
 
 ***
 
+## Combat State Machine
+\label{recipe:combat-state-machine}
+
+The **Combat State Machine** orchestrates the combat loop, managing transitions between wave phases, handling victory/defeat conditions, and coordinating with the Wave Manager. It provides a structured framework for multi-wave encounters with automatic progression and event-driven state changes.
+
+This system is part of the Entity Lifecycle & Combat Loop Framework. For wave configuration and enemy spawning, see the Wave Manager documentation.
+
+### Core Concepts
+
+**State Flow:**
+The combat state machine follows this progression:
+1. **INIT** - Initial state before combat begins
+2. **WAVE_START** - Initialize wave, prepare systems
+3. **SPAWNING** - Enemies being spawned
+4. **COMBAT** - Active battle phase
+5. **VICTORY** - Wave cleared, calculate rewards
+6. **INTERMISSION** - Between waves, prepare for next
+7. **DEFEAT** / **GAME_WON** / **GAME_OVER** - Terminal states
+
+**Integration Points:**
+- **Wave Manager**: Tracks wave progression, enemy counts, rewards
+- **Event Bus**: Emits state change events (`OnCombatStateChanged`, `OnCombatStart`, etc.)
+- **Timer System**: Manages automatic state transitions with delays
+- **Player Health**: Monitors defeat conditions
+
+### Creating a State Machine
+
+Use `CombatStateMachine.new()` to create an instance with callbacks and configuration:
+
+```lua
+local CombatStateMachine = require("combat.combat_state_machine")
+
+local stateMachine = CombatStateMachine.new({
+    wave_manager = waveManager,           -- WaveManager instance
+    combat_context = combatContext,       -- Event bus container
+    player_entity = playerEntity,         -- Player entity ID
+
+    -- State callbacks
+    on_wave_start = function(wave_number)
+        print("Wave", wave_number, "starting!")
+        showWaveUI(wave_number)
+    end,
+
+    on_combat_start = function()
+        print("Combat phase begun!")
+    end,
+
+    on_victory = function(wave_stats)
+        print("Wave complete! XP:", wave_stats.total_xp)
+        displayRewards(wave_stats)
+    end,
+
+    on_defeat = function()
+        print("Player defeated!")
+        showGameOverScreen()
+    end,
+
+    on_intermission = function(next_wave)
+        print("Intermission. Next wave:", next_wave)
+    end,
+
+    on_game_won = function(total_stats)
+        print("All waves complete! Total kills:", total_stats.total_enemies_killed)
+    end,
+
+    -- Condition checkers
+    is_player_alive = function()
+        local hp = getBlackboardFloat(playerEntity, "health")
+        return hp and hp > 0
+    end,
+
+    -- Auto-progress timings
+    victory_delay = 2.0,           -- Delay before intermission (default: 2.0)
+    intermission_duration = 5.0,   -- Auto-start next wave after 5s (default: 5.0, 0 = manual)
+    defeat_delay = 2.0             -- Delay before game over (default: 2.0)
+})
+```
+
+**Configuration Options:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `wave_manager` | WaveManager | Yes | Wave manager instance |
+| `combat_context` | table | Yes | Must have `.bus` field with event emitter |
+| `player_entity` | Entity | Yes | Player entity ID for health checks |
+| `on_wave_start` | function(wave_number) | No | Called when wave initializes |
+| `on_combat_start` | function() | No | Called when COMBAT state begins |
+| `on_victory` | function(wave_stats) | No | Called when wave is cleared |
+| `on_defeat` | function() | No | Called when player dies |
+| `on_intermission` | function(next_wave) | No | Called between waves |
+| `on_game_won` | function(total_stats) | No | Called when all waves complete |
+| `is_player_alive` | function() -> boolean | No | Health check function (default: always returns true) |
+| `victory_delay` | number | No | Seconds before transitioning to intermission (default: 2.0) |
+| `intermission_duration` | number | No | Seconds before auto-starting next wave (0 = manual, default: 5.0) |
+| `defeat_delay` | number | No | Seconds before game over screen (default: 2.0) |
+
+### Running the State Machine
+
+Start the machine and update it every frame:
+
+```lua
+-- Start combat (transitions to WAVE_START)
+stateMachine:start()
+
+-- Update every frame (place in game loop)
+function update(dt)
+    stateMachine:update(dt)
+end
+```
+
+**State Transitions:**
+The state machine automatically handles transitions based on conditions:
+- **WAVE_START → SPAWNING**: After 0.5s delay
+- **SPAWNING → COMBAT**: When `wave_manager.spawner.spawn_complete` is true
+- **COMBAT → VICTORY**: When `wave_manager:is_wave_complete()` is true
+- **COMBAT → DEFEAT**: When `is_player_alive()` returns false
+- **VICTORY → INTERMISSION**: After `victory_delay` seconds (if more waves exist)
+- **VICTORY → GAME_WON**: After `victory_delay` seconds (if no more waves)
+- **INTERMISSION → WAVE_START**: After `intermission_duration` seconds (or manual trigger)
+- **DEFEAT → GAME_OVER**: After `defeat_delay` seconds
+
+### State Management
+
+Query and control the current state:
+
+```lua
+-- Get current state
+local currentState = stateMachine:get_current_state()
+print(currentState)  -- "COMBAT", "VICTORY", etc.
+
+-- Check if in specific state
+if stateMachine:is_in_state(stateMachine.States.COMBAT) then
+    print("Battle is active!")
+end
+
+-- Get time in current state
+local stateTime = stateMachine:get_state_time()
+print("In current state for", stateTime, "seconds")
+
+-- Available state constants
+local States = CombatStateMachine.States
+-- States.INIT, States.WAVE_START, States.SPAWNING, States.COMBAT,
+-- States.VICTORY, States.INTERMISSION, States.DEFEAT,
+-- States.GAME_WON, States.GAME_OVER
+```
+
+### Manual Controls
+
+Control state machine execution and progression:
+
+```lua
+-- Pause combat (stops update loop)
+stateMachine:pause()
+
+-- Resume combat
+stateMachine:resume()
+
+-- Stop combat (halts execution, cancels timers)
+stateMachine:stop()
+
+-- Reset to initial state
+stateMachine:reset()
+
+-- Manually progress to next wave (from INTERMISSION state)
+local success = stateMachine:progress_to_next_wave()
+if success then
+    print("Starting next wave now!")
+else
+    print("Cannot progress - not in intermission state")
+end
+
+-- Retry current wave (from DEFEAT or GAME_OVER state)
+local success = stateMachine:retry_wave()
+if success then
+    print("Retrying wave...")
+end
+```
+
+**Use Cases:**
+- **pause()/resume()**: Menu overlay, cutscene, inventory screen
+- **progress_to_next_wave()**: "Ready!" button to skip intermission timer
+- **retry_wave()**: "Try Again" button after defeat
+
+### Event System Integration
+
+The state machine emits events through the combat context's event bus:
+
+```lua
+-- Setup event listeners before starting combat
+local bus = combatContext.bus
+
+-- Listen for state changes
+bus:on("OnCombatStateChanged", function(event)
+    print("State:", event.from, "→", event.to)
+
+    -- React to specific transitions
+    if event.to == "COMBAT" then
+        playBattleMusic()
+    elseif event.to == "INTERMISSION" then
+        pauseBattleMusic()
+    end
+end)
+
+-- Combat start event
+bus:on("OnCombatStart", function(event)
+    print("Combat started! Wave:", event.wave_number)
+end)
+
+-- Combat end event (emitted for both victory and defeat)
+bus:on("OnCombatEnd", function(event)
+    if event.victory then
+        print("Victory! Stats:", event.stats)
+    else
+        print("Defeat on wave:", event.wave_number)
+    end
+end)
+
+-- Player death event (emitted during DEFEAT transition)
+bus:on("OnPlayerDeath", function(event)
+    print("Player entity died:", event.player)
+    spawnDeathAnimation(event.player)
+end)
+
+-- Intermission event
+bus:on("OnIntermission", function(event)
+    print("Preparing for wave", event.next_wave)
+    showIntermissionUI(event.next_wave)
+end)
+```
+
+**Event Payloads:**
+
+| Event | Payload Fields | Description |
+|-------|---------------|-------------|
+| `OnCombatStateChanged` | `from`, `to` | State transition (state names as strings) |
+| `OnCombatStart` | `wave_number` | Combat phase started |
+| `OnCombatEnd` | `victory` (bool), `stats` or `wave_number` | Combat ended (victory or defeat) |
+| `OnPlayerDeath` | `player` (entity) | Player entity died |
+| `OnIntermission` | `next_wave` (number) | Between waves |
+
+### Complete Integration Example
+
+Full example showing combat loop setup with state machine:
+
+```lua
+local CombatStateMachine = require("combat.combat_state_machine")
+local WaveManager = require("combat.wave_manager")
+
+-- Create event bus
+local eventBus = {
+    listeners = {},
+    on = function(self, event, callback)
+        self.listeners[event] = self.listeners[event] or {}
+        table.insert(self.listeners[event], callback)
+    end,
+    emit = function(self, event, data)
+        if self.listeners[event] then
+            for _, callback in ipairs(self.listeners[event]) do
+                callback(data)
+            end
+        end
+    end
+}
+
+local combatContext = { bus = eventBus }
+
+-- Define waves
+local waves = {
+    { wave_number = 1, type = "instant", enemies = { {type = "kobold", count = 5} } },
+    { wave_number = 2, type = "instant", enemies = { {type = "kobold", count = 8} } }
+}
+
+-- Create wave manager
+local waveManager = WaveManager.new({
+    waves = waves,
+    combat_context = combatContext,
+    entity_factory_fn = create_ai_entity
+})
+
+-- Create state machine
+local stateMachine = CombatStateMachine.new({
+    wave_manager = waveManager,
+    combat_context = combatContext,
+    player_entity = playerEntity,
+
+    on_wave_start = function(wave_number)
+        print("=== Wave", wave_number, "===")
+    end,
+
+    on_victory = function(stats)
+        print("Wave clear! Rewards: XP", stats.total_xp, "/ Gold", stats.total_gold)
+    end,
+
+    on_defeat = function()
+        print("Game Over!")
+    end,
+
+    on_game_won = function(total_stats)
+        print("Victory! Total waves:", total_stats.waves_completed)
+    end,
+
+    is_player_alive = function()
+        local hp = getBlackboardFloat(playerEntity, "health")
+        return hp and hp > 0
+    end,
+
+    intermission_duration = 3.0  -- 3 second break between waves
+})
+
+-- Setup event listeners
+eventBus:on("OnCombatStateChanged", function(event)
+    print("State:", event.from, "→", event.to)
+end)
+
+eventBus:on("OnEntityDeath", function(event)
+    -- Track enemy deaths in wave manager
+    waveManager:on_enemy_death(event.entity)
+end)
+
+-- Start combat
+stateMachine:start()
+
+-- Update loop
+function update(dt)
+    stateMachine:update(dt)
+end
+```
+
+### Common Patterns
+
+**Intermission UI with Manual Progression:**
+
+```lua
+-- Set intermission_duration = 0 to disable auto-start
+local stateMachine = CombatStateMachine.new({
+    -- ...
+    intermission_duration = 0,  -- Manual progression only
+
+    on_intermission = function(next_wave)
+        showIntermissionUI(next_wave, function()
+            -- "Ready!" button callback
+            stateMachine:progress_to_next_wave()
+        end)
+    end
+})
+```
+
+**Defeat with Retry:**
+
+```lua
+local stateMachine = CombatStateMachine.new({
+    -- ...
+    on_defeat = function()
+        showDefeatScreen({
+            onRetry = function()
+                stateMachine:retry_wave()
+            end,
+            onQuit = function()
+                returnToMainMenu()
+            end
+        })
+    end
+})
+```
+
+**Boss Wave with Custom State Logic:**
+
+```lua
+-- Listen for state changes to implement boss phase transitions
+eventBus:on("OnCombatStateChanged", function(event)
+    if event.to == "COMBAT" then
+        local wave = waveManager:get_current_wave_number()
+        if wave == 5 then  -- Boss wave
+            spawnBossEntity()
+            playBossMusic()
+        end
+    end
+end)
+```
+
+**Conditional Victory Bonuses:**
+
+```lua
+local stateMachine = CombatStateMachine.new({
+    -- ...
+    on_victory = function(stats)
+        -- Perfect clear bonus
+        if stats.perfect_clear then
+            grantPerfectBonus(stats.perfect_bonus)
+        end
+
+        -- Speed bonus
+        if stats.duration < stats.target_time then
+            local timeBonus = calculateSpeedBonus(stats)
+            grantSpeedBonus(timeBonus)
+        end
+    end
+})
+```
+
+### API Reference
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `CombatStateMachine.new()` | config: table | CombatStateMachine | Creates new state machine instance |
+| `:start()` | - | - | Start combat (transition to WAVE_START) |
+| `:update()` | dt: number | - | Update state machine (call every frame) |
+| `:pause()` | - | - | Pause execution (stops update loop) |
+| `:resume()` | - | - | Resume execution |
+| `:stop()` | - | - | Stop combat (halt execution, cancel timers) |
+| `:reset()` | - | - | Reset to INIT state |
+| `:get_current_state()` | - | string | Returns current state name |
+| `:is_in_state()` | state: string | boolean | Check if in specific state |
+| `:get_state_time()` | - | number | Seconds in current state |
+| `:progress_to_next_wave()` | - | boolean | Manually start next wave from intermission |
+| `:retry_wave()` | - | boolean | Retry current wave from defeat/game over |
+
+### State Constants
+
+Access state constants via `CombatStateMachine.States`:
+
+```lua
+local States = CombatStateMachine.States
+
+States.INIT           -- Initial state
+States.WAVE_START     -- Wave initialization
+States.SPAWNING       -- Enemies spawning
+States.COMBAT         -- Active combat
+States.VICTORY        -- Wave cleared
+States.INTERMISSION   -- Between waves
+States.DEFEAT         -- Player death
+States.GAME_WON       -- All waves complete
+States.GAME_OVER      -- Final defeat state
+```
+
+### Related Systems
+
+- **Wave Manager**: Manages wave progression, enemy tracking, reward calculation
+- **Combat Loop Integration** (`combat.combat_loop_integration`): High-level wrapper combining state machine, wave manager, and loot system
+- **Signal System** (Recipe \pageref{recipe:signal-system}): Alternative event handling approach
+- **Timer System** (Recipe \pageref{recipe:timer-system}): Used internally for state transitions
+
+***
+
 \newpage
 \appendix
 

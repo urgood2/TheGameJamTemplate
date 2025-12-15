@@ -8402,6 +8402,308 @@ end)
 
 ***
 
+## Animation System
+
+\label{recipe:animation-system}
+
+The Animation System provides functions for creating animated entities from sprite sheets and animation definitions. It handles sprite animation playback, entity creation with visual components, and sizing utilities for both gameplay entities and UI elements.
+
+### Creating Animated Entities
+
+The primary function for creating entities with animations is `createAnimatedObjectWithTransform()`:
+
+```lua
+local animation_system = require("core.animation_system")
+
+-- Create entity with animation
+local entity = animation_system.createAnimatedObjectWithTransform(
+    "kobold",  -- Animation ID or sprite UUID
+    true,      -- true = animation ID, false = sprite UUID
+    100,       -- x position (optional, default: 0)
+    200,       -- y position (optional, default: 0)
+    nil,       -- shader config function (optional)
+    true       -- shadow enabled (optional, default: true)
+)
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `defaultAnimationIDOrSpriteUUID` | `string` | Required | Animation ID or sprite UUID |
+| `generateNewAnimFromSprite` | `boolean` | `false` | Use animation ID (`true`) or sprite UUID (`false`) |
+| `x` | `number` | `0` | Initial x position |
+| `y` | `number` | `0` | Initial y position |
+| `shaderPassConfigFunc` | `function` | `nil` | Custom shader setup callback |
+| `shadowEnabled` | `boolean` | `true` | Enable drop shadow |
+
+**What this function creates:**
+
+- Entity with `Transform` component (position, size, rotation)
+- `AnimationQueueComponent` (animation state and playback)
+- `GameObject` component (interaction callbacks)
+- Optional shadow entity (if `shadowEnabled = true`)
+
+**Important:** The function automatically sets the entity's size based on the animation's first frame dimensions.
+
+### Animation vs Sprite UUID
+
+The second parameter determines whether to use an animation definition or create a still image from a sprite:
+
+```lua
+-- Use animation definition (animated sprite)
+local animated = animation_system.createAnimatedObjectWithTransform(
+    "kobold_walk",  -- Animation ID from animations.json
+    true            -- Use animation
+)
+
+-- Use sprite UUID (still image)
+local still = animation_system.createAnimatedObjectWithTransform(
+    "sprite_uuid_12345",  -- Sprite UUID from sprite sheet
+    false                 -- Generate animation from single sprite
+)
+```
+
+**When to use each:**
+
+- **Animation ID** (`true`): For animated sprites with multiple frames (characters, effects, UI animations)
+- **Sprite UUID** (`false`): For static images (icons, backgrounds, single-frame objects)
+
+### Resizing Animations
+
+After creating an animated entity, you can resize it to fit specific dimensions:
+
+```lua
+-- Resize animation to fit target dimensions
+animation_system.resizeAnimationObjectsInEntityToFit(
+    entity,     -- Entity with AnimationQueueComponent
+    64,         -- Target width
+    64          -- Target height
+)
+```
+
+**Resize behavior:**
+
+- Preserves aspect ratio (uses smallest scale factor)
+- Updates the entity's `Transform` component size
+- Scales all animation objects in the entity's queue
+
+**Example:**
+
+```lua
+local card = animation_system.createAnimatedObjectWithTransform("fire_card", true)
+
+-- Card's original size might be 128x180
+-- Resize to fit 64x64 slot (will scale proportionally)
+animation_system.resizeAnimationObjectsInEntityToFit(card, 64, 64)
+
+-- Result: Card scaled to fit 64x64, maintaining aspect ratio
+local transform = component_cache.get(card, Transform)
+-- transform.actualW and transform.actualH now reflect scaled size
+```
+
+### UI-Specific Resizing
+
+For UI elements, use the centering variant:
+
+```lua
+-- Resize and center within UI bounds
+animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(
+    entity,          -- Entity to resize
+    100,             -- Target width
+    100,             -- Target height
+    true,            -- Center horizontally (optional, default: true)
+    true             -- Center vertically (optional, default: true)
+)
+```
+
+**Use case:** When you need animations to fit precisely within UI boxes while maintaining visual centering.
+
+### Custom Shader Configuration
+
+Pass a shader configuration function to apply shaders during entity creation:
+
+```lua
+local entity = animation_system.createAnimatedObjectWithTransform(
+    "card_glow",
+    true,
+    0, 0,
+    function(e)  -- Shader config callback
+        local ShaderBuilder = require("core.shader_builder")
+        ShaderBuilder.for_entity(e)
+            :add("3d_skew_holo")
+            :add("glow", { intensity = 1.5 })
+            :apply()
+    end,
+    true
+)
+```
+
+**Callback receives:** The newly created entity ID.
+
+### Integration with EntityBuilder
+
+`EntityBuilder` uses `animation_system` internally. When you call `EntityBuilder.create()`, it delegates to `createAnimatedObjectWithTransform()`:
+
+```lua
+local EntityBuilder = require("core.entity_builder")
+
+-- EntityBuilder wraps animation_system
+local entity = EntityBuilder.create({
+    sprite = "kobold",  -- Passed to createAnimatedObjectWithTransform()
+    position = { x = 100, y = 200 },
+    size = { 64, 64 },  -- Triggers resizeAnimationObjectsInEntityToFit()
+    shadow = true
+})
+```
+
+**Advantages of EntityBuilder:**
+
+- Declarative options table (vs positional parameters)
+- Automatic script table initialization
+- Built-in interaction setup
+- Shader application via `shaders` field
+
+**When to use animation_system directly:**
+
+- Fine-grained control over shader callbacks
+- Custom animation object manipulation
+- Performance-critical spawning (fewer abstractions)
+
+### Still Animations from Sprites
+
+Create a `AnimationObject` (not an entity) from a sprite UUID:
+
+```lua
+-- Create AnimationObject for use in components
+local anim_obj = animation_system.createStillAnimationFromSpriteUUID(
+    "sprite_uuid_12345",
+    Color.WHITE,  -- Foreground tint (optional)
+    Color.BLACK   -- Background tint (optional)
+)
+
+-- Use in AnimationQueueComponent
+local queue = registry:get(entity, AnimationQueueComponent)
+queue.defaultAnimation = anim_obj
+```
+
+**Use case:** Dynamically changing an entity's sprite without creating a new entity.
+
+### Resetting UI Render Scale
+
+If you've manipulated UI render scale and need to reset:
+
+```lua
+-- Reset to default intrinsic scale
+animation_system.resetAnimationUIRenderScale(entity)
+```
+
+**When to use:** After applying custom `uiRenderScale` to `AnimationObject` and needing to restore defaults.
+
+### Common Patterns
+
+**Pattern 1: Create entity and resize**
+
+```lua
+local enemy = animation_system.createAnimatedObjectWithTransform("orc", true)
+animation_system.resizeAnimationObjectsInEntityToFit(enemy, 48, 48)
+
+local transform = component_cache.get(enemy, Transform)
+transform.actualX = spawn_x
+transform.actualY = spawn_y
+```
+
+**Pattern 2: UI icon with centering**
+
+```lua
+local icon = animation_system.createAnimatedObjectWithTransform("icon_sword", false)
+animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(icon, 32, 32)
+```
+
+**Pattern 3: Card with shader effects**
+
+```lua
+local card = animation_system.createAnimatedObjectWithTransform(
+    card_anim_id,
+    true,
+    0, 0,
+    function(e)
+        ShaderBuilder.for_entity(e):add("3d_skew_holo"):apply()
+    end,
+    true
+)
+animation_system.resizeAnimationObjectsInEntityToFit(card, CARD_WIDTH, CARD_HEIGHT)
+```
+
+### API Reference
+
+**Entity Creation:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `createAnimatedObjectWithTransform(id, useAnim, x, y, shaderFn, shadow)` | `string, bool, num?, num?, fn?, bool?` | `entity_id` | Create animated entity |
+| `createStillAnimationFromSpriteUUID(uuid, fg, bg)` | `string, Color?, Color?` | `AnimationObject` | Create still animation object |
+
+**Resizing:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `resizeAnimationObjectsInEntityToFit(entity, w, h)` | `entity_id, number, number` | - | Resize animation to fit dimensions |
+| `resizeAnimationObjectsInEntityToFitAndCenterUI(entity, w, h, centerX, centerY)` | `entity_id, num, num, bool?, bool?` | - | Resize and center for UI |
+| `resetAnimationUIRenderScale(entity)` | `entity_id` | - | Reset UI scale to default |
+| `resizeAnimationObjectToFit(animObj, w, h)` | `AnimationObject, number, number` | - | Resize single animation object |
+
+**Utility:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `setFGColorForAllAnimationObjects(entity, color)` | `entity_id, Color` | - | Tint all animations in entity |
+| `getNinepatchUIBorderInfo(uuid)` | `string` | `NPatchInfo, Texture2D` | Get nine-patch data for UUID |
+
+### Gotchas
+
+**Gotcha 1:** Don't manually emplace components created by `createAnimatedObjectWithTransform()`
+
+```lua
+-- WRONG: Components already exist!
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+registry:emplace(entity, Transform)  -- Error: already exists!
+registry:emplace(entity, GameObject) -- Error: already exists!
+
+-- CORRECT: Just use the entity
+local transform = component_cache.get(entity, Transform)
+transform.actualX = 100
+```
+
+**Gotcha 2:** Resizing must happen after entity creation
+
+```lua
+-- WRONG: Entity doesn't exist yet
+animation_system.resizeAnimationObjectsInEntityToFit(entity, 64, 64)
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+
+-- CORRECT: Create first, then resize
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+animation_system.resizeAnimationObjectsInEntityToFit(entity, 64, 64)
+```
+
+**Gotcha 3:** Shader callback runs during creation, not after
+
+```lua
+-- The shader callback runs BEFORE createAnimatedObjectWithTransform() returns
+local entity = animation_system.createAnimatedObjectWithTransform(
+    "sprite", true, 0, 0,
+    function(e)
+        -- e is the entity being created (partially initialized)
+        -- You can safely add shaders here
+        ShaderBuilder.for_entity(e):add("glow"):apply()
+    end
+)
+-- At this point, shaders are already applied
+```
+
+***
+
 \newpage
 \appendix
 
@@ -8414,6 +8716,10 @@ Alphabetical listing of all documented functions and APIs.
 | Function | Module | Recipe |
 |----------|--------|--------|
 | `add_state_tag()` | `util.lua` | \pageref{recipe:validate-entity} |
+| `animation_system.createAnimatedObjectWithTransform()` | `core.animation_system` | \pageref{recipe:animation-system} |
+| `animation_system.createStillAnimationFromSpriteUUID()` | `core.animation_system` | \pageref{recipe:animation-system} |
+| `animation_system.resizeAnimationObjectsInEntityToFit()` | `core.animation_system` | \pageref{recipe:animation-system} |
+| `animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI()` | `core.animation_system` | \pageref{recipe:animation-system} |
 | `component_cache.get()` | `core.component_cache` | \pageref{recipe:get-component} |
 | `dsl.anim()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
 | `dsl.dynamic()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |

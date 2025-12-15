@@ -7619,6 +7619,470 @@ end
 
 ***
 
+## LDtk Integration
+
+\label{recipe:ldtk-integration}
+
+LDtk (Level Designer Toolkit) is a modern 2D level editor. The engine provides comprehensive Lua bindings to load LDtk projects, spawn entities, build physics colliders, and query level data.
+
+### Configuration
+
+Create a JSON config file to map your LDtk project:
+
+```lua
+-- assets/ldtk_config.json
+{
+  "project_path": "world.ldtk",
+  "asset_dir": "assets",
+  "collider_layers": ["Collisions"],
+  "entity_prefabs": {
+    "Player": "spawnPlayer",
+    "Enemy": "EnemySystem.spawn"
+  }
+}
+```
+
+Load the config at startup:
+
+```lua
+ldtk.load_config("ldtk_config.json")
+```
+
+**Config Fields:**
+- `project_path`: Path to `.ldtk` file
+- `asset_dir`: Base directory for assets
+- `collider_layers`: IntGrid layers to generate colliders from
+- `entity_prefabs`: Map entity names to Lua spawner functions
+
+### Loading Levels
+
+Activate a level and trigger entity spawning + collider generation:
+
+```lua
+-- Full level load with colliders and entity spawning
+ldtk.set_active_level("Level_0", "world", true, true, "WORLD")
+-- Parameters: levelName, physicsWorldName, buildColliders, spawnEntities, physicsTag
+
+-- Check active level
+if ldtk.has_active_level() then
+    local levelName = ldtk.active_level()
+    print("Active level:", levelName)
+end
+
+-- Check if level exists before loading
+if ldtk.level_exists("Level_1") then
+    ldtk.set_active_level("Level_1", "world", true, true, "WORLD")
+end
+```
+
+### Entity Spawning
+
+Register a global entity spawner callback that fires for each entity in the level:
+
+```lua
+ldtk.set_spawner(function(name, px, py, layerName, gx, gy, fields)
+    -- name: entity identifier from LDtk
+    -- px, py: pixel position
+    -- layerName: layer the entity is on
+    -- gx, gy: grid coordinates
+    -- fields: table of custom fields from LDtk
+
+    local prefab = ldtk.prefab_for(name)
+    if prefab and _G[prefab] then
+        _G[prefab](px, py, fields)
+    end
+end)
+```
+
+**Entity Field Types:**
+
+LDtk custom fields are automatically converted to Lua:
+
+| LDtk Type | Lua Type | Example Access |
+|-----------|----------|----------------|
+| Int | `number` | `fields.health` |
+| Float | `number` | `fields.speed` |
+| Bool | `boolean` | `fields.hostile` |
+| String | `string` | `fields.dialog` |
+| Color | `table` | `fields.tint.r, .g, .b, .a` |
+| Point | `table` | `fields.target.x, .y` |
+| Enum | `table` | `fields.type.name, .id` |
+| FilePath | `string` | `fields.texture` |
+| EntityRef | `table` | `fields.owner.entity_iid` |
+| Array[T] | `table` | `fields.items[1], fields.items[2]` |
+
+### IntGrid Iteration
+
+Iterate over IntGrid cells for custom collision logic or procedural content:
+
+```lua
+ldtk.each_intgrid("Level_0", "Collisions", function(x, y, value)
+    -- x, y: grid coordinates
+    -- value: IntGrid cell value (0 = empty)
+
+    if value == 1 then
+        -- Solid wall
+    elseif value == 2 then
+        -- Platform (one-way collision)
+    end
+end)
+```
+
+### Physics Colliders
+
+Build static colliders from IntGrid layers:
+
+```lua
+-- Build colliders for active level
+local colliderLayers = ldtk.collider_layers()  -- Returns: {"Collisions", "Platforms"}
+ldtk.build_colliders("Level_0", "world", "WORLD")
+
+-- Clear colliders (useful when switching levels)
+ldtk.clear_colliders("Level_0", "world")
+```
+
+Colliders are automatically generated from non-zero IntGrid cells and tagged with the specified physics tag (e.g., `"WORLD"`).
+
+### Level Metadata
+
+Query level properties for camera bounds, background colors, and navigation:
+
+```lua
+-- Get level bounds
+local bounds = ldtk.get_level_bounds("Level_0")
+print(bounds.x, bounds.y, bounds.width, bounds.height)
+
+-- Get level metadata
+local meta = ldtk.get_level_meta("Level_0")
+print("Size:", meta.width, "x", meta.height)
+print("World position:", meta.world_x, meta.world_y)
+print("Background:", meta.bg_color.r, meta.bg_color.g, meta.bg_color.b)
+print("Depth:", meta.depth)  -- Multi-world z-order
+
+-- Get neighboring levels (for seamless world streaming)
+local neighbors = ldtk.get_neighbors("Level_0")
+if neighbors.north then
+    print("North level:", neighbors.north)
+end
+if neighbors.east then
+    print("East level:", neighbors.east)
+end
+-- Also: .south, .west, .overlap (array of overlapping levels)
+```
+
+### Entity Queries
+
+Query entities by name or IID (Instance Identifier):
+
+```lua
+-- Get all entities of a specific type
+local enemies = ldtk.get_entities_by_name("Level_0", "Enemy")
+for _, ent in ipairs(enemies) do
+    print("Enemy at", ent.x, ent.y)
+    print("Size:", ent.width, ent.height)
+    print("IID:", ent.iid)
+    print("Tags:", table.concat(ent.tags, ", "))
+
+    -- Access custom fields
+    if ent.fields.health then
+        print("Health:", ent.fields.health)
+    end
+end
+
+-- Get entity position by IID
+local pos = ldtk.get_entity_position("Level_0", "abc123-def-456")
+if pos then
+    print("Entity at:", pos.x, pos.y)
+end
+```
+
+### Procedural Generation
+
+Use LDtk auto-rules on runtime-generated IntGrid data:
+
+```lua
+-- Create procedural IntGrid (e.g., from noise or cellular automata)
+local width, height = 32, 24
+local grid = {}
+
+for y = 1, height do
+    for x = 1, width do
+        local idx = (y - 1) * width + x
+        grid[idx] = (math.random() > 0.7) and 1 or 0  -- Random walls
+    end
+end
+
+-- Apply LDtk auto-rules to generate tile results
+local gridTable = {
+    width = width,
+    height = height,
+    cells = grid
+}
+
+local tileResults = ldtk.apply_rules(gridTable, "TileLayer")
+-- Returns: array of {tile_id, x, y, flip_x, flip_y}
+
+-- Build colliders from procedural grid (without LDtk level)
+ldtk.build_colliders_from_grid(gridTable, "world", "WORLD", {1})
+-- Parameters: gridTable, physicsWorldName, physicsTag, solidValues
+```
+
+**Layer Query API:**
+
+```lua
+local layerCount = ldtk.get_layer_count()
+for i = 0, layerCount - 1 do
+    local name = ldtk.get_layer_name(i)
+    print("Layer", i, ":", name)
+end
+
+local idx = ldtk.get_layer_index("TileLayer")
+print("TileLayer index:", idx)
+```
+
+**Tile Grid Access:**
+
+```lua
+local grid = ldtk.get_tile_grid(layerIdx)
+-- Returns: {width, height, tiles={...}}
+-- Each tile: {tile_id, x, y, flip_x, flip_y}
+```
+
+**Cleanup:**
+
+```lua
+-- Clean up procedurally generated level data
+ldtk.cleanup_procedural()
+```
+
+### Event System Integration
+
+Use signal emitter for level load/entity spawn events:
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Set up signal emitter
+ldtk.set_signal_emitter(function(eventName, data)
+    signal.emit(eventName, data)
+end)
+
+-- Register handlers
+signal.register("ldtk_level_loaded", function(data)
+    print("Level loaded:", data.level_name)
+    print("Colliders built:", data.colliders_built)
+end)
+
+signal.register("ldtk_colliders_built", function(data)
+    print("Colliders for:", data.level_name)
+    print("Physics tag:", data.physics_tag)
+end)
+
+signal.register("ldtk_entity_spawned", function(data)
+    print("Spawned:", data.entity_name, "at", data.px, data.py)
+end)
+
+-- Load level with signal emission
+ldtk.set_active_level_with_signals("Level_0", "world", true, true, "WORLD")
+
+-- Manually emit entity spawned event (from spawner callback)
+ldtk.emit_entity_spawned("Enemy", 100, 200, "Entities", {type = "goblin"})
+```
+
+### Rendering Procedural Tiles
+
+Draw procedurally generated tiles using the shader pipeline:
+
+```lua
+local draw = require("core.draw")
+
+-- Draw single procedural layer
+ldtk.draw_procedural_layer(layerIdx, layerName, offsetX, offsetY, tilesetPath, space)
+
+-- Draw all layers
+ldtk.draw_all_procedural_layers(offsetX, offsetY, space)
+
+-- Draw with Y-sorting (for isometric/top-down)
+ldtk.draw_procedural_layer_ysorted(layerIdx, layerName, offsetX, offsetY,
+                                    tilesetPath, sortFn, space)
+
+-- Draw with tile filtering
+ldtk.draw_procedural_layer_filtered(layerIdx, layerName, offsetX, offsetY,
+                                     tilesetPath, filterFn, space)
+-- filterFn: function(tileId, x, y, flipX, flipY) -> boolean
+
+-- Draw individual tile
+ldtk.draw_tile(tileId, x, y, tileSize, tilesetPath, flipX, flipY, space)
+
+-- Get tileset info
+local info = ldtk.get_tileset_info(layerIdx)
+print("Tileset:", info.path)
+print("Tile size:", info.tile_size)
+print("Grid size:", info.grid_width, "x", info.grid_height)
+```
+
+### Complete Example
+
+Full level loading system with entity spawning and event handling:
+
+```lua
+local LevelManager = {}
+
+function LevelManager.init()
+    -- Load config
+    ldtk.load_config("ldtk_config.json")
+
+    -- Set up entity spawner
+    ldtk.set_spawner(function(name, px, py, layerName, gx, gy, fields)
+        local prefab = ldtk.prefab_for(name)
+        if prefab and _G[prefab] then
+            local entity = _G[prefab](px, py)
+
+            -- Apply custom fields
+            if entity and fields then
+                local script = getScriptTableFromEntityID(entity)
+                if script then
+                    for k, v in pairs(fields) do
+                        script[k] = v
+                    end
+                end
+            end
+        end
+    end)
+
+    -- Set up event system
+    local signal = require("external.hump.signal")
+    ldtk.set_signal_emitter(function(eventName, data)
+        signal.emit(eventName, data)
+    end)
+
+    signal.register("ldtk_level_loaded", function(data)
+        print("Level ready:", data.level_name)
+        LevelManager.onLevelReady(data.level_name)
+    end)
+end
+
+function LevelManager.loadLevel(levelName)
+    if not ldtk.level_exists(levelName) then
+        print("Level not found:", levelName)
+        return false
+    end
+
+    -- Clear old level colliders
+    local currentLevel = ldtk.active_level()
+    if currentLevel ~= "" then
+        ldtk.clear_colliders(currentLevel, "world")
+    end
+
+    -- Load new level
+    ldtk.set_active_level_with_signals(levelName, "world", true, true, "WORLD")
+    return true
+end
+
+function LevelManager.onLevelReady(levelName)
+    -- Set camera bounds
+    local bounds = ldtk.get_level_bounds(levelName)
+    CameraSystem.setBounds(bounds.x, bounds.y, bounds.width, bounds.height)
+
+    -- Set background color
+    local meta = ldtk.get_level_meta(levelName)
+    BackgroundSystem.setColor(meta.bg_color)
+end
+
+function LevelManager.transitionTo(direction)
+    local currentLevel = ldtk.active_level()
+    local neighbors = ldtk.get_neighbors(currentLevel)
+    local nextLevel = neighbors[direction]
+
+    if nextLevel then
+        LevelManager.loadLevel(nextLevel)
+    end
+end
+
+return LevelManager
+```
+
+### API Reference
+
+**Configuration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `load_config(path)` | `string` | - | Load LDtk project config JSON |
+| `collider_layers()` | - | `table` | Get collider layer names from config |
+| `prefab_for(entityName)` | `string` | `string` | Look up prefab mapping for entity |
+
+**Level Management:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `set_active_level(name, world, colliders, spawn, tag)` | `string, string, bool, bool, string` | - | Activate level and optionally build colliders/spawn entities |
+| `set_active_level_with_signals(...)` | Same as above | - | Like `set_active_level` but emits signals |
+| `active_level()` | - | `string` | Get active level name |
+| `has_active_level()` | - | `boolean` | Check if level is active |
+| `level_exists(name)` | `string` | `boolean` | Check if level exists in project |
+
+**Entity Spawning:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `set_spawner(callback)` | `function` | - | Register entity spawner callback |
+| `get_entities_by_name(level, name)` | `string, string` | `table` | Query entities by name |
+| `get_entity_position(level, iid)` | `string, string` | `table` | Get entity position by IID |
+
+**IntGrid & Colliders:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `each_intgrid(level, layer, callback)` | `string, string, function` | - | Iterate IntGrid cells |
+| `build_colliders(level, world, tag)` | `string, string, string` | - | Build physics colliders from IntGrid |
+| `clear_colliders(level, world)` | `string, string` | - | Clear level colliders |
+| `build_colliders_from_grid(grid, world, tag, solidVals)` | `table, string, string, table` | - | Build colliders from Lua IntGrid |
+
+**Metadata:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_level_bounds(name)` | `string` | `table` | Get `{x, y, width, height}` |
+| `get_level_meta(name)` | `string` | `table` | Get `{width, height, world_x, world_y, bg_color, depth}` |
+| `get_neighbors(name)` | `string` | `table` | Get `{north, south, east, west, overlap}` |
+
+**Procedural Generation:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `apply_rules(grid, layer)` | `table, string` | `table` | Apply LDtk auto-rules to IntGrid |
+| `get_layer_count()` | - | `number` | Get layer count |
+| `get_layer_name(idx)` | `number` | `string` | Get layer name by index |
+| `get_layer_index(name)` | `string` | `number` | Get layer index by name |
+| `get_tile_grid(layerIdx)` | `number` | `table` | Get tile results for layer |
+| `get_tileset_info(layerIdx)` | `number` | `table` | Get tileset metadata |
+| `cleanup_procedural()` | - | - | Clean up procedural data |
+
+**Rendering:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `draw_procedural_layer(idx, name, x, y, tileset, space)` | `number, string, number, number, string, number` | - | Draw procedural layer |
+| `draw_all_procedural_layers(x, y, space)` | `number, number, number` | - | Draw all layers |
+| `draw_procedural_layer_filtered(idx, name, x, y, tileset, filterFn, space)` | `..., function, ...` | - | Draw with filter callback |
+| `draw_procedural_layer_ysorted(idx, name, x, y, tileset, sortFn, space)` | `..., function, ...` | - | Draw with Y-sorting |
+| `draw_tile(id, x, y, size, tileset, flipX, flipY, space)` | `number, number, number, number, string, bool, bool, number` | - | Draw single tile |
+
+**Events:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `set_signal_emitter(callback)` | `function` | - | Register signal emitter for events |
+| `emit_entity_spawned(name, x, y, layer, fields)` | `string, number, number, string, table` | - | Emit entity spawn event |
+
+**Events Emitted:**
+- `ldtk_level_loaded`: `{level_name, colliders_built, entities_spawned}`
+- `ldtk_colliders_built`: `{level_name, physics_tag}`
+- `ldtk_entity_spawned`: `{entity_name, px, py, layer_name, fields}`
+
+***
+
 \newpage
 \appendix
 

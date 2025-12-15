@@ -733,6 +733,39 @@ if timer.every_physics_step then
 end
 ```
 
+### Options-Table API (Recommended)
+
+Avoid positional parameter confusion with named options:
+
+```lua
+-- Instead of: timer.every(delay, action, times, immediate, after, tag, group)
+-- Use named parameters:
+
+timer.every_opts({
+    delay = 0.5,
+    action = function() print("tick") end,
+    times = 10,        -- 0 = infinite (default)
+    immediate = true,  -- run once immediately (default: false)
+    tag = "my_timer"   -- for cancellation
+})
+
+timer.after_opts({
+    delay = 2.0,
+    action = function() print("done") end,
+    tag = "one_shot"
+})
+
+timer.cooldown_opts({
+    delay = 1.0,
+    condition = function() return canAttack end,
+    action = doAttack,
+    tag = "attack_cd"
+})
+
+-- Cancel by tag
+timer.cancel("my_timer")
+```
+
 ---
 
 ## GameObject Callbacks

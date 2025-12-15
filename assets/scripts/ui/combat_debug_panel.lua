@@ -47,35 +47,45 @@ local state = {
         crit_damage = 150,
     },
     damage_modifiers = {
-        physical = 0, fire = 0, ice = 0, lightning = 0,
-        poison = 0, arcane = 0, holy = 0, void = 0, magic = 0,
+        physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0, poison = 0,
     },
     dot_durations = {
-        burn = 1.0, freeze = 1.0, shock = 1.0, poison = 1.0, bleed = 1.0,
+        bleed = 1.0, trauma = 1.0, burn = 1.0, frostburn = 1.0,
+        electrocute = 1.0, poison = 1.0, vitality_decay = 1.0,
     },
     penetration = {
-        physical = 0, fire = 0, ice = 0, lightning = 0,
-        poison = 0, arcane = 0, holy = 0, void = 0, magic = 0,
+        physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0, poison = 0,
     },
 
     -- Tab 3: Defense
     defense_stats = {
         armor = 0,
-        dodge = 0,
-        block = 0,
-        block_reduction = 50,
+        dodge_chance_pct = 0,
+        block_chance_pct = 0,
+        block_amount = 0,
+        block_recovery_reduction_pct = 50,
     },
     resistances = {
-        physical = 0, fire = 0, ice = 0, lightning = 0,
-        poison = 0, arcane = 0, holy = 0, void = 0, magic = 0,
+        physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0, poison = 0,
     },
     resist_caps = {
-        physical = 80, fire = 80, ice = 80, lightning = 80,
-        poison = 80, arcane = 80, holy = 80, void = 80, magic = 80,
+        physical = 80, pierce = 80, fire = 80, cold = 80, lightning = 80,
+        acid = 80, vitality = 80, aether = 80, chaos = 80, poison = 80,
     },
     absorb = {
         amount = 0,
         remaining = 0,
+    },
+
+    -- Damage preview
+    damage_preview = {
+        incoming = 100,
+        damage_type = "physical",
+        result = 0,
+        breakdown = {},
     },
 
     -- Tab 4: Relics
@@ -94,7 +104,7 @@ local state = {
 
     -- Tab 6: Tags
     tag_counts = {
-        Fire = 0, Ice = 0, Lightning = 0, Poison = 0, Arcane = 0, Holy = 0, Void = 0,
+        Fire = 0, Cold = 0, Lightning = 0, Poison = 0,
         Projectile = 0, AoE = 0, Hazard = 0, Summon = 0, Buff = 0, Debuff = 0,
         Mobility = 0, Defense = 0, Brute = 0,
     },
@@ -324,9 +334,9 @@ function CombatDebugPanel.sync_combat_from_player()
     if ps.crit_damage then state.offense_stats.crit_damage = ps.crit_damage.total or 150 end
 
     -- Sync damage modifiers
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_damage_pct"
+        local key = dtype .. "_modifier_pct"
         if ps[key] then
             state.damage_modifiers[dtype] = ps[key].add_pct or 0
         end
@@ -334,16 +344,16 @@ function CombatDebugPanel.sync_combat_from_player()
 
     -- Sync penetration
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_penetration"
+        local key = "penetration_" .. dtype .. "_pct"
         if ps[key] then
             state.penetration[dtype] = ps[key].total or 0
         end
     end
 
     -- Sync DoT durations
-    local dot_types = { "burn", "freeze", "shock", "poison", "bleed" }
+    local dot_types = { "bleed", "trauma", "burn", "frostburn", "electrocute", "poison", "vitality_decay" }
     for _, dot in ipairs(dot_types) do
-        local key = dot .. "_duration_mult"
+        local key = dot .. "_duration_mult_pct"
         if ps[key] then
             state.dot_durations[dot] = ps[key].total or 1.0
         end
@@ -364,9 +374,9 @@ function CombatDebugPanel.apply_combat_to_player()
     if ps.crit_damage then ps.crit_damage.base = state.offense_stats.crit_damage end
 
     -- Apply damage modifiers
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_damage_pct"
+        local key = dtype .. "_modifier_pct"
         if ps[key] then
             ps[key].add_pct = state.damage_modifiers[dtype]
         end
@@ -374,16 +384,16 @@ function CombatDebugPanel.apply_combat_to_player()
 
     -- Apply penetration
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_penetration"
+        local key = "penetration_" .. dtype .. "_pct"
         if ps[key] then
             ps[key].base = state.penetration[dtype]
         end
     end
 
     -- Apply DoT durations
-    local dot_types = { "burn", "freeze", "shock", "poison", "bleed" }
+    local dot_types = { "bleed", "trauma", "burn", "frostburn", "electrocute", "poison", "vitality_decay" }
     for _, dot in ipairs(dot_types) do
-        local key = dot .. "_duration_mult"
+        local key = dot .. "_duration_mult_pct"
         if ps[key] then
             ps[key].base = state.dot_durations[dot]
         end
@@ -443,14 +453,15 @@ function CombatDebugPanel.sync_defense_from_player()
 
     -- Sync defense stats
     if ps.armor then state.defense_stats.armor = ps.armor.total or 0 end
-    if ps.dodge_chance then state.defense_stats.dodge = ps.dodge_chance.total or 0 end
-    if ps.block_chance then state.defense_stats.block = ps.block_chance.total or 0 end
-    if ps.block_reduction then state.defense_stats.block_reduction = ps.block_reduction.total or 50 end
+    if ps.dodge_chance_pct then state.defense_stats.dodge_chance_pct = ps.dodge_chance_pct.total or 0 end
+    if ps.block_chance_pct then state.defense_stats.block_chance_pct = ps.block_chance_pct.total or 0 end
+    if ps.block_amount then state.defense_stats.block_amount = ps.block_amount.total or 0 end
+    if ps.block_recovery_reduction_pct then state.defense_stats.block_recovery_reduction_pct = ps.block_recovery_reduction_pct.total or 50 end
 
     -- Sync resistances
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance"
+        local key = dtype .. "_resist_pct"
         if ps[key] then
             state.resistances[dtype] = ps[key].total or 0
         end
@@ -458,7 +469,7 @@ function CombatDebugPanel.sync_defense_from_player()
 
     -- Sync resist caps
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance_cap"
+        local key = "max_" .. dtype .. "_resist_cap_pct"
         if ps[key] then
             state.resist_caps[dtype] = ps[key].total or 80
         end
@@ -478,14 +489,15 @@ function CombatDebugPanel.apply_defense_to_player()
 
     -- Apply defense stats
     if ps.armor then ps.armor.base = state.defense_stats.armor end
-    if ps.dodge_chance then ps.dodge_chance.base = state.defense_stats.dodge end
-    if ps.block_chance then ps.block_chance.base = state.defense_stats.block end
-    if ps.block_reduction then ps.block_reduction.base = state.defense_stats.block_reduction end
+    if ps.dodge_chance_pct then ps.dodge_chance_pct.base = state.defense_stats.dodge_chance_pct end
+    if ps.block_chance_pct then ps.block_chance_pct.base = state.defense_stats.block_chance_pct end
+    if ps.block_amount then ps.block_amount.base = state.defense_stats.block_amount end
+    if ps.block_recovery_reduction_pct then ps.block_recovery_reduction_pct.base = state.defense_stats.block_recovery_reduction_pct end
 
     -- Apply resistances
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance"
+        local key = dtype .. "_resist_pct"
         if ps[key] then
             ps[key].base = state.resistances[dtype]
         end
@@ -493,7 +505,7 @@ function CombatDebugPanel.apply_defense_to_player()
 
     -- Apply resist caps
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance_cap"
+        local key = "max_" .. dtype .. "_resist_cap_pct"
         if ps[key] then
             ps[key].base = state.resist_caps[dtype]
         end
@@ -934,7 +946,7 @@ local function render_combat_tab()
     ImGui.Text("DAMAGE MODIFIERS (% bonus)")
     ImGui.Separator()
 
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
 
     -- Display in columns for better layout
     ImGui.Columns(3, "dmg_mod_cols", false)
@@ -957,7 +969,7 @@ local function render_combat_tab()
     ImGui.Text("DOT DURATION MULTIPLIERS")
     ImGui.Separator()
 
-    local dot_types = { "burn", "freeze", "shock", "poison", "bleed" }
+    local dot_types = { "bleed", "trauma", "burn", "frostburn", "electrocute", "poison", "vitality_decay" }
     for _, dot in ipairs(dot_types) do
         ImGui.PushID("dot_" .. dot)
         local val = state.dot_durations[dot] or 1.0
@@ -1009,9 +1021,10 @@ local function render_defense_tab()
     local def = state.defense_stats
 
     def.armor, _ = ImGui.SliderInt("Armor", def.armor, 0, 500)
-    def.dodge, _ = ImGui.SliderInt("Dodge %", def.dodge, 0, 75)
-    def.block, _ = ImGui.SliderInt("Block %", def.block, 0, 75)
-    def.block_reduction, _ = ImGui.SliderInt("Block Reduction %", def.block_reduction, 0, 100)
+    def.dodge_chance_pct, _ = ImGui.SliderInt("Dodge Chance %", def.dodge_chance_pct, 0, 75)
+    def.block_chance_pct, _ = ImGui.SliderInt("Block Chance %", def.block_chance_pct, 0, 75)
+    def.block_amount, _ = ImGui.SliderInt("Block Amount", def.block_amount, 0, 100)
+    def.block_recovery_reduction_pct, _ = ImGui.SliderInt("Block Recovery Reduction %", def.block_recovery_reduction_pct, 0, 100)
 
     ImGui.Separator()
 
@@ -1019,7 +1032,7 @@ local function render_defense_tab()
     ImGui.Text("RESISTANCES")
     ImGui.Separator()
 
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
 
     for _, dtype in ipairs(damage_types) do
         ImGui.PushID("res_" .. dtype)

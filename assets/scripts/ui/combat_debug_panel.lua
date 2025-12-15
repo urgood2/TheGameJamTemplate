@@ -22,6 +22,7 @@ local component_cache = nil
 local StatSystem = nil
 local JokerSystem = nil
 local TagEvaluator = nil
+local PlayerStatsAccessor = nil  -- lazy loaded
 
 -- State
 local state = {
@@ -151,6 +152,9 @@ function CombatDebugPanel.init()
     local ok4, te = pcall(require, "wand.tag_evaluator")
     if ok4 then TagEvaluator = te end
 
+    local ok5, psa = pcall(require, "ui.player_stats_accessor")
+    if ok5 then PlayerStatsAccessor = psa end
+
     -- Load available relics from globals
     if globals and globals.relic_defs then
         state.available_relics = {}
@@ -187,38 +191,38 @@ end
 -- SYNC FROM/TO PLAYER
 --===========================================================================
 function CombatDebugPanel.sync_from_player()
-    -- This will be implemented per-tab
-    -- For now, just sync basic info
-    if globals then
-        state.gold = globals.currency or 0
-
-        if globals.player_state then
-            state.current_hp = globals.player_state.health or 0
-            state.max_hp = globals.player_state.max_health or 100
-            state.current_energy = globals.player_state.energy or 0
-            state.max_energy = globals.player_state.max_energy or 100
-            state.player_level = globals.player_state.level or 1
-            state.player_xp = globals.player_state.xp or 0
-        end
-
-        if globals.player_stats then
-            for _, stat in ipairs(state.core_stats) do
-                if globals.player_stats[stat.name] and globals.player_stats[stat.name].base then
-                    stat.value = globals.player_stats[stat.name].base
-                end
-            end
-        end
-
-        if globals.ownedRelics then
-            state.owned_relics = {}
-            for _, relic in ipairs(globals.ownedRelics) do
-                table.insert(state.owned_relics, relic.id or relic)
-            end
-        end
+    if not PlayerStatsAccessor then
+        print("[CombatDebugPanel] PlayerStatsAccessor not loaded")
+        return
     end
 
-    -- Recalculate derived stats after sync
+    local player = PlayerStatsAccessor.get_player()
+    if not player then
+        print("[CombatDebugPanel] No player in combat context")
+        return
+    end
+
+    -- Sync core stats
+    for _, stat in ipairs(state.core_stats) do
+        stat.value = PlayerStatsAccessor.get_raw(stat.name).base
+    end
+
+    -- Sync HP/Energy
+    state.current_hp, state.max_hp = PlayerStatsAccessor.get_hp()
+    state.current_energy = PlayerStatsAccessor.get('energy') or 50
+    state.max_energy = PlayerStatsAccessor.get('energy') or 100
+
+    -- Sync level
+    state.player_level = player.level or 1
+    state.player_xp = player.xp or 0
+
+    -- Sync gold from globals
+    if globals then
+        state.gold = globals.currency or 0
+    end
+
     CombatDebugPanel.calculate_derived_stats()
+    print("[CombatDebugPanel] Synced from player")
 end
 
 function CombatDebugPanel.apply_to_player()
@@ -292,31 +296,21 @@ function CombatDebugPanel.calculate_derived_stats()
 end
 
 function CombatDebugPanel.apply_stats_to_player()
-    if not globals then return end
+    if not PlayerStatsAccessor then return end
 
     -- Apply core stats
-    if globals.player_stats then
-        for _, stat in ipairs(state.core_stats) do
-            local player_stat = globals.player_stats[stat.name]
-            if player_stat and type(player_stat) == "table" and player_stat.base ~= nil then
-                player_stat.base = stat.value
-            end
-        end
+    for _, stat in ipairs(state.core_stats) do
+        PlayerStatsAccessor.set_base(stat.name, stat.value)
     end
 
     -- Apply level
-    if globals.player_state then
-        globals.player_state.level = state.player_level
-        globals.player_state.xp = state.player_xp
+    local player = PlayerStatsAccessor.get_player()
+    if player then
+        player.level = state.player_level
+        player.xp = state.player_xp
     end
 
-    -- Emit signal for stat recalculation
-    local ok, signal = pcall(require, "external.hump.signal")
-    if ok then
-        signal.emit("stats_recomputed")
-    end
-
-    print("[Combat] Applied stats to player")
+    print("[CombatDebugPanel] Applied stats to player")
 end
 
 --===========================================================================

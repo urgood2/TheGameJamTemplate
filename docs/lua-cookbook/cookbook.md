@@ -7273,6 +7273,352 @@ shop = ShopSystem.generateShop(player.level, player.gold)
 
 ***
 
+## Stat System
+
+\label{recipe:stat-system}
+
+**When to use:** Managing character progression through core stats that derive gameplay effects.
+
+The Stat System provides an extensible framework for mapping core character stats (physique, cunning, spirit) to gameplay stats. It centralizes stat derivations, provides stat impact previews for UI tooltips, handles level-up application, and integrates with the combat system's Stats class for automatic recomputation.
+
+**Quick start:**
+
+```lua
+local StatSystem = require("core.stat_system")
+
+-- Initialize with default derivations
+StatSystem.init()
+
+-- Apply level-up
+StatSystem.applyLevelUp(player, "physique", 1)
+
+-- Preview stat impact for UI
+local impact = StatSystem.getStatImpact("spirit", currentValue, 1)
+-- Returns: { energy = 10, energy_regen = 0.5, ... }
+```
+
+*— from core/stat_system.lua:1-36*
+
+### Core Stats
+
+The system defines three primary stats that players can increase through level-ups:
+
+```lua
+StatSystem.stats = {
+    physique = {
+        name = "Physique",
+        description = "Increases health and survivability",
+        icon = "icon_physique",
+        color = "#E74C3C"   -- Red
+    },
+    cunning = {
+        name = "Cunning",
+        description = "Increases damage and critical strikes",
+        icon = "icon_cunning",
+        color = "#F39C12"   -- Orange
+    },
+    spirit = {
+        name = "Spirit",
+        description = "Increases energy and elemental power",
+        icon = "icon_spirit",
+        color = "#9B59B6"   -- Purple
+    }
+}
+```
+
+*— from core/stat_system.lua:36-55*
+
+**Stat effects:**
+
+| Stat | Primary Effects |
+|------|-----------------|
+| **Physique** | Health (+10 per point), health regen (after 10 points) |
+| **Cunning** | Offensive ability, physical/pierce damage, bleed/trauma duration |
+| **Spirit** | Health (+2 per point), energy (+10 per point), energy regen (+0.5 per point), elemental damage |
+
+### Registering Derivations
+
+Add custom stat-to-gameplay mappings:
+
+```lua
+-- Register a new derivation
+StatSystem.registerDerivation("physique", "dash_distance", function(value, entity)
+    return value * 2  -- +2 dash distance per physique point
+end)
+
+-- Register context-aware derivation
+StatSystem.registerDerivation("cunning", "crit_damage", function(value, entity)
+    local base = value * 5
+    -- Can use entity context for conditional logic
+    if entity and entity.hasAmulet then
+        return base * 1.2
+    end
+    return base
+end)
+```
+
+*— from core/stat_system.lua:73-85*
+
+**How it works:**
+
+1. Derivations are stored in `StatSystem.derivations[statName][derivedStatName]`
+2. Multiple derivations per stat are supported (physique → health, health_regen, etc.)
+3. Derivation functions receive `(value, entity)` parameters
+4. Entity context is optional - use for conditional derivations
+
+**Pattern:** Derivation functions are called during stat recomputation. Return the derived stat's total value (not the delta).
+
+### Applying Level-Ups
+
+Increase player stats and trigger automatic recomputation:
+
+```lua
+-- Player must have .stats (Stats instance from combat_system)
+local player = {
+    stats = Stats.new(),
+    name = "Player"
+}
+
+-- Apply +1 physique
+StatSystem.applyLevelUp(player, "physique", 1)
+
+-- Apply multiple points
+StatSystem.applyLevelUp(player, "spirit", 3)
+
+-- Stats automatically recompute via on_recompute hooks
+```
+
+*— from core/stat_system.lua:206-227*
+
+**Integration with combat_system:**
+
+```lua
+-- When creating player stats, attach derivations
+local Stats = require("combat.stats")
+local player = { stats = Stats.new() }
+
+-- Attach stat system derivations
+StatSystem.attachToStatsInstance(player.stats)
+
+-- Now level-ups will auto-trigger derivations
+StatSystem.applyLevelUp(player, "cunning", 1)
+```
+
+*— from core/stat_system.lua:233-259*
+
+**Gotcha:** `applyLevelUp` modifies the base stat and lets the Stats instance handle recomputation. Don't manually recompute - the system does it automatically.
+
+### Previewing Stat Impact
+
+Show players what they'll gain before committing to level-up:
+
+```lua
+-- Preview +1 spirit impact
+local currentSpirit = player.stats:get_raw('spirit').base
+local impact = StatSystem.getStatImpact("spirit", currentSpirit, 1)
+
+-- Returns table of derivedStatName -> deltaValue
+-- Example: { health = 2, energy = 10, energy_regen = 0.5, fire_modifier_pct = 0, ... }
+
+-- Format for UI display
+local formatted = StatSystem.formatStatImpact(impact)
+print(formatted)
+-- Output:
+--   energy: +10.00
+--   energy_regen: +0.50
+--   health: +2.00
+
+-- Only non-zero changes are included
+for statName, delta in pairs(impact) do
+    if delta > 0 then
+        print(string.format("+%.1f %s", delta, statName))
+    end
+end
+```
+
+*— from core/stat_system.lua:161-200*
+
+**Preview mechanics:**
+
+1. Calculate derived stats at current value
+2. Calculate derived stats at current + delta
+3. Return differences (only non-zero changes)
+4. Use for tooltips, confirmation dialogs, stat screens
+
+**Example use case:**
+
+```lua
+-- Level-up UI tooltip
+local function showLevelUpTooltip(statName)
+    local current = player.stats:get_raw(statName).base
+    local impact = StatSystem.getStatImpact(statName, current, 1)
+
+    local lines = { "Level up " .. statName .. ":" }
+    for stat, delta in pairs(impact) do
+        table.insert(lines, string.format("  +%.1f %s", delta, stat))
+    end
+
+    return table.concat(lines, "\n")
+end
+```
+
+### Default Derivations
+
+The system initializes with derivations matching combat_system.lua:
+
+```lua
+StatSystem.initializeDefaultDerivations()
+
+-- PHYSIQUE derivations:
+-- health: 100 + value * 10
+-- health_regen: (value - 10) * 0.2  (only after 10 physique)
+
+-- CUNNING derivations:
+-- offensive_ability: value * 1
+-- physical_modifier_pct: floor(value / 5) * 1
+-- pierce_modifier_pct: floor(value / 5) * 1
+-- bleed_duration_pct: floor(value / 5) * 1
+-- trauma_duration_pct: floor(value / 5) * 1
+
+-- SPIRIT derivations:
+-- health: value * 2
+-- energy: value * 10
+-- energy_regen: value * 0.5
+-- fire_modifier_pct: floor(value / 5) * 1
+-- cold_modifier_pct: floor(value / 5) * 1
+-- lightning_modifier_pct: floor(value / 5) * 1
+-- (... all elemental types)
+-- burn_duration_pct: floor(value / 5) * 1
+-- frostburn_duration_pct: floor(value / 5) * 1
+-- (... all DoT types)
+```
+
+*— from core/stat_system.lua:91-155*
+
+**Elemental types:** fire, cold, lightning, acid, vitality, aether, chaos
+
+**DoT types:** burn, frostburn, electrocute, poison, vitality_decay
+
+**Breakpoint mechanics:** Cunning and Spirit derivations use `floor(value / 5)` for breakpoints at 5, 10, 15, 20... This creates strategic level-up thresholds.
+
+### Stat Flow to Gameplay
+
+How stats flow through the system:
+
+```
+1. Player gains XP → Level up
+                ↓
+2. StatSystem.applyLevelUp(player, "physique", 1)
+                ↓
+3. player.stats:add_base("physique", 1)
+                ↓
+4. Stats instance triggers on_recompute hooks
+                ↓
+5. StatSystem derivations run:
+   - Read raw base values (physique, cunning, spirit)
+   - Apply derivation functions
+   - Call S:derived_add_base() for each derived stat
+                ↓
+6. Gameplay systems read final computed stats:
+   - Combat uses health, energy, damage modifiers
+   - Movement uses dash_distance (if registered)
+   - UI displays final values
+```
+
+**Example end-to-end:**
+
+```lua
+local Stats = require("combat.stats")
+local StatSystem = require("core.stat_system")
+
+-- Setup
+StatSystem.init()
+local player = { stats = Stats.new() }
+StatSystem.attachToStatsInstance(player.stats)
+
+-- Starting stats: 10 physique
+player.stats:add_base("physique", 10)
+
+-- Health is now: 100 + 10*10 = 200
+local health = player.stats:get("health")  -- 200
+
+-- Player levels up physique
+StatSystem.applyLevelUp(player, "physique", 1)
+
+-- Health is now: 100 + 11*10 = 210
+health = player.stats:get("health")  -- 210
+```
+
+### Debugging Derivations
+
+Inspect registered derivations:
+
+```lua
+-- List all derivations
+StatSystem.listDerivations()
+-- Output:
+-- [StatSystem] Registered Derivations:
+--   physique:
+--     -> health
+--     -> health_regen
+--   cunning:
+--     -> offensive_ability
+--     -> physical_modifier_pct
+--     -> pierce_modifier_pct
+--     ...
+
+-- Get derivations for specific stat
+local physiqueDerivs = StatSystem.getDerivations("physique")
+for derivedStatName, derivationFunc in pairs(physiqueDerivs) do
+    print(derivedStatName, derivationFunc(15))  -- Test with value 15
+end
+```
+
+*— from core/stat_system.lua:265-281*
+
+### API Reference
+
+**Initialization:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `init()` | - | - | Initialize with default derivations |
+| `initializeDefaultDerivations()` | - | - | Register default stat derivations |
+
+**Derivation Registration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `registerDerivation(statName, derivedStatName, func)` | `string, string, function` | - | Register stat derivation |
+| `getDerivations(statName)` | `string` | `table` | Get all derivations for stat |
+
+**Level-Up:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `applyLevelUp(entity, statName, amount)` | `table, string, number` | - | Apply stat increase (default 1) |
+
+**Stat Impact:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `getStatImpact(statName, currentValue, delta, entity)` | `string, number, number, table?` | `table` | Calculate stat changes |
+| `formatStatImpact(impact)` | `table` | `string` | Format impact for display |
+
+**Integration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `attachToStatsInstance(statsInstance)` | `table` | - | Attach derivations to Stats instance |
+
+**Debugging:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `listDerivations()` | - | - | Print all registered derivations |
+
+***
+
 \newpage
 \appendix
 

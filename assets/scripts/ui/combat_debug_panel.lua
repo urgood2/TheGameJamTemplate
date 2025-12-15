@@ -22,6 +22,7 @@ local component_cache = nil
 local StatSystem = nil
 local JokerSystem = nil
 local TagEvaluator = nil
+local PlayerStatsAccessor = nil  -- lazy loaded
 
 -- State
 local state = {
@@ -41,41 +42,53 @@ local state = {
 
     -- Tab 2: Combat
     offense_stats = {
-        base_damage = 10,
+        weapon_min = 18,
+        weapon_max = 25,
         attack_speed = 1.0,
-        crit_chance = 5,
-        crit_damage = 150,
+        crit_damage_pct = 50,
+        all_damage_pct = 0,
+        life_steal_pct = 0,
     },
     damage_modifiers = {
-        physical = 0, fire = 0, ice = 0, lightning = 0,
-        poison = 0, arcane = 0, holy = 0, void = 0, magic = 0,
+        physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0,
     },
     dot_durations = {
-        burn = 1.0, freeze = 1.0, shock = 1.0, poison = 1.0, bleed = 1.0,
+        bleed = 0, trauma = 0, burn = 0, frostburn = 0,
+        electrocute = 0, poison = 0, vitality_decay = 0,
     },
     penetration = {
-        physical = 0, fire = 0, ice = 0, lightning = 0,
-        poison = 0, arcane = 0, holy = 0, void = 0, magic = 0,
+        physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0,
     },
 
     -- Tab 3: Defense
     defense_stats = {
         armor = 0,
-        dodge = 0,
-        block = 0,
-        block_reduction = 50,
+        dodge_chance_pct = 0,
+        block_chance_pct = 0,
+        block_amount = 0,
+        block_recovery_reduction_pct = 50,
     },
     resistances = {
-        physical = 0, fire = 0, ice = 0, lightning = 0,
-        poison = 0, arcane = 0, holy = 0, void = 0, magic = 0,
+        physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
+        acid = 0, vitality = 0, aether = 0, chaos = 0,
     },
     resist_caps = {
-        physical = 80, fire = 80, ice = 80, lightning = 80,
-        poison = 80, arcane = 80, holy = 80, void = 80, magic = 80,
+        physical = 80, pierce = 80, fire = 80, cold = 80, lightning = 80,
+        acid = 80, vitality = 80, aether = 80, chaos = 80,
     },
     absorb = {
-        amount = 0,
-        remaining = 0,
+        percent = 0,
+        flat = 0,
+    },
+
+    -- Damage preview
+    damage_preview = {
+        incoming = 100,
+        damage_type = "physical",
+        result = 0,
+        breakdown = {},
     },
 
     -- Tab 4: Relics
@@ -94,7 +107,7 @@ local state = {
 
     -- Tab 6: Tags
     tag_counts = {
-        Fire = 0, Ice = 0, Lightning = 0, Poison = 0, Arcane = 0, Holy = 0, Void = 0,
+        Fire = 0, Cold = 0, Lightning = 0, Poison = 0,
         Projectile = 0, AoE = 0, Hazard = 0, Summon = 0, Buff = 0, Debuff = 0,
         Mobility = 0, Defense = 0, Brute = 0,
     },
@@ -141,6 +154,9 @@ function CombatDebugPanel.init()
     local ok4, te = pcall(require, "wand.tag_evaluator")
     if ok4 then TagEvaluator = te end
 
+    local ok5, psa = pcall(require, "ui.player_stats_accessor")
+    if ok5 then PlayerStatsAccessor = psa end
+
     -- Load available relics from globals
     if globals and globals.relic_defs then
         state.available_relics = {}
@@ -177,38 +193,38 @@ end
 -- SYNC FROM/TO PLAYER
 --===========================================================================
 function CombatDebugPanel.sync_from_player()
-    -- This will be implemented per-tab
-    -- For now, just sync basic info
-    if globals then
-        state.gold = globals.currency or 0
-
-        if globals.player_state then
-            state.current_hp = globals.player_state.health or 0
-            state.max_hp = globals.player_state.max_health or 100
-            state.current_energy = globals.player_state.energy or 0
-            state.max_energy = globals.player_state.max_energy or 100
-            state.player_level = globals.player_state.level or 1
-            state.player_xp = globals.player_state.xp or 0
-        end
-
-        if globals.player_stats then
-            for _, stat in ipairs(state.core_stats) do
-                if globals.player_stats[stat.name] and globals.player_stats[stat.name].base then
-                    stat.value = globals.player_stats[stat.name].base
-                end
-            end
-        end
-
-        if globals.ownedRelics then
-            state.owned_relics = {}
-            for _, relic in ipairs(globals.ownedRelics) do
-                table.insert(state.owned_relics, relic.id or relic)
-            end
-        end
+    if not PlayerStatsAccessor then
+        print("[CombatDebugPanel] PlayerStatsAccessor not loaded")
+        return
     end
 
-    -- Recalculate derived stats after sync
+    local player = PlayerStatsAccessor.get_player()
+    if not player then
+        print("[CombatDebugPanel] No player in combat context")
+        return
+    end
+
+    -- Sync core stats
+    for _, stat in ipairs(state.core_stats) do
+        stat.value = PlayerStatsAccessor.get_raw(stat.name).base
+    end
+
+    -- Sync HP/Energy
+    state.current_hp, state.max_hp = PlayerStatsAccessor.get_hp()
+    state.current_energy = PlayerStatsAccessor.get('energy') or 50
+    state.max_energy = PlayerStatsAccessor.get('energy') or 100
+
+    -- Sync level
+    state.player_level = player.level or 1
+    state.player_xp = player.xp or 0
+
+    -- Sync gold from globals
+    if globals then
+        state.gold = globals.currency or 0
+    end
+
     CombatDebugPanel.calculate_derived_stats()
+    print("[CombatDebugPanel] Synced from player")
 end
 
 function CombatDebugPanel.apply_to_player()
@@ -282,120 +298,92 @@ function CombatDebugPanel.calculate_derived_stats()
 end
 
 function CombatDebugPanel.apply_stats_to_player()
-    if not globals then return end
+    if not PlayerStatsAccessor then return end
 
     -- Apply core stats
-    if globals.player_stats then
-        for _, stat in ipairs(state.core_stats) do
-            local player_stat = globals.player_stats[stat.name]
-            if player_stat and type(player_stat) == "table" and player_stat.base ~= nil then
-                player_stat.base = stat.value
-            end
-        end
+    for _, stat in ipairs(state.core_stats) do
+        PlayerStatsAccessor.set_base(stat.name, stat.value)
     end
 
     -- Apply level
-    if globals.player_state then
-        globals.player_state.level = state.player_level
-        globals.player_state.xp = state.player_xp
+    local player = PlayerStatsAccessor.get_player()
+    if player then
+        player.level = state.player_level
+        player.xp = state.player_xp
     end
 
-    -- Emit signal for stat recalculation
-    local ok, signal = pcall(require, "external.hump.signal")
-    if ok then
-        signal.emit("stats_recomputed")
-    end
-
-    print("[Combat] Applied stats to player")
+    print("[CombatDebugPanel] Applied stats to player")
 end
 
 --===========================================================================
 -- COMBAT TAB FUNCTIONS
 --===========================================================================
 function CombatDebugPanel.sync_combat_from_player()
-    if not globals or not globals.player_stats then return end
+    if not PlayerStatsAccessor then return end
 
-    local ps = globals.player_stats
+    -- Sync offense stats (using correct stat names)
+    state.offense_stats.weapon_min = PlayerStatsAccessor.get('weapon_min')
+    state.offense_stats.weapon_max = PlayerStatsAccessor.get('weapon_max')
+    state.offense_stats.attack_speed = PlayerStatsAccessor.get('attack_speed')
+    state.offense_stats.crit_damage_pct = PlayerStatsAccessor.get('crit_damage_pct')
+    state.offense_stats.all_damage_pct = PlayerStatsAccessor.get('all_damage_pct')
+    state.offense_stats.life_steal_pct = PlayerStatsAccessor.get('life_steal_pct')
 
-    -- Sync offense stats
-    if ps.base_damage then state.offense_stats.base_damage = ps.base_damage.total or 10 end
-    if ps.attack_speed then state.offense_stats.attack_speed = ps.attack_speed.total or 1.0 end
-    if ps.crit_chance then state.offense_stats.crit_chance = ps.crit_chance.total or 5 end
-    if ps.crit_damage then state.offense_stats.crit_damage = ps.crit_damage.total or 150 end
-
-    -- Sync damage modifiers
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    -- Sync damage modifiers per type (using correct names)
+    local damage_types = PlayerStatsAccessor.get_damage_types()
+    state.damage_modifiers = {}
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_damage_pct"
-        if ps[key] then
-            state.damage_modifiers[dtype] = ps[key].add_pct or 0
-        end
+        state.damage_modifiers[dtype] = PlayerStatsAccessor.get(dtype .. '_modifier_pct')
     end
 
     -- Sync penetration
+    state.penetration = { all = PlayerStatsAccessor.get('penetration_all_pct') }
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_penetration"
-        if ps[key] then
-            state.penetration[dtype] = ps[key].total or 0
-        end
+        state.penetration[dtype] = PlayerStatsAccessor.get('penetration_' .. dtype .. '_pct')
     end
 
-    -- Sync DoT durations
-    local dot_types = { "burn", "freeze", "shock", "poison", "bleed" }
+    -- Sync DoT durations (using correct suffix: _duration_pct not _duration_mult_pct)
+    local dot_types = { 'bleed', 'trauma', 'burn', 'frostburn', 'electrocute', 'poison', 'vitality_decay' }
+    state.dot_durations = {}
     for _, dot in ipairs(dot_types) do
-        local key = dot .. "_duration_mult"
-        if ps[key] then
-            state.dot_durations[dot] = ps[key].total or 1.0
-        end
+        state.dot_durations[dot] = PlayerStatsAccessor.get(dot .. '_duration_pct')
     end
 
-    print("[Combat] Synced combat stats from player")
+    print("[CombatDebugPanel] Synced combat from player")
 end
 
 function CombatDebugPanel.apply_combat_to_player()
-    if not globals or not globals.player_stats then return end
-
-    local ps = globals.player_stats
+    if not PlayerStatsAccessor then return end
 
     -- Apply offense stats
-    if ps.base_damage then ps.base_damage.base = state.offense_stats.base_damage end
-    if ps.attack_speed then ps.attack_speed.base = state.offense_stats.attack_speed end
-    if ps.crit_chance then ps.crit_chance.base = state.offense_stats.crit_chance end
-    if ps.crit_damage then ps.crit_damage.base = state.offense_stats.crit_damage end
+    PlayerStatsAccessor.set_base('weapon_min', state.offense_stats.weapon_min or 18)
+    PlayerStatsAccessor.set_base('weapon_max', state.offense_stats.weapon_max or 25)
+    PlayerStatsAccessor.set_base('attack_speed', state.offense_stats.attack_speed or 1.0)
+    PlayerStatsAccessor.set_base('crit_damage_pct', state.offense_stats.crit_damage_pct or 50)
+    PlayerStatsAccessor.set_base('all_damage_pct', state.offense_stats.all_damage_pct or 0)
+    PlayerStatsAccessor.set_base('life_steal_pct', state.offense_stats.life_steal_pct or 0)
 
     -- Apply damage modifiers
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
-    for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_damage_pct"
-        if ps[key] then
-            ps[key].add_pct = state.damage_modifiers[dtype]
-        end
+    for dtype, value in pairs(state.damage_modifiers or {}) do
+        PlayerStatsAccessor.set_base(dtype .. '_modifier_pct', value)
     end
 
     -- Apply penetration
-    for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_penetration"
-        if ps[key] then
-            ps[key].base = state.penetration[dtype]
+    if state.penetration then
+        PlayerStatsAccessor.set_base('penetration_all_pct', state.penetration.all or 0)
+        for dtype, value in pairs(state.penetration) do
+            if dtype ~= 'all' then
+                PlayerStatsAccessor.set_base('penetration_' .. dtype .. '_pct', value)
+            end
         end
     end
 
     -- Apply DoT durations
-    local dot_types = { "burn", "freeze", "shock", "poison", "bleed" }
-    for _, dot in ipairs(dot_types) do
-        local key = dot .. "_duration_mult"
-        if ps[key] then
-            ps[key].base = state.dot_durations[dot]
-        end
+    for dot, value in pairs(state.dot_durations or {}) do
+        PlayerStatsAccessor.set_base(dot .. '_duration_pct', value)
     end
 
-    -- Emit signal for stat recalculation
-    local ok, signal = pcall(require, "external.hump.signal")
-    if ok then
-        signal.emit("stats_recomputed")
-    end
-
-    print("[Combat] Applied combat stats to player")
+    print("[CombatDebugPanel] Applied combat to player")
 end
 
 --===========================================================================
@@ -437,79 +425,56 @@ end
 -- DEFENSE TAB FUNCTIONS
 --===========================================================================
 function CombatDebugPanel.sync_defense_from_player()
-    if not globals or not globals.player_stats then return end
+    if not PlayerStatsAccessor then return end
 
-    local ps = globals.player_stats
+    -- Core defense stats (using correct names)
+    state.defense_stats.armor = PlayerStatsAccessor.get('armor')
+    state.defense_stats.dodge_chance_pct = PlayerStatsAccessor.get('dodge_chance_pct')
+    state.defense_stats.block_chance_pct = PlayerStatsAccessor.get('block_chance_pct')
+    state.defense_stats.block_amount = PlayerStatsAccessor.get('block_amount')
+    state.defense_stats.block_recovery_reduction_pct = PlayerStatsAccessor.get('block_recovery_reduction_pct')
 
-    -- Sync defense stats
-    if ps.armor then state.defense_stats.armor = ps.armor.total or 0 end
-    if ps.dodge_chance then state.defense_stats.dodge = ps.dodge_chance.total or 0 end
-    if ps.block_chance then state.defense_stats.block = ps.block_chance.total or 0 end
-    if ps.block_reduction then state.defense_stats.block_reduction = ps.block_reduction.total or 50 end
-
-    -- Sync resistances
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    -- Resistances (correct suffix: _resist_pct)
+    local damage_types = PlayerStatsAccessor.get_damage_types()
+    state.resistances = {}
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance"
-        if ps[key] then
-            state.resistances[dtype] = ps[key].total or 0
-        end
+        state.resistances[dtype] = PlayerStatsAccessor.get(dtype .. '_resist_pct')
     end
 
-    -- Sync resist caps
+    -- Resist caps
+    state.resist_caps = {}
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance_cap"
-        if ps[key] then
-            state.resist_caps[dtype] = ps[key].total or 80
-        end
+        local cap = 80 + PlayerStatsAccessor.get('max_' .. dtype .. '_resist_cap_pct')
+        state.resist_caps[dtype] = math.min(100, cap)
     end
 
-    -- Sync absorb
-    if ps.absorb_amount then state.absorb.amount = ps.absorb_amount.total or 0 end
-    if ps.absorb_remaining then state.absorb.remaining = ps.absorb_remaining.total or 0 end
+    -- Absorb
+    state.absorb.percent = PlayerStatsAccessor.get('percent_absorb_pct')
+    state.absorb.flat = PlayerStatsAccessor.get('flat_absorb')
 
-    print("[Combat] Synced defense stats from player")
+    print("[CombatDebugPanel] Synced defense from player")
 end
 
 function CombatDebugPanel.apply_defense_to_player()
-    if not globals or not globals.player_stats then return end
+    if not PlayerStatsAccessor then return end
 
-    local ps = globals.player_stats
+    -- Core defense stats
+    PlayerStatsAccessor.set_base('armor', state.defense_stats.armor)
+    PlayerStatsAccessor.set_base('dodge_chance_pct', state.defense_stats.dodge_chance_pct)
+    PlayerStatsAccessor.set_base('block_chance_pct', state.defense_stats.block_chance_pct)
+    PlayerStatsAccessor.set_base('block_amount', state.defense_stats.block_amount)
+    PlayerStatsAccessor.set_base('block_recovery_reduction_pct', state.defense_stats.block_recovery_reduction_pct)
 
-    -- Apply defense stats
-    if ps.armor then ps.armor.base = state.defense_stats.armor end
-    if ps.dodge_chance then ps.dodge_chance.base = state.defense_stats.dodge end
-    if ps.block_chance then ps.block_chance.base = state.defense_stats.block end
-    if ps.block_reduction then ps.block_reduction.base = state.defense_stats.block_reduction end
-
-    -- Apply resistances
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
-    for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance"
-        if ps[key] then
-            ps[key].base = state.resistances[dtype]
-        end
+    -- Resistances
+    for dtype, value in pairs(state.resistances) do
+        PlayerStatsAccessor.set_base(dtype .. '_resist_pct', value)
     end
 
-    -- Apply resist caps
-    for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_resistance_cap"
-        if ps[key] then
-            ps[key].base = state.resist_caps[dtype]
-        end
-    end
+    -- Absorb
+    PlayerStatsAccessor.set_base('percent_absorb_pct', state.absorb.percent or 0)
+    PlayerStatsAccessor.set_base('flat_absorb', state.absorb.flat or 0)
 
-    -- Apply absorb
-    if ps.absorb_amount then ps.absorb_amount.base = state.absorb.amount end
-    if ps.absorb_remaining then ps.absorb_remaining.base = state.absorb.remaining end
-
-    -- Emit signal for stat recalculation
-    local ok, signal = pcall(require, "external.hump.signal")
-    if ok then
-        signal.emit("stats_recomputed")
-    end
-
-    print("[Combat] Applied defense stats to player")
+    print("[CombatDebugPanel] Applied defense to player")
 end
 
 --===========================================================================
@@ -923,10 +888,12 @@ local function render_combat_tab()
 
     local off = state.offense_stats
 
-    off.base_damage, _ = ImGui.SliderInt("Base Damage", off.base_damage, 0, 100)
-    off.attack_speed, _ = ImGui.SliderFloat("Attack Speed", off.attack_speed, 0.1, 3.0, "%.2f")
-    off.crit_chance, _ = ImGui.SliderInt("Crit Chance %", off.crit_chance, 0, 100)
-    off.crit_damage, _ = ImGui.SliderInt("Crit Damage %", off.crit_damage, 100, 500)
+    off.weapon_min, _ = ImGui.SliderInt("Weapon Min", off.weapon_min or 18, 0, 100)
+    off.weapon_max, _ = ImGui.SliderInt("Weapon Max", off.weapon_max or 25, 0, 200)
+    off.attack_speed, _ = ImGui.SliderFloat("Attack Speed", off.attack_speed or 1.0, 0.1, 3.0, "%.2f")
+    off.crit_damage_pct, _ = ImGui.SliderInt("Crit Damage %", off.crit_damage_pct or 50, 0, 300)
+    off.all_damage_pct, _ = ImGui.SliderInt("All Damage %", off.all_damage_pct or 0, -50, 200)
+    off.life_steal_pct, _ = ImGui.SliderInt("Life Steal %", off.life_steal_pct or 0, 0, 100)
 
     ImGui.Separator()
 
@@ -934,15 +901,17 @@ local function render_combat_tab()
     ImGui.Text("DAMAGE MODIFIERS (% bonus)")
     ImGui.Separator()
 
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    -- Direct damage types only (not DoT types)
+    local direct_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos" }
 
     -- Display in columns for better layout
     ImGui.Columns(3, "dmg_mod_cols", false)
-    for _, dtype in ipairs(damage_types) do
+    for _, dtype in ipairs(direct_types) do
         ImGui.PushID("dmg_" .. dtype)
         local val = state.damage_modifiers[dtype] or 0
         ImGui.SetNextItemWidth(80)
-        local new_val, c = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
+        local display = dtype:sub(1,1):upper() .. dtype:sub(2)
+        local new_val, c = ImGui.InputInt(display, val)
         if c then
             state.damage_modifiers[dtype] = math.max(-100, math.min(200, new_val))
         end
@@ -954,15 +923,16 @@ local function render_combat_tab()
     ImGui.Separator()
 
     -- SECTION C: DoT Durations
-    ImGui.Text("DOT DURATION MULTIPLIERS")
+    ImGui.Text("DOT DURATION MODIFIERS (%)")
     ImGui.Separator()
 
-    local dot_types = { "burn", "freeze", "shock", "poison", "bleed" }
+    local dot_types = { "bleed", "trauma", "burn", "frostburn", "electrocute", "poison", "vitality_decay" }
     for _, dot in ipairs(dot_types) do
         ImGui.PushID("dot_" .. dot)
-        local val = state.dot_durations[dot] or 1.0
+        local val = state.dot_durations[dot] or 0
         ImGui.SetNextItemWidth(120)
-        local new_val, c = ImGui.SliderFloat(dot:sub(1,1):upper() .. dot:sub(2), val, 0.5, 3.0, "%.1fx")
+        local display = dot:sub(1,1):upper() .. dot:sub(2):gsub("_", " ")
+        local new_val, c = ImGui.SliderFloat(display, val, -50, 200, "%.0f%%")
         if c then state.dot_durations[dot] = new_val end
         ImGui.PopID()
     end
@@ -973,12 +943,16 @@ local function render_combat_tab()
     ImGui.Text("PENETRATION (% resist reduction)")
     ImGui.Separator()
 
+    -- Use same direct damage types as damage modifiers
+    local penetration_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos" }
+
     ImGui.Columns(3, "pen_cols", false)
-    for _, dtype in ipairs(damage_types) do
+    for _, dtype in ipairs(penetration_types) do
         ImGui.PushID("pen_" .. dtype)
         local val = state.penetration[dtype] or 0
         ImGui.SetNextItemWidth(80)
-        local new_val, c = ImGui.InputInt(dtype:sub(1,1):upper() .. dtype:sub(2), val)
+        local display = dtype:sub(1,1):upper() .. dtype:sub(2)
+        local new_val, c = ImGui.InputInt(display, val)
         if c then
             state.penetration[dtype] = math.max(0, math.min(100, new_val))
         end
@@ -1009,9 +983,10 @@ local function render_defense_tab()
     local def = state.defense_stats
 
     def.armor, _ = ImGui.SliderInt("Armor", def.armor, 0, 500)
-    def.dodge, _ = ImGui.SliderInt("Dodge %", def.dodge, 0, 75)
-    def.block, _ = ImGui.SliderInt("Block %", def.block, 0, 75)
-    def.block_reduction, _ = ImGui.SliderInt("Block Reduction %", def.block_reduction, 0, 100)
+    def.dodge_chance_pct, _ = ImGui.SliderInt("Dodge %", def.dodge_chance_pct, 0, 75)
+    def.block_chance_pct, _ = ImGui.SliderInt("Block %", def.block_chance_pct, 0, 75)
+    def.block_amount, _ = ImGui.SliderInt("Block Amount", def.block_amount, 0, 100)
+    def.block_recovery_reduction_pct, _ = ImGui.SliderInt("Block Recovery %", def.block_recovery_reduction_pct, 0, 100)
 
     ImGui.Separator()
 
@@ -1019,9 +994,10 @@ local function render_defense_tab()
     ImGui.Text("RESISTANCES")
     ImGui.Separator()
 
-    local damage_types = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+    -- Direct damage types for resistances (not DoT types)
+    local resist_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos" }
 
-    for _, dtype in ipairs(damage_types) do
+    for _, dtype in ipairs(resist_types) do
         ImGui.PushID("res_" .. dtype)
 
         local res = state.resistances[dtype] or 0
@@ -1053,7 +1029,7 @@ local function render_defense_tab()
     -- SECTION C: Resist Caps (collapsible)
     if ImGui.CollapsingHeader("Resist Caps (Advanced)") then
         ImGui.Columns(3, "cap_cols", false)
-        for _, dtype in ipairs(damage_types) do
+        for _, dtype in ipairs(resist_types) do
             ImGui.PushID("cap_" .. dtype)
             local cap = state.resist_caps[dtype] or 80
             ImGui.SetNextItemWidth(60)
@@ -1072,13 +1048,156 @@ local function render_defense_tab()
     ImGui.Separator()
 
     local abs = state.absorb
-    abs.amount, _ = ImGui.SliderInt("Absorb Amount", abs.amount, 0, 50)
+    abs.percent, _ = ImGui.SliderInt("Percent Absorb %", abs.percent, 0, 50)
+    abs.flat, _ = ImGui.SliderInt("Flat Absorb", abs.flat, 0, 100)
 
-    -- Remaining is display-only
-    ImGui.Text(string.format("  Remaining: %d / %d", abs.remaining, abs.amount))
+    ImGui.Separator()
 
-    if ImGui.SmallButton("Refill Absorb") then
-        abs.remaining = abs.amount
+    -- SECTION E: Damage Preview
+    ImGui.Text("DAMAGE PREVIEW")
+    ImGui.Separator()
+
+    local preview = state.damage_preview
+
+    -- Input for incoming damage
+    ImGui.SetNextItemWidth(100)
+    local new_incoming, incoming_changed = ImGui.InputInt("Incoming Damage", preview.incoming)
+    if incoming_changed then
+        preview.incoming = math.max(1, new_incoming)
+    end
+
+    -- Damage type combo box
+    ImGui.SameLine()
+    ImGui.SetNextItemWidth(100)
+    local damage_type_list = { "physical", "fire", "cold", "lightning", "acid", "pierce" }
+    local current_type_idx = 1
+    for i, dtype in ipairs(damage_type_list) do
+        if dtype == preview.damage_type then
+            current_type_idx = i
+            break
+        end
+    end
+    local new_type_idx, type_changed = ImGui.Combo("Type", current_type_idx, damage_type_list, #damage_type_list)
+    if type_changed then
+        preview.damage_type = damage_type_list[new_type_idx]
+    end
+
+    -- Calculate preview on input change or button press
+    local should_calculate = false
+    ImGui.SameLine()
+    if ImGui.Button("Calculate") then
+        should_calculate = true
+    end
+
+    if should_calculate or incoming_changed or type_changed then
+        if PlayerStatsAccessor and PlayerStatsAccessor.preview_damage then
+            preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(preview.incoming, preview.damage_type)
+        else
+            preview.result = preview.incoming
+            preview.breakdown = { final = preview.incoming }
+        end
+    end
+
+    -- Display final damage with color coding
+    local reduction_pct = 0
+    if preview.incoming > 0 then
+        reduction_pct = ((preview.incoming - preview.result) / preview.incoming) * 100
+    end
+
+    ImGui.Text("Final Damage:")
+    ImGui.SameLine()
+
+    -- Color: green if >50% reduced, yellow if >25%, red otherwise
+    local color = { 1.0, 0.3, 0.3, 1 } -- red
+    if reduction_pct > 50 then
+        color = { 0.2, 1.0, 0.2, 1 } -- green
+    elseif reduction_pct > 25 then
+        color = { 1.0, 0.9, 0.2, 1 } -- yellow
+    end
+
+    ImGui.TextColored(color[1], color[2], color[3], color[4],
+        string.format("%.1f (%.1f%% reduced)", preview.result, reduction_pct))
+
+    -- Quick test buttons
+    ImGui.Separator()
+    if ImGui.SmallButton("Test 100 Physical") then
+        preview.incoming = 100
+        preview.damage_type = "physical"
+        preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(100, "physical")
+    end
+    ImGui.SameLine()
+    if ImGui.SmallButton("Test 100 Fire") then
+        preview.incoming = 100
+        preview.damage_type = "fire"
+        preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(100, "fire")
+    end
+    ImGui.SameLine()
+    if ImGui.SmallButton("Test 500 Physical") then
+        preview.incoming = 500
+        preview.damage_type = "physical"
+        preview.result, preview.breakdown = PlayerStatsAccessor.preview_damage(500, "physical")
+    end
+
+    -- Collapsible damage breakdown section
+    if ImGui.CollapsingHeader("Damage Breakdown") then
+        local bd = preview.breakdown
+        if bd and bd.final then
+            ImGui.Text(string.format("  Raw Damage: %.1f", bd.raw or preview.incoming))
+
+            -- Dodge
+            if bd.dodge_chance and bd.dodge_chance > 0 then
+                ImGui.Text(string.format("  Dodge Chance: %.1f%%", bd.dodge_chance))
+                ImGui.Text(string.format("    After dodge (expected): %.1f", bd.after_dodge_expected or 0))
+            end
+
+            -- Armor
+            if bd.armor and bd.armor > 0 then
+                ImGui.Text(string.format("  Armor: %d (mitigation: %.1f)", bd.armor, bd.armor_mitigation or 0))
+                ImGui.Text(string.format("    After armor: %.1f", bd.after_armor or 0))
+            elseif bd.after_armor then
+                ImGui.Text(string.format("  After armor: %.1f", bd.after_armor))
+            end
+
+            -- Resistance
+            if bd.resistance then
+                ImGui.Text(string.format("  Resistance: %.1f%%", bd.resistance))
+                ImGui.Text(string.format("    After resist: %.1f", bd.after_resist or 0))
+            end
+
+            -- Damage reduction
+            if bd.damage_reduction and bd.damage_reduction > 0 then
+                ImGui.Text(string.format("  Damage Reduction: %.1f%%", bd.damage_reduction))
+            end
+            if bd.type_damage_reduction and bd.type_damage_reduction > 0 then
+                ImGui.Text(string.format("  Type-specific DR: %.1f%%", bd.type_damage_reduction))
+            end
+            if bd.after_dr then
+                ImGui.Text(string.format("    After DR: %.1f", bd.after_dr))
+            end
+
+            -- Percent absorb
+            if bd.percent_absorb and bd.percent_absorb > 0 then
+                ImGui.Text(string.format("  Percent Absorb: %.1f%%", bd.percent_absorb))
+                ImGui.Text(string.format("    After percent absorb: %.1f", bd.after_percent_absorb or 0))
+            end
+
+            -- Block
+            if bd.block_chance and bd.block_chance > 0 then
+                ImGui.Text(string.format("  Block: %.1f%% chance, %d amount", bd.block_chance, bd.block_amount or 0))
+                ImGui.Text(string.format("    After block (expected): %.1f", bd.after_block_expected or 0))
+            end
+
+            -- Flat absorb
+            if bd.flat_absorb and bd.flat_absorb > 0 then
+                ImGui.Text(string.format("  Flat Absorb: %d", bd.flat_absorb))
+            end
+
+            ImGui.Separator()
+            ImGui.TextColored(color[1], color[2], color[3], color[4],
+                string.format("  FINAL DAMAGE: %.1f", bd.final))
+        else
+            ImGui.TextDisabled("  (calculate damage first)")
+        end
     end
 end
 

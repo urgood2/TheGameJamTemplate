@@ -22,15 +22,20 @@ signal.register("spawn_telegraph", function(data)
     local enemy_type = data.enemy_type
 
     -- Create a simple pulsing circle entity
-    -- Using a generic marker sprite (replace with your actual asset)
-    local marker = animation_system.createAnimatedObjectWithTransform(
-        "telegraph_marker",  -- Replace with actual sprite name
-        true
-    )
+    -- Try to create sprite, fallback gracefully if it doesn't exist
+    local success, marker = pcall(function()
+        if animation_system then
+            return animation_system.createAnimatedObjectWithTransform(
+                "telegraph_marker",  -- TODO: Replace with actual sprite name
+                true
+            )
+        end
+        return nil
+    end)
 
-    if not marker or not entity_cache.valid(marker) then
-        -- Fallback: just log it
-        print("Telegraph at " .. x .. ", " .. y .. " for " .. tostring(enemy_type))
+    if not success or not marker or not entity_cache.valid(marker) then
+        -- Fallback: just log it (sprite doesn't exist yet)
+        print("[WaveVisuals] Telegraph at " .. x .. ", " .. y .. " for " .. tostring(enemy_type) .. " (no sprite)")
         return
     end
 

@@ -10708,6 +10708,251 @@ ai_system::requestAISystemReset();
 
 ***
 
+## Screen & Camera Globals
+
+\label{recipe:screen-camera}
+
+The engine provides global functions for querying screen dimensions, timing information, and coordinate transformations between world and screen space. These are essential for UI positioning, camera-relative rendering, and input handling.
+
+### Screen Dimensions
+
+Get the virtual screen resolution (independent of actual window size):
+
+```lua
+local width = GetScreenWidth()   -- Returns virtual width (e.g., 1280)
+local height = GetScreenHeight() -- Returns virtual height (e.g., 720)
+
+-- Center UI element on screen
+local centerX = width / 2
+local centerY = height / 2
+```
+
+**Note:** These return `globals::VIRTUAL_WIDTH` and `globals::VIRTUAL_HEIGHT`, not the physical window dimensions. The engine handles scaling to match the actual window.
+
+### Timing Functions
+
+Access frame timing and total elapsed time:
+
+```lua
+-- Delta time since last frame (smoothed)
+local dt = GetFrameTime()  -- Returns seconds (e.g., 0.016 for 60 FPS)
+
+-- Total elapsed time since game start
+local elapsed = GetTime()  -- Returns seconds
+
+-- Example: animate entity with delta time
+local speed = 100  -- pixels per second
+transform.actualX = transform.actualX + (speed * dt)
+```
+
+**Timing Details:**
+- `GetFrameTime()` returns smoothed delta time from `main_loop::mainLoop.smoothedDeltaTime`
+- `GetTime()` returns total elapsed time from `main_loop::getTime()`
+- Both return `float` values in seconds
+
+### Camera Access
+
+The global camera is available via `globals.camera`:
+
+```lua
+-- Access camera properties
+local cam = globals.camera
+
+-- Read camera state
+print("Offset:", cam.offset.x, cam.offset.y)     -- Camera displacement from target
+print("Target:", cam.target.x, cam.target.y)     -- Camera focus point
+print("Rotation:", cam.rotation)                 -- Rotation in degrees
+print("Zoom:", cam.zoom)                          -- Zoom level (1.0 = default)
+
+-- Modify camera (example: shake effect)
+cam.offset.x = math.random(-5, 5)
+cam.offset.y = math.random(-5, 5)
+```
+
+**Camera2D Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `offset` | Vector2 | Camera offset (displacement from target) |
+| `target` | Vector2 | Camera target (rotation and zoom origin) |
+| `rotation` | number | Camera rotation in degrees |
+| `zoom` | number | Camera zoom (1.0 = default scale) |
+
+### Coordinate Conversion
+
+Convert between world coordinates (game space) and screen coordinates (pixel space):
+
+```lua
+local cam = globals.camera
+
+-- World to screen (e.g., render world entity label at screen position)
+local worldPos = { x = 500, y = 300 }
+local screenPos = GetWorldToScreen2D(worldPos, cam)
+print("Screen position:", screenPos.x, screenPos.y)
+
+-- Screen to world (e.g., convert mouse click to world position)
+local mouseX, mouseY = GetMousePosition()
+local mouseScreen = { x = mouseX, y = mouseY }
+local mouseWorld = GetScreenToWorld2D(mouseScreen, cam)
+print("World position:", mouseWorld.x, mouseWorld.y)
+```
+
+**Use Cases:**
+- **World to Screen:** Render UI elements at entity positions, draw health bars above characters
+- **Screen to World:** Handle mouse input in world space, place entities at cursor position
+
+### Common Patterns
+
+**Pattern 1: Center UI element on screen**
+
+```lua
+local width = GetScreenWidth()
+local height = GetScreenHeight()
+
+local boxWidth = 200
+local boxHeight = 100
+
+-- Center the box
+local x = (width - boxWidth) / 2
+local y = (height - boxHeight) / 2
+
+-- Spawn UI at centered position
+dsl.spawn({ x = x, y = y }, myUIDefinition)
+```
+
+**Pattern 2: Mouse position in world coordinates**
+
+```lua
+local function getMouseWorldPosition()
+    local mouseX, mouseY = GetMousePosition()
+    local mouseScreen = { x = mouseX, y = mouseY }
+    return GetScreenToWorld2D(mouseScreen, globals.camera)
+end
+
+-- Use in click handler
+local worldPos = getMouseWorldPosition()
+print("Clicked world position:", worldPos.x, worldPos.y)
+```
+
+**Pattern 3: Render text at entity position (world to screen)**
+
+```lua
+local function drawEntityLabel(entity, text)
+    local transform = component_cache.get(entity, Transform)
+    if not transform then return end
+
+    -- Convert entity world position to screen coordinates
+    local worldPos = { x = transform.actualX, y = transform.actualY }
+    local screenPos = GetWorldToScreen2D(worldPos, globals.camera)
+
+    -- Draw text at screen position
+    draw.textPro(UI_LAYER, {
+        text = text,
+        x = screenPos.x,
+        y = screenPos.y - 20,  -- Offset above entity
+        fontSize = 16
+    }, z_orders.UI)
+end
+```
+
+**Pattern 4: Smooth camera follow**
+
+```lua
+local function updateCamera(playerEntity, dt)
+    local transform = component_cache.get(playerEntity, Transform)
+    if not transform then return end
+
+    local cam = globals.camera
+    local targetX = transform.actualX
+    local targetY = transform.actualY
+
+    -- Smooth lerp (adjust 0.1 for smoothing factor)
+    local lerpFactor = 1.0 - math.exp(-10 * dt)
+    cam.target.x = cam.target.x + (targetX - cam.target.x) * lerpFactor
+    cam.target.y = cam.target.y + (targetY - cam.target.y) * lerpFactor
+end
+```
+
+**Pattern 5: Screen-shake effect**
+
+```lua
+local function screenShake(duration, intensity)
+    local shakeTimer = 0
+
+    timer.every(0.016, function(dt)
+        shakeTimer = shakeTimer + dt
+        if shakeTimer >= duration then
+            -- Reset camera offset
+            globals.camera.offset.x = 0
+            globals.camera.offset.y = 0
+            return false  -- Stop timer
+        end
+
+        -- Apply random offset
+        local factor = 1.0 - (shakeTimer / duration)  -- Decay over time
+        globals.camera.offset.x = (math.random() * 2 - 1) * intensity * factor
+        globals.camera.offset.y = (math.random() * 2 - 1) * intensity * factor
+    end)
+end
+
+-- Trigger shake on impact
+signal.register("player_hit", function()
+    screenShake(0.3, 10)  -- 0.3 seconds, intensity 10
+end)
+```
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `GetScreenWidth()` | None | integer | Virtual screen width in pixels |
+| `GetScreenHeight()` | None | integer | Virtual screen height in pixels |
+| `GetFrameTime()` | None | number | Smoothed delta time since last frame (seconds) |
+| `GetTime()` | None | number | Total elapsed time since game start (seconds) |
+| `GetWorldToScreen2D()` | position: Vector2, camera: Camera2D | Vector2 | Convert world position to screen coordinates |
+| `GetScreenToWorld2D()` | position: Vector2, camera: Camera2D | Vector2 | Convert screen position to world coordinates |
+
+**Global:**
+| Global | Type | Description |
+|--------|------|-------------|
+| `globals.camera` | Camera2D | Main camera instance (offset, target, rotation, zoom) |
+
+### Implementation Details
+
+These functions are exposed from C++ via the scripting system:
+
+```cpp
+// From scripting_functions.cpp
+lua["GetScreenWidth"] = []() -> int { return globals::VIRTUAL_WIDTH; };
+lua["GetScreenHeight"] = []() -> int { return globals::VIRTUAL_HEIGHT; };
+
+lua["GetFrameTime"] = []() -> float {
+    return main_loop::mainLoop.smoothedDeltaTime;
+};
+
+lua["GetTime"] = []() -> float {
+    return main_loop::getTime();
+};
+
+lua["GetWorldToScreen2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+    return GetWorldToScreen2D(position, camera);
+};
+
+lua["GetScreenToWorld2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+    return GetScreenToWorld2D(position, camera);
+};
+
+// Camera binding (static Camera2D instance)
+lua["globals"]["camera"] = []() -> Camera2D & { return std::ref(camera2D); };
+```
+
+### Related Systems
+
+- **Input System** (Recipe \pageref{recipe:input-system}): Use `GetScreenToWorld2D()` for mouse input in world space
+- **UI DSL** (Recipe \pageref{recipe:ui-dsl}): Use screen dimensions for positioning UI elements
+- **Timer System** (Recipe \pageref{recipe:timer-system}): Use `GetFrameTime()` for smooth animations
+
+***
+
 \newpage
 \appendix
 
@@ -10741,6 +10986,13 @@ Alphabetical listing of all documented functions and APIs.
 | `EntityBuilder.interactive()` | `core.entity_builder` | \pageref{recipe:entity-interactive} |
 | `EntityBuilder.simple()` | `core.entity_builder` | \pageref{recipe:entity-sprite} |
 | `getScriptTableFromEntityID()` | `util.lua` | \pageref{recipe:script-table} |
+| `GetFrameTime()` | Global | \pageref{recipe:screen-camera} |
+| `GetScreenHeight()` | Global | \pageref{recipe:screen-camera} |
+| `GetScreenToWorld2D()` | Global | \pageref{recipe:screen-camera} |
+| `GetScreenWidth()` | Global | \pageref{recipe:screen-camera} |
+| `GetTime()` | Global | \pageref{recipe:screen-camera} |
+| `GetWorldToScreen2D()` | Global | \pageref{recipe:screen-camera} |
+| `globals.camera` | Global | \pageref{recipe:screen-camera} |
 | `hardReset()` | Global | \pageref{recipe:game-control} |
 | `is_state_active()` | `util.lua` | \pageref{recipe:validate-entity} |
 | `JokerSystem.add_joker()` | `wand.joker_system` | \pageref{recipe:joker-manage} |

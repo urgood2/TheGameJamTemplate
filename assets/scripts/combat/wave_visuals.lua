@@ -83,10 +83,12 @@ signal.register("show_floating_text", function(data)
 
     -- Default position: center of screen
     if not x then
-        x = (globals.screenWidth or 800) / 2
+        local sw = globals.screenWidth and globals.screenWidth() or 800
+        x = sw / 2
     end
     if not y then
-        y = (globals.screenHeight or 600) / 3
+        local sh = globals.screenHeight and globals.screenHeight() or 600
+        y = sh / 3
     end
 
     -- Style configurations

@@ -344,8 +344,8 @@ function WaveHelpers.get_spawn_positions(spawn_config, count)
 
     elseif config.type == "off_screen" then
         local padding = config.padding or 50
-        local screen_w = globals.screenWidth or 800
-        local screen_h = globals.screenHeight or 600
+        local screen_w = globals.screenWidth and globals.screenWidth() or 800
+        local screen_h = globals.screenHeight and globals.screenHeight() or 600
 
         for i = 1, count do
             local side = math.random(1, 4)

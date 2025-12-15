@@ -200,9 +200,12 @@ function EntityBuilder.create(opts)
         end
     end
 
-    -- Add state tag
+    -- Add state tag (must also remove default per gameplay.lua pattern)
     if state and add_state_tag then
         add_state_tag(entity, state)
+        if remove_default_state_tag then
+            remove_default_state_tag(entity)
+        end
     end
 
     -- Apply shaders

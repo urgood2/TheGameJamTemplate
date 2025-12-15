@@ -340,7 +340,7 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
                 if targetTransform then
                     local dx = targetTransform.actualX - position.x
                     local dy = targetTransform.actualY - position.y
-                    angle = math.atan2(dy, dx)
+                    angle = math.atan(dy, dx)  -- Lua 5.4: atan2 removed, use atan(y,x)
                 end
             end
         else

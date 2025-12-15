@@ -47,7 +47,7 @@ local NM = {}
 
 -- math helpers
 local function dist(ax,ay,bx,by) local dx,dy=bx-ax,by-ay; return (dx*dx+dy*dy)^0.5 end
-local function angle(ax,ay,bx,by) return math.atan2(by-ay, bx-ax) end
+local function angle(ax,ay,bx,by) return math.atan(by-ay, bx-ax) end  -- Lua 5.4 compat
 
 -- default palette (used if you rely on NM-managed colors)
 NM.palette = {
@@ -144,7 +144,7 @@ function NM.generate(nodemap, opts)
         local nb = g.nodes[nid]
         if nb then local r = angle(n.x, n.y, nb.x, nb.y); xs = xs + math.cos(r); ys = ys + math.sin(r) end
       end
-      n.label_r = math.atan2(-ys, -xs)
+      n.label_r = math.atan(-ys, -xs)  -- Lua 5.4 compat
     end
   end
 

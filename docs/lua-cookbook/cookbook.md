@@ -11135,6 +11135,245 @@ setEntityAlias("current_boss", boss2)  -- Overwrites previous alias
 
 ***
 
+## Avatar System
+\label{recipe:avatar-system}
+
+The **Avatar System** manages character unlocks and selection through a lightweight, data-driven framework. Avatars are powerful character transformations unlocked mid-run by meeting specific conditions (tag thresholds, gameplay metrics). This section covers the runtime API for tracking progress, checking unlocks, and equipping avatars.
+
+For avatar data format and unlock condition syntax, see Chapter 9, Section "Avatar System - Character Unlocks".
+
+### Core Concepts
+
+**State Storage:**
+- Player entities store avatar state in `player.avatar_state` table:
+  - `unlocked`: Table of `avatar_id -> true` for unlocked avatars
+  - `equipped`: Currently equipped avatar ID (or `nil`)
+- Progress metrics stored in `player.avatar_progress` (e.g., `kills_with_fire`, `damage_blocked`)
+
+**Unlock Conditions:**
+- Defined in `assets/scripts/data/avatars.lua` with dual-path logic:
+  - **Primary path**: All non-OR conditions must be met
+  - **Alternative path**: Any `OR_` prefixed condition is sufficient
+- Conditions can reference tag counts (`fire_tags`) or metrics (`kills_with_fire`)
+
+### Checking for Unlocks
+
+Use `AvatarSystem.check_unlocks()` to evaluate unlock conditions and update state:
+
+```lua
+local AvatarSystem = require("wand.avatar_system")
+
+-- Check unlocks with current player state
+local newlyUnlocked = AvatarSystem.check_unlocks(player)
+
+-- Check with explicit context (overrides player state)
+local newlyUnlocked = AvatarSystem.check_unlocks(player, {
+    tag_counts = { Fire = 7, Defense = 5 },
+    metrics = { kills_with_fire = 100, damage_blocked = 5000 }
+})
+
+-- Process newly unlocked avatars
+for _, avatarId in ipairs(newlyUnlocked) do
+    print("Unlocked:", avatarId)
+    -- Signal "avatar_unlocked" automatically emitted for each unlock
+end
+```
+
+**When to call:**
+- After deck changes (tag counts may have changed)
+- After significant gameplay events (boss kill, level up)
+- Periodically during gameplay (if tracking distance, time, etc.)
+
+### Recording Progress
+
+Increment progress metrics and automatically check for unlocks:
+
+```lua
+-- Record progress for a specific metric
+local newlyUnlocked = AvatarSystem.record_progress(
+    player,
+    "kills_with_fire",  -- Metric name
+    1                   -- Delta (increment by 1)
+)
+
+-- With explicit tag counts for unlock check
+local newlyUnlocked = AvatarSystem.record_progress(
+    player,
+    "damage_blocked",
+    250,  -- Blocked 250 damage
+    { tag_counts = player.tag_counts }
+)
+```
+
+**Common metrics:**
+- `kills_with_fire`, `kills_with_ice`, etc. (elemental kills)
+- `damage_blocked` (total damage blocked)
+- `distance_moved` (movement distance)
+- `crits_dealt` (critical hit count)
+- `mana_spent` (total mana used)
+- `hp_lost` (damage taken)
+
+### Equipping Avatars
+
+Players can equip unlocked avatars to activate their effects:
+
+```lua
+-- Equip an avatar (must be already unlocked)
+local success, error = AvatarSystem.equip(player, "wildfire")
+
+if not success then
+    print("Cannot equip:", error)  -- "avatar_locked" if not unlocked
+else
+    print("Avatar equipped!")
+end
+
+-- Get currently equipped avatar
+local equippedId = AvatarSystem.get_equipped(player)
+if equippedId then
+    print("Playing as:", equippedId)
+
+    -- Load avatar definition to apply effects
+    local avatarDefs = require("data.avatars")
+    local avatarDef = avatarDefs[equippedId]
+
+    if avatarDef and avatarDef.effects then
+        -- Apply avatar effects to player stats/rules
+        -- (Effect application is game-specific implementation)
+    end
+end
+```
+
+### Unlock Condition Logic
+
+Avatar unlock conditions support flexible dual-path logic:
+
+```lua
+-- Example avatar definition (from data/avatars.lua)
+wildfire = {
+    name = "Avatar of Wildfire",
+    unlock = {
+        kills_with_fire = 100,  -- Primary: must have 100 fire kills
+        OR_fire_tags = 7        -- Alternative: OR have 7 Fire tags
+    },
+    effects = { ... }
+}
+
+-- Unlock evaluation:
+-- 1. Primary path: kills_with_fire >= 100
+-- 2. Alternative path: fire_tags >= 7
+-- Player unlocks if EITHER path is satisfied
+```
+
+**Condition types:**
+- **Tag-based**: `fire_tags`, `defense_tags`, `mobility_tags`, etc.
+  - Tag name extracted from `{tag}_tags` pattern
+  - Matched against `tag_counts` parameter (e.g., `Fire`, `Defense`)
+- **Metric-based**: `kills_with_fire`, `damage_blocked`, `distance_moved`, etc.
+  - Matched against `metrics` parameter or `player.avatar_progress`
+- **OR conditions**: Prefix with `OR_` for alternative unlock paths
+  - `OR_fire_tags`, `OR_wins`, etc.
+
+### Events
+
+The Avatar System emits signals when avatars are unlocked:
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Listen for avatar unlocks
+signal.register("avatar_unlocked", function(data)
+    local avatarId = data.avatar_id
+    print("AVATAR UNLOCKED:", avatarId)
+
+    -- Load definition to show name
+    local avatarDefs = require("data.avatars")
+    local avatarDef = avatarDefs[avatarId]
+    if avatarDef then
+        print("Name:", avatarDef.name)
+        print("Description:", avatarDef.description)
+    end
+
+    -- Show celebration UI, achievement notification, etc.
+end)
+```
+
+**Event payload:**
+- `avatar_unlocked`: `{ avatar_id = "wildfire" }`
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `AvatarSystem.check_unlocks()` | player: table, opts?: table | string[] | Evaluates unlock conditions, updates state, returns newly unlocked avatar IDs |
+| `AvatarSystem.record_progress()` | player: table, metric: string, delta: number, opts?: table | string[] | Increments progress metric, calls `check_unlocks()` |
+| `AvatarSystem.equip()` | player: table, avatar_id: string | boolean, string? | Equips an unlocked avatar, returns `(success, error)` |
+| `AvatarSystem.get_equipped()` | player: table | string? | Returns currently equipped avatar ID or `nil` |
+
+**Options table (opts):**
+- `tag_counts`: `table<string, number>` - Tag counts to use for unlock evaluation (overrides player state)
+- `metrics`: `table<string, number>` - Metrics to use for unlock evaluation (overrides `player.avatar_progress`)
+
+### Integration Example
+
+Complete example showing avatar system integration in a game loop:
+
+```lua
+local AvatarSystem = require("wand.avatar_system")
+local signal = require("external.hump.signal")
+
+-- Initialize player state (done once at game start)
+function initPlayer(player)
+    player.avatar_state = { unlocked = {}, equipped = nil }
+    player.avatar_progress = {}
+    player.tag_counts = {}
+end
+
+-- Track gameplay events
+function onEnemyKilled(enemy, damageType)
+    local player = getPlayer()
+
+    -- Record metric for kill
+    local metricName = "kills_with_" .. string.lower(damageType)
+    local newUnlocks = AvatarSystem.record_progress(
+        player,
+        metricName,
+        1,
+        { tag_counts = player.tag_counts }
+    )
+
+    -- New unlocks automatically trigger "avatar_unlocked" signal
+end
+
+-- Re-check unlocks when deck changes
+function onDeckChanged(player, newTagCounts)
+    player.tag_counts = newTagCounts
+    local newUnlocks = AvatarSystem.check_unlocks(player, {
+        tag_counts = newTagCounts
+    })
+end
+
+-- Avatar selection UI callback
+function onAvatarSelected(avatarId)
+    local player = getPlayer()
+    local success, error = AvatarSystem.equip(player, avatarId)
+
+    if success then
+        -- Apply avatar effects
+        applyAvatarEffects(player, avatarId)
+    else
+        showError("Avatar locked!")
+    end
+end
+```
+
+### Related Systems
+
+- **Chapter 9** (Avatar Data Definitions): Data format, unlock condition syntax, effects structure
+- **Signal System** (Recipe \pageref{recipe:signal-system}): Event handling for unlocks
+- **Tag Evaluator** (Recipe \pageref{recipe:tag-evaluator}): Tag counting and threshold tracking
+
+***
+
 \newpage
 \appendix
 

@@ -42,10 +42,12 @@ local state = {
 
     -- Tab 2: Combat
     offense_stats = {
-        base_damage = 10,
+        weapon_min = 18,
+        weapon_max = 25,
         attack_speed = 1.0,
-        crit_chance = 5,
-        crit_damage = 150,
+        crit_damage_pct = 50,
+        all_damage_pct = 0,
+        life_steal_pct = 0,
     },
     damage_modifiers = {
         physical = 0, pierce = 0, fire = 0, cold = 0, lightning = 0,
@@ -317,89 +319,71 @@ end
 -- COMBAT TAB FUNCTIONS
 --===========================================================================
 function CombatDebugPanel.sync_combat_from_player()
-    if not globals or not globals.player_stats then return end
+    if not PlayerStatsAccessor then return end
 
-    local ps = globals.player_stats
+    -- Sync offense stats (using correct stat names)
+    state.offense_stats.weapon_min = PlayerStatsAccessor.get('weapon_min')
+    state.offense_stats.weapon_max = PlayerStatsAccessor.get('weapon_max')
+    state.offense_stats.attack_speed = PlayerStatsAccessor.get('attack_speed')
+    state.offense_stats.crit_damage_pct = PlayerStatsAccessor.get('crit_damage_pct')
+    state.offense_stats.all_damage_pct = PlayerStatsAccessor.get('all_damage_pct')
+    state.offense_stats.life_steal_pct = PlayerStatsAccessor.get('life_steal_pct')
 
-    -- Sync offense stats
-    if ps.base_damage then state.offense_stats.base_damage = ps.base_damage.total or 10 end
-    if ps.attack_speed then state.offense_stats.attack_speed = ps.attack_speed.total or 1.0 end
-    if ps.crit_chance then state.offense_stats.crit_chance = ps.crit_chance.total or 5 end
-    if ps.crit_damage then state.offense_stats.crit_damage = ps.crit_damage.total or 150 end
-
-    -- Sync damage modifiers
-    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
+    -- Sync damage modifiers per type (using correct names)
+    local damage_types = PlayerStatsAccessor.get_damage_types()
+    state.damage_modifiers = {}
     for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_modifier_pct"
-        if ps[key] then
-            state.damage_modifiers[dtype] = ps[key].add_pct or 0
-        end
+        state.damage_modifiers[dtype] = PlayerStatsAccessor.get(dtype .. '_modifier_pct')
     end
 
     -- Sync penetration
+    state.penetration = { all = PlayerStatsAccessor.get('penetration_all_pct') }
     for _, dtype in ipairs(damage_types) do
-        local key = "penetration_" .. dtype .. "_pct"
-        if ps[key] then
-            state.penetration[dtype] = ps[key].total or 0
-        end
+        state.penetration[dtype] = PlayerStatsAccessor.get('penetration_' .. dtype .. '_pct')
     end
 
-    -- Sync DoT durations
-    local dot_types = { "bleed", "trauma", "burn", "frostburn", "electrocute", "poison", "vitality_decay" }
+    -- Sync DoT durations (using correct suffix: _duration_pct not _duration_mult_pct)
+    local dot_types = { 'bleed', 'trauma', 'burn', 'frostburn', 'electrocute', 'poison', 'vitality_decay' }
+    state.dot_durations = {}
     for _, dot in ipairs(dot_types) do
-        local key = dot .. "_duration_mult_pct"
-        if ps[key] then
-            state.dot_durations[dot] = ps[key].total or 1.0
-        end
+        state.dot_durations[dot] = PlayerStatsAccessor.get(dot .. '_duration_pct')
     end
 
-    print("[Combat] Synced combat stats from player")
+    print("[CombatDebugPanel] Synced combat from player")
 end
 
 function CombatDebugPanel.apply_combat_to_player()
-    if not globals or not globals.player_stats then return end
-
-    local ps = globals.player_stats
+    if not PlayerStatsAccessor then return end
 
     -- Apply offense stats
-    if ps.base_damage then ps.base_damage.base = state.offense_stats.base_damage end
-    if ps.attack_speed then ps.attack_speed.base = state.offense_stats.attack_speed end
-    if ps.crit_chance then ps.crit_chance.base = state.offense_stats.crit_chance end
-    if ps.crit_damage then ps.crit_damage.base = state.offense_stats.crit_damage end
+    PlayerStatsAccessor.set_base('weapon_min', state.offense_stats.weapon_min or 18)
+    PlayerStatsAccessor.set_base('weapon_max', state.offense_stats.weapon_max or 25)
+    PlayerStatsAccessor.set_base('attack_speed', state.offense_stats.attack_speed or 1.0)
+    PlayerStatsAccessor.set_base('crit_damage_pct', state.offense_stats.crit_damage_pct or 50)
+    PlayerStatsAccessor.set_base('all_damage_pct', state.offense_stats.all_damage_pct or 0)
+    PlayerStatsAccessor.set_base('life_steal_pct', state.offense_stats.life_steal_pct or 0)
 
     -- Apply damage modifiers
-    local damage_types = { "physical", "pierce", "fire", "cold", "lightning", "acid", "vitality", "aether", "chaos", "poison" }
-    for _, dtype in ipairs(damage_types) do
-        local key = dtype .. "_modifier_pct"
-        if ps[key] then
-            ps[key].add_pct = state.damage_modifiers[dtype]
-        end
+    for dtype, value in pairs(state.damage_modifiers or {}) do
+        PlayerStatsAccessor.set_base(dtype .. '_modifier_pct', value)
     end
 
     -- Apply penetration
-    for _, dtype in ipairs(damage_types) do
-        local key = "penetration_" .. dtype .. "_pct"
-        if ps[key] then
-            ps[key].base = state.penetration[dtype]
+    if state.penetration then
+        PlayerStatsAccessor.set_base('penetration_all_pct', state.penetration.all or 0)
+        for dtype, value in pairs(state.penetration) do
+            if dtype ~= 'all' then
+                PlayerStatsAccessor.set_base('penetration_' .. dtype .. '_pct', value)
+            end
         end
     end
 
     -- Apply DoT durations
-    local dot_types = { "bleed", "trauma", "burn", "frostburn", "electrocute", "poison", "vitality_decay" }
-    for _, dot in ipairs(dot_types) do
-        local key = dot .. "_duration_mult_pct"
-        if ps[key] then
-            ps[key].base = state.dot_durations[dot]
-        end
+    for dot, value in pairs(state.dot_durations or {}) do
+        PlayerStatsAccessor.set_base(dot .. '_duration_pct', value)
     end
 
-    -- Emit signal for stat recalculation
-    local ok, signal = pcall(require, "external.hump.signal")
-    if ok then
-        signal.emit("stats_recomputed")
-    end
-
-    print("[Combat] Applied combat stats to player")
+    print("[CombatDebugPanel] Applied combat to player")
 end
 
 --===========================================================================

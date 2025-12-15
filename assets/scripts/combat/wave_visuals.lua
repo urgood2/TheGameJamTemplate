@@ -21,25 +21,35 @@ signal.register("spawn_telegraph", function(data)
     local duration = data.duration or 1.0
     local enemy_type = data.enemy_type
 
-    -- Create a simple pulsing circle entity
-    -- Try to create sprite, fallback gracefully if it doesn't exist
-    local success, marker = pcall(function()
-        if animation_system then
-            return animation_system.createAnimatedObjectWithTransform(
-                "telegraph_marker",  -- TODO: Replace with actual sprite name
-                true
-            )
-        end
-        return nil
-    end)
+    -- TODO: Add visual telegraph marker when sprite asset is created
+    -- For now, just log the spawn location
+    print("[WaveVisuals] Telegraph at " .. math.floor(x) .. ", " .. math.floor(y) .. " for " .. tostring(enemy_type))
 
-    if not success or not marker or not entity_cache.valid(marker) then
-        -- Fallback: just log it (sprite doesn't exist yet)
-        print("[WaveVisuals] Telegraph at " .. x .. ", " .. y .. " for " .. tostring(enemy_type) .. " (no sprite)")
+    -- Track telegraph for potential future use
+    local telegraph_id = tostring(x) .. "_" .. tostring(y) .. "_" .. os.clock()
+    active_telegraphs[telegraph_id] = {
+        x = x,
+        y = y,
+        enemy_type = enemy_type,
+        start_time = os.clock(),
+        duration = duration,
+    }
+
+    -- Auto-cleanup after duration
+    timer.after(duration, function()
+        active_telegraphs[telegraph_id] = nil
+    end, "telegraph_" .. telegraph_id)
+
+    --[[ DISABLED: Sprite doesn't exist yet - enable when 'telegraph_marker' asset is added
+    local marker = animation_system.createAnimatedObjectWithTransform(
+        "telegraph_marker",
+        true
+    )
+
+    if not marker or not entity_cache.valid(marker) then
         return
     end
 
-    -- Position
     local transform = component_cache.get(marker, Transform)
     if transform then
         transform.actualX = x
@@ -48,7 +58,6 @@ signal.register("spawn_telegraph", function(data)
         transform.actualH = 40
     end
 
-    -- Pulse animation via scale
     local elapsed = 0
     local pulse_speed = 8
 
@@ -74,6 +83,7 @@ signal.register("spawn_telegraph", function(data)
     end, "telegraph_pulse_" .. marker)
 
     active_telegraphs[marker] = true
+    ]] -- End of disabled sprite code
 end)
 
 --============================================

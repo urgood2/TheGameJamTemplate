@@ -6602,6 +6602,173 @@ local currentScale = startScale + (endScale - startScale) * eased
 **Gotcha:** `.d` (derivative) is useful for velocity-based effects (like particles).
 
 ***
+
+\newpage
+
+# Chapter 11: Game Systems
+
+## Spawn System
+
+\label{recipe:spawn-system}
+
+**When to use:** One-line entity spawning from presets (enemies, projectiles, pickups, effects).
+
+The spawn module provides convenient one-line functions to create entities using data-driven presets. Built on EntityBuilder and PhysicsBuilder, it eliminates boilerplate for common entity types.
+
+**Basic usage:**
+
+```lua
+local spawn = require("core.spawn")
+
+-- Spawn enemy at position
+local entity, script = spawn.enemy("kobold", 100, 200)
+
+-- Spawn projectile with direction
+local projectile = spawn.projectile("fireball", x, y, math.pi/4)
+
+-- Spawn pickup
+local pickup = spawn.pickup("exp_orb", x, y)
+
+-- Spawn effect (auto-destroys after lifetime)
+local effect = spawn.effect("explosion", x, y)
+```
+
+*— from core/spawn.lua, examples/spawn_example.lua*
+
+### Using Overrides
+
+Override preset defaults at spawn time:
+
+```lua
+-- Stronger enemy with custom stats
+local boss, boss_script = spawn.enemy("kobold", 400, 200, {
+    data = {
+        health = 200,        -- Override health
+        max_health = 200,
+        damage = 25,         -- Override damage
+        xp_value = 50,
+    }
+})
+
+-- Projectile with custom owner and damage
+local bolt = spawn.projectile("basic_bolt", x, y, direction, {
+    owner = playerEntity,
+    damage = 50
+})
+
+-- Pickup with custom value
+local gold = spawn.pickup("gold_coin", x, y, {
+    data = { value = 25 }
+})
+```
+
+*— from examples/spawn_example.lua:41-67*
+
+**Gotcha:** Overrides use deep merge; nested tables are merged, not replaced.
+
+### Generic Spawn Function
+
+All spawn functions delegate to `spawn.from_preset()`:
+
+```lua
+-- Generic spawn with category + preset ID
+local entity, script = spawn.from_preset(
+    "enemies",      -- category: enemies, projectiles, pickups, effects
+    "kobold",       -- preset_id within category
+    100,            -- x position
+    200,            -- y position
+    { }             -- overrides (optional)
+)
+```
+
+*— from core/spawn.lua:169-230*
+
+**When to use:** Custom spawn categories or when building spawn systems.
+
+### Spawn Events
+
+Each spawn function emits events via `signal`:
+
+| Function | Event | Parameters |
+|----------|-------|------------|
+| `spawn.enemy()` | `"enemy_spawned"` | `entity, { preset_id }` |
+| `spawn.projectile()` | `"projectile_spawned"` | `entity, { preset_id, direction, speed, owner }` |
+| `spawn.pickup()` | `"pickup_spawned"` | `entity, { preset_id, pickup_type }` |
+| `spawn.effect()` | `"effect_spawned"` | `entity, { preset_id, effect_type }` |
+
+*— from core/spawn.lua:243-335*
+
+**Usage:**
+
+```lua
+local signal = require("external.hump.signal")
+
+-- React to spawns
+signal.register("enemy_spawned", function(entity, data)
+    print("Enemy spawned:", data.preset_id)
+    add_to_wave_tracker(entity)
+end)
+
+signal.register("projectile_spawned", function(entity, data)
+    if data.owner == playerEntity then
+        increment_shots_fired()
+    end
+end)
+```
+
+*— from examples/spawn_example.lua:150-174*
+
+**Gotcha:** Events fire after entity creation; entity is guaranteed valid.
+
+### How Presets Work
+
+Presets are defined in `data.spawn_presets` by category:
+
+```lua
+local SpawnPresets = require("data.spawn_presets")
+
+-- Access presets directly
+local kobold = SpawnPresets.enemies.kobold
+local fireball = SpawnPresets.projectiles.fireball
+local exp_orb = SpawnPresets.pickups.exp_orb
+local explosion = SpawnPresets.effects.explosion
+```
+
+**Preset structure:**
+
+```lua
+SpawnPresets.enemies.kobold = {
+    sprite = "b1060.png",
+    size = { 32, 32 },
+    shadow = true,
+    physics = {
+        shape = "rectangle",
+        tag = "enemy",
+        collideWith = { "player", "projectile" },
+    },
+    data = {
+        health = 50,
+        damage = 10,
+        faction = "enemy",
+        -- ... other script data
+    },
+    interactive = {
+        hover = { title = "Kobold", body = "Basic melee enemy" },
+        collision = true
+    }
+}
+```
+
+*— from data/spawn_presets.lua:47-79*
+
+**Adding new presets:**
+
+1. Edit `data/spawn_presets.lua`
+2. Add to appropriate category table
+3. Spawn via `spawn.enemy("new_preset_id", x, y)`
+
+***
+
 \newpage
 \appendix
 

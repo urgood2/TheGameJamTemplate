@@ -8704,6 +8704,447 @@ local entity = animation_system.createAnimatedObjectWithTransform(
 
 ***
 
+## Physics Manager
+
+\label{recipe:physics-manager}
+
+The Physics Manager is a centralized system for managing multiple physics worlds, their lifecycle, and entity interactions across worlds. It provides safe access to physics worlds by name, manages stepping and debug visualization, and handles navmesh-based pathfinding. Always use `PhysicsManager.get_world("world")` instead of accessing `globals.physicsWorld` directly.
+
+### Why Use PhysicsManager?
+
+**Benefits over direct world access:**
+
+- **Safety**: Returns `nil` if world doesn't exist (no crashes)
+- **Multi-world support**: Manage separate physics spaces (e.g., "world", "ui_drag", "menu")
+- **State binding**: Automatically pause/resume worlds based on game state
+- **Debug control**: Toggle debug draw per-world
+- **Migration**: Safely move entities between physics worlds
+
+**Deprecated pattern:**
+
+```lua
+-- DON'T USE: Direct global access (unsafe, single-world)
+if globals.physicsWorld then
+    physics.create_physics_for_transform(globals.physicsWorld, entity, "dynamic")
+end
+```
+
+**Correct pattern:**
+
+```lua
+-- USE: PhysicsManager access (safe, multi-world)
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+if world then
+    -- Use world safely
+end
+```
+
+### Getting a Physics World
+
+The primary function you'll use is `get_world()`:
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Get the main game physics world
+local world = PhysicsManager.get_world("world")
+if not world then
+    log_warn("Physics world not available")
+    return
+end
+
+-- Now use world with physics functions
+physics.SetVelocity(world, entity, vx, vy)
+```
+
+**What it returns:**
+
+- A `PhysicsWorld` userdata if the world exists and is registered
+- `nil` if the world doesn't exist
+
+**Common world names:**
+
+- `"world"` - Main gameplay physics world (default)
+- Additional worlds can be registered via `PhysicsManager.add_world()`
+
+### Creating Physics Bodies
+
+When creating physics bodies for entities, use the correct API signature with `PhysicsManager.get_world()`:
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Create entity with transform
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+
+-- Define physics configuration
+local config = {
+    shape = "circle",       -- "circle", "rectangle", "polygon", "chain"
+    tag = "projectile",     -- Collision tag
+    sensor = false,         -- Is sensor (no physical response)
+    density = 1.0,          -- Body density
+    inflate_px = 0          -- Inflate/deflate collider by pixels
+}
+
+-- Create physics body (correct signature)
+physics.create_physics_for_transform(
+    registry,                    -- Global registry
+    physics_manager_instance,    -- Global physics_manager instance
+    entity,
+    "world",                     -- World name (not the world object!)
+    config
+)
+```
+
+**Important:** The fourth parameter is the world *name* (string), not the world object. The C++ function internally calls `PhysicsManager.get_world()`.
+
+### Physics Sync Modes
+
+Physics bodies can sync between Transform and physics in different modes:
+
+```lua
+-- Set sync mode using correct API
+physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+```
+
+**Available sync modes:**
+
+| Mode | Transform → Physics | Physics → Transform | Use Case |
+|------|---------------------|---------------------|----------|
+| `AuthoritativePhysics` | Initial only | Every frame | Dynamic physics objects (projectiles, enemies) |
+| `AuthoritativeTransform` | Every frame | Never | Kinematic objects (platforms, UI drag) |
+| `Bidirectional` | Every frame | Every frame | Hybrid (rare, expensive) |
+
+**Example: Dynamic enemy**
+
+```lua
+-- Enemy controlled by physics (AI applies forces)
+physics.set_sync_mode(registry, enemy, physics.PhysicsSyncMode.AuthoritativePhysics)
+
+-- Physics updates position, Transform reads from physics
+local world = PhysicsManager.get_world("world")
+physics.ApplyImpulse(world, enemy, fx, fy)
+```
+
+**Example: Draggable UI card**
+
+```lua
+-- Card position controlled by UI drag (Transform updated manually)
+physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+
+-- Transform drives physics, physics body follows
+local transform = component_cache.get(card, Transform)
+transform.actualX = mouseX
+transform.actualY = mouseY
+```
+
+### Common Physics Operations
+
+After getting the world, use it with physics functions:
+
+```lua
+local world = PhysicsManager.get_world("world")
+
+-- Set velocity
+physics.SetVelocity(world, entity, vx, vy)
+
+-- Apply impulse (instant force)
+physics.ApplyImpulse(world, entity, ix, iy)
+
+-- Apply force (continuous over time)
+physics.ApplyForce(world, entity, fx, fy)
+
+-- Set physical properties
+physics.SetFriction(world, entity, 0.3)
+physics.SetRestitution(world, entity, 0.8)  -- Bounciness
+physics.SetDensity(world, entity, 2.0)
+
+-- Enable high-speed collision detection
+physics.SetBullet(world, entity, true)
+
+-- Lock rotation
+physics.SetFixedRotation(world, entity, true)
+
+-- Change body type
+physics.SetBodyType(world, entity, "dynamic")  -- "static", "kinematic", "dynamic"
+```
+
+### Collision Masks (Per-Entity)
+
+Collision masks determine which entities can collide. These are set **per-entity** when creating physics bodies, not globally:
+
+```lua
+local world = PhysicsManager.get_world("world")
+
+-- Enable bidirectional collision between tags
+physics.enable_collision_between_many(world, "projectile", { "enemy", "WORLD" })
+physics.enable_collision_between_many(world, "enemy", { "projectile", "player" })
+
+-- Update collision masks for all entities with these tags
+physics.update_collision_masks_for(world, "projectile", { "enemy", "WORLD" })
+physics.update_collision_masks_for(world, "enemy", { "projectile", "player" })
+```
+
+**Why per-entity?**
+
+- Different projectile types can have different collision behavior
+- Allows dynamic collision changes (e.g., enemy becomes intangible)
+- More flexible than global collision matrices
+
+**Common pattern:**
+
+```lua
+-- In entity creation function (not in system init)
+local function spawnProjectile(x, y)
+    local entity = animation_system.createAnimatedObjectWithTransform("bullet", true)
+
+    local config = { shape = "circle", tag = "projectile" }
+    physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
+
+    -- Set collision masks for this entity
+    local world = PhysicsManager.get_world("world")
+    physics.enable_collision_between_many(world, "projectile", { "enemy" })
+    physics.update_collision_masks_for(world, "projectile", { "enemy" })
+
+    return entity
+end
+```
+
+### PhysicsBuilder Integration
+
+`PhysicsBuilder` wraps PhysicsManager internally for fluent API:
+
+```lua
+local PhysicsBuilder = require("core.physics_builder")
+
+-- PhysicsBuilder uses PhysicsManager.get_world() internally
+PhysicsBuilder.for_entity(entity)
+    :circle()
+    :tag("enemy")
+    :bullet()
+    :syncMode("physics")
+    :collideWith({ "player", "projectile" })
+    :apply()
+```
+
+**When to use PhysicsBuilder vs direct API:**
+
+- **PhysicsBuilder**: Quick setup, declarative, less boilerplate
+- **Direct API**: Fine-grained control, custom collision logic, performance-critical
+
+### Multi-World Management
+
+PhysicsManager can manage multiple physics worlds:
+
+```lua
+-- Register a new physics world
+local uiWorld = physics.create_world()
+PhysicsManager.add_world("ui_drag", uiWorld, "planning")  -- Bind to "planning" state
+
+-- Check if world exists
+if PhysicsManager.has_world("ui_drag") then
+    print("UI world available")
+end
+
+-- Check if world is active (step enabled + state active)
+if PhysicsManager.is_world_active("ui_drag") then
+    print("UI world stepping")
+end
+
+-- Toggle stepping
+PhysicsManager.enable_step("ui_drag", false)  -- Pause
+PhysicsManager.enable_step("ui_drag", true)   -- Resume
+
+-- Toggle debug draw
+PhysicsManager.enable_debug_draw("world", true)
+
+-- Move entity between worlds
+PhysicsManager.move_entity_to_world(entity, "ui_drag")
+```
+
+### Navmesh and Pathfinding
+
+PhysicsManager includes integrated navmesh for pathfinding:
+
+```lua
+local world = PhysicsManager.get_world("world")
+
+-- Configure navmesh inflation (clearance around obstacles)
+PhysicsManager.set_nav_config("world", { default_inflate_px = 10 })
+
+-- Mark entity as navmesh obstacle
+PhysicsManager.set_nav_obstacle(wallEntity, true)
+
+-- Rebuild navmesh (happens automatically, but can force)
+PhysicsManager.mark_navmesh_dirty("world")
+PhysicsManager.rebuild_navmesh("world")
+
+-- Find path from (sx, sy) to (dx, dy)
+local path = PhysicsManager.find_path("world", sx, sy, dx, dy)
+if path then
+    for i, point in ipairs(path) do
+        print("Waypoint", i, point.x, point.y)
+    end
+end
+
+-- Compute visibility polygon (line-of-sight)
+local visiblePolygon = PhysicsManager.vision_fan("world", sx, sy, radius)
+```
+
+### API Reference
+
+**World Access:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_world(name)` | `string` | `PhysicsWorld\|nil` | Get world by name |
+| `has_world(name)` | `string` | `boolean` | Check if world exists |
+| `is_world_active(name)` | `string` | `boolean` | Check if world is stepping |
+
+**World Management:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `add_world(name, world, state)` | `string, PhysicsWorld, string?` | - | Register world with optional state binding |
+| `enable_step(name, on)` | `string, boolean` | - | Enable/disable stepping |
+| `enable_debug_draw(name, on)` | `string, boolean` | - | Enable/disable debug visualization |
+| `step_all(dt)` | `number` | - | Step all active worlds |
+| `draw_all()` | - | - | Debug-draw all active worlds |
+
+**Entity Migration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `move_entity_to_world(entity, dst)` | `entity_id, string` | - | Move entity to another world |
+
+**Navmesh:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_nav_config(world)` | `string` | `table` | Get navmesh config |
+| `set_nav_config(world, cfg)` | `string, table` | - | Set navmesh config |
+| `mark_navmesh_dirty(world)` | `string` | - | Mark for rebuild |
+| `rebuild_navmesh(world)` | `string` | - | Force immediate rebuild |
+| `find_path(world, sx, sy, dx, dy)` | `string, num×4` | `table` | Find path (returns waypoints) |
+| `vision_fan(world, sx, sy, radius)` | `string, num×3` | `table` | Compute visibility polygon |
+| `set_nav_obstacle(entity, include)` | `entity_id, boolean` | - | Tag entity as obstacle |
+
+### Common Patterns
+
+**Pattern 1: Safe world access**
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+local function updateEntity(entity, dt)
+    local world = PhysicsManager.get_world("world")
+    if not world then return end  -- Graceful fallback
+
+    physics.SetVelocity(world, entity, 100, 0)
+end
+```
+
+**Pattern 2: Dynamic projectile with collisions**
+
+```lua
+local function spawnProjectile(owner, x, y, vx, vy)
+    local entity = animation_system.createAnimatedObjectWithTransform("bullet", true)
+
+    -- Position
+    local transform = component_cache.get(entity, Transform)
+    transform.actualX, transform.actualY = x, y
+
+    -- Physics
+    local config = { shape = "circle", tag = "projectile", sensor = false }
+    physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
+
+    -- Sync mode
+    physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+
+    -- Collision masks
+    local world = PhysicsManager.get_world("world")
+    physics.enable_collision_between_many(world, "projectile", { "enemy" })
+    physics.update_collision_masks_for(world, "projectile", { "enemy" })
+
+    -- Initial velocity
+    physics.SetVelocity(world, entity, vx, vy)
+    physics.SetBullet(world, entity, true)  -- Fast-moving
+
+    return entity
+end
+```
+
+**Pattern 3: AI pathfinding**
+
+```lua
+local function findPathToPlayer(enemy)
+    local enemyT = component_cache.get(enemy, Transform)
+    local playerT = component_cache.get(survivorEntity, Transform)
+
+    local path = PhysicsManager.find_path(
+        "world",
+        enemyT.actualX, enemyT.actualY,
+        playerT.actualX, playerT.actualY
+    )
+
+    if path and #path > 1 then
+        local nextWaypoint = path[2]  -- [1] is start position
+        return nextWaypoint.x, nextWaypoint.y
+    end
+    return nil
+end
+```
+
+### Gotchas
+
+**Gotcha 1:** Don't store the world reference long-term
+
+```lua
+-- WRONG: World reference can become invalid
+local MySystem = {}
+MySystem.world = PhysicsManager.get_world("world")  -- Cached
+
+function MySystem.update(dt)
+    physics.SetVelocity(MySystem.world, entity, vx, vy)  -- May crash if world destroyed
+end
+
+-- CORRECT: Fetch world each time (negligible overhead)
+function MySystem.update(dt)
+    local world = PhysicsManager.get_world("world")
+    if not world then return end
+    physics.SetVelocity(world, entity, vx, vy)
+end
+```
+
+**Gotcha 2:** World name vs world object in `create_physics_for_transform()`
+
+```lua
+-- WRONG: Passing world object (5th param expects string)
+local world = PhysicsManager.get_world("world")
+physics.create_physics_for_transform(registry, physics_manager_instance, entity, world, config)
+
+-- CORRECT: Passing world name (string)
+physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
+```
+
+**Gotcha 3:** Collision masks must be bidirectional
+
+```lua
+-- WRONG: Only one direction enabled
+physics.enable_collision_between_many(world, "projectile", { "enemy" })
+physics.update_collision_masks_for(world, "projectile", { "enemy" })
+-- Result: Projectiles detect enemies, but enemies don't detect projectiles!
+
+-- CORRECT: Enable both directions
+physics.enable_collision_between_many(world, "projectile", { "enemy" })
+physics.enable_collision_between_many(world, "enemy", { "projectile" })
+physics.update_collision_masks_for(world, "projectile", { "enemy" })
+physics.update_collision_masks_for(world, "enemy", { "projectile" })
+```
+
+***
+
 \newpage
 \appendix
 
@@ -8747,12 +9188,23 @@ Alphabetical listing of all documented functions and APIs.
 | `lume.*` | `external.lume` | \pageref{recipe:lume-tables}, \pageref{recipe:lume-math} |
 | `PhysicsBuilder.for_entity()` | `core.physics_builder` | \pageref{recipe:add-physics} |
 | `PhysicsBuilder.quick()` | `core.physics_builder` | \pageref{recipe:add-physics} |
-| `physics.create_physics_for_transform()` | `physics.physics_lua_api` | \pageref{recipe:get-physics-world} |
-| `physics.enable_collision_between_many()` | `physics.physics_lua_api` | \pageref{recipe:collision-masks} |
-| `physics.set_sync_mode()` | `physics.physics_lua_api` | \pageref{recipe:get-physics-world} |
-| `physics.SetBullet()` | `physics.physics_lua_api` | \pageref{recipe:bullet-mode} |
-| `physics.update_collision_masks_for()` | `physics.physics_lua_api` | \pageref{recipe:collision-masks} |
-| `PhysicsManager.get_world()` | `core.physics_manager` | \pageref{recipe:get-physics-world} |
+| `physics.create_physics_for_transform()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.enable_collision_between_many()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.set_sync_mode()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.SetBullet()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.SetVelocity()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.update_collision_masks_for()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.add_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.enable_debug_draw()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.enable_step()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.find_path()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.get_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.has_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.is_world_active()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.move_entity_to_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.rebuild_navmesh()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.set_nav_obstacle()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.vision_fan()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
 | `ProjectileSystem.spawn()` | `combat.projectile_system` | \pageref{recipe:spawn-projectile} |
 | `remove_default_state_tag()` | `util.lua` | \pageref{recipe:validate-entity} |
 | `safe_script_get()` | `util.lua` | \pageref{recipe:safe-script} |

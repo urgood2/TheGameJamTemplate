@@ -7894,25 +7894,34 @@ ldtk.emit_entity_spawned("Enemy", 100, 200, "Entities", {type = "goblin"})
 Draw procedurally generated tiles using the shader pipeline:
 
 ```lua
-local draw = require("core.draw")
-
 -- Draw single procedural layer
-ldtk.draw_procedural_layer(layerIdx, layerName, offsetX, offsetY, tilesetPath, space)
+-- Parameters: layerIdx (int), targetLayerName (string), offsetX (optional float),
+--             offsetY (optional float), zLevel (optional int), opacity (optional float)
+ldtk.draw_procedural_layer(layerIdx, "WORLD", 0, 0, 0, 1.0)
 
--- Draw all layers
-ldtk.draw_all_procedural_layers(offsetX, offsetY, space)
+-- Draw all procedural layers
+-- Parameters: targetLayerName (string), offsetX (optional float), offsetY (optional float),
+--             baseZLevel (optional int), opacity (optional float)
+ldtk.draw_all_procedural_layers("WORLD", 0, 0, 0, 1.0)
 
 -- Draw with Y-sorting (for isometric/top-down)
-ldtk.draw_procedural_layer_ysorted(layerIdx, layerName, offsetX, offsetY,
-                                    tilesetPath, sortFn, space)
+-- Parameters: layerIdx (int), targetLayerName (string), offsetX (optional float),
+--             offsetY (optional float), baseZLevel (optional int), zPerRow (optional int),
+--             opacity (optional float)
+ldtk.draw_procedural_layer_ysorted(layerIdx, "WORLD", 0, 0, 0, 1, 1.0)
 
 -- Draw with tile filtering
-ldtk.draw_procedural_layer_filtered(layerIdx, layerName, offsetX, offsetY,
-                                     tilesetPath, filterFn, space)
--- filterFn: function(tileId, x, y, flipX, flipY) -> boolean
+-- Parameters: layerIdx (int), targetLayerName (string), tileIds (table),
+--             offsetX (optional float), offsetY (optional float), zLevel (optional int),
+--             opacity (optional float)
+-- tileIds: Lua table of allowed tile IDs, e.g., {1, 2, 5, 10}
+ldtk.draw_procedural_layer_filtered(layerIdx, "WORLD", {1, 2, 3}, 0, 0, 0, 1.0)
 
 -- Draw individual tile
-ldtk.draw_tile(tileId, x, y, tileSize, tilesetPath, flipX, flipY, space)
+-- Parameters: layerIdx (int), tileId (int), targetLayerName (string), worldX (float),
+--             worldY (float), zLevel (int), flipX (optional bool), flipY (optional bool),
+--             opacity (optional float)
+ldtk.draw_tile(layerIdx, tileId, "WORLD", 100, 200, 0, false, false, 1.0)
 
 -- Get tileset info
 local info = ldtk.get_tileset_info(layerIdx)

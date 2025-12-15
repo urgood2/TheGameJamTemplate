@@ -5,7 +5,7 @@ local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local entity_cache = require("core.entity_cache")
 local component_cache = require("core.component_cache")
-local animation_system = require("core.animation_system")
+local animation_system = _G.animation_system  -- C++ binding, exposed globally
 
 local WaveVisuals = {}
 

@@ -6602,6 +6602,5222 @@ local currentScale = startScale + (endScale - startScale) * eased
 **Gotcha:** `.d` (derivative) is useful for velocity-based effects (like particles).
 
 ***
+
+\newpage
+
+# Chapter 11: Game Systems
+
+## Spawn System
+
+\label{recipe:spawn-system}
+
+**When to use:** One-line entity spawning from presets (enemies, projectiles, pickups, effects).
+
+The spawn module provides convenient one-line functions to create entities using data-driven presets. Built on EntityBuilder and PhysicsBuilder, it eliminates boilerplate for common entity types.
+
+**Basic usage:**
+
+```lua
+local spawn = require("core.spawn")
+
+-- Spawn enemy at position
+local entity, script = spawn.enemy("kobold", 100, 200)
+
+-- Spawn projectile with direction
+local projectile = spawn.projectile("fireball", x, y, math.pi/4)
+
+-- Spawn pickup
+local pickup = spawn.pickup("exp_orb", x, y)
+
+-- Spawn effect (auto-destroys after lifetime)
+local effect = spawn.effect("explosion", x, y)
+```
+
+*— from core/spawn.lua, examples/spawn_example.lua*
+
+### Using Overrides
+
+Override preset defaults at spawn time:
+
+```lua
+-- Stronger enemy with custom stats
+local boss, boss_script = spawn.enemy("kobold", 400, 200, {
+    data = {
+        health = 200,        -- Override health
+        max_health = 200,
+        damage = 25,         -- Override damage
+        xp_value = 50,
+    }
+})
+
+-- Projectile with custom owner and damage
+local bolt = spawn.projectile("basic_bolt", x, y, direction, {
+    owner = playerEntity,
+    damage = 50
+})
+
+-- Pickup with custom value
+local gold = spawn.pickup("gold_coin", x, y, {
+    data = { value = 25 }
+})
+```
+
+*— from examples/spawn_example.lua:41-67*
+
+**Gotcha:** Overrides use deep merge; nested tables are merged, not replaced.
+
+### Generic Spawn Function
+
+All spawn functions delegate to `spawn.from_preset()`:
+
+```lua
+-- Generic spawn with category + preset ID
+local entity, script = spawn.from_preset(
+    "enemies",      -- category: enemies, projectiles, pickups, effects
+    "kobold",       -- preset_id within category
+    100,            -- x position
+    200,            -- y position
+    { }             -- overrides (optional)
+)
+```
+
+*— from core/spawn.lua:169-230*
+
+**When to use:** Custom spawn categories or when building spawn systems.
+
+### Spawn Events
+
+Each spawn function emits events via `signal`:
+
+| Function | Event | Parameters |
+|----------|-------|------------|
+| `spawn.enemy()` | `"enemy_spawned"` | `entity, { preset_id }` |
+| `spawn.projectile()` | `"projectile_spawned"` | `entity, { preset_id, direction, speed, owner }` |
+| `spawn.pickup()` | `"pickup_spawned"` | `entity, { preset_id, pickup_type }` |
+| `spawn.effect()` | `"effect_spawned"` | `entity, { preset_id, effect_type }` |
+
+*— from core/spawn.lua:243-335*
+
+**Usage:**
+
+```lua
+local signal = require("external.hump.signal")
+
+-- React to spawns
+signal.register("enemy_spawned", function(entity, data)
+    print("Enemy spawned:", data.preset_id)
+    add_to_wave_tracker(entity)
+end)
+
+signal.register("projectile_spawned", function(entity, data)
+    if data.owner == playerEntity then
+        increment_shots_fired()
+    end
+end)
+```
+
+*— from examples/spawn_example.lua:150-174*
+
+**Gotcha:** Events fire after entity creation; entity is guaranteed valid.
+
+### How Presets Work
+
+Presets are defined in `data.spawn_presets` by category:
+
+```lua
+local SpawnPresets = require("data.spawn_presets")
+
+-- Access presets directly
+local kobold = SpawnPresets.enemies.kobold
+local fireball = SpawnPresets.projectiles.fireball
+local exp_orb = SpawnPresets.pickups.exp_orb
+local explosion = SpawnPresets.effects.explosion
+```
+
+**Preset structure:**
+
+```lua
+SpawnPresets.enemies.kobold = {
+    sprite = "b1060.png",
+    size = { 32, 32 },
+    shadow = true,
+    physics = {
+        shape = "rectangle",
+        tag = "enemy",
+        collideWith = { "player", "projectile" },
+    },
+    data = {
+        health = 50,
+        damage = 10,
+        faction = "enemy",
+        -- ... other script data
+    },
+    interactive = {
+        hover = { title = "Kobold", body = "Basic melee enemy" },
+        collision = true
+    }
+}
+```
+
+*— from data/spawn_presets.lua:47-79*
+
+**Adding new presets:**
+
+1. Edit `data/spawn_presets.lua`
+2. Add to appropriate category table
+3. Spawn via `spawn.enemy("new_preset_id", x, y)`
+
+***
+
+## Shop System
+
+\label{recipe:shop-system}
+
+**When to use:** Between-round card shop for roguelike progression loops.
+
+The Shop System manages all shop mechanics including card offerings with rarity-based pricing, interest calculation, lock/reroll mechanics, and card upgrade/removal services. It provides a complete economy system for roguelike deck-building games.
+
+**Quick start:**
+
+```lua
+local ShopSystem = require("core.shop_system")
+
+-- Generate shop for player
+local shop = ShopSystem.generateShop(playerLevel, playerGold)
+
+-- Player purchases a card
+local success, card = ShopSystem.purchaseCard(shop, 1, player)
+
+-- Calculate interest before next round
+local interest = ShopSystem.calculateInterest(player.gold)
+```
+
+*— from core/shop_system.lua:1-36*
+
+### Generating a Shop
+
+Create a shop instance with randomized offerings:
+
+```lua
+local ShopSystem = require("core.shop_system")
+
+-- Generate shop (5 card offerings by default)
+local shop = ShopSystem.generateShop(playerLevel, playerGold)
+
+-- Shop structure:
+-- shop.offerings       -- Array of 5 card offerings
+-- shop.locks           -- Boolean array tracking locked slots
+-- shop.rerollCount     -- Number of times rerolled
+-- shop.rerollCost      -- Current reroll cost (escalates)
+-- shop.interest        -- Interest earned this round
+```
+
+*— from core/shop_system.lua:264-289*
+
+**How offerings are generated:**
+
+1. **Rarity selection** - Weighted random (60% common, 30% uncommon, 9% rare, 1% legendary)
+2. **Card type selection** - Weighted by config (15% trigger, 40% modifier, 45% action)
+3. **Card selection** - Random from matching pool (type + rarity)
+4. **Pricing** - Based on rarity (common=3g, uncommon=5g, rare=8g, legendary=12g)
+
+*— from core/shop_system.lua:73-98, 188-258*
+
+### Purchasing Cards
+
+Buy cards from shop offerings:
+
+```lua
+-- Player must have { gold, cards } fields
+local player = {
+    gold = 20,
+    cards = {}
+}
+
+-- Purchase from slot 1 (1-indexed)
+local success, cardInstance = ShopSystem.purchaseCard(shop, 1, player)
+
+if success then
+    print("Purchased:", cardInstance.id)
+    print("Gold remaining:", player.gold)
+    print("Deck size:", #player.cards)
+else
+    print("Purchase failed (insufficient gold or empty slot)")
+end
+```
+
+*— from core/shop_system.lua:327-363*
+
+**Card instances** are deep copies of card definitions with upgrade tracking initialized. They're automatically added to `player.cards`.
+
+**Gotcha:** Once purchased, offerings are marked `sold = true` and `isEmpty = true`, preventing duplicate purchases.
+
+### Locking Offerings
+
+Lock offerings to preserve them during rerolls:
+
+```lua
+-- Lock slot 3 (keep this offering across rerolls)
+ShopSystem.lockOffering(shop, 3)
+
+-- Unlock later if needed
+ShopSystem.unlockOffering(shop, 3)
+
+-- Check lock status
+if shop.locks[3] then
+    print("Slot 3 is locked")
+end
+```
+
+*— from core/shop_system.lua:365-379*
+
+**Usage pattern:**
+
+```lua
+-- Player sees good offering but can't afford yet
+ShopSystem.lockOffering(shop, 2)
+
+-- Reroll other slots
+ShopSystem.rerollOfferings(shop, player)
+
+-- Locked offering remains, others are new
+```
+
+**Gotcha:** Sold offerings are never rerolled, even if unlocked.
+
+### Rerolling Offerings
+
+Refresh unlocked slots with new random offerings:
+
+```lua
+-- Reroll costs escalate: 5g, 6g, 7g, 8g...
+local success = ShopSystem.rerollOfferings(shop, player)
+
+if success then
+    print("Rerolled! Cost:", shop.rerollCost - 1)  -- Previous cost
+    print("Next reroll will cost:", shop.rerollCost)
+
+    -- Unlocked, non-sold offerings are now different
+    for i, offering in ipairs(shop.offerings) do
+        if not shop.locks[i] and not offering.sold then
+            print("New offering in slot", i, ":", offering.cardDef.id)
+        end
+    end
+else
+    print("Insufficient gold to reroll")
+end
+```
+
+*— from core/shop_system.lua:381-408*
+
+**Reroll mechanics:**
+
+- **Base cost:** 5g (configurable via `ShopSystem.config.baseRerollCost`)
+- **Cost increase:** +1g per reroll (configurable via `ShopSystem.config.rerollCostIncrease`)
+- **Progression:** 5g → 6g → 7g → 8g → 9g... (escalates each time)
+- **Locked slots:** Never rerolled
+- **Sold slots:** Never rerolled
+
+**Strategy tip:** Locking high-value offerings while fishing for specific cards is core to shop strategy.
+
+### Interest System
+
+Earn passive gold based on savings:
+
+```lua
+-- Calculate interest (1g per 10g, max 5g)
+local interest = ShopSystem.calculateInterest(player.gold)
+
+-- Examples:
+-- 0-9g   → 0g interest
+-- 10-19g → 1g interest
+-- 20-29g → 2g interest
+-- 30-39g → 3g interest
+-- 40-49g → 4g interest
+-- 50+g   → 5g interest (capped)
+
+-- Apply interest at round end
+local interestEarned = ShopSystem.applyInterest(player)
+print("Earned", interestEarned, "gold in interest")
+```
+
+*— from core/shop_system.lua:488-516*
+
+**Interest configuration:**
+
+```lua
+ShopSystem.config = {
+    interestRate = 1,         -- 1 gold per threshold
+    interestThreshold = 10,   -- Gold needed for 1 interest
+    maxInterest = 5,          -- Maximum interest per round
+    interestCap = 50,         -- Max gold that counts (50g = 5g interest)
+}
+```
+
+*— from core/shop_system.lua:49-56*
+
+**Gotcha:** Interest is calculated on current gold, not gold at round start. Spend wisely!
+
+### Card Upgrade Service
+
+Upgrade cards using the shop:
+
+```lua
+-- Upgrade a card from player's collection
+local card = player.cards[1]
+
+local success, upgradedCard = ShopSystem.upgradeCard(card, player)
+
+if success then
+    print("Upgraded!")
+    -- upgradedCard has enhanced stats
+    -- Original card is modified in-place
+else
+    print("Upgrade failed (insufficient gold or max level)")
+end
+```
+
+*— from core/shop_system.lua:414-447*
+
+**Integration:** Uses `wand/card_upgrade_system.lua` for upgrade logic. Cost is determined by `CardUpgrade.getUpgradeCost(card)`.
+
+### Card Removal Service
+
+Remove unwanted cards from deck:
+
+```lua
+-- Remove a card (default cost: 2g)
+local card = player.cards[5]
+
+local success = ShopSystem.removeCard(card, player)
+
+if success then
+    print("Card removed from deck")
+    print("Deck size:", #player.cards)
+else
+    print("Removal failed (insufficient gold or card not found)")
+end
+```
+
+*— from core/shop_system.lua:449-482*
+
+**Configuration:**
+
+```lua
+ShopSystem.config.removalCost = 2  -- Cost to remove a card
+```
+
+**Gotcha:** Card must exist in `player.cards` array. Uses reference equality.
+
+### Shop Configuration
+
+Customize shop behavior:
+
+```lua
+-- Modify shop parameters
+ShopSystem.config = {
+    -- Offerings
+    offerSlots = 5,              -- Number of card offerings
+
+    -- Reroll system
+    baseRerollCost = 5,          -- Starting reroll cost
+    rerollCostIncrease = 1,      -- Cost increase per reroll
+
+    -- Interest system
+    interestRate = 1,            -- Gold earned per threshold
+    interestThreshold = 10,      -- Gold needed for 1 interest
+    maxInterest = 5,             -- Maximum interest per round
+    interestCap = 50,            -- Max gold counted for interest
+
+    -- Services
+    removalCost = 2,             -- Cost to remove a card
+
+    -- Card type distribution
+    typeWeights = {
+        trigger = 15,            -- 15% triggers
+        modifier = 40,           -- 40% modifiers
+        action = 45              -- 45% actions
+    }
+}
+```
+
+*— from core/shop_system.lua:49-67*
+
+**Rarity weights:**
+
+```lua
+ShopSystem.rarities = {
+    common = {
+        name = "Common",
+        color = "#CCCCCC",
+        weight = 60,       -- 60% chance
+        baseCost = 3
+    },
+    uncommon = {
+        name = "Uncommon",
+        color = "#4A90E2",
+        weight = 30,       -- 30% chance
+        baseCost = 5
+    },
+    rare = {
+        name = "Rare",
+        color = "#9B59B6",
+        weight = 9,        -- 9% chance
+        baseCost = 8
+    },
+    legendary = {
+        name = "Legendary",
+        color = "#F39C12",
+        weight = 1,        -- 1% chance
+        baseCost = 12
+    }
+}
+```
+
+*— from core/shop_system.lua:73-98*
+
+**Modifying weights:**
+
+```lua
+-- Make rare cards more common
+ShopSystem.rarities.rare.weight = 20
+
+-- Make triggers more common
+ShopSystem.config.typeWeights.trigger = 30
+ShopSystem.config.typeWeights.modifier = 35
+ShopSystem.config.typeWeights.action = 35
+```
+
+### Registering Cards
+
+Populate the shop card pool:
+
+```lua
+local Cards = require("data.cards")
+
+-- Register all cards at initialization
+for _, cardDef in pairs(Cards) do
+    ShopSystem.registerCard(cardDef)
+end
+
+-- Cards must have: id, type, rarity
+-- Example card definition:
+local cardDef = {
+    id = "FIREBALL",
+    type = "action",       -- action, modifier, trigger
+    rarity = "common",     -- common, uncommon, rare, legendary
+    -- ... other card fields
+}
+
+ShopSystem.registerCard(cardDef)
+```
+
+*— from core/shop_system.lua:131-169*
+
+**Card pool structure:**
+
+```lua
+ShopSystem.cardPool = {
+    trigger = { common = {}, uncommon = {}, rare = {}, legendary = {} },
+    modifier = { common = {}, uncommon = {}, rare = {}, legendary = {} },
+    action = { common = {}, uncommon = {}, rare = {}, legendary = {} }
+}
+```
+
+**Check pool counts:**
+
+```lua
+local counts = ShopSystem.getPoolCounts()
+-- Returns: { trigger = { common = 5, uncommon = 3, ... }, ... }
+```
+
+*— from core/shop_system.lua:172-182*
+
+### Shop Display Utilities
+
+Format shop for debugging or UI:
+
+```lua
+-- Print formatted shop display
+local formatted = ShopSystem.formatShop(shop)
+print(formatted)
+
+-- Output:
+-- === SHOP ===
+-- Reroll Cost: 5g | Interest: 2g
+--
+-- 1. [Common] SPARK - 3g
+-- 2. [Uncommon] FIREBALL - 5g [LOCKED]
+-- 3. [SOLD]
+-- 4. [Rare] CHAIN_LIGHTNING - 8g
+-- 5. [Common] FROST_BOLT - 3g
+```
+
+*— from core/shop_system.lua:552-577*
+
+**Get shop statistics:**
+
+```lua
+local stats = ShopSystem.getShopStats(shop)
+
+print("Total offerings:", stats.totalOfferings)  -- 5
+print("Sold:", stats.sold)                      -- 1
+print("Locked:", stats.locked)                  -- 1
+print("Reroll count:", stats.rerollCount)       -- 3
+```
+
+*— from core/shop_system.lua:579-600*
+
+### Complete Shop Flow Example
+
+Full round-to-round shop lifecycle:
+
+```lua
+local ShopSystem = require("core.shop_system")
+local Cards = require("data.cards")
+
+-- Initialize shop system (once at game start)
+for _, cardDef in pairs(Cards) do
+    ShopSystem.registerCard(cardDef)
+end
+ShopSystem.init()
+
+-- Player state
+local player = {
+    gold = 25,
+    cards = {},
+    level = 3
+}
+
+-- === ROUND START ===
+
+-- Generate shop
+local shop = ShopSystem.generateShop(player.level, player.gold)
+print(ShopSystem.formatShop(shop))
+
+-- Player locks interesting offering
+ShopSystem.lockOffering(shop, 2)
+
+-- Player rerolls rest
+ShopSystem.rerollOfferings(shop, player)
+
+-- Player purchases a card
+local success, card = ShopSystem.purchaseCard(shop, 1, player)
+if success then
+    print("Purchased:", card.id)
+end
+
+-- Player upgrades existing card
+local upgradeSuccess = ShopSystem.upgradeCard(player.cards[1], player)
+
+-- === ROUND END ===
+
+-- Apply interest
+local interest = ShopSystem.applyInterest(player)
+print("Earned", interest, "gold in interest")
+print("Total gold:", player.gold)
+
+-- Next round starts with new shop
+shop = ShopSystem.generateShop(player.level, player.gold)
+```
+
+*— combining patterns from core/shop_system.lua*
+
+**Gotcha:** Shop instances are ephemeral - generate new shop each round. Don't persist across rounds.
+
+### API Reference
+
+**Shop Generation:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `generateShop(level, gold)` | `number, number` | `table` | Creates shop with random offerings |
+| `generateOffering(level)` | `number` | `table` | Generates single offering |
+
+**Shop Actions:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `purchaseCard(shop, slot, player)` | `table, number, table` | `boolean, table` | Purchase card from slot |
+| `lockOffering(shop, slot)` | `table, number` | - | Lock offering (prevent reroll) |
+| `unlockOffering(shop, slot)` | `table, number` | - | Unlock offering |
+| `rerollOfferings(shop, player)` | `table, table` | `boolean` | Reroll unlocked slots |
+
+**Services:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `upgradeCard(card, player)` | `table, table` | `boolean, table` | Upgrade card (uses CardUpgrade) |
+| `removeCard(card, player)` | `table, table` | `boolean` | Remove card from deck |
+
+**Interest:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `calculateInterest(gold)` | `number` | `number` | Calculate interest for gold amount |
+| `applyInterest(player)` | `table` | `number` | Add interest to player gold |
+
+**Card Pool:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `registerCard(cardDef)` | `table` | - | Add card to shop pool |
+| `getPoolCounts()` | - | `table` | Get card counts by type/rarity |
+
+**Utilities:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `formatShop(shop)` | `table` | `string` | Format shop for display |
+| `getShopStats(shop)` | `table` | `table` | Get shop statistics |
+
+***
+
+## Stat System
+
+\label{recipe:stat-system}
+
+**When to use:** Managing character progression through core stats that derive gameplay effects.
+
+The Stat System provides an extensible framework for mapping core character stats (physique, cunning, spirit) to gameplay stats. It centralizes stat derivations, provides stat impact previews for UI tooltips, handles level-up application, and integrates with the combat system's Stats class for automatic recomputation.
+
+**Quick start:**
+
+```lua
+local StatSystem = require("core.stat_system")
+
+-- Initialize with default derivations
+StatSystem.init()
+
+-- Apply level-up
+StatSystem.applyLevelUp(player, "physique", 1)
+
+-- Preview stat impact for UI
+local impact = StatSystem.getStatImpact("spirit", currentValue, 1)
+-- Returns: { energy = 10, energy_regen = 0.5, ... }
+```
+
+*— from core/stat_system.lua:1-36*
+
+### Core Stats
+
+The system defines three primary stats that players can increase through level-ups:
+
+```lua
+StatSystem.stats = {
+    physique = {
+        name = "Physique",
+        description = "Increases health and survivability",
+        icon = "icon_physique",
+        color = "#E74C3C"   -- Red
+    },
+    cunning = {
+        name = "Cunning",
+        description = "Increases damage and critical strikes",
+        icon = "icon_cunning",
+        color = "#F39C12"   -- Orange
+    },
+    spirit = {
+        name = "Spirit",
+        description = "Increases energy and elemental power",
+        icon = "icon_spirit",
+        color = "#9B59B6"   -- Purple
+    }
+}
+```
+
+*— from core/stat_system.lua:36-55*
+
+**Stat effects:**
+
+| Stat | Primary Effects |
+|------|-----------------|
+| **Physique** | Health (+10 per point), health regen (after 10 points) |
+| **Cunning** | Offensive ability, physical/pierce damage, bleed/trauma duration |
+| **Spirit** | Health (+2 per point), energy (+10 per point), energy regen (+0.5 per point), elemental damage |
+
+### Registering Derivations
+
+Add custom stat-to-gameplay mappings:
+
+```lua
+-- Register a new derivation
+StatSystem.registerDerivation("physique", "dash_distance", function(value, entity)
+    return value * 2  -- +2 dash distance per physique point
+end)
+
+-- Register context-aware derivation
+StatSystem.registerDerivation("cunning", "crit_damage", function(value, entity)
+    local base = value * 5
+    -- Can use entity context for conditional logic
+    if entity and entity.hasAmulet then
+        return base * 1.2
+    end
+    return base
+end)
+```
+
+*— from core/stat_system.lua:73-85*
+
+**How it works:**
+
+1. Derivations are stored in `StatSystem.derivations[statName][derivedStatName]`
+2. Multiple derivations per stat are supported (physique → health, health_regen, etc.)
+3. Derivation functions receive `(value, entity)` parameters
+4. Entity context is optional - use for conditional derivations
+
+**Pattern:** Derivation functions are called during stat recomputation. Return the derived stat's total value (not the delta).
+
+### Applying Level-Ups
+
+Increase player stats and trigger automatic recomputation:
+
+```lua
+-- Player must have .stats (Stats instance from combat_system)
+local player = {
+    stats = Stats.new(),
+    name = "Player"
+}
+
+-- Apply +1 physique
+StatSystem.applyLevelUp(player, "physique", 1)
+
+-- Apply multiple points
+StatSystem.applyLevelUp(player, "spirit", 3)
+
+-- Stats automatically recompute via on_recompute hooks
+```
+
+*— from core/stat_system.lua:206-227*
+
+**Integration with combat_system:**
+
+```lua
+-- When creating player stats, attach derivations
+local Stats = require("combat.stats")
+local player = { stats = Stats.new() }
+
+-- Attach stat system derivations
+StatSystem.attachToStatsInstance(player.stats)
+
+-- Now level-ups will auto-trigger derivations
+StatSystem.applyLevelUp(player, "cunning", 1)
+```
+
+*— from core/stat_system.lua:233-259*
+
+**Gotcha:** `applyLevelUp` modifies the base stat and lets the Stats instance handle recomputation. Don't manually recompute - the system does it automatically.
+
+### Previewing Stat Impact
+
+Show players what they'll gain before committing to level-up:
+
+```lua
+-- Preview +1 spirit impact
+local currentSpirit = player.stats:get_raw('spirit').base
+local impact = StatSystem.getStatImpact("spirit", currentSpirit, 1)
+
+-- Returns table of derivedStatName -> deltaValue
+-- Example: { health = 2, energy = 10, energy_regen = 0.5, fire_modifier_pct = 0, ... }
+
+-- Format for UI display
+local formatted = StatSystem.formatStatImpact(impact)
+print(formatted)
+-- Output:
+--   energy: +10.00
+--   energy_regen: +0.50
+--   health: +2.00
+
+-- Only non-zero changes are included
+for statName, delta in pairs(impact) do
+    if delta > 0 then
+        print(string.format("+%.1f %s", delta, statName))
+    end
+end
+```
+
+*— from core/stat_system.lua:161-200*
+
+**Preview mechanics:**
+
+1. Calculate derived stats at current value
+2. Calculate derived stats at current + delta
+3. Return differences (only non-zero changes)
+4. Use for tooltips, confirmation dialogs, stat screens
+
+**Example use case:**
+
+```lua
+-- Level-up UI tooltip
+local function showLevelUpTooltip(statName)
+    local current = player.stats:get_raw(statName).base
+    local impact = StatSystem.getStatImpact(statName, current, 1)
+
+    local lines = { "Level up " .. statName .. ":" }
+    for stat, delta in pairs(impact) do
+        table.insert(lines, string.format("  +%.1f %s", delta, stat))
+    end
+
+    return table.concat(lines, "\n")
+end
+```
+
+### Default Derivations
+
+The system initializes with derivations matching combat_system.lua:
+
+```lua
+StatSystem.initializeDefaultDerivations()
+
+-- PHYSIQUE derivations:
+-- health: 100 + value * 10
+-- health_regen: (value - 10) * 0.2  (only after 10 physique)
+
+-- CUNNING derivations:
+-- offensive_ability: value * 1
+-- physical_modifier_pct: floor(value / 5) * 1
+-- pierce_modifier_pct: floor(value / 5) * 1
+-- bleed_duration_pct: floor(value / 5) * 1
+-- trauma_duration_pct: floor(value / 5) * 1
+
+-- SPIRIT derivations:
+-- health: value * 2
+-- energy: value * 10
+-- energy_regen: value * 0.5
+-- fire_modifier_pct: floor(value / 5) * 1
+-- cold_modifier_pct: floor(value / 5) * 1
+-- lightning_modifier_pct: floor(value / 5) * 1
+-- (... all elemental types)
+-- burn_duration_pct: floor(value / 5) * 1
+-- frostburn_duration_pct: floor(value / 5) * 1
+-- (... all DoT types)
+```
+
+*— from core/stat_system.lua:91-155*
+
+**Elemental types:** fire, cold, lightning, acid, vitality, aether, chaos
+
+**DoT types:** burn, frostburn, electrocute, poison, vitality_decay
+
+**Breakpoint mechanics:** Cunning and Spirit derivations use `floor(value / 5)` for breakpoints at 5, 10, 15, 20... This creates strategic level-up thresholds.
+
+### Stat Flow to Gameplay
+
+How stats flow through the system:
+
+```
+1. Player gains XP → Level up
+                ↓
+2. StatSystem.applyLevelUp(player, "physique", 1)
+                ↓
+3. player.stats:add_base("physique", 1)
+                ↓
+4. Stats instance triggers on_recompute hooks
+                ↓
+5. StatSystem derivations run:
+   - Read raw base values (physique, cunning, spirit)
+   - Apply derivation functions
+   - Call S:derived_add_base() for each derived stat
+                ↓
+6. Gameplay systems read final computed stats:
+   - Combat uses health, energy, damage modifiers
+   - Movement uses dash_distance (if registered)
+   - UI displays final values
+```
+
+**Example end-to-end:**
+
+```lua
+local Stats = require("combat.stats")
+local StatSystem = require("core.stat_system")
+
+-- Setup
+StatSystem.init()
+local player = { stats = Stats.new() }
+StatSystem.attachToStatsInstance(player.stats)
+
+-- Starting stats: 10 physique
+player.stats:add_base("physique", 10)
+
+-- Health is now: 100 + 10*10 = 200
+local health = player.stats:get("health")  -- 200
+
+-- Player levels up physique
+StatSystem.applyLevelUp(player, "physique", 1)
+
+-- Health is now: 100 + 11*10 = 210
+health = player.stats:get("health")  -- 210
+```
+
+### Debugging Derivations
+
+Inspect registered derivations:
+
+```lua
+-- List all derivations
+StatSystem.listDerivations()
+-- Output:
+-- [StatSystem] Registered Derivations:
+--   physique:
+--     -> health
+--     -> health_regen
+--   cunning:
+--     -> offensive_ability
+--     -> physical_modifier_pct
+--     -> pierce_modifier_pct
+--     ...
+
+-- Get derivations for specific stat
+local physiqueDerivs = StatSystem.getDerivations("physique")
+for derivedStatName, derivationFunc in pairs(physiqueDerivs) do
+    print(derivedStatName, derivationFunc(15))  -- Test with value 15
+end
+```
+
+*— from core/stat_system.lua:265-281*
+
+### API Reference
+
+**Initialization:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `init()` | - | - | Initialize with default derivations |
+| `initializeDefaultDerivations()` | - | - | Register default stat derivations |
+
+**Derivation Registration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `registerDerivation(statName, derivedStatName, func)` | `string, string, function` | - | Register stat derivation |
+| `getDerivations(statName)` | `string` | `table` | Get all derivations for stat |
+
+**Level-Up:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `applyLevelUp(entity, statName, amount)` | `table, string, number` | - | Apply stat increase (default 1) |
+
+**Stat Impact:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `getStatImpact(statName, currentValue, delta, entity)` | `string, number, number, table?` | `table` | Calculate stat changes |
+| `formatStatImpact(impact)` | `table` | `string` | Format impact for display |
+
+**Integration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `attachToStatsInstance(statsInstance)` | `table` | - | Attach derivations to Stats instance |
+
+**Debugging:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `listDerivations()` | - | - | Print all registered derivations |
+
+***
+
+## LDtk Integration
+
+\label{recipe:ldtk-integration}
+
+LDtk (Level Designer Toolkit) is a modern 2D level editor. The engine provides comprehensive Lua bindings to load LDtk projects, spawn entities, build physics colliders, and query level data.
+
+### Configuration
+
+Create a JSON config file to map your LDtk project:
+
+```lua
+-- assets/ldtk_config.json
+{
+  "project_path": "world.ldtk",
+  "asset_dir": "assets",
+  "collider_layers": ["Collisions"],
+  "entity_prefabs": {
+    "Player": "spawnPlayer",
+    "Enemy": "EnemySystem.spawn"
+  }
+}
+```
+
+Load the config at startup:
+
+```lua
+ldtk.load_config("ldtk_config.json")
+```
+
+**Config Fields:**
+- `project_path`: Path to `.ldtk` file
+- `asset_dir`: Base directory for assets
+- `collider_layers`: IntGrid layers to generate colliders from
+- `entity_prefabs`: Map entity names to Lua spawner functions
+
+### Loading Levels
+
+Activate a level and trigger entity spawning + collider generation:
+
+```lua
+-- Full level load with colliders and entity spawning
+ldtk.set_active_level("Level_0", "world", true, true, "WORLD")
+-- Parameters: levelName, physicsWorldName, buildColliders, spawnEntities, physicsTag
+
+-- Check active level
+if ldtk.has_active_level() then
+    local levelName = ldtk.active_level()
+    print("Active level:", levelName)
+end
+
+-- Check if level exists before loading
+if ldtk.level_exists("Level_1") then
+    ldtk.set_active_level("Level_1", "world", true, true, "WORLD")
+end
+```
+
+### Entity Spawning
+
+Register a global entity spawner callback that fires for each entity in the level:
+
+```lua
+ldtk.set_spawner(function(name, px, py, layerName, gx, gy, fields)
+    -- name: entity identifier from LDtk
+    -- px, py: pixel position
+    -- layerName: layer the entity is on
+    -- gx, gy: grid coordinates
+    -- fields: table of custom fields from LDtk
+
+    local prefab = ldtk.prefab_for(name)
+    if prefab and _G[prefab] then
+        _G[prefab](px, py, fields)
+    end
+end)
+```
+
+**Entity Field Types:**
+
+LDtk custom fields are automatically converted to Lua:
+
+| LDtk Type | Lua Type | Example Access |
+|-----------|----------|----------------|
+| Int | `number` | `fields.health` |
+| Float | `number` | `fields.speed` |
+| Bool | `boolean` | `fields.hostile` |
+| String | `string` | `fields.dialog` |
+| Color | `table` | `fields.tint.r, .g, .b, .a` |
+| Point | `table` | `fields.target.x, .y` |
+| Enum | `table` | `fields.type.name, .id` |
+| FilePath | `string` | `fields.texture` |
+| EntityRef | `table` | `fields.owner.entity_iid` |
+| Array[T] | `table` | `fields.items[1], fields.items[2]` |
+
+### IntGrid Iteration
+
+Iterate over IntGrid cells for custom collision logic or procedural content:
+
+```lua
+ldtk.each_intgrid("Level_0", "Collisions", function(x, y, value)
+    -- x, y: grid coordinates
+    -- value: IntGrid cell value (0 = empty)
+
+    if value == 1 then
+        -- Solid wall
+    elseif value == 2 then
+        -- Platform (one-way collision)
+    end
+end)
+```
+
+### Physics Colliders
+
+Build static colliders from IntGrid layers:
+
+```lua
+-- Build colliders for active level
+local colliderLayers = ldtk.collider_layers()  -- Returns: {"Collisions", "Platforms"}
+ldtk.build_colliders("Level_0", "world", "WORLD")
+
+-- Clear colliders (useful when switching levels)
+ldtk.clear_colliders("Level_0", "world")
+```
+
+Colliders are automatically generated from non-zero IntGrid cells and tagged with the specified physics tag (e.g., `"WORLD"`).
+
+### Level Metadata
+
+Query level properties for camera bounds, background colors, and navigation:
+
+```lua
+-- Get level bounds
+local bounds = ldtk.get_level_bounds("Level_0")
+print(bounds.x, bounds.y, bounds.width, bounds.height)
+
+-- Get level metadata
+local meta = ldtk.get_level_meta("Level_0")
+print("Size:", meta.width, "x", meta.height)
+print("World position:", meta.world_x, meta.world_y)
+print("Background:", meta.bg_color.r, meta.bg_color.g, meta.bg_color.b)
+print("Depth:", meta.depth)  -- Multi-world z-order
+
+-- Get neighboring levels (for seamless world streaming)
+local neighbors = ldtk.get_neighbors("Level_0")
+if neighbors.north then
+    print("North level:", neighbors.north)
+end
+if neighbors.east then
+    print("East level:", neighbors.east)
+end
+-- Also: .south, .west, .overlap (array of overlapping levels)
+```
+
+### Entity Queries
+
+Query entities by name or IID (Instance Identifier):
+
+```lua
+-- Get all entities of a specific type
+local enemies = ldtk.get_entities_by_name("Level_0", "Enemy")
+for _, ent in ipairs(enemies) do
+    print("Enemy at", ent.x, ent.y)
+    print("Size:", ent.width, ent.height)
+    print("IID:", ent.iid)
+    print("Tags:", table.concat(ent.tags, ", "))
+
+    -- Access custom fields
+    if ent.fields.health then
+        print("Health:", ent.fields.health)
+    end
+end
+
+-- Get entity position by IID
+local pos = ldtk.get_entity_position("Level_0", "abc123-def-456")
+if pos then
+    print("Entity at:", pos.x, pos.y)
+end
+```
+
+### Procedural Generation
+
+Use LDtk auto-rules on runtime-generated IntGrid data:
+
+```lua
+-- Create procedural IntGrid (e.g., from noise or cellular automata)
+local width, height = 32, 24
+local grid = {}
+
+for y = 1, height do
+    for x = 1, width do
+        local idx = (y - 1) * width + x
+        grid[idx] = (math.random() > 0.7) and 1 or 0  -- Random walls
+    end
+end
+
+-- Apply LDtk auto-rules to generate tile results
+local gridTable = {
+    width = width,
+    height = height,
+    cells = grid
+}
+
+local tileResults = ldtk.apply_rules(gridTable, "TileLayer")
+-- Returns: array of {tile_id, x, y, flip_x, flip_y}
+
+-- Build colliders from procedural grid (without LDtk level)
+ldtk.build_colliders_from_grid(gridTable, "world", "WORLD", {1})
+-- Parameters: gridTable, physicsWorldName, physicsTag, solidValues
+```
+
+**Layer Query API:**
+
+```lua
+local layerCount = ldtk.get_layer_count()
+for i = 0, layerCount - 1 do
+    local name = ldtk.get_layer_name(i)
+    print("Layer", i, ":", name)
+end
+
+local idx = ldtk.get_layer_index("TileLayer")
+print("TileLayer index:", idx)
+```
+
+**Tile Grid Access:**
+
+```lua
+local grid = ldtk.get_tile_grid(layerIdx)
+-- Returns: {width, height, tiles={...}}
+-- Each tile: {tile_id, x, y, flip_x, flip_y}
+```
+
+**Cleanup:**
+
+```lua
+-- Clean up procedurally generated level data
+ldtk.cleanup_procedural()
+```
+
+### Event System Integration
+
+Use signal emitter for level load/entity spawn events:
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Set up signal emitter
+ldtk.set_signal_emitter(function(eventName, data)
+    signal.emit(eventName, data)
+end)
+
+-- Register handlers
+signal.register("ldtk_level_loaded", function(data)
+    print("Level loaded:", data.level_name)
+    print("Colliders built:", data.colliders_built)
+end)
+
+signal.register("ldtk_colliders_built", function(data)
+    print("Colliders for:", data.level_name)
+    print("Physics tag:", data.physics_tag)
+end)
+
+signal.register("ldtk_entity_spawned", function(data)
+    print("Spawned:", data.entity_name, "at", data.px, data.py)
+end)
+
+-- Load level with signal emission
+ldtk.set_active_level_with_signals("Level_0", "world", true, true, "WORLD")
+
+-- Manually emit entity spawned event (from spawner callback)
+ldtk.emit_entity_spawned("Enemy", 100, 200, "Entities", {type = "goblin"})
+```
+
+### Rendering Procedural Tiles
+
+Draw procedurally generated tiles using the shader pipeline:
+
+```lua
+-- Draw single procedural layer
+-- Parameters: layerIdx (int), targetLayerName (string), offsetX (optional float),
+--             offsetY (optional float), zLevel (optional int), opacity (optional float)
+ldtk.draw_procedural_layer(layerIdx, "WORLD", 0, 0, 0, 1.0)
+
+-- Draw all procedural layers
+-- Parameters: targetLayerName (string), offsetX (optional float), offsetY (optional float),
+--             baseZLevel (optional int), opacity (optional float)
+ldtk.draw_all_procedural_layers("WORLD", 0, 0, 0, 1.0)
+
+-- Draw with Y-sorting (for isometric/top-down)
+-- Parameters: layerIdx (int), targetLayerName (string), offsetX (optional float),
+--             offsetY (optional float), baseZLevel (optional int), zPerRow (optional int),
+--             opacity (optional float)
+ldtk.draw_procedural_layer_ysorted(layerIdx, "WORLD", 0, 0, 0, 1, 1.0)
+
+-- Draw with tile filtering
+-- Parameters: layerIdx (int), targetLayerName (string), tileIds (table),
+--             offsetX (optional float), offsetY (optional float), zLevel (optional int),
+--             opacity (optional float)
+-- tileIds: Lua table of allowed tile IDs, e.g., {1, 2, 5, 10}
+ldtk.draw_procedural_layer_filtered(layerIdx, "WORLD", {1, 2, 3}, 0, 0, 0, 1.0)
+
+-- Draw individual tile
+-- Parameters: layerIdx (int), tileId (int), targetLayerName (string), worldX (float),
+--             worldY (float), zLevel (int), flipX (optional bool), flipY (optional bool),
+--             opacity (optional float)
+ldtk.draw_tile(layerIdx, tileId, "WORLD", 100, 200, 0, false, false, 1.0)
+
+-- Get tileset info
+local info = ldtk.get_tileset_info(layerIdx)
+print("Tileset:", info.path)
+print("Tile size:", info.tile_size)
+print("Grid size:", info.grid_width, "x", info.grid_height)
+```
+
+### Complete Example
+
+Full level loading system with entity spawning and event handling:
+
+```lua
+local LevelManager = {}
+
+function LevelManager.init()
+    -- Load config
+    ldtk.load_config("ldtk_config.json")
+
+    -- Set up entity spawner
+    ldtk.set_spawner(function(name, px, py, layerName, gx, gy, fields)
+        local prefab = ldtk.prefab_for(name)
+        if prefab and _G[prefab] then
+            local entity = _G[prefab](px, py)
+
+            -- Apply custom fields
+            if entity and fields then
+                local script = getScriptTableFromEntityID(entity)
+                if script then
+                    for k, v in pairs(fields) do
+                        script[k] = v
+                    end
+                end
+            end
+        end
+    end)
+
+    -- Set up event system
+    local signal = require("external.hump.signal")
+    ldtk.set_signal_emitter(function(eventName, data)
+        signal.emit(eventName, data)
+    end)
+
+    signal.register("ldtk_level_loaded", function(data)
+        print("Level ready:", data.level_name)
+        LevelManager.onLevelReady(data.level_name)
+    end)
+end
+
+function LevelManager.loadLevel(levelName)
+    if not ldtk.level_exists(levelName) then
+        print("Level not found:", levelName)
+        return false
+    end
+
+    -- Clear old level colliders
+    local currentLevel = ldtk.active_level()
+    if currentLevel ~= "" then
+        ldtk.clear_colliders(currentLevel, "world")
+    end
+
+    -- Load new level
+    ldtk.set_active_level_with_signals(levelName, "world", true, true, "WORLD")
+    return true
+end
+
+function LevelManager.onLevelReady(levelName)
+    -- Set camera bounds
+    local bounds = ldtk.get_level_bounds(levelName)
+    CameraSystem.setBounds(bounds.x, bounds.y, bounds.width, bounds.height)
+
+    -- Set background color
+    local meta = ldtk.get_level_meta(levelName)
+    BackgroundSystem.setColor(meta.bg_color)
+end
+
+function LevelManager.transitionTo(direction)
+    local currentLevel = ldtk.active_level()
+    local neighbors = ldtk.get_neighbors(currentLevel)
+    local nextLevel = neighbors[direction]
+
+    if nextLevel then
+        LevelManager.loadLevel(nextLevel)
+    end
+end
+
+return LevelManager
+```
+
+### API Reference
+
+**Configuration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `load_config(path)` | `string` | - | Load LDtk project config JSON |
+| `collider_layers()` | - | `table` | Get collider layer names from config |
+| `prefab_for(entityName)` | `string` | `string` | Look up prefab mapping for entity |
+
+**Level Management:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `set_active_level(name, world, colliders, spawn, tag)` | `string, string, bool, bool, string` | - | Activate level and optionally build colliders/spawn entities |
+| `set_active_level_with_signals(...)` | Same as above | - | Like `set_active_level` but emits signals |
+| `active_level()` | - | `string` | Get active level name |
+| `has_active_level()` | - | `boolean` | Check if level is active |
+| `level_exists(name)` | `string` | `boolean` | Check if level exists in project |
+
+**Entity Spawning:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `set_spawner(callback)` | `function` | - | Register entity spawner callback |
+| `get_entities_by_name(level, name)` | `string, string` | `table` | Query entities by name |
+| `get_entity_position(level, iid)` | `string, string` | `table` | Get entity position by IID |
+
+**IntGrid & Colliders:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `each_intgrid(level, layer, callback)` | `string, string, function` | - | Iterate IntGrid cells |
+| `build_colliders(level, world, tag)` | `string, string, string` | - | Build physics colliders from IntGrid |
+| `clear_colliders(level, world)` | `string, string` | - | Clear level colliders |
+| `build_colliders_from_grid(grid, world, tag, solidVals)` | `table, string, string, table` | - | Build colliders from Lua IntGrid |
+
+**Metadata:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_level_bounds(name)` | `string` | `table` | Get `{x, y, width, height}` |
+| `get_level_meta(name)` | `string` | `table` | Get `{width, height, world_x, world_y, bg_color, depth}` |
+| `get_neighbors(name)` | `string` | `table` | Get `{north, south, east, west, overlap}` |
+
+**Procedural Generation:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `apply_rules(grid, layer)` | `table, string` | `table` | Apply LDtk auto-rules to IntGrid |
+| `get_layer_count()` | - | `number` | Get layer count |
+| `get_layer_name(idx)` | `number` | `string` | Get layer name by index |
+| `get_layer_index(name)` | `string` | `number` | Get layer index by name |
+| `get_tile_grid(layerIdx)` | `number` | `table` | Get tile results for layer |
+| `get_tileset_info(layerIdx)` | `number` | `table` | Get tileset metadata |
+| `cleanup_procedural()` | - | - | Clean up procedural data |
+
+**Rendering:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `draw_procedural_layer(idx, name, x, y, tileset, space)` | `number, string, number, number, string, number` | - | Draw procedural layer |
+| `draw_all_procedural_layers(x, y, space)` | `number, number, number` | - | Draw all layers |
+| `draw_procedural_layer_filtered(idx, name, x, y, tileset, filterFn, space)` | `..., function, ...` | - | Draw with filter callback |
+| `draw_procedural_layer_ysorted(idx, name, x, y, tileset, sortFn, space)` | `..., function, ...` | - | Draw with Y-sorting |
+| `draw_tile(id, x, y, size, tileset, flipX, flipY, space)` | `number, number, number, number, string, bool, bool, number` | - | Draw single tile |
+
+**Events:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `set_signal_emitter(callback)` | `function` | - | Register signal emitter for events |
+| `emit_entity_spawned(name, x, y, layer, fields)` | `string, number, number, string, table` | - | Emit entity spawn event |
+
+**Events Emitted:**
+- `ldtk_level_loaded`: `{level_name, colliders_built, entities_spawned}`
+- `ldtk_colliders_built`: `{level_name, physics_tag}`
+- `ldtk_entity_spawned`: `{entity_name, px, py, layer_name, fields}`
+
+***
+
+## Loot System
+
+\label{recipe:loot-system}
+
+The Loot System manages the spawning and collection of loot drops from defeated enemies, including XP orbs, gold, health potions, ability cards, and equipment. It provides configurable loot tables, multiple collection modes (auto-collect, click, magnet), and integrates with the combat system's event bus and leveling mechanics.
+
+### Creating a Loot System
+
+Initialize a loot system with configuration options:
+
+```lua
+local LootSystem = require("combat.loot_system")
+
+local loot_system = LootSystem.new({
+    combat_context = combat_ctx,        -- Combat context (for event bus)
+    player_entity = player_eid,         -- Player entity ID
+    loot_tables = {                     -- Custom loot tables (optional)
+        goblin = {
+            gold = { min = 1, max = 3, chance = 100 },
+            xp = { base = 10, variance = 2, chance = 100 },
+            items = {
+                { type = "health_potion", chance = 10 }
+            }
+        }
+    },
+    default_collection_mode = LootSystem.CollectionModes.AUTO_COLLECT,  -- or CLICK, MAGNET
+    magnet_range = 150,                 -- Range for magnet collection (pixels)
+    despawn_time = 30,                  -- Auto-despawn timeout (seconds)
+    on_loot_collected = function(player, loot_type, amount)
+        print("Collected", amount, loot_type)
+    end
+})
+```
+
+**Configuration Fields:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `combat_context` | `table` | Required | Combat context with event bus |
+| `player_entity` | `entity_id` | Required | Player entity for collection |
+| `loot_tables` | `table` | Auto-generated | Loot tables per enemy type |
+| `default_collection_mode` | `string` | `"auto_collect"` | Collection mode (see below) |
+| `magnet_range` | `number` | `150` | Magnet attraction range (pixels) |
+| `despawn_time` | `number` | `30` | Auto-despawn timeout (seconds) |
+| `on_loot_collected` | `function` | `nil` | Callback on collection |
+
+### Loot Types
+
+The system supports five loot types:
+
+```lua
+-- Access via LootSystem.LootTypes
+LootSystem.LootTypes.GOLD            -- Currency
+LootSystem.LootTypes.XP_ORB          -- Experience points
+LootSystem.LootTypes.HEALTH_POTION   -- Restores 50 HP
+LootSystem.LootTypes.CARD            -- Ability card
+LootSystem.LootTypes.ITEM            -- Equipment item
+```
+
+### Collection Modes
+
+Three collection modes control how players interact with loot:
+
+```lua
+-- Auto-collect: Immediate collection after 0.3s delay
+LootSystem.CollectionModes.AUTO_COLLECT
+
+-- Click-to-collect: Player must click loot entity
+LootSystem.CollectionModes.CLICK
+
+-- Magnet: Loot flies towards player when in range
+LootSystem.CollectionModes.MAGNET
+```
+
+**Collection Mode Behavior:**
+
+| Mode | Interaction | Use Case |
+|------|-------------|----------|
+| `AUTO_COLLECT` | Automatic after delay | Fast-paced action games |
+| `CLICK` | Manual click required | Strategic looting decisions |
+| `MAGNET` | Attracts within range | Hybrid: intentional movement |
+
+### Spawning Loot
+
+Spawn loot when enemies die:
+
+```lua
+-- Spawn loot from loot table
+loot_system:spawn_loot_for_enemy(
+    "goblin",                -- Enemy type (looks up loot table)
+    { x = 300, y = 200 },    -- Spawn position
+    combat_context           -- Optional combat context
+)
+
+-- Spawn specific loot types manually
+loot_system:spawn_gold({ x = 100, y = 100 }, 5)           -- 5 gold
+loot_system:spawn_xp({ x = 100, y = 100 }, 25)            -- 25 XP
+loot_system:spawn_item({ x = 100, y = 100 }, "card_rare") -- Rare card
+```
+
+### Loot Tables
+
+Define loot tables for enemy types:
+
+```lua
+local loot_tables = {
+    goblin = {
+        gold = { min = 1, max = 3, chance = 100 },        -- Always drops 1-3 gold
+        xp = { base = 10, variance = 2, chance = 100 },   -- Always drops 8-12 XP
+        items = {
+            { type = "health_potion", chance = 10 }       -- 10% chance for potion
+        }
+    },
+    orc = {
+        gold = { min = 3, max = 7, chance = 100 },
+        xp = { base = 25, variance = 5, chance = 100 },
+        items = {
+            { type = "health_potion", chance = 15 },
+            { type = "card_common", chance = 5 }
+        }
+    },
+    boss = {
+        gold = { min = 20, max = 50, chance = 100 },
+        xp = { base = 100, variance = 20, chance = 100 },
+        items = {
+            { type = "card_rare", chance = 50 },
+            { type = "card_uncommon", chance = 100 },
+            { type = "health_potion", chance = 100 }
+        }
+    },
+    unknown = {
+        gold = { min = 1, max = 2, chance = 80 },         -- Fallback for unknown enemies
+        xp = { base = 5, variance = 1, chance = 80 }
+    }
+}
+```
+
+**Loot Table Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `gold.min` | `number` | Minimum gold drop |
+| `gold.max` | `number` | Maximum gold drop |
+| `gold.chance` | `number` | Drop chance (0-100) |
+| `xp.base` | `number` | Base XP amount |
+| `xp.variance` | `number` | Random variance (+/-) |
+| `xp.chance` | `number` | Drop chance (0-100) |
+| `items` | `table` | Array of item drops |
+| `items[n].type` | `string` | Loot type or item ID |
+| `items[n].chance` | `number` | Drop chance (0-100) |
+
+### Integration with Combat System
+
+Hook up loot spawning to enemy death events:
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Register enemy death handler
+signal.register("OnEnemyDeath", function(enemy_entity, enemy_data)
+    local transform = component_cache.get(enemy_entity, Transform)
+    if transform then
+        local position = {
+            x = transform.actualX + transform.actualW * 0.5,
+            y = transform.actualY + transform.actualH * 0.5
+        }
+
+        -- Spawn loot based on enemy type
+        local enemy_type = enemy_data.type or "unknown"
+        loot_system:spawn_loot_for_enemy(enemy_type, position, combat_context)
+    end
+end)
+```
+
+### Event System
+
+The loot system emits events via the combat context event bus:
+
+```lua
+-- Register event handlers
+if combat_context.bus then
+    combat_context.bus:on("OnLootDropped", function(data)
+        -- data: { loot_entity, loot_type, amount, position }
+        print("Loot dropped:", data.loot_type, "at", data.position.x, data.position.y)
+    end)
+
+    combat_context.bus:on("OnLootCollected", function(data)
+        -- data: { player, loot_type, amount }
+        print("Player collected:", data.amount, data.loot_type)
+    end)
+end
+```
+
+**Events Emitted:**
+
+| Event | Data | Description |
+|-------|------|-------------|
+| `OnLootDropped` | `{ loot_entity, loot_type, amount, position }` | Loot spawned |
+| `OnLootCollected` | `{ player, loot_type, amount }` | Loot collected |
+
+### Cleanup
+
+Clean up all active loot (useful for level transitions):
+
+```lua
+-- Despawn all loot entities
+loot_system:cleanup_all_loot()
+```
+
+### Complete Example
+
+Full integration with combat system:
+
+```lua
+local LootSystem = require("combat.loot_system")
+local signal = require("external.hump.signal")
+local component_cache = require("core.component_cache")
+
+-- Custom loot tables
+local loot_tables = {
+    skeleton = {
+        gold = { min = 2, max = 5, chance = 100 },
+        xp = { base = 15, variance = 3, chance = 100 },
+        items = {
+            { type = "health_potion", chance = 8 },
+            { type = "card_common", chance = 3 }
+        }
+    },
+    dragon = {
+        gold = { min = 50, max = 100, chance = 100 },
+        xp = { base = 500, variance = 50, chance = 100 },
+        items = {
+            { type = "card_legendary", chance = 25 },
+            { type = "card_rare", chance = 100 },
+            { type = "health_potion", chance = 100 }
+        }
+    }
+}
+
+-- Initialize loot system
+local loot_system = LootSystem.new({
+    combat_context = combat_ctx,
+    player_entity = player_eid,
+    loot_tables = loot_tables,
+    default_collection_mode = LootSystem.CollectionModes.MAGNET,
+    magnet_range = 200,
+    despawn_time = 60,
+    on_loot_collected = function(player, loot_type, amount)
+        -- Play sound effect
+        if loot_type == LootSystem.LootTypes.GOLD then
+            playSound("coin_pickup")
+        elseif loot_type == LootSystem.LootTypes.XP_ORB then
+            playSound("xp_gain")
+        end
+    end
+})
+
+-- Hook up enemy death event
+signal.register("OnEnemyDeath", function(enemy_entity, enemy_data)
+    local transform = component_cache.get(enemy_entity, Transform)
+    if not transform then return end
+
+    local position = {
+        x = transform.actualX + transform.actualW * 0.5,
+        y = transform.actualY + transform.actualH * 0.5
+    }
+
+    loot_system:spawn_loot_for_enemy(enemy_data.type or "unknown", position, combat_ctx)
+end)
+
+-- Clean up on level transition
+signal.register("OnLevelTransition", function()
+    loot_system:cleanup_all_loot()
+end)
+```
+
+### API Reference
+
+**Constructor:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `LootSystem.new(config)` | `table` | `LootSystem` | Create new loot system |
+
+**Loot Spawning:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `spawn_loot_for_enemy(type, pos, ctx)` | `string, table, table` | - | Spawn loot from table |
+| `spawn_gold(pos, amount)` | `table, number` | - | Spawn gold drops |
+| `spawn_xp(pos, amount)` | `table, number` | `entity_id` | Spawn XP orb |
+| `spawn_item(pos, item_type)` | `table, string` | `entity_id` | Spawn item drop |
+
+**Management:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `cleanup_all_loot()` | - | - | Despawn all active loot |
+| `despawn_loot(entity_id)` | `entity_id` | - | Despawn specific loot |
+
+**Internal Helpers:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_default_loot_tables()` | - | `table` | Get built-in loot tables |
+| `roll_chance(chance)` | `number` | `boolean` | Roll percentage (0-100) |
+| `collect_loot(eid, type, amount)` | `entity_id, string, number` | - | Apply loot collection |
+
+***
+
+## Animation System
+
+\label{recipe:animation-system}
+
+The Animation System provides functions for creating animated entities from sprite sheets and animation definitions. It handles sprite animation playback, entity creation with visual components, and sizing utilities for both gameplay entities and UI elements.
+
+### Creating Animated Entities
+
+The primary function for creating entities with animations is `createAnimatedObjectWithTransform()`:
+
+```lua
+local animation_system = require("core.animation_system")
+
+-- Create entity with animation
+local entity = animation_system.createAnimatedObjectWithTransform(
+    "kobold",  -- Animation ID or sprite UUID
+    true,      -- true = use first param as animation ID, false = generate animation from sprite UUID
+    100,       -- x position (optional, default: 0)
+    200,       -- y position (optional, default: 0)
+    nil,       -- shader config function (optional)
+    true       -- shadow enabled (optional, default: true)
+)
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `defaultAnimationIDOrSpriteUUID` | `string` | Required | Animation ID or sprite UUID |
+| `generateNewAnimFromSprite` | `boolean` | `false` | `true` = use first param as animation ID, `false` = generate animation from sprite UUID |
+| `x` | `number` | `0` | Initial x position |
+| `y` | `number` | `0` | Initial y position |
+| `shaderPassConfigFunc` | `function` | `nil` | Custom shader setup callback |
+| `shadowEnabled` | `boolean` | `true` | Enable drop shadow |
+
+> **Note:** Despite the parameter name, `generateNewAnimFromSprite=true` means "use as animation ID" (no generation), while `false` means "generate a new animation from a sprite UUID."
+
+**What this function creates:**
+
+- Entity with `Transform` component (position, size, rotation)
+- `AnimationQueueComponent` (animation state and playback)
+- `GameObject` component (interaction callbacks)
+- Optional shadow entity (if `shadowEnabled = true`)
+
+**Important:** The function automatically sets the entity's size based on the animation's first frame dimensions.
+
+### Animation vs Sprite UUID
+
+The second parameter determines whether to use an animation definition or create a still image from a sprite:
+
+```lua
+-- Use animation definition (animated sprite)
+local animated = animation_system.createAnimatedObjectWithTransform(
+    "kobold_walk",  -- Animation ID from animations.json
+    true            -- Use animation
+)
+
+-- Use sprite UUID (still image)
+local still = animation_system.createAnimatedObjectWithTransform(
+    "sprite_uuid_12345",  -- Sprite UUID from sprite sheet
+    false                 -- Generate animation from single sprite
+)
+```
+
+**When to use each:**
+
+- **Animation ID** (`true`): For animated sprites with multiple frames (characters, effects, UI animations)
+- **Sprite UUID** (`false`): For static images (icons, backgrounds, single-frame objects)
+
+### Resizing Animations
+
+After creating an animated entity, you can resize it to fit specific dimensions:
+
+```lua
+-- Resize animation to fit target dimensions
+animation_system.resizeAnimationObjectsInEntityToFit(
+    entity,     -- Entity with AnimationQueueComponent
+    64,         -- Target width
+    64          -- Target height
+)
+```
+
+**Resize behavior:**
+
+- Preserves aspect ratio (uses smallest scale factor)
+- Updates the entity's `Transform` component size
+- Scales all animation objects in the entity's queue
+
+**Example:**
+
+```lua
+local card = animation_system.createAnimatedObjectWithTransform("fire_card", true)
+
+-- Card's original size might be 128x180
+-- Resize to fit 64x64 slot (will scale proportionally)
+animation_system.resizeAnimationObjectsInEntityToFit(card, 64, 64)
+
+-- Result: Card scaled to fit 64x64, maintaining aspect ratio
+local transform = component_cache.get(card, Transform)
+-- transform.actualW and transform.actualH now reflect scaled size
+```
+
+### UI-Specific Resizing
+
+For UI elements, use the centering variant:
+
+```lua
+-- Resize and center within UI bounds
+animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(
+    entity,          -- Entity to resize
+    100,             -- Target width
+    100,             -- Target height
+    true,            -- Center horizontally (optional, default: true)
+    true             -- Center vertically (optional, default: true)
+)
+```
+
+**Use case:** When you need animations to fit precisely within UI boxes while maintaining visual centering.
+
+### Custom Shader Configuration
+
+Pass a shader configuration function to apply shaders during entity creation:
+
+```lua
+local entity = animation_system.createAnimatedObjectWithTransform(
+    "card_glow",
+    true,
+    0, 0,
+    function(e)  -- Shader config callback
+        local ShaderBuilder = require("core.shader_builder")
+        ShaderBuilder.for_entity(e)
+            :add("3d_skew_holo")
+            :add("glow", { intensity = 1.5 })
+            :apply()
+    end,
+    true
+)
+```
+
+**Callback receives:** The newly created entity ID.
+
+### Integration with EntityBuilder
+
+`EntityBuilder` uses `animation_system` internally. When you call `EntityBuilder.create()`, it delegates to `createAnimatedObjectWithTransform()`:
+
+```lua
+local EntityBuilder = require("core.entity_builder")
+
+-- EntityBuilder wraps animation_system
+local entity = EntityBuilder.create({
+    sprite = "kobold",  -- Passed to createAnimatedObjectWithTransform()
+    position = { x = 100, y = 200 },
+    size = { 64, 64 },  -- Triggers resizeAnimationObjectsInEntityToFit()
+    shadow = true
+})
+```
+
+**Advantages of EntityBuilder:**
+
+- Declarative options table (vs positional parameters)
+- Automatic script table initialization
+- Built-in interaction setup
+- Shader application via `shaders` field
+
+**When to use animation_system directly:**
+
+- Fine-grained control over shader callbacks
+- Custom animation object manipulation
+- Performance-critical spawning (fewer abstractions)
+
+### Still Animations from Sprites
+
+Create a `AnimationObject` (not an entity) from a sprite UUID:
+
+```lua
+-- Create AnimationObject for use in components
+local anim_obj = animation_system.createStillAnimationFromSpriteUUID(
+    "sprite_uuid_12345",
+    Color.WHITE,  -- Foreground tint (optional)
+    Color.BLACK   -- Background tint (optional)
+)
+
+-- Use in AnimationQueueComponent
+local queue = registry:get(entity, AnimationQueueComponent)
+queue.defaultAnimation = anim_obj
+```
+
+**Use case:** Dynamically changing an entity's sprite without creating a new entity.
+
+### Resetting UI Render Scale
+
+If you've manipulated UI render scale and need to reset:
+
+```lua
+-- Reset to default intrinsic scale
+animation_system.resetAnimationUIRenderScale(entity)
+```
+
+**When to use:** After applying custom `uiRenderScale` to `AnimationObject` and needing to restore defaults.
+
+### Common Patterns
+
+**Pattern 1: Create entity and resize**
+
+```lua
+local enemy = animation_system.createAnimatedObjectWithTransform("orc", true)
+animation_system.resizeAnimationObjectsInEntityToFit(enemy, 48, 48)
+
+local transform = component_cache.get(enemy, Transform)
+transform.actualX = spawn_x
+transform.actualY = spawn_y
+```
+
+**Pattern 2: UI icon with centering**
+
+```lua
+local icon = animation_system.createAnimatedObjectWithTransform("icon_sword", false)
+animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(icon, 32, 32)
+```
+
+**Pattern 3: Card with shader effects**
+
+```lua
+local card = animation_system.createAnimatedObjectWithTransform(
+    card_anim_id,
+    true,
+    0, 0,
+    function(e)
+        ShaderBuilder.for_entity(e):add("3d_skew_holo"):apply()
+    end,
+    true
+)
+animation_system.resizeAnimationObjectsInEntityToFit(card, CARD_WIDTH, CARD_HEIGHT)
+```
+
+### API Reference
+
+**Entity Creation:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `createAnimatedObjectWithTransform(id, useAnim, x, y, shaderFn, shadow)` | `string, bool, num?, num?, fn?, bool?` | `entity_id` | Create animated entity |
+| `createStillAnimationFromSpriteUUID(uuid, fg, bg)` | `string, Color?, Color?` | `AnimationObject` | Create still animation object |
+
+**Resizing:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `resizeAnimationObjectsInEntityToFit(entity, w, h)` | `entity_id, number, number` | - | Resize animation to fit dimensions |
+| `resizeAnimationObjectsInEntityToFitAndCenterUI(entity, w, h, centerX, centerY)` | `entity_id, num, num, bool?, bool?` | - | Resize and center for UI |
+| `resetAnimationUIRenderScale(entity)` | `entity_id` | - | Reset UI scale to default |
+| `resizeAnimationObjectToFit(animObj, w, h)` | `AnimationObject, number, number` | - | Resize single animation object |
+
+**Utility:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `setFGColorForAllAnimationObjects(entity, color)` | `entity_id, Color` | - | Tint all animations in entity |
+| `getNinepatchUIBorderInfo(uuid)` | `string` | `NPatchInfo, Texture2D` | Get nine-patch data for UUID |
+
+### Gotchas
+
+**Gotcha 1:** Don't manually emplace components created by `createAnimatedObjectWithTransform()`
+
+```lua
+-- WRONG: Components already exist!
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+registry:emplace(entity, Transform)  -- Error: already exists!
+registry:emplace(entity, GameObject) -- Error: already exists!
+
+-- CORRECT: Just use the entity
+local transform = component_cache.get(entity, Transform)
+transform.actualX = 100
+```
+
+**Gotcha 2:** Resizing must happen after entity creation
+
+```lua
+-- WRONG: Entity doesn't exist yet
+animation_system.resizeAnimationObjectsInEntityToFit(entity, 64, 64)
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+
+-- CORRECT: Create first, then resize
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+animation_system.resizeAnimationObjectsInEntityToFit(entity, 64, 64)
+```
+
+**Gotcha 3:** Shader callback runs during creation, not after
+
+```lua
+-- The shader callback runs BEFORE createAnimatedObjectWithTransform() returns
+local entity = animation_system.createAnimatedObjectWithTransform(
+    "sprite", true, 0, 0,
+    function(e)
+        -- e is the entity being created (partially initialized)
+        -- You can safely add shaders here
+        ShaderBuilder.for_entity(e):add("glow"):apply()
+    end
+)
+-- At this point, shaders are already applied
+```
+
+***
+
+## Physics Manager
+
+\label{recipe:physics-manager}
+
+The Physics Manager is a centralized system for managing multiple physics worlds, their lifecycle, and entity interactions across worlds. It provides safe access to physics worlds by name, manages stepping and debug visualization, and handles navmesh-based pathfinding. Always use `PhysicsManager.get_world("world")` instead of accessing `globals.physicsWorld` directly.
+
+### Why Use PhysicsManager?
+
+**Benefits over direct world access:**
+
+- **Safety**: Returns `nil` if world doesn't exist (no crashes)
+- **Multi-world support**: Manage separate physics spaces (e.g., "world", "ui_drag", "menu")
+- **State binding**: Automatically pause/resume worlds based on game state
+- **Debug control**: Toggle debug draw per-world
+- **Migration**: Safely move entities between physics worlds
+
+**Deprecated pattern:**
+
+```lua
+-- DON'T USE: Direct global access (unsafe, single-world)
+if globals.physicsWorld then
+    physics.create_physics_for_transform(globals.physicsWorld, entity, "dynamic")
+end
+```
+
+**Correct pattern:**
+
+```lua
+-- USE: PhysicsManager access (safe, multi-world)
+local PhysicsManager = require("core.physics_manager")
+local world = PhysicsManager.get_world("world")
+if world then
+    -- Use world safely
+end
+```
+
+### Getting a Physics World
+
+The primary function you'll use is `get_world()`:
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Get the main game physics world
+local world = PhysicsManager.get_world("world")
+if not world then
+    log_warn("Physics world not available")
+    return
+end
+
+-- Now use world with physics functions
+physics.SetVelocity(world, entity, vx, vy)
+```
+
+**What it returns:**
+
+- A `PhysicsWorld` userdata if the world exists and is registered
+- `nil` if the world doesn't exist
+
+**Common world names:**
+
+- `"world"` - Main gameplay physics world (default)
+- Additional worlds can be registered via `PhysicsManager.add_world()`
+
+### Creating Physics Bodies
+
+When creating physics bodies for entities, use the correct API signature with `PhysicsManager.get_world()`:
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+-- Create entity with transform
+local entity = animation_system.createAnimatedObjectWithTransform("sprite", true)
+
+-- Define physics configuration
+local config = {
+    shape = "circle",       -- "circle", "rectangle", "polygon", "chain"
+    tag = "projectile",     -- Collision tag
+    sensor = false,         -- Is sensor (no physical response)
+    density = 1.0,          -- Body density
+    inflate_px = 0          -- Inflate/deflate collider by pixels
+}
+
+-- Create physics body (correct signature)
+physics.create_physics_for_transform(
+    registry,                    -- Global registry
+    physics_manager_instance,    -- Global physics_manager instance
+    entity,
+    "world",                     -- World name (not the world object!)
+    config
+)
+```
+
+**Important:** The fourth parameter is the world *name* (string), not the world object. The C++ function internally calls `PhysicsManager.get_world()`.
+
+### Physics Sync Modes
+
+Physics bodies can sync between Transform and physics in different modes:
+
+```lua
+-- Set sync mode using correct API
+physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+```
+
+**Available sync modes:**
+
+| Mode | Transform → Physics | Physics → Transform | Use Case |
+|------|---------------------|---------------------|----------|
+| `AuthoritativePhysics` | Initial only | Every frame | Dynamic physics objects (projectiles, enemies) |
+| `AuthoritativeTransform` | Every frame | Never | Kinematic objects (platforms, UI drag) |
+| `Bidirectional` | Every frame | Every frame | Hybrid (rare, expensive) |
+
+**Example: Dynamic enemy**
+
+```lua
+-- Enemy controlled by physics (AI applies forces)
+physics.set_sync_mode(registry, enemy, physics.PhysicsSyncMode.AuthoritativePhysics)
+
+-- Physics updates position, Transform reads from physics
+local world = PhysicsManager.get_world("world")
+physics.ApplyImpulse(world, enemy, fx, fy)
+```
+
+**Example: Draggable UI card**
+
+```lua
+-- Card position controlled by UI drag (Transform updated manually)
+physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+
+-- Transform drives physics, physics body follows
+local transform = component_cache.get(card, Transform)
+transform.actualX = mouseX
+transform.actualY = mouseY
+```
+
+### Common Physics Operations
+
+After getting the world, use it with physics functions:
+
+```lua
+local world = PhysicsManager.get_world("world")
+
+-- Set velocity
+physics.SetVelocity(world, entity, vx, vy)
+
+-- Apply impulse (instant force)
+physics.ApplyImpulse(world, entity, ix, iy)
+
+-- Apply force (continuous over time)
+physics.ApplyForce(world, entity, fx, fy)
+
+-- Set physical properties
+physics.SetFriction(world, entity, 0.3)
+physics.SetRestitution(world, entity, 0.8)  -- Bounciness
+physics.SetDensity(world, entity, 2.0)
+
+-- Enable high-speed collision detection
+physics.SetBullet(world, entity, true)
+
+-- Lock rotation
+physics.SetFixedRotation(world, entity, true)
+
+-- Change body type
+physics.SetBodyType(world, entity, "dynamic")  -- "static", "kinematic", "dynamic"
+```
+
+### Collision Masks (Per-Entity)
+
+Collision masks determine which entities can collide. These are set **per-entity** when creating physics bodies, not globally:
+
+```lua
+local world = PhysicsManager.get_world("world")
+
+-- Enable bidirectional collision between tags
+physics.enable_collision_between_many(world, "projectile", { "enemy", "WORLD" })
+physics.enable_collision_between_many(world, "enemy", { "projectile", "player" })
+
+-- Update collision masks for all entities with these tags
+physics.update_collision_masks_for(world, "projectile", { "enemy", "WORLD" })
+physics.update_collision_masks_for(world, "enemy", { "projectile", "player" })
+```
+
+**Why per-entity?**
+
+- Different projectile types can have different collision behavior
+- Allows dynamic collision changes (e.g., enemy becomes intangible)
+- More flexible than global collision matrices
+
+**Common pattern:**
+
+```lua
+-- In entity creation function (not in system init)
+local function spawnProjectile(x, y)
+    local entity = animation_system.createAnimatedObjectWithTransform("bullet", true)
+
+    local config = { shape = "circle", tag = "projectile" }
+    physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
+
+    -- Set collision masks for this entity
+    local world = PhysicsManager.get_world("world")
+    physics.enable_collision_between_many(world, "projectile", { "enemy" })
+    physics.update_collision_masks_for(world, "projectile", { "enemy" })
+
+    return entity
+end
+```
+
+### PhysicsBuilder Integration
+
+`PhysicsBuilder` wraps PhysicsManager internally for fluent API:
+
+```lua
+local PhysicsBuilder = require("core.physics_builder")
+
+-- PhysicsBuilder uses PhysicsManager.get_world() internally
+PhysicsBuilder.for_entity(entity)
+    :circle()
+    :tag("enemy")
+    :bullet()
+    :syncMode("physics")
+    :collideWith({ "player", "projectile" })
+    :apply()
+```
+
+**When to use PhysicsBuilder vs direct API:**
+
+- **PhysicsBuilder**: Quick setup, declarative, less boilerplate
+- **Direct API**: Fine-grained control, custom collision logic, performance-critical
+
+### Multi-World Management
+
+PhysicsManager can manage multiple physics worlds:
+
+```lua
+-- Register a new physics world
+local uiWorld = physics.create_world()
+PhysicsManager.add_world("ui_drag", uiWorld, "planning")  -- Bind to "planning" state
+
+-- Check if world exists
+if PhysicsManager.has_world("ui_drag") then
+    print("UI world available")
+end
+
+-- Check if world is active (step enabled + state active)
+if PhysicsManager.is_world_active("ui_drag") then
+    print("UI world stepping")
+end
+
+-- Toggle stepping
+PhysicsManager.enable_step("ui_drag", false)  -- Pause
+PhysicsManager.enable_step("ui_drag", true)   -- Resume
+
+-- Toggle debug draw
+PhysicsManager.enable_debug_draw("world", true)
+
+-- Move entity between worlds
+PhysicsManager.move_entity_to_world(entity, "ui_drag")
+```
+
+### Navmesh and Pathfinding
+
+PhysicsManager includes integrated navmesh for pathfinding:
+
+```lua
+local world = PhysicsManager.get_world("world")
+
+-- Configure navmesh inflation (clearance around obstacles)
+PhysicsManager.set_nav_config("world", { default_inflate_px = 10 })
+
+-- Mark entity as navmesh obstacle
+PhysicsManager.set_nav_obstacle(wallEntity, true)
+
+-- Rebuild navmesh (happens automatically, but can force)
+PhysicsManager.mark_navmesh_dirty("world")
+PhysicsManager.rebuild_navmesh("world")
+
+-- Find path from (sx, sy) to (dx, dy)
+local path = PhysicsManager.find_path("world", sx, sy, dx, dy)
+if path then
+    for i, point in ipairs(path) do
+        print("Waypoint", i, point.x, point.y)
+    end
+end
+
+-- Compute visibility polygon (line-of-sight)
+local visiblePolygon = PhysicsManager.vision_fan("world", sx, sy, radius)
+```
+
+### API Reference
+
+**World Access:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_world(name)` | `string` | `PhysicsWorld\|nil` | Get world by name |
+| `has_world(name)` | `string` | `boolean` | Check if world exists |
+| `is_world_active(name)` | `string` | `boolean` | Check if world is stepping |
+
+**World Management:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `add_world(name, world, state)` | `string, PhysicsWorld, string?` | - | Register world with optional state binding |
+| `enable_step(name, on)` | `string, boolean` | - | Enable/disable stepping |
+| `enable_debug_draw(name, on)` | `string, boolean` | - | Enable/disable debug visualization |
+| `step_all(dt)` | `number` | - | Step all active worlds |
+| `draw_all()` | - | - | Debug-draw all active worlds |
+
+**Entity Migration:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `move_entity_to_world(entity, dst)` | `entity_id, string` | - | Move entity to another world |
+
+**Navmesh:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `get_nav_config(world)` | `string` | `table` | Get navmesh config |
+| `set_nav_config(world, cfg)` | `string, table` | - | Set navmesh config |
+| `mark_navmesh_dirty(world)` | `string` | - | Mark for rebuild |
+| `rebuild_navmesh(world)` | `string` | - | Force immediate rebuild |
+| `find_path(world, sx, sy, dx, dy)` | `string, num×4` | `table` | Find path (returns waypoints) |
+| `vision_fan(world, sx, sy, radius)` | `string, num×3` | `table` | Compute visibility polygon |
+| `set_nav_obstacle(entity, include)` | `entity_id, boolean` | - | Tag entity as obstacle |
+
+### Common Patterns
+
+**Pattern 1: Safe world access**
+
+```lua
+local PhysicsManager = require("core.physics_manager")
+
+local function updateEntity(entity, dt)
+    local world = PhysicsManager.get_world("world")
+    if not world then return end  -- Graceful fallback
+
+    physics.SetVelocity(world, entity, 100, 0)
+end
+```
+
+**Pattern 2: Dynamic projectile with collisions**
+
+```lua
+local function spawnProjectile(owner, x, y, vx, vy)
+    local entity = animation_system.createAnimatedObjectWithTransform("bullet", true)
+
+    -- Position
+    local transform = component_cache.get(entity, Transform)
+    transform.actualX, transform.actualY = x, y
+
+    -- Physics
+    local config = { shape = "circle", tag = "projectile", sensor = false }
+    physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
+
+    -- Sync mode
+    physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
+
+    -- Collision masks
+    local world = PhysicsManager.get_world("world")
+    physics.enable_collision_between_many(world, "projectile", { "enemy" })
+    physics.update_collision_masks_for(world, "projectile", { "enemy" })
+
+    -- Initial velocity
+    physics.SetVelocity(world, entity, vx, vy)
+    physics.SetBullet(world, entity, true)  -- Fast-moving
+
+    return entity
+end
+```
+
+**Pattern 3: AI pathfinding**
+
+```lua
+local function findPathToPlayer(enemy)
+    local enemyT = component_cache.get(enemy, Transform)
+    local playerT = component_cache.get(survivorEntity, Transform)
+
+    local path = PhysicsManager.find_path(
+        "world",
+        enemyT.actualX, enemyT.actualY,
+        playerT.actualX, playerT.actualY
+    )
+
+    if path and #path > 1 then
+        local nextWaypoint = path[2]  -- [1] is start position
+        return nextWaypoint.x, nextWaypoint.y
+    end
+    return nil
+end
+```
+
+### Gotchas
+
+**Gotcha 1:** Don't store the world reference long-term
+
+```lua
+-- WRONG: World reference can become invalid
+local MySystem = {}
+MySystem.world = PhysicsManager.get_world("world")  -- Cached
+
+function MySystem.update(dt)
+    physics.SetVelocity(MySystem.world, entity, vx, vy)  -- May crash if world destroyed
+end
+
+-- CORRECT: Fetch world each time (negligible overhead)
+function MySystem.update(dt)
+    local world = PhysicsManager.get_world("world")
+    if not world then return end
+    physics.SetVelocity(world, entity, vx, vy)
+end
+```
+
+**Gotcha 2:** World name vs world object in `create_physics_for_transform()`
+
+```lua
+-- WRONG: Passing world object (5th param expects string)
+local world = PhysicsManager.get_world("world")
+physics.create_physics_for_transform(registry, physics_manager_instance, entity, world, config)
+
+-- CORRECT: Passing world name (string)
+physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
+```
+
+**Gotcha 3:** Collision masks must be bidirectional
+
+```lua
+-- WRONG: Only one direction enabled
+physics.enable_collision_between_many(world, "projectile", { "enemy" })
+physics.update_collision_masks_for(world, "projectile", { "enemy" })
+-- Result: Projectiles detect enemies, but enemies don't detect projectiles!
+
+-- CORRECT: Enable both directions
+physics.enable_collision_between_many(world, "projectile", { "enemy" })
+physics.enable_collision_between_many(world, "enemy", { "projectile" })
+physics.update_collision_masks_for(world, "projectile", { "enemy" })
+physics.update_collision_masks_for(world, "enemy", { "projectile" })
+```
+
+***
+
+## AI Blackboard API
+
+\label{recipe:ai-blackboard}
+
+The AI Blackboard is a per-entity key-value store for AI agent state and memory. It provides type-safe storage for common data types (float, int, bool, string, Vector2) and integrates with GOAP (Goal-Oriented Action Planning) systems for behavior planning. Use the blackboard to store agent state, target information, decision-making data, and any per-entity AI memory.
+
+### What is the Blackboard?
+
+The blackboard pattern is a shared memory system used in AI for storing and retrieving information that multiple behaviors or systems need to access. In this engine, each AI entity with a `GOAPComponent` has its own blackboard instance.
+
+**Use cases:**
+
+- **Target tracking**: Store current target entity, position, distance
+- **State memory**: Remember last seen player position, patrol waypoints
+- **Behavior flags**: Track if agent is alerted, investigating, retreating
+- **Decision data**: Store calculated values used across multiple AI frames
+- **Communication**: Share information between AI behaviors/actions
+
+**Key features:**
+
+- **Type-safe**: Separate functions for each data type prevent type errors
+- **Per-entity**: Each AI agent has its own isolated blackboard
+- **Optional returns**: Get functions return `nil` if key doesn't exist (safe to check)
+- **GOAP integration**: Works alongside world state for planning systems
+
+### Supported Data Types
+
+The blackboard supports five data types:
+
+| Type | Set Function | Get Function | Use Case |
+|------|--------------|--------------|----------|
+| `float` | `setBlackboardFloat()` | `getBlackboardFloat()` | Health percentages, distances, timers |
+| `int` | `setBlackboardInt()` | `getBlackboardInt()` | Entity IDs, counts, enums |
+| `bool` | `setBlackboardBool()` | `getBlackboardBool()` | State flags, conditions |
+| `string` | `setBlackboardString()` | `getBlackboardString()` | State names, target types |
+| `Vector2` | `setBlackboardVector2()` | `getBlackboardVector2()` | Positions, velocities, directions |
+
+### Setting Values
+
+All set functions follow the same pattern: `set[Type](entity, key, value)`
+
+```lua
+-- Store target position
+setBlackboardVector2(enemyEntity, "last_seen_player_pos", { x = 100, y = 200 })
+
+-- Store alert state
+setBlackboardBool(enemyEntity, "is_alerted", true)
+
+-- Store target entity ID
+setBlackboardInt(enemyEntity, "target_entity", playerEntity)
+
+-- Store distance to target
+setBlackboardFloat(enemyEntity, "distance_to_target", 150.5)
+
+-- Store current behavior state
+setBlackboardString(enemyEntity, "behavior_state", "patrolling")
+```
+
+**Notes:**
+
+- Entity must have a `GOAPComponent` (added when AI system is initialized)
+- Setting a key that already exists will overwrite the previous value
+- Keys are strings and can be any valid identifier
+
+### Getting Values
+
+All get functions return `nil` if the key doesn't exist, allowing safe conditional checks:
+
+```lua
+-- Check if entity has a target
+local targetID = getBlackboardInt(enemyEntity, "target_entity")
+if targetID then
+    -- Entity has a target, use it
+    local targetPos = component_cache.get(targetID, Transform)
+    -- ...
+end
+
+-- Get last seen position with fallback
+local lastSeenPos = getBlackboardVector2(enemyEntity, "last_seen_player_pos")
+if not lastSeenPos then
+    -- Never seen player, use default patrol position
+    lastSeenPos = { x = 0, y = 0 }
+end
+
+-- Check alert state (defaults to false if not set)
+local isAlerted = getBlackboardBool(enemyEntity, "is_alerted")
+if isAlerted then
+    -- Agent is alerted, play alert behavior
+end
+
+-- Get distance (with nil check)
+local distance = getBlackboardFloat(enemyEntity, "distance_to_target")
+if distance and distance < 50 then
+    -- Close enough to attack
+end
+```
+
+**Important:** Always check for `nil` when getting values, or ensure the key is always set before reading.
+
+### Complete AI Agent Example
+
+Combining blackboard with component access and AI logic:
+
+```lua
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
+
+function updateEnemyAI(enemyEntity, dt)
+    -- Validate entity
+    if not entity_cache.valid(enemyEntity) then return end
+
+    -- Get player position
+    local playerEntity = getBlackboardInt(enemyEntity, "target_entity")
+    if not playerEntity then
+        -- No target set, enter patrol mode
+        setBlackboardString(enemyEntity, "behavior_state", "patrol")
+        return
+    end
+
+    -- Calculate distance to player
+    local enemyTransform = component_cache.get(enemyEntity, Transform)
+    local playerTransform = component_cache.get(playerEntity, Transform)
+
+    if not enemyTransform or not playerTransform then return end
+
+    local dx = playerTransform.actualX - enemyTransform.actualX
+    local dy = playerTransform.actualY - enemyTransform.actualY
+    local distance = math.sqrt(dx * dx + dy * dy)
+
+    -- Store distance in blackboard
+    setBlackboardFloat(enemyEntity, "distance_to_target", distance)
+
+    -- Update last seen position
+    setBlackboardVector2(enemyEntity, "last_seen_player_pos", {
+        x = playerTransform.actualX,
+        y = playerTransform.actualY
+    })
+
+    -- Behavior logic based on distance
+    if distance < 50 then
+        setBlackboardString(enemyEntity, "behavior_state", "attack")
+        setBlackboardBool(enemyEntity, "is_alerted", true)
+    elseif distance < 200 then
+        setBlackboardString(enemyEntity, "behavior_state", "pursue")
+        setBlackboardBool(enemyEntity, "is_alerted", true)
+    else
+        -- Return to patrol if player escapes
+        setBlackboardString(enemyEntity, "behavior_state", "patrol")
+        setBlackboardBool(enemyEntity, "is_alerted", false)
+    end
+end
+```
+
+### World State for GOAP Planning
+
+The blackboard stores arbitrary data, but GOAP systems also use **world state** - boolean key-value pairs representing the state of the world and goals. Use world state for planning, blackboard for memory.
+
+**Current World State** (what is true right now):
+
+```lua
+-- Set current state facts
+setCurrentWorldStateValue(entity, "has_weapon", true)
+setCurrentWorldStateValue(entity, "enemy_visible", false)
+setCurrentWorldStateValue(entity, "at_cover", true)
+
+-- Read current state
+local hasWeapon = getCurrentWorldStateValue(entity, "has_weapon")  -- true/false
+
+-- Clear all current world state
+clearCurrentWorldState(entity)
+```
+
+**Goal World State** (what the agent wants to be true):
+
+```lua
+-- Set goal conditions
+setGoalWorldStateValue(entity, "enemy_dead", true)
+setGoalWorldStateValue(entity, "has_ammo", true)
+
+-- Read goal state
+local wantsEnemyDead = getGoalWorldStateValue(entity, "enemy_dead")  -- true/false
+
+-- Clear all goal world state
+clearGoalWorldState(entity)
+```
+
+**When to use each:**
+
+| System | Data Type | Use Case |
+|--------|-----------|----------|
+| **Blackboard** | Any (float, int, bool, string, Vector2) | Agent memory, target data, calculated values |
+| **Current World State** | Bool only | Facts about the world for GOAP planning |
+| **Goal World State** | Bool only | Desired outcome for GOAP planner |
+
+**GOAP integration example:**
+
+```lua
+-- Blackboard: Store where the enemy is
+setBlackboardVector2(entity, "enemy_position", { x = 100, y = 200 })
+setBlackboardInt(entity, "enemy_entity_id", enemyID)
+
+-- World State: Facts for planning
+setCurrentWorldStateValue(entity, "enemy_visible", true)
+setCurrentWorldStateValue(entity, "has_weapon", true)
+setCurrentWorldStateValue(entity, "in_range", false)
+
+-- Goal State: What we want to achieve
+setGoalWorldStateValue(entity, "enemy_dead", true)
+
+-- GOAP planner will create action sequence to make "enemy_dead" true
+-- Actions will use blackboard data (enemy position, ID) during execution
+```
+
+### Common Patterns
+
+**Pattern 1: Target tracking**
+
+```lua
+-- Store target when acquiring
+local function acquireTarget(aiEntity, targetEntity)
+    setBlackboardInt(aiEntity, "target_id", targetEntity)
+    setBlackboardBool(aiEntity, "has_target", true)
+
+    local targetTransform = component_cache.get(targetEntity, Transform)
+    if targetTransform then
+        setBlackboardVector2(aiEntity, "target_pos", {
+            x = targetTransform.actualX,
+            y = targetTransform.actualY
+        })
+    end
+end
+
+-- Clear target when lost
+local function loseTarget(aiEntity)
+    setBlackboardBool(aiEntity, "has_target", false)
+    -- Keep last known position for investigation
+end
+```
+
+**Pattern 2: State machine with blackboard**
+
+```lua
+local function updateStateMachine(entity)
+    local state = getBlackboardString(entity, "state") or "idle"
+
+    if state == "idle" then
+        -- Check for target
+        if getBlackboardBool(entity, "has_target") then
+            setBlackboardString(entity, "state", "chase")
+        end
+    elseif state == "chase" then
+        local distance = getBlackboardFloat(entity, "distance_to_target")
+        if distance and distance < 50 then
+            setBlackboardString(entity, "state", "attack")
+        elseif not getBlackboardBool(entity, "has_target") then
+            setBlackboardString(entity, "state", "idle")
+        end
+    elseif state == "attack" then
+        -- Attack logic...
+    end
+end
+```
+
+**Pattern 3: Behavior timers**
+
+```lua
+-- Start a timer
+setBlackboardFloat(entity, "attack_cooldown", 2.0)
+
+-- Update and check timer
+local function updateTimers(entity, dt)
+    local cooldown = getBlackboardFloat(entity, "attack_cooldown")
+    if cooldown then
+        cooldown = cooldown - dt
+        if cooldown <= 0 then
+            -- Cooldown finished
+            setBlackboardBool(entity, "can_attack", true)
+            -- Remove timer
+            setBlackboardFloat(entity, "attack_cooldown", 0)
+        else
+            setBlackboardFloat(entity, "attack_cooldown", cooldown)
+        end
+    end
+end
+```
+
+### Common Gotchas
+
+**Gotcha 1:** Entity must have GOAPComponent
+
+```lua
+-- WRONG: Using blackboard on entity without GOAPComponent
+local entity = registry:create()
+setBlackboardInt(entity, "health", 100)  -- Crash! No GOAPComponent
+
+-- CORRECT: Ensure entity has GOAPComponent (usually added by AI system init)
+-- Or add manually:
+registry:emplace(entity, GOAPComponent)
+setBlackboardInt(entity, "health", 100)
+```
+
+**Gotcha 2:** Type mismatch
+
+```lua
+-- WRONG: Storing float, retrieving as int
+setBlackboardFloat(entity, "value", 10.5)
+local value = getBlackboardInt(entity, "value")  -- Returns nil (type mismatch)
+
+-- CORRECT: Use matching types
+setBlackboardFloat(entity, "value", 10.5)
+local value = getBlackboardFloat(entity, "value")  -- Returns 10.5
+```
+
+**Gotcha 3:** Forgetting nil checks
+
+```lua
+-- WRONG: Assuming key always exists
+local distance = getBlackboardFloat(entity, "distance")
+if distance < 50 then  -- Crash if distance is nil!
+    -- ...
+end
+
+-- CORRECT: Check for nil
+local distance = getBlackboardFloat(entity, "distance")
+if distance and distance < 50 then
+    -- ...
+end
+```
+
+**Gotcha 4:** Confusing blackboard with world state
+
+```lua
+-- WRONG: Trying to store Vector2 in world state
+setCurrentWorldStateValue(entity, "position", { x = 10, y = 20 })  -- Error! Only accepts bool
+
+-- CORRECT: Use blackboard for complex types
+setBlackboardVector2(entity, "position", { x = 10, y = 20 })
+
+-- World state is for boolean facts only
+setCurrentWorldStateValue(entity, "at_position", true)
+```
+
+### Integration with AI System
+
+The blackboard works seamlessly with the AI system documented in **Chapter 8: AI System**. While Chapter 8 covers behavior trees, GOAP planning, and AI architecture, this section focuses specifically on the data storage API.
+
+**Quick reference:**
+
+- **Chapter 8**: AI behavior implementation, planning algorithms, action execution
+- **This section**: Data storage API for AI agents (blackboard, world state)
+
+Use the blackboard to store data that AI behaviors need to access and modify, and world state for GOAP planning conditions.
+
+***
+
+## Card Discovery & Progression
+
+\label{recipe:card-discovery}
+
+The Card Discovery & Progression system provides roguelike meta-progression by tracking player discoveries across runs. It records tag thresholds reached, spell types cast, tag patterns encountered, and avatar unlocks. These discoveries persist between runs, creating "Balatro-style" celebration moments when players hit milestones for the first time.
+
+### What is Tracked?
+
+The discovery system tracks three main categories:
+
+1. **Tag Thresholds**: When a player reaches 3/5/7/9 cards with the same tag (e.g., Fire, Defense, Mobility)
+2. **Spell Types**: When a player casts specific spell patterns (e.g., "Twin Cast", "Mono-Element", "Combo Chain")
+3. **Tag Patterns**: Future system for curated card combinations with special names
+4. **Avatar Unlocks**: Character unlocks based on tag thresholds or gameplay metrics
+
+All discoveries are stored persistently in `player.tag_discoveries` and can be saved/loaded between sessions.
+
+### Discovery Journal - Viewing Discoveries
+
+The `DiscoveryJournal` provides a UI-friendly interface to view and query all player discoveries.
+
+**Getting organized summary:**
+
+```lua
+local DiscoveryJournal = require("wand.discovery_journal")
+
+-- Get summary for UI display
+local summary = DiscoveryJournal.getSummary(player)
+
+-- summary.stats contains:
+--   total_discoveries - Total count
+--   tag_thresholds - Count of tag threshold discoveries
+--   spell_types - Count of spell type discoveries
+--   tag_patterns - Count of tag pattern discoveries
+
+print("Total discoveries:", summary.stats.total_discoveries)
+
+-- summary.tag_thresholds is an array of:
+for _, discovery in ipairs(summary.tag_thresholds) do
+    print(discovery.display_name)  -- e.g., "Fire x3"
+    print(discovery.tag)           -- "Fire"
+    print(discovery.threshold)     -- 3
+    print(discovery.timestamp)     -- Unix timestamp
+end
+
+-- summary.spell_types is an array of spell type discoveries
+for _, discovery in ipairs(summary.spell_types) do
+    print(discovery.spell_type)    -- e.g., "Twin Cast"
+    print(discovery.timestamp)
+end
+```
+
+**Getting recent discoveries (for notification feed):**
+
+```lua
+-- Get last 10 discoveries
+local recent = DiscoveryJournal.getRecent(player, 10)
+
+for _, discovery in ipairs(recent) do
+    if discovery.type == "tag_threshold" then
+        print("Discovered:", discovery.tag, "x" .. discovery.threshold)
+    elseif discovery.type == "spell_type" then
+        print("Discovered:", discovery.spell_type)
+    end
+end
+```
+
+**Checking specific discoveries:**
+
+```lua
+-- Check if player has discovered a specific tag threshold
+local hasFirex5 = DiscoveryJournal.hasDiscovered(player, "tag_threshold", "Fire", 5)
+
+-- Check if player has discovered a spell type
+local hasTwinCast = DiscoveryJournal.hasDiscovered(player, "spell_type", "Twin Cast")
+
+-- Get completion percentage for a category
+local completion = DiscoveryJournal.getCompletionPercentage(
+    player,
+    "tag_thresholds",
+    36  -- Total possible (6 tags × 4 thresholds + 12 elements × 4)
+)
+print("Tag threshold completion:", completion .. "%")
+```
+
+### Tag Discovery System - Tracking Milestones
+
+The `TagDiscoverySystem` is the underlying tracker that detects and records new discoveries. It's automatically called by the wand and tag evaluation systems.
+
+**Manual tag threshold checking:**
+
+```lua
+local TagDiscoverySystem = require("wand.tag_discovery_system")
+
+-- Check for new tag threshold discoveries
+-- tag_counts is a table of tag -> count (e.g., { Fire = 5, Defense = 3 })
+local newDiscoveries = TagDiscoverySystem.checkTagThresholds(player, tag_counts)
+
+-- newDiscoveries is an array of newly discovered thresholds
+for _, discovery in ipairs(newDiscoveries) do
+    print("NEW:", discovery.tag, "x" .. discovery.threshold)
+    print("Current count:", discovery.count)
+
+    -- Signal is automatically emitted:
+    -- signal.emit("tag_threshold_discovered", { tag, threshold, count })
+end
+```
+
+**Spell type discovery during casting:**
+
+```lua
+-- Check if spell type is new (called by WandExecutor during cast)
+local discovery = TagDiscoverySystem.checkSpellType(player, "Twin Cast")
+
+if discovery then
+    print("First time casting:", discovery.spell_type)
+    -- Signal automatically emitted: signal.emit("spell_type_discovered", { spell_type })
+end
+```
+
+**Discovery statistics:**
+
+```lua
+local stats = TagDiscoverySystem.getStats(player)
+print("Total:", stats.total_discoveries)
+print("Tag thresholds:", stats.tag_thresholds)
+print("Spell types:", stats.spell_types)
+print("Tag patterns:", stats.tag_patterns)
+```
+
+**Get all discoveries by type:**
+
+```lua
+-- Get all tag threshold discoveries
+local thresholds = TagDiscoverySystem.getDiscoveriesByType(player, "tag_threshold")
+
+-- Get all spell type discoveries
+local spellTypes = TagDiscoverySystem.getDiscoveriesByType(player, "spell_type")
+```
+
+**Clear discoveries (for testing):**
+
+```lua
+TagDiscoverySystem.clearDiscoveries(player)
+```
+
+### Spell Type Evaluator - Identifying Patterns
+
+The `SpellTypeEvaluator` analyzes a cast block (list of actions and modifiers) and identifies the spell pattern being cast. This is the "Poker Hand" equivalent for the wand system.
+
+**Spell type categories:**
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `Simple Cast` | 1 action, no modifiers | Single fireball |
+| `Twin Cast` | 1 action, multicast x2 | Two projectiles |
+| `Scatter Cast` | 1 action, multicast > 2 + spread | Shotgun pattern |
+| `Precision Cast` | 1 action, speed/damage mod, no spread | Sniper shot |
+| `Rapid Fire` | 1 action, low cast delay | Machine gun |
+| `Mono-Element` | 3+ actions, same element | All Fire spells |
+| `Combo Chain` | 3+ actions, different types | Fire + Ice + Lightning |
+| `Heavy Barrage` | 3+ actions, high cost/damage | Expensive spell combo |
+| `Chaos Cast` | Fallback for undefined patterns | Mixed/unusual combos |
+
+**Evaluating spell types:**
+
+```lua
+local SpellTypeEvaluator = require("wand.spell_type_evaluator")
+
+-- Cast block from wand execution
+local block = {
+    actions = {
+        { id = "FIREBALL", tags = { "Fire", "Projectile" }, mana_cost = 10 },
+        { id = "ICE_SHARD", tags = { "Ice", "Projectile" }, mana_cost = 8 }
+    },
+    modifiers = {
+        multicastCount = 1,
+        projectile_speed_multiplier = 1.0,
+        damage_multiplier = 1.5,
+        cast_delay_multiplier = 1.0
+    }
+}
+
+local spellType = SpellTypeEvaluator.evaluate(block)
+print("Spell type:", spellType)  -- e.g., "Combo Chain"
+
+-- Check for discovery
+TagDiscoverySystem.checkSpellType(player, spellType)
+```
+
+**Analyzing tag composition:**
+
+```lua
+-- Get detailed tag metrics for the cast
+local tagAnalysis = SpellTypeEvaluator.analyzeTags(block.actions)
+
+print("Primary tag:", tagAnalysis.primary_tag)        -- Most common tag
+print("Primary count:", tagAnalysis.primary_count)    -- How many times
+print("Diversity:", tagAnalysis.diversity)            -- Number of distinct tags
+print("Total tags:", tagAnalysis.total_tags)          -- Total tag instances
+
+-- Threshold flags for joker reactions
+if tagAnalysis.is_tag_heavy then
+    print("3+ actions with same tag!")
+end
+
+if tagAnalysis.is_mono_tag then
+    print("All actions share one tag!")
+end
+
+if tagAnalysis.is_diverse then
+    print("3+ different tag types!")
+end
+```
+
+### Card Synergy System - Set Bonuses
+
+The `CardSynergy` system detects tag-based sets and curated combos, applying bonuses when thresholds are met. This works alongside the discovery system.
+
+**Detecting active sets:**
+
+```lua
+local CardSynergy = require("wand.card_synergy_system")
+
+-- Detect tag counts from card list
+local cardList = {
+    { id = "FIREBALL", tags = { "Fire", "Projectile" } },
+    { id = "FLAME_WALL", tags = { "Fire", "Hazard" } },
+    { id = "INFERNO", tags = { "Fire", "AoE" } }
+}
+
+local tagCounts = CardSynergy.detectSets(cardList)
+-- Returns: { Fire = 3, Projectile = 1, Hazard = 1, AoE = 1 }
+
+-- Get active bonuses (thresholds: 3, 6, 9)
+local activeBonuses = CardSynergy.getActiveBonuses(tagCounts)
+
+for tagName, bonusData in pairs(activeBonuses) do
+    print("Active:", tagName, "tier", bonusData.tier)
+    print("Description:", bonusData.bonus.description)
+end
+```
+
+**Getting bonus info for UI:**
+
+```lua
+local bonusInfo = CardSynergy.getActiveBonusInfo(tagCounts)
+
+for _, info in ipairs(bonusInfo) do
+    print(info.displayName)   -- "Mobility"
+    print(info.tier)          -- 3, 6, or 9
+    print(info.count)         -- Actual card count
+    print(info.description)   -- "Swift Caster I: +10% cast speed, ..."
+    print(info.color)         -- "#4A90E2"
+    print(info.icon)          -- "icon_mobility"
+end
+```
+
+**Checking progress to next tier:**
+
+```lua
+local nextThreshold, cardsNeeded = CardSynergy.getProgressToNextTier("Fire", 4)
+if nextThreshold then
+    print("Need", cardsNeeded, "more Fire cards to reach tier", nextThreshold)
+else
+    print("Already at max tier!")
+end
+```
+
+**Detecting curated combos:**
+
+```lua
+-- Check for specific card combinations
+local activeCombos = CardSynergy.detectCuratedCombos(cardList)
+
+for _, comboId in ipairs(activeCombos) do
+    local comboDef = CardSynergy.curatedCombos[comboId]
+    print("Active combo:", comboDef.name)
+    print("Effect:", comboDef.description)
+end
+```
+
+### Avatar System - Character Unlocks
+
+The `AvatarSystem` tracks unlock progress for playable avatars based on tag thresholds and gameplay metrics.
+
+**Checking unlocks:**
+
+```lua
+local AvatarSystem = require("wand.avatar_system")
+
+-- Check for new unlocks (called when deck changes or metrics update)
+local newUnlocks = AvatarSystem.check_unlocks(player, {
+    tag_counts = { Fire = 7, Defense = 5 },  -- Optional tag counts
+    metrics = { kills = 100, wins = 5 }      -- Optional metrics (falls back to player.avatar_progress)
+})
+
+-- newUnlocks is an array of avatar IDs
+for _, avatarId in ipairs(newUnlocks) do
+    print("Unlocked avatar:", avatarId)
+    -- Signal automatically emitted: signal.emit("avatar_unlocked", { avatar_id })
+end
+```
+
+**Recording progress:**
+
+```lua
+-- Increment a metric and check for unlocks
+local newUnlocks = AvatarSystem.record_progress(
+    player,
+    "kills_with_fire",  -- Metric name
+    1,                  -- Delta (amount to add)
+    { tag_counts = player.tag_counts }  -- Optional context
+)
+```
+
+**Equipping avatars:**
+
+```lua
+-- Equip an already-unlocked avatar
+local success, error = AvatarSystem.equip(player, "fire_mage")
+
+if not success then
+    print("Cannot equip:", error)  -- "avatar_locked"
+end
+
+-- Get currently equipped avatar
+local equippedId = AvatarSystem.get_equipped(player)
+if equippedId then
+    print("Playing as:", equippedId)
+end
+```
+
+**Avatar unlock conditions (data-driven):**
+
+Avatars are defined in `assets/scripts/data/avatars.lua` with unlock conditions:
+
+```lua
+-- Example avatar definition
+fire_mage = {
+    id = "fire_mage",
+    name = "Fire Mage",
+    unlock = {
+        fire_tags = 7,           -- Primary condition: 7+ Fire tags
+        OR_wins = 3              -- Alternative: 3 wins
+    }
+}
+
+-- Unlock logic:
+-- - Primary path: ALL non-OR conditions must be met
+-- - Alternative path: ANY OR_ condition is sufficient
+-- Player unlocks if (primary_path OR alternative_path)
+```
+
+### Events Emitted
+
+The discovery and progression systems emit signals for UI notifications:
+
+| Event | Parameters | When Emitted |
+|-------|------------|--------------|
+| `"tag_threshold_discovered"` | `{ tag, threshold, count }` | First time reaching tag threshold |
+| `"spell_type_discovered"` | `{ spell_type }` | First time casting spell type |
+| `"tag_pattern_discovered"` | `{ pattern_id, pattern_name }` | First time encountering tag pattern |
+| `"avatar_unlocked"` | `{ avatar_id }` | Avatar unlock conditions met |
+
+**Listening to events:**
+
+```lua
+local signal = require("external.hump.signal")
+
+signal.register("tag_threshold_discovered", function(data)
+    print("NEW DISCOVERY:", data.tag, "x" .. data.threshold)
+    print("You now have", data.count, data.tag, "cards!")
+    -- Show celebration UI
+end)
+
+signal.register("spell_type_discovered", function(data)
+    print("NEW SPELL TYPE:", data.spell_type)
+    -- Show tutorial or achievement
+end)
+
+signal.register("avatar_unlocked", function(data)
+    print("AVATAR UNLOCKED:", data.avatar_id)
+    -- Show unlock animation
+end)
+```
+
+### Persistence - Save/Load
+
+**Exporting discoveries for save file:**
+
+```lua
+-- Get all discoveries in save-friendly format
+local saveData = DiscoveryJournal.exportForSave(player)
+
+-- saveData is a table that can be serialized to JSON/file
+-- Structure: { ["tag_Fire_3"] = { type, tag, threshold, timestamp }, ... }
+```
+
+**Importing discoveries from save file:**
+
+```lua
+-- Load discoveries from save data
+DiscoveryJournal.importFromSave(player, saveData)
+
+-- Player's tag_discoveries table is now populated
+```
+
+**Avatar progress persistence:**
+
+```lua
+-- Avatar state is stored in player.avatar_state:
+player.avatar_state = {
+    unlocked = { fire_mage = true, ice_mage = true },
+    equipped = "fire_mage"
+}
+
+-- Avatar progress metrics in player.avatar_progress:
+player.avatar_progress = {
+    kills_with_fire = 50,
+    wins = 3,
+    distance_traveled = 1000
+}
+```
+
+### Integration Example - Complete Flow
+
+```lua
+local TagDiscoverySystem = require("wand.tag_discovery_system")
+local DiscoveryJournal = require("wand.discovery_journal")
+local CardSynergy = require("wand.card_synergy_system")
+local AvatarSystem = require("wand.avatar_system")
+local signal = require("external.hump.signal")
+
+-- Called when player's deck changes
+function onDeckChanged(player, cardList)
+    -- Detect tag counts
+    local tagCounts = CardSynergy.detectSets(cardList)
+
+    -- Check for new tag threshold discoveries
+    local newThresholds = TagDiscoverySystem.checkTagThresholds(player, tagCounts)
+
+    -- Check for avatar unlocks
+    local newAvatars = AvatarSystem.check_unlocks(player, {
+        tag_counts = tagCounts
+    })
+
+    -- Apply set bonuses
+    CardSynergy.applySetBonuses(player, tagCounts)
+
+    -- Update UI with discoveries
+    local summary = DiscoveryJournal.getSummary(player)
+    updateDiscoveryUI(summary)
+end
+
+-- Called during wand execution
+function onSpellCast(player, castBlock)
+    -- Evaluate spell type
+    local SpellTypeEvaluator = require("wand.spell_type_evaluator")
+    local spellType = SpellTypeEvaluator.evaluate(castBlock)
+
+    -- Check for spell type discovery
+    local discovery = TagDiscoverySystem.checkSpellType(player, spellType)
+
+    if discovery then
+        -- First time casting this spell type!
+        signal.emit("spell_type_discovered", discovery)
+    end
+end
+
+-- Listen for discovery events
+signal.register("tag_threshold_discovered", function(data)
+    -- Show celebration popup
+    showDiscoveryPopup(string.format("%s x%d Discovered!", data.tag, data.threshold))
+end)
+
+signal.register("avatar_unlocked", function(data)
+    showAvatarUnlockAnimation(data.avatar_id)
+end)
+```
+
+### Common Patterns
+
+**Pattern 1: Discovery notification feed**
+
+```lua
+-- Show recent discoveries in UI
+local function updateDiscoveryFeed(player)
+    local recent = DiscoveryJournal.getRecent(player, 5)
+
+    for i, discovery in ipairs(recent) do
+        local text = ""
+        if discovery.type == "tag_threshold" then
+            text = string.format("%s x%d", discovery.tag, discovery.threshold)
+        elseif discovery.type == "spell_type" then
+            text = discovery.spell_type
+        end
+
+        displayNotification(text, discovery.timestamp)
+    end
+end
+```
+
+**Pattern 2: Progress bar to next tier**
+
+```lua
+-- Show progress to next Fire tag tier
+local function getTagProgress(tagCounts, tagName)
+    local count = tagCounts[tagName] or 0
+    local nextThreshold, needed = CardSynergy.getProgressToNextTier(tagName, count)
+
+    if nextThreshold then
+        return {
+            current = count,
+            next = nextThreshold,
+            progress = count / nextThreshold,
+            cardsNeeded = needed
+        }
+    else
+        return { maxed = true }
+    end
+end
+```
+
+**Pattern 3: First-time tutorial triggers**
+
+```lua
+-- Show tutorial when player discovers certain spell types
+signal.register("spell_type_discovered", function(data)
+    if data.spell_type == "Twin Cast" then
+        showTutorial("multicast_modifiers")
+    elseif data.spell_type == "Mono-Element" then
+        showTutorial("elemental_synergy")
+    end
+end)
+```
+
+### Common Gotchas
+
+**Gotcha 1:** Discovery tracking requires player table with tag_discoveries
+
+```lua
+-- WRONG: Using entity ID directly
+local discoveries = TagDiscoverySystem.checkTagThresholds(playerEntityID, tagCounts)
+
+-- CORRECT: Pass player table (script table or entity with discoveries)
+local player = getScriptTableFromEntityID(playerEntityID)
+local discoveries = TagDiscoverySystem.checkTagThresholds(player, tagCounts)
+```
+
+**Gotcha 2:** Tag thresholds are 3/5/7/9 by default
+
+```lua
+-- These thresholds trigger discoveries:
+-- 3, 5, 7, 9 (defined in TagDiscoverySystem.DISCOVERY_THRESHOLDS)
+
+-- If you have 4 Fire cards, only the x3 discovery triggers
+-- You need 5 cards for the next discovery
+```
+
+**Gotcha 3:** Discoveries are persistent - never discovered twice
+
+```lua
+-- Once discovered, won't trigger again
+TagDiscoverySystem.checkTagThresholds(player, { Fire = 5 })  -- Discovers Fire x3, Fire x5
+TagDiscoverySystem.checkTagThresholds(player, { Fire = 5 })  -- Returns empty array
+
+-- To reset for testing:
+TagDiscoverySystem.clearDiscoveries(player)
+```
+
+**Gotcha 4:** Spell type evaluation requires properly formatted block
+
+```lua
+-- WRONG: Missing required fields
+local block = { actions = { card1, card2 } }
+local spellType = SpellTypeEvaluator.evaluate(block)  -- May return nil or "Chaos Cast"
+
+-- CORRECT: Include modifiers aggregate
+local block = {
+    actions = { card1, card2 },
+    modifiers = {
+        multicastCount = 1,
+        projectile_speed_multiplier = 1.0,
+        damage_multiplier = 1.0,
+        cast_delay_multiplier = 1.0
+    }
+}
+```
+
+### Related Systems
+
+- **Tag Evaluator** (`wand.tag_evaluator`): Calculates tag bonuses at thresholds (documented in CLAUDE.md)
+- **Wand Executor** (`wand.wand_executor`): Executes spell casts and calls spell type evaluation
+- **Joker System** (`wand.joker_system`): Reacts to tag counts and spell types (Chapter 10)
+- **Card Registry** (`wand.card_registry`): Card definitions with tags (Chapter 10)
+
+***
+
+## Input System
+
+\label{recipe:input-system}
+
+The Input System provides a flexible action-binding framework for keyboard, mouse, and gamepad input. Instead of hardcoding specific keys, you bind **actions** (like "Jump", "Attack", "Menu") to input devices with triggers (Pressed, Released, Held) and poll them in your game logic. This allows for remapping, context switching (gameplay vs menu), and unified input handling.
+
+### Action Binding - Mapping Inputs to Actions
+
+The core workflow is:
+1. **Bind** an action name to a device + key/button/axis + trigger type + context
+2. **Poll** the action state in your game loop using `input.action_pressed()`, `input.action_down()`, etc.
+
+**Basic binding examples:**
+
+```lua
+-- Keyboard bindings
+input.bind("jump", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_SPACE,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+input.bind("move_left", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_A,
+    trigger = "Held",
+    context = "gameplay"
+})
+
+-- Mouse bindings
+input.bind("shoot", {
+    device = "mouse",
+    key = MouseButton.BUTTON_LEFT,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+-- Gamepad button bindings
+input.bind("confirm", {
+    device = "gamepad_button",
+    key = GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN,  -- A on Xbox, Cross on PS
+    trigger = "Pressed",
+    context = "menu"
+})
+
+-- Gamepad axis bindings (for analog sticks)
+input.bind("move_right", {
+    device = "gamepad_axis",
+    axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X,
+    trigger = "AxisPos",
+    threshold = 0.2,  -- Deadzone
+    context = "gameplay"
+})
+
+input.bind("move_left", {
+    device = "gamepad_axis",
+    axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X,
+    trigger = "AxisNeg",
+    threshold = 0.2,
+    context = "gameplay"
+})
+```
+
+**Binding options:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `device` | string | `"keyboard"`, `"mouse"`, `"gamepad_button"`, `"gamepad_axis"` |
+| `key` | enum | `KeyboardKey.*`, `MouseButton.*`, `GamepadButton.*` (for non-axis devices) |
+| `axis` | enum | `GamepadAxis.*` (for `gamepad_axis` device) |
+| `trigger` | string | `"Pressed"`, `"Released"`, `"Held"`, `"Repeat"`, `"AxisPos"`, `"AxisNeg"` |
+| `threshold` | number | Deadzone for axis triggers (default: 0.5) |
+| `context` | string | Context name (default: `"global"`) - see Context Switching below |
+| `modifiers` | table | Optional modifier keys (keyboard only), e.g., `{ KeyboardKey.KEY_LEFT_SHIFT }` |
+
+### Polling Input - Checking Action State
+
+After binding, poll actions in your update loop:
+
+```lua
+local timer = require("core.timer")
+
+-- Poll every frame
+timer.every(0.016, function()
+    -- Check if action was pressed THIS FRAME (one-frame pulse)
+    if input.action_pressed("jump") then
+        player.velocity.y = -500
+        print("Player jumped!")
+    end
+
+    -- Check if action is held down (continuous)
+    if input.action_down("move_left") then
+        player.position.x -= 200 * dt
+    end
+
+    -- Check if action was released THIS FRAME
+    if input.action_released("shoot") then
+        print("Released trigger")
+    end
+
+    -- Get analog axis value (for gamepad axes)
+    local moveX = input.action_value("move_right") + input.action_value("move_left")
+    player.position.x += moveX * 200 * dt
+end)
+```
+
+**Polling functions:**
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `input.action_pressed(name)` | boolean | True for ONE FRAME when action is pressed |
+| `input.action_released(name)` | boolean | True for ONE FRAME when action is released |
+| `input.action_down(name)` | boolean | True while action is held (latched from press to release) |
+| `input.action_value(name)` | number | Axis value (for analog inputs), resets each frame |
+
+### Trigger Types - Edge Detection vs Continuous
+
+Triggers control when a binding fires:
+
+| Trigger | Behavior | Use Case |
+|---------|----------|----------|
+| `"Pressed"` | Fires once on press, latches `down=true` | Jump, single actions |
+| `"Released"` | Fires once on release | Charge attacks, release timing |
+| `"Held"` | Fires continuously while held | Movement, continuous actions |
+| `"Repeat"` | Placeholder for auto-repeat | Not yet implemented |
+| `"AxisPos"` | Fires when axis > threshold | Analog stick right/up |
+| `"AxisNeg"` | Fires when axis < -threshold | Analog stick left/down |
+
+**Important lifecycle:** `Pressed` trigger sets both `pressed=true` (one frame) AND `down=true` (latched). Use `action_pressed()` for single-frame detection, `action_down()` for held state.
+
+### Context Switching - Gameplay vs Menu
+
+Contexts allow different bindings for different game states (e.g., "gameplay", "menu", "inventory").
+
+```lua
+-- Bind same key to different actions in different contexts
+input.bind("confirm", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ENTER,
+    trigger = "Pressed",
+    context = "menu"
+})
+
+input.bind("interact", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ENTER,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+-- Switch context at runtime
+input.set_context("gameplay")  -- Only "gameplay" bindings active
+
+-- Later, switch to menu
+input.set_context("menu")      -- Only "menu" bindings active
+```
+
+**Context rules:**
+- Only bindings matching the **active context** OR `"global"` context are evaluated
+- Use `"global"` for bindings that should work everywhere (e.g., pause, screenshot)
+- Default context is `"global"`
+
+### Key and Button Constants
+
+The engine exposes Raylib enums for all input devices:
+
+**Keyboard keys:** `KeyboardKey.KEY_*`
+
+```lua
+-- Letter keys
+KeyboardKey.KEY_A, KEY_B, ..., KEY_Z
+
+-- Number keys
+KeyboardKey.KEY_ZERO, KEY_ONE, ..., KEY_NINE
+
+-- Special keys
+KeyboardKey.KEY_SPACE, KEY_ENTER, KEY_ESCAPE, KEY_TAB, KEY_BACKSPACE
+
+-- Arrow keys
+KeyboardKey.KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
+
+-- Function keys
+KeyboardKey.KEY_F1, KEY_F2, ..., KEY_F12
+
+-- Modifier keys
+KeyboardKey.KEY_LEFT_SHIFT, KEY_RIGHT_SHIFT, KEY_LEFT_CONTROL, KEY_RIGHT_CONTROL
+KeyboardKey.KEY_LEFT_ALT, KEY_RIGHT_ALT, KEY_LEFT_SUPER, KEY_RIGHT_SUPER
+```
+
+**Mouse buttons:** `MouseButton.BUTTON_*`
+
+```lua
+MouseButton.BUTTON_LEFT
+MouseButton.BUTTON_RIGHT
+MouseButton.BUTTON_MIDDLE
+MouseButton.BUTTON_SIDE      -- Side button (forward)
+MouseButton.BUTTON_EXTRA     -- Extra button (back)
+```
+
+**Gamepad buttons:** `GamepadButton.GAMEPAD_BUTTON_*`
+
+```lua
+-- Face buttons (Xbox layout)
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN   -- A
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_RIGHT  -- B
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_LEFT   -- X
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_UP     -- Y
+
+-- D-Pad
+GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_UP, ..._DOWN, ..._LEFT, ..._RIGHT
+
+-- Shoulder buttons
+GamepadButton.GAMEPAD_BUTTON_LEFT_TRIGGER_1    -- LB
+GamepadButton.GAMEPAD_BUTTON_RIGHT_TRIGGER_1   -- RB
+GamepadButton.GAMEPAD_BUTTON_LEFT_TRIGGER_2    -- LT
+GamepadButton.GAMEPAD_BUTTON_RIGHT_TRIGGER_2   -- RT
+
+-- Menu buttons
+GamepadButton.GAMEPAD_BUTTON_MIDDLE_LEFT       -- Back/Select
+GamepadButton.GAMEPAD_BUTTON_MIDDLE_RIGHT      -- Start
+GamepadButton.GAMEPAD_BUTTON_MIDDLE            -- Guide/Home
+```
+
+**Gamepad axes:** `GamepadAxis.GAMEPAD_AXIS_*`
+
+```lua
+GamepadAxis.GAMEPAD_AXIS_LEFT_X
+GamepadAxis.GAMEPAD_AXIS_LEFT_Y
+GamepadAxis.GAMEPAD_AXIS_RIGHT_X
+GamepadAxis.GAMEPAD_AXIS_RIGHT_Y
+GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER    -- LT analog (0 to 1)
+GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER   -- RT analog (0 to 1)
+```
+
+### Legacy Input - Direct Key Polling
+
+For simple cases, you can check keys directly (not recommended for production):
+
+```lua
+-- Check if a key is pressed THIS FRAME
+if isKeyPressed("W") then
+    print("W key pressed!")
+end
+
+-- Note: Case-insensitive, uses magic_enum conversion
+-- Returns boolean
+```
+
+**Why use action bindings instead?**
+- Remappable controls
+- Context-aware (menu vs gameplay)
+- Unified gamepad + keyboard support
+- Works with modifiers and chords
+
+### Input Remapping - Runtime Rebinding
+
+Allow players to remap controls:
+
+```lua
+-- Start listening for next input
+input.start_rebind("jump", function(ok, binding)
+    if ok then
+        print("Rebound jump to:", binding.device, binding.code, binding.trigger)
+        -- binding contains: { device, code, trigger, context, modifiers }
+        -- Save to config file
+    else
+        print("Rebind cancelled")
+    end
+end)
+
+-- While listening, the next raw input (key/button/axis) will:
+-- 1. Populate the binding table with device/code/trigger
+-- 2. Call the callback with ok=true
+```
+
+### Common Patterns
+
+**Pattern 1: WASD + Gamepad movement**
+
+```lua
+-- Keyboard WASD
+input.bind("move_up",    { device = "keyboard", key = KeyboardKey.KEY_W, trigger = "Held" })
+input.bind("move_down",  { device = "keyboard", key = KeyboardKey.KEY_S, trigger = "Held" })
+input.bind("move_left",  { device = "keyboard", key = KeyboardKey.KEY_A, trigger = "Held" })
+input.bind("move_right", { device = "keyboard", key = KeyboardKey.KEY_D, trigger = "Held" })
+
+-- Gamepad left stick
+input.bind("move_up",    { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_Y, trigger = "AxisNeg", threshold = 0.2 })
+input.bind("move_down",  { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_Y, trigger = "AxisPos", threshold = 0.2 })
+input.bind("move_left",  { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisNeg", threshold = 0.2 })
+input.bind("move_right", { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisPos", threshold = 0.2 })
+
+-- Poll in update
+local function updateMovement(dt)
+    local dx = 0
+    local dy = 0
+
+    if input.action_down("move_right") then dx += 1 end
+    if input.action_down("move_left")  then dx -= 1 end
+    if input.action_down("move_down")  then dy += 1 end
+    if input.action_down("move_up")    then dy -= 1 end
+
+    -- For analog, add axis values
+    dx += input.action_value("move_right") + input.action_value("move_left")
+    dy += input.action_value("move_down") + input.action_value("move_up")
+
+    player.position.x += dx * 200 * dt
+    player.position.y += dy * 200 * dt
+end
+```
+
+**Pattern 2: Context-aware pause menu**
+
+```lua
+-- Pause works in gameplay, ESC works in menu
+input.bind("pause", { device = "keyboard", key = KeyboardKey.KEY_ESCAPE, trigger = "Pressed", context = "gameplay" })
+input.bind("back",  { device = "keyboard", key = KeyboardKey.KEY_ESCAPE, trigger = "Pressed", context = "menu" })
+
+-- Switch contexts when toggling pause
+local paused = false
+
+if input.action_pressed("pause") then
+    paused = true
+    input.set_context("menu")
+    showPauseMenu()
+end
+
+if input.action_pressed("back") then
+    paused = false
+    input.set_context("gameplay")
+    hidePauseMenu()
+end
+```
+
+**Pattern 3: Charge attack with release timing**
+
+```lua
+input.bind("attack_start", { device = "mouse", key = MouseButton.BUTTON_LEFT, trigger = "Pressed" })
+input.bind("attack_release", { device = "mouse", key = MouseButton.BUTTON_LEFT, trigger = "Released" })
+
+local charge_time = 0
+
+timer.every(0.016, function(dt)
+    -- Track how long button is held
+    if input.action_down("attack_start") then
+        charge_time += dt
+    end
+
+    -- Release to fire charged attack
+    if input.action_released("attack_release") then
+        local damage = 10 + (charge_time * 50)  -- More damage for longer charge
+        fireProjectile(damage)
+        charge_time = 0
+    end
+end)
+```
+
+### Accessing InputState (Advanced)
+
+For advanced use cases, you can access the global InputState:
+
+```lua
+local inputState = globals.inputState
+
+-- Cursor position (world coordinates)
+local cursorPos = inputState.cursor_position
+print("Mouse at:", cursorPos.x, cursorPos.y)
+
+-- Check which entity is under cursor
+local hoveredEntity = inputState.cursor_hovering_target
+
+-- Check key/button states directly (not recommended - use actions instead)
+local pressedKeys = inputState.keysPressedThisFrame
+local heldKeys = inputState.keysHeldThisFrame
+local releasedKeys = inputState.keysReleasedThisFrame
+```
+
+### Common Gotchas
+
+**Gotcha 1:** `action_pressed` vs `action_down`
+
+```lua
+-- WRONG: Using action_pressed for held movement
+if input.action_pressed("move_left") then
+    player.x -= 5  -- Only moves ONE FRAME when key is pressed!
+end
+
+-- CORRECT: Use action_down for continuous actions
+if input.action_down("move_left") then
+    player.x -= 5  -- Moves every frame while held
+end
+```
+
+**Gotcha 2:** Forgetting to set context
+
+```lua
+-- Bind with "gameplay" context
+input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE, context = "gameplay" })
+
+-- WRONG: Polling without setting context (defaults to "global")
+if input.action_pressed("jump") then  -- Won't work! Context mismatch
+    player.jump()
+end
+
+-- CORRECT: Set context first
+input.set_context("gameplay")
+if input.action_pressed("jump") then  -- Now it works
+    player.jump()
+end
+
+-- OR: Use "global" context for always-active bindings
+input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE, context = "global" })
+```
+
+**Gotcha 3:** Axis triggers require proper threshold
+
+```lua
+-- WRONG: Axis trigger with no threshold (uses default 0.5)
+input.bind("move_right", { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisPos" })
+-- May feel sluggish - requires >50% stick movement
+
+-- CORRECT: Lower threshold for responsive controls
+input.bind("move_right", { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisPos", threshold = 0.15 })
+```
+
+**Gotcha 4:** Input polling before binding
+
+```lua
+-- WRONG: Polling before binding exists
+if input.action_pressed("jump") then  -- Returns false, no error
+    player.jump()
+end
+input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE })  -- Too late!
+
+-- CORRECT: Bind during initialization, poll during gameplay
+function init()
+    input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE, context = "gameplay" })
+    input.set_context("gameplay")
+end
+
+function update(dt)
+    if input.action_pressed("jump") then
+        player.jump()
+    end
+end
+```
+
+### Related Systems
+
+- **Controller Navigation** (`src/systems/input/controller_nav.cpp`): UI focus and navigation
+- **Text Input** (`input.HookTextInput()`, `input.UnhookTextInput()`): Text field input
+- **Input Action Binding Documentation** (`src/systems/input/input_action_binding_usage.md`): Full C++ API reference
+
+### See Also
+
+For detailed action binding usage (including mouse wheel as pseudo-axis, modifiers, chording), see `src/systems/input/input_action_binding_usage.md`.
+
+***
+
+## Game Control
+
+\label{recipe:game-control}
+
+The Game Control API provides essential functions for managing game lifecycle: pausing/unpausing gameplay and resetting game state. These are low-level functions exposed directly from C++ for controlling the game loop and AI systems.
+
+### Pausing and Unpausing
+
+The engine provides simple pause/unpause functions that control the game's update loop. When paused, gameplay updates stop but rendering continues (useful for pause menus).
+
+```lua
+-- Pause the game
+pauseGame()
+
+-- Resume the game
+unpauseGame()
+```
+
+**Behavior:**
+- `pauseGame()` sets `game::isPaused = true`, halting gameplay updates
+- `unpauseGame()` sets `game::isPaused = false`, resuming normal updates
+- Rendering and UI continue to work while paused
+- No return value (void functions)
+
+### Hard Reset
+
+The `hardReset()` function requests a full reset of the AI system state. This is useful for clearing all AI state and starting fresh.
+
+```lua
+-- Reset the AI system
+hardReset()
+```
+
+**Important:** This only resets the AI system (`ai_system::requestAISystemReset()`). For full game resets, you may need to manually reset other systems (physics, entities, etc.).
+
+### Common Patterns
+
+**Pattern 1: Pause menu with input context switching**
+
+```lua
+local paused = false
+
+-- Bind pause key (works in gameplay context)
+input.bind("pause", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ESCAPE,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+-- Bind resume key (works in menu context)
+input.bind("resume", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ESCAPE,
+    trigger = "Pressed",
+    context = "menu"
+})
+
+-- Toggle pause state
+timer.every(0.016, function()
+    if input.action_pressed("pause") and not paused then
+        pauseGame()
+        paused = true
+        input.set_context("menu")
+        showPauseMenu()
+    end
+
+    if input.action_pressed("resume") and paused then
+        unpauseGame()
+        paused = false
+        input.set_context("gameplay")
+        hidePauseMenu()
+    end
+end)
+```
+
+**Pattern 2: Conditional pause (only pause if not already paused)**
+
+```lua
+local function togglePause()
+    if paused then
+        unpauseGame()
+        paused = false
+    else
+        pauseGame()
+        paused = true
+    end
+end
+```
+
+**Pattern 3: Reset game state on player death**
+
+```lua
+local signal = require("external.hump.signal")
+
+signal.register("player_death", function()
+    -- Pause the game
+    pauseGame()
+
+    -- Show death screen
+    showDeathScreen()
+
+    -- Reset AI after delay
+    timer.after(2.0, function()
+        hardReset()
+        -- Additional cleanup...
+        unpauseGame()
+    end)
+end)
+```
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `pauseGame()` | None | nil | Pauses gameplay updates |
+| `unpauseGame()` | None | nil | Resumes gameplay updates |
+| `hardReset()` | None | nil | Resets AI system state |
+
+### Implementation Details
+
+These functions are thin wrappers around C++ game state:
+
+```cpp
+// From scripting_functions.cpp
+auto pauseGame() -> void {
+  game::isPaused = true;
+  SPDLOG_INFO("Game paused.");
+}
+
+auto unpauseGame() -> void {
+  game::isPaused = false;
+  SPDLOG_INFO("Game unpaused.");
+}
+
+// hardReset calls:
+ai_system::requestAISystemReset();
+```
+
+### Related Systems
+
+- **Input System** (Recipe \pageref{recipe:input-system}): Use input contexts to handle pause/resume input
+- **Timer System** (Recipe \pageref{recipe:timer-system}): Timers respect pause state
+- **Signal System**: Emit custom events when pausing/resuming for UI updates
+
+***
+
+## Screen & Camera Globals
+
+\label{recipe:screen-camera}
+
+The engine provides global functions for querying screen dimensions, timing information, and coordinate transformations between world and screen space. These are essential for UI positioning, camera-relative rendering, and input handling.
+
+### Screen Dimensions
+
+Get the virtual screen resolution (independent of actual window size):
+
+```lua
+local width = GetScreenWidth()   -- Returns virtual width (e.g., 1280)
+local height = GetScreenHeight() -- Returns virtual height (e.g., 720)
+
+-- Center UI element on screen
+local centerX = width / 2
+local centerY = height / 2
+```
+
+**Note:** These return `globals::VIRTUAL_WIDTH` and `globals::VIRTUAL_HEIGHT`, not the physical window dimensions. The engine handles scaling to match the actual window.
+
+### Timing Functions
+
+Access frame timing and total elapsed time:
+
+```lua
+-- Delta time since last frame (smoothed)
+local dt = GetFrameTime()  -- Returns seconds (e.g., 0.016 for 60 FPS)
+
+-- Total elapsed time since game start
+local elapsed = GetTime()  -- Returns seconds
+
+-- Example: animate entity with delta time
+local speed = 100  -- pixels per second
+transform.actualX = transform.actualX + (speed * dt)
+```
+
+**Timing Details:**
+- `GetFrameTime()` returns smoothed delta time from `main_loop::mainLoop.smoothedDeltaTime`
+- `GetTime()` returns total elapsed time from `main_loop::getTime()`
+- Both return `float` values in seconds
+
+### Camera Access
+
+The global camera is available via `globals.camera`:
+
+```lua
+-- Access camera properties
+local cam = globals.camera
+
+-- Read camera state
+print("Offset:", cam.offset.x, cam.offset.y)     -- Camera displacement from target
+print("Target:", cam.target.x, cam.target.y)     -- Camera focus point
+print("Rotation:", cam.rotation)                 -- Rotation in degrees
+print("Zoom:", cam.zoom)                          -- Zoom level (1.0 = default)
+
+-- Modify camera (example: shake effect)
+cam.offset.x = math.random(-5, 5)
+cam.offset.y = math.random(-5, 5)
+```
+
+**Camera2D Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `offset` | Vector2 | Camera offset (displacement from target) |
+| `target` | Vector2 | Camera target (rotation and zoom origin) |
+| `rotation` | number | Camera rotation in degrees |
+| `zoom` | number | Camera zoom (1.0 = default scale) |
+
+### Coordinate Conversion
+
+Convert between world coordinates (game space) and screen coordinates (pixel space):
+
+```lua
+local cam = globals.camera
+
+-- World to screen (e.g., render world entity label at screen position)
+local worldPos = { x = 500, y = 300 }
+local screenPos = GetWorldToScreen2D(worldPos, cam)
+print("Screen position:", screenPos.x, screenPos.y)
+
+-- Screen to world (e.g., convert mouse click to world position)
+local mouseX, mouseY = GetMousePosition()
+local mouseScreen = { x = mouseX, y = mouseY }
+local mouseWorld = GetScreenToWorld2D(mouseScreen, cam)
+print("World position:", mouseWorld.x, mouseWorld.y)
+```
+
+**Use Cases:**
+- **World to Screen:** Render UI elements at entity positions, draw health bars above characters
+- **Screen to World:** Handle mouse input in world space, place entities at cursor position
+
+### Common Patterns
+
+**Pattern 1: Center UI element on screen**
+
+```lua
+local width = GetScreenWidth()
+local height = GetScreenHeight()
+
+local boxWidth = 200
+local boxHeight = 100
+
+-- Center the box
+local x = (width - boxWidth) / 2
+local y = (height - boxHeight) / 2
+
+-- Spawn UI at centered position
+dsl.spawn({ x = x, y = y }, myUIDefinition)
+```
+
+**Pattern 2: Mouse position in world coordinates**
+
+```lua
+local function getMouseWorldPosition()
+    local mouseX, mouseY = GetMousePosition()
+    local mouseScreen = { x = mouseX, y = mouseY }
+    return GetScreenToWorld2D(mouseScreen, globals.camera)
+end
+
+-- Use in click handler
+local worldPos = getMouseWorldPosition()
+print("Clicked world position:", worldPos.x, worldPos.y)
+```
+
+**Pattern 3: Render text at entity position (world to screen)**
+
+```lua
+local function drawEntityLabel(entity, text)
+    local transform = component_cache.get(entity, Transform)
+    if not transform then return end
+
+    -- Convert entity world position to screen coordinates
+    local worldPos = { x = transform.actualX, y = transform.actualY }
+    local screenPos = GetWorldToScreen2D(worldPos, globals.camera)
+
+    -- Draw text at screen position
+    draw.textPro(UI_LAYER, {
+        text = text,
+        x = screenPos.x,
+        y = screenPos.y - 20,  -- Offset above entity
+        fontSize = 16
+    }, z_orders.UI)
+end
+```
+
+**Pattern 4: Smooth camera follow**
+
+```lua
+local function updateCamera(playerEntity, dt)
+    local transform = component_cache.get(playerEntity, Transform)
+    if not transform then return end
+
+    local cam = globals.camera
+    local targetX = transform.actualX
+    local targetY = transform.actualY
+
+    -- Smooth lerp (adjust 0.1 for smoothing factor)
+    local lerpFactor = 1.0 - math.exp(-10 * dt)
+    cam.target.x = cam.target.x + (targetX - cam.target.x) * lerpFactor
+    cam.target.y = cam.target.y + (targetY - cam.target.y) * lerpFactor
+end
+```
+
+**Pattern 5: Screen-shake effect**
+
+```lua
+local function screenShake(duration, intensity)
+    local shakeTimer = 0
+
+    timer.every(0.016, function(dt)
+        shakeTimer = shakeTimer + dt
+        if shakeTimer >= duration then
+            -- Reset camera offset
+            globals.camera.offset.x = 0
+            globals.camera.offset.y = 0
+            return false  -- Stop timer
+        end
+
+        -- Apply random offset
+        local factor = 1.0 - (shakeTimer / duration)  -- Decay over time
+        globals.camera.offset.x = (math.random() * 2 - 1) * intensity * factor
+        globals.camera.offset.y = (math.random() * 2 - 1) * intensity * factor
+    end)
+end
+
+-- Trigger shake on impact
+signal.register("player_hit", function()
+    screenShake(0.3, 10)  -- 0.3 seconds, intensity 10
+end)
+```
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `GetScreenWidth()` | None | integer | Virtual screen width in pixels |
+| `GetScreenHeight()` | None | integer | Virtual screen height in pixels |
+| `GetFrameTime()` | None | number | Smoothed delta time since last frame (seconds) |
+| `GetTime()` | None | number | Total elapsed time since game start (seconds) |
+| `GetWorldToScreen2D()` | position: Vector2, camera: Camera2D | Vector2 | Convert world position to screen coordinates |
+| `GetScreenToWorld2D()` | position: Vector2, camera: Camera2D | Vector2 | Convert screen position to world coordinates |
+
+**Global:**
+| Global | Type | Description |
+|--------|------|-------------|
+| `globals.camera` | Camera2D | Main camera instance (offset, target, rotation, zoom) |
+
+### Implementation Details
+
+These functions are exposed from C++ via the scripting system:
+
+```cpp
+// From scripting_functions.cpp
+lua["GetScreenWidth"] = []() -> int { return globals::VIRTUAL_WIDTH; };
+lua["GetScreenHeight"] = []() -> int { return globals::VIRTUAL_HEIGHT; };
+
+lua["GetFrameTime"] = []() -> float {
+    return main_loop::mainLoop.smoothedDeltaTime;
+};
+
+lua["GetTime"] = []() -> float {
+    return main_loop::getTime();
+};
+
+lua["GetWorldToScreen2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+    return GetWorldToScreen2D(position, camera);
+};
+
+lua["GetScreenToWorld2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+    return GetScreenToWorld2D(position, camera);
+};
+
+// Camera binding (static Camera2D instance)
+lua["globals"]["camera"] = []() -> Camera2D & { return std::ref(camera2D); };
+```
+
+### Related Systems
+
+- **Input System** (Recipe \pageref{recipe:input-system}): Use `GetScreenToWorld2D()` for mouse input in world space
+- **UI DSL** (Recipe \pageref{recipe:ui-dsl}): Use screen dimensions for positioning UI elements
+- **Timer System** (Recipe \pageref{recipe:timer-system}): Use `GetFrameTime()` for smooth animations
+
+***
+
+## Entity Alias System
+
+\label{recipe:entity-alias}
+
+The entity alias system provides named lookups for important entities, allowing you to retrieve entities by string identifiers instead of storing entity handles globally. This is useful for referencing key entities like the player, boss enemies, or UI containers across different systems.
+
+### Setting an Alias
+
+Assign a string alias to an entity using `setEntityAlias()`:
+
+```lua
+-- Create player entity
+local player = animation_system.createAnimatedObjectWithTransform("player_sprite", true)
+
+-- Assign alias for later retrieval
+setEntityAlias("player", player)
+
+-- Alias a boss entity
+local boss = createBossEnemy()
+setEntityAlias("current_boss", boss)
+
+-- Alias UI container
+local inventoryUI = createInventoryPanel()
+setEntityAlias("inventory_panel", inventoryUI)
+```
+
+**Function Signature:**
+```lua
+setEntityAlias(alias, entity)
+-- alias: string - The name to use for lookup
+-- entity: Entity - The entity to alias (must be valid)
+```
+
+**Validation:** The function validates that the entity is valid before setting the alias. Invalid or null entities will log an error and be rejected.
+
+### Getting Entity by Alias
+
+Retrieve an entity by its alias using `getEntityByAlias()`:
+
+```lua
+-- Retrieve player entity from anywhere in code
+local player = getEntityByAlias("player")
+if player ~= entt_null then
+    local transform = component_cache.get(player, Transform)
+    print("Player position:", transform.actualX, transform.actualY)
+end
+
+-- Check if boss exists
+local boss = getEntityByAlias("current_boss")
+if boss == entt_null then
+    print("No boss currently active")
+else
+    -- Boss exists, do something
+    applyDamage(boss, 100)
+end
+```
+
+**Function Signature:**
+```lua
+local entity = getEntityByAlias(alias)
+-- alias: string - The alias to look up
+-- Returns: Entity - The aliased entity, or entt_null if not found
+```
+
+**Note:** `getEntityByAlias()` returns `entt_null` if the alias doesn't exist. Always check the result before using.
+
+### Common Patterns
+
+**Player Entity:**
+```lua
+-- Set player alias during initialization
+function initPlayer()
+    local player = createPlayerEntity()
+    setEntityAlias("player", player)
+    return player
+end
+
+-- Retrieve player from any system
+function damagePlayer(amount)
+    local player = getEntityByAlias("player")
+    if ensure_entity(player) then
+        applyDamage(player, amount)
+    end
+end
+```
+
+**Boss Entity:**
+```lua
+-- Set boss alias when spawning
+function spawnBoss(bossType)
+    local boss = createBossEntity(bossType)
+    setEntityAlias("current_boss", boss)
+    signal.emit("boss_spawned", boss)
+end
+
+-- Clear boss alias when defeated
+signal.register("boss_defeated", function(bossEntity)
+    -- Alias still points to dead entity, can be overwritten
+    -- or you can set it to null to indicate no boss
+    local currentBoss = getEntityByAlias("current_boss")
+    if currentBoss == bossEntity then
+        -- No API to remove alias, but it will be overwritten by next boss
+        print("Current boss defeated")
+    end
+end)
+```
+
+**UI Containers:**
+```lua
+-- Alias UI panels for cross-system access
+function createGameUI()
+    local healthBar = createHealthBarPanel()
+    setEntityAlias("ui_healthbar", healthBar)
+
+    local inventory = createInventoryPanel()
+    setEntityAlias("ui_inventory", inventory)
+
+    local minimap = createMinimapPanel()
+    setEntityAlias("ui_minimap", minimap)
+end
+
+-- Update UI from any system
+function updateHealthDisplay(currentHealth, maxHealth)
+    local healthBar = getEntityByAlias("ui_healthbar")
+    if ensure_entity(healthBar) then
+        local script = getScriptTableFromEntityID(healthBar)
+        if script then
+            script.currentHealth = currentHealth
+            script.maxHealth = maxHealth
+        end
+    end
+end
+```
+
+### Lifecycle Considerations
+
+**Entity Destruction:**
+- The alias map does NOT automatically remove aliases when entities are destroyed
+- If an aliased entity is destroyed, the alias will point to an invalid entity
+- Always validate entities returned from `getEntityByAlias()` using `ensure_entity()` or `entity_cache.valid()`
+
+```lua
+-- Safe usage pattern
+local boss = getEntityByAlias("current_boss")
+if ensure_entity(boss) then
+    -- Entity exists and is valid
+    applyDamage(boss, 50)
+else
+    -- Entity was destroyed or alias doesn't exist
+    print("No valid boss entity")
+end
+```
+
+**Alias Reuse:**
+- Aliases can be reassigned by calling `setEntityAlias()` with the same alias name
+- This is useful for "current_boss" or "active_npc" patterns where the entity changes
+
+```lua
+-- First boss
+local boss1 = spawnBoss("goblin_king")
+setEntityAlias("current_boss", boss1)
+
+-- Later, after boss1 is defeated, spawn new boss
+local boss2 = spawnBoss("dragon")
+setEntityAlias("current_boss", boss2)  -- Overwrites previous alias
+```
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `setEntityAlias()` | alias: string, entity: Entity | nil | Assigns a string alias to a valid entity |
+| `getEntityByAlias()` | alias: string | Entity \| nil | Retrieves entity by alias, returns `entt_null` if not found |
+
+### Related Systems
+
+- **Entity Validation** (Recipe \pageref{recipe:validate-entity}): Use `ensure_entity()` to validate aliased entities
+- **Component Cache** (Recipe \pageref{recipe:component-cache}): Access components on aliased entities
+- **Signal System** (Recipe \pageref{recipe:signal-system}): Emit events when important aliased entities change
+
+***
+
+## Avatar System
+\label{recipe:avatar-system}
+
+The **Avatar System** manages character unlocks and selection through a lightweight, data-driven framework. Avatars are powerful character transformations unlocked mid-run by meeting specific conditions (tag thresholds, gameplay metrics). This section covers the runtime API for tracking progress, checking unlocks, and equipping avatars.
+
+For avatar data format and unlock condition syntax, see Chapter 9, Section "Avatar System - Character Unlocks".
+
+### Core Concepts
+
+**State Storage:**
+- Player entities store avatar state in `player.avatar_state` table:
+  - `unlocked`: Table of `avatar_id -> true` for unlocked avatars
+  - `equipped`: Currently equipped avatar ID (or `nil`)
+- Progress metrics stored in `player.avatar_progress` (e.g., `kills_with_fire`, `damage_blocked`)
+
+**Unlock Conditions:**
+- Defined in `assets/scripts/data/avatars.lua` with dual-path logic:
+  - **Primary path**: All non-OR conditions must be met
+  - **Alternative path**: Any `OR_` prefixed condition is sufficient
+- Conditions can reference tag counts (`fire_tags`) or metrics (`kills_with_fire`)
+
+### Checking for Unlocks
+
+Use `AvatarSystem.check_unlocks()` to evaluate unlock conditions and update state:
+
+```lua
+local AvatarSystem = require("wand.avatar_system")
+
+-- Check unlocks with current player state
+local newlyUnlocked = AvatarSystem.check_unlocks(player)
+
+-- Check with explicit context (overrides player state)
+local newlyUnlocked = AvatarSystem.check_unlocks(player, {
+    tag_counts = { Fire = 7, Defense = 5 },
+    metrics = { kills_with_fire = 100, damage_blocked = 5000 }
+})
+
+-- Process newly unlocked avatars
+for _, avatarId in ipairs(newlyUnlocked) do
+    print("Unlocked:", avatarId)
+    -- Signal "avatar_unlocked" automatically emitted for each unlock
+end
+```
+
+**When to call:**
+- After deck changes (tag counts may have changed)
+- After significant gameplay events (boss kill, level up)
+- Periodically during gameplay (if tracking distance, time, etc.)
+
+### Recording Progress
+
+Increment progress metrics and automatically check for unlocks:
+
+```lua
+-- Record progress for a specific metric
+local newlyUnlocked = AvatarSystem.record_progress(
+    player,
+    "kills_with_fire",  -- Metric name
+    1                   -- Delta (increment by 1)
+)
+
+-- With explicit tag counts for unlock check
+local newlyUnlocked = AvatarSystem.record_progress(
+    player,
+    "damage_blocked",
+    250,  -- Blocked 250 damage
+    { tag_counts = player.tag_counts }
+)
+```
+
+**Common metrics:**
+- `kills_with_fire`, `kills_with_ice`, etc. (elemental kills)
+- `damage_blocked` (total damage blocked)
+- `distance_moved` (movement distance)
+- `crits_dealt` (critical hit count)
+- `mana_spent` (total mana used)
+- `hp_lost` (damage taken)
+
+### Equipping Avatars
+
+Players can equip unlocked avatars to activate their effects:
+
+```lua
+-- Equip an avatar (must be already unlocked)
+local success, error = AvatarSystem.equip(player, "wildfire")
+
+if not success then
+    print("Cannot equip:", error)  -- "avatar_locked" if not unlocked
+else
+    print("Avatar equipped!")
+end
+
+-- Get currently equipped avatar
+local equippedId = AvatarSystem.get_equipped(player)
+if equippedId then
+    print("Playing as:", equippedId)
+
+    -- Load avatar definition to apply effects
+    local avatarDefs = require("data.avatars")
+    local avatarDef = avatarDefs[equippedId]
+
+    if avatarDef and avatarDef.effects then
+        -- Apply avatar effects to player stats/rules
+        -- (Effect application is game-specific implementation)
+    end
+end
+```
+
+### Unlock Condition Logic
+
+Avatar unlock conditions support flexible dual-path logic:
+
+```lua
+-- Example avatar definition (from data/avatars.lua)
+wildfire = {
+    name = "Avatar of Wildfire",
+    unlock = {
+        kills_with_fire = 100,  -- Primary: must have 100 fire kills
+        OR_fire_tags = 7        -- Alternative: OR have 7 Fire tags
+    },
+    effects = { ... }
+}
+
+-- Unlock evaluation:
+-- 1. Primary path: kills_with_fire >= 100
+-- 2. Alternative path: fire_tags >= 7
+-- Player unlocks if EITHER path is satisfied
+```
+
+**Condition types:**
+- **Tag-based**: `fire_tags`, `defense_tags`, `mobility_tags`, etc.
+  - Tag name extracted from `{tag}_tags` pattern
+  - Matched against `tag_counts` parameter (e.g., `Fire`, `Defense`)
+- **Metric-based**: `kills_with_fire`, `damage_blocked`, `distance_moved`, etc.
+  - Matched against `metrics` parameter or `player.avatar_progress`
+- **OR conditions**: Prefix with `OR_` for alternative unlock paths
+  - `OR_fire_tags`, `OR_wins`, etc.
+
+### Events
+
+The Avatar System emits signals when avatars are unlocked:
+
+```lua
+local signal = require("external.hump.signal")
+
+-- Listen for avatar unlocks
+signal.register("avatar_unlocked", function(data)
+    local avatarId = data.avatar_id
+    print("AVATAR UNLOCKED:", avatarId)
+
+    -- Load definition to show name
+    local avatarDefs = require("data.avatars")
+    local avatarDef = avatarDefs[avatarId]
+    if avatarDef then
+        print("Name:", avatarDef.name)
+        print("Description:", avatarDef.description)
+    end
+
+    -- Show celebration UI, achievement notification, etc.
+end)
+```
+
+**Event payload:**
+- `avatar_unlocked`: `{ avatar_id = "wildfire" }`
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `AvatarSystem.check_unlocks()` | player: table, opts?: table | string[] | Evaluates unlock conditions, updates state, returns newly unlocked avatar IDs |
+| `AvatarSystem.record_progress()` | player: table, metric: string, delta: number, opts?: table | string[] | Increments progress metric, calls `check_unlocks()` |
+| `AvatarSystem.equip()` | player: table, avatar_id: string | boolean, string? | Equips an unlocked avatar, returns `(success, error)` |
+| `AvatarSystem.get_equipped()` | player: table | string? | Returns currently equipped avatar ID or `nil` |
+
+**Options table (opts):**
+- `tag_counts`: `table<string, number>` - Tag counts to use for unlock evaluation (overrides player state)
+- `metrics`: `table<string, number>` - Metrics to use for unlock evaluation (overrides `player.avatar_progress`)
+
+### Integration Example
+
+Complete example showing avatar system integration in a game loop:
+
+```lua
+local AvatarSystem = require("wand.avatar_system")
+local signal = require("external.hump.signal")
+
+-- Initialize player state (done once at game start)
+function initPlayer(player)
+    player.avatar_state = { unlocked = {}, equipped = nil }
+    player.avatar_progress = {}
+    player.tag_counts = {}
+end
+
+-- Track gameplay events
+function onEnemyKilled(enemy, damageType)
+    local player = getPlayer()
+
+    -- Record metric for kill
+    local metricName = "kills_with_" .. string.lower(damageType)
+    local newUnlocks = AvatarSystem.record_progress(
+        player,
+        metricName,
+        1,
+        { tag_counts = player.tag_counts }
+    )
+
+    -- New unlocks automatically trigger "avatar_unlocked" signal
+end
+
+-- Re-check unlocks when deck changes
+function onDeckChanged(player, newTagCounts)
+    player.tag_counts = newTagCounts
+    local newUnlocks = AvatarSystem.check_unlocks(player, {
+        tag_counts = newTagCounts
+    })
+end
+
+-- Avatar selection UI callback
+function onAvatarSelected(avatarId)
+    local player = getPlayer()
+    local success, error = AvatarSystem.equip(player, avatarId)
+
+    if success then
+        -- Apply avatar effects
+        applyAvatarEffects(player, avatarId)
+    else
+        showError("Avatar locked!")
+    end
+end
+```
+
+### Related Systems
+
+- **Chapter 9** (Avatar Data Definitions): Data format, unlock condition syntax, effects structure
+- **Signal System** (Recipe \pageref{recipe:signal-system}): Event handling for unlocks
+- **Tag Evaluator** (Recipe \pageref{recipe:tag-evaluator}): Tag counting and threshold tracking
+
+***
+
+## Combat State Machine
+\label{recipe:combat-state-machine}
+
+The **Combat State Machine** orchestrates the combat loop, managing transitions between wave phases, handling victory/defeat conditions, and coordinating with the Wave Manager. It provides a structured framework for multi-wave encounters with automatic progression and event-driven state changes.
+
+This system is part of the Entity Lifecycle & Combat Loop Framework. For wave configuration and enemy spawning, see the Wave Manager documentation.
+
+### Core Concepts
+
+**State Flow:**
+The combat state machine follows this progression:
+1. **INIT** - Initial state before combat begins
+2. **WAVE_START** - Initialize wave, prepare systems
+3. **SPAWNING** - Enemies being spawned
+4. **COMBAT** - Active battle phase
+5. **VICTORY** - Wave cleared, calculate rewards
+6. **INTERMISSION** - Between waves, prepare for next
+7. **DEFEAT** / **GAME_WON** / **GAME_OVER** - Terminal states
+
+**Integration Points:**
+- **Wave Manager**: Tracks wave progression, enemy counts, rewards
+- **Event Bus**: Emits state change events (`OnCombatStateChanged`, `OnCombatStart`, etc.)
+- **Timer System**: Manages automatic state transitions with delays
+- **Player Health**: Monitors defeat conditions
+
+### Creating a State Machine
+
+Use `CombatStateMachine.new()` to create an instance with callbacks and configuration:
+
+```lua
+local CombatStateMachine = require("combat.combat_state_machine")
+
+local stateMachine = CombatStateMachine.new({
+    wave_manager = waveManager,           -- WaveManager instance
+    combat_context = combatContext,       -- Event bus container
+    player_entity = playerEntity,         -- Player entity ID
+
+    -- State callbacks
+    on_wave_start = function(wave_number)
+        print("Wave", wave_number, "starting!")
+        showWaveUI(wave_number)
+    end,
+
+    on_combat_start = function()
+        print("Combat phase begun!")
+    end,
+
+    on_victory = function(wave_stats)
+        print("Wave complete! XP:", wave_stats.total_xp)
+        displayRewards(wave_stats)
+    end,
+
+    on_defeat = function()
+        print("Player defeated!")
+        showGameOverScreen()
+    end,
+
+    on_intermission = function(next_wave)
+        print("Intermission. Next wave:", next_wave)
+    end,
+
+    on_game_won = function(total_stats)
+        print("All waves complete! Total kills:", total_stats.total_enemies_killed)
+    end,
+
+    -- Condition checkers
+    is_player_alive = function()
+        local hp = getBlackboardFloat(playerEntity, "health")
+        return hp and hp > 0
+    end,
+
+    -- Auto-progress timings
+    victory_delay = 2.0,           -- Delay before intermission (default: 2.0)
+    intermission_duration = 5.0,   -- Auto-start next wave after 5s (default: 5.0, 0 = manual)
+    defeat_delay = 2.0             -- Delay before game over (default: 2.0)
+})
+```
+
+**Configuration Options:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `wave_manager` | WaveManager | Yes | Wave manager instance |
+| `combat_context` | table | Yes | Must have `.bus` field with event emitter |
+| `player_entity` | Entity | Yes | Player entity ID for health checks |
+| `on_wave_start` | function(wave_number) | No | Called when wave initializes |
+| `on_combat_start` | function() | No | Called when COMBAT state begins |
+| `on_victory` | function(wave_stats) | No | Called when wave is cleared |
+| `on_defeat` | function() | No | Called when player dies |
+| `on_intermission` | function(next_wave) | No | Called between waves |
+| `on_game_won` | function(total_stats) | No | Called when all waves complete |
+| `is_player_alive` | function() -> boolean | No | Health check function (default: always returns true) |
+| `victory_delay` | number | No | Seconds before transitioning to intermission (default: 2.0) |
+| `intermission_duration` | number | No | Seconds before auto-starting next wave (0 = manual, default: 5.0) |
+| `defeat_delay` | number | No | Seconds before game over screen (default: 2.0) |
+
+### Running the State Machine
+
+Start the machine and update it every frame:
+
+```lua
+-- Start combat (transitions to WAVE_START)
+stateMachine:start()
+
+-- Update every frame (place in game loop)
+function update(dt)
+    stateMachine:update(dt)
+end
+```
+
+**State Transitions:**
+The state machine automatically handles transitions based on conditions:
+- **WAVE_START → SPAWNING**: After 0.5s delay
+- **SPAWNING → COMBAT**: When `wave_manager.spawner.spawn_complete` is true
+- **COMBAT → VICTORY**: When `wave_manager:is_wave_complete()` is true
+- **COMBAT → DEFEAT**: When `is_player_alive()` returns false
+- **VICTORY → INTERMISSION**: After `victory_delay` seconds (if more waves exist)
+- **VICTORY → GAME_WON**: After `victory_delay` seconds (if no more waves)
+- **INTERMISSION → WAVE_START**: After `intermission_duration` seconds (or manual trigger)
+- **DEFEAT → GAME_OVER**: After `defeat_delay` seconds
+
+### State Management
+
+Query and control the current state:
+
+```lua
+-- Get current state
+local currentState = stateMachine:get_current_state()
+print(currentState)  -- "COMBAT", "VICTORY", etc.
+
+-- Check if in specific state
+if stateMachine:is_in_state(stateMachine.States.COMBAT) then
+    print("Battle is active!")
+end
+
+-- Get time in current state
+local stateTime = stateMachine:get_state_time()
+print("In current state for", stateTime, "seconds")
+
+-- Available state constants
+local States = CombatStateMachine.States
+-- States.INIT, States.WAVE_START, States.SPAWNING, States.COMBAT,
+-- States.VICTORY, States.INTERMISSION, States.DEFEAT,
+-- States.GAME_WON, States.GAME_OVER
+```
+
+### Manual Controls
+
+Control state machine execution and progression:
+
+```lua
+-- Pause combat (stops update loop)
+stateMachine:pause()
+
+-- Resume combat
+stateMachine:resume()
+
+-- Stop combat (halts execution, cancels timers)
+stateMachine:stop()
+
+-- Reset to initial state
+stateMachine:reset()
+
+-- Manually progress to next wave (from INTERMISSION state)
+local success = stateMachine:progress_to_next_wave()
+if success then
+    print("Starting next wave now!")
+else
+    print("Cannot progress - not in intermission state")
+end
+
+-- Retry current wave (from DEFEAT or GAME_OVER state)
+local success = stateMachine:retry_wave()
+if success then
+    print("Retrying wave...")
+end
+```
+
+**Use Cases:**
+- **pause()/resume()**: Menu overlay, cutscene, inventory screen
+- **progress_to_next_wave()**: "Ready!" button to skip intermission timer
+- **retry_wave()**: "Try Again" button after defeat
+
+### Event System Integration
+
+The state machine emits events through the combat context's event bus:
+
+```lua
+-- Setup event listeners before starting combat
+local bus = combatContext.bus
+
+-- Listen for state changes
+bus:on("OnCombatStateChanged", function(event)
+    print("State:", event.from, "→", event.to)
+
+    -- React to specific transitions
+    if event.to == "COMBAT" then
+        playBattleMusic()
+    elseif event.to == "INTERMISSION" then
+        pauseBattleMusic()
+    end
+end)
+
+-- Combat start event
+bus:on("OnCombatStart", function(event)
+    print("Combat started! Wave:", event.wave_number)
+end)
+
+-- Combat end event (emitted for both victory and defeat)
+bus:on("OnCombatEnd", function(event)
+    if event.victory then
+        print("Victory! Stats:", event.stats)
+    else
+        print("Defeat on wave:", event.wave_number)
+    end
+end)
+
+-- Player death event (emitted during DEFEAT transition)
+bus:on("OnPlayerDeath", function(event)
+    print("Player entity died:", event.player)
+    spawnDeathAnimation(event.player)
+end)
+
+-- Intermission event
+bus:on("OnIntermission", function(event)
+    print("Preparing for wave", event.next_wave)
+    showIntermissionUI(event.next_wave)
+end)
+```
+
+**Event Payloads:**
+
+| Event | Payload Fields | Description |
+|-------|---------------|-------------|
+| `OnCombatStateChanged` | `from`, `to` | State transition (state names as strings) |
+| `OnCombatStart` | `wave_number` | Combat phase started |
+| `OnCombatEnd` | `victory` (bool), `stats` or `wave_number` | Combat ended (victory or defeat) |
+| `OnPlayerDeath` | `player` (entity) | Player entity died |
+| `OnIntermission` | `next_wave` (number) | Between waves |
+
+### Complete Integration Example
+
+Full example showing combat loop setup with state machine:
+
+```lua
+local CombatStateMachine = require("combat.combat_state_machine")
+local WaveManager = require("combat.wave_manager")
+
+-- Create event bus
+local eventBus = {
+    listeners = {},
+    on = function(self, event, callback)
+        self.listeners[event] = self.listeners[event] or {}
+        table.insert(self.listeners[event], callback)
+    end,
+    emit = function(self, event, data)
+        if self.listeners[event] then
+            for _, callback in ipairs(self.listeners[event]) do
+                callback(data)
+            end
+        end
+    end
+}
+
+local combatContext = { bus = eventBus }
+
+-- Define waves
+local waves = {
+    { wave_number = 1, type = "instant", enemies = { {type = "kobold", count = 5} } },
+    { wave_number = 2, type = "instant", enemies = { {type = "kobold", count = 8} } }
+}
+
+-- Create wave manager
+local waveManager = WaveManager.new({
+    waves = waves,
+    combat_context = combatContext,
+    entity_factory_fn = create_ai_entity
+})
+
+-- Create state machine
+local stateMachine = CombatStateMachine.new({
+    wave_manager = waveManager,
+    combat_context = combatContext,
+    player_entity = playerEntity,
+
+    on_wave_start = function(wave_number)
+        print("=== Wave", wave_number, "===")
+    end,
+
+    on_victory = function(stats)
+        print("Wave clear! Rewards: XP", stats.total_xp, "/ Gold", stats.total_gold)
+    end,
+
+    on_defeat = function()
+        print("Game Over!")
+    end,
+
+    on_game_won = function(total_stats)
+        print("Victory! Total waves:", total_stats.waves_completed)
+    end,
+
+    is_player_alive = function()
+        local hp = getBlackboardFloat(playerEntity, "health")
+        return hp and hp > 0
+    end,
+
+    intermission_duration = 3.0  -- 3 second break between waves
+})
+
+-- Setup event listeners
+eventBus:on("OnCombatStateChanged", function(event)
+    print("State:", event.from, "→", event.to)
+end)
+
+eventBus:on("OnEntityDeath", function(event)
+    -- Track enemy deaths in wave manager
+    waveManager:on_enemy_death(event.entity)
+end)
+
+-- Start combat
+stateMachine:start()
+
+-- Update loop
+function update(dt)
+    stateMachine:update(dt)
+end
+```
+
+### Common Patterns
+
+**Intermission UI with Manual Progression:**
+
+```lua
+-- Set intermission_duration = 0 to disable auto-start
+local stateMachine = CombatStateMachine.new({
+    -- ...
+    intermission_duration = 0,  -- Manual progression only
+
+    on_intermission = function(next_wave)
+        showIntermissionUI(next_wave, function()
+            -- "Ready!" button callback
+            stateMachine:progress_to_next_wave()
+        end)
+    end
+})
+```
+
+**Defeat with Retry:**
+
+```lua
+local stateMachine = CombatStateMachine.new({
+    -- ...
+    on_defeat = function()
+        showDefeatScreen({
+            onRetry = function()
+                stateMachine:retry_wave()
+            end,
+            onQuit = function()
+                returnToMainMenu()
+            end
+        })
+    end
+})
+```
+
+**Boss Wave with Custom State Logic:**
+
+```lua
+-- Listen for state changes to implement boss phase transitions
+eventBus:on("OnCombatStateChanged", function(event)
+    if event.to == "COMBAT" then
+        local wave = waveManager:get_current_wave_number()
+        if wave == 5 then  -- Boss wave
+            spawnBossEntity()
+            playBossMusic()
+        end
+    end
+end)
+```
+
+**Conditional Victory Bonuses:**
+
+```lua
+local stateMachine = CombatStateMachine.new({
+    -- ...
+    on_victory = function(stats)
+        -- Perfect clear bonus
+        if stats.perfect_clear then
+            grantPerfectBonus(stats.perfect_bonus)
+        end
+
+        -- Speed bonus
+        if stats.duration < stats.target_time then
+            local timeBonus = calculateSpeedBonus(stats)
+            grantSpeedBonus(timeBonus)
+        end
+    end
+})
+```
+
+### API Reference
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `CombatStateMachine.new()` | config: table | CombatStateMachine | Creates new state machine instance |
+| `:start()` | - | - | Start combat (transition to WAVE_START) |
+| `:update()` | dt: number | - | Update state machine (call every frame) |
+| `:pause()` | - | - | Pause execution (stops update loop) |
+| `:resume()` | - | - | Resume execution |
+| `:stop()` | - | - | Stop combat (halt execution, cancel timers) |
+| `:reset()` | - | - | Reset to INIT state |
+| `:get_current_state()` | - | string | Returns current state name |
+| `:is_in_state()` | state: string | boolean | Check if in specific state |
+| `:get_state_time()` | - | number | Seconds in current state |
+| `:progress_to_next_wave()` | - | boolean | Manually start next wave from intermission |
+| `:retry_wave()` | - | boolean | Retry current wave from defeat/game over |
+
+### State Constants
+
+Access state constants via `CombatStateMachine.States`:
+
+```lua
+local States = CombatStateMachine.States
+
+States.INIT           -- Initial state
+States.WAVE_START     -- Wave initialization
+States.SPAWNING       -- Enemies spawning
+States.COMBAT         -- Active combat
+States.VICTORY        -- Wave cleared
+States.INTERMISSION   -- Between waves
+States.DEFEAT         -- Player death
+States.GAME_WON       -- All waves complete
+States.GAME_OVER      -- Final defeat state
+```
+
+### Related Systems
+
+- **Wave Manager**: Manages wave progression, enemy tracking, reward calculation
+- **Combat Loop Integration** (`combat.combat_loop_integration`): High-level wrapper combining state machine, wave manager, and loot system
+- **Signal System** (Recipe \pageref{recipe:signal-system}): Alternative event handling approach
+- **Timer System** (Recipe \pageref{recipe:timer-system}): Used internally for state transitions
+
+***
+
 \newpage
 \appendix
 
@@ -6614,6 +11830,10 @@ Alphabetical listing of all documented functions and APIs.
 | Function | Module | Recipe |
 |----------|--------|--------|
 | `add_state_tag()` | `util.lua` | \pageref{recipe:validate-entity} |
+| `animation_system.createAnimatedObjectWithTransform()` | `core.animation_system` | \pageref{recipe:animation-system} |
+| `animation_system.createStillAnimationFromSpriteUUID()` | `core.animation_system` | \pageref{recipe:animation-system} |
+| `animation_system.resizeAnimationObjectsInEntityToFit()` | `core.animation_system` | \pageref{recipe:animation-system} |
+| `animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI()` | `core.animation_system` | \pageref{recipe:animation-system} |
 | `component_cache.get()` | `core.component_cache` | \pageref{recipe:get-component} |
 | `dsl.anim()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
 | `dsl.dynamic()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
@@ -6631,6 +11851,14 @@ Alphabetical listing of all documented functions and APIs.
 | `EntityBuilder.interactive()` | `core.entity_builder` | \pageref{recipe:entity-interactive} |
 | `EntityBuilder.simple()` | `core.entity_builder` | \pageref{recipe:entity-sprite} |
 | `getScriptTableFromEntityID()` | `util.lua` | \pageref{recipe:script-table} |
+| `GetFrameTime()` | Global | \pageref{recipe:screen-camera} |
+| `GetScreenHeight()` | Global | \pageref{recipe:screen-camera} |
+| `GetScreenToWorld2D()` | Global | \pageref{recipe:screen-camera} |
+| `GetScreenWidth()` | Global | \pageref{recipe:screen-camera} |
+| `GetTime()` | Global | \pageref{recipe:screen-camera} |
+| `GetWorldToScreen2D()` | Global | \pageref{recipe:screen-camera} |
+| `globals.camera` | Global | \pageref{recipe:screen-camera} |
+| `hardReset()` | Global | \pageref{recipe:game-control} |
 | `is_state_active()` | `util.lua` | \pageref{recipe:validate-entity} |
 | `JokerSystem.add_joker()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
 | `JokerSystem.clear_jokers()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
@@ -6639,14 +11867,26 @@ Alphabetical listing of all documented functions and APIs.
 | `JokerSystem.trigger_event()` | `wand.joker_system` | \pageref{recipe:joker-trigger} |
 | `knife.chain()` | `external.knife.chain` | \pageref{recipe:knife-chain} |
 | `lume.*` | `external.lume` | \pageref{recipe:lume-tables}, \pageref{recipe:lume-math} |
+| `pauseGame()` | Global | \pageref{recipe:game-control} |
 | `PhysicsBuilder.for_entity()` | `core.physics_builder` | \pageref{recipe:add-physics} |
 | `PhysicsBuilder.quick()` | `core.physics_builder` | \pageref{recipe:add-physics} |
-| `physics.create_physics_for_transform()` | `physics.physics_lua_api` | \pageref{recipe:get-physics-world} |
-| `physics.enable_collision_between_many()` | `physics.physics_lua_api` | \pageref{recipe:collision-masks} |
-| `physics.set_sync_mode()` | `physics.physics_lua_api` | \pageref{recipe:get-physics-world} |
-| `physics.SetBullet()` | `physics.physics_lua_api` | \pageref{recipe:bullet-mode} |
-| `physics.update_collision_masks_for()` | `physics.physics_lua_api` | \pageref{recipe:collision-masks} |
-| `PhysicsManager.get_world()` | `core.physics_manager` | \pageref{recipe:get-physics-world} |
+| `physics.create_physics_for_transform()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.enable_collision_between_many()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.set_sync_mode()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.SetBullet()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.SetVelocity()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `physics.update_collision_masks_for()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.add_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.enable_debug_draw()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.enable_step()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.find_path()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.get_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.has_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.is_world_active()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.move_entity_to_world()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.rebuild_navmesh()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.set_nav_obstacle()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
+| `PhysicsManager.vision_fan()` | `core.physics_manager` | \pageref{recipe:physics-manager} |
 | `ProjectileSystem.spawn()` | `combat.projectile_system` | \pageref{recipe:spawn-projectile} |
 | `remove_default_state_tag()` | `util.lua` | \pageref{recipe:validate-entity} |
 | `safe_script_get()` | `util.lua` | \pageref{recipe:safe-script} |
@@ -6668,6 +11908,7 @@ Alphabetical listing of all documented functions and APIs.
 | `timer.every()` | `core.timer` | \pageref{recipe:timer-every} |
 | `timer.every_opts()` | `core.timer` | \pageref{recipe:timer-every} |
 | `timer.every_physics_step()` | `core.timer` | \pageref{recipe:timer-physics} |
+| `unpauseGame()` | Global | \pageref{recipe:game-control} |
 | `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
 | `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |
 

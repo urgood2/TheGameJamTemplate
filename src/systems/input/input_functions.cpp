@@ -1,3 +1,20 @@
+/**
+ * @file input_functions.cpp
+ * @brief Input system orchestrator - coordinates all input modules
+ *
+ * This file serves as the main entry point for the input system.
+ * Actual logic is delegated to specialized modules:
+ * - input_polling: Raw input polling and Raylib abstraction
+ * - input_keyboard: Keyboard and text input
+ * - input_gamepad: Gamepad buttons and axes
+ * - input_cursor: Cursor position and collision
+ * - input_cursor_events: Click/drag/hover propagation
+ * - input_focus: Focus navigation
+ * - input_actions: Action binding system
+ * - input_hid: HID device switching
+ * - input_lua_bindings: Lua API exposure
+ */
+
 #include "input_functions.hpp"
 #include "input_lua_bindings.hpp"
 #include "input_keyboard.hpp"
@@ -7,49 +24,34 @@
 #include "input_cursor_events.hpp"
 #include "input_focus.hpp"
 #include "input_polling.hpp"
-
-#include "raylib.h"
-
-#include "entt/entt.hpp"
-
-#include "spdlog/spdlog.h"
-#include "systems/camera/camera_manager.hpp"
-#include "systems/collision/broad_phase.hpp"
-#include "util/common_headers.hpp"
-
-#include "core/globals.hpp"
-
-#include "input.hpp"
 #include "input_actions.hpp"
 #include "input_constants.hpp"
 #include "input_function_data.hpp"
 
+#include "raylib.h"
+#include "entt/entt.hpp"
+
+#include "systems/collision/broad_phase.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/ui/ui.hpp"
 #include "systems/ui/ui_data.hpp"
 #include "systems/ui/element.hpp"
-#include "systems/scripting/binding_recorder.hpp"
 #include "systems/timer/timer.hpp"
-#include "systems/physics/transform_physics_hook.hpp"
+#include "core/globals.hpp"
 #include "core/engine_context.hpp"
-#include "core/events.hpp"
-
-#include "raylib.h"
-#include "raymath.h"
 
 #include <algorithm>
 #include <vector>
-#include <unordered_map>
-#include <string>
-#include <regex>
 
 using namespace snowhouse; // assert
-// TODO: focus traversal with gamepad should be tested after ui
-// TODO: cursor stacks also need to be tested after ui
+
 namespace input
 {
-    // Resolve input state and registry, preferring the EngineContext when available.
+    // ========================================
+    // Context Resolution Helpers
+    // ========================================
+
     static EngineContext* resolveCtx(EngineContext* ctx) {
         return ctx ? ctx : globals::g_ctx;
     }
@@ -72,12 +74,10 @@ namespace input
         return globals::getEventBus();
     }
 
-    void HandleTextInput(ui::TextInput &input) {
-        keyboard::handle_text_input(input);
-    }
-    
+    // ========================================
+    // System Initialization
+    // ========================================
 
-    // Initializes the controller
     auto Init(InputState &inputState, entt::registry &registry, EngineContext* ctx) -> void
     {
         // make new
@@ -107,9 +107,20 @@ namespace input
         }
     }
 
+    // ========================================
+    // Text Input Handling
+    // ========================================
+
+    void HandleTextInput(ui::TextInput &input) {
+        keyboard::handle_text_input(input);
+    }
+
+    // ========================================
+    // Main Update Loop - Orchestration
+    // ========================================
+
     auto PollInput(entt::registry &registry, InputState &inputState, float dt, EngineContext* ctx) -> void
     {
-        // Delegate to the polling abstraction
         polling::poll_all_inputs(registry, inputState, dt, ctx);
     }
 
@@ -121,12 +132,11 @@ namespace input
 
         DeleteInvalidEntitiesFromInputRegistry(inputState, registry);
         
-        
+
     }
-    
+
     auto DetectMouseActivity(InputState &state) -> InputDeviceInputCategory
     {
-        // Delegate to the polling abstraction
         return polling::detect_mouse_activity(state);
     }
 
@@ -245,21 +255,23 @@ namespace input
             auto &textInputNode = registry.get<ui::TextInput>(inputState.activeTextInput);
             HandleTextInput(textInputNode);
         }
-        
+
+
     }
-    
-    // call at the end of frame for cleanup & action ticking
+
     void finalizeUpdateAtEndOfFrame(InputState &inputState, float dt) {
-        // action bindings
-        input::TickActionHolds(inputState, dt);
-        input::DecayActions(inputState);
+        TickActionHolds(inputState, dt);
+        DecayActions(inputState);
     }
-    
+
+    // ========================================
+    // Cursor Event Propagation - Delegation
+    // ========================================
+
     void stopHover(entt::registry &registry, entt::entity target)
     {
         cursor_events::stop_hover(registry, target);
     }
-
 
     void propagateReleaseToGameObjects(input::InputState &inputState, entt::registry &registry)
     {
@@ -306,6 +318,9 @@ namespace input
         cursor_events::process_raylib_click(inputState, registry);
     }
 
+    // ========================================
+    // Input State Management
+    // ========================================
 
     void resetInputStateForProcessing(input::InputState &inputState)
     {
@@ -327,6 +342,10 @@ namespace input
         inputState.prev_designated_hover_target = inputState.current_designated_hover_target;
     }
 
+    // ========================================
+    // Cursor Position Management - Delegation
+    // ========================================
+
     void handleRawCursor(input::InputState &inputState, entt::registry &registry)
     {
         cursor::handle_raw(inputState, registry);
@@ -336,6 +355,10 @@ namespace input
     {
         cursor::process_controller_snap(inputState, registry);
     }
+
+    // ========================================
+    // Button/Key Press Propagation
+    // ========================================
 
     void PropagateButtonAndKeyUpdates(input::InputState &inputState, entt::registry &registry, float dt)
     {
@@ -378,6 +401,10 @@ namespace input
         }
     }
 
+    // ========================================
+    // Input Lock Management
+    // ========================================
+
     void ProcessInputLocks(input::InputState &inputState, entt::registry &registry, float dt)
     {
         inputState.inputLocked = false;
@@ -416,7 +443,10 @@ namespace input
             inputState.overlay_menu_active_timer = 0.0f;
     }
 
-    // HID Management wrappers
+    // ========================================
+    // HID Management - Wrappers
+    // ========================================
+
     auto ReconfigureInputDeviceInfo(InputState &state, InputDeviceInputCategory category, GamepadButton button) -> void
     {
         hid::reconfigure_device_info(state, category, button);
@@ -432,7 +462,10 @@ namespace input
         hid::set_current_gamepad(state, gamepad_object, gamepadID);
     }
 
-    // Cursor Management wrappers
+    // ========================================
+    // Input Registry Management
+    // ========================================
+
     auto SetCurrentCursorPosition(entt::registry &registry, InputState &state) -> void
     {
         cursor::set_current_position(registry, state);
@@ -501,6 +534,10 @@ namespace input
         }
     }
 
+    // ========================================
+    // Cursor Manipulation - Wrappers
+    // ========================================
+
     auto ModifyCurrentCursorContextLayer(entt::registry &registry, InputState &state, int delta) -> void
     {
         cursor::modify_context_layer(registry, state, delta);
@@ -515,6 +552,10 @@ namespace input
     {
         cursor::update(state, registry, hardSetT);
     }
+
+    // ========================================
+    // Gamepad Input - Wrappers
+    // ========================================
 
     auto ProcessButtonPress(InputState &state, GamepadButton button, EngineContext* ctx) -> void
     {
@@ -546,25 +587,25 @@ namespace input
         gamepad::held_button_update(registry, state, button, dt);
     }
 
-    // Handles button release updates
     void ReleasedButtonUpdate(entt::registry &registry, InputState &state, const GamepadButton button, float dt)
     {
         gamepad::released_button_update(registry, state, button, dt);
     }
 
-    // **Maps Raylib's KeyboardKey to characters (handles shift & caps)**
+    // ========================================
+    // Keyboard Input - Wrappers
+    // ========================================
+
     char GetCharacterFromKey(KeyboardKey key, bool caps)
     {
         return keyboard::get_character_from_key(key, caps);
     }
 
-    // **Processes user text input and updates the entity's text field**
     void ProcessTextInput(entt::registry &registry, entt::entity entity, KeyboardKey key, bool shift, bool capsLock)
     {
         keyboard::process_text_input(registry, entity, key, shift, capsLock);
     }
 
-    // **Hooks an entity to listen for text input**
     void HookTextInput(entt::registry &registry, entt::entity entity)
     {
         keyboard::hook_text_input(registry, entity);
@@ -603,6 +644,10 @@ namespace input
         keyboard::process_key_release(state, key);
     }
 
+    // ========================================
+    // Collision Detection - Wrappers
+    // ========================================
+
     void MarkEntitiesCollidingWithCursor(entt::registry &registry, InputState &state, const Vector2 &cursor_trans)
     {
         cursor::mark_entities_colliding(registry, state, cursor_trans);
@@ -613,7 +658,10 @@ namespace input
         cursor::update_hovering_state(registry, state);
     }
 
-    // save press to be handled by update() function
+    // ========================================
+    // Mouse Event Queueing - Wrappers
+    // ========================================
+
     void EnqueueLeftMouseButtonPress(InputState &state, float x, float y)
     {
         cursor_events::enqueue_left_press(state, x, y);
@@ -637,6 +685,10 @@ namespace input
         cursor_events::process_left_release(registry, state, x, y, ctx);
     }
 
+    // ========================================
+    // Focus Management - Wrappers
+    // ========================================
+
     bool IsNodeFocusable(entt::registry &registry, InputState &state, entt::entity entity)
     {
         return focus::IsNodeFocusable(registry, state, entity);
@@ -647,6 +699,19 @@ namespace input
     {
         focus::UpdateFocusForRelevantNodes(registry, state, dir, ctx);
     }
+
+    void NavigateFocus(entt::registry &registry, InputState &state, std::optional<std::string> dir)
+    {
+        // Step 1: Update focus based on direction (or nearest focusable entity if no direction)
+        UpdateFocusForRelevantNodes(registry, state, dir);
+
+        // Step 2: Update cursor position to match the newly focused entity
+        UpdateCursor(state, registry);
+    }
+
+    // ========================================
+    // Focus Input Capture (Legacy)
+    // ========================================
 
     bool CaptureFocusedInput(entt::registry &registry, InputState &state, const std::string inputType, GamepadButton button, float dt)
     {
@@ -848,19 +913,9 @@ namespace input
         return ret;
     }
 
-    void NavigateFocus(entt::registry &registry, InputState &state, std::optional<std::string> dir)
-    {
-        // Step 1: Update focus based on direction (or nearest focusable entity if no direction)
-        UpdateFocusForRelevantNodes(registry, state, dir);
-
-        // Step 2: Update cursor position to match the newly focused entity
-        UpdateCursor(state, registry);
-    }
-    
     // ========================================
-    // Action System - Wrapper Functions
+    // Action System - Wrappers
     // ========================================
-    // These functions delegate to the input::actions module
 
     auto RebuildActionIndex(InputState &s) -> void {
         actions::rebuild_index(s);
@@ -878,7 +933,6 @@ namespace input
         actions::tick_holds(s, dt);
     }
 
-    // Public C++ API - wrappers for backward compatibility
     auto bind_action(InputState &s, const std::string &action, const ActionBinding &b) -> void {
         actions::bind(s, action, b);
     }
@@ -919,11 +973,13 @@ namespace input
         return actions::to_trigger(s);
     }
 
+    // ========================================
+    // Lua Bindings - Delegation
+    // ========================================
 
     auto exposeToLua(sol::state &lua, EngineContext* ctx) -> void
     {
-        // Delegate to the dedicated Lua bindings module
         lua_bindings::expose_to_lua(lua, ctx);
     }
 
-}
+} // namespace input

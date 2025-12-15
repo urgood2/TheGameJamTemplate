@@ -5,7 +5,7 @@ local Avatars = {
     wildfire = {
         name = "Avatar of Wildfire",
         description = "Your flames consume everything.",
-        sprite = "avatar_wildfire",  -- Optional: custom sprite (falls back to avatar_sample.png)
+        -- sprite = "avatar_wildfire",  -- Optional: custom sprite (default: avatar_sample.png)
 
         -- Unlock Condition (Session-based)
         unlock = {

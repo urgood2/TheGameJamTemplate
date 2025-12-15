@@ -149,6 +149,11 @@ function ContentValidator.validate_card(key, card)
             add_warning("Card", id, "modifier has 'damage' field (use 'damage_modifier' instead)")
         end
     end
+
+    -- Sprite validation (optional field)
+    if card.sprite ~= nil and type(card.sprite) ~= "string" then
+        add_error("Card", id, "'sprite' must be a string")
+    end
 end
 
 function ContentValidator.validate_cards()
@@ -211,6 +216,11 @@ function ContentValidator.validate_joker(key, joker)
     -- Rarity validation
     if joker.rarity and not RARITY_LOOKUP[joker.rarity] then
         add_warning("Joker", id, string.format("unknown rarity '%s' (expected: %s)", joker.rarity, table.concat(VALID_RARITIES, ", ")))
+    end
+
+    -- Sprite validation (optional field)
+    if joker.sprite ~= nil and type(joker.sprite) ~= "string" then
+        add_error("Joker", id, "'sprite' must be a string")
     end
 end
 
@@ -384,6 +394,11 @@ function ContentValidator.validate_avatar(key, avatar)
 
     if not avatar.description then
         add_warning("Avatar", id, "missing 'description' field")
+    end
+
+    -- Sprite validation (optional field)
+    if avatar.sprite ~= nil and type(avatar.sprite) ~= "string" then
+        add_error("Avatar", id, "'sprite' must be a string")
     end
 end
 

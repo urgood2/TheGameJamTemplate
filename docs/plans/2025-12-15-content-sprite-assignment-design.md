@@ -98,17 +98,17 @@ local entity = createSprite(j, j.sprite or AvatarJokerStrip.layout.jokerSprite, 
 
 ## Implementation Checklist
 
-1. [ ] Add `sprite` field to `cards.lua` schema (example card)
-2. [ ] Add `sprite` field to `jokers.lua` schema (example joker)
-3. [ ] Add `sprite` field to `avatars.lua` schema (example avatar)
-4. [ ] Update `gameplay.lua:1496` to use `card_def.sprite or "sample_card.png"`
-5. [ ] Update `avatar_joker_strip.lua:174` to use `a.sprite or layout.avatarSprite`
-6. [ ] Update `avatar_joker_strip.lua:187` to use `j.sprite or layout.jokerSprite`
-7. [ ] Test: create a card/joker/avatar with custom sprite, verify it renders
-8. [ ] Test: verify fallback works when sprite field is absent
+1. [x] Add `sprite` field to `cards.lua` schema (example card)
+2. [x] Add `sprite` field to `jokers.lua` schema (example joker)
+3. [x] Add `sprite` field to `avatars.lua` schema (example avatar)
+4. [x] Update `gameplay.lua:1496` to use `card_def.sprite or "sample_card.png"`
+5. [x] Update `avatar_joker_strip.lua:174` to use `a.sprite or layout.avatarSprite`
+6. [x] Update `avatar_joker_strip.lua:187` to use `j.sprite or layout.jokerSprite`
+7. [x] Add sprite type validation to `content_validator.lua`
+8. [ ] Test: create a card/joker/avatar with custom sprite, verify it renders
+9. [ ] Test: verify fallback works when sprite field is absent
 
 ## Future Enhancements (Not In Scope)
 
-- Startup validation to catch all missing sprites at once
 - Build-time validation script for CI
-- Warning logging for invalid sprite names
+- Runtime sprite existence check (requires animation_system access)

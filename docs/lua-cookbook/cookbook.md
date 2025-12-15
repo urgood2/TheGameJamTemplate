@@ -10561,6 +10561,153 @@ For detailed action binding usage (including mouse wheel as pseudo-axis, modifie
 
 ***
 
+## Game Control
+
+\label{recipe:game-control}
+
+The Game Control API provides essential functions for managing game lifecycle: pausing/unpausing gameplay and resetting game state. These are low-level functions exposed directly from C++ for controlling the game loop and AI systems.
+
+### Pausing and Unpausing
+
+The engine provides simple pause/unpause functions that control the game's update loop. When paused, gameplay updates stop but rendering continues (useful for pause menus).
+
+```lua
+-- Pause the game
+pauseGame()
+
+-- Resume the game
+unpauseGame()
+```
+
+**Behavior:**
+- `pauseGame()` sets `game::isPaused = true`, halting gameplay updates
+- `unpauseGame()` sets `game::isPaused = false`, resuming normal updates
+- Rendering and UI continue to work while paused
+- No return value (void functions)
+
+### Hard Reset
+
+The `hardReset()` function requests a full reset of the AI system state. This is useful for clearing all AI state and starting fresh.
+
+```lua
+-- Reset the AI system
+hardReset()
+```
+
+**Important:** This only resets the AI system (`ai_system::requestAISystemReset()`). For full game resets, you may need to manually reset other systems (physics, entities, etc.).
+
+### Common Patterns
+
+**Pattern 1: Pause menu with input context switching**
+
+```lua
+local paused = false
+
+-- Bind pause key (works in gameplay context)
+input.bind("pause", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ESCAPE,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+-- Bind resume key (works in menu context)
+input.bind("resume", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ESCAPE,
+    trigger = "Pressed",
+    context = "menu"
+})
+
+-- Toggle pause state
+timer.every(0.016, function()
+    if input.action_pressed("pause") and not paused then
+        pauseGame()
+        paused = true
+        input.set_context("menu")
+        showPauseMenu()
+    end
+
+    if input.action_pressed("resume") and paused then
+        unpauseGame()
+        paused = false
+        input.set_context("gameplay")
+        hidePauseMenu()
+    end
+end)
+```
+
+**Pattern 2: Conditional pause (only pause if not already paused)**
+
+```lua
+local function togglePause()
+    if paused then
+        unpauseGame()
+        paused = false
+    else
+        pauseGame()
+        paused = true
+    end
+end
+```
+
+**Pattern 3: Reset game state on player death**
+
+```lua
+local signal = require("external.hump.signal")
+
+signal.register("player_death", function()
+    -- Pause the game
+    pauseGame()
+
+    -- Show death screen
+    showDeathScreen()
+
+    -- Reset AI after delay
+    timer.after(2.0, function()
+        hardReset()
+        -- Additional cleanup...
+        unpauseGame()
+    end)
+end)
+```
+
+### API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `pauseGame()` | None | nil | Pauses gameplay updates |
+| `unpauseGame()` | None | nil | Resumes gameplay updates |
+| `hardReset()` | None | nil | Resets AI system state |
+
+### Implementation Details
+
+These functions are thin wrappers around C++ game state:
+
+```cpp
+// From scripting_functions.cpp
+auto pauseGame() -> void {
+  game::isPaused = true;
+  SPDLOG_INFO("Game paused.");
+}
+
+auto unpauseGame() -> void {
+  game::isPaused = false;
+  SPDLOG_INFO("Game unpaused.");
+}
+
+// hardReset calls:
+ai_system::requestAISystemReset();
+```
+
+### Related Systems
+
+- **Input System** (Recipe \pageref{recipe:input-system}): Use input contexts to handle pause/resume input
+- **Timer System** (Recipe \pageref{recipe:timer-system}): Timers respect pause state
+- **Signal System**: Emit custom events when pausing/resuming for UI updates
+
+***
+
 \newpage
 \appendix
 
@@ -10594,6 +10741,7 @@ Alphabetical listing of all documented functions and APIs.
 | `EntityBuilder.interactive()` | `core.entity_builder` | \pageref{recipe:entity-interactive} |
 | `EntityBuilder.simple()` | `core.entity_builder` | \pageref{recipe:entity-sprite} |
 | `getScriptTableFromEntityID()` | `util.lua` | \pageref{recipe:script-table} |
+| `hardReset()` | Global | \pageref{recipe:game-control} |
 | `is_state_active()` | `util.lua` | \pageref{recipe:validate-entity} |
 | `JokerSystem.add_joker()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
 | `JokerSystem.clear_jokers()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
@@ -10602,6 +10750,7 @@ Alphabetical listing of all documented functions and APIs.
 | `JokerSystem.trigger_event()` | `wand.joker_system` | \pageref{recipe:joker-trigger} |
 | `knife.chain()` | `external.knife.chain` | \pageref{recipe:knife-chain} |
 | `lume.*` | `external.lume` | \pageref{recipe:lume-tables}, \pageref{recipe:lume-math} |
+| `pauseGame()` | Global | \pageref{recipe:game-control} |
 | `PhysicsBuilder.for_entity()` | `core.physics_builder` | \pageref{recipe:add-physics} |
 | `PhysicsBuilder.quick()` | `core.physics_builder` | \pageref{recipe:add-physics} |
 | `physics.create_physics_for_transform()` | `physics.physics_lua_api` | \pageref{recipe:physics-manager} |
@@ -10642,6 +10791,7 @@ Alphabetical listing of all documented functions and APIs.
 | `timer.every()` | `core.timer` | \pageref{recipe:timer-every} |
 | `timer.every_opts()` | `core.timer` | \pageref{recipe:timer-every} |
 | `timer.every_physics_step()` | `core.timer` | \pageref{recipe:timer-physics} |
+| `unpauseGame()` | Global | \pageref{recipe:game-control} |
 | `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
 | `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |
 

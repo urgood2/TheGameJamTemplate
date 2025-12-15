@@ -10099,6 +10099,466 @@ local block = {
 
 ***
 
+## Input System
+
+\label{recipe:input-system}
+
+The Input System provides a flexible action-binding framework for keyboard, mouse, and gamepad input. Instead of hardcoding specific keys, you bind **actions** (like "Jump", "Attack", "Menu") to input devices with triggers (Pressed, Released, Held) and poll them in your game logic. This allows for remapping, context switching (gameplay vs menu), and unified input handling.
+
+### Action Binding - Mapping Inputs to Actions
+
+The core workflow is:
+1. **Bind** an action name to a device + key/button/axis + trigger type + context
+2. **Poll** the action state in your game loop using `input.action_pressed()`, `input.action_down()`, etc.
+
+**Basic binding examples:**
+
+```lua
+-- Keyboard bindings
+input.bind("jump", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_SPACE,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+input.bind("move_left", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_A,
+    trigger = "Held",
+    context = "gameplay"
+})
+
+-- Mouse bindings
+input.bind("shoot", {
+    device = "mouse",
+    key = MouseButton.BUTTON_LEFT,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+-- Gamepad button bindings
+input.bind("confirm", {
+    device = "gamepad_button",
+    key = GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN,  -- A on Xbox, Cross on PS
+    trigger = "Pressed",
+    context = "menu"
+})
+
+-- Gamepad axis bindings (for analog sticks)
+input.bind("move_right", {
+    device = "gamepad_axis",
+    axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X,
+    trigger = "AxisPos",
+    threshold = 0.2,  -- Deadzone
+    context = "gameplay"
+})
+
+input.bind("move_left", {
+    device = "gamepad_axis",
+    axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X,
+    trigger = "AxisNeg",
+    threshold = 0.2,
+    context = "gameplay"
+})
+```
+
+**Binding options:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `device` | string | `"keyboard"`, `"mouse"`, `"gamepad_button"`, `"gamepad_axis"` |
+| `key` | enum | `KeyboardKey.*`, `MouseButton.*`, `GamepadButton.*` (for non-axis devices) |
+| `axis` | enum | `GamepadAxis.*` (for `gamepad_axis` device) |
+| `trigger` | string | `"Pressed"`, `"Released"`, `"Held"`, `"Repeat"`, `"AxisPos"`, `"AxisNeg"` |
+| `threshold` | number | Deadzone for axis triggers (default: 0.5) |
+| `context` | string | Context name (default: `"global"`) - see Context Switching below |
+| `modifiers` | table | Optional modifier keys (keyboard only), e.g., `{ KeyboardKey.KEY_LEFT_SHIFT }` |
+
+### Polling Input - Checking Action State
+
+After binding, poll actions in your update loop:
+
+```lua
+local timer = require("core.timer")
+
+-- Poll every frame
+timer.every(0.016, function()
+    -- Check if action was pressed THIS FRAME (one-frame pulse)
+    if input.action_pressed("jump") then
+        player.velocity.y = -500
+        print("Player jumped!")
+    end
+
+    -- Check if action is held down (continuous)
+    if input.action_down("move_left") then
+        player.position.x -= 200 * dt
+    end
+
+    -- Check if action was released THIS FRAME
+    if input.action_released("shoot") then
+        print("Released trigger")
+    end
+
+    -- Get analog axis value (for gamepad axes)
+    local moveX = input.action_value("move_right") + input.action_value("move_left")
+    player.position.x += moveX * 200 * dt
+end)
+```
+
+**Polling functions:**
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `input.action_pressed(name)` | boolean | True for ONE FRAME when action is pressed |
+| `input.action_released(name)` | boolean | True for ONE FRAME when action is released |
+| `input.action_down(name)` | boolean | True while action is held (latched from press to release) |
+| `input.action_value(name)` | number | Axis value (for analog inputs), resets each frame |
+
+### Trigger Types - Edge Detection vs Continuous
+
+Triggers control when a binding fires:
+
+| Trigger | Behavior | Use Case |
+|---------|----------|----------|
+| `"Pressed"` | Fires once on press, latches `down=true` | Jump, single actions |
+| `"Released"` | Fires once on release | Charge attacks, release timing |
+| `"Held"` | Fires continuously while held | Movement, continuous actions |
+| `"Repeat"` | Placeholder for auto-repeat | Not yet implemented |
+| `"AxisPos"` | Fires when axis > threshold | Analog stick right/up |
+| `"AxisNeg"` | Fires when axis < -threshold | Analog stick left/down |
+
+**Important lifecycle:** `Pressed` trigger sets both `pressed=true` (one frame) AND `down=true` (latched). Use `action_pressed()` for single-frame detection, `action_down()` for held state.
+
+### Context Switching - Gameplay vs Menu
+
+Contexts allow different bindings for different game states (e.g., "gameplay", "menu", "inventory").
+
+```lua
+-- Bind same key to different actions in different contexts
+input.bind("confirm", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ENTER,
+    trigger = "Pressed",
+    context = "menu"
+})
+
+input.bind("interact", {
+    device = "keyboard",
+    key = KeyboardKey.KEY_ENTER,
+    trigger = "Pressed",
+    context = "gameplay"
+})
+
+-- Switch context at runtime
+input.set_context("gameplay")  -- Only "gameplay" bindings active
+
+-- Later, switch to menu
+input.set_context("menu")      -- Only "menu" bindings active
+```
+
+**Context rules:**
+- Only bindings matching the **active context** OR `"global"` context are evaluated
+- Use `"global"` for bindings that should work everywhere (e.g., pause, screenshot)
+- Default context is `"global"`
+
+### Key and Button Constants
+
+The engine exposes Raylib enums for all input devices:
+
+**Keyboard keys:** `KeyboardKey.KEY_*`
+
+```lua
+-- Letter keys
+KeyboardKey.KEY_A, KEY_B, ..., KEY_Z
+
+-- Number keys
+KeyboardKey.KEY_ZERO, KEY_ONE, ..., KEY_NINE
+
+-- Special keys
+KeyboardKey.KEY_SPACE, KEY_ENTER, KEY_ESCAPE, KEY_TAB, KEY_BACKSPACE
+
+-- Arrow keys
+KeyboardKey.KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
+
+-- Function keys
+KeyboardKey.KEY_F1, KEY_F2, ..., KEY_F12
+
+-- Modifier keys
+KeyboardKey.KEY_LEFT_SHIFT, KEY_RIGHT_SHIFT, KEY_LEFT_CONTROL, KEY_RIGHT_CONTROL
+KeyboardKey.KEY_LEFT_ALT, KEY_RIGHT_ALT, KEY_LEFT_SUPER, KEY_RIGHT_SUPER
+```
+
+**Mouse buttons:** `MouseButton.BUTTON_*`
+
+```lua
+MouseButton.BUTTON_LEFT
+MouseButton.BUTTON_RIGHT
+MouseButton.BUTTON_MIDDLE
+MouseButton.BUTTON_SIDE      -- Side button (forward)
+MouseButton.BUTTON_EXTRA     -- Extra button (back)
+```
+
+**Gamepad buttons:** `GamepadButton.GAMEPAD_BUTTON_*`
+
+```lua
+-- Face buttons (Xbox layout)
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN   -- A
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_RIGHT  -- B
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_LEFT   -- X
+GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_UP     -- Y
+
+-- D-Pad
+GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_UP, ..._DOWN, ..._LEFT, ..._RIGHT
+
+-- Shoulder buttons
+GamepadButton.GAMEPAD_BUTTON_LEFT_TRIGGER_1    -- LB
+GamepadButton.GAMEPAD_BUTTON_RIGHT_TRIGGER_1   -- RB
+GamepadButton.GAMEPAD_BUTTON_LEFT_TRIGGER_2    -- LT
+GamepadButton.GAMEPAD_BUTTON_RIGHT_TRIGGER_2   -- RT
+
+-- Menu buttons
+GamepadButton.GAMEPAD_BUTTON_MIDDLE_LEFT       -- Back/Select
+GamepadButton.GAMEPAD_BUTTON_MIDDLE_RIGHT      -- Start
+GamepadButton.GAMEPAD_BUTTON_MIDDLE            -- Guide/Home
+```
+
+**Gamepad axes:** `GamepadAxis.GAMEPAD_AXIS_*`
+
+```lua
+GamepadAxis.GAMEPAD_AXIS_LEFT_X
+GamepadAxis.GAMEPAD_AXIS_LEFT_Y
+GamepadAxis.GAMEPAD_AXIS_RIGHT_X
+GamepadAxis.GAMEPAD_AXIS_RIGHT_Y
+GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER    -- LT analog (0 to 1)
+GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER   -- RT analog (0 to 1)
+```
+
+### Legacy Input - Direct Key Polling
+
+For simple cases, you can check keys directly (not recommended for production):
+
+```lua
+-- Check if a key is pressed THIS FRAME
+if isKeyPressed("W") then
+    print("W key pressed!")
+end
+
+-- Note: Case-insensitive, uses magic_enum conversion
+-- Returns boolean
+```
+
+**Why use action bindings instead?**
+- Remappable controls
+- Context-aware (menu vs gameplay)
+- Unified gamepad + keyboard support
+- Works with modifiers and chords
+
+### Input Remapping - Runtime Rebinding
+
+Allow players to remap controls:
+
+```lua
+-- Start listening for next input
+input.start_rebind("jump", function(ok, binding)
+    if ok then
+        print("Rebound jump to:", binding.device, binding.code, binding.trigger)
+        -- binding contains: { device, code, trigger, context, modifiers }
+        -- Save to config file
+    else
+        print("Rebind cancelled")
+    end
+end)
+
+-- While listening, the next raw input (key/button/axis) will:
+-- 1. Populate the binding table with device/code/trigger
+-- 2. Call the callback with ok=true
+```
+
+### Common Patterns
+
+**Pattern 1: WASD + Gamepad movement**
+
+```lua
+-- Keyboard WASD
+input.bind("move_up",    { device = "keyboard", key = KeyboardKey.KEY_W, trigger = "Held" })
+input.bind("move_down",  { device = "keyboard", key = KeyboardKey.KEY_S, trigger = "Held" })
+input.bind("move_left",  { device = "keyboard", key = KeyboardKey.KEY_A, trigger = "Held" })
+input.bind("move_right", { device = "keyboard", key = KeyboardKey.KEY_D, trigger = "Held" })
+
+-- Gamepad left stick
+input.bind("move_up",    { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_Y, trigger = "AxisNeg", threshold = 0.2 })
+input.bind("move_down",  { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_Y, trigger = "AxisPos", threshold = 0.2 })
+input.bind("move_left",  { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisNeg", threshold = 0.2 })
+input.bind("move_right", { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisPos", threshold = 0.2 })
+
+-- Poll in update
+local function updateMovement(dt)
+    local dx = 0
+    local dy = 0
+
+    if input.action_down("move_right") then dx += 1 end
+    if input.action_down("move_left")  then dx -= 1 end
+    if input.action_down("move_down")  then dy += 1 end
+    if input.action_down("move_up")    then dy -= 1 end
+
+    -- For analog, add axis values
+    dx += input.action_value("move_right") + input.action_value("move_left")
+    dy += input.action_value("move_down") + input.action_value("move_up")
+
+    player.position.x += dx * 200 * dt
+    player.position.y += dy * 200 * dt
+end
+```
+
+**Pattern 2: Context-aware pause menu**
+
+```lua
+-- Pause works in gameplay, ESC works in menu
+input.bind("pause", { device = "keyboard", key = KeyboardKey.KEY_ESCAPE, trigger = "Pressed", context = "gameplay" })
+input.bind("back",  { device = "keyboard", key = KeyboardKey.KEY_ESCAPE, trigger = "Pressed", context = "menu" })
+
+-- Switch contexts when toggling pause
+local paused = false
+
+if input.action_pressed("pause") then
+    paused = true
+    input.set_context("menu")
+    showPauseMenu()
+end
+
+if input.action_pressed("back") then
+    paused = false
+    input.set_context("gameplay")
+    hidePauseMenu()
+end
+```
+
+**Pattern 3: Charge attack with release timing**
+
+```lua
+input.bind("attack_start", { device = "mouse", key = MouseButton.BUTTON_LEFT, trigger = "Pressed" })
+input.bind("attack_release", { device = "mouse", key = MouseButton.BUTTON_LEFT, trigger = "Released" })
+
+local charge_time = 0
+
+timer.every(0.016, function(dt)
+    -- Track how long button is held
+    if input.action_down("attack_start") then
+        charge_time += dt
+    end
+
+    -- Release to fire charged attack
+    if input.action_released("attack_release") then
+        local damage = 10 + (charge_time * 50)  -- More damage for longer charge
+        fireProjectile(damage)
+        charge_time = 0
+    end
+end)
+```
+
+### Accessing InputState (Advanced)
+
+For advanced use cases, you can access the global InputState:
+
+```lua
+local inputState = globals.inputState
+
+-- Cursor position (world coordinates)
+local cursorPos = inputState.cursor_position
+print("Mouse at:", cursorPos.x, cursorPos.y)
+
+-- Check which entity is under cursor
+local hoveredEntity = inputState.cursor_hovering_target
+
+-- Check key/button states directly (not recommended - use actions instead)
+local pressedKeys = inputState.keysPressedThisFrame
+local heldKeys = inputState.keysHeldThisFrame
+local releasedKeys = inputState.keysReleasedThisFrame
+```
+
+### Common Gotchas
+
+**Gotcha 1:** `action_pressed` vs `action_down`
+
+```lua
+-- WRONG: Using action_pressed for held movement
+if input.action_pressed("move_left") then
+    player.x -= 5  -- Only moves ONE FRAME when key is pressed!
+end
+
+-- CORRECT: Use action_down for continuous actions
+if input.action_down("move_left") then
+    player.x -= 5  -- Moves every frame while held
+end
+```
+
+**Gotcha 2:** Forgetting to set context
+
+```lua
+-- Bind with "gameplay" context
+input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE, context = "gameplay" })
+
+-- WRONG: Polling without setting context (defaults to "global")
+if input.action_pressed("jump") then  -- Won't work! Context mismatch
+    player.jump()
+end
+
+-- CORRECT: Set context first
+input.set_context("gameplay")
+if input.action_pressed("jump") then  -- Now it works
+    player.jump()
+end
+
+-- OR: Use "global" context for always-active bindings
+input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE, context = "global" })
+```
+
+**Gotcha 3:** Axis triggers require proper threshold
+
+```lua
+-- WRONG: Axis trigger with no threshold (uses default 0.5)
+input.bind("move_right", { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisPos" })
+-- May feel sluggish - requires >50% stick movement
+
+-- CORRECT: Lower threshold for responsive controls
+input.bind("move_right", { device = "gamepad_axis", axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X, trigger = "AxisPos", threshold = 0.15 })
+```
+
+**Gotcha 4:** Input polling before binding
+
+```lua
+-- WRONG: Polling before binding exists
+if input.action_pressed("jump") then  -- Returns false, no error
+    player.jump()
+end
+input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE })  -- Too late!
+
+-- CORRECT: Bind during initialization, poll during gameplay
+function init()
+    input.bind("jump", { device = "keyboard", key = KeyboardKey.KEY_SPACE, context = "gameplay" })
+    input.set_context("gameplay")
+end
+
+function update(dt)
+    if input.action_pressed("jump") then
+        player.jump()
+    end
+end
+```
+
+### Related Systems
+
+- **Controller Navigation** (`src/systems/input/controller_nav.cpp`): UI focus and navigation
+- **Text Input** (`input.HookTextInput()`, `input.UnhookTextInput()`): Text field input
+- **Input Action Binding Documentation** (`src/systems/input/input_action_binding_usage.md`): Full C++ API reference
+
+### See Also
+
+For detailed action binding usage (including mouse wheel as pseudo-axis, modifiers, chording), see `src/systems/input/input_action_binding_usage.md`.
+
+***
+
 \newpage
 \appendix
 

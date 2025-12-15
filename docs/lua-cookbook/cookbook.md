@@ -83,6 +83,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | **Timers & Events** | |
 | Delay an action | \pageref{recipe:timer-after} |
 | Repeat an action | \pageref{recipe:timer-every} |
+| Chain timer actions fluently | \pageref{recipe:timer-chain} |
 | Synchronize with physics steps | \pageref{recipe:timer-physics} |
 | Emit and handle events | \pageref{recipe:signals} |
 | **Rendering & Shaders** | |
@@ -100,6 +101,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Define action card | \pageref{recipe:card-action} |
 | Define modifier card | \pageref{recipe:card-modifier} |
 | Define trigger card | \pageref{recipe:card-trigger} |
+| Get card metadata (rarity/tags) | \pageref{recipe:card-metadata} |
 | Define joker | \pageref{recipe:joker-define} |
 | Trigger joker events | \pageref{recipe:joker-trigger} |
 | Add/remove jokers | \pageref{recipe:joker-manage} |
@@ -402,6 +404,79 @@ timer.cancel_physics_step("my_physics_timer")
 *— from core/timer.lua:508-531*
 
 **Gotcha:** Physics step timers are separate from regular timers. Use `cancel_physics_step()`, not `cancel()`.
+
+***
+
+## Timer: Fluent Chaining (TimerChain)
+
+\label{recipe:timer-chain}
+
+**When to use:** Avoid deeply nested timer callbacks by chaining steps fluently.
+
+```lua
+local TimerChain = require("core.timer_chain")
+
+-- Basic sequence
+TimerChain.new("my_animation")
+    :wait(0.5)
+    :do_now(function() print("start") end)
+    :wait(0.3)
+    :do_now(function() print("middle") end)
+    :wait(0.2)
+    :do_now(function() print("end") end)
+    :onComplete(function() print("done!") end)
+    :start()
+
+-- With timer types
+TimerChain.new()
+    :after(1.0, function() print("1 second") end)
+    :every(0.5, function() print("tick") end, 3)  -- 3 ticks
+    :tween(1.0,
+        function() return entity.alpha end,
+        function(v) entity.alpha = v end,
+        0)  -- fade out
+    :onComplete(function() destroy(entity) end)
+    :start()
+```
+
+*— from core/timer_chain.lua:66-410*
+
+**TimerChain methods:**
+
+| Method | Description |
+|--------|-------------|
+| `:wait(delay)` | Pause for delay seconds |
+| `:do_now(fn)` | Execute immediately (alias for `:after(0, fn)`) |
+| `:after(delay, fn)` | One-shot delay |
+| `:every(interval, fn, times?, immediate?, after?)` | Repeating |
+| `:cooldown(delay, condition, fn, ...)` | Conditional repeat |
+| `:for_time(duration, fn_dt, after?)` | Run every frame for duration |
+| `:tween(duration, getter, setter, target, ...)` | Animate value |
+| `:fork(chain)` | Launch parallel chain |
+| `:onComplete(fn)` | Final callback |
+| `:start()` | Execute the chain |
+| `:pause()` / `:resume()` / `:cancel()` | Control |
+
+**Real usage example:**
+
+```lua
+-- Animate card flip
+TimerChain.new("card_flip")
+    :tween(0.15,
+        function() return transform.scaleX end,
+        function(v) transform.scaleX = v end,
+        0)
+    :do_now(function() swapCardFace() end)
+    :tween(0.15,
+        function() return transform.scaleX end,
+        function(v) transform.scaleX = v end,
+        1)
+    :start()
+```
+
+**Gotcha:** Call `:start()` to execute — the chain does nothing until started.
+
+**Gotcha:** Steps execute sequentially with accumulated delays. Use `:fork()` for parallel.
 
 ***
 
@@ -5249,6 +5324,50 @@ dofile("assets/scripts/tools/content_validator.lua")
 local ContentValidator = require("tools.content_validator")
 ContentValidator.validate_all(true)
 ```
+
+***
+
+## Card Metadata (Rarity & Tags)
+
+\label{recipe:card-metadata}
+
+**When to use:** Enrich card instances with rarity and tags at runtime without modifying the original card definitions.
+
+```lua
+local CardMeta = require("core.card_metadata")
+
+-- Get metadata for a card by ID
+local meta = CardMeta.get("ACTION_BASIC_PROJECTILE")
+-- Returns: { rarity = "common", tags = {"brute"} }
+
+-- Check if metadata exists
+if meta then
+    print("Rarity:", meta.rarity)  -- "common", "uncommon", "rare"
+    print("Tags:", table.concat(meta.tags, ", "))
+end
+
+-- Enrich a card instance with metadata
+local enrichedCard = CardMeta.enrich(cardInstance)
+-- Adds .rarity and .tags fields to the card
+
+-- Register all cards with the shop system
+CardMeta.registerAllWithShop(ShopSystem)
+```
+
+*— from core/card_metadata.lua:1-50*
+
+**CardMetadata API:**
+
+| Function | Description |
+|----------|-------------|
+| `CardMeta.get(cardId)` | Get metadata table `{rarity, tags}` for card ID |
+| `CardMeta.enrich(card)` | Add rarity/tags fields to card instance |
+| `CardMeta.registerAllWithShop(shop)` | Register all cards with shop system |
+| `CardMeta.data` | Raw metadata table (direct access) |
+
+**Rarity values:** `"common"`, `"uncommon"`, `"rare"`
+
+**Gotcha:** This module provides metadata separately from card definitions in `data/cards.lua`. Use it to add rarity/tags without modifying the original data file.
 
 ***
 

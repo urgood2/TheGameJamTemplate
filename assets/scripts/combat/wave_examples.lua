@@ -150,23 +150,23 @@ end
 
 function examples.setup_listeners()
     signal.register("stage_started", function(stage_config)
-        log_info("Stage started: " .. (stage_config.id or "unknown"))
+        print("Stage started: " .. (stage_config.id or "unknown"))
     end)
 
     signal.register("wave_started", function(wave_num, wave)
-        log_info("Wave " .. wave_num .. " started")
+        print("Wave " .. wave_num .. " started")
     end)
 
     signal.register("wave_cleared", function(wave_num)
-        log_info("Wave " .. wave_num .. " cleared!")
+        print("Wave " .. wave_num .. " cleared!")
     end)
 
     signal.register("elite_spawned", function(e, ctx)
-        log_info("Elite spawned: " .. ctx.type)
+        print("Elite spawned: " .. ctx.type)
     end)
 
     signal.register("stage_completed", function(results)
-        log_info("Stage complete: " .. (results.stage or "unknown"))
+        print("Stage complete: " .. (results.stage or "unknown"))
     end)
 
     signal.register("enemy_spawned", function(e, ctx)
@@ -178,18 +178,18 @@ function examples.setup_listeners()
     end)
 
     signal.register("run_complete", function()
-        log_info("Run complete - victory!")
+        print("Run complete - victory!")
     end)
 
     signal.register("goto_shop", function()
         -- Transition to shop state
-        log_info("Going to shop...")
+        print("Going to shop...")
         -- activate_state(SHOP_STATE)
     end)
 
     signal.register("goto_rewards", function()
         -- Show reward picker
-        log_info("Showing rewards...")
+        print("Showing rewards...")
         -- activate_state(REWARD_OPENING_STATE)
     end)
 end
@@ -209,13 +209,13 @@ end
 
 function examples.print_state()
     local state = WaveSystem.get_state()
-    log_info("=== Wave System State ===")
-    log_info("Stage: " .. tostring(state.stage_id))
-    log_info("Wave: " .. state.wave_index .. "/" .. state.total_waves)
-    log_info("Alive enemies: " .. state.alive_enemies)
-    log_info("Spawning complete: " .. tostring(state.spawning_complete))
-    log_info("Stage complete: " .. tostring(state.stage_complete))
-    log_info("Paused: " .. tostring(state.paused))
+    print("=== Wave System State ===")
+    print("Stage: " .. tostring(state.stage_id))
+    print("Wave: " .. state.wave_index .. "/" .. state.total_waves)
+    print("Alive enemies: " .. state.alive_enemies)
+    print("Spawning complete: " .. tostring(state.spawning_complete))
+    print("Stage complete: " .. tostring(state.stage_complete))
+    print("Paused: " .. tostring(state.paused))
 end
 
 return examples

@@ -30,7 +30,7 @@ signal.register("spawn_telegraph", function(data)
 
     if not marker or not entity_cache.valid(marker) then
         -- Fallback: just log it
-        log_info("Telegraph at " .. x .. ", " .. y .. " for " .. tostring(enemy_type))
+        print("Telegraph at " .. x .. ", " .. y .. " for " .. tostring(enemy_type))
         return
     end
 
@@ -101,7 +101,7 @@ signal.register("show_floating_text", function(data)
 
     -- Create text entity (simplified - adapt to your UI system)
     -- This is a placeholder - integrate with your actual text rendering
-    log_info("[FLOATING TEXT] " .. text .. " (style: " .. style .. ")")
+    print("[FLOATING TEXT] " .. text .. " (style: " .. style .. ")")
 
     -- If you have a UI text system, use it here:
     -- local textEntity = ui.createFloatingText(text, x, y, cfg)
@@ -128,7 +128,7 @@ signal.register("spawn_particles", function(data)
     local y = data.y
 
     -- Integrate with your particle system
-    log_info("[PARTICLES] " .. effect .. " at " .. x .. ", " .. y)
+    print("[PARTICLES] " .. effect .. " at " .. x .. ", " .. y)
 
     -- Example: signal.emit("create_particle_effect", effect, x, y)
 end)
@@ -142,7 +142,7 @@ signal.register("screen_shake", function(data)
     local intensity = data.intensity or 5
 
     -- Integrate with your camera system
-    log_info("[SCREEN SHAKE] duration=" .. duration .. " intensity=" .. intensity)
+    print("[SCREEN SHAKE] duration=" .. duration .. " intensity=" .. intensity)
 
     -- Example: camera.shake(duration, intensity)
 end)
@@ -187,7 +187,7 @@ signal.register("spawn_trap", function(data)
     local lifetime = data.lifetime
 
     -- Create trap entity (simplified)
-    log_info("[TRAP] spawned at " .. x .. ", " .. y .. " (damage=" .. damage .. ", lifetime=" .. lifetime .. ")")
+    print("[TRAP] spawned at " .. x .. ", " .. y .. " (damage=" .. damage .. ", lifetime=" .. lifetime .. ")")
 
     -- Implement trap entity creation based on your entity system
     -- Should have collision with player, deal damage on contact, despawn after lifetime
@@ -199,7 +199,7 @@ end)
 
 function WaveVisuals.init()
     -- Any initialization needed
-    log_info("WaveVisuals initialized")
+    print("WaveVisuals initialized")
 end
 
 return WaveVisuals

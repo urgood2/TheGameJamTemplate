@@ -32,7 +32,7 @@ function WaveSystem.start_run(provider)
     if first_stage then
         WaveDirector.start_stage(first_stage)
     else
-        log_warn("WaveSystem.start_run: provider returned no stages")
+        print("WaveSystem.start_run: provider returned no stages")
     end
 end
 
@@ -59,7 +59,7 @@ end
 --- Continue from shop to next stage
 function WaveSystem.continue_from_shop()
     if not WaveDirector.stage_provider then
-        log_warn("WaveSystem.continue_from_shop: no stage provider set")
+        print("WaveSystem.continue_from_shop: no stage provider set")
         return
     end
 

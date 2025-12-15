@@ -35,7 +35,7 @@ WaveDirector.stage_provider = nil
 
 function WaveDirector.start_stage(stage_config)
     if not stage_config then
-        log_warn("WaveDirector.start_stage called with nil config")
+        print("WaveDirector.start_stage called with nil config")
         return
     end
 
@@ -155,7 +155,7 @@ function WaveDirector.spawn_elite()
                 modifiers = elite_modifiers.roll_random(2)
             end
         else
-            log_warn("Invalid elite config")
+            print("Invalid elite config")
             WaveDirector.complete_stage()
             return
         end
@@ -276,7 +276,7 @@ function WaveDirector.go_to(target)
                 return
             end
         end
-        log_warn("Unknown go_to target: " .. tostring(target))
+        print("Unknown go_to target: " .. tostring(target))
     end
 end
 

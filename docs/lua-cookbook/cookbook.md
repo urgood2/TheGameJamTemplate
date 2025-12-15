@@ -6769,6 +6769,510 @@ SpawnPresets.enemies.kobold = {
 
 ***
 
+## Shop System
+
+\label{recipe:shop-system}
+
+**When to use:** Between-round card shop for roguelike progression loops.
+
+The Shop System manages all shop mechanics including card offerings with rarity-based pricing, interest calculation, lock/reroll mechanics, and card upgrade/removal services. It provides a complete economy system for roguelike deck-building games.
+
+**Quick start:**
+
+```lua
+local ShopSystem = require("core.shop_system")
+
+-- Generate shop for player
+local shop = ShopSystem.generateShop(playerLevel, playerGold)
+
+-- Player purchases a card
+local success, card = ShopSystem.purchaseCard(shop, 1, player)
+
+-- Calculate interest before next round
+local interest = ShopSystem.calculateInterest(player.gold)
+```
+
+*— from core/shop_system.lua:1-36*
+
+### Generating a Shop
+
+Create a shop instance with randomized offerings:
+
+```lua
+local ShopSystem = require("core.shop_system")
+
+-- Generate shop (5 card offerings by default)
+local shop = ShopSystem.generateShop(playerLevel, playerGold)
+
+-- Shop structure:
+-- shop.offerings       -- Array of 5 card offerings
+-- shop.locks           -- Boolean array tracking locked slots
+-- shop.rerollCount     -- Number of times rerolled
+-- shop.rerollCost      -- Current reroll cost (escalates)
+-- shop.interest        -- Interest earned this round
+```
+
+*— from core/shop_system.lua:264-289*
+
+**How offerings are generated:**
+
+1. **Rarity selection** - Weighted random (60% common, 30% uncommon, 9% rare, 1% legendary)
+2. **Card type selection** - Weighted by config (15% trigger, 40% modifier, 45% action)
+3. **Card selection** - Random from matching pool (type + rarity)
+4. **Pricing** - Based on rarity (common=3g, uncommon=5g, rare=8g, legendary=12g)
+
+*— from core/shop_system.lua:73-98, 188-258*
+
+### Purchasing Cards
+
+Buy cards from shop offerings:
+
+```lua
+-- Player must have { gold, cards } fields
+local player = {
+    gold = 20,
+    cards = {}
+}
+
+-- Purchase from slot 1 (1-indexed)
+local success, cardInstance = ShopSystem.purchaseCard(shop, 1, player)
+
+if success then
+    print("Purchased:", cardInstance.id)
+    print("Gold remaining:", player.gold)
+    print("Deck size:", #player.cards)
+else
+    print("Purchase failed (insufficient gold or empty slot)")
+end
+```
+
+*— from core/shop_system.lua:327-363*
+
+**Card instances** are deep copies of card definitions with upgrade tracking initialized. They're automatically added to `player.cards`.
+
+**Gotcha:** Once purchased, offerings are marked `sold = true` and `isEmpty = true`, preventing duplicate purchases.
+
+### Locking Offerings
+
+Lock offerings to preserve them during rerolls:
+
+```lua
+-- Lock slot 3 (keep this offering across rerolls)
+ShopSystem.lockOffering(shop, 3)
+
+-- Unlock later if needed
+ShopSystem.unlockOffering(shop, 3)
+
+-- Check lock status
+if shop.locks[3] then
+    print("Slot 3 is locked")
+end
+```
+
+*— from core/shop_system.lua:365-379*
+
+**Usage pattern:**
+
+```lua
+-- Player sees good offering but can't afford yet
+ShopSystem.lockOffering(shop, 2)
+
+-- Reroll other slots
+ShopSystem.rerollOfferings(shop, player)
+
+-- Locked offering remains, others are new
+```
+
+**Gotcha:** Sold offerings are never rerolled, even if unlocked.
+
+### Rerolling Offerings
+
+Refresh unlocked slots with new random offerings:
+
+```lua
+-- Reroll costs escalate: 5g, 6g, 7g, 8g...
+local success = ShopSystem.rerollOfferings(shop, player)
+
+if success then
+    print("Rerolled! Cost:", shop.rerollCost - 1)  -- Previous cost
+    print("Next reroll will cost:", shop.rerollCost)
+
+    -- Unlocked, non-sold offerings are now different
+    for i, offering in ipairs(shop.offerings) do
+        if not shop.locks[i] and not offering.sold then
+            print("New offering in slot", i, ":", offering.cardDef.id)
+        end
+    end
+else
+    print("Insufficient gold to reroll")
+end
+```
+
+*— from core/shop_system.lua:381-408*
+
+**Reroll mechanics:**
+
+- **Base cost:** 5g (configurable via `ShopSystem.config.baseRerollCost`)
+- **Cost increase:** +1g per reroll (configurable via `ShopSystem.config.rerollCostIncrease`)
+- **Progression:** 5g → 6g → 7g → 8g → 9g... (escalates each time)
+- **Locked slots:** Never rerolled
+- **Sold slots:** Never rerolled
+
+**Strategy tip:** Locking high-value offerings while fishing for specific cards is core to shop strategy.
+
+### Interest System
+
+Earn passive gold based on savings:
+
+```lua
+-- Calculate interest (1g per 10g, max 5g)
+local interest = ShopSystem.calculateInterest(player.gold)
+
+-- Examples:
+-- 0-9g   → 0g interest
+-- 10-19g → 1g interest
+-- 20-29g → 2g interest
+-- 30-39g → 3g interest
+-- 40-49g → 4g interest
+-- 50+g   → 5g interest (capped)
+
+-- Apply interest at round end
+local interestEarned = ShopSystem.applyInterest(player)
+print("Earned", interestEarned, "gold in interest")
+```
+
+*— from core/shop_system.lua:488-516*
+
+**Interest configuration:**
+
+```lua
+ShopSystem.config = {
+    interestRate = 1,         -- 1 gold per threshold
+    interestThreshold = 10,   -- Gold needed for 1 interest
+    maxInterest = 5,          -- Maximum interest per round
+    interestCap = 50,         -- Max gold that counts (50g = 5g interest)
+}
+```
+
+*— from core/shop_system.lua:49-56*
+
+**Gotcha:** Interest is calculated on current gold, not gold at round start. Spend wisely!
+
+### Card Upgrade Service
+
+Upgrade cards using the shop:
+
+```lua
+-- Upgrade a card from player's collection
+local card = player.cards[1]
+
+local success, upgradedCard = ShopSystem.upgradeCard(card, player)
+
+if success then
+    print("Upgraded!")
+    -- upgradedCard has enhanced stats
+    -- Original card is modified in-place
+else
+    print("Upgrade failed (insufficient gold or max level)")
+end
+```
+
+*— from core/shop_system.lua:414-447*
+
+**Integration:** Uses `wand/card_upgrade_system.lua` for upgrade logic. Cost is determined by `CardUpgrade.getUpgradeCost(card)`.
+
+### Card Removal Service
+
+Remove unwanted cards from deck:
+
+```lua
+-- Remove a card (default cost: 2g)
+local card = player.cards[5]
+
+local success = ShopSystem.removeCard(card, player)
+
+if success then
+    print("Card removed from deck")
+    print("Deck size:", #player.cards)
+else
+    print("Removal failed (insufficient gold or card not found)")
+end
+```
+
+*— from core/shop_system.lua:449-482*
+
+**Configuration:**
+
+```lua
+ShopSystem.config.removalCost = 2  -- Cost to remove a card
+```
+
+**Gotcha:** Card must exist in `player.cards` array. Uses reference equality.
+
+### Shop Configuration
+
+Customize shop behavior:
+
+```lua
+-- Modify shop parameters
+ShopSystem.config = {
+    -- Offerings
+    offerSlots = 5,              -- Number of card offerings
+
+    -- Reroll system
+    baseRerollCost = 5,          -- Starting reroll cost
+    rerollCostIncrease = 1,      -- Cost increase per reroll
+
+    -- Interest system
+    interestRate = 1,            -- Gold earned per threshold
+    interestThreshold = 10,      -- Gold needed for 1 interest
+    maxInterest = 5,             -- Maximum interest per round
+    interestCap = 50,            -- Max gold counted for interest
+
+    -- Services
+    removalCost = 2,             -- Cost to remove a card
+
+    -- Card type distribution
+    typeWeights = {
+        trigger = 15,            -- 15% triggers
+        modifier = 40,           -- 40% modifiers
+        action = 45              -- 45% actions
+    }
+}
+```
+
+*— from core/shop_system.lua:49-67*
+
+**Rarity weights:**
+
+```lua
+ShopSystem.rarities = {
+    common = {
+        name = "Common",
+        color = "#CCCCCC",
+        weight = 60,       -- 60% chance
+        baseCost = 3
+    },
+    uncommon = {
+        name = "Uncommon",
+        color = "#4A90E2",
+        weight = 30,       -- 30% chance
+        baseCost = 5
+    },
+    rare = {
+        name = "Rare",
+        color = "#9B59B6",
+        weight = 9,        -- 9% chance
+        baseCost = 8
+    },
+    legendary = {
+        name = "Legendary",
+        color = "#F39C12",
+        weight = 1,        -- 1% chance
+        baseCost = 12
+    }
+}
+```
+
+*— from core/shop_system.lua:73-98*
+
+**Modifying weights:**
+
+```lua
+-- Make rare cards more common
+ShopSystem.rarities.rare.weight = 20
+
+-- Make triggers more common
+ShopSystem.config.typeWeights.trigger = 30
+ShopSystem.config.typeWeights.modifier = 35
+ShopSystem.config.typeWeights.action = 35
+```
+
+### Registering Cards
+
+Populate the shop card pool:
+
+```lua
+local Cards = require("data.cards")
+
+-- Register all cards at initialization
+for _, cardDef in pairs(Cards) do
+    ShopSystem.registerCard(cardDef)
+end
+
+-- Cards must have: id, type, rarity
+-- Example card definition:
+local cardDef = {
+    id = "FIREBALL",
+    type = "action",       -- action, modifier, trigger
+    rarity = "common",     -- common, uncommon, rare, legendary
+    -- ... other card fields
+}
+
+ShopSystem.registerCard(cardDef)
+```
+
+*— from core/shop_system.lua:131-169*
+
+**Card pool structure:**
+
+```lua
+ShopSystem.cardPool = {
+    trigger = { common = {}, uncommon = {}, rare = {}, legendary = {} },
+    modifier = { common = {}, uncommon = {}, rare = {}, legendary = {} },
+    action = { common = {}, uncommon = {}, rare = {}, legendary = {} }
+}
+```
+
+**Check pool counts:**
+
+```lua
+local counts = ShopSystem.getPoolCounts()
+-- Returns: { trigger = { common = 5, uncommon = 3, ... }, ... }
+```
+
+*— from core/shop_system.lua:172-182*
+
+### Shop Display Utilities
+
+Format shop for debugging or UI:
+
+```lua
+-- Print formatted shop display
+local formatted = ShopSystem.formatShop(shop)
+print(formatted)
+
+-- Output:
+-- === SHOP ===
+-- Reroll Cost: 5g | Interest: 2g
+--
+-- 1. [Common] SPARK - 3g
+-- 2. [Uncommon] FIREBALL - 5g [LOCKED]
+-- 3. [SOLD]
+-- 4. [Rare] CHAIN_LIGHTNING - 8g
+-- 5. [Common] FROST_BOLT - 3g
+```
+
+*— from core/shop_system.lua:552-577*
+
+**Get shop statistics:**
+
+```lua
+local stats = ShopSystem.getShopStats(shop)
+
+print("Total offerings:", stats.totalOfferings)  -- 5
+print("Sold:", stats.sold)                      -- 1
+print("Locked:", stats.locked)                  -- 1
+print("Reroll count:", stats.rerollCount)       -- 3
+```
+
+*— from core/shop_system.lua:579-600*
+
+### Complete Shop Flow Example
+
+Full round-to-round shop lifecycle:
+
+```lua
+local ShopSystem = require("core.shop_system")
+local Cards = require("data.cards")
+
+-- Initialize shop system (once at game start)
+for _, cardDef in pairs(Cards) do
+    ShopSystem.registerCard(cardDef)
+end
+ShopSystem.init()
+
+-- Player state
+local player = {
+    gold = 25,
+    cards = {},
+    level = 3
+}
+
+-- === ROUND START ===
+
+-- Generate shop
+local shop = ShopSystem.generateShop(player.level, player.gold)
+print(ShopSystem.formatShop(shop))
+
+-- Player locks interesting offering
+ShopSystem.lockOffering(shop, 2)
+
+-- Player rerolls rest
+ShopSystem.rerollOfferings(shop, player)
+
+-- Player purchases a card
+local success, card = ShopSystem.purchaseCard(shop, 1, player)
+if success then
+    print("Purchased:", card.id)
+end
+
+-- Player upgrades existing card
+local upgradeSuccess = ShopSystem.upgradeCard(player.cards[1], player)
+
+-- === ROUND END ===
+
+-- Apply interest
+local interest = ShopSystem.applyInterest(player)
+print("Earned", interest, "gold in interest")
+print("Total gold:", player.gold)
+
+-- Next round starts with new shop
+shop = ShopSystem.generateShop(player.level, player.gold)
+```
+
+*— combining patterns from core/shop_system.lua*
+
+**Gotcha:** Shop instances are ephemeral - generate new shop each round. Don't persist across rounds.
+
+### API Reference
+
+**Shop Generation:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `generateShop(level, gold)` | `number, number` | `table` | Creates shop with random offerings |
+| `generateOffering(level)` | `number` | `table` | Generates single offering |
+
+**Shop Actions:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `purchaseCard(shop, slot, player)` | `table, number, table` | `boolean, table` | Purchase card from slot |
+| `lockOffering(shop, slot)` | `table, number` | - | Lock offering (prevent reroll) |
+| `unlockOffering(shop, slot)` | `table, number` | - | Unlock offering |
+| `rerollOfferings(shop, player)` | `table, table` | `boolean` | Reroll unlocked slots |
+
+**Services:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `upgradeCard(card, player)` | `table, table` | `boolean, table` | Upgrade card (uses CardUpgrade) |
+| `removeCard(card, player)` | `table, table` | `boolean` | Remove card from deck |
+
+**Interest:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `calculateInterest(gold)` | `number` | `number` | Calculate interest for gold amount |
+| `applyInterest(player)` | `table` | `number` | Add interest to player gold |
+
+**Card Pool:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `registerCard(cardDef)` | `table` | - | Add card to shop pool |
+| `getPoolCounts()` | - | `table` | Get card counts by type/rarity |
+
+**Utilities:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `formatShop(shop)` | `table` | `string` | Format shop for display |
+| `getShopStats(shop)` | `table` | `table` | Get shop statistics |
+
+***
+
 \newpage
 \appendix
 

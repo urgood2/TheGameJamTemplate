@@ -56,6 +56,26 @@ local entity_cache = require("core.entity_cache")
 local component_cache = require("core.component_cache")
 local Node = require("monobehavior.behavior_script_v2")
 
+---@class EntityBuilderOpts
+---@field sprite string? Animation/sprite ID
+---@field fromSprite boolean? True=animation, false=sprite identifier (default: true)
+---@field x number? X position (alternative to position)
+---@field y number? Y position (alternative to position)
+---@field position {x: number, y: number}|{[1]: number, [2]: number}? Position table
+---@field size {[1]: number, [2]: number}|{w: number, h: number}? Size (default: 32x32)
+---@field shadow boolean? Enable shadow (default: false)
+---@field data table? Script table data (assigned before attach_ecs)
+---@field interactive EntityBuilderInteractive? Interaction configuration
+---@field state string? State tag to add (e.g., PLANNING_STATE)
+---@field shaders (string|{[1]: string, [2]: table})[]? Shader names or {name, uniforms} pairs
+
+---@class EntityBuilderInteractive
+---@field hover {title: string, body: string, id: string?}? Tooltip configuration
+---@field click fun(registry: any, entity: number)? Click callback
+---@field drag boolean|fun()? Enable drag (true) or custom drag handler
+---@field stopDrag fun()? Stop drag callback
+---@field collision boolean? Enable collision detection
+
 -- Optional dependencies (may not exist in all contexts)
 local showSimpleTooltipAbove = _G.showSimpleTooltipAbove
 local hideSimpleTooltip = _G.hideSimpleTooltip
@@ -131,9 +151,9 @@ end
 --------------------------------------------------------------------------------
 
 --- Create an entity with all common setup in one call.
---- @param opts table Configuration options
+--- @param opts EntityBuilderOpts Configuration options
 --- @return number entity The created entity ID
---- @return table script The script table (if data provided)
+--- @return table|nil script The script table (if data provided)
 function EntityBuilder.create(opts)
     opts = opts or {}
 
@@ -200,9 +220,12 @@ function EntityBuilder.create(opts)
         end
     end
 
-    -- Add state tag
+    -- Add state tag (must also remove default per gameplay.lua pattern)
     if state and add_state_tag then
         add_state_tag(entity, state)
+        if remove_default_state_tag then
+            remove_default_state_tag(entity)
+        end
     end
 
     -- Apply shaders

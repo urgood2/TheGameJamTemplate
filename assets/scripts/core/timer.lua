@@ -134,18 +134,47 @@ end
 -- Options-Table API (Ergonomic alternatives)
 --------------------------------------------------------
 
---- Options-table variant of timer.after
---- @param opts table { delay, action, tag?, group? }
---- @return string tag The timer tag
+---@class TimerAfterOpts
+---@field delay number|{[1]: number, [2]: number} Delay in seconds (or {min, max} for random)
+---@field action fun() Callback function
+---@field tag string? Timer tag for cancellation
+---@field group string? Timer group
+
+---@class TimerEveryOpts
+---@field delay number|{[1]: number, [2]: number} Interval in seconds
+---@field action fun():boolean? Callback (return false to stop)
+---@field times number? Number of times to run (0 = infinite, default: 0)
+---@field immediate boolean? Run once immediately (default: false)
+---@field after fun()? Callback after all iterations complete
+---@field tag string? Timer tag for cancellation
+---@field group string? Timer group
+
+---@class TimerCooldownOpts
+---@field delay number|{[1]: number, [2]: number} Cooldown duration
+---@field condition fun():boolean Condition to check
+---@field action fun() Action when condition met after cooldown
+---@field times number? Number of times (0 = infinite, default: 0)
+---@field after fun()? Callback after all iterations
+---@field tag string? Timer tag for cancellation
+---@field group string? Timer group
+
+---@class TimerForTimeOpts
+---@field delay number|{[1]: number, [2]: number} Duration to run action
+---@field action fun(dt: number) Action called each frame with dt
+---@field after fun()? Callback after duration completes
+---@field tag string? Timer tag for cancellation
+---@field group string? Timer group
+
+---@param opts TimerAfterOpts
+---@return string tag The timer tag
 function timer.after_opts(opts)
     assert(opts.delay, "timer.after_opts: delay required")
     assert(opts.action, "timer.after_opts: action required")
     return timer.after(opts.delay, opts.action, opts.tag, opts.group)
 end
 
---- Options-table variant of timer.every
---- @param opts table { delay, action, times?, immediate?, after?, tag?, group? }
---- @return string tag The timer tag
+---@param opts TimerEveryOpts
+---@return string tag The timer tag
 function timer.every_opts(opts)
     assert(opts.delay, "timer.every_opts: delay required")
     assert(opts.action, "timer.every_opts: action required")
@@ -160,9 +189,8 @@ function timer.every_opts(opts)
     )
 end
 
---- Options-table variant of timer.cooldown
---- @param opts table { delay, condition, action, times?, after?, tag?, group? }
---- @return string tag The timer tag
+---@param opts TimerCooldownOpts
+---@return string tag The timer tag
 function timer.cooldown_opts(opts)
     assert(opts.delay, "timer.cooldown_opts: delay required")
     assert(opts.condition, "timer.cooldown_opts: condition required")
@@ -178,9 +206,8 @@ function timer.cooldown_opts(opts)
     )
 end
 
---- Options-table variant of timer.for_time
---- @param opts table { delay, action, after?, tag?, group? }
---- @return string tag The timer tag
+---@param opts TimerForTimeOpts
+---@return string tag The timer tag
 function timer.for_time_opts(opts)
     assert(opts.delay, "timer.for_time_opts: delay required")
     assert(opts.action, "timer.for_time_opts: action required")

@@ -47,6 +47,19 @@ local physics = _G.physics
 local physics_manager_instance = _G.physics_manager_instance
 local entity_cache = require("core.entity_cache")
 
+-- LuaLS type definitions
+---@class PhysicsBuilderOpts
+---@field shape "circle"|"rectangle"? Shape type (default: "circle")
+---@field tag string? Collision tag (default: "default")
+---@field sensor boolean? Is sensor/trigger (default: false)
+---@field density number? Body density (default: 1.0)
+---@field friction number? Surface friction (default: 0.3)
+---@field restitution number? Bounciness (default: 0.0)
+---@field bullet boolean? Enable CCD for fast objects (default: false)
+---@field fixedRotation boolean? Lock rotation (default: false)
+---@field syncMode "physics"|"transform"? Sync mode (default: "physics")
+---@field collideWith string[]? Tags to collide with
+
 -- Lazy-load PhysicsManager to avoid circular dependency
 local PhysicsManager
 
@@ -298,7 +311,7 @@ end
 
 --- Quick physics setup with common options
 --- @param entity number Entity ID
---- @param opts table Options { shape, tag, bullet, collideWith, ... }
+--- @param opts PhysicsBuilderOpts Options for physics setup
 --- @return boolean success
 function PhysicsBuilder.quick(entity, opts)
     opts = opts or {}

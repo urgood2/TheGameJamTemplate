@@ -1,8 +1,60 @@
-------------------------------------------------------------
--- ui_dsl.lua
--- Declarative DSL for creating UI trees with readable syntax.
--- Depends on: ui.definitions.def, ui.box, layer_order_system,
--- animation_system, timer, util, registry, etc.
+--[[
+================================================================================
+UI DSL (ui_syntax_sugar) - Declarative UI Tree Builder
+================================================================================
+Build UI hierarchies with readable, declarative syntax.
+
+BASIC USAGE:
+    local dsl = require("ui.ui_syntax_sugar")
+
+    local myUI = dsl.root {
+        config = { color = "blackberry", padding = 10 },
+        children = {
+            dsl.vbox {
+                config = { spacing = 6 },
+                children = {
+                    dsl.text("Title", { fontSize = 24, color = "white" }),
+                    dsl.hbox {
+                        children = {
+                            dsl.anim("sprite_id", { w = 40, h = 40 }),
+                            dsl.text("Subtitle", { fontSize = 16 })
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    local boxID = dsl.spawn({ x = 200, y = 200 }, myUI)
+
+CONTAINERS:
+    dsl.root { config, children }    -- Root container (required at top)
+    dsl.vbox { config, children }    -- Vertical layout
+    dsl.hbox { config, children }    -- Horizontal layout
+
+ELEMENTS:
+    dsl.text(text, opts)             -- Text element
+        opts: { fontSize, color, align, onClick, hover }
+
+    dsl.anim(id, opts)               -- Animated sprite
+        opts: { w, h, shadow, isAnimation }
+
+    dsl.dynamicText(fn, fontSize, effect, opts)  -- Auto-updating text
+        fn: function returning string
+
+HOVER/TOOLTIP:
+    dsl.text("Button", {
+        hover = { title = "Button Title", body = "Description" },
+        onClick = function() print("clicked") end
+    })
+
+SPAWNING:
+    dsl.spawn(pos, defNode, layerName?, zIndex?, opts?)
+        pos: { x = number, y = number }
+        Returns: boxID (entity)
+
+Dependencies: ui.definitions, ui.box, layer_order_system, animation_system
+]]
 ------------------------------------------------------------
 -- local bit = require("bit") -- LuaJIT's bit library
 

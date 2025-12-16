@@ -1,6 +1,44 @@
--- assets/scripts/combat/enemy_factory.lua
--- Creates enemies from definitions and wires up with combat system
--- Pattern matches gameplay.lua:8626-8791
+--[[
+================================================================================
+ENEMY FACTORY - Enemy Creation with Combat System Integration
+================================================================================
+Creates enemy entities from definitions in data/enemies.lua and integrates
+them with the combat system (stats, weapons, health UI).
+
+PUBLIC API:
+    EnemyFactory.spawn(enemy_type, position, modifiers)
+        enemy_type: string  -- Key from data/enemies.lua (e.g., "goblin")
+        position: {x, y}    -- Spawn coordinates
+        modifiers: string[] -- Optional elite modifiers from data/elite_modifiers.lua
+        Returns: entity, ctx
+
+    EnemyFactory.kill(e, ctx)
+        e: entity           -- Enemy entity to kill
+        ctx: table          -- Context returned from spawn()
+        Triggers on_death callback and cleanup
+
+USAGE:
+    local EnemyFactory = require("combat.enemy_factory")
+
+    -- Spawn basic enemy
+    local enemy, ctx = EnemyFactory.spawn("goblin", { x = 100, y = 200 })
+
+    -- Spawn elite enemy with modifiers
+    local elite, ctx = EnemyFactory.spawn("goblin", { x = 100, y = 200 }, { "armored", "fast" })
+
+    -- Kill enemy (triggers on_death, cleanup, signals)
+    EnemyFactory.kill(enemy, ctx)
+
+INTEGRATION:
+    - Adds entity to ACTION_STATE
+    - Creates combat actor with stats
+    - Registers in enemyHealthUiState for HP bars
+    - Sets up physics body with "enemy" tag
+    - Registers steering for movement
+    - Calls on_spawn from enemy definition
+
+Dependencies: data/enemies.lua, data/elite_modifiers.lua, combat/wave_helpers.lua
+]]
 
 local signal = require("external.hump.signal")
 local component_cache = require("core.component_cache")
@@ -11,6 +49,21 @@ local Node = require("monobehavior.behavior_script_v2")
 local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
 local elite_modifiers = require("data.elite_modifiers")
+
+---@class EnemyContext
+---@field type string Enemy type from data/enemies.lua
+---@field hp number Current health
+---@field max_hp number Maximum health
+---@field speed number Movement speed
+---@field damage number Contact damage
+---@field size {[1]: number, [2]: number} Width, height
+---@field entity number Entity ID
+---@field is_elite boolean Has elite modifiers
+---@field modifiers string[] Applied modifier names
+---@field invulnerable boolean Damage immunity flag
+---@field on_death fun(e: number, ctx: EnemyContext, helpers: table)? Death callback
+---@field on_hit fun(e: number, ctx: EnemyContext, damage: number, helpers: table)? Hit callback
+---@field on_contact_player fun(e: number, ctx: EnemyContext, helpers: table)? Player contact callback
 
 local EnemyFactory = {}
 
@@ -28,6 +81,11 @@ local basic_monster_weapon = {
 -- ENEMY CREATION
 --============================================
 
+---@param enemy_type string Key from data/enemies.lua
+---@param position {x: number, y: number} Spawn position
+---@param modifiers string[]? Elite modifier names from data/elite_modifiers.lua
+---@return number? entity Entity ID (nil on failure)
+---@return EnemyContext? ctx Enemy context (nil on failure)
 function EnemyFactory.spawn(enemy_type, position, modifiers)
     modifiers = modifiers or {}
 
@@ -248,6 +306,8 @@ end
 -- ENEMY DEATH (called by wave director on enemy_killed signal)
 --============================================
 
+---@param e number Enemy entity ID
+---@param ctx EnemyContext? Enemy context from spawn()
 function EnemyFactory.kill(e, ctx)
     if not entity_cache.valid(e) then return end
 

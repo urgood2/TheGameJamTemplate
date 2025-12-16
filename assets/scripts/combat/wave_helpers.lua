@@ -1,5 +1,152 @@
--- assets/scripts/combat/wave_helpers.lua
--- Helper functions for enemy movement, combat, and visuals
+--[[
+================================================================================
+WAVE HELPERS - Enemy AI Helper Functions
+================================================================================
+Provides reusable movement, combat, spawning, and visual effects for enemy AI.
+Used by enemy definitions in data/enemies.lua.
+
+MOVEMENT HELPERS:
+    move_toward_player(e, speed)
+        - Chase player at constant speed
+        - Auto-normalizes direction vector
+        - Parameters: e (entity), speed (pixels/sec)
+
+    flee_from_player(e, speed, min_distance)
+        - Run away from player when too close
+        - Stops fleeing beyond min_distance
+        - Parameters: e (entity), speed (pixels/sec), min_distance (pixels)
+
+    kite_from_player(e, speed, preferred_distance)
+        - Maintain distance from player (ranged enemy behavior)
+        - Moves closer/away to stay at preferred_distance ± tolerance
+        - Parameters: e (entity), speed (pixels/sec), preferred_distance (pixels)
+
+    wander(e, speed)
+        - Random wandering movement
+        - Changes direction randomly every ~50 frames
+        - Parameters: e (entity), speed (pixels/sec)
+
+    dash_toward_player(e, dash_speed, duration)
+        - High-speed dash toward player's current position
+        - Direction locked at dash start (won't track player)
+        - Parameters: e (entity), dash_speed (pixels/sec), duration (seconds)
+
+POSITION HELPERS:
+    get_player_position()
+        - Returns player position as { x, y }
+        - Safe: returns { x = 0, y = 0 } if player invalid
+
+    get_entity_position(e)
+        - Returns entity position as { x, y }
+        - Returns nil if entity invalid or missing Transform
+
+    get_spawn_positions(spawn_config, count)
+        - Generate spawn positions based on pattern
+        - spawn_config types:
+            * "around_player" - Circle around player (min_radius, max_radius)
+            * "random_area" - Random within area { x, y, w, h }
+            * "fixed_points" - Cycle through points = { {x,y}, {x,y}, ... }
+            * "off_screen" - Just outside screen bounds (padding)
+        - Returns: array of { x, y } positions
+
+COMBAT HELPERS:
+    deal_damage_to_player(damage)
+        - Emit damage signal to player
+        - Routes through combat system
+
+    heal_enemy(e, amount)
+        - Heal enemy (capped at max_hp)
+        - Modifies enemy context hp
+
+    kill_enemy(e)
+        - Instantly kill enemy
+        - Sets hp = 0 and emits death event
+
+    get_hp_percent(e)
+        - Returns hp / max_hp ratio (0.0 to 1.0)
+        - Returns 1.0 if no context found
+
+    set_invulnerable(e, invulnerable)
+        - Toggle invulnerability flag
+        - Modifies enemy context
+
+SPAWNING HELPERS:
+    drop_trap(e, damage, lifetime)
+        - Emit spawn_trap event at entity position
+        - Parameters: e (entity), damage (number), lifetime (seconds)
+
+    summon_enemies(e, enemy_type, count)
+        - Spawn multiple enemies near entity
+        - Random offset ±30 pixels
+        - Parameters: e (entity), enemy_type (string), count (number)
+
+    explode(e, radius, damage)
+        - Emit explosion event at entity position
+        - Parameters: e (entity), radius (pixels), damage (number)
+
+VISUAL HELPERS:
+    spawn_telegraph(position, enemy_type, duration)
+        - Show spawn telegraph at position
+        - Parameters: position { x, y }, enemy_type (string), duration (seconds, default 1.0)
+
+    show_floating_text(text, opts)
+        - Display floating damage/status text
+        - opts: { style, x, y }
+
+    spawn_particles(effect_name, e_or_position)
+        - Spawn particle effect
+        - Accepts entity or { x, y } position
+        - Parameters: effect_name (string), e_or_position
+
+    screen_shake(duration, intensity)
+        - Trigger camera shake
+        - Parameters: duration (seconds), intensity (number)
+
+SHADER HELPERS:
+    set_shader(e, shader_name)
+        - Apply shader to entity using ShaderBuilder
+        - Parameters: e (entity), shader_name (string)
+
+    clear_shader(e)
+        - Remove all shaders from entity
+        - Parameters: e (entity)
+
+CONTEXT STORAGE:
+    set_enemy_ctx(e, ctx)
+        - Store enemy context (hp, max_hp, invulnerable, etc.)
+        - Uses weak table (auto-cleanup on entity destroy)
+
+    get_enemy_ctx(e)
+        - Retrieve enemy context
+        - Returns nil if not found
+
+USAGE EXAMPLE (from data/enemies.lua):
+    enemies.goblin = {
+        sprite = "b1060.png",
+        hp = 30,
+        speed = 60,
+        damage = 5,
+        size = { 32, 32 },
+
+        on_spawn = function(e, ctx, helpers)
+            timer.every(0.5, function()
+                if not entity_cache.valid(e) then return false end
+                helpers.move_toward_player(e, ctx.speed)
+            end, "enemy_" .. e)
+        end,
+
+        on_death = function(e, ctx, helpers)
+            helpers.spawn_particles("enemy_death", e)
+        end,
+    }
+
+Dependencies:
+    - core.component_cache
+    - core.entity_cache
+    - core.timer
+    - external.hump.signal
+    - core.shader_builder (optional, for shader helpers)
+]]
 
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")

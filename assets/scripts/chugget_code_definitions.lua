@@ -385,10 +385,28 @@ function setEntityAlias(...) end
 function log_debug(...) end
 
 ---
---- Logs a general debug message.
+--- Logs a general debug message with optional system tag.
 ---
+---@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
+---@param ... any # Message parts to concatenate
 ---@overload fun(message: string):nil
 function log_debug(...) end
+
+---
+--- Logs an info message with optional system tag.
+---
+---@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
+---@param ... any # Message parts to concatenate
+---@overload fun(message: string):nil
+function log_info(...) end
+
+---
+--- Logs a warning message with optional system tag.
+---
+---@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
+---@param ... any # Message parts to concatenate
+---@overload fun(message: string):nil
+function log_warn(...) end
 
 ---
 --- Logs an error message associated with an entity.
@@ -399,8 +417,10 @@ function log_debug(...) end
 function log_error(...) end
 
 ---
---- Logs a general error message.
+--- Logs a general error message with optional system tag.
 ---
+---@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
+---@param ... any # Message parts to concatenate
 ---@overload fun(message: string):nil
 function log_error(...) end
 

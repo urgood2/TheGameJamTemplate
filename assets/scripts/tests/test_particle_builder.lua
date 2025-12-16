@@ -116,6 +116,73 @@ TestRunner.describe("Recipe motion", function()
     end)
 end)
 
+TestRunner.describe("Recipe behaviors", function()
+    local assert_true = TestRunner.assert_true
+
+    it("fade() enables alpha fade", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():fade()
+        assert_true(recipe._config.fade)
+    end)
+
+    it("fadeIn() sets fade in percentage", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():fadeIn(0.2)
+        assert_equals(0.2, recipe._config.fadeInPct)
+    end)
+
+    it("shrink() enables scale shrink", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shrink()
+        assert_true(recipe._config.shrink)
+    end)
+
+    it("grow() sets scale range", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():grow(1, 3)
+        assert_equals(1, recipe._config.scaleStart)
+        assert_equals(3, recipe._config.scaleEnd)
+    end)
+
+    it("spin() sets rotation speed", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():spin(90)
+        assert_equals(90, recipe._config.spinMin)
+        assert_equals(90, recipe._config.spinMax)
+    end)
+
+    it("spin() with range", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():spin(90, 180)
+        assert_equals(90, recipe._config.spinMin)
+        assert_equals(180, recipe._config.spinMax)
+    end)
+
+    it("wiggle() sets wiggle amount", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():wiggle(10)
+        assert_equals(10, recipe._config.wiggle)
+    end)
+
+    it("stretch() enables velocity stretching", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():stretch()
+        assert_true(recipe._config.stretch)
+    end)
+
+    it("bounce() sets restitution", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():bounce(0.6)
+        assert_equals(0.6, recipe._config.bounceRestitution)
+    end)
+
+    it("homing() sets homing strength", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():homing(0.5)
+        assert_equals(0.5, recipe._config.homingStrength)
+    end)
+end)
+
 return function()
     TestRunner.run_all()
 end

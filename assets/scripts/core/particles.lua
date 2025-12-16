@@ -105,6 +105,79 @@ function RecipeMethods:drag(factor)
     return self
 end
 
+--- Enable alpha fade (1 -> 0 over lifetime)
+--- @return self
+function RecipeMethods:fade()
+    self._config.fade = true
+    return self
+end
+
+--- Enable fade in then out (0 -> 1 -> 0)
+--- @param fadeInPct number Percentage of lifetime for fade in (0-1)
+--- @return self
+function RecipeMethods:fadeIn(fadeInPct)
+    self._config.fadeInPct = fadeInPct
+    return self
+end
+
+--- Enable scale shrink (1 -> 0 over lifetime)
+--- @return self
+function RecipeMethods:shrink()
+    self._config.shrink = true
+    return self
+end
+
+--- Set scale interpolation
+--- @param startScale number Starting scale
+--- @param endScale number Ending scale
+--- @return self
+function RecipeMethods:grow(startScale, endScale)
+    self._config.scaleStart = startScale
+    self._config.scaleEnd = endScale
+    return self
+end
+
+--- Set rotation speed (degrees/second)
+--- @param minOrFixed number Min spin speed, or fixed
+--- @param max number? Max spin for random range
+--- @return self
+function RecipeMethods:spin(minOrFixed, max)
+    self._config.spinMin = minOrFixed
+    self._config.spinMax = max or minOrFixed
+    return self
+end
+
+--- Set lateral wiggle amount
+--- @param amount number Wiggle in pixels
+--- @return self
+function RecipeMethods:wiggle(amount)
+    self._config.wiggle = amount
+    return self
+end
+
+--- Enable velocity-based stretching
+--- @return self
+function RecipeMethods:stretch()
+    self._config.stretch = true
+    return self
+end
+
+--- Enable bouncing with restitution
+--- @param restitution number Bounce factor (0-1)
+--- @return self
+function RecipeMethods:bounce(restitution)
+    self._config.bounceRestitution = restitution
+    return self
+end
+
+--- Enable homing toward target
+--- @param strength number Homing strength (0-1)
+--- @return self
+function RecipeMethods:homing(strength)
+    self._config.homingStrength = strength
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------

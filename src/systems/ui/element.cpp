@@ -2007,32 +2007,32 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         auto *rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
         const auto& fontData = resolveFontData(config);
 
-        // Phase 4 migration: Try new split components, fall back to UIConfig
-        auto* styleConfig = globals::getRegistry().try_get<UIStyleConfig>(entity);
-        auto* layoutConfig = globals::getRegistry().try_get<UILayoutConfig>(entity);
+        // Phase 7: Use split components directly (always present since SetUpUIElement)
+        auto& styleConfig = globals::getRegistry().get<UIStyleConfig>(entity);
+        auto& layoutConfig = globals::getRegistry().get<UILayoutConfig>(entity);
+        auto& interactionConfig = globals::getRegistry().get<UIInteractionConfig>(entity);
+        auto& contentConfig = globals::getRegistry().get<UIContentConfig>(entity);
 
-        // Style field accessors - prefer UIStyleConfig when available
-        const auto& stylingType = styleConfig ? styleConfig->stylingType : config->stylingType;
-        const auto& styleColor = styleConfig ? styleConfig->color : config->color;
-        const auto styleShadow = styleConfig ? styleConfig->shadow : config->shadow;
-        const auto styleEmboss = styleConfig ? styleConfig->emboss : config->emboss;
-        const auto styleNoFill = styleConfig ? styleConfig->noFill : config->noFill;
-        const auto& styleOutlineColor = styleConfig ? styleConfig->outlineColor : config->outlineColor;
-        const auto& styleOutlineThickness = styleConfig ? styleConfig->outlineThickness : config->outlineThickness;
-        const auto styleShadowColor = styleConfig ? styleConfig->shadowColor : config->shadowColor;
-        const auto& styleProgressBarEmptyColor = styleConfig ? styleConfig->progressBarEmptyColor : config->progressBarEmptyColor;
-        const auto& styleProgressBarFullColor = styleConfig ? styleConfig->progressBarFullColor : config->progressBarFullColor;
+        // Style field accessors from UIStyleConfig
+        const auto& stylingType = styleConfig.stylingType;
+        const auto& styleColor = styleConfig.color;
+        const auto styleShadow = styleConfig.shadow;
+        const auto styleEmboss = styleConfig.emboss;
+        const auto styleNoFill = styleConfig.noFill;
+        const auto& styleOutlineColor = styleConfig.outlineColor;
+        const auto& styleOutlineThickness = styleConfig.outlineThickness;
+        const auto styleShadowColor = styleConfig.shadowColor;
+        const auto& styleProgressBarEmptyColor = styleConfig.progressBarEmptyColor;
+        const auto& styleProgressBarFullColor = styleConfig.progressBarFullColor;
 
-        // Layout field accessors - prefer UILayoutConfig when available
-        const auto& layoutScale = layoutConfig ? layoutConfig->scale : config->scale;
+        // Layout field accessors from UILayoutConfig
+        const auto& layoutScale = layoutConfig.scale;
 
-        // Interaction field accessors - prefer UIInteractionConfig when available
-        auto* interactionConfig = globals::getRegistry().try_get<UIInteractionConfig>(entity);
-        const auto interactionHover = interactionConfig ? interactionConfig->hover : config->hover;
+        // Interaction field accessors from UIInteractionConfig
+        const auto interactionHover = interactionConfig.hover;
 
-        // Content field accessors - prefer UIContentConfig when available
-        auto* contentConfig = globals::getRegistry().try_get<UIContentConfig>(entity);
-        const auto contentVerticalText = contentConfig ? contentConfig->verticalText : config->verticalText;
+        // Content field accessors from UIContentConfig
+        const auto contentVerticalText = contentConfig.verticalText;
 
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
@@ -2123,7 +2123,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // Create UIDrawContext with all necessary rendering info
         {
             auto* handler = UIHandlerRegistry::instance().get(config->uiType);
-            if (handler && styleConfig) {
+            if (handler) {
                 UIDrawContext ctx;
                 ctx.layer = layerPtr;
                 ctx.zIndex = zIndex;
@@ -2147,7 +2147,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 ctx.buttonBeingPressed = buttonBeingPressed;
                 ctx.buttonActive = buttonActive;
 
-                handler->draw(globals::getRegistry(), entity, *styleConfig, *transform, ctx);
+                handler->draw(globals::getRegistry(), entity, styleConfig, *transform, ctx);
                 // Skip legacy rendering for handled types
                 // Note: Common rendering (outline, focus) still runs after this
             }

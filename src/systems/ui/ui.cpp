@@ -772,7 +772,8 @@ namespace ui {
             "addStylingType",                 &UIConfig::Builder::addStylingType,
             "addNPatchInfo",                  &UIConfig::Builder::addNPatchInfo,
             "addNPatchSourceTexture",         &UIConfig::Builder::addNPatchSourceTexture,
-            "build",                          &UIConfig::Builder::build
+            "build",                          &UIConfig::Builder::build,
+            "buildBundle",                    &UIConfig::Builder::buildBundle
         );
 
         auto& cfgBuilder = rec.add_type("UIConfigBuilder");
@@ -877,6 +878,7 @@ namespace ui {
         rec.record_method("UIConfigBuilder", {"addNPatchInfo", "---@param info NPatchInfo\n---@return self", "Sets the 9-patch info.", false, false});
         rec.record_method("UIConfigBuilder", {"addNPatchSourceTexture", "---@param texture string\n---@return self", "Sets the 9-patch texture.", false, false});
         rec.record_method("UIConfigBuilder", {"build", "---@param self UIConfigBuilder\n---@return UIConfig", "Constructs the final UIConfig object.", false, false});
+        rec.record_method("UIConfigBuilder", {"buildBundle", "---@param self UIConfigBuilder\n---@return UIConfigBundle", "Builds UIConfig and extracts split components (UIStyleConfig, UILayoutConfig, UIInteractionConfig, UIContentConfig) into a bundle.", false, false});
 
         //=========================================================
         // Part 2: UI Templating

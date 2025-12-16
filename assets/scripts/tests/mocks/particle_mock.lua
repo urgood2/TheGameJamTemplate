@@ -65,4 +65,16 @@ function ParticleMock.get_call_count()
     return #ParticleMock.calls
 end
 
+function ParticleMock.get_all_calls()
+    return ParticleMock.calls
+end
+
+function ParticleMock.get_last_entity()
+    local last_call = ParticleMock.get_last_call()
+    if last_call then
+        return last_call.returned
+    end
+    return nil
+end
+
 return ParticleMock

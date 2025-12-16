@@ -1,6 +1,9 @@
 -- assets/scripts/tests/test_particle_builder.lua
-local TestRunner = require("tests.test_runner")
-local ParticleMock = require("tests.mocks.particle_mock")
+-- Set up package path for standalone execution
+package.path = package.path .. ";./assets/scripts/?.lua;./assets/scripts/tests/?.lua"
+
+local TestRunner = require("test_runner")
+local ParticleMock = require("mocks.particle_mock")
 local it, assert_equals, assert_not_nil = TestRunner.it, TestRunner.assert_equals, TestRunner.assert_not_nil
 
 TestRunner.describe("Recipe", function()
@@ -426,6 +429,325 @@ TestRunner.describe("Emission customization", function()
         for i, call in ipairs(ParticleMock.calls) do
             assert_equals(i * 2, call.args.size.x)
         end
+    end)
+end)
+
+TestRunner.describe("Handle", function()
+    local assert_true = TestRunner.assert_true
+    local assert_false = TestRunner.assert_false
+
+    it("stream() returns a Handle", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }  -- Set position without spawning
+        local handle = emission:stream()
+        assert_not_nil(handle)
+        assert_equals(type(handle.update), "function")
+    end)
+
+    it("every() sets spawn interval", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }
+        local handle = emission:stream():every(0.5)
+        assert_equals(0.5, handle._interval)
+    end)
+
+    it("for_() sets duration", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }
+        local handle = emission:stream():for_(2.0)
+        assert_equals(2.0, handle._duration)
+    end)
+
+    it("times() sets max count", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }
+        local handle = emission:stream():times(5)
+        assert_equals(5, handle._maxCount)
+    end)
+
+    it("stop() deactivates handle", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }
+        local handle = emission:stream()
+        assert_true(handle._active)
+        handle:stop()
+        assert_false(handle._active)
+    end)
+
+    it("update() spawns particles at interval", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        recipe._particleModule = ParticleMock
+        ParticleMock.reset()
+
+        local emission = recipe:burst(2)
+        emission._position = { x = 100, y = 100 }
+        local handle = emission:stream():every(0.1)
+
+        -- First update spawns immediately
+        handle:update(0.0)
+        assert_equals(2, ParticleMock.get_call_count())
+
+        -- Not enough time passed
+        handle:update(0.05)
+        assert_equals(2, ParticleMock.get_call_count())
+
+        -- Enough time passed, spawn again
+        handle:update(0.06)
+        assert_equals(4, ParticleMock.get_call_count())
+    end)
+
+    it("update() respects duration limit", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        recipe._particleModule = ParticleMock
+        ParticleMock.reset()
+
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }
+        local handle = emission:stream():every(0.1):for_(0.25)
+
+        handle:update(0.0)   -- t=0.0, spawn
+        handle:update(0.1)   -- t=0.1, spawn
+        handle:update(0.1)   -- t=0.2, spawn
+        handle:update(0.1)   -- t=0.3, exceeds duration, no spawn
+
+        assert_equals(3, ParticleMock.get_call_count())
+        assert_false(handle._active)
+    end)
+
+    it("update() respects times limit", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        recipe._particleModule = ParticleMock
+        ParticleMock.reset()
+
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }
+        local handle = emission:stream():every(0.1):times(2)
+
+        handle:update(0.0)   -- spawn 1
+        handle:update(0.1)   -- spawn 2
+        handle:update(0.1)   -- would be spawn 3, but limited
+
+        assert_equals(2, ParticleMock.get_call_count())
+        assert_false(handle._active)
+    end)
+
+    it("attachTo() stores entity reference", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        local emission = recipe:burst(1)
+        emission._position = { x = 0, y = 0 }
+        local mockEntity = { id = 123 }
+        local handle = emission:stream():attachTo(mockEntity)
+        assert_equals(mockEntity, handle._attachedEntity)
+    end)
+end)
+
+TestRunner.describe("Particles.mix()", function()
+    local assert_true = TestRunner.assert_true
+
+    it("mix() creates MixedEmission from multiple recipes", function()
+        local Particles = require("core.particles")
+        local r1 = Particles.define():shape("circle"):size(4)
+        local r2 = Particles.define():shape("rect"):size(8)
+
+        local mixed = Particles.mix({ r1, r2 })
+        assert_not_nil(mixed)
+        assert_equals(2, #mixed._emissions)
+    end)
+
+    it("mix() with uniform burst spawns from all recipes", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local r1 = Particles.define():shape("circle"):size(4)
+        local r2 = Particles.define():shape("rect"):size(8)
+        r1._particleModule = ParticleMock
+        r2._particleModule = ParticleMock
+
+        Particles.mix({ r1, r2 })
+            :burst(3)  -- 3 of each = 6 total
+            :at(100, 100)
+
+        assert_equals(6, ParticleMock.get_call_count())
+    end)
+
+    it("mix() with per-recipe burst counts", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local r1 = Particles.define():shape("circle"):size(4)
+        local r2 = Particles.define():shape("rect"):size(8)
+        r1._particleModule = ParticleMock
+        r2._particleModule = ParticleMock
+
+        Particles.mix({ r1, r2 })
+            :burst(5, 2)  -- 5 from r1, 2 from r2 = 7 total
+            :at(100, 100)
+
+        assert_equals(7, ParticleMock.get_call_count())
+    end)
+
+    it("mix() position is shared across all recipes", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local r1 = Particles.define():shape("circle"):size(4)
+        local r2 = Particles.define():shape("rect"):size(8)
+        r1._particleModule = ParticleMock
+        r2._particleModule = ParticleMock
+
+        Particles.mix({ r1, r2 })
+            :burst(1, 1)
+            :at(200, 300)
+
+        -- Both particles should be at 200, 300
+        local calls = ParticleMock.get_all_calls()
+        assert_equals(200, calls[1].args.location.x)
+        assert_equals(300, calls[1].args.location.y)
+        assert_equals(200, calls[2].args.location.x)
+        assert_equals(300, calls[2].args.location.y)
+    end)
+
+    it("mix() with inCircle distributes all recipes", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local r1 = Particles.define():shape("circle"):size(4)
+        local r2 = Particles.define():shape("rect"):size(8)
+        r1._particleModule = ParticleMock
+        r2._particleModule = ParticleMock
+
+        Particles.mix({ r1, r2 })
+            :burst(2, 2)
+            :inCircle(100, 100, 50)
+
+        assert_equals(4, ParticleMock.get_call_count())
+        -- All should be within circle (distance <= 50 from center)
+        local calls = ParticleMock.get_all_calls()
+        for _, call in ipairs(calls) do
+            local dx = call.args.location.x - 100
+            local dy = call.args.location.y - 100
+            local dist = math.sqrt(dx*dx + dy*dy)
+            assert_true(dist <= 50.1, "particle should be within circle")
+        end
+    end)
+
+    it("mix() stream() returns working Handle", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local r1 = Particles.define():shape("circle"):size(4)
+        local r2 = Particles.define():shape("rect"):size(8)
+        r1._particleModule = ParticleMock
+        r2._particleModule = ParticleMock
+
+        local mixed = Particles.mix({ r1, r2 })
+            :burst(1, 1)
+
+        -- Set position without spawning (for stream usage)
+        mixed._position = { x = 0, y = 0 }
+        mixed._spawnMode = "at"
+        -- Propagate position to child emissions
+        for _, emission in ipairs(mixed._emissions) do
+            emission._position = { x = 0, y = 0 }
+        end
+
+        local handle = mixed:stream()
+            :every(0.1)
+
+        handle:update(0.0)  -- First spawn: 2 particles
+        assert_equals(2, ParticleMock.get_call_count())
+
+        handle:update(0.1)  -- Second spawn: 2 more
+        assert_equals(4, ParticleMock.get_call_count())
+    end)
+end)
+
+TestRunner.describe("Shader Particle Path", function()
+    local assert_true = TestRunner.assert_true
+
+    it("_spawnSingle returns entity from CreateParticle", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle"):size(4)
+        recipe._particleModule = ParticleMock
+        ParticleMock.reset()
+
+        local emission = recipe:burst(1)
+        emission._count = 1
+        emission._position = { x = 100, y = 100 }
+
+        local entity = emission:_spawnSingle(ParticleMock, 1, 1)
+        assert_not_nil(entity, "_spawnSingle should return entity")
+        assert_equals(entity, ParticleMock.get_last_entity())
+    end)
+
+    it("particles with shaders get ShaderParticleTag", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define()
+            :shape("circle")
+            :size(4)
+            :shaders({ "glow" })
+        recipe._particleModule = ParticleMock
+        ParticleMock.reset()
+
+        -- Need to mock registry and shaders for this test
+        local mockRegistry = {
+            emplace_calls = {},
+            emplace = function(self, entity, component)
+                table.insert(self.emplace_calls, { entity = entity, component = component })
+            end
+        }
+        recipe._registry = mockRegistry
+        recipe._shadersModule = { ShaderParticleTag = {} }
+
+        local emission = recipe:burst(1)
+        emission._count = 1
+        emission._position = { x = 0, y = 0 }
+
+        local entity = emission:_spawnSingle(ParticleMock, 1, 1)
+
+        -- Check that emplace was called for ShaderParticleTag
+        assert_true(#mockRegistry.emplace_calls > 0, "should emplace ShaderParticleTag")
+        assert_equals(mockRegistry.emplace_calls[1].entity, entity)
+    end)
+
+    it("particles without shaders do NOT get ShaderParticleTag", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define()
+            :shape("circle")
+            :size(4)
+        recipe._particleModule = ParticleMock
+        ParticleMock.reset()
+
+        local mockRegistry = {
+            emplace_calls = {},
+            emplace = function(self, entity, component)
+                table.insert(self.emplace_calls, { entity = entity, component = component })
+            end
+        }
+        recipe._registry = mockRegistry
+
+        local emission = recipe:burst(1)
+        emission._count = 1
+        emission._position = { x = 0, y = 0 }
+
+        emission:_spawnSingle(ParticleMock, 1, 1)
+
+        -- Should NOT have any emplace calls for ShaderParticleTag
+        assert_equals(#mockRegistry.emplace_calls, 0, "should not emplace ShaderParticleTag")
     end)
 end)
 

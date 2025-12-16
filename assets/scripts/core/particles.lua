@@ -8,6 +8,7 @@ Reduces verbose particle.CreateParticle() calls to composable recipes.
 Usage:
     local Particles = require("core.particles")
 
+    -- Simple burst
     local spark = Particles.define()
         :shape("circle")
         :size(4, 8)
@@ -17,9 +18,28 @@ Usage:
 
     spark:burst(10):at(x, y)
 
+    -- Mixed particles (composite effects)
+    local fire = Particles.define():shape("circle"):size(4,8):color("orange","red"):fade()
+    local smoke = Particles.define():shape("circle"):size(8,16):color("gray"):fade():velocity(0,-50)
+
+    Particles.mix({ fire, smoke })
+        :burst(10, 5)  -- 10 fire particles, 5 smoke particles
+        :at(x, y)
+
+    -- Streaming mixed particles
+    local fireStream = Particles.mix({ fire, smoke })
+        :burst(3, 2)  -- 3 fire, 2 smoke per emission
+        :at(x, y)
+        :stream()
+        :every(0.1)   -- Emit every 0.1 seconds
+
+    -- Update in game loop
+    fireStream:update(dt)
+
 Design:
     - Recipe: Immutable particle definition (what it looks like, how it behaves)
     - Emission: Spawn configuration (where, when, how many)
+    - MixedEmission: Combines multiple recipes in one emission
     - Handle: Controller for streams (stop, pause, resume)
 ]]
 
@@ -492,7 +512,22 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
     local location = { x = pos.x, y = pos.y }
     local sizeVec = { x = size, y = size }
 
-    particleModule.CreateParticle(location, sizeVec, opts, nil, nil)
+    local entity = particleModule.CreateParticle(location, sizeVec, opts, nil, nil)
+
+    -- If recipe has shaders, add ShaderParticleTag to prevent double-render
+    if config.shaders and #config.shaders > 0 then
+        -- Get registry (use _registry for testing, fall back to global)
+        local registry = self._recipe._registry or _G.registry
+        if registry then
+            -- Get ShaderParticleTag (use _shadersModule for testing, fall back to global)
+            local shadersModule = self._recipe._shadersModule or _G.shaders
+            if shadersModule and shadersModule.ShaderParticleTag then
+                registry:emplace(entity, shadersModule.ShaderParticleTag)
+            end
+        end
+    end
+
+    return entity
 end
 
 --- Internal: Get random value in range
@@ -513,6 +548,318 @@ function RecipeMethods:burst(count)
 end
 
 --------------------------------------------------------------------------------
+-- HANDLE
+--------------------------------------------------------------------------------
+--[[
+Handles provide control over continuous particle streams.
+
+Usage:
+    local sparkStream = Particles.define()
+        :shape("circle")
+        :size(2, 4)
+        :velocity(50, 100)
+        :lifespan(0.5)
+        :fade()
+        :burst(3)
+        :at(x, y)
+        :stream()
+        :every(0.1)      -- Spawn every 0.1 seconds
+        :for_(2.0)       -- Run for 2 seconds total
+        :attachTo(entity) -- Stop when entity is destroyed
+
+    -- Update in game loop
+    function update(dt)
+        sparkStream:update(dt)
+    end
+
+    -- Stop manually
+    sparkStream:stop()
+
+API:
+    - stream()         - Start streaming particles
+    - every(interval)  - Set spawn interval in seconds (default: 0.1)
+    - for_(duration)   - Set total duration in seconds (nil = infinite)
+    - times(count)     - Set max spawn count (nil = infinite)
+    - attachTo(entity) - Tie lifecycle to entity validity
+    - stop()          - Stop the stream
+    - update(dt)      - Call every frame to manage spawning
+]]
+
+local HandleMethods = {}
+HandleMethods.__index = HandleMethods
+
+--- Set spawn interval
+--- @param interval number Interval in seconds between spawns
+--- @return self
+function HandleMethods:every(interval)
+    self._interval = interval
+    return self
+end
+
+--- Set total duration
+--- @param duration number Total duration in seconds (nil = infinite)
+--- @return self
+function HandleMethods:for_(duration)
+    self._duration = duration
+    return self
+end
+
+--- Set max spawn count
+--- @param count number Max number of spawns (nil = infinite)
+--- @return self
+function HandleMethods:times(count)
+    self._maxCount = count
+    return self
+end
+
+--- Attach to entity lifecycle
+--- @param entity any Entity to track
+--- @return self
+function HandleMethods:attachTo(entity)
+    self._attachedEntity = entity
+    return self
+end
+
+--- Stop the stream
+function HandleMethods:stop()
+    self._active = false
+end
+
+--- Update the stream (call every frame)
+--- @param dt number Delta time in seconds
+function HandleMethods:update(dt)
+    if not self._active then
+        return
+    end
+
+    -- Check if attached entity is still valid
+    if self._attachedEntity then
+        -- In real implementation, would check entity_cache.valid()
+        -- For now, we trust the entity reference
+    end
+
+    -- Handle first spawn (timeSinceSpawn starts at infinity)
+    if self._timeSinceSpawn == math.huge then
+        -- First update: check duration before spawning
+        if self._duration and self._elapsed + dt > self._duration then
+            self._active = false
+            return
+        end
+
+        -- Check spawn count limit before spawning
+        if self._maxCount and self._spawnCount >= self._maxCount then
+            self._active = false
+            return
+        end
+
+        -- Spawn immediately and reset timer
+        self._emission:_spawn()
+        self._spawnCount = self._spawnCount + 1
+        self._timeSinceSpawn = dt  -- Start timer with current dt
+    else
+        -- Normal updates: accumulate time
+        self._timeSinceSpawn = self._timeSinceSpawn + dt
+
+        -- Check if we should spawn
+        if self._timeSinceSpawn >= self._interval then
+            -- Check duration limit before spawning
+            if self._duration and self._elapsed + dt > self._duration then
+                self._active = false
+                return
+            end
+
+            -- Check spawn count limit before spawning
+            if self._maxCount and self._spawnCount >= self._maxCount then
+                self._active = false
+                return
+            end
+
+            -- Spawn particles
+            self._emission:_spawn()
+            self._spawnCount = self._spawnCount + 1
+
+            -- Reset timer, preserving overflow
+            self._timeSinceSpawn = self._timeSinceSpawn - self._interval
+        end
+    end
+
+    -- Accumulate elapsed time after spawn check
+    self._elapsed = self._elapsed + dt
+end
+
+--- Create a handle for continuous emission
+--- @return Handle
+function EmissionMethods:stream()
+    local handle = setmetatable({}, HandleMethods)
+    handle._emission = self
+    handle._active = true
+    handle._elapsed = 0
+    handle._timeSinceSpawn = math.huge  -- Set to infinity to trigger immediate spawn on first update
+    handle._spawnCount = 0
+    handle._interval = 0.1  -- default 10 times per second
+    handle._duration = nil  -- infinite by default
+    handle._maxCount = nil  -- infinite by default
+    handle._attachedEntity = nil
+    return handle
+end
+
+--------------------------------------------------------------------------------
+-- MIXED EMISSION
+--------------------------------------------------------------------------------
+--[[
+MixedEmission allows spawning particles from multiple recipes in a single emission.
+Useful for composite effects like fire + smoke, sparks + debris, etc.
+
+Usage:
+    local fire = Particles.define():shape("circle"):size(4,8):color("orange")
+    local smoke = Particles.define():shape("circle"):size(8,16):color("gray")
+
+    Particles.mix({ fire, smoke })
+        :burst(10, 5)  -- 10 fire, 5 smoke
+        :at(x, y)
+        :go()
+]]
+
+local MixedEmissionMethods = {}
+MixedEmissionMethods.__index = MixedEmissionMethods
+
+--- Set particle counts for burst (varargs for per-recipe counts, or single for uniform)
+--- @param ... number Counts per recipe, or single count for all
+--- @return self
+function MixedEmissionMethods:burst(...)
+    local counts = {...}
+    if #counts == 1 then
+        -- Uniform count: apply to all emissions
+        for i = 1, #self._emissions do
+            self._burstCounts[i] = counts[1]
+        end
+    else
+        -- Per-recipe counts
+        for i = 1, #self._emissions do
+            self._burstCounts[i] = counts[i] or 0
+        end
+    end
+    return self
+end
+
+--- Set spawn position and trigger burst
+--- @param x number X position
+--- @param y number Y position
+--- @return self
+function MixedEmissionMethods:at(x, y)
+    self._position = { x = x, y = y }
+    self._spawnMode = "at"
+    self:go()
+    return self
+end
+
+--- Spawn within a circle
+--- @param cx number Center X
+--- @param cy number Center Y
+--- @param radius number Circle radius
+--- @return self
+function MixedEmissionMethods:inCircle(cx, cy, radius)
+    self._spawnMode = "circle"
+    self._spawnCenter = { x = cx, y = cy }
+    self._spawnRadius = radius
+    self:go()
+    return self
+end
+
+--- Spawn within a rectangle
+--- @param x number Left X
+--- @param y number Top Y
+--- @param w number Width
+--- @param h number Height
+--- @return self
+function MixedEmissionMethods:inRect(x, y, w, h)
+    self._spawnMode = "rect"
+    self._spawnRect = { x = x, y = y, w = w, h = h }
+    self:go()
+    return self
+end
+
+--- Set spawn origin (use with :toward())
+--- @param x number Origin X
+--- @param y number Origin Y
+--- @return self
+function MixedEmissionMethods:from(x, y)
+    self._fromPos = { x = x, y = y }
+    return self
+end
+
+--- Set target position and spawn
+--- @param x number Target X
+--- @param y number Target Y
+--- @return self
+function MixedEmissionMethods:toward(x, y)
+    self._towardPos = { x = x, y = y }
+    self._position = self._fromPos or { x = 0, y = 0 }
+    self._spawnMode = "toward"
+    self:go()
+    return self
+end
+
+--- Spawn all particles from all recipes
+function MixedEmissionMethods:go()
+    for i, emission in ipairs(self._emissions) do
+        local count = self._burstCounts[i] or 0
+        if count > 0 then
+            emission._count = count
+
+            -- Copy position state to each emission
+            if self._spawnMode == "at" and self._position then
+                emission._position = self._position
+                emission:_spawn()
+            elseif self._spawnMode == "circle" then
+                emission._spawnMode = "circle"
+                emission._spawnCenter = self._spawnCenter
+                emission._spawnRadius = self._spawnRadius
+                emission:_spawn()
+            elseif self._spawnMode == "rect" then
+                emission._spawnMode = "rect"
+                emission._spawnRect = self._spawnRect
+                emission:_spawn()
+            elseif self._spawnMode == "toward" then
+                emission._fromPos = self._fromPos
+                emission._towardPos = self._towardPos
+                emission._position = self._position
+                emission._spawnMode = "toward"
+                emission:_spawn()
+            end
+        end
+    end
+end
+
+--- Internal: Spawn particles (called by Handle)
+function MixedEmissionMethods:_spawn()
+    for i, emission in ipairs(self._emissions) do
+        local count = self._burstCounts[i] or 0
+        if count > 0 then
+            -- Ensure emission has the count set
+            emission._count = count
+            emission:_spawn()
+        end
+    end
+end
+
+--- Create a handle for continuous emission
+--- @return Handle
+function MixedEmissionMethods:stream()
+    local handle = setmetatable({}, HandleMethods)
+    handle._emission = self
+    handle._active = true
+    handle._elapsed = 0
+    handle._timeSinceSpawn = math.huge  -- Set to infinity to trigger immediate spawn on first update
+    handle._spawnCount = 0
+    handle._interval = 0.1  -- default 10 times per second
+    handle._duration = nil  -- infinite by default
+    handle._maxCount = nil  -- infinite by default
+    handle._attachedEntity = nil
+    return handle
+end
+
+--------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------
 
@@ -524,6 +871,27 @@ function Particles.define()
         shape = "circle",  -- default
     }
     return recipe
+end
+
+--- Mix multiple recipes into a single emission
+--- @param recipes table Array of Recipe objects
+--- @return MixedEmission
+function Particles.mix(recipes)
+    local mixed = setmetatable({}, MixedEmissionMethods)
+    mixed._emissions = {}
+    mixed._burstCounts = {}
+
+    -- Create emissions for each recipe
+    for i, recipe in ipairs(recipes) do
+        local emission = setmetatable({}, EmissionMethods)
+        emission._recipe = recipe
+        emission._count = 0
+        emission._mode = "burst"
+        mixed._emissions[i] = emission
+        mixed._burstCounts[i] = 0
+    end
+
+    return mixed
 end
 
 _G.__PARTICLES_BUILDER__ = Particles

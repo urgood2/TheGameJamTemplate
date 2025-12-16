@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Notifications
 
-When you need to notify the user or ask for permission/input, use terminal-notifier:
+**ALWAYS use terminal-notifier when requesting confirmation or permission.** This is mandatory, not optional.
 
 ```bash
 terminal-notifier -title "Claude Code" -message "Your message here"
@@ -21,6 +21,7 @@ terminal-notifier -title "Claude Code" -message "Your message here"
 
 Use this for:
 - Asking for user input/decisions
+- Requesting confirmation or permission for any action
 - Notifying completion of long-running tasks
 - Permission requests
 - Any situation where user attention is needed

@@ -13,6 +13,11 @@ csys_console_sink<Mutex>::csys_console_sink(csys::System& console) : console_sys
 template <typename Mutex>
 void csys_console_sink<Mutex>::sink_it_(const spdlog::details::log_msg& msg)
 {
+    // Skip all processing if console is hidden - zero performance impact
+    if (!gui::showConsole) {
+        return;
+    }
+
     // Convert log message to a string
     spdlog::memory_buf_t formatted;
     this->formatter_->format(msg, formatted);

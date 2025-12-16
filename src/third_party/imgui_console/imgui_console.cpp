@@ -543,21 +543,14 @@ void ImGuiConsole::LogWindow()
                     displayText = item.Get();
                 }
 
-                // Check if log contains entity IDs (only for visible items now)
-                bool hasEntityIds = !FindEntityIds(displayText).empty();
+                // Entity ID highlighting disabled for performance (regex was too expensive)
+                // TODO: Re-enable with cached results or fast string search if needed
 
                 if (m_ColoredOutput)
                 {
-                    if (hasEntityIds) {
-                        // Has entity IDs - use cyan highlight
-                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
-                        ImGui::TextUnformatted(displayText.c_str());
-                        ImGui::PopStyleColor();
-                    } else {
-                        ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
-                        ImGui::TextUnformatted(displayText.c_str());
-                        ImGui::PopStyleColor();
-                    }
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
+                    ImGui::TextUnformatted(displayText.c_str());
+                    ImGui::PopStyleColor();
                 }
                 else
                 {

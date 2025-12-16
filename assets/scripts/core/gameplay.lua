@@ -5381,7 +5381,9 @@ function initCombatSystem()
     end
 
     -- update combat system every frame / render health bars
-    timer.run(
+    -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
+    -- timer.run() executes during fixed timestep which may skip frames
+    timer.run_every_render_frame(
         function()
             -- bail if not in action state
             if not is_state_active(ACTION_STATE) or isLevelUpModalActive() then return end

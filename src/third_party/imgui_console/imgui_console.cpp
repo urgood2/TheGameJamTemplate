@@ -11,6 +11,7 @@
 #include "systems/event/event_system.hpp"
 #include "systems/ai/ai_system.hpp"
 #include <cstring>
+#include <iomanip>
 #include "sol/sol.hpp"
 
 // The following three functions (InputTextCallback_UserData, InputTextCallback, InputText) are obtained from misc/cpp/imgui_stdlib.h
@@ -273,6 +274,32 @@ void ImGuiConsole::FilterSection()
             for (auto& f : m_LevelFilters) f = !f;
             for (auto& f : m_SystemTagFilters) f = !f;
             for (auto& [_, v] : m_DynamicTagFilters) v = !v;
+        }
+        ImGui::SameLine();
+        ImGui::Spacing();
+        ImGui::SameLine();
+        if (ImGui::Button("Copy Filtered")) {
+            std::ostringstream oss;
+            for (const auto& item : m_ConsoleSystem.Items()) {
+                if (!m_TextFilter.PassFilter(item.Get().c_str())) continue;
+                if (!PassesFilters(item)) continue;
+
+                // Format: [HH:MM:SS] [tag] message
+                unsigned int ts = item.m_TimeStamp;
+                unsigned int hours = (ts / 3600000) % 24;
+                unsigned int mins = (ts / 60000) % 60;
+                unsigned int secs = (ts / 1000) % 60;
+
+                oss << "[" << std::setfill('0') << std::setw(2) << hours
+                    << ":" << std::setw(2) << mins
+                    << ":" << std::setw(2) << secs << "] ";
+
+                if (!item.m_Tag.empty()) {
+                    oss << "[" << item.m_Tag << "] ";
+                }
+                oss << item.Get() << "\n";
+            }
+            ImGui::SetClipboardText(oss.str().c_str());
         }
 
         ImGui::Separator();

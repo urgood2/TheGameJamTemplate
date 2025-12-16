@@ -316,6 +316,38 @@ function EmissionMethods:toward(x, y)
     return self
 end
 
+--- Set emission spread angle (cone)
+--- @param degrees number Spread in degrees (±degrees from base direction)
+--- @return self
+function EmissionMethods:spread(degrees)
+    self._spread = degrees
+    return self
+end
+
+--- Set fixed emission angle
+--- @param minDeg number Min angle in degrees (0 = right, 90 = down)
+--- @param maxDeg number? Max angle for random range
+--- @return self
+function EmissionMethods:angle(minDeg, maxDeg)
+    self._angleMin = minDeg
+    self._angleMax = maxDeg or minDeg
+    return self
+end
+
+--- Point particles away from spawn center
+--- @return self
+function EmissionMethods:outward()
+    self._directionMode = "outward"
+    return self
+end
+
+--- Point particles toward spawn center
+--- @return self
+function EmissionMethods:inward()
+    self._directionMode = "inward"
+    return self
+end
+
 --- Internal: Spawn particles
 function EmissionMethods:_spawn()
     local particleModule = self._recipe._particleModule or _G.particle
@@ -359,23 +391,40 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
 
     -- Resolve velocity direction
     local vx, vy
-    if self._spawnMode == "toward" and self._towardPos then
-        -- Direction toward target
+
+    -- Determine base angle
+    local baseAngle
+    if self._angleMin then
+        -- Fixed angle or range
+        baseAngle = math.rad(self:_randomRange(self._angleMin, self._angleMax))
+    elseif self._directionMode == "outward" and self._spawnCenter then
+        -- Point away from spawn center
+        local dx = pos.x - self._spawnCenter.x
+        local dy = pos.y - self._spawnCenter.y
+        baseAngle = math.atan2(dy, dx)
+    elseif self._directionMode == "inward" and self._spawnCenter then
+        -- Point toward spawn center
+        local dx = self._spawnCenter.x - pos.x
+        local dy = self._spawnCenter.y - pos.y
+        baseAngle = math.atan2(dy, dx)
+    elseif self._spawnMode == "toward" and self._towardPos then
+        -- Point toward target
         local dx = self._towardPos.x - pos.x
         local dy = self._towardPos.y - pos.y
-        local dist = math.sqrt(dx*dx + dy*dy)
-        if dist > 0 then
-            vx = (dx / dist) * velocity
-            vy = (dy / dist) * velocity
-        else
-            vx, vy = 0, 0
-        end
+        baseAngle = math.atan2(dy, dx)
     else
         -- Random direction
-        local angle = math.random() * math.pi * 2
-        vx = math.cos(angle) * velocity
-        vy = math.sin(angle) * velocity
+        baseAngle = math.random() * math.pi * 2
     end
+
+    -- Apply spread
+    if self._spread then
+        local spreadRad = math.rad(self._spread)
+        baseAngle = baseAngle + (math.random() * 2 - 1) * spreadRad
+    end
+
+    vx = math.cos(baseAngle) * velocity
+    vy = math.sin(baseAngle) * velocity
 
     -- Map shape to C++ renderType
     local renderTypeMap = {

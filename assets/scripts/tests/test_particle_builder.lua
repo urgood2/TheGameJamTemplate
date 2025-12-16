@@ -354,6 +354,49 @@ TestRunner.describe("Emission positioning", function()
     end)
 end)
 
+TestRunner.describe("Emission direction", function()
+    local assert_true = TestRunner.assert_true
+
+    it("spread() limits angle range", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle")
+        local emission = recipe:burst(10):spread(30)
+        assert_equals(30, emission._spread)
+    end)
+
+    it("angle() sets fixed angle", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):velocity(100)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(1):angle(0):at(0, 0)  -- angle 0 = right
+
+        local call = ParticleMock.get_last_call()
+        assert_true(call.args.opts.velocity.x > 0, "should point right")
+        assert_true(math.abs(call.args.opts.velocity.y) < 1, "should have minimal y")
+    end)
+
+    it("outward() points away from spawn center", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):velocity(100)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(1):inCircle(100, 100, 50):outward()
+
+        local call = ParticleMock.get_last_call()
+        local px, py = call.args.location.x, call.args.location.y
+        local vx, vy = call.args.opts.velocity.x, call.args.opts.velocity.y
+        -- Velocity should point away from center (100, 100)
+        local dx, dy = px - 100, py - 100
+        local dot = dx * vx + dy * vy
+        assert_true(dot >= 0, "velocity should point outward")
+    end)
+end)
+
 return function()
     TestRunner.run_all()
 end

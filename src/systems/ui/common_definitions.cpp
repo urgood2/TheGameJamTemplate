@@ -1,8 +1,19 @@
 #include "common_definitions.hpp"
 
 #include "ui_data.hpp"
+#include "core/ui_components.hpp"
 
 namespace ui {
+
+    // Implementation of UIConfig::Builder::buildBundle()
+    UIConfigBundle UIConfig::Builder::buildBundle() const {
+        UIConfigBundle bundle;
+        bundle.style = extractStyle(uiConfig);
+        bundle.layout = extractLayout(uiConfig);
+        bundle.interaction = extractInteraction(uiConfig);
+        bundle.content = extractContent(uiConfig);
+        return bundle;
+    }
     auto createTooltipUIBoxDef(entt::registry &registry, ui::Tooltip tooltip) -> ui::UIElementTemplateNode {
 
         ui::UIElementTemplateNode title = ui::UIElementTemplateNode::Builder::create()

@@ -21,6 +21,8 @@
 // Each ui element can have a parent (root ui element or some other element below that)
 namespace ui
 {
+    // Forward declaration for buildBundle() - defined in core/ui_components.hpp
+    struct UIConfigBundle;
     
     // this marks objects like text, animations, etc. which are attached to a UI element. For optimization purposes.
     struct ObjectAttachedToUITag {
@@ -843,6 +845,18 @@ namespace ui
         UIConfig build() {
             return uiConfig;
         }
+
+        /**
+         * @brief Build both UIConfig and extract split components into UIConfigBundle.
+         *
+         * This method builds the UIConfig and simultaneously extracts the relevant
+         * fields into the split component structure (UIStyleConfig, UILayoutConfig,
+         * UIInteractionConfig, UIContentConfig). Use this when migrating to the
+         * new component architecture.
+         *
+         * @return UIConfigBundle containing the split components
+         */
+        UIConfigBundle buildBundle() const;
     };
 
     // TODO: probably get rid of intermediate types like this?

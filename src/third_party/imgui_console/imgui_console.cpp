@@ -781,6 +781,9 @@ void ImGuiConsole::SettingsHandler_ReadLine(ImGuiContext *ctx, ImGuiSettingsHand
 
     float f;
     int r, g, b, a;
+    int value;
+    size_t idx;
+    char tagName[64];
 
     // Window style/visuals
     if INI_CONSOLE_LOAD_COLOR(COL_COMMAND)
@@ -797,6 +800,22 @@ void ImGuiConsole::SettingsHandler_ReadLine(ImGuiContext *ctx, ImGuiSettingsHand
     else if INI_CONSOLE_LOAD_BOOL(m_ColoredOutput)
     else if INI_CONSOLE_LOAD_BOOL(m_FilterBar)
     else if INI_CONSOLE_LOAD_BOOL(m_TimeStamps)
+
+        // Filter states
+    else if (sscanf(line, "LevelFilter%zu=%d", &idx, &value) == 2 && idx < LEVEL_COUNT) {
+        console->m_LevelFilters[idx] = value != 0;
+    }
+    else if (sscanf(line, "TagFilter_%63[^=]=%d", tagName, &value) == 2) {
+        for (size_t i = 0; i < console->SYSTEM_TAGS.size(); ++i) {
+            if (strcmp(tagName, console->SYSTEM_TAGS[i]) == 0) {
+                console->m_SystemTagFilters[i] = value != 0;
+                break;
+            }
+        }
+    }
+    else if (sscanf(line, "ShowFilters=%d", &value) == 1) {
+        console->m_ShowFilters = value != 0;
+    }
 
 #pragma warning( pop )
 }
@@ -841,6 +860,16 @@ void ImGuiConsole::SettingsHandler_WriteAll(ImGuiContext *ctx, ImGuiSettingsHand
     INI_CONSOLE_SAVE_COLOR(COL_ERROR);
     INI_CONSOLE_SAVE_COLOR(COL_INFO);
     INI_CONSOLE_SAVE_COLOR(COL_TIMESTAMP);
+
+    // Filter states
+    for (size_t i = 0; i < ImGuiConsole::LEVEL_COUNT; ++i) {
+        buf->appendf("LevelFilter%zu=%d\n", i, console->m_LevelFilters[i] ? 1 : 0);
+    }
+    for (size_t i = 0; i < console->SYSTEM_TAGS.size(); ++i) {
+        buf->appendf("TagFilter_%s=%d\n", console->SYSTEM_TAGS[i],
+                     console->m_SystemTagFilters[i] ? 1 : 0);
+    }
+    buf->appendf("ShowFilters=%d\n", console->m_ShowFilters ? 1 : 0);
 
     // End saving.
     buf->append("\n");

@@ -40,8 +40,10 @@ namespace csys
          *      Create console item type
          * \param type
          *      Item type to be stored
+         * \param tag
+         *      System tag (e.g., "physics", "combat", "general")
          */
-        explicit Item(ItemType type = ItemType::LOG);
+        explicit Item(ItemType type = ItemType::LOG, std::string tag = "general");
 
         /*!
          * \brief
@@ -94,6 +96,7 @@ namespace csys
         [[nodiscard]] std::string Get() const;
 
         ItemType m_Type;             //!< Console item type
+        std::string m_Tag;           //!< System tag (e.g., "physics", "combat", "general")
         std::string m_Data;          //!< Item string data
         unsigned int m_TimeStamp;    //!< Record timestamp
     };

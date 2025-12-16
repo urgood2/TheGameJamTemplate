@@ -229,6 +229,15 @@ namespace csys
 
     CSYS_INLINE ItemLog &System::Log(ItemType type) { return m_ItemLog.log(type); }
 
+    CSYS_INLINE ItemLog &System::Log(ItemType type, const std::string& tag)
+    {
+        m_ItemLog.log(type);
+        if (!m_ItemLog.Items().empty()) {
+            m_ItemLog.Items().back().m_Tag = tag;
+        }
+        return m_ItemLog;
+    }
+
     CSYS_INLINE std::unordered_map<std::string, std::unique_ptr<CommandBase>> &System::Commands() { return m_Commands; }
 
     CSYS_INLINE std::unordered_map<std::string, std::unique_ptr<Script>> &System::Scripts() { return m_Scripts; }

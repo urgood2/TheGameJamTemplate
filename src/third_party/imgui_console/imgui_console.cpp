@@ -4,12 +4,15 @@
 //#pragma once
 
 #include <string>
+#include <algorithm>
+#include <regex>
 #include "imgui_console.h"
 #include "util/common_headers.hpp"
 #include "third_party/rlImGui/imgui_internal.h"
 #include "systems/event/event_system.hpp"
 #include "systems/ai/ai_system.hpp"
 #include <cstring>
+#include <iomanip>
 #include "sol/sol.hpp"
 
 // The following three functions (InputTextCallback_UserData, InputTextCallback, InputText) are obtained from misc/cpp/imgui_stdlib.h
@@ -105,6 +108,11 @@ void ImGuiConsole::Draw()
     ///////////////
     MenuBar();
 
+    ////////////////////
+    // Filter section //
+    ////////////////////
+    FilterSection();
+
     ////////////////
     // Filter bar //
     ////////////////
@@ -162,6 +170,11 @@ void ImGuiConsole::DefaultSettings()
     m_FilterBar = true;
     m_TimeStamps = true;
 
+    // Log filters (default: show all)
+    std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), true);
+    std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), true);
+    m_ShowFilters = false;
+
     // Style
     m_WindowAlpha = 1;
     m_ColorPalette[COL_COMMAND] = ImVec4(1.f, 1.f, 1.f, 1.f);
@@ -177,6 +190,8 @@ void ImGuiConsole::RegisterConsoleCommands()
     m_ConsoleSystem.RegisterCommand("clear", "Clear console log", [this]()
     {
         m_ConsoleSystem.Items().clear();
+        m_Bookmarks.clear();
+        m_CurrentBookmark = -1;
     });
 
     m_ConsoleSystem.RegisterCommand("filter", "Set screen filter", [this](const csys::String &filter)
@@ -208,6 +223,195 @@ void ImGuiConsole::RegisterConsoleCommands()
 
 }
 
+void ImGuiConsole::FilterSection()
+{
+    if (ImGui::CollapsingHeader("Filters", m_ShowFilters ? ImGuiTreeNodeFlags_DefaultOpen : 0))
+    {
+        m_ShowFilters = true;
+
+        // Level filters
+        ImGui::Text("Levels:");
+        ImGui::SameLine();
+        ImGui::Checkbox("Error", &m_LevelFilters[LEVEL_ERROR]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Warn", &m_LevelFilters[LEVEL_WARNING]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Info", &m_LevelFilters[LEVEL_INFO]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Debug", &m_LevelFilters[LEVEL_DEBUG]);
+
+        // System tag filters
+        ImGui::Text("Systems:");
+        for (size_t i = 0; i < SYSTEM_TAGS.size(); ++i) {
+            if (i > 0 && i % 4 != 0) ImGui::SameLine();
+            ImGui::Checkbox(SYSTEM_TAGS[i], &m_SystemTagFilters[i]);
+        }
+
+        // Dynamic tags (Other section)
+        if (!m_DynamicTags.empty()) {
+            ImGui::Text("Other:");
+            int count = 0;
+            for (const auto& tag : m_DynamicTags) {
+                if (count > 0 && count % 4 != 0) ImGui::SameLine();
+                bool& enabled = m_DynamicTagFilters[tag];
+                ImGui::Checkbox(tag.c_str(), &enabled);
+                ++count;
+            }
+        }
+
+        // Quick toggle buttons
+        ImGui::Spacing();
+        if (ImGui::Button("All")) {
+            std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), true);
+            std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), true);
+            for (auto& [_, v] : m_DynamicTagFilters) v = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("None")) {
+            std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), false);
+            std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), false);
+            for (auto& [_, v] : m_DynamicTagFilters) v = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Invert")) {
+            for (auto& f : m_LevelFilters) f = !f;
+            for (auto& f : m_SystemTagFilters) f = !f;
+            for (auto& [_, v] : m_DynamicTagFilters) v = !v;
+        }
+        ImGui::SameLine();
+        ImGui::Spacing();
+        ImGui::SameLine();
+        if (ImGui::Button("Copy Filtered")) {
+            std::ostringstream oss;
+            for (const auto& item : m_ConsoleSystem.Items()) {
+                if (!m_TextFilter.PassFilter(item.Get().c_str())) continue;
+                if (!PassesFilters(item)) continue;
+
+                // Format: [HH:MM:SS] [tag] message
+                unsigned int ts = item.m_TimeStamp;
+                unsigned int hours = (ts / 3600000) % 24;
+                unsigned int mins = (ts / 60000) % 60;
+                unsigned int secs = (ts / 1000) % 60;
+
+                oss << "[" << std::setfill('0') << std::setw(2) << hours
+                    << ":" << std::setw(2) << mins
+                    << ":" << std::setw(2) << secs << "] ";
+
+                if (!item.m_Tag.empty()) {
+                    oss << "[" << item.m_Tag << "] ";
+                }
+                oss << item.Get() << "\n";
+            }
+            ImGui::SetClipboardText(oss.str().c_str());
+        }
+
+        // Bookmark navigation
+        ImGui::SameLine();
+        if (ImGui::Button("<Prev") && !m_Bookmarks.empty()) {
+            // Find previous bookmark
+            std::vector<size_t> sortedBookmarks(m_Bookmarks.begin(), m_Bookmarks.end());
+            std::sort(sortedBookmarks.begin(), sortedBookmarks.end());
+
+            if (m_CurrentBookmark < 0) {
+                m_CurrentBookmark = static_cast<int>(sortedBookmarks.back());
+            } else {
+                auto it = std::lower_bound(sortedBookmarks.begin(), sortedBookmarks.end(), m_CurrentBookmark);
+                if (it != sortedBookmarks.begin()) {
+                    --it;
+                    m_CurrentBookmark = static_cast<int>(*it);
+                } else {
+                    m_CurrentBookmark = static_cast<int>(sortedBookmarks.back());
+                }
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Next>") && !m_Bookmarks.empty()) {
+            // Find next bookmark
+            std::vector<size_t> sortedBookmarks(m_Bookmarks.begin(), m_Bookmarks.end());
+            std::sort(sortedBookmarks.begin(), sortedBookmarks.end());
+
+            if (m_CurrentBookmark < 0) {
+                m_CurrentBookmark = static_cast<int>(sortedBookmarks.front());
+            } else {
+                auto it = std::upper_bound(sortedBookmarks.begin(), sortedBookmarks.end(), m_CurrentBookmark);
+                if (it != sortedBookmarks.end()) {
+                    m_CurrentBookmark = static_cast<int>(*it);
+                } else {
+                    m_CurrentBookmark = static_cast<int>(sortedBookmarks.front());
+                }
+            }
+        }
+        ImGui::SameLine();
+        ImGui::Text("(%zu bookmarks)", m_Bookmarks.size());
+
+        ImGui::Separator();
+    }
+    else
+    {
+        m_ShowFilters = false;
+    }
+}
+
+bool ImGuiConsole::PassesFilters(const csys::Item& item) const
+{
+    // Check level filter
+    LogLevel level;
+    switch (item.m_Type) {
+        case csys::ERROR: level = LEVEL_ERROR; break;
+        case csys::WARNING: level = LEVEL_WARNING; break;
+        case csys::INFO: level = LEVEL_INFO; break;
+        case csys::LOG: level = LEVEL_DEBUG; break;
+        default: level = LEVEL_DEBUG; break;
+    }
+    if (!m_LevelFilters[level]) return false;
+
+    // Check tag filter
+    const std::string& tag = item.m_Tag;
+
+    // Check predefined tags
+    for (size_t i = 0; i < SYSTEM_TAGS.size(); ++i) {
+        if (tag == SYSTEM_TAGS[i]) {
+            return m_SystemTagFilters[i];
+        }
+    }
+
+    // Check dynamic tags
+    auto it = m_DynamicTagFilters.find(tag);
+    if (it != m_DynamicTagFilters.end()) {
+        return it->second;
+    }
+
+    // Unknown tag - default to showing
+    return true;
+}
+
+void ImGuiConsole::RegisterDynamicTag(const std::string& tag)
+{
+    // Skip if it's a predefined tag
+    for (const auto& sysTag : SYSTEM_TAGS) {
+        if (tag == sysTag) return;
+    }
+
+    if (m_DynamicTags.find(tag) == m_DynamicTags.end()) {
+        m_DynamicTags.insert(tag);
+        m_DynamicTagFilters[tag] = true;  // Default to enabled
+    }
+}
+
+std::vector<std::pair<size_t, size_t>> ImGuiConsole::FindEntityIds(const std::string& text) const
+{
+    std::vector<std::pair<size_t, size_t>> results;
+    static const std::regex pattern(R"(entity\s+(\d+)|eid[:\s]+(\d+)|\[(\d+)\])", std::regex::icase);
+
+    auto begin = std::sregex_iterator(text.begin(), text.end(), pattern);
+    auto end = std::sregex_iterator();
+
+    for (auto it = begin; it != end; ++it) {
+        results.emplace_back(it->position(), it->length());
+    }
+    return results;
+}
+
 void ImGuiConsole::FilterBar()
 {
     m_TextFilter.Draw("Filter", ImGui::GetWindowWidth() * 0.25f);
@@ -229,8 +433,17 @@ void ImGuiConsole::LogWindow()
         // Display items.
         for (const auto &item : m_ConsoleSystem.Items())
         {
-            // Exit if word is filtered.
+            // Register any new dynamic tags
+            if (!item.m_Tag.empty()) {
+                RegisterDynamicTag(item.m_Tag);
+            }
+
+            // Exit if word is filtered by text filter
             if (!m_TextFilter.PassFilter(item.Get().c_str()))
+                continue;
+
+            // Exit if filtered by level/tag checkboxes
+            if (!PassesFilters(item))
                 continue;
 
             // Spacing between commands.
@@ -241,15 +454,58 @@ void ImGuiConsole::LogWindow()
             }
 
             // Items.
+            // Build display text with tag prefix if available
+            std::string displayText;
+            if (!item.m_Tag.empty() && item.m_Tag != "general") {
+                displayText = "[" + item.m_Tag + "] " + item.Get();
+            } else {
+                displayText = item.Get();
+            }
+
+            // Check if log contains entity IDs
+            auto entityPositions = FindEntityIds(displayText);
+
             if (m_ColoredOutput)
             {
-                ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
-                ImGui::TextUnformatted(item.Get().data());
-                ImGui::PopStyleColor();
+                if (!entityPositions.empty()) {
+                    // Has entity IDs - use cyan highlight for entire line as MVP
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
+                    ImGui::TextUnformatted(displayText.c_str());
+                    ImGui::PopStyleColor();
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
+                    ImGui::TextUnformatted(displayText.c_str());
+                    ImGui::PopStyleColor();
+                }
             }
             else
             {
-                ImGui::TextUnformatted(item.Get().data());
+                ImGui::TextUnformatted(displayText.c_str());
+            }
+
+            // Get item index for bookmarking
+            size_t itemIndex = &item - &m_ConsoleSystem.Items()[0];
+
+            // Right-click context menu
+            if (ImGui::BeginPopupContextItem(std::to_string(itemIndex).c_str())) {
+                bool isBookmarked = m_Bookmarks.count(itemIndex) > 0;
+                if (ImGui::MenuItem(isBookmarked ? "Remove Bookmark" : "Add Bookmark")) {
+                    if (isBookmarked) {
+                        m_Bookmarks.erase(itemIndex);
+                    } else {
+                        m_Bookmarks.insert(itemIndex);
+                    }
+                }
+                if (ImGui::MenuItem("Copy Line")) {
+                    ImGui::SetClipboardText(item.Get().c_str());
+                }
+                ImGui::EndPopup();
+            }
+
+            // Show bookmark indicator
+            if (m_Bookmarks.count(itemIndex) > 0) {
+                ImGui::SameLine(0, 0);
+                ImGui::TextColored(ImVec4(1.0f, 0.87f, 0.0f, 1.0f), " *");
             }
 
 
@@ -651,6 +907,9 @@ void ImGuiConsole::SettingsHandler_ReadLine(ImGuiContext *ctx, ImGuiSettingsHand
 
     float f;
     int r, g, b, a;
+    int value;
+    size_t idx;
+    char tagName[64];
 
     // Window style/visuals
     if INI_CONSOLE_LOAD_COLOR(COL_COMMAND)
@@ -667,6 +926,22 @@ void ImGuiConsole::SettingsHandler_ReadLine(ImGuiContext *ctx, ImGuiSettingsHand
     else if INI_CONSOLE_LOAD_BOOL(m_ColoredOutput)
     else if INI_CONSOLE_LOAD_BOOL(m_FilterBar)
     else if INI_CONSOLE_LOAD_BOOL(m_TimeStamps)
+
+        // Filter states
+    else if (sscanf(line, "LevelFilter%zu=%d", &idx, &value) == 2 && idx < LEVEL_COUNT) {
+        console->m_LevelFilters[idx] = value != 0;
+    }
+    else if (sscanf(line, "TagFilter_%63[^=]=%d", tagName, &value) == 2) {
+        for (size_t i = 0; i < console->SYSTEM_TAGS.size(); ++i) {
+            if (strcmp(tagName, console->SYSTEM_TAGS[i]) == 0) {
+                console->m_SystemTagFilters[i] = value != 0;
+                break;
+            }
+        }
+    }
+    else if (sscanf(line, "ShowFilters=%d", &value) == 1) {
+        console->m_ShowFilters = value != 0;
+    }
 
 #pragma warning( pop )
 }
@@ -711,6 +986,16 @@ void ImGuiConsole::SettingsHandler_WriteAll(ImGuiContext *ctx, ImGuiSettingsHand
     INI_CONSOLE_SAVE_COLOR(COL_ERROR);
     INI_CONSOLE_SAVE_COLOR(COL_INFO);
     INI_CONSOLE_SAVE_COLOR(COL_TIMESTAMP);
+
+    // Filter states
+    for (size_t i = 0; i < ImGuiConsole::LEVEL_COUNT; ++i) {
+        buf->appendf("LevelFilter%zu=%d\n", i, console->m_LevelFilters[i] ? 1 : 0);
+    }
+    for (size_t i = 0; i < console->SYSTEM_TAGS.size(); ++i) {
+        buf->appendf("TagFilter_%s=%d\n", console->SYSTEM_TAGS[i],
+                     console->m_SystemTagFilters[i] ? 1 : 0);
+    }
+    buf->appendf("ShowFilters=%d\n", console->m_ShowFilters ? 1 : 0);
 
     // End saving.
     buf->append("\n");

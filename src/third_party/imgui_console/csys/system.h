@@ -110,6 +110,18 @@ namespace csys
 
         /*!
          * \brief
+         *      Creates a new item entry to log information with a system tag
+         * \param type
+         *      Log type (COMMAND, LOG, WARNING, ERROR)
+         * \param tag
+         *      System tag (e.g., "physics", "combat", "general")
+         * \return
+         *      Reference to console items obj
+         */
+        ItemLog &Log(ItemType type, const std::string& tag);
+
+        /*!
+         * \brief
          *      Run the given script
          * \param script_name
          *      Script to be executed

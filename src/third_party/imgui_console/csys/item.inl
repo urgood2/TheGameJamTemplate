@@ -23,7 +23,7 @@ namespace csys
     CSYS_INLINE static const std::string_view s_Error = "[ERROR]: ";
     CSYS_INLINE static const auto s_TimeBegin = std::chrono::steady_clock::now();
 
-    CSYS_INLINE Item::Item(ItemType type) : m_Type(type)
+    CSYS_INLINE Item::Item(ItemType type, std::string tag) : m_Type(type), m_Tag(std::move(tag))
     {
         auto timeNow = std::chrono::steady_clock::now();
         m_TimeStamp = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - s_TimeBegin).count());

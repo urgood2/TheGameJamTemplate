@@ -12,6 +12,7 @@
 #include "systems/localization/localization.hpp"
 #include "systems/ui/ui_data.hpp"
 #include "systems/ui/core/ui_components.hpp"
+#include "systems/ui/handlers/handler_registry.hpp"
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
 #include "systems/collision/broad_phase.hpp"
@@ -20,6 +21,12 @@
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include <cstddef>
+
+// Feature flag to enable handler-based rendering (for testing)
+// Set to true to use handlers for RECT_SHAPE and TEXT types
+#ifndef UI_USE_HANDLERS
+#define UI_USE_HANDLERS 0
+#endif
 
 namespace ui
 {
@@ -2110,6 +2117,43 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             //     buttonActive = false;
             // }
         }
+
+#if UI_USE_HANDLERS
+        // Handler-based rendering (experimental)
+        // Create UIDrawContext with all necessary rendering info
+        {
+            auto* handler = UIHandlerRegistry::instance().get(config->uiType);
+            if (handler && styleConfig) {
+                UIDrawContext ctx;
+                ctx.layer = layerPtr;
+                ctx.zIndex = zIndex;
+                ctx.config = config;
+                ctx.state = state;
+                ctx.node = node;
+                ctx.rectCache = rectCache;
+                ctx.fontData = &fontData;
+                ctx.actualX = actualX;
+                ctx.actualY = actualY;
+                ctx.actualW = actualW;
+                ctx.actualH = actualH;
+                ctx.visualX = visualX;
+                ctx.visualY = visualY;
+                ctx.visualW = visualW;
+                ctx.visualH = visualH;
+                ctx.visualScaleWithHoverAndMotion = visualScaleWithHoverAndMotion;
+                ctx.visualR = visualR;
+                ctx.rotationOffset = rotationOffset;
+                ctx.parallaxDist = parallaxDist;
+                ctx.buttonBeingPressed = buttonBeingPressed;
+                ctx.buttonActive = buttonActive;
+
+                handler->draw(globals::getRegistry(), entity, *styleConfig, *transform, ctx);
+                // Skip legacy rendering for handled types
+                // Note: Common rendering (outline, focus) still runs after this
+            }
+        }
+#endif
+
         // is it text?
         if (config->uiType == UITypeEnum::TEXT && layoutScale)
         {

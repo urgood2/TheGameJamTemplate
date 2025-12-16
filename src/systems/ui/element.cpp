@@ -2019,6 +2019,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // Layout field accessors - prefer UILayoutConfig when available
         const auto& layoutScale = layoutConfig ? layoutConfig->scale : config->scale;
 
+        // Interaction field accessors - prefer UIInteractionConfig when available
+        auto* interactionConfig = globals::getRegistry().try_get<UIInteractionConfig>(entity);
+        const auto interactionHover = interactionConfig ? interactionConfig->hover : config->hover;
+
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
         AssertThat(state, Is().Not().EqualTo(nullptr));
@@ -2285,7 +2289,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             // darken if button is on cooldown
             Color buttonColor = config->buttonDelay ? util::MixColours(styleColor.value(), BLACK, 0.5f) : styleColor.value();
-            bool collidedButtonHovered = config->hover && node->state.isBeingHovered; 
+            bool collidedButtonHovered = interactionHover && node->state.isBeingHovered;
 
             if (node->state.isBeingHovered && (entity == (entt::entity)85)) {
                 // SPDLOG_DEBUG("DrawSelf(): Button is being hovered: {}", collidedButtonNode.state.isBeingHovered);

@@ -371,15 +371,23 @@ void ImGuiConsole::LogWindow()
             }
 
             // Items.
+            // Build display text with tag prefix if available
+            std::string displayText;
+            if (!item.m_Tag.empty() && item.m_Tag != "general") {
+                displayText = "[" + item.m_Tag + "] " + item.Get();
+            } else {
+                displayText = item.Get();
+            }
+
             if (m_ColoredOutput)
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
-                ImGui::TextUnformatted(item.Get().data());
+                ImGui::TextUnformatted(displayText.c_str());
                 ImGui::PopStyleColor();
             }
             else
             {
-                ImGui::TextUnformatted(item.Get().data());
+                ImGui::TextUnformatted(displayText.c_str());
             }
 
 

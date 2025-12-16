@@ -79,6 +79,32 @@ function RecipeMethods:lifespan(minOrFixed, max)
     return self
 end
 
+--- Set particle velocity (speed in pixels/second)
+--- @param minOrFixed number Min velocity, or fixed if max not provided
+--- @param max number? Max velocity for random range
+--- @return self
+function RecipeMethods:velocity(minOrFixed, max)
+    self._config.velocityMin = minOrFixed
+    self._config.velocityMax = max or minOrFixed
+    return self
+end
+
+--- Set gravity strength (positive = down)
+--- @param strength number Gravity in pixels/second^2
+--- @return self
+function RecipeMethods:gravity(strength)
+    self._config.gravity = strength
+    return self
+end
+
+--- Set drag factor (velocity multiplier per frame)
+--- @param factor number Drag factor (0.95 = 5% slowdown per frame)
+--- @return self
+function RecipeMethods:drag(factor)
+    self._config.drag = factor
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------

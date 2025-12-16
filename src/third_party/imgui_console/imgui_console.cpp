@@ -5,6 +5,7 @@
 
 #include <string>
 #include <algorithm>
+#include <regex>
 #include "imgui_console.h"
 #include "util/common_headers.hpp"
 #include "third_party/rlImGui/imgui_internal.h"
@@ -395,6 +396,20 @@ void ImGuiConsole::RegisterDynamicTag(const std::string& tag)
     }
 }
 
+std::vector<std::pair<size_t, size_t>> ImGuiConsole::FindEntityIds(const std::string& text) const
+{
+    std::vector<std::pair<size_t, size_t>> results;
+    std::regex pattern(R"(entity\s+(\d+)|eid[:\s]+(\d+)|\[(\d+)\])", std::regex::icase);
+
+    auto begin = std::sregex_iterator(text.begin(), text.end(), pattern);
+    auto end = std::sregex_iterator();
+
+    for (auto it = begin; it != end; ++it) {
+        results.emplace_back(it->position(), it->length());
+    }
+    return results;
+}
+
 void ImGuiConsole::FilterBar()
 {
     m_TextFilter.Draw("Filter", ImGui::GetWindowWidth() * 0.25f);
@@ -445,11 +460,21 @@ void ImGuiConsole::LogWindow()
                 displayText = item.Get();
             }
 
+            // Check if log contains entity IDs
+            auto entityPositions = FindEntityIds(displayText);
+
             if (m_ColoredOutput)
             {
-                ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
-                ImGui::TextUnformatted(displayText.c_str());
-                ImGui::PopStyleColor();
+                if (!entityPositions.empty()) {
+                    // Has entity IDs - use cyan highlight for entire line as MVP
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
+                    ImGui::TextUnformatted(displayText.c_str());
+                    ImGui::PopStyleColor();
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
+                    ImGui::TextUnformatted(displayText.c_str());
+                    ImGui::PopStyleColor();
+                }
             }
             else
             {

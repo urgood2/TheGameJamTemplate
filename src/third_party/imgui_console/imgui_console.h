@@ -76,6 +76,7 @@ protected:
 
     bool PassesFilters(const csys::Item& item) const;  //!< Check if item passes level and tag filters
     void RegisterDynamicTag(const std::string& tag);   //!< Register unknown tags to m_DynamicTags
+    std::vector<std::pair<size_t, size_t>> FindEntityIds(const std::string& text) const;  //!< Find entity IDs in text
 
     static void HelpMaker(const char *desc);
 

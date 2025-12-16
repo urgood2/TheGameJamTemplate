@@ -255,6 +255,52 @@ TestRunner.describe("Recipe rendering", function()
     end)
 end)
 
+TestRunner.describe("Emission burst", function()
+    local assert_nil = TestRunner.assert_nil
+
+    it("burst() returns Emission object", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle")
+        local emission = recipe:burst(10)
+        assert_not_nil(emission)
+        assert_equals(10, emission._count)
+    end)
+
+    it("burst() does not modify recipe", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():shape("circle")
+        local emission = recipe:burst(10)
+        assert_nil(recipe._count)
+    end)
+
+    it("at() sets position and triggers spawn", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        -- Inject mock
+        local recipe = Particles.define():shape("circle"):size(6):lifespan(1)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(5):at(100, 200)
+
+        assert_equals(5, ParticleMock.get_call_count())
+    end)
+
+    it("at() passes correct position to CreateParticle", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):size(6):lifespan(1)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(1):at(150, 250)
+
+        local call = ParticleMock.get_last_call()
+        assert_equals(150, call.args.location.x)
+        assert_equals(250, call.args.location.y)
+    end)
+end)
+
 return function()
     TestRunner.run_all()
 end

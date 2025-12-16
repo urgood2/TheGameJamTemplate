@@ -253,6 +253,95 @@ function RecipeMethods:shaderUniforms(uniforms)
 end
 
 --------------------------------------------------------------------------------
+-- EMISSION
+--------------------------------------------------------------------------------
+
+local EmissionMethods = {}
+EmissionMethods.__index = EmissionMethods
+
+--- Set spawn position and trigger burst
+--- @param x number X position
+--- @param y number Y position
+--- @return self
+function EmissionMethods:at(x, y)
+    self._position = { x = x, y = y }
+    self:_spawn()
+    return self
+end
+
+--- Internal: Spawn particles
+function EmissionMethods:_spawn()
+    local particleModule = self._recipe._particleModule or _G.particle
+    if not particleModule then
+        log_warn("Particles: particle module not available")
+        return
+    end
+
+    for i = 1, self._count do
+        self:_spawnSingle(particleModule, i, self._count)
+    end
+end
+
+--- Internal: Spawn a single particle
+function EmissionMethods:_spawnSingle(particleModule, index, total)
+    local config = self._recipe._config
+    local pos = self._position
+
+    -- Resolve random values
+    local size = self:_randomRange(config.sizeMin or 6, config.sizeMax or 6)
+    local lifespan = self:_randomRange(config.lifespanMin or 1, config.lifespanMax or 1)
+    local velocity = self:_randomRange(config.velocityMin or 0, config.velocityMax or 0)
+
+    -- Build angle (random direction by default)
+    local angle = math.random() * math.pi * 2
+    local vx = math.cos(angle) * velocity
+    local vy = math.sin(angle) * velocity
+
+    -- Map shape to C++ renderType
+    local renderTypeMap = {
+        circle = particleModule.ParticleRenderType and particleModule.ParticleRenderType.CIRCLE_FILLED or 4,
+        rect = particleModule.ParticleRenderType and particleModule.ParticleRenderType.RECTANGLE_FILLED or 2,
+        line = particleModule.ParticleRenderType and particleModule.ParticleRenderType.LINE_FACING or 8,
+        sprite = particleModule.ParticleRenderType and particleModule.ParticleRenderType.TEXTURE or 0,
+    }
+
+    local opts = {
+        renderType = renderTypeMap[config.shape] or renderTypeMap.circle,
+        velocity = { x = vx, y = vy },
+        lifespan = lifespan,
+        gravity = config.gravity,
+        startColor = config.startColor,
+        endColor = config.endColor,
+        rotationSpeed = config.spinMin and self:_randomRange(config.spinMin, config.spinMax),
+        autoAspect = config.stretch,
+        z = config.z,
+        space = config.space,
+    }
+
+    local location = { x = pos.x, y = pos.y }
+    local sizeVec = { x = size, y = size }
+
+    particleModule.CreateParticle(location, sizeVec, opts, nil, nil)
+end
+
+--- Internal: Get random value in range
+function EmissionMethods:_randomRange(min, max)
+    if min == max then return min end
+    return min + math.random() * (max - min)
+end
+
+--- Create an emission for burst spawning
+--- @param count number Number of particles to spawn
+--- @return Emission
+function RecipeMethods:burst(count)
+    local emission = setmetatable({}, EmissionMethods)
+    emission._recipe = self
+    emission._count = count
+    emission._mode = "burst"
+    return emission
+end
+
+--------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------
 

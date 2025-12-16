@@ -2000,6 +2000,21 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         auto *rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
         const auto& fontData = resolveFontData(config);
 
+        // Phase 4 migration: Try new split components, fall back to UIConfig
+        auto* styleConfig = globals::getRegistry().try_get<UIStyleConfig>(entity);
+
+        // Style field accessors - prefer UIStyleConfig when available
+        const auto& stylingType = styleConfig ? styleConfig->stylingType : config->stylingType;
+        const auto& styleColor = styleConfig ? styleConfig->color : config->color;
+        const auto styleShadow = styleConfig ? styleConfig->shadow : config->shadow;
+        const auto styleEmboss = styleConfig ? styleConfig->emboss : config->emboss;
+        const auto styleNoFill = styleConfig ? styleConfig->noFill : config->noFill;
+        const auto& styleOutlineColor = styleConfig ? styleConfig->outlineColor : config->outlineColor;
+        const auto& styleOutlineThickness = styleConfig ? styleConfig->outlineThickness : config->outlineThickness;
+        const auto styleShadowColor = styleConfig ? styleConfig->shadowColor : config->shadowColor;
+        const auto& styleProgressBarEmptyColor = styleConfig ? styleConfig->progressBarEmptyColor : config->progressBarEmptyColor;
+        const auto& styleProgressBarFullColor = styleConfig ? styleConfig->progressBarFullColor : config->progressBarFullColor;
+
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
         AssertThat(state, Is().Not().EqualTo(nullptr));
@@ -2053,12 +2068,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             float parentLayerX = (globals::getRegistry().valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
             float parentLayerY = (globals::getRegistry().valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
 
-            float shadowOffsetX = (config->shadow ? 0.4f * node->shadowDisplacement->x : 0) ;
-            float shadowOffsetY = (config->shadow ? 0.4f * node->shadowDisplacement->y : 0) ;
+            float shadowOffsetX = (styleShadow ? 0.4f * node->shadowDisplacement->x : 0) ;
+            float shadowOffsetY = (styleShadow ? 0.4f * node->shadowDisplacement->y : 0) ;
 
             // node->layerDisplacement->x = parentLayerX + shadowOffsetX;
             // node->layerDisplacement->y = parentLayerY + shadowOffsetY;
-            
+
             node->layerDisplacement->x = parentLayerX;
             node->layerDisplacement->y = parentLayerY;
 
@@ -2070,12 +2085,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 node->layerDisplacement->y -= parallaxDist * 1.8f * node->shadowDisplacement->y;
                 parallaxDist = 0;
                 buttonBeingPressed = true;
-                
+
                 // SPDLOG_DEBUG("Button being pressed: {}, setting layer displacement to x: {}, y: {}", buttonBeingPressed, node->layerDisplacement->x, node->layerDisplacement->y);
             }
-    
-    
-        
+
+
+
             //TODO: commenting out for testing. also , why is callback a string?
             // auto *buttonUIEConfig = registry.try_get<UIConfig>(config->button_UIE.value());
             // if (config->button_UIE && buttonUIEConfig && buttonUIEConfig->buttonCallback)
@@ -2091,10 +2106,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
             float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
-            
+
             //TODO: if scale is smaller, make the shadow height smaller too
 
-            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
+            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && styleShadow && globals::getSettings().shadowsOn);
 
             if (drawShadow)
             {
@@ -2116,21 +2131,21 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         cmd->angle = rotation;
                     }, zIndex);
                 }
-                if ((config->shadow || (config->button_UIE && buttonActive)) && globals::getSettings().shadowsOn)
+                if ((styleShadow || (config->button_UIE && buttonActive)) && globals::getSettings().shadowsOn)
                 {
-                    Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+                    Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor->a * 0.3f)};
 
                     float textX = fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * fontData.fontScale;
                     float textY = fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * fontData.fontScale;
                     float fontScale = config->scale.value_or(1.0f) * fontData.fontScale;
-                    float spacing = config->textSpacing.value_or(fontData.spacing);   
+                    float spacing = config->textSpacing.value_or(fontData.spacing);
 
                     float scale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
                     layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                         cmd->scaleX = scale;
                         cmd->scaleY = scale;
                     }, zIndex);
-                    
+
                     float fontSize = fontData.fontLoadedSize;
                     layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = fontData.font, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
                         cmd->text = text.c_str();
@@ -2143,7 +2158,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         cmd->spacing = spacing;
                         cmd->color = shadowColor;
                     }, zIndex);
-                    
+
                     // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
                 }
 
@@ -2167,7 +2182,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                     cmd->angle = rotation;
                 }, zIndex);
             }
-            Color renderColor = config->color.value();
+            Color renderColor = styleColor.value();
             if (buttonActive == false)
             {
                 renderColor = globals::uiTextInactive;
@@ -2250,22 +2265,22 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // auto collidedButtonUIState = *state;
             
             // draw embossed rectangle
-            if (config->emboss)
+            if (styleEmboss)
             {
-                Color c = ColorBrightness(config->color.value(), node->state.isBeingHovered ? -0.8f : -0.5f);
-                
+                Color c = ColorBrightness(styleColor.value(), node->state.isBeingHovered ? -0.8f : -0.5f);
 
-                if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+
+                if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                     util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt, zIndex);
-                    
-                else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+
+                else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                 //TODO: ninepatch doens't support layer order yet
                     util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, c, parallaxDist, std::nullopt, zIndex);
             }
-        
-            
+
+
             // darken if button is on cooldown
-            Color buttonColor = config->buttonDelay ? util::MixColours(config->color.value(), BLACK, 0.5f) : config->color.value();
+            Color buttonColor = config->buttonDelay ? util::MixColours(styleColor.value(), BLACK, 0.5f) : styleColor.value();
             bool collidedButtonHovered = config->hover && node->state.isBeingHovered; 
 
             if (node->state.isBeingHovered && (entity == (entt::entity)85)) {
@@ -2313,38 +2328,38 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 if (config->buttonDelay)
                 {
                     // gray background
-                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
-                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                         util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, std::nullopt, zIndex);
 
-                    // progress bar                        
-                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    // progress bar
+                    if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt, zIndex);
-                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                         util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, config->buttonDelayProgress, zIndex);
 
                 }
                 else if (config->progressBar)
                 {
-                    auto colorToUse = config->progressBarEmptyColor.value_or(GRAY);
-                    
-                    //FIXME: commenting out for testing
-                    // if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                    //     util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
-                    // else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                    //     util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
-                    
+                    auto colorToUse = styleProgressBarEmptyColor.value_or(GRAY);
 
-                    colorToUse = config->progressBarFullColor.value_or(GREEN);
-                    
+                    //FIXME: commenting out for testing
+                    // if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    //     util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
+                    // else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    //     util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
+
+
+                    colorToUse = styleProgressBarFullColor.value_or(GREEN);
+
                     // retrieve the current progress bar value using reflection
-                    
+
                     float progress = 1.0f;
-                    
+
                     if (config->progressBarFetchValueLambda) {
                         progress = config->progressBarFetchValueLambda(entity);
-                        
+
                         if (entity == (entt::entity)238) {
                             SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
                         }
@@ -2355,22 +2370,22 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
                         SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
                     }
-                    
-                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+
+                    if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt, zIndex);
-                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                         util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, progress, zIndex);
-                    
+
                 }
                 else
                 {
-                    
+
                     // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
-                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
-                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                         util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, std::nullopt, zIndex);
-                    else if (config->stylingType == ui::UIStylingType::SPRITE && config->spriteSourceTexture && config->spriteSourceRect)
+                    else if (stylingType == ui::UIStylingType::SPRITE && config->spriteSourceTexture && config->spriteSourceRect)
                     {
                         auto* tex = config->spriteSourceTexture.value();
                         auto srcRect = config->spriteSourceRect.value();

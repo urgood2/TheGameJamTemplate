@@ -1189,8 +1189,7 @@ if (EMSCRIPTEN)
         "assets/Title.png"
         "assets/Typical_2D_platformer_example.ldtk"
         "assets/Typical_TopDown_example.ldtk"
-        # Auto-generated files (not needed at runtime)
-        "assets/all_uuids.json #auto_generated #verified.json"
+        # Note: all_uuids.json excluded via copy_assets.py (UUID dump disabled for Emscripten anyway)
     )
 
     # Build exclude flags

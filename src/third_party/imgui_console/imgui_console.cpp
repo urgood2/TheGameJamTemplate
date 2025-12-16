@@ -190,6 +190,8 @@ void ImGuiConsole::RegisterConsoleCommands()
     m_ConsoleSystem.RegisterCommand("clear", "Clear console log", [this]()
     {
         m_ConsoleSystem.Items().clear();
+        m_Bookmarks.clear();
+        m_CurrentBookmark = -1;
     });
 
     m_ConsoleSystem.RegisterCommand("filter", "Set screen filter", [this](const csys::String &filter)
@@ -399,7 +401,7 @@ void ImGuiConsole::RegisterDynamicTag(const std::string& tag)
 std::vector<std::pair<size_t, size_t>> ImGuiConsole::FindEntityIds(const std::string& text) const
 {
     std::vector<std::pair<size_t, size_t>> results;
-    std::regex pattern(R"(entity\s+(\d+)|eid[:\s]+(\d+)|\[(\d+)\])", std::regex::icase);
+    static const std::regex pattern(R"(entity\s+(\d+)|eid[:\s]+(\d+)|\[(\d+)\])", std::regex::icase);
 
     auto begin = std::sregex_iterator(text.begin(), text.end(), pattern);
     auto end = std::sregex_iterator();
@@ -433,7 +435,7 @@ void ImGuiConsole::LogWindow()
         {
             // Register any new dynamic tags
             if (!item.m_Tag.empty()) {
-                const_cast<ImGuiConsole*>(this)->RegisterDynamicTag(item.m_Tag);
+                RegisterDynamicTag(item.m_Tag);
             }
 
             // Exit if word is filtered by text filter

@@ -283,6 +283,52 @@ void ImGuiConsole::FilterSection()
     }
 }
 
+bool ImGuiConsole::PassesFilters(const csys::Item& item) const
+{
+    // Check level filter
+    LogLevel level;
+    switch (item.m_Type) {
+        case csys::ERROR: level = LEVEL_ERROR; break;
+        case csys::WARNING: level = LEVEL_WARNING; break;
+        case csys::INFO: level = LEVEL_INFO; break;
+        case csys::LOG: level = LEVEL_DEBUG; break;
+        default: level = LEVEL_DEBUG; break;
+    }
+    if (!m_LevelFilters[level]) return false;
+
+    // Check tag filter
+    const std::string& tag = item.m_Tag;
+
+    // Check predefined tags
+    for (size_t i = 0; i < SYSTEM_TAGS.size(); ++i) {
+        if (tag == SYSTEM_TAGS[i]) {
+            return m_SystemTagFilters[i];
+        }
+    }
+
+    // Check dynamic tags
+    auto it = m_DynamicTagFilters.find(tag);
+    if (it != m_DynamicTagFilters.end()) {
+        return it->second;
+    }
+
+    // Unknown tag - default to showing
+    return true;
+}
+
+void ImGuiConsole::RegisterDynamicTag(const std::string& tag)
+{
+    // Skip if it's a predefined tag
+    for (const auto& sysTag : SYSTEM_TAGS) {
+        if (tag == sysTag) return;
+    }
+
+    if (m_DynamicTags.find(tag) == m_DynamicTags.end()) {
+        m_DynamicTags.insert(tag);
+        m_DynamicTagFilters[tag] = true;  // Default to enabled
+    }
+}
+
 void ImGuiConsole::FilterBar()
 {
     m_TextFilter.Draw("Filter", ImGui::GetWindowWidth() * 0.25f);
@@ -304,8 +350,17 @@ void ImGuiConsole::LogWindow()
         // Display items.
         for (const auto &item : m_ConsoleSystem.Items())
         {
-            // Exit if word is filtered.
+            // Register any new dynamic tags
+            if (!item.m_Tag.empty()) {
+                const_cast<ImGuiConsole*>(this)->RegisterDynamicTag(item.m_Tag);
+            }
+
+            // Exit if word is filtered by text filter
             if (!m_TextFilter.PassFilter(item.Get().c_str()))
+                continue;
+
+            // Exit if filtered by level/tag checkboxes
+            if (!PassesFilters(item))
                 continue;
 
             // Spacing between commands.

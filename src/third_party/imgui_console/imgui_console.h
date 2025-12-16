@@ -74,6 +74,9 @@ protected:
     void InputBar();                 //!< Console input bar
     void LogWindow();                 //!< Console log
 
+    bool PassesFilters(const csys::Item& item) const;  //!< Check if item passes level and tag filters
+    void RegisterDynamicTag(const std::string& tag);   //!< Register unknown tags to m_DynamicTags
+
     static void HelpMaker(const char *desc);
 
     // Window appearance.

@@ -38,7 +38,8 @@ public:
         entt::registry& registry,
         entt::entity entity,
         const UIStyleConfig& style,
-        const transform::Transform& transform
+        const transform::Transform& transform,
+        const UIDrawContext& ctx
     ) override;
 };
 

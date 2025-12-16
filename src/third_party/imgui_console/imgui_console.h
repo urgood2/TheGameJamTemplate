@@ -122,6 +122,10 @@ protected:
     std::unordered_map<std::string, bool> m_DynamicTagFilters; //!< Filter state for dynamic tags
     bool m_ShowFilters = false;  //!< Collapsible filter section state
 
+    // Bookmark support
+    std::unordered_set<size_t> m_Bookmarks;  //!< Indices of bookmarked items
+    int m_CurrentBookmark = -1;               //!< Current bookmark for navigation
+
     // ImGui Console Window.
 
     static int InputCallback(ImGuiInputTextCallbackData *data);    //!< Console input callback

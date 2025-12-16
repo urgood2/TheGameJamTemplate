@@ -302,6 +302,45 @@ void ImGuiConsole::FilterSection()
             ImGui::SetClipboardText(oss.str().c_str());
         }
 
+        // Bookmark navigation
+        ImGui::SameLine();
+        if (ImGui::Button("<Prev") && !m_Bookmarks.empty()) {
+            // Find previous bookmark
+            std::vector<size_t> sortedBookmarks(m_Bookmarks.begin(), m_Bookmarks.end());
+            std::sort(sortedBookmarks.begin(), sortedBookmarks.end());
+
+            if (m_CurrentBookmark < 0) {
+                m_CurrentBookmark = static_cast<int>(sortedBookmarks.back());
+            } else {
+                auto it = std::lower_bound(sortedBookmarks.begin(), sortedBookmarks.end(), m_CurrentBookmark);
+                if (it != sortedBookmarks.begin()) {
+                    --it;
+                    m_CurrentBookmark = static_cast<int>(*it);
+                } else {
+                    m_CurrentBookmark = static_cast<int>(sortedBookmarks.back());
+                }
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Next>") && !m_Bookmarks.empty()) {
+            // Find next bookmark
+            std::vector<size_t> sortedBookmarks(m_Bookmarks.begin(), m_Bookmarks.end());
+            std::sort(sortedBookmarks.begin(), sortedBookmarks.end());
+
+            if (m_CurrentBookmark < 0) {
+                m_CurrentBookmark = static_cast<int>(sortedBookmarks.front());
+            } else {
+                auto it = std::upper_bound(sortedBookmarks.begin(), sortedBookmarks.end(), m_CurrentBookmark);
+                if (it != sortedBookmarks.end()) {
+                    m_CurrentBookmark = static_cast<int>(*it);
+                } else {
+                    m_CurrentBookmark = static_cast<int>(sortedBookmarks.front());
+                }
+            }
+        }
+        ImGui::SameLine();
+        ImGui::Text("(%zu bookmarks)", m_Bookmarks.size());
+
         ImGui::Separator();
     }
     else
@@ -415,6 +454,31 @@ void ImGuiConsole::LogWindow()
             else
             {
                 ImGui::TextUnformatted(displayText.c_str());
+            }
+
+            // Get item index for bookmarking
+            size_t itemIndex = &item - &m_ConsoleSystem.Items()[0];
+
+            // Right-click context menu
+            if (ImGui::BeginPopupContextItem(std::to_string(itemIndex).c_str())) {
+                bool isBookmarked = m_Bookmarks.count(itemIndex) > 0;
+                if (ImGui::MenuItem(isBookmarked ? "Remove Bookmark" : "Add Bookmark")) {
+                    if (isBookmarked) {
+                        m_Bookmarks.erase(itemIndex);
+                    } else {
+                        m_Bookmarks.insert(itemIndex);
+                    }
+                }
+                if (ImGui::MenuItem("Copy Line")) {
+                    ImGui::SetClipboardText(item.Get().c_str());
+                }
+                ImGui::EndPopup();
+            }
+
+            // Show bookmark indicator
+            if (m_Bookmarks.count(itemIndex) > 0) {
+                ImGui::SameLine(0, 0);
+                ImGui::TextColored(ImVec4(1.0f, 0.87f, 0.0f, 1.0f), " *");
             }
 
 

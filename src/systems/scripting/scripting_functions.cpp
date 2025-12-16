@@ -1,6 +1,7 @@
 #include "scripting_functions.hpp"
 
 #include "../../util/common_headers.hpp"
+#include <algorithm>
 
 #include "../ai/ai_system.hpp"
 #include "../collision/broad_phase.hpp"
@@ -1319,6 +1320,107 @@ auto initLuaMasterState(sol::state &stateToInit,
   rec.record_free_function({}, {"log_error",
                                 "---@overload fun(message: string):nil",
                                 "Logs a general error message.", true, true});
+
+  // log_info with tag support
+  stateToInit.set_function(
+      "log_info", [](sol::this_state ts, sol::variadic_args va) {
+        if (va.size() == 0) {
+          SPDLOG_WARN("[log_info] Called with no arguments");
+          return;
+        }
+
+        auto it = va.begin();
+        std::string tag = "general";
+
+        // Check if first arg is a string tag (not entity)
+        if (it->is<std::string>() && va.size() >= 2) {
+          // Could be tag + message, or just messages
+          std::string first = it->as<std::string>();
+          // Simple heuristic: short lowercase = tag
+          if (first.size() <= 20 && std::all_of(first.begin(), first.end(),
+              [](char c) { return std::islower(c) || c == '_'; })) {
+            tag = first;
+            ++it;
+          }
+        }
+
+        std::ostringstream oss;
+        for (; it != va.end(); ++it) {
+          if (it->is<std::string>()) {
+            oss << it->as<std::string>();
+          } else if (it->is<int>()) {
+            oss << it->as<int>();
+          } else if (it->is<double>()) {
+            oss << it->as<double>();
+          } else if (it->is<bool>()) {
+            oss << (it->as<bool>() ? "true" : "false");
+          } else {
+            oss << "[?]";
+          }
+          oss << " ";
+        }
+
+        spdlog::info("[{}] {}", tag, oss.str());
+      });
+
+  rec.record_free_function(
+      {}, {"log_info",
+           "---@param tag string # System tag (e.g., 'physics', 'combat')\n"
+           "---@param ... any # Message parts to log",
+           "Logs an info message with system tag.", true, false});
+  rec.record_free_function(
+      {}, {"log_info",
+           "---@overload fun(message: string):nil",
+           "Logs a general info message.", true, true});
+
+  // log_warn with tag support
+  stateToInit.set_function(
+      "log_warn", [](sol::this_state ts, sol::variadic_args va) {
+        if (va.size() == 0) {
+          SPDLOG_WARN("[log_warn] Called with no arguments");
+          return;
+        }
+
+        auto it = va.begin();
+        std::string tag = "general";
+
+        if (it->is<std::string>() && va.size() >= 2) {
+          std::string first = it->as<std::string>();
+          if (first.size() <= 20 && std::all_of(first.begin(), first.end(),
+              [](char c) { return std::islower(c) || c == '_'; })) {
+            tag = first;
+            ++it;
+          }
+        }
+
+        std::ostringstream oss;
+        for (; it != va.end(); ++it) {
+          if (it->is<std::string>()) {
+            oss << it->as<std::string>();
+          } else if (it->is<int>()) {
+            oss << it->as<int>();
+          } else if (it->is<double>()) {
+            oss << it->as<double>();
+          } else if (it->is<bool>()) {
+            oss << (it->as<bool>() ? "true" : "false");
+          } else {
+            oss << "[?]";
+          }
+          oss << " ";
+        }
+
+        spdlog::warn("[{}] {}", tag, oss.str());
+      });
+
+  rec.record_free_function(
+      {}, {"log_warn",
+           "---@param tag string # System tag\n"
+           "---@param ... any # Message parts",
+           "Logs a warning with system tag.", true, false});
+  rec.record_free_function(
+      {}, {"log_warn",
+           "---@overload fun(message: string):nil",
+           "Logs a general warning.", true, true});
 
   // --- Current World State ---
   stateToInit.set_function("setCurrentWorldStateValue",

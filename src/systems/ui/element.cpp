@@ -2002,6 +2002,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
         // Phase 4 migration: Try new split components, fall back to UIConfig
         auto* styleConfig = globals::getRegistry().try_get<UIStyleConfig>(entity);
+        auto* layoutConfig = globals::getRegistry().try_get<UILayoutConfig>(entity);
 
         // Style field accessors - prefer UIStyleConfig when available
         const auto& stylingType = styleConfig ? styleConfig->stylingType : config->stylingType;
@@ -2014,6 +2015,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         const auto styleShadowColor = styleConfig ? styleConfig->shadowColor : config->shadowColor;
         const auto& styleProgressBarEmptyColor = styleConfig ? styleConfig->progressBarEmptyColor : config->progressBarEmptyColor;
         const auto& styleProgressBarFullColor = styleConfig ? styleConfig->progressBarFullColor : config->progressBarFullColor;
+
+        // Layout field accessors - prefer UILayoutConfig when available
+        const auto& layoutScale = layoutConfig ? layoutConfig->scale : config->scale;
 
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
@@ -2099,10 +2103,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // }
         }
         // is it text?
-        if (config->uiType == UITypeEnum::TEXT && config->scale)
+        if (config->uiType == UITypeEnum::TEXT && layoutScale)
         {
             ZONE_SCOPED("UI Element: Text Logic");
-            float rawScale = config->scale.value() * fontData.fontScale;
+            float rawScale = layoutScale.value() * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
             float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
@@ -2135,12 +2139,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 {
                     Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor->a * 0.3f)};
 
-                    float textX = fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * fontData.fontScale;
-                    float textY = fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * fontData.fontScale;
-                    float fontScale = config->scale.value_or(1.0f) * fontData.fontScale;
+                    float textX = fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * layoutScale.value_or(1.0f) * fontData.fontScale;
+                    float textY = fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * layoutScale.value_or(1.0f) * fontData.fontScale;
+                    float fontScale = layoutScale.value_or(1.0f) * fontData.fontScale;
                     float spacing = config->textSpacing.value_or(fontData.spacing);
 
-                    float scale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
+                    float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
                     layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                         cmd->scaleX = scale;
                         cmd->scaleY = scale;
@@ -2187,14 +2191,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             {
                 renderColor = globals::uiTextInactive;
             }
-            
+
             //REVIEW: bugfixing, commenting out
-            // float textX = localization::getFontData().fontRenderOffset.x * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-            // float textY = localization::getFontData().fontRenderOffset.y * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
-            // float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
+            // float textX = localization::getFontData().fontRenderOffset.x * layoutScale.value_or(1.0f) * localization::getFontData().fontScale;
+            // float textY = localization::getFontData().fontRenderOffset.y * layoutScale.value_or(1.0f) * localization::getFontData().fontScale;
+            // float fontScale = layoutScale.value_or(1.0f) * localization::getFontData().fontScale;
             float textX = fontData.fontRenderOffset.x;
             float textY = fontData.fontRenderOffset.y;
-            float scale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
+            float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
             layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                 cmd->scaleX = scale;
                 cmd->scaleY = scale;

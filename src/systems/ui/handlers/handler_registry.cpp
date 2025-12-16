@@ -1,5 +1,6 @@
 #include "handler_registry.hpp"
 #include "rect_handler.hpp"
+#include "text_handler.hpp"
 #include <spdlog/spdlog.h>
 
 namespace ui {
@@ -28,15 +29,15 @@ void registerAllHandlers() {
 
     // Register type-specific handlers
     reg.registerHandler(UITypeEnum::RECT_SHAPE, std::make_unique<RectHandler>());
+    reg.registerHandler(UITypeEnum::TEXT, std::make_unique<TextHandler>());
 
     // Future handlers to add:
-    // reg.registerHandler(UITypeEnum::TEXT, std::make_unique<TextHandler>());
     // reg.registerHandler(UITypeEnum::OBJECT, std::make_unique<ObjectHandler>());
-    // reg.registerHandler(UITypeEnum::VERTICAL, std::make_unique<ContainerHandler>());
-    // reg.registerHandler(UITypeEnum::HORIZONTAL, std::make_unique<ContainerHandler>());
+    // reg.registerHandler(UITypeEnum::VERTICAL_CONTAINER, std::make_unique<ContainerHandler>());
+    // reg.registerHandler(UITypeEnum::HORIZONTAL_CONTAINER, std::make_unique<ContainerHandler>());
     // etc.
 
-    SPDLOG_INFO("UI handler registration complete ({} handlers)", 1);
+    SPDLOG_INFO("UI handler registration complete ({} handlers)", 2);
 }
 
 } // namespace ui

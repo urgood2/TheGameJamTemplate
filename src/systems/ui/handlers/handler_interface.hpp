@@ -3,6 +3,7 @@
 #include "entt/entity/registry.hpp"
 #include "../core/ui_components.hpp"
 #include "../ui_data.hpp"
+#include "core/globals.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/layer/layer.hpp"
 #include <memory>
@@ -30,6 +31,7 @@ struct UIDrawContext {
     UIState* state = nullptr;                      // Runtime state
     transform::GameObject* node = nullptr;         // GameObject with displacement info
     RoundedRectangleVerticesCache* rectCache = nullptr;  // Cached vertices
+    const globals::FontData* fontData = nullptr;   // Font data for text rendering
 
     // Computed transform values
     float actualX = 0, actualY = 0, actualW = 0, actualH = 0;

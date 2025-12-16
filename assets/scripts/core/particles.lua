@@ -348,6 +348,22 @@ function EmissionMethods:inward()
     return self
 end
 
+--- Override recipe properties for this emission
+--- @param overrides table Property overrides
+--- @return self
+function EmissionMethods:override(overrides)
+    self._overrides = overrides
+    return self
+end
+
+--- Apply per-particle customization
+--- @param fn function(index, total) -> table of overrides
+--- @return self
+function EmissionMethods:each(fn)
+    self._eachFn = fn
+    return self
+end
+
 --- Internal: Spawn particles
 function EmissionMethods:_spawn()
     local particleModule = self._recipe._particleModule or _G.particle
@@ -364,6 +380,20 @@ end
 --- Internal: Spawn a single particle
 function EmissionMethods:_spawnSingle(particleModule, index, total)
     local config = self._recipe._config
+
+    -- Get per-particle overrides
+    local perParticle = {}
+    if self._eachFn then
+        perParticle = self._eachFn(index, total) or {}
+    end
+
+    -- Helper function to get value with override priority
+    -- Priority: recipe config < emission overrides < per-particle
+    local function getValue(key, default)
+        if perParticle[key] ~= nil then return perParticle[key] end
+        if self._overrides and self._overrides[key] ~= nil then return self._overrides[key] end
+        return config[key] or default
+    end
 
     -- Resolve position based on spawn mode
     local pos
@@ -384,10 +414,19 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
         pos = self._position or { x = 0, y = 0 }
     end
 
-    -- Resolve random values
-    local size = self:_randomRange(config.sizeMin or 6, config.sizeMax or 6)
-    local lifespan = self:_randomRange(config.lifespanMin or 1, config.lifespanMax or 1)
-    local velocity = self:_randomRange(config.velocityMin or 0, config.velocityMax or 0)
+    -- Resolve size with override support
+    local size
+    if perParticle.size then
+        size = perParticle.size
+    elseif self._overrides and self._overrides.size then
+        size = self._overrides.size
+    else
+        size = self:_randomRange(config.sizeMin or 6, config.sizeMax or 6)
+    end
+
+    -- Resolve other random values
+    local lifespan = self:_randomRange(getValue("lifespanMin", 1), getValue("lifespanMax", 1))
+    local velocity = self:_randomRange(getValue("velocityMin", 0), getValue("velocityMax", 0))
 
     -- Resolve velocity direction
     local vx, vy
@@ -434,17 +473,20 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
         sprite = particleModule.ParticleRenderType and particleModule.ParticleRenderType.TEXTURE or 0,
     }
 
+    -- Get shape with override support
+    local shape = getValue("shape", "circle")
+
     local opts = {
-        renderType = renderTypeMap[config.shape] or renderTypeMap.circle,
+        renderType = renderTypeMap[shape] or renderTypeMap.circle,
         velocity = { x = vx, y = vy },
         lifespan = lifespan,
-        gravity = config.gravity,
-        startColor = config.startColor,
-        endColor = config.endColor,
-        rotationSpeed = config.spinMin and self:_randomRange(config.spinMin, config.spinMax),
-        autoAspect = config.stretch,
-        z = config.z,
-        space = config.space,
+        gravity = getValue("gravity", nil),
+        startColor = getValue("startColor", nil),
+        endColor = getValue("endColor", nil),
+        rotationSpeed = getValue("spinMin", nil) and self:_randomRange(getValue("spinMin", 0), getValue("spinMax", 0)),
+        autoAspect = getValue("stretch", nil),
+        z = getValue("z", nil),
+        space = getValue("space", nil),
     }
 
     local location = { x = pos.x, y = pos.y }

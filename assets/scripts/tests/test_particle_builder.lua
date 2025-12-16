@@ -397,6 +397,38 @@ TestRunner.describe("Emission direction", function()
     end)
 end)
 
+TestRunner.describe("Emission customization", function()
+    it("override() applies property overrides", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):size(6):color("red")
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(1):override({ size = 12 }):at(0, 0)
+
+        local call = ParticleMock.get_last_call()
+        assert_equals(12, call.args.size.x)
+    end)
+
+    it("each() applies per-particle function", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):size(4)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(5):each(function(i, total)
+            return { size = i * 2 }
+        end):at(0, 0)
+
+        -- Each particle should have increasing size
+        for i, call in ipairs(ParticleMock.calls) do
+            assert_equals(i * 2, call.args.size.x)
+        end
+    end)
+end)
+
 return function()
     TestRunner.run_all()
 end

@@ -1694,10 +1694,50 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
         local finalDamage = data.damage * data.damageMultiplier
         local dmgType = data.damageType or "physical"
 
+        -- Apply defensive joker effects BEFORE dealing damage (enemy projectile hitting player)
+        if data.faction == "enemy" and targetCombatActor and targetCombatActor.side == 1 then
+            local JokerSystem = require("wand.joker_system")
+            local effects = JokerSystem.trigger_event("on_player_damaged", {
+                damage = finalDamage,
+                damage_type = dmgType,
+                source = "enemy_projectile",
+                attacker = data.owner,
+                player = targetCombatActor,
+            })
+
+            -- Apply damage reduction from defensive jokers (e.g., iron_skin, flame_ward)
+            if effects and effects.damage_reduction then
+                finalDamage = math.max(0, finalDamage - effects.damage_reduction)
+            end
+
+            -- TODO: Apply reflect damage when combat system supports it
+            -- if effects and effects.reflect_damage and data.owner then
+            --     Deal effects.reflect_damage to data.owner
+            -- end
+
+            -- TODO: Apply temporary buffs when buff system is available
+            -- if effects and effects.buff then
+            --     Apply buff to player
+            -- end
+        end
+
+        -- Deal the (potentially reduced) damage
         CombatSystem.Game.Effects.deal_damage {
             components = { { type = dmgType, amount = finalDamage } },
             tags = { projectile = true }
         }(ctx, sourceCombatActor or targetCombatActor, targetCombatActor)
+
+        -- Track avatar progress with actual damage dealt
+        if data.faction == "enemy" and targetCombatActor and targetCombatActor.side == 1 then
+            local AvatarSystem = require("wand.avatar_system")
+            local playerScript = getScriptTableFromEntityID(targetEntity)
+            if playerScript then
+                AvatarSystem.record_progress(playerScript, "hp_lost", finalDamage)
+            else
+                log_warn("Player entity missing script table; avatar progress not tracked")
+            end
+        end
+
         return targetCombatActor, sourceCombatActor
     else
         -- No combat actor found - entity won't take damage

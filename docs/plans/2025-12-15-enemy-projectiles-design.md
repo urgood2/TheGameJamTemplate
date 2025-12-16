@@ -1,7 +1,7 @@
 # Enemy Projectiles Design
 
 **Date:** 2025-12-15
-**Status:** Approved
+**Status:** Implemented
 
 ## Overview
 

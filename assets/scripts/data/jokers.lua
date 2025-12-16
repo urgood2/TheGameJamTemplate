@@ -169,7 +169,73 @@ local Jokers = {
                 end
             end
         end
-    }
+    },
+
+    --===========================================================================
+    -- DEFENSIVE JOKERS (React to on_player_damaged)
+    --===========================================================================
+
+    iron_skin = {
+        id = "iron_skin",
+        name = "Iron Skin",
+        description = "Reduce projectile damage by 5.",
+        rarity = "Common",
+        calculate = function(self, context)
+            if context.event == "on_player_damaged" and context.source == "enemy_projectile" then
+                return {
+                    damage_reduction = 5,
+                    message = "Iron Skin!"
+                }
+            end
+        end
+    },
+
+    flame_ward = {
+        id = "flame_ward",
+        name = "Flame Ward",
+        description = "Immune to Fire damage from projectiles.",
+        rarity = "Uncommon",
+        calculate = function(self, context)
+            if context.event == "on_player_damaged"
+               and context.source == "enemy_projectile"
+               and context.damage_type == "fire" then
+                return {
+                    damage_reduction = context.damage,
+                    message = "Flame Ward!"
+                }
+            end
+        end
+    },
+
+    thorns = {
+        id = "thorns",
+        name = "Thorns",
+        description = "Reflect 50% of projectile damage back to attacker.",
+        rarity = "Rare",
+        calculate = function(self, context)
+            if context.event == "on_player_damaged" and context.source == "enemy_projectile" then
+                return {
+                    reflect_damage = math.floor(context.damage * 0.5),
+                    message = "Thorns!"
+                }
+            end
+        end
+    },
+
+    survival_instinct = {
+        id = "survival_instinct",
+        name = "Survival Instinct",
+        description = "+20% damage for 3s after taking projectile damage.",
+        rarity = "Uncommon",
+        calculate = function(self, context)
+            if context.event == "on_player_damaged" and context.source == "enemy_projectile" then
+                return {
+                    buff = { stat = "damage_mult", value = 1.2, duration = 3.0 },
+                    message = "Survival!"
+                }
+            end
+        end
+    },
 }
 
 return Jokers

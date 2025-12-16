@@ -751,6 +751,53 @@ TestRunner.describe("Shader Particle Path", function()
     end)
 end)
 
+TestRunner.describe("Custom drawCommand", function()
+    local assert_nil = TestRunner.assert_nil
+
+    it("drawCommand() stores function in recipe", function()
+        local Particles = require("core.particles")
+        local drawFn = function(particle, props) end
+        local recipe = Particles.define()
+            :shape("circle")
+            :size(4)
+            :drawCommand(drawFn)
+
+        assert_equals(recipe._drawCommand, drawFn)
+    end)
+
+    it("drawCommand() returns self for chaining", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define()
+            :shape("circle")
+            :drawCommand(function() end)
+            :size(4)
+
+        assert_equals(recipe._config.sizeMin, 4)
+    end)
+
+    it("getConfig() includes drawCommand when set", function()
+        local Particles = require("core.particles")
+        local drawFn = function(particle, props) end
+        local recipe = Particles.define()
+            :shape("circle")
+            :size(4)
+            :drawCommand(drawFn)
+
+        local config = recipe:getConfig()
+        assert_equals(config.drawCommand, drawFn)
+    end)
+
+    it("getConfig() drawCommand is nil when not set", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define()
+            :shape("circle")
+            :size(4)
+
+        local config = recipe:getConfig()
+        assert_nil(config.drawCommand)
+    end)
+end)
+
 return function()
     TestRunner.run_all()
 end

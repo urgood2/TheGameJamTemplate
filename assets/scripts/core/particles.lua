@@ -272,6 +272,27 @@ function RecipeMethods:shaderUniforms(uniforms)
     return self
 end
 
+--- Set custom draw command for this particle
+--- @param fn function(particle, props) Custom draw function
+--- @return self
+function RecipeMethods:drawCommand(fn)
+    self._drawCommand = fn
+    return self
+end
+
+--- Get the recipe configuration (includes all settings)
+--- @return table Configuration table
+function RecipeMethods:getConfig()
+    local config = {}
+    -- Copy all _config fields
+    for k, v in pairs(self._config) do
+        config[k] = v
+    end
+    -- Add drawCommand if set
+    config.drawCommand = self._drawCommand
+    return config
+end
+
 --------------------------------------------------------------------------------
 -- EMISSION
 --------------------------------------------------------------------------------

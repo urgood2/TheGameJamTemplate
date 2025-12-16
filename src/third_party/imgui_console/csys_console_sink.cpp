@@ -20,6 +20,21 @@ void csys_console_sink<Mutex>::sink_it_(const spdlog::details::log_msg& msg)
     // Log the message to spdlog's default output (console/file)
     std::string log_message = fmt::to_string(formatted);
 
+    // Extract tag if present: "[tag] message" format
+    std::string tag = "general";
+    if (log_message.size() > 2 && log_message[0] == '[') {
+        auto close_bracket = log_message.find(']');
+        if (close_bracket != std::string::npos && close_bracket > 1) {
+            tag = log_message.substr(1, close_bracket - 1);
+            // Skip "] " after the tag (2 characters)
+            if (close_bracket + 2 < log_message.size()) {
+                log_message = log_message.substr(close_bracket + 2);
+            } else {
+                log_message = log_message.substr(close_bracket + 1);
+            }
+        }
+    }
+
     // Determine the log level and log to the csys console
     csys::ItemType log_type = csys::ItemType::INFO;
     switch (msg.level) {
@@ -37,8 +52,8 @@ void csys_console_sink<Mutex>::sink_it_(const spdlog::details::log_msg& msg)
             break;
     }
 
-    // Use the csys system to log the message
-    console_system.Log(log_type) << log_message << csys::endl;
+    // Use the csys system to log the message with tag
+    console_system.Log(log_type, tag) << log_message << csys::endl;
 
     // Scroll the ImGui console to the bottom
     gui::consolePtr->PushScrollToBottom();

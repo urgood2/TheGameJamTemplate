@@ -220,6 +220,38 @@ function RecipeMethods:onDeath(fn)
     return self
 end
 
+--- Set particle draw order
+--- @param order number Z-index for draw order
+--- @return self
+function RecipeMethods:z(order)
+    self._config.z = order
+    return self
+end
+
+--- Set render space
+--- @param spaceName string "world" or "screen"
+--- @return self
+function RecipeMethods:space(spaceName)
+    self._config.space = spaceName
+    return self
+end
+
+--- Set shaders for particle (enables entity-based rendering)
+--- @param shaderList table List of shader names
+--- @return self
+function RecipeMethods:shaders(shaderList)
+    self._config.shaders = shaderList
+    return self
+end
+
+--- Set shader uniforms
+--- @param uniforms table Uniform name -> value mapping
+--- @return self
+function RecipeMethods:shaderUniforms(uniforms)
+    self._config.shaderUniforms = uniforms
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------

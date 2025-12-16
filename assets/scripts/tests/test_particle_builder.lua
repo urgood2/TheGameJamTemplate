@@ -301,6 +301,59 @@ TestRunner.describe("Emission burst", function()
     end)
 end)
 
+TestRunner.describe("Emission positioning", function()
+    local assert_true = TestRunner.assert_true
+
+    it("inCircle() spawns within radius", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):size(4)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(10):inCircle(100, 100, 50)
+
+        assert_equals(10, ParticleMock.get_call_count())
+        -- All particles should be within 50 units of (100,100)
+        for _, call in ipairs(ParticleMock.calls) do
+            local dx = call.args.location.x - 100
+            local dy = call.args.location.y - 100
+            local dist = math.sqrt(dx*dx + dy*dy)
+            assert_true(dist <= 50, "particle outside circle")
+        end
+    end)
+
+    it("inRect() spawns within rectangle", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):size(4)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(10):inRect(100, 100, 50, 30)
+
+        for _, call in ipairs(ParticleMock.calls) do
+            local x, y = call.args.location.x, call.args.location.y
+            assert_true(x >= 100 and x <= 150, "x outside rect")
+            assert_true(y >= 100 and y <= 130, "y outside rect")
+        end
+    end)
+
+    it("from/toward sets directed velocity", function()
+        local Particles = require("core.particles")
+        ParticleMock.reset()
+
+        local recipe = Particles.define():shape("circle"):size(4):velocity(100)
+        recipe._particleModule = ParticleMock
+
+        recipe:burst(1):from(0, 0):toward(100, 0)
+
+        local call = ParticleMock.get_last_call()
+        -- Velocity should be positive X (toward target)
+        assert_true(call.args.opts.velocity.x > 0, "velocity should point toward target")
+    end)
+end)
+
 return function()
     TestRunner.run_all()
 end

@@ -269,6 +269,53 @@ function EmissionMethods:at(x, y)
     return self
 end
 
+--- Spawn within a circle
+--- @param cx number Center X
+--- @param cy number Center Y
+--- @param radius number Circle radius
+--- @return self
+function EmissionMethods:inCircle(cx, cy, radius)
+    self._spawnMode = "circle"
+    self._spawnCenter = { x = cx, y = cy }
+    self._spawnRadius = radius
+    self:_spawn()
+    return self
+end
+
+--- Spawn within a rectangle
+--- @param x number Left X
+--- @param y number Top Y
+--- @param w number Width
+--- @param h number Height
+--- @return self
+function EmissionMethods:inRect(x, y, w, h)
+    self._spawnMode = "rect"
+    self._spawnRect = { x = x, y = y, w = w, h = h }
+    self:_spawn()
+    return self
+end
+
+--- Set spawn origin (use with :toward())
+--- @param x number Origin X
+--- @param y number Origin Y
+--- @return self
+function EmissionMethods:from(x, y)
+    self._fromPos = { x = x, y = y }
+    return self
+end
+
+--- Set target position and spawn
+--- @param x number Target X
+--- @param y number Target Y
+--- @return self
+function EmissionMethods:toward(x, y)
+    self._towardPos = { x = x, y = y }
+    self._position = self._fromPos or { x = 0, y = 0 }
+    self._spawnMode = "toward"
+    self:_spawn()
+    return self
+end
+
 --- Internal: Spawn particles
 function EmissionMethods:_spawn()
     local particleModule = self._recipe._particleModule or _G.particle
@@ -285,17 +332,50 @@ end
 --- Internal: Spawn a single particle
 function EmissionMethods:_spawnSingle(particleModule, index, total)
     local config = self._recipe._config
-    local pos = self._position
+
+    -- Resolve position based on spawn mode
+    local pos
+    if self._spawnMode == "circle" then
+        -- Use sqrt(random) for uniform distribution within circle
+        local angle = math.random() * math.pi * 2
+        local r = math.sqrt(math.random()) * self._spawnRadius
+        pos = {
+            x = self._spawnCenter.x + math.cos(angle) * r,
+            y = self._spawnCenter.y + math.sin(angle) * r
+        }
+    elseif self._spawnMode == "rect" then
+        pos = {
+            x = self._spawnRect.x + math.random() * self._spawnRect.w,
+            y = self._spawnRect.y + math.random() * self._spawnRect.h
+        }
+    else
+        pos = self._position or { x = 0, y = 0 }
+    end
 
     -- Resolve random values
     local size = self:_randomRange(config.sizeMin or 6, config.sizeMax or 6)
     local lifespan = self:_randomRange(config.lifespanMin or 1, config.lifespanMax or 1)
     local velocity = self:_randomRange(config.velocityMin or 0, config.velocityMax or 0)
 
-    -- Build angle (random direction by default)
-    local angle = math.random() * math.pi * 2
-    local vx = math.cos(angle) * velocity
-    local vy = math.sin(angle) * velocity
+    -- Resolve velocity direction
+    local vx, vy
+    if self._spawnMode == "toward" and self._towardPos then
+        -- Direction toward target
+        local dx = self._towardPos.x - pos.x
+        local dy = self._towardPos.y - pos.y
+        local dist = math.sqrt(dx*dx + dy*dy)
+        if dist > 0 then
+            vx = (dx / dist) * velocity
+            vy = (dy / dist) * velocity
+        else
+            vx, vy = 0, 0
+        end
+    else
+        -- Random direction
+        local angle = math.random() * math.pi * 2
+        vx = math.cos(angle) * velocity
+        vy = math.sin(angle) * velocity
+    end
 
     -- Map shape to C++ renderType
     local renderTypeMap = {

@@ -1,6 +1,7 @@
 #include "sol/sol.hpp"
 #include "ui.hpp"
 #include "ui_pack.hpp"
+#include "systems/ui/core/ui_components.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -448,6 +449,220 @@ namespace ui {
         rec.record_property("UIConfig", {"noRole", "boolean|nil", "This element has no inherited properties role."});
         rec.record_property("UIConfig", {"role", "InheritedProperties|nil", "The inherited properties role."});
 
+        //=========================================================
+        // Split UI Components (Phase 1 Migration)
+        //=========================================================
+
+        // 14) UIElementCore - Identity and hierarchy
+        lua.new_usertype<UIElementCore>("UIElementCore",
+            sol::constructors<UIElementCore()>(),
+            "type", &UIElementCore::type,
+            "uiBox", &UIElementCore::uiBox,
+            "id", &UIElementCore::id,
+            "treeOrder", &UIElementCore::treeOrder,
+            "type_id", []() { return entt::type_hash<UIElementCore>::value(); }
+        );
+        auto& uiCoreDef = rec.add_type("UIElementCore", /*is_data_class=*/true);
+        uiCoreDef.doc = "Core identity component for UI elements, containing type, box reference, and tree position.";
+        rec.record_property("UIElementCore", {"type", "UITypeEnum", "The fundamental type of this UI element."});
+        rec.record_property("UIElementCore", {"uiBox", "Entity", "The root UI box entity this element belongs to."});
+        rec.record_property("UIElementCore", {"id", "string", "Unique identifier for this UI element."});
+        rec.record_property("UIElementCore", {"treeOrder", "integer", "Order of this element in the UI tree for traversal."});
+
+        // 15) UIStyleConfig - Visual appearance
+        lua.new_usertype<UIStyleConfig>("UIStyleConfig",
+            sol::constructors<UIStyleConfig()>(),
+            "stylingType", &UIStyleConfig::stylingType,
+            "color", &UIStyleConfig::color,
+            "outlineColor", &UIStyleConfig::outlineColor,
+            "shadowColor", &UIStyleConfig::shadowColor,
+            "progressBarEmptyColor", &UIStyleConfig::progressBarEmptyColor,
+            "progressBarFullColor", &UIStyleConfig::progressBarFullColor,
+            "outlineThickness", &UIStyleConfig::outlineThickness,
+            "emboss", &UIStyleConfig::emboss,
+            "resolution", &UIStyleConfig::resolution,
+            "shadow", &UIStyleConfig::shadow,
+            "outlineShadow", &UIStyleConfig::outlineShadow,
+            "noFill", &UIStyleConfig::noFill,
+            "pixelatedRectangle", &UIStyleConfig::pixelatedRectangle,
+            "line_emboss", &UIStyleConfig::line_emboss,
+            "nPatchInfo", &UIStyleConfig::nPatchInfo,
+            "nPatchSourceTexture", &UIStyleConfig::nPatchSourceTexture,
+            "nPatchTiling", &UIStyleConfig::nPatchTiling,
+            "spriteSourceTexture", &UIStyleConfig::spriteSourceTexture,
+            "spriteSourceRect", &UIStyleConfig::spriteSourceRect,
+            "spriteScaleMode", &UIStyleConfig::spriteScaleMode,
+            "type_id", []() { return entt::type_hash<UIStyleConfig>::value(); }
+        );
+        auto& uiStyleDef = rec.add_type("UIStyleConfig", /*is_data_class=*/true);
+        uiStyleDef.doc = "Visual styling configuration for UI elements.";
+        rec.record_property("UIStyleConfig", {"stylingType", "UIStylingType", "The visual style type (rounded rectangle, 9-patch, sprite)."});
+        rec.record_property("UIStyleConfig", {"color", "Color|nil", "Background color."});
+        rec.record_property("UIStyleConfig", {"outlineColor", "Color|nil", "Outline color."});
+        rec.record_property("UIStyleConfig", {"shadowColor", "Color|nil", "Shadow color."});
+        rec.record_property("UIStyleConfig", {"outlineThickness", "number|nil", "Outline thickness in pixels."});
+        rec.record_property("UIStyleConfig", {"shadow", "boolean", "Whether shadow is enabled."});
+        rec.record_property("UIStyleConfig", {"noFill", "boolean", "If true, background is not filled."});
+        rec.record_property("UIStyleConfig", {"pixelatedRectangle", "boolean", "Use pixel-perfect rectangle drawing."});
+
+        // 16) UILayoutConfig - Positioning and dimensions
+        lua.new_usertype<UILayoutConfig>("UILayoutConfig",
+            sol::constructors<UILayoutConfig()>(),
+            "width", &UILayoutConfig::width,
+            "height", &UILayoutConfig::height,
+            "maxWidth", &UILayoutConfig::maxWidth,
+            "maxHeight", &UILayoutConfig::maxHeight,
+            "minWidth", &UILayoutConfig::minWidth,
+            "minHeight", &UILayoutConfig::minHeight,
+            "padding", &UILayoutConfig::padding,
+            "extend_up", &UILayoutConfig::extend_up,
+            "alignmentFlags", &UILayoutConfig::alignmentFlags,
+            "location_bond", &UILayoutConfig::location_bond,
+            "rotation_bond", &UILayoutConfig::rotation_bond,
+            "size_bond", &UILayoutConfig::size_bond,
+            "scale_bond", &UILayoutConfig::scale_bond,
+            "offset", &UILayoutConfig::offset,
+            "scale", &UILayoutConfig::scale,
+            "no_recalc", &UILayoutConfig::no_recalc,
+            "non_recalc", &UILayoutConfig::non_recalc,
+            "mid", &UILayoutConfig::mid,
+            "noRole", &UILayoutConfig::noRole,
+            "role", &UILayoutConfig::role,
+            "master", &UILayoutConfig::master,
+            "parent", &UILayoutConfig::parent,
+            "drawLayer", &UILayoutConfig::drawLayer,
+            "draw_after", &UILayoutConfig::draw_after,
+            "type_id", []() { return entt::type_hash<UILayoutConfig>::value(); }
+        );
+        auto& uiLayoutDef = rec.add_type("UILayoutConfig", /*is_data_class=*/true);
+        uiLayoutDef.doc = "Layout configuration for UI elements including positioning, dimensions, and hierarchy.";
+        rec.record_property("UILayoutConfig", {"width", "integer|nil", "Explicit width."});
+        rec.record_property("UILayoutConfig", {"height", "integer|nil", "Explicit height."});
+        rec.record_property("UILayoutConfig", {"maxWidth", "integer|nil", "Maximum width."});
+        rec.record_property("UILayoutConfig", {"maxHeight", "integer|nil", "Maximum height."});
+        rec.record_property("UILayoutConfig", {"minWidth", "integer|nil", "Minimum width."});
+        rec.record_property("UILayoutConfig", {"minHeight", "integer|nil", "Minimum height."});
+        rec.record_property("UILayoutConfig", {"padding", "number|nil", "Padding around the content."});
+        rec.record_property("UILayoutConfig", {"alignmentFlags", "integer|nil", "Bitmask of alignment flags."});
+        rec.record_property("UILayoutConfig", {"offset", "Vector2|nil", "Offset from aligned position."});
+        rec.record_property("UILayoutConfig", {"scale", "number|nil", "Scale multiplier."});
+        rec.record_property("UILayoutConfig", {"mid", "boolean", "A miscellaneous layout flag."});
+        rec.record_property("UILayoutConfig", {"draw_after", "boolean", "Draw this element after its children."});
+
+        // 17) UIInteractionConfig - Input handling and callbacks
+        lua.new_usertype<UIInteractionConfig>("UIInteractionConfig",
+            sol::constructors<UIInteractionConfig()>(),
+            "canCollide", &UIInteractionConfig::canCollide,
+            "collideable", &UIInteractionConfig::collideable,
+            "forceCollision", &UIInteractionConfig::forceCollision,
+            "hover", &UIInteractionConfig::hover,
+            "button_UIE", &UIInteractionConfig::button_UIE,
+            "disable_button", &UIInteractionConfig::disable_button,
+            "buttonDelay", &UIInteractionConfig::buttonDelay,
+            "buttonDelayStart", &UIInteractionConfig::buttonDelayStart,
+            "buttonDelayEnd", &UIInteractionConfig::buttonDelayEnd,
+            "buttonDelayProgress", &UIInteractionConfig::buttonDelayProgress,
+            "buttonDistance", &UIInteractionConfig::buttonDistance,
+            "buttonClicked", &UIInteractionConfig::buttonClicked,
+            "force_focus", &UIInteractionConfig::force_focus,
+            "focusWithObject", &UIInteractionConfig::focusWithObject,
+            "focusArgs", &UIInteractionConfig::focusArgs,
+            "tooltip", &UIInteractionConfig::tooltip,
+            "detailedTooltip", &UIInteractionConfig::detailedTooltip,
+            "onDemandTooltip", &UIInteractionConfig::onDemandTooltip,
+            "buttonCallback", &UIInteractionConfig::buttonCallback,
+            "buttonTemp", &UIInteractionConfig::buttonTemp,
+            "updateFunc", &UIInteractionConfig::updateFunc,
+            "initFunc", &UIInteractionConfig::initFunc,
+            "onUIResizeFunc", &UIInteractionConfig::onUIResizeFunc,
+            "onUIScalingResetToOne", &UIInteractionConfig::onUIScalingResetToOne,
+            "instaFunc", &UIInteractionConfig::instaFunc,
+            "choice", &UIInteractionConfig::choice,
+            "chosen", &UIInteractionConfig::chosen,
+            "one_press", &UIInteractionConfig::one_press,
+            "chosen_vert", &UIInteractionConfig::chosen_vert,
+            "group", &UIInteractionConfig::group,
+            "groupParent", &UIInteractionConfig::groupParent,
+            "dynamicMotion", &UIInteractionConfig::dynamicMotion,
+            "makeMovementDynamic", &UIInteractionConfig::makeMovementDynamic,
+            "noMovementWhenDragged", &UIInteractionConfig::noMovementWhenDragged,
+            "refreshMovement", &UIInteractionConfig::refreshMovement,
+            "type_id", []() { return entt::type_hash<UIInteractionConfig>::value(); }
+        );
+        auto& uiInteractionDef = rec.add_type("UIInteractionConfig", /*is_data_class=*/true);
+        uiInteractionDef.doc = "Interaction configuration for UI elements including collision, buttons, focus, and callbacks.";
+        rec.record_property("UIInteractionConfig", {"canCollide", "boolean|nil", "Whether collision is possible."});
+        rec.record_property("UIInteractionConfig", {"hover", "boolean", "Whether element is currently hovered."});
+        rec.record_property("UIInteractionConfig", {"disable_button", "boolean", "Disables button functionality."});
+        rec.record_property("UIInteractionConfig", {"buttonClicked", "boolean", "True if button was clicked this frame."});
+        rec.record_property("UIInteractionConfig", {"force_focus", "boolean", "Forces this element to take focus."});
+        rec.record_property("UIInteractionConfig", {"focusArgs", "FocusArgs|nil", "Arguments for focus behavior."});
+        rec.record_property("UIInteractionConfig", {"tooltip", "Tooltip|nil", "Simple tooltip."});
+        rec.record_property("UIInteractionConfig", {"buttonCallback", "function|nil", "Callback for button presses."});
+        rec.record_property("UIInteractionConfig", {"updateFunc", "function|nil", "Custom update function."});
+        rec.record_property("UIInteractionConfig", {"choice", "boolean|nil", "Marks this as a choice element."});
+        rec.record_property("UIInteractionConfig", {"dynamicMotion", "boolean|nil", "Enables dynamic motion effects."});
+
+        // 18) UIContentConfig - Text, objects, references
+        lua.new_usertype<UIContentConfig>("UIContentConfig",
+            sol::constructors<UIContentConfig()>(),
+            "text", &UIContentConfig::text,
+            "language", &UIContentConfig::language,
+            "verticalText", &UIContentConfig::verticalText,
+            "textSpacing", &UIContentConfig::textSpacing,
+            "fontSize", &UIContentConfig::fontSize,
+            "fontName", &UIContentConfig::fontName,
+            "textGetter", &UIContentConfig::textGetter,
+            "object", &UIContentConfig::object,
+            "objectRecalculate", &UIContentConfig::objectRecalculate,
+            "ui_object_updated", &UIContentConfig::ui_object_updated,
+            "includeChildrenInShaderPass", &UIContentConfig::includeChildrenInShaderPass,
+            "progressBar", &UIContentConfig::progressBar,
+            "progressBarMaxValue", &UIContentConfig::progressBarMaxValue,
+            "progressBarValueComponentName", &UIContentConfig::progressBarValueComponentName,
+            "progressBarValueFieldName", &UIContentConfig::progressBarValueFieldName,
+            "progressBarFetchValueLambda", &UIContentConfig::progressBarFetchValueLambda,
+            "ref_entity", &UIContentConfig::ref_entity,
+            "ref_component", &UIContentConfig::ref_component,
+            "ref_value", &UIContentConfig::ref_value,
+            "prev_ref_value", &UIContentConfig::prev_ref_value,
+            "hPopup", &UIContentConfig::hPopup,
+            "dPopup", &UIContentConfig::dPopup,
+            "hPopupConfig", &UIContentConfig::hPopupConfig,
+            "dPopupConfig", &UIContentConfig::dPopupConfig,
+            "instanceType", &UIContentConfig::instanceType,
+            "type_id", []() { return entt::type_hash<UIContentConfig>::value(); }
+        );
+        auto& uiContentDef = rec.add_type("UIContentConfig", /*is_data_class=*/true);
+        uiContentDef.doc = "Content configuration for UI elements including text, attached objects, and references.";
+        rec.record_property("UIContentConfig", {"text", "string|nil", "Static text content."});
+        rec.record_property("UIContentConfig", {"language", "string|nil", "Language key for localization."});
+        rec.record_property("UIContentConfig", {"verticalText", "boolean|nil", "If true, text is rendered vertically."});
+        rec.record_property("UIContentConfig", {"fontSize", "number|nil", "Font size for text elements."});
+        rec.record_property("UIContentConfig", {"fontName", "string|nil", "Named font to use."});
+        rec.record_property("UIContentConfig", {"textGetter", "function|nil", "Function to dynamically get text content."});
+        rec.record_property("UIContentConfig", {"object", "Entity|nil", "The game object associated with this UI element."});
+        rec.record_property("UIContentConfig", {"objectRecalculate", "boolean", "Force recalculation based on object."});
+        rec.record_property("UIContentConfig", {"progressBar", "boolean", "If this element is a progress bar."});
+        rec.record_property("UIContentConfig", {"progressBarMaxValue", "number|nil", "Maximum value of the progress bar."});
+        rec.record_property("UIContentConfig", {"ref_entity", "Entity|nil", "A referenced entity."});
+        rec.record_property("UIContentConfig", {"instanceType", "string|nil", "A specific instance type for categorization."});
+
+        // 19) UIConfigBundle - For passing all configs through builder
+        lua.new_usertype<UIConfigBundle>("UIConfigBundle",
+            sol::constructors<UIConfigBundle()>(),
+            "style", &UIConfigBundle::style,
+            "layout", &UIConfigBundle::layout,
+            "interaction", &UIConfigBundle::interaction,
+            "content", &UIConfigBundle::content,
+            "type_id", []() { return entt::type_hash<UIConfigBundle>::value(); }
+        );
+        auto& uiBundleDef = rec.add_type("UIConfigBundle", /*is_data_class=*/true);
+        uiBundleDef.doc = "Bundle of all split UI config components for convenient passing through builders.";
+        rec.record_property("UIConfigBundle", {"style", "UIStyleConfig", "Visual styling configuration."});
+        rec.record_property("UIConfigBundle", {"layout", "UILayoutConfig", "Layout and positioning configuration."});
+        rec.record_property("UIConfigBundle", {"interaction", "UIInteractionConfig", "Interaction and callback configuration."});
+        rec.record_property("UIConfigBundle", {"content", "UIContentConfig", "Content and text configuration."});
 
 
         //=========================================================

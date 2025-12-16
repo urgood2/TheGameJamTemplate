@@ -11,6 +11,7 @@
 #include "core/globals.hpp"
 #include "systems/localization/localization.hpp"
 #include "systems/ui/ui_data.hpp"
+#include "systems/ui/core/ui_components.hpp"
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
 #include "systems/collision/broad_phase.hpp"
@@ -73,6 +74,32 @@ namespace ui
         element.uiBox = uiBox;
         auto &uiState = registry.emplace<UIState>(entity);
         uiState.contentDimensions = {0, 0};
+
+        // Emplace split components for gradual migration (Phase 1)
+        if (config) {
+            registry.emplace<UIElementCore>(entity, UIElementCore{
+                .type = type,
+                .uiBox = uiBox,
+                .id = config->id.value_or(""),
+                .treeOrder = 0
+            });
+            registry.emplace<UIStyleConfig>(entity, extractStyle(*config));
+            registry.emplace<UILayoutConfig>(entity, extractLayout(*config));
+            registry.emplace<UIInteractionConfig>(entity, extractInteraction(*config));
+            registry.emplace<UIContentConfig>(entity, extractContent(*config));
+        } else {
+            registry.emplace<UIElementCore>(entity, UIElementCore{
+                .type = type,
+                .uiBox = uiBox,
+                .id = "",
+                .treeOrder = 0
+            });
+            registry.emplace<UIStyleConfig>(entity);
+            registry.emplace<UILayoutConfig>(entity);
+            registry.emplace<UIInteractionConfig>(entity);
+            registry.emplace<UIContentConfig>(entity);
+        }
+
         auto &node = registry.get<transform::GameObject>(entity);
         node.methods.onHover = nullptr; // disable ui jiggle by default
         node.parent = parent;

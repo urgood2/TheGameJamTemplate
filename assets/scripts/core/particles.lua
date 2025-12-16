@@ -178,6 +178,48 @@ function RecipeMethods:homing(strength)
     return self
 end
 
+--- Spawn trail particles behind this particle
+--- @param recipe Recipe Trail particle recipe
+--- @param rate number Spawn rate in seconds
+--- @return self
+function RecipeMethods:trail(recipe, rate)
+    self._config.trailRecipe = recipe
+    self._config.trailRate = rate
+    return self
+end
+
+--- Cycle through colors
+--- @param ... string|table Colors to flash
+--- @return self
+function RecipeMethods:flash(...)
+    self._config.flashColors = {...}
+    return self
+end
+
+--- Set spawn callback
+--- @param fn function(particle, entity)
+--- @return self
+function RecipeMethods:onSpawn(fn)
+    self._config.onSpawn = fn
+    return self
+end
+
+--- Set update callback (called every frame)
+--- @param fn function(particle, dt, entity)
+--- @return self
+function RecipeMethods:onUpdate(fn)
+    self._config.onUpdate = fn
+    return self
+end
+
+--- Set death callback
+--- @param fn function(particle, entity)
+--- @return self
+function RecipeMethods:onDeath(fn)
+    self._config.onDeath = fn
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------

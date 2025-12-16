@@ -183,6 +183,43 @@ TestRunner.describe("Recipe behaviors", function()
     end)
 end)
 
+TestRunner.describe("Recipe advanced", function()
+    it("trail() stores recipe and rate", function()
+        local Particles = require("core.particles")
+        local trailRecipe = Particles.define():shape("circle"):size(2)
+        local recipe = Particles.define():trail(trailRecipe, 0.1)
+        assert_equals(trailRecipe, recipe._config.trailRecipe)
+        assert_equals(0.1, recipe._config.trailRate)
+    end)
+
+    it("flash() stores colors", function()
+        local Particles = require("core.particles")
+        local recipe = Particles.define():flash("white", "orange", "red")
+        assert_equals(3, #recipe._config.flashColors)
+    end)
+
+    it("onSpawn() stores callback", function()
+        local Particles = require("core.particles")
+        local fn = function() end
+        local recipe = Particles.define():onSpawn(fn)
+        assert_equals(fn, recipe._config.onSpawn)
+    end)
+
+    it("onUpdate() stores callback", function()
+        local Particles = require("core.particles")
+        local fn = function() end
+        local recipe = Particles.define():onUpdate(fn)
+        assert_equals(fn, recipe._config.onUpdate)
+    end)
+
+    it("onDeath() stores callback", function()
+        local Particles = require("core.particles")
+        local fn = function() end
+        local recipe = Particles.define():onDeath(fn)
+        assert_equals(fn, recipe._config.onDeath)
+    end)
+end)
+
 return function()
     TestRunner.run_all()
 end

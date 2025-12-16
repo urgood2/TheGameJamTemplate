@@ -49,6 +49,36 @@ function RecipeMethods:shape(shapeType, spriteId)
     return self
 end
 
+--- Set particle size (single value or random range)
+--- @param minOrFixed number Min size, or fixed size if max not provided
+--- @param max number? Max size for random range
+--- @return self
+function RecipeMethods:size(minOrFixed, max)
+    self._config.sizeMin = minOrFixed
+    self._config.sizeMax = max or minOrFixed
+    return self
+end
+
+--- Set particle color (start/end for interpolation)
+--- @param startColor string|table Color name or {r,g,b,a}
+--- @param endColor string|table? End color (defaults to startColor)
+--- @return self
+function RecipeMethods:color(startColor, endColor)
+    self._config.startColor = startColor
+    self._config.endColor = endColor or startColor
+    return self
+end
+
+--- Set particle lifespan (single value or random range)
+--- @param minOrFixed number Min lifespan in seconds, or fixed if max not provided
+--- @param max number? Max lifespan for random range
+--- @return self
+function RecipeMethods:lifespan(minOrFixed, max)
+    self._config.lifespanMin = minOrFixed
+    self._config.lifespanMax = max or minOrFixed
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------

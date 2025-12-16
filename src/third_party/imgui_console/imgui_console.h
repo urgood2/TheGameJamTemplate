@@ -69,6 +69,7 @@ protected:
     void RunLuaCode(const std::string &code); //!< Run Lua code
 
     void MenuBar();                     //!< Console menu bar
+    void FilterSection();               //!< Collapsible filter checkboxes
     void FilterBar();                 //!< Console filter bar
     void InputBar();                 //!< Console input bar
     void LogWindow();                 //!< Console log

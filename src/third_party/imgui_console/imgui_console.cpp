@@ -106,6 +106,11 @@ void ImGuiConsole::Draw()
     ///////////////
     MenuBar();
 
+    ////////////////////
+    // Filter section //
+    ////////////////////
+    FilterSection();
+
     ////////////////
     // Filter bar //
     ////////////////
@@ -212,6 +217,70 @@ void ImGuiConsole::RegisterConsoleCommands()
     });
 
 
+}
+
+void ImGuiConsole::FilterSection()
+{
+    if (ImGui::CollapsingHeader("Filters", m_ShowFilters ? ImGuiTreeNodeFlags_DefaultOpen : 0))
+    {
+        m_ShowFilters = true;
+
+        // Level filters
+        ImGui::Text("Levels:");
+        ImGui::SameLine();
+        ImGui::Checkbox("Error", &m_LevelFilters[LEVEL_ERROR]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Warn", &m_LevelFilters[LEVEL_WARNING]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Info", &m_LevelFilters[LEVEL_INFO]);
+        ImGui::SameLine();
+        ImGui::Checkbox("Debug", &m_LevelFilters[LEVEL_DEBUG]);
+
+        // System tag filters
+        ImGui::Text("Systems:");
+        for (size_t i = 0; i < SYSTEM_TAGS.size(); ++i) {
+            if (i > 0 && i % 4 != 0) ImGui::SameLine();
+            ImGui::Checkbox(SYSTEM_TAGS[i], &m_SystemTagFilters[i]);
+        }
+
+        // Dynamic tags (Other section)
+        if (!m_DynamicTags.empty()) {
+            ImGui::Text("Other:");
+            int count = 0;
+            for (const auto& tag : m_DynamicTags) {
+                if (count > 0 && count % 4 != 0) ImGui::SameLine();
+                bool& enabled = m_DynamicTagFilters[tag];
+                ImGui::Checkbox(tag.c_str(), &enabled);
+                ++count;
+            }
+        }
+
+        // Quick toggle buttons
+        ImGui::Spacing();
+        if (ImGui::Button("All")) {
+            std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), true);
+            std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), true);
+            for (auto& [_, v] : m_DynamicTagFilters) v = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("None")) {
+            std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), false);
+            std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), false);
+            for (auto& [_, v] : m_DynamicTagFilters) v = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Invert")) {
+            for (auto& f : m_LevelFilters) f = !f;
+            for (auto& f : m_SystemTagFilters) f = !f;
+            for (auto& [_, v] : m_DynamicTagFilters) v = !v;
+        }
+
+        ImGui::Separator();
+    }
+    else
+    {
+        m_ShowFilters = false;
+    }
 }
 
 void ImGuiConsole::FilterBar()

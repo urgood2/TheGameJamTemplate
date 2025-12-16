@@ -182,3 +182,41 @@ TEST_F(UIComponentsTest, UIConfigBundle_ContainsAllComponents) {
     EXPECT_TRUE(bundle.content.text.has_value());
     EXPECT_EQ(bundle.content.text.value(), "Test");
 }
+
+// =============================================================================
+// Edge Case Tests
+// =============================================================================
+
+TEST_F(UIComponentsTest, ExtractStyle_HandlesEmptyOptionals) {
+    UIConfig config;
+    // No fields set - all optionals should remain empty
+
+    auto style = extractStyle(config);
+
+    EXPECT_FALSE(style.color.has_value());
+    EXPECT_FALSE(style.outlineColor.has_value());
+    EXPECT_EQ(style.stylingType, UIStylingType::ROUNDED_RECTANGLE); // default
+}
+
+TEST_F(UIComponentsTest, ExtractLayout_DefaultDimensions) {
+    UIConfig config;
+    // No dimensions set
+
+    auto layout = extractLayout(config);
+
+    EXPECT_FALSE(layout.width.has_value());
+    EXPECT_FALSE(layout.height.has_value());
+    EXPECT_FALSE(layout.minWidth.has_value());
+    EXPECT_FALSE(layout.maxWidth.has_value());
+}
+
+TEST_F(UIComponentsTest, ExtractInteraction_DefaultCallbacks) {
+    UIConfig config;
+    // No callbacks set
+
+    auto interaction = extractInteraction(config);
+
+    EXPECT_FALSE(interaction.buttonCallback.has_value());
+    EXPECT_FALSE(interaction.updateFunc.has_value());
+    EXPECT_FALSE(interaction.initFunc.has_value());
+}

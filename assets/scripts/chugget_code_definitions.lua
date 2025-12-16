@@ -1141,7 +1141,7 @@ function ai:force_interrupt(...) end
 function ai:list_lua_files(...) end
 
 ---
---- Sets a single world-state flag on the entity’s current state.
+--- Sets a single world-state flag on the entity's current state.
 ---
 ---@param e Entity
 ---@param key string
@@ -1175,14 +1175,14 @@ function ai:patch_worldstate(...) end
 function ai:patch_goal(...) end
 
 ---
---- Returns the entity’s Blackboard component.
+--- Returns the entity's Blackboard component.
 ---
 ---@param e Entity
 ---@return Blackboard
 function ai:get_blackboard(...) end
 
 ---
---- Immediately interrupts the entity’s current GOAP action.
+--- Immediately interrupts the entity's current GOAP action.
 ---
 ---@param e Entity
 ---@return nil
@@ -6456,7 +6456,7 @@ NodeData = {
 ---@class SnapTarget
 SnapTarget = {
     node = Entity,  -- Target entity to snap cursor to
-    transform = Transform,  -- Target’s transform
+    transform = Transform,  -- Target's transform
     type = SnapType  -- Snap behavior type
 }
 
@@ -6465,8 +6465,8 @@ SnapTarget = {
 ---
 ---@class CursorContext::CursorLayer
 CursorContext::CursorLayer = {
-    cursor_focused_target = Entity,  -- Layer’s focused target entity
-    cursor_position = Vector2,  -- Layer’s cursor position
+    cursor_focused_target = Entity,  -- Layer's focused target entity
+    cursor_position = Vector2,  -- Layer's cursor position
     focus_interrupt = bool  -- Interrupt flag for this layer
 }
 

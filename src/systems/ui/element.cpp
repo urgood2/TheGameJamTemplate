@@ -2023,6 +2023,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         auto* interactionConfig = globals::getRegistry().try_get<UIInteractionConfig>(entity);
         const auto interactionHover = interactionConfig ? interactionConfig->hover : config->hover;
 
+        // Content field accessors - prefer UIContentConfig when available
+        auto* contentConfig = globals::getRegistry().try_get<UIContentConfig>(entity);
+        const auto contentVerticalText = contentConfig ? contentConfig->verticalText : config->verticalText;
+
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
         AssertThat(state, Is().Not().EqualTo(nullptr));
@@ -2129,7 +2133,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                     cmd->y = y;
                 }, zIndex);
                 
-                if (config->verticalText)
+                if (contentVerticalText)
                 {
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = actualH](layer::CmdTranslate *cmd) {
                         cmd->x = x;
@@ -2143,8 +2147,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 {
                     Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor->a * 0.3f)};
 
-                    float textX = fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * layoutScale.value_or(1.0f) * fontData.fontScale;
-                    float textY = fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * layoutScale.value_or(1.0f) * fontData.fontScale;
+                    float textX = fontData.fontRenderOffset.x + (contentVerticalText ? textParallaxSY : textParallaxSX) * layoutScale.value_or(1.0f) * fontData.fontScale;
+                    float textY = fontData.fontRenderOffset.y + (contentVerticalText ? textParallaxSX : textParallaxSY) * layoutScale.value_or(1.0f) * fontData.fontScale;
                     float fontScale = layoutScale.value_or(1.0f) * fontData.fontScale;
                     float spacing = config->textSpacing.value_or(fontData.spacing);
 
@@ -2180,7 +2184,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 cmd->x = x;
                 cmd->y = y;
             }, zIndex);
-            if (config->verticalText)
+            if (contentVerticalText)
             {
                 layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = actualH](layer::CmdTranslate *cmd) {
                     cmd->x = x;

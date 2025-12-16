@@ -21,6 +21,7 @@ namespace gui
 {
 
     std::unique_ptr<ImGuiConsole> consolePtr{};
+    bool showConsole = true;  // Console visible by default (toggle with ` backtick)
 
     auto showGUI() -> void
     {

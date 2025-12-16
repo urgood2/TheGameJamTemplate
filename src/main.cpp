@@ -43,6 +43,7 @@
 #include "core/globals.hpp"
 #include "core/graphics.hpp"
 #include "core/gui.hpp"
+#include "third_party/imgui_console/imgui_console.h"
 #include "core/init.hpp"
 #include "core/ownership.hpp"
 
@@ -358,6 +359,13 @@ void RunGameLoop() {
 
     // Pass real render deltaTime to renderer
     MainLoopRenderAbstraction(scaledStep);
+
+#ifndef __EMSCRIPTEN__
+    // Draw ImGui console (toggle with ` backtick key)
+    if (globals::getUseImGUI() && gui::showConsole && gui::consolePtr) {
+      gui::consolePtr->Draw();
+    }
+#endif
 
     // ---------- Step 6: FPS counter ----------
     frameCounter++;

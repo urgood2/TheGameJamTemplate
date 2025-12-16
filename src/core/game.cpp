@@ -1071,6 +1071,9 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
                 } else if (ev.keyCode == KEY_F4) {
                     globals::setDrawPhysicsDebug(!globals::drawPhysicsDebug);
                     SPDLOG_INFO("Physics debug toggled via event bus: {}", globals::drawPhysicsDebug);
+                } else if (ev.keyCode == KEY_GRAVE) {
+                    gui::showConsole = !gui::showConsole;
+                    SPDLOG_INFO("Console toggled via ` (backtick): {}", gui::showConsole);
                 } else if (ev.keyCode == KEY_F10) {
                     // Generate debug report
                     SPDLOG_INFO("F10 pressed - generating debug report");

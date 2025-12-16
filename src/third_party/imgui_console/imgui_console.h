@@ -127,6 +127,13 @@ protected:
     std::unordered_set<size_t> m_Bookmarks;  //!< Indices of bookmarked items
     int m_CurrentBookmark = -1;               //!< Current bookmark for navigation
 
+    // Performance: Cached filtered items for virtualized rendering
+    std::vector<size_t> m_FilteredIndices;   //!< Indices of items passing current filters
+    size_t m_LastItemCount = 0;              //!< Track item count to detect new logs
+    bool m_FilterCacheDirty = true;          //!< Rebuild cache when true
+    void RebuildFilterCache();               //!< Rebuild filtered indices cache
+    void MarkFiltersDirty() { m_FilterCacheDirty = true; }  //!< Mark cache as needing rebuild
+
     // ImGui Console Window.
 
     static int InputCallback(ImGuiInputTextCallbackData *data);    //!< Console input callback

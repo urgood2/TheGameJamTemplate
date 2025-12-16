@@ -192,6 +192,7 @@ void ImGuiConsole::RegisterConsoleCommands()
         m_ConsoleSystem.Items().clear();
         m_Bookmarks.clear();
         m_CurrentBookmark = -1;
+        MarkFiltersDirty();  // Rebuild cache after clear
     });
 
     m_ConsoleSystem.RegisterCommand("filter", "Set screen filter", [this](const csys::String &filter)
@@ -204,6 +205,9 @@ void ImGuiConsole::RegisterConsoleCommands()
 
         // Build text filter.
         m_TextFilter.Build();
+
+        // Mark cache dirty since filter changed
+        MarkFiltersDirty();
 
     }, csys::Arg<csys::String>("filter_str"));
 
@@ -228,23 +232,24 @@ void ImGuiConsole::FilterSection()
     if (ImGui::CollapsingHeader("Filters", m_ShowFilters ? ImGuiTreeNodeFlags_DefaultOpen : 0))
     {
         m_ShowFilters = true;
+        bool filterChanged = false;
 
         // Level filters
         ImGui::Text("Levels:");
         ImGui::SameLine();
-        ImGui::Checkbox("Error", &m_LevelFilters[LEVEL_ERROR]);
+        filterChanged |= ImGui::Checkbox("Error", &m_LevelFilters[LEVEL_ERROR]);
         ImGui::SameLine();
-        ImGui::Checkbox("Warn", &m_LevelFilters[LEVEL_WARNING]);
+        filterChanged |= ImGui::Checkbox("Warn", &m_LevelFilters[LEVEL_WARNING]);
         ImGui::SameLine();
-        ImGui::Checkbox("Info", &m_LevelFilters[LEVEL_INFO]);
+        filterChanged |= ImGui::Checkbox("Info", &m_LevelFilters[LEVEL_INFO]);
         ImGui::SameLine();
-        ImGui::Checkbox("Debug", &m_LevelFilters[LEVEL_DEBUG]);
+        filterChanged |= ImGui::Checkbox("Debug", &m_LevelFilters[LEVEL_DEBUG]);
 
         // System tag filters
         ImGui::Text("Systems:");
         for (size_t i = 0; i < SYSTEM_TAGS.size(); ++i) {
             if (i > 0 && i % 4 != 0) ImGui::SameLine();
-            ImGui::Checkbox(SYSTEM_TAGS[i], &m_SystemTagFilters[i]);
+            filterChanged |= ImGui::Checkbox(SYSTEM_TAGS[i], &m_SystemTagFilters[i]);
         }
 
         // Dynamic tags (Other section)
@@ -254,7 +259,7 @@ void ImGuiConsole::FilterSection()
             for (const auto& tag : m_DynamicTags) {
                 if (count > 0 && count % 4 != 0) ImGui::SameLine();
                 bool& enabled = m_DynamicTagFilters[tag];
-                ImGui::Checkbox(tag.c_str(), &enabled);
+                filterChanged |= ImGui::Checkbox(tag.c_str(), &enabled);
                 ++count;
             }
         }
@@ -265,18 +270,25 @@ void ImGuiConsole::FilterSection()
             std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), true);
             std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), true);
             for (auto& [_, v] : m_DynamicTagFilters) v = true;
+            filterChanged = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("None")) {
             std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), false);
             std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), false);
             for (auto& [_, v] : m_DynamicTagFilters) v = false;
+            filterChanged = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Invert")) {
             for (auto& f : m_LevelFilters) f = !f;
             for (auto& f : m_SystemTagFilters) f = !f;
             for (auto& [_, v] : m_DynamicTagFilters) v = !v;
+            filterChanged = true;
+        }
+
+        if (filterChanged) {
+            MarkFiltersDirty();
         }
         ImGui::SameLine();
         ImGui::Spacing();
@@ -412,130 +424,191 @@ std::vector<std::pair<size_t, size_t>> ImGuiConsole::FindEntityIds(const std::st
     return results;
 }
 
-void ImGuiConsole::FilterBar()
+void ImGuiConsole::RebuildFilterCache()
 {
-    m_TextFilter.Draw("Filter", ImGui::GetWindowWidth() * 0.25f);
-    ImGui::Separator();
-}
+    const auto& items = m_ConsoleSystem.Items();
 
-void ImGuiConsole::LogWindow()
-{
-    const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-    if (ImGui::BeginChild("ScrollRegion##", ImVec2(0, -footerHeightToReserve), false, 0))
-    {
-        // Display colored command output.
-        static const float timestamp_width = ImGui::CalcTextSize("00:00:00:0000").x;    // Timestamp.
-        int count = 0;                                                                       // Item count.
+    // If filters changed, do full rebuild
+    if (m_FilterCacheDirty) {
+        m_FilteredIndices.clear();
+        m_FilteredIndices.reserve(items.size());
 
-        // Wrap items.
-        ImGui::PushTextWrapPos();
+        for (size_t i = 0; i < items.size(); ++i) {
+            const auto& item = items[i];
 
-        // Display items.
-        for (const auto &item : m_ConsoleSystem.Items())
-        {
             // Register any new dynamic tags
             if (!item.m_Tag.empty()) {
                 RegisterDynamicTag(item.m_Tag);
             }
 
-            // Exit if word is filtered by text filter
+            // Check text filter
             if (!m_TextFilter.PassFilter(item.Get().c_str()))
                 continue;
 
-            // Exit if filtered by level/tag checkboxes
+            // Check level/tag filters
             if (!PassesFilters(item))
                 continue;
 
-            // Spacing between commands.
-            if (item.m_Type == csys::COMMAND)
-            {
-                if (m_TimeStamps) ImGui::PushTextWrapPos(ImGui::GetColumnWidth() - timestamp_width);    // Wrap before timestamps start.
-                if (count++ != 0) ImGui::Dummy(ImVec2(-1, ImGui::GetFontSize()));                            // No space for the first command.
+            m_FilteredIndices.push_back(i);
+        }
+    }
+    // Otherwise just append new items (incremental update)
+    else if (items.size() > m_LastItemCount) {
+        for (size_t i = m_LastItemCount; i < items.size(); ++i) {
+            const auto& item = items[i];
+
+            // Register any new dynamic tags
+            if (!item.m_Tag.empty()) {
+                RegisterDynamicTag(item.m_Tag);
             }
 
-            // Items.
-            // Build display text with tag prefix if available
-            std::string displayText;
-            if (!item.m_Tag.empty() && item.m_Tag != "general") {
-                displayText = "[" + item.m_Tag + "] " + item.Get();
-            } else {
-                displayText = item.Get();
-            }
+            // Check text filter
+            if (!m_TextFilter.PassFilter(item.Get().c_str()))
+                continue;
 
-            // Check if log contains entity IDs
-            auto entityPositions = FindEntityIds(displayText);
+            // Check level/tag filters
+            if (!PassesFilters(item))
+                continue;
 
-            if (m_ColoredOutput)
-            {
-                if (!entityPositions.empty()) {
-                    // Has entity IDs - use cyan highlight for entire line as MVP
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
-                    ImGui::TextUnformatted(displayText.c_str());
-                    ImGui::PopStyleColor();
+            m_FilteredIndices.push_back(i);
+        }
+    }
+
+    m_LastItemCount = items.size();
+    m_FilterCacheDirty = false;
+}
+
+void ImGuiConsole::FilterBar()
+{
+    if (m_TextFilter.Draw("Filter", ImGui::GetWindowWidth() * 0.25f)) {
+        MarkFiltersDirty();  // Text filter changed
+    }
+    ImGui::Separator();
+}
+
+void ImGuiConsole::LogWindow()
+{
+    // Reserve space for footer (input bar + jump to bottom button)
+    const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing() * 2;
+
+    // Jump to Bottom button bar
+    {
+        // Show auto-scroll toggle and jump button
+        if (ImGui::Checkbox("Auto-scroll", &m_AutoScroll)) {
+            if (m_AutoScroll) m_ScrollToBottom = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("v Jump to Bottom")) {
+            m_ScrollToBottom = true;
+            m_AutoScroll = true;  // Also enable auto-scroll when jumping
+        }
+        ImGui::SameLine();
+        ImGui::Text("(%zu items)", m_FilteredIndices.size());
+    }
+
+    if (ImGui::BeginChild("ScrollRegion##", ImVec2(0, -footerHeightToReserve + ImGui::GetFrameHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar))
+    {
+        const auto& items = m_ConsoleSystem.Items();
+
+        // Check if new items arrived (for auto-scroll)
+        bool newItemsArrived = items.size() > m_LastItemCount;
+
+        // Rebuild filter cache if dirty or new items arrived
+        if (m_FilterCacheDirty || items.size() != m_LastItemCount) {
+            RebuildFilterCache();
+        }
+
+        // Display colored command output.
+        static const float timestamp_width = ImGui::CalcTextSize("00:00:00:0000").x;
+
+        // Wrap items.
+        ImGui::PushTextWrapPos();
+
+        // Use clipper for virtualized rendering - only render visible rows
+        // Pass line height so ImGui can calculate proper scrollbar
+        const float lineHeight = ImGui::GetTextLineHeightWithSpacing();
+        ImGuiListClipper clipper;
+        clipper.Begin(static_cast<int>(m_FilteredIndices.size()), lineHeight);
+
+        while (clipper.Step()) {
+            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                size_t itemIndex = m_FilteredIndices[i];
+                const auto& item = items[itemIndex];
+
+                // Build display text with tag prefix if available
+                std::string displayText;
+                if (!item.m_Tag.empty() && item.m_Tag != "general") {
+                    displayText = "[" + item.m_Tag + "] " + item.Get();
                 } else {
-                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
-                    ImGui::TextUnformatted(displayText.c_str());
-                    ImGui::PopStyleColor();
+                    displayText = item.Get();
                 }
-            }
-            else
-            {
-                ImGui::TextUnformatted(displayText.c_str());
-            }
 
-            // Get item index for bookmarking
-            size_t itemIndex = &item - &m_ConsoleSystem.Items()[0];
+                // Check if log contains entity IDs (only for visible items now)
+                bool hasEntityIds = !FindEntityIds(displayText).empty();
 
-            // Right-click context menu
-            if (ImGui::BeginPopupContextItem(std::to_string(itemIndex).c_str())) {
-                bool isBookmarked = m_Bookmarks.count(itemIndex) > 0;
-                if (ImGui::MenuItem(isBookmarked ? "Remove Bookmark" : "Add Bookmark")) {
-                    if (isBookmarked) {
-                        m_Bookmarks.erase(itemIndex);
+                if (m_ColoredOutput)
+                {
+                    if (hasEntityIds) {
+                        // Has entity IDs - use cyan highlight
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
+                        ImGui::TextUnformatted(displayText.c_str());
+                        ImGui::PopStyleColor();
                     } else {
-                        m_Bookmarks.insert(itemIndex);
+                        ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
+                        ImGui::TextUnformatted(displayText.c_str());
+                        ImGui::PopStyleColor();
                     }
                 }
-                if (ImGui::MenuItem("Copy Line")) {
-                    ImGui::SetClipboardText(item.Get().c_str());
+                else
+                {
+                    ImGui::TextUnformatted(displayText.c_str());
                 }
-                ImGui::EndPopup();
-            }
 
-            // Show bookmark indicator
-            if (m_Bookmarks.count(itemIndex) > 0) {
-                ImGui::SameLine(0, 0);
-                ImGui::TextColored(ImVec4(1.0f, 0.87f, 0.0f, 1.0f), " *");
-            }
+                // Right-click context menu
+                if (ImGui::BeginPopupContextItem(std::to_string(itemIndex).c_str())) {
+                    bool isBookmarked = m_Bookmarks.count(itemIndex) > 0;
+                    if (ImGui::MenuItem(isBookmarked ? "Remove Bookmark" : "Add Bookmark")) {
+                        if (isBookmarked) {
+                            m_Bookmarks.erase(itemIndex);
+                        } else {
+                            m_Bookmarks.insert(itemIndex);
+                        }
+                    }
+                    if (ImGui::MenuItem("Copy Line")) {
+                        ImGui::SetClipboardText(item.Get().c_str());
+                    }
+                    ImGui::EndPopup();
+                }
 
+                // Show bookmark indicator
+                if (m_Bookmarks.count(itemIndex) > 0) {
+                    ImGui::SameLine(0, 0);
+                    ImGui::TextColored(ImVec4(1.0f, 0.87f, 0.0f, 1.0f), " *");
+                }
 
-            // Time stamp.
-            if (item.m_Type == csys::COMMAND && m_TimeStamps)
-            {
-                // No wrap for timestamps
-                ImGui::PopTextWrapPos();
-
-                // Right align.
-                ImGui::SameLine(ImGui::GetColumnWidth(-1) - timestamp_width);
-
-                // Draw time stamp.
-                ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[COL_TIMESTAMP]);
-                ImGui::Text("%02d:%02d:%02d:%04d", ((item.m_TimeStamp / 1000 / 3600) % 24), ((item.m_TimeStamp / 1000 / 60) % 60),
-                            ((item.m_TimeStamp / 1000) % 60), item.m_TimeStamp % 1000);
-                ImGui::PopStyleColor();
-
+                // Time stamp for commands
+                if (item.m_Type == csys::COMMAND && m_TimeStamps)
+                {
+                    ImGui::SameLine(ImGui::GetColumnWidth(-1) - timestamp_width);
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[COL_TIMESTAMP]);
+                    ImGui::Text("%02d:%02d:%02d:%04d", ((item.m_TimeStamp / 1000 / 3600) % 24), ((item.m_TimeStamp / 1000 / 60) % 60),
+                                ((item.m_TimeStamp / 1000) % 60), item.m_TimeStamp % 1000);
+                    ImGui::PopStyleColor();
+                }
             }
         }
 
         // Stop wrapping since we are done displaying console items.
         ImGui::PopTextWrapPos();
 
-        // Auto-scroll logs.
-        if ((m_ScrollToBottom && (ImGui::GetScrollY() >= ImGui::GetScrollMaxY() || m_AutoScroll)))
+        // Auto-scroll: only jump to bottom if:
+        // 1. User explicitly requested (m_ScrollToBottom from button click)
+        // 2. New items arrived AND auto-scroll is enabled
+        if (m_ScrollToBottom || (m_AutoScroll && newItemsArrived)) {
             ImGui::SetScrollHereY(1.0f);
+        }
         m_ScrollToBottom = false;
 
-        // Loop through command string vector.
         ImGui::EndChild();
     }
 }

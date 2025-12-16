@@ -6,6 +6,7 @@
 #include "events.hpp"
 #include "globals.hpp"
 #include "graphics.hpp"
+#include "gui.hpp"
 #include "systems/physics/physics_components.hpp"
 #include "systems/physics/physics_manager.hpp"
 #include "systems/physics/physics_world.hpp"
@@ -832,6 +833,7 @@ auto base_init() -> void {
   // these methods cause crash when taskflow is used
   rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
   initGUI();
+  gui::initConsole(); // Initialize the debugging console
   loadTextures();
   // load animations map (spriteFrames and colors must be initialized before
   // this part)

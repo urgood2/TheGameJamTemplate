@@ -34,6 +34,25 @@ EXCLUDE_PATTERNS = [
     "chugget_code_definitions.lua",
     "siralim_data",
     "docs",
+    # Web build exclusions (source/editor files)
+    "auto_export_assets.aseprite",
+    "graphics/atlas",
+    "graphics/ascii_tilesets",
+    "graphics/auto-exported-sprites-from-aseprite",
+    # Localization source files
+    "localization/localization.babel",
+    # Test/example files
+    "scripts/AI_TABLE_CONTENT_EXAMPLE.lua",
+    "AI_TABLE_CONTENT_EXAMPLE.lua",
+    "shaders/archived",
+    "test_features.ldtk",
+    "test_translation_project.babel",
+    "test.png",
+    "Title.png",
+    "Typical_2D_platformer_example.ldtk",
+    "Typical_TopDown_example.ldtk",
+    # Auto-generated files (not needed at runtime)
+    "all_uuids.json #auto_generated #verified.json",
 ]
 
 

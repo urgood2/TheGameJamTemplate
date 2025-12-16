@@ -159,7 +159,7 @@ else()
     add_compile_definitions(SKIP_ASSET_SCAN_DEFAULT=0)
 endif()
 
-if (SKIP_UUID_DUMP)
+if (SKIP_UUID_DUMP OR EMSCRIPTEN)
     add_compile_definitions(SKIP_UUID_DUMP_DEFAULT=1)
 else()
     add_compile_definitions(SKIP_UUID_DUMP_DEFAULT=0)
@@ -1170,8 +1170,37 @@ if (EMSCRIPTEN)
     # Tell Emscripten to build an .html file.
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Os")
+
+    # Files/directories to exclude from web build
+    set(WEB_EXCLUDE_FILES
+        # Source/editor files
+        "assets/auto_export_assets.aseprite"
+        "assets/graphics/atlas/"
+        "assets/graphics/ascii_tilesets/"
+        "assets/graphics/auto-exported-sprites-from-aseprite/"
+        # Localization source files
+        "assets/localization/localization.babel"
+        # Test/example files
+        "assets/scripts/AI_TABLE_CONTENT_EXAMPLE.lua"
+        "assets/shaders/archived/"
+        "assets/test_features.ldtk"
+        "assets/test_translation_project.babel"
+        "assets/test.png"
+        "assets/Title.png"
+        "assets/Typical_2D_platformer_example.ldtk"
+        "assets/Typical_TopDown_example.ldtk"
+        # Auto-generated files (not needed at runtime)
+        "assets/all_uuids.json #auto_generated #verified.json"
+    )
+
+    # Build exclude flags
+    set(EXCLUDE_FLAGS "")
+    foreach(EXCLUDE_PATH ${WEB_EXCLUDE_FILES})
+        set(EXCLUDE_FLAGS "${EXCLUDE_FLAGS} --exclude-file ${EXCLUDE_PATH}")
+    endforeach()
+
     # NOTE: -sFULL_ES2=1 required for raylib's client-side vertex arrays (fixes "cb is undefined" WebGL error)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sASSERTIONS=1 -sWASM=1 -Os -Wall -sTOTAL_MEMORY=512MB -sFORCE_FILESYSTEM=1 --preload-file assets/ --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sASSERTIONS=1 -sWASM=1 -Os -Wall -sTOTAL_MEMORY=512MB -sFORCE_FILESYSTEM=1 --preload-file assets/${EXCLUDE_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 endif()
 

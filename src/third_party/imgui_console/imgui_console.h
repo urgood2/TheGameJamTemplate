@@ -6,9 +6,11 @@
 #pragma once
 
 #include "csys/system.h"
-#include "third_party/rlImGui/imgui.h" 
+#include "third_party/rlImGui/imgui.h"
 #include <array>
 #include <memory>
+#include <unordered_set>
+#include <unordered_map>
 #include "sol/sol.hpp"
 
 struct ImGuiSettingsHandler;
@@ -93,6 +95,28 @@ protected:
     };
 
     std::array<ImVec4, COL_COUNT> m_ColorPalette;                //!< Container for all available colors
+
+    // Log filtering
+    enum LogLevel {
+        LEVEL_ERROR = 0,
+        LEVEL_WARNING,
+        LEVEL_INFO,
+        LEVEL_DEBUG,
+        LEVEL_COUNT
+    };
+
+    // Predefined system tags
+    static constexpr size_t SYSTEM_TAG_COUNT = 9;
+    static constexpr std::array<const char*, SYSTEM_TAG_COUNT> SYSTEM_TAGS = {
+        "physics", "combat", "ai", "ui", "input",
+        "audio", "scripting", "render", "entity"
+    };
+
+    std::array<bool, LEVEL_COUNT> m_LevelFilters{};      //!< Level filter state (default: all enabled)
+    std::array<bool, SYSTEM_TAG_COUNT> m_SystemTagFilters{}; //!< System tag filter state (default: all enabled)
+    std::unordered_set<std::string> m_DynamicTags;           //!< Tags seen at runtime
+    std::unordered_map<std::string, bool> m_DynamicTagFilters; //!< Filter state for dynamic tags
+    bool m_ShowFilters = false;  //!< Collapsible filter section state
 
     // ImGui Console Window.
 

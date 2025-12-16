@@ -4,6 +4,7 @@
 //#pragma once
 
 #include <string>
+#include <algorithm>
 #include "imgui_console.h"
 #include "util/common_headers.hpp"
 #include "third_party/rlImGui/imgui_internal.h"
@@ -161,6 +162,11 @@ void ImGuiConsole::DefaultSettings()
     m_ColoredOutput = true;
     m_FilterBar = true;
     m_TimeStamps = true;
+
+    // Log filters (default: show all)
+    std::fill(m_LevelFilters.begin(), m_LevelFilters.end(), true);
+    std::fill(m_SystemTagFilters.begin(), m_SystemTagFilters.end(), true);
+    m_ShowFilters = false;
 
     // Style
     m_WindowAlpha = 1;

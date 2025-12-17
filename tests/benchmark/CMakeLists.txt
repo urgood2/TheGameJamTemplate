@@ -4,8 +4,9 @@
 # Placeholder for benchmark sources - actual benchmark files will be added in later tasks
 set(BENCHMARK_SOURCES
     benchmark_lua_boundary.cpp
-    # benchmark_physics.cpp - Task 1.4
-    # benchmark_layer.cpp - Task 1.5
+    benchmark_rendering.cpp
+    # benchmark_physics.cpp - Task 1.5
+    # benchmark_layer.cpp - Task 1.6
 )
 
 # Only create executable if we have benchmark sources

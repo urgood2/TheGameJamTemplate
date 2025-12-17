@@ -423,5 +423,70 @@ TestRunner.describe("Tags and bulk operations", function()
     end)
 end)
 
+TestRunner.describe("Handle content updates", function()
+    it(":setText() updates content with template", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("[%d](red)"):width(100)
+        local handle = recipe:spawn(25):at(0, 0)
+
+        handle:setText(50)
+
+        assert_equals("[50](red)", handle._content)
+    end)
+
+    it(":setContent() replaces entire content", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("old"):width(100)
+        local handle = recipe:spawn():at(0, 0)
+
+        handle:setContent("[NEW](shake)")
+
+        assert_equals("[NEW](shake)", handle._content)
+    end)
+
+    it(":moveTo() updates position", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(0, 0)
+
+        handle:moveTo(150, 250)
+
+        assert_equals(150, handle._position.x)
+        assert_equals(250, handle._position.y)
+    end)
+
+    it(":moveBy() offsets position", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(100, 100)
+
+        handle:moveBy(50, -25)
+
+        assert_equals(150, handle._position.x)
+        assert_equals(75, handle._position.y)
+    end)
+
+    it(":getPosition() returns current position", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(123, 456)
+
+        local pos = handle:getPosition()
+
+        assert_equals(123, pos.x)
+        assert_equals(456, pos.y)
+    end)
+end)
+
 -- Run tests
 TestRunner.run_all()

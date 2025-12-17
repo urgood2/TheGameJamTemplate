@@ -356,6 +356,58 @@ function HandleMethods:tag(tagName)
     return self
 end
 
+--- Update content using template with new value
+--- @param newValue any Value for template substitution
+function HandleMethods:setText(newValue)
+    local content = self._config.content or ""
+    if type(content) == "string" and newValue ~= nil then
+        self._content = string.format(content, newValue)
+    elseif type(content) == "function" then
+        self._content = content()
+    end
+    if self._textRenderer and self._textRenderer.set_text then
+        self._textRenderer:set_text(self._content)
+    end
+end
+
+--- Replace entire content string
+--- @param newContent string New content string
+function HandleMethods:setContent(newContent)
+    self._content = newContent
+    if self._textRenderer and self._textRenderer.set_text then
+        self._textRenderer:set_text(self._content)
+    end
+end
+
+--- Move to absolute position
+--- @param x number X position
+--- @param y number Y position
+function HandleMethods:moveTo(x, y)
+    self._position = { x = x, y = y }
+    if self._textRenderer then
+        self._textRenderer.x = x
+        self._textRenderer.y = y
+    end
+end
+
+--- Move by relative offset
+--- @param dx number X offset
+--- @param dy number Y offset
+function HandleMethods:moveBy(dx, dy)
+    self._position.x = self._position.x + dx
+    self._position.y = self._position.y + dy
+    if self._textRenderer then
+        self._textRenderer.x = self._position.x
+        self._textRenderer.y = self._position.y
+    end
+end
+
+--- Get current position
+--- @return table { x, y }
+function HandleMethods:getPosition()
+    return { x = self._position.x, y = self._position.y }
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------

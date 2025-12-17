@@ -1864,7 +1864,7 @@ function createNewCard(id, x, y, gameStateToApply)
 
 
     -- make draggable and set some callbacks in the transform system
-    local nodeComp = registry:get(card, GameObject)
+    local nodeComp = component_cache.get(card, GameObject)
     nodeComp.shadowMode = ShadowMode.SpriteBased
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true

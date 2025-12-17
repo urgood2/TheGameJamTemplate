@@ -273,7 +273,7 @@ function LevelUpScreen.update(dt)
         if (not slot.hitbox) or (not entity_cache.valid(slot.hitbox)) then
             slot.hitbox = create_transform_entity()
             table.insert(LevelUpScreen._hitboxes, slot.hitbox)
-            local go = registry:get(slot.hitbox, GameObject)
+            local go = component_cache.get(slot.hitbox, GameObject)
             if go then
                 go.state.hoverEnabled = true
                 go.state.clickEnabled = true

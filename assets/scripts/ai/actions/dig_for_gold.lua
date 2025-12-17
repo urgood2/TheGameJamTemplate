@@ -3,6 +3,8 @@
 -- Each action should have a start, update and finish function. Start is called once, update is called each frame and finish is called once.
 -- The update function should return ActionResult.SUCCESS when the action is complete, ActionResult.RUNNING when the action is still running and ActionResult.FAILURE when the action has failed. It can also use functions like wait() to wait for a certain amount of time, but it must return one of the three values eventually.
 
+local component_cache = require("core.component_cache")
+
 return {
     name = "digforgold",
     cost = 1,
@@ -34,7 +36,7 @@ return {
                     return ActionResult.FAILURE
                 end
                 -- get transform
-                local transform = registry:get(e, Transform)
+                local transform = component_cache.get(e, Transform)
                 
                 -- pull visual X a little to the left or the right, occilating based on time
                 local offsetX = math.sin(os.clock() * 10) * 30 -- oscillate between -30 and 30
@@ -56,8 +58,8 @@ return {
                 doneDiggng = true
             end
         )
-        
-        local transform = registry:get(e, Transform)
+
+        local transform = component_cache.get(e, Transform)
         newTextPopup(
             localization.get("ui.digging"),
             transform.visualX + transform.visualW / 2,
@@ -84,8 +86,8 @@ return {
         )
         
         playSoundEffect("effects", "gold-gain") -- play coin sound effect
-        local transformComp = registry:get(coinImage, Transform)
-        local t = registry:get(e, Transform)
+        local transformComp = component_cache.get(coinImage, Transform)
+        local t = component_cache.get(e, Transform)
         -- align above the character
         transformComp.actualX = t.actualX + t.actualW / 2 - transformComp.actualW / 2
         transformComp.actualY = t.actualY - transformComp.actualH / 2 - 5
@@ -111,10 +113,10 @@ return {
               return
             end
             
-            
+
             -- tween the coin image to the currency UI box
-            local uiBoxTransform = registry:get(globals.ui.currencyUIBox, Transform)
-            local transformComp = registry:get(coinImage, Transform)
+            local uiBoxTransform = component_cache.get(globals.ui.currencyUIBox, Transform)
+            local transformComp = component_cache.get(coinImage, Transform)
             transformComp.actualX = uiBoxTransform.actualX + uiBoxTransform.actualW / 2 - transformComp.actualW / 2
             transformComp.actualY = uiBoxTransform.actualY + uiBoxTransform.actualH / 2 - transformComp.actualH / 2
             

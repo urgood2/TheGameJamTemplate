@@ -3,6 +3,8 @@
 -- Each action should have a start, update and finish function. Start is called once, update is called each frame and finish is called once.
 -- The update function should return ActionResult.SUCCESS when the action is complete, ActionResult.RUNNING when the action is still running and ActionResult.FAILURE when the action has failed. It can also use functions like wait() to wait for a certain amount of time, but it must return one of the three values eventually.
 
+local component_cache = require("core.component_cache")
+
 return {
     name = "heal_other",
     cost = 1,
@@ -21,7 +23,7 @@ return {
         timer.every(0.2,
             function()
                 -- get transform
-                local transform = registry:get(e, Transform)
+                local transform = component_cache.get(e, Transform)
                 
                 -- stretch either y or x, oscillating based on time
                 local offsetY = math.sin(os.clock() * 10) * 30 -- oscillate between 
@@ -70,17 +72,17 @@ return {
             local healAmount = findInTable(globals.creature_defs, "id", "healer").heal_amount or 1 -- default to 1 if not found
             setBlackboardFloat(toHeal, "health", math.min(hp + healAmount, maxHp)) -- heal by 1, but not above max health
             log_debug("Healed entity", toHeal, "to", getBlackboardFloat(toHeal, "health"), "/", maxHp)
-            
-            -- local 
-            local selfTransform = registry:get(e, Transform)
+
+            -- local
+            local selfTransform = component_cache.get(e, Transform)
             newTextPopup(
                 localization.get("ui.healing"),
                 selfTransform.visualX + selfTransform.visualW / 2,
                 selfTransform.visualY + selfTransform.visualH / 2   
             )
-            
+
             -- spawn a healing particle effect at the entity's position
-            local transform = registry:get(toHeal, Transform)
+            local transform = component_cache.get(toHeal, Transform)
             spawnCircularBurstParticles(
                 transform.visualX + transform.visualW / 2, -- center X
                 transform.visualY + transform.visualH / 2, -- center Y

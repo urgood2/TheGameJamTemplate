@@ -46,6 +46,7 @@ local registry = _G.registry
 local shader_pipeline = _G.shader_pipeline
 local globalShaderUniforms = _G.globalShaderUniforms
 local entity_cache = require("core.entity_cache")
+local component_cache = require("core.component_cache")
 
 --------------------------------------------------------------------------------
 -- SHADER FAMILY REGISTRY
@@ -173,7 +174,7 @@ function ShaderBuilder.for_entity(entity)
             -- Get or create ShaderPipelineComponent
             local comp
             if registry:has(self._entity, shader_pipeline.ShaderPipelineComponent) then
-                comp = registry:get(self._entity, shader_pipeline.ShaderPipelineComponent)
+                comp = component_cache.get(self._entity, shader_pipeline.ShaderPipelineComponent)
             else
                 comp = registry:emplace(self._entity, shader_pipeline.ShaderPipelineComponent)
             end
@@ -195,7 +196,7 @@ function ShaderBuilder.for_entity(entity)
         -- Clear all existing shader passes from the entity
         -- @return self - For method chaining
         clear = function(self)
-            local comp = registry:get(self._entity, shader_pipeline.ShaderPipelineComponent)
+            local comp = component_cache.get(self._entity, shader_pipeline.ShaderPipelineComponent)
             if comp then
                 comp:clearAll()
             end

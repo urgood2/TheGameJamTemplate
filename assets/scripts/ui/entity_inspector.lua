@@ -227,7 +227,7 @@ function EntityInspector.render()
         -- GameObject
         if imgui.CollapsingHeader("GameObject", false) then
             local go = nil
-            pcall(function() go = registry:get(eid, GameObject) end)
+            pcall(function() go = component_cache.get(eid, GameObject) end)
             if go then
                 render_gameobject(go)
             else

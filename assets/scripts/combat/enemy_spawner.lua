@@ -16,6 +16,7 @@
 
 local timer = require("core.timer")
 local random_utils = require("util.util")
+local component_cache = require("core.component_cache")
 
 local EnemySpawner = {}
 EnemySpawner.__index = EnemySpawner
@@ -306,7 +307,7 @@ function EnemySpawner:spawn_enemy(enemy_type, wave_config)
 
     -- Set position
     if registry and registry:valid(entity_id) then
-        local transform = registry:get(entity_id, Transform)
+        local transform = component_cache.get(entity_id, Transform)
         if transform then
             transform.actualX = spawn_pos.x
             transform.actualY = spawn_pos.y
@@ -424,7 +425,7 @@ function EnemySpawner:get_around_player_position(config)
         return {x = 400, y = 300}
     end
 
-    local transform = registry:get(player, Transform)
+    local transform = component_cache.get(player, Transform)
     if not transform then
         return {x = 400, y = 300}
     end

@@ -18,6 +18,7 @@
 ]]
 
 local timer = require("core.timer")
+local component_cache = require("core.component_cache")
 
 local EntityCleanup = {}
 
@@ -51,7 +52,7 @@ function EntityCleanup.handle_death(entity_id, config)
     log_debug("[EntityCleanup] Handling death for entity:", entity_id)
 
     -- Get entity data before cleanup
-    local transform = registry:get(entity_id, Transform)
+    local transform = component_cache.get(entity_id, Transform)
     local death_position = nil
     if transform then
         death_position = {

@@ -212,7 +212,7 @@ function EntityBuilder.create(opts)
 
     -- Set up interactions
     if interactive then
-        local nodeComp = registry:get(entity, GameObject)
+        local nodeComp = component_cache.get(entity, GameObject)
         if nodeComp then
             setup_interactions(entity, nodeComp, interactive)
         else
@@ -367,7 +367,7 @@ end
 --- @return userdata|nil GameObject component
 function BuilderInstance:getGameObject()
     local eid = self:getEntity()
-    return registry:get(eid, GameObject)
+    return component_cache.get(eid, GameObject)
 end
 
 --- Get the script table

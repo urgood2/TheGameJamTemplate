@@ -23,6 +23,7 @@
 
 local timer = require("core.timer")
 local random_utils = require("util.util")
+local component_cache = require("core.component_cache")
 
 local LootSystem = {}
 LootSystem.__index = LootSystem
@@ -383,7 +384,7 @@ end
 function LootSystem:setup_click_collect(entity_id, loot_type, amount)
     if not registry or not registry:valid(entity_id) then return end
 
-    local game_object = registry:get(entity_id, GameObject)
+    local game_object = component_cache.get(entity_id, GameObject)
     if not game_object then return end
 
     game_object.state.clickEnabled = true
@@ -406,8 +407,8 @@ function LootSystem:setup_magnet_collect(entity_id, loot_type, amount)
             return
         end
 
-        local loot_transform = registry:get(entity_id, Transform)
-        local player_transform = registry:get(self.player_entity, Transform)
+        local loot_transform = component_cache.get(entity_id, Transform)
+        local player_transform = component_cache.get(self.player_entity, Transform)
 
         if not loot_transform or not player_transform then
             timer.cancel("loot_magnet_" .. entity_id)

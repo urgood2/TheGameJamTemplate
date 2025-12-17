@@ -7,6 +7,8 @@ if os.getenv("LUA_STRICT_MODE") == "1" or os.getenv("DEBUG") == "1" then
     _G.STRICT_MODE = true
 end
 
+local component_cache = require("core.component_cache")
+
 globals = globals or {}
 
 globals.end_of_day_gold_multiplier = 1.0 -- multiplier for gold at the end of the day
@@ -468,10 +470,11 @@ globals.relicDefs = {
         local randomColonist = allColonists[lume.random(1, #allColonists)] -- get a random colonist
         
         local healAmount = 3 -- amount to heal
-        
+
+
         setBlackboardFloat(randomColonist, "health", math.min(getBlackboardFloat(randomColonist, "health") + healAmount, getBlackboardFloat(randomColonist, "max_health"))) -- heal the random colonist
-        
-        local transform = registry:get(randomColonist, Transform)
+
+        local transform = component_cache.get(randomColonist, Transform)
         
         newTextPopup(
           "+ "..healAmount,
@@ -516,10 +519,11 @@ globals.relicDefs = {
     onHitCallback = function(entity, damage) -- function to call when the entity is hit
       if (lume.random() < 0.5) then -- 50% chance to heal
         local healAmount = math.floor(damage * 0.1) -- heal by 10% of damage taken
-        
+
+
         setBlackboardFloat(entity, "health", math.min(getBlackboardFloat(entity, "health") + healAmount, getBlackboardFloat(entity, "max_health"))) -- heal the entity
-        
-        local transform = registry:get(entity, Transform)
+
+        local transform = component_cache.get(entity, Transform)
         
         newTextPopup(
           "+ "..healAmount,

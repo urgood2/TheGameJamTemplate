@@ -3,6 +3,8 @@
 -- Each action should have a start, update and finish function. Start is called once, update is called each frame and finish is called once.
 -- The update function should return ActionResult.SUCCESS when the action is complete, ActionResult.RUNNING when the action is still running and ActionResult.FAILURE when the action has failed. It can also use functions like wait() to wait for a certain amount of time, but it must return one of the three values eventually.
 
+local component_cache = require("core.component_cache")
+
 return {
     name = "use_duplicator",
     cost = 1, -- lowest cost, as it is a common action
@@ -23,8 +25,8 @@ return {
         local entry = findInTable(globals.structures.duplicators, "entity", duplicatorEntity)
         entry.taken = true
         log_debug("use_duplicator: Entity", e, "is using duplicator", duplicatorEntity)
-        
-        local t = registry:get(duplicatorEntity, Transform)
+
+        local t = component_cache.get(duplicatorEntity, Transform)
         
         local goalLoc = Vec2(t.actualX, t.actualY)
         

@@ -28,6 +28,7 @@ local CombatStateMachine = require("combat.combat_state_machine")
 local WaveManager = require("combat.wave_manager")
 local LootSystem = require("combat.loot_system")
 local EntityCleanup = require("combat.entity_cleanup")
+local component_cache = require("core.component_cache")
 
 local CombatLoopIntegration = {}
 CombatLoopIntegration.__index = CombatLoopIntegration
@@ -225,7 +226,7 @@ function CombatLoopIntegration:handle_entity_death(entity_id, killer)
     -- Get position before cleanup
     local position = nil
     if registry and registry:valid(entity_id) then
-        local transform = registry:get(entity_id, Transform)
+        local transform = component_cache.get(entity_id, Transform)
         if transform then
             position = {
                 x = transform.actualX + (transform.actualW or 0) * 0.5,

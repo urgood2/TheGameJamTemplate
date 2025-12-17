@@ -12,6 +12,7 @@ Visualizes wand cast blocks as nested horizontal rows:
 local CastExecutionGraphUI = {}
 
 local dsl = require("ui.ui_syntax_sugar")
+local component_cache = require("core.component_cache")
 local z_ok, z_orders = pcall(require, "core.z_orders")
 if not z_ok then z_orders = { ui_tooltips = 0 } end
 local STYLING_ROUNDED = UIStylingType and UIStylingType.RoundedRectangle or nil
@@ -174,7 +175,7 @@ end
 local function applyHoverToEntity(entity, tooltipData)
     if not entity or not registry:valid(entity) then return end
 
-    local go = registry:get(entity, GameObject)
+    local go = component_cache.get(entity, GameObject)
     if not go then return end
 
     local card = tooltipData.card
@@ -220,7 +221,7 @@ local function applyPendingHovers(entity)
     end
 
     -- Traverse children
-    local go = registry:get(entity, GameObject)
+    local go = component_cache.get(entity, GameObject)
     if go and go.children then
         for _, child in ipairs(go.children) do
             applyPendingHovers(child)

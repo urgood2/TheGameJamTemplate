@@ -61,6 +61,7 @@ Dependencies: ui.definitions, ui.box, layer_order_system, animation_system
 local dsl = {}
 
 -- Local aliases
+local component_cache = require("core.component_cache")
 local def    = ui.definitions.def
 local wrap   = ui.definitions.wrapEntityInsideObjectElement
 local getDyn = ui.definitions.getNewDynamicTextEntry
@@ -128,7 +129,7 @@ function dsl.dynamicText(fn, fontSize, effect, opts)
         local prevW = -1
         timer.every(opts.alignRate or 0.5, function()
             if not entry.config or not entry.config.object then return end
-            local t = registry:get(entry.config.object, Transform)
+            local t = component_cache.get(entry.config.object, Transform)
             if math.abs(t.actualW - prevW) > 1 then
                 ui.box.RenewAlignment(registry, entry.config.object)
                 prevW = t.actualW
@@ -176,7 +177,7 @@ end
 -- hover = { title = "Shop", body = "Opens the store" }
 ------------------------------------------------------------
 local function attachHover(eid, hover)
-    local go = registry:get(eid, GameObject)
+    local go = component_cache.get(eid, GameObject)
     if not go then return end
 
     go.state.hoverEnabled = true
@@ -208,7 +209,7 @@ end
 -- Uses std::vector<entt::entity> orderedChildren
 ------------------------------------------------------------
 function dsl.applyHoverRecursive(entity)
-    local go = registry:get(entity, GameObject)
+    local go = component_cache.get(entity, GameObject)
     if not go then return end
 
     if go.config and go.config.hover then
@@ -235,7 +236,7 @@ function dsl.spawn(pos, defNode, layerName, zIndex, opts)
     end
 
     if opts and opts.onBoxResize then
-        local boxComp = registry:get(box, UIBoxComponent)
+        local boxComp = component_cache.get(box, UIBoxComponent)
         if boxComp then
             boxComp.onBoxResize = opts.onBoxResize
         end

@@ -3,6 +3,12 @@
 
 local Easing = require("util.easing")
 
+-- Lua 5.4 compatibility
+local unpack = table.unpack or unpack
+
+-- Col fallback if not yet loaded as global
+local Col = _G.Col or function(r, g, b, a) return { r = r, g = g, b = b, a = a or 255 } end
+
 local effects = {}
 local registered = {}
 

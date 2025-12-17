@@ -2,6 +2,7 @@ add_executable(unit_tests
     unit/test_engine_context.cpp
     unit/test_color_utils.cpp
     unit/test_component_cache.cpp
+    unit/test_bulk_component_access.cpp
     unit/test_uuid.cpp
     unit/test_utilities.cpp
     unit/test_input_state.cpp

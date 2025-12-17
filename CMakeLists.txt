@@ -58,9 +58,15 @@ if (GAME_PLATFORM STREQUAL "Web")
 endif()
 
 option(TRACY_ENABLE "Enable Tracy profiler instrumentation" ON)
+option(PROFILE_LUA_BOUNDARY "Enable Lua/C++ boundary call profiling" OFF)
 option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
 option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" ON)
 option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" OFF)
+
+if (PROFILE_LUA_BOUNDARY)
+    message(STATUS "Lua boundary profiling ENABLED")
+    add_compile_definitions(PROFILE_LUA_BOUNDARY=1)
+endif()
 
 option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
 if(ENABLE_UNIT_TESTS)

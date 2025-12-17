@@ -6,6 +6,7 @@
 #include "systems/transform/transform_functions.hpp"
 #include "systems/ui/editor/pack_editor.hpp"
 #include "systems/layer/layer_optimized.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -87,6 +88,22 @@ namespace game {
                     ImGui::Text("Draw calls this frame: %d", layer::g_drawCallsThisFrame);
                     ImGui::Text("FPS: %d", GetFPS());
                     ImGui::Text("Frame time: %.2f ms", GetFrameTime() * 1000.0f);
+
+#ifndef UNIT_TESTS
+                    ImGui::Separator();
+                    ImGui::Text("Rendering Optimizations:");
+                    if (ImGui::Checkbox("Enable state batching", &layer::layer_command_buffer::g_enableStateBatching)) {
+                        if (layer::layer_command_buffer::g_enableStateBatching) {
+                            SPDLOG_INFO("State batching enabled - commands will be sorted by space within z-levels");
+                        } else {
+                            SPDLOG_INFO("State batching disabled - using z-only sorting");
+                        }
+                    }
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Sort commands by space (World/Screen) within same z-level\nReduces camera mode toggles during rendering");
+                    }
+#endif
+
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("Events")) {

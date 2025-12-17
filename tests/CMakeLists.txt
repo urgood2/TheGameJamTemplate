@@ -33,6 +33,7 @@ add_executable(unit_tests
     unit/test_ui_components.cpp
     unit/test_draw_call_counter.cpp
     unit/test_layer_sorted_flag.cpp
+    unit/test_layer_state_batching.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -80,6 +81,7 @@ endif()
 
 target_compile_definitions(unit_tests PRIVATE
     ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets/"
+    UNIT_TESTS
 )
 
 target_link_libraries(unit_tests PRIVATE

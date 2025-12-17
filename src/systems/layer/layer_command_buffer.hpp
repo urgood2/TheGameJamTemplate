@@ -19,6 +19,11 @@ template <typename T> struct DynamicObjectPoolWrapper;
 } // namespace layer
 
 namespace layer::layer_command_buffer {
+// Feature flag for state-aware batching optimization
+// When enabled, commands are sorted by space (World/Screen) within same z-level
+// This reduces camera mode toggles during rendering
+inline bool g_enableStateBatching = false;  // Off by default for safety
+
 template <typename T>
 DynamicObjectPoolWrapper<T> &GetDrawCommandPool(Layer &layer);
 }

@@ -5,6 +5,7 @@
 set(BENCHMARK_SOURCES
     benchmark_lua_boundary.cpp
     benchmark_rendering.cpp
+    benchmark_coroutines.cpp
     # benchmark_physics.cpp - Task 1.5
     # benchmark_layer.cpp - Task 1.6
 )

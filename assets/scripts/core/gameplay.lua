@@ -9298,3 +9298,366 @@ function initPlanningUI()
         end
     end, nil, "wand_selector_highlight")
 end
+
+-- ============================================================================
+-- PARTICLE BUILDER TEST (temporary - remove after testing)
+-- ============================================================================
+timer.after(3.0, function()
+    local ok, Particles = pcall(require, "core.particles")
+    if not ok then
+        log_warn("[ParticleTest] Failed to load particles module")
+        return
+    end
+
+    log_info("[ParticleTest] Spawning test particles...")
+
+    -- Define test recipes (use screen space so positions are screen coordinates)
+    local spark = Particles.define()
+        :shape("circle")
+        :size(2, 4)
+        :color(255, 200, 50)
+        :velocity(100, 200)
+        :lifespan(0.3, 0.5)
+        :fade()
+        :gravity(200)
+        :space("screen")
+
+    local fire = Particles.define()
+        :shape("circle")
+        :size(4, 8)
+        :color(255, 150, 50)
+        :velocity(50, 100)
+        :lifespan(0.4, 0.7)
+        :fade()
+        :shrink()
+        :space("screen")
+
+    local smoke = Particles.define()
+        :shape("circle")
+        :size(8, 16)
+        :color(150, 150, 150)
+        :velocity(20, 40)
+        :lifespan(0.8, 1.2)
+        :fade()
+        :grow(1.5)
+        :space("screen")
+
+    -- Spawn at lower portion of screen (to avoid main menu overlap)
+    local cx, cy = 720, 700
+
+    -- Define more test recipes
+    local debris = Particles.define()
+        :shape("rect")
+        :size(3, 6)
+        :color(139, 90, 43)  -- brown
+        :velocity(150, 300)
+        :lifespan(1.5, 2.0)  -- longer lifespan to see gravity
+        :gravity(400)
+        :spin()
+        :space("screen")
+
+    local sparkle = Particles.define()
+        :shape("circle")
+        :size(1, 3)
+        :color(255, 255, 200)  -- pale yellow
+        :velocity(30, 60)
+        :lifespan(0.4, 0.6)
+        :fade()
+        :space("screen")
+
+    local bigSmoke = Particles.define()
+        :shape("circle")
+        :size(20, 40)
+        :color(100, 100, 100, 128)  -- semi-transparent gray
+        :velocity(10, 30)
+        :lifespan(1.5, 2.5)
+        :fade()
+        :grow(2.0)
+        :space("screen")
+
+    -- Stagger each effect with delays so user can see them one by one
+    local delay = 0
+    local step = 1.5  -- seconds between each effect
+
+    -- Effect 1: Sparks with gravity (yellow, falling)
+    timer.after(delay, function()
+        log_info("[ParticleTest] 1/7: SPARKS with gravity")
+        spark:burst(40):spread(120):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 2: Fire explosion (orange, outward burst)
+    timer.after(delay, function()
+        log_info("[ParticleTest] 2/7: FIRE explosion outward")
+        fire:burst(30):outward():inCircle(cx, cy, 20)
+    end)
+    delay = delay + step
+
+    -- Effect 3: Smoke rising (gray, upward)
+    timer.after(delay, function()
+        log_info("[ParticleTest] 3/7: SMOKE rising upward")
+        smoke:burst(25):spread(45):angle(-90):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 4: Debris with gravity + spin (brown rectangles falling)
+    timer.after(delay, function()
+        log_info("[ParticleTest] 4/7: DEBRIS with gravity + spin")
+        debris:burst(20):spread(180):at(cx, cy - 50)  -- start higher to see fall
+    end)
+    delay = delay + step
+
+    -- Effect 5: Fire + Smoke combo
+    timer.after(delay, function()
+        log_info("[ParticleTest] 5/7: FIRE + SMOKE mix rising")
+        Particles.mix({ fire, smoke }):burst(20, 12):spread(40):angle(-90):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 6: Sparks + Debris explosion
+    timer.after(delay, function()
+        log_info("[ParticleTest] 6/7: SPARKS + DEBRIS explosion")
+        Particles.mix({ spark, debris }):burst(25, 15):outward():inCircle(cx, cy, 30)
+    end)
+    delay = delay + step
+
+    -- Effect 7: Sparkles + Big Smoke
+    timer.after(delay, function()
+        log_info("[ParticleTest] 7/8: SPARKLES + BIG SMOKE")
+        Particles.mix({ sparkle, bigSmoke }):burst(40, 8):spread(360):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 8: STREAMING - continuous particle emission
+    timer.after(delay, function()
+        log_info("[ParticleTest] 8/13: STREAMING sparks (3 seconds)")
+        local streamHandle = spark
+            :burst(5)
+            :spread(90)
+            :angle(-90)  -- upward
+            :at(cx, cy)
+            :stream()
+            :every(0.08)  -- emit every 80ms
+            :for_(3.0)    -- run for 3 seconds
+
+        -- Update the stream each frame
+        local streamTimer
+        streamTimer = timer.every(1/60, function()
+            if streamHandle then
+                streamHandle:update(1/60)
+                if not streamHandle:isActive() then
+                    timer.cancel(streamTimer)
+                    log_info("[ParticleTest] Stream complete!")
+                end
+            end
+        end)
+    end)
+    delay = delay + step + 2.0  -- Extra delay for streaming
+
+    -- Effect 9: WIGGLE - oscillating particles
+    timer.after(delay, function()
+        log_info("[ParticleTest] 9/13: WIGGLE particles")
+        local wiggler = Particles.define()
+            :shape("circle")
+            :size(4, 6)
+            :color(100, 200, 255)  -- cyan
+            :velocity(150, 200)
+            :lifespan(1.5, 2.0)
+            :wiggle(30, 8)  -- 30 pixel amplitude, 8 Hz
+            :fade()
+            :space("screen")
+
+        wiggler:burst(15):spread(30):angle(-90):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 10: BOUNCE - bouncing particles
+    timer.after(delay, function()
+        log_info("[ParticleTest] 10/13: BOUNCE particles")
+        local bouncer = Particles.define()
+            :shape("rect")
+            :size(6, 10)
+            :color(255, 100, 100)  -- red
+            :velocity(100, 200)
+            :lifespan(4.0, 5.0)
+            :gravity(300)
+            :bounce(0.7, cy + 100)  -- bounce off cy+100 with 70% restitution
+            :spin(180, 360)
+            :space("screen")
+
+        bouncer:burst(10):spread(120):at(cx, cy - 50)
+    end)
+    delay = delay + step
+
+    -- Effect 11: HOMING - particles that seek a target
+    timer.after(delay, function()
+        log_info("[ParticleTest] 11/13: HOMING particles toward center")
+        local homer = Particles.define()
+            :shape("circle")
+            :size(5, 8)
+            :color(255, 255, 100)  -- yellow
+            :velocity(80, 120)
+            :lifespan(2.5, 3.0)
+            :homing(0.5, { x = cx, y = cy })  -- home toward screen center
+            :fade()
+            :space("screen")
+
+        -- Spawn around the edges, they'll home toward center
+        homer:burst(8):at(cx - 200, cy)
+        homer:burst(8):at(cx + 200, cy)
+        homer:burst(8):at(cx, cy - 150)
+    end)
+    delay = delay + step
+
+    -- Effect 12: TRAIL - particles that leave trails
+    timer.after(delay, function()
+        log_info("[ParticleTest] 12/13: TRAIL particles")
+        -- Define the trail particle (small, fading)
+        local trailDot = Particles.define()
+            :shape("circle")
+            :size(2, 3)
+            :color(255, 150, 50, 200)  -- orange, semi-transparent
+            :velocity(0, 0)  -- stationary
+            :lifespan(0.3, 0.5)
+            :fade()
+            :shrink()
+            :space("screen")
+
+        -- Main particle that leaves trails
+        local tracer = Particles.define()
+            :shape("circle")
+            :size(8, 10)
+            :color(255, 200, 100)  -- bright orange
+            :velocity(150, 200)
+            :lifespan(2.0, 2.5)
+            :trail(trailDot, 0.05)  -- spawn trail every 50ms
+            :fade()
+            :space("screen")
+
+        tracer:burst(5):spread(60):angle(-45):at(cx - 100, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 13: FLASH - color cycling particles
+    timer.after(delay, function()
+        log_info("[ParticleTest] 13/13: FLASH rainbow particles")
+        local flasher = Particles.define()
+            :shape("circle")
+            :size(8, 12)
+            :flash(
+                { 255, 0, 0 },     -- red
+                { 255, 165, 0 },   -- orange
+                { 255, 255, 0 },   -- yellow
+                { 0, 255, 0 },     -- green
+                { 0, 0, 255 },     -- blue
+                { 128, 0, 128 }    -- purple
+            )
+            :velocity(50, 100)
+            :lifespan(1.5, 2.0)
+            :space("screen")
+
+        flasher:burst(20):spread(360):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 14: STRETCH - velocity-based stretching with ELLIPSE (circles become stretched ellipses)
+    timer.after(delay, function()
+        log_info("[ParticleTest] 14/16: STRETCH ellipses (circles + stretch)")
+        local stretchEllipse = Particles.define()
+            :shape("circle")       -- Uses ELLIPSE_STRETCH when :stretch() is called
+            :size(12, 16)          -- base size
+            :color(100, 200, 255)  -- light blue
+            :velocity(250, 400)    -- fast for visible stretch
+            :lifespan(0.8, 1.2)
+            :stretch()             -- elongate based on velocity
+            :fade()
+            :space("screen")
+
+        stretchEllipse:burst(20):spread(360):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 15: STRETCH - velocity-based stretching with LINES
+    timer.after(delay, function()
+        log_info("[ParticleTest] 15/16: STRETCH lines")
+        local stretchLine = Particles.define()
+            :shape("line")         -- LINE_FACING for stretch
+            :size(20, 30)          -- line length
+            :color(255, 255, 255)  -- white streaks
+            :velocity(300, 500)    -- fast for visible stretch
+            :lifespan(0.8, 1.2)
+            :stretch()             -- elongate based on velocity
+            :fade()
+            :space("screen")
+
+        stretchLine:burst(15):spread(360):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 16: COMBINED - multiple effects together
+    timer.after(delay, function()
+        log_info("[ParticleTest] 16/16: COMBINED effects (stretch + wiggle + bounce)")
+        local combined = Particles.define()
+            :shape("circle")
+            :size(8, 12)
+            :color(255, 150, 50)   -- orange
+            :velocity(150, 250)
+            :lifespan(2.0, 3.0)
+            :stretch()             -- velocity-based stretching
+            :wiggle(30)            -- lateral oscillation
+            :bounce(0.6)           -- bounce off ground
+            :fade()
+            :space("screen")
+
+        combined:burst(12):spread(120):angle(270):at(cx, cy - 100)  -- shoot downward
+    end)
+    delay = delay + step
+
+    -- Effect 17: SHADER PARTICLES - particles rendered through shader pipeline
+    timer.after(delay, function()
+        log_info("[ParticleTest] 17/18: SHADER particles with 'flash' effect")
+        local shaderParticle = Particles.define()
+            :shape("circle")
+            :size(15, 25)
+            :color("cyan", "magenta")
+            :velocity(80, 150)
+            :lifespan(1.5, 2.5)
+            :fade()
+            :shaders({ "flash" })  -- Render through shader pipeline
+            :space("screen")
+
+        shaderParticle:burst(25):spread(360):at(cx, cy)
+    end)
+    delay = delay + step
+
+    -- Effect 18: CUSTOM DRAW COMMAND - particles with custom rendering
+    timer.after(delay, function()
+        log_info("[ParticleTest] 18/18: CUSTOM drawCommand particles")
+        local draw = require("core.draw")
+
+        local customDrawParticle = Particles.define()
+            :shape("circle")
+            :size(20)
+            :color("yellow")
+            :velocity(100, 180)
+            :lifespan(1.0, 2.0)
+            :fade()
+            :shaders({ "flash" })  -- Required for drawCommand to work
+            :drawCommand(function(entity, props)
+                -- Custom rendering: draw a filled circle through shader pipeline
+                if draw and draw.local_command then
+                    draw.local_command(entity, "draw_circle_filled", {
+                        x = props.x,
+                        y = props.y,
+                        radius = props.size / 2,
+                        color = props.color or WHITE
+                    }, { z = 1, space = layer.DrawCommandSpace.Screen })
+                end
+            end)
+            :space("screen")
+
+        customDrawParticle:burst(15):spread(180):at(cx, cy)
+    end)
+
+    log_info("[ParticleTest] Starting sequence - 18 effects, 1.5s apart")
+end)

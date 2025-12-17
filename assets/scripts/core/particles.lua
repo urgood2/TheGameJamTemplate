@@ -79,13 +79,71 @@ function RecipeMethods:size(minOrFixed, max)
     return self
 end
 
+--- Helper to convert various color inputs to a Color table
+--- @param arg1 any First argument (r, table, string, or Color)
+--- @param arg2 any|nil Second argument (g or endColor)
+--- @param arg3 any|nil Third argument (b)
+--- @param arg4 any|nil Fourth argument (a)
+--- @return table, table|nil Normalized start color, optional end color
+local function normalizeColors(arg1, arg2, arg3, arg4)
+    local Col = _G.Col or function(r, g, b, a) return { r = r, g = g, b = b, a = a or 255 } end
+
+    -- Case 1: color(r, g, b) or color(r, g, b, a) - 3+ numbers
+    if type(arg1) == "number" and type(arg2) == "number" and type(arg3) == "number" then
+        local a = (type(arg4) == "number") and arg4 or 255
+        local c = Col(arg1, arg2, arg3, a)
+        return c, nil  -- Same color for start/end
+    end
+
+    -- Case 2: color({r, g, b}) or color({r, g, b, a}) - table
+    if type(arg1) == "table" then
+        local r, g, b, a
+        if arg1.r then
+            -- Named fields: {r=255, g=200, b=50}
+            r, g, b, a = arg1.r, arg1.g, arg1.b, arg1.a or 255
+        else
+            -- Array style: {255, 200, 50}
+            r, g, b, a = arg1[1], arg1[2], arg1[3], arg1[4] or 255
+        end
+        local startCol = Col(r, g, b, a)
+
+        -- Check if arg2 is an end color
+        local endCol = nil
+        if type(arg2) == "table" then
+            if arg2.r then
+                endCol = Col(arg2.r, arg2.g, arg2.b, arg2.a or 255)
+            else
+                endCol = Col(arg2[1], arg2[2], arg2[3], arg2[4] or 255)
+            end
+        elseif type(arg2) == "string" then
+            endCol = arg2  -- Named color, will be resolved later
+        end
+
+        return startCol, endCol
+    end
+
+    -- Case 3: color("yellow") or color("yellow", "red") - named colors
+    if type(arg1) == "string" then
+        -- Named colors - keep as string, will be resolved at spawn time
+        return arg1, arg2  -- arg2 could be another named color or nil
+    end
+
+    -- Case 4: color(Color) - already a Color userdata
+    return arg1, arg2
+end
+
 --- Set particle color (start/end for interpolation)
---- @param startColor string|table Color name or {r,g,b,a}
---- @param endColor string|table? End color (defaults to startColor)
+--- Supports multiple calling conventions:
+---   :color(255, 200, 50)      -- RGB
+---   :color(255, 200, 50, 128) -- RGBA
+---   :color({255, 200, 50})    -- Table
+---   :color("yellow")          -- Named color
+---   :color(startColor, endColor) -- Gradient
 --- @return self
-function RecipeMethods:color(startColor, endColor)
-    self._config.startColor = startColor
-    self._config.endColor = endColor or startColor
+function RecipeMethods:color(arg1, arg2, arg3, arg4)
+    local startCol, endCol = normalizeColors(arg1, arg2, arg3, arg4)
+    self._config.startColor = startCol
+    self._config.endColor = endCol or startCol
     return self
 end
 
@@ -169,9 +227,21 @@ end
 
 --- Set lateral wiggle amount
 --- @param amount number Wiggle in pixels
+--- @param freq number? Wiggle frequency in Hz (default: 10)
 --- @return self
-function RecipeMethods:wiggle(amount)
+function RecipeMethods:wiggle(amount, freq)
     self._config.wiggle = amount
+    if freq then
+        self._config.wiggleFreq = freq
+    end
+    return self
+end
+
+--- Set wiggle frequency (use with :wiggle())
+--- @param freq number Frequency in Hz
+--- @return self
+function RecipeMethods:wiggleFreq(freq)
+    self._config.wiggleFreq = freq
     return self
 end
 
@@ -184,17 +254,39 @@ end
 
 --- Enable bouncing with restitution
 --- @param restitution number Bounce factor (0-1)
+--- @param groundY number? Ground Y level (default: 900)
 --- @return self
-function RecipeMethods:bounce(restitution)
+function RecipeMethods:bounce(restitution, groundY)
     self._config.bounceRestitution = restitution
+    if groundY then
+        self._config.bounceGroundY = groundY
+    end
+    return self
+end
+
+--- Set bounce ground level (use with :bounce())
+--- @param groundY number Ground Y level in pixels
+--- @return self
+function RecipeMethods:bounceGroundY(groundY)
+    self._config.bounceGroundY = groundY
     return self
 end
 
 --- Enable homing toward target
 --- @param strength number Homing strength (0-1)
+--- @param target table|number|nil Target position {x,y} or entity ID (nil = set later)
 --- @return self
-function RecipeMethods:homing(strength)
+function RecipeMethods:homing(strength, target)
     self._config.homingStrength = strength
+    self._config.homingTarget = target
+    return self
+end
+
+--- Set homing target (use with :homing())
+--- @param target table|number Target position {x,y} or entity ID
+--- @return self
+function RecipeMethods:homingTarget(target)
+    self._config.homingTarget = target
     return self
 end
 
@@ -456,18 +548,19 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
     end
 
     -- Resolve size with override support
+    -- If size is directly overridden, use it; otherwise use sizeMin/sizeMax
     local size
-    if perParticle.size then
-        size = perParticle.size
-    elseif self._overrides and self._overrides.size then
-        size = self._overrides.size
+    local overrideSize = getValue("size", nil)
+    if overrideSize then
+        size = overrideSize
     else
-        size = self:_randomRange(config.sizeMin or 6, config.sizeMax or 6)
+        size = self:_randomRange(getValue("sizeMin", 6), getValue("sizeMax", 6))
     end
 
     -- Resolve other random values
-    local lifespan = self:_randomRange(getValue("lifespanMin", 1), getValue("lifespanMax", 1))
-    local velocity = self:_randomRange(getValue("velocityMin", 0), getValue("velocityMax", 0))
+    -- Check for direct override before using min/max ranges
+    local lifespan = getValue("lifespan", nil) or self:_randomRange(getValue("lifespanMin", 1), getValue("lifespanMax", 1))
+    local velocity = getValue("velocity", nil) or self:_randomRange(getValue("velocityMin", 0), getValue("velocityMax", 0))
 
     -- Resolve velocity direction
     local vx, vy
@@ -481,17 +574,29 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
         -- Point away from spawn center
         local dx = pos.x - self._spawnCenter.x
         local dy = pos.y - self._spawnCenter.y
-        baseAngle = math.atan2(dy, dx)
+        local dist = math.sqrt(dx*dx + dy*dy)
+        if dist < 0.01 then
+            -- If particle is at center, use random direction
+            baseAngle = math.random() * math.pi * 2
+        else
+            baseAngle = math.atan(dy, dx)
+        end
     elseif self._directionMode == "inward" and self._spawnCenter then
         -- Point toward spawn center
         local dx = self._spawnCenter.x - pos.x
         local dy = self._spawnCenter.y - pos.y
-        baseAngle = math.atan2(dy, dx)
+        local dist = math.sqrt(dx*dx + dy*dy)
+        if dist < 0.01 then
+            -- If particle is at center, use random direction
+            baseAngle = math.random() * math.pi * 2
+        else
+            baseAngle = math.atan(dy, dx)
+        end
     elseif self._spawnMode == "toward" and self._towardPos then
         -- Point toward target
         local dx = self._towardPos.x - pos.x
         local dy = self._towardPos.y - pos.y
-        baseAngle = math.atan2(dy, dx)
+        baseAngle = math.atan(dy, dx)
     else
         -- Random direction
         baseAngle = math.random() * math.pi * 2
@@ -509,6 +614,7 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
     -- Map shape to C++ renderType
     local renderTypeMap = {
         circle = particleModule.ParticleRenderType and particleModule.ParticleRenderType.CIRCLE_FILLED or 4,
+        ellipse_stretch = particleModule.ParticleRenderType and particleModule.ParticleRenderType.ELLIPSE_STRETCH or 7,
         rect = particleModule.ParticleRenderType and particleModule.ParticleRenderType.RECTANGLE_FILLED or 2,
         line = particleModule.ParticleRenderType and particleModule.ParticleRenderType.LINE_FACING or 8,
         sprite = particleModule.ParticleRenderType and particleModule.ParticleRenderType.TEXTURE or 0,
@@ -516,22 +622,217 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
 
     -- Get shape with override support
     local shape = getValue("shape", "circle")
+    local stretchEnabled = getValue("stretch", false)
+
+    -- When stretch is enabled with circle shape, use ELLIPSE_STRETCH for velocity-based stretching
+    if stretchEnabled and shape == "circle" then
+        shape = "ellipse_stretch"
+    end
+
+    -- Use Vec2 for C++ compatibility (or fall back to table for mock testing)
+    local Vec2 = _G.Vec2 or function(x, y) return { x = x, y = y } end
+
+    -- Resolve a color value (handles strings via util.getColor, or returns as-is)
+    local function resolveColor(c)
+        if c == nil then return nil end
+        if type(c) == "string" then
+            -- Named color - try to resolve via util.getColor
+            if _G.util and _G.util.getColor then
+                return _G.util.getColor(c)
+            else
+                -- Fallback: return white if we can't resolve
+                local Col = _G.Col or function(r, g, b, a) return { r = r, g = g, b = b, a = a or 255 } end
+                return Col(255, 255, 255, 255)
+            end
+        end
+        return c
+    end
 
     local opts = {
         renderType = renderTypeMap[shape] or renderTypeMap.circle,
-        velocity = { x = vx, y = vy },
+        velocity = Vec2(vx, vy),
         lifespan = lifespan,
         gravity = getValue("gravity", nil),
-        startColor = getValue("startColor", nil),
-        endColor = getValue("endColor", nil),
+        startColor = resolveColor(getValue("startColor", nil)),
+        endColor = resolveColor(getValue("endColor", nil)),
         rotationSpeed = getValue("spinMin", nil) and self:_randomRange(getValue("spinMin", 0), getValue("spinMax", 0)),
-        autoAspect = getValue("stretch", nil),
+        autoAspect = getValue("stretch", false) or nil,  -- Boolean: stretch based on velocity
+        faceVelocity = getValue("stretch", false) or nil,  -- Boolean: rotate to face velocity
         z = getValue("z", nil),
         space = getValue("space", nil),
     }
 
-    local location = { x = pos.x, y = pos.y }
-    local sizeVec = { x = size, y = size }
+    -- Check if any enhanced features need callbacks
+    local hasEnhanced = config.wiggle or config.bounceRestitution or
+                        config.homingStrength or config.trailRecipe or config.flashColors or
+                        config.onSpawn or config.onUpdate or config.onDeath
+
+    if hasEnhanced then
+        -- Per-particle state (captured in closure)
+        local state = {
+            entity = nil,  -- Set in onInit
+            wigglePhase = math.random() * math.pi * 2,
+            originalDir = { x = vx, y = vy },
+            trailTimer = 0,
+        }
+
+        -- Get component_cache and entity_cache for position access
+        local component_cache = _G.component_cache or (function()
+            local ok, cc = pcall(require, "core.component_cache")
+            return ok and cc or nil
+        end)()
+        local entity_cache = _G.entity_cache or (function()
+            local ok, ec = pcall(require, "core.entity_cache")
+            return ok and ec or nil
+        end)()
+        local Transform = _G.Transform
+
+        opts.onInitCallback = function(entity, particle)
+            state.entity = entity
+            -- Call user's onSpawn if provided
+            if config.onSpawn then
+                config.onSpawn(particle, entity)
+            end
+        end
+
+        opts.onUpdateCallback = function(particle, dt)
+            -- Safety check: ensure entity is still valid
+            if not state.entity then return end
+            if entity_cache and not entity_cache.valid(state.entity) then return end
+
+            -- Get transform for position-based features
+            local transform = nil
+            if component_cache and Transform then
+                transform = component_cache.get(state.entity, Transform)
+            end
+
+            -- 1. WIGGLE: Lateral oscillation
+            if config.wiggle then
+                state.wigglePhase = state.wigglePhase + dt * (config.wiggleFreq or 10)
+                local origLen = math.sqrt(state.originalDir.x^2 + state.originalDir.y^2)
+                if origLen > 0.01 then
+                    local perpX = -state.originalDir.y / origLen
+                    local perpY = state.originalDir.x / origLen
+                    local wiggleOffset = math.sin(state.wigglePhase) * config.wiggle
+                    local vel = particle.velocity
+                    if vel then
+                        -- Apply perpendicular wiggle force
+                        particle.velocity = Vec2(
+                            vel.x + perpX * wiggleOffset * dt * 60,
+                            vel.y + perpY * wiggleOffset * dt * 60
+                        )
+                    end
+                end
+            end
+
+            -- 2. BOUNCE: Reflect off ground
+            if config.bounceRestitution and transform then
+                local groundY = config.bounceGroundY or 900
+                if transform.actualY > groundY then
+                    transform.actualY = groundY
+                    local vel = particle.velocity
+                    if vel and vel.y > 0 then
+                        particle.velocity = Vec2(vel.x, -vel.y * config.bounceRestitution)
+                    end
+                end
+            end
+
+            -- 3. HOMING: Seek toward target
+            if config.homingStrength and config.homingTarget and transform then
+                local targetPos = config.homingTarget
+                -- If target is entity ID, get its position
+                if type(targetPos) == "number" and component_cache and Transform then
+                    local targetTransform = component_cache.get(targetPos, Transform)
+                    if targetTransform then
+                        targetPos = { x = targetTransform.actualX, y = targetTransform.actualY }
+                    else
+                        targetPos = nil  -- Entity no longer valid
+                    end
+                end
+
+                if targetPos and targetPos.x and targetPos.y then
+                    local dx = targetPos.x - transform.actualX
+                    local dy = targetPos.y - transform.actualY
+                    local dist = math.sqrt(dx*dx + dy*dy)
+                    if dist > 1 then
+                        local vel = particle.velocity
+                        if vel then
+                            local speed = math.sqrt(vel.x^2 + vel.y^2)
+                            if speed > 0.01 then
+                                local targetVelX = (dx / dist) * speed
+                                local targetVelY = (dy / dist) * speed
+                                local str = config.homingStrength
+                                particle.velocity = Vec2(
+                                    vel.x + (targetVelX - vel.x) * str * dt * 5,
+                                    vel.y + (targetVelY - vel.y) * str * dt * 5
+                                )
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- 4. TRAIL: Spawn trail particles
+            if config.trailRecipe and config.trailRate and transform then
+                state.trailTimer = state.trailTimer + dt
+                if state.trailTimer >= config.trailRate then
+                    state.trailTimer = state.trailTimer - config.trailRate
+                    -- Guard against infinite recursion: skip if trail recipe has its own trail
+                    local trailConfig = config.trailRecipe._config
+                    if trailConfig and trailConfig.trailRecipe then
+                        if not state.trailWarned then
+                            log_warn("Trail particle recipe has its own :trail() - skipping to prevent infinite recursion")
+                            state.trailWarned = true
+                        end
+                    else
+                        -- Spawn trail particle at current position
+                        config.trailRecipe:burst(1):at(transform.actualX, transform.actualY)
+                    end
+                end
+            end
+
+            -- 5. FLASH: Cycle through colors
+            if config.flashColors and #config.flashColors > 0 then
+                local age = particle.age or 0
+                local life = particle.lifespan or 1
+                local progress = math.min(age / life, 0.999)
+                local numColors = #config.flashColors
+                local colorIndex = math.floor(progress * numColors) + 1
+
+                local color = config.flashColors[colorIndex]
+                if color then
+                    -- Resolve color if it's a string
+                    if type(color) == "string" then
+                        color = resolveColor(color)
+                    end
+                    -- Convert table to Col object if needed
+                    if type(color) == "table" and color.r == nil then
+                        -- Array-style table {r, g, b, a}
+                        color = Col(color[1] or 255, color[2] or 255, color[3] or 255, color[4] or 255)
+                    elseif type(color) == "table" and color.r then
+                        -- Named table {r=, g=, b=, a=}
+                        color = Col(color.r, color.g, color.b, color.a or 255)
+                    end
+                    particle.color = color
+                end
+            end
+
+            -- Call user's onUpdate if provided
+            if config.onUpdate then
+                config.onUpdate(particle, dt, state.entity)
+            end
+        end
+
+        -- Wire up onDeathCallback for user's onDeath
+        if config.onDeath then
+            opts.onDeathCallback = function(particle)
+                config.onDeath(particle, state.entity)
+            end
+        end
+    end
+
+    local location = Vec2(pos.x, pos.y)
+    local sizeVec = Vec2(size, size)
 
     local entity = particleModule.CreateParticle(location, sizeVec, opts, nil, nil)
 
@@ -545,6 +846,37 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
             if shadersModule and shadersModule.ShaderParticleTag then
                 registry:emplace(entity, shadersModule.ShaderParticleTag)
             end
+        end
+
+        -- Setup shader rendering pipeline
+        Particles.setupShaderRendering(entity, config)
+    end
+
+    -- Handle custom drawCommand
+    -- Note: drawCommand is stored in _drawCommand, not in _config
+    local drawCommand = self._recipe._drawCommand
+    if drawCommand then
+        if not config.shaders or #config.shaders == 0 then
+            -- Warn: drawCommand requires shaders to work
+            if _G.log_warn then
+                log_warn("Particle drawCommand requires :shaders() to be set - custom rendering will not work")
+            end
+        else
+            -- Build props for the custom draw command
+            local drawProps = {
+                entity = entity,
+                x = pos.x,
+                y = pos.y,
+                size = size,
+                color = resolveColor(getValue("startColor", nil)),
+                velocity = { x = vx, y = vy },
+                lifespan = lifespan,
+                config = self._recipe:getConfig(),  -- Full config including drawCommand
+            }
+
+            -- Call the custom draw command
+            -- User should use draw.local_command() to add commands to shader pipeline
+            drawCommand(entity, drawProps)
         end
     end
 
@@ -644,6 +976,12 @@ end
 --- Stop the stream
 function HandleMethods:stop()
     self._active = false
+end
+
+--- Check if stream is still active
+--- @return boolean
+function HandleMethods:isActive()
+    return self._active
 end
 
 --- Update the stream (call every frame)
@@ -763,6 +1101,40 @@ function MixedEmissionMethods:burst(...)
     return self
 end
 
+--- Set angular spread (applies to all emissions)
+--- @param degrees number Spread angle in degrees
+--- @return self
+function MixedEmissionMethods:spread(degrees)
+    -- Store in degrees - EmissionMethods:_spawnSingle converts to radians
+    self._spread = degrees
+    return self
+end
+
+--- Set emission angle (applies to all emissions)
+--- @param minDeg number Min angle in degrees
+--- @param maxDeg number? Max angle (same as min if not provided)
+--- @return self
+function MixedEmissionMethods:angle(minDeg, maxDeg)
+    -- Store in degrees - EmissionMethods:_spawnSingle converts to radians
+    self._angleMin = minDeg
+    self._angleMax = maxDeg or minDeg
+    return self
+end
+
+--- Particles move outward from spawn center
+--- @return self
+function MixedEmissionMethods:outward()
+    self._directionMode = "outward"
+    return self
+end
+
+--- Particles move inward toward spawn center
+--- @return self
+function MixedEmissionMethods:inward()
+    self._directionMode = "inward"
+    return self
+end
+
 --- Set spawn position and trigger burst
 --- @param x number X position
 --- @param y number Y position
@@ -828,6 +1200,18 @@ function MixedEmissionMethods:go()
         if count > 0 then
             emission._count = count
 
+            -- Copy direction state to each emission
+            if self._spread then
+                emission._spread = self._spread
+            end
+            if self._angleMin then
+                emission._angleMin = self._angleMin
+                emission._angleMax = self._angleMax
+            end
+            if self._directionMode then
+                emission._directionMode = self._directionMode
+            end
+
             -- Copy position state to each emission
             if self._spawnMode == "at" and self._position then
                 emission._position = self._position
@@ -859,6 +1243,19 @@ function MixedEmissionMethods:_spawn()
         if count > 0 then
             -- Ensure emission has the count set
             emission._count = count
+
+            -- Copy direction state to each emission
+            if self._spread then
+                emission._spread = self._spread
+            end
+            if self._angleMin then
+                emission._angleMin = self._angleMin
+                emission._angleMax = self._angleMax
+            end
+            if self._directionMode then
+                emission._directionMode = self._directionMode
+            end
+
             emission:_spawn()
         end
     end
@@ -878,6 +1275,42 @@ function MixedEmissionMethods:stream()
     handle._maxCount = nil  -- infinite by default
     handle._attachedEntity = nil
     return handle
+end
+
+--------------------------------------------------------------------------------
+-- SHADER RENDERING SETUP
+--------------------------------------------------------------------------------
+
+--- Setup shader rendering for a particle entity
+--- @param entity any Entity ID
+--- @param config table Recipe configuration with shaders and shaderUniforms
+function Particles.setupShaderRendering(entity, config)
+    if not config.shaders or #config.shaders == 0 then
+        return
+    end
+
+    -- Use injected ShaderBuilder for testing, or fall back to require
+    local ShaderBuilder = Particles._ShaderBuilder or require("core.shader_builder")
+
+    -- Add shader passes using ShaderBuilder
+    local builder = ShaderBuilder.for_entity(entity)
+    for _, shaderName in ipairs(config.shaders) do
+        builder:add(shaderName)
+    end
+    builder:apply()
+
+    -- Apply shader uniforms if provided
+    if config.shaderUniforms then
+        -- Use injected globalShaderUniforms for testing, or fall back to global
+        local globalShaderUniforms = Particles._globalShaderUniforms or _G.globalShaderUniforms
+        if globalShaderUniforms then
+            for shaderName, uniforms in pairs(config.shaderUniforms) do
+                for uniformName, value in pairs(uniforms) do
+                    globalShaderUniforms:set(shaderName, uniformName, value)
+                end
+            end
+        end
+    end
 end
 
 --------------------------------------------------------------------------------

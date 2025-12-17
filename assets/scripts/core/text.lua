@@ -324,6 +324,14 @@ function HandleMethods:follow()
     return self
 end
 
+--- Attach lifecycle to entity (text dies when entity dies)
+--- @param entity any Entity to attach to
+--- @return self
+function HandleMethods:attachTo(entity)
+    self._attachedEntity = entity
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------
@@ -357,6 +365,9 @@ function Text._createHandle(spawner)
     handle._followMode = spawner._followMode
     handle._followOffset = spawner._followOffset
     handle._shouldFollow = spawner._shouldFollow
+
+    -- Store attached entity
+    handle._attachedEntity = spawner._attachedEntity
 
     -- Resolve content
     local content = config.content or ""
@@ -409,6 +420,16 @@ function Text.update(dt)
         if not handle._active then
             table.remove(Text._activeHandles, i)
         else
+            -- Check attached entity
+            if handle._attachedEntity then
+                local entity_cache = _G.entity_cache or require("core.entity_cache")
+                if not entity_cache.valid(handle._attachedEntity) then
+                    handle._active = false
+                    table.remove(Text._activeHandles, i)
+                    goto continue
+                end
+            end
+
             -- Update elapsed time
             handle._elapsed = handle._elapsed + dt
 
@@ -457,6 +478,7 @@ function Text.update(dt)
                 end
             end
         end
+        ::continue::
     end
 end
 

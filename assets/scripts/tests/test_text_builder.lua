@@ -345,5 +345,53 @@ TestRunner.describe("Entity-relative positioning", function()
     end)
 end)
 
+TestRunner.describe("Lifecycle binding", function()
+    it(":attachTo(entity) stores entity reference", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(10, 100, 200)
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(0, 0):attachTo(entity)
+
+        assert_equals(entity, handle._attachedEntity)
+    end)
+
+    it("handle is removed when attached entity dies", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(11, 100, 200)
+        local recipe = Text.define():content("test"):width(100)
+        recipe:spawn():at(0, 0):attachTo(entity)
+
+        assert_equals(1, #Text._activeHandles)
+
+        -- Simulate entity death
+        mockEntities[11] = nil
+
+        Text.update(0.016)
+
+        assert_equals(0, #Text._activeHandles)
+    end)
+
+    it("handle survives if entity is still valid", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(12, 100, 200)
+        local recipe = Text.define():content("test"):width(100)
+        recipe:spawn():at(0, 0):attachTo(entity)
+
+        assert_equals(1, #Text._activeHandles)
+
+        -- Entity still alive
+        Text.update(0.016)
+
+        -- Handle should still be active
+        assert_equals(1, #Text._activeHandles)
+    end)
+end)
+
 -- Run tests
 TestRunner.run_all()

@@ -26,11 +26,7 @@ namespace main_loop {
     void initMainLoopData(std::optional<int>, std::optional<int>) {}
 } // namespace main_loop
 
-// Stub out minimal ImGui functions referenced by utilities during tests.
-namespace ImGui {
-    void Image(void*, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&) {}
-    void MemFree(void*) {}
-} // namespace ImGui
+// Note: ImGui stubs removed - using full ImGui implementation in benchmarks
 
 // Stub out UI traversal/interaction hooks used by input_functions.
 namespace ui {

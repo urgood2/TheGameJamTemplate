@@ -45,6 +45,11 @@ if(BENCHMARK_SOURCES)
         ${CMAKE_SOURCE_DIR}/src/systems/layer/layer_command_buffer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../helpers/test_stubs.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../helpers/object_pool_stubs.cpp
+        # ImGui sources needed for shader_system.cpp
+        ${CMAKE_SOURCE_DIR}/src/third_party/rlImGui/imgui.cpp
+        ${CMAKE_SOURCE_DIR}/src/third_party/rlImGui/imgui_draw.cpp
+        ${CMAKE_SOURCE_DIR}/src/third_party/rlImGui/imgui_widgets.cpp
+        ${CMAKE_SOURCE_DIR}/src/third_party/rlImGui/imgui_tables.cpp
     )
 
     target_include_directories(perf_benchmarks PRIVATE

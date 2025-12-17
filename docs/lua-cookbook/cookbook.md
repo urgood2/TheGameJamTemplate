@@ -154,8 +154,8 @@ local imports = require("core.imports")
 -- Core bundle (most common - 5 modules)
 local component_cache, entity_cache, timer, signal, z_orders = imports.core()
 
--- Entity creation bundle (3 modules)
-local Node, animation_system, EntityBuilder = imports.entity()
+-- Entity creation bundle (4 modules)
+local Node, animation_system, EntityBuilder, spawn = imports.entity()
 
 -- Physics bundle (2 modules)
 local PhysicsManager, PhysicsBuilder = imports.physics()
@@ -6422,13 +6422,26 @@ log_debug("Entity", eid, "at", x, y)
 
 -- Format strings
 log_debug(("Health: %d/%d"):format(current, max))
+
+-- Tag support (log_info and log_warn only)
+log_info("physics", "Body created for entity", eid)
+-- Output: "[physics] Body created for entity 42"
+
+log_warn("combat", "Target out of range")
+-- Output: "[combat] Target out of range"
+
+-- Tags must be short lowercase strings (<=20 chars, only a-z and _)
+-- If first arg doesn't look like a tag, it's treated as a message
+log_info("Game started")  -- No tag, logs as "[general] Game started"
 ```
 
-*— from chugget_code_definitions.lua:385-405 (stubs), C++ bindings in scripting system*
+*— from chugget_code_definitions.lua:385-431 (stubs), C++ bindings in src/systems/scripting/scripting_functions.cpp:1324-1420*
 
 **Gotcha:** Log functions accept varargs but don't auto-format; use `string.format()` for structured output.
 
 **Gotcha:** `log_debug()` may be compiled out in release builds; use `log_info()` for important messages.
+
+**Gotcha:** Tags only work with `log_info()` and `log_warn()`. The tag must be short and lowercase (e.g., "physics", "combat", "ai").
 
 ***
 

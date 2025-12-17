@@ -5,6 +5,7 @@
 #include "util/error_handling.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/ui/editor/pack_editor.hpp"
+#include "systems/layer/layer_optimized.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -80,6 +81,12 @@ namespace game {
                         OnUIScaleChanged(); // ✅ Call your method here
                     }
 
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Performance")) {
+                    ImGui::Text("Draw calls this frame: %d", layer::g_drawCallsThisFrame);
+                    ImGui::Text("FPS: %d", GetFPS());
+                    ImGui::Text("Frame time: %.2f ms", GetFrameTime() * 1000.0f);
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("Events")) {

@@ -31,6 +31,7 @@ add_executable(unit_tests
     unit/test_ownership.cpp
     unit/test_ui_layout.cpp
     unit/test_ui_components.cpp
+    unit/test_draw_call_counter.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp

@@ -18,7 +18,10 @@
 namespace layer
 {
     struct Layer;
-    
+
+    // Performance monitoring
+    inline int g_drawCallsThisFrame = 0;
+
     //TODO: something about manual destruction of non-trivial types, make template-based auto-destructor code
     
     /*

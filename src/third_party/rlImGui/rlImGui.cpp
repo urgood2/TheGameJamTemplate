@@ -451,7 +451,14 @@ void rlImGuiBeginInitImGui(void)
     SetupKeymap();
 
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontDefault();
+
+    // Try to load JetBrains Mono font for better readability
+    const char* fontPath = "assets/fonts/en/JetBrainsMonoNerdFont-Regular.ttf";
+    if (FileExists(fontPath)) {
+        io.Fonts->AddFontFromFileTTF(fontPath, 14.0f);
+    } else {
+        io.Fonts->AddFontDefault();
+    }
 }
 
 void rlImGuiSetup(bool dark)

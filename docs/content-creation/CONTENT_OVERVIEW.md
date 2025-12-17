@@ -2,6 +2,8 @@
 
 Quick index for adding new content to the game.
 
+> **Looking for a comprehensive walkthrough?** See [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md) for detailed step-by-step instructions including wave visual improvements.
+
 ## What Do You Want to Add?
 
 | Content Type | Guide | Data File |

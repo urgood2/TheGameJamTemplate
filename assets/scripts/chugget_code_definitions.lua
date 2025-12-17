@@ -385,28 +385,10 @@ function setEntityAlias(...) end
 function log_debug(...) end
 
 ---
---- Logs a general debug message with optional system tag.
+--- Logs a general debug message.
 ---
----@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
----@param ... any # Message parts to concatenate
 ---@overload fun(message: string):nil
 function log_debug(...) end
-
----
---- Logs an info message with optional system tag.
----
----@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
----@param ... any # Message parts to concatenate
----@overload fun(message: string):nil
-function log_info(...) end
-
----
---- Logs a warning message with optional system tag.
----
----@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
----@param ... any # Message parts to concatenate
----@overload fun(message: string):nil
-function log_warn(...) end
 
 ---
 --- Logs an error message associated with an entity.
@@ -417,12 +399,36 @@ function log_warn(...) end
 function log_error(...) end
 
 ---
---- Logs a general error message with optional system tag.
+--- Logs a general error message.
 ---
----@param tag_or_message string # System tag (e.g., "physics", "combat", "ui") or message
----@param ... any # Message parts to concatenate
 ---@overload fun(message: string):nil
 function log_error(...) end
+
+---
+--- Logs an info message with system tag.
+---
+---@param tag string # System tag (e.g., 'physics', 'combat')
+---@param ... any # Message parts to log
+function log_info(...) end
+
+---
+--- Logs a general info message.
+---
+---@overload fun(message: string):nil
+function log_info(...) end
+
+---
+--- Logs a warning with system tag.
+---
+---@param tag string # System tag
+---@param ... any # Message parts
+function log_warn(...) end
+
+---
+--- Logs a general warning.
+---
+---@overload fun(message: string):nil
+function log_warn(...) end
 
 ---
 --- Sets a value in the entity's current world state.
@@ -4422,6 +4428,156 @@ UIConfig = {
 
 
 ---
+--- Core identity component for UI elements, containing type, box reference, and tree position.
+---
+---@class UIElementCore
+UIElementCore = {
+    ---@type UITypeEnum
+    type = nil,  -- The fundamental type of this UI element.
+    ---@type Entity
+    uiBox = nil,  -- The root UI box entity this element belongs to.
+    ---@type string
+    id = nil,  -- Unique identifier for this UI element.
+    ---@type integer
+    treeOrder = nil  -- Order of this element in the UI tree for traversal.
+}
+
+
+---
+--- Visual styling configuration for UI elements.
+---
+---@class UIStyleConfig
+UIStyleConfig = {
+    ---@type UIStylingType
+    stylingType = nil,  -- The visual style type (rounded rectangle, 9-patch, sprite).
+    ---@type Color|nil
+    color = nil,  -- Background color.
+    ---@type Color|nil
+    outlineColor = nil,  -- Outline color.
+    ---@type Color|nil
+    shadowColor = nil,  -- Shadow color.
+    ---@type number|nil
+    outlineThickness = nil,  -- Outline thickness in pixels.
+    ---@type boolean
+    shadow = nil,  -- Whether shadow is enabled.
+    ---@type boolean
+    noFill = nil,  -- If true, background is not filled.
+    ---@type boolean
+    pixelatedRectangle = nil  -- Use pixel-perfect rectangle drawing.
+}
+
+
+---
+--- Layout configuration for UI elements including positioning, dimensions, and hierarchy.
+---
+---@class UILayoutConfig
+UILayoutConfig = {
+    ---@type integer|nil
+    width = nil,  -- Explicit width.
+    ---@type integer|nil
+    height = nil,  -- Explicit height.
+    ---@type integer|nil
+    maxWidth = nil,  -- Maximum width.
+    ---@type integer|nil
+    maxHeight = nil,  -- Maximum height.
+    ---@type integer|nil
+    minWidth = nil,  -- Minimum width.
+    ---@type integer|nil
+    minHeight = nil,  -- Minimum height.
+    ---@type number|nil
+    padding = nil,  -- Padding around the content.
+    ---@type integer|nil
+    alignmentFlags = nil,  -- Bitmask of alignment flags.
+    ---@type Vector2|nil
+    offset = nil,  -- Offset from aligned position.
+    ---@type number|nil
+    scale = nil,  -- Scale multiplier.
+    ---@type boolean
+    mid = nil,  -- A miscellaneous layout flag.
+    ---@type boolean
+    draw_after = nil  -- Draw this element after its children.
+}
+
+
+---
+--- Interaction configuration for UI elements including collision, buttons, focus, and callbacks.
+---
+---@class UIInteractionConfig
+UIInteractionConfig = {
+    ---@type boolean|nil
+    canCollide = nil,  -- Whether collision is possible.
+    ---@type boolean
+    hover = nil,  -- Whether element is currently hovered.
+    ---@type boolean
+    disable_button = nil,  -- Disables button functionality.
+    ---@type boolean
+    buttonClicked = nil,  -- True if button was clicked this frame.
+    ---@type boolean
+    force_focus = nil,  -- Forces this element to take focus.
+    ---@type FocusArgs|nil
+    focusArgs = nil,  -- Arguments for focus behavior.
+    ---@type Tooltip|nil
+    tooltip = nil,  -- Simple tooltip.
+    ---@type function|nil
+    buttonCallback = nil,  -- Callback for button presses.
+    ---@type function|nil
+    updateFunc = nil,  -- Custom update function.
+    ---@type boolean|nil
+    choice = nil,  -- Marks this as a choice element.
+    ---@type boolean|nil
+    dynamicMotion = nil  -- Enables dynamic motion effects.
+}
+
+
+---
+--- Content configuration for UI elements including text, attached objects, and references.
+---
+---@class UIContentConfig
+UIContentConfig = {
+    ---@type string|nil
+    text = nil,  -- Static text content.
+    ---@type string|nil
+    language = nil,  -- Language key for localization.
+    ---@type boolean|nil
+    verticalText = nil,  -- If true, text is rendered vertically.
+    ---@type number|nil
+    fontSize = nil,  -- Font size for text elements.
+    ---@type string|nil
+    fontName = nil,  -- Named font to use.
+    ---@type function|nil
+    textGetter = nil,  -- Function to dynamically get text content.
+    ---@type Entity|nil
+    object = nil,  -- The game object associated with this UI element.
+    ---@type boolean
+    objectRecalculate = nil,  -- Force recalculation based on object.
+    ---@type boolean
+    progressBar = nil,  -- If this element is a progress bar.
+    ---@type number|nil
+    progressBarMaxValue = nil,  -- Maximum value of the progress bar.
+    ---@type Entity|nil
+    ref_entity = nil,  -- A referenced entity.
+    ---@type string|nil
+    instanceType = nil  -- A specific instance type for categorization.
+}
+
+
+---
+--- Bundle of all split UI config components for convenient passing through builders.
+---
+---@class UIConfigBundle
+UIConfigBundle = {
+    ---@type UIStyleConfig
+    style = nil,  -- Visual styling configuration.
+    ---@type UILayoutConfig
+    layout = nil,  -- Layout and positioning configuration.
+    ---@type UIInteractionConfig
+    interaction = nil,  -- Interaction and callback configuration.
+    ---@type UIContentConfig
+    content = nil  -- Content and text configuration.
+}
+
+
+---
 --- A fluent builder for creating UIConfig components.
 ---
 ---@class UIConfigBuilder
@@ -5127,6 +5283,13 @@ function UIConfigBuilder:addNPatchSourceTexture(...) end
 ---@param self UIConfigBuilder
 ---@return UIConfig
 function UIConfigBuilder:build(...) end
+
+---
+--- Builds UIConfig and extracts split components (UIStyleConfig, UILayoutConfig, UIInteractionConfig, UIContentConfig) into a bundle.
+---
+---@param self UIConfigBuilder
+---@return UIConfigBundle
+function UIConfigBuilder:buildBundle(...) end
 
 
 ---

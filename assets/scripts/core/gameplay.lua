@@ -557,13 +557,6 @@ local function destroyAllSimpleTooltips()
     simple_tooltip_cache = {}
 end
 
--- Export new simple tooltip functions globally
-_G.makeSimpleTooltip = makeSimpleTooltip
-_G.ensureSimpleTooltip = ensureSimpleTooltip
-_G.showSimpleTooltipAbove = showSimpleTooltipAbove
-_G.hideSimpleTooltip = hideSimpleTooltip
-_G.destroyAllSimpleTooltips = destroyAllSimpleTooltips
-
 centerTooltipAboveEntity = function(tooltipEntity, targetEntity, offset)
     if not tooltipEntity or not targetEntity then return end
     if not entity_cache.valid(tooltipEntity) or not entity_cache.valid(targetEntity) then return end
@@ -601,7 +594,6 @@ centerTooltipAboveEntity = function(tooltipEntity, targetEntity, offset)
     tooltipTransform.visualX = tooltipTransform.actualX
     tooltipTransform.visualY = tooltipTransform.actualY
 end
-_G.centerTooltipAboveEntity = centerTooltipAboveEntity
 
 local ensureCardTooltip -- forward declaration
 
@@ -675,7 +667,6 @@ local shop_card_entities = {} -- Track shop card entity IDs for cleanup
 local active_shop_instance = nil
 local AVATAR_PURCHASE_COST = 10
 local ensureShopSystemInitialized -- forward declaration so planning init can ensure metadata before card spawn
-_G.AVATAR_PURCHASE_COST = AVATAR_PURCHASE_COST
 local tryPurchaseShopCard -- forward declaration
 
 
@@ -757,9 +748,8 @@ local function isEnemyEntity(eid)
         and entity_cache.valid(eid)
 end
 
--- Override globals stub with actual implementation and expose globally for wand_executor
+-- Override globals stub with actual implementation
 globals.isEnemyEntity = isEnemyEntity
-_G.isEnemyEntity = isEnemyEntity
 
 local function findNearestEnemyPosition(px, py, maxDistance)
     local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
@@ -3352,10 +3342,6 @@ function ensureCardTooltip(card_def, opts)
     clear_state_tags(tooltip)
     return tooltip
 end
-
--- Export card tooltip functions globally
-_G.makeCardTooltip = makeCardTooltip
-_G.ensureCardTooltip = ensureCardTooltip
 
 local function destroyPlayerStatsTooltip()
     if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) then
@@ -9309,6 +9295,25 @@ function initPlanningUI()
         end
     end, nil, "wand_selector_highlight")
 end
+
+-- ============================================================================
+-- GLOBAL EXPORTS
+-- ============================================================================
+-- Tooltip functions
+_G.makeSimpleTooltip = makeSimpleTooltip
+_G.ensureSimpleTooltip = ensureSimpleTooltip
+_G.showSimpleTooltipAbove = showSimpleTooltipAbove
+_G.hideSimpleTooltip = hideSimpleTooltip
+_G.destroyAllSimpleTooltips = destroyAllSimpleTooltips
+_G.centerTooltipAboveEntity = centerTooltipAboveEntity
+_G.makeCardTooltip = makeCardTooltip
+_G.ensureCardTooltip = ensureCardTooltip
+
+-- Entity helpers
+_G.isEnemyEntity = isEnemyEntity
+
+-- Constants
+_G.AVATAR_PURCHASE_COST = AVATAR_PURCHASE_COST
 
 -- ============================================================================
 -- PARTICLE BUILDER TEST (temporary - remove after testing)

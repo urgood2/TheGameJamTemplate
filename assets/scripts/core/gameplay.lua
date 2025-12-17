@@ -8677,7 +8677,6 @@ function initActionPhase()
                 physics.update_collision_masks_for(PhysicsManager.get_world("world"), C.CollisionTags.PLAYER, { C.CollisionTags.ENEMY })
 
                 -- make it steerable
-                -- steering
                 steering.make_steerable(registry, enemyEntity, 3000.0, 30000.0, math.pi * 2.0, 2.0)
 
 

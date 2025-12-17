@@ -42,9 +42,9 @@ end
 local PhysicsBuilder = {}
 
 -- Dependencies
-local registry = _G.registry
-local physics = _G.physics
-local physics_manager_instance = _G.physics_manager_instance
+-- NOTE: Do NOT capture _G.physics, _G.registry, _G.physics_manager_instance at load time!
+-- These C++ globals may not be set when this module first loads.
+-- Access them dynamically via _G in apply() instead.
 local entity_cache = require("core.entity_cache")
 
 -- LuaLS type definitions
@@ -59,9 +59,6 @@ local entity_cache = require("core.entity_cache")
 ---@field fixedRotation boolean? Lock rotation (default: false)
 ---@field syncMode "physics"|"transform"? Sync mode (default: "physics")
 ---@field collideWith string[]? Tags to collide with
-
--- Lazy-load PhysicsManager to avoid circular dependency
-local PhysicsManager
 
 --------------------------------------------------------------------------------
 -- DEFAULTS
@@ -172,14 +169,13 @@ function BuilderMethods:getEntity()
     return self._entity
 end
 
---- Get the physics world (lazy-loaded)
+--- Get the physics world (accessed dynamically)
 --- ESCAPE HATCH: Use for advanced physics operations
 --- @return userdata|nil world The physics world object
 function BuilderMethods:getWorld()
-    if not PhysicsManager then
-        local ok, pm = pcall(require, "core.physics_manager")
-        if ok then PhysicsManager = pm end
-    end
+    -- NOTE: PhysicsManager is a C++ global binding, NOT a Lua module!
+    -- Access it dynamically via _G to handle load order correctly.
+    local PhysicsManager = _G.PhysicsManager
     if PhysicsManager and PhysicsManager.get_world then
         return PhysicsManager.get_world(self._worldName)
     end
@@ -207,13 +203,11 @@ function BuilderMethods:getConfig()
 end
 
 function BuilderMethods:apply()
-    -- Lazy load PhysicsManager
-    if not PhysicsManager then
-        local ok, pm = pcall(require, "core.physics_manager")
-        if ok then
-            PhysicsManager = pm
-        end
-    end
+    -- Get globals dynamically (NOT at module load time, as they may not be set yet)
+    local physics = _G.physics
+    local registry = _G.registry
+    local physics_manager_instance = _G.physics_manager_instance
+    local PhysicsManager = _G.PhysicsManager  -- C++ global, NOT a Lua module!
 
     -- Get physics world
     local world

@@ -710,9 +710,10 @@ DOCKER_CMD="$DOCKER_CMD \
 	-v $WORKSPACE_PATH:/home/$USERNAME/$WORKSPACE_BASENAME"
 
 # Add optional read-only mounts if they exist
+# Mount SSH to staging location - entrypoint will process for Linux compatibility
 if [[ -d "$HOME/.ssh" ]]; then
   DOCKER_CMD="$DOCKER_CMD \
-	-v $HOME/.ssh:/home/$USERNAME/.ssh:ro"
+	-v $HOME/.ssh:/home/$USERNAME/.ssh-host:ro"
 fi
 
 if [[ -f "$HOME/.gitconfig" ]]; then
@@ -961,6 +962,7 @@ generate_dockerfile_content() {
     "fd-find"
     "gpg"
     "git-delta"
+    "git-lfs"
   )
 
   # Add extra packages to the list
@@ -1037,6 +1039,9 @@ WORKDIR /home/$USERNAME
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
 	&& git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
 	&& git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+# Initialize Git LFS
+RUN git lfs install
 
 # Setup fnm for user
 RUN curl -o- https://fnm.vercel.app/install | bash
@@ -1138,12 +1143,12 @@ fi
 if [ -S "/gpg-agent-extra" ]; then
   # Detect expected socket location dynamically
   EXPECTED_SOCKET=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-  
+
   if [ -n "$EXPECTED_SOCKET" ]; then
     # Create directory structure for expected socket location
     mkdir -p "$(dirname "$EXPECTED_SOCKET")"
     chmod 700 "$(dirname "$EXPECTED_SOCKET")"
-    
+
     # Link forwarded socket to expected location
     ln -sf /gpg-agent-extra "$EXPECTED_SOCKET"
     if [ "$RUN_CLAUDE_VERBOSE" = "1" ]; then
@@ -1157,6 +1162,42 @@ if [ -S "/gpg-agent-extra" ]; then
     if [ "$RUN_CLAUDE_VERBOSE" = "1" ]; then
       echo "GPG agent socket linked at ~/.gnupg/S.gpg-agent (fallback)"
     fi
+  fi
+fi
+
+# Setup SSH from host mount with Linux compatibility
+if [ -d "$HOME/.ssh-host" ]; then
+  mkdir -p "$HOME/.ssh"
+  chmod 700 "$HOME/.ssh"
+
+  # Copy keys and known_hosts
+  for f in "$HOME/.ssh-host"/*; do
+    fname=$(basename "$f")
+    case "$fname" in
+      config) ;; # Handle config separately
+      *)
+        cp "$f" "$HOME/.ssh/$fname" 2>/dev/null || true
+        # Fix permissions for private keys
+        case "$fname" in
+          id_*|*_key) chmod 600 "$HOME/.ssh/$fname" 2>/dev/null || true ;;
+          *.pub|known_hosts*) chmod 644 "$HOME/.ssh/$fname" 2>/dev/null || true ;;
+        esac
+        ;;
+    esac
+  done
+
+  # Create Linux-compatible SSH config
+  if [ -f "$HOME/.ssh-host/config" ]; then
+    # Prepend IgnoreUnknown for macOS-specific options
+    echo "# Auto-generated for Linux compatibility" > "$HOME/.ssh/config"
+    echo "IgnoreUnknown UseKeychain,AddKeysToAgent" >> "$HOME/.ssh/config"
+    echo "" >> "$HOME/.ssh/config"
+    cat "$HOME/.ssh-host/config" >> "$HOME/.ssh/config"
+    chmod 600 "$HOME/.ssh/config"
+  fi
+
+  if [ "$RUN_CLAUDE_VERBOSE" = "1" ]; then
+    echo "SSH config processed for Linux compatibility"
   fi
 fi
 

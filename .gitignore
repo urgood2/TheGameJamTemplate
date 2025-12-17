@@ -72,6 +72,8 @@ compile_commands.json
 *apk*
 android.*
 
+build-ninja/
+build-test-new/
 build-release-ninja/
 build-helper-web/
 cardgameSource-main 2/

@@ -3,7 +3,7 @@
 
 # Placeholder for benchmark sources - actual benchmark files will be added in later tasks
 set(BENCHMARK_SOURCES
-    # benchmark_ecs.cpp - Task 1.3
+    benchmark_lua_boundary.cpp
     # benchmark_physics.cpp - Task 1.4
     # benchmark_layer.cpp - Task 1.5
 )

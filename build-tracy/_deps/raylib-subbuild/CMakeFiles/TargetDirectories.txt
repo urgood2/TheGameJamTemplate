@@ -1,0 +1,3 @@
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.worktrees/perf-audit/build-tracy/_deps/raylib-subbuild/CMakeFiles/raylib-populate.dir
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.worktrees/perf-audit/build-tracy/_deps/raylib-subbuild/CMakeFiles/edit_cache.dir
+/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.worktrees/perf-audit/build-tracy/_deps/raylib-subbuild/CMakeFiles/rebuild_cache.dir

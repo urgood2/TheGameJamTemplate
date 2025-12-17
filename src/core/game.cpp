@@ -2330,8 +2330,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
             // layer::Pop();
 
-            // Reset draw call counter for next frame
+            // Reset draw call counter and stats for next frame
             layer::g_drawCallsThisFrame = 0;
+            layer::g_drawCallStats.reset();
 
         }
 

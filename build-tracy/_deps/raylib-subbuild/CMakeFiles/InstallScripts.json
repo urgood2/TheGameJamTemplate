@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/.worktrees/perf-audit/build-tracy/_deps/raylib-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

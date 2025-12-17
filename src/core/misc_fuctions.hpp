@@ -87,6 +87,20 @@ namespace game {
                 }
                 if (ImGui::BeginTabItem("Performance")) {
                     ImGui::Text("Draw calls this frame: %d", layer::g_drawCallsThisFrame);
+
+                    // Draw call breakdown by source
+                    ImGui::Separator();
+                    ImGui::Text("Draw Call Breakdown:");
+                    ImGui::Indent();
+                    ImGui::Text("Sprites/Animations: %u", layer::g_drawCallStats.sprites);
+                    ImGui::Text("Text: %u", layer::g_drawCallStats.text);
+                    ImGui::Text("Shapes: %u", layer::g_drawCallStats.shapes);
+                    ImGui::Text("UI: %u", layer::g_drawCallStats.ui);
+                    ImGui::Text("State Changes: %u", layer::g_drawCallStats.state);
+                    ImGui::Text("Other: %u", layer::g_drawCallStats.other);
+                    ImGui::Unindent();
+
+                    ImGui::Separator();
                     ImGui::Text("FPS: %d", GetFPS());
                     ImGui::Text("Frame time: %.2f ms", GetFrameTime() * 1000.0f);
 

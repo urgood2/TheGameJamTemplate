@@ -3322,7 +3322,7 @@ void DrawLayerCommandsToSpecificCanvasOptimizedVersion(
     auto it = dispatcher.find(command.type);
     if (it != dispatcher.end()) {
       it->second(layer, command.data);
-      g_drawCallsThisFrame++;
+      IncrementDrawCallStats(command.type);
     } else {
       SPDLOG_ERROR("Unhandled draw command type {}");
     }

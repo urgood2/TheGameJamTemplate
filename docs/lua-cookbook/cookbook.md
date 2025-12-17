@@ -90,6 +90,11 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Add shader to entity | \pageref{recipe:add-shader} |
 | Stack multiple shaders | \pageref{recipe:stack-shaders} |
 | Draw text | \pageref{recipe:draw-text} |
+| **Particles** | |
+| Define particle effect | \pageref{recipe:particle-builder} |
+| Configure emission (where/how) | \pageref{recipe:particle-emission} |
+| Stream continuous particles | \pageref{recipe:particle-stream} |
+| Mix multiple particle types | \pageref{recipe:particle-mix} |
 | **UI** | |
 | Create UI with DSL | \pageref{recipe:ui-dsl} |
 | Add tooltip on hover | \pageref{recipe:tooltip} |
@@ -2524,6 +2529,279 @@ end
 *— Combined pattern from core/shader_builder.lua, core/draw.lua, tests/shader_builder_visual_test.lua*
 
 **Gotcha:** Follow the order: Create sprite -> Position -> Apply shaders -> Add local draw commands. Local commands added before shaders may not render correctly.
+
+***
+
+## Particle Builder (Fluent API)
+
+\label{recipe:particle-builder}
+
+**When to use:** Spawn particle effects using composable recipes instead of verbose CreateParticle calls.
+
+```lua
+local Particles = require("core.particles")
+
+-- Define a reusable particle recipe
+local spark = Particles.define()
+    :shape("circle")
+    :size(4, 8)               -- random size between 4-8
+    :color("orange", "red")   -- gradient from orange to red
+    :fade()                   -- alpha fades over lifetime
+    :lifespan(0.3)
+
+-- Spawn a burst of 10 particles at position
+spark:burst(10):at(x, y)
+```
+
+*— from core/particles.lua:9-19*
+
+**Real usage example:**
+
+```lua
+-- Fire effect with smoke
+local fire = Particles.define()
+    :shape("circle")
+    :size(4, 8)
+    :color("orange", "red")
+    :velocity(50, 100)
+    :gravity(-50)             -- float upward
+    :fade()
+    :lifespan(0.5)
+
+local smoke = Particles.define()
+    :shape("circle")
+    :size(8, 16)
+    :color("gray")
+    :velocity(20, 40)
+    :gravity(-30)
+    :fade()
+    :lifespan(1.0)
+
+-- Mix multiple recipes in one emission
+Particles.mix({ fire, smoke })
+    :burst(10, 5)             -- 10 fire, 5 smoke
+    :at(x, y)
+```
+
+*— from core/particles.lua:22-28*
+
+**Gotcha:** Recipes are immutable definitions. Create multiple recipes for different effect variations.
+
+**Gotcha:** Use `:burst(count):at(x, y)` to spawn particles. The `at()` call triggers the spawn.
+
+***
+
+### Recipe Methods
+
+\label{recipe:particle-recipe-methods}
+
+| Method | Description | Example |
+|--------|-------------|---------|
+| `:shape(type, spriteId?)` | Set shape: "circle", "rect", "line", "sprite" | `:shape("circle")` |
+| `:size(min, max?)` | Size or random range | `:size(4, 8)` |
+| `:color(start, end?)` | Color or gradient | `:color("orange", "red")` |
+| `:lifespan(min, max?)` | Lifetime in seconds | `:lifespan(0.3, 0.5)` |
+| `:velocity(min, max?)` | Speed in pixels/sec | `:velocity(50, 100)` |
+| `:gravity(strength)` | Gravity (positive = down) | `:gravity(200)` |
+| `:drag(factor)` | Velocity damping per frame | `:drag(0.95)` |
+| `:fade()` | Alpha fades to 0 | `:fade()` |
+| `:fadeIn(pct)` | Fade in then out | `:fadeIn(0.3)` |
+| `:shrink()` | Scale shrinks to 0 | `:shrink()` |
+| `:grow(start, end)` | Scale interpolation | `:grow(0.5, 2.0)` |
+| `:spin(min, max?)` | Rotation speed (deg/sec) | `:spin(90, 180)` |
+| `:wiggle(amount, freq?)` | Lateral oscillation | `:wiggle(10, 5)` |
+| `:stretch()` | Velocity-based stretching | `:stretch()` |
+| `:bounce(restitution, groundY?)` | Bounce off ground | `:bounce(0.8, 400)` |
+| `:homing(strength, target?)` | Seek toward target | `:homing(0.5, targetEntity)` |
+| `:trail(recipe, rate)` | Spawn trail particles | `:trail(trailRecipe, 0.05)` |
+| `:flash(...)` | Cycle through colors | `:flash("red", "yellow", "white")` |
+| `:z(order)` | Draw order | `:z(100)` |
+| `:space(name)` | "world" or "screen" | `:space("world")` |
+| `:shaders(list)` | Apply shaders | `:shaders({"glow"})` |
+| `:drawCommand(fn)` | Custom draw function | `:drawCommand(myDrawFn)` |
+
+*— from core/particles.lua:56-386*
+
+***
+
+### Emission Methods
+
+\label{recipe:particle-emission}
+
+**When to use:** Configure where and how particles spawn.
+
+```lua
+local spark = Particles.define():shape("circle"):size(4):fade():lifespan(0.3)
+
+-- Spawn at point
+spark:burst(10):at(100, 200)
+
+-- Spawn within circle (uniform distribution)
+spark:burst(20):inCircle(centerX, centerY, radius)
+
+-- Spawn within rectangle
+spark:burst(15):inRect(x, y, width, height)
+
+-- Spawn from origin toward target
+spark:burst(10):from(startX, startY):toward(targetX, targetY)
+
+-- Control direction
+spark:burst(10)
+    :angle(0, 360)            -- random angle range
+    :spread(30)               -- ±30 degrees from base
+    :outward()                -- point away from center
+    :at(x, y)
+
+-- Per-particle customization
+spark:burst(10)
+    :override({ velocity = 200 })        -- override recipe defaults
+    :each(function(i, total)             -- per-particle overrides
+        return { size = 4 + i * 2 }      -- size increases per particle
+    end)
+    :at(x, y)
+```
+
+*— from core/particles.lua:392-498*
+
+**Gotcha:** `:at()`, `:inCircle()`, `:inRect()`, and `:toward()` trigger immediate spawn.
+
+**Gotcha:** `:outward()` and `:inward()` require a spawn center (from `:inCircle()` or similar).
+
+***
+
+### Streaming Particles
+
+\label{recipe:particle-stream}
+
+**When to use:** Continuous particle emission over time.
+
+```lua
+local spark = Particles.define()
+    :shape("circle")
+    :size(2, 4)
+    :velocity(50, 100)
+    :fade()
+    :lifespan(0.5)
+
+-- Create streaming emission
+local stream = spark:burst(3)
+    :at(x, y)
+    :stream()
+    :every(0.1)               -- emit every 0.1 seconds
+    :for_(2.0)                -- total duration (nil = infinite)
+    :times(20)                -- max spawn count (nil = infinite)
+    :attachTo(entity)         -- stop when entity destroyed
+
+-- Update in game loop
+function update(dt)
+    stream:update(dt)
+end
+
+-- Manual control
+stream:stop()                 -- stop emission
+stream:isActive()             -- check if still running
+```
+
+*— from core/particles.lua:906-1063*
+
+**Gotcha:** Call `:update(dt)` every frame to manage stream timing.
+
+**Gotcha:** Stream stops automatically when duration, times, or attached entity is exhausted.
+
+***
+
+### Mixed Emissions
+
+\label{recipe:particle-mix}
+
+**When to use:** Combine multiple particle types in one emission (fire + smoke, sparks + debris).
+
+```lua
+local fire = Particles.define():shape("circle"):size(4,8):color("orange"):fade()
+local smoke = Particles.define():shape("circle"):size(8,16):color("gray"):fade()
+
+-- Mix with per-recipe counts
+Particles.mix({ fire, smoke })
+    :burst(10, 5)             -- 10 fire, 5 smoke per emission
+    :spread(45)               -- apply to all
+    :outward()
+    :inCircle(x, y, 20)
+
+-- Stream mixed particles
+local fireStream = Particles.mix({ fire, smoke })
+    :burst(3, 2)
+    :at(x, y)
+    :stream()
+    :every(0.1)
+
+function update(dt)
+    fireStream:update(dt)
+end
+```
+
+*— from core/particles.lua:1066-1278*
+
+**Gotcha:** `:burst(...)` takes per-recipe counts in order, or single count for uniform distribution.
+
+***
+
+### Shader Particles
+
+\label{recipe:particle-shaders}
+
+**When to use:** Apply shader effects to individual particles.
+
+```lua
+local glowParticle = Particles.define()
+    :shape("circle")
+    :size(8, 16)
+    :color("cyan")
+    :fade()
+    :lifespan(0.5)
+    :shaders({ "glow_fragment" })
+    :shaderUniforms({ glow_fragment = { glow_intensity = 2.0 } })
+
+glowParticle:burst(5):at(x, y)
+```
+
+*— from core/particles.lua:351-365, 1282-1314*
+
+**Gotcha:** Shader particles use entity-based rendering (more expensive but supports effects).
+
+**Gotcha:** Particles with shaders get `ShaderParticleTag` to prevent double-rendering.
+
+***
+
+### Callbacks
+
+\label{recipe:particle-callbacks}
+
+**When to use:** React to particle lifecycle events.
+
+```lua
+local spark = Particles.define()
+    :shape("circle")
+    :size(4)
+    :fade()
+    :lifespan(0.5)
+    :onSpawn(function(particle, entity)
+        print("Particle spawned:", entity)
+    end)
+    :onUpdate(function(particle, dt, entity)
+        -- Custom per-frame logic
+    end)
+    :onDeath(function(particle, entity)
+        print("Particle died")
+    end)
+
+spark:burst(1):at(x, y)
+```
+
+*— from core/particles.lua:311-333*
+
+**Gotcha:** Callbacks are optional. They're only called if the recipe has enhanced features.
+
+**Gotcha:** `onUpdate` receives delta time; use for custom physics or visual effects.
 
 \newpage
 

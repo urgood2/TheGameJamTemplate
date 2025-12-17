@@ -718,11 +718,20 @@ namespace shaders
         ZONE_SCOPED("Shaders update");
 
         updateAllShaderUniforms();
-        // FIXME: perforamnce intensive on windows, commenting out for now
+
+        // Hot-reload shaders in debug builds only
+        // Throttled to every 500ms to reduce overhead (was 1.9% of frame time)
     #ifndef __EMSCRIPTEN__
         if (!kIsReleaseBuild)
         {
-            hotReloadShaders(); // Check for shader file modifications
+            static float s_hotReloadTimer = 0.0f;
+            s_hotReloadTimer += dt;
+
+            // Check every 500ms or on F5 keypress for manual trigger
+            if (s_hotReloadTimer > 0.5f || IsKeyPressed(KEY_F5)) {
+                hotReloadShaders();
+                s_hotReloadTimer = 0.0f;
+            }
         }
     #endif
     }

@@ -528,5 +528,46 @@ TestRunner.describe("Stream mode", function()
     end)
 end)
 
+TestRunner.describe("Entity mode", function()
+    it(":asEntity() marks spawner for entity creation", function()
+        local Text = require("core.text")
+        local recipe = Text.define():content("test"):width(100)
+        local spawner = recipe:spawn():asEntity()
+
+        assert_true(spawner._asEntity)
+    end)
+
+    it(":withShaders() stores shader list", function()
+        local Text = require("core.text")
+        local recipe = Text.define():content("test"):width(100)
+        local spawner = recipe:spawn():asEntity():withShaders({ "3d_skew_holo" })
+
+        assert_equals(1, #spawner._shaders)
+        assert_equals("3d_skew_holo", spawner._shaders[1])
+    end)
+
+    it("handle:getEntity() returns entity ID when in entity mode", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():asEntity():at(0, 0)
+
+        -- Should have a mock entity ID (for now, just a number)
+        local entity = handle:getEntity()
+        assert_not_nil(entity, "Entity ID should not be nil in entity mode")
+    end)
+
+    it("handle:getEntity() returns nil for non-entity mode", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(0, 0)
+
+        assert_equals(nil, handle:getEntity())
+    end)
+end)
+
 -- Run tests
 TestRunner.run_all()

@@ -173,6 +173,7 @@ function RecipeMethods:spawn(value)
     spawner._attachedEntity = nil
     spawner._asEntity = false
     spawner._shaders = nil
+    spawner._richEffects = false
     spawner._tag = nil
     return spawner
 end
@@ -275,6 +276,28 @@ end
 --- @return self
 function SpawnerMethods:attachTo(entity)
     self._attachedEntity = entity
+    return self
+end
+
+--- Enable entity mode (creates ECS entity with Transform)
+--- @return self
+function SpawnerMethods:asEntity()
+    self._asEntity = true
+    return self
+end
+
+--- Set shaders for entity mode
+--- @param shaderList table List of shader names
+--- @return self
+function SpawnerMethods:withShaders(shaderList)
+    self._shaders = shaderList
+    return self
+end
+
+--- Enable per-character effects in entity mode (expensive)
+--- @return self
+function SpawnerMethods:richEffects()
+    self._richEffects = true
     return self
 end
 
@@ -435,6 +458,12 @@ function HandleMethods:at(x, y)
     return self
 end
 
+--- Get ECS entity (only valid if :asEntity() was used)
+--- @return any|nil Entity ID or nil
+function HandleMethods:getEntity()
+    return self._entityId
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------
@@ -474,6 +503,21 @@ function Text._createHandle(spawner)
 
     -- Store tag
     handle._tag = spawner._tag
+
+    -- Store entity mode flags
+    handle._asEntity = spawner._asEntity
+    handle._shaders = spawner._shaders
+    handle._richEffects = spawner._richEffects
+
+    -- Create mock entity ID if in entity mode (actual entity creation is deferred)
+    if spawner._asEntity then
+        -- For now, just create a mock entity ID (a simple counter)
+        -- In real implementation, this would call registry:create() and set up Transform
+        Text._mockEntityCounter = (Text._mockEntityCounter or 0) + 1
+        handle._entityId = Text._mockEntityCounter
+    else
+        handle._entityId = nil
+    end
 
     -- Resolve content
     local content = config.content or ""

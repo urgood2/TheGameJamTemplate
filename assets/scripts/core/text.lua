@@ -262,6 +262,22 @@ function SpawnerMethods:follow()
     return self
 end
 
+--- Tag this text for bulk operations
+--- @param tagName string Tag name
+--- @return self
+function SpawnerMethods:tag(tagName)
+    self._tag = tagName
+    return self
+end
+
+--- Attach lifecycle to entity (text dies when entity dies)
+--- @param entity any Entity to attach to
+--- @return self
+function SpawnerMethods:attachTo(entity)
+    self._attachedEntity = entity
+    return self
+end
+
 --- Internal: Calculate position from entity
 function SpawnerMethods:_calculateEntityPosition()
     local entity_cache = _G.entity_cache or require("core.entity_cache")
@@ -332,6 +348,14 @@ function HandleMethods:attachTo(entity)
     return self
 end
 
+--- Tag this handle (can be called after spawn)
+--- @param tagName string Tag name
+--- @return self
+function HandleMethods:tag(tagName)
+    self._tag = tagName
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------
@@ -368,6 +392,9 @@ function Text._createHandle(spawner)
 
     -- Store attached entity
     handle._attachedEntity = spawner._attachedEntity
+
+    -- Store tag
+    handle._tag = spawner._tag
 
     -- Resolve content
     local content = config.content or ""
@@ -504,6 +531,16 @@ function Text.stopAll()
         handle._active = false
     end
     Text._activeHandles = {}
+end
+
+--- Stop all text with a specific tag
+--- @param tagName string Tag to match
+function Text.stopByTag(tagName)
+    for _, handle in ipairs(Text._activeHandles) do
+        if handle._tag == tagName then
+            handle._active = false
+        end
+    end
 end
 
 _G.__TEXT_BUILDER__ = Text

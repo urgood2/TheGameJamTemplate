@@ -393,5 +393,35 @@ TestRunner.describe("Lifecycle binding", function()
     end)
 end)
 
+TestRunner.describe("Tags and bulk operations", function()
+    it(":tag() stores tag on handle", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(0, 0):tag("combat")
+
+        assert_equals("combat", handle._tag)
+    end)
+
+    it("Text.stopByTag() removes only tagged handles", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        recipe:spawn():at(0, 0):tag("combat")
+        recipe:spawn():at(100, 0):tag("combat")
+        recipe:spawn():at(200, 0):tag("ui")
+
+        assert_equals(3, #Text._activeHandles)
+
+        Text.stopByTag("combat")
+        Text.update(0)  -- Process removals
+
+        assert_equals(1, #Text._activeHandles)
+        assert_equals("ui", Text._activeHandles[1]._tag)
+    end)
+end)
+
 -- Run tests
 TestRunner.run_all()

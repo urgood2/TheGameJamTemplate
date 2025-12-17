@@ -35,6 +35,7 @@ add_executable(unit_tests
     unit/test_draw_call_counter.cpp
     unit/test_layer_sorted_flag.cpp
     unit/test_layer_state_batching.cpp
+    unit/test_layer_batching.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp

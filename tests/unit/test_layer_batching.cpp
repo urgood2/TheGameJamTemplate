@@ -49,9 +49,14 @@ TEST_F(LayerBatchingTest, ShaderBatchingReducesStateChanges) {
     // Without batching: many shader changes
     // With batching: shaders grouped together
 
+    // NOTE: This test documents current behavior before shader batching is implemented.
+    // The proposed optimization would add shader_id/texture_id fields to DrawCommandV2
+    // to enable batching by shader state, but those fields don't exist yet.
+
     // Create a simple shader (we'll use dummy shaders for testing)
-    Shader shader1 = {1, 0, 0};  // Mock shader with id=1
-    Shader shader2 = {2, 0, 0};  // Mock shader with id=2
+    // Shader struct: { unsigned int id, int* locs }
+    Shader shader1 = {1, nullptr};  // Mock shader with id=1
+    Shader shader2 = {2, nullptr};  // Mock shader with id=2
 
     // Add commands in mixed order: draw with shader1, draw with shader2, draw with shader1
     // All at same z-level to focus on shader batching
@@ -143,8 +148,11 @@ TEST_F(LayerBatchingTest, TextureBatchingReducesStateChanges) {
 
 // Test combined shader + texture batching
 TEST_F(LayerBatchingTest, CombinedShaderTextureBatching) {
-    Shader shader1 = {1, 0, 0};
-    Shader shader2 = {2, 0, 0};
+    // NOTE: This test documents current behavior. Shader/texture batching requires
+    // adding shader_id/texture_id fields to DrawCommandV2 (not yet implemented).
+
+    Shader shader1 = {1, nullptr};
+    Shader shader2 = {2, nullptr};
     Texture2D tex1 = {1, 0, 0, 0, 0};
     Texture2D tex2 = {2, 0, 0, 0, 0};
 
@@ -211,8 +219,11 @@ TEST_F(LayerBatchingTest, CombinedShaderTextureBatching) {
 
 // Test that z-order still takes precedence over batching
 TEST_F(LayerBatchingTest, ZOrderTakesPrecedenceOverBatching) {
-    Shader shader1 = {1, 0, 0};
-    Shader shader2 = {2, 0, 0};
+    // NOTE: This test documents that z-order must always take precedence over any
+    // future shader/texture batching optimizations.
+
+    Shader shader1 = {1, nullptr};
+    Shader shader2 = {2, nullptr};
 
     // Different z levels with same shader repeated
     auto* setShader1_z1 = layer::layer_command_buffer::Add<layer::CmdSetShader>(

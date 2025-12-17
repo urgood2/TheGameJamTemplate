@@ -285,5 +285,57 @@ function Text.define()
     return recipe
 end
 
+--- Update all active text handles (call once per frame)
+--- @param dt number Delta time in seconds
+function Text.update(dt)
+    -- Iterate backwards for safe removal
+    for i = #Text._activeHandles, 1, -1 do
+        local handle = Text._activeHandles[i]
+
+        -- Check if still active
+        if not handle._active then
+            table.remove(Text._activeHandles, i)
+        else
+            -- Update elapsed time
+            handle._elapsed = handle._elapsed + dt
+
+            -- Check lifespan
+            if handle._lifespan and handle._elapsed >= handle._lifespan then
+                handle._active = false
+                table.remove(Text._activeHandles, i)
+            else
+                -- Update renderer
+                if handle._textRenderer and handle._textRenderer.update then
+                    handle._textRenderer:update(dt)
+                end
+            end
+        end
+    end
+end
+
+--- Get count of active text handles
+--- @return number
+function Text.getActiveCount()
+    return #Text._activeHandles
+end
+
+--- Get copy of active handles list (for debugging)
+--- @return table
+function Text.getActiveHandles()
+    local copy = {}
+    for i, h in ipairs(Text._activeHandles) do
+        copy[i] = h
+    end
+    return copy
+end
+
+--- Stop and remove all active text
+function Text.stopAll()
+    for _, handle in ipairs(Text._activeHandles) do
+        handle._active = false
+    end
+    Text._activeHandles = {}
+end
+
 _G.__TEXT_BUILDER__ = Text
 return Text

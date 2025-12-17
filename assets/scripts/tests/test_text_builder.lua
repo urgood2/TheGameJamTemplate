@@ -200,5 +200,72 @@ TestRunner.describe("Spawner basics", function()
     end)
 end)
 
+TestRunner.describe("Text.update()", function()
+    it("updates all active handles", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local h1 = recipe:spawn():at(0, 0)
+        local h2 = recipe:spawn():at(100, 100)
+
+        Text.update(0.016)
+
+        assert_equals(1, h1._textRenderer.updateCount)
+        assert_equals(1, h2._textRenderer.updateCount)
+    end)
+
+    it("removes handles with expired lifespan", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100):lifespan(0.5)
+        recipe:spawn():at(0, 0)
+
+        assert_equals(1, #Text._activeHandles)
+
+        Text.update(0.6)  -- Exceeds lifespan
+
+        assert_equals(0, #Text._activeHandles)
+    end)
+
+    it("removes stopped handles", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(0, 0)
+
+        handle:stop()
+        Text.update(0.016)
+
+        assert_equals(0, #Text._activeHandles)
+    end)
+
+    it("Text.getActiveCount() returns count", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        recipe:spawn():at(0, 0)
+        recipe:spawn():at(100, 100)
+
+        assert_equals(2, Text.getActiveCount())
+    end)
+
+    it("Text.stopAll() removes all handles", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        recipe:spawn():at(0, 0)
+        recipe:spawn():at(100, 100)
+
+        Text.stopAll()
+
+        assert_equals(0, #Text._activeHandles)
+    end)
+end)
+
 -- Run tests
 TestRunner.run_all()

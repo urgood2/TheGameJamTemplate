@@ -84,12 +84,14 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Delay an action | \pageref{recipe:timer-after} |
 | Repeat an action | \pageref{recipe:timer-every} |
 | Chain timer actions fluently | \pageref{recipe:timer-chain} |
+| Group timers for cleanup | \pageref{recipe:timer-scope} |
 | Synchronize with physics steps | \pageref{recipe:timer-physics} |
 | Emit and handle events | \pageref{recipe:signals} |
 | **Rendering & Shaders** | |
 | Add shader to entity | \pageref{recipe:add-shader} |
 | Stack multiple shaders | \pageref{recipe:stack-shaders} |
 | Draw text | \pageref{recipe:draw-text} |
+| Spawn dynamic text (damage numbers) | \pageref{recipe:text-builder} |
 | **Particles** | |
 | Define particle effect | \pageref{recipe:particle-builder} |
 | Configure emission (where/how) | \pageref{recipe:particle-emission} |
@@ -106,6 +108,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Define action card | \pageref{recipe:card-action} |
 | Define modifier card | \pageref{recipe:card-modifier} |
 | Define trigger card | \pageref{recipe:card-trigger} |
+| Define cards with CardFactory DSL | \pageref{recipe:card-factory} |
 | Get card metadata (rarity/tags) | \pageref{recipe:card-metadata} |
 | Define joker | \pageref{recipe:joker-define} |
 | Trigger joker events | \pageref{recipe:joker-trigger} |
@@ -120,6 +123,8 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | **AI** | |
 | Create AI entity | \pageref{recipe:ai-entity-type} |
 | Define AI action | \pageref{recipe:ai-action} |
+| **Validation & Utilities** | |
+| Validate data schemas | \pageref{recipe:schema-validate} |
 
 \newpage
 
@@ -171,9 +176,18 @@ local dsl, z_orders, util = imports.ui()
 -- Shader bundle (2 modules)
 local ShaderBuilder, draw = imports.shaders()
 
+-- Draw bundle (3 modules) - rendering utilities
+local draw, ShaderBuilder, z_orders = imports.draw()
+
+-- Combat bundle (3 modules) - combat and wand systems
+local combat_system, projectile_system, wand_executor = imports.combat()
+
+-- Util bundle (3 modules) - utilities and helpers
+local util, Easing, palette = imports.util()
+
 -- Everything as a table (for selective access)
 local i = imports.all()
--- Access: i.timer, i.signal, i.EntityBuilder, i.PhysicsBuilder, etc.
+-- Access: i.timer, i.signal, i.EntityBuilder, i.PhysicsBuilder, i.draw, etc.
 ```
 
 *— from core/imports.lua*
@@ -482,6 +496,72 @@ TimerChain.new("card_flip")
 **Gotcha:** Call `:start()` to execute — the chain does nothing until started.
 
 **Gotcha:** Steps execute sequentially with accumulated delays. Use `:fork()` for parallel.
+
+***
+
+## Timer Scopes (Automatic Cleanup)
+
+\label{recipe:timer-scope}
+
+**When to use:** Group timers for automatic cleanup when a system/entity is destroyed.
+
+```lua
+local TimerScope = require("core.timer_scope")
+
+-- Create a scope for a system/feature
+local scope = TimerScope.new("my_feature")
+scope:after(2.0, function() print("delayed") end)
+scope:every(0.5, function() print("repeating") end)
+
+-- Later, clean up all timers with one call
+scope:destroy()
+```
+
+*— from core/timer_scope.lua*
+
+### Entity-Bound Scopes
+
+```lua
+-- Scope tied to an entity's lifecycle
+local entityScope = TimerScope.for_entity(entity)
+entityScope:after(1.0, function() doSomething() end)
+-- Automatically cleaned when entity is destroyed (if integrated with lifecycle)
+```
+
+### Scope Methods
+
+| Method | Description |
+|--------|-------------|
+| `TimerScope.new(name)` | Create named scope |
+| `TimerScope.for_entity(entity)` | Create entity-bound scope |
+| `scope:after(delay, fn, tag?)` | Schedule delayed action |
+| `scope:every(delay, fn, times?, immediate?, after?, tag?)` | Schedule repeating action |
+| `scope:cancel(tag)` | Cancel specific timer |
+| `scope:destroy()` | Cancel ALL timers in scope |
+| `scope:count()` | Get active timer count |
+| `scope:active()` | Check if scope is still active |
+
+**Gotcha:** After `scope:destroy()`, the scope cannot accept new timers.
+
+**Real usage example:**
+
+```lua
+-- AI agent with scoped timers
+local function createAgent(entity)
+    local scope = TimerScope.for_entity(entity)
+
+    scope:every(1.0, function()
+        updateAILogic(entity)
+    end)
+
+    -- When entity dies, all timers are cleaned up
+    signal.register("entity_destroyed", function(eid)
+        if eid == entity then
+            scope:destroy()
+        end
+    end)
+end
+```
 
 ***
 
@@ -2529,6 +2609,185 @@ end
 *— Combined pattern from core/shader_builder.lua, core/draw.lua, tests/shader_builder_visual_test.lua*
 
 **Gotcha:** Follow the order: Create sprite -> Position -> Apply shaders -> Add local draw commands. Local commands added before shaders may not render correctly.
+
+***
+
+## Text Builder (Fluent API)
+
+\label{recipe:text-builder}
+
+**When to use:** Spawn dynamic game text (damage numbers, notifications, labels) using a fluent particle-like API.
+
+**Pattern:** Three-layer API: Recipe (define appearance) → Spawner (position) → Handle (lifecycle).
+
+```lua
+local Text = require("core.text")
+
+-- Define a reusable text recipe
+local damageText = Text.define()
+    :content("[%d](color=red)")   -- Template with value placeholder
+    :size(20)
+    :fade()                        -- Alpha fades over lifetime
+    :lifespan(0.8)
+
+-- Spawn damage number above enemy
+damageText:spawn(25):above(enemy, 10)  -- Shows "25" above enemy
+
+-- In game loop, update all active text handles
+function love.update(dt)
+    Text.update(dt)
+end
+```
+
+*— from core/text.lua*
+
+### Recipe Configuration
+
+```lua
+local Text = require("core.text")
+
+local recipe = Text.define()
+    -- Content
+    :content("Hello!")             -- Literal text
+    :content("[%d](color=gold)")   -- Template (value passed to :spawn())
+    :content(function(v) return tostring(v) end)  -- Callback
+
+    -- Appearance
+    :size(20)                      -- Font size
+    :color("white")                -- Base color
+    :effects("shake=2;float")      -- Per-character effects
+
+    -- Behavior
+    :fade()                        -- Alpha fade over lifetime
+    :fadeIn(0.2)                   -- 20% of lifespan for fade-in
+    :lifespan(1.0)                 -- Auto-destroy after 1 second
+    :lifespan(0.8, 1.2)            -- Random between 0.8-1.2
+
+    -- Layout
+    :width(200)                    -- Wrap width for multi-line
+    :anchor("center")              -- "center" or "topleft"
+    :align("center")               -- "left", "center", "right", "justify"
+
+    -- Render settings
+    :layer(myLayer)                -- Render layer
+    :z(100)                        -- Z-index
+    :space("world")                -- "world" or "screen"
+    :font(myFont)                  -- Custom font
+```
+
+### Spawner Methods
+
+```lua
+local recipe = Text.define():content("Hit!"):size(16):fade():lifespan(0.5)
+
+-- Position methods (each triggers spawn and returns Handle)
+recipe:spawn():at(100, 200)            -- Absolute position
+recipe:spawn():above(entity, 10)       -- Above entity with offset
+recipe:spawn():below(entity, 5)        -- Below entity
+recipe:spawn():center(entity)          -- Entity center
+recipe:spawn():follow(entity, 0, -20)  -- Follow entity with offset
+
+-- Spawn with value
+recipe:spawn(42):above(enemy, 10)      -- "42" for damage numbers
+```
+
+### Handle Methods
+
+```lua
+local handle = recipe:spawn(10):above(enemy, 10)
+
+-- Update content
+handle:update("New text")              -- Change text
+handle:update(99)                      -- Update value (if template)
+
+-- Move position
+handle:moveTo(200, 300)                -- Absolute position
+handle:moveBy(10, -5)                  -- Relative offset
+
+-- Lifecycle
+handle:destroy()                       -- Immediate removal
+handle:isAlive()                       -- Check if still active
+
+-- Tags and bulk operations
+local handles = recipe:spawn(10):at(100, 100):tag("damage")
+Text.destroy_by_tag("damage")          -- Destroy all with tag
+Text.get_by_tag("damage")              -- Get all handles with tag
+```
+
+### Entity Mode (Attach to Entity)
+
+```lua
+-- Create text as entity (for shader pipeline integration)
+local handle = recipe:spawn("Label")
+    :asEntity()                        -- Enable entity mode
+    :shaders({ "3d_skew_holo" })       -- Add shaders
+    :at(100, 200)
+
+-- Text is now an entity with Transform component
+-- Shaders will apply to the text
+```
+
+### Attach to Entity Lifecycle
+
+```lua
+-- Text auto-destroys when entity is destroyed
+local handle = recipe:spawn("HP: 100")
+    :attachTo(entity)
+    :above(entity, 20)
+
+-- When entity is destroyed, text is automatically cleaned up
+```
+
+**API Reference:**
+
+| Recipe Method | Description |
+|---------------|-------------|
+| `:content(str/fn)` | Set text content or template |
+| `:size(n)` | Font size |
+| `:color(name)` | Base color |
+| `:effects(str)` | Default character effects |
+| `:fade()` | Enable alpha fade |
+| `:fadeIn(pct)` | Fade-in percentage (0-1) |
+| `:lifespan(min, max?)` | Auto-destroy lifespan |
+| `:width(n)` | Wrap width |
+| `:anchor("center"/"topleft")` | Anchor point |
+| `:align("left"/"center"/"right")` | Text alignment |
+| `:layer(obj)` | Render layer |
+| `:z(n)` | Z-index |
+| `:space("world"/"screen")` | Render space |
+| `:spawn(value?)` | Create spawner |
+
+| Spawner Method | Description |
+|----------------|-------------|
+| `:at(x, y)` | Spawn at position |
+| `:above(entity, offset?)` | Spawn above entity |
+| `:below(entity, offset?)` | Spawn below entity |
+| `:center(entity)` | Spawn at entity center |
+| `:follow(entity, dx?, dy?)` | Follow entity |
+| `:asEntity()` | Create as entity |
+| `:shaders({...})` | Add shaders (entity mode) |
+| `:attachTo(entity)` | Bind lifecycle |
+| `:tag(str)` | Add tag for bulk operations |
+
+| Handle Method | Description |
+|---------------|-------------|
+| `:update(content)` | Change text/value |
+| `:moveTo(x, y)` | Move to position |
+| `:moveBy(dx, dy)` | Move by offset |
+| `:destroy()` | Remove immediately |
+| `:isAlive()` | Check if active |
+
+| Global | Description |
+|--------|-------------|
+| `Text.update(dt)` | Update all handles (call in game loop) |
+| `Text.destroy_by_tag(tag)` | Destroy handles with tag |
+| `Text.get_by_tag(tag)` | Get handles with tag |
+
+**Provenance:** See `assets/scripts/core/text.lua:1-600` for implementation.
+
+**Gotcha:** Call `Text.update(dt)` in your game loop — text won't fade/expire without it.
+
+**Gotcha:** Templates use `[%d]` for value placeholder. The value is passed to `:spawn(value)`.
 
 ***
 
@@ -6270,6 +6529,176 @@ end
 **Gotcha:** Validator allows custom fields for extensibility. Only critical fields are validated.
 
 **Gotcha:** Unknown tags generate warnings with suggestions (fuzzy matching by lowercasing).
+
+***
+
+## Schema Validation
+
+\label{recipe:schema-validate}
+
+**When to use:** Validate data tables at load time to catch typos, missing fields, and wrong types.
+
+**Pattern:** The Schema module defines field specs and validates against them.
+
+**Example:**
+
+```lua
+local Schema = require("core.schema")
+
+-- Check a card definition (returns errors/warnings)
+local ok, errors, warnings = Schema.check(card, Schema.CARD)
+if not ok then
+    for _, err in ipairs(errors) do
+        print(err)  -- "Missing required field: id"
+    end
+end
+
+-- Validate with automatic error throwing
+Schema.validate(card, Schema.CARD, "Card:FIREBALL")
+-- Throws error if invalid
+
+-- Validate all items in a table
+Schema.validateAll(Cards, Schema.CARD, "Card")
+```
+
+*— from core/schema.lua*
+
+**Built-in Schemas:**
+
+| Schema | Required Fields | Description |
+|--------|-----------------|-------------|
+| `Schema.CARD` | id, type, tags | Card definitions |
+| `Schema.JOKER` | id, name, description, rarity | Joker definitions |
+| `Schema.PROJECTILE` | id | Projectile presets |
+| `Schema.ENEMY` | id | Enemy definitions |
+
+**Field Spec Format:**
+
+```lua
+-- How schema fields are defined
+field_name = {
+    type = "string",      -- "string", "number", "table", "function", "boolean"
+    required = true,      -- Field must be present
+    enum = { "a", "b" }   -- Optional: value must be one of these
+}
+```
+
+**API:**
+
+| Function | Description |
+|----------|-------------|
+| `Schema.check(data, schema)` | Returns `ok, errors, warnings` |
+| `Schema.validate(data, schema, name?)` | Throws error if invalid |
+| `Schema.validateAll(table, schema, prefix?)` | Validate all items in table |
+| `Schema.ENABLED` | Set to `false` to disable (production) |
+
+**Provenance:** See `assets/scripts/core/schema.lua:1-150` for implementation.
+
+**Gotcha:** Warnings are generated for unknown fields (typo detection). Errors are for missing/wrong-type fields.
+
+**Gotcha:** Set `Schema.ENABLED = false` in production to skip validation overhead.
+
+***
+
+## CardFactory DSL
+
+\label{recipe:card-factory}
+
+**When to use:** Defining multiple cards with less boilerplate.
+
+**Pattern:** CardFactory auto-sets id from key, applies type-specific defaults, and generates test_label.
+
+**Example:**
+
+```lua
+local CardFactory = require("core.card_factory")
+
+-- Minimal definition (id auto-set from key, defaults applied)
+local card = CardFactory.create("FIREBALL", {
+    type = "action",
+    damage = 25,
+    damage_type = "fire",
+    tags = { "Fire", "Projectile" },
+})
+-- card.id = "FIREBALL"
+-- card.test_label = "FIREBALL" (auto-generated)
+
+-- Type-specific shortcuts
+local proj = CardFactory.projectile("ICE_BOLT", {
+    damage = 20,
+    tags = { "Ice", "Projectile" },
+})
+
+local mod = CardFactory.modifier("DAMAGE_BOOST", {
+    damage_modifier = 10,
+    tags = { "Buff" },
+})
+
+local trig = CardFactory.trigger("ON_HIT_EXPLODE", {
+    trigger_on_collision = true,
+    tags = { "AoE" },
+})
+```
+
+*— from core/card_factory.lua*
+
+### Batch Processing
+
+```lua
+-- Process multiple cards at once
+local Cards = CardFactory.batch({
+    FIREBALL = { type = "action", damage = 25, tags = { "Fire" } },
+    ICE_BOLT = { type = "action", damage = 20, tags = { "Ice" } },
+}, { validate = true })  -- Optional validation
+```
+
+### Custom Presets
+
+```lua
+-- Register reusable presets
+CardFactory.register_presets({
+    basic_fire = {
+        type = "action",
+        damage = 20,
+        damage_type = "fire",
+        projectile_speed = 350,
+        tags = { "Fire", "Projectile" },
+    },
+})
+
+-- Create from preset with overrides
+local card = CardFactory.from_preset("MEGA_FIREBALL", "basic_fire", {
+    damage = 50,  -- Override damage
+})
+
+-- Extend an existing card
+local variant = CardFactory.extend("FIREBALL_PLUS", existingCard, {
+    damage = existingCard.damage * 1.5,
+})
+```
+
+**API:**
+
+| Function | Description |
+|----------|-------------|
+| `CardFactory.create(id, def, opts?)` | Create card with defaults |
+| `CardFactory.projectile(id, def, opts?)` | Create action card |
+| `CardFactory.modifier(id, def, opts?)` | Create modifier card |
+| `CardFactory.trigger(id, def, opts?)` | Create trigger card |
+| `CardFactory.batch(cards, opts?)` | Process multiple cards |
+| `CardFactory.register_presets(presets)` | Register reusable base definitions |
+| `CardFactory.from_preset(id, preset, overrides?, opts?)` | Create from preset |
+| `CardFactory.extend(id, base, overrides, opts?)` | Extend existing card |
+| `CardFactory.get_presets()` | Get all registered presets |
+
+**Options:**
+- `opts.validate = true`: Run Schema validation after creation
+
+**Provenance:** See `assets/scripts/core/card_factory.lua:1-192` for implementation.
+
+**Gotcha:** `test_label` is auto-generated from ID if not provided (SNAKE_CASE → multi-line).
+
+**Gotcha:** Tags default to empty table `{}` if not provided.
 
 ***
 

@@ -1,5 +1,12 @@
 -- global variables used by the lua side of the game
 
+-- Enable STRICT_MODE in debug builds for development warnings
+-- Set via environment variable: LUA_STRICT_MODE=1
+-- This enables warnings for nil script tables, missing components, etc.
+if os.getenv("LUA_STRICT_MODE") == "1" or os.getenv("DEBUG") == "1" then
+    _G.STRICT_MODE = true
+end
+
 globals = globals or {}
 
 globals.end_of_day_gold_multiplier = 1.0 -- multiplier for gold at the end of the day

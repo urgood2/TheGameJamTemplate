@@ -1,6 +1,6 @@
-local task = require("task/task")
-local timer = require("core/timer")
-local component_cache = require("core/component_cache")
+local task = require("task.task")
+local timer = require("core.timer")
+local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local Easing = require("util.easing")
 local Node = require("monobehavior.behavior_script_v2")
@@ -8,6 +8,29 @@ local z_orders = require("core.z_orders")
 -- local bit = require("bit") -- LuaJIT's bit library
 -- local entity_cache = require("core.entity_cache")
 -- local component_cache = require("core.component_cache")
+
+--===========================================================================
+-- STRICT MODE CONFIGURATION
+--===========================================================================
+-- Enable STRICT_MODE to get warnings when common operations fail silently.
+-- This helps catch bugs during development without breaking production.
+-- Set via: _G.STRICT_MODE = true (before requiring util.lua) or DEBUG_MODE
+local STRICT_MODE = rawget(_G, "STRICT_MODE") or rawget(_G, "DEBUG_MODE") or false
+
+--- Enable or disable strict mode at runtime
+--- @param enabled boolean
+function set_strict_mode(enabled)
+    STRICT_MODE = enabled
+    if enabled then
+        log_info("[util] Strict mode ENABLED - nil returns will log warnings")
+    end
+end
+
+--- Check if strict mode is currently enabled
+--- @return boolean
+function is_strict_mode()
+    return STRICT_MODE
+end
 
 local function resolveEasing(name, defaultName)
     -- Safely grab an easing entry; fall back to a known good curve.
@@ -24,9 +47,26 @@ end
 
 
 -- return the object lua table from an entt id
+-- In strict mode, logs warnings when the entity is invalid or lacks ScriptComponent
 function getScriptTableFromEntityID(eid)
-    if not eid or eid == entt_null or not entity_cache.valid(eid) then return nil end
-    if not registry:has(eid, ScriptComponent) then return nil end
+    if not eid or eid == entt_null then
+        if STRICT_MODE then
+            log_warn(("[STRICT] getScriptTableFromEntityID: invalid entity id (%s)"):format(tostring(eid)))
+        end
+        return nil
+    end
+    if not entity_cache.valid(eid) then
+        if STRICT_MODE then
+            log_warn(("[STRICT] getScriptTableFromEntityID: entity %s is not valid"):format(tostring(eid)))
+        end
+        return nil
+    end
+    if not registry:has(eid, ScriptComponent) then
+        if STRICT_MODE then
+            log_warn(("[STRICT] getScriptTableFromEntityID: entity %s has no ScriptComponent"):format(tostring(eid)))
+        end
+        return nil
+    end
     local scriptComp = component_cache.get(eid, ScriptComponent)
     return scriptComp.self
 end
@@ -39,7 +79,7 @@ end
 function safe_script_get(eid, warn_on_nil)
     local script = getScriptTableFromEntityID(eid)
     if not script and warn_on_nil then
-        log_debug(("safe_script_get: Script table missing for entity %s"):format(tostring(eid)))
+        log_warn(("safe_script_get: Script table missing for entity %s"):format(tostring(eid)))
     end
     return script
 end
@@ -72,6 +112,76 @@ function ensure_scripted_entity(eid)
     return ensure_entity(eid) and registry:has(eid, ScriptComponent)
 end
 
+--===========================================================================
+-- STRICT COMPONENT ACCESS
+--===========================================================================
+
+--- Safely get a component with optional strict-mode warnings.
+--- @param eid number Entity ID
+--- @param comp_type any Component type (e.g., Transform)
+--- @param context string? Optional context for error messages
+--- @return any|nil The component or nil
+function safe_component_get(eid, comp_type, context)
+    if not ensure_entity(eid) then
+        if STRICT_MODE then
+            local ctx = context and (" in " .. context) or ""
+            log_warn(("[STRICT] safe_component_get: invalid entity%s"):format(ctx))
+        end
+        return nil
+    end
+    local comp = component_cache.get(eid, comp_type)
+    if not comp and STRICT_MODE then
+        local ctx = context and (" in " .. context) or ""
+        log_warn(("[STRICT] safe_component_get: component not found for entity %s%s"):format(tostring(eid), ctx))
+    end
+    return comp
+end
+
+--- Require a component - returns the component or throws an error.
+--- Use when the component MUST exist (programming error if it doesn't).
+--- @param eid number Entity ID
+--- @param comp_type any Component type
+--- @param context string? Optional context for error messages
+--- @return any The component (never nil)
+function require_component(eid, comp_type, context)
+    local ctx = context and (" in " .. context) or ""
+    assert(ensure_entity(eid), ("require_component: invalid entity%s"):format(ctx))
+    local comp = component_cache.get(eid, comp_type)
+    assert(comp, ("require_component: missing component for entity %s%s"):format(tostring(eid), ctx))
+    return comp
+end
+
+--===========================================================================
+-- COMPONENT ACCESS BEST PRACTICES
+--===========================================================================
+-- PREFERRED: Use component_cache.get() for cached, efficient access:
+--   local transform = component_cache.get(entity, Transform)
+--
+-- AVOID: Using registry:get() directly (no caching, no validation):
+--   local transform = registry:get(entity, Transform)  -- NOT RECOMMENDED
+--
+-- Use safe_component_get() when you're unsure if the component exists
+-- Use require_component() when the component MUST exist (programming error if not)
+--===========================================================================
+
+-- Deprecation tracking for registry:get usage (opt-in)
+local _registry_get_warned = {}
+
+--- Wrapper around registry:get that logs deprecation warnings in strict mode.
+--- Use this during migration to track direct registry:get usage.
+--- @param eid number Entity ID
+--- @param comp_type any Component type
+--- @return any|nil The component
+function deprecated_registry_get(eid, comp_type)
+    if STRICT_MODE then
+        local key = tostring(comp_type)
+        if not _registry_get_warned[key] then
+            log_warn(("[DEPRECATED] Use component_cache.get() instead of registry:get() for %s"):format(key))
+            _registry_get_warned[key] = true
+        end
+    end
+    return registry:get(eid, comp_type)
+end
 
 --- Smoothly step the camera toward a target to avoid big-jump jitter.
 -- @param camName string   Name used with camera.Get(...)

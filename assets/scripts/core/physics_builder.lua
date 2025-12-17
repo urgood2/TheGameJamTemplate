@@ -138,6 +138,11 @@ function BuilderMethods:fixedRotation(v)
     return self
 end
 
+function BuilderMethods:inflate(px)
+    self._inflate_px = px
+    return self
+end
+
 function BuilderMethods:syncMode(mode)
     self._syncMode = mode
     return self
@@ -197,6 +202,7 @@ function BuilderMethods:getConfig()
         syncMode = self._syncMode,
         worldName = self._worldName,
         collideWith = self._collideWith,
+        inflate_px = self._inflate_px,
     }
 end
 
@@ -231,6 +237,7 @@ function BuilderMethods:apply()
         tag = self._tag,
         sensor = self._sensor,
         density = self._density,
+        inflate_px = self._inflate_px,
     }
 
     physics.create_physics_for_transform(

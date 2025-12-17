@@ -1,6 +1,7 @@
 
 local Easing = require("util.easing")  -- the file above
 local timer = require("core.timer")
+local C = require("core.constants")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 -- meant to be called within a coroutine.
@@ -1159,7 +1160,7 @@ function spawnNewWhale()
     local collider = collision.create_collider_for_entity(bowser, {width = 50, height = 50, alignment = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)})
     
     collision.resetCollisionCategory(collider, "playerColliderTest")
-    collision.setCollisionMask(collider, "enemy") -- there is no enemy
+    collision.setCollisionMask(collider, C.CollisionTags.ENEMY) -- there is no enemy
     
     -- give it a ScriptComponent with an onCollision method
     local ColliderLogic = {

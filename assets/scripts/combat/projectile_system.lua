@@ -28,6 +28,7 @@ local signal = require("external.hump.signal")
 local Node = require("monobehavior.behavior_script_v2")
 local CombatSystem = require("combat.combat_system")
 local z_orders = require("core.z_orders")
+local C = require("core.constants")
 
 ---@diagnostic disable: undefined-global
 -- Suppress warnings for runtime globals (registry, physics_manager)
@@ -48,8 +49,8 @@ ProjectileSystem.next_projectile_id = 1
 ProjectileSystem.world_bounds = nil
 ProjectileSystem.world_bounds_margin = nil
 ProjectileSystem._playable_bounds = nil
-ProjectileSystem.collisionTargetSet = { WORLD = true }
-ProjectileSystem.collisionTargetList = { "WORLD" }
+ProjectileSystem.collisionTargetSet = { [C.CollisionTags.WORLD] = true }
+ProjectileSystem.collisionTargetList = { C.CollisionTags.WORLD }
 ProjectileSystem.collisionCallbacksRegistered = {}
 ProjectileSystem.highDamageVisualThreshold = 30
 ProjectileSystem.highDamageTrailInterval = HIGH_DAMAGE_TRAIL_INTERVAL
@@ -307,7 +308,7 @@ local function resolveCollisionTargets(params)
         return targets
     end
 
-    local targetTag = params.targetCollisionTag or "enemy"
+    local targetTag = params.targetCollisionTag or C.CollisionTags.ENEMY
     addIfNotPresent(targets, seen, targetTag)
 
     local collideWithWorld = params.collideWithWorld
@@ -316,7 +317,7 @@ local function resolveCollisionTargets(params)
     end
 
     if collideWithWorld then
-        addIfNotPresent(targets, seen, "WORLD")
+        addIfNotPresent(targets, seen, C.CollisionTags.WORLD)
     end
 
     return targets
@@ -1914,8 +1915,8 @@ INITIALIZATION
 
 -- Initialize projectile system
 function ProjectileSystem.init()
-    ProjectileSystem.collisionTargetSet = { WORLD = true }
-    ProjectileSystem.collisionTargetList = { "WORLD" }
+    ProjectileSystem.collisionTargetSet = { [C.CollisionTags.WORLD] = true }
+    ProjectileSystem.collisionTargetList = { C.CollisionTags.WORLD }
     ProjectileSystem.collisionCallbacksRegistered = {}
     -- Track last physics tick time for dt calculation
     ProjectileSystem._lastUpdateTime = os.clock()
@@ -1972,8 +1973,8 @@ function ProjectileSystem.cleanup()
     ProjectileSystem.projectile_scripts = {}
     ProjectileSystem.world_bounds = nil
     ProjectileSystem._playable_bounds = nil
-    ProjectileSystem.collisionTargetSet = { WORLD = true }
-    ProjectileSystem.collisionTargetList = { "WORLD" }
+    ProjectileSystem.collisionTargetSet = { [C.CollisionTags.WORLD] = true }
+    ProjectileSystem.collisionTargetList = { C.CollisionTags.WORLD }
     ProjectileSystem.collisionCallbacksRegistered = {}
 
     log_debug("ProjectileSystem cleaned up")

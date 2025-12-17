@@ -11,14 +11,23 @@ Usage:
     local component_cache, entity_cache, timer, signal, z_orders = imports.core()
 
     -- Entity creation bundle
-    local Node, animation_system, EntityBuilder = imports.entity()
+    local Node, animation_system, EntityBuilder, spawn = imports.entity()
 
     -- Physics bundle
     local PhysicsManager, PhysicsBuilder = imports.physics()
 
+    -- Draw/rendering bundle
+    local draw, ShaderBuilder, z_orders = imports.draw()
+
+    -- Combat bundle
+    local combat_system, projectile_system, wand_executor = imports.combat()
+
+    -- Utilities bundle
+    local util, Easing, palette = imports.util()
+
     -- Full bundle (everything)
     local i = imports.all()
-    -- Access: i.timer, i.signal, i.EntityBuilder, etc.
+    -- Access: i.timer, i.signal, i.EntityBuilder, i.draw, i.ShaderBuilder, etc.
 ]]
 
 local imports = {}
@@ -84,12 +93,49 @@ function imports.shaders()
         require("core.draw")
 end
 
+--- Draw bundle (3 modules) - rendering utilities
+--- @return table draw
+--- @return table ShaderBuilder
+--- @return table z_orders
+function imports.draw()
+    return
+        require("core.draw"),
+        require("core.shader_builder"),
+        require("core.z_orders")
+end
+
+--- Combat bundle (3 modules) - combat and wand systems
+--- @return table|nil combat_system
+--- @return table|nil projectile_system
+--- @return table|nil wand_executor
+function imports.combat()
+    local combat_system, projectile_system, wand_executor
+    pcall(function() combat_system = require("combat.combat_system") end)
+    pcall(function() projectile_system = require("combat.projectile_system") end)
+    pcall(function() wand_executor = require("wand.wand_executor") end)
+    return combat_system, projectile_system, wand_executor
+end
+
+--- Util bundle (3 modules) - utilities and helpers
+--- @return table util
+--- @return table Easing
+--- @return table palette
+function imports.util()
+    return
+        require("util.util"),
+        require("util.easing"),
+        require("color.palette")
+end
+
 --- All common modules as a single table
 --- @return table All imports keyed by name
 function imports.all()
     local component_cache, entity_cache, timer, signal, z_orders = imports.core()
     local Node, animation_system, EntityBuilder, spawn = imports.entity()
     local PhysicsManager, PhysicsBuilder = imports.physics()
+    local draw, ShaderBuilder = imports.draw()
+    local combat_system, projectile_system, wand_executor = imports.combat()
+    local util, Easing, palette = imports.util()
 
     return {
         -- Core
@@ -108,6 +154,20 @@ function imports.all()
         -- Physics
         PhysicsManager = PhysicsManager,
         PhysicsBuilder = PhysicsBuilder,
+
+        -- Draw/Shaders
+        draw = draw,
+        ShaderBuilder = ShaderBuilder,
+
+        -- Combat
+        combat_system = combat_system,
+        projectile_system = projectile_system,
+        wand_executor = wand_executor,
+
+        -- Util
+        util = util,
+        Easing = Easing,
+        palette = palette,
     }
 end
 

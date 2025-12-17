@@ -1017,6 +1017,17 @@ TriggerCards.TEST_TRIGGER_ON_DISTANCE_TRAVELED = {
     sprite = "trigger-on-distance-travelled.png",
 }
 
+-- Apply defaults to all cards at load time
+local ContentDefaults = require("data.content_defaults")
+
+for key, card in pairs(Cards) do
+    Cards[key] = ContentDefaults.apply_card_defaults(card)
+end
+
+for key, card in pairs(TriggerCards) do
+    TriggerCards[key] = ContentDefaults.apply_card_defaults(card)
+end
+
 return {
     Cards = Cards,
     TriggerCards = TriggerCards

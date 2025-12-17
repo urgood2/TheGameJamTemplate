@@ -1,6 +1,6 @@
-local Object = require("external/object")
-local task = require("task/task")
-local timer = require("core/timer")
+local Object = require("external.object")
+local task = require("task.task")
+local timer = require("core.timer")
 local entity_cache = require("core.entity_cache")
 
 local node = Object:extend()

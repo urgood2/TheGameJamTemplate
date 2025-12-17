@@ -54,6 +54,22 @@ for _, c in ipairs(VALID_COLLISION_TYPES) do COLLISION_LOOKUP[c] = true end
 local DAMAGE_TYPE_LOOKUP = {}
 for _, d in ipairs(VALID_DAMAGE_TYPES) do DAMAGE_TYPE_LOOKUP[d] = true end
 
+-- Stub fields that are defined but not yet fully implemented
+-- Using these will generate warnings to alert content creators
+local STUB_CARD_FIELDS = {
+    teleport_on_hit = "detection exists, execution needs implementation",
+    leave_hazard = "detection exists, hazard system needs implementation",
+    summon_entity = "detection exists, spawning system needs implementation",
+    burn_damage = "status effect system not fully implemented",
+    freeze_duration = "status effect system not fully implemented",
+    poison_stacks = "status effect system not fully implemented",
+}
+
+local STUB_PROJECTILE_FIELDS = {
+    suction_strength = "suction system not implemented",
+    suction_radius = "suction system not implemented",
+}
+
 -- Results accumulator
 local results = {
     errors = {},
@@ -96,7 +112,7 @@ function ContentValidator.validate_card(key, card)
     if not card.id then
         add_error("Card", key, "missing required field 'id'")
     elseif card.id ~= key then
-        add_warning("Card", key, string.format("id '%s' doesn't match table key '%s'", card.id, key))
+        add_error("Card", key, string.format("id '%s' doesn't match table key '%s' (must be identical)", card.id, key))
     end
 
     if not card.type then
@@ -154,6 +170,13 @@ function ContentValidator.validate_card(key, card)
     if card.sprite ~= nil and type(card.sprite) ~= "string" then
         add_error("Card", id, "'sprite' must be a string")
     end
+
+    -- Stub field warnings
+    for field, reason in pairs(STUB_CARD_FIELDS) do
+        if card[field] then
+            add_warning("Card", id, string.format("field '%s' is not yet implemented (%s)", field, reason))
+        end
+    end
 end
 
 function ContentValidator.validate_cards()
@@ -196,7 +219,7 @@ function ContentValidator.validate_joker(key, joker)
     if not joker.id then
         add_error("Joker", key, "missing required field 'id'")
     elseif joker.id ~= key then
-        add_warning("Joker", key, string.format("id '%s' doesn't match table key '%s'", joker.id, key))
+        add_error("Joker", key, string.format("id '%s' doesn't match table key '%s' (must be identical)", joker.id, key))
     end
 
     if not joker.name then
@@ -252,7 +275,7 @@ function ContentValidator.validate_projectile(key, proj)
     if not proj.id then
         add_error("Projectile", key, "missing required field 'id'")
     elseif proj.id ~= key then
-        add_warning("Projectile", key, string.format("id '%s' doesn't match table key '%s'", proj.id, key))
+        add_error("Projectile", key, string.format("id '%s' doesn't match table key '%s' (must be identical)", proj.id, key))
     end
 
     if not proj.speed then
@@ -329,6 +352,13 @@ function ContentValidator.validate_projectile(key, proj)
     -- Damage type validation
     if proj.damage_type and not DAMAGE_TYPE_LOOKUP[proj.damage_type] then
         add_warning("Projectile", id, string.format("unknown damage_type '%s'", proj.damage_type))
+    end
+
+    -- Stub field warnings
+    for field, reason in pairs(STUB_PROJECTILE_FIELDS) do
+        if proj[field] then
+            add_warning("Projectile", id, string.format("field '%s' is not yet implemented (%s)", field, reason))
+        end
     end
 end
 

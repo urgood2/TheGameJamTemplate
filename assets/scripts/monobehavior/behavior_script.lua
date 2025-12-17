@@ -1,4 +1,4 @@
-local task = require("task/task")
+local task = require("task.task")
 
 local node = {}
 

@@ -45,6 +45,8 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local timer = require("core.timer")
 local Node = require("monobehavior.behavior_script_v2")
+local PhysicsBuilder = require("core.physics_builder")
+local C = require("core.constants")
 
 local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
@@ -171,30 +173,18 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
     -- Resize animation
     animation_system.resizeAnimationObjectsInEntityToFit(e, ctx.size[1], ctx.size[2])
 
-    -- Give physics body (CRITICAL: must match gameplay.lua pattern)
-    local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
-    if world then
-        local info = {
-            shape = "rectangle",
-            tag = "enemy",
-            sensor = false,
-            density = 1.0,
-            inflate_px = -4
-        }
-        physics.create_physics_for_transform(
-            registry,
-            physics_manager_instance,
-            e,
-            "world",
-            info
-        )
+    -- Give physics body using PhysicsBuilder (replaces 20+ lines of manual setup)
+    local physicsSuccess = PhysicsBuilder.for_entity(e)
+        :rectangle()
+        :tag(C.CollisionTags.ENEMY)
+        :sensor(false)
+        :density(1.0)
+        :inflate(-4)
+        :collideWith({ C.CollisionTags.PLAYER, C.CollisionTags.ENEMY, C.CollisionTags.BULLET })
+        :apply()
 
-        -- Update collision masks so enemies collide with player and other enemies
-        physics.update_collision_masks_for(world, "enemy", { "player", "enemy", "bullet" })
-        physics.update_collision_masks_for(world, "player", { "enemy" })
-        physics.update_collision_masks_for(world, "bullet", { "enemy" })
-    else
-        print("[EnemyFactory] WARNING: Physics world not available!")
+    if not physicsSuccess then
+        print("[EnemyFactory] WARNING: Physics setup failed for enemy!")
     end
 
     -- Add shader pipeline for proper rendering

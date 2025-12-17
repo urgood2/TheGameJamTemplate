@@ -238,4 +238,17 @@ local Jokers = {
     },
 }
 
+-- Apply defaults to all jokers at load time
+local ContentDefaults = require("data.content_defaults")
+
+for key, joker in pairs(Jokers) do
+    -- Apply joker defaults (non-destructive, fills in missing fields)
+    local defaults = ContentDefaults.JOKER_FIELDS
+    for field, default_value in pairs(defaults) do
+        if joker[field] == nil then
+            joker[field] = default_value
+        end
+    end
+end
+
 return Jokers

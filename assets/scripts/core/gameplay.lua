@@ -33,6 +33,8 @@ local AvatarJokerStrip = require("ui.avatar_joker_strip")
 local LevelUpScreen = require("ui.level_up_screen")
 local ContentDebugPanel = require("ui.content_debug_panel")
 local CombatDebugPanel = require("ui.combat_debug_panel")
+local EntityInspector = require("ui.entity_inspector")
+local Constants = require("core.constants")
 local LEVEL_UP_MODAL_DELAY = 0.5
 local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
@@ -2382,7 +2384,7 @@ function spawnRandomBullet()
 
     local world = PhysicsManager.get_world("world")
 
-    local info = { shape = "circle", tag = "bullet", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+    local info = { shape = "circle", tag = C.CollisionTags.BULLET, sensor = false, density = 1.0, inflate_px = -4 }
     physics.create_physics_for_transform(registry,
         physics_manager_instance,                                                                     -- global instance
         node:handle(),                                                                                -- entity id
@@ -2394,10 +2396,10 @@ function spawnRandomBullet()
     add_state_tag(node:handle(), ACTION_STATE)
 
     -- collision mask
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", { "bullet" })
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "bullet", { "enemy" })
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", { "bullet" })
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "bullet", { "enemy" })
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), C.CollisionTags.ENEMY, { C.CollisionTags.BULLET })
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), C.CollisionTags.BULLET, { C.CollisionTags.ENEMY })
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), C.CollisionTags.ENEMY, { C.CollisionTags.BULLET })
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), C.CollisionTags.BULLET, { C.CollisionTags.ENEMY })
 
     -- ignore damping
     physics.SetBullet(world, node:handle(), true)
@@ -2486,7 +2488,7 @@ function spawnRandomTrapHazard()
     hazardTransform.visualS = 1.5
 
     -- give physics & node
-    local info = { shape = "rectangle", tag = "spike_hazard", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+    local info = { shape = "rectangle", tag = C.CollisionTags.SPIKE_HAZARD, sensor = false, density = 1.0, inflate_px = -4 }
     physics.create_physics_for_transform(registry,
         physics_manager_instance,                                                                              -- global instance
         hazard,                                                                                                -- entity id
@@ -6934,6 +6936,11 @@ function debugUI()
         if debugQuickAccessState.lastMessage then
             ImGui.Text(debugQuickAccessState.lastMessage)
         end
+        ImGui.Separator()
+        ImGui.Text("Debug Panels")
+        if ImGui.Button("Toggle Entity Inspector") then
+            EntityInspector.toggle()
+        end
     end
     ImGui.End() -- Must be called even if Begin() returns false
 
@@ -6947,6 +6954,11 @@ function debugUI()
     -- Combat Debug Panel (Stats, Combat, Defense, etc.)
     if CombatDebugPanel and CombatDebugPanel.render then
         CombatDebugPanel.render()
+    end
+
+    -- Entity Inspector Panel (inspect entity components at runtime)
+    if EntityInspector and EntityInspector.render then
+        EntityInspector.render()
     end
 end
 
@@ -7116,7 +7128,7 @@ function initSurvivorEntity()
     survivorTransform.visualY = survivorTransform.actualY
 
     -- give survivor physics.
-    local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = -5 } -- default tag is "WORLD"
+    local info = { shape = "rectangle", tag = C.CollisionTags.PLAYER, sensor = false, density = 1.0, inflate_px = -5 }
     physics.create_physics_for_transform(registry,
         physics_manager_instance,                                                                        -- global instance
         survivorEntity,                                                                                  -- entity id
@@ -7125,16 +7137,16 @@ function initSurvivorEntity()
     )
 
     -- make it collide with enemies & walls & pickups
-    physics.enable_collision_between_many(world, "WORLD", { "player", "projectile", "enemy" })
-    physics.enable_collision_between_many(world, "player", { "WORLD" })
-    physics.enable_collision_between_many(world, "projectile", { "WORLD" })
-    -- physics.enable_collision_between_many(world, "enemy", { "WORLD" })
-    physics.enable_collision_between_many(world, "pickup", { "player" })
-    physics.enable_collision_between_many(world, "player", { "pickup" })
+    physics.enable_collision_between_many(world, C.CollisionTags.WORLD, { C.CollisionTags.PLAYER, C.CollisionTags.PROJECTILE, C.CollisionTags.ENEMY })
+    physics.enable_collision_between_many(world, C.CollisionTags.PLAYER, { C.CollisionTags.WORLD })
+    physics.enable_collision_between_many(world, C.CollisionTags.PROJECTILE, { C.CollisionTags.WORLD })
+    -- physics.enable_collision_between_many(world, C.CollisionTags.ENEMY, { C.CollisionTags.WORLD })
+    physics.enable_collision_between_many(world, C.CollisionTags.PICKUP, { C.CollisionTags.PLAYER })
+    physics.enable_collision_between_many(world, C.CollisionTags.PLAYER, { C.CollisionTags.PICKUP })
 
-    physics.update_collision_masks_for(world, "player", { "WORLD" })
-    physics.update_collision_masks_for(world, "enemy", { "WORLD" })
-    physics.update_collision_masks_for(world, "WORLD", { "player", "enemy" })
+    physics.update_collision_masks_for(world, C.CollisionTags.PLAYER, { C.CollisionTags.WORLD })
+    physics.update_collision_masks_for(world, C.CollisionTags.ENEMY, { C.CollisionTags.WORLD })
+    physics.update_collision_masks_for(world, C.CollisionTags.WORLD, { C.CollisionTags.PLAYER, C.CollisionTags.ENEMY })
 
 
     -- assign z level
@@ -7152,7 +7164,7 @@ function initSurvivorEntity()
         SCREEN_BOUND_RIGHT + wallThickness,
         SCREEN_BOUND_BOTTOM + wallThickness,
         wallThickness,
-        "WORLD"
+        C.CollisionTags.WORLD
     )
 
     -- make a timer that runs every frame when action state is active, to render the walls
@@ -7189,10 +7201,10 @@ function initSurvivorEntity()
     end
 
 
-    physics.enable_collision_between_many(world, "enemy", { "player", "enemy" }) -- enemy>player and enemy>enemy
-    physics.enable_collision_between_many(world, "player", { "enemy" })          -- player>enemy
-    physics.update_collision_masks_for(world, "player", { "enemy" })
-    physics.update_collision_masks_for(world, "enemy", { "player", "enemy" })
+    physics.enable_collision_between_many(world, C.CollisionTags.ENEMY, { C.CollisionTags.PLAYER, C.CollisionTags.ENEMY }) -- enemy>player and enemy>enemy
+    physics.enable_collision_between_many(world, C.CollisionTags.PLAYER, { C.CollisionTags.ENEMY })          -- player>enemy
+    physics.update_collision_masks_for(world, C.CollisionTags.PLAYER, { C.CollisionTags.ENEMY })
+    physics.update_collision_masks_for(world, C.CollisionTags.ENEMY, { C.CollisionTags.PLAYER, C.CollisionTags.ENEMY })
 
     -- entity.set_draw_override(survivorEntity, function(w, h)
     --     -- immediate render version of the same thing.
@@ -7215,7 +7227,7 @@ function initSurvivorEntity()
 
 
     -- player vs pickup collision
-    physics.on_pair_begin(world, "player", "pickup", function(arb)
+    physics.on_pair_begin(world, C.CollisionTags.PLAYER, C.CollisionTags.PICKUP, function(arb)
         log_debug("Survivor hit a pickup!")
 
         local a, b = arb:entities()
@@ -7273,7 +7285,7 @@ function initSurvivorEntity()
 
     -- give survivor collision callback, namely begin.
     -- modifying a file.
-    physics.on_pair_begin(world, "player", "enemy", function(arb)
+    physics.on_pair_begin(world, C.CollisionTags.PLAYER, C.CollisionTags.ENEMY, function(arb)
         log_debug("Survivor hit an enemy!")
 
         -- ascertain the enemy entity, only on first contact
@@ -8035,7 +8047,7 @@ function spawnExpPickupAt(x, y, opts)
         )
     end
 
-    local info = { shape = "rectangle", tag = "pickup", sensor = true, density = 1.0, inflate_px = 0 }
+    local info = { shape = "rectangle", tag = C.CollisionTags.PICKUP, sensor = true, density = 1.0, inflate_px = 0 }
 
     physics.create_physics_for_transform(
         registry,
@@ -8046,10 +8058,10 @@ function spawnExpPickupAt(x, y, opts)
     )
 
     if world then
-        physics.enable_collision_between_many(world, "pickup", { "player" })
-        physics.enable_collision_between_many(world, "player", { "pickup" })
-        physics.update_collision_masks_for(world, "pickup", { "player" })
-        physics.update_collision_masks_for(world, "player", { "pickup" })
+        physics.enable_collision_between_many(world, C.CollisionTags.PICKUP, { C.CollisionTags.PLAYER })
+        physics.enable_collision_between_many(world, C.CollisionTags.PLAYER, { C.CollisionTags.PICKUP })
+        physics.update_collision_masks_for(world, C.CollisionTags.PICKUP, { C.CollisionTags.PLAYER })
+        physics.update_collision_masks_for(world, C.CollisionTags.PLAYER, { C.CollisionTags.PICKUP })
     end
 
     local expPickupScript = Node {}
@@ -8129,16 +8141,16 @@ function initActionPhase()
     -- setUpScrollingBackgroundSprites()
 
     local world = PhysicsManager.get_world("world")
-    world:AddCollisionTag("sensor")
-    world:AddCollisionTag("player")
-    world:AddCollisionTag("bullet")
-    world:AddCollisionTag("WORLD")
-    world:AddCollisionTag("trap")
-    world:AddCollisionTag("enemy")
-    world:AddCollisionTag("card")
-    world:AddCollisionTag("pickup") -- for items on ground
-    world:AddCollisionTag("projectile")
-    world:AddCollisionTag("mask")
+    world:AddCollisionTag(C.CollisionTags.SENSOR)
+    world:AddCollisionTag(C.CollisionTags.PLAYER)
+    world:AddCollisionTag(C.CollisionTags.BULLET)
+    world:AddCollisionTag(C.CollisionTags.WORLD)
+    world:AddCollisionTag("trap")  -- TODO: add to Constants if used
+    world:AddCollisionTag(C.CollisionTags.ENEMY)
+    world:AddCollisionTag("card")  -- TODO: add to Constants if used
+    world:AddCollisionTag(C.CollisionTags.PICKUP) -- for items on ground
+    world:AddCollisionTag(C.CollisionTags.PROJECTILE)
+    world:AddCollisionTag("mask")  -- TODO: add to Constants if used
 
     initSurvivorEntity()
 
@@ -8650,7 +8662,7 @@ function initActionPhase()
                 enemyTransform.visualY = enemyTransform.actualY
 
                 -- give it physics
-                local info = { shape = "rectangle", tag = "enemy", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+                local info = { shape = "rectangle", tag = C.CollisionTags.ENEMY, sensor = false, density = 1.0, inflate_px = -4 }
                 physics.create_physics_for_transform(registry,
                     physics_manager_instance,                                                                       -- global instance
                     enemyEntity,                                                                                    -- entity id
@@ -8661,8 +8673,8 @@ function initActionPhase()
                 -- give pipeline
                 registry:emplace(enemyEntity, shader_pipeline.ShaderPipelineComponent)
 
-                physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", { "player", "enemy" })
-                physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", { "enemy" })
+                physics.update_collision_masks_for(PhysicsManager.get_world("world"), C.CollisionTags.ENEMY, { C.CollisionTags.PLAYER, C.CollisionTags.ENEMY })
+                physics.update_collision_masks_for(PhysicsManager.get_world("world"), C.CollisionTags.PLAYER, { C.CollisionTags.ENEMY })
 
                 -- make it steerable
                 -- steering

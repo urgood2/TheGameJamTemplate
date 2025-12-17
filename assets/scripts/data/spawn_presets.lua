@@ -38,6 +38,8 @@ Usage with EntityBuilder:
     end
 ]]
 
+local C = require("core.constants")
+
 local SpawnPresets = {}
 
 --------------------------------------------------------------------------------
@@ -52,8 +54,8 @@ SpawnPresets.enemies = {
         shadow = true,
         physics = {
             shape = "rectangle",
-            tag = "enemy",
-            collideWith = { "player", "enemy", "projectile" },
+            tag = C.CollisionTags.ENEMY,
+            collideWith = { C.CollisionTags.PLAYER, C.CollisionTags.ENEMY, C.CollisionTags.PROJECTILE },
             sensor = false,
             density = 1.0,
             inflate_px = -4
@@ -85,8 +87,8 @@ SpawnPresets.enemies = {
         shadow = true,
         physics = {
             shape = "circle",
-            tag = "enemy",
-            collideWith = { "player", "enemy", "projectile" },
+            tag = C.CollisionTags.ENEMY,
+            collideWith = { C.CollisionTags.PLAYER, C.CollisionTags.ENEMY, C.CollisionTags.PROJECTILE },
             sensor = false,
             density = 0.8
         },
@@ -117,8 +119,8 @@ SpawnPresets.enemies = {
         shadow = true,
         physics = {
             shape = "rectangle",
-            tag = "enemy",
-            collideWith = { "player", "enemy", "projectile" },
+            tag = C.CollisionTags.ENEMY,
+            collideWith = { C.CollisionTags.PLAYER, C.CollisionTags.ENEMY, C.CollisionTags.PROJECTILE },
             sensor = false,
             density = 1.5
         },
@@ -155,8 +157,8 @@ SpawnPresets.projectiles = {
         shadow = false,
         physics = {
             shape = "circle",
-            tag = "projectile",
-            collideWith = { "enemy", "WORLD" },
+            tag = C.CollisionTags.PROJECTILE,
+            collideWith = { C.CollisionTags.ENEMY, C.CollisionTags.WORLD },
             sensor = false,
             density = 0.5,
             bullet = true,  -- Enable CCD for fast-moving objects
@@ -179,8 +181,8 @@ SpawnPresets.projectiles = {
         shadow = false,
         physics = {
             shape = "circle",
-            tag = "projectile",
-            collideWith = { "enemy", "WORLD" },
+            tag = C.CollisionTags.PROJECTILE,
+            collideWith = { C.CollisionTags.ENEMY, C.CollisionTags.WORLD },
             sensor = false,
             density = 0.6,
             bullet = true
@@ -204,8 +206,8 @@ SpawnPresets.projectiles = {
         shadow = false,
         physics = {
             shape = "rectangle",
-            tag = "projectile",
-            collideWith = { "enemy", "WORLD" },
+            tag = C.CollisionTags.PROJECTILE,
+            collideWith = { C.CollisionTags.ENEMY, C.CollisionTags.WORLD },
             sensor = false,
             density = 0.4,
             bullet = true,
@@ -236,8 +238,8 @@ SpawnPresets.pickups = {
         shadow = false,
         physics = {
             shape = "rectangle",
-            tag = "pickup",
-            collideWith = { "player" },
+            tag = C.CollisionTags.PICKUP,
+            collideWith = { C.CollisionTags.PLAYER },
             sensor = true,
             density = 1.0,
             inflate_px = 0
@@ -259,8 +261,8 @@ SpawnPresets.pickups = {
         shadow = false,
         physics = {
             shape = "circle",
-            tag = "pickup",
-            collideWith = { "player" },
+            tag = C.CollisionTags.PICKUP,
+            collideWith = { C.CollisionTags.PLAYER },
             sensor = true,
             density = 0.5
         },
@@ -285,8 +287,8 @@ SpawnPresets.pickups = {
         shadow = true,
         physics = {
             shape = "circle",
-            tag = "pickup",
-            collideWith = { "player" },
+            tag = C.CollisionTags.PICKUP,
+            collideWith = { C.CollisionTags.PLAYER },
             sensor = true,
             density = 0.8
         },

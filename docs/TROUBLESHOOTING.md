@@ -492,3 +492,205 @@ if not script then
     script:attach_ecs { create_new = false, existing_entity = entity }
 end
 ```
+
+---
+
+## Windows Build Issues
+
+### CMake Configure Freezes / Hangs with No Output
+
+**Problem:** Running `cmake -B build` on Windows appears to freeze with no messages.
+
+**Root Cause:** CMake's FetchContent downloads dependencies using Git. If Git is waiting for credentials (HTTPS auth or SSH key passphrase), and there's no interactive terminal, CMake appears to hang.
+
+**Solution 1: Configure Git Credential Manager**
+
+```powershell
+# Use Windows Credential Manager (recommended)
+git config --global credential.helper manager
+
+# Or use wincred on older Git versions
+git config --global credential.helper wincred
+
+# Test by cloning a repo - it should prompt once and remember
+git clone https://github.com/raysan5/raylib.git test-clone
+```
+
+**Solution 2: Pre-cache GitHub HTTPS credentials**
+
+1. Visit https://github.com and log in
+2. Go to Settings → Developer settings → Personal access tokens → Tokens (classic)
+3. Generate a new token with `repo` scope
+4. Clone any GitHub repo manually and enter the token as password
+5. Windows will cache it
+
+**Solution 3: Use SSH instead of HTTPS**
+
+```bash
+# Generate SSH key if you don't have one
+ssh-keygen -t ed25519 -C "your-email@example.com"
+
+# Add to GitHub: Settings → SSH and GPG keys → New SSH key
+
+# Configure Git to use SSH
+git config --global url."git@github.com:".insteadOf "https://github.com/"
+```
+
+**Solution 4: Run CMake with verbose output**
+
+```powershell
+# See where it's hanging
+cmake -B build --log-level=VERBOSE
+
+# Or use trace for maximum detail
+cmake -B build --trace 2>&1 | Out-File cmake-trace.log
+```
+
+**Solution 5: Pre-populate the build cache**
+
+If you have a working build elsewhere, copy the `_deps` folder:
+```powershell
+# Copy from working machine
+xcopy /E /I other-machine\build\_deps build\_deps
+```
+
+### MinGW vs MSVC Compiler Flag Errors
+
+**Problem:** Build fails with unknown flag errors like `-Wa,-mbig-obj`.
+
+**Cause:** CMake detected MinGW flags but you're using MSVC (or vice versa).
+
+**Solution:** Ensure the correct compiler is detected:
+
+```powershell
+# For MSVC (Visual Studio)
+cmake -B build -G "Visual Studio 17 2022"
+
+# For MinGW
+cmake -B build -G "MinGW Makefiles"
+
+# For Ninja with MSVC
+cmake -B build -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+```
+
+### Build Fails: File Too Big / Too Many Sections
+
+**Problem:** Linker error about file size or section count limits.
+
+**Cause:** Debug builds with heavy template usage (sol2/EnTT) exceed COFF limits.
+
+**Solution:** The CMakeLists.txt now includes `/bigobj` for MSVC and `-Wa,-mbig-obj` for MinGW automatically. If you still see this error:
+
+```powershell
+# Explicitly add the flag for your compiler
+# MSVC:
+cmake -B build -DCMAKE_CXX_FLAGS="/bigobj"
+
+# MinGW:
+cmake -B build -DCMAKE_CXX_FLAGS="-Wa,-mbig-obj"
+```
+
+### ccache Not Working on Windows
+
+**Problem:** ccache not speeding up builds, or ccache errors.
+
+**Cause:** ccache may not be in PATH, or temp directory issues.
+
+**Solution:**
+
+```powershell
+# Install ccache via scoop (recommended)
+scoop install ccache
+
+# Or via chocolatey
+choco install ccache
+
+# Verify it's working
+ccache --version
+ccache -s
+
+# Clear ccache if corrupted
+ccache -C
+```
+
+### FetchContent Timeout / Network Errors
+
+**Problem:** Build fails with network timeout during dependency download.
+
+**Cause:** Corporate firewall, proxy, or network issues.
+
+**Solution:**
+
+```powershell
+# Option 1: Configure Git proxy
+git config --global http.proxy http://proxy.yourcompany.com:8080
+
+# Option 2: Increase timeout
+set GIT_HTTP_TIMEOUT=600
+
+# Option 3: Manual download
+# Download dependencies manually and point to local paths
+cmake -B build -DFETCHCONTENT_SOURCE_DIR_RAYLIB="C:/deps/raylib"
+```
+
+### Windows Defender Slowing Build
+
+**Problem:** First build extremely slow on Windows.
+
+**Cause:** Windows Defender scans every file during compilation.
+
+**Solution:** Add exclusions for build directories:
+
+1. Open Windows Security → Virus & threat protection
+2. Under "Virus & threat protection settings", click "Manage settings"
+3. Scroll to "Exclusions" and click "Add or remove exclusions"
+4. Add folder exclusions:
+   - Your project directory
+   - `C:\Users\<you>\.ccache`
+   - Your build directory
+
+### Tracy Profiler Issues on Windows
+
+**Problem:** Tracy profiler not connecting or crash on start.
+
+**Cause:** Tracy server/client version mismatch or missing runtime dependencies.
+
+**Solution:**
+
+```powershell
+# Disable Tracy if not needed
+cmake -B build -DTRACY_ENABLE=OFF
+
+# Or ensure matching versions
+# Check tracy-master/public/TracyClient.cpp version matches your server
+```
+
+---
+
+## Diagnostic Commands
+
+Quick commands to diagnose build issues:
+
+```powershell
+# Check CMake version
+cmake --version
+
+# Check compiler
+cl 2>&1 | Select-String "Version"  # MSVC
+g++ --version  # MinGW
+
+# Check Git credential helper
+git config --global credential.helper
+
+# List cached Git credentials (Windows)
+cmdkey /list | Select-String "git"
+
+# Check if ccache is working
+ccache -s
+
+# Check environment (list PATH entries containing cmake)
+$env:PATH -split ';' | Select-String cmake
+
+# Run CMake with maximum verbosity
+cmake -B build --log-level=TRACE 2>&1 | Out-File cmake-debug.log
+```

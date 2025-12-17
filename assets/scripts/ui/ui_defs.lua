@@ -2,6 +2,7 @@
 
 -- build defs here
 local timer = require("core.timer")
+local component_cache = require("core.component_cache")
 
 ui_defs = {
     
@@ -284,7 +285,7 @@ local function buildShopUI()
         :build()
 
     globals.ui.weatherShopUIBox = ui.box.Initialize({x = 0, y = 0}, root)
-    local t = registry:get(globals.ui.weatherShopUIBox, Transform)
+    local t = component_cache.get(globals.ui.weatherShopUIBox, Transform)
     local margin = 12
     t.actualX = math.max(margin, globals.screenWidth() / 2 - (t.actualW or 0) / 2)
     t.visualX = t.actualX
@@ -359,14 +360,14 @@ function ui_defs.generateUI()
     -- ui box, place it at the top left corner of the screen
     dragDropboxUIBOX = ui.box.Initialize({x = 10, y = 10}, dragDropboxRoot)
     -- align the ui box to the top left corner of the screen
-    local uiBoxTransform = registry:get(dragDropboxUIBOX, Transform)
+    local uiBoxTransform = component_cache.get(dragDropboxUIBOX, Transform)
     uiBoxTransform.actualX = 10 -- 10 pixels from the left edge
     uiBoxTransform.visualX = uiBoxTransform.actualX -- update visual position as well
     uiBoxTransform.actualY = 300 -- 10 pixels from the top edge
     
     -- get root, make collidable
-    local rootEntity = registry:get(dragDropboxUIBOX, UIBoxComponent).uiRoot
-    local rootGameObject = registry:get(rootEntity, GameObject)
+    local rootEntity = component_cache.get(dragDropboxUIBOX, UIBoxComponent).uiRoot
+    local rootGameObject = component_cache.get(rootEntity, GameObject)
     rootGameObject.state.collisionEnabled = true -- make the root collidable
     rootGameObject.state.triggerOnReleaseEnabled = true -- make the root hoverable
     
@@ -403,9 +404,9 @@ function ui_defs.generateUI()
         
         -- set global variable
         globals.recentlyDroppedColonist = released -- set the recently dropped colonist
-        
+
         -- TODO: show globals.ui.creatureDuplicateChoiceUIbox
-        local creatureChoiceTransform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        local creatureChoiceTransform = component_cache.get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
         creatureChoiceTransform.actualY = globals.screenHeight() / 2 - creatureChoiceTransform.actualH / 2 -- center it vertically
     end
     
@@ -453,7 +454,7 @@ function ui_defs.generateUI()
         
         -- move the selected colonist, if valid, 300 pixels to the right
         if (globals.recentlyDroppedColonist and registry:valid(globals.recentlyDroppedColonist) and globals.recentlyDroppedColonist ~= entt_null) then
-            local transform = registry:get(globals.recentlyDroppedColonist, Transform)
+            local transform = component_cache.get(globals.recentlyDroppedColonist, Transform)
             transform.actualX = transform.actualX + 300 -- move 300 pixels to the right
             
             
@@ -465,7 +466,7 @@ function ui_defs.generateUI()
         togglePausedState(false) -- unpause the game
         
         -- hide the creature duplicate choice UI box
-        local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        local transform = component_cache.get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
         transform.actualY = globals.screenHeight() -- hide the UI box
     end
     
@@ -494,7 +495,7 @@ function ui_defs.generateUI()
         
         -- move the selected colonist, if valid, 300 pixels to the right
         if (globals.recentlyDroppedColonist and registry:valid(globals.recentlyDroppedColonist) and globals.recentlyDroppedColonist ~= entt_null) then
-            local transform = registry:get(globals.recentlyDroppedColonist, Transform)
+            local transform = component_cache.get(globals.recentlyDroppedColonist, Transform)
             transform.actualX = transform.actualX + 300 -- move 300 pixels to the right
             
             -- reset variable
@@ -504,7 +505,7 @@ function ui_defs.generateUI()
         togglePausedState(false) -- unpause the game
         
         -- hide the creature duplicate choice UI box
-        local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        local transform = component_cache.get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
         transform.actualY = globals.screenHeight() -- hide the UI box
     end
     
@@ -536,7 +537,7 @@ function ui_defs.generateUI()
         
         -- move the selected colonist, if valid, 300 pixels to the right
         if (globals.recentlyDroppedColonist and registry:valid(globals.recentlyDroppedColonist) and globals.recentlyDroppedColonist ~= entt_null) then
-            local transform = registry:get(globals.recentlyDroppedColonist, Transform)
+            local transform = component_cache.get(globals.recentlyDroppedColonist, Transform)
             transform.actualX = transform.actualX + 300 -- move 300 pixels to the right
             
             -- reset variable
@@ -547,7 +548,7 @@ function ui_defs.generateUI()
         togglePausedState(false) -- unpause the game
         
         -- hide the creature duplicate choice UI box
-        local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        local transform = component_cache.get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
         transform.actualY = globals.screenHeight() -- hide the UI box
     end
     
@@ -584,7 +585,7 @@ function ui_defs.generateUI()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     
                     -- hide the creature duplicate choice UI box
-                    local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+                    local transform = component_cache.get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
                     transform.actualY = globals.screenHeight() -- hide the UI box
                     togglePausedState(false) -- unpause the game
                 end)
@@ -623,7 +624,7 @@ function ui_defs.generateUI()
         globals.ui.creatureDuplicateChoiceUIbox -- ui box to assign layer order components to
     )
     -- align the creature duplicate choice UI box to the center of the screen, out of view
-    local creatureChoiceTransform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+    local creatureChoiceTransform = component_cache.get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
     creatureChoiceTransform.actualX = globals.screenWidth() / 2 - creatureChoiceTransform.actualW / 2 -- center it horizontally
     creatureChoiceTransform.visualX = creatureChoiceTransform.actualX -- update visual position as well
     creatureChoiceTransform.actualY = globals.screenHeight() -- out of view initially
@@ -643,7 +644,7 @@ function ui_defs.generateUI()
     )
     
     -- add hover
-    local goldDiggerButtonGameObject = registry:get(globals.ui.goldDiggerButtonElement, GameObject)
+    local goldDiggerButtonGameObject = component_cache.get(globals.ui.goldDiggerButtonElement, GameObject)
     goldDiggerButtonGameObject.state.hoverEnabled = true -- enable hover for the button
     goldDiggerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     goldDiggerButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
@@ -659,7 +660,7 @@ function ui_defs.generateUI()
     goldDiggerButtonGameObject.methods.onStopHover = function()
         if hideSimpleTooltip then hideSimpleTooltip("gold_digger_button") end
     end
-    local healerButtonGameObject = registry:get(globals.ui.healerButtonElement, GameObject)
+    local healerButtonGameObject = component_cache.get(globals.ui.healerButtonElement, GameObject)
     healerButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
     healerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     
@@ -676,7 +677,7 @@ function ui_defs.generateUI()
     healerButtonGameObject.methods.onStopHover = function()
         if hideSimpleTooltip then hideSimpleTooltip("healer_button") end
     end
-    local damageCushionButtonGameObject = registry:get(globals.ui.damageCushionButtonElement, GameObject)
+    local damageCushionButtonGameObject = component_cache.get(globals.ui.damageCushionButtonElement, GameObject)
     damageCushionButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
     damageCushionButtonGameObject.state.collisionEnabled = true -- enable collision for the button
     damageCushionButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
@@ -707,7 +708,7 @@ function ui_defs.generateUI()
     )
     
     -- place at the top center of the screen
-    local weatherTransform = registry:get(globals.ui.weatherTextEntity.config.object, Transform)
+    local weatherTransform = component_cache.get(globals.ui.weatherTextEntity.config.object, Transform)
     weatherTransform.actualX = globals.screenWidth() / 2 - weatherTransform.actualW / 2 -- center it horizontally
     weatherTransform.visualX = weatherTransform.actualX -- update visual position as well
     weatherTransform.actualY = 150 -- 10 pixels from the top edge
@@ -728,7 +729,7 @@ function ui_defs.generateUI()
         TextSystem.Functions.applyGlobalEffects(globals.ui.weatherTextEntity.config.object, "rainbow") -- apply the rainbow effect to the text
 
         -- center the weather text
-        local weatherTextTransform = registry:get(globals.ui.weatherTextEntity.config.object, Transform)
+        local weatherTextTransform = component_cache.get(globals.ui.weatherTextEntity.config.object, Transform)
         weatherTextTransform.actualX = globals.screenWidth() / 2 - weatherTextTransform.actualW / 2 -- center it horizontally
         weatherTextTransform.visualX = weatherTextTransform.actualX -- update visual position as well
         
@@ -761,7 +762,7 @@ function ui_defs.generateUI()
         ui.box.RenewAlignment(registry, globals.ui.timeTextUIBox)
         
         -- get ui box transform, align to the right side of the screen
-        local uiBoxTransform = registry:get(globals.ui.timeTextUIBox, Transform)
+        local uiBoxTransform = component_cache.get(globals.ui.timeTextUIBox, Transform)
         uiBoxTransform.actualX = globals.screenWidth() - uiBoxTransform.actualW - 10 -- 10 pixels from the right edge
         uiBoxTransform.visualX = uiBoxTransform.actualX -- update visual position as well
         uiBoxTransform.visualW = uiBoxTransform.actualW -- update visual width as well
@@ -778,7 +779,7 @@ function ui_defs.generateUI()
         ui.box.RenewAlignment(registry, globals.ui.dayTextUIBox)
         
         -- get ui box transform, align to the right side of the screen
-        local uiBoxTransform = registry:get(globals.ui.dayTextUIBox, Transform)
+        local uiBoxTransform = component_cache.get(globals.ui.dayTextUIBox, Transform)
         uiBoxTransform.actualX = globals.screenWidth() - uiBoxTransform.actualW - 10 -- 10 pixels from the right edge
         uiBoxTransform.visualX = uiBoxTransform.actualX -- update visual position as well
         uiBoxTransform.visualW = uiBoxTransform.actualW -- update visual width as well
@@ -823,7 +824,7 @@ function ui_defs.generateUI()
     -- create a new UI box for the day text
     globals.ui.dayTextUIBox = ui.box.Initialize({x = 10, y = 60}, dayTextRoot)
     -- align the day text UI box to the right side of the screen
-    local dayTextTransform = registry:get(globals.ui.dayTextUIBox, Transform)
+    local dayTextTransform = component_cache.get(globals.ui.dayTextUIBox, Transform)
     dayTextTransform.actualX = globals.screenWidth() - dayTextTransform.actualW - 10 -- 10 pixels from the right edge
     dayTextTransform.visualX = dayTextTransform.actualX -- update visual position as well
     
@@ -831,7 +832,7 @@ function ui_defs.generateUI()
     globals.ui.timeTextUIBox = ui.box.Initialize({x = 10, y = 10}, timeTextRoot)
     
     -- right side of the screen, below the day text
-    local timeTextTransform = registry:get(globals.ui.timeTextUIBox, Transform)
+    local timeTextTransform = component_cache.get(globals.ui.timeTextUIBox, Transform)
     timeTextTransform.actualX = globals.screenWidth() - timeTextTransform.actualW - 10 -- 10 pixels from the right edge
     timeTextTransform.visualX = timeTextTransform.actualX -- update visual position as well
     timeTextTransform.actualY = dayTextTransform.actualY + dayTextTransform.actualH + 10 -- 10 pixels below the day texture
@@ -859,11 +860,11 @@ function ui_defs.generateUI()
                     
                     if (globals.isShopOpen) then
                         globals.isShopOpen = false
-                        local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+                        local transform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
                         transform.actualY = globals.screenHeight() -- hide the shop UI box
                     else
                         globals.isShopOpen = true
-                        local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+                        local transform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
                         transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2-- show the shop UI box
                     end
                     
@@ -898,7 +899,7 @@ function ui_defs.generateUI()
     -- create a new UI box for the shop button
     globals.ui.shopButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 10}, shopButtonRoot)
     -- align the shop button UI box to the right side of the screen
-    local shopButtonTransform = registry:get(globals.ui.shopButtonUIBox, Transform)
+    local shopButtonTransform = component_cache.get(globals.ui.shopButtonUIBox, Transform)
     shopButtonTransform.actualX = globals.screenWidth() - shopButtonTransform.actualW - 10 -- 10 pixels from the right edge
     shopButtonTransform.visualX = shopButtonTransform.actualX -- update visual position as well
     -- move it out of sight
@@ -1007,7 +1008,7 @@ function ui_defs.generateUI()
         "colonist_home_button" -- id of the UI element to find
     )
     -- add hover
-    local colonistHomeButtonGameObject = registry:get(globals.ui.colonistHomeButton, GameObject)
+    local colonistHomeButtonGameObject = component_cache.get(globals.ui.colonistHomeButton, GameObject)
     colonistHomeButtonGameObject.state.hoverEnabled = true -- enable hover for the colonist
     colonistHomeButtonGameObject.state.collisionEnabled = true -- enable collision for the colonist home button
     colonistHomeButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
@@ -1025,7 +1026,7 @@ function ui_defs.generateUI()
     end
     
     -- align the structure placement UI box to the left side of the screen, and bottom
-    local structurePlacementTransform = registry:get(globals.ui.structurePlacementUIBox, Transform)
+    local structurePlacementTransform = component_cache.get(globals.ui.structurePlacementUIBox, Transform)
     structurePlacementTransform.actualX = 10 -- 10 pixels from the left edge
     structurePlacementTransform.visualX = structurePlacementTransform.actualX -- update visual position as well
     structurePlacementTransform.actualY = globals.screenHeight() - structurePlacementTransform.actualH - 10 -- 10 pixels from the bottom edge
@@ -1088,7 +1089,7 @@ function ui_defs.generateUI()
     -- create a new UI box for the currency row
     globals.ui.currencyUIBox = ui.box.Initialize({x = globals.screenWidth() - 200, y = 10}, currencyRow)
     -- align the currency UI box away from the gold pill and clamp to screen bounds
-    local currencyTransform = registry:get(globals.ui.currencyUIBox, Transform)
+    local currencyTransform = component_cache.get(globals.ui.currencyUIBox, Transform)
     local margin = 16
     local desiredX = margin
     local desiredY = margin
@@ -1142,7 +1143,7 @@ function ui_defs.generateUI()
     -- create a new UI box for the weather difficulty text
     globals.ui.weatherDifficultyUIBox = ui.box.Initialize({x = globals.screenWidth() - 200, y = 60}, weatherDifficultyTextDef)
     -- align the weather difficulty UI box to the top right of the screen
-    local weatherDifficultyTransform = registry:get(globals.ui.weatherDifficultyUIBox, Transform)
+    local weatherDifficultyTransform = component_cache.get(globals.ui.weatherDifficultyUIBox, Transform)
     weatherDifficultyTransform.actualX = globals.screenWidth() - weatherDifficultyTransform.actualW - 10 -- 10 pixels from the right edge
     weatherDifficultyTransform.visualX = weatherDifficultyTransform.actualX -- update visual position as well
     weatherDifficultyTransform.actualY = 10 -- 10 pixels from the top edge
@@ -1536,7 +1537,7 @@ function ui_defs.generateUI()
     -- create a new UI box for the shop
     globals.ui.weatherShopUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 100}, weatherRow)
     -- align the weather shop UI box to the center of the screen
-    local weatherShopTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
+    local weatherShopTransform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
     weatherShopTransform.actualX = globals.screenWidth() / 2 - weatherShopTransform.actualW / 2 -- center horizontally
     weatherShopTransform.visualX = weatherShopTransform.actualX -- update visual position as well
     weatherShopTransform.actualY = globals.screenHeight() -- out of view initially
@@ -1569,7 +1570,7 @@ function ui_defs.generateUI()
         
             local relicIconDef = ui.definitions.wrapEntityInsideObjectElement(ownedRelic.animation_entity)
         
-            local relicGameObject = registry:get(ownedRelic.animation_entity, GameObject)
+            local relicGameObject = component_cache.get(ownedRelic.animation_entity, GameObject)
             relicGameObject.methods.onHover = function()
                 if showSimpleTooltipAbove then
                     showSimpleTooltipAbove(
@@ -1629,8 +1630,8 @@ function ui_defs.generateUI()
     -- new ui box for relics
     globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRoot)
     -- align the relics UI box to the left side of the screen, and top
-    local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
-    local currencyBoxTrnsform = registry:get(globals.ui.currencyUIBox, Transform)
+    local relicsTransform = component_cache.get(globals.ui.relicsUIBox, Transform)
+    local currencyBoxTrnsform = component_cache.get(globals.ui.currencyUIBox, Transform)
     
     globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
     
@@ -1678,7 +1679,7 @@ function ui_defs.generateUI()
     -- new uibox
         globals.ui.newDayUIBox = ui.box.Initialize({x = globals.screenWidth() / 2 - 150, y = globals.screenHeight() / 2 - 50}, newDayTextDef)
         -- align the new day UI box to the center of the screen
-        local newDayTransform = registry:get(globals.ui.newDayUIBox, Transform)
+        local newDayTransform = component_cache.get(globals.ui.newDayUIBox, Transform)
         newDayTransform.actualX = globals.screenWidth() / 2 - newDayTransform.actualW / 2 -- center horizontally
         newDayTransform.visualX = newDayTransform.actualX -- update visual position as well
         newDayTransform.actualY = globals.screenHeight() -- hide it initially
@@ -1724,11 +1725,11 @@ function ui_defs.generateUI()
     -- create a new UI box for the pause button
     globals.ui.pauseButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 100, y = 10}, pauseButtonRow)
     -- align the pause button UI box to the right side of the screen
-    local pauseButtonTransform = registry:get(globals.ui.pauseButtonUIBox, Transform)
+    local pauseButtonTransform = component_cache.get(globals.ui.pauseButtonUIBox, Transform)
     pauseButtonTransform.actualX = globals.screenWidth() - pauseButtonTransform.actualW - 10 -- 10 pixels from the right edge
     pauseButtonTransform.visualX = pauseButtonTransform.actualX -- update visual position as well
     -- above the shop button
-    local shopButtonTransform = registry:get(globals.ui.shopButtonUIBox, Transform)
+    local shopButtonTransform = component_cache.get(globals.ui.shopButtonUIBox, Transform)
     pauseButtonTransform.actualY = shopButtonTransform.actualY - pauseButtonTransform.actualH - 10 -- 10 pixels below the shop button
     pauseButtonTransform.visualY = pauseButtonTransform.actualY -- update visual position as well
     
@@ -1823,7 +1824,7 @@ function ui_defs.generateUI()
     -- new uibox for the tutorial
     globals.ui.tutorial_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, tutorialRoot)
     -- center the uibox
-    local tutorialTransform = registry:get(globals.ui.tutorial_uibox, Transform)
+    local tutorialTransform = component_cache.get(globals.ui.tutorial_uibox, Transform)
     tutorialTransform.actualX = globals.screenWidth() / 2 - tutorialTransform.actualW / 2
     -- snap x
     tutorialTransform.visualX = tutorialTransform.actualX

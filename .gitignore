@@ -2609,3 +2609,4 @@ build_attempt.log
 # Git worktrees
 .worktrees/
 docs/lua-cookbook/output/*.pdf
+build-tracy/

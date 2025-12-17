@@ -488,5 +488,45 @@ TestRunner.describe("Handle content updates", function()
     end)
 end)
 
+TestRunner.describe("Stream mode", function()
+    it(":stream() returns handle without triggering spawn", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():stream()
+
+        assert_not_nil(handle)
+        -- Not yet in active list (no position set)
+        assert_equals(0, #Text._activeHandles)
+    end)
+
+    it("stream handle can set position later with :at()", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():stream()
+
+        handle:at(100, 200)
+
+        assert_equals(1, #Text._activeHandles)
+        assert_equals(100, handle._position.x)
+    end)
+
+    it("stream mode allows pre-configuration before positioning", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():stream()
+
+        -- Should be able to configure before activating
+        assert_equals(0, #Text._activeHandles)
+        assert_not_nil(handle)
+        assert_true(handle.isActive and handle:isActive(), "handle should be active")
+    end)
+end)
+
 -- Run tests
 TestRunner.run_all()

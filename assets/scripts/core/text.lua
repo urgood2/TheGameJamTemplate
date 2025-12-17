@@ -308,6 +308,15 @@ function SpawnerMethods:_calculateEntityPosition()
     end
 end
 
+--- Create handle without triggering spawn (deferred positioning)
+--- @return Handle
+function SpawnerMethods:stream()
+    local handle = Text._createHandle(self)
+    handle._streamed = true
+    -- Don't add to active list yet
+    return handle
+end
+
 --- Internal: Create the text handle
 --- @return Handle
 function SpawnerMethods:_spawn()
@@ -406,6 +415,24 @@ end
 --- @return table { x, y }
 function HandleMethods:getPosition()
     return { x = self._position.x, y = self._position.y }
+end
+
+--- Set position (for streamed handles)
+--- @param x number X position
+--- @param y number Y position
+--- @return self
+function HandleMethods:at(x, y)
+    self._position = { x = x, y = y }
+    if self._textRenderer then
+        self._textRenderer.x = x
+        self._textRenderer.y = y
+    end
+    -- Add to active list if streamed
+    if self._streamed and self._active then
+        table.insert(Text._activeHandles, self)
+        self._streamed = false
+    end
+    return self
 end
 
 --------------------------------------------------------------------------------

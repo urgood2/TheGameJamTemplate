@@ -508,6 +508,13 @@ function CommandBufferText:update(dt)
     local needs_scale = draw_scaleX ~= 1 or draw_scaleY ~= 1
     local char_z = self.z or 0
 
+    -- Calculate character center for proper rotation pivot
+    -- Raylib's DrawTextPro uses origin as both rotation center AND anchor point
+    local char_w = ch.w or self.font_size * 0.6
+    local char_h = ch.h or self.font_size
+    local center_x = char_w * 0.5
+    local center_y = char_h * 0.5
+
     if needs_scale then
       -- =====================================================================
       -- PERFORMANCE WARNING: Matrix Transform Path
@@ -534,8 +541,9 @@ function CommandBufferText:update(dt)
       -- =====================================================================
       command_buffer.queuePushMatrix(layer_handle, function(c) end, char_z, self.render_space)
       command_buffer.queueTranslate(layer_handle, function(c)
-        c.x = draw_x
-        c.y = draw_y
+        -- Translate to character center for proper rotation
+        c.x = draw_x + center_x
+        c.y = draw_y + center_y
       end, char_z, self.render_space)
       command_buffer.queueScale(layer_handle, function(c)
         c.x = draw_scaleX
@@ -546,7 +554,8 @@ function CommandBufferText:update(dt)
         c.font = font_ref
         c.x = 0
         c.y = 0
-        c.origin = Vec2(0, 0)
+        -- Origin at center so rotation pivots around character center
+        c.origin = Vec2(center_x, center_y)
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1
@@ -567,9 +576,11 @@ function CommandBufferText:update(dt)
       command_buffer.queueTextPro(layer_handle, function(c)
         c.text = draw_char
         c.font = font_ref
-        c.x = draw_x
-        c.y = draw_y
-        c.origin = Vec2(0, 0)
+        -- Position at character center for proper rotation pivot
+        c.x = draw_x + center_x
+        c.y = draw_y + center_y
+        -- Origin at center so rotation pivots around character center
+        c.origin = Vec2(center_x, center_y)
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1

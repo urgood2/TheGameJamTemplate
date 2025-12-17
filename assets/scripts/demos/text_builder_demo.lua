@@ -1,12 +1,9 @@
 --[[
 ================================================================================
-TEXT BUILDER DEMO - Visual showcase for main menu
+TEXT BUILDER DEMO - Comprehensive Feature Showcase
 ================================================================================
-Demonstrates the TextBuilder API with various text effects, patterns, and features.
-Designed to run in the top portion of the main menu.
-
-NOTE: This simplified version avoids scale-based effects (pop, pulse, shake)
-that have issues in CommandBufferText's matrix transform path.
+Demonstrates ALL TextBuilder features with staggered display and labels.
+Each feature is shown individually with its name so you know exactly what's being tested.
 
 Usage:
     local TextBuilderDemo = require("demos.text_builder_demo")
@@ -23,6 +20,8 @@ local timer = require("core.timer")
 local _active = false
 local _timers = {}
 local _demoTag = "text_builder_demo"
+local _currentDemo = 0
+local _demoQueue = {}
 
 -- Screen helpers
 local function screenW()
@@ -34,271 +33,1107 @@ local function screenH()
 end
 
 --------------------------------------------------------------------------------
--- RECIPES - Define reusable text styles (simplified, no scale effects)
+-- DEMO SEQUENCE DEFINITIONS
 --------------------------------------------------------------------------------
 
--- Damage number style - red, rises up
--- NOTE: rise effect has params: speed, fade, stagger, color
--- Using rise's color param instead of separate color effect (rise overwrites color)
-local damageRecipe = Text.define()
-    :content("[%d](rise=60,true,0,red)")
-    :size(28)
-    :fade()
-    :lifespan(0.8, 1.2)
-    :anchor("center")
-    :space("screen")
+-- Each demo entry: { name = "...", duration = N, spawn = function() end }
+-- spawn() creates the text elements for that demo
 
--- Heal number style - green, rises up
-local healRecipe = Text.define()
-    :content("[+%d](rise=50,true,0,green)")
-    :size(24)
-    :fade()
-    :lifespan(0.7, 1.0)
-    :anchor("center")
-    :space("screen")
+local function buildDemoQueue()
+    _demoQueue = {}
 
--- Critical hit style - gold, larger
-local critRecipe = Text.define()
-    :content("[CRIT! %d](rise=40,true,0,gold)")
-    :size(36)
-    :fade()
-    :fadeIn(0.1)
-    :lifespan(1.0)
-    :anchor("center")
-    :space("screen")
+    local cx = screenW() * 0.5  -- Center X
+    local baseY = 120           -- Base Y for demo content
+    local labelY = 50           -- Y for section labels
 
--- Status effect style - cyan
-local statusRecipe = Text.define()
-    :content("[%s](rise=30,true,0,cyan)")
-    :size(18)
-    :fade()
-    :lifespan(1.5)
-    :anchor("center")
-    :space("screen")
-
--- Title announcement style - gold, large (no rise, just color)
-local titleRecipe = Text.define()
-    :content("[%s](color=gold)")
-    :size(42)
-    :fade()
-    :fadeIn(0.3)
-    :lifespan(2.5)
-    :anchor("center")
-    :space("screen")
-
--- Combo counter style - purple
-local comboRecipe = Text.define()
-    :content("[%dx COMBO](rise=35,true,0,purple)")
-    :size(32)
-    :fade()
-    :lifespan(0.8)
-    :anchor("center")
-    :space("screen")
-
--- XP gain style - blue
-local xpRecipe = Text.define()
-    :content("[+%d XP](rise=45,true,0,blue)")
-    :size(20)
-    :fade()
-    :lifespan(1.2)
-    :anchor("center")
-    :space("screen")
-
---------------------------------------------------------------------------------
--- DEMO PATTERNS
---------------------------------------------------------------------------------
-
--- Pattern 1: Random damage numbers across the demo area
-local _damage_count = 0
-local function spawnRandomDamage()
-    local x = screenW() * (0.15 + math.random() * 0.7)  -- 15%-85% of screen width
-    local y = 50 + math.random() * 120  -- Top area
-    local damage = math.random(10, 99)
-
-    _damage_count = _damage_count + 1
-    if _damage_count <= 3 then
-        print(string.format("[TextBuilderDemo] Spawning damage #%d: %d at (%.1f, %.1f)", _damage_count, damage, x, y))
+    -- Helper: Add a section header
+    local function addSection(name, demos)
+        -- Section header
+        table.insert(_demoQueue, {
+            name = "SECTION: " .. name,
+            duration = 1.5,
+            spawn = function()
+                Text.define()
+                    :content(string.format("[=== %s ===](color=gold)", name))
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(1.4)
+                    :spawn()
+                    :at(cx, labelY)
+                    :tag(_demoTag)
+            end
+        })
+        -- Add all demos in this section
+        for _, demo in ipairs(demos) do
+            table.insert(_demoQueue, demo)
+        end
     end
 
-    damageRecipe:spawn(damage):at(x, y):tag(_demoTag)
-end
+    --------------------------------------------------------------------------
+    -- SECTION: COLORS
+    --------------------------------------------------------------------------
+    addSection("COLORS", {
+        {
+            name = "color: Named Colors",
+            duration = 3,
+            spawn = function()
+                local colors = { "red", "orange", "yellow", "green", "cyan", "blue", "purple", "pink" }
+                local spacing = screenW() / (#colors + 1)
+                for i, col in ipairs(colors) do
+                    Text.define()
+                        :content(string.format("[%s](color=%s)", col, col))
+                        :size(22)
+                        :anchor("center")
+                        :space("screen")
+                        :lifespan(2.8)
+                        :spawn()
+                        :at(spacing * i, baseY)
+                        :tag(_demoTag)
+                end
+                -- Label
+                Text.define()
+                    :content("[color=<name>](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "rainbow: HSV Cycling",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[RAINBOW EFFECT](rainbow=60,10)")
+                    :size(36)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[rainbow=speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
--- Pattern 2: Heal numbers
-local function spawnRandomHeal()
-    local x = screenW() * (0.2 + math.random() * 0.6)
-    local y = 80 + math.random() * 100
-    local heal = math.random(5, 30)
+    --------------------------------------------------------------------------
+    -- SECTION: MOVEMENT EFFECTS
+    --------------------------------------------------------------------------
+    addSection("MOVEMENT", {
+        {
+            name = "float: Vertical Bob",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[Floating Text](float=8,2,0.3)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[float=amp,speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "shake: Random Jitter",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[SHAKING!](shake=3,15;color=red)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[shake=intensity,speed](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "wave: Traveling Sine",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[~~ WAVE MOTION ~~](wave=10,4,0.4)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[wave=amp,speed,wavelength](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "rise: Drift Upward",
+            duration = 3,
+            spawn = function()
+                -- Spawn multiple rising texts
+                for i = 1, 5 do
+                    timer.after(i * 0.4, function()
+                        if not _active then return end
+                        local x = cx + (i - 3) * 100
+                        Text.define()
+                            :content(string.format("[+%d](rise=50,true,0,green)", i * 10))
+                            :size(24)
+                            :anchor("center")
+                            :space("screen")
+                            :fade()
+                            :lifespan(1.5)
+                            :spawn()
+                            :at(x, baseY + 30)
+                            :tag(_demoTag)
+                    end, nil, nil, "demo_rise_" .. i, "text_demo")
+                end
+                Text.define()
+                    :content("[rise=speed,fade,stagger,color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 80)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "orbit: Circular Motion",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[ORBITING](orbit=5,3,0.8;color=cyan)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[orbit=radius,speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
-    healRecipe:spawn(heal):at(x, y):tag(_demoTag)
-end
+    --------------------------------------------------------------------------
+    -- SECTION: ROTATION & SCALE
+    --------------------------------------------------------------------------
+    addSection("ROTATION & SCALE", {
+        {
+            name = "wiggle: Fast Oscillation",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[Wiggle Wiggle](wiggle=15,12,0.8)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[wiggle=angle,speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "spin: 360 Rotation",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[S][P][I][N](spin=1.5,0.3)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[spin=rotations_per_sec,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "pulse: Scale Oscillation",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[PULSE](pulse=0.7,1.3,3,0.2;color=purple)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[pulse=min,max,speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "fan: Spread Rotation",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[FANNED OUT](fan=20)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[fan=max_angle](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
--- Pattern 3: Occasional critical hit
-local function spawnCriticalHit()
-    local x = screenW() * 0.5 + (math.random() - 0.5) * 400
-    local y = 60 + math.random() * 80
-    local damage = math.random(100, 250)
+    --------------------------------------------------------------------------
+    -- SECTION: ONESHOT ANIMATIONS
+    --------------------------------------------------------------------------
+    addSection("ONESHOT ANIMATIONS", {
+        {
+            name = "pop: Scale In",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[POP IN!](pop=0.4,0.1,in;color=gold)")
+                    :size(36)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[pop=duration,stagger,mode](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "slide: Directional Entry",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[SLIDE FROM LEFT](slide=0.5,0.08,l,in)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[slide=dur,stagger,dir,fade](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "bounce: Physics Drop",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[BOUNCE!](bounce=30,800,0.08;color=orange)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 30)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[bounce=height,gravity,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 80)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "scramble: Character Cycling",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[DECRYPTING](scramble=0.8,0.1,20;color=green)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[scramble=duration,stagger,rate](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "cascade: Waterfall Reveal",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[CASCADE REVEAL](cascade=0.1,0.4,cyan)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[cascade=delay,duration,start_color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
-    critRecipe:spawn(damage):at(x, y):tag(_demoTag)
-end
+    --------------------------------------------------------------------------
+    -- SECTION: JUICY EFFECTS
+    --------------------------------------------------------------------------
+    addSection("JUICY EFFECTS", {
+        {
+            name = "jelly: Squash & Stretch",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[JELLY](jelly=0.4,6,0.15)")
+                    :size(36)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[jelly=squash,speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "hop: Quick Jumps",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[HOP HOP HOP](hop=8,6,0.25;color=green)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[hop=height,speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "slam: Impact Entry",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[SLAM!](slam=0.3,0.06,2.5,orange)")
+                    :size(36)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[slam=dur,stagger,scale,color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "heartbeat: Lub-Dub Rhythm",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[<3 LOVE <3](heartbeat=1.4,2,pink)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[heartbeat=scale,speed,color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "tremble: Fear Effect",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[TERRIFIED...](tremble=1.5,25,red)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[tremble=intensity,speed,tint](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
--- Pattern 4: Status effects
-local function spawnStatusEffect()
-    local statuses = { "STUNNED", "BURNING", "FROZEN", "POISONED", "BLESSED" }
-    local status = statuses[math.random(#statuses)]
-    local x = screenW() * (0.25 + math.random() * 0.5)
-    local y = 100 + math.random() * 60
+    --------------------------------------------------------------------------
+    -- SECTION: MAGICAL EFFECTS
+    --------------------------------------------------------------------------
+    addSection("MAGICAL EFFECTS", {
+        {
+            name = "shimmer: Color Flicker",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[SHIMMERING](shimmer=10,0.1,silver,white,cyan)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[shimmer=speed,stagger,colors...](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "glow_pulse: Alpha Pulse",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[GLOWING](glow_pulse=0.4,1,2,gold)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[glow_pulse=min,max,speed,color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "enchant: Magic Float",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[ENCHANTED](enchant=3,0.2,purple)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[enchant=speed,stagger,color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "phase: Ghostly Fade",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[PHASING...](phase=0.2,0.9,2,lightblue)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[phase=min,max,speed,color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "sparkle: Random Flash",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[*SPARKLE*](sparkle=0.05,white,gold,cyan)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[sparkle=chance,colors...](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
-    statusRecipe:spawn(status):at(x, y):tag(_demoTag)
-end
+    --------------------------------------------------------------------------
+    -- SECTION: ELEMENTAL EFFECTS
+    --------------------------------------------------------------------------
+    addSection("ELEMENTAL EFFECTS", {
+        {
+            name = "fire: Flame Effect",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[BURNING!](fire=8,4)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[fire=speed,flicker](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "ice: Frozen Shimmer",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[FROZEN](ice=1.5)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[ice=speed](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "electric: Lightning",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[SHOCKED!](electric=25,3,cyan)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[electric=speed,jitter,color](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "poison: Toxic Pulse",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[POISONED](poison=3,0.6)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[poison=speed,intensity](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "holy: Divine Glow",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[BLESSED](holy=2.5,0.15)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[holy=speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "void: Dark Energy",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[V O I D](void=2,0.25)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("[void=speed,stagger](color=silver)")
+                    :size(16)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
--- Pattern 5: Combo counter
-local function spawnCombo()
-    local combo = math.random(2, 10)
-    local x = screenW() * 0.5
-    local y = 40
+    --------------------------------------------------------------------------
+    -- SECTION: COMBINED EFFECTS
+    --------------------------------------------------------------------------
+    addSection("COMBINED EFFECTS", {
+        {
+            name = "Multiple Effects",
+            duration = 4,
+            spawn = function()
+                Text.define()
+                    :content("[COMBINED](color=gold;float=5,2,0.3;pulse=0.9,1.1,3)")
+                    :size(32)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(3.8)
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content("Effects chain with semicolons: effect1;effect2;effect3")
+                    :size(16)
+                    :color("silver")
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(3.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "Game-Style Damage Numbers",
+            duration = 4,
+            spawn = function()
+                -- Simulate combat numbers
+                local types = {
+                    { fmt = "[%d](rise=60,true,0,red)", val = math.random(50, 150), label = "Damage" },
+                    { fmt = "[+%d](rise=50,true,0,green)", val = math.random(20, 60), label = "Heal" },
+                    { fmt = "[CRIT %d](rise=40,true,0,gold;pulse=0.9,1.2,4)", val = math.random(200, 400), label = "Critical" },
+                    { fmt = "[MISS](rise=30,true,0,silver)", val = nil, label = "Miss" },
+                }
+                local spacing = screenW() / (#types + 1)
+                for i, t in ipairs(types) do
+                    local content = t.val and string.format(t.fmt, t.val) or t.fmt
+                    Text.define()
+                        :content(content)
+                        :size(24)
+                        :anchor("center")
+                        :space("screen")
+                        :fade()
+                        :lifespan(2)
+                        :spawn()
+                        :at(spacing * i, baseY)
+                        :tag(_demoTag)
+                    Text.define()
+                        :content(t.label)
+                        :size(14)
+                        :color("silver")
+                        :anchor("center")
+                        :space("screen")
+                        :lifespan(3.8)
+                        :spawn()
+                        :at(spacing * i, baseY + 60)
+                        :tag(_demoTag)
+                end
+            end
+        },
+    })
 
-    comboRecipe:spawn(combo):at(x, y):tag(_demoTag)
-end
+    --------------------------------------------------------------------------
+    -- SECTION: API FEATURES
+    --------------------------------------------------------------------------
+    addSection("API FEATURES", {
+        {
+            name = "Fade & Lifespan",
+            duration = 3,
+            spawn = function()
+                Text.define()
+                    :content("[Auto-fading text](color=cyan)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :fade()           -- Enable fade
+                    :lifespan(2.5)    -- Die after 2.5s
+                    :spawn()
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+                Text.define()
+                    :content(":fade() + :lifespan(seconds)")
+                    :size(16)
+                    :color("silver")
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "Template Substitution",
+            duration = 3,
+            spawn = function()
+                local recipe = Text.define()
+                    :content("[Score: %d](color=gold)")
+                    :size(28)
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
 
--- Pattern 6: XP gains
-local function spawnXPGain()
-    local x = screenW() * (0.3 + math.random() * 0.4)
-    local y = 130 + math.random() * 40
-    local xp = math.random(10, 50) * 5
+                -- Spawn with different values
+                recipe:spawn(1000):at(cx - 150, baseY):tag(_demoTag)
+                recipe:spawn(2500):at(cx, baseY):tag(_demoTag)
+                recipe:spawn(5000):at(cx + 150, baseY):tag(_demoTag)
 
-    xpRecipe:spawn(xp):at(x, y):tag(_demoTag)
-end
+                Text.define()
+                    :content(":content('[Score: %d]') + :spawn(value)")
+                    :size(16)
+                    :color("silver")
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "Tags & Bulk Operations",
+            duration = 3,
+            spawn = function()
+                -- Spawn tagged text
+                for i = 1, 5 do
+                    Text.define()
+                        :content(string.format("[Tag #%d](color=purple)", i))
+                        :size(22)
+                        :anchor("center")
+                        :space("screen")
+                        :lifespan(2.8)
+                        :spawn()
+                        :at(cx + (i - 3) * 120, baseY)
+                        :tag(_demoTag)
+                end
+                Text.define()
+                    :content(":tag('name') + Text.stopByTag('name')")
+                    :size(16)
+                    :color("silver")
+                    :anchor("center")
+                    :space("screen")
+                    :lifespan(2.8)
+                    :spawn()
+                    :at(cx, baseY + 50)
+                    :tag(_demoTag)
+            end
+        },
+    })
 
--- Pattern 7: Title announcement (rare)
-local function spawnTitleAnnouncement()
-    local titles = {
-        "WAVE COMPLETE",
-        "LEVEL UP!",
-        "BOSS INCOMING",
-        "PERFECT!",
-        "UNSTOPPABLE"
-    }
-    local title = titles[math.random(#titles)]
-    local x = screenW() * 0.5
-    local y = 90
-
-    titleRecipe:spawn(title):at(x, y):tag(_demoTag)
+    -- Final summary
+    table.insert(_demoQueue, {
+        name = "DEMO COMPLETE",
+        duration = 3,
+        spawn = function()
+            Text.define()
+                :content("[Demo Complete!](rainbow=90,15)")
+                :size(36)
+                :anchor("center")
+                :space("screen")
+                :lifespan(2.8)
+                :spawn()
+                :at(cx, baseY)
+                :tag(_demoTag)
+            Text.define()
+                :content(string.format("Showcased %d features", #_demoQueue - 1))
+                :size(20)
+                :color("silver")
+                :anchor("center")
+                :space("screen")
+                :lifespan(2.8)
+                :spawn()
+                :at(cx, baseY + 50)
+                :tag(_demoTag)
+        end
+    })
 end
 
 --------------------------------------------------------------------------------
 -- DEMO CONTROL
 --------------------------------------------------------------------------------
 
+local function runNextDemo()
+    if not _active then return end
+
+    _currentDemo = _currentDemo + 1
+    if _currentDemo > #_demoQueue then
+        _currentDemo = 1  -- Loop
+    end
+
+    local demo = _demoQueue[_currentDemo]
+    if not demo then return end
+
+    -- Clear previous demo text
+    Text.stopByTag(_demoTag)
+
+    -- Show progress indicator
+    local progress = string.format("[%d/%d](color=silver)", _currentDemo, #_demoQueue)
+    Text.define()
+        :content(progress)
+        :size(14)
+        :anchor("topleft")
+        :space("screen")
+        :lifespan(demo.duration - 0.1)
+        :spawn()
+        :at(20, 20)
+        :tag(_demoTag)
+
+    -- Spawn demo content
+    demo.spawn()
+
+    -- Schedule next demo
+    _timers.nextDemo = timer.after(
+        demo.duration,
+        runNextDemo,
+        nil,
+        nil,
+        "text_demo_next",
+        "text_demo"
+    )
+end
+
 --- Start the text builder demo
 function TextBuilderDemo.start()
     if _active then return end
     _active = true
 
-    -- DEBUG: Verify demo is starting
-    print("[TextBuilderDemo] START called - setting up demo")
+    print("[TextBuilderDemo] Starting comprehensive feature showcase")
+
+    -- Build the demo queue
+    buildDemoQueue()
+    _currentDemo = 0
 
     -- Clear any existing demo text
     Text.stopByTag(_demoTag)
-
-    -- Schedule periodic spawns with variety (slower rates to reduce load)
-
-    -- Damage numbers: every 0.6 seconds
-    _timers.damage = timer.every(
-        0.6,
-        function()
-            if not _active then return end
-            spawnRandomDamage()
-        end,
-        0,    -- infinite
-        true, -- immediate
-        nil,
-        "text_demo_damage",
-        "text_demo"
-    )
-
-    -- Heals: every 1.5 seconds
-    _timers.heal = timer.every(
-        1.5,
-        function()
-            if not _active then return end
-            spawnRandomHeal()
-        end,
-        0,
-        false, -- not immediate
-        nil,
-        "text_demo_heal",
-        "text_demo"
-    )
-
-    -- Crits: every 3 seconds
-    _timers.crit = timer.every(
-        3.0,
-        function()
-            if not _active then return end
-            spawnCriticalHit()
-        end,
-        0,
-        false,
-        nil,
-        "text_demo_crit",
-        "text_demo"
-    )
-
-    -- Status effects: every 2 seconds
-    _timers.status = timer.every(
-        2.0,
-        function()
-            if not _active then return end
-            spawnStatusEffect()
-        end,
-        0,
-        false,
-        nil,
-        "text_demo_status",
-        "text_demo"
-    )
-
-    -- Combos: every 4 seconds
-    _timers.combo = timer.every(
-        4.0,
-        function()
-            if not _active then return end
-            spawnCombo()
-        end,
-        0,
-        false,
-        nil,
-        "text_demo_combo",
-        "text_demo"
-    )
-
-    -- XP: every 2.5 seconds
-    _timers.xp = timer.every(
-        2.5,
-        function()
-            if not _active then return end
-            spawnXPGain()
-        end,
-        0,
-        false,
-        nil,
-        "text_demo_xp",
-        "text_demo"
-    )
-
-    -- Title announcements: every 6 seconds
-    _timers.title = timer.every(
-        6.0,
-        function()
-            if not _active then return end
-            spawnTitleAnnouncement()
-        end,
-        0,
-        false,
-        nil,
-        "text_demo_title",
-        "text_demo"
-    )
 
     -- Update loop for Text.update(dt)
     _timers.update = timer.every(
@@ -314,7 +1149,10 @@ function TextBuilderDemo.start()
         "text_demo"
     )
 
-    log_debug("[TextBuilderDemo] Started")
+    -- Start first demo
+    runNextDemo()
+
+    log_debug("[TextBuilderDemo] Started - " .. #_demoQueue .. " demos queued")
 end
 
 --- Stop the text builder demo
@@ -330,12 +1168,36 @@ function TextBuilderDemo.stop()
     Text.stopByTag(_demoTag)
     Text.update(0) -- Process removals
 
+    _currentDemo = 0
+    _demoQueue = {}
+
     log_debug("[TextBuilderDemo] Stopped")
 end
 
 --- Check if demo is active
 function TextBuilderDemo.isActive()
     return _active
+end
+
+--- Get current demo index
+function TextBuilderDemo.getCurrentDemo()
+    return _currentDemo, #_demoQueue
+end
+
+--- Skip to next demo
+function TextBuilderDemo.next()
+    if not _active then return end
+    timer.kill("text_demo_next")
+    runNextDemo()
+end
+
+--- Skip to previous demo
+function TextBuilderDemo.prev()
+    if not _active then return end
+    _currentDemo = _currentDemo - 2
+    if _currentDemo < 0 then _currentDemo = #_demoQueue - 1 end
+    timer.kill("text_demo_next")
+    runNextDemo()
 end
 
 --- Get active text count (for debugging)

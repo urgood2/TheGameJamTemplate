@@ -530,6 +530,18 @@ function Text._createHandle(spawner)
 
     -- Create CommandBufferText (or mock)
     local CBT = _G._MockCommandBufferText or require("ui.command_buffer_text")
+    local layer = config.layer or (_G.layers and _G.layers.ui)
+
+    -- Convert string space to DrawCommandSpace enum
+    local renderSpace = nil
+    if layer and layer.DrawCommandSpace then
+        if config.space == "world" then
+            renderSpace = layer.DrawCommandSpace.World
+        else
+            renderSpace = layer.DrawCommandSpace.Screen
+        end
+    end
+
     handle._textRenderer = CBT({
         text = handle._content,
         w = config.width or 200,
@@ -537,9 +549,9 @@ function Text._createHandle(spawner)
         y = handle._position.y,
         font_size = config.size or 16,
         anchor = config.anchor or "center",
-        layer = config.layer or (_G.layers and _G.layers.ui),
+        layer = layer,
         z = config.z or 0,
-        space = config.space,
+        render_space = renderSpace,
     })
 
     return handle

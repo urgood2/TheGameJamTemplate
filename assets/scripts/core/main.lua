@@ -20,6 +20,7 @@ local CastFeedUI = require("ui.cast_feed_ui")
 -- local bit = require("bit") -- LuaJIT's bit library
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
+local TextBuilderDemo = require("demos.text_builder_demo")
 -- Represents game loop main module
 main = main or {}
 
@@ -357,7 +358,9 @@ function initMainMenu()
     local languageButtonTransform = component_cache.get(mainMenuEntities.language_button_uibox, Transform)
     languageButtonTransform.actualX = globals.screenWidth() - languageButtonTransform.actualW - 20
     languageButtonTransform.actualY = globals.screenHeight() - languageButtonTransform.actualH - 20
-    
+
+    -- Start TextBuilder visual demo in the top area
+    TextBuilderDemo.start()
 end
 
 function startGameButtonCallback()
@@ -407,8 +410,10 @@ function startGameButtonCallback()
     )
     
 end
-function clearMainMenu() 
-    --TODO:
+function clearMainMenu()
+    -- Stop TextBuilder demo
+    TextBuilderDemo.stop()
+
     -- for each entity in mainMenuEntities, push it down out of view
     for _, entity in pairs(mainMenuEntities) do
         if registry:has(entity, Transform) then

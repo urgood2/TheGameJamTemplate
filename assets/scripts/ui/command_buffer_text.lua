@@ -535,7 +535,7 @@ function CommandBufferText:update(dt)
         c.font = font_ref
         c.x = 0
         c.y = 0
-        c.origin = { x = 0, y = 0 }
+        c.origin = Vec2(0, 0)
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1
@@ -550,7 +550,7 @@ function CommandBufferText:update(dt)
         c.font = font_ref
         c.x = draw_x
         c.y = draw_y
-        c.origin = { x = 0, y = 0 }
+        c.origin = Vec2(0, 0)
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1

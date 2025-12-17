@@ -34,7 +34,7 @@ local LevelUpScreen = require("ui.level_up_screen")
 local ContentDebugPanel = require("ui.content_debug_panel")
 local CombatDebugPanel = require("ui.combat_debug_panel")
 local EntityInspector = require("ui.entity_inspector")
-local Constants = require("core.constants")
+local C = require("core.constants")
 local LEVEL_UP_MODAL_DELAY = 0.5
 local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
@@ -8677,7 +8677,6 @@ function initActionPhase()
                 physics.update_collision_masks_for(PhysicsManager.get_world("world"), C.CollisionTags.PLAYER, { C.CollisionTags.ENEMY })
 
                 -- make it steerable
-                -- steering
                 steering.make_steerable(registry, enemyEntity, 3000.0, 30000.0, math.pi * 2.0, 2.0)
 
 

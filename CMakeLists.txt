@@ -226,8 +226,15 @@ if (EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s TOTAL_STACK=128MB") # 5MB stack size
 endif() 
 
-if (WIN32) 
-    add_compile_options("-Wa,-mbig-obj")
+# Windows requires big object file support due to large template instantiations
+if (WIN32)
+    if (MSVC)
+        # MSVC native flag for big objects
+        add_compile_options(/bigobj)
+    else()
+        # MinGW/GCC flag (passes through to assembler)
+        add_compile_options(-Wa,-mbig-obj)
+    endif()
 endif()
 
 
@@ -262,12 +269,15 @@ endif()
 if(NOT _default_build_id)
     find_package(Git QUIET)
     if(GIT_FOUND)
+        # Add TIMEOUT to prevent hanging on Windows if Git is waiting for credentials
         execute_process(
             COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             OUTPUT_VARIABLE _git_build_id
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE _git_build_id_result
+            TIMEOUT 10
+            ERROR_QUIET
         )
         if(_git_build_id_result EQUAL 0 AND NOT _git_build_id STREQUAL "")
             set(_default_build_id "${_git_build_id}")
@@ -288,7 +298,8 @@ include(FetchContent)
 if(ENABLE_POSTHOG AND NOT EMSCRIPTEN)
     find_package(CURL QUIET)
     if(NOT CURL_FOUND)
-        message(STATUS "CURL not found; fetching via FetchContent")
+        message(STATUS "[FetchContent] CURL not found; fetching from GitHub...")
+        message(STATUS "               If this hangs on Windows, Git may be waiting for credentials.")
         set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
         set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
         # Enable HTTPS support so PostHog can be reached over TLS.
@@ -303,6 +314,7 @@ if(ENABLE_POSTHOG AND NOT EMSCRIPTEN)
             GIT_PROGRESS TRUE
         )
         FetchContent_MakeAvailable(curl)
+        message(STATUS "[FetchContent] CURL ready.")
         if(NOT TARGET CURL::libcurl)
             if(TARGET libcurl)
                 get_target_property(_curl_aliased libcurl ALIASED_TARGET)
@@ -323,7 +335,13 @@ endif()
 # Add dependencies with FetchContent
 ##########################################################################################
 
+# NOTE (Windows users): If CMake appears to hang here, it's likely Git is waiting for
+# credentials. To fix: run 'git config --global credential.helper manager' and ensure
+# your GitHub credentials are cached, or use SSH keys.
 function(add_git_dependency libName gitURL gitTag)
+    message(STATUS "[FetchContent] Fetching ${libName} from ${gitURL} (${gitTag})...")
+    message(STATUS "               If this hangs on Windows, Git may be waiting for credentials.")
+
     FetchContent_Declare(${libName}
         GIT_REPOSITORY ${gitURL}
         GIT_TAG        ${gitTag}
@@ -331,7 +349,9 @@ function(add_git_dependency libName gitURL gitTag)
         GIT_PROGRESS   TRUE
     )
     FetchContent_MakeAvailable(${libName})
-    
+
+    message(STATUS "[FetchContent] ${libName} ready.")
+
     if(TARGET ${libName})
         get_target_property(type ${libName} TYPE)
         if(NOT "${type}" STREQUAL "INTERFACE_LIBRARY")
@@ -1111,13 +1131,19 @@ if(ENABLE_UNIT_TESTS)
     enable_testing()
     include(GoogleTest)
 
+    message(STATUS "[FetchContent] Fetching GoogleTest...")
+    message(STATUS "               If this hangs on Windows, Git may be waiting for credentials.")
+
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
         GIT_TAG release-1.12.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
     )
     FetchContent_MakeAvailable(googletest)
+    message(STATUS "[FetchContent] GoogleTest ready.")
 
     add_subdirectory(tests)
 

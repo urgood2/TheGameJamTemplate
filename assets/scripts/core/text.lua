@@ -34,10 +34,17 @@ local Text = {}
 Text._activeHandles = {}
 
 --------------------------------------------------------------------------------
--- RECIPE
+-- FORWARD DECLARATIONS
 --------------------------------------------------------------------------------
 
 local RecipeMethods = {}
+local SpawnerMethods = {}
+local HandleMethods = {}
+
+--------------------------------------------------------------------------------
+-- RECIPE
+--------------------------------------------------------------------------------
+
 RecipeMethods.__index = RecipeMethods
 
 --- Set text content (template string, literal, or callback)
@@ -153,9 +160,116 @@ function RecipeMethods:font(fontObj)
     return self
 end
 
+--- Create a spawner for this recipe
+--- @param value any? Value for template substitution
+--- @return Spawner
+function RecipeMethods:spawn(value)
+    local spawner = setmetatable({}, SpawnerMethods)
+    spawner._recipe = self
+    spawner._value = value
+    spawner._position = nil
+    spawner._followEntity = nil
+    spawner._followOffset = nil
+    spawner._attachedEntity = nil
+    spawner._asEntity = false
+    spawner._shaders = nil
+    spawner._tag = nil
+    return spawner
+end
+
+--------------------------------------------------------------------------------
+-- SPAWNER
+--------------------------------------------------------------------------------
+
+SpawnerMethods.__index = SpawnerMethods
+
+--- Set absolute position and trigger spawn
+--- @param x number X position
+--- @param y number Y position
+--- @return Handle
+function SpawnerMethods:at(x, y)
+    self._position = { x = x, y = y }
+    return self:_spawn()
+end
+
+--- Internal: Create the text handle
+--- @return Handle
+function SpawnerMethods:_spawn()
+    local handle = Text._createHandle(self)
+    table.insert(Text._activeHandles, handle)
+    return handle
+end
+
+--------------------------------------------------------------------------------
+-- HANDLE
+--------------------------------------------------------------------------------
+
+HandleMethods.__index = HandleMethods
+
+--- Check if handle is still active
+--- @return boolean
+function HandleMethods:isActive()
+    return self._active
+end
+
+--- Stop and remove this text
+function HandleMethods:stop()
+    self._active = false
+end
+
 --------------------------------------------------------------------------------
 -- PUBLIC API
 --------------------------------------------------------------------------------
+
+--- Internal: Create handle from spawner config
+--- @param spawner Spawner
+--- @return Handle
+function Text._createHandle(spawner)
+    local config = spawner._recipe._config
+    local handle = setmetatable({}, HandleMethods)
+
+    handle._active = true
+    handle._spawner = spawner
+    handle._config = config
+    handle._position = spawner._position or { x = 0, y = 0 }
+    handle._elapsed = 0
+    handle._lifespan = nil
+
+    -- Calculate lifespan if set
+    if config.lifespanMin then
+        if config.lifespanMin == config.lifespanMax then
+            handle._lifespan = config.lifespanMin
+        else
+            handle._lifespan = config.lifespanMin +
+                math.random() * (config.lifespanMax - config.lifespanMin)
+        end
+    end
+
+    -- Resolve content
+    local content = config.content or ""
+    if type(content) == "function" then
+        content = content()
+    elseif spawner._value ~= nil and type(content) == "string" then
+        content = string.format(content, spawner._value)
+    end
+    handle._content = content
+
+    -- Create CommandBufferText (or mock)
+    local CBT = _G._MockCommandBufferText or require("ui.command_buffer_text")
+    handle._textRenderer = CBT({
+        text = handle._content,
+        w = config.width or 200,
+        x = handle._position.x,
+        y = handle._position.y,
+        font_size = config.size or 16,
+        anchor = config.anchor or "center",
+        layer = config.layer or (_G.layers and _G.layers.ui),
+        z = config.z or 0,
+        space = config.space,
+    })
+
+    return handle
+end
 
 --- Create a new text recipe
 --- @return Recipe

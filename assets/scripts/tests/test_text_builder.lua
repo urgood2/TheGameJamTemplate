@@ -8,15 +8,36 @@ local it, assert_equals, assert_not_nil, assert_true =
 -- Mock CommandBufferText for unit tests
 local MockCommandBufferText = {}
 MockCommandBufferText.__index = MockCommandBufferText
-function MockCommandBufferText:init(args)
-    self.args = args
-    self.updateCount = 0
+
+-- Constructor function
+function MockCommandBufferText:new(args)
+    local obj = {
+        args = args,
+        updateCount = 0,
+        x = args.x,
+        y = args.y
+    }
+    setmetatable(obj, MockCommandBufferText)
+    return obj
 end
+
 function MockCommandBufferText:update(dt)
     self.updateCount = self.updateCount + 1
 end
-function MockCommandBufferText:set_text(t) self.args.text = t end
-function MockCommandBufferText:rebuild() end
+
+function MockCommandBufferText:set_text(t)
+    self.args.text = t
+end
+
+function MockCommandBufferText:rebuild()
+end
+
+-- Make it callable
+setmetatable(MockCommandBufferText, {
+    __call = function(cls, args)
+        return cls:new(args)
+    end
+})
 
 -- Inject mock before requiring Text module
 _G._MockCommandBufferText = MockCommandBufferText
@@ -143,6 +164,39 @@ TestRunner.describe("Recipe configuration", function()
         assert_equals(24, recipe._config.size)
         assert_equals("red", recipe._config.color)
         assert_true(recipe._config.fade)
+    end)
+end)
+
+TestRunner.describe("Spawner basics", function()
+    it(":spawn() returns a Spawner", function()
+        local Text = require("core.text")
+        local recipe = Text.define():content("test")
+        local spawner = recipe:spawn()
+        assert_not_nil(spawner, "spawn() should return spawner")
+        assert_not_nil(spawner._recipe, "spawner should reference recipe")
+    end)
+
+    it(":spawn(value) stores value for template", function()
+        local Text = require("core.text")
+        local recipe = Text.define():content("[%d](red)")
+        local spawner = recipe:spawn(25)
+        assert_equals(25, spawner._value)
+    end)
+
+    it(":at() triggers spawn and returns Handle", function()
+        local Text = require("core.text")
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(100, 200)
+        assert_not_nil(handle, "at() should return handle")
+        assert_true(handle.isActive and handle:isActive(), "handle should be active")
+    end)
+
+    it(":at() registers handle in active list", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}  -- Reset
+        local recipe = Text.define():content("test"):width(100)
+        recipe:spawn():at(100, 200)
+        assert_equals(1, #Text._activeHandles)
     end)
 end)
 

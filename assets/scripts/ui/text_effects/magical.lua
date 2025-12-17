@@ -111,9 +111,13 @@ effects.register("rise", function(ctx, dt, char, speed, fade, stagger, color)
     char.alpha = math.max(0, math.floor(255 * (1 - elapsed * 0.5)))
   end
 
-  -- Ascension color
-  local rise_color = effects.get_color(color)
-  char.color = effects.lerp_color(char.color or effects.colors.white, rise_color, math.min(1, elapsed * 0.5))
+  -- Apply color directly when color is specified
+  if color and color ~= "white" then
+    local rise_color = effects.get_color(color)
+    if rise_color then
+      char.color = rise_color
+    end
+  end
 end, { 30, true, 0.1, "white" })
 
 -- waver: Heat shimmer with warm tint

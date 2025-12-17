@@ -109,10 +109,16 @@ local xpRecipe = Text.define()
 --------------------------------------------------------------------------------
 
 -- Pattern 1: Random damage numbers across the demo area
+local _damage_count = 0
 local function spawnRandomDamage()
     local x = screenW() * (0.15 + math.random() * 0.7)  -- 15%-85% of screen width
     local y = 50 + math.random() * 120  -- Top area
     local damage = math.random(10, 99)
+
+    _damage_count = _damage_count + 1
+    if _damage_count <= 3 then
+        print(string.format("[TextBuilderDemo] Spawning damage #%d: %d at (%.1f, %.1f)", _damage_count, damage, x, y))
+    end
 
     damageRecipe:spawn(damage):at(x, y):tag(_demoTag)
 end
@@ -187,6 +193,9 @@ end
 function TextBuilderDemo.start()
     if _active then return end
     _active = true
+
+    -- DEBUG: Verify demo is starting
+    print("[TextBuilderDemo] START called - setting up demo")
 
     -- Clear any existing demo text
     Text.stopByTag(_demoTag)

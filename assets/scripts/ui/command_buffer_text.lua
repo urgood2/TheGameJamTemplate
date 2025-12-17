@@ -84,10 +84,18 @@ local function parse_effect_arg(raw)
   raw = tostring(raw or "")
   if raw == "" then return raw end
   if raw:find("#") then return raw end
+
+  -- Try to evaluate as Lua literal (number, boolean, etc.)
   local chunk = load("return " .. raw)
   if not chunk then return raw end
   local ok, val = pcall(chunk)
-  if not ok then return raw end
+
+  -- If evaluation failed, or returned nil, keep the original string
+  -- This allows color names like "red", "gold", etc. to pass through as strings
+  if not ok or val == nil then
+    return raw
+  end
+
   return val
 end
 
@@ -490,8 +498,11 @@ function CommandBufferText:update(dt)
     local draw_scaleX = draw_scale * (ch.scaleX or 1)
     local draw_scaleY = draw_scale * (ch.scaleY or 1)
     local draw_color = ch.color or default_color
-    if ch.alpha and ch.alpha < 255 then
-      draw_color = Col(draw_color.r, draw_color.g, draw_color.b, ch.alpha)
+    -- Always convert to proper Col userdata to ensure C++ compatibility
+    -- Effects may return plain tables, but command buffer expects Color userdata
+    local alpha = (ch.alpha and ch.alpha < 255) and ch.alpha or (draw_color.a or 255)
+    if draw_color.r and draw_color.g and draw_color.b then
+      draw_color = Col(draw_color.r, draw_color.g, draw_color.b, alpha)
     end
 
     local needs_scale = draw_scaleX ~= 1 or draw_scaleY ~= 1
@@ -545,6 +556,14 @@ function CommandBufferText:update(dt)
     else
       -- Fast path: Single command buffer call for unscaled characters
       -- This path should be used whenever possible for best performance
+      -- DEBUG: Log non-white colors once per text instance
+      if draw_color and draw_color.r and (draw_color.r ~= 255 or draw_color.g ~= 255 or draw_color.b ~= 255) then
+        if not self._logged_color then
+          self._logged_color = true
+          print(string.format("[CBT DEBUG] Non-white color detected: r=%d g=%d b=%d a=%d for char '%s'",
+            draw_color.r or 0, draw_color.g or 0, draw_color.b or 0, draw_color.a or 0, draw_char or "?"))
+        end
+      end
       command_buffer.queueTextPro(layer_handle, function(c)
         c.text = draw_char
         c.font = font_ref

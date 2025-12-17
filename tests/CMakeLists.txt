@@ -66,7 +66,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/core/ui_components.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/layer/layer_command_buffer.cpp
-    ${CMAKE_SOURCE_DIR}/src/third_party/objectpool-master/src/object_pool.cpp
+    helpers/object_pool_stubs.cpp
 )
 
 target_include_directories(unit_tests PRIVATE

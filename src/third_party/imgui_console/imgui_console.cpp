@@ -503,6 +503,11 @@ void ImGuiConsole::LogWindow()
             m_AutoScroll = true;  // Also enable auto-scroll when jumping
         }
         ImGui::SameLine();
+        if (ImGui::Button("^ Jump to Top")) {
+            m_ScrollToTop = true;
+            m_AutoScroll = false;  // Disable auto-scroll when jumping to top
+        }
+        ImGui::SameLine();
         ImGui::Text("(%zu items)", m_FilteredIndices.size());
     }
 
@@ -510,19 +515,21 @@ void ImGuiConsole::LogWindow()
     {
         const auto& items = m_ConsoleSystem.Items();
 
-        // Check if new items arrived (for auto-scroll)
-        bool newItemsArrived = items.size() > m_LastItemCount;
+        // Detect if new items arrived BEFORE updating the cache
+        // This is used for auto-scroll: only scroll when new content appears
+        const bool newItemsArrived = items.size() > m_LastItemCount;
 
         // Rebuild filter cache if dirty or new items arrived
-        if (m_FilterCacheDirty || items.size() != m_LastItemCount) {
+        if (m_FilterCacheDirty || newItemsArrived) {
             RebuildFilterCache();
         }
 
         // Display colored command output.
         static const float timestamp_width = ImGui::CalcTextSize("00:00:00:0000").x;
 
-        // Wrap items.
-        ImGui::PushTextWrapPos();
+        // Note: Text wrapping is disabled because ImGuiListClipper assumes uniform item heights.
+        // Long log messages can be viewed via horizontal scroll (HorizontalScrollbar flag is set).
+        // See: https://github.com/ocornut/imgui/issues/1447
 
         // Use clipper for virtualized rendering - only render visible rows
         // Pass line height so ImGui can calculate proper scrollbar
@@ -591,16 +598,22 @@ void ImGuiConsole::LogWindow()
             }
         }
 
-        // Stop wrapping since we are done displaying console items.
-        ImGui::PopTextWrapPos();
 
-        // Auto-scroll: only jump to bottom if:
-        // 1. User explicitly requested (m_ScrollToBottom from button click)
-        // 2. New items arrived AND auto-scroll is enabled
-        if (m_ScrollToBottom || (m_AutoScroll && newItemsArrived)) {
-            ImGui::SetScrollHereY(1.0f);
+        // Handle scroll requests
+        if (m_ScrollToTop) {
+            ImGui::SetScrollY(0.0f);
+            m_ScrollToTop = false;
         }
-        m_ScrollToBottom = false;
+        else if (m_ScrollToBottom) {
+            // Explicit scroll-to-bottom request (e.g., button click, command entered)
+            ImGui::SetScrollY(ImGui::GetScrollMaxY());
+            m_ScrollToBottom = false;
+        }
+        else if (m_AutoScroll && newItemsArrived) {
+            // Auto-scroll: only scroll when new items arrive, not every frame
+            // This prevents oscillation/fighting with ImGui's scroll state
+            ImGui::SetScrollY(ImGui::GetScrollMaxY());
+        }
 
         ImGui::EndChild();
     }
@@ -637,9 +650,24 @@ void ImGuiConsole::InputBar()
     // Only reclaim after enter key is pressed!
     bool reclaimFocus = false;
 
+    // Lua mode toggle and indicator
+    if (ImGui::Checkbox("Lua", &m_luaMode)) {
+        m_ConsoleSystem.Log(csys::LOG) << "Lua mode " << (m_luaMode ? "enabled" : "disabled") << csys::endl;
+    }
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Toggle Lua mode (execute Lua code directly)");
+    }
+    ImGui::SameLine();
+
+    // Color the input label based on mode
+    if (m_luaMode) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f)); // Cyan for Lua mode
+    }
+
     // Input widget. (Width an always fixed width)
     ImGui::PushItemWidth(-ImGui::GetStyle().ItemSpacing.x * 5.f);
-    if (ImGui::InputText("Input", &m_Buffer, inputTextFlags, InputCallback, this))
+    const char* inputLabel = m_luaMode ? "Lua>" : "Input";
+    if (ImGui::InputText(inputLabel, &m_Buffer, inputTextFlags, InputCallback, this))
     {
         // Validate.
         if (!m_Buffer.empty())
@@ -677,6 +705,11 @@ void ImGuiConsole::InputBar()
         m_Buffer.clear();
     }
     ImGui::PopItemWidth();
+
+    // Pop Lua mode style if it was pushed
+    if (m_luaMode) {
+        ImGui::PopStyleColor();
+    }
 
     // Reset suggestions when client provides char input.
     if (ImGui::IsItemEdited() && !m_WasPrevFrameTabCompletion)

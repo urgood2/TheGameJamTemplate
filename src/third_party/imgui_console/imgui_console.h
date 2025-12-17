@@ -59,6 +59,7 @@ protected:
     bool m_AutoScroll;               //!< Auto scroll flag.
     bool m_ColoredOutput;            //!< Colored output flag.
     bool m_ScrollToBottom;           //!< Scroll to bottom after is command is ran
+    bool m_ScrollToTop = false;      //!< Scroll to top flag
     bool m_FilterBar;                //!< Filter bar flag.
     bool m_TimeStamps;                 //!< Display time stamps flag
     bool m_luaMode;                    //!< Lua mode flag

@@ -329,9 +329,8 @@ T *AddExplicit(std::shared_ptr<Layer> &layer, DrawCommandType type, int z,
   auto &added = layer->commands_ptr->back();
   added.uniqueID = gNextUniqueID++;
 
-  if (z != 0) {
-    layer->isSorted = false;
-  }
+  // Mark as unsorted whenever a command is added (not just when z != 0)
+  layer->isSorted = false;
   return cmd;
 }
 

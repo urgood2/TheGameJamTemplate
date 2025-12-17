@@ -10,13 +10,15 @@ namespace layer
         
         const std::vector<DrawCommandV2>& GetCommandsSorted(const std::shared_ptr<Layer>& layer) {
             if (!layer->isSorted) {
+                ZoneScoped;
+                ZoneName("CommandBuffer Sort", 18);
                 std::stable_sort(layer->commands.begin(), layer->commands.end(), [](const DrawCommandV2& a, const DrawCommandV2& b) {
                     if (a.z != b.z) return a.z < b.z;
                     // if (a.followAnchor && a.followAnchor == b.uniqueID) return false;
                     // if (b.followAnchor && b.followAnchor == a.uniqueID) return true;
                     return false; // stable_sort preserves insertion order when z is equal
-        
-            
+
+
                     // return a.uniqueID < b.uniqueID; // preserve queue order
                 });
                 layer->isSorted = true;

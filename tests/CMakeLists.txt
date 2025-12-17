@@ -32,6 +32,7 @@ add_executable(unit_tests
     unit/test_ui_layout.cpp
     unit/test_ui_components.cpp
     unit/test_draw_call_counter.cpp
+    unit/test_layer_sorted_flag.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -63,6 +64,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/core/ui_components.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/layer/layer_command_buffer.cpp
 )
 
 target_include_directories(unit_tests PRIVATE

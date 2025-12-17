@@ -267,5 +267,83 @@ TestRunner.describe("Text.update()", function()
     end)
 end)
 
+-- Mock entity and component system
+local mockEntities = {}
+local mockTransforms = {}
+
+_G.entity_cache = {
+    valid = function(eid) return mockEntities[eid] ~= nil end
+}
+_G.component_cache = {
+    get = function(eid, comp)
+        if comp == _G.Transform then return mockTransforms[eid] end
+        return nil
+    end
+}
+_G.Transform = {}
+
+local function createMockEntity(id, x, y)
+    mockEntities[id] = true
+    mockTransforms[id] = { actualX = x, actualY = y, actualW = 32, actualH = 32 }
+    return id
+end
+
+TestRunner.describe("Entity-relative positioning", function()
+    it(":above(entity, offset) positions above entity", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(1, 100, 200)
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():above(entity, 20)
+
+        -- Should be at entity center X, above entity by offset
+        assert_equals(100 + 16, handle._position.x)  -- centerX
+        assert_equals(200 - 20, handle._position.y)  -- above by offset
+    end)
+
+    it(":below(entity, offset) positions below entity", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(2, 100, 200)
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():below(entity, 10)
+
+        assert_equals(100 + 16, handle._position.x)
+        assert_equals(200 + 32 + 10, handle._position.y)  -- below entity
+    end)
+
+    it(":center(entity) positions at entity center", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(3, 100, 200)
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():center(entity)
+
+        assert_equals(100 + 16, handle._position.x)
+        assert_equals(200 + 16, handle._position.y)
+    end)
+
+    it(":follow() updates position each frame", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(4, 100, 200)
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():above(entity, 20):follow()
+
+        -- Move entity
+        mockTransforms[4].actualX = 150
+        mockTransforms[4].actualY = 250
+
+        Text.update(0.016)
+
+        assert_equals(150 + 16, handle._position.x)
+        assert_equals(250 - 20, handle._position.y)
+    end)
+end)
+
 -- Run tests
 TestRunner.run_all()

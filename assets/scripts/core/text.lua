@@ -192,6 +192,106 @@ function SpawnerMethods:at(x, y)
     return self:_spawn()
 end
 
+--- Position above entity (triggers spawn)
+--- @param entity any Entity to position relative to
+--- @param offset number? Pixels above entity (default: 0)
+--- @return Handle
+function SpawnerMethods:above(entity, offset)
+    offset = offset or 0
+    self._followEntity = entity
+    self._followMode = "above"
+    self._followOffset = offset
+    self._position = self:_calculateEntityPosition()
+    return self:_spawn()
+end
+
+--- Position below entity (triggers spawn)
+--- @param entity any Entity to position relative to
+--- @param offset number? Pixels below entity (default: 0)
+--- @return Handle
+function SpawnerMethods:below(entity, offset)
+    offset = offset or 0
+    self._followEntity = entity
+    self._followMode = "below"
+    self._followOffset = offset
+    self._position = self:_calculateEntityPosition()
+    return self:_spawn()
+end
+
+--- Position at entity center (triggers spawn)
+--- @param entity any Entity to center on
+--- @return Handle
+function SpawnerMethods:center(entity)
+    self._followEntity = entity
+    self._followMode = "center"
+    self._followOffset = 0
+    self._position = self:_calculateEntityPosition()
+    return self:_spawn()
+end
+
+--- Position left of entity (triggers spawn)
+--- @param entity any Entity to position relative to
+--- @param offset number? Pixels left of entity (default: 0)
+--- @return Handle
+function SpawnerMethods:left(entity, offset)
+    offset = offset or 0
+    self._followEntity = entity
+    self._followMode = "left"
+    self._followOffset = offset
+    self._position = self:_calculateEntityPosition()
+    return self:_spawn()
+end
+
+--- Position right of entity (triggers spawn)
+--- @param entity any Entity to position relative to
+--- @param offset number? Pixels right of entity (default: 0)
+--- @return Handle
+function SpawnerMethods:right(entity, offset)
+    offset = offset or 0
+    self._followEntity = entity
+    self._followMode = "right"
+    self._followOffset = offset
+    self._position = self:_calculateEntityPosition()
+    return self:_spawn()
+end
+
+--- Enable position following (call before :at/:above/etc)
+--- @return self
+function SpawnerMethods:follow()
+    self._shouldFollow = true
+    return self
+end
+
+--- Internal: Calculate position from entity
+function SpawnerMethods:_calculateEntityPosition()
+    local entity_cache = _G.entity_cache or require("core.entity_cache")
+    local component_cache = _G.component_cache or require("core.component_cache")
+    local Transform = _G.Transform
+
+    if not self._followEntity or not entity_cache.valid(self._followEntity) then
+        return { x = 0, y = 0 }
+    end
+
+    local t = component_cache.get(self._followEntity, Transform)
+    if not t then return { x = 0, y = 0 } end
+
+    local centerX = (t.actualX or 0) + (t.actualW or 0) * 0.5
+    local centerY = (t.actualY or 0) + (t.actualH or 0) * 0.5
+    local offset = self._followOffset or 0
+
+    if self._followMode == "above" then
+        return { x = centerX, y = (t.actualY or 0) - offset }
+    elseif self._followMode == "below" then
+        return { x = centerX, y = (t.actualY or 0) + (t.actualH or 0) + offset }
+    elseif self._followMode == "left" then
+        return { x = (t.actualX or 0) - offset, y = centerY }
+    elseif self._followMode == "right" then
+        return { x = (t.actualX or 0) + (t.actualW or 0) + offset, y = centerY }
+    else -- center
+        return { x = centerX, y = centerY }
+    end
+end
+
 --- Internal: Create the text handle
 --- @return Handle
 function SpawnerMethods:_spawn()
@@ -215,6 +315,13 @@ end
 --- Stop and remove this text
 function HandleMethods:stop()
     self._active = false
+end
+
+--- Enable position following (can be called after spawn)
+--- @return self
+function HandleMethods:follow()
+    self._shouldFollow = true
+    return self
 end
 
 --------------------------------------------------------------------------------
@@ -244,6 +351,12 @@ function Text._createHandle(spawner)
                 math.random() * (config.lifespanMax - config.lifespanMin)
         end
     end
+
+    -- Store follow info
+    handle._followEntity = spawner._followEntity
+    handle._followMode = spawner._followMode
+    handle._followOffset = spawner._followOffset
+    handle._shouldFollow = spawner._shouldFollow
 
     -- Resolve content
     local content = config.content or ""
@@ -304,6 +417,40 @@ function Text.update(dt)
                 handle._active = false
                 table.remove(Text._activeHandles, i)
             else
+                -- Update following position
+                if handle._shouldFollow and handle._followEntity then
+                    local entity_cache = _G.entity_cache or require("core.entity_cache")
+                    local component_cache = _G.component_cache or require("core.component_cache")
+                    local Transform = _G.Transform
+
+                    if entity_cache.valid(handle._followEntity) then
+                        local t = component_cache.get(handle._followEntity, Transform)
+                        if t then
+                            local centerX = (t.actualX or 0) + (t.actualW or 0) * 0.5
+                            local centerY = (t.actualY or 0) + (t.actualH or 0) * 0.5
+                            local offset = handle._followOffset or 0
+
+                            if handle._followMode == "above" then
+                                handle._position = { x = centerX, y = (t.actualY or 0) - offset }
+                            elseif handle._followMode == "below" then
+                                handle._position = { x = centerX, y = (t.actualY or 0) + (t.actualH or 0) + offset }
+                            elseif handle._followMode == "left" then
+                                handle._position = { x = (t.actualX or 0) - offset, y = centerY }
+                            elseif handle._followMode == "right" then
+                                handle._position = { x = (t.actualX or 0) + (t.actualW or 0) + offset, y = centerY }
+                            else
+                                handle._position = { x = centerX, y = centerY }
+                            end
+
+                            -- Update renderer position
+                            if handle._textRenderer then
+                                handle._textRenderer.x = handle._position.x
+                                handle._textRenderer.y = handle._position.y
+                            end
+                        end
+                    end
+                end
+
                 -- Update renderer
                 if handle._textRenderer and handle._textRenderer.update then
                     handle._textRenderer:update(dt)

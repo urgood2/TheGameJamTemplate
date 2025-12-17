@@ -99,7 +99,8 @@ function spawnGoldDigger(x, y)
     
     globals.ui.colonist_ui[colonist] = {
         id = colonist, -- the entity ID of the colonist
-        hp_ui_text = nil -- will be set later
+        hp_ui_text = nil, -- will be set later
+        timer_tag = "colonist_hp_text_update_" .. colonist -- store timer tag for cleanup
     }
     
     local textDef =  ui.definitions.getNewDynamicTextEntry(
@@ -259,7 +260,8 @@ function spawnHealer(x, y)
     
     globals.ui.colonist_ui[colonist] = {
         id = colonist, -- the entity ID of the colonist
-        hp_ui_text = nil -- will be set later
+        hp_ui_text = nil, -- will be set later
+        timer_tag = "colonist_hp_text_update_" .. colonist -- store timer tag for cleanup
     }
     
     local textDef =  ui.definitions.getNewDynamicTextEntry(
@@ -398,7 +400,8 @@ function spawnDamageCushion(x, y)
     
     globals.ui.colonist_ui[colonist] = {
         id = colonist, -- the entity ID of the colonist
-        hp_ui_text = nil -- will be set later
+        hp_ui_text = nil, -- will be set later
+        timer_tag = "colonist_hp_text_update_" .. colonist -- store timer tag for cleanup
     }
     
     local textDef =  ui.definitions.getNewDynamicTextEntry(
@@ -550,7 +553,8 @@ function spawnNewColonist(x, y)
     
     globals.ui.colonist_ui[colonist] = {
         id = colonist, -- the entity ID of the colonist
-        hp_ui_text = nil -- will be set later
+        hp_ui_text = nil, -- will be set later
+        timer_tag = "colonist_hp_text_update_" .. colonist -- store timer tag for cleanup
     }
     
     local textDef =  ui.definitions.getNewDynamicTextEntry(
@@ -1134,6 +1138,27 @@ local PlayerLogic = {
         print("[player] destroy; final position:", self.x, self.y)
     end
 }
+
+-- Cleanup function for colonist UI and associated timers
+function cleanupColonistUI(colonist)
+    if not colonist then
+        log_warn("cleanupColonistUI: colonist is nil")
+        return
+    end
+
+    if globals.ui.colonist_ui[colonist] then
+        -- Cancel the infinite timer using the stored tag
+        if globals.ui.colonist_ui[colonist].timer_tag then
+            timer.cancel(globals.ui.colonist_ui[colonist].timer_tag)
+        end
+
+        -- Clear the UI data
+        globals.ui.colonist_ui[colonist] = nil
+    end
+end
+
+-- Export cleanup function globally
+_G.cleanupColonistUI = cleanupColonistUI
 
 function spawnNewWhale() 
     

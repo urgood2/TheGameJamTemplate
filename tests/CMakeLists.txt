@@ -31,6 +31,9 @@ add_executable(unit_tests
     unit/test_ownership.cpp
     unit/test_ui_layout.cpp
     unit/test_ui_components.cpp
+    unit/test_draw_call_counter.cpp
+    unit/test_layer_sorted_flag.cpp
+    unit/test_layer_state_batching.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -62,6 +65,8 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/input/controller_nav.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/core/ui_components.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/layer/layer_command_buffer.cpp
+    helpers/object_pool_stubs.cpp
 )
 
 target_include_directories(unit_tests PRIVATE
@@ -76,6 +81,7 @@ endif()
 
 target_compile_definitions(unit_tests PRIVATE
     ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets/"
+    UNIT_TESTS
 )
 
 target_link_libraries(unit_tests PRIVATE

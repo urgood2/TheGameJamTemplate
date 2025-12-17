@@ -1,10 +1,13 @@
 #pragma once
 
 #include "core/globals.hpp"
+#include "core/game.hpp"
 #include "util/common_headers.hpp"
 #include "util/error_handling.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/ui/editor/pack_editor.hpp"
+#include "systems/layer/layer_optimized.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -79,6 +82,35 @@ namespace game {
                         globals::setGlobalUIScaleFactor(uiScales[currentScaleIndex]);
                         OnUIScaleChanged(); // ✅ Call your method here
                     }
+
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Performance")) {
+                    ImGui::Text("Draw calls this frame: %d", layer::g_drawCallsThisFrame);
+                    ImGui::Text("FPS: %d", GetFPS());
+                    ImGui::Text("Frame time: %.2f ms", GetFrameTime() * 1000.0f);
+
+#ifndef UNIT_TESTS
+                    ImGui::Separator();
+                    ImGui::Text("Rendering Optimizations:");
+                    if (ImGui::Checkbox("Enable state batching", &layer::layer_command_buffer::g_enableStateBatching)) {
+                        // Invalidate all layer sort flags to force re-sort with new setting
+                        for (auto& [name, layer] : game::s_layers) {
+                            if (layer) layer->isSorted = false;
+                        }
+                        if (layer::layer_command_buffer::g_enableStateBatching) {
+                            SPDLOG_INFO("State batching enabled - commands will be sorted by space within z-levels");
+                        } else {
+                            SPDLOG_INFO("State batching disabled - using z-only sorting");
+                        }
+                    }
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Sort commands by space (World/Screen) within same z-level\nReduces camera mode toggles during rendering");
+                    }
+                    ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.4f, 1.0f), "Note:");
+                    ImGui::SameLine();
+                    ImGui::TextWrapped("May affect visual order for commands at same z-level. Use distinct z-levels for UI vs World.");
+#endif
 
                     ImGui::EndTabItem();
                 }

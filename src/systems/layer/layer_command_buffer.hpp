@@ -19,6 +19,11 @@ template <typename T> struct DynamicObjectPoolWrapper;
 } // namespace layer
 
 namespace layer::layer_command_buffer {
+// Feature flag for state-aware batching optimization
+// When enabled, commands are sorted by space (World/Screen) within same z-level
+// This reduces camera mode toggles during rendering
+inline bool g_enableStateBatching = false;  // Off by default for safety
+
 template <typename T>
 DynamicObjectPoolWrapper<T> &GetDrawCommandPool(Layer &layer);
 }
@@ -329,9 +334,8 @@ T *AddExplicit(std::shared_ptr<Layer> &layer, DrawCommandType type, int z,
   auto &added = layer->commands_ptr->back();
   added.uniqueID = gNextUniqueID++;
 
-  if (z != 0) {
-    layer->isSorted = false;
-  }
+  // Mark as unsorted whenever a command is added (not just when z != 0)
+  layer->isSorted = false;
   return cmd;
 }
 
@@ -437,6 +441,7 @@ inline void ImmediateCommand(std::shared_ptr<Layer> layer, Initializer &&init,
   auto it = dispatcher.find(type);
   if (it != dispatcher.end()) {
     it->second(layer, static_cast<void *>(&tmp));
+    g_drawCallsThisFrame++;  // Count immediate commands
   } else {
     SPDLOG_ERROR("Unhandled draw command type {}", magic_enum::enum_name(type));
   }

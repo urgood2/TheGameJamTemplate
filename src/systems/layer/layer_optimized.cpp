@@ -73,6 +73,7 @@ namespace layer
             auto it = dispatcher.find(cmd.type);
             if (it != dispatcher.end()) {
                 it->second(layer, cmd.data);
+                g_drawCallsThisFrame++;  // Count child commands
             }
         }
         PopMatrix();

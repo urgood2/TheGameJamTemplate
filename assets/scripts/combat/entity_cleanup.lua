@@ -319,6 +319,9 @@ end
 --[[
     Cleanup UI elements attached to entity
 
+    Cancels infinite timers associated with the UI (e.g., HP text updates)
+    before destroying UI entities to prevent memory leaks.
+
     @param entity_id
 ]]
 function EntityCleanup.cleanup_ui(entity_id)
@@ -327,6 +330,14 @@ function EntityCleanup.cleanup_ui(entity_id)
         local ui_data = globals.ui.colonist_ui[entity_id]
 
         if ui_data then
+            -- Cancel infinite HP text update timer BEFORE destroying UI entities
+            -- This prevents timer leak where timers continue running after entity destruction
+            local timer_tag = ui_data.timer_tag
+            if timer_tag then
+                timer.cancel(timer_tag)
+                log_debug("[EntityCleanup] Cancelled timer:", timer_tag)
+            end
+
             -- Destroy UI box
             if ui_data.hp_ui_box and registry and registry:valid(ui_data.hp_ui_box) then
                 registry:destroy(ui_data.hp_ui_box)

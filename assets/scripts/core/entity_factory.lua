@@ -1139,27 +1139,6 @@ local PlayerLogic = {
     end
 }
 
--- Cleanup function for colonist UI and associated timers
-function cleanupColonistUI(colonist)
-    if not colonist then
-        log_warn("cleanupColonistUI: colonist is nil")
-        return
-    end
-
-    if globals.ui.colonist_ui[colonist] then
-        -- Cancel the infinite timer using the stored tag
-        if globals.ui.colonist_ui[colonist].timer_tag then
-            timer.cancel(globals.ui.colonist_ui[colonist].timer_tag)
-        end
-
-        -- Clear the UI data
-        globals.ui.colonist_ui[colonist] = nil
-    end
-end
-
--- Export cleanup function globally
-_G.cleanupColonistUI = cleanupColonistUI
-
 function spawnNewWhale() 
     
     bowser = create_ai_entity("kobold")      -- Create a new entity of ai type kobold

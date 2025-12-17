@@ -2,13 +2,14 @@
 local Easing = require("util.easing")  -- the file above
 local timer = require("core.timer")
 local C = require("core.constants")
+local component_cache = require("core.component_cache")
 -- local bit = require("bit") -- LuaJIT's bit library
 
 -- meant to be called within a coroutine.
 -- returns false if entity should stop.
 function moveEntityTowardGoalOneIncrement(e, goalLoc, dt) 
     -- get the current position of the entity
-    local transformComp = registry:get(e, Transform)
+    local transformComp = component_cache.get(e, Transform)
     local absYDiff = math.abs(transformComp.actualY - goalLoc.y)
     local absXDiff = math.abs(transformComp.actualX - goalLoc.x)
     -- check if the entity is close enough to the target location
@@ -62,7 +63,7 @@ function spawnGoldDigger(x, y)
     setBlackboardFloat(colonist, "health", findInTable(globals.creature_defs, "id", "gold_digger").initial_hp) -- set the initial health of the gold digger
     setBlackboardFloat(colonist, "max_health", findInTable(globals.creature_defs, "id", "gold_digger").initial_hp) -- set the max health of the gold digger
     
-    local nodeComp = registry:get(colonist, GameObject)
+    local nodeComp = component_cache.get(colonist, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
@@ -88,11 +89,11 @@ function spawnGoldDigger(x, y)
     
     -- 3) Randomize its start position, unless x and y are provided
     if (x and y) then
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = x
         tr.actualY = y
     else
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
         tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
     end
@@ -164,10 +165,10 @@ function spawnGoldDigger(x, y)
     );
     
     -- set the alignment flag for the uibox to be centered above the colonist
-    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    local roleComp = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
     roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP)
 
-    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+    local uiRoot = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
     log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
     
@@ -176,15 +177,15 @@ function spawnGoldDigger(x, y)
     --     function()
     --         -- print the location of the text entity every frame
     --         -- log_debug("colonist", colonist, "ui text entity:", globals.ui.colonist_ui[colonist].hp_ui_text)
-    --         local transform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
+    --         local transform = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
     --         log_debug("colonist", colonist, "ui text entity", globals.ui.colonist_ui[colonist].hp_ui_text, " location:", transform.actualX, transform.actualY)
 
     --         -- print the root entity location as well
-    --         local rootTransform = registry:get(uiRoot, Transform)
+    --         local rootTransform = component_cache.get(uiRoot, Transform)
     --         log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
 
     --         -- print the uibox location
-    --         local uiboxTransform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
+    --         local uiboxTransform = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
     --         log_debug("colonist", colonist, "uibox entity", globals.ui.colonist_ui[colonist].hp_ui_box, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
 
     --         log_debug(ui.box.DebugPrint(registry, globals.ui.colonist_ui[colonist].hp_ui_box, 4)) -- print the uibox debug info
@@ -223,7 +224,7 @@ function spawnHealer(x, y)
     setBlackboardFloat(colonist, "health", findInTable(globals.creature_defs, "id", "healer").initial_hp) -- set the initial health of the gold digger
     setBlackboardFloat(colonist, "max_health", findInTable(globals.creature_defs, "id", "healer").initial_hp) -- set the max health of the gold digger
     
-    local nodeComp = registry:get(colonist, GameObject)
+    local nodeComp = component_cache.get(colonist, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
@@ -249,11 +250,11 @@ function spawnHealer(x, y)
     
     -- 3) Randomize its start position, unless x and y are provided
     if (x and y) then
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = x
         tr.actualY = y
     else
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
         tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
     end
@@ -327,10 +328,10 @@ function spawnHealer(x, y)
     );
     
     -- set the alignment flag for the uibox to be centered above the colonist
-    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    local roleComp = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
     roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)
 
-    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+    local uiRoot = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
     log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
     
@@ -363,7 +364,7 @@ function spawnDamageCushion(x, y)
     setBlackboardFloat(colonist, "health", findInTable(globals.creature_defs, "id", "damage_cushion").initial_hp) -- set the initial health of the gold digger
     setBlackboardFloat(colonist, "max_health", findInTable(globals.creature_defs, "id", "damage_cushion").initial_hp) -- set the max health of the gold digger
     
-    local nodeComp = registry:get(colonist, GameObject)
+    local nodeComp = component_cache.get(colonist, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
@@ -389,11 +390,11 @@ function spawnDamageCushion(x, y)
     
     -- 3) Randomize its start position, unless x and y are provided
     if (x and y) then
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = x
         tr.actualY = y
     else
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
         tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
     end
@@ -467,10 +468,10 @@ function spawnDamageCushion(x, y)
     );
     
     -- set the alignment flag for the uibox to be centered above the colonist
-    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    local roleComp = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
     roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)
 
-    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+    local uiRoot = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
     log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
     
@@ -512,7 +513,7 @@ function spawnNewColonist(x, y)
         64
     )
     
-    local nodeComp = registry:get(colonist, GameObject)
+    local nodeComp = component_cache.get(colonist, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
@@ -542,11 +543,11 @@ function spawnNewColonist(x, y)
     
     -- 3) Randomize its start position, unless x and y are provided
     if (x and y) then
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = x
         tr.actualY = y
     else
-        local tr = registry:get(colonist, Transform)
+        local tr = component_cache.get(colonist, Transform)
         tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
         tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
     end
@@ -625,10 +626,10 @@ function spawnNewColonist(x, y)
     );
     
     -- set the alignment flag for the uibox to be centered above the colonist
-    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    local roleComp = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
     roleComp.flags = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_BOTTOM)
 
-    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+    local uiRoot = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
     log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
     
@@ -637,15 +638,15 @@ function spawnNewColonist(x, y)
     --     function()
     --         -- print the location of the text entity every frame
     --         -- log_debug("colonist", colonist, "ui text entity:", globals.ui.colonist_ui[colonist].hp_ui_text)
-    --         local transform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
+    --         local transform = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
     --         log_debug("colonist", colonist, "ui text entity", globals.ui.colonist_ui[colonist].hp_ui_text, " location:", transform.actualX, transform.actualY)
 
     --         -- print the root entity location as well
-    --         local rootTransform = registry:get(uiRoot, Transform)
+    --         local rootTransform = component_cache.get(uiRoot, Transform)
     --         log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
 
     --         -- print the uibox location
-    --         local uiboxTransform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
+    --         local uiboxTransform = component_cache.get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
     --         log_debug("colonist", colonist, "uibox entity", globals.ui.colonist_ui[colonist].hp_ui_box, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
 
     --         log_debug(ui.box.DebugPrint(registry, globals.ui.colonist_ui[colonist].hp_ui_box, 4)) -- print the uibox debug info
@@ -731,23 +732,23 @@ function spawnCurrencyAutoCollect(x, y, currencyName)
     
     log_debug("currency", currencyName, "clicked")
     -- Get the Transform component you use to track visual X/Y and size:
-    local tc = registry:get(e, Transform)  -- or whatever its name is
+    local tc = component_cache.get(e, Transform)  -- or whatever its name is
 
     -- Compute the true on-screen center:
     local centerX = tc.visualX + tc.visualW * 0.5
     local centerY = tc.visualY + tc.visualH * 0.5
     -- spawn a growing circle particle
     
-    local gameObjectComp = registry:get(e, GameObject)
+    local gameObjectComp = component_cache.get(e, GameObject)
     -- remove the click and hover enabled state
     
     transform.InjectDynamicMotion(e, 1, 50)
     
     timer.after(0.2, function()
-        local transformComp = registry:get(e, Transform)
+        local transformComp = component_cache.get(e, Transform)
         -- send it to the top right corner of the screen
-        -- local transformComp = registry:get(e, Transform)
-        local targetTransform = registry:get(globals.currencies[currencyName].ui_icon_entity, Transform)
+        -- local transformComp = component_cache.get(e, Transform)
+        local targetTransform = component_cache.get(globals.currencies[currencyName].ui_icon_entity, Transform)
         
         transformComp.scale = 0.8
         transformComp.actualX = targetTransform.actualX
@@ -758,7 +759,7 @@ function spawnCurrencyAutoCollect(x, y, currencyName)
     log_debug("currency", currencyName, "remove timer added")
     -- remove some time later
     timer.after(0.8, function()
-        local transformComp = registry:get(e, Transform)
+        local transformComp = component_cache.get(e, Transform)
         if (registry:valid(e) == true) then
             registry:destroy(e)
         end
@@ -807,7 +808,7 @@ function spawnCurrency(x, y, currencyName)
     -- jigglle on spawn
     transform.InjectDynamicMotionDefault(e)
     
-    nodeComp = registry:get(e, GameObject)
+    nodeComp = component_cache.get(e, GameObject)
     
     gameObjectState = nodeComp.state
     gameObjectState.clickEnabled = true
@@ -824,14 +825,14 @@ function spawnCurrency(x, y, currencyName)
         
         log_debug("currency", currencyName, "clicked")
         -- Get the Transform component you use to track visual X/Y and size:
-        local tc = registry:get(e, Transform)  -- or whatever its name is
+        local tc = component_cache.get(e, Transform)  -- or whatever its name is
 
         -- Compute the true on-screen center:
         local centerX = tc.visualX + tc.visualW * 0.5
         local centerY = tc.visualY + tc.visualH * 0.5
         -- spawn a growing circle particle
         
-        local gameObjectComp = registry:get(e, GameObject)
+        local gameObjectComp = component_cache.get(e, GameObject)
         -- remove the click and hover enabled state
         gameObjectComp.state.clickEnabled = false
         gameObjectComp.state.hoverEnabled = false
@@ -843,7 +844,7 @@ function spawnCurrency(x, y, currencyName)
         -- jiggle
         transform.InjectDynamicMotion(e, 1, 50)
         
-        local transformComp = registry:get(e, Transform)
+        local transformComp = component_cache.get(e, Transform)
         transformComp.scale = 3 -- make it bigger
         spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
         
@@ -853,8 +854,8 @@ function spawnCurrency(x, y, currencyName)
         
         timer.after(0.2, function()
             -- send it to the top right corner of the screen
-            -- local transformComp = registry:get(e, Transform)
-            targetTransform = registry:get(globals.currencies[currencyName].ui_icon_entity, Transform)
+            -- local transformComp = component_cache.get(e, Transform)
+            targetTransform = component_cache.get(globals.currencies[currencyName].ui_icon_entity, Transform)
             
             transformComp.scale = 0.8
             transformComp.actualX = targetTransform.actualX
@@ -943,7 +944,7 @@ end
 
 function spawnNewKrillAtLocation(x, y)
     local krill = spawnNewKrill() -- spawn a new krill
-    local transform = registry:get(krill, Transform) -- get the transform component of the
+    local transform = component_cache.get(krill, Transform) -- get the transform component of the
     transform.actualX = x
     transform.actualY = y -- set its position to the given x and y
 end
@@ -979,7 +980,7 @@ function spawnNewKrill()
     )
     
     -- make them hoverable
-    local nodeComp = registry:get(kr, GameObject)
+    local nodeComp = component_cache.get(kr, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
@@ -1010,7 +1011,7 @@ function spawnNewKrill()
     -- shaderPipelineComp:addPass("random_displacement_anim")
 
     -- 3) Randomize its start position
-    local tr = registry:get(kr, Transform)
+    local tr = component_cache.get(kr, Transform)
     tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
     tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
 
@@ -1026,8 +1027,8 @@ function spawnNewKrill()
             local i = random_utils.random_int(1, #whales)
             local bowser = whales[i] -- get a random whale
             -- make the krill move a litlte toward the whale
-            local whaleTransform = registry:get(bowser, Transform)
-            local krillTransform = registry:get(kr, Transform)
+            local whaleTransform = component_cache.get(bowser, Transform)
+            local krillTransform = component_cache.get(kr, Transform)
             local directionX = whaleTransform.actualX - krillTransform.actualX
             local directionY = whaleTransform.actualY - krillTransform.actualY
             -- normalize manually with x and y comps
@@ -1054,7 +1055,7 @@ function spawnNewKrill()
             )
             if distance < globals.krill_tickle_distance then
                 -- call the onClick method of the whale
-                local gameObjectComp = registry:get(bowser, GameObject)
+                local gameObjectComp = component_cache.get(bowser, GameObject)
                 if gameObjectComp and gameObjectComp.methods and gameObjectComp.methods.onClick then
                     gameObjectComp.methods.onClick(registry, kr)
                 end
@@ -1191,8 +1192,8 @@ function spawnNewWhale()
     }
     registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 
-    transformComp = registry:get(bowser, Transform)
-    nodeComp = registry:get(bowser, GameObject)
+    transformComp = component_cache.get(bowser, Transform)
+    nodeComp = component_cache.get(bowser, GameObject)
     
     gameObjectState = nodeComp.state
     gameObjectState.clickEnabled = true
@@ -1233,7 +1234,7 @@ function spawnNewWhale()
         
         playSoundEffect("effects", "whale-click") -- play the whale hit sound effect
         
-        local transformComp = registry:get(e, Transform)
+        local transformComp = component_cache.get(e, Transform)
         
         spawnCurrency(transformComp.actualX + random_utils.random_int(50, 100),
                         transformComp.actualY + random_utils.random_int(50, 100),
@@ -1281,7 +1282,7 @@ function spawnNewWhale()
     -- use a timer to update the position of Bowser every second
     timer.every(loopDelta, function()
         
-        local transformComp = registry:get(bowser, Transform)
+        local transformComp = component_cache.get(bowser, Transform)
        
         -- Step A: Update the total elapsed time for this effect
         elapsedTime = elapsedTime + loopDelta
@@ -1315,7 +1316,7 @@ function spawnNewWhale()
             timer.after(
                 0.5, -- delay in seconds
                 function()
-                    local transform = registry:get(bowser, Transform)
+                    local transform = component_cache.get(bowser, Transform)
                     transform.rotation = transform.rotation - 30
                     
                     timer.tween(
@@ -1338,7 +1339,7 @@ function spawnNewWhale()
                     timer.after(
                         0.1, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX +transform.actualW / 2 ,
@@ -1353,7 +1354,7 @@ function spawnNewWhale()
                     timer.after(
                         0.2, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1368,7 +1369,7 @@ function spawnNewWhale()
                     timer.after(
                         0.3, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1383,7 +1384,7 @@ function spawnNewWhale()
                     timer.after(
                         0.9, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnGrowingCircleParticle(
                                 transform.actualX,
@@ -1399,7 +1400,7 @@ function spawnNewWhale()
                     timer.after(
                         1.5, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1414,7 +1415,7 @@ function spawnNewWhale()
                     timer.after(
                         2.1, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1429,7 +1430,7 @@ function spawnNewWhale()
                     timer.after(
                         2.9, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1443,7 +1444,7 @@ function spawnNewWhale()
                     timer.after(
                         3.5, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnGrowingCircleParticle(
                                 transform.actualX,
@@ -1458,7 +1459,7 @@ function spawnNewWhale()
                     timer.after(
                         3.9, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1472,7 +1473,7 @@ function spawnNewWhale()
                     timer.after(
                         4.0, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1486,7 +1487,7 @@ function spawnNewWhale()
                     timer.after(
                         4.3, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1500,7 +1501,7 @@ function spawnNewWhale()
                     timer.after(
                         4.4, -- delay in seconds
                         function()
-                            local transform = registry:get(bowser, Transform)
+                            local transform = component_cache.get(bowser, Transform)
                             -- spawn particles 
                             spawnCircularBurstParticles(
                                 transform.actualX + transform.actualW / 2 ,
@@ -1518,7 +1519,7 @@ function spawnNewWhale()
             timer.after(
                 5.0, -- delay in seconds
                 function()
-                    local transformComp = registry:get(bowser, Transform)
+                    local transformComp = component_cache.get(bowser, Transform)
                     transformComp.rotation = 0 -- reset rotation
                     
                     timer.tween(
@@ -1537,7 +1538,7 @@ function spawnNewWhale()
                             -- jiggle and add a currency
                             transform.InjectDynamicMotion(whaleSongGatherer, 0.9, 1)
                             
-                            local whalesonggathererTransform = registry:get(whaleSongGatherer, Transform)
+                            local whalesonggathererTransform = component_cache.get(whaleSongGatherer, Transform)
                             
                             spawnCurrencyAutoCollect(whalesonggathererTransform.actualX, whalesonggathererTransform.actualY,
                              "song_essence")

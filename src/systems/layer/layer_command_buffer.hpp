@@ -437,6 +437,7 @@ inline void ImmediateCommand(std::shared_ptr<Layer> layer, Initializer &&init,
   auto it = dispatcher.find(type);
   if (it != dispatcher.end()) {
     it->second(layer, static_cast<void *>(&tmp));
+    g_drawCallsThisFrame++;  // Count immediate commands
   } else {
     SPDLOG_ERROR("Unhandled draw command type {}", magic_enum::enum_name(type));
   }

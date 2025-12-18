@@ -67,6 +67,7 @@ namespace layer
         PushMatrix,
         PopMatrix,
         ScopedTransformCompositeRender,
+        ScopedTransformCompositeRenderWithPipeline,
         PushObjectTransformsToMatrix,
         Circle,
         CircleLine,
@@ -226,6 +227,15 @@ namespace layer
     struct CmdScopedTransformCompositeRender {
         entt::entity entity;
         std::vector<DrawCommandV2> children;
+    };
+
+    // Like ScopedTransformCompositeRender, but also executes the shader pipeline
+    // for the entity's BatchedLocalCommands. Use this for text/shapes that need
+    // to render through shader effects (e.g., polychrome, holo, dissolve).
+    struct CmdScopedTransformCompositeRenderWithPipeline {
+        entt::entity entity;
+        std::vector<DrawCommandV2> children;
+        entt::registry* registry = nullptr;  // Needed for pipeline execution
     };
 
     struct CmdDrawCircleFilled {
@@ -650,6 +660,7 @@ namespace layer
     extern void ExecuteSetBlendMode(std::shared_ptr<layer::Layer> layer, CmdSetBlendMode* c);
     extern void ExecuteUnsetBlendMode(std::shared_ptr<layer::Layer> layer, CmdUnsetBlendMode* c);
     extern void ExecuteScopedTransformCompositeRender(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRender* c);
+    extern void ExecuteScopedTransformCompositeRenderWithPipeline(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRenderWithPipeline* c);
     extern void ExecuteSendUniformFloat(std::shared_ptr<layer::Layer> layer, CmdSendUniformFloat* c);
     extern void ExecuteSendUniformInt(std::shared_ptr<layer::Layer> layer, CmdSendUniformInt* c);
     extern void ExecuteSendUniformVec2(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec2* c);

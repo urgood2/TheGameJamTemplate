@@ -78,7 +78,40 @@ namespace layer
         }
         PopMatrix();
     }
-    
+
+    void ExecuteScopedTransformCompositeRenderWithPipeline(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRenderWithPipeline* c) {
+        if (!c->registry) {
+            SPDLOG_WARN("ScopedTransformCompositeRenderWithPipeline: registry is null");
+            return;
+        }
+
+        // Execute the shader pipeline for this entity's BatchedLocalCommands
+        // This processes text/shapes through shader effects (polychrome, holo, etc.)
+        shader_draw_commands::DrawCommandBatch batch;
+        batch.beginRecording();
+        shader_draw_commands::executeEntityPipelineWithCommands(
+            *c->registry,
+            c->entity,
+            batch,
+            true  // auto-optimize
+        );
+        batch.endRecording();
+        batch.execute();
+
+        // Also execute any child commands in local space (legacy support)
+        if (!c->children.empty()) {
+            layer::pushEntityTransformsToMatrixImmediate(*c->registry, c->entity, layer);
+            for (auto& cmd : c->children) {
+                auto it = dispatcher.find(cmd.type);
+                if (it != dispatcher.end()) {
+                    it->second(layer, cmd.data);
+                    g_drawCallsThisFrame++;
+                }
+            }
+            PopMatrix();
+        }
+    }
+
     void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c) {
         PopMatrix();
     }
@@ -377,6 +410,7 @@ namespace layer
         RegisterRenderer<CmdPopMatrix>(DrawCommandType::PopMatrix, ExecutePopMatrix);
         RegisterRenderer<CmdPushObjectTransformsToMatrix>(DrawCommandType::PushObjectTransformsToMatrix, ExecutePushObjectTransformsToMatrix);
         RegisterRenderer<CmdScopedTransformCompositeRender>(DrawCommandType::ScopedTransformCompositeRender, ExecuteScopedTransformCompositeRender);
+        RegisterRenderer<CmdScopedTransformCompositeRenderWithPipeline>(DrawCommandType::ScopedTransformCompositeRenderWithPipeline, ExecuteScopedTransformCompositeRenderWithPipeline);
         RegisterRenderer<CmdDrawCircleFilled>(DrawCommandType::Circle, ExecuteCircle);
         RegisterRenderer<CmdDrawCircleLine>(DrawCommandType::CircleLine, ExecuteCircleLine);
         RegisterRenderer<CmdDrawRectangle>(DrawCommandType::Rectangle, ExecuteRectangle);

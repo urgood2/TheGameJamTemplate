@@ -92,6 +92,10 @@ template <>
 inline DrawCommandType GetDrawCommandType<CmdScopedTransformCompositeRender>() {
   return DrawCommandType::ScopedTransformCompositeRender;
 }
+template <>
+inline DrawCommandType GetDrawCommandType<CmdScopedTransformCompositeRenderWithPipeline>() {
+  return DrawCommandType::ScopedTransformCompositeRenderWithPipeline;
+}
 template <> inline DrawCommandType GetDrawCommandType<CmdPopMatrix>() {
   return DrawCommandType::PopMatrix;
 }
@@ -473,7 +477,8 @@ inline void LogAllPoolStats(const std::shared_ptr<Layer> &layer) {
       CmdEndDrawing, CmdClearBackground, CmdBeginScissorMode, CmdEndScissorMode,
       CmdTranslate, CmdScale, CmdRotate, CmdAddPush, CmdAddPop, CmdPushMatrix,
       CmdPopMatrix, CmdPushObjectTransformsToMatrix,
-      CmdScopedTransformCompositeRender, CmdDrawCircleFilled, CmdDrawCircleLine,
+      CmdScopedTransformCompositeRender, CmdScopedTransformCompositeRenderWithPipeline,
+      CmdDrawCircleFilled, CmdDrawCircleLine,
       CmdDrawRectangle, CmdDrawRectanglePro, CmdDrawRectangleLinesPro,
       CmdDrawLine, CmdDrawText, CmdDrawTextCentered, CmdTextPro, CmdDrawImage,
       CmdTexturePro, CmdDrawEntityAnimation, CmdDrawTransformEntityAnimation,

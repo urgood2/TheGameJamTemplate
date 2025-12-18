@@ -671,21 +671,23 @@ function CommandBufferText:update(dt)
   -- SHADER PIPELINE EXECUTION
   -- =========================================================================
   -- After adding all local commands to the shader entity, we must trigger
-  -- the shader pipeline execution. The C++ side processes local commands
-  -- only when the entity is rendered via queueScopedTransformCompositeRender.
+  -- the shader pipeline execution. We use queueScopedTransformCompositeRenderWithPipeline
+  -- which properly calls executeEntityPipelineWithCommands() to process
+  -- BatchedLocalCommands through shader passes.
   --
-  -- This is the same pattern cards use: add local commands, then render.
-  -- Without this call, local commands are queued but never executed.
+  -- The original queueScopedTransformCompositeRender only executes child commands
+  -- in local space but NEVER calls the shader pipeline - hence text didn't render.
   -- =========================================================================
-  if use_shader_pipeline and command_buffer and command_buffer.queueScopedTransformCompositeRender then
+  if use_shader_pipeline and command_buffer and command_buffer.queueScopedTransformCompositeRenderWithPipeline then
     -- Debug: log the composite render call (once per entity)
     if not self._composite_logged then
       self._composite_logged = true
-      print(string.format("[CBT] Triggering queueScopedTransformCompositeRender for entity %s",
+      print(string.format("[CBT] Triggering queueScopedTransformCompositeRenderWithPipeline for entity %s",
         tostring(self.shader_entity)))
     end
-    command_buffer.queueScopedTransformCompositeRender(
+    command_buffer.queueScopedTransformCompositeRenderWithPipeline(
       layer_handle,
+      registry,  -- Pass registry so C++ can call executeEntityPipelineWithCommands
       self.shader_entity,
       function()
         -- No additional drawing needed; local commands already added above

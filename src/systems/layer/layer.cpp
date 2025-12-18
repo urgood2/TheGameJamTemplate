@@ -1799,6 +1799,37 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
         });
       });
 
+  // Like queueScopedTransformCompositeRender, but also executes the shader pipeline
+  // for the entity's BatchedLocalCommands. Use this for text/shapes that need
+  // to render through shader effects (polychrome, holo, dissolve).
+  cb.set_function(
+      "queueScopedTransformCompositeRenderWithPipeline",
+      [](std::shared_ptr<layer::Layer> lyr, entt::registry* registry, entt::entity e,
+         sol::function child_builder, int z,
+         DrawCommandSpace space = DrawCommandSpace::World) {
+        // Queue a command that will execute the shader pipeline
+        auto *cmd = layer::layer_command_buffer::Add<
+            layer::CmdScopedTransformCompositeRenderWithPipeline>(lyr, z, space);
+        cmd->entity = e;
+        cmd->registry = registry;
+        cmd->children.reserve(8);
+
+        // Capture any child commands if the builder function is valid
+        if (child_builder.valid()) {
+          auto *prevList = lyr->commands_ptr;
+          lyr->commands_ptr = &cmd->children;
+          sol::protected_function pf(child_builder);
+          auto r = util::safeLuaCall(pf, "queueScopedTransformCompositeRenderWithPipeline");
+          if (r.isErr()) {
+            std::fprintf(stderr,
+                         "[queueScopedTransformCompositeRenderWithPipeline] "
+                         "child_builder error: %s\n",
+                         r.error().c_str());
+          }
+          lyr->commands_ptr = prevList;
+        }
+      });
+
   // -----------------------------------------------------------------------------
 // Immediate versions (execute immediately instead of queuing)
 // -----------------------------------------------------------------------------

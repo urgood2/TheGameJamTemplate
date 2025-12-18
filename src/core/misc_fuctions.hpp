@@ -104,6 +104,17 @@ namespace game {
                     ImGui::Text("FPS: %d", GetFPS());
                     ImGui::Text("Frame time: %.2f ms", GetFrameTime() * 1000.0f);
 
+                    ImGui::Separator();
+                    ImGui::Text("Lua GC Statistics:");
+                    ImGui::Indent();
+                    ImGui::Text("Last GC pause: %.3f ms", game::g_lastGcPauseMs);
+                    ImGui::Text("Max GC pause: %.3f ms", game::g_maxGcPauseMs);
+                    ImGui::Text("Avg GC pause: %.3f ms", game::g_avgGcPauseMs);
+                    if (game::g_lastGcPauseMs > 5.0) {
+                        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "WARNING: Last GC pause exceeded 5ms!");
+                    }
+                    ImGui::Unindent();
+
 #ifndef UNIT_TESTS
                     ImGui::Separator();
                     ImGui::Text("Rendering Optimizations:");

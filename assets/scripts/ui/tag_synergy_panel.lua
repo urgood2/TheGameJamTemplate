@@ -956,44 +956,47 @@ function TagSynergyPanel.draw()
     end
 
     -- Register hover regions with HoverRegistry
-    local mouse = getMousePosition()
-    if mouse then
-        for _, row in ipairs(layoutCache.rows or {}) do
-            -- Register row region (lower z)
-            HoverRegistry.region({
-                id = "synergy_" .. row.entry.tag,
-                x = row.rowLeft,
-                y = row.top,
-                w = row.rowWidth,
-                h = row.rowHeight,
-                z = 100,
-                onHover = function()
-                    local target = buildHoverTarget(row.entry)
+    for _, row in ipairs(layoutCache.rows or {}) do
+        -- Register row region (lower z)
+        HoverRegistry.region({
+            id = "synergy_" .. row.entry.tag,
+            x = row.rowLeft,
+            y = row.top,
+            w = row.rowWidth,
+            h = row.rowHeight,
+            z = 100,
+            onHover = function()
+                local target = buildHoverTarget(row.entry)
+                local mouse = getMousePosition()
+                if mouse then
                     updateHoverTooltip(target, mouse)
+                end
+            end,
+            onUnhover = function()
+                hideActiveTooltip()
+            end,
+        })
+
+        -- Register segment regions (higher z)
+        for _, seg in ipairs(row.segments or {}) do
+            HoverRegistry.region({
+                id = "synergy_" .. row.entry.tag .. "_" .. seg.threshold,
+                x = seg.left - hoverPadX,
+                y = seg.top - hoverPadY,
+                w = seg.width + hoverPadX * 2,
+                h = seg.height + hoverPadY * 2,
+                z = 101,
+                onHover = function()
+                    local target = buildHoverTarget(row.entry, seg.threshold)
+                    local mouse = getMousePosition()
+                    if mouse then
+                        updateHoverTooltip(target, mouse)
+                    end
                 end,
                 onUnhover = function()
                     hideActiveTooltip()
                 end,
             })
-
-            -- Register segment regions (higher z)
-            for _, seg in ipairs(row.segments or {}) do
-                HoverRegistry.region({
-                    id = "synergy_" .. row.entry.tag .. "_" .. seg.threshold,
-                    x = seg.left - hoverPadX,
-                    y = seg.top - hoverPadY,
-                    w = seg.width + hoverPadX * 2,
-                    h = seg.height + hoverPadY * 2,
-                    z = 101,
-                    onHover = function()
-                        local target = buildHoverTarget(row.entry, seg.threshold)
-                        updateHoverTooltip(target, mouse)
-                    end,
-                    onUnhover = function()
-                        hideActiveTooltip()
-                    end,
-                })
-            end
         end
     end
 end

@@ -9,6 +9,7 @@ local TagSynergyPanel = {}
 local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
 local dsl = require("ui.ui_syntax_sugar")
+local HoverRegistry = require("ui.hover_registry")
 -- local bit = require("bit")
 
 local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
@@ -804,9 +805,6 @@ function TagSynergyPanel.update(dt)
         TagSynergyPanel._pulses[tag] = math.max(0, pulse - dt * 2.4)
     end
 
-    TagSynergyPanel._hoverCandidate = nil
-    TagSynergyPanel._hoverCooldown = 0
-    hideActiveTooltip()
 end
 
 local function drawSegment(left, top, width, height, fill, accent, tag, threshold, z, space, font)
@@ -954,6 +952,48 @@ function TagSynergyPanel.draw()
         for _, seg in ipairs(row.segments or {}) do
             local fill = entry.count / seg.threshold
             drawSegment(seg.left, seg.top, seg.width, seg.height, fill, accent, entry.tag, seg.threshold, baseZ + 2, space, font)
+        end
+    end
+
+    -- Register hover regions with HoverRegistry
+    local mouse = getMousePosition()
+    if mouse then
+        for _, row in ipairs(layoutCache.rows or {}) do
+            -- Register row region (lower z)
+            HoverRegistry.region({
+                id = "synergy_" .. row.entry.tag,
+                x = row.rowLeft,
+                y = row.top,
+                w = row.rowWidth,
+                h = row.rowHeight,
+                z = 100,
+                onHover = function()
+                    local target = buildHoverTarget(row.entry)
+                    updateHoverTooltip(target, mouse)
+                end,
+                onUnhover = function()
+                    hideActiveTooltip()
+                end,
+            })
+
+            -- Register segment regions (higher z)
+            for _, seg in ipairs(row.segments or {}) do
+                HoverRegistry.region({
+                    id = "synergy_" .. row.entry.tag .. "_" .. seg.threshold,
+                    x = seg.left - hoverPadX,
+                    y = seg.top - hoverPadY,
+                    w = seg.width + hoverPadX * 2,
+                    h = seg.height + hoverPadY * 2,
+                    z = 101,
+                    onHover = function()
+                        local target = buildHoverTarget(row.entry, seg.threshold)
+                        updateHoverTooltip(target, mouse)
+                    end,
+                    onUnhover = function()
+                        hideActiveTooltip()
+                    end,
+                })
+            end
         end
     end
 end

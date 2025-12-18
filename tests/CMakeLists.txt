@@ -2,6 +2,7 @@ add_executable(unit_tests
     unit/test_engine_context.cpp
     unit/test_color_utils.cpp
     unit/test_component_cache.cpp
+    unit/test_bulk_component_access.cpp
     unit/test_uuid.cpp
     unit/test_utilities.cpp
     unit/test_input_state.cpp
@@ -34,6 +35,8 @@ add_executable(unit_tests
     unit/test_draw_call_counter.cpp
     unit/test_layer_sorted_flag.cpp
     unit/test_layer_state_batching.cpp
+    unit/test_layer_batching.cpp
+    unit/test_startup_timer.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -49,6 +52,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/uuid/uuid.cpp
     ${CMAKE_SOURCE_DIR}/src/util/crash_reporter.cpp
     ${CMAKE_SOURCE_DIR}/src/util/utilities.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/startup_timer.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_actions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_lua_bindings.cpp
@@ -90,3 +94,6 @@ target_link_libraries(unit_tests PRIVATE
 )
 
 gtest_discover_tests(unit_tests)
+
+# Add benchmark subdirectory
+add_subdirectory(benchmark)

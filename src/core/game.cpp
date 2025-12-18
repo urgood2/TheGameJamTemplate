@@ -1,5 +1,6 @@
 
 #include <memory>
+#include <chrono>
 
 #if defined(PLATFORM_WEB)
 #include "util/web_glad_shim.hpp"
@@ -206,6 +207,12 @@ namespace game
     // ----------------
 
     bool isPaused{false}, isGameOver{false};
+
+    // GC performance tracking
+    double g_lastGcPauseMs{0.0};
+    double g_maxGcPauseMs{0.0};
+    double g_avgGcPauseMs{0.0};
+    size_t g_gcPauseSampleCount{0};
 
     // camera
     entt::entity cameraRotationSpringEntity;
@@ -1571,8 +1578,28 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::getRegistry(), uiBox, 0));
         {
             ZONE_SCOPED("lua gc step");
+
+            // Measure GC pause time
+            auto gc_start = std::chrono::high_resolution_clock::now();
+
             // lua garbage collection
-            ai_system::masterStateLua.step_gc(4); 
+            ai_system::masterStateLua.step_gc(4);
+
+            auto gc_end = std::chrono::high_resolution_clock::now();
+            auto gc_ms = std::chrono::duration<double, std::milli>(gc_end - gc_start).count();
+
+            // Track GC pause statistics
+            game::g_lastGcPauseMs = gc_ms;
+            game::g_maxGcPauseMs = std::max(game::g_maxGcPauseMs, gc_ms);
+
+            // Update rolling average
+            game::g_gcPauseSampleCount++;
+            game::g_avgGcPauseMs = game::g_avgGcPauseMs + (gc_ms - game::g_avgGcPauseMs) / game::g_gcPauseSampleCount;
+
+            // Warn if GC pause exceeds threshold (5ms is noticeable at 60 FPS)
+            if (gc_ms > 5.0) {
+                SPDLOG_WARN("Long GC pause detected: {:.2f}ms (threshold: 5ms)", gc_ms);
+            }
         }
         
         {
@@ -2330,8 +2357,9 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
 
             // layer::Pop();
 
-            // Reset draw call counter for next frame
+            // Reset draw call counter and stats for next frame
             layer::g_drawCallsThisFrame = 0;
+            layer::g_drawCallStats.reset();
 
         }
 

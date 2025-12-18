@@ -62,6 +62,11 @@ build-release-ninja:
 	cmake -B build-release-ninja -G Ninja -DCMAKE_BUILD_TYPE=Release
 	cmake --build build-release-ninja --target raylib-cpp-cmake-template -j --
 
+# Tracy profiler build (RelWithDebInfo + Tracy enabled)
+build-tracy:
+	cmake -B build-tracy -DTRACY_ENABLE=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_UNIT_TESTS=OFF
+	cmake --build build-tracy --target raylib-cpp-cmake-template -j 10 --
+
 # =============================================================================
 # Testing
 # =============================================================================

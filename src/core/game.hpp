@@ -62,6 +62,12 @@ namespace game {
     extern bool isPaused, isGameOver;
     extern bool isGameOver;
     extern bool gameStarted; // if game state has begun (not in menu )
+
+    // GC performance tracking
+    extern double g_lastGcPauseMs;
+    extern double g_maxGcPauseMs;
+    extern double g_avgGcPauseMs;
+    extern size_t g_gcPauseSampleCount;
     
     
     namespace luaqt {

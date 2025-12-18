@@ -58,9 +58,15 @@ if (GAME_PLATFORM STREQUAL "Web")
 endif()
 
 option(TRACY_ENABLE "Enable Tracy profiler instrumentation" ON)
+option(PROFILE_LUA_BOUNDARY "Enable Lua/C++ boundary call profiling" OFF)
 option(ENABLE_UNITY_BUILD "Enable unity/jumbo build for main target" OFF)
 option(ENGINECTX_DEPRECATE_GLOBALS "Emit deprecation warnings for legacy globals accessors to encourage EngineContext usage" ON)
 option(ENABLE_POSTHOG "Enable PostHog metrics (requires libcurl)" OFF)
+
+if (PROFILE_LUA_BOUNDARY)
+    message(STATUS "Lua boundary profiling ENABLED")
+    add_compile_definitions(PROFILE_LUA_BOUNDARY=1)
+endif()
 
 option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
 if(ENABLE_UNIT_TESTS)
@@ -980,7 +986,9 @@ if(EMSCRIPTEN OR ENABLE_WEB_HELPER_TARGETS)
     endif()
 
     # NOTE: -sFULL_ES2=1 required for raylib's client-side vertex arrays (fixes "cb is undefined" WebGL error)
-    set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1")
+    # NOTE: --closure removed because miniaudio/telemetry JS isn't closure-compatible (matches justfile)
+    # NOTE: EXPORTED_RUNTIME_METHODS needed for audio (HEAPF32) and telemetry (stringToUTF8OnStack)
+    set(_emscripten_link_flags "-sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sDISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -sEXPORTED_RUNTIME_METHODS=HEAPF32,HEAPF64,HEAP8,HEAP16,HEAP32,HEAPU8,HEAPU16,HEAPU32,stringToUTF8OnStack,UTF8ToString,stringToUTF8,lengthBytesUTF8")
     set(_configure_args "-DPLATFORM=Web -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS=\"${_emscripten_link_flags}\" -DCMAKE_EXECUTABLE_SUFFIX=.html -DCCACHE_PROGRAM= -DCMAKE_C_COMPILER_LAUNCHER= -DCMAKE_CXX_COMPILER_LAUNCHER=")
 
     # Target to activate emsdk
@@ -1195,7 +1203,8 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
 if (EMSCRIPTEN)
     # Tell Emscripten to build an .html file.
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Os")
+    # Use -Oz for size optimization (matches link flags below)
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Oz")
 
     # Files/directories to exclude from web build
     set(WEB_EXCLUDE_FILES
@@ -1225,7 +1234,8 @@ if (EMSCRIPTEN)
     endforeach()
 
     # NOTE: -sFULL_ES2=1 required for raylib's client-side vertex arrays (fixes "cb is undefined" WebGL error)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sASSERTIONS=1 -sWASM=1 -Os -Wall -sTOTAL_MEMORY=512MB -sFORCE_FILESYSTEM=1 --preload-file assets/${EXCLUDE_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
+    # NOTE: Updated to match justfile build flags for consistency
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sUSE_GLFW=3 -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sASSERTIONS=1 -sWASM=1 -Oz -Wall -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sDISABLE_EXCEPTION_CATCHING=0 -sEXPORTED_RUNTIME_METHODS=HEAPF32,HEAPF64,HEAP8,HEAP16,HEAP32,HEAPU8,HEAPU16,HEAPU32,stringToUTF8OnStack,UTF8ToString,stringToUTF8,lengthBytesUTF8 --preload-file assets/${EXCLUDE_FLAGS} --shell-file ${CMAKE_SOURCE_DIR}/src/minshell.html")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 endif()
 

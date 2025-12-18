@@ -103,6 +103,7 @@ namespace
 
 namespace game {
     std::function<void()> OnUIScaleChanged = []() {};
+    double g_lastGcPauseMs = 0.0;
 }
 
 // Stub shader operations with external linkage so the implementation resolves to them.
@@ -207,6 +208,11 @@ namespace ImGui
     void EndCombo() {}
     void ProgressBar(float, const ImVec2 &, const char *) { ImGuiCallTracker::contentCalls++; }
     void Text(const char *, ...) { ImGuiCallTracker::contentCalls++; }
+    void TextColored(const ImVec4&, const char*, ...) { ImGuiCallTracker::contentCalls++; }
+    void Indent(float) { ImGuiCallTracker::contentCalls++; }
+    void Unindent(float) { ImGuiCallTracker::contentCalls++; }
+    void Image(void*, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&) { ImGuiCallTracker::contentCalls++; }
+    void MemFree(void*) {}
 } // namespace ImGui
 
 TEST_F(ShaderSystemTest, ShaderUniformSetStoresAndRetrievesUniforms)
@@ -442,4 +448,91 @@ TEST(DebugUIImGui, CallsEndWhenWindowCollapsed)
     EXPECT_EQ(ImGuiCallTracker::beginCalls, 1);
     EXPECT_EQ(ImGuiCallTracker::endCalls, 1);
     EXPECT_EQ(ImGuiCallTracker::contentCalls, 0);
+}
+
+// Lazy loading tests
+TEST_F(ShaderSystemTest, LazyLoadingStoresMetadataOnly)
+{
+    shaders::enableLazyShaderLoading = true;
+    shaders::loadedShaders.clear();
+    shaders::shaderMetadata.clear();
+
+    // Directly add metadata (simulating what loadShadersFromJSON does when lazy loading is enabled)
+    shaders::shaderMetadata["test_shader"] = {
+        "shaders/basic.vert",
+        "shaders/basic.frag",
+        false
+    };
+
+    // Metadata should be stored
+    EXPECT_EQ(shaders::shaderMetadata.size(), 1u);
+    EXPECT_TRUE(shaders::shaderMetadata.contains("test_shader"));
+    EXPECT_FALSE(shaders::shaderMetadata["test_shader"].compiled);
+
+    // No shaders should be compiled yet
+    EXPECT_EQ(shaders::loadedShaders.size(), 0u);
+    EXPECT_EQ(ShaderStubStats::loadCount, 0);
+
+    // Cleanup
+    shaders::enableLazyShaderLoading = false;
+}
+
+TEST_F(ShaderSystemTest, LazyLoadingCompilesOnFirstAccess)
+{
+    shaders::enableLazyShaderLoading = true;
+    shaders::loadedShaders.clear();
+    shaders::shaderMetadata.clear();
+
+    // Create test shader files
+    auto vertexPath = makeTempFile("lazy_load_test.vert", "// vertex shader");
+    auto fragmentPath = makeTempFile("lazy_load_test.frag", "// fragment shader");
+
+    // Manually add metadata (simulating what loadShadersFromJSON does)
+    shaders::shaderMetadata["lazy_test"] = {
+        vertexPath.string(),
+        fragmentPath.string(),
+        false
+    };
+
+    // First access should trigger compilation
+    auto shader = shaders::getShader("lazy_test");
+
+    // Shader should be compiled
+    EXPECT_NE(shader.id, 0u);
+    EXPECT_EQ(ShaderStubStats::loadCount, 1);
+    EXPECT_EQ(shaders::loadedShaders.size(), 1u);
+    EXPECT_TRUE(shaders::shaderMetadata["lazy_test"].compiled);
+
+    // Second access should return cached shader (no additional compilation)
+    ShaderStubStats::loadCount = 0;
+    auto shader2 = shaders::getShader("lazy_test");
+    EXPECT_EQ(shader.id, shader2.id);
+    EXPECT_EQ(ShaderStubStats::loadCount, 0);
+
+    // Cleanup
+    shaders::enableLazyShaderLoading = false;
+}
+
+TEST_F(ShaderSystemTest, UnloadShadersReleasesMetadata)
+{
+    shaders::shaderMetadata.clear();
+    shaders::loadedShaders.clear();
+
+    // Add test metadata
+    shaders::shaderMetadata["test_shader"] = {
+        "vertex.vert",
+        "fragment.frag",
+        true
+    };
+    shaders::loadedShaders["test_shader"] = Shader{.id = 1};
+
+    EXPECT_EQ(shaders::shaderMetadata.size(), 1u);
+    EXPECT_EQ(shaders::loadedShaders.size(), 1u);
+
+    // Unload shaders
+    shaders::unloadShaders();
+
+    // Metadata should be cleared
+    EXPECT_EQ(shaders::shaderMetadata.size(), 0u);
+    EXPECT_EQ(shaders::loadedShaders.size(), 0u);
 }

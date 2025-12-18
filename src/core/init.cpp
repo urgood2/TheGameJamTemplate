@@ -2,6 +2,7 @@
 #include "../components/components.hpp"
 #include "../util/error_handling.hpp"
 #include "../util/utilities.hpp"
+#include "../util/startup_timer.hpp"
 #include "engine_context.hpp"
 #include "events.hpp"
 #include "globals.hpp"
@@ -795,53 +796,82 @@ static void onColliderDestroyed(entt::registry &R, entt::entity e) {
  * @return void
  */
 auto base_init() -> void {
+  startup_timer::ScopedPhase total_init("total_init");
 
   // logging setup
   spdlog::set_level(spdlog::level::trace);
 
   // load root json and other data init from json
-
-  scanAssetsFolderAndAddAllPaths();
-
-  loadJSONData();
-  loadColorsFromJSON();
-  loadInSpriteFramesFromJSON();
-  loadConfigFileValues(); // should be called after loadJSONData()
-  // in general, loadConfigFileValues() should be called before any pertinent
-  // values are used
-
-  // load physics manager
-  globals::physicsManager =
-      std::make_shared<PhysicsManager>(globals::getRegistry());
-  if (globals::g_ctx) {
-    globals::g_ctx->physicsManager = globals::physicsManager;
+  {
+    startup_timer::ScopedPhase phase("asset_scanning");
+    scanAssetsFolderAndAddAllPaths();
   }
 
-  // set up physics component destruction
-  globals::getRegistry()
-      .on_destroy<physics::ColliderComponent>()
-      .connect<&onColliderDestroyed>();
+  {
+    startup_timer::ScopedPhase phase("json_loading");
+    loadJSONData();
+    loadColorsFromJSON();
+    loadInSpriteFramesFromJSON();
+    loadConfigFileValues(); // should be called after loadJSONData()
+    // in general, loadConfigFileValues() should be called before any pertinent
+    // values are used
+  }
 
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+  // load physics manager
+  {
+    startup_timer::ScopedPhase phase("physics_init");
+    globals::physicsManager =
+        std::make_shared<PhysicsManager>(globals::getRegistry());
+    if (globals::g_ctx) {
+      globals::g_ctx->physicsManager = globals::physicsManager;
+    }
 
-  InitWindow(globals::getScreenWidth(), globals::getScreenHeight(), "Game");
+    // set up physics component destruction
+    globals::getRegistry()
+        .on_destroy<physics::ColliderComponent>()
+        .connect<&onColliderDestroyed>();
+  }
 
-  // fixes mac input bug.
-  SetGamepadMappings(LoadFileText(
-      util::getRawAssetPathNoUUID("gamecontrollerdb.txt").c_str()));
+  {
+    startup_timer::ScopedPhase phase("window_graphics_init");
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(globals::getScreenWidth(), globals::getScreenHeight(), "Game");
 
-  // these methods cause crash when taskflow is used
-  rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
-  initGUI();
-  gui::initConsole(); // Initialize the debugging console
-  loadTextures();
-  // load animations map (spriteFrames and colors must be initialized before
-  // this part)
-  loadAnimationsFromJSON();
-  // InitAudioDevice(); done in audioManager
-  loadSounds();
+    // fixes mac input bug.
+    SetGamepadMappings(LoadFileText(
+        util::getRawAssetPathNoUUID("gamecontrollerdb.txt").c_str()));
+  }
 
-  initECS();
+  {
+    startup_timer::ScopedPhase phase("imgui_init");
+    // these methods cause crash when taskflow is used
+    rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
+    initGUI();
+    gui::initConsole(); // Initialize the debugging console
+  }
+
+  {
+    startup_timer::ScopedPhase phase("texture_loading");
+    loadTextures();
+  }
+
+  {
+    startup_timer::ScopedPhase phase("animation_loading");
+    // load animations map (spriteFrames and colors must be initialized before
+    // this part)
+    loadAnimationsFromJSON();
+  }
+
+  {
+    startup_timer::ScopedPhase phase("audio_init");
+    // InitAudioDevice(); done in audioManager
+    loadSounds();
+  }
+
+  {
+    startup_timer::ScopedPhase phase("ecs_init");
+    initECS();
+  }
 
   // Get the current time
   auto now = std::chrono::system_clock::now();
@@ -849,6 +879,9 @@ auto base_init() -> void {
   std::time_t now_c = std::chrono::system_clock::to_time_t(now);
   // Use it as a seed for random number generation
   Random::seed(now_c);
+
+  // Print startup summary
+  startup_timer::print_summary();
 }
 
 // Initializes the necessary systems for the application to run.
@@ -856,6 +889,16 @@ auto base_init() -> void {
 // name_gen::init().
 auto initSystems() -> void {
   ai_system::init();
+
+  // Check if lazy shader loading is enabled in config
+  if (globals::configJSON.contains("performance") &&
+      globals::configJSON["performance"].contains("enable_lazy_shader_loading")) {
+    shaders::enableLazyShaderLoading = globals::configJSON["performance"]["enable_lazy_shader_loading"].get<bool>();
+    if (shaders::enableLazyShaderLoading) {
+      SPDLOG_INFO("Lazy shader loading enabled via config.json");
+    }
+  }
+
   shaders::loadShadersFromJSON("shaders/shaders.json");
 
   // Load shader presets after shaders are loaded
@@ -874,25 +917,41 @@ auto initSystems() -> void {
  * is done.
  */
 auto startInit() -> void {
+  startup_timer::ScopedPhase total_start_init("total_start_init");
+
   // try {
   SPDLOG_DEBUG("Starting taskflow task INIT.");
-  initSystems();
+
+  {
+    startup_timer::ScopedPhase phase("systems_init");
+    initSystems();
+  }
+
   globals::loadingStateIndex++;
-  initECS();
+
+  {
+    startup_timer::ScopedPhase phase("ecs_init_2");
+    initECS();
+  }
+
   globals::loadingStateIndex++;
-  localization::setFallbackLanguage("en_us");
-  localization::loadLanguage("en_us",
-                             util::getRawAssetPathNoUUID("localization/"));
-  localization::loadLanguage("ko_kr",
-                             util::getRawAssetPathNoUUID("localization/"));
-  localization::setCurrentLanguage("en_us");
-  localization::loadFontData(
-      util::getRawAssetPathNoUUID("localization/fonts.json"));
-  // Preload the tooltip font so UI elements can resolve it before any tooltips spawn.
-  if (!localization::hasNamedFont("tooltip")) {
-    localization::loadNamedFont("tooltip",
-                                "fonts/en/JetBrainsMonoNerdFont-Regular.ttf",
-                                44.0f);
+
+  {
+    startup_timer::ScopedPhase phase("localization_init");
+    localization::setFallbackLanguage("en_us");
+    localization::loadLanguage("en_us",
+                               util::getRawAssetPathNoUUID("localization/"));
+    localization::loadLanguage("ko_kr",
+                               util::getRawAssetPathNoUUID("localization/"));
+    localization::setCurrentLanguage("en_us");
+    localization::loadFontData(
+        util::getRawAssetPathNoUUID("localization/fonts.json"));
+    // Preload the tooltip font so UI elements can resolve it before any tooltips spawn.
+    if (!localization::hasNamedFont("tooltip")) {
+      localization::loadNamedFont("tooltip",
+                                  "fonts/en/JetBrainsMonoNerdFont-Regular.ttf",
+                                  44.0f);
+    }
   }
 
   // moved over from next task to see if this helps with crash
@@ -923,6 +982,9 @@ auto startInit() -> void {
     }
   });
 #endif
+
+  // Print startup summary
+  startup_timer::print_summary();
 }
 
 // Function to save the UUID map to a file

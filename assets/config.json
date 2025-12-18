@@ -17,6 +17,10 @@
         },
         "use_line_of_sight": false
     },
+    "performance": {
+        "enable_lazy_shader_loading": false,
+        "__comment": "Set to true to defer shader compilation until first use (reduces startup time)"
+    },
     "sprites" : {
         "sprites_json": "graphics/cp437_20x20_sprites.json",
         "sprite_mappings_json": "graphics/cp437_mappings.json"

@@ -22,6 +22,26 @@ namespace layer
     // Performance monitoring
     inline int g_drawCallsThisFrame = 0;
 
+    // Draw call statistics by source type
+    struct DrawCallStats {
+        uint32_t sprites = 0;      // Sprites, animations, entities
+        uint32_t text = 0;         // All text rendering
+        uint32_t shapes = 0;       // Primitives (circles, rectangles, lines, etc.)
+        uint32_t ui = 0;           // UI elements
+        uint32_t state = 0;        // State changes (transforms, shaders, blend modes)
+        uint32_t other = 0;        // Everything else
+
+        void reset() {
+            sprites = text = shapes = ui = state = other = 0;
+        }
+
+        uint32_t total() const {
+            return sprites + text + shapes + ui + state + other;
+        }
+    };
+
+    inline DrawCallStats g_drawCallStats;
+
     //TODO: something about manual destruction of non-trivial types, make template-based auto-destructor code
     
     /*
@@ -710,6 +730,117 @@ namespace layer
     // Init Dispatch Table Once
     // ===========================
     extern void InitDispatcher();
+
+    // ===========================
+    // Draw Call Stats Helper
+    // ===========================
+    // Helper function to categorize draw commands and update statistics
+    inline void IncrementDrawCallStats(DrawCommandType type) {
+        g_drawCallsThisFrame++;
+
+        switch (type) {
+            // Sprite/Animation commands
+            case DrawCommandType::DrawEntityAnimation:
+            case DrawCommandType::DrawTransformEntityAnimation:
+            case DrawCommandType::DrawTransformEntityAnimationPipeline:
+            case DrawCommandType::DrawImage:
+            case DrawCommandType::TexturePro:
+            case DrawCommandType::DrawSpriteCentered:
+            case DrawCommandType::DrawSpriteTopLeft:
+            case DrawCommandType::DrawBatchedEntities:
+                g_drawCallStats.sprites++;
+                break;
+
+            // Text commands
+            case DrawCommandType::Text:
+            case DrawCommandType::DrawTextCentered:
+            case DrawCommandType::TextPro:
+                g_drawCallStats.text++;
+                break;
+
+            // Shape primitives
+            case DrawCommandType::Circle:
+            case DrawCommandType::CircleLine:
+            case DrawCommandType::Rectangle:
+            case DrawCommandType::RectanglePro:
+            case DrawCommandType::RectangleLinesPro:
+            case DrawCommandType::Line:
+            case DrawCommandType::DashedLine:
+            case DrawCommandType::Polygon:
+            case DrawCommandType::Triangle:
+            case DrawCommandType::DrawCenteredEllipse:
+            case DrawCommandType::DrawRoundedLine:
+            case DrawCommandType::DrawPolyline:
+            case DrawCommandType::DrawArc:
+            case DrawCommandType::DrawTriangleEquilateral:
+            case DrawCommandType::DrawCenteredFilledRoundedRect:
+            case DrawCommandType::DrawDashedCircle:
+            case DrawCommandType::DrawDashedRoundedRect:
+            case DrawCommandType::DrawGradientRectCentered:
+            case DrawCommandType::DrawGradientRectRoundedCentered:
+            case DrawCommandType::RenderNPatchRect:
+            case DrawCommandType::RenderRectVerticesFilledLayer:
+            case DrawCommandType::RenderRectVerticlesOutlineLayer:
+                g_drawCallStats.shapes++;
+                break;
+
+            // UI commands
+            case DrawCommandType::RenderUISliceFromDrawList:
+            case DrawCommandType::RenderUISelfImmediate:
+                g_drawCallStats.ui++;
+                break;
+
+            // State changes (don't actually render anything)
+            case DrawCommandType::SetShader:
+            case DrawCommandType::ResetShader:
+            case DrawCommandType::SetBlendMode:
+            case DrawCommandType::UnsetBlendMode:
+            case DrawCommandType::Translate:
+            case DrawCommandType::Scale:
+            case DrawCommandType::Rotate:
+            case DrawCommandType::PushMatrix:
+            case DrawCommandType::PopMatrix:
+            case DrawCommandType::AddPush:
+            case DrawCommandType::AddPop:
+            case DrawCommandType::PushObjectTransformsToMatrix:
+            case DrawCommandType::ScopedTransformCompositeRender:
+            case DrawCommandType::SendUniformFloat:
+            case DrawCommandType::SendUniformInt:
+            case DrawCommandType::SendUniformVec2:
+            case DrawCommandType::SendUniformVec3:
+            case DrawCommandType::SendUniformVec4:
+            case DrawCommandType::SendUniformFloatArray:
+            case DrawCommandType::SendUniformIntArray:
+            case DrawCommandType::BeginStencilMode:
+            case DrawCommandType::EndStencilMode:
+            case DrawCommandType::BeginStencilMask:
+            case DrawCommandType::EndStencilMask:
+            case DrawCommandType::StencilFunc:
+            case DrawCommandType::StencilOp:
+            case DrawCommandType::ColorMask:
+            case DrawCommandType::AtomicStencilMask:
+            case DrawCommandType::ClearStencilBuffer:
+            case DrawCommandType::RenderBatchFlush:
+            case DrawCommandType::BeginScissorMode:
+            case DrawCommandType::EndScissorMode:
+            case DrawCommandType::SetColor:
+            case DrawCommandType::SetLineWidth:
+            case DrawCommandType::SetTexture:
+                g_drawCallStats.state++;
+                break;
+
+            // OpenGL/Vertex commands and other misc
+            case DrawCommandType::BeginOpenGLMode:
+            case DrawCommandType::EndOpenGLMode:
+            case DrawCommandType::Vertex:
+            case DrawCommandType::BeginDrawing:
+            case DrawCommandType::EndDrawing:
+            case DrawCommandType::ClearBackground:
+            default:
+                g_drawCallStats.other++;
+                break;
+        }
+    }
 
 }
    

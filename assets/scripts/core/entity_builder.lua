@@ -265,6 +265,28 @@ function EntityBuilder.simple(sprite, x, y, w, h)
     })
 end
 
+--- Create a script with validated initialization order.
+--- This prevents the common mistake of assigning data after attach_ecs().
+--- @param ScriptType table The script class (extends Node)
+--- @param entity number The entity ID to attach to
+--- @param data table? Optional data to assign to script before attach
+--- @return table script The initialized script table
+function EntityBuilder.validated(ScriptType, entity, data)
+    local script = ScriptType {}
+
+    -- Assign all data BEFORE attach_ecs (critical!)
+    if data then
+        for k, v in pairs(data) do
+            script[k] = v
+        end
+    end
+
+    -- Now safe to attach
+    script:attach_ecs { create_new = false, existing_entity = entity }
+
+    return script
+end
+
 --- Create an interactive entity with hover tooltip
 --- @param opts table Options including sprite, position, size, hover
 --- @return number entity

@@ -1,3 +1,7 @@
+-- WARNING: Lua does not expose table allocation hooks. This tracks function call
+-- frequency as a proxy for allocation patterns. Debug hooks add significant overhead -
+-- use for targeted profiling only, not continuous monitoring.
+--
 -- Allocation profiler for finding table creation hotspots
 -- Usage: require this, call start(), run code, call report()
 --
@@ -11,7 +15,6 @@
 local AllocationProfiler = {}
 
 local tracking = false
-local allocations = {}
 local call_counts = {}
 local start_time = 0
 local start_gc_count = 0
@@ -21,20 +24,21 @@ local function track_hook(event)
     if not tracking then return end
 
     local info = debug.getinfo(2, "Sl")
-    if info and info.source and info.currentline then
-        -- Filter out profiler itself and engine internals
-        if info.source:match("allocation_profiler") then
-            return
-        end
-
-        local key = info.source .. ":" .. info.currentline
-        call_counts[key] = (call_counts[key] or 0) + 1
+    if not info or not info.source or not info.currentline or info.currentline < 0 then
+        return
     end
+
+    -- Filter out profiler itself and engine internals
+    if info.source:match("allocation_profiler") then
+        return
+    end
+
+    local key = info.source .. ":" .. info.currentline
+    call_counts[key] = (call_counts[key] or 0) + 1
 end
 
 function AllocationProfiler.start()
     tracking = true
-    allocations = {}
     call_counts = {}
     start_time = os.clock()
     start_gc_count = collectgarbage("count")
@@ -82,11 +86,13 @@ function AllocationProfiler.report(top_n)
 end
 
 function AllocationProfiler.get_gc_stats()
+    local count = 0
+    for _ in pairs(call_counts) do count = count + 1 end
+
     return {
         memory_kb = collectgarbage("count"),
-        gc_count = collectgarbage("count"),
+        hotspot_count = count,
         tracking = tracking,
-        hotspot_count = 0,  -- Could be enhanced with more detailed tracking
     }
 end
 
@@ -128,7 +134,6 @@ end
 
 -- Reset counters without stopping tracking
 function AllocationProfiler.reset()
-    allocations = {}
     call_counts = {}
     start_time = os.clock()
     start_gc_count = collectgarbage("count")

@@ -48,6 +48,7 @@
 
 local Node = require("monobehavior.behavior_script_v2")
 local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
 local text_effects = require("ui.text_effects")
 -- Load all effect modules
 require("ui.text_effects.static")
@@ -165,7 +166,7 @@ function CommandBufferText:init(args)
   self.z = args.z or args.z_index or 0
 
   self.layer = args.layer or (layers and layers.ui) or (_G.layers and _G.layers.ui)
-  self.render_space = args.render_space or args.space or (layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen)
+  self.render_space = args.render_space or args.space or (self.layer and self.layer.DrawCommandSpace and self.layer.DrawCommandSpace.Screen)
 
   self.font = args.font or (localization and localization.getFont and localization.getFont())
   self.font_size = args.font_size or args.fontSize or 16
@@ -177,6 +178,10 @@ function CommandBufferText:init(args)
   self.follow_transform = args.follow_transform ~= false
 
   self.text_effects = merge_effects(args.text_effects)
+
+  -- Shader entity for rendering through shader pipeline
+  -- When set, uses shader_draw_commands.add_local_command instead of command_buffer.queueTextPro
+  self.shader_entity = args.shader_entity
 
   self.characters = {}
   self.text_w = 0
@@ -442,8 +447,36 @@ function CommandBufferText:update(dt)
   local origin_x = anchor_center and (base_x - self.text_w * 0.5) or base_x
   local origin_y = anchor_center and (base_y - self.text_h * 0.5) or base_y
 
+  -- Update shader entity's Transform to match text bounding box
+  -- Local commands render relative to entity position, so entity must be at text's top-left
+  if self.shader_entity and entity_cache.valid(self.shader_entity) then
+    local t = component_cache.get(self.shader_entity, Transform)
+    if t then
+      -- Position entity at text's top-left corner (not anchor point)
+      t.actualX = origin_x
+      t.actualY = origin_y
+      -- Size entity to encompass all text (local commands must be within entity bounds)
+      t.actualW = math.max(self.text_w, 1)
+      t.actualH = math.max(self.text_h, 1)
+    end
+  end
+
   local font_ref = self.font or (localization and localization.getFont and localization.getFont())
   local default_color = self.base_color
+
+  -- Check if we should render through shader pipeline (used both in loop and after)
+  local use_shader_pipeline = self.shader_entity and
+      entity_cache.valid(self.shader_entity) and
+      shader_draw_commands and shader_draw_commands.add_local_command
+
+  -- Debug: Log shader pipeline check (once per instance)
+  if self.shader_entity and not self._shader_check_logged then
+    self._shader_check_logged = true
+    local valid = entity_cache.valid(self.shader_entity)
+    local has_sdc = shader_draw_commands and shader_draw_commands.add_local_command
+    print(string.format("[CBT] Shader check: entity=%s valid=%s has_sdc=%s use_pipeline=%s",
+      tostring(self.shader_entity), tostring(valid), tostring(has_sdc), tostring(use_shader_pipeline)))
+  end
 
   for _, ch in ipairs(self.characters) do
     -- Reset per-frame properties
@@ -515,7 +548,50 @@ function CommandBufferText:update(dt)
     local center_x = char_w * 0.5
     local center_y = char_h * 0.5
 
-    if needs_scale then
+    if use_shader_pipeline then
+      -- =====================================================================
+      -- SHADER PIPELINE PATH
+      -- =====================================================================
+      -- Routes draw commands through entity's ShaderPipelineComponent.
+      -- This enables per-text shader effects like polychrome, dissolve, etc.
+      --
+      -- IMPORTANT: Local commands render relative to entity's Transform position.
+      -- Entity is positioned at origin_x/origin_y (text's top-left corner).
+      -- Since draw_x = origin_x + ch.x + ch.ox, local coords = ch.x + ch.ox + center_x
+      -- =====================================================================
+      local local_x = (ch.x or 0) + (ch.ox or 0) + center_x
+      local local_y = (ch.y or 0) + (ch.oy or 0) + center_y
+
+      -- Debug log (only once)
+      if not self._shader_debug_logged then
+        self._shader_debug_logged = true
+        print(string.format("[CBT SHADER] entity=%s, entity_pos=(%.1f,%.1f), entity_size=(%.1f,%.1f), first_char_local=(%.1f,%.1f)",
+          tostring(self.shader_entity), origin_x, origin_y, self.text_w, self.text_h, local_x, local_y))
+      end
+
+      -- Create origin with fallback (matching gameplay.lua pattern)
+      local origin = (_G.Vector2 and _G.Vector2(center_x, center_y)) or { x = center_x, y = center_y }
+
+      shader_draw_commands.add_local_command(
+        registry,
+        self.shader_entity,
+        "text_pro",
+        function(c)
+          c.text = draw_char
+          c.font = font_ref
+          c.x = local_x
+          c.y = local_y
+          c.origin = origin
+          c.rotation = draw_rotation
+          c.fontSize = self.font_size
+          c.spacing = self.letter_spacing or 1
+          c.color = draw_color
+        end,
+        char_z,
+        _G.layer.DrawCommandSpace.World, -- Local commands use world space relative to entity
+        true   -- textPass: enable text pass rendering
+      )
+    elseif needs_scale then
       -- =====================================================================
       -- PERFORMANCE WARNING: Matrix Transform Path
       -- =====================================================================
@@ -555,7 +631,7 @@ function CommandBufferText:update(dt)
         c.x = 0
         c.y = 0
         -- Origin at center so rotation pivots around character center
-        c.origin = Vec2(center_x, center_y)
+        c.origin = (_G.Vector2 and _G.Vector2(center_x, center_y)) or { x = center_x, y = center_y }
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1
@@ -580,7 +656,7 @@ function CommandBufferText:update(dt)
         c.x = draw_x + center_x
         c.y = draw_y + center_y
         -- Origin at center so rotation pivots around character center
-        c.origin = Vec2(center_x, center_y)
+        c.origin = (_G.Vector2 and _G.Vector2(center_x, center_y)) or { x = center_x, y = center_y }
         c.rotation = draw_rotation
         c.fontSize = self.font_size
         c.spacing = self.letter_spacing or 1
@@ -590,6 +666,32 @@ function CommandBufferText:update(dt)
   end
 
   if self.first_frame then self.first_frame = false end
+
+  -- =========================================================================
+  -- SHADER PIPELINE EXECUTION
+  -- =========================================================================
+  -- After adding all local commands to the shader entity, we must trigger
+  -- the shader pipeline execution. The C++ side processes local commands
+  -- only when the entity is rendered via queueScopedTransformCompositeRender.
+  --
+  -- This is the same pattern cards use: add local commands, then render.
+  -- Without this call, local commands are queued but never executed.
+  -- =========================================================================
+  if use_shader_pipeline and command_buffer and command_buffer.queueScopedTransformCompositeRender then
+    -- Debug: log the composite render call (once per entity)
+    if not self._composite_logged then
+      self._composite_logged = true
+      print(string.format("[CBT] Triggering queueScopedTransformCompositeRender for entity %s",
+        tostring(self.shader_entity)))
+    end
+    command_buffer.queueScopedTransformCompositeRender(
+      layer_handle,
+      self.shader_entity,
+      function()
+        -- No additional drawing needed; local commands already added above
+      end
+    )
+  end
 end
 
 return CommandBufferText

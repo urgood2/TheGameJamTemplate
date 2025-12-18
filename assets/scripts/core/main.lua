@@ -21,6 +21,7 @@ local CastFeedUI = require("ui.cast_feed_ui")
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
+local Text = require("core.text") -- TextBuilder system for fire-and-forget text
 -- Represents game loop main module
 main = main or {}
 
@@ -670,6 +671,10 @@ function main.update(dt)
         -- Node system (lua side)
         Node.update_all(dt) -- Update all nodes with update() functions
     end
+
+    -- TextBuilder system - MUST be called every frame to queue text draw commands
+    -- Runs even when paused so UI text still renders
+    Text.update(dt)
 
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt

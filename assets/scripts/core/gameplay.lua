@@ -7451,20 +7451,15 @@ function initSurvivorEntity()
 
 
         -- play sound
-
-        playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
-        -- low pass on
-        setLowPassTarget(1.0)
-        slowTime(1.5, 0.1) -- slow time for 2 seconds, to 20% speed
-
         playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
 
-        timer.after(1.0, function()
-            -- playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
-
-            -- low pass off
-            setLowPassTarget(0.0)
-        end)
+        -- DISABLED: time slow and music silencing effects
+        -- playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
+        -- setLowPassTarget(1.0)
+        -- slowTime(1.5, 0.1)
+        -- timer.after(1.0, function()
+        --     setLowPassTarget(0.0)
+        -- end)
 
         -- TODO: make player take damage, play hit effect, etc.
 

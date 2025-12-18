@@ -108,37 +108,37 @@ function initMainMenu()
     
     
     -- create main logo
-    globals.ui.logo = animation_system.createAnimatedObjectWithTransform(
-        "b3832.png", -- animation ID
-        true             -- use animation, not sprite identifier, if false
-    )
-    animation_system.resizeAnimationObjectsInEntityToFit(
-        globals.ui.logo,
-        64 * 3,   -- width
-        64 * 3    -- height
-    )
-    -- center
-    local logoTransform = component_cache.get(globals.ui.logo, Transform)
-    logoTransform.actualX = globals.screenWidth() / 2 - logoTransform.actualW / 2
-    logoTransform.actualY = globals.screenHeight() / 2 - logoTransform.actualH / 2 - 400 -- move it up a bit
+    -- globals.ui.logo = animation_system.createAnimatedObjectWithTransform(
+    --     "b3832.png", -- animation ID
+    --     true             -- use animation, not sprite identifier, if false
+    -- )
+    -- animation_system.resizeAnimationObjectsInEntityToFit(
+    --     globals.ui.logo,
+    --     64 * 3,   -- width
+    --     64 * 3    -- height
+    -- )
+    -- -- center
+    -- local logoTransform = component_cache.get(globals.ui.logo, Transform)
+    -- logoTransform.actualX = globals.screenWidth() / 2 - logoTransform.actualW / 2
+    -- logoTransform.actualY = globals.screenHeight() / 2 - logoTransform.actualH / 2 - 400 -- move it up a bit
     
-    timer.every(
-        0.1, -- every 0.5 seconds
-        function()
-            -- make the text move up and down (bob)
-            local transformComp = component_cache.get(globals.ui.logo, Transform)
-            local bobHeight = 10 -- height of the bob
-            local time = os.clock() -- get the current time
-            local bobOffset = math.sin(time * 2) * bobHeight -- calculate the offset
-            transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2 - 200 + bobOffset -- apply the offset to the Y position
+    -- timer.every(
+    --     0.1, -- every 0.5 seconds
+    --     function()
+    --         -- make the text move up and down (bob)
+    --         local transformComp = component_cache.get(globals.ui.logo, Transform)
+    --         local bobHeight = 10 -- height of the bob
+    --         local time = os.clock() -- get the current time
+    --         local bobOffset = math.sin(time * 2) * bobHeight -- calculate the offset
+    --         transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2 - 200 + bobOffset -- apply the offset to the Y position
             
-        end,
-        0, -- infinite repetitions
-        true, -- start immediately
-        nil, -- no "after" callback
-        "logo_text_pulse",
-        MAIN_MENU_TIMER_GROUP
-    )
+    --     end,
+    --     0, -- infinite repetitions
+    --     true, -- start immediately
+    --     nil, -- no "after" callback
+    --     "logo_text_pulse",
+    --     MAIN_MENU_TIMER_GROUP
+    -- )
     
     
     local startButtonText = ui.definitions.getNewDynamicTextEntry(

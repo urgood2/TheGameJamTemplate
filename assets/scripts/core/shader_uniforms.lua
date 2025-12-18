@@ -164,7 +164,7 @@ local function init_static_defaults()
     set("outer_space_donuts_bg", "u_noisiness", 0.22)
     set("outer_space_donuts_bg", "u_hueOffset", 0.0)
     set("outer_space_donuts_bg", "u_donutWidth", -2.77)
-    set("outer_space_donuts_bg", "pixel_filter", 150.0)
+    set("outer_space_donuts_bg", "pixel_filter", 10.0)
 
     -- screen_tone_transition
     set("screen_tone_transition", "in_out", 0.0)
@@ -202,19 +202,19 @@ local function init_static_defaults()
     set("crt", "vignette_amount", 1.41)
     set("crt", "warp_amount", 0.06)
     set("crt", "interference_amount", 0.0)
-    set("crt", "roll_line_amount", 0.12)
+    set("crt", "roll_line_amount", 0.06)     -- was 0.12, less aberration spike
     set("crt", "grille_size", 1.5)
     set("crt", "vignette_intensity", 0.10)
     set("crt", "iTime", 113.47279)
-    set("crt", "aberation_amount", 0.93)
+    set("crt", "aberation_amount", 0.25)     -- was 0.93, reduced for text legibility
     set("crt", "enable_rgb_scanlines", 1.0)
     set("crt", "enable_dark_scanlines", 1.0)
     set("crt", "scanline_density", 100.0)
-    set("crt", "scanline_intensity", 0.10)
+    set("crt", "scanline_intensity", 0.04)   -- was 0.10, gentler for text
     set("crt", "enable_bloom", 1.0)
-    set("crt", "bloom_strength", 0.19)
-    set("crt", "bloom_radius", 4.0)
-    set("crt", "glitch_strength", 0.02)
+    set("crt", "bloom_strength", 0.10)       -- was 0.19, less glow bleed
+    set("crt", "bloom_radius", 2.0)          -- was 4.0, tighter blur kernel
+    set("crt", "glitch_strength", 0.0)       -- was 0.02, disabled banding
     set("crt", "glitch_speed", 3.0)
     set("crt", "glitch_density", 180.0)
 

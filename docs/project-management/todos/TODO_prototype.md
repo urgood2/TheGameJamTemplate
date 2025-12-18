@@ -64,7 +64,9 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
-- flip a card to see upgrate level & tags
+- flip a card to see upgrate level & tags, add juice.
+- add stars to background, pulsing particles.
+- text builders still need some debugging.
 
 - use new aseprite workflow to design my own versions of cards.
 

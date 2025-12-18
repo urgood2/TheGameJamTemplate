@@ -100,7 +100,7 @@ TagSynergyPanel.layout = {
 if localization and localization.loadNamedFont then
     local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
     if not alreadyLoaded then
-        localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 44)
+        localization.loadNamedFont("tooltip", "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf", 44)
     end
 end
 

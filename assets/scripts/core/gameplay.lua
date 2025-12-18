@@ -280,7 +280,7 @@ local TOOLTIP_FONT_VERSION = 2
 if localization and localization.loadNamedFont then
     local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
     if not alreadyLoaded then
-        localization.loadNamedFont("tooltip", "fonts/en/JetBrainsMonoNerdFont-Regular.ttf", 44)
+        localization.loadNamedFont("tooltip", "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf", 44)
     end
 end
 
@@ -577,17 +577,87 @@ centerTooltipAboveEntity = function(tooltipEntity, targetEntity, offset)
     local tooltipW = tooltipTransform.actualW or 0
     local tooltipH = tooltipTransform.actualH or 0
 
-    local x = anchorX + anchorW * 0.5 - tooltipW * 0.5
-    local y = anchorY - tooltipH - gap
+    local x, y
 
+    -- Helper to check if a position would overlap the anchor entity
+    local function overlapsAnchor(testX, testY)
+        local tooltipRight = testX + tooltipW
+        local tooltipBottom = testY + tooltipH
+        local anchorRight = anchorX + anchorW
+        local anchorBottom = anchorY + anchorH
+        -- Check for rectangle intersection
+        return testX < anchorRight and tooltipRight > anchorX and
+               testY < anchorBottom and tooltipBottom > anchorY
+    end
+
+    -- Try positioning ABOVE the card (preferred)
+    x = anchorX + anchorW * 0.5 - tooltipW * 0.5
+    y = anchorY - tooltipH - gap
+
+    -- Clamp X to screen bounds
     if x < gap then
         x = gap
     elseif x + tooltipW > screenW - gap then
         x = math.max(gap, screenW - tooltipW - gap)
     end
-    if y < gap then
-        y = gap
+
+    -- Check if "above" fits without overlapping
+    local fitsAbove = (y >= gap) and not overlapsAnchor(x, y)
+
+    if not fitsAbove then
+        -- Try positioning BELOW the card
+        local belowY = anchorY + anchorH + gap
+        local fitsBelow = (belowY + tooltipH <= screenH - gap) and not overlapsAnchor(x, belowY)
+
+        if fitsBelow then
+            y = belowY
+        else
+            -- Try positioning to the RIGHT of the card
+            local rightX = anchorX + anchorW + gap
+            local rightY = anchorY + anchorH * 0.5 - tooltipH * 0.5
+            -- Clamp Y for right position
+            if rightY < gap then rightY = gap end
+            if rightY + tooltipH > screenH - gap then rightY = math.max(gap, screenH - tooltipH - gap) end
+
+            local fitsRight = (rightX + tooltipW <= screenW - gap) and not overlapsAnchor(rightX, rightY)
+
+            if fitsRight then
+                x = rightX
+                y = rightY
+            else
+                -- Try positioning to the LEFT of the card
+                local leftX = anchorX - tooltipW - gap
+                local leftY = rightY -- same vertical centering
+                local fitsLeft = (leftX >= gap) and not overlapsAnchor(leftX, leftY)
+
+                if fitsLeft then
+                    x = leftX
+                    y = leftY
+                else
+                    -- Fallback: position below but clamp to screen (may partially overlap)
+                    y = anchorY + anchorH + gap
+                    if y + tooltipH > screenH - gap then
+                        y = math.max(gap, screenH - tooltipH - gap)
+                    end
+                    -- If still overlapping, push to the side
+                    if overlapsAnchor(x, y) then
+                        -- Push right if there's more room on the right, else left
+                        local roomRight = screenW - (anchorX + anchorW)
+                        local roomLeft = anchorX
+                        if roomRight >= roomLeft then
+                            x = math.min(anchorX + anchorW + gap, screenW - tooltipW - gap)
+                        else
+                            x = math.max(gap, anchorX - tooltipW - gap)
+                        end
+                    end
+                end
+            end
+        end
     end
+
+    -- Final safety clamp to screen bounds
+    x = math.max(gap, math.min(x, screenW - tooltipW - gap))
+    y = math.max(gap, math.min(y, screenH - tooltipH - gap))
 
     tooltipTransform.actualX = x
     tooltipTransform.actualY = y
@@ -618,18 +688,68 @@ local function positionTooltipRightOfEntity(tooltipEntity, targetEntity, opts)
     local anchorW = targetTransform.actualW or 0
     local anchorH = targetTransform.actualH or 0
 
-    local x = anchorX + anchorW + gap
-    local y = anchorY + anchorH * 0.5 - tooltipH * 0.5
+    local x, y
 
-    if x + tooltipW > screenW - gap then
-        x = math.max(gap, screenW - tooltipW - gap)
+    -- Helper to check if a position would overlap the anchor entity
+    local function overlapsAnchor(testX, testY)
+        local tooltipRight = testX + tooltipW
+        local tooltipBottom = testY + tooltipH
+        local anchorRight = anchorX + anchorW
+        local anchorBottom = anchorY + anchorH
+        return testX < anchorRight and tooltipRight > anchorX and
+               testY < anchorBottom and tooltipBottom > anchorY
     end
 
-    if y < gap then
-        y = gap
-    elseif y + tooltipH > screenH - gap then
-        y = math.max(gap, screenH - tooltipH - gap)
+    -- Try positioning to the RIGHT (preferred for this function)
+    x = anchorX + anchorW + gap
+    y = anchorY + anchorH * 0.5 - tooltipH * 0.5
+
+    -- Clamp Y to screen bounds
+    if y < gap then y = gap end
+    if y + tooltipH > screenH - gap then y = math.max(gap, screenH - tooltipH - gap) end
+
+    local fitsRight = (x + tooltipW <= screenW - gap) and not overlapsAnchor(x, y)
+
+    if not fitsRight then
+        -- Try positioning to the LEFT
+        local leftX = anchorX - tooltipW - gap
+        local fitsLeft = (leftX >= gap) and not overlapsAnchor(leftX, y)
+
+        if fitsLeft then
+            x = leftX
+        else
+            -- Try positioning ABOVE
+            local aboveX = anchorX + anchorW * 0.5 - tooltipW * 0.5
+            local aboveY = anchorY - tooltipH - gap
+            if aboveX < gap then aboveX = gap end
+            if aboveX + tooltipW > screenW - gap then aboveX = math.max(gap, screenW - tooltipW - gap) end
+
+            local fitsAbove = (aboveY >= gap) and not overlapsAnchor(aboveX, aboveY)
+
+            if fitsAbove then
+                x = aboveX
+                y = aboveY
+            else
+                -- Try positioning BELOW
+                local belowY = anchorY + anchorH + gap
+                local fitsBelow = (belowY + tooltipH <= screenH - gap) and not overlapsAnchor(aboveX, belowY)
+
+                if fitsBelow then
+                    x = aboveX
+                    y = belowY
+                else
+                    -- Fallback: clamp to screen, accept possible overlap
+                    if x + tooltipW > screenW - gap then
+                        x = math.max(gap, screenW - tooltipW - gap)
+                    end
+                end
+            end
+        end
     end
+
+    -- Final safety clamp
+    x = math.max(gap, math.min(x, screenW - tooltipW - gap))
+    y = math.max(gap, math.min(y, screenH - tooltipH - gap))
 
     tooltipTransform.actualX = x
     tooltipTransform.actualY = y
@@ -6446,6 +6566,40 @@ function startActionPhase()
 
     -- Emit signal for systems that need to react to action phase
     signal.emit("action_phase_started")
+    
+    -- star particle timer
+
+    local ok, Particles = pcall(require, "core.particles")
+    if not ok then
+        log_warn("[Stars] Failed to load particles module")
+        return
+    end
+
+    -- Define the pulsing star recipe (now using built-in :pulse() method!)
+    local pulsingStar = Particles.define()
+        :shape("circle")
+        :size(1, 4)                    -- Small stars, random sizes
+        :color(255, 255, 220)          -- Warm white
+        :lifespan(9.0, 12.0)            -- Live for 3-8 seconds (random)
+        :fade()                        -- Fade out when dying
+        :velocity(0, 0)                -- Static
+        :space("world")                -- World space
+        :z(-100)                       -- Behind everything
+        :pulse(0.4, 2.0, 6.0)          -- ±40% size, random 2-6 Hz per particle
+
+    -- Spawn initial batch of stars
+    pulsingStar:burst(100):inRect(-1440, -900, 2500, 1800)
+    -- Create continuous stream to replace dying stars
+    local starStream = pulsingStar
+        :burst(5)
+        :inRect(-1440, -900, 2500, 1800)
+        :stream()
+        :every(1.0)  -- Spawn 5 new stars every second
+
+    -- Register the stream for updates
+    timer.every(0.016, function()  -- ~60fps
+        starStream:update(0.016)
+    end)
 end
 
 function startPlanningPhase()
@@ -7095,7 +7249,7 @@ function initSurvivorEntity()
 
     -- 3856-TheRoguelike_1_10_alpha_649.png
     survivorEntity = animation_system.createAnimatedObjectWithTransform(
-        "3856-TheRoguelike_1_10_alpha_649.png", -- animation ID
+        "survivor.png", -- animation ID
         true                                    -- use animation, not sprite identifier, if false
     )
 
@@ -8627,7 +8781,7 @@ function initActionPhase()
             if is_state_active(ACTION_STATE) and not isLevelUpModalActive() then
                 -- animation entity
                 local enemyEntity = animation_system.createAnimatedObjectWithTransform(
-                    "b1060.png", -- animation ID
+                    "enemy_type_1.png", -- animation ID
                     true         -- use animation, not sprite identifier, if false
                 )
 

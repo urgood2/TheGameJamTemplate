@@ -397,6 +397,28 @@
             "trimmed": true
         },
         {
+            "auto_generated_uuid": "back_card",
+            "filename": "card_back.png",
+            "frame": {
+                "h": 130,
+                "w": 82,
+                "x": 3244,
+                "y": 392
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 2000,
+                "w": 2000
+            },
+            "spriteSourceSize": {
+                "h": 130,
+                "w": 82,
+                "x": 42,
+                "y": 1492
+            },
+            "trimmed": true
+        },
+        {
             "auto_generated_uuid": "checkmark",
             "filename": "checkmark.png",
             "frame": {
@@ -1018,7 +1040,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3244,
+                "x": 3337,
                 "y": 392
             },
             "rotated": false,
@@ -1040,7 +1062,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3337,
+                "x": 3430,
                 "y": 392
             },
             "rotated": false,
@@ -1062,7 +1084,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3430,
+                "x": 3523,
                 "y": 392
             },
             "rotated": false,
@@ -1084,7 +1106,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3523,
+                "x": 3616,
                 "y": 392
             },
             "rotated": false,
@@ -1106,7 +1128,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3616,
+                "x": 3709,
                 "y": 392
             },
             "rotated": false,
@@ -1128,7 +1150,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3709,
+                "x": 3802,
                 "y": 392
             },
             "rotated": false,
@@ -1150,7 +1172,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3802,
+                "x": 3895,
                 "y": 392
             },
             "rotated": false,
@@ -1172,7 +1194,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3895,
+                "x": 3988,
                 "y": 392
             },
             "rotated": false,
@@ -1194,8 +1216,8 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 3988,
-                "y": 392
+                "x": 4,
+                "y": 533
             },
             "rotated": false,
             "sourceSize": {
@@ -1216,7 +1238,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 4,
+                "x": 97,
                 "y": 533
             },
             "rotated": false,
@@ -4384,7 +4406,7 @@
             "frame": {
                 "h": 154,
                 "w": 84,
-                "x": 469,
+                "x": 562,
                 "y": 533
             },
             "rotated": false,
@@ -4538,7 +4560,7 @@
             "frame": {
                 "h": 156,
                 "w": 467,
-                "x": 564,
+                "x": 657,
                 "y": 533
             },
             "rotated": false,
@@ -5066,7 +5088,7 @@
             "frame": {
                 "h": 203,
                 "w": 401,
-                "x": 1970,
+                "x": 2063,
                 "y": 533
             },
             "rotated": false,
@@ -5088,7 +5110,7 @@
             "frame": {
                 "h": 185,
                 "w": 400,
-                "x": 1042,
+                "x": 1135,
                 "y": 533
             },
             "rotated": false,
@@ -5110,7 +5132,7 @@
             "frame": {
                 "h": 200,
                 "w": 506,
-                "x": 1453,
+                "x": 1546,
                 "y": 533
             },
             "rotated": false,
@@ -5132,7 +5154,7 @@
             "frame": {
                 "h": 203,
                 "w": 509,
-                "x": 2382,
+                "x": 2475,
                 "y": 533
             },
             "rotated": false,
@@ -5154,7 +5176,7 @@
             "frame": {
                 "h": 212,
                 "w": 512,
-                "x": 3425,
+                "x": 3518,
                 "y": 533
             },
             "rotated": false,
@@ -5176,7 +5198,7 @@
             "frame": {
                 "h": 204,
                 "w": 512,
-                "x": 2902,
+                "x": 2995,
                 "y": 533
             },
             "rotated": false,
@@ -5308,7 +5330,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 97,
+                "x": 190,
                 "y": 533
             },
             "rotated": false,
@@ -5330,7 +5352,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 190,
+                "x": 283,
                 "y": 533
             },
             "rotated": false,
@@ -5352,7 +5374,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 283,
+                "x": 376,
                 "y": 533
             },
             "rotated": false,
@@ -5374,7 +5396,7 @@
             "frame": {
                 "h": 130,
                 "w": 82,
-                "x": 376,
+                "x": 469,
                 "y": 533
             },
             "rotated": false,
@@ -6856,7 +6878,7 @@
             "h": 4096,
             "w": 4096
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:48b8f42c2ecfe43a1c3cc2cb97ca4ad1:aadb37517afc54e434804dcb93e2558f:2bbe3b05147ba790fd87830b7012f958$",
+        "smartupdate": "$TexturePacker:SmartUpdate:7077df346d25eeca3e745d6bb0bfd8ac:99f00480a7e4d24fcd7b37cf7b750f4d:2bbe3b05147ba790fd87830b7012f958$",
         "version": "1.0"
     }
 }

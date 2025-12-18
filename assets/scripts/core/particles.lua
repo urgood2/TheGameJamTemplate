@@ -308,6 +308,20 @@ function RecipeMethods:flash(...)
     return self
 end
 
+--- Enable scale pulsing (oscillates scale over time)
+--- @param amount number Pulse amount (0.4 = ±40% size variation)
+--- @param minSpeed number? Min pulse speed in Hz (default: 2.0)
+--- @param maxSpeed number? Max pulse speed in Hz (default: 6.0)
+--- @return self
+function RecipeMethods:pulse(amount, minSpeed, maxSpeed)
+    self._config.pulse = {
+        amount = amount or 0.4,
+        minSpeed = minSpeed or 2.0,
+        maxSpeed = maxSpeed or 6.0,
+    }
+    return self
+end
+
 --- Set spawn callback
 --- @param fn function(particle, entity)
 --- @return self
@@ -665,7 +679,7 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
     -- Check if any enhanced features need callbacks
     local hasEnhanced = config.wiggle or config.bounceRestitution or
                         config.homingStrength or config.trailRecipe or config.flashColors or
-                        config.onSpawn or config.onUpdate or config.onDeath
+                        config.pulse or config.onSpawn or config.onUpdate or config.onDeath
 
     if hasEnhanced then
         -- Per-particle state (captured in closure)
@@ -674,6 +688,9 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
             wigglePhase = math.random() * math.pi * 2,
             originalDir = { x = vx, y = vy },
             trailTimer = 0,
+            -- Pulse state (random speed and phase per particle for organic variation)
+            pulseSpeed = config.pulse and (config.pulse.minSpeed + math.random() * (config.pulse.maxSpeed - config.pulse.minSpeed)) or nil,
+            pulsePhase = config.pulse and (math.random() * math.pi * 2) or nil,
         }
 
         -- Get component_cache and entity_cache for position access
@@ -815,6 +832,13 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
                     end
                     particle.color = color
                 end
+            end
+
+            -- 6. PULSE: Oscillate scale over time
+            if config.pulse and state.pulseSpeed then
+                local age = particle.age or 0
+                local pulse = math.sin(age * state.pulseSpeed + state.pulsePhase)
+                particle.scale = 1.0 + pulse * config.pulse.amount
             end
 
             -- Call user's onUpdate if provided

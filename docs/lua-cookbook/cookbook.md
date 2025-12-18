@@ -125,6 +125,9 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Define AI action | \pageref{recipe:ai-action} |
 | **Validation & Utilities** | |
 | Validate data schemas | \pageref{recipe:schema-validate} |
+| Quick transform helpers (Q.lua) | \pageref{recipe:q-helpers} |
+| Type-safe constants | \pageref{recipe:constants} |
+| Hot-reload modules (dev) | \pageref{recipe:hot-reload} |
 
 \newpage
 
@@ -736,6 +739,122 @@ timer.cooldown_opts({
 **Gotcha:** Options API uses table syntax. Don't forget the curly braces!
 
 **Gotcha:** These are convenience wrappers. You can always fall back to the positional parameter versions (`timer.after()`, `timer.every()`, etc.) if preferred.
+
+***
+
+## Q.lua: Quick Transform Helpers
+
+\label{recipe:q-helpers}
+
+**When to use:** Quick transform operations without verbose component access.
+
+```lua
+local Q = require("core.Q")
+
+-- Move entity to absolute position
+Q.move(entity, 100, 200)
+
+-- Get center point (returns x, y or nil, nil if invalid)
+local cx, cy = Q.center(entity)
+if cx then
+    spawn_explosion(cx, cy)
+end
+
+-- Move relative to current position
+Q.offset(entity, 10, 0)  -- Nudge 10 pixels right
+```
+
+*— from core/Q.lua:32-62*
+
+**Replace verbose patterns:**
+
+```lua
+-- OLD (4 lines)
+local transform = component_cache.get(entity, Transform)
+if transform then
+    transform.actualX = x
+    transform.actualY = y
+end
+
+-- NEW (1 line)
+Q.move(entity, x, y)
+```
+
+**API Reference:**
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `Q.move(entity, x, y)` | boolean | Set absolute position |
+| `Q.center(entity)` | x, y or nil, nil | Get center point |
+| `Q.offset(entity, dx, dy)` | boolean | Move relative to current position |
+
+**Gotcha:** All functions return `false` or `nil` if the entity has no Transform component. Check return values when you need to know if the operation succeeded.
+
+***
+
+## Constants: Type-Safe Magic Strings
+
+\label{recipe:constants}
+
+**When to use:** Avoid typos and enable IDE autocomplete for collision tags, states, damage types, and other frequently-used strings.
+
+```lua
+local C = require("core.constants")
+
+-- Collision tags
+PhysicsBuilder.for_entity(entity)
+    :tag(C.CollisionTags.ENEMY)
+    :collideWith({ C.CollisionTags.PLAYER, C.CollisionTags.PROJECTILE })
+    :apply()
+
+-- State tags
+add_state_tag(entity, C.States.PLANNING)
+
+-- Damage types
+card.damage_type = C.DamageTypes.FIRE
+
+-- Card types
+if card.type == C.CardTypes.ACTION then
+    -- process action card
+end
+
+-- Content tags
+if card.tags[C.Tags.FIRE] then
+    applyBurnEffect()
+end
+```
+
+*— from core/constants.lua:1-247*
+
+**Available constant groups:**
+
+| Group | Example Values | Usage |
+|-------|----------------|-------|
+| `C.CollisionTags` | PLAYER, ENEMY, PROJECTILE, BULLET, WORLD | Physics tags |
+| `C.States` | PLANNING, ACTION, MENU, PAUSED, GAME_OVER | Game states |
+| `C.DamageTypes` | FIRE, ICE, LIGHTNING, POISON, ARCANE | Damage calculations |
+| `C.Tags` | Fire, Ice, Projectile, AoE, Buff, Debuff | Content tags |
+| `C.CardTypes` | ACTION, MODIFIER, TRIGGER | Card categorization |
+| `C.Rarities` | COMMON, UNCOMMON, RARE, LEGENDARY | Item rarities |
+| `C.Shaders` | DISSOLVE, OUTLINE, HOLOGRAM | Shader names |
+| `C.DrawSpace` | WORLD, SCREEN | Render spaces |
+| `C.SyncModes` | PHYSICS, TRANSFORM | Physics sync modes |
+
+**Utility functions:**
+
+```lua
+-- Get all values as array
+local allDamageTypes = Constants.values(C.DamageTypes)
+
+-- Check if value is valid
+if Constants.is_valid(C.DamageTypes, "fire") then
+    -- Valid damage type
+end
+```
+
+**Gotcha:** Constants are lowercase strings internally (e.g., `C.DamageTypes.FIRE` → `"fire"`). This matches the existing codebase conventions.
+
+**Gotcha:** Use `C.States.ACTION` instead of the internal string `"SURVIVORS"` — the constant abstracts implementation details.
 
 \newpage
 
@@ -6853,6 +6972,84 @@ local breakpoints = TagEvaluator.get_breakpoints()
 \newpage
 
 # Chapter 10: Utilities & External Libraries
+
+## HotReload: Development Module Reloading
+
+\label{recipe:hot-reload}
+
+**When to use:** Reload Lua modules during development without restarting the game.
+
+```lua
+local HotReload = require("core.hot_reload")
+
+-- Reload a single module
+HotReload.reload("data.cards")  -- Reloads and re-requires
+
+-- Reload all modules matching a pattern
+HotReload.reload_pattern("^data%.")   -- All data modules
+HotReload.reload_pattern("^ui%.")     -- All UI modules
+
+-- Convenience presets
+HotReload.reload_data()    -- All data/*.lua
+HotReload.reload_ui()      -- All ui/*.lua
+HotReload.reload_combat()  -- All combat/*.lua
+HotReload.reload_wand()    -- All wand/*.lua
+
+-- Clear module from cache without reloading
+HotReload.clear("data.cards")
+HotReload.clear_pattern("^combat%.")
+```
+
+*— from core/hot_reload.lua:72-214*
+
+**Protection System:**
+
+Some modules should never be reloaded (those with runtime state):
+
+```lua
+-- Check if module is protected
+if HotReload.is_protected("core.timer") then
+    print("Timer module cannot be reloaded")
+end
+
+-- Protect a custom module
+HotReload.protect("my_singleton_module")
+
+-- Unprotect (use carefully!)
+HotReload.unprotect("my_singleton_module")
+```
+
+**Default protected modules:**
+- `core.hot_reload` — Self-protection
+- `core.main` — Entry point
+- `core.component_cache` — Cached references
+- `core.entity_cache` — Entity tracking
+- `core.timer` — Active timers
+- `monobehavior.behavior_script_v2` — Attached scripts
+
+**API Reference:**
+
+| Function | Description |
+|----------|-------------|
+| `HotReload.reload(path)` | Clear and re-require module |
+| `HotReload.clear(path)` | Clear from package.loaded (no re-require) |
+| `HotReload.reload_pattern(pattern)` | Reload all modules matching Lua pattern |
+| `HotReload.clear_pattern(pattern)` | Clear all modules matching pattern |
+| `HotReload.reload_data()` | Reload all data/*.lua |
+| `HotReload.reload_ui()` | Reload all ui/*.lua |
+| `HotReload.reload_combat()` | Reload all combat/*.lua |
+| `HotReload.reload_wand()` | Reload all wand/*.lua |
+| `HotReload.protect(path)` | Mark module as non-reloadable |
+| `HotReload.unprotect(path)` | Allow module to be reloaded |
+| `HotReload.is_protected(path)` | Check if module is protected |
+
+**Gotcha:** Hot-reload is for **development only**. Modules with initialization code or global state may behave unexpectedly after reload.
+
+**Gotcha:** After reloading, existing `local` references in other modules still point to old code. Use `require()` again or access via globals.
+
+**Gotcha:** Protected modules return `false, "Module is protected"` when you try to clear/reload them.
+
+***
 
 ## hump/signal: Full API
 

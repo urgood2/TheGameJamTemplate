@@ -252,6 +252,39 @@ local health = script_field(eid, "health", 100)  -- with default
 
 ---
 
+## Q.lua - Quick Convenience Helpers
+
+Single-letter import for minimal friction transform operations:
+
+```lua
+local Q = require("core.Q")
+
+-- Move entity to absolute position
+Q.move(entity, 100, 200)
+
+-- Get center point (returns x, y or nil, nil if invalid)
+local cx, cy = Q.center(entity)
+if cx then spawn_explosion(cx, cy) end
+
+-- Move relative to current position
+Q.offset(entity, 10, 0)  -- Nudge 10 pixels right
+```
+
+**Replaces this boilerplate:**
+```lua
+-- Old way (4 lines)
+local transform = component_cache.get(entity, Transform)
+if transform then
+    transform.actualX = x
+    transform.actualY = y
+end
+
+-- New way (1 line)
+Q.move(entity, x, y)
+```
+
+---
+
 ## UI DSL
 
 ```lua

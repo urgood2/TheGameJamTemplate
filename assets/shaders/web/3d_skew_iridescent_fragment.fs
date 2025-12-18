@@ -74,6 +74,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 float hue(float s, float t, float h) {
     float hs = mod(h, 1.0) * 6.0;
     if (hs < 1.0) return (t - s) * hs + s;
@@ -167,10 +173,12 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Iridescent oil-slick / beetle shell effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the iridescent pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = iridescent.y * 1.2 + time * 0.4;
 
-    vec2 uvCentered = uv - 0.5;
+    vec2 uvCentered = rotated_uv - 0.5;
     float radius = length(uvCentered);
     float angle = atan(uvCentered.y, uvCentered.x);
 
@@ -187,7 +195,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     thickness += iridescent.x * 0.3;
 
     // Add slow drifting movement
-    thickness += 0.1 * sin(uv.x * 3.0 + uv.y * 2.0 + t * 0.3);
+    thickness += 0.1 * sin(rotated_uv.x * 3.0 + rotated_uv.y * 2.0 + t * 0.3);
 
     // Get interference hue
     float interferenceHue = thinFilmHue(thickness, viewAngle);

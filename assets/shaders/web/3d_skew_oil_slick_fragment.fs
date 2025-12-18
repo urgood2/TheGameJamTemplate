@@ -78,6 +78,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 // Simplex-like noise for organic flow (seed parameter for per-card variation)
 float hash(vec2 p, float seed) {
     p = fract(p * vec2(123.34, 456.21) + seed * vec2(78.91, 32.45));
@@ -180,6 +186,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Oil slick / thin-film interference effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the oil slick pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = time * 0.3;
 
@@ -188,10 +196,10 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Simulate oil spreading/flowing on water
     // Multiple layers of flowing noise create organic, non-radial patterns
-    vec2 flowUV1 = uv * 3.0 + vec2(t * 0.2 + seedOffset * 0.1, t * 0.1 + seedOffset * 0.15);
-    vec2 flowUV2 = uv * 5.0 - vec2(t * 0.15 - seedOffset * 0.08, t * 0.25 - seedOffset * 0.12);
-    vec2 flowUV3 = uv * 2.0 + vec2(sin(t * 0.1 + rand_seed * 3.14) * 0.5, cos(t * 0.15 + rand_seed * 2.71) * 0.5);
-    vec2 flowUV4 = uv * 4.0 + vec2(t * 0.08 + seedOffset * 0.05, -t * 0.12 + seedOffset * 0.07);
+    vec2 flowUV1 = rotated_uv * 3.0 + vec2(t * 0.2 + seedOffset * 0.1, t * 0.1 + seedOffset * 0.15);
+    vec2 flowUV2 = rotated_uv * 5.0 - vec2(t * 0.15 - seedOffset * 0.08, t * 0.25 - seedOffset * 0.12);
+    vec2 flowUV3 = rotated_uv * 2.0 + vec2(sin(t * 0.1 + rand_seed * 3.14) * 0.5, cos(t * 0.15 + rand_seed * 2.71) * 0.5);
+    vec2 flowUV4 = rotated_uv * 4.0 + vec2(t * 0.08 + seedOffset * 0.05, -t * 0.12 + seedOffset * 0.07);
 
     float flow1 = fbm(flowUV1, rand_seed);
     float flow2 = fbm(flowUV2, rand_seed + 0.33);
@@ -213,8 +221,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Add flowing/swirling patterns where oil pools (non-radial)
     // Use directional flow instead of radial atan
-    float swirl = sin(uv.x * 8.0 + uv.y * 6.0 + thickness * 10.0 + t * 2.0) * 0.5 + 0.5;
-    swirl *= sin(uv.x * 5.0 - uv.y * 7.0 + flow1 * 5.0 - t) * 0.5 + 0.5;
+    float swirl = sin(rotated_uv.x * 8.0 + rotated_uv.y * 6.0 + thickness * 10.0 + t * 2.0) * 0.5 + 0.5;
+    swirl *= sin(rotated_uv.x * 5.0 - rotated_uv.y * 7.0 + flow1 * 5.0 - t) * 0.5 + 0.5;
     vec3 swirlColor = oilSlickColor((thickness + swirl * 0.15) * 4.0, flowVariation * 0.8);
     slickColor = mix(slickColor, swirlColor, 0.35);
 

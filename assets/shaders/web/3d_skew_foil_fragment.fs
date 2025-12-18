@@ -169,7 +169,9 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Foil overlay: hue/brightness modulation driven by foil vector and field noise.
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
-    vec2 adjusted_uv = uv - vec2(0.5);
+    // Apply card rotation so the foil pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
+    vec2 adjusted_uv = rotated_uv - vec2(0.5);
     adjusted_uv.x *= texture_details.b / texture_details.a;
 
     float low = min(base.r, min(base.g, base.b));
@@ -185,8 +187,8 @@ vec4 applyOverlay(vec2 atlasUV) {
     float fac2 = max(min(5.0 * cos(foil.y * 0.3 + angle * 3.14 * (2.2 + 0.9 * sin(foil.x * 1.65 + 0.2 * foil.y)))
                          - 4.0 - max(2.0 - length(20.0 * adjusted_uv), 0.0),
                          1.0), 0.0);
-    float fac3 = 0.3 * max(min(2.0 * sin(foil.x * 5.0 + uv.x * 3.0 + 3.0 * (1.0 + 0.5 * cos(foil.x * 7.0))) - 1.0, 1.0), -1.0);
-    float fac4 = 0.3 * max(min(2.0 * sin(foil.x * 6.66 + uv.y * 3.8 + 3.0 * (1.0 + 0.5 * cos(foil.x * 3.414))) - 1.0, 1.0), -1.0);
+    float fac3 = 0.3 * max(min(2.0 * sin(foil.x * 5.0 + rotated_uv.x * 3.0 + 3.0 * (1.0 + 0.5 * cos(foil.x * 7.0))) - 1.0, 1.0), -1.0);
+    float fac4 = 0.3 * max(min(2.0 * sin(foil.x * 6.66 + rotated_uv.y * 3.8 + 3.0 * (1.0 + 0.5 * cos(foil.x * 3.414))) - 1.0, 1.0), -1.0);
 
     float maxfac = max(max(fac, max(fac2, max(fac3, max(fac4, 0.0)))) + 2.2 * (fac + fac2 + fac3 + fac4), 0.0);
 

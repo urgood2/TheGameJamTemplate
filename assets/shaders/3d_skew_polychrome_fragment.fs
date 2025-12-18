@@ -164,7 +164,9 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     float t = polychrome.y * 2.221 + time;
     vec2 floored_uv = floor(uv * texture_details.ba) / max(texture_details.b, texture_details.a);
-    vec2 uv_scaled_centered = (floored_uv - 0.5) * 2.3 * max(texture_details.b, texture_details.a);
+    // Apply card rotation so the polychrome pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (floored_uv - 0.5) + 0.5;
+    vec2 uv_scaled_centered = (rotated_uv - 0.5) * 2.3 * max(texture_details.b, texture_details.a);
 
     vec2 field_part1 = uv_scaled_centered + 50.0 * vec2(sin(-t / 143.6340), cos(-t / 99.4324));
     vec2 field_part2 = uv_scaled_centered + 50.0 * vec2(cos(t / 53.1532), cos(t / 61.4532));

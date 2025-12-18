@@ -173,6 +173,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Holographic overlay: hue shift plus grid shimmer driven by holo vector.
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the holographic pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
     vec4 hsl = HSL(0.5 * base + 0.5 * vec4(0.0, 0.0, 1.0, base.a));
 
     float t = holo.y * 7.221 + time;
@@ -180,7 +182,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     float seedPhase = rand_seed * 6.2831;
     float seedOffset = rand_seed * 50.0;
 
-    vec2 floored_uv = floor(uv * texture_details.ba) / texture_details.ba;
+    vec2 floored_uv = floor(rotated_uv * texture_details.ba) / texture_details.ba;
     vec2 uv_scaled_centered = (floored_uv - 0.5) * 250.0 + vec2(seedOffset * 0.3, seedOffset * 0.5);
 
     vec2 field_part1 = uv_scaled_centered + 50.0 * vec2(sin(-t / 143.6340 + seedPhase * 0.3), cos(-t / 99.4324 + seedPhase * 0.5));
@@ -202,9 +204,9 @@ vec4 applyOverlay(vec2 atlasUV) {
     // Add seed-based offset to grid pattern for per-card variation
     float gridSeedOffset = rand_seed * 3.14159;
     float fac = 0.5 * max(
-        max(max(0.0, 7.0 * abs(cos(uv.x * gridsize * 20.0 + gridSeedOffset)) - 6.0),
-            max(0.0, 7.0 * cos(uv.y * gridsize * 45.0 + uv.x * gridsize * 20.0 + gridSeedOffset * 1.3) - 6.0)),
-        max(0.0, 7.0 * cos(uv.y * gridsize * 45.0 - uv.x * gridsize * 20.0 + gridSeedOffset * 0.7) - 6.0));
+        max(max(0.0, 7.0 * abs(cos(rotated_uv.x * gridsize * 20.0 + gridSeedOffset)) - 6.0),
+            max(0.0, 7.0 * cos(rotated_uv.y * gridsize * 45.0 + rotated_uv.x * gridsize * 20.0 + gridSeedOffset * 1.3) - 6.0)),
+        max(0.0, 7.0 * cos(rotated_uv.y * gridsize * 45.0 - rotated_uv.x * gridsize * 20.0 + gridSeedOffset * 0.7) - 6.0));
 
     hsl.x = hsl.x + res + fac;
     hsl.y = hsl.y * 1.3;

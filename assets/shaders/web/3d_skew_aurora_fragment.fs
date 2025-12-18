@@ -170,24 +170,26 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Aurora effect: vertical flowing curtains of light
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the aurora pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = aurora.y * 1.5 + time * 0.8;
 
     // Create vertical curtain bands with per-card seed offset
     float seedPhase = rand_seed * 6.2831;
-    float curtainX = uv.x * 6.0 + aurora.x * 2.0 + rand_seed * 3.0;
-    float curtainWave = auroraWave(vec2(curtainX, uv.y * 2.0), t, rand_seed);
+    float curtainX = rotated_uv.x * 6.0 + aurora.x * 2.0 + rand_seed * 3.0;
+    float curtainWave = auroraWave(vec2(curtainX, rotated_uv.y * 2.0), t, rand_seed);
 
     // Vertical flow - colors flow upward like real aurora
-    float verticalFlow = sin(uv.y * 8.0 - t * 2.0 + curtainWave * 2.0 + seedPhase * 0.5);
-    float verticalFlow2 = sin(uv.y * 12.0 - t * 2.5 + curtainWave * 1.5 + 1.0 + seedPhase * 0.7);
+    float verticalFlow = sin(rotated_uv.y * 8.0 - t * 2.0 + curtainWave * 2.0 + seedPhase * 0.5);
+    float verticalFlow2 = sin(rotated_uv.y * 12.0 - t * 2.5 + curtainWave * 1.5 + 1.0 + seedPhase * 0.7);
 
     // Combine for main aurora intensity
     float auroraIntensity = (0.5 + 0.5 * curtainWave) * (0.6 + 0.4 * verticalFlow);
     auroraIntensity *= 0.7 + 0.3 * verticalFlow2;
 
     // Fade aurora toward bottom (aurora is stronger at top)
-    float heightFade = smoothstep(0.0, 0.7, uv.y);
+    float heightFade = smoothstep(0.0, 0.7, rotated_uv.y);
     auroraIntensity *= 0.4 + 0.6 * heightFade;
 
     // Aurora colors: cycle through greens, teals, and magentas (offset by seed for variety)

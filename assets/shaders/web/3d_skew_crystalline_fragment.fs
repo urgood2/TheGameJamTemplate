@@ -74,6 +74,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 // Hash for randomness
 vec2 hash2(vec2 p) {
     p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
@@ -175,10 +181,12 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Crystalline/Faceted effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the crystalline pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     // Crystal facet scale
     float facetScale = 6.0 + crystalline.x * 4.0;
-    vec2 scaledUV = uv * facetScale;
+    vec2 scaledUV = rotated_uv * facetScale;
 
     // Get voronoi cell info
     vec2 cellCenter;

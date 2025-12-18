@@ -156,6 +156,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Polychrome overlay: hue shift driven by the polychrome vector and noise field.
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the polychrome pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
     float low = min(base.r, min(base.g, base.b));
     float high = max(base.r, max(base.g, base.b));
     float delta = high - low;
@@ -163,7 +165,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec4 hsl = HSL(vec4(base.r * saturation_fac, base.g * saturation_fac, base.b, base.a));
 
     float t = polychrome.y * 2.221 + time;
-    vec2 floored_uv = floor(uv * texture_details.ba) / max(texture_details.b, texture_details.a);
+    vec2 floored_uv = floor(rotated_uv * texture_details.ba) / max(texture_details.b, texture_details.a);
     vec2 uv_scaled_centered = (floored_uv - 0.5) * 2.3 * max(texture_details.b, texture_details.a);
 
     vec2 field_part1 = uv_scaled_centered + 50.0 * vec2(sin(-t / 143.6340), cos(-t / 99.4324));

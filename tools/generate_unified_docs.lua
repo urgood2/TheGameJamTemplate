@@ -1,0 +1,183 @@
+#!/usr/bin/env lua
+-- Generate unified Lua API documentation from multiple sources
+
+local output = {}
+
+local function add(line)
+    table.insert(output, line)
+end
+
+local function add_section(title)
+    add("")
+    add("## " .. title)
+    add("")
+end
+
+-- Header
+add("# Unified Lua API Reference")
+add("")
+add("> Auto-generated from binding definitions and api.lua module")
+add("")
+add("**Last updated:** " .. os.date("%Y-%m-%d"))
+add("")
+
+-- Try to load api.lua for documentation
+local api_path = "assets/scripts/core/api.lua"
+local api_file = io.open(api_path, "r")
+
+if api_file then
+    add_section("Core API (from api.lua)")
+    add("See `assets/scripts/core/api.lua` for the authoritative documentation table.")
+    add("")
+    add("Key modules:")
+    add("- `registry` - ECS entity management")
+    add("- `component_cache` - Cached component access")
+    add("- `physics` - Physics world and collision")
+    add("- `timer` - Timer and sequence API")
+    add("- `signal` - Event pub/sub system")
+    add("- `draw` - Drawing commands")
+    api_file:close()
+end
+
+add_section("Builder APIs")
+
+add("### EntityBuilder")
+add("")
+add("```lua")
+add("local EntityBuilder = require('core.entity_builder')")
+add("")
+add("-- Full options")
+add("local entity, script = EntityBuilder.create({")
+add("    sprite = 'kobold',")
+add("    position = { x = 100, y = 200 },")
+add("    size = { 64, 64 },")
+add("    shadow = true,")
+add("    data = { health = 100 },")
+add("})")
+add("")
+add("-- Simple creation")
+add("local entity = EntityBuilder.simple('sprite', x, y, w, h)")
+add("")
+add("-- Validated (prevents data-after-attach bug)")
+add("local script = EntityBuilder.validated(MyScript, entity, { health = 100 })")
+add("```")
+add("")
+
+add("### PhysicsBuilder")
+add("")
+add("```lua")
+add("local PhysicsBuilder = require('core.physics_builder')")
+add("")
+add("PhysicsBuilder.for_entity(entity)")
+add("    :circle()")
+add("    :tag('projectile')")
+add("    :bullet()")
+add("    :collideWith({ 'enemy', 'WORLD' })")
+add("    :apply()")
+add("```")
+add("")
+
+add("### ShaderBuilder")
+add("")
+add("```lua")
+add("local ShaderBuilder = require('core.shader_builder')")
+add("")
+add("ShaderBuilder.for_entity(entity)")
+add("    :add('3d_skew_holo', { sheen_strength = 1.5 })")
+add("    :add('dissolve', { dissolve = 0.5 })")
+add("    :apply()")
+add("```")
+add("")
+
+add_section("Quick Helpers (Q.lua)")
+
+add("```lua")
+add("local Q = require('core.Q')")
+add("")
+add("Q.move(entity, x, y)       -- Move to absolute position")
+add("Q.offset(entity, dx, dy)   -- Move relative")
+add("local cx, cy = Q.center(entity)  -- Get center point")
+add("```")
+add("")
+
+add_section("Timer API")
+
+add("```lua")
+add("local timer = require('core.timer')")
+add("")
+add("-- One-shot")
+add("timer.after(2.0, function() print('done') end, 'my_tag')")
+add("")
+add("-- Repeating")
+add("timer.every(0.5, function() print('tick') end, 'heartbeat')")
+add("")
+add("-- Sequence")
+add("timer.sequence('anim')")
+add("    :wait(0.5)")
+add("    :do_now(function() print('start') end)")
+add("    :wait(0.3)")
+add("    :do_now(function() print('end') end)")
+add("    :start()")
+add("")
+add("-- Cancel")
+add("timer.cancel('my_tag')")
+add("```")
+add("")
+
+add_section("Event System (Signal)")
+
+add("```lua")
+add("local signal = require('external.hump.signal')")
+add("")
+add("-- Emit event")
+add("signal.emit('player_damaged', player_entity, { damage = 25, type = 'fire' })")
+add("")
+add("-- Register handler")
+add("signal.register('player_damaged', function(entity, data)")
+add("    log_debug('Player took', data.damage, data.type, 'damage')")
+add("end)")
+add("```")
+add("")
+
+add_section("Common Patterns")
+
+add("### Safe Entity Access")
+add("")
+add("```lua")
+add("if ensure_entity(eid) then")
+add("    local script = safe_script_get(eid)")
+add("    local health = script_field(eid, 'health', 100)  -- with default")
+add("end")
+add("```")
+add("")
+
+add("### Component Cache")
+add("")
+add("```lua")
+add("local transform = component_cache.get(entity, Transform)")
+add("if transform then")
+add("    transform.actualX = 100")
+add("end")
+add("```")
+add("")
+
+add_section("Performance Settings")
+
+add("```lua")
+add("-- Enable shader/texture batching (reduces GPU state changes)")
+add("set_shader_texture_batching(true)")
+add("")
+add("-- Check current state")
+add("local enabled = get_shader_texture_batching()")
+add("```")
+add("")
+
+add_section("See Also")
+
+add("- `CLAUDE.md` - Quick reference and patterns")
+add("- `docs/api/` - Individual API documentation files")
+add("- `docs/content-creation/` - Content creation guides")
+add("- `assets/scripts/core/api.lua` - Full API documentation table")
+
+-- Output
+print(table.concat(output, "\n"))

@@ -93,6 +93,11 @@ docs:
 docs-cookbook:
 	cd docs/lua-cookbook && ./build.sh
 
+# Generate unified Lua API documentation
+docs-lua-api:
+	lua tools/generate_unified_docs.lua > docs/api/UNIFIED_LUA_API.md
+	@echo "Generated docs/api/UNIFIED_LUA_API.md"
+
 # =============================================================================
 # Web Build - Individual Steps (match CMakeLists.txt targets)
 # =============================================================================

@@ -3817,8 +3817,7 @@ function StatTooltipSystem.makeSectionHeader(groupId, opts)
         config = {
             color = opts.headerBg or tooltipStyle.labelBg,
             padding = opts.headerPadding or 3,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            outlineThickness = 0
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
         },
         children = {
             dsl.text(label, {

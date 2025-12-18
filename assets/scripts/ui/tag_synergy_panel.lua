@@ -88,8 +88,6 @@ TagSynergyPanel._pulses = {}
 TagSynergyPanel._hoverKey = nil
 TagSynergyPanel._activeTooltip = nil
 TagSynergyPanel._tooltips = {}
-TagSynergyPanel._hoverCandidate = nil
-TagSynergyPanel._hoverCooldown = 0
 TagSynergyPanel._layoutCache = nil
 TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
@@ -423,7 +421,7 @@ end
 
 local function clearHover()
     hideActiveTooltip()
-    TagSynergyPanel._hoverCooldown = 0
+    HoverRegistry.clear()
 end
 
 local statDescriptions = {
@@ -671,30 +669,6 @@ local function buildHoverTarget(entry, focusThreshold)
     }
 end
 
-local function resolveHoverTarget(mouse, layoutCache)
-    if not mouse or not layoutCache or layoutCache.totalRows == 0 then
-        return nil
-    end
-
-    for _, row in ipairs(layoutCache.rows or {}) do
-        for _, seg in ipairs(row.segments or {}) do
-            local hitLeft = seg.left - hoverPadX
-            local hitTop = seg.top - hoverPadY
-            local hitW = seg.width + hoverPadX * 2
-            local hitH = seg.height + hoverPadY * 2
-            if pointInRect(mouse.x, mouse.y, hitLeft, hitTop, hitW, hitH) then
-                return buildHoverTarget(row.entry, seg.threshold)
-            end
-        end
-
-        if pointInRect(mouse.x, mouse.y, row.rowLeft, row.top, row.rowWidth, row.rowHeight) then
-            return buildHoverTarget(row.entry)
-        end
-    end
-
-    return nil
-end
-
 local function updateHoverTooltip(target, mouse)
     if not target then
         hideActiveTooltip()
@@ -721,8 +695,6 @@ function TagSynergyPanel.init(opts)
     TagSynergyPanel._hoverKey = nil
     TagSynergyPanel._activeTooltip = nil
     resetTooltipCache()
-    TagSynergyPanel._hoverCandidate = nil
-    TagSynergyPanel._hoverCooldown = 0
     TagSynergyPanel._layoutCache = nil
     if opts and opts.layout then
         TagSynergyPanel.setLayout(opts.layout)
@@ -776,15 +748,12 @@ function TagSynergyPanel.setData(tagCounts, breakpoints)
 
     TagSynergyPanel.entries = entries
     resetTooltipCache()
-    TagSynergyPanel._hoverCandidate = nil
-    TagSynergyPanel._hoverCooldown = 0
     TagSynergyPanel._layoutCache = nil
 end
 
 function TagSynergyPanel.update(dt)
     if not TagSynergyPanel.isActive then
         clearHover()
-        TagSynergyPanel._hoverCandidate = nil
         TagSynergyPanel._layoutCache = nil
         return
     end

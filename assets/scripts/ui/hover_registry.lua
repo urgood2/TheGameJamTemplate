@@ -80,11 +80,14 @@ function HoverRegistry.update()
         end
     end
 
-    -- Fire callbacks on state change
-    if currentHover ~= newHover then
+    -- Fire callbacks on state change (compare by ID, not reference)
+    local currentID = currentHover and currentHover.id or nil
+    local newID = newHover and newHover.id or nil
+
+    if currentID ~= newID then
         -- Unhover old region
         if currentHover and currentHover.onUnhover then
-            local success, err = pcall(currentHover.onUnhover)
+            local success, err = pcall(currentHover.onUnhover, currentHover.data)
             if not success then
                 print("[HoverRegistry] onUnhover error for '" .. (currentHover.id or "?") .. "': " .. tostring(err))
             end
@@ -92,7 +95,7 @@ function HoverRegistry.update()
 
         -- Hover new region
         if newHover and newHover.onHover then
-            local success, err = pcall(newHover.onHover)
+            local success, err = pcall(newHover.onHover, newHover.data)
             if not success then
                 print("[HoverRegistry] onHover error for '" .. (newHover.id or "?") .. "': " .. tostring(err))
             end
@@ -106,7 +109,7 @@ end
 function HoverRegistry.clear()
     -- Fire unhover callback if something is currently hovered
     if currentHover and currentHover.onUnhover then
-        local success, err = pcall(currentHover.onUnhover)
+        local success, err = pcall(currentHover.onUnhover, currentHover.data)
         if not success then
             print("[HoverRegistry] onUnhover error during clear for '" .. (currentHover.id or "?") .. "': " .. tostring(err))
         end

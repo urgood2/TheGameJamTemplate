@@ -468,6 +468,91 @@ end
 -- PUBLIC API
 --------------------------------------------------------------------------------
 
+--- Internal: Create ECS entity with Transform and optional shaders
+--- Uses animation_system to create a renderable entity so shader pipeline executes.
+--- @param handle Handle Handle to associate with entity
+--- @param shaders table|nil List of shader names to apply
+--- @return userdata Entity ID
+function Text._createShaderEntity(handle, shaders)
+    local animation_system = _G.animation_system
+    local component_cache = _G.component_cache or require("core.component_cache")
+    local Transform = _G.Transform
+    local ShaderBuilder = require("core.shader_builder")
+
+    -- Verify animation_system is available
+    if not animation_system or not animation_system.createAnimatedObjectWithTransform then
+        print("[TEXT ERROR] animation_system not available!")
+        return nil
+    end
+
+    -- Create entity with animation_system so it has AnimationQueueComponent
+    -- This makes it part of the render system, enabling shader pipeline execution.
+    -- Using "sample_card.png" as placeholder (known to exist and work with shaders)
+    -- The sprite will be made invisible; local commands provide the actual visuals.
+    local ok, entity = pcall(function()
+        return animation_system.createAnimatedObjectWithTransform(
+            "sample_card.png",  -- valid sprite that exists (used by cards)
+            true                -- use as animation ID
+        )
+    end)
+
+    if not ok then
+        print("[TEXT ERROR] Failed to create animated entity: " .. tostring(entity))
+        return nil
+    end
+
+    if not entity then
+        print("[TEXT ERROR] createAnimatedObjectWithTransform returned nil!")
+        return nil
+    end
+
+    print(string.format("[TEXT] Entity created: %s", tostring(entity)))
+
+    -- Get transform and set position
+    local t = component_cache.get(entity, Transform)
+    if t then
+        local pos = handle._position or { x = 0, y = 0 }
+        t.actualX = pos.x
+        t.actualY = pos.y
+        -- Make the sprite tiny/invisible - the local commands will provide the actual visuals
+        t.actualW = 1
+        t.actualH = 1
+    end
+
+    -- Make the base animation invisible while keeping shader pipeline active
+    -- Local commands (text) will render through the shader pipeline
+    -- NOTE: We DON'T set noDraw=true because that would skip the shader pipeline entirely.
+    -- Instead, the 1x1 size makes the sprite effectively invisible while still processing shaders.
+    local AnimationQueueComponent = _G.AnimationQueueComponent
+    if AnimationQueueComponent then
+        local animComp = component_cache.get(entity, AnimationQueueComponent)
+        if animComp then
+            -- Ensure it renders through shader pipeline, not legacy
+            pcall(function() animComp.drawWithLegacyPipeline = false end)
+        end
+    end
+
+    -- Apply shaders if specified
+    if shaders and #shaders > 0 then
+        local shader_ok, shader_err = pcall(function()
+            local builder = ShaderBuilder.for_entity(entity)
+            for _, shaderName in ipairs(shaders) do
+                builder:add(shaderName)
+            end
+            builder:apply()
+        end)
+        if not shader_ok then
+            print("[TEXT ERROR] Shader application failed: " .. tostring(shader_err))
+        else
+            print(string.format("[TEXT] Shaders applied: %s", table.concat(shaders, ", ")))
+        end
+    end
+
+    print(string.format("[TEXT] Shader entity complete: %s", tostring(entity)))
+
+    return entity
+end
+
 --- Internal: Create handle from spawner config
 --- @param spawner Spawner
 --- @return Handle
@@ -509,12 +594,13 @@ function Text._createHandle(spawner)
     handle._shaders = spawner._shaders
     handle._richEffects = spawner._richEffects
 
-    -- Create mock entity ID if in entity mode (actual entity creation is deferred)
+    -- Create real ECS entity if in entity mode (enables shader support)
     if spawner._asEntity then
-        -- For now, just create a mock entity ID (a simple counter)
-        -- In real implementation, this would call registry:create() and set up Transform
-        Text._mockEntityCounter = (Text._mockEntityCounter or 0) + 1
-        handle._entityId = Text._mockEntityCounter
+        print(string.format("[TEXT] Creating shader entity with shaders: %s",
+            spawner._shaders and table.concat(spawner._shaders, ", ") or "nil"))
+        local entity = Text._createShaderEntity(handle, spawner._shaders)
+        handle._entityId = entity
+        print(string.format("[TEXT] Created shader entity: %s", tostring(entity)))
     else
         handle._entityId = nil
     end
@@ -552,6 +638,8 @@ function Text._createHandle(spawner)
         layer = layer,
         z = config.z or 0,
         render_space = renderSpace,
+        -- Pass entity for shader pipeline rendering
+        shader_entity = handle._entityId,
     })
 
     return handle
@@ -629,6 +717,15 @@ function Text.update(dt)
                             if handle._textRenderer then
                                 handle._textRenderer.x = handle._position.x
                                 handle._textRenderer.y = handle._position.y
+                            end
+
+                            -- Update shader entity Transform (for queueScopedTransformCompositeRender)
+                            if handle._entityId and entity_cache.valid(handle._entityId) then
+                                local et = component_cache.get(handle._entityId, Transform)
+                                if et then
+                                    et.actualX = handle._position.x
+                                    et.actualY = handle._position.y
+                                end
                             end
                         end
                     end

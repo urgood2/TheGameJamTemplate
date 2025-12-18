@@ -71,6 +71,93 @@ local function buildDemoQueue()
     end
 
     --------------------------------------------------------------------------
+    -- SECTION: SHADER EFFECTS (first to verify shaders work)
+    --------------------------------------------------------------------------
+    addSection("SHADER EFFECTS", {
+        {
+            name = "Polychrome Shader",
+            duration = 10,
+            spawn = function()
+                print("[DEMO] Spawning Polychrome shader text...")
+                -- Text with polychrome shader applied
+                Text.define()
+                    :content("POLYCHROME")
+                    :size(48)
+                    :anchor("center")
+                    :lifespan(9.8)
+                    :spawn()
+                    :asEntity()
+                    :withShaders({"3d_skew_polychrome"})
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+
+                Text.define()
+                    :content(":asEntity():withShaders({'3d_skew_polychrome'})")
+                    :size(16)
+                    :color("silver")
+                    :anchor("center")
+                    :lifespan(9.8)
+                    :spawn()
+                    :at(cx, baseY + 70)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "Holo Shader",
+            duration = 10,
+            spawn = function()
+                print("[DEMO] Spawning Holo shader text...")
+                Text.define()
+                    :content("HOLOGRAPHIC")
+                    :size(44)
+                    :anchor("center")
+                    :lifespan(9.8)
+                    :spawn()
+                    :asEntity()
+                    :withShaders({"3d_skew_holo"})
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+
+                Text.define()
+                    :content(":asEntity():withShaders({'3d_skew_holo'})")
+                    :size(16)
+                    :color("silver")
+                    :anchor("center")
+                    :lifespan(9.8)
+                    :spawn()
+                    :at(cx, baseY + 70)
+                    :tag(_demoTag)
+            end
+        },
+        {
+            name = "Shader + Text Effects",
+            duration = 5,
+            spawn = function()
+                Text.define()
+                    :content("[MAGICAL](float=4,2,1)")
+                    :size(44)
+                    :anchor("center")
+                    :lifespan(4.8)
+                    :spawn()
+                    :asEntity()
+                    :withShaders({"3d_skew_polychrome"})
+                    :at(cx, baseY)
+                    :tag(_demoTag)
+
+                Text.define()
+                    :content("3d_skew_polychrome + [float] effect")
+                    :size(16)
+                    :color("silver")
+                    :anchor("center")
+                    :lifespan(4.8)
+                    :spawn()
+                    :at(cx, baseY + 70)
+                    :tag(_demoTag)
+            end
+        },
+    })
+
+    --------------------------------------------------------------------------
     -- SECTION: COLORS
     --------------------------------------------------------------------------
     addSection("COLORS", {

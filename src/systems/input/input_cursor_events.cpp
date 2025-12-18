@@ -35,8 +35,8 @@ static event_bus::EventBus& resolveEventBus(EngineContext* ctx) {
     if (auto* resolved = resolveCtx(ctx)) {
         return resolved->eventBus;
     }
-    // Fallback to global context's event bus
-    return globals::g_ctx->eventBus;
+    // Fallback to global event bus
+    return globals::getEventBus();
 }
 
 // ───────────────────────────────────────────────────────────────────────────

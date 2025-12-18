@@ -99,6 +99,11 @@ void renderTamperWarningIfNeeded(int screenWidth, int screenHeight) {
         return;
     }
 
+    // Check if Raylib window is initialized before attempting to render
+    if (!IsWindowReady()) {
+        return;
+    }
+
     // Warning box dimensions
     const int boxWidth = 500;
     const int boxHeight = 280;

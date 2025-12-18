@@ -36,6 +36,7 @@ local CurrencyDisplay = require("ui.currency_display")
 local TagSynergyPanel = require("ui.tag_synergy_panel")
 local AvatarJokerStrip = require("ui.avatar_joker_strip")
 local LevelUpScreen = require("ui.level_up_screen")
+local HoverRegistry = require("ui.hover_registry")
 local ContentDebugPanel = require("ui.content_debug_panel")
 local CombatDebugPanel = require("ui.combat_debug_panel")
 local EntityInspector = require("ui.entity_inspector")
@@ -4236,6 +4237,9 @@ function initPlanningPhase()
             LevelUpScreen.update(dt)
             LevelUpScreen.draw()
         end
+
+        -- Process hover regions after all UIs have registered
+        HoverRegistry.update()
     end)
 
     -- let's bind d-pad input to switch between cards, and A to select.

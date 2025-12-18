@@ -36,6 +36,7 @@ add_executable(unit_tests
     unit/test_layer_sorted_flag.cpp
     unit/test_layer_state_batching.cpp
     unit/test_layer_batching.cpp
+    unit/test_startup_timer.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -51,6 +52,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/uuid/uuid.cpp
     ${CMAKE_SOURCE_DIR}/src/util/crash_reporter.cpp
     ${CMAKE_SOURCE_DIR}/src/util/utilities.cpp
+    ${CMAKE_SOURCE_DIR}/src/util/startup_timer.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_actions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_functions.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/input/input_lua_bindings.cpp

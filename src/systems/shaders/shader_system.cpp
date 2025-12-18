@@ -401,6 +401,10 @@ namespace shaders
 
     bool shaderEnabledOverride = false;
 
+    // Lazy loading feature flag and metadata storage
+    bool enableLazyShaderLoading = false;  // Default: disabled for backward compatibility
+    std::unordered_map<std::string, ShaderMetadata> shaderMetadata;
+
     void ApplyUniformsToShader(Shader shader, const ShaderUniformSet &set)
     {
         for (const auto &[name, value] : set.uniforms)
@@ -448,6 +452,84 @@ namespace shaders
         shaderEnabledOverride = disabled;
     }
 
+    // Helper function to compile a shader on demand (used for lazy loading)
+    static util::Result<Shader, std::string> compileShaderOnDemand(const std::string& shaderName) {
+        auto it = shaderMetadata.find(shaderName);
+        if (it == shaderMetadata.end()) {
+            return util::Result<Shader, std::string>("Shader metadata not found: " + shaderName);
+        }
+
+        auto& metadata = it->second;
+        if (metadata.compiled) {
+            // Already compiled, return from loadedShaders
+            auto loadedIt = loadedShaders.find(shaderName);
+            if (loadedIt != loadedShaders.end()) {
+                return util::Result<Shader, std::string>(loadedIt->second);
+            }
+            return util::Result<Shader, std::string>("Shader marked compiled but not in loadedShaders: " + shaderName);
+        }
+
+        // Compile the shader now
+        SPDLOG_DEBUG("Lazy loading shader: {}", shaderName);
+
+        const char* vsPtr = metadata.vertexPath.empty() ? nullptr : metadata.vertexPath.c_str();
+        const char* fsPtr = metadata.fragmentPath.empty() ? nullptr : metadata.fragmentPath.c_str();
+
+        auto ctxLabel = std::string("shader_lazy_load:") + shaderName;
+        auto shaderResult = util::tryWithLog([&]() {
+            return g_shaderApi.load_shader(vsPtr, fsPtr);
+        }, ctxLabel);
+
+        if (shaderResult.isErr()) {
+            SPDLOG_ERROR("[shader] Lazy load failed for {}: {}", shaderName, shaderResult.error());
+            telemetry::RecordEvent("shader_lazy_load_failed",
+                                   {{"name", shaderName},
+                                    {"vertex_path", metadata.vertexPath},
+                                    {"fragment_path", metadata.fragmentPath},
+                                    {"platform", telemetry::PlatformTag()},
+                                    {"error", shaderResult.error()},
+                                    {"build_id", telemetry::BuildId()}});
+            return shaderResult;
+        }
+
+        Shader shader = shaderResult.value();
+        if (shader.id == 0) {
+            std::string message = "Shader id==0 for " + shaderName;
+            return util::Result<Shader, std::string>(std::move(message));
+        }
+
+        // Store compiled shader
+        loadedShaders[shaderName] = shader;
+        shaderPaths[shaderName] = {metadata.vertexPath, metadata.fragmentPath};
+        metadata.compiled = true;
+
+        // Initialize modification times for hot reload
+        std::error_code ec;
+        auto getTime = [&](const std::string &p) {
+            if (p.empty() || !std::filesystem::exists(p, ec)) {
+                return uint64_t{0};
+            }
+            auto ft = std::filesystem::last_write_time(p, ec);
+            if (ec) {
+                return uint64_t{0};
+            }
+            return uint64_t{(uint64_t) ft.time_since_epoch().count()};
+        };
+
+        shaderFileModificationTimes[shaderName] = {
+            getTime(metadata.vertexPath),
+            getTime(metadata.fragmentPath)
+        };
+
+        telemetry::RecordEvent("shader_lazy_loaded",
+                               {{"name", shaderName},
+                                {"platform", telemetry::PlatformTag()},
+                                {"build_id", telemetry::BuildId()}});
+
+        SPDLOG_INFO("Lazy loaded shader: {}", shaderName);
+        return util::Result<Shader, std::string>(shader);
+    }
+
     // Load shaders from JSON and initialize modification times
     auto loadShadersFromJSON(std::string jsonPath) -> void
     {
@@ -480,6 +562,15 @@ namespace shaders
             return;
         }
 
+        // Check if lazy loading is enabled
+        if (enableLazyShaderLoading) {
+            SPDLOG_INFO("Lazy shader loading enabled - storing metadata for {} shaders", shaderData.size());
+            telemetry::RecordEvent("shader_lazy_loading_mode",
+                                   {{"count", static_cast<int>(shaderData.size())},
+                                    {"platform", telemetry::PlatformTag()},
+                                    {"build_id", telemetry::BuildId()}});
+        }
+
         auto loadShaderSafe = [&](const std::string& shaderNameLabel,
                                   const char* vsPath,
                                   const char* fsPath) -> util::Result<Shader, std::string> {
@@ -510,7 +601,7 @@ namespace shaders
             {
                 auto webPaths = shaderPathsJSON["web"];
                 if (webPaths.contains("vertex") && webPaths["vertex"].is_string())
-                { 
+                {
                     vertexPath =  util::getRawAssetPathNoUUID("shaders/" + webPaths["vertex"].get<std::string>());
                     SPDLOG_DEBUG("Web Vertex path: {}", vertexPath);
                 }
@@ -534,13 +625,25 @@ namespace shaders
                 SPDLOG_DEBUG("Default Fragment path: {}", fragmentPath);
             }
 
-            Shader shader;
             if (vertexPath.empty() && fragmentPath.empty())
             {
                 SPDLOG_WARN("Shader {} has no valid paths. Skipping.", shaderName);
                 continue;
             }
 
+            // LAZY LOADING PATH: Store metadata only, defer compilation
+            if (enableLazyShaderLoading) {
+                ShaderMetadata metadata;
+                metadata.vertexPath = vertexPath;
+                metadata.fragmentPath = fragmentPath;
+                metadata.compiled = false;
+                shaderMetadata[shaderName] = metadata;
+                SPDLOG_DEBUG("Stored metadata for shader: {}", shaderName);
+                continue;  // Skip compilation
+            }
+
+            // EAGER LOADING PATH: Compile immediately (original behavior)
+            Shader shader;
             const char* vsPtr = vertexPath.empty() ? nullptr : vertexPath.c_str();
             const char* fsPtr = fragmentPath.empty() ? nullptr : fragmentPath.c_str();
 
@@ -565,7 +668,7 @@ namespace shaders
             // After you assign loadedShaders[shaderName] = shader;
             std::error_code ec;
 
-            // only query times if the paths aren’t empty AND actually exist
+            // only query times if the paths aren't empty AND actually exist
             auto getTime = [&](const std::string &p){
                 if (p.empty() || !std::filesystem::exists(p, ec)) {
                     SPDLOG_WARN("Shader file not found (or empty path): {}", p);
@@ -673,12 +776,26 @@ namespace shaders
 
     auto getShader(std::string shaderName) -> Shader
     {
-        if (loadedShaders.find(shaderName) == loadedShaders.end())
+        // Check if shader is already compiled
+        auto it = loadedShaders.find(shaderName);
+        if (it != loadedShaders.end())
         {
-            // SPDLOG_WARN("Shader {} not found.", shaderName);
-            return {0};
+            return it->second;
         }
-        return loadedShaders[shaderName];
+
+        // If lazy loading is enabled, try to compile on demand
+        if (enableLazyShaderLoading) {
+            auto compileResult = compileShaderOnDemand(shaderName);
+            if (compileResult.isOk()) {
+                return compileResult.value();
+            } else {
+                SPDLOG_WARN("Failed to lazy load shader {}: {}", shaderName, compileResult.error());
+            }
+        }
+
+        // Shader not found and couldn't be lazy loaded
+        // SPDLOG_WARN("Shader {} not found.", shaderName);
+        return {0};
     }
 
     // Register a lambda for uniform updates
@@ -783,6 +900,7 @@ namespace shaders
         loadedShaders.clear();
         shaderFileModificationTimes.clear();
         shaderPaths.clear();
+        shaderMetadata.clear();
     }
 
     void ShowShaderEditorUI(ShaderUniformComponent &component)

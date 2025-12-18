@@ -143,6 +143,15 @@ namespace shaders
     extern std::unordered_map<std::string, std::pair<std::string, std::string>> shaderPaths;
     extern std::unordered_map<std::string, std::pair<long, long>> shaderFileModificationTimes;
 
+    // Lazy loading feature flag and metadata storage
+    extern bool enableLazyShaderLoading;
+    struct ShaderMetadata {
+        std::string vertexPath;
+        std::string fragmentPath;
+        bool compiled = false;
+    };
+    extern std::unordered_map<std::string, ShaderMetadata> shaderMetadata;
+
     // attach this to a sprite entity, for example
     /**
      * @struct ShaderUniformComponent

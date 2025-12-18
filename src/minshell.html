@@ -1051,6 +1051,199 @@
                 }
             };
         })();
+
+        // ============================================
+        // WEB PROFILER SYSTEM
+        // Collects performance metrics from both JS and C++
+        // ============================================
+        (function() {
+            const WebProfiler = {
+                enabled: false,
+                frameTimings: [],
+                maxFrameTimings: 300, // 5 seconds at 60fps
+                lastFrameTime: 0,
+                metricsFromCpp: null,
+
+                // Frame timing collection
+                recordFrame: function(frameTime) {
+                    if (!this.enabled) return;
+
+                    this.frameTimings.push({
+                        time: frameTime,
+                        timestamp: performance.now()
+                    });
+
+                    if (this.frameTimings.length > this.maxFrameTimings) {
+                        this.frameTimings.shift();
+                    }
+                },
+
+                // Receive metrics from C++ via web_profiler::send_to_js()
+                receiveMetrics: function(jsonString) {
+                    try {
+                        this.metricsFromCpp = JSON.parse(jsonString);
+                        console.log('[WebProfiler] Received metrics from C++:', this.metricsFromCpp);
+                    } catch (e) {
+                        console.error('[WebProfiler] Failed to parse metrics from C++:', e);
+                    }
+                },
+
+                // Get memory info (Chrome only)
+                getMemoryInfo: function() {
+                    if (performance.memory) {
+                        return {
+                            usedJSHeapSize: performance.memory.usedJSHeapSize,
+                            totalJSHeapSize: performance.memory.totalJSHeapSize,
+                            jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+                            usedMB: (performance.memory.usedJSHeapSize / 1048576).toFixed(2),
+                            totalMB: (performance.memory.totalJSHeapSize / 1048576).toFixed(2)
+                        };
+                    }
+                    return null;
+                },
+
+                // Calculate frame stats
+                getFrameStats: function() {
+                    if (this.frameTimings.length === 0) return null;
+
+                    const times = this.frameTimings.map(f => f.time);
+                    const sum = times.reduce((a, b) => a + b, 0);
+                    const mean = sum / times.length;
+                    const sorted = times.slice().sort((a, b) => a - b);
+                    const min = sorted[0];
+                    const max = sorted[sorted.length - 1];
+                    const p50 = sorted[Math.floor(sorted.length * 0.5)];
+                    const p95 = sorted[Math.floor(sorted.length * 0.95)];
+                    const p99 = sorted[Math.floor(sorted.length * 0.99)];
+
+                    return {
+                        count: times.length,
+                        mean: mean.toFixed(2),
+                        min: min.toFixed(2),
+                        max: max.toFixed(2),
+                        p50: p50.toFixed(2),
+                        p95: p95.toFixed(2),
+                        p99: p99.toFixed(2),
+                        avgFPS: (1000 / mean).toFixed(1)
+                    };
+                },
+
+                // Export all metrics as JSON
+                exportMetrics: function() {
+                    const data = {
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent,
+                        memory: this.getMemoryInfo(),
+                        frameStats: this.getFrameStats(),
+                        frameTimings: this.frameTimings,
+                        cppMetrics: this.metricsFromCpp
+                    };
+
+                    return JSON.stringify(data, null, 2);
+                },
+
+                // Print metrics to console
+                printMetrics: function() {
+                    console.log('\n=== Web Profiler Metrics ===');
+
+                    const frameStats = this.getFrameStats();
+                    if (frameStats) {
+                        console.log('Frame Stats (last ' + frameStats.count + ' frames):');
+                        console.log('  Mean:    ' + frameStats.mean + ' ms (' + frameStats.avgFPS + ' FPS)');
+                        console.log('  Min:     ' + frameStats.min + ' ms');
+                        console.log('  Max:     ' + frameStats.max + ' ms');
+                        console.log('  P50:     ' + frameStats.p50 + ' ms');
+                        console.log('  P95:     ' + frameStats.p95 + ' ms');
+                        console.log('  P99:     ' + frameStats.p99 + ' ms');
+                    }
+
+                    const memory = this.getMemoryInfo();
+                    if (memory) {
+                        console.log('Memory:');
+                        console.log('  Used:    ' + memory.usedMB + ' MB');
+                        console.log('  Total:   ' + memory.totalMB + ' MB');
+                        console.log('  Limit:   ' + (memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB');
+                    }
+
+                    if (this.metricsFromCpp) {
+                        console.log('C++ Timings:');
+                        for (const [name, stats] of Object.entries(this.metricsFromCpp.timings || {})) {
+                            console.log('  ' + name + ':');
+                            console.log('    Mean:  ' + stats.mean.toFixed(2) + ' ms');
+                            console.log('    Count: ' + stats.count);
+                        }
+                    }
+
+                    console.log('===========================\n');
+                },
+
+                // Download metrics as JSON file
+                downloadMetrics: function() {
+                    const json = this.exportMetrics();
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'perf_metrics_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    console.log('[WebProfiler] Metrics downloaded');
+                },
+
+                // Reset all metrics
+                reset: function() {
+                    this.frameTimings = [];
+                    this.metricsFromCpp = null;
+                    console.log('[WebProfiler] Metrics reset');
+                },
+
+                // Toggle profiling on/off
+                toggle: function() {
+                    this.enabled = !this.enabled;
+                    console.log('[WebProfiler] Profiling ' + (this.enabled ? 'enabled' : 'disabled'));
+
+                    // Notify C++ side if module is loaded
+                    if (typeof Module !== 'undefined' && Module._web_profiler_toggle) {
+                        Module._web_profiler_toggle(this.enabled);
+                    }
+
+                    return this.enabled;
+                }
+            };
+
+            // Expose WebProfiler globally
+            window.WebProfiler = WebProfiler;
+
+            // Console commands
+            console.log('%c[WebProfiler] Available commands:', 'color: #4a6cd4; font-weight: bold;');
+            console.log('  WebProfiler.toggle()          - Enable/disable profiling');
+            console.log('  WebProfiler.printMetrics()    - Print metrics to console');
+            console.log('  WebProfiler.downloadMetrics() - Download metrics as JSON');
+            console.log('  WebProfiler.reset()           - Clear all metrics');
+            console.log('  WebProfiler.getFrameStats()   - Get frame timing statistics');
+            console.log('  WebProfiler.getMemoryInfo()   - Get memory usage (Chrome only)');
+
+            // Monitor frame timing via requestAnimationFrame
+            let lastTime = performance.now();
+            function monitorFrames() {
+                const now = performance.now();
+                const frameTime = now - lastTime;
+                lastTime = now;
+
+                WebProfiler.recordFrame(frameTime);
+                requestAnimationFrame(monitorFrames);
+            }
+
+            // Start monitoring after game ready
+            const originalGameReady = window.gameReady;
+            window.gameReady = function() {
+                if (originalGameReady) originalGameReady();
+                monitorFrames();
+                console.log('[WebProfiler] Frame monitoring started');
+            };
+        })();
     </script>
 
     {{{ SCRIPT }}}

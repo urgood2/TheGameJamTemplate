@@ -301,6 +301,23 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
             addShaderPass(reg, e, shaderName, tbl);
         }
     );
+
+    // Set skipBaseSprite flag to hide base sprite texture while keeping shader pipeline active
+    // Useful for text entities that only want shader effects on local draw commands
+    lua.set_function("setSkipBaseSprite",
+        [](entt::registry& reg, entt::entity e, bool skip) {
+            if (!reg.valid(e)) {
+                SPDLOG_WARN("setSkipBaseSprite: invalid entity");
+                return;
+            }
+            auto* pipeline = reg.try_get<shader_pipeline::ShaderPipelineComponent>(e);
+            if (!pipeline) {
+                SPDLOG_WARN("setSkipBaseSprite: entity {} has no ShaderPipelineComponent", (int)e);
+                return;
+            }
+            pipeline->skipBaseSprite = skip;
+        }
+    );
 }
 
 }  // namespace shader_presets

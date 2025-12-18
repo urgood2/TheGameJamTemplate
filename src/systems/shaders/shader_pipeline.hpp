@@ -101,6 +101,10 @@ namespace shader_pipeline {
             passes.clear();
             overlayDraws.clear();
         }
+
+        // If true, skip drawing the base sprite texture but still process local commands
+        // Useful for text entities that only want shader effects on local draw commands
+        bool skipBaseSprite = false;
     };
     
     

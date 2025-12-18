@@ -509,18 +509,23 @@ void executeEntityPipelineWithCommands(
         return {shaderName, injectAtlas};
     };
 
+    // When skipBaseSprite is true, we skip drawing the sprite texture but still process local commands
+    const bool shouldDrawSprite = drawForeground && !pipelineComp.skipBaseSprite;
+
     if (drawForeground && pipelineComp.passes.empty()) {
         if (hasLocalNonTextCommands) {
             batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
         }
-        batch.addDrawTexturePro(
-            *spriteAtlas,
-            srcRect,
-            destRect,
-            origin,
-            cardRotationDeg,
-            fgColor
-        );
+        if (shouldDrawSprite) {
+            batch.addDrawTexturePro(
+                *spriteAtlas,
+                srcRect,
+                destRect,
+                origin,
+                cardRotationDeg,
+                fgColor
+            );
+        }
         if (hasLocalNonTextCommands) {
             batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/false));
         }
@@ -624,7 +629,7 @@ void executeEntityPipelineWithCommands(
             const bool emitLocalsThisPass =
                 hasLocalNonTextCommands &&
                 static_cast<int>(passIndex) == lastEnabledPass;
-            if (renderShadow) {
+            if (renderShadow && shouldDrawSprite) {
                 batch.addCustomCommand([shaderName = pass.shaderName,
                                         passIs3DSkew,
                                         passIsCardOverlay,
@@ -667,14 +672,16 @@ void executeEntityPipelineWithCommands(
             if (emitLocalsThisPass) {
                 batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/true));
             }
-            batch.addDrawTexturePro(
-                *spriteAtlas,
-                srcRect,
-                destRect,
-                origin,
-                cardRotationDeg,
-                fgColor
-            );
+            if (shouldDrawSprite) {
+                batch.addDrawTexturePro(
+                    *spriteAtlas,
+                    srcRect,
+                    destRect,
+                    origin,
+                    cardRotationDeg,
+                    fgColor
+                );
+            }
             if (emitLocalsThisPass) {
                 batch.addCustomCommand(makeLocalCommandEmitter(localNonTextCommands, /*beforeSprite=*/false));
             }

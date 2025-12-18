@@ -519,11 +519,6 @@ function Text._createShaderEntity(handle, shaders)
         t.actualH = handle._config.size or 16
     end
 
-    -- Make the base sprite invisible by setting alpha to 0
-    -- The shader pipeline still processes, but only local commands (text) are visible
-    -- This is cleaner than setting size to 1x1 which affects transform bounds
-    animation_system.setFGColorForAllAnimationObjects(entity, Col(255, 255, 255, 0))
-
     -- Ensure it renders through shader pipeline, not legacy
     local AnimationQueueComponent = _G.AnimationQueueComponent
     if AnimationQueueComponent then
@@ -546,6 +541,12 @@ function Text._createShaderEntity(handle, shaders)
             print("[TEXT ERROR] Shader application failed: " .. tostring(shader_err))
         else
             print(string.format("[TEXT] Shaders applied: %s", table.concat(shaders, ", ")))
+            -- Hide the base sprite (sample_card.png) while keeping shader pipeline active
+            -- setSkipBaseSprite must be called AFTER shaders are applied (ShaderPipelineComponent exists)
+            if setSkipBaseSprite then
+                setSkipBaseSprite(registry, entity, true)
+                print("[TEXT] Base sprite hidden via skipBaseSprite")
+            end
         end
     end
 

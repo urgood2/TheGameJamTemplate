@@ -21,6 +21,8 @@ terminal-notifier -title "Claude Code" -message "Your message here"
 
 **Use exponential wait delays when checking builds.** When polling for build completion (e.g., background builds, CI checks), use exponential backoff (e.g., 1s → 2s → 4s → 8s) instead of fixed intervals to reduce unnecessary load.
 
+**Use exponential wait delays when checking builds.** When polling for build completion (e.g., background builds, CI checks), use exponential backoff (e.g., 1s → 2s → 4s → 8s) instead of fixed intervals to reduce unnecessary load.
+
 ```bash
 just build-debug              # Debug build → ./build/raylib-cpp-cmake-template
 just build-release            # Release build

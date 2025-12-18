@@ -159,7 +159,12 @@ local entity, script = EntityBuilder.create({
 
 -- Simple version
 local entity = EntityBuilder.simple("kobold", 100, 200, 64, 64)
+
+-- Validated (prevents data-after-attach bug)
+local script = EntityBuilder.validated(MyScript, entity, { health = 100 })
 ```
+
+**Why `validated()`:** When extending scripts manually, use `validated()` to ensure data is assigned before `attach_ecs()`. This prevents the data-loss bug where fields assigned after `attach_ecs()` become inaccessible.
 
 ---
 

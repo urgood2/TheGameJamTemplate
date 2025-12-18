@@ -78,6 +78,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 // Hash functions for randomness
 float hash(float n) {
     return fract(sin(n) * 43758.5453123);
@@ -134,6 +140,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Glitch / Digital distortion effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the glitch pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = time;
     float glitchIntensity = glitch.x;
@@ -163,16 +171,16 @@ vec4 applyOverlay(vec2 atlasUV) {
     float burstTotal = max(burst1, max(burst2, burst3));
 
     // Horizontal line displacement (VHS-style) with seed variation
-    float lineNoise = hash(floor(uv.y * 50.0 + t * 30.0 + seedOffset));
+    float lineNoise = hash(floor(rotated_uv.y * 50.0 + t * 30.0 + seedOffset));
     float lineDisplace = (lineNoise - 0.5) * 0.1 * glitchIntensity * burstTotal;
 
     // Block displacement with seed variation
     float blockSize = 8.0 + hash(floor(t * 5.0) + seedOffset * 0.1) * 8.0;
-    float blockDisplace = (blockNoise(uv + rand_seed * 0.5, blockSize) - 0.5) * 0.15 * glitchIntensity * burst1;
+    float blockDisplace = (blockNoise(rotated_uv + rand_seed * 0.5, blockSize) - 0.5) * 0.15 * glitchIntensity * burst1;
 
     // Vertical tear/shift with seed variation
     float tearY = step(0.5, hash(floor(t * 8.0) + seedOffset * 0.2));
-    float tearAmount = (hash(floor(uv.y * 20.0 + t * 15.0 + seedOffset)) - 0.5) * 0.2 * tearY * glitchIntensity;
+    float tearAmount = (hash(floor(rotated_uv.y * 20.0 + t * 15.0 + seedOffset)) - 0.5) * 0.2 * tearY * glitchIntensity;
 
     // Apply displacements in local sprite UV space to prevent atlas bleeding
     vec2 glitchLocalUV = warpedLocal;
@@ -181,7 +189,7 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // RGB channel splitting (chromatic aberration on steroids)
     float splitAmount = 0.01 + 0.03 * glitchIntensity * burstTotal;
-    splitAmount += 0.02 * sin(uv.y * 100.0 + t * 50.0) * burst1;
+    splitAmount += 0.02 * sin(rotated_uv.y * 100.0 + t * 50.0) * burst1;
 
     // Calculate offsets in local UV space and clamp to sprite boundaries
     vec2 localR = glitchLocalUV + vec2(splitAmount, splitAmount * 0.3 * burst2);
@@ -204,11 +212,11 @@ vec4 applyOverlay(vec2 atlasUV) {
     glitchColor.b = sampleTinted(uvB).b;
 
     // Scanlines
-    float scanline = 0.95 + 0.05 * sin(uv.y * 400.0 + t * 10.0);
+    float scanline = 0.95 + 0.05 * sin(rotated_uv.y * 400.0 + t * 10.0);
     glitchColor *= scanline;
 
     // Occasional color inversion in blocks (with seed variation)
-    float invertBlock = step(0.92, blockNoise(uv + t * 0.1 + rand_seed * 0.3, 12.0)) * burst1;
+    float invertBlock = step(0.92, blockNoise(rotated_uv + t * 0.1 + rand_seed * 0.3, 12.0)) * burst1;
     glitchColor = mix(glitchColor, 1.0 - glitchColor, invertBlock);
 
     // Color quantization (reduce color depth for digital look)
@@ -216,20 +224,20 @@ vec4 applyOverlay(vec2 atlasUV) {
     glitchColor = floor(glitchColor * quantize) / quantize;
 
     // Static noise overlay (with seed variation)
-    float staticNoise = hash2(uv * 500.0 + t * 100.0 + rand_seed * 50.0);
+    float staticNoise = hash2(rotated_uv * 500.0 + t * 100.0 + rand_seed * 50.0);
     float staticIntensity = 0.05 + 0.15 * burstTotal * glitchIntensity;
     glitchColor = mix(glitchColor, vec3(staticNoise), staticIntensity);
 
     // Horizontal noise bands (with seed variation)
-    float bandY = floor(uv.y * 30.0 + t * 20.0 + seedOffset * 0.05);
+    float bandY = floor(rotated_uv.y * 30.0 + t * 20.0 + seedOffset * 0.05);
     float band = step(0.9, hash(bandY + seedOffset * 0.1)) * burstTotal;
     glitchColor = mix(glitchColor, vec3(hash(bandY + 0.5 + seedOffset)), band * 0.5);
 
     // Rolling bar (like old TV interference) with seed variation
     float rollSpeed = 2.0;
     float rollPos = fract(t * rollSpeed * 0.1 + rand_seed * 0.5);
-    float rollBar = smoothstep(0.0, 0.02, abs(uv.y - rollPos)) *
-                    smoothstep(0.0, 0.02, abs(uv.y - rollPos - 1.0));
+    float rollBar = smoothstep(0.0, 0.02, abs(rotated_uv.y - rollPos)) *
+                    smoothstep(0.0, 0.02, abs(rotated_uv.y - rollPos - 1.0));
     rollBar = 1.0 - (1.0 - rollBar) * 0.3 * step(0.7, hash(floor(t * 2.0) + seedOffset * 0.3));
     glitchColor *= rollBar;
 

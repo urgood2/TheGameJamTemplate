@@ -169,10 +169,11 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec4 base = sampleTinted(sampleUV);
 
     vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
-    vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
 
     // Gold seal overlay: brighten channels based on oscillating bands.
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the gold seal pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
     float low = min(base.r, min(base.g, base.b));
     float high = max(base.r, max(base.g, base.b));
     float delta = high * 0.5;
@@ -181,8 +182,8 @@ vec4 applyOverlay(vec2 atlasUV) {
     float seedPhase = rand_seed * 6.2831;
     float seedOffset = rand_seed * 100.0;
 
-    float fac = 0.3 + sin((uv.x * 450.0 + seedOffset + sin(gold_seal.r * 6.0 + seedPhase * 0.3) * 180.0) - 700.0 * gold_seal.r + seedPhase * 0.5)
-                  - sin((uv.x * 190.0 + uv.y * 30.0 + seedOffset * 0.7) + 1080.3 * gold_seal.r + seedPhase * 0.8);
+    float fac = 0.3 + sin((rotated_uv.x * 450.0 + seedOffset + sin(gold_seal.r * 6.0 + seedPhase * 0.3) * 180.0) - 700.0 * gold_seal.r + seedPhase * 0.5)
+                  - sin((rotated_uv.x * 190.0 + rotated_uv.y * 30.0 + seedOffset * 0.7) + 1080.3 * gold_seal.r + seedPhase * 0.8);
 
     vec3 sealColor = vec3(
         max(base.r, (1.0 - base.r) * delta * fac + base.r),

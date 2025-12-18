@@ -74,6 +74,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 float hue(float s, float t, float h) {
     float hs = mod(h, 1.0) * 6.0;
     if (hs < 1.0) return (t - s) * hs + s;
@@ -217,6 +223,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Plasma electric effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the plasma pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = plasma.y * 3.0 + time * 2.0;
 
@@ -226,28 +234,28 @@ vec4 applyOverlay(vec2 atlasUV) {
     // Arc 1: diagonal
     vec2 start1 = vec2(0.1, 0.2);
     vec2 end1 = vec2(0.9, 0.7);
-    totalArc += electricArc(uv, start1, end1, t, plasma.x);
+    totalArc += electricArc(rotated_uv, start1, end1, t, plasma.x);
 
     // Arc 2: opposite diagonal
     vec2 start2 = vec2(0.15, 0.8);
     vec2 end2 = vec2(0.85, 0.25);
-    totalArc += electricArc(uv, start2, end2, t * 1.1, plasma.x + 1.0);
+    totalArc += electricArc(rotated_uv, start2, end2, t * 1.1, plasma.x + 1.0);
 
     // Arc 3: horizontal with offset
     vec2 start3 = vec2(0.05, 0.5 + 0.1 * sin(t * 0.5));
     vec2 end3 = vec2(0.95, 0.5 - 0.1 * sin(t * 0.5 + 1.0));
-    totalArc += electricArc(uv, start3, end3, t * 0.9, plasma.x + 2.0);
+    totalArc += electricArc(rotated_uv, start3, end3, t * 0.9, plasma.x + 2.0);
 
     // Arc 4: vertical
     vec2 start4 = vec2(0.5 + 0.1 * cos(t * 0.4), 0.1);
     vec2 end4 = vec2(0.5 - 0.1 * cos(t * 0.4), 0.9);
-    totalArc += electricArc(uv, start4, end4, t * 1.2, plasma.x + 3.0);
+    totalArc += electricArc(rotated_uv, start4, end4, t * 1.2, plasma.x + 3.0);
 
     // Background plasma field
     float plasmaField = 0.0;
-    plasmaField += sin(uv.x * 10.0 + t * 3.0) * cos(uv.y * 8.0 - t * 2.0);
-    plasmaField += sin(uv.x * 15.0 - t * 4.0 + uv.y * 12.0) * 0.5;
-    plasmaField += cos(length(uv - 0.5) * 20.0 - t * 5.0) * 0.3;
+    plasmaField += sin(rotated_uv.x * 10.0 + t * 3.0) * cos(rotated_uv.y * 8.0 - t * 2.0);
+    plasmaField += sin(rotated_uv.x * 15.0 - t * 4.0 + rotated_uv.y * 12.0) * 0.5;
+    plasmaField += cos(length(rotated_uv - 0.5) * 20.0 - t * 5.0) * 0.3;
     plasmaField = (plasmaField + 2.0) / 4.0; // Normalize to 0-1
 
     // Pulsing energy nodes
@@ -258,7 +266,7 @@ vec4 applyOverlay(vec2 atlasUV) {
             0.5 + 0.3 * cos(t * 0.3 + fi * 1.2),
             0.5 + 0.3 * sin(t * 0.4 + fi * 1.5)
         );
-        float nodeDist = length(uv - nodePos);
+        float nodeDist = length(rotated_uv - nodePos);
         float nodeGlow = smoothstep(0.15, 0.0, nodeDist);
         nodeGlow *= 0.5 + 0.5 * sin(t * 6.0 + fi * 2.0);
         pulse += nodeGlow;

@@ -173,6 +173,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Voucher overlay: energetic sine fields + blue bias driven by booster vector.
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the voucher pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
     float low = min(base.r, min(base.g, base.b));
     float high = max(base.r, max(base.g, base.b));
     float delta = max(high - low, low * 0.7);
@@ -181,11 +183,11 @@ vec4 applyOverlay(vec2 atlasUV) {
     float seedPhase = rand_seed * 6.2831;
     float seedOffset = rand_seed * 2.0;
 
-    float fac = 0.8 + 0.9 * sin(13.0 * uv.x + 5.32 * uv.y + booster.x * 12.0 + seedPhase + cos(booster.x * 5.3 + uv.y * 4.2 - uv.x * 4.0 + seedOffset));
-    float fac2 = 0.5 + 0.5 * sin(10.0 * uv.x + 2.32 * uv.y + booster.x * 5.0 + seedPhase * 0.7 - cos(booster.x * 2.3 + uv.x * 8.2 + seedOffset * 1.3));
-    float fac3 = 0.5 + 0.5 * sin(12.0 * uv.x + 6.32 * uv.y + booster.x * 6.111 + seedPhase * 1.2 + sin(booster.x * 5.3 + uv.y * 3.2 + seedOffset * 0.8));
-    float fac4 = 0.5 + 0.5 * sin(4.0 * uv.x + 2.32 * uv.y + booster.x * 8.111 + seedPhase * 0.5 + sin(booster.x * 1.3 + uv.y * 13.2 + seedOffset * 1.1));
-    float fac5 = sin(0.5 * 16.0 * uv.x + 5.32 * uv.y + booster.x * 12.0 + seedPhase * 0.9 + cos(booster.x * 5.3 + uv.y * 4.2 - uv.x * 4.0 + seedOffset * 0.6));
+    float fac = 0.8 + 0.9 * sin(13.0 * rotated_uv.x + 5.32 * rotated_uv.y + booster.x * 12.0 + seedPhase + cos(booster.x * 5.3 + rotated_uv.y * 4.2 - rotated_uv.x * 4.0 + seedOffset));
+    float fac2 = 0.5 + 0.5 * sin(10.0 * rotated_uv.x + 2.32 * rotated_uv.y + booster.x * 5.0 + seedPhase * 0.7 - cos(booster.x * 2.3 + rotated_uv.x * 8.2 + seedOffset * 1.3));
+    float fac3 = 0.5 + 0.5 * sin(12.0 * rotated_uv.x + 6.32 * rotated_uv.y + booster.x * 6.111 + seedPhase * 1.2 + sin(booster.x * 5.3 + rotated_uv.y * 3.2 + seedOffset * 0.8));
+    float fac4 = 0.5 + 0.5 * sin(4.0 * rotated_uv.x + 2.32 * rotated_uv.y + booster.x * 8.111 + seedPhase * 0.5 + sin(booster.x * 1.3 + rotated_uv.y * 13.2 + seedOffset * 1.1));
+    float fac5 = sin(0.5 * 16.0 * rotated_uv.x + 5.32 * rotated_uv.y + booster.x * 12.0 + seedPhase * 0.9 + cos(booster.x * 5.3 + rotated_uv.y * 4.2 - rotated_uv.x * 4.0 + seedOffset * 0.6));
 
     float maxfac = 0.6 * max(max(fac, max(fac2, max(fac3, 0.0))) + (fac + fac2 + fac3 * fac4), 0.0);
 

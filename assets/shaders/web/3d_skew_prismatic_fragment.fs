@@ -78,6 +78,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 float hue(float s, float t, float h) {
     float hs = mod(h, 1.0) * 6.0;
     if (hs < 1.0) return (t - s) * hs + s;
@@ -186,16 +192,18 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Prismatic crystal effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the prismatic pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = prismatic.y * 2.0 + time;
     // Per-card seed for unique prismatic patterns
     float seedPhase = rand_seed * 6.2831;
 
     // Get facet pattern
-    float facet = facetPattern(uv, t, rand_seed);
+    float facet = facetPattern(rotated_uv, t, rand_seed);
 
     // Rainbow dispersion along facet edges
-    vec2 uvCentered = uv - 0.5;
+    vec2 uvCentered = rotated_uv - 0.5;
     float angle = atan(uvCentered.y, uvCentered.x);
     float radius = length(uvCentered);
 

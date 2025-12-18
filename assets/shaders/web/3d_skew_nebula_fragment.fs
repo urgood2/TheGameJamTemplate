@@ -74,6 +74,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 float hue(float s, float t, float h) {
     float hs = mod(h, 1.0) * 6.0;
     if (hs < 1.0) return (t - s) * hs + s;
@@ -211,11 +217,13 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Nebula cosmic effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the nebula pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = nebula.y * 1.5 + time * 0.5;
 
     // Create swirling vortex center
-    vec2 uvCentered = uv - 0.5;
+    vec2 uvCentered = rotated_uv - 0.5;
     float radius = length(uvCentered);
     float angle = atan(uvCentered.y, uvCentered.x);
 
@@ -236,7 +244,7 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Nebula colors: deep purples, blues, with warm accents
     // Color zones based on position and noise
-    float colorZone = fbm(uv * 2.0 + t * 0.05, t);
+    float colorZone = fbm(rotated_uv * 2.0 + t * 0.05, t);
 
     // Deep purple base (hue ~0.75-0.85)
     float hueBase = 0.75 + nebula.x * 0.1;
@@ -265,8 +273,8 @@ vec4 applyOverlay(vec2 atlasUV) {
     nebulaColor += vec3(0.4, 0.2, 0.5) * dustLane * 0.3;
 
     // Star field overlay
-    float starField = stars(uv + nebula.x * 0.1, t);
-    starField += stars(uv * 1.5 + 0.5, t * 1.1) * 0.7;
+    float starField = stars(rotated_uv + nebula.x * 0.1, t);
+    starField += stars(rotated_uv * 1.5 + 0.5, t * 1.1) * 0.7;
     nebulaColor += vec3(1.0, 0.95, 0.9) * starField;
 
     // Central bright core glow

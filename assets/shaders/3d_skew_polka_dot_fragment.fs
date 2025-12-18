@@ -74,6 +74,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 // HSV/RGB conversion for hue shifting
 vec3 rgb2hsv(vec3 c) {
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -151,6 +157,8 @@ vec4 applyOverlay(vec2 atlasUV) {
     // Polka dot pattern effect - 3D spherical dots with shine
     // Use local sprite UV (0-1) for pattern to avoid atlas bleeding
     vec2 uv = warpedLocal;
+    // Apply card rotation so the polka dot pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     // Pattern parameters - polka_dot.x controls scale, polka_dot.y controls animation/hue
     float scale = 3.0 + polka_dot.x * 3.0;  // Dot density (3-6 dots across)
@@ -171,7 +179,7 @@ vec4 applyOverlay(vec2 atlasUV) {
         vec2(0.0, -0.5)
     );
 
-    vec2 scaledUV = uv * scale;
+    vec2 scaledUV = rotated_uv * scale;
     vec2 tiledUV = fract(scaledUV);
 
     // Background color (between dots)
@@ -204,7 +212,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     }
 
     // Apply subtle hue variation across the sprite for visual interest
-    float hueShift = sin(uv.x * 6.2831 + time * 0.3) * cos(uv.y * 6.2831 - time * 0.2) * 0.08;
+    float hueShift = sin(rotated_uv.x * 6.2831 + time * 0.3) * cos(rotated_uv.y * 6.2831 - time * 0.2) * 0.08;
     hueShift += polka_dot.y * 0.05;  // User-controlled hue offset
     vec3 patternHSV = rgb2hsv(patternColor);
     patternHSV.x = fract(patternHSV.x + hueShift);

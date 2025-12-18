@@ -74,6 +74,12 @@ vec4 sampleTinted(vec2 uv) {
     return texture(texture0, uv) * fragColor * colDiffuse;
 }
 
+mat2 rotate2d(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 // Classic thermal/infrared color palette
 // Maps temperature (0-1) to color: black -> blue -> cyan -> green -> yellow -> orange -> red -> white
 vec3 thermalPalette(float temp) {
@@ -175,6 +181,8 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Thermal imaging effect
     vec2 uv = ((sampleUV * image_details) - texture_details.xy * texture_details.ba) / texture_details.ba;
+    // Apply card rotation so the thermal pattern responds to the card's visual orientation
+    vec2 rotated_uv = rotate2d(card_rotation) * (uv - 0.5) + 0.5;
 
     float t = thermal.y * 2.0 + time * 0.5;
 
@@ -183,7 +191,7 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Add thermal variations
     // Heat rises - warmer at top
-    float heatRise = uv.y * 0.15;
+    float heatRise = rotated_uv.y * 0.15;
 
     // Radial heat from center (like a heat source)
     float centerHeat = (1.0 - dist * 1.5) * 0.2;
@@ -191,15 +199,15 @@ vec4 applyOverlay(vec2 atlasUV) {
 
     // Pulsing heat waves
     float heatWave = sin(dist * 15.0 - t * 3.0) * 0.08;
-    heatWave += sin(uv.x * 10.0 + t * 2.0) * cos(uv.y * 8.0 - t * 1.5) * 0.05;
+    heatWave += sin(rotated_uv.x * 10.0 + t * 2.0) * cos(rotated_uv.y * 8.0 - t * 1.5) * 0.05;
 
     // Convection currents (rising heat patterns)
-    float convection = noise(vec2(uv.x * 5.0, uv.y * 3.0 - t * 0.8)) * 0.15;
-    convection += noise(vec2(uv.x * 8.0 + 1.0, uv.y * 5.0 - t * 1.2)) * 0.08;
+    float convection = noise(vec2(rotated_uv.x * 5.0, rotated_uv.y * 3.0 - t * 0.8)) * 0.15;
+    convection += noise(vec2(rotated_uv.x * 8.0 + 1.0, rotated_uv.y * 5.0 - t * 1.2)) * 0.08;
 
     // Hot spots that drift
-    float hotSpot1 = smoothstep(0.2, 0.0, length(uv - vec2(0.3 + 0.1 * sin(t * 0.4), 0.6 + 0.1 * cos(t * 0.3))));
-    float hotSpot2 = smoothstep(0.15, 0.0, length(uv - vec2(0.7 + 0.1 * cos(t * 0.5), 0.4 + 0.1 * sin(t * 0.35))));
+    float hotSpot1 = smoothstep(0.2, 0.0, length(rotated_uv - vec2(0.3 + 0.1 * sin(t * 0.4), 0.6 + 0.1 * cos(t * 0.3))));
+    float hotSpot2 = smoothstep(0.15, 0.0, length(rotated_uv - vec2(0.7 + 0.1 * cos(t * 0.5), 0.4 + 0.1 * sin(t * 0.35))));
     float hotSpots = (hotSpot1 + hotSpot2) * 0.25;
 
     // Combine all thermal factors
@@ -212,7 +220,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     temperature += hotSpots;
 
     // Add sensor noise (thermal cameras have noise)
-    float sensorNoise = (hash(uv * 200.0 + t) - 0.5) * 0.03;
+    float sensorNoise = (hash(rotated_uv * 200.0 + t) - 0.5) * 0.03;
     temperature += sensorNoise;
 
     // Clamp and apply palette
@@ -220,7 +228,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec3 thermalColor = thermalPalette(temperature);
 
     // Add slight scan line effect (like real thermal cameras)
-    float scanLine = 0.97 + 0.03 * sin(uv.y * 200.0);
+    float scanLine = 0.97 + 0.03 * sin(rotated_uv.y * 200.0);
     thermalColor *= scanLine;
 
     // Subtle vignette (thermal cameras often have edge falloff)

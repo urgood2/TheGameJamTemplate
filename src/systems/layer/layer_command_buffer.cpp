@@ -2,6 +2,7 @@
 #include "layer.hpp"
 #include "systems/camera/camera_manager.hpp"
 #include "systems/layer/layer_optimized.hpp"
+#include "util/common_headers.hpp"
 
 namespace layer
 {
@@ -10,8 +11,10 @@ namespace layer
         
         const std::vector<DrawCommandV2>& GetCommandsSorted(const std::shared_ptr<Layer>& layer) {
             if (!layer->isSorted) {
+#if defined(TRACY_ENABLE) || (defined(TRACY_ENABLED) && TRACY_ENABLED)
                 ZoneScoped;
                 ZoneName("CommandBuffer Sort", 18);
+#endif
 
                 if (g_enableStateBatching) {
                     // Sort by z, then by space (groups World commands together, Screen together)
@@ -56,7 +59,9 @@ namespace layer
                     DELETE_COMMAND(layer, PushObjectTransformsToMatrix, CmdPushObjectTransformsToMatrix)
                     DELETE_COMMAND(layer, ScopedTransformCompositeRender,
                         CmdScopedTransformCompositeRender)
-                    
+                    DELETE_COMMAND(layer, ScopedTransformCompositeRenderWithPipeline,
+                        CmdScopedTransformCompositeRenderWithPipeline)
+
                     DELETE_COMMAND(layer, PopMatrix, CmdPopMatrix)
                     DELETE_COMMAND(layer, Circle, CmdDrawCircleFilled)
                     DELETE_COMMAND(layer, CircleLine, CmdDrawCircleLine)

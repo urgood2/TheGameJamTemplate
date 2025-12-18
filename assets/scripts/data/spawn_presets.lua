@@ -49,7 +49,7 @@ local SpawnPresets = {}
 SpawnPresets.enemies = {
     -- Basic melee enemy
     kobold = {
-        sprite = "b1060.png",
+        sprite = "enemy_type_1.png",
         size = { 32, 32 },
         shadow = true,
         physics = {
@@ -82,7 +82,7 @@ SpawnPresets.enemies = {
 
     -- Fast, low-health enemy
     slime = {
-        sprite = "b1060.png",  -- Reusing sprite, replace with actual slime sprite
+        sprite = "enemy_type_1.png",  -- TODO: Replace with actual slime sprite when available
         size = { 28, 28 },
         shadow = true,
         physics = {
@@ -114,7 +114,7 @@ SpawnPresets.enemies = {
 
     -- Tanky enemy
     skeleton = {
-        sprite = "b1060.png",  -- Reusing sprite, replace with actual skeleton sprite
+        sprite = "elite_porcupine.png",  -- TODO: Replace with actual skeleton sprite when available
         size = { 36, 36 },
         shadow = true,
         physics = {

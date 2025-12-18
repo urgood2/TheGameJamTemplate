@@ -1629,7 +1629,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- give card state tag
     add_state_tag(card, gameStateToApply or PLANNING_STATE)
     remove_default_state_tag(card)
-
+    
     -- give a script table
     local CardType = Node:extend()
     local cardScript = CardType {}
@@ -2150,6 +2150,11 @@ function createNewCard(id, x, y, gameStateToApply)
 
     nodeComp.methods.onHover = function()
         log_debug("card onHover called for", card)
+        
+        -- inject dynamic motion
+        transform.InjectDynamicMotionDefault(card)
+        
+        
         -- get script
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
@@ -8776,12 +8781,14 @@ function initActionPhase()
 
     initCombatSystem()
 
-    -- lets make a timer that, if action state is active, spawn an enemy every few seconds
+    -- DEBUG: Hardcoded enemy spawn timer - DISABLED
+    -- This bypasses EnemyFactory and uses old sprites. Use EnemyFactory.spawn() instead.
+    --[[ COMMENTED OUT - use wave_director + EnemyFactory instead
     timer.every(5.0, function()
             if is_state_active(ACTION_STATE) and not isLevelUpModalActive() then
                 -- animation entity
                 local enemyEntity = animation_system.createAnimatedObjectWithTransform(
-                    "enemy_type_1.png", -- animation ID
+                    "enemy_type_2.png", -- animation ID
                     true         -- use animation, not sprite identifier, if false
                 )
 
@@ -8945,6 +8952,7 @@ function initActionPhase()
         end,
         nil,
         "spawnEnemyTimer")
+    --]] -- END of commented-out debug spawn timer
 
 
 

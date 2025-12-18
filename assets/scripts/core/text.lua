@@ -514,20 +514,21 @@ function Text._createShaderEntity(handle, shaders)
         local pos = handle._position or { x = 0, y = 0 }
         t.actualX = pos.x
         t.actualY = pos.y
-        -- Make the sprite tiny/invisible - the local commands will provide the actual visuals
-        t.actualW = 1
-        t.actualH = 1
+        -- Set reasonable bounds for text (shader pipeline uses entity bounds)
+        t.actualW = handle._config.width or 200
+        t.actualH = handle._config.size or 16
     end
 
-    -- Make the base animation invisible while keeping shader pipeline active
-    -- Local commands (text) will render through the shader pipeline
-    -- NOTE: We DON'T set noDraw=true because that would skip the shader pipeline entirely.
-    -- Instead, the 1x1 size makes the sprite effectively invisible while still processing shaders.
+    -- Make the base sprite invisible by setting alpha to 0
+    -- The shader pipeline still processes, but only local commands (text) are visible
+    -- This is cleaner than setting size to 1x1 which affects transform bounds
+    animation_system.setFGColorForAllAnimationObjects(entity, Col(255, 255, 255, 0))
+
+    -- Ensure it renders through shader pipeline, not legacy
     local AnimationQueueComponent = _G.AnimationQueueComponent
     if AnimationQueueComponent then
         local animComp = component_cache.get(entity, AnimationQueueComponent)
         if animComp then
-            -- Ensure it renders through shader pipeline, not legacy
             pcall(function() animComp.drawWithLegacyPipeline = false end)
         end
     end

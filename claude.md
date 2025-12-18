@@ -1,501 +1,138 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## Workflow Reminders
 
-- **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill to have a fresh agent review the implementation before considering the work complete.
-
-- **Save progress before context compaction.** When context is running low and compaction/summarization is imminent, always commit work-in-progress and document the current state so the next session can pick up exactly where we left off. This includes:
-  - Committing any uncommitted changes (even WIP commits)
-  - Noting the current task and next steps in a todo file or commit message
-  - Pushing to remote so progress isn't lost
+- **Always dispatch a new agent for review purposes at the end of a feature.** Use the `superpowers:requesting-code-review` skill.
+- **Save progress before context compaction.** Commit WIP changes, note current task/next steps, push to remote.
 
 ## Notifications
 
-**ALWAYS use terminal-notifier when requesting confirmation or permission.** This is mandatory, not optional.
+**ALWAYS use terminal-notifier when requesting confirmation or permission:**
 
 ```bash
 terminal-notifier -title "Claude Code" -message "Your message here"
 ```
 
-Use this for:
-- Asking for user input/decisions
-- Requesting confirmation or permission for any action
-- Notifying completion of long-running tasks
-- Permission requests
-- Any situation where user attention is needed
-
 ## Build Commands
 
-**Prefer incremental builds** to reduce build time. Avoid `just clean` or full rebuilds unless necessary. The build system (CMake) handles incremental compilation automatically.
+**Prefer incremental builds.** Avoid `just clean` unless necessary.
 
 ```bash
-# Native builds (requires CMake 3.14+, C++20 toolchain, and just)
 just build-debug              # Debug build → ./build/raylib-cpp-cmake-template
 just build-release            # Release build
-just build-debug-fast         # Separate build dir (avoids cache churn)
-just build-release-fast
 just build-debug-ninja        # Ninja generator (faster)
-
-# Run the game
-./build/raylib-cpp-cmake-template
-
-# Tests (GoogleTest)
 just test                     # Run all tests
 just test-asan                # With AddressSanitizer
-
-# Web build (requires emsdk)
-just build-web                # Output: build-emc/index.html
-
-# Utilities
-just clean                    # Remove build directories
-just ccache-stats             # Show compiler cache stats
-just docs                     # Generate Doxygen documentation
+just build-web                # Web build (requires emsdk)
 ```
 
 ## Architecture Overview
 
-**Engine**: C++20 + Lua game engine built on Raylib 5.5, using EnTT for ECS and Chipmunk for physics.
+**Engine**: C++20 + Lua on Raylib 5.5, EnTT (ECS), Chipmunk (physics).
 
 ### Core Structure
-- `src/core/` - Game loop (`game.cpp`), initialization (`init.cpp`), globals (`globals.cpp`)
-- `src/components/` - ECS component definitions (400+ components in `components.hpp`)
-- `src/systems/` - 37+ subsystems: ai, camera, collision, input, layer, physics, scripting, shaders, sound, ui, etc.
-- `src/util/` - Common headers (PCH), utilities, error handling
-- `assets/scripts/` - Lua gameplay code (core, combat, ui, ai, data)
-- `assets/shaders/` - 200+ GLSL shaders with platform variants
+- `src/core/` - Game loop, initialization, globals
+- `src/components/` - ECS components (400+ in `components.hpp`)
+- `src/systems/` - 37+ subsystems: ai, camera, collision, input, layer, physics, scripting, shaders, sound, ui
+- `assets/scripts/` - Lua gameplay (core, combat, ui, ai, data)
+- `assets/shaders/` - 200+ GLSL shaders
 
 ### Key Subsystems
 | System | Location | Purpose |
 |--------|----------|---------|
-| **Layer** | `src/systems/layer/` | Render batching, shader grouping, depth sorting |
-| **Physics** | `src/systems/physics/` | Chipmunk wrapper, collision masks, sync modes |
-| **Scripting** | `src/systems/scripting/` | Lua VM (Sol2), hot-reload, engine bindings |
-| **Shaders** | `src/systems/shaders/` | Multi-pass pipeline, fullscreen effects |
-| **UI** | `src/systems/ui/` | Layouts, controller nav, localization |
-| **Combat** | `assets/scripts/combat/` | Card/ability system, wands, projectiles |
-
-### Dependency Injection
-Legacy `globals::` are being migrated to `EngineContext` (`src/core/engine_context.hpp`). Access via `globals::g_ctx`.
+| Layer | `src/systems/layer/` | Render batching, depth sorting |
+| Physics | `src/systems/physics/` | Chipmunk wrapper, collision masks |
+| Scripting | `src/systems/scripting/` | Lua VM (Sol2), hot-reload |
+| Shaders | `src/systems/shaders/` | Multi-pass pipeline |
+| Combat | `assets/scripts/combat/` | Card/ability system, projectiles |
 
 ---
 
 ## Lua Entity Script Table Pattern
 
-### ✅ Correct: Use Node-Based Script Tables
-
-When creating entities that need Lua data storage, you **must** initialize a script table using the Node monobehavior system:
-
-**CRITICAL: Data must be assigned to the script table BEFORE calling `attach_ecs()`!**
+**CRITICAL: Data must be assigned BEFORE `attach_ecs()`!**
 
 ```lua
 local Node = require("monobehavior.behavior_script_v2")
 
--- Create entity
 local entity = registry:create()
-
--- Initialize script table (REQUIRED for getScriptTableFromEntityID to work)
 local EntityType = Node:extend()
-local entityScript = EntityType {}
+local script = EntityType {}
 
--- Assign data to script table FIRST (before attach_ecs)
-entityScript.customData = { foo = "bar" }
-entityScript.someValue = 42
+-- Assign data FIRST
+script.customData = { foo = "bar" }
+script.someValue = 42
 
--- Call attach_ecs LAST (after all data assignment)
-entityScript:attach_ecs { create_new = false, existing_entity = entity }
+-- Call attach_ecs LAST
+script:attach_ecs { create_new = false, existing_entity = entity }
+
+-- Use script variable directly after attach (don't call getScriptTableFromEntityID immediately)
 ```
 
-### ❌ Wrong: Storing Data Directly in GameObject Component
-
-```lua
--- DON'T DO THIS:
-if not registry:has(entity, GameObject) then
-    registry:emplace(entity, GameObject)
-end
-local gameObj = component_cache.get(entity, GameObject)
-gameObj.customData = { foo = "bar" }  -- Wrong!
-```
-
-### ⚠️ CRITICAL: Initialization Order and Usage
-
-**Data assignment MUST come BEFORE `attach_ecs()` call!**
-
-The correct order is:
-1. Create Node instance: `local script = EntityType {}`
-2. Assign all data to script table: `script.data = ...`
-3. Call `attach_ecs()` LAST: `script:attach_ecs {...}`
-
-If you call `attach_ecs()` before assigning data, the data will not persist and will be lost!
-
-**IMPORTANT: After calling `attach_ecs()`, use the script variable directly!**
-
-Don't call `getScriptTableFromEntityID()` immediately after `attach_ecs()` - it may return nil. Instead, continue using the `script` variable you already have:
-
-```lua
--- Initialize script table
-local EntityType = Node:extend()
-local entityScript = EntityType {}
-
--- Assign data
-entityScript.someData = {...}
-
--- Attach to entity
-entityScript:attach_ecs { create_new = false, existing_entity = entity }
-
--- ✅ CORRECT: Use entityScript directly
-entityScript.someData.value = 100
-
--- ❌ WRONG: Don't call getScriptTableFromEntityID immediately after attach
-local script = getScriptTableFromEntityID(entity)  -- May return nil!
-script.someData.value = 100  -- Error!
-```
-
-### Why This Matters
-
-- `getScriptTableFromEntityID(entity)` only works if the entity has a Node-based script attached via `attach_ecs()`
-- Without script initialization, `getScriptTableFromEntityID()` returns `nil`
-- The GameObject component already exists - you don't need to emplace it
-- Data must be assigned BEFORE `attach_ecs()` for it to stick
-- This pattern is used consistently throughout the codebase (see [gameplay.lua:600-602](assets/scripts/core/gameplay.lua#L600-L602))
-
-### Retrieving Script Tables
-
-```lua
--- Later, to retrieve the script table:
-local entityScript = getScriptTableFromEntityID(entity)
-if entityScript then
-    print(entityScript.customData.foo)  -- "bar"
-end
-```
+**Why:** `getScriptTableFromEntityID()` returns nil without proper initialization. Data assigned after `attach_ecs()` is lost.
 
 ---
 
 ## Event System: Signal Library
 
-### ✅ Correct: Use signal.emit()
-
 ```lua
 local signal = require("external.hump.signal")
 
--- Emit an event
-signal.emit("projectile_spawned", entity, {
-    owner = ownerEntity,
-    position = {x = 100, y = 200},
-    damage = 50
-})
+-- Emit: entity first, then data table
+signal.emit("projectile_spawned", entity, { owner = ownerEntity, damage = 50 })
 
--- Register event handler
+-- Register handler
 signal.register("projectile_spawned", function(entity, data)
-    print("Projectile spawned at", data.position.x, data.position.y)
+    print("Damage:", data.damage)
 end)
 ```
 
-### ❌ Wrong: Using publishLuaEvent()
-
-```lua
--- DON'T DO THIS:
-publishLuaEvent("projectile_spawned", {
-    entity = entity,
-    owner = ownerEntity,
-    position = {x = 100, y = 200}
-})
-```
-
-### Signal Pattern
-
-The signal library follows this convention:
-- **First parameter**: The entity being acted upon
-- **Second parameter**: Additional data table (optional)
-
-This allows handlers to easily access both the entity and associated metadata.
-
-### Examples from Codebase
-
-See [gameplay.lua:3569-3625](assets/scripts/core/gameplay.lua#L3569-L3625) for examples:
-```lua
-signal.register("player_level_up", function()
-    -- Handle level up
-end)
-
-signal.register("on_pickup", function(pickupEntity)
-    -- Handle pickup collection
-end)
-
-signal.emit("on_bump_enemy", enemyEntity)
-```
-
----
-
-## Component Access Pattern
-
-### Getting Components
-
-```lua
-local component_cache = require("core.component_cache")
-
--- Get a component from an entity
-local transform = component_cache.get(entity, Transform)
-if transform then
-    transform.actualX = 100
-    transform.actualY = 200
-end
-```
-
-### Common Components
-
-- **Transform**: Position, size, rotation (`actualX`, `actualY`, `actualW`, `actualH`, `actualR`)
-- **GameObject**: Contains `state` and `methods` for interaction callbacks
-- **StateTag**: Game state management (see entity_gamestate_management)
-
----
-
-## Entity Validation
-
-### Always Validate Entities
-
-```lua
-local entity_cache = require("core.entity_cache")
-
--- Check if entity is valid before using
-if not entity_cache.valid(entity) then
-    return
-end
-
--- Check if entity is active (not just valid)
-if not entity_cache.active(entity) then
-    return
-end
-```
+**Don't use `publishLuaEvent()`** - use `signal.emit()`.
 
 ---
 
 ## Physics Integration
 
-### ✅ Getting the Physics World
-
-**Always use `PhysicsManager.get_world("world")` instead of `globals.physicsWorld`:**
+### Getting Physics World
 
 ```lua
 local PhysicsManager = require("core.physics_manager")
-
--- Get the physics world
-local world = PhysicsManager.get_world("world")
-if not world then
-    log_warn("Physics world not available")
-    return
-end
+local world = PhysicsManager.get_world("world")  -- NOT globals.physicsWorld
 ```
 
-### ❌ Wrong: Using globals.physicsWorld
+### Creating Physics Bodies
 
 ```lua
--- DON'T DO THIS:
-if physics and globals.physicsWorld then
-    physics.create_physics_for_transform(globals.physicsWorld, entity, "dynamic")
-end
-```
+local config = { shape = "circle", tag = "projectile", sensor = false, density = 1.0 }
+physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
 
-### Setting Up Physics Bodies
-
-**Correct signature for `create_physics_for_transform`:**
-
-```lua
-local world = PhysicsManager.get_world("world")
-
--- Create physics body using correct signature
-local config = {
-    shape = "circle",  -- or "rectangle", "polygon", "chain"
-    tag = "projectile",
-    sensor = false,
-    density = 1.0
-}
-
-physics.create_physics_for_transform(
-    registry,                    -- global registry
-    physics_manager_instance,    -- global physics_manager instance
-    entity,
-    "world",                     -- world name
-    config
-)
-
--- Set additional physics properties
-physics.SetBullet(world, entity, true)  -- High-speed collision detection
-physics.SetFriction(world, entity, 0.0)
-physics.SetRestitution(world, entity, 0.5)
-physics.SetFixedRotation(world, entity, true)  -- Lock rotation
-```
-
-### ❌ Wrong: Old API signature
-
-```lua
--- DON'T DO THIS:
-physics.create_physics_for_transform(world, entity, "dynamic")
-physics.AddCollider(world, entity, tag, "circle", radius, ...)
-```
-
-### Physics Sync Modes
-
-When using physics bodies, set the sync mode using the correct API:
-
-```lua
--- ✅ CORRECT: Use set_sync_mode (matches gameplay.lua)
+-- Set sync mode
 physics.set_sync_mode(registry, entity, physics.PhysicsSyncMode.AuthoritativePhysics)
-```
 
-### ❌ Wrong: Manual PhysicsSyncConfig
-
-```lua
--- DON'T DO THIS:
-local PhysicsSyncConfig = {
-    mode = "AuthoritativePhysics",
-    pullPositionFromPhysics = true,
-    -- ...
-}
-registry:emplace(entity, "PhysicsSyncConfig", PhysicsSyncConfig)
-```
-
-### Setting Up Collision Masks (Per-Entity)
-
-Collision masks are set **per entity** when creating physics bodies, not globally in init:
-
-```lua
-local world = PhysicsManager.get_world("world")
-
--- Enable collisions between this entity's tag and other tags
+-- Per-entity collision masks
 physics.enable_collision_between_many(world, "projectile", { "enemy" })
-physics.enable_collision_between_many(world, "enemy", { "projectile" })
-
--- Update collision masks for both tags
 physics.update_collision_masks_for(world, "projectile", { "enemy" })
-physics.update_collision_masks_for(world, "enemy", { "projectile" })
 ```
 
-### ❌ Wrong: Setting global collision tags in init
+### PhysicsBuilder (Fluent API)
 
 ```lua
--- DON'T DO THIS in system initialization:
-function ProjectileSystem.init()
-    physics.set_collision_tags(world, {"projectile", "enemy", "player"})
-    physics.enable_collision_between(world, "projectile", "enemy")
-end
-```
+local PhysicsBuilder = require("core.physics_builder")
 
-**Why:** Collision masks are entity-specific. Set them when creating each entity's physics body.
-
----
-
-## Animation System
-
-### Creating Animated Entities
-
-```lua
-local animation_system = require("core.animation_system")
-
--- Create entity with animated sprite
-local entity = animation_system.createAnimatedObjectWithTransform(
-    "sprite_animation_id",  -- animation ID
-    true                     -- use animation (not sprite identifier)
-)
-
--- Resize animation to fit transform
-animation_system.resizeAnimationObjectsInEntityToFit(
-    entity,
-    width,
-    height
-)
-```
-
----
-
-## Shader Builder API
-
-### Fluent Shader Composition
-
-```lua
-local ShaderBuilder = require("core.shader_builder")
-
--- Basic usage
-ShaderBuilder.for_entity(entity)
-    :add("3d_skew_holo")
-    :apply()
-
--- With custom uniforms
-ShaderBuilder.for_entity(entity)
-    :add("3d_skew_holo", { sheen_strength = 1.5 })
-    :add("dissolve", { dissolve = 0.5 })
-    :apply()
-
--- Clear and rebuild
-ShaderBuilder.for_entity(entity)
-    :clear()
-    :add("3d_skew_prismatic")
+PhysicsBuilder.for_entity(entity)
+    :circle()
+    :tag("projectile")
+    :bullet()
+    :friction(0)
+    :collideWith({ "enemy", "WORLD" })
     :apply()
 ```
-
-### Shader Families
-
-Convention-based prefix detection. Shaders with matching prefix get family defaults:
-- `3d_skew_*`: Card shaders (regionRate, pivot, etc.)
-- `liquid_*`: Fluid effects (wave_speed, wave_amplitude, distortion)
-
-Register custom families:
-```lua
-ShaderBuilder.register_family("energy", {
-    uniforms = { "pulse_speed", "glow_intensity" },
-    defaults = { pulse_speed = 1.0 },
-})
-```
-
----
-
-## Draw Commands API
-
-### Table-Based Command Buffer Wrappers
-
-```lua
-local draw = require("core.draw")
-
--- Before (verbose callback)
-command_buffer.queueTextPro(layer, function(c)
-    c.text = "hello"
-    c.x, c.y = 100, 200
-    c.fontSize = 16
-    c.color = WHITE
-end, z, space)
-
--- After (table-based with defaults)
-draw.textPro(layer, { text = "hello", x = 100, y = 200 }, z, space)
-```
-
-### Local Commands (Shader Pipeline)
-
-```lua
--- Before (9 positional params)
-shader_draw_commands.add_local_command(
-    registry, eid, "text_pro", fn, 1, space, true, false, false
-)
-
--- After (props + opts)
-draw.local_command(eid, "text_pro", {
-    text = "hello", x = 10, y = 20, fontSize = 20,
-}, { z = 1, preset = "shaded_text" })
-```
-
-### Render Presets
-
-Named presets for common configurations:
-- `"shaded_text"`: textPass=true, uvPassthrough=true
-- `"sticker"`: stickerPass=true, uvPassthrough=true
-- `"world"`: space=World
-- `"screen"`: space=Screen
 
 ---
 
 ## Entity Builder API
-
-### Fluent Entity Creation
 
 ```lua
 local EntityBuilder = require("core.entity_builder")
@@ -503,145 +140,72 @@ local EntityBuilder = require("core.entity_builder")
 -- Full options
 local entity, script = EntityBuilder.create({
     sprite = "kobold",
-    position = { x = 100, y = 200 },  -- or { 100, 200 }
+    position = { x = 100, y = 200 },
     size = { 64, 64 },
     shadow = true,
     data = { health = 100, faction = "enemy" },
     interactive = {
         hover = { title = "Enemy", body = "A dangerous kobold" },
         click = function(reg, eid) print("clicked!") end,
-        drag = true,
         collision = true
     },
     state = PLANNING_STATE,
     shaders = { "3d_skew_holo" }
 })
 
--- Simple version (just sprite + position)
+-- Simple version
 local entity = EntityBuilder.simple("kobold", 100, 200, 64, 64)
-
--- Interactive with hover tooltip
-local entity, script = EntityBuilder.interactive({
-    sprite = "button",
-    position = { 100, 100 },
-    hover = { title = "Click me", body = "Description" },
-    click = function() print("clicked!") end
-})
 ```
-
-### EntityBuilder.create Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `sprite` | string | Animation/sprite ID |
-| `position` | table | `{ x, y }` or `{ x = n, y = n }` |
-| `size` | table | `{ w, h }` (default: 32x32) |
-| `shadow` | boolean | Enable shadow (default: false) |
-| `data` | table | Script table data (assigned before attach_ecs) |
-| `interactive` | table | Interaction config (see below) |
-| `state` | string | State tag to add |
-| `shaders` | table | List of shader names |
-
-### Interactive Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `hover` | table | `{ title, body, id? }` for tooltip |
-| `click` | function | onClick callback |
-| `drag` | boolean/function | Enable drag or custom handler |
-| `stopDrag` | function | onStopDrag callback |
-| `collision` | boolean | Enable collision |
 
 ---
 
-## Physics Builder API
-
-### Fluent Physics Setup
+## Shader Builder API
 
 ```lua
-local PhysicsBuilder = require("core.physics_builder")
+local ShaderBuilder = require("core.shader_builder")
 
--- Fluent API
-PhysicsBuilder.for_entity(entity)
-    :circle()                           -- or :rectangle()
-    :tag("projectile")
-    :bullet()                           -- high-speed collision detection
-    :friction(0)
-    :fixedRotation()
-    :syncMode("physics")                -- or "transform"
-    :collideWith({ "enemy", "WORLD" })
+ShaderBuilder.for_entity(entity)
+    :add("3d_skew_holo", { sheen_strength = 1.5 })
+    :add("dissolve", { dissolve = 0.5 })
     :apply()
-
--- Quick setup with options table
-PhysicsBuilder.quick(entity, {
-    shape = "circle",
-    tag = "projectile",
-    bullet = true,
-    collideWith = { "enemy", "WORLD" }
-})
 ```
 
-### PhysicsBuilder Methods
-
-| Method | Description |
-|--------|-------------|
-| `:circle()` | Circle collider shape |
-| `:rectangle()` | Rectangle collider shape |
-| `:tag(string)` | Collision tag |
-| `:sensor(bool)` | Is sensor (no physical response) |
-| `:density(number)` | Body density |
-| `:friction(number)` | Surface friction |
-| `:restitution(number)` | Bounciness |
-| `:bullet(bool)` | CCD for fast objects |
-| `:fixedRotation(bool)` | Lock rotation |
-| `:syncMode(string)` | "physics" or "transform" |
-| `:collideWith(table)` | Tags to collide with |
-| `:apply()` | Apply all settings |
+**Shader families:** `3d_skew_*` (card shaders), `liquid_*` (fluid effects)
 
 ---
 
-## Timer Options API
+## Draw Commands API
 
-### Options-Table Variants
+```lua
+local draw = require("core.draw")
+
+-- Table-based (preferred)
+draw.textPro(layer, { text = "hello", x = 100, y = 200 }, z, space)
+
+-- Local commands for shader pipeline
+draw.local_command(eid, "text_pro", {
+    text = "hello", x = 10, y = 20, fontSize = 20,
+}, { z = 1, preset = "shaded_text" })
+```
+
+**Presets:** `"shaded_text"`, `"sticker"`, `"world"`, `"screen"`
+
+---
+
+## Timer API
 
 ```lua
 local timer = require("core.timer")
 
--- Clearer than positional parameters
-timer.after_opts({
-    delay = 2.0,
-    action = function() print("done") end,
-    tag = "my_timer"
-})
+timer.after_opts({ delay = 2.0, action = function() end, tag = "my_timer" })
+timer.every_opts({ delay = 0.5, action = fn, times = 10, immediate = true, tag = "update" })
 
-timer.every_opts({
-    delay = 0.5,
-    action = updateHealth,
-    times = 10,           -- 0 = infinite
-    immediate = true,     -- run once immediately
-    tag = "health_update"
-})
-
-timer.cooldown_opts({
-    delay = 1.0,
-    condition = function() return canAttack end,
-    action = doAttack,
-    tag = "attack_cd"
-})
-```
-
-### Timer Sequences (Fluent Chaining)
-
-```lua
--- Avoid nested timer.after calls
+-- Fluent sequences
 timer.sequence("animation")
     :wait(0.5)
     :do_now(function() print("start") end)
     :wait(0.3)
-    :do_now(function() print("middle") end)
-    :wait(0.2)
     :do_now(function() print("end") end)
-    :onComplete(function() print("done!") end)
     :start()
 ```
 
@@ -649,856 +213,127 @@ timer.sequence("animation")
 
 ## Text Builder API
 
-### Fluent Text Creation
-
-The Text Builder provides a particle-style API for game text with three layers: Recipe (immutable definition), Spawner (position configuration), and Handle (lifecycle control).
+See [docs/api/text-builder.md](docs/api/text-builder.md) for full documentation.
 
 ```lua
 local Text = require("core.text")
 
--- Define a reusable damage number recipe
+-- Define reusable recipe
 local damageRecipe = Text.define()
     :content("[%d](color=red;pop=0.2)")
     :size(20)
     :fade()
     :lifespan(0.8)
 
--- Fire-and-forget: spawn at position
-damageRecipe:spawn(25):at(enemy.x, enemy.y)
+-- Fire-and-forget
+damageRecipe:spawn(25):above(enemy, 10)
 
--- Spawn relative to entity
-damageRecipe:spawn(50):above(enemy, 10)
-
--- Persistent text with following
-local hpText = Text.define()
-    :content(function() return "HP: " .. player.hp end)
-    :size(14)
-    :spawn()
-    :above(player, 40)
-    :follow()
-    :attachTo(player)
-
--- Update in game loop (REQUIRED)
-function update(dt)
-    Text.update(dt)
-end
+-- REQUIRED: call in game loop
+Text.update(dt)
 ```
-
-### Recipe Configuration Methods
-
-| Method | Description |
-|--------|-------------|
-| `:content(str\|fn)` | Template string (`"[%d](red)"`) or callback function |
-| `:size(n)` | Font size in pixels |
-| `:color(name)` | Base color name or Color object |
-| `:effects(str)` | Default effects for all characters (e.g., `"shake=2;float"`) |
-| `:fade()` | Enable alpha fade over lifespan |
-| `:fadeIn(pct)` | Fade-in percentage (0-1) |
-| `:lifespan(n)` | Auto-destroy after N seconds |
-| `:lifespan(min, max)` | Random lifespan range |
-| `:width(n)` | Wrap width for multi-line text |
-| `:anchor(mode)` | `"center"` or `"topleft"` |
-| `:align(mode)` | `"left"`, `"center"`, `"right"`, `"justify"` |
-| `:layer(obj)` | Render layer object |
-| `:z(n)` | Z-index for draw order |
-| `:space(name)` | `"screen"` or `"world"` |
-| `:font(obj)` | Custom font object |
-
-### Spawner Methods
-
-| Method | Description |
-|--------|-------------|
-| `:spawn(value?)` | Create spawner (value for template substitution) |
-| `:at(x, y)` | Absolute position (triggers spawn) |
-| `:above(entity, offset?)` | Position above entity (triggers spawn) |
-| `:below(entity, offset?)` | Position below entity (triggers spawn) |
-| `:center(entity)` | Position at entity center (triggers spawn) |
-| `:left(entity, offset?)` | Position left of entity (triggers spawn) |
-| `:right(entity, offset?)` | Position right of entity (triggers spawn) |
-| `:follow()` | Keep following entity position |
-| `:attachTo(entity)` | Text dies when entity dies |
-| `:tag(name)` | Tag for bulk operations |
-| `:stream()` | Deferred spawn (set position later with handle:at()) |
-| `:asEntity()` | Enable entity mode (creates ECS entity) |
-| `:withShaders(list)` | Set shaders for entity mode |
-| `:richEffects()` | Enable per-character effects (entity mode, expensive) |
-
-### Handle Methods
-
-| Method | Description |
-|--------|-------------|
-| `:setText(value)` | Update with template substitution |
-| `:setContent(str)` | Replace entire content string |
-| `:moveTo(x, y)` | Move to absolute position |
-| `:moveBy(dx, dy)` | Move by relative offset |
-| `:getPosition()` | Get current position `{ x, y }` |
-| `:at(x, y)` | Set position (for streamed handles) |
-| `:stop()` | Stop and remove text |
-| `:isActive()` | Check if alive |
-| `:follow()` | Enable following (can be called after spawn) |
-| `:attachTo(entity)` | Attach lifecycle (can be called after spawn) |
-| `:tag(name)` | Tag handle (can be called after spawn) |
-| `:getEntity()` | Get ECS entity ID (only valid if `:asEntity()` used) |
-
-### Module-Level Functions
-
-| Function | Description |
-|----------|-------------|
-| `Text.update(dt)` | Update all text (call each frame, REQUIRED) |
-| `Text.stopAll()` | Remove all active text |
-| `Text.stopByTag(tag)` | Remove all text with specific tag |
-| `Text.getActiveCount()` | Get count of active text handles |
-| `Text.getActiveHandles()` | Get copy of active handles list (debugging) |
-
-### Common Usage Patterns
-
-#### Fire-and-Forget Damage Numbers
-
-```lua
-local damageRecipe = Text.define()
-    :content("[%d](color=red;pop=0.2)")
-    :size(20)
-    :fade()
-    :lifespan(0.8)
-
--- On enemy hit
-damageRecipe:spawn(damage):above(enemy, 10)
-```
-
-#### Persistent HP Bar Following Entity
-
-```lua
-local playerHP = 100
-
-local hpRecipe = Text.define()
-    :content(function() return "HP: " .. playerHP end)
-    :size(14)
-    :anchor("center")
-
-local hpHandle = hpRecipe:spawn()
-    :above(player, 40)
-    :follow()
-    :attachTo(player)
-
--- Update HP and text
-playerHP = 75
-hpHandle:setText()  -- Re-evaluates callback
-```
-
-#### Tagged Combat Text with Bulk Cleanup
-
-```lua
-local combatRecipe = Text.define()
-    :content("[%s](shake=1)")
-    :size(16)
-    :lifespan(1.5)
-
--- Spawn tagged combat messages
-combatRecipe:spawn("CRITICAL!"):above(enemy, 20):tag("combat")
-combatRecipe:spawn("MISS"):above(enemy, 25):tag("combat")
-
--- Clean up all combat text when battle ends
-Text.stopByTag("combat")
-```
-
-#### Stream Mode (Deferred Positioning)
-
-```lua
-local recipe = Text.define():content("Delayed"):width(100)
-
--- Create handle without spawning
-local handle = recipe:spawn():stream()
-
--- Set position later (adds to active list)
-timer.after(1.0, function()
-    handle:at(100, 200)
-end)
-```
-
-#### Dynamic Position Updates
-
-```lua
-local floatingText = Text.define()
-    :content("[LOOT](color=gold;float)")
-    :size(18)
-    :spawn()
-    :at(x, y)
-
--- Animate upward
-timer.every(0.016, function()
-    local pos = floatingText:getPosition()
-    floatingText:moveBy(0, -2)
-end, 30)  -- 30 frames = ~0.5 seconds
-```
-
-### Lifecycle Binding Patterns
-
-#### Text Dies With Entity
-
-```lua
--- HP bar attached to entity lifecycle
-local hpBar = Text.define()
-    :content(function() return "HP: " .. entity.hp end)
-    :spawn()
-    :above(entity, 30)
-    :attachTo(entity)  -- Auto-removed when entity dies
-```
-
-#### Following Entity Position
-
-```lua
--- Text follows entity continuously
-local nameTag = Text.define()
-    :content("Enemy")
-    :spawn()
-    :above(entity, 40)
-    :follow()  -- Updates position every frame
-```
-
-#### Combined: Follow + Attach
-
-```lua
--- Persistent status indicator
-local statusText = Text.define()
-    :content(function() return entity.status end)
-    :spawn()
-    :above(entity, 35)
-    :follow()      -- Keep position updated
-    :attachTo(entity)  -- Die with entity
-```
-
-### Integration with Game Loop
-
-```lua
--- In your game update function
-function update(dt)
-    -- Update all active text handles
-    Text.update(dt)
-
-    -- Handles automatically:
-    -- - Position following
-    -- - Lifespan expiration
-    -- - Attached entity validation
-    -- - Renderer updates
-end
-```
-
-### Best Practices
-
-1. **Always call Text.update(dt)** in your game loop - text won't animate or expire without it
-2. **Use :attachTo() for entity-bound text** to prevent memory leaks when entities die
-3. **Use tags for bulk cleanup** of related text (e.g., all combat text, all tutorial text)
-4. **Prefer recipes over one-offs** to reuse common text styles
-5. **Use callbacks for dynamic content** that changes frequently (HP, status effects)
-6. **Use :follow() sparingly** - position updates every frame can be expensive
-7. **Clean up on state transitions** with `Text.stopAll()` or `Text.stopByTag()`
 
 ---
 
 ## Global Helper Functions
 
-These functions are available globally after util.lua loads:
-
 ```lua
--- Entity validation (use instead of manual nil checks)
-if ensure_entity(eid) then
-    -- entity is valid
-end
-
-if ensure_scripted_entity(eid) then
-    -- entity is valid AND has ScriptComponent
-end
+-- Entity validation
+if ensure_entity(eid) then ... end
+if ensure_scripted_entity(eid) then ... end
 
 -- Safe script access
-local script = safe_script_get(eid)           -- returns nil if missing
-local script = safe_script_get(eid, true)     -- logs warning if missing
-
--- Safe field access with default
-local health = script_field(eid, "health", 100)  -- returns 100 if missing
-```
-
-### Replace This Pattern
-
-```lua
--- OLD (verbose)
-if not entity or entity == entt_null or not entity_cache.valid(entity) then
-    return
-end
-
--- NEW (use the helper!)
-if not ensure_entity(entity) then return end
+local script = safe_script_get(eid)
+local health = script_field(eid, "health", 100)  -- with default
 ```
 
 ---
 
-## Imports Bundle
-
-Reduce repetitive requires with bundled imports:
-
-```lua
-local imports = require("core.imports")
-
--- Core bundle (most common set)
-local component_cache, entity_cache, timer, signal, z_orders = imports.core()
-
--- Entity creation
-local Node, animation_system, EntityBuilder = imports.entity()
-
--- Physics
-local PhysicsManager, PhysicsBuilder = imports.physics()
-
--- UI
-local dsl, z_orders, util = imports.ui()
-
--- Everything as a table
-local i = imports.all()
-print(i.timer, i.EntityBuilder, i.signal)
-```
-
----
-
-## GameObject Callbacks
-
-### Setting Up Entity Interaction
-
-```lua
--- Get GameObject component (already exists on entities)
-local nodeComp = registry:get(entity, GameObject)
-local gameObjectState = nodeComp.state
-
--- Enable interaction modes
-gameObjectState.hoverEnabled = true
-gameObjectState.collisionEnabled = true
-gameObjectState.clickEnabled = true
-gameObjectState.dragEnabled = true
-
--- Set callbacks
-nodeComp.methods.onClick = function(registry, clickedEntity)
-    print("Clicked entity:", clickedEntity)
-end
-
-nodeComp.methods.onHover = function()
-    print("Hovering over entity")
-end
-
-nodeComp.methods.onDrag = function()
-    print("Dragging entity")
-end
-
-nodeComp.methods.onStopDrag = function()
-    print("Stopped dragging")
-end
-```
-
----
-
-## State Tags
-
-### Managing Entity States
-
-```lua
--- Add state tag to entity
-add_state_tag(entity, PLANNING_STATE)
-
--- Remove default state tag
-remove_default_state_tag(entity)
-
--- Check if state is active
-if is_state_active(PLANNING_STATE) then
-    -- Do something
-end
-
--- Activate/deactivate states
-activate_state(PLANNING_STATE)
-deactivate_state(PLANNING_STATE)
-```
-
----
-
-## Common Mistakes to Avoid
-
-### ❌ Don't: Emplace GameObject
-```lua
--- GameObject already exists on entities created via animation_system
-if not registry:has(entity, GameObject) then
-    registry:emplace(entity, GameObject)  -- Not needed!
-end
-```
-
-### ❌ Don't: Store Data in Component Cache
-```lua
--- This bypasses the script table system
-local gameObj = component_cache.get(entity, GameObject)
-gameObj.myData = {}  -- Don't do this
-```
-
-### ❌ Don't: Use getScriptTableFromEntityID Without Initialization
-```lua
-local entity = registry:create()
-local script = getScriptTableFromEntityID(entity)  -- Returns nil!
-script.data = {}  -- Crash!
-```
-
-### ✅ Do: Initialize Script Table with Correct Order
-```lua
-local entity = registry:create()
-local EntityType = Node:extend()
-local script = EntityType {}
-
--- Assign data BEFORE attach_ecs
-script.data = {}
-script.someValue = 42
-
--- Call attach_ecs LAST
-script:attach_ecs { create_new = false, existing_entity = entity }
--- Now getScriptTableFromEntityID(entity) works!
-```
-
----
-
-## Complete Entity Creation Example
-
-Combining all patterns for a fully-functional entity:
-
-```lua
-local Node = require("monobehavior.behavior_script_v2")
-local signal = require("external.hump.signal")
-local component_cache = require("core.component_cache")
-local entity_cache = require("core.entity_cache")
-local animation_system = require("core.animation_system")
-
-function createCustomEntity(x, y)
-    -- Create entity with sprite
-    local entity = animation_system.createAnimatedObjectWithTransform(
-        "my_sprite_animation",
-        true
-    )
-
-    -- Initialize script table and assign data BEFORE attach_ecs
-    local EntityType = Node:extend()
-    local entityScript = EntityType {}
-
-    -- Store custom data in script table FIRST
-    entityScript.customValue = 100
-    entityScript.health = 50
-
-    -- Call attach_ecs LAST
-    entityScript:attach_ecs { create_new = false, existing_entity = entity }
-
-    -- Set position
-    local transform = component_cache.get(entity, Transform)
-    if transform then
-        transform.actualX = x
-        transform.actualY = y
-        transform.actualW = 32
-        transform.actualH = 32
-    end
-
-    -- Enable interactions
-    local nodeComp = registry:get(entity, GameObject)
-    nodeComp.state.clickEnabled = true
-    nodeComp.methods.onClick = function()
-        entityScript.health -= 10
-        signal.emit("entity_damaged", entity, { damage = 10 })
-    end
-
-    -- Add physics (use correct API)
-    local PhysicsManager = require("core.physics_manager")
-    local world = PhysicsManager.get_world("world")
-    local config = { shape = "circle", tag = "custom", sensor = false, density = 1.0 }
-    physics.create_physics_for_transform(registry, physics_manager_instance, entity, "world", config)
-
-    -- Emit creation event
-    signal.emit("entity_created", entity, { type = "custom" })
-
-    return entity
-end
-```
-
----
-
-## Content Creation (Cards, Jokers, Projectiles, Avatars)
-
-Full documentation in `docs/content-creation/`. Quick reference below.
-
-### Adding a Card
-
-Add to `assets/scripts/data/cards.lua`:
-
-```lua
-Cards.MY_FIREBALL = {
-    id = "MY_FIREBALL",
-    type = "action",           -- "action", "modifier", or "trigger"
-    mana_cost = 12,
-    damage = 25,
-    damage_type = "fire",
-    projectile_speed = 400,
-    lifetime = 2000,
-    radius_of_effect = 50,     -- AoE radius (0 = no AoE)
-    tags = { "Fire", "Projectile", "AoE" },
-    test_label = "MY\nfireball",
-    sprite = "fireball_icon",  -- Optional: custom sprite (default: sample_card.png)
-}
-```
-
-### Adding a Joker
-
-Add to `assets/scripts/data/jokers.lua`:
-
-```lua
-my_joker = {
-    id = "my_joker",
-    name = "My Joker",
-    description = "+10 damage to Fire spells",
-    rarity = "Common",         -- Common, Uncommon, Rare, Epic, Legendary
-    sprite = "joker_my_joker", -- Optional: custom sprite (default: joker_sample.png)
-    calculate = function(self, context)
-        if context.event == "on_spell_cast" and context.tags and context.tags.Fire then
-            return { damage_mod = 10, message = "My Joker!" }
-        end
-    end
-}
-```
-
-### Adding a Projectile Preset
-
-Add to `assets/scripts/data/projectiles.lua`:
-
-```lua
-my_projectile = {
-    id = "my_projectile",
-    speed = 400,
-    damage_type = "fire",
-    movement = "straight",     -- straight, homing, arc, orbital
-    collision = "explode",     -- destroy, pierce, bounce, explode, pass_through, chain
-    explosion_radius = 60,
-    lifetime = 2000,
-    tags = { "Fire", "Projectile", "AoE" },
-}
-```
-
-### Standard Tags
-
-**Elements:** `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`
-**Mechanics:** `Projectile`, `AoE`, `Hazard`, `Summon`, `Buff`, `Debuff`
-**Playstyle:** `Mobility`, `Defense`, `Brute`
-
-### Validation & Testing
-
-```lua
--- Validate all content (run in-game or standalone)
-dofile("assets/scripts/tools/content_validator.lua")
-
--- ImGui Content Debug Panel shows:
--- - Joker Tester: Add/remove jokers, trigger test events
--- - Projectile Spawner: Spawn with live parameter tweaking
--- - Tag Inspector: View tag counts and bonuses
-```
-
-### Extending the Systems
-
-All content systems are designed to be extensible. You can add new mechanics without modifying core code.
-
-#### Adding New Tags
-Tags are just strings. Add to any card/projectile and react to them in jokers:
-```lua
--- In card: tags = { "MyNewTag" }
--- In joker: if context.tags and context.tags.MyNewTag then return { damage_mult = 1.5 } end
-```
-
-#### Tag Synergy Thresholds
-Tags grant bonuses at breakpoints (3/5/7/9 cards with that tag). Defined in `wand/tag_evaluator.lua`:
-
-```lua
--- Add new tag with synergy breakpoints:
-local TAG_BREAKPOINTS = {
-    MyNewTag = {
-        [3] = { type = "stat", stat = "damage_pct", value = 10 },       -- +10% damage
-        [5] = { type = "proc", proc_id = "my_custom_proc" },            -- Trigger proc
-        [7] = { type = "stat", stat = "crit_chance_pct", value = 15 },  -- +15% crit
-        [9] = { type = "proc", proc_id = "my_ultimate_proc" },          -- Ultimate proc
-    },
-    -- ... existing tags
-}
-```
-
-**Bonus types:**
-- `stat`: Modifies player stat (e.g., `damage_pct`, `crit_chance_pct`)
-- `proc`: Triggers a proc effect (implement handler in combat system)
-
-**Changing thresholds:** Edit `DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }` in tag_evaluator.lua.
-
-**API:**
-```lua
-local TagEvaluator = require("wand.tag_evaluator")
-TagEvaluator.get_thresholds("Fire")     -- Returns sorted threshold list
-TagEvaluator.get_breakpoints()          -- Returns copy of all tag definitions
-```
-
-#### Adding New Joker Events
-Event names are strings. Emit from any code, jokers react automatically:
-```lua
-local JokerSystem = require("wand.joker_system")
-local effects = JokerSystem.trigger_event("on_dodge", { player = player })
-```
-
-#### Adding New Card Behaviors
-Use BehaviorRegistry for complex logic:
-```lua
-local BehaviorRegistry = require("wand.card_behavior_registry")
-BehaviorRegistry.register("my_behavior", function(ctx) ... end)
--- In card: behavior_id = "my_behavior"
-```
-
-#### Implementation Status Notes
-| System | Fully Implemented | Needs Implementation |
-|--------|------------------|---------------------|
-| Cards | ✅ All fields work | - |
-| Jokers | ✅ Events, aggregation | - |
-| Projectiles | ✅ Movement, collision | - |
-| Avatars | ✅ Unlock conditions | ⚠️ Effect application |
-
-See `docs/content-creation/` for detailed extensibility guides.
-
----
-
-## Troubleshooting
-
-See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues and solutions.
-
----
-
-## References
-
-- **Card Creation**: [gameplay.lua:577-1034](assets/scripts/core/gameplay.lua#L577-L1034)
-- **Signal Usage**: [gameplay.lua:3569-3625](assets/scripts/core/gameplay.lua#L3569-L3625)
-- **Projectile System**: [assets/scripts/combat/projectile_system.lua](assets/scripts/combat/projectile_system.lua)
-
----
-
-## UI DSL Pattern
-
-### Declarative UI with ui_syntax_sugar
-
-Use the DSL for building UIs instead of manual box construction:
+## UI DSL
 
 ```lua
 local dsl = require("ui.ui_syntax_sugar")
 
 local myUI = dsl.root {
-    config = {
-        color = util.getColor("blackberry"),
-        padding = 10,
-        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
-    },
+    config = { padding = 10 },
     children = {
         dsl.vbox {
-            config = { spacing = 6, padding = 6 },
             children = {
-                dsl.text("Title", { fontSize = 24, color = "white" }),
-                dsl.hbox {
-                    config = { spacing = 4 },
-                    children = {
-                        dsl.anim("sprite_id", { w = 40, h = 40, shadow = true }),
-                        dsl.text("Subtitle", { fontSize = 16 })
-                    }
-                }
+                dsl.text("Title", { fontSize = 24 }),
+                dsl.anim("sprite_id", { w = 40, h = 40 })
             }
         }
     }
 }
 
--- Spawn the UI
 local boxID = dsl.spawn({ x = 200, y = 200 }, myUI)
 ```
 
-### DSL Functions
+---
 
-- `dsl.root {}` - Root container
-- `dsl.vbox {}` - Vertical layout
-- `dsl.hbox {}` - Horizontal layout
-- `dsl.text(text, opts)` - Text element
-- `dsl.anim(id, opts)` - Animated sprite wrapper
-- `dsl.dynamicText(fn, fontSize, effect, opts)` - Auto-updating text
-- `dsl.grid(rows, cols, generator)` - Uniform grid
-- `dsl.spawn(pos, defNode, layerName, zIndex)` - Create UI entity
+## Content Creation
 
-### Hover/Tooltip Support
+See [docs/content-creation/](docs/content-creation/) for full guides.
 
+### Quick Reference
+
+**Card** (`assets/scripts/data/cards.lua`):
 ```lua
-dsl.text("Button", {
-    hover = {
-        title = "Button Title",
-        body = "Button description"
-    },
-    onClick = function() print("clicked") end
-})
+Cards.MY_FIREBALL = {
+    id = "MY_FIREBALL", type = "action", mana_cost = 12, damage = 25,
+    damage_type = "fire", tags = { "Fire", "Projectile" }
+}
 ```
+
+**Joker** (`assets/scripts/data/jokers.lua`):
+```lua
+my_joker = {
+    id = "my_joker", name = "My Joker", rarity = "Common",
+    calculate = function(self, context)
+        if context.tags and context.tags.Fire then return { damage_mod = 10 } end
+    end
+}
+```
+
+**Standard Tags:**
+- Elements: `Fire`, `Ice`, `Lightning`, `Poison`, `Arcane`, `Holy`, `Void`
+- Mechanics: `Projectile`, `AoE`, `Hazard`, `Summon`, `Buff`, `Debuff`
 
 ---
 
-## Module Structure Pattern
+## Common Mistakes to Avoid
 
-### Standard Lua Module Layout
-
+### Don't: Store data in GameObject component
 ```lua
--- File: assets/scripts/systems/my_system.lua
-
-local MySystem = {}
-
--- Require dependencies at top
-local component_cache = require("core.component_cache")
-local entity_cache = require("core.entity_cache")
-local signal = require("external.hump.signal")
-
--- Exposed state
-MySystem.config = { ... }
-MySystem.active_entities = {}
-
--- Internal state (local)
-local _internal_state = {}
-
--- Private functions (prefix with _)
-local function _privateHelper()
-    -- ...
-end
-
--- Public API
-function MySystem.initialize()
-    -- ...
-end
-
-function MySystem.update(dt)
-    -- ...
-end
-
-function MySystem.getEntityData(entity)
-    if not entity_cache.valid(entity) then return nil end
-    return MySystem.active_entities[entity]
-end
-
--- Return module at end
-return MySystem
+local gameObj = component_cache.get(entity, GameObject)
+gameObj.myData = {}  -- WRONG - bypasses script table system
 ```
 
----
-
-## Naming Conventions
-
-### Variables
+### Don't: Use getScriptTableFromEntityID without initialization
 ```lua
--- Entity identifiers
-local entityID, eid, entity
-
--- Components
-local transform, t          -- Transform
-local gameObj, go           -- GameObject
-local animComp              -- AnimationQueueComponent
-
--- UI
-local boxID                 -- UI Box identifier
-
--- State
-local isActive, _isActive   -- Boolean flags
-local isBeingDragged        -- Boolean state
+local entity = registry:create()
+local script = getScriptTableFromEntityID(entity)  -- Returns nil!
 ```
 
-### Functions
+### Don't: Call attach_ecs before assigning data
 ```lua
--- Private functions: underscore prefix
-local function _privateHelper() end
-
--- Public API: PascalCase or camelCase
-function MySystem.doSomething() end
-function MySystem.GetEntityData() end
-
--- Callbacks: on* prefix
-nodeComp.methods.onClick = function() end
-nodeComp.methods.onHover = function() end
+script:attach_ecs { ... }
+script.data = {}  -- WRONG - data is lost!
 ```
 
-### Constants
+### Do: Initialize properly
 ```lua
--- SCREAMING_SNAKE_CASE for constants
-local PLANNING_STATE = "planning"
-local ACTION_STATE = "action"
-local MAX_HEALTH = 100
-```
-
----
-
-## Common Idioms
-
-### Safe Access Pattern
-```lua
--- Always check existence before accessing
-if transform then
-    transform.actualX = x
-end
-
-if not eid or not entity_cache.valid(eid) then
-    return
-end
-
--- Nil coalescing for defaults
-local value = (obj and obj.field) or default_value
-
--- Type checking before call
-if type(callback) == "function" then
-    callback()
-end
-```
-
-### Localize Globals for Performance
-```lua
--- At top of file, localize frequently-used globals
-local registry = _G.registry
-local math_floor = math.floor
-local table_insert = table.insert
-```
-
-### Global Exports
-```lua
--- Expose utilities globally when needed across files
-_G.makeSimpleTooltip = makeSimpleTooltip
-_G.isEnemyEntity = isEnemyEntity
-
--- Feature flags
-local DEBUG_MODE = rawget(_G, "DEBUG_MODE") or false
-```
-
-### Singleton Pattern
-```lua
--- Prevent re-initialization
-if _G.__MY_SYSTEM__ then
-    return _G.__MY_SYSTEM__
-end
-
-local MySystem = {}
-_G.__MY_SYSTEM__ = MySystem
--- ... rest of module
-return MySystem
-```
-
-### Weak Tables for Auto-Cleanup
-```lua
--- Entities auto-removed when GC'd
-local entityToData = setmetatable({}, { __mode = "k" })
+local script = EntityType {}
+script.data = {}              -- Assign FIRST
+script:attach_ecs { ... }     -- Attach LAST
 ```
 
 ---
 
 ## Common Events
 
-Events used throughout the codebase (emit with `signal.emit()`, handle with `signal.register()`):
-
 | Event | Parameters | Purpose |
 |-------|------------|---------|
-| `"avatar_unlocked"` | `avatarId` | Avatar unlock |
-| `"tag_threshold_discovered"` | `tagName, threshold` | Tag synergy discovery |
 | `"on_player_attack"` | `targetEntity` | Player attacks |
-| `"on_low_health"` | `healthPercent` | Health drops low |
-| `"on_dash"` | `direction` | Player dashes |
 | `"on_bump_enemy"` | `enemyEntity` | Collision with enemy |
 | `"player_level_up"` | `{ xp, level }` | Level progression |
 | `"deck_changed"` | `{ source }` | Inventory modification |
@@ -1506,16 +341,9 @@ Events used throughout the codebase (emit with `signal.emit()`, handle with `sig
 
 ---
 
-## Testing
+## References
 
-Tests are in `tests/unit/` using GoogleTest. Key test files:
-- `test_engine_context.cpp` - Dependency injection
-- `test_physics_manager.cpp` - Physics initialization
-- `test_scripting_lifecycle.cpp` - Lua environment
-- `test_controller_nav.cpp` - Controller focus/selection
-- `test_error_handling.cpp` - C++/Lua error boundaries
-
-Run a single test:
-```bash
-./build/unit_tests --gtest_filter="TestSuite.TestName"
-```
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Content Creation Guides](docs/content-creation/)
+- [Text Builder API](docs/api/text-builder.md)
+- [API Documentation](docs/api/)

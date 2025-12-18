@@ -166,7 +166,11 @@ function CommandBufferText:init(args)
   self.z = args.z or args.z_index or 0
 
   self.layer = args.layer or (layers and layers.ui) or (_G.layers and _G.layers.ui)
-  self.render_space = args.render_space or args.space or (self.layer and self.layer.DrawCommandSpace and self.layer.DrawCommandSpace.Screen)
+  -- Default to Screen space if not specified; try multiple fallback sources
+  self.render_space = args.render_space or args.space
+      or (self.layer and self.layer.DrawCommandSpace and self.layer.DrawCommandSpace.Screen)
+      or (layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen)
+      or (_G.layer and _G.layer.DrawCommandSpace and _G.layer.DrawCommandSpace.Screen)
 
   self.font = args.font or (localization and localization.getFont and localization.getFont())
   self.font_size = args.font_size or args.fontSize or 16
@@ -691,7 +695,9 @@ function CommandBufferText:update(dt)
       self.shader_entity,
       function()
         -- No additional drawing needed; local commands already added above
-      end
+      end,
+      self.z or 0,  -- z-index
+      self.render_space  -- DrawCommandSpace (Screen or World)
     )
   end
 end

@@ -11,7 +11,7 @@ local enemies = {}
 --============================================
 
 enemies.goblin = {
-    sprite = "b1060.png",
+    sprite = "enemy_type_1.png",
     hp = 30,
     speed = 60,
     damage = 5,
@@ -34,7 +34,7 @@ enemies.goblin = {
 --============================================
 
 enemies.archer = {
-    sprite = "b1060.png",
+    sprite = "enemy_type_2.png",
     hp = 20,
     speed = 40,
     damage = 8,
@@ -61,7 +61,7 @@ enemies.archer = {
 --============================================
 
 enemies.dasher = {
-    sprite = "b1060.png",
+    sprite = "enemy_type_1.png",
     hp = 25,
     speed = 50,
     dash_speed = 300,
@@ -93,7 +93,7 @@ enemies.dasher = {
 --============================================
 
 enemies.trapper = {
-    sprite = "b1060.png",
+    sprite = "enemy_type_2.png",
     hp = 35,
     speed = 30,
     trap_cooldown = 4.0,
@@ -126,7 +126,7 @@ enemies.trapper = {
 --============================================
 
 enemies.summoner = {
-    sprite = "b1060.png",
+    sprite = "elite_porcupine.png",
     hp = 50,
     speed = 25,
     summon_cooldown = 5.0,
@@ -159,7 +159,7 @@ enemies.summoner = {
 --============================================
 
 enemies.exploder = {
-    sprite = "b1060.png",
+    sprite = "enemy_type_1.png",
     hp = 15,
     speed = 80,
     explosion_radius = 60,
@@ -190,7 +190,7 @@ enemies.exploder = {
 --============================================
 
 enemies.wanderer = {
-    sprite = "b1060.png",
+    sprite = "enemy_type_2.png",
     hp = 20,
     speed = 35,
     damage = 3,

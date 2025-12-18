@@ -5,7 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
+            "name": "Debug (CodeLLDB)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/raylib-cpp-cmake-template",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "CMake: build"
+        },
+        {
+            "name": "(cppdbg) Launch - Legacy",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/build/raylib-cpp-cmake-template",
@@ -14,7 +23,7 @@
             "cwd": "${fileDirname}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
+            "MIMode": "lldb",
             "preLaunchTask": "CMake: build",
             "setupCommands": [
                 {

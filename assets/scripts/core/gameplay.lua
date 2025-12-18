@@ -1,5 +1,10 @@
 -- contains code limited to gameplay logic for organizational purposes
 
+-- CRITICAL: Must be declared BEFORE any requires that might load enemy_factory.lua
+-- enemy_factory checks _G.enemyHealthUiState to register spawned enemies
+_G.enemyHealthUiState = _G.enemyHealthUiState or {}
+_G.combatActorToEntity = _G.combatActorToEntity or setmetatable({}, { __mode = "k" })
+
 local z_orders = require("core.z_orders")
 local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior script
 local palette = require("color.palette")
@@ -838,8 +843,9 @@ local function lerp(a, b, t)
     return a + (b - a) * t
 end
 
-local enemyHealthUiState          = {}                                 -- eid -> { actor=<combat actor>, visibleUntil=<time> }
-local combatActorToEntity         = setmetatable({}, { __mode = "k" }) -- combat actor -> eid (weak keys so actors can be GCd)
+-- Use the global tables created at top of file (required for enemy_factory.lua integration)
+local enemyHealthUiState          = _G.enemyHealthUiState              -- eid -> { actor=<combat actor>, visibleUntil=<time> }
+local combatActorToEntity         = _G.combatActorToEntity             -- combat actor -> eid (weak keys so actors can be GCd)
 local damageNumbers               = {}                                 -- active floating damage numbers
 local spawnExpPickupAt            -- forward declaration
 
@@ -873,49 +879,34 @@ globals.isEnemyEntity = isEnemyEntity
 
 local function findNearestEnemyPosition(px, py, maxDistance)
     local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
-    if not (physics and physics.point_query_nearest and physics.entity_from_ptr and world) then
+    if not (physics and physics.GetObjectsInArea and world) then
         return nil
     end
 
     local radius = maxDistance or AUTO_AIM_RADIUS
 
-    local nearestHit = physics.point_query_nearest(world, { x = px, y = py }, radius)
-    if nearestHit and nearestHit.hit and nearestHit.shape then
-        local hitEntity = physics.entity_from_ptr(nearestHit.shape)
-        if isEnemyEntity(hitEntity) then
-            local t = component_cache.get(hitEntity, Transform)
+    -- Use GetObjectsInArea which correctly returns entity IDs from shape userData
+    -- NOTE: point_query_nearest returns shape pointers, not entities, so we can't use it directly
+    local candidates = physics.GetObjectsInArea(world, px - radius, py - radius, px + radius, py + radius) or {}
+    local bestPos, bestDistSq = nil, nil
+    for _, eid in ipairs(candidates) do
+        if isEnemyEntity(eid) then
+            local t = component_cache.get(eid, Transform)
             if t then
-                return {
-                    x = (t.actualX or t.visualX or 0) + (t.actualW or t.visualW or 0) * 0.5,
-                    y = (t.actualY or t.visualY or 0) + (t.actualH or t.visualH or 0) * 0.5,
-                }
-            end
-        end
-    end
-
-    if physics.GetObjectsInArea then
-        local half = radius
-        local candidates = physics.GetObjectsInArea(world, px - half, py - half, half * 2, half * 2) or {}
-        local bestPos, bestDistSq = nil, nil
-        for _, eid in ipairs(candidates) do
-            if isEnemyEntity(eid) then
-                local t = component_cache.get(eid, Transform)
-                if t then
-                    local ex = (t.actualX or t.visualX or 0) + (t.actualW or t.visualW or 0) * 0.5
-                    local ey = (t.actualY or t.visualY or 0) + (t.actualH or t.visualH or 0) * 0.5
-                    local dx, dy = ex - px, ey - py
-                    local distSq = dx * dx + dy * dy
-                    if not bestDistSq or distSq < bestDistSq then
-                        bestDistSq = distSq
-                        bestPos = { x = ex, y = ey }
-                    end
+                local ex = (t.actualX or t.visualX or 0) + (t.actualW or t.visualW or 0) * 0.5
+                local ey = (t.actualY or t.visualY or 0) + (t.actualH or t.visualH or 0) * 0.5
+                local dx, dy = ex - px, ey - py
+                local distSq = dx * dx + dy * dy
+                -- Also check within circular radius (AABB is just first pass)
+                if distSq <= radius * radius and (not bestDistSq or distSq < bestDistSq) then
+                    bestDistSq = distSq
+                    bestPos = { x = ex, y = ey }
                 end
             end
         end
-        if bestPos then return bestPos end
     end
 
-    return nil
+    return bestPos
 end
 
 local function isCardOverCapacity(cardScript, cardEntityID)
@@ -8301,8 +8292,9 @@ function initActionPhase()
     dashBufferTimer = 0
     bufferedDashDir = nil
     playerStaminaTickerTimer = 0
-    enemyHealthUiState = {}
-    combatActorToEntity = setmetatable({}, { __mode = "k" })
+    -- Clear tables instead of replacing them (maintains global reference for enemy_factory.lua)
+    for k in pairs(enemyHealthUiState) do enemyHealthUiState[k] = nil end
+    for k in pairs(combatActorToEntity) do combatActorToEntity[k] = nil end
     damageNumbers = {}
 
     local DASH_END_TIMER_NAME = "dash_end_timer"

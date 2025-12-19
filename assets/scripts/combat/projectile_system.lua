@@ -1116,6 +1116,174 @@ function ProjectileSystem.checkWorldBounds(entity, projectileScript, transform)
     return ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript, transform, collisionInfo)
 end
 
+
+local function getVelocityXY(world, entity, fallbackVelocity, usePhysics)
+    if usePhysics and physics and world then
+        local vel = physics.GetVelocity(world, entity)
+        if vel then
+            return vel.x or 0, vel.y or 0
+        end
+    end
+
+    if fallbackVelocity then
+        return fallbackVelocity.x or 0, fallbackVelocity.y or 0
+    end
+
+    return 0, 0
+end
+
+
+local function computeImpactDirection(projectileEntity, targetEntity, behavior, collisionInfo)
+    local vx = (behavior and behavior.velocity and behavior.velocity.x) or 0
+    local vy = (behavior and behavior.velocity and behavior.velocity.y) or 0
+    local len = math.sqrt(vx * vx + vy * vy)
+
+    if len < 0.0001 and projectileEntity and targetEntity then
+        local projT = component_cache.get(projectileEntity, Transform)
+        local targetT = component_cache.get(targetEntity, Transform)
+        if projT and targetT then
+            local px = projT.actualX + (projT.actualW or 0) * 0.5
+            local py = projT.actualY + (projT.actualH or 0) * 0.5
+            local tx = targetT.actualX + (targetT.actualW or 0) * 0.5
+            local ty = targetT.actualY + (targetT.actualH or 0) * 0.5
+            vx = tx - px
+            vy = ty - py
+            len = math.sqrt(vx * vx + vy * vy)
+        end
+    end
+
+    if len < 0.0001 and collisionInfo then
+        local nx, ny = 0, 0
+        if collisionInfo.hitLeft then
+            nx = 1
+        elseif collisionInfo.hitRight then
+            nx = -1
+        end
+        if collisionInfo.hitTop then
+            ny = 1
+        elseif collisionInfo.hitBottom then
+            ny = -1
+        end
+        len = math.sqrt(nx * nx + ny * ny)
+        if len > 0.0001 then
+            vx, vy = nx / len, ny / len
+        end
+    end
+
+    if len < 0.0001 then
+        return 1, 0
+    end
+    return vx / len, vy / len
+end
+
+
+local function resolveImpactFxOptions(projectileScript, behavior, impactSpeed)
+    local data = projectileScript and projectileScript.projectileData or nil
+    local bands = (data and data.impactSpeedBands) or ProjectileSystem.wallImpactSpeedBands or WALL_IMPACT_SPEED_BANDS
+    local slowThreshold = bands.slow or WALL_IMPACT_SPEED_BANDS.slow
+    local fastThreshold = bands.fast or WALL_IMPACT_SPEED_BANDS.fast
+
+    local colors = { util.getColor("WHITE"), util.getColor("YELLOW") }
+    local opts = {
+        count = 14,
+        spread = 32,
+        minSpeed = 180,
+        maxSpeed = 360,
+        minLength = 26,
+        maxLength = 62,
+        minThickness = 2,
+        maxThickness = 5
+    }
+
+    if impactSpeed >= fastThreshold then
+        colors = { util.getColor("ORANGE"), util.getColor("RED"), util.getColor("YELLOW") }
+        opts.count = 20
+        opts.spread = 24
+        opts.minSpeed = 280
+        opts.maxSpeed = 560
+        opts.minLength = 32
+        opts.maxLength = 82
+        opts.minThickness = 2.4
+        opts.maxThickness = 6.3
+    elseif impactSpeed >= slowThreshold then
+        colors = { util.getColor("YELLOW"), util.getColor("ORANGE"), util.getColor("WHITE") }
+        opts.count = 16
+        opts.spread = 28
+        opts.minSpeed = 220
+        opts.maxSpeed = 440
+        opts.minLength = 30
+        opts.maxLength = 72
+        opts.minThickness = 2.1
+        opts.maxThickness = 5.7
+    end
+
+    local damageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
+    if computeProjectileDamage(data) >= damageThreshold then
+        colors[#colors + 1] = util.getColor("CYAN")
+        opts.count = math.floor(opts.count * 1.15)
+        opts.minSpeed = opts.minSpeed + 30
+        opts.maxSpeed = opts.maxSpeed + 80
+        opts.maxLength = opts.maxLength + 10
+        opts.maxThickness = opts.maxThickness + 0.8
+    end
+
+    opts.colors = colors
+    return opts
+end
+local function spawnWallImpactFx(projectileScript, transform, behavior, collisionInfo)
+    if not projectileScript then return end
+    local lifetime = projectileScript.projectileLifetime
+    if lifetime and lifetime.wallImpactVfxPlayed then return end
+
+    transform = transform or component_cache.get(projectileScript.projectileEntity, Transform)
+    if not transform then return end
+
+    if lifetime then
+        lifetime.wallImpactVfxPlayed = true
+    end
+
+    local world = getPhysicsWorld(projectileScript)
+    local vx, vy = getVelocityXY(world, projectileScript.projectileEntity, behavior and behavior.velocity, world ~= nil)
+    local impactSpeed = math.sqrt(vx * vx + vy * vy)
+    if impactSpeed <= 0 and behavior and behavior.baseSpeed then
+        impactSpeed = behavior.baseSpeed
+    end
+
+    local dirX, dirY = computeImpactDirection(projectileScript.projectileEntity, nil, behavior, collisionInfo)
+    local fxOptions = resolveImpactFxOptions(projectileScript, behavior, impactSpeed)
+    local cx = transform.actualX + (transform.actualW or 0) * 0.5
+    local cy = transform.actualY + (transform.actualH or 0) * 0.5
+    local impactDuration = 0.25 + math.min(impactSpeed / 2000, 0.08)
+
+    if particle and particle.spawnDirectionalLinesCone then
+        particle.spawnDirectionalLinesCone(Vec2(cx, cy), fxOptions.count, impactDuration, {
+            direction = Vec2(-dirX, -dirY),
+            spread = fxOptions.spread,
+            colors = fxOptions.colors,
+            minSpeed = fxOptions.minSpeed,
+            maxSpeed = fxOptions.maxSpeed,
+            minLength = fxOptions.minLength,
+            maxLength = fxOptions.maxLength,
+            minThickness = fxOptions.minThickness,
+            maxThickness = fxOptions.maxThickness,
+            shrink = true,
+            space = "world",
+            z = z_orders.particle_vfx
+        })
+    end
+
+    -- if spawnImpactSmear then
+    --     spawnImpactSmear(
+    --         cx,
+    --         cy,
+    --         Vec2(dirX, dirY),
+    --         util.getColor("white"),
+    --         0.16,
+    --         { single = true, maxLength = 46, maxThickness = 9 }
+    --     )
+    -- end
+end
+
 function ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript, transform, collisionInfo)
     local behavior = projectileScript.projectileBehavior
     local lifetime = projectileScript.projectileLifetime
@@ -1175,21 +1343,6 @@ end
 MOVEMENT PATTERNS
 =============================================================================
 ]]--
-
-local function getVelocityXY(world, entity, fallbackVelocity, usePhysics)
-    if usePhysics and physics and world then
-        local vel = physics.GetVelocity(world, entity)
-        if vel then
-            return vel.x or 0, vel.y or 0
-        end
-    end
-
-    if fallbackVelocity then
-        return fallbackVelocity.x or 0, fallbackVelocity.y or 0
-    end
-
-    return 0, 0
-end
 
 function ProjectileSystem.updateStraightMovement(entity, dt, transform, behavior, projectileScript)
     -- Physics-driven: Let Chipmunk2D handle movement via velocity
@@ -1411,156 +1564,8 @@ COLLISION HANDLING
 =============================================================================
 ]]--
 
-local function computeImpactDirection(projectileEntity, targetEntity, behavior, collisionInfo)
-    local vx = (behavior and behavior.velocity and behavior.velocity.x) or 0
-    local vy = (behavior and behavior.velocity and behavior.velocity.y) or 0
-    local len = math.sqrt(vx * vx + vy * vy)
 
-    if len < 0.0001 and projectileEntity and targetEntity then
-        local projT = component_cache.get(projectileEntity, Transform)
-        local targetT = component_cache.get(targetEntity, Transform)
-        if projT and targetT then
-            local px = projT.actualX + (projT.actualW or 0) * 0.5
-            local py = projT.actualY + (projT.actualH or 0) * 0.5
-            local tx = targetT.actualX + (targetT.actualW or 0) * 0.5
-            local ty = targetT.actualY + (targetT.actualH or 0) * 0.5
-            vx = tx - px
-            vy = ty - py
-            len = math.sqrt(vx * vx + vy * vy)
-        end
-    end
 
-    if len < 0.0001 and collisionInfo then
-        local nx, ny = 0, 0
-        if collisionInfo.hitLeft then
-            nx = 1
-        elseif collisionInfo.hitRight then
-            nx = -1
-        end
-        if collisionInfo.hitTop then
-            ny = 1
-        elseif collisionInfo.hitBottom then
-            ny = -1
-        end
-        len = math.sqrt(nx * nx + ny * ny)
-        if len > 0.0001 then
-            vx, vy = nx / len, ny / len
-        end
-    end
-
-    if len < 0.0001 then
-        return 1, 0
-    end
-    return vx / len, vy / len
-end
-
-local function resolveImpactFxOptions(projectileScript, behavior, impactSpeed)
-    local data = projectileScript and projectileScript.projectileData or nil
-    local bands = (data and data.impactSpeedBands) or ProjectileSystem.wallImpactSpeedBands or WALL_IMPACT_SPEED_BANDS
-    local slowThreshold = bands.slow or WALL_IMPACT_SPEED_BANDS.slow
-    local fastThreshold = bands.fast or WALL_IMPACT_SPEED_BANDS.fast
-
-    local colors = { util.getColor("WHITE"), util.getColor("YELLOW") }
-    local opts = {
-        count = 14,
-        spread = 32,
-        minSpeed = 180,
-        maxSpeed = 360,
-        minLength = 26,
-        maxLength = 62,
-        minThickness = 2,
-        maxThickness = 5
-    }
-
-    if impactSpeed >= fastThreshold then
-        colors = { util.getColor("ORANGE"), util.getColor("RED"), util.getColor("YELLOW") }
-        opts.count = 20
-        opts.spread = 24
-        opts.minSpeed = 280
-        opts.maxSpeed = 560
-        opts.minLength = 32
-        opts.maxLength = 82
-        opts.minThickness = 2.4
-        opts.maxThickness = 6.3
-    elseif impactSpeed >= slowThreshold then
-        colors = { util.getColor("YELLOW"), util.getColor("ORANGE"), util.getColor("WHITE") }
-        opts.count = 16
-        opts.spread = 28
-        opts.minSpeed = 220
-        opts.maxSpeed = 440
-        opts.minLength = 30
-        opts.maxLength = 72
-        opts.minThickness = 2.1
-        opts.maxThickness = 5.7
-    end
-
-    local damageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
-    if computeProjectileDamage(data) >= damageThreshold then
-        colors[#colors + 1] = util.getColor("CYAN")
-        opts.count = math.floor(opts.count * 1.15)
-        opts.minSpeed = opts.minSpeed + 30
-        opts.maxSpeed = opts.maxSpeed + 80
-        opts.maxLength = opts.maxLength + 10
-        opts.maxThickness = opts.maxThickness + 0.8
-    end
-
-    opts.colors = colors
-    return opts
-end
-
-local function spawnWallImpactFx(projectileScript, transform, behavior, collisionInfo)
-    if not projectileScript then return end
-    local lifetime = projectileScript.projectileLifetime
-    if lifetime and lifetime.wallImpactVfxPlayed then return end
-
-    transform = transform or component_cache.get(projectileScript.projectileEntity, Transform)
-    if not transform then return end
-
-    if lifetime then
-        lifetime.wallImpactVfxPlayed = true
-    end
-
-    local world = getPhysicsWorld(projectileScript)
-    local vx, vy = getVelocityXY(world, projectileScript.projectileEntity, behavior and behavior.velocity, world ~= nil)
-    local impactSpeed = math.sqrt(vx * vx + vy * vy)
-    if impactSpeed <= 0 and behavior and behavior.baseSpeed then
-        impactSpeed = behavior.baseSpeed
-    end
-
-    local dirX, dirY = computeImpactDirection(projectileScript.projectileEntity, nil, behavior, collisionInfo)
-    local fxOptions = resolveImpactFxOptions(projectileScript, behavior, impactSpeed)
-    local cx = transform.actualX + (transform.actualW or 0) * 0.5
-    local cy = transform.actualY + (transform.actualH or 0) * 0.5
-    local impactDuration = 0.25 + math.min(impactSpeed / 2000, 0.08)
-
-    if particle and particle.spawnDirectionalLinesCone then
-        particle.spawnDirectionalLinesCone(Vec2(cx, cy), fxOptions.count, impactDuration, {
-            direction = Vec2(-dirX, -dirY),
-            spread = fxOptions.spread,
-            colors = fxOptions.colors,
-            minSpeed = fxOptions.minSpeed,
-            maxSpeed = fxOptions.maxSpeed,
-            minLength = fxOptions.minLength,
-            maxLength = fxOptions.maxLength,
-            minThickness = fxOptions.minThickness,
-            maxThickness = fxOptions.maxThickness,
-            shrink = true,
-            space = "world",
-            z = z_orders.particle_vfx
-        })
-    end
-
-    -- if spawnImpactSmear then
-    --     spawnImpactSmear(
-    --         cx,
-    --         cy,
-    --         Vec2(dirX, dirY),
-    --         util.getColor("white"),
-    --         0.16,
-    --         { single = true, maxLength = 46, maxThickness = 9 }
-    --     )
-    -- end
-end
 
 local function applyEnemyHitFeedback(projectileEntity, targetEntity, behavior, projectileScript, targetCombatActor)
     if not targetCombatActor or targetCombatActor.side ~= 2 then return end
@@ -1587,12 +1592,18 @@ end
 
 -- Handle collision between projectile and another entity
 function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
+    print("[ProjectileSystem.handleCollision] CALLED - projectile:", projectileEntity, "other:", otherEntity)
+
     if not entity_cache.valid(projectileEntity) then
+        print("[ProjectileSystem.handleCollision] projectile invalid, returning")
         return
     end
 
     local projectileScript = ProjectileSystem.getProjectileScript(projectileEntity)
-    if not projectileScript or not projectileScript.projectileData then return end
+    if not projectileScript or not projectileScript.projectileData then
+        print("[ProjectileSystem.handleCollision] no projectileScript or projectileData, returning")
+        return
+    end
 
     local data = projectileScript.projectileData
     local behavior = projectileScript.projectileBehavior
@@ -1602,6 +1613,7 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     local otherIsValid = ensure_entity(otherEntity)
     local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
     local isDamageable = targetGameObject ~= nil
+    print("[ProjectileSystem.handleCollision] otherIsValid:", otherIsValid, "isDamageable:", isDamageable)
     local now = os.clock()
 
     -- Check if already hit this entity (for piercing) – only track damageable targets
@@ -1689,6 +1701,12 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
     local ctx = rawget(_G, "combat_context")
     local targetCombatActor = combatActorForEntity(targetEntity)
     local sourceCombatActor = combatActorForEntity(data.owner)
+
+    -- DEBUG: Trace damage application
+    print("[ProjectileSystem.applyDamage] targetEntity:", targetEntity)
+    print("[ProjectileSystem.applyDamage] ctx:", ctx and "EXISTS" or "NIL")
+    print("[ProjectileSystem.applyDamage] targetCombatActor:", targetCombatActor and "EXISTS" or "NIL")
+    print("[ProjectileSystem.applyDamage] CombatSystem.Game.Effects:", CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and "EXISTS" or "NIL")
 
     -- Use combat system if available
     if CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and ctx and targetCombatActor then

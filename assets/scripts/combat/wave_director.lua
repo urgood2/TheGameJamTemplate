@@ -91,26 +91,28 @@ function WaveDirector.start_next_wave()
 
     -- Telegraph then spawn each enemy
     local delay_between = wave.delay_between or 0.5
+    local telegraph_duration = wave.telegraph_duration or 1.0
+    local spawn_buffer = 0.1  -- Small buffer after telegraph completes
 
     for i, enemy_type in ipairs(enemies) do
         local pos = positions[i]
         local spawn_delay = (i - 1) * delay_between
 
-        -- Telegraph (1 second before spawn)
+        -- Show telegraph first
         timer.after(spawn_delay, function()
             if state.paused then return end
-            WaveHelpers.spawn_telegraph(pos, enemy_type, 1.0)
+            WaveHelpers.spawn_telegraph(pos, enemy_type, telegraph_duration)
         end, "wave_telegraph_" .. i)
 
-        -- Actual spawn (1 second after telegraph)
-        timer.after(spawn_delay + 1.0, function()
+        -- Spawn AFTER telegraph completes (duration + buffer)
+        timer.after(spawn_delay + telegraph_duration + spawn_buffer, function()
             if state.paused then return end
             WaveDirector.spawn_enemy(enemy_type, pos)
         end, "wave_spawn_" .. i)
     end
 
     -- Mark spawning complete after last enemy
-    local total_spawn_time = (#enemies - 1) * delay_between + 1.0
+    local total_spawn_time = (#enemies - 1) * delay_between + telegraph_duration + spawn_buffer
     timer.after(total_spawn_time + 0.1, function()
         state.spawning_complete = true
         WaveDirector.check_wave_complete()
@@ -133,9 +135,11 @@ function WaveDirector.spawn_elite()
     local pos = WaveHelpers.get_spawn_positions("around_player", 1)[1]
 
     -- Telegraph elite (longer warning)
-    WaveHelpers.spawn_telegraph(pos, "elite", 1.5)
+    local elite_telegraph_duration = 1.5
+    WaveHelpers.spawn_telegraph(pos, "elite", elite_telegraph_duration)
 
-    timer.after(1.5, function()
+    -- Spawn after telegraph completes
+    timer.after(elite_telegraph_duration + 0.1, function()
         if state.paused then return end
 
         local enemy_type, modifiers

@@ -2924,6 +2924,9 @@ function setUpLogicTimers()
                                 timer.every(
                                     1.0, -- timing may need to change if there are many cards.
                                     function()
+                                        
+                                        if not is_state_active(PLANNING_STATE) then return end
+                                        
                                         -- bail if current action board has no cards
                                         local currentSet = board_sets[current_board_set_index]
                                         if not currentSet then
@@ -6526,6 +6529,9 @@ function startActionPhase()
         setPlanningPeekMode(false)
     end
 
+    -- Clean up planning phase UI elements to prevent flicker
+    CastExecutionGraphUI.clear()
+
     if record_telemetry then
         local now = os.clock()
         if _G.current_phase and _G.phase_started_at then
@@ -6552,6 +6558,7 @@ function startActionPhase()
     PhysicsManager.enable_step("world", true)
 
     loadWandsIntoExecutorFromBoards()
+    CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
     CastBlockFlashUI.init()
 
     playStateTransition()

@@ -118,36 +118,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     vec2 sampleUV = localToAtlas(warpedLocal);
     vec4 base = sampleTinted(sampleUV);
 
-    vec2 clampedLocal = clamp(warpedLocal, 0.0, 1.0);
-    vec2 rotated = rotate2d(card_rotation) * (clampedLocal - 0.5);
-
-    float stripeFreq = max(6.0, abs(grain_scale) * 55.0);
-    float brushedA = sin(rotated.x * stripeFreq + time * 0.6);
-    float brushedB = sin((rotated.x + rotated.y * 0.35) * (stripeFreq * 0.35) - time * 0.8);
-    float grain = 0.5 + 0.5 * (0.65 * brushedA + 0.35 * brushedB);
-
-    float grainNoise = hash21(rotated * (grain_scale * 90.0 + 1.0) + time * 0.15);
-    grain = mix(grain, grain * (0.6 + 0.8 * grainNoise), clamp(noise_amount, 0.0, 1.0));
-
-    float sweepAxis = dot(rotated, normalize(vec2(0.6, 1.0)));
-    float sweepTravel = sin(time * sheen_speed + card_rotation * 0.5) * 0.35;
-    float bandWidth = max(0.02, sheen_width);
-    float sweepMask = exp(-pow((sweepAxis - sweepTravel) / bandWidth, 2.0));
-    float ribbon = 0.5 + 0.5 * cos((rotated.y + rotated.x * 0.75) * 18.0 + time * 1.4);
-    float sheen = sweepMask * ribbon;
-
-    float edgeMask = mix(0.35, 1.0, smoothstep(0.08, 0.62, length(clampedLocal - 0.5)));
-
-    float foilStrength = abs(grain_intensity) * grain + abs(sheen_strength) * sheen;
-    float overlayMask = clamp(foilStrength, 0.0, 1.0) * edgeMask;
-
-    float rotMod = sin(card_rotation * 4.0) * 0.35 + sin(card_rotation * 8.0) * 0.15;
-    float brightness = ((grain - 0.5) * 0.4 + (sheen - 0.5) * 0.25 + rotMod * 0.35) * overlayMask;
-    float factor = clamp(1.0 + brightness, 0.85, 1.15);
-    float detail = ((grain - 0.5) + rotMod * 0.5) * 0.06 * overlayMask;
-
-    vec3 lit = clamp(base.rgb * factor + vec3(detail), 0.0, 1.0);
-    lit = clamp(lit * material_tint, 0.0, 1.0);
+    vec3 lit = clamp(base.rgb * material_tint, 0.0, 1.0);
 
     float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
     float alpha = base.a * alphaFactor;

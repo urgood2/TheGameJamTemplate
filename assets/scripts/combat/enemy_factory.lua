@@ -47,6 +47,7 @@ local timer = require("core.timer")
 local Node = require("monobehavior.behavior_script_v2")
 local PhysicsBuilder = require("core.physics_builder")
 local C = require("core.constants")
+local CombatSystem = require("combat.combat_system")
 
 local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
@@ -175,13 +176,15 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
 
     -- Give physics body using PhysicsBuilder (replaces 20+ lines of manual setup)
     -- Use circle shape to prevent corner wedging (rectangles can get stuck in corners)
+    -- Use friction(0) to prevent wall sticking (steering pushes into walls; friction prevents sliding)
     local physicsSuccess = PhysicsBuilder.for_entity(e)
         :circle()
         :tag(C.CollisionTags.ENEMY)
         :sensor(false)
         :density(1.0)
+        :friction(0)
         :inflate(-4)
-        :collideWith({ C.CollisionTags.PLAYER, C.CollisionTags.ENEMY, C.CollisionTags.BULLET })
+        :collideWith({ C.CollisionTags.PLAYER, C.CollisionTags.ENEMY, C.CollisionTags.PROJECTILE })
         :apply()
 
     if not physicsSuccess then
@@ -206,6 +209,10 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
     local combatActor = nil
     local combatCtx = rawget(_G, "combat_context")
 
+    -- DEBUG: Check combat system availability
+    print("[EnemyFactory] combat_context:", combatCtx and "EXISTS" or "NIL")
+    print("[EnemyFactory] CombatSystem.Game:", CombatSystem and CombatSystem.Game and "EXISTS" or "NIL")
+
     if combatCtx and combatCtx._make_actor and CombatSystem and CombatSystem.Game then
         combatActor = combatCtx._make_actor(
             enemy_type,
@@ -228,6 +235,13 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         if CombatSystem.Game.ItemSystem and CombatSystem.Game.ItemSystem.equip then
             CombatSystem.Game.ItemSystem.equip(combatCtx, combatActor, basic_monster_weapon)
         end
+        print("[EnemyFactory] Created combatActor for", enemy_type)
+    else
+        print("[EnemyFactory] WARNING: Could not create combatActor! Missing:",
+            not combatCtx and "combat_context" or "",
+            not (combatCtx and combatCtx._make_actor) and "_make_actor" or "",
+            not CombatSystem and "CombatSystem" or "",
+            not (CombatSystem and CombatSystem.Game) and "CombatSystem.Game" or "")
     end
 
     -- Create Node script with combatTable (matches gameplay.lua:8735-8739)

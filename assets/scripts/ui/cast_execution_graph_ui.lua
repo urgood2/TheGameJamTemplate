@@ -211,19 +211,21 @@ end
 local function applyPendingHovers(entity)
     if not entity or not registry:valid(entity) then return end
 
-    -- Check if this entity has a UIConfig with a tooltip ID
-    local uiConfig = registry:try_get(entity, UIConfig)
-    if uiConfig and uiConfig.id then
-        local tooltipData = pendingTooltips[uiConfig.id]
+    local go = component_cache.get(entity, GameObject)
+    if not go then return end
+
+    -- Check if this entity has a config with a tooltip ID
+    -- Config is stored in go.config (from DSL definition), not as a UIConfig component
+    if go.config and go.config.id then
+        local tooltipData = pendingTooltips[go.config.id]
         if tooltipData then
             applyHoverToEntity(entity, tooltipData)
         end
     end
 
-    -- Traverse children
-    local go = component_cache.get(entity, GameObject)
-    if go and go.children then
-        for _, child in ipairs(go.children) do
+    -- Traverse children (orderedChildren is a vector, children is a map)
+    if go.orderedChildren then
+        for _, child in ipairs(go.orderedChildren) do
             applyPendingHovers(child)
         end
     end
@@ -280,6 +282,11 @@ local function cardLabel(card)
     return cleanLabel(card.card_id or card.cardID or card.id or "?")
 end
 
+-- Default icon placeholders
+local DEFAULT_ACTION_ICON = "b3888.png"
+local DEFAULT_MODIFIER_ICON = "b3770.png"
+local ICON_SIZE = 24
+
 local function pill(text, opts)
     opts = opts or {}
     local outline = opts.outline
@@ -288,13 +295,13 @@ local function pill(text, opts)
 
     local config = {
         color = opts.bg or colors.row,
-        padding = opts.padding or 4,
+        padding = opts.padding or 6,
         outlineThickness = outline,
         outlineColor = opts.outlineColor or colors.outline,
         stylingType = STYLING_ROUNDED,
         align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         minWidth = opts.minWidth,
-        minHeight = opts.minHeight or 20,
+        minHeight = opts.minHeight or 28,
         shadow = opts.shadow,
         initFunc = opts.initFunc,
     }
@@ -309,28 +316,52 @@ local function pill(text, opts)
     }
 end
 
+-- Icon-based pill for actions and modifiers
+local function iconPill(iconId, opts)
+    opts = opts or {}
+    local outline = opts.outline
+    if outline == nil then outline = 1 end
+
+    local config = {
+        color = opts.bg or colors.row,
+        padding = opts.padding or 6,
+        outlineThickness = outline,
+        outlineColor = opts.outlineColor or colors.outline,
+        stylingType = STYLING_ROUNDED,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        minWidth = opts.minWidth or (ICON_SIZE + 12),
+        minHeight = opts.minHeight or (ICON_SIZE + 12),
+        shadow = opts.shadow,
+    }
+
+    config = attachTooltip(config, opts.tooltip)
+
+    return dsl.hbox{
+        config = config,
+        children = {
+            dsl.anim(iconId, { w = ICON_SIZE, h = ICON_SIZE, shadow = false })
+        }
+    }
+end
+
 local function modBox(modInfo)
-    local label = cardLabel(modInfo and modInfo.card)
-    return pill("M", {
+    local card = modInfo and modInfo.card
+    local label = cardLabel(card)
+    local icon = (card and card.smallIcon) or DEFAULT_MODIFIER_ICON
+    return iconPill(icon, {
         bg = colors.mod,
-        textColor = colors.modText,
-        fontSize = 12,
-        padding = 4,
-        minWidth = 22,
-        minHeight = 20,
+        padding = 6,
         shadow = true,
-        tooltip = { card = modInfo and modInfo.card, label = label, body = "Modifier" },
+        tooltip = { card = card, label = label, body = "Modifier" },
     })
 end
 
 local function actionBox(card)
     local fullLabel = cardLabel(card)
-    local label = abbreviateLabel(fullLabel)
-    return pill(label, {
+    local icon = (card and card.smallIcon) or DEFAULT_ACTION_ICON
+    return iconPill(icon, {
         bg = colors.action,
-        textColor = colors.outline,
-        fontSize = 12,
-        padding = 4,
+        padding = 6,
         tooltip = { card = card, label = fullLabel, body = "Action" },
     })
 end
@@ -339,7 +370,7 @@ local function wrapNested(row)
     return dsl.hbox{
         config = {
             color = colors.nested,
-            padding = 3,
+            padding = 6,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             outlineThickness = 1,
             outlineColor = colors.outline,
@@ -410,7 +441,7 @@ local function buildBlockRow(block, depth, label)
             bg = colors.backdrop,
             textColor = colors.text,
             fontSize = 12,
-            padding = 3,
+            padding = 6,
         }))
     end
 
@@ -437,7 +468,7 @@ local function buildBlockRow(block, depth, label)
     return dsl.hbox{
         config = {
             color = bg,
-            padding = 4,
+            padding = 8,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             outlineThickness = 1,
             outlineColor = colors.outline,
@@ -464,7 +495,7 @@ local function buildRoot(blocks, opts)
     local headerRow = dsl.vbox{
         config = {
             color = colors.backdrop,
-            padding = 4,
+            padding = 8,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
         children = headerChildren
@@ -473,7 +504,7 @@ local function buildRoot(blocks, opts)
     local column = dsl.vbox{
         config = {
             color = colors.backdrop,
-            padding = 6,
+            padding = 10,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
         },
         children = rows
@@ -482,7 +513,7 @@ local function buildRoot(blocks, opts)
     return dsl.root{
         config = {
             color = colors.backdrop,
-            padding = 6,
+            padding = 12,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
             outlineThickness = 2,
             outlineColor = colors.outline,

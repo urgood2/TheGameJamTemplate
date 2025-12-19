@@ -9,6 +9,7 @@ local TagSynergyPanel = {}
 local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
 local dsl = require("ui.ui_syntax_sugar")
+local HoverRegistry = require("ui.hover_registry")
 -- local bit = require("bit")
 
 local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
@@ -87,8 +88,6 @@ TagSynergyPanel._pulses = {}
 TagSynergyPanel._hoverKey = nil
 TagSynergyPanel._activeTooltip = nil
 TagSynergyPanel._tooltips = {}
-TagSynergyPanel._hoverCandidate = nil
-TagSynergyPanel._hoverCooldown = 0
 TagSynergyPanel._layoutCache = nil
 TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
@@ -422,7 +421,7 @@ end
 
 local function clearHover()
     hideActiveTooltip()
-    TagSynergyPanel._hoverCooldown = 0
+    HoverRegistry.clear()
 end
 
 local statDescriptions = {
@@ -670,30 +669,6 @@ local function buildHoverTarget(entry, focusThreshold)
     }
 end
 
-local function resolveHoverTarget(mouse, layoutCache)
-    if not mouse or not layoutCache or layoutCache.totalRows == 0 then
-        return nil
-    end
-
-    for _, row in ipairs(layoutCache.rows or {}) do
-        for _, seg in ipairs(row.segments or {}) do
-            local hitLeft = seg.left - hoverPadX
-            local hitTop = seg.top - hoverPadY
-            local hitW = seg.width + hoverPadX * 2
-            local hitH = seg.height + hoverPadY * 2
-            if pointInRect(mouse.x, mouse.y, hitLeft, hitTop, hitW, hitH) then
-                return buildHoverTarget(row.entry, seg.threshold)
-            end
-        end
-
-        if pointInRect(mouse.x, mouse.y, row.rowLeft, row.top, row.rowWidth, row.rowHeight) then
-            return buildHoverTarget(row.entry)
-        end
-    end
-
-    return nil
-end
-
 local function updateHoverTooltip(target, mouse)
     if not target then
         hideActiveTooltip()
@@ -720,8 +695,6 @@ function TagSynergyPanel.init(opts)
     TagSynergyPanel._hoverKey = nil
     TagSynergyPanel._activeTooltip = nil
     resetTooltipCache()
-    TagSynergyPanel._hoverCandidate = nil
-    TagSynergyPanel._hoverCooldown = 0
     TagSynergyPanel._layoutCache = nil
     if opts and opts.layout then
         TagSynergyPanel.setLayout(opts.layout)
@@ -775,15 +748,12 @@ function TagSynergyPanel.setData(tagCounts, breakpoints)
 
     TagSynergyPanel.entries = entries
     resetTooltipCache()
-    TagSynergyPanel._hoverCandidate = nil
-    TagSynergyPanel._hoverCooldown = 0
     TagSynergyPanel._layoutCache = nil
 end
 
 function TagSynergyPanel.update(dt)
     if not TagSynergyPanel.isActive then
         clearHover()
-        TagSynergyPanel._hoverCandidate = nil
         TagSynergyPanel._layoutCache = nil
         return
     end
@@ -804,9 +774,6 @@ function TagSynergyPanel.update(dt)
         TagSynergyPanel._pulses[tag] = math.max(0, pulse - dt * 2.4)
     end
 
-    TagSynergyPanel._hoverCandidate = nil
-    TagSynergyPanel._hoverCooldown = 0
-    hideActiveTooltip()
 end
 
 local function drawSegment(left, top, width, height, fill, accent, tag, threshold, z, space, font)
@@ -954,6 +921,51 @@ function TagSynergyPanel.draw()
         for _, seg in ipairs(row.segments or {}) do
             local fill = entry.count / seg.threshold
             drawSegment(seg.left, seg.top, seg.width, seg.height, fill, accent, entry.tag, seg.threshold, baseZ + 2, space, font)
+        end
+    end
+
+    -- Register hover regions with HoverRegistry
+    for _, row in ipairs(layoutCache.rows or {}) do
+        -- Register row region (lower z)
+        HoverRegistry.region({
+            id = "synergy_" .. row.entry.tag,
+            x = row.rowLeft,
+            y = row.top,
+            w = row.rowWidth,
+            h = row.rowHeight,
+            z = 100,
+            onHover = function()
+                local target = buildHoverTarget(row.entry)
+                local mouse = getMousePosition()
+                if mouse then
+                    updateHoverTooltip(target, mouse)
+                end
+            end,
+            onUnhover = function()
+                hideActiveTooltip()
+            end,
+        })
+
+        -- Register segment regions (higher z)
+        for _, seg in ipairs(row.segments or {}) do
+            HoverRegistry.region({
+                id = "synergy_" .. row.entry.tag .. "_" .. seg.threshold,
+                x = seg.left - hoverPadX,
+                y = seg.top - hoverPadY,
+                w = seg.width + hoverPadX * 2,
+                h = seg.height + hoverPadY * 2,
+                z = 101,
+                onHover = function()
+                    local target = buildHoverTarget(row.entry, seg.threshold)
+                    local mouse = getMousePosition()
+                    if mouse then
+                        updateHoverTooltip(target, mouse)
+                    end
+                end,
+                onUnhover = function()
+                    hideActiveTooltip()
+                end,
+            })
         end
     end
 end

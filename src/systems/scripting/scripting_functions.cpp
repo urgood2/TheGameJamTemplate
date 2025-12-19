@@ -30,6 +30,7 @@
 #include "binding_recorder.hpp"
 
 #include "../layer/layer.hpp"
+#include "../layer/layer_command_buffer.hpp"
 #include "core/init.hpp"
 #include "systems/palette/palette_quantizer.hpp"
 
@@ -1840,6 +1841,16 @@ auto exposeGlobalsToLua(sol::state &lua) -> void {
     return GetScreenToWorld2D(position, camera);
   };
 
+  // Shader/texture batching toggle (opt-in performance optimization)
+  lua.set_function("set_shader_texture_batching", [](bool enabled) {
+    layer::layer_command_buffer::g_enableShaderTextureBatching = enabled;
+    spdlog::info("Shader/texture batching: {}", enabled ? "enabled" : "disabled");
+  });
+
+  lua.set_function("get_shader_texture_batching", []() {
+    return layer::layer_command_buffer::g_enableShaderTextureBatching;
+  });
+
   // Document utility functions
   rec.record_free_function(
       {}, {"GetFrameTime", "---@return number",
@@ -1861,6 +1872,14 @@ auto exposeGlobalsToLua(sol::state &lua) -> void {
       {}, {"GetScreenToWorld2D",
            "---@param position Vector2\n---@param camera Camera2D\n---@return Vector2",
            "Converts a screen position to world coordinates using the given camera.", true, false});
+  rec.record_free_function(
+      {}, {"set_shader_texture_batching",
+           "---@param enabled boolean\n---@return nil",
+           "Enable/disable shader and texture batching optimization. When enabled, draw commands are sorted by shader_id and texture_id to minimize GPU state changes. Default: disabled.", true, false});
+  rec.record_free_function(
+      {}, {"get_shader_texture_batching",
+           "---@return boolean",
+           "Returns whether shader and texture batching optimization is currently enabled.", true, false});
 
   rec.record_property(
       "globals",

@@ -170,10 +170,13 @@ namespace layer
         void* data;
         int z;
         DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
-        
+
         uint64_t uniqueID = 0; // For stable sorting
         uint64_t followAnchor;   // 0 = none
 
+        // NEW: For shader/texture batching optimization (opt-in)
+        unsigned int shader_id = 0;
+        unsigned int texture_id = 0;
     };
 
     // ===========================

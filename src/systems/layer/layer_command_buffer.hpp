@@ -24,6 +24,11 @@ namespace layer::layer_command_buffer {
 // This reduces camera mode toggles during rendering
 inline bool g_enableStateBatching = false;  // Off by default for safety
 
+// Feature flag for shader/texture batching optimization (opt-in)
+// When enabled, commands are additionally sorted by shader_id and texture_id
+// This reduces GPU state changes during rendering
+inline bool g_enableShaderTextureBatching = false;  // Off by default for safety
+
 template <typename T>
 DynamicObjectPoolWrapper<T> &GetDrawCommandPool(Layer &layer);
 }
@@ -326,6 +331,89 @@ template <> struct PoolBlockSize<CmdVertex> {
 
 static uint64_t gNextUniqueID = 1;
 
+// Helper to extract shader ID from command data (if applicable)
+template <typename T>
+inline unsigned int ExtractShaderID(const T* /*cmd*/) {
+  return 0;  // Default: no shader
+}
+
+// Specializations for commands that have shader references
+template <>
+inline unsigned int ExtractShaderID<CmdSetShader>(const CmdSetShader* cmd) {
+  return cmd->shader.id;
+}
+
+template <>
+inline unsigned int ExtractShaderID<CmdSendUniformFloat>(const CmdSendUniformFloat* cmd) {
+  return cmd->shader.id;
+}
+
+template <>
+inline unsigned int ExtractShaderID<CmdSendUniformInt>(const CmdSendUniformInt* cmd) {
+  return cmd->shader.id;
+}
+
+template <>
+inline unsigned int ExtractShaderID<CmdSendUniformVec2>(const CmdSendUniformVec2* cmd) {
+  return cmd->shader.id;
+}
+
+template <>
+inline unsigned int ExtractShaderID<CmdSendUniformVec3>(const CmdSendUniformVec3* cmd) {
+  return cmd->shader.id;
+}
+
+template <>
+inline unsigned int ExtractShaderID<CmdSendUniformVec4>(const CmdSendUniformVec4* cmd) {
+  return cmd->shader.id;
+}
+
+template <>
+inline unsigned int ExtractShaderID<CmdSendUniformFloatArray>(const CmdSendUniformFloatArray* cmd) {
+  return cmd->shader.id;
+}
+
+template <>
+inline unsigned int ExtractShaderID<CmdSendUniformIntArray>(const CmdSendUniformIntArray* cmd) {
+  return cmd->shader.id;
+}
+
+// Helper to extract texture ID from command data (if applicable)
+template <typename T>
+inline unsigned int ExtractTextureID(const T* /*cmd*/) {
+  return 0;  // Default: no texture
+}
+
+// Specializations for commands that have texture references
+template <>
+inline unsigned int ExtractTextureID<CmdDrawImage>(const CmdDrawImage* cmd) {
+  return cmd->image.id;
+}
+
+template <>
+inline unsigned int ExtractTextureID<CmdTexturePro>(const CmdTexturePro* cmd) {
+  return cmd->texture.id;
+}
+
+template <>
+inline unsigned int ExtractTextureID<CmdSetTexture>(const CmdSetTexture* cmd) {
+  return cmd->texture.id;
+}
+
+template <>
+inline unsigned int ExtractTextureID<CmdRenderNPatchRect>(const CmdRenderNPatchRect* cmd) {
+  return cmd->sourceTexture.id;
+}
+
+// Helper to populate shader_id and texture_id for the last command in the layer
+// Call this after initializing command data when using Add<T> directly
+template <typename T>
+inline void PopulateLastCommandIDs(std::shared_ptr<Layer> &layer, const T* cmd) {
+  auto &lastCmd = layer->commands_ptr->back();
+  lastCmd.shader_id = ExtractShaderID<T>(cmd);
+  lastCmd.texture_id = ExtractTextureID<T>(cmd);
+}
+
 template <typename T>
 T *AddExplicit(std::shared_ptr<Layer> &layer, DrawCommandType type, int z,
                DrawCommandSpace space) {
@@ -390,6 +478,10 @@ inline T *QueueCommand(std::shared_ptr<Layer> layer, Initializer &&init,
   T *cmd = layer_command_buffer::Add<T>(layer, z, space);
   // inlined call, no std::function
   init(cmd);
+
+  // Populate shader_id and texture_id after initialization (for batching optimization)
+  layer_command_buffer::PopulateLastCommandIDs<T>(layer, cmd);
+
   return cmd;
 }
 

@@ -355,10 +355,16 @@ local function getOrBuildTooltip(target)
 
     destroyTooltip(target.key)
     local def = buildTooltipDef(target.title or "Synergy", target.rows or {}, colorForTag(target.entry and target.entry.tag))
-    local z = (z_orders.ui_tooltips or 0) + 5
+    local z = (z_orders.ui_tooltips or 0) + 10
     local entity = dsl.spawn({ x = -2000, y = -2000 }, def, "ui", z)
     if ui and ui.box and ui.box.RenewAlignment then
         ui.box.RenewAlignment(registry, entity)
+    end
+    -- Snap visual dimensions to prevent tween-from-zero animation
+    local t = component_cache.get(entity, Transform)
+    if t then
+        t.visualW = t.actualW or t.visualW
+        t.visualH = t.actualH or t.visualH
     end
     if ui and ui.box and ui.box.AssignStateTagsToUIBox and PLANNING_STATE then
         ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
@@ -859,7 +865,7 @@ function TagSynergyPanel.draw()
     end
 
     local space = layer.DrawCommandSpace.Screen
-    local baseZ = (z_orders.ui_tooltips or 0) + 3
+    local baseZ = 100  -- Lower z so other UI can draw above
 
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = layoutCache.panelCenterX

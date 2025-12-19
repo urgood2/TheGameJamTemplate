@@ -1,12 +1,4 @@
 {
-    "cmake.debugConfig": {
-        "type": "lldb",
-        "request": "launch",
-        "cwd": "${workspaceFolder}",
-        "args": []
-    },
-    "cmake.options.statusBarVisibility": "visible",
-    "cmake.showOptionsMovedNotification": false,
     "files.associations": {
         "ios": "cpp",
         "any": "cpp",

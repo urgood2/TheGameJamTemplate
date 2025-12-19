@@ -667,6 +667,41 @@ cmake -B build -DTRACY_ENABLE=OFF
 
 ---
 
+## Audio Issues
+
+### Sound Effects Delayed When Developer Console is Open
+
+**Problem:** Sound effects play with a noticeable delay (200-500ms) when the developer console (backtick key) is visible.
+
+**Root Cause:** Heavy logging to the console blocks the main thread. When the console is visible, the `csys_console_sink` processes ALL log messages, which involves:
+- String formatting
+- Memory allocation
+- ImGui text rendering
+
+At high log volumes (common during loading and action phases), this can block the main thread for 200-500ms per frame, causing sound commands to wait until the frame completes.
+
+**Pattern:**
+| Phase | Log Activity | Sound Delay |
+|-------|-------------|-------------|
+| After loading | Heavy logs | Delayed |
+| Idle | Low logs | Minimal |
+| Action phase | Heavy logs | Delayed |
+| Console hidden | Logs dropped | No delay |
+
+**Workaround:** Press backtick (`` ` ``) to hide the developer console. When hidden, logs are dropped with zero performance impact.
+
+**Permanent fix options (TODO):**
+1. Rate-limit console logging (cap messages per frame when visible)
+2. Reduce log verbosity in hot paths (change DEBUG to TRACE for high-frequency logs)
+3. Make console logging asynchronous (process logs on separate thread)
+4. Default console to hidden (`gui::showConsole = false` in `src/core/gui.cpp`)
+
+**Related files:**
+- `src/core/gui.cpp:24` - `showConsole` default value
+- `src/third_party/imgui_console/csys_console_sink.cpp:15-20` - Log processing
+
+---
+
 ## Diagnostic Commands
 
 Quick commands to diagnose build issues:

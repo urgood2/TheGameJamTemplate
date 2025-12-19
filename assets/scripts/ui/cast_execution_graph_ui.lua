@@ -168,6 +168,8 @@ local function attachTooltip(config, tooltipData)
         body = body
     }
 
+    log_debug("[ExecGraph] attachTooltip: id=" .. tooltipId .. ", label=" .. tostring(label))
+
     return config
 end
 
@@ -188,9 +190,11 @@ local function applyHoverToEntity(entity, tooltipData)
     go.state.clickEnabled = true
 
     go.methods.onHover = function()
+        log_debug("[ExecGraph] onHover triggered for entity=" .. tostring(entity) .. ", label=" .. tostring(label))
         local shown = showCardTooltip(card, entity, label, body)
         if not shown and label then
             local tooltipKey = "cast_graph_" .. tostring(entity)
+            log_debug("[ExecGraph] Card tooltip not shown, falling back to simple tooltip key=" .. tooltipKey)
             if showSimpleTooltipAbove then
                 showSimpleTooltipAbove(tooltipKey, cleanLabel(label), cleanLabel(body), entity)
                 CastExecutionGraphUI._activeTooltipOwner = entity
@@ -198,25 +202,37 @@ local function applyHoverToEntity(entity, tooltipData)
                 CastExecutionGraphUI._fallbackTooltipActive = true
             end
         elseif shown then
+            log_debug("[ExecGraph] Card tooltip shown successfully")
             CastExecutionGraphUI._activeTooltipOwner = entity
         end
     end
 
     go.methods.onStopHover = function()
+        log_debug("[ExecGraph] onStopHover for entity=" .. tostring(entity))
         hideActiveTooltip(entity)
     end
 end
 
 -- Recursively apply pending hover handlers to all entities in the UI tree
-local function applyPendingHovers(entity)
+local function applyPendingHovers(entity, depth)
+    depth = depth or 0
     if not entity or not registry:valid(entity) then return end
 
     -- Check if this entity has a UIElementCore with a tooltip ID
-    local uiCore = registry:try_get(entity, UIElementCore)
+    local uiCore = component_cache.get(entity, UIElementCore)
+    local foundId = uiCore and uiCore.id or "(no UIElementCore or no id)"
     if uiCore and uiCore.id and uiCore.id ~= "" then
         local tooltipData = pendingTooltips[uiCore.id]
         if tooltipData then
+            log_debug("[ExecGraph] applyPendingHovers: MATCH found id=" .. uiCore.id)
             applyHoverToEntity(entity, tooltipData)
+            -- Log dimensions to check if hover will work
+            local t = component_cache.get(entity, Transform)
+            if t then
+                log_debug("[ExecGraph] Entity " .. tostring(entity) .. " dims: actualW=" .. tostring(t.actualW) .. ", actualH=" .. tostring(t.actualH))
+            end
+        else
+            log_debug("[ExecGraph] applyPendingHovers: id=" .. uiCore.id .. " not in pendingTooltips")
         end
     end
 
@@ -224,7 +240,7 @@ local function applyPendingHovers(entity)
     local go = component_cache.get(entity, GameObject)
     if go and go.orderedChildren then
         for _, child in ipairs(go.orderedChildren) do
-            applyPendingHovers(child)
+            applyPendingHovers(child, depth + 1)
         end
     end
 end
@@ -591,10 +607,17 @@ function CastExecutionGraphUI.render(blocks, opts)
         (z_orders.ui_tooltips or 0) + 5)
 
     -- Apply hover handlers after spawn (workaround for initFunc not being called via makeConfigFromTable)
+    local pendingCount = 0
+    for _ in pairs(pendingTooltips) do pendingCount = pendingCount + 1 end
+    log_debug("[ExecGraph] render: pendingTooltips count=" .. pendingCount)
+
     if CastExecutionGraphUI.currentBox and registry:valid(CastExecutionGraphUI.currentBox) then
-        local uiBoxComp = registry:try_get(CastExecutionGraphUI.currentBox, UIBoxComponent)
+        local uiBoxComp = component_cache.get(CastExecutionGraphUI.currentBox, UIBoxComponent)
         if uiBoxComp and uiBoxComp.uiRoot then
+            log_debug("[ExecGraph] render: calling applyPendingHovers on uiRoot=" .. tostring(uiBoxComp.uiRoot))
             applyPendingHovers(uiBoxComp.uiRoot)
+        else
+            log_debug("[ExecGraph] render: No uiBoxComp or uiRoot!")
         end
     end
 
@@ -620,9 +643,10 @@ function CastExecutionGraphUI.render(blocks, opts)
     end
 
     -- Snap visual dimensions to prevent tween-from-zero animation
-    local uiBoxComp = registry:try_get(CastExecutionGraphUI.currentBox, UIBoxComponent)
+    local uiBoxComp = registry:get(CastExecutionGraphUI.currentBox, UIBoxComponent)
     if uiBoxComp and uiBoxComp.uiRoot then
         snapVisualToActual(uiBoxComp.uiRoot)
+        snapVisualToActual(CastExecutionGraphUI.currentBox)
     end
 
     return CastExecutionGraphUI.currentBox

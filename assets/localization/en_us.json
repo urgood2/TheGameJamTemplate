@@ -340,6 +340,181 @@
 		"whale_dust_500_tooltip_title": "Dust Storm",
 		"whale_song_gatherer_desc": "Collects Whale Songs from Whales.\nProduces a new resource: Song Essence,\nwhich is required for creating chips",
 		"whale_song_gatherer_name": "Whale Song Gatherer",
-		"whale_title": "Whale"
+		"whale_title": "Whale",
+		"avatars_label": "Avatars",
+		"jokers_label": "Jokers",
+		"level_up_title": "LEVEL UP",
+		"gold_label": "Gold",
+		"tag_synergies_title": "Tag Synergies",
+		"execution_graph_title": "Execution Graph",
+		"wand_prefix": "Wand: ",
+		"block_number": "Block {num}",
+		"press_key_auto_aim": "Press {key} to toggle auto-aim."
+	},
+	"joker": {
+		"pyromaniac": {
+			"name": "Pyromaniac",
+			"description": "+10 Damage to Mono-Element (Fire) Spells."
+		},
+		"echo_chamber": {
+			"name": "Echo Chamber",
+			"description": "Twin Casts trigger twice."
+		},
+		"tag_master": {
+			"name": "Tag Master",
+			"description": "+1% Damage for every Tag you have."
+		},
+		"elemental_master": {
+			"name": "Elemental Master",
+			"description": "+5% Damage for every Elemental Tag (Fire, Ice, Lightning)."
+		},
+		"synergy_seeker": {
+			"name": "Synergy Seeker",
+			"description": "Gain +10 Mana when a Set Bonus is active."
+		},
+		"tag_specialist": {
+			"name": "Tag Specialist",
+			"description": "+30% damage if 3+ actions share the same tag."
+		},
+		"rainbow_mage": {
+			"name": "Rainbow Mage",
+			"description": "+10% damage per distinct tag type in cast."
+		},
+		"combo_catalyst": {
+			"name": "Combo Catalyst",
+			"description": "Single actions with 2+ tags cast twice."
+		},
+		"iron_skin": {
+			"name": "Iron Skin",
+			"description": "Reduce projectile damage by 5."
+		},
+		"flame_ward": {
+			"name": "Flame Ward",
+			"description": "Immune to Fire damage from projectiles."
+		},
+		"thorns": {
+			"name": "Thorns",
+			"description": "Reflect 50% of projectile damage back to attacker."
+		},
+		"survival_instinct": {
+			"name": "Survival Instinct",
+			"description": "+20% damage for 3s after taking projectile damage."
+		}
+	},
+	"avatar": {
+		"wildfire": {
+			"name": "Avatar of Wildfire",
+			"description": "Your flames consume everything.",
+			"effect": "Multicast modifiers now Loop the cast block instead of simultaneous cast."
+		},
+		"citadel": {
+			"name": "Avatar of the Citadel",
+			"description": "Unmovable object.",
+			"effect": "Summons inherit 100% of your Block Chance and Thorns."
+		},
+		"miasma": {
+			"name": "Avatar of Miasma",
+			"description": "Death is in the air.",
+			"effect": "Wands triggered by Movement now trigger 'On Hit' effects."
+		},
+		"stormlord": {
+			"name": "Avatar of the Storm",
+			"description": "Ride the lightning.",
+			"effect": "Critical hits always Chain to a nearby enemy."
+		},
+		"voidwalker": {
+			"name": "Voidwalker",
+			"description": "You are not here.",
+			"effect": "When you cast a projectile, your Summons also cast a copy of it."
+		},
+		"bloodgod": {
+			"name": "Blood God",
+			"description": "Pain is power.",
+			"effect": "Gain +1% Damage for every 1% missing HP."
+		}
+	},
+	"origin": {
+		"ember_nomad": {
+			"name": "Ember Nomad",
+			"description": "A wanderer from the scorched wastes."
+		},
+		"tundra_sentinel": {
+			"name": "Tundra Sentinel",
+			"description": "Guardian of the eternal ice."
+		},
+		"plague_scribe": {
+			"name": "Plague Scribe",
+			"description": "Scholar of forbidden decay."
+		},
+		"void_cultist": {
+			"name": "Void Cultist",
+			"description": "Worshipper of the empty dark."
+		}
+	},
+	"prayer": {
+		"ember_psalm": {
+			"name": "Ember Psalm",
+			"description": "Next 3 actions leave fire hazards."
+		},
+		"glacier_litany": {
+			"name": "Glacier Litany",
+			"description": "Freeze nearby enemies and gain barrier. Cooldown reduced when you block."
+		},
+		"contagion": {
+			"name": "Contagion",
+			"description": "Spread all poison stacks to nearby enemies."
+		},
+		"void_rift": {
+			"name": "Void Rift",
+			"description": "Summon a rift that pulls enemies and deals damage."
+		}
+	},
+	"discipline": {
+		"arcane": {
+			"name": "Arcane Discipline",
+			"description": "Mastery of pure magic and spell manipulation."
+		},
+		"mobility": {
+			"name": "Mobility Discipline",
+			"description": "Speed, positioning, and evasion."
+		},
+		"summon": {
+			"name": "Summon Discipline",
+			"description": "Commanding minions and constructs."
+		},
+		"brute": {
+			"name": "Brute Discipline",
+			"description": "Raw physical force and durability."
+		}
+	},
+	"wand_frame": {
+		"fanatic": {
+			"name": "Fanatic Frame",
+			"description": "Fast, predictable bursts."
+		},
+		"engine": {
+			"name": "Engine Frame",
+			"description": "Heavy artillery. Slow but massive."
+		},
+		"scatter": {
+			"name": "Scatter Frame",
+			"description": "Chaotic shotgun spread."
+		},
+		"ritual": {
+			"name": "Ritual Frame",
+			"description": "Power at a price."
+		},
+		"reactive": {
+			"name": "Reactive Frame",
+			"description": "Defensive retaliation."
+		}
+	},
+	"card": {
+		"trigger": {
+			"timer": "Casts spells automatically every few seconds.",
+			"collision": "Casts spells when you collide with an enemy.",
+			"dash": "Casts spells when you dash.",
+			"distance": "Casts spells after traveling a certain distance."
+		}
 	}
 }

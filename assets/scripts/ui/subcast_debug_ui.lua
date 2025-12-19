@@ -13,6 +13,15 @@ local z_orders = require("core.z_orders")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 
+-- Lazy-load toggle state to avoid circular dependencies
+local function isVisible()
+    local ok, toggles = pcall(require, "ui.ui_overlay_toggles")
+    if ok and toggles and toggles.isSubcastDebugVisible then
+        return toggles.isSubcastDebugVisible()
+    end
+    return true -- Default to visible if toggles module not available
+end
+
 -- Layout / styling
 local LEFT_MARGIN = 24
 local TOP_MARGIN = 120
@@ -172,6 +181,7 @@ end
 
 function SubcastDebugUI.draw()
     if not SubcastDebugUI.enabled or not SubcastDebugUI.isActive then return end
+    if not isVisible() then return end
     if not layers or not command_buffer or not localization or not globals then return end
 
     local now = os.clock()

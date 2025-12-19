@@ -888,7 +888,7 @@ function TagSynergyPanel.draw()
     end, baseZ, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
-        c.text = "Tag Synergies"
+        c.text = localization and localization.get and localization.get("ui.tag_synergies_title") or "Tag Synergies"
         c.font = font
         c.x = layoutCache.panelLeft + layoutCache.paddingX
         c.y = layoutCache.panelTop + layoutCache.paddingY - 2

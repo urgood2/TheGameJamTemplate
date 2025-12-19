@@ -3,6 +3,15 @@
 
 local ActionAPI = require("combat.action_api")
 
+-- Helper to get localized text with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
 
 local Prayers = {
     ember_psalm = {
@@ -87,5 +96,23 @@ local Prayers = {
         end
     }
 }
+
+--- Get localized name for a prayer (call at runtime when localization is ready)
+--- @param prayerId string The prayer key (e.g., "ember_psalm")
+--- @return string The localized name or fallback English name
+function Prayers.getLocalizedName(prayerId)
+    local prayer = Prayers[prayerId]
+    if not prayer then return prayerId end
+    return L("prayer." .. prayerId .. ".name", prayer.name)
+end
+
+--- Get localized description for a prayer (call at runtime when localization is ready)
+--- @param prayerId string The prayer key (e.g., "ember_psalm")
+--- @return string The localized description or fallback English description
+function Prayers.getLocalizedDescription(prayerId)
+    local prayer = Prayers[prayerId]
+    if not prayer then return "" end
+    return L("prayer." .. prayerId .. ".description", prayer.description)
+end
 
 return Prayers

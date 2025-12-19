@@ -1,3 +1,12 @@
+-- Helper to get localized text with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
 local Origins = {
     ember_nomad = {
         name = "Ember Nomad",
@@ -75,5 +84,23 @@ local Origins = {
         }
     }
 }
+
+--- Get localized name for an origin (call at runtime when localization is ready)
+--- @param originId string The origin key (e.g., "ember_nomad")
+--- @return string The localized name or fallback English name
+function Origins.getLocalizedName(originId)
+    local origin = Origins[originId]
+    if not origin then return originId end
+    return L("origin." .. originId .. ".name", origin.name)
+end
+
+--- Get localized description for an origin (call at runtime when localization is ready)
+--- @param originId string The origin key (e.g., "ember_nomad")
+--- @return string The localized description or fallback English description
+function Origins.getLocalizedDescription(originId)
+    local origin = Origins[originId]
+    if not origin then return "" end
+    return L("origin." .. originId .. ".description", origin.description)
+end
 
 return Origins

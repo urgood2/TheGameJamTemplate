@@ -340,6 +340,181 @@
 		"whale_dust_500_tooltip_title": "먼지 폭풍",
 		"whale_song_gatherer_desc": "고래에게서 고래 노래를 수집합니다.\n새로운 자원인 노래 정수를 생성합니다.\n이 정수는 칩 제작에 필요합니다.",
 		"whale_song_gatherer_name": "고래 노래 수집가",
-		"whale_title": "고래"
+		"whale_title": "고래",
+		"avatars_label": "아바타",
+		"jokers_label": "조커",
+		"level_up_title": "레벨 업",
+		"gold_label": "골드",
+		"tag_synergies_title": "태그 시너지",
+		"execution_graph_title": "실행 그래프",
+		"wand_prefix": "완드: ",
+		"block_number": "블록 {num}",
+		"press_key_auto_aim": "{key} 키를 눌러 자동 조준 전환"
+	},
+	"joker": {
+		"pyromaniac": {
+			"name": "방화광",
+			"description": "단일 원소(화염) 주문에 +10 피해."
+		},
+		"echo_chamber": {
+			"name": "메아리 방",
+			"description": "쌍둥이 시전이 두 번 발동합니다."
+		},
+		"tag_master": {
+			"name": "태그 마스터",
+			"description": "보유한 태그당 +1% 피해."
+		},
+		"elemental_master": {
+			"name": "원소 마스터",
+			"description": "원소 태그(화염, 얼음, 번개)당 +5% 피해."
+		},
+		"synergy_seeker": {
+			"name": "시너지 추구자",
+			"description": "세트 보너스 활성화 시 +10 마나 획득."
+		},
+		"tag_specialist": {
+			"name": "태그 전문가",
+			"description": "3개 이상의 행동이 같은 태그를 공유하면 +30% 피해."
+		},
+		"rainbow_mage": {
+			"name": "무지개 마법사",
+			"description": "시전 시 고유 태그 유형당 +10% 피해."
+		},
+		"combo_catalyst": {
+			"name": "콤보 촉매제",
+			"description": "2개 이상의 태그를 가진 단일 행동이 두 번 시전됩니다."
+		},
+		"iron_skin": {
+			"name": "강철 피부",
+			"description": "투사체 피해를 5 감소."
+		},
+		"flame_ward": {
+			"name": "화염 보호막",
+			"description": "투사체로 인한 화염 피해 면역."
+		},
+		"thorns": {
+			"name": "가시",
+			"description": "투사체 피해의 50%를 공격자에게 반사."
+		},
+		"survival_instinct": {
+			"name": "생존 본능",
+			"description": "투사체 피해를 받은 후 3초 동안 +20% 피해."
+		}
+	},
+	"avatar": {
+		"wildfire": {
+			"name": "야생화염의 화신",
+			"description": "당신의 불꽃이 모든 것을 삼킵니다.",
+			"effect": "다중 시전 수정자가 동시 시전 대신 시전 블록을 반복합니다."
+		},
+		"citadel": {
+			"name": "성채의 화신",
+			"description": "움직일 수 없는 물체.",
+			"effect": "소환수가 당신의 막기 확률과 가시의 100%를 상속합니다."
+		},
+		"miasma": {
+			"name": "독기의 화신",
+			"description": "죽음이 공기 중에 있습니다.",
+			"effect": "이동으로 발동되는 완드가 이제 '적중 시' 효과를 발동합니다."
+		},
+		"stormlord": {
+			"name": "폭풍의 화신",
+			"description": "번개를 타라.",
+			"effect": "치명타가 항상 근처 적에게 연쇄됩니다."
+		},
+		"voidwalker": {
+			"name": "공허 보행자",
+			"description": "당신은 여기 없습니다.",
+			"effect": "투사체를 시전하면 소환수도 복사본을 시전합니다."
+		},
+		"bloodgod": {
+			"name": "피의 신",
+			"description": "고통이 힘입니다.",
+			"effect": "잃은 HP 1%당 +1% 피해 획득."
+		}
+	},
+	"origin": {
+		"ember_nomad": {
+			"name": "잿불의 방랑자",
+			"description": "불타버린 황무지에서 온 떠돌이."
+		},
+		"tundra_sentinel": {
+			"name": "동토의 파수꾼",
+			"description": "영원한 얼음의 수호자."
+		},
+		"plague_scribe": {
+			"name": "역병의 서기관",
+			"description": "금지된 부패의 학자."
+		},
+		"void_cultist": {
+			"name": "공허의 광신도",
+			"description": "텅 빈 어둠의 숭배자."
+		}
+	},
+	"prayer": {
+		"ember_psalm": {
+			"name": "잿불의 찬가",
+			"description": "다음 3번의 행동이 화염 위험 지역을 남깁니다."
+		},
+		"glacier_litany": {
+			"name": "빙하의 연도",
+			"description": "근처 적을 동결시키고 보호막을 얻습니다. 막기 시 재사용 대기시간 감소."
+		},
+		"contagion": {
+			"name": "전염",
+			"description": "모든 독 중첩을 근처 적에게 전파합니다."
+		},
+		"void_rift": {
+			"name": "공허의 균열",
+			"description": "적을 끌어당기고 피해를 주는 균열을 소환합니다."
+		}
+	},
+	"discipline": {
+		"arcane": {
+			"name": "신비 수련",
+			"description": "순수 마법과 주문 조작의 숙달."
+		},
+		"mobility": {
+			"name": "기동 수련",
+			"description": "속도, 위치 선정, 회피."
+		},
+		"summon": {
+			"name": "소환 수련",
+			"description": "하수인과 구조물 지휘."
+		},
+		"brute": {
+			"name": "야만 수련",
+			"description": "순수한 물리적 힘과 내구성."
+		}
+	},
+	"wand_frame": {
+		"fanatic": {
+			"name": "광신자 프레임",
+			"description": "빠르고 예측 가능한 연사."
+		},
+		"engine": {
+			"name": "엔진 프레임",
+			"description": "중포병. 느리지만 강력함."
+		},
+		"scatter": {
+			"name": "산탄 프레임",
+			"description": "혼란스러운 산탄총 확산."
+		},
+		"ritual": {
+			"name": "의식 프레임",
+			"description": "대가를 치르는 힘."
+		},
+		"reactive": {
+			"name": "반응 프레임",
+			"description": "방어적 반격."
+		}
+	},
+	"card": {
+		"trigger": {
+			"timer": "몇 초마다 자동으로 주문을 시전합니다.",
+			"collision": "적과 충돌할 때 주문을 시전합니다.",
+			"dash": "대시할 때 주문을 시전합니다.",
+			"distance": "일정 거리를 이동한 후 주문을 시전합니다."
+		}
 	}
 }

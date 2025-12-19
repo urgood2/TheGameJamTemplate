@@ -2,6 +2,15 @@
 -- This ensures you don't get a diluted pool of 1000 random cards.
 -- NOTE: You always get your Discipline cards + a set of "Neutral" cards.
 
+-- Helper to get localized text with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
 local Disciplines = {
     arcane_discipline = {
         name = "Arcane Discipline",
@@ -93,5 +102,26 @@ local Disciplines = {
         }
     }
 }
+
+--- Get localized name for a discipline (call at runtime when localization is ready)
+--- @param disciplineId string The discipline key (e.g., "arcane_discipline")
+--- @return string The localized name or fallback English name
+function Disciplines.getLocalizedName(disciplineId)
+    local discipline = Disciplines[disciplineId]
+    if not discipline then return disciplineId end
+    -- Map keys like "arcane_discipline" to localization keys like "discipline.arcane"
+    local locKey = disciplineId:gsub("_discipline$", "")
+    return L("discipline." .. locKey .. ".name", discipline.name)
+end
+
+--- Get localized description for a discipline (call at runtime when localization is ready)
+--- @param disciplineId string The discipline key (e.g., "arcane_discipline")
+--- @return string The localized description or fallback English description
+function Disciplines.getLocalizedDescription(disciplineId)
+    local discipline = Disciplines[disciplineId]
+    if not discipline then return "" end
+    local locKey = disciplineId:gsub("_discipline$", "")
+    return L("discipline." .. locKey .. ".description", discipline.description)
+end
 
 return Disciplines

@@ -572,8 +572,11 @@ end
 --   ActionAPI.register_all_prayers(prayers)
 function ActionAPI.register_all_prayers(prayers_table)
     for id, def in pairs(prayers_table) do
-        def.id = def.id or id
-        ActionAPI.register_prayer(def)
+        -- Skip non-table entries (e.g., localization helper functions)
+        if type(def) == "table" then
+            def.id = def.id or id
+            ActionAPI.register_prayer(def)
+        end
     end
 end
 

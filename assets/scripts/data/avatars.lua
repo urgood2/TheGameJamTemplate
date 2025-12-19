@@ -1,6 +1,15 @@
 -- Avatars are "Ascensions" or "Ultimate Forms" unlocked mid-run.
 -- They provide powerful global rule changes.
 
+-- Helper to get localized text with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
 local Avatars = {
     wildfire = {
         name = "Avatar of Wildfire",
@@ -141,5 +150,40 @@ local Avatars = {
         }
     }
 }
+
+--- Get localized name for an avatar (call at runtime when localization is ready)
+--- @param avatarId string The avatar key (e.g., "wildfire")
+--- @return string The localized name or fallback English name
+function Avatars.getLocalizedName(avatarId)
+    local avatar = Avatars[avatarId]
+    if not avatar then return avatarId end
+    return L("avatar." .. avatarId .. ".name", avatar.name)
+end
+
+--- Get localized description for an avatar (call at runtime when localization is ready)
+--- @param avatarId string The avatar key (e.g., "wildfire")
+--- @return string The localized description or fallback English description
+function Avatars.getLocalizedDescription(avatarId)
+    local avatar = Avatars[avatarId]
+    if not avatar then return "" end
+    return L("avatar." .. avatarId .. ".description", avatar.description)
+end
+
+--- Get localized effect description for an avatar (call at runtime when localization is ready)
+--- @param avatarId string The avatar key (e.g., "wildfire")
+--- @return string The localized effect description or fallback English effect
+function Avatars.getLocalizedEffect(avatarId)
+    local avatar = Avatars[avatarId]
+    if not avatar then return "" end
+    -- Look for the first rule_change effect's desc
+    if avatar.effects then
+        for _, eff in ipairs(avatar.effects) do
+            if eff.type == "rule_change" and eff.desc then
+                return L("avatar." .. avatarId .. ".effect", eff.desc)
+            end
+        end
+    end
+    return L("avatar." .. avatarId .. ".effect", "")
+end
 
 return Avatars

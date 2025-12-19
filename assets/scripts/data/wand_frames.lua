@@ -2,6 +2,15 @@
 -- You can equip multiple wands (e.g., 4 slots), each with a different frame.
 -- The frame determines HOW and WHEN the cards inside are cast.
 
+-- Helper to get localized text with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
 local WandFrames = {
     fanatic = {
         name = "Fanatic Frame",
@@ -84,5 +93,23 @@ local WandFrames = {
         trigger_type = "on_hit"
     }
 }
+
+--- Get localized name for a wand frame (call at runtime when localization is ready)
+--- @param frameId string The frame key (e.g., "fanatic")
+--- @return string The localized name or fallback English name
+function WandFrames.getLocalizedName(frameId)
+    local frame = WandFrames[frameId]
+    if not frame then return frameId end
+    return L("wand_frame." .. frameId .. ".name", frame.name)
+end
+
+--- Get localized description for a wand frame (call at runtime when localization is ready)
+--- @param frameId string The frame key (e.g., "fanatic")
+--- @return string The localized description or fallback English description
+function WandFrames.getLocalizedDescription(frameId)
+    local frame = WandFrames[frameId]
+    if not frame then return "" end
+    return L("wand_frame." .. frameId .. ".description", frame.description)
+end
 
 return WandFrames

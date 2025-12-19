@@ -39,8 +39,10 @@ local LevelUpScreen = require("ui.level_up_screen")
 local HoverRegistry = require("ui.hover_registry")
 local ContentDebugPanel = require("ui.content_debug_panel")
 local CombatDebugPanel = require("ui.combat_debug_panel")
+local UIOverlayToggles = require("ui.ui_overlay_toggles")
 local EntityInspector = require("ui.entity_inspector")
 local C = require("core.constants")
+local CardsData = require("data.cards")
 local LEVEL_UP_MODAL_DELAY = 0.5
 local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
@@ -192,6 +194,33 @@ wand_tooltip_cache = {}
 card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
+
+-- Register language change callback to clear tooltip caches
+-- This ensures tooltips are rebuilt with the new language's text
+if localization and localization.onLanguageChanged then
+    localization.onLanguageChanged(function(newLang)
+        -- Clear all tooltip caches so they get rebuilt with new language
+        for id, entity in pairs(card_tooltip_cache or {}) do
+            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
+                registry:destroy(entity)
+            end
+        end
+        for id, entity in pairs(card_tooltip_disabled_cache or {}) do
+            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
+                registry:destroy(entity)
+            end
+        end
+        for id, entity in pairs(wand_tooltip_cache or {}) do
+            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
+                registry:destroy(entity)
+            end
+        end
+        card_tooltip_cache = {}
+        card_tooltip_disabled_cache = {}
+        wand_tooltip_cache = {}
+        previously_hovered_tooltip = nil
+    end)
+end
 local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then
         return
@@ -281,12 +310,21 @@ local tooltipStyle = {
 }
 local TOOLTIP_FONT_VERSION = 2
 
--- Initialize tooltip font
--- Load JetBrains Mono Nerd Font for tooltips at startup
+-- Initialize tooltip font (language-aware)
+-- Korean requires a font with Hangul support; English uses Proggy
 if localization and localization.loadNamedFont then
     local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
     if not alreadyLoaded then
-        localization.loadNamedFont("tooltip", "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf", 44)
+        local lang = localization.getCurrentLanguage and localization.getCurrentLanguage() or "en_us"
+        local tooltipFont, tooltipSize
+        if lang == "ko_kr" then
+            tooltipFont = "fonts/ko/Galmuri11-Bold.ttf"
+            tooltipSize = 32
+        else
+            tooltipFont = "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf"
+            tooltipSize = 44
+        end
+        localization.loadNamedFont("tooltip", tooltipFont, tooltipSize)
     end
 end
 
@@ -3317,8 +3355,16 @@ function makeCardTooltip(card_def, opts)
     addLine(rows, "type", card_def.type)
 
     -- Show description if available (important for trigger cards)
-    if card_def.description and card_def.description ~= "" then
-        addLine(rows, "effect", card_def.description)
+    -- For trigger cards, use localized description if available
+    local descriptionText = card_def.description
+    if card_def.type == "trigger" and card_def.trigger_type then
+        local localizedDesc = CardsData.getLocalizedTriggerDescription and CardsData.getLocalizedTriggerDescription(card_def.trigger_type)
+        if localizedDesc and localizedDesc ~= "" then
+            descriptionText = localizedDesc
+        end
+    end
+    if descriptionText and descriptionText ~= "" then
+        addLine(rows, "effect", descriptionText)
     end
 
     -- For trigger cards, show trigger-specific info
@@ -7115,6 +7161,11 @@ function debugUI()
     -- Combat Debug Panel (Stats, Combat, Defense, etc.)
     if CombatDebugPanel and CombatDebugPanel.render then
         CombatDebugPanel.render()
+    end
+
+    -- UI Overlay Toggles (visibility controls for action mode overlays)
+    if UIOverlayToggles and UIOverlayToggles.render then
+        UIOverlayToggles.render()
     end
 
     -- Entity Inspector Panel (inspect entity components at runtime)

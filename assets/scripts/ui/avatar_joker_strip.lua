@@ -13,6 +13,7 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local JokerSystem = require("wand.joker_system")
 local avatarDefs = require("data.avatars")
+local jokerDefs = require("data.jokers")
 
 AvatarJokerStrip.isActive = false
 AvatarJokerStrip.avatars = {}
@@ -74,7 +75,7 @@ local function destroyList(list)
     end
 end
 
-local function applyTooltip(entity, title, body)
+local function applyTooltip(entity, itemType, itemId, fallbackName, fallbackDesc)
     if not entity or not component_cache then return end
     local go = component_cache.get(entity, GameObject)
     if not go then return end
@@ -92,6 +93,16 @@ local function applyTooltip(entity, title, body)
     local tooltipKey = "avatar_joker_" .. tostring(entity)
 
     methods.onHover = function()
+        -- Look up localized text at hover time (not at creation time)
+        local title, body = fallbackName, fallbackDesc
+        if itemType == "avatar" and avatarDefs.getLocalizedName then
+            title = avatarDefs.getLocalizedName(itemId) or fallbackName
+            body = avatarDefs.getLocalizedDescription and avatarDefs.getLocalizedDescription(itemId) or fallbackDesc
+        elseif itemType == "joker" and jokerDefs.getLocalizedName then
+            title = jokerDefs.getLocalizedName(itemId) or fallbackName
+            body = jokerDefs.getLocalizedDescription and jokerDefs.getLocalizedDescription(itemId) or fallbackDesc
+        end
+
         if showSimpleTooltipAbove then
             showSimpleTooltipAbove(tooltipKey, title or "Unknown", body or "", entity, {
                 titleFontSize = 28,
@@ -136,7 +147,7 @@ local function dummyData()
     }
 end
 
-local function createSprite(entry, defaultSprite, accent)
+local function createSprite(entry, defaultSprite, accent, itemType)
     if not animation_system then return nil end
 
     local spriteId = entry.sprite or defaultSprite
@@ -159,7 +170,8 @@ local function createSprite(entry, defaultSprite, accent)
         AvatarJokerStrip.layout.cardW, AvatarJokerStrip.layout.cardH)
     animation_system.setFGColorForAllAnimationObjects(entity, accent or Col(255, 255, 255, 255))
 
-    applyTooltip(entity, entry.name or entry.id, entry.description)
+    -- Pass item type and ID for localization lookup at hover time
+    applyTooltip(entity, itemType, entry.id, entry.name or entry.id, entry.description)
 
     return entity
 end
@@ -171,7 +183,7 @@ local function rebuildSprites()
     AvatarJokerStrip.jokerSprites = {}
 
     for _, a in ipairs(AvatarJokerStrip.avatars or {}) do
-        local entity = createSprite(a, a.sprite or AvatarJokerStrip.layout.avatarSprite, colors.avatarAccent)
+        local entity = createSprite(a, a.sprite or AvatarJokerStrip.layout.avatarSprite, colors.avatarAccent, "avatar")
         if entity then
             table.insert(AvatarJokerStrip.avatarSprites, {
                 id = a.id,
@@ -184,7 +196,7 @@ local function rebuildSprites()
     end
 
     for _, j in ipairs(AvatarJokerStrip.jokers or {}) do
-        local entity = createSprite(j, j.sprite or AvatarJokerStrip.layout.jokerSprite, colors.jokerAccent)
+        local entity = createSprite(j, j.sprite or AvatarJokerStrip.layout.jokerSprite, colors.jokerAccent, "joker")
         if entity then
             table.insert(AvatarJokerStrip.jokerSprites, {
                 id = j.id,
@@ -434,8 +446,10 @@ function AvatarJokerStrip.update()
         rebuildSprites()
     end
 
-    local avatarBox = computeLayout(AvatarJokerStrip.avatarSprites, false, "Avatars")
-    local jokerBox = computeLayout(AvatarJokerStrip.jokerSprites, true, "Jokers")
+    local avatarLabel = localization and localization.get and localization.get("ui.avatars_label") or "Avatars"
+    local jokerLabel = localization and localization.get and localization.get("ui.jokers_label") or "Jokers"
+    local avatarBox = computeLayout(AvatarJokerStrip.avatarSprites, false, avatarLabel)
+    local jokerBox = computeLayout(AvatarJokerStrip.jokerSprites, true, jokerLabel)
     AvatarJokerStrip._layoutCache = { avatar = avatarBox, joker = jokerBox }
 
     local baseZ = (z_orders.ui_tooltips or 0) - 8
@@ -450,8 +464,10 @@ function AvatarJokerStrip.draw()
     local baseZ = (z_orders.ui_tooltips or 0) - 8
     local space = layer.DrawCommandSpace.Screen
 
-    drawGroup(AvatarJokerStrip._layoutCache.avatar, colors.avatarAccent, "Avatars", baseZ)
-    drawGroup(AvatarJokerStrip._layoutCache.joker, colors.jokerAccent, "Jokers", baseZ)
+    local avatarLabel = localization and localization.get and localization.get("ui.avatars_label") or "Avatars"
+    local jokerLabel = localization and localization.get and localization.get("ui.jokers_label") or "Jokers"
+    drawGroup(AvatarJokerStrip._layoutCache.avatar, colors.avatarAccent, avatarLabel, baseZ)
+    drawGroup(AvatarJokerStrip._layoutCache.joker, colors.jokerAccent, jokerLabel, baseZ)
 
     drawSprites(AvatarJokerStrip.avatarSprites, baseZ + 3, space)
     drawSprites(AvatarJokerStrip.jokerSprites, baseZ + 3, space)
@@ -479,8 +495,12 @@ function AvatarJokerStrip.draw()
     if jokerBox and command_buffer and layers and localization and localization.getFont then
         local font = localization.getFont()
         local fontSize = AvatarJokerStrip.layout.labelSize
-        local leftText = "press"
-        local rightText = " to toggle auto-aim."
+        -- Use localization with key placeholder for "Press {key} to toggle auto-aim"
+        local fullText = localization and localization.get and localization.get("ui.press_key_auto_aim", { key = "" }) or "Press {key} to toggle auto-aim."
+        -- Split around the placeholder to draw key icon in between
+        local leftText, rightText = fullText:match("^(.-)%{key%}(.*)$")
+        if not leftText then leftText = "Press " end
+        if not rightText then rightText = " to toggle auto-aim." end
         local textWidthFn = localization.getTextWidthWithCurrentFont
         local leftW = (textWidthFn and textWidthFn(leftText, fontSize, 1)) or (#leftText * fontSize * 0.5)
         local rightW = (textWidthFn and textWidthFn(rightText, fontSize, 1)) or (#rightText * fontSize * 0.5)

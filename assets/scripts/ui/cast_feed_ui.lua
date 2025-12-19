@@ -14,6 +14,15 @@ local signal = require("external.hump.signal")
 local z_orders = require("core.z_orders")
 local entity_cache = require("core.entity_cache")
 
+-- Lazy-load toggle state to avoid circular dependencies
+local function isVisible()
+    local ok, toggles = pcall(require, "ui.ui_overlay_toggles")
+    if ok and toggles and toggles.isCastFeedVisible then
+        return toggles.isCastFeedVisible()
+    end
+    return true -- Default to visible if toggles module not available
+end
+
 -- Configuration
 local FEED_MAX_ITEMS = 5
 local ITEM_LIFETIME = 3.0      -- seconds
@@ -284,6 +293,7 @@ end
 --- Draw the UI
 function CastFeedUI.draw()
     if not CastFeedUI.isActive then return end
+    if not isVisible() then return end
 
     local startX = globals.screenWidth() * 0.5
     local startY = globals.screenHeight() * 0.8 -- Bottom center

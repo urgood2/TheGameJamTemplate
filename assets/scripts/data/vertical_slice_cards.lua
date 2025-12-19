@@ -74,17 +74,21 @@ function VerticalSlice.get_cards(Cards, TriggerCards)
 
     -- Filter action and modifier cards
     for id, card in pairs(Cards) do
-        if VerticalSlice.ACTION_CARDS[id] then
-            result.actions[id] = card
-        elseif VerticalSlice.MODIFIER_CARDS[id] then
-            result.modifiers[id] = card
+        -- Skip non-table entries (e.g., localization helper functions)
+        if type(card) == "table" then
+            if VerticalSlice.ACTION_CARDS[id] then
+                result.actions[id] = card
+            elseif VerticalSlice.MODIFIER_CARDS[id] then
+                result.modifiers[id] = card
+            end
         end
     end
 
     -- Filter trigger cards
     if TriggerCards then
         for id, card in pairs(TriggerCards) do
-            if VerticalSlice.TRIGGER_CARDS[id] then
+            -- Skip non-table entries (e.g., localization helper functions)
+            if type(card) == "table" and VerticalSlice.TRIGGER_CARDS[id] then
                 result.triggers[id] = card
             end
         end

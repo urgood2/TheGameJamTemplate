@@ -158,7 +158,7 @@ function CurrencyDisplay.draw()
     drawIcon(iconCenterX, centerY, iconRadius, baseZ + 3, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
-        c.text = "Gold"
+        c.text = localization and localization.get and localization.get("ui.gold_label") or "Gold"
         c.font = font
         c.x = iconCenterX + 18
         c.y = centerY - 18

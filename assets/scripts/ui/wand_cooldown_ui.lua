@@ -12,6 +12,15 @@ local WandCooldownUI = {}
 local WandExecutor = require("wand.wand_executor")
 local z_orders = require("core.z_orders")
 
+-- Lazy-load toggle state to avoid circular dependencies
+local function isVisible()
+    local ok, toggles = pcall(require, "ui.ui_overlay_toggles")
+    if ok and toggles and toggles.isWandCooldownVisible then
+        return toggles.isWandCooldownVisible()
+    end
+    return true -- Default to visible if toggles module not available
+end
+
 -- Layout configuration
 local LEFT_MARGIN = 28
 local TOP_MARGIN = 140
@@ -124,6 +133,7 @@ end
 function WandCooldownUI.draw()
     if not WandCooldownUI.isActive then return end
     if not is_state_active or not is_state_active(ACTION_STATE) then return end
+    if not isVisible() then return end
 
     local wandIds = {}
     for wandId, _ in pairs(WandCooldownUI.entries) do

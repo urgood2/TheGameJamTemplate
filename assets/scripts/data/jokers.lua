@@ -5,6 +5,15 @@ JOKER DEFINITIONS
 Centralized registry for all Joker (Passive Artifact) definitions.
 ]]
 
+-- Helper to get localized text with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
 local Jokers = {
     -- Example 1: The "Pyromaniac" (Buffs Fire Spells)
     pyromaniac = {
@@ -249,6 +258,24 @@ for key, joker in pairs(Jokers) do
             joker[field] = default_value
         end
     end
+end
+
+--- Get localized name for a joker (call at runtime when localization is ready)
+--- @param jokerId string The joker key (e.g., "pyromaniac")
+--- @return string The localized name or fallback English name
+function Jokers.getLocalizedName(jokerId)
+    local joker = Jokers[jokerId]
+    if not joker then return jokerId end
+    return L("joker." .. jokerId .. ".name", joker.name)
+end
+
+--- Get localized description for a joker (call at runtime when localization is ready)
+--- @param jokerId string The joker key (e.g., "pyromaniac")
+--- @return string The localized description or fallback English description
+function Jokers.getLocalizedDescription(jokerId)
+    local joker = Jokers[jokerId]
+    if not joker then return "" end
+    return L("joker." .. jokerId .. ".description", joker.description)
 end
 
 return Jokers

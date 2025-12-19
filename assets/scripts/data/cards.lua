@@ -10,6 +10,15 @@ Tags (for joker synergies):
   Playstyle: Mobility, Defense, Brute
 ]]
 
+-- Helper to get localized text with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
 local Cards = {}
 
 
@@ -1028,7 +1037,30 @@ for key, card in pairs(TriggerCards) do
     TriggerCards[key] = ContentDefaults.apply_card_defaults(card)
 end
 
+--- Get localized trigger description by trigger_type (call at runtime when localization is ready)
+--- @param triggerType string The trigger type (e.g., "time", "collision", "dash", "movement")
+--- @return string The localized description or fallback English description
+local function getLocalizedTriggerDescription(triggerType)
+    local typeToKey = {
+        time = "timer",
+        collision = "collision",
+        dash = "dash",
+        movement = "distance"
+    }
+    local locKey = typeToKey[triggerType] or triggerType
+    -- Find the default description from one of the trigger cards
+    local fallback = ""
+    for _, card in pairs(TriggerCards) do
+        if card.trigger_type == triggerType and card.description then
+            fallback = card.description
+            break
+        end
+    end
+    return L("card.trigger." .. locKey, fallback)
+end
+
 return {
     Cards = Cards,
-    TriggerCards = TriggerCards
+    TriggerCards = TriggerCards,
+    getLocalizedTriggerDescription = getLocalizedTriggerDescription
 }

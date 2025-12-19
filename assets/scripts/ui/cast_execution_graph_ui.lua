@@ -15,6 +15,15 @@ local dsl = require("ui.ui_syntax_sugar")
 local component_cache = require("core.component_cache")
 local z_ok, z_orders = pcall(require, "core.z_orders")
 if not z_ok then z_orders = { ui_tooltips = 0 } end
+
+-- Lazy-load toggle state to avoid circular dependencies
+local function isVisible()
+    local ok, toggles = pcall(require, "ui.ui_overlay_toggles")
+    if ok and toggles and toggles.isCastExecutionGraphVisible then
+        return toggles.isCastExecutionGraphVisible()
+    end
+    return true -- Default to visible if toggles module not available
+end
 local STYLING_ROUNDED = UIStylingType and UIStylingType.RoundedRectangle or nil
 
 local function defaultPosition()
@@ -513,11 +522,14 @@ end
 local function buildRoot(blocks, opts)
     local rows = {}
     for i, block in ipairs(blocks or {}) do
-        table.insert(rows, buildBlockRow(block, 1, string.format("Block %d", i)))
+        local blockLabel = localization and localization.get and localization.get("ui.block_number", { num = i }) or string.format("Block %d", i)
+        table.insert(rows, buildBlockRow(block, 1, blockLabel))
     end
 
-    local headerText = opts and opts.title or "Execution Graph"
-    local subtitle = opts and opts.wandId and ("Wand: " .. tostring(opts.wandId)) or nil
+    local defaultTitle = localization and localization.get and localization.get("ui.execution_graph_title") or "Execution Graph"
+    local wandPrefix = localization and localization.get and localization.get("ui.wand_prefix") or "Wand: "
+    local headerText = opts and opts.title or defaultTitle
+    local subtitle = opts and opts.wandId and (wandPrefix .. tostring(opts.wandId)) or nil
 
     local headerChildren = { dsl.text(headerText, { fontSize = 16, color = colors.text }) }
     if subtitle then
@@ -581,6 +593,10 @@ end
 function CastExecutionGraphUI.render(blocks, opts)
     if not ui or not ui.box or not registry then return nil end
     if not planningActive() then
+        CastExecutionGraphUI.clear()
+        return nil
+    end
+    if not isVisible() then
         CastExecutionGraphUI.clear()
         return nil
     end

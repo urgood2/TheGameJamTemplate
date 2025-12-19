@@ -92,7 +92,8 @@ function AvatarSystem.check_unlocks(player, opts)
     local newlyUnlocked = {}
 
     for id, def in pairs(defs or {}) do
-        if not state.unlocked[id] then
+        -- Skip non-table entries (e.g., localization helper functions)
+        if type(def) == "table" and not state.unlocked[id] then
             if isUnlocked(def.unlock, tagCounts, metrics) then
                 state.unlocked[id] = true
                 table.insert(newlyUnlocked, id)

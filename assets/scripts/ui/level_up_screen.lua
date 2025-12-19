@@ -387,7 +387,7 @@ function LevelUpScreen.draw()
     local pulse = (math.sin(t * 2.4) + 1) * 0.5
     local titleColor = lerpColor(util.getColor("apricot_cream"), util.getColor("cyan"), pulse)
     local titleGlow = lerpColor(util.getColor("pink"), util.getColor("white"), pulse * 0.6 + 0.2)
-    local titleText = "LEVEL UP"
+    local titleText = localization and localization.get and localization.get("ui.level_up_title") or "LEVEL UP"
     local titleSize = 44 + pulse * 6
     local titleWidth = (localization.getTextWidthWithCurrentFont and localization.getTextWidthWithCurrentFont(titleText, titleSize, 1)) or (#titleText * (titleSize * 0.55))
     local titleX = screenW * 0.5 - titleWidth * 0.5

@@ -371,4 +371,33 @@
   - Added optional sprite field to cards, jokers, and avatars for custom sprite assignment with fallback defaults.
   - Created 26 custom card sprite images (12 action, 10 modifier, 4 trigger) and assigned them to card definitions.
   - Updated createNewCard to check both card_defs and trigger_card_defs and hide text overlay/sticker for cards with custom sprites.
-  - Code review polish and documentation updates.
+  - Fixed wave system integration: enemy factory infrastructure, physics manager reference, sprite definitions, and combat system hookup.
+
+12/16/2025
+  - Refactored C++ UI system: split UIConfig into focused components (Style, Layout, Interaction, Content) with handler architecture for type-specific rendering.
+  - Implemented console improvements: level/tag filtering, bookmark navigation, entity ID detection/highlighting, copy filtered logs, filter state persistence.
+  - Built particle builder fluent API with TDD: Recipe.define(), shape/size/color/velocity/behavior methods, emission modes, positioning (inCircle, inRect, from/toward), shader support.
+  - Added LuaLS type annotations to entity_builder, timer, enemy_factory, physics_builder for IDE autocomplete.
+  - Added API documentation headers to wave_helpers, enemy_factory, and ui_syntax_sugar modules.
+
+12/17/2025
+  - Implemented Text Builder fluent API: Recipe configuration, spawner basics (:spawn/:at), lifecycle management with lifespan expiration, entity-relative positioning with follow mode.
+  - Extended Text Builder with tags, bulk operations, content/position update methods, and stream mode for deferred spawning.
+  - Added performance instrumentation: draw call counter, state-aware batching with feature flag, shader hot-reload throttling to 500ms.
+  - Created Lua convenience modules: Schema validation, TimerScope for auto-cancel, CardFactory DSL for card definition.
+  - Enhanced particle system with entity returns from spawn, custom drawCommand support, and shader rendering tests.
+
+12/18/2025
+  - Built comprehensive performance audit infrastructure: benchmark tests, Lua/C++ boundary profiler, GC pause measurement, allocation profiler, draw call source tracking.
+  - Implemented HoverRegistry module for immediate-mode UI hover regions and integrated into tag synergy panel with proper cleanup.
+  - Fixed shader text rendering: hide base sprite, correct entity bounds for pipeline, make overlay patterns respond to card_rotation uniform.
+  - Refactored codebase: migrated registry:get calls to component_cache.get across gameplay, ui_defs, and entity_factory.
+  - Added Q.lua convenience module for transform operations (move, center, offset) with single-letter import.
+  - Fixed auto-aim targeting, enemy corner-sticking prevention, tooltip white blocks from outlineThickness, and timer cleanup in entity cleanup flow.
+
+12/19/2025
+  - Implemented wave visual feedback: Text Builder rendering for wave/elite/stage announcements, spawn telegraph sprite with growing hollow circle effect.
+  - Fixed telegraph-to-spawn timing: spawn now explicitly waits for telegraph duration plus 0.1s buffer instead of hardcoded delay.
+  - Fixed execution graph UI: tooltip lookup, tween-from-zero animation prevention, settings and hover handling improvements.
+  - Added enemy physics friction(0) to prevent wall sticking, fixed collision tag to use PROJECTILE instead of BULLET.
+  - Cleaned up UI state transitions: guard planning timer with state check, clear execution graph and block flash UI before action phase.

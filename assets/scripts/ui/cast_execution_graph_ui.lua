@@ -231,6 +231,26 @@ local function applyPendingHovers(entity)
     end
 end
 
+-- Snap visual transform to actual (skip spring animation)
+local function snapVisualToActual(entity)
+    if not entity or not registry:valid(entity) then return end
+
+    local t = component_cache.get(entity, Transform)
+    if t then
+        t.visualX = t.actualX
+        t.visualY = t.actualY
+        t.visualW = t.actualW
+        t.visualH = t.actualH
+    end
+
+    local go = component_cache.get(entity, GameObject)
+    if go and go.orderedChildren then
+        for _, child in ipairs(go.orderedChildren) do
+            snapVisualToActual(child)
+        end
+    end
+end
+
 local function abbreviateLabel(label)
     if not label or label == "" then return "?" end
     label = cleanLabel(label)
@@ -602,6 +622,9 @@ function CastExecutionGraphUI.render(blocks, opts)
     if ui.box.RenewAlignment then
         ui.box.RenewAlignment(registry, CastExecutionGraphUI.currentBox)
     end
+
+    -- Snap visual to actual to prevent tween-from-zero animation
+    snapVisualToActual(CastExecutionGraphUI.currentBox)
 
     return CastExecutionGraphUI.currentBox
 end

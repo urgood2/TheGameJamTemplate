@@ -8,6 +8,7 @@ local providers = require("combat.stage_providers")
 local generators = require("combat.wave_generators")
 local WaveHelpers = require("combat.wave_helpers")
 local EnemyFactory = require("combat.enemy_factory")
+local WaveVisuals = require("combat.wave_visuals")  -- Registers visual signal handlers
 
 local WaveSystem = {}
 
@@ -17,6 +18,7 @@ WaveSystem.providers = providers
 WaveSystem.generators = generators
 WaveSystem.helpers = WaveHelpers
 WaveSystem.factory = EnemyFactory
+WaveSystem.visuals = WaveVisuals
 
 --============================================
 -- QUICK START API

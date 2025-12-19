@@ -5,9 +5,50 @@ local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local entity_cache = require("core.entity_cache")
 local component_cache = require("core.component_cache")
+local Text = require("core.text")
 local animation_system = _G.animation_system  -- C++ binding, exposed globally
 
 local WaveVisuals = {}
+
+--============================================
+-- TEXT RECIPES (pre-defined for reuse)
+--============================================
+
+local waveAnnounceRecipe = Text.define()
+    :content("%s")
+    :size(32)
+    :color("white")
+    :anchor("center")
+    :fade()
+    :lifespan(1.5)
+    :space("screen")
+
+local eliteAnnounceRecipe = Text.define()
+    :content("%s")
+    :size(40)
+    :color("red")
+    :anchor("center")
+    :fade()
+    :lifespan(2.0)
+    :space("screen")
+
+local stageCompleteRecipe = Text.define()
+    :content("%s")
+    :size(36)
+    :color("gold")
+    :anchor("center")
+    :fade()
+    :lifespan(2.0)
+    :space("screen")
+
+local defaultTextRecipe = Text.define()
+    :content("%s")
+    :size(24)
+    :color("white")
+    :anchor("center")
+    :fade()
+    :lifespan(1.5)
+    :space("screen")
 
 --============================================
 -- TELEGRAPH MARKER
@@ -21,13 +62,37 @@ signal.register("spawn_telegraph", function(data)
     local duration = data.duration or 1.0
     local enemy_type = data.enemy_type
 
-    -- TODO: Add visual telegraph marker when sprite asset is created
-    -- For now, just log the spawn location
-    print("[WaveVisuals] Telegraph at " .. math.floor(x) .. ", " .. math.floor(y) .. " for " .. tostring(enemy_type))
+    -- Position and size constants
+    local base_size = 48
+    local spawn_x = x - base_size * 0.5
+    local spawn_y = y - base_size * 0.5
 
-    -- Track telegraph for potential future use
-    local telegraph_id = tostring(x) .. "_" .. tostring(y) .. "_" .. os.clock()
+    -- Create telegraph sprite at exact position (avoids first-frame pop)
+    local marker = animation_system.createAnimatedObjectWithTransform(
+        "spawn_telegraph.png",
+        true,           -- forceSprite
+        spawn_x,        -- x position
+        spawn_y,        -- y position
+        nil,            -- parent
+        false           -- useRenderPosition
+    )
+
+    if not marker or not entity_cache.valid(marker) then
+        print("[WaveVisuals] Failed to create telegraph marker")
+        return
+    end
+
+    -- Ensure size is set correctly
+    local transform = component_cache.get(marker, Transform)
+    if transform then
+        transform.actualW = base_size
+        transform.actualH = base_size
+    end
+
+    -- Track for cleanup
+    local telegraph_id = tostring(marker)
     active_telegraphs[telegraph_id] = {
+        entity = marker,
         x = x,
         y = y,
         enemy_type = enemy_type,
@@ -35,60 +100,79 @@ signal.register("spawn_telegraph", function(data)
         duration = duration,
     }
 
-    -- Auto-cleanup after duration
-    timer.after(duration, function()
-        active_telegraphs[telegraph_id] = nil
-    end, "telegraph_" .. telegraph_id)
-
-    --[[ DISABLED: Sprite doesn't exist yet - enable when 'telegraph_marker' asset is added
-    local marker = animation_system.createAnimatedObjectWithTransform(
-        "telegraph_marker",
-        true
-    )
-
-    if not marker or not entity_cache.valid(marker) then
-        return
-    end
-
-    local transform = component_cache.get(marker, Transform)
-    if transform then
-        transform.actualX = x
-        transform.actualY = y
-        transform.actualW = 40
-        transform.actualH = 40
-    end
-
+    -- Growing hollow circle animation
     local elapsed = 0
-    local pulse_speed = 8
+    local pulse_speed = 6
+    local max_radius = 60
+    local ring_thickness = 4
+    local layers_ref = _G.layers
 
-    timer.every(0.016, function()
-        if not entity_cache.valid(marker) then return false end
-        elapsed = elapsed + 0.016
+    timer.every_opts({
+        delay = 0.016,
+        action = function()
+            if not entity_cache.valid(marker) then return false end
+            elapsed = elapsed + 0.016
 
-        if elapsed >= duration then
-            registry:destroy(marker)
-            return false
-        end
+            if elapsed >= duration then
+                -- Cleanup
+                if registry and registry:valid(marker) then
+                    registry:destroy(marker)
+                end
+                active_telegraphs[telegraph_id] = nil
+                return false
+            end
 
-        -- Pulse scale
-        local scale = 1.0 + math.sin(elapsed * pulse_speed) * 0.2
-        local t = component_cache.get(marker, Transform)
-        if t then
-            t.actualW = 40 * scale
-            t.actualH = 40 * scale
-        end
+            -- Progress from 0 to 1
+            local progress = elapsed / duration
 
-        -- Fade in urgency near end
-        -- Could add shader/color change here
-    end, "telegraph_pulse_" .. marker)
+            -- Pulse the sprite scale
+            local pulse = 1.0 + math.sin(elapsed * pulse_speed) * 0.15
+            local t = component_cache.get(marker, Transform)
+            if t then
+                t.actualW = base_size * pulse
+                t.actualH = base_size * pulse
+                -- Re-center after scale
+                t.actualX = x - t.actualW * 0.5
+                t.actualY = y - t.actualH * 0.5
+            end
 
-    active_telegraphs[marker] = true
-    ]] -- End of disabled sprite code
+            -- Draw growing hollow circle
+            if layers_ref and layers_ref.sprites and command_buffer then
+                local current_radius = max_radius * progress
+                -- Fade color as it grows (more visible at start)
+                local alpha = math.floor(255 * (1 - progress * 0.7))
+                local urgency = progress > 0.7 and 1 or 0
+                local r = 255
+                local g = math.floor(200 * (1 - urgency * 0.5))
+                local b = math.floor(100 * (1 - urgency))
+
+                command_buffer.queueDrawCircleLine(layers_ref.sprites, function(c)
+                    c.x = x
+                    c.y = y
+                    c.innerRadius = math.max(0, current_radius - ring_thickness)
+                    c.outerRadius = current_radius
+                    c.startAngle = 0
+                    c.endAngle = 360
+                    c.segments = 48
+                    c.color = Col(r, g, b, alpha)
+                end, 100, layer.DrawCommandSpace.World)
+            end
+        end,
+        tag = "telegraph_anim_" .. telegraph_id
+    })
 end)
 
 --============================================
 -- FLOATING TEXT
 --============================================
+
+-- Map style names to recipes
+local styleRecipes = {
+    wave_announce = waveAnnounceRecipe,
+    elite_announce = eliteAnnounceRecipe,
+    stage_complete = stageCompleteRecipe,
+    default = defaultTextRecipe,
+}
 
 signal.register("show_floating_text", function(data)
     local text = data.text
@@ -106,33 +190,11 @@ signal.register("show_floating_text", function(data)
         y = sh / 3
     end
 
-    -- Style configurations
-    local styles = {
-        wave_announce = { fontSize = 32, color = "white", duration = 1.5, rise = 30 },
-        elite_announce = { fontSize = 40, color = "red", duration = 2.0, rise = 20 },
-        stage_complete = { fontSize = 36, color = "gold", duration = 2.0, rise = 40 },
-        default = { fontSize = 24, color = "white", duration = 1.5, rise = 20 },
-    }
+    -- Get the appropriate recipe for this style
+    local recipe = styleRecipes[style] or styleRecipes.default
 
-    local cfg = styles[style] or styles.default
-
-    -- Create text entity (simplified - adapt to your UI system)
-    -- This is a placeholder - integrate with your actual text rendering
-    print("[FLOATING TEXT] " .. text .. " (style: " .. style .. ")")
-
-    -- If you have a UI text system, use it here:
-    -- local textEntity = ui.createFloatingText(text, x, y, cfg)
-
-    -- For now, emit a signal that UI layer can handle
-    signal.emit("ui_floating_text", {
-        text = text,
-        x = x,
-        y = y,
-        fontSize = cfg.fontSize,
-        color = cfg.color,
-        duration = cfg.duration,
-        rise = cfg.rise,
-    })
+    -- Spawn the text using Text Builder
+    recipe:spawn(text):at(x, y)
 end)
 
 --============================================

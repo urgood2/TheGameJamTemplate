@@ -73,8 +73,8 @@ SpawnPresets.enemies = {
         },
         interactive = {
             hover = {
-                title = "Kobold",
-                body = "Basic melee enemy"
+                title = localization.get("ui.enemy_kobold_title"),
+                body = localization.get("ui.enemy_kobold_body")
             },
             collision = true
         }
@@ -105,8 +105,8 @@ SpawnPresets.enemies = {
         },
         interactive = {
             hover = {
-                title = "Slime",
-                body = "Fast but weak"
+                title = localization.get("ui.enemy_slime_title"),
+                body = localization.get("ui.enemy_slime_body")
             },
             collision = true
         }
@@ -137,8 +137,8 @@ SpawnPresets.enemies = {
         },
         interactive = {
             hover = {
-                title = "Skeleton",
-                body = "Slow but durable"
+                title = localization.get("ui.enemy_skeleton_title"),
+                body = localization.get("ui.enemy_skeleton_body")
             },
             collision = true
         }

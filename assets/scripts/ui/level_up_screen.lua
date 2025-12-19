@@ -32,8 +32,8 @@ LevelUpScreen._layout = {
 local defaultChoices = {
     {
         id = "physique",
-        title = "Physique",
-        description = "+2 Physique • Big health bump and regen",
+        title = localization.get("stats.physique"),
+        description = localization.get("ui.levelup_physique_desc"),
         apply = function(actor)
             if not actor or not actor.stats then return end
             actor.stats:add_base("physique", 2)
@@ -43,8 +43,8 @@ local defaultChoices = {
     },
     {
         id = "cunning",
-        title = "Cunning",
-        description = "+2 Cunning • More crit and offense",
+        title = localization.get("stats.cunning"),
+        description = localization.get("ui.levelup_cunning_desc"),
         apply = function(actor)
             if not actor or not actor.stats then return end
             actor.stats:add_base("cunning", 2)
@@ -54,8 +54,8 @@ local defaultChoices = {
     },
     {
         id = "spirit",
-        title = "Spirit",
-        description = "+2 Spirit • Extra energy and sustain",
+        title = localization.get("stats.spirit"),
+        description = localization.get("ui.levelup_spirit_desc"),
         apply = function(actor)
             if not actor or not actor.stats then return end
             actor.stats:add_base("spirit", 2)

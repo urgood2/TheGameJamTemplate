@@ -384,7 +384,7 @@ local function modBox(modInfo)
         bg = colors.mod,
         padding = 6,
         shadow = true,
-        tooltip = { card = card, label = label, body = "Modifier" },
+        tooltip = { card = card, label = label, body = localization.get("ui.modifier_label") },
     })
 end
 
@@ -394,7 +394,7 @@ local function actionBox(card)
     return iconPill(icon, {
         bg = colors.action,
         padding = 6,
-        tooltip = { card = card, label = fullLabel, body = "Action" },
+        tooltip = { card = card, label = fullLabel, body = localization.get("ui.action_label") },
     })
 end
 

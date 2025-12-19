@@ -1309,7 +1309,7 @@ function transitionGoldInterest(duration, startingGold, interestEarned)
     TransitionType.displayGold = TransitionType.startingGold
     TransitionType.targetGold = TransitionType.startingGold + TransitionType.interest
     TransitionType.interestPulse = 0
-    TransitionType.title = "Banked gold"
+    TransitionType.title = localization.get("ui.banked_gold_title")
 
     function TransitionType:init()
         local maxRadius = math.sqrt(globals.screenWidth() ^ 2 + globals.screenHeight() ^ 2)
@@ -2967,7 +2967,7 @@ function setUpLogicTimers()
 
                                         if simulatedResult and simulatedResult.blocks then
                                             CastExecutionGraphUI.render(simulatedResult.blocks,
-                                                { wandId = currentSet.wandDef.id, title = "Execution Preview" })
+                                                { wandId = currentSet.wandDef.id, title = localization.get("ui.execution_preview_title") })
                                         else
                                             CastExecutionGraphUI.clear()
                                             return
@@ -5114,6 +5114,10 @@ function initCombatSystem()
     ctx.get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end
     ctx.get_allies_of  = function(a) return a.side == 1 and ctx.side1 or ctx.side2 end
 
+    -- Bridge combat bus events to signal system (prevents disconnection bugs)
+    local EventBridge = require("core.event_bridge")
+    EventBridge.attach(ctx)
+
     --TODO: probably make separate enemy creation functions for each enemy type.
 
     -- Hero baseline: some OA/Cunning/Spirit, crit damage, CDR, cost reduction, and atk/cast speed.
@@ -5229,6 +5233,10 @@ function initCombatSystem()
 
         if enemyEntity then
             enemyHealthUiState[enemyEntity] = nil
+
+            -- Notify wave system that enemy was killed (for wave progression)
+            signal.emit("enemy_killed", enemyEntity)
+
             local dropX, dropY = nil, nil
             if entity_cache.valid(enemyEntity) then
                 local t = component_cache.get(enemyEntity, Transform)

@@ -95,6 +95,31 @@ end)
 
 **Don't use `publishLuaEvent()`** - use `signal.emit()`.
 
+### Two Event Systems (IMPORTANT)
+
+The codebase has **two separate event systems** that must be kept in sync:
+
+| System | Usage | Example |
+|--------|-------|---------|
+| `signal` (hump.signal) | Gameplay events, wave system, UI | `signal.emit("enemy_killed", entity)` |
+| `ctx.bus` (combat EventBus) | Combat system internals | `ctx.bus:emit("OnDeath", { entity = actor })` |
+
+**The Event Bridge** (`core/event_bridge.lua`) automatically forwards most combat bus events to the signal system. This prevents disconnection bugs where one system doesn't know about events from the other.
+
+**When adding new combat events:**
+1. If the event should be visible outside combat system, add it to `BRIDGED_EVENTS` in `event_bridge.lua`
+2. If the event data contains combat actors (not entity IDs), handle it manually like `OnDeath` in `gameplay.lua:5234`
+
+**Special case - OnDeath:**
+```lua
+-- Combat bus emits actor (NOT entity ID):
+ctx.bus:emit('OnDeath', { entity = combatActor, killer = src })
+
+-- gameplay.lua converts to entity ID for signal:
+local enemyEntity = combatActorToEntity[actor]
+signal.emit("enemy_killed", enemyEntity)  -- Wave system expects entity ID
+```
+
 ---
 
 ## Physics Integration

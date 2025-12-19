@@ -211,36 +211,32 @@ end
 local function applyPendingHovers(entity)
     if not entity or not registry:valid(entity) then return end
 
-    local go = component_cache.get(entity, GameObject)
-    if not go then return end
-
-    -- Check if this entity has a config with a tooltip ID
-    -- Config is stored in go.config (from DSL definition), not as a UIConfig component
-    if go.config and go.config.id then
-        local tooltipData = pendingTooltips[go.config.id]
+    -- Check if this entity has a UIElementCore with a tooltip ID
+    local uiCore = registry:try_get(entity, UIElementCore)
+    if uiCore and uiCore.id and uiCore.id ~= "" then
+        local tooltipData = pendingTooltips[uiCore.id]
         if tooltipData then
             applyHoverToEntity(entity, tooltipData)
         end
     end
 
     -- Traverse children (orderedChildren is a vector, children is a map)
-    if go.orderedChildren then
+    local go = component_cache.get(entity, GameObject)
+    if go and go.orderedChildren then
         for _, child in ipairs(go.orderedChildren) do
             applyPendingHovers(child)
         end
     end
 end
 
--- Snap visual transform to actual (skip spring animation)
+-- Snap visual dimensions to prevent tween-from-zero animation
 local function snapVisualToActual(entity)
     if not entity or not registry:valid(entity) then return end
 
     local t = component_cache.get(entity, Transform)
     if t then
-        t.visualX = t.actualX
-        t.visualY = t.actualY
-        t.visualW = t.actualW
-        t.visualH = t.actualH
+        t.visualW = t.actualW or t.visualW
+        t.visualH = t.actualH or t.visualH
     end
 
     local go = component_cache.get(entity, GameObject)
@@ -623,8 +619,11 @@ function CastExecutionGraphUI.render(blocks, opts)
         ui.box.RenewAlignment(registry, CastExecutionGraphUI.currentBox)
     end
 
-    -- Snap visual to actual to prevent tween-from-zero animation
-    snapVisualToActual(CastExecutionGraphUI.currentBox)
+    -- Snap visual dimensions to prevent tween-from-zero animation
+    local uiBoxComp = registry:try_get(CastExecutionGraphUI.currentBox, UIBoxComponent)
+    if uiBoxComp and uiBoxComp.uiRoot then
+        snapVisualToActual(uiBoxComp.uiRoot)
+    end
 
     return CastExecutionGraphUI.currentBox
 end

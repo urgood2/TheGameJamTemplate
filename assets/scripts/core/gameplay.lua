@@ -1933,7 +1933,7 @@ function createNewCard(id, x, y, gameStateToApply)
     local shaderPipelineComp = registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
     -- shaderPipelineComp:addPass("material_card_overlay")
     -- shaderPipelineComp:addPass("3d_skew_hologram")
-    -- shaderPipelineComp:addPass("3d_skew")
+    shaderPipelineComp:addPass("3d_skew")
     -- shaderPipelineComp:addPass("3d_skew_foil")
     -- shaderPipelineComp:addPass("3d_skew_negative_shine")
     -- shaderPipelineComp:addPass("3d_skew_negative")
@@ -1945,7 +1945,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- shaderPipelineComp:addPass("3d_skew_iridescent")
     -- shaderPipelineComp:addPass("3d_skew_nebula")
     -- shaderPipelineComp:addPass("3d_skew_plasma")
-    shaderPipelineComp:addPass("3d_skew_prismatic")
+    -- shaderPipelineComp:addPass("3d_skew_prismatic")
     -- shaderPipelineComp:addPass("3d_skew_thermal")
     
     -- shaderPipelineComp:addPass("3d_skew_crystalline")
@@ -2144,7 +2144,7 @@ function createNewCard(id, x, y, gameStateToApply)
         log_debug("card onHover called for", card)
         
         -- inject dynamic motion
-        transform.InjectDynamicMotionDefault(card)
+        transform.InjectDynamicMotion(card, 0, 1)
         
         
         -- get script
@@ -4491,6 +4491,11 @@ function initPlanningPhase()
     local cardsToChange = {}
 
     for cardID, cardDef in pairs(catalog) do
+        -- Only spawn cards with designated sprites (for testing)
+        if not cardDef.sprite then
+            goto continue
+        end
+
         local card = createNewCard(cardID, 4000, 4000, PLANNING_STATE) -- offscreen for now
 
         table.insert(cardsToChange, card)
@@ -4501,6 +4506,8 @@ function initPlanningPhase()
         controller_nav.validate()          -- validate the nav system after setting up bindings and layers.
         controller_nav.debug_print_state() -- print state for debugging.
         controller_nav.focus_entity(card)  -- focus the newly created card.
+
+        ::continue::
     end
 
 
@@ -7446,7 +7453,7 @@ function initSurvivorEntity()
 
 
         -- play sound
-        playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
+        -- playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
 
         -- DISABLED: time slow and music silencing effects
         -- playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
@@ -7615,7 +7622,7 @@ function initSurvivorEntity()
                     local itemScript = getScriptTableFromEntityID(itemEntity)
                     if itemScript and itemScript.isPickup and not itemScript.pickedUp then
                         -- enable steering towards player
-                        steering.make_steerable(registry, itemEntity, 3000.0, 8000.0, math.pi * 2.0, 10)
+                        steering.make_steerable(registry, itemEntity, 4000.0, 15000.0, math.pi * 2.0, 10)
 
 
                         -- add a timer to move towards player
@@ -8105,7 +8112,7 @@ local function spawnWalkDust()
         easing = "cubic",
         gravity = 0,
         space = "world",
-        z = z_orders.player_vfx - 5,
+        z = z_orders.player_char - 1,
     })
 end
 

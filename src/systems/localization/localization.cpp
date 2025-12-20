@@ -256,29 +256,22 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   // 1) Bind the functions and record their metadata simultaneously.
   // The get_or_create_table logic is now handled inside bind_function.
 
-  struct FontData {
-    Font font{};
-    float fontLoadedSize = 32.f; // the size of the font when loaded
-    float fontScale = 1.0f;      // the scale of the font when rendered
-    float spacing = 1.0f;        // the horizontal spacing for the font
-    Vector2 fontRenderOffset = {
-        2,
-        0}; // the offset of the font when rendered, applied to ensure text is
-            // centered correctly in ui, it is multiplied by scale when applied
-    // <— store your codepoint list if you ever need it later
-    std::vector<int> codepoints;
-  };
   // bind fontdata type.
   lua.new_usertype<Font>("Font", "baseSize", &Font::baseSize, "texture",
                          &Font::texture, "recs", &Font::recs);
 
-  lua.new_usertype<FontData>(
-      "FontData", "font", &FontData::font, "fontLoadedSize",
-      &FontData::fontLoadedSize, "fontScale", &FontData::fontScale, "spacing",
-      &FontData::spacing, "fontRenderOffset", &FontData::fontRenderOffset,
-      "codepoints", &FontData::codepoints);
+  lua.new_usertype<globals::FontData>(
+      "FontData",
+      "fontsBySize", &globals::FontData::fontsBySize,
+      "defaultSize", &globals::FontData::defaultSize,
+      "fontScale", &globals::FontData::fontScale,
+      "spacing", &globals::FontData::spacing,
+      "fontRenderOffset", &globals::FontData::fontRenderOffset,
+      "codepoints", &globals::FontData::codepoints,
+      "getBestFontForSize", &globals::FontData::getBestFontForSize,
+      "getDefaultFont", &globals::FontData::getDefaultFont);
   rec.add_type("FontData").doc =
-      "Structure containing font data for localization.";
+      "Structure containing font data for localization with multi-size font cache support.";
 
   rec.add_type("localization").doc = "namespace for localization functions";
 

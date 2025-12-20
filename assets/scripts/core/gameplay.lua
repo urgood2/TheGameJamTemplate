@@ -273,7 +273,7 @@ local function unpack_rect_like(rectLike, fallbackTable)
 end
 
 local tooltipStyle = {
-    fontSize = 22,
+    fontSize = 26,  -- ProggyClean base is 13px, use 2x for readability
     labelBg = "black",
     idBg = "gold",
     idTextColor = "black",
@@ -296,21 +296,35 @@ local TOOLTIP_FONT_VERSION = 2
 
 -- Load tooltip font based on current language
 -- Korean requires a font with Hangul support; English uses Proggy
+-- Loads at multiple sizes to support body (22px) and title (24px) text
 local function loadTooltipFont()
     if not (localization and localization.loadNamedFont) then
         return
     end
 
     local lang = localization.getCurrentLanguage and localization.getCurrentLanguage() or "en_us"
-    local tooltipFont, tooltipSize
+    local tooltipFont
+    local tooltipSizes
+    local defaultSize
+
     if lang == "ko_kr" then
+        -- Galmuri11 is designed at 11px - use multiples of 11 for pixel-perfect rendering
         tooltipFont = "fonts/ko/Galmuri11-Bold.ttf"
-        tooltipSize = 22  -- Changed from 32 to match tooltipStyle.fontSize
+        tooltipSizes = {11, 22, 33, 44, 55, 66}
+        defaultSize = 22  -- 2x base size for readability
     else
+        -- ProggyClean is designed at 13px - use multiples of 13 for pixel-perfect rendering
         tooltipFont = "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf"
-        tooltipSize = 22  -- Changed from 44 to match tooltipStyle.fontSize
+        tooltipSizes = {13, 26, 39, 52, 65, 78}
+        defaultSize = 26  -- 2x base size for readability
     end
-    localization.loadNamedFont("tooltip", tooltipFont, tooltipSize)
+
+    if localization.loadNamedFontSizes then
+        localization.loadNamedFontSizes("tooltip", tooltipFont, tooltipSizes, defaultSize)
+    else
+        -- Fallback for backwards compatibility
+        localization.loadNamedFont("tooltip", tooltipFont, defaultSize)
+    end
     TOOLTIP_FONT_VERSION = TOOLTIP_FONT_VERSION + 1
 end
 
@@ -4350,11 +4364,33 @@ function initPlanningPhase()
             and is_state_active(PLANNING_STATE) then
             TagSynergyPanel.update(dt)
             TagSynergyPanel.draw()
+
+            -- Update synergy panel button visual feedback based on visibility
+            local synergyButton = planningUIEntities and planningUIEntities.synergy_toggle_button
+            if synergyButton and entity_cache.valid(synergyButton) then
+                local config = component_cache.get(synergyButton, UIConfig)
+                if config then
+                    local isVisible = TagSynergyPanel.isVisible()
+                    local targetColor = isVisible and util.getColor("apricot") or util.getColor("gray")
+                    config.color = targetColor
+                end
+            end
         end
 
         -- Update execution graph slide animation
         if CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
             CastExecutionGraphUI.updateSlide(dt)
+
+            -- Update execution graph button visual feedback based on visibility
+            local execGraphButton = planningUIEntities and planningUIEntities.exec_graph_toggle_button
+            if execGraphButton and entity_cache.valid(execGraphButton) then
+                local config = component_cache.get(execGraphButton, UIConfig)
+                if config then
+                    local isVisible = CastExecutionGraphUI.isVisible()
+                    local targetColor = isVisible and util.getColor("apricot") or util.getColor("gray")
+                    config.color = targetColor
+                end
+            end
         end
 
         if AvatarJokerStrip and AvatarJokerStrip.isActive and is_state_active
@@ -9479,6 +9515,12 @@ function initPlanningUI()
     ui.box.ClearStateTagsFromUIBox(planningUIEntities.synergy_button_box)
     ui.box.AddStateTagToUIBox(planningUIEntities.synergy_button_box, PLANNING_STATE)
 
+    -- Give button higher z-order than the synergy panel so it remains clickable
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(planningUIEntities.synergy_button_box,
+            (z_orders.ui_tooltips or 0) + 15)
+    end
+
     local synergyButtonEntity = ui.box.GetUIEByID(registry, "synergy_toggle_button")
     planningUIEntities.synergy_toggle_button = synergyButtonEntity
 
@@ -9539,6 +9581,13 @@ function initPlanningUI()
     end
     ui.box.ClearStateTagsFromUIBox(planningUIEntities.exec_graph_button_box)
     ui.box.AddStateTagToUIBox(planningUIEntities.exec_graph_button_box, PLANNING_STATE)
+
+    -- Give button higher z-order than the graph panel (which is at ui_tooltips + 5)
+    -- so it remains clickable even when the graph overlaps it
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(planningUIEntities.exec_graph_button_box,
+            (z_orders.ui_tooltips or 0) + 15)
+    end
 
     local execGraphButtonEntity = ui.box.GetUIEByID(registry, "exec_graph_toggle_button")
     planningUIEntities.exec_graph_toggle_button = execGraphButtonEntity

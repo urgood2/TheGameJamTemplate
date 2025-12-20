@@ -1,7 +1,7 @@
 {
   "en_us": {
     "file": "fonts/en/Kenney Thick.ttf",
-    "sizes": [16, 22, 32, 44],
+    "sizes": [13, 16, 22, 32, 44],
     "defaultSize": 22,
     "scale": 1.0,
     "spacing": 1.0,

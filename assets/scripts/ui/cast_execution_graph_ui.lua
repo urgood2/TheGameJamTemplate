@@ -54,7 +54,9 @@ CastExecutionGraphUI._slideState = "hidden"  -- "hidden", "entering", "visible",
 CastExecutionGraphUI._slideProgress = 0       -- 0 = fully hidden, 1 = fully visible
 CastExecutionGraphUI._slideSpeed = 4.0        -- Animation speed multiplier
 CastExecutionGraphUI._toggleButtonBounds = nil
+CastExecutionGraphUI._toggleButtonEntity = nil  -- Reference to button entity for dynamic bounds
 CastExecutionGraphUI._cachedHeight = 200      -- Cached panel height for slide offset
+CastExecutionGraphUI._buttonClickCooldown = 0  -- Prevent double-toggling
 
 -- Pending hover handlers to apply after spawn (workaround for initFunc not being called)
 local pendingTooltips = {}
@@ -640,13 +642,46 @@ function CastExecutionGraphUI.containsPoint(px, py)
 end
 
 --- Set the toggle button bounds for click-outside exclusion
-function CastExecutionGraphUI.setToggleButtonBounds(bounds)
+--- @param bounds table|nil Static bounds {x, y, w, h} or nil
+--- @param buttonEntity number|nil Optional entity to read dynamic bounds from
+function CastExecutionGraphUI.setToggleButtonBounds(bounds, buttonEntity)
     CastExecutionGraphUI._toggleButtonBounds = bounds
+    CastExecutionGraphUI._toggleButtonEntity = buttonEntity
+end
+
+--- Update button bounds from the actual button entity transform (call each frame)
+local function updateButtonBoundsFromEntity()
+    local entity = CastExecutionGraphUI._toggleButtonEntity
+    if not entity then return end
+    if not registry or not registry.valid or not registry:valid(entity) then return end
+
+    local t = component_cache.get(entity, Transform)
+    if not t then return end
+
+    -- Only update if we have valid dimensions
+    local w = t.actualW or 0
+    local h = t.actualH or 0
+    if w > 0 and h > 0 then
+        CastExecutionGraphUI._toggleButtonBounds = {
+            x = t.actualX or 0,
+            y = t.actualY or 0,
+            w = w,
+            h = h
+        }
+    end
 end
 
 --- Update slide animation (call each frame)
 function CastExecutionGraphUI.updateSlide(dt)
     if not dt then dt = GetFrameTime and GetFrameTime() or 0.016 end
+
+    -- Update button bounds from entity each frame for accurate click detection
+    updateButtonBoundsFromEntity()
+
+    -- Update button click cooldown
+    if CastExecutionGraphUI._buttonClickCooldown > 0 then
+        CastExecutionGraphUI._buttonClickCooldown = CastExecutionGraphUI._buttonClickCooldown - dt
+    end
 
     local state = CastExecutionGraphUI._slideState
     local progress = CastExecutionGraphUI._slideProgress
@@ -690,20 +725,30 @@ function CastExecutionGraphUI.updateSlide(dt)
         end
     end
 
-    -- Check for click-outside-to-dismiss when fully visible
-    if CastExecutionGraphUI._slideState == "visible" and input and input.action_down then
-        local clickedOutside = input.action_down("mouse_click")
-        if clickedOutside then
+    -- Handle button clicks and click-outside-to-dismiss
+    if input and input.action_down then
+        local clicked = input.action_down("mouse_click")
+        if clicked then
             local mouse = input.getMousePos and input.getMousePos() or (input.getMousePosition and input.getMousePosition())
             if mouse then
-                -- Check if click is inside toggle button (don't dismiss if clicking the button)
+                -- Check if click is inside toggle button
                 local buttonBounds = CastExecutionGraphUI._toggleButtonBounds
                 local insideButton = buttonBounds and
                     mouse.x >= buttonBounds.x and mouse.x <= buttonBounds.x + buttonBounds.w and
                     mouse.y >= buttonBounds.y and mouse.y <= buttonBounds.y + buttonBounds.h
 
-                if not insideButton and not CastExecutionGraphUI.containsPoint(mouse.x, mouse.y) then
-                    CastExecutionGraphUI.hide()
+                if insideButton then
+                    -- Explicitly handle button click here to bypass any z-order issues
+                    -- Only toggle if cooldown has elapsed (prevents double-toggling)
+                    if CastExecutionGraphUI._buttonClickCooldown <= 0 then
+                        CastExecutionGraphUI._buttonClickCooldown = 0.2  -- 200ms cooldown
+                        CastExecutionGraphUI.toggle()
+                    end
+                elseif CastExecutionGraphUI._slideState == "visible" then
+                    -- Click outside - dismiss only when visible
+                    if not CastExecutionGraphUI.containsPoint(mouse.x, mouse.y) then
+                        CastExecutionGraphUI.hide()
+                    end
                 end
             end
         end
@@ -715,6 +760,9 @@ function CastExecutionGraphUI.clear()
     pendingTooltips = {}
     tooltipCounter = 0
     destroyBox()
+    -- Reset slide state to ensure consistent behavior when re-entering planning
+    CastExecutionGraphUI._slideState = "hidden"
+    CastExecutionGraphUI._slideProgress = 0
 end
 
 local function planningActive()

@@ -109,7 +109,7 @@ void loadFontData(const std::string &jsonPath) {
         if (font.texture.id == 0) {
           SPDLOG_ERROR("Failed to LoadFontEx '{}' at {}px for '{}'", file, size, lang);
         } else {
-          SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+          SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
           fd.fontsBySize[size] = font;
           SPDLOG_INFO("Loaded font '{}' at {}px ({} glyphs) for '{}'", file, size, cps.size(), lang);
         }
@@ -167,10 +167,52 @@ void loadNamedFont(const std::string &name, const std::string &path,
     if (font.texture.id == 0) {
       SPDLOG_ERROR("Failed to load named font '{}' from '{}'", name, filePath);
     } else {
-      SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+      SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
       fd.fontsBySize[loadedSize] = font;
       SPDLOG_INFO("Loaded named font '{}' from '{}' ({} glyphs, size {})", name,
                   filePath, fd.codepoints.size(), size);
+      namedFonts[name] = std::move(fd);
+    }
+  } else {
+    SPDLOG_ERROR("Named font path is empty for '{}'", name);
+  }
+}
+
+void loadNamedFontSizes(const std::string &name, const std::string &path,
+                        const std::vector<int> &sizes, int defaultSize) {
+  globals::FontData fd;
+  fd.defaultSize = defaultSize;
+  fd.fontScale = 1.0f;
+  fd.spacing = 1.0f;
+  fd.fontRenderOffset = {0, 0};
+
+  // Use the current language's codepoints instead of just ASCII
+  const auto &currentFontData = getFontData();
+  if (!currentFontData.codepoints.empty()) {
+    fd.codepoints = currentFontData.codepoints;
+  } else {
+    for (int cp = 0x0020; cp <= 0x007E; ++cp) {
+      fd.codepoints.push_back(cp);
+    }
+  }
+
+  std::string filePath = util::getRawAssetPathNoUUID(path);
+  if (!filePath.empty()) {
+    for (int size : sizes) {
+      Font font = LoadFontEx(filePath.c_str(), size, fd.codepoints.data(),
+                             static_cast<int>(fd.codepoints.size()));
+
+      if (font.texture.id == 0) {
+        SPDLOG_ERROR("Failed to load named font '{}' at {}px from '{}'", name,
+                     size, filePath);
+      } else {
+        SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+        fd.fontsBySize[size] = font;
+        SPDLOG_INFO("Loaded named font '{}' at {}px ({} glyphs) from '{}'",
+                    name, size, fd.codepoints.size(), filePath);
+      }
+    }
+    if (!fd.fontsBySize.empty()) {
       namedFonts[name] = std::move(fd);
     }
   } else {
@@ -406,6 +448,28 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
       "---@param size number # The font size to load.\n"
       "---@return nil",
       "Loads a named font from a file path with the specified size.");
+
+  // loadNamedFontSizes - multi-size version
+  rec.bind_function(
+      lua, path, "loadNamedFontSizes",
+      [](const std::string &name, const std::string &fontPath,
+         sol::table sizesTable, int defaultSize) {
+        std::vector<int> sizes;
+        for (auto &kv : sizesTable) {
+          if (kv.second.is<int>()) {
+            sizes.push_back(kv.second.as<int>());
+          }
+        }
+        localization::loadNamedFontSizes(name, fontPath, sizes, defaultSize);
+      },
+      "---@param name string # The name to register the font under (e.g., "
+      "'tooltip').\n"
+      "---@param path string # The file path to the font file (TTF/OTF).\n"
+      "---@param sizes table # Array of font sizes to load (e.g., {16, 22, "
+      "24, 32}).\n"
+      "---@param defaultSize number # The default font size.\n"
+      "---@return nil",
+      "Loads a named font at multiple sizes for the multi-size font cache.");
 
   // getNamedFont
   rec.bind_function(

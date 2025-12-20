@@ -4071,9 +4071,10 @@ local function buildFourColumnBody(rows, opts) return buildNColumnBody(rows, 4, 
 
 local function makeDetailedStatsTooltip(snapshot)
     -- Compressed styling for detailed stats
+    -- Use 13px (ProggyClean base size) for pixel-perfect small text
     local compactPadding = 4
     local compactRowPadding = 1
-    local compactFontSize = 20
+    local compactFontSize = 13
     local opts = {
         colorCode = true,
         showHeaders = true,  -- Show section headers
@@ -4081,7 +4082,7 @@ local function makeDetailedStatsTooltip(snapshot)
         rowPadding = compactRowPadding,
         fontSize = compactFontSize,
         pillPadding = 2,
-        headerFontSize = 14,
+        headerFontSize = 13,  -- Match body font for consistency
         headerPadding = 2,
         textPadding = 1
     }

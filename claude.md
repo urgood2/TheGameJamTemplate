@@ -270,6 +270,8 @@ Text.update(dt)
 
 ## Global Helper Functions
 
+**C++ bindings are globals—don't `require()` them:** `registry`, `component_cache`, `localization`, `physics`, `globals` are exposed from C++ and available everywhere without import.
+
 ```lua
 -- Entity validation
 if ensure_entity(eid) then ... end

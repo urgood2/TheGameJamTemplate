@@ -393,7 +393,10 @@
 		"execution_graph_title": "Execution Graph",
 		"wand_prefix": "Wand: ",
 		"block_number": "Block {num}",
-		"press_key_auto_aim": "Press {key} to toggle auto-aim."
+		"press_key_auto_aim": "Press {key} to toggle auto-aim.",
+		"wave_label": "Wave",
+		"tutorial_to_move": "to move",
+		"tutorial_to_dash": "to dash"
 	},
 	"joker": {
 		"pyromaniac": {

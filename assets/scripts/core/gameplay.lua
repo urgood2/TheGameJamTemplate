@@ -1269,12 +1269,12 @@ function createNewTriggerSlotCard(id, x, y, gameStateToApply)
     return card
 end
 
-function transitionInOutCircle(duration, message, color, startPosition)
+function transitionInOutCircle(duration, messageKey, color, startPosition)
     local TransitionType = Node:extend()
 
     TransitionType.age = 0
     TransitionType.duration = duration or 1.0
-    TransitionType.message = message or ""
+    TransitionType.messageKey = messageKey or ""  -- Store the localization key instead of resolved text
     TransitionType.color = color or palette.getColor("gray")
     TransitionType.radius = 0
     TransitionType.x = startPosition.x or globals.getScreenWidth() * 0.5
@@ -1331,10 +1331,12 @@ function transitionInOutCircle(duration, message, color, startPosition)
             c.color = self.color
         end, z_orders.ui_transition, layer.DrawCommandSpace.Screen)
 
-        local textW = localization.getTextWidthWithCurrentFont(self.message, self.fontSize, 1)
+        -- Resolve the localized text dynamically each frame so it updates when language changes
+        local message = localization.get(self.messageKey)
+        local textW = localization.getTextWidthWithCurrentFont(message, self.fontSize, 1)
         -- scale text
         command_buffer.queueDrawText(layers.sprites, function(c)
-            c.text = self.message
+            c.text = message
             c.font = localization.getFont()
             c.x = globals.screenWidth() * 0.5 - textW * 0.5 * self.textScale
             c.y = globals.screenHeight() * 0.5 - (self.fontSize * self.textScale) * 0.5
@@ -1371,7 +1373,7 @@ function transitionGoldInterest(duration, startingGold, interestEarned)
     TransitionType.displayGold = TransitionType.startingGold
     TransitionType.targetGold = TransitionType.startingGold + TransitionType.interest
     TransitionType.interestPulse = 0
-    TransitionType.title = localization.get("ui.banked_gold_title")
+    TransitionType.titleKey = "ui.banked_gold_title"  -- Store localization key instead of resolved text
 
     function TransitionType:init()
         local maxRadius = math.sqrt(globals.screenWidth() ^ 2 + globals.screenHeight() ^ 2)
@@ -1424,10 +1426,12 @@ function transitionGoldInterest(duration, startingGold, interestEarned)
         local amountSize = 46 * self.textScale
         local interestSize = (24 + self.interestPulse * 6) * self.textScale
 
+        -- Resolve the localized text dynamically each frame so it updates when language changes
+        local title = localization.get(self.titleKey)
         command_buffer.queueDrawText(layers.sprites, function(c)
-            c.text = self.title
+            c.text = title
             c.font = font
-            c.x = self.centerX - localization.getTextWidthWithCurrentFont(self.title, labelSize, 1) * 0.5
+            c.x = self.centerX - localization.getTextWidthWithCurrentFont(title, labelSize, 1) * 0.5
             c.y = self.centerY - 64 * self.textScale
             c.color = Col(self.accent.r, self.accent.g, self.accent.b, 220)
             c.fontSize = labelSize
@@ -5564,8 +5568,8 @@ function initCombatSystem()
         local renderSpace = layer.DrawCommandSpace.World
         local usingPad = input and input.isPadConnected and input.isPadConnected(0)
 
-        local moveText = "to move"
-        local dashText = "to dash"
+        local moveText = localization.get("ui.tutorial_to_move")
+        local dashText = localization.get("ui.tutorial_to_dash")
         local fontSize = movementTutorialStyle.fontSize
         local moveTextWidth = localization.getTextWidthWithCurrentFont(moveText, fontSize, 1)
         local dashTextWidth = localization.getTextWidthWithCurrentFont(dashText, fontSize, 1)
@@ -6389,7 +6393,8 @@ local function loadWandsIntoExecutorFromBoards()
 end
 
 local function playStateTransition()
-    transitionInOutCircle(0.6, localization.get("ui.loading_transition_text"), util.getColor("black"),
+    -- Pass the localization key instead of resolved text so it updates when language changes
+    transitionInOutCircle(0.6, "ui.loading_transition_text", util.getColor("black"),
         { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
 end
 

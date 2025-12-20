@@ -81,7 +81,8 @@ function WaveDirector.start_next_wave()
     end
 
     -- Announce wave
-    WaveHelpers.show_floating_text("Wave " .. state.current_wave_index, { style = "wave_announce" })
+    local waveLabel = localization.get("ui.wave_label")
+    WaveHelpers.show_floating_text(waveLabel .. " " .. state.current_wave_index, { style = "wave_announce" })
     signal.emit("wave_started", state.current_wave_index, wave)
 
     -- Get spawn positions

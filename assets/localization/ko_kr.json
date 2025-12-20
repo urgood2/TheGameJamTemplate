@@ -393,7 +393,10 @@
 		"execution_graph_title": "실행 그래프",
 		"wand_prefix": "완드: ",
 		"block_number": "블록 {num}",
-		"press_key_auto_aim": "{key} 키를 눌러 자동 조준 전환"
+		"press_key_auto_aim": "{key} 키를 눌러 자동 조준 전환",
+		"wave_label": "웨이브",
+		"tutorial_to_move": "이동",
+		"tutorial_to_dash": "대시"
 	},
 	"joker": {
 		"pyromaniac": {

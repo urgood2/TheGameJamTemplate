@@ -452,8 +452,10 @@ Settings &getSettings();
 void setCurrentGameState(GameState state);
 
 struct FontData {
-  Font font{};
-  float fontLoadedSize = 32.f; // the size of the font when loaded
+  // Multi-size font cache
+  std::map<int, Font> fontsBySize;  // size -> Font (sorted)
+  int defaultSize = 22;
+
   float fontScale = 1.0f;      // the scale of the font when rendered
   float spacing = 1.0f;        // the horizontal spacing for the font
   Vector2 fontRenderOffset = {
@@ -461,6 +463,29 @@ struct FontData {
              // centered correctly in ui, it is multiplied by scale when applied
   // <— store your codepoint list if you ever need it later
   std::vector<int> codepoints;
+
+  // Returns best font for requested size (prefers larger for downscaling)
+  const Font& getBestFontForSize(float requestedSize) const {
+    int requested = static_cast<int>(std::round(requestedSize));
+
+    // Find smallest size >= requested (prefer downscaling)
+    auto it = fontsBySize.lower_bound(requested);
+    if (it != fontsBySize.end()) {
+      return it->second;
+    }
+    // Fall back to largest available size
+    if (!fontsBySize.empty()) {
+      return fontsBySize.rbegin()->second;
+    }
+    // Ultimate fallback - return empty font (should never happen)
+    static Font empty{};
+    return empty;
+  }
+
+  // Convenience method to get the default font
+  const Font& getDefaultFont() const {
+    return getBestFontForSize(static_cast<float>(defaultSize));
+  }
 };
 
 extern float uiPadding;

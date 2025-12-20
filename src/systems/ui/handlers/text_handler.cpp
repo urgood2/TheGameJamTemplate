@@ -55,8 +55,8 @@ void TextHandler::draw(
     // Calculate parallax values for shadow
     float rawScale = layoutScale.value() * fontData.fontScale;
     float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
-    float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
-    float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
+    float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
+    float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
 
     bool drawShadow = (config->button_UIE && ctx.buttonActive) ||
                       (!config->button_UIE && styleShadow && globals::getSettings().shadowsOn);
@@ -98,10 +98,12 @@ void TextHandler::draw(
                 cmd->scaleY = scale;
             }, zIndex);
 
-            float fontSize = fontData.fontLoadedSize;
+            float requestedSize = static_cast<float>(fontData.defaultSize);
+            const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+            float fontSize = static_cast<float>(bestFont.baseSize);
             if (config->text) {
                 layer::QueueCommand<layer::CmdTextPro>(layerPtr,
-                    [text = config->text.value(), font = fontData.font, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
+                    [text = config->text.value(), font = bestFont, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
                     cmd->text = text.c_str();
                     cmd->font = font;
                     cmd->x = textX;
@@ -153,11 +155,13 @@ void TextHandler::draw(
     }, zIndex);
 
     float spacing = config->textSpacing.value_or(fontData.spacing);
-    float fontSize = fontData.fontLoadedSize;
+    float requestedSize = static_cast<float>(fontData.defaultSize);
+    const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+    float fontSize = static_cast<float>(bestFont.baseSize);
 
     if (config->text) {
         layer::QueueCommand<layer::CmdTextPro>(layerPtr,
-            [text = config->text.value(), font = fontData.font, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
+            [text = config->text.value(), font = bestFont, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
             cmd->text = text.c_str();
             cmd->font = font;
             cmd->x = textX;

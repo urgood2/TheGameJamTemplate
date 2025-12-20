@@ -43,6 +43,16 @@ local UIOverlayToggles = require("ui.ui_overlay_toggles")
 local EntityInspector = require("ui.entity_inspector")
 local C = require("core.constants")
 local CardsData = require("data.cards")
+
+-- Localization helper: returns localized string or fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback or key
+end
+
 local LEVEL_UP_MODAL_DELAY = 0.5
 local ENABLE_SURVIVOR_MASK = false
 -- local bit = require("bit") -- LuaJIT's bit library
@@ -3234,7 +3244,7 @@ function makeWandTooltip(wand_def)
             config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
                 padding = tooltipStyle.rowPadding },
             children = {
-                makeTooltipPill("id: " .. tostring(wand_def.id), {
+                makeTooltipPill(L("wand.label.id_prefix", "ID: ") .. tostring(wand_def.id), {
                     background = tooltipStyle.idBg,
                     color = tooltipStyle.idTextColor or tooltipStyle.labelColor
                 })
@@ -3252,17 +3262,17 @@ function makeWandTooltip(wand_def)
         end
     end
 
-    addLine("type", wand_def.type)
-    addLine("cast block size", wand_def.cast_block_size)
-    addLine("cast delay", wand_def.cast_delay)
-    addLine("recharge", wand_def.recharge_time)
-    addLine("spread", wand_def.spread_angle)
-    addLine("shuffle", wand_def.shuffle, function(v) return v and "on" or "off" end)
-    addLine("total slots", wand_def.total_card_slots)
+    addLine(L("wand.label.type", "type"), wand_def.type)
+    addLine(L("wand.label.cast_block_size", "cast block size"), wand_def.cast_block_size)
+    addLine(L("wand.label.cast_delay", "cast delay"), wand_def.cast_delay)
+    addLine(L("wand.label.recharge", "recharge"), wand_def.recharge_time)
+    addLine(L("wand.label.spread", "spread"), wand_def.spread_angle)
+    addLine(L("wand.label.shuffle", "shuffle"), wand_def.shuffle, function(v) return v and L("ui.on", "on") or L("ui.off", "off") end)
+    addLine(L("wand.label.total_slots", "total slots"), wand_def.total_card_slots)
 
     -- Handle always_cast_cards specially
     if wand_def.always_cast_cards and #wand_def.always_cast_cards > 0 then
-        addLine("always casts", table.concat(wand_def.always_cast_cards, ", "))
+        addLine(L("wand.label.always_casts", "always casts"), table.concat(wand_def.always_cast_cards, ", "))
     end
 
     local v = dsl.vbox {
@@ -3338,7 +3348,7 @@ function makeCardTooltip(card_def, opts)
                 padding = rowPadding
             },
             children = {
-                makeTooltipPill("id: " .. tostring(cardId), {
+                makeTooltipPill(L("card.label.id_prefix", "ID: ") .. tostring(cardId), {
                     background = tooltipStyle.idBg,
                     color = tooltipStyle.idTextColor or tooltipStyle.labelColor
                 })
@@ -3347,12 +3357,13 @@ function makeCardTooltip(card_def, opts)
     end
 
     if opts.status then
-        addLine(rows, "status", opts.status, { background = "dim_gray", color = "white" },
+        addLine(rows, L("card.label.status", "status"), opts.status, { background = "dim_gray", color = "white" },
             { color = opts.statusColor or "red" })
     end
 
     -- Always show ID and type
-    addLine(rows, "type", card_def.type)
+    local localizedType = L("card.type." .. (card_def.type or "action"), card_def.type)
+    addLine(rows, L("card.label.type", "type"), localizedType)
 
     -- Show description if available (important for trigger cards)
     -- For trigger cards, use localized description if available
@@ -3364,37 +3375,38 @@ function makeCardTooltip(card_def, opts)
         end
     end
     if descriptionText and descriptionText ~= "" then
-        addLine(rows, "effect", descriptionText)
+        addLine(rows, L("card.label.effect", "effect"), descriptionText)
     end
 
     -- For trigger cards, show trigger-specific info
     if card_def.type == "trigger" then
         if card_def.trigger_type then
-            addLine(rows, "trigger", card_def.trigger_type)
+            addLine(rows, L("card.label.trigger", "trigger"), card_def.trigger_type)
         end
         if card_def.trigger_interval then
-            addLine(rows, "interval", string.format("%.1fs", card_def.trigger_interval / 1000))
+            addLine(rows, L("card.label.interval", "interval"), string.format("%.1fs", card_def.trigger_interval / 1000))
         end
         if card_def.trigger_distance then
-            addLine(rows, "distance", card_def.trigger_distance)
+            addLine(rows, L("card.label.distance", "distance"), card_def.trigger_distance)
         end
     end
 
-    addLine(rows, "max uses", card_def.max_uses)
-    addLine(rows, "mana cost", card_def.mana_cost)
-    addLine(rows, "damage", card_def.damage)
-    addLine(rows, "damage type", card_def.damage_type)
-    addLine(rows, "radius of effect", card_def.radius_of_effect)
-    addLine(rows, "spread angle", card_def.spread_angle)
-    addLine(rows, "projectile speed", card_def.projectile_speed)
-    addLine(rows, "lifetime", card_def.lifetime)
-    addLine(rows, "cast delay", card_def.cast_delay)
-    addLine(rows, "recharge", card_def.recharge_time)
-    addLine(rows, "spread modifier", card_def.spread_modifier)
-    addLine(rows, "speed modifier", card_def.speed_modifier)
-    addLine(rows, "lifetime modifier", card_def.lifetime_modifier)
-    addLine(rows, "crit chance mod", card_def.critical_hit_chance_modifier)
-    addLine(rows, "weight", card_def.weight)
+    addLine(rows, L("card.label.max_uses", "max uses"), card_def.max_uses)
+    addLine(rows, L("card.label.mana_cost", "mana cost"), card_def.mana_cost)
+    addLine(rows, L("card.label.damage", "damage"), card_def.damage)
+    local localizedDamageType = card_def.damage_type and L("card.damage_type." .. card_def.damage_type, card_def.damage_type) or nil
+    addLine(rows, L("card.label.damage_type", "damage type"), localizedDamageType)
+    addLine(rows, L("card.label.radius_of_effect", "radius of effect"), card_def.radius_of_effect)
+    addLine(rows, L("card.label.spread_angle", "spread angle"), card_def.spread_angle)
+    addLine(rows, L("card.label.projectile_speed", "projectile speed"), card_def.projectile_speed)
+    addLine(rows, L("card.label.lifetime", "lifetime"), card_def.lifetime)
+    addLine(rows, L("card.label.cast_delay", "cast delay"), card_def.cast_delay)
+    addLine(rows, L("card.label.recharge", "recharge"), card_def.recharge_time)
+    addLine(rows, L("card.label.spread_modifier", "spread modifier"), card_def.spread_modifier)
+    addLine(rows, L("card.label.speed_modifier", "speed modifier"), card_def.speed_modifier)
+    addLine(rows, L("card.label.lifetime_modifier", "lifetime modifier"), card_def.lifetime_modifier)
+    addLine(rows, L("card.label.crit_modifier", "crit chance mod"), card_def.critical_hit_chance_modifier)
+    addLine(rows, L("card.label.weight", "weight"), card_def.weight)
 
     local rarityColors = {
         common = "gray",
@@ -3424,12 +3436,14 @@ function makeCardTooltip(card_def, opts)
         if assignment.rarity then
             local rarity = tostring(assignment.rarity)
             local rarityBg = rarityColors[rarity] or tooltipStyle.idBg
-            table.insert(pillDefs, makeTooltipPill(rarity, { background = rarityBg, color = "white" }))
+            local localizedRarity = L("card.rarity." .. rarity, rarity)
+            table.insert(pillDefs, makeTooltipPill(localizedRarity, { background = rarityBg, color = "white" }))
         end
         if assignment.tags and #assignment.tags > 0 then
             for _, tag in ipairs(assignment.tags) do
                 local tagBg = tagColors[tag] or "dim_gray"
-                table.insert(pillDefs, makeTooltipPill(tostring(tag), { background = tagBg, color = "white" }))
+                local localizedTag = L("card.tag." .. tostring(tag), tostring(tag))
+                table.insert(pillDefs, makeTooltipPill(localizedTag, { background = tagBg, color = "white" }))
             end
         end
         if #pillDefs > 0 then
@@ -3676,7 +3690,15 @@ StatTooltipSystem = {
         "hazard_radius_pct", "hazard_damage_pct", "hazard_duration",
         "max_poison_stacks_pct",
         "summon_hp_pct", "summon_damage_pct", "summon_persistence",
-        "barrier_refresh_rate_pct", "health_pct", "melee_damage_pct", "melee_crit_chance_pct"
+        "barrier_refresh_rate_pct", "health_pct", "melee_damage_pct", "melee_crit_chance_pct",
+        -- Elemental damage modifiers
+        "fire_modifier_pct", "cold_modifier_pct", "lightning_modifier_pct",
+        "acid_modifier_pct", "vitality_modifier_pct", "aether_modifier_pct", "chaos_modifier_pct",
+        -- Physical/pierce modifiers
+        "physical_modifier_pct", "pierce_modifier_pct",
+        -- DoT duration modifiers
+        "burn_duration_pct", "frostburn_duration_pct", "electrocute_duration_pct",
+        "poison_duration_pct", "vitality_decay_duration_pct", "bleed_duration_pct", "trauma_duration_pct"
     },
 
     -- Group labels
@@ -3748,6 +3770,25 @@ StatTooltipSystem.DEFS = {
     health_pct = { label = "stats.health_bonus", format = SF.PCT, group = "core" },
     melee_damage_pct = { label = "stats.melee_damage", format = SF.PCT, group = "offense" },
     melee_crit_chance_pct = { label = "stats.melee_crit", format = SF.PCT, group = "offense" },
+    -- Elemental damage modifiers (derived from Spirit)
+    fire_modifier_pct = { label = "stats.fire_modifier", format = SF.PCT, group = "elemental" },
+    cold_modifier_pct = { label = "stats.cold_modifier", format = SF.PCT, group = "elemental" },
+    lightning_modifier_pct = { label = "stats.lightning_modifier", format = SF.PCT, group = "elemental" },
+    acid_modifier_pct = { label = "stats.acid_modifier", format = SF.PCT, group = "elemental" },
+    vitality_modifier_pct = { label = "stats.vitality_modifier", format = SF.PCT, group = "elemental" },
+    aether_modifier_pct = { label = "stats.aether_modifier", format = SF.PCT, group = "elemental" },
+    chaos_modifier_pct = { label = "stats.chaos_modifier", format = SF.PCT, group = "elemental" },
+    -- Physical/pierce modifiers (derived from Cunning)
+    physical_modifier_pct = { label = "stats.physical_modifier", format = SF.PCT, group = "offense" },
+    pierce_modifier_pct = { label = "stats.pierce_modifier", format = SF.PCT, group = "offense" },
+    -- DoT duration modifiers
+    burn_duration_pct = { label = "stats.burn_duration", format = SF.PCT, group = "status" },
+    frostburn_duration_pct = { label = "stats.frostburn_duration", format = SF.PCT, group = "status" },
+    electrocute_duration_pct = { label = "stats.electrocute_duration", format = SF.PCT, group = "status" },
+    poison_duration_pct = { label = "stats.poison_duration", format = SF.PCT, group = "status" },
+    vitality_decay_duration_pct = { label = "stats.vitality_decay_duration", format = SF.PCT, group = "status" },
+    bleed_duration_pct = { label = "stats.bleed_duration", format = SF.PCT, group = "status" },
+    trauma_duration_pct = { label = "stats.trauma_duration", format = SF.PCT, group = "status" },
 }
 
 -- Helper functions as methods
@@ -9247,7 +9288,7 @@ function initPlanningUI()
     remove_default_state_tag(planningUIEntities.start_action_button_box)
 
     -- simple stats button with hover tooltip
-    local statsButtonLabel = ui.definitions.getTextFromString("[Stats](color=white;fontSize=14;shadow=false)")
+    local statsButtonLabel = ui.definitions.getTextFromString("[" .. L("ui.stats_button", "Stats") .. "](color=white;fontSize=14;shadow=false)")
     local statsButtonTemplate = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
@@ -9264,7 +9305,7 @@ function initPlanningUI()
         :addChild(statsButtonLabel)
         :build()
 
-    local detailedButtonLabel = ui.definitions.getTextFromString("[Detailed](color=white;fontSize=14;shadow=false)")
+    local detailedButtonLabel = ui.definitions.getTextFromString("[" .. L("ui.detailed_button", "Detailed") .. "](color=white;fontSize=14;shadow=false)")
     local detailedButtonTemplate = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(

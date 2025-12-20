@@ -128,9 +128,17 @@ void loadNamedFont(const std::string &name, const std::string &path,
   fd.spacing = 1.0f;
   fd.fontRenderOffset = {0, 0};
 
-  // Default ASCII codepoints
-  for (int cp = 0x0020; cp <= 0x007E; ++cp) {
-    fd.codepoints.push_back(cp);
+  // Use the current language's codepoints instead of just ASCII
+  // This ensures Korean and other non-ASCII characters render properly
+  const auto& currentFontData = getFontData();
+  if (!currentFontData.codepoints.empty()) {
+    // Copy codepoints from current language font
+    fd.codepoints = currentFontData.codepoints;
+  } else {
+    // Fallback to ASCII if no language font is loaded
+    for (int cp = 0x0020; cp <= 0x007E; ++cp) {
+      fd.codepoints.push_back(cp);
+    }
   }
 
   std::string filePath = util::getRawAssetPathNoUUID(path);

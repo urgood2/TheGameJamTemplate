@@ -205,32 +205,6 @@ card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
 
--- Register language change callback to clear tooltip caches
--- This ensures tooltips are rebuilt with the new language's text
-if localization and localization.onLanguageChanged then
-    localization.onLanguageChanged(function(newLang)
-        -- Clear all tooltip caches so they get rebuilt with new language
-        for id, entity in pairs(card_tooltip_cache or {}) do
-            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
-                registry:destroy(entity)
-            end
-        end
-        for id, entity in pairs(card_tooltip_disabled_cache or {}) do
-            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
-                registry:destroy(entity)
-            end
-        end
-        for id, entity in pairs(wand_tooltip_cache or {}) do
-            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
-                registry:destroy(entity)
-            end
-        end
-        card_tooltip_cache = {}
-        card_tooltip_disabled_cache = {}
-        wand_tooltip_cache = {}
-        previously_hovered_tooltip = nil
-    end)
-end
 local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then
         return
@@ -320,22 +294,62 @@ local tooltipStyle = {
 }
 local TOOLTIP_FONT_VERSION = 2
 
--- Initialize tooltip font (language-aware)
+-- Load tooltip font based on current language
 -- Korean requires a font with Hangul support; English uses Proggy
+local function loadTooltipFont()
+    if not (localization and localization.loadNamedFont) then
+        return
+    end
+
+    local lang = localization.getCurrentLanguage and localization.getCurrentLanguage() or "en_us"
+    local tooltipFont, tooltipSize
+    if lang == "ko_kr" then
+        tooltipFont = "fonts/ko/Galmuri11-Bold.ttf"
+        tooltipSize = 32
+    else
+        tooltipFont = "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf"
+        tooltipSize = 44
+    end
+    localization.loadNamedFont("tooltip", tooltipFont, tooltipSize)
+    TOOLTIP_FONT_VERSION = TOOLTIP_FONT_VERSION + 1
+end
+
+-- Initialize tooltip font at startup
 if localization and localization.loadNamedFont then
     local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
     if not alreadyLoaded then
-        local lang = localization.getCurrentLanguage and localization.getCurrentLanguage() or "en_us"
-        local tooltipFont, tooltipSize
-        if lang == "ko_kr" then
-            tooltipFont = "fonts/ko/Galmuri11-Bold.ttf"
-            tooltipSize = 32
-        else
-            tooltipFont = "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf"
-            tooltipSize = 44
-        end
-        localization.loadNamedFont("tooltip", tooltipFont, tooltipSize)
+        loadTooltipFont()
     end
+end
+
+-- Register language change callback to reload tooltip font and clear caches
+-- This ensures tooltips are rebuilt with the new language's text and font
+if localization and localization.onLanguageChanged then
+    localization.onLanguageChanged(function(newLang)
+        -- Reload tooltip font for new language (increments TOOLTIP_FONT_VERSION)
+        loadTooltipFont()
+
+        -- Clear all tooltip caches so they get rebuilt with new language
+        for id, entity in pairs(card_tooltip_cache or {}) do
+            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
+                registry:destroy(entity)
+            end
+        end
+        for id, entity in pairs(card_tooltip_disabled_cache or {}) do
+            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
+                registry:destroy(entity)
+            end
+        end
+        for id, entity in pairs(wand_tooltip_cache or {}) do
+            if entity and entity_cache and entity_cache.valid(entity) and registry and registry:valid(entity) then
+                registry:destroy(entity)
+            end
+        end
+        card_tooltip_cache = {}
+        card_tooltip_disabled_cache = {}
+        wand_tooltip_cache = {}
+        previously_hovered_tooltip = nil
+    end)
 end
 
 -- Helper to get the tooltip font (with fallback)
@@ -3616,6 +3630,25 @@ local function collectPlayerStatsSnapshot()
         health_pct = stats:get('health_pct'),
         melee_damage_pct = stats:get('melee_damage_pct'),
         melee_crit_chance_pct = stats:get('melee_crit_chance_pct'),
+        -- Elemental damage modifiers (derived from Spirit)
+        fire_modifier_pct = stats:get('fire_modifier_pct'),
+        cold_modifier_pct = stats:get('cold_modifier_pct'),
+        lightning_modifier_pct = stats:get('lightning_modifier_pct'),
+        acid_modifier_pct = stats:get('acid_modifier_pct'),
+        vitality_modifier_pct = stats:get('vitality_modifier_pct'),
+        aether_modifier_pct = stats:get('aether_modifier_pct'),
+        chaos_modifier_pct = stats:get('chaos_modifier_pct'),
+        -- Physical/pierce modifiers (derived from Cunning)
+        physical_modifier_pct = stats:get('physical_modifier_pct'),
+        pierce_modifier_pct = stats:get('pierce_modifier_pct'),
+        -- DoT duration modifiers
+        burn_duration_pct = stats:get('burn_duration_pct'),
+        frostburn_duration_pct = stats:get('frostburn_duration_pct'),
+        electrocute_duration_pct = stats:get('electrocute_duration_pct'),
+        poison_duration_pct = stats:get('poison_duration_pct'),
+        vitality_decay_duration_pct = stats:get('vitality_decay_duration_pct'),
+        bleed_duration_pct = stats:get('bleed_duration_pct'),
+        trauma_duration_pct = stats:get('trauma_duration_pct'),
         per_type = perType
     }
 end
@@ -3942,15 +3975,23 @@ function StatTooltipSystem.buildElementalRows(perType, opts)
 
     for _, entry in ipairs(perType) do
         local t = entry.type or "?"
-        local function addRow(suffix, val)
+
+        -- Localize damage type name
+        local localizedType = L("stats.damage_type." .. t, t)
+
+        local function addRow(suffixKey, val)
             -- Skip nil/zero values unless showZeros is true
             local isZero = not val or math.abs(val) < 0.01
             if isZero and not opts.showZeros then return end
 
             local displayVal = val or 0
-            local fmt = suffix:match("%%") and string.format("%d%%", math.floor(displayVal + 0.5)) or tostring(math.floor(displayVal + 0.5))
+
+            -- Localize suffix
+            local localizedSuffix = L("stats.suffix." .. suffixKey, suffixKey)
+
+            local fmt = suffixKey:match("pct") and string.format("%d%%", math.floor(displayVal + 0.5)) or tostring(math.floor(displayVal + 0.5))
             local clr = opts.colorCode and (displayVal > 0 and "green" or (displayVal < 0 and "red" or (tooltipStyle.valueColor or "white"))) or tooltipStyle.valueColor
-            local r = makeTooltipRow(t .. " " .. suffix, fmt, {
+            local r = makeTooltipRow(localizedType .. " " .. localizedSuffix, fmt, {
                 rowPadding = opts.rowPadding or tooltipStyle.rowPadding,
                 labelOpts = {
                     background = tooltipStyle.labelBg,
@@ -3968,9 +4009,9 @@ function StatTooltipSystem.buildElementalRows(perType, opts)
             if r then rows[#rows + 1] = r end
         end
         addRow("dmg", entry.dmg)
-        addRow("dmg %", entry.mod)
+        addRow("dmg_pct", entry.mod)
         addRow("resist", entry.resist)
-        addRow("dur %", entry.duration)
+        addRow("dur_pct", entry.duration)
     end
     return rows
 end

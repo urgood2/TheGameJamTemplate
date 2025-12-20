@@ -84,7 +84,31 @@
 		"physical_modifier": "물리 피해",
 		"pierce_modifier": "관통 피해",
 		"bleed_duration": "출혈 지속시간",
-		"trauma_duration": "외상 지속시간"
+		"trauma_duration": "외상 지속시간",
+		"damage_type": {
+			"physical": "물리",
+			"pierce": "관통",
+			"bleed": "출혈",
+			"trauma": "외상",
+			"fire": "화염",
+			"cold": "냉기",
+			"lightning": "번개",
+			"acid": "산성",
+			"vitality": "생명력",
+			"aether": "에테르",
+			"chaos": "혼돈",
+			"burn": "화상",
+			"frostburn": "동상",
+			"electrocute": "감전",
+			"poison": "독",
+			"vitality_decay": "생명력 부식"
+		},
+		"suffix": {
+			"dmg": "피해",
+			"dmg_pct": "피해 %",
+			"resist": "저항",
+			"dur_pct": "지속시간 %"
+		}
 	},
 	"ui": {
 		"stats_button": "능력치",

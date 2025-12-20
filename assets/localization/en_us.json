@@ -84,7 +84,31 @@
 		"physical_modifier": "Physical Damage",
 		"pierce_modifier": "Pierce Damage",
 		"bleed_duration": "Bleed Duration",
-		"trauma_duration": "Trauma Duration"
+		"trauma_duration": "Trauma Duration",
+		"damage_type": {
+			"physical": "Physical",
+			"pierce": "Pierce",
+			"bleed": "Bleed",
+			"trauma": "Trauma",
+			"fire": "Fire",
+			"cold": "Cold",
+			"lightning": "Lightning",
+			"acid": "Acid",
+			"vitality": "Vitality",
+			"aether": "Aether",
+			"chaos": "Chaos",
+			"burn": "Burn",
+			"frostburn": "Frostburn",
+			"electrocute": "Electrocute",
+			"poison": "Poison",
+			"vitality_decay": "Vitality Decay"
+		},
+		"suffix": {
+			"dmg": "Dmg",
+			"dmg_pct": "Dmg %",
+			"resist": "Resist",
+			"dur_pct": "Dur %"
+		}
 	},
 	"ui": {
 		"stats_button": "Stats",

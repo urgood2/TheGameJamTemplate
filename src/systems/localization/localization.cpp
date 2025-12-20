@@ -427,6 +427,44 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
                     "---@return boolean # True if the named font exists.",
                     "Checks if a named font has been loaded.");
 
+  // getBestFontForSize (for named fonts)
+  rec.bind_function(
+      lua, path, "getBestFontForSize",
+      [](const std::string &fontName, float requestedSize) -> Font {
+        const auto &fontData = getNamedFont(fontName);
+        return fontData.getBestFontForSize(requestedSize);
+      },
+      "---@param fontName string # The name of the font to get.\n"
+      "---@param requestedSize number # The requested font size.\n"
+      "---@return Font # The best matching font for the requested size.",
+      "Gets the best font for the requested size from a named font, "
+      "preferring downscaling from larger sizes.");
+
+  // getBestFontSizeFor (for layout calculations)
+  rec.bind_function(
+      lua, path, "getBestFontSizeFor",
+      [](const std::string &fontName, float requestedSize) -> int {
+        const auto &fontData = getNamedFont(fontName);
+        return fontData.getBestFontForSize(requestedSize).baseSize;
+      },
+      "---@param fontName string # The name of the font to check.\n"
+      "---@param requestedSize number # The requested font size.\n"
+      "---@return number # The actual baseSize of the best matching font.",
+      "Gets the actual size of the best font for layout calculations.");
+
+  // getBestLangFontForSize (for current language font)
+  rec.bind_function(
+      lua, path, "getBestLangFontForSize",
+      [](float requestedSize) -> Font {
+        const auto &fontData = getFontData();
+        return fontData.getBestFontForSize(requestedSize);
+      },
+      "---@param requestedSize number # The requested font size.\n"
+      "---@return Font # The best matching font for the requested size from "
+      "the current language font.",
+      "Gets the best font for the requested size from the current language "
+      "font, preferring downscaling from larger sizes.");
+
   // onLanguageChanged
   rec.bind_function(
       lua, path, "onLanguageChanged", &localization::onLanguageChanged,

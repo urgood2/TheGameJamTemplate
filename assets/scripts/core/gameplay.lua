@@ -9427,6 +9427,73 @@ function initPlanningUI()
         end
     end
 
+    -- Synergy panel toggle button
+    local synergyButtonLabel = ui.definitions.getTextFromString("[" .. L("ui.synergies_button", "Synergies") .. "](color=white;fontSize=14;shadow=false)")
+    local synergyButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addId("synergy_toggle_button")
+            :addColor(util.getColor("gray"))
+            :addPadding(8.0)
+            :addEmboss(2.0)
+            :addHover(true)
+            :addMinWidth(80)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+            :build()
+        )
+        :addChild(synergyButtonLabel)
+        :build()
+
+    local synergyRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addColor(util.getColor("blank"))
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_TOP))
+            :build()
+        )
+        :addChild(synergyButtonTemplate)
+        :build()
+
+    -- Position synergy button in top-right area
+    local synergyPosX = globals.screenWidth() - 120
+    local synergyPosY = 20
+    planningUIEntities.synergy_button_box = ui.box.Initialize({ x = synergyPosX, y = synergyPosY }, synergyRoot)
+    local synergyTransform = component_cache.get(planningUIEntities.synergy_button_box, Transform)
+    if synergyTransform then
+        synergyTransform.actualX = synergyPosX
+        synergyTransform.visualX = synergyTransform.actualX
+        synergyTransform.actualY = synergyPosY
+        synergyTransform.visualY = synergyTransform.actualY
+    end
+    ui.box.ClearStateTagsFromUIBox(planningUIEntities.synergy_button_box)
+    ui.box.AddStateTagToUIBox(planningUIEntities.synergy_button_box, PLANNING_STATE)
+
+    local synergyButtonEntity = ui.box.GetUIEByID(registry, "synergy_toggle_button")
+    planningUIEntities.synergy_toggle_button = synergyButtonEntity
+    if synergyButtonEntity and entity_cache.valid(synergyButtonEntity) then
+        local go = component_cache.get(synergyButtonEntity, GameObject)
+        if go then
+            go.state.hoverEnabled = true
+            go.state.collisionEnabled = true
+            go.methods.onClick = function()
+                TagSynergyPanel.toggle()
+            end
+        end
+
+        -- Set button bounds for click-outside exclusion
+        local buttonTransform = component_cache.get(planningUIEntities.synergy_button_box, Transform)
+        if buttonTransform then
+            TagSynergyPanel.setToggleButtonBounds({
+                x = buttonTransform.actualX or synergyPosX,
+                y = buttonTransform.actualY or synergyPosY,
+                w = buttonTransform.actualW or 100,
+                h = buttonTransform.actualH or 40
+            })
+        end
+    end
+
     if not playerStatsSignalRegistered then
         signal.register("stats_recomputed", function(payload)
             local ctx = combat_context

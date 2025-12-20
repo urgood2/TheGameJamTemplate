@@ -96,6 +96,13 @@ TagSynergyPanel.layout = {
     panelWidth = 420
 }
 
+-- Slide animation state
+TagSynergyPanel._slideState = "hidden"  -- "hidden", "entering", "visible", "exiting"
+TagSynergyPanel._slideProgress = 0       -- 0 = fully hidden, 1 = fully visible
+TagSynergyPanel._slideSpeed = 4.0        -- Animation speed multiplier
+
+local Easing = require("util.easing")
+
 if localization and localization.loadNamedFont then
     local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
     if not alreadyLoaded then
@@ -717,6 +724,71 @@ function TagSynergyPanel.setLayout(layout)
     }
 end
 
+--- Show the synergy panel with slide-up animation
+function TagSynergyPanel.show()
+    if TagSynergyPanel._slideState == "visible" or TagSynergyPanel._slideState == "entering" then
+        return
+    end
+    TagSynergyPanel._slideState = "entering"
+end
+
+--- Hide the synergy panel with slide-down animation
+function TagSynergyPanel.hide()
+    if TagSynergyPanel._slideState == "hidden" or TagSynergyPanel._slideState == "exiting" then
+        return
+    end
+    TagSynergyPanel._slideState = "exiting"
+    hideActiveTooltip()
+end
+
+--- Toggle the synergy panel visibility
+function TagSynergyPanel.toggle()
+    if TagSynergyPanel._slideState == "visible" or TagSynergyPanel._slideState == "entering" then
+        TagSynergyPanel.hide()
+    else
+        TagSynergyPanel.show()
+    end
+end
+
+--- Check if the panel is currently visible (or animating in)
+function TagSynergyPanel.isVisible()
+    return TagSynergyPanel._slideState == "visible" or TagSynergyPanel._slideState == "entering"
+end
+
+--- Get the current panel bounds for hit-testing (includes slide offset)
+function TagSynergyPanel.getPanelBounds()
+    local cache = TagSynergyPanel._layoutCache
+    if not cache then return nil end
+    local slideOffset = TagSynergyPanel._currentSlideOffset or 0
+    return {
+        x = cache.panelLeft,
+        y = cache.panelTop + slideOffset,
+        w = cache.panelW,
+        h = cache.totalHeight
+    }
+end
+
+--- Check if a point is inside the panel
+function TagSynergyPanel.containsPoint(px, py)
+    local bounds = TagSynergyPanel.getPanelBounds()
+    if not bounds then return false end
+    return px >= bounds.x and px <= bounds.x + bounds.w
+       and py >= bounds.y and py <= bounds.y + bounds.h
+end
+
+--- Handle click-outside to dismiss
+function TagSynergyPanel.handleClickOutside(mx, my)
+    if TagSynergyPanel._slideState ~= "visible" then return end
+    if not TagSynergyPanel.containsPoint(mx, my) then
+        TagSynergyPanel.hide()
+    end
+end
+
+--- Set the toggle button bounds for click-outside exclusion
+function TagSynergyPanel.setToggleButtonBounds(bounds)
+    TagSynergyPanel._toggleButtonBounds = bounds
+end
+
 function TagSynergyPanel.setData(tagCounts, breakpoints)
     if breakpoints then
         TagSynergyPanel.breakpoints, TagSynergyPanel.breakpointDetails = normalizeBreakpoints(breakpoints)
@@ -765,8 +837,56 @@ function TagSynergyPanel.update(dt)
     end
     if not dt then dt = GetFrameTime() end
 
+    -- Update slide animation state machine
+    local state = TagSynergyPanel._slideState
+    local progress = TagSynergyPanel._slideProgress
+    local speed = TagSynergyPanel._slideSpeed
+
+    if state == "entering" then
+        progress = math.min(1, progress + dt * speed)
+        TagSynergyPanel._slideProgress = progress
+        if progress >= 1 then
+            TagSynergyPanel._slideState = "visible"
+            TagSynergyPanel._slideProgress = 1
+        end
+    elseif state == "exiting" then
+        progress = math.max(0, progress - dt * speed)
+        TagSynergyPanel._slideProgress = progress
+        if progress <= 0 then
+            TagSynergyPanel._slideState = "hidden"
+            TagSynergyPanel._slideProgress = 0
+            clearHover()
+        end
+    end
+
+    -- Skip further updates if fully hidden
+    if TagSynergyPanel._slideState == "hidden" then
+        clearHover()
+        TagSynergyPanel._layoutCache = nil
+        return
+    end
+
     TagSynergyPanel._pulses = TagSynergyPanel._pulses or {}
     TagSynergyPanel._layoutCache = computeLayoutCache()
+
+    -- Check for click-outside-to-dismiss when fully visible
+    if TagSynergyPanel._slideState == "visible" and input and input.action_down then
+        local clickedOutside = input.action_down("mouse_click")
+        if clickedOutside then
+            local mouse = getMousePosition()
+            if mouse then
+                -- Check if click is inside synergy toggle button (don't dismiss if clicking the button)
+                local buttonBounds = TagSynergyPanel._toggleButtonBounds
+                local insideButton = buttonBounds and
+                    mouse.x >= buttonBounds.x and mouse.x <= buttonBounds.x + buttonBounds.w and
+                    mouse.y >= buttonBounds.y and mouse.y <= buttonBounds.y + buttonBounds.h
+
+                if not insideButton and not TagSynergyPanel.containsPoint(mouse.x, mouse.y) then
+                    TagSynergyPanel.hide()
+                end
+            end
+        end
+    end
 
     for _, entry in ipairs(TagSynergyPanel.entries) do
         local previous = TagSynergyPanel.displayedCounts[entry.tag]
@@ -838,6 +958,12 @@ function TagSynergyPanel.draw()
         return
     end
 
+    -- Skip drawing if fully hidden
+    if TagSynergyPanel._slideState == "hidden" then
+        clearHover()
+        return
+    end
+
     TagSynergyPanel._layoutCache = computeLayoutCache()
     local layoutCache = TagSynergyPanel._layoutCache
     local screenW = layoutCache.screenW
@@ -845,13 +971,25 @@ function TagSynergyPanel.draw()
     local font = localization.getFont()
     local totalRows = layoutCache.totalRows
 
+    -- Calculate slide offset (panel slides up from bottom)
+    local slideProgress = TagSynergyPanel._slideProgress
+    local easedProgress
+    if TagSynergyPanel._slideState == "entering" then
+        easedProgress = Easing.outQuad.f(slideProgress)
+    elseif TagSynergyPanel._slideState == "exiting" then
+        easedProgress = Easing.outQuad.f(slideProgress)
+    else
+        easedProgress = 1
+    end
+    local slideOffset = (1 - easedProgress) * (layoutCache.totalHeight + 40)
+
     -- If nothing to show, render a small hint and exit.
     if totalRows == 0 then
         local hint = "Add tagged cards to start a synergy"
         local fontSize = 15
         local w = localization.getTextWidthWithCurrentFont(hint, fontSize, 1)
         local x = screenW - w - math.max(14, layoutCache.marginX or 0)
-        local y = math.max(24, layoutCache.marginTop - 56)
+        local y = math.max(24, layoutCache.marginTop - 56) + slideOffset
         command_buffer.queueDrawText(layers.ui, function(c)
             c.text = hint
             c.font = font
@@ -867,9 +1005,13 @@ function TagSynergyPanel.draw()
     local space = layer.DrawCommandSpace.Screen
     local baseZ = 100  -- Lower z so other UI can draw above
 
+    -- Apply slide offset to panel position
+    local panelCenterY = layoutCache.panelCenterY + slideOffset
+    local panelTop = layoutCache.panelTop + slideOffset
+
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = layoutCache.panelCenterX
-        c.y = layoutCache.panelCenterY
+        c.y = panelCenterY
         c.w = layoutCache.panelW + layoutCache.outlineWidth * 2
         c.h = layoutCache.totalHeight + layoutCache.outlineWidth * 2
         c.rx = layoutCache.panelRadius + layoutCache.outlineWidth
@@ -879,7 +1021,7 @@ function TagSynergyPanel.draw()
 
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = layoutCache.panelCenterX
-        c.y = layoutCache.panelCenterY
+        c.y = panelCenterY
         c.w = layoutCache.panelW
         c.h = layoutCache.totalHeight
         c.rx = layoutCache.panelRadius
@@ -891,14 +1033,18 @@ function TagSynergyPanel.draw()
         c.text = localization and localization.get and localization.get("ui.tag_synergies_title") or "Tag Synergies"
         c.font = font
         c.x = layoutCache.panelLeft + layoutCache.paddingX
-        c.y = layoutCache.panelTop + layoutCache.paddingY - 2
+        c.y = panelTop + layoutCache.paddingY - 2
         c.color = colors.header
         c.fontSize = 22
     end, baseZ + 2, space)
 
+    -- Store slideOffset for use in row rendering
+    TagSynergyPanel._currentSlideOffset = slideOffset
+
     for _, row in ipairs(layoutCache.rows or {}) do
         local entry = row.entry
-        local rowCenterY = row.centerY
+        local rowCenterY = row.centerY + slideOffset
+        local rowTop = row.top + slideOffset
         local accent = colorForTag(entry.tag)
         local pulse = TagSynergyPanel._pulses[entry.tag] or 0
         local nameSize = 20 * (1 + pulse * 0.08)
@@ -926,8 +1072,14 @@ function TagSynergyPanel.draw()
 
         for _, seg in ipairs(row.segments or {}) do
             local fill = entry.count / seg.threshold
-            drawSegment(seg.left, seg.top, seg.width, seg.height, fill, accent, entry.tag, seg.threshold, baseZ + 2, space, font)
+            local segTop = seg.top + slideOffset
+            drawSegment(seg.left, segTop, seg.width, seg.height, fill, accent, entry.tag, seg.threshold, baseZ + 2, space, font)
         end
+    end
+
+    -- Don't register hover regions while animating
+    if TagSynergyPanel._slideState ~= "visible" then
+        return
     end
 
     -- Register hover regions with HoverRegistry
@@ -936,7 +1088,7 @@ function TagSynergyPanel.draw()
         HoverRegistry.region({
             id = "synergy_" .. row.entry.tag,
             x = row.rowLeft,
-            y = row.top,
+            y = row.top + slideOffset,
             w = row.rowWidth,
             h = row.rowHeight,
             z = 100,
@@ -957,7 +1109,7 @@ function TagSynergyPanel.draw()
             HoverRegistry.region({
                 id = "synergy_" .. row.entry.tag .. "_" .. seg.threshold,
                 x = seg.left - hoverPadX,
-                y = seg.top - hoverPadY,
+                y = seg.top + slideOffset - hoverPadY,
                 w = seg.width + hoverPadX * 2,
                 h = seg.height + hoverPadY * 2,
                 z = 101,

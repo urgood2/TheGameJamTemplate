@@ -32,7 +32,9 @@ local function defaultPosition()
         if globals.screenHeight then h = globals.screenHeight() end
         if not h and globals.getScreenHeight then h = globals.getScreenHeight() end
     end
-    local y = h and (h - 200) or 540
+    -- Position graph higher (h - 280) to leave room for toggle button at h - 60
+    -- This gives ~220px vertical clearance before overlapping the button
+    local y = h and (h - 280) or 480
     return { x = 32, y = y }
 end
 

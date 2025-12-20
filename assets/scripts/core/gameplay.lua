@@ -9593,15 +9593,17 @@ function initPlanningUI()
     planningUIEntities.exec_graph_toggle_button = execGraphButtonEntity
 
     -- Set button bounds for click-outside exclusion
+    -- Pass the button box entity so bounds can be updated dynamically each frame
     local execGraphButtonTransform = component_cache.get(planningUIEntities.exec_graph_button_box, Transform)
-    if execGraphButtonTransform then
-        CastExecutionGraphUI.setToggleButtonBounds({
-            x = execGraphButtonTransform.actualX or execGraphPosX,
-            y = execGraphButtonTransform.actualY or execGraphPosY,
-            w = execGraphButtonTransform.actualW or 120,
-            h = execGraphButtonTransform.actualH or 40
-        })
-    end
+    CastExecutionGraphUI.setToggleButtonBounds(
+        {
+            x = execGraphButtonTransform and execGraphButtonTransform.actualX or execGraphPosX,
+            y = execGraphButtonTransform and execGraphButtonTransform.actualY or execGraphPosY,
+            w = execGraphButtonTransform and execGraphButtonTransform.actualW or 120,
+            h = execGraphButtonTransform and execGraphButtonTransform.actualH or 40
+        },
+        planningUIEntities.exec_graph_button_box  -- Entity for dynamic bounds updates
+    )
 
     if not playerStatsSignalRegistered then
         signal.register("stats_recomputed", function(payload)

@@ -2143,6 +2143,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (config->uiType == UITypeEnum::TEXT && layoutScale)
         {
             ZONE_SCOPED("UI Element: Text Logic");
+            const bool snapToPixels = config->pixelatedRectangle;
+            auto snapPixel = [](float v) -> float { return std::round(v); };
             float rawScale = layoutScale.value() * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
@@ -2157,7 +2159,13 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 // util::PrepDraw(layerPtr, registry, entity, 0.97f);
                 layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
                 Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + textParallaxSX + layerDisplacement.x, y = actualY + textParallaxSY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+                float shadowTranslateX = actualX + textParallaxSX + layerDisplacement.x;
+                float shadowTranslateY = actualY + textParallaxSY + layerDisplacement.y;
+                if (snapToPixels) {
+                    shadowTranslateX = snapPixel(shadowTranslateX);
+                    shadowTranslateY = snapPixel(shadowTranslateY);
+                }
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = shadowTranslateX, y = shadowTranslateY](layer::CmdTranslate *cmd) {
                     cmd->x = x;
                     cmd->y = y;
                 }, zIndex);
@@ -2182,6 +2190,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                     // Scale text offsets manually (no transform scaling for crisp fonts)
                     float textX = (fontData.fontRenderOffset.x + (contentVerticalText ? textParallaxSY : textParallaxSX) * layoutScale.value_or(1.0f) * fontData.fontScale) * totalScale;
                     float textY = (fontData.fontRenderOffset.y + (contentVerticalText ? textParallaxSX : textParallaxSY) * layoutScale.value_or(1.0f) * fontData.fontScale) * totalScale;
+                    if (snapToPixels) {
+                        textX = snapPixel(textX);
+                        textY = snapPixel(textY);
+                    }
                     float spacing = config->textSpacing.value_or(fontData.spacing);
 
                     // Use effective size for font selection (no scaling transform for crisp text)
@@ -2210,7 +2222,13 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + layerDisplacement.x, y = actualY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+            float translateX = actualX + layerDisplacement.x;
+            float translateY = actualY + layerDisplacement.y;
+            if (snapToPixels) {
+                translateX = snapPixel(translateX);
+                translateY = snapPixel(translateY);
+            }
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = translateX, y = translateY](layer::CmdTranslate *cmd) {
                 cmd->x = x;
                 cmd->y = y;
             }, zIndex);
@@ -2236,6 +2254,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // Scale text offsets manually (no transform scaling for crisp fonts)
             float textX = fontData.fontRenderOffset.x * totalScale;
             float textY = fontData.fontRenderOffset.y * totalScale;
+            if (snapToPixels) {
+                textX = snapPixel(textX);
+                textY = snapPixel(textY);
+            }
 
             float spacing = config->textSpacing.value_or(fontData.spacing);
 

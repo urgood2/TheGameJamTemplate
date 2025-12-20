@@ -298,7 +298,6 @@ void SetUpShaderUniforms() {
                                  static_cast<float>(main_loop::getTime()));
       });
   globalShaderUniforms.set("crt", "roll_speed", 1.49f);
-  globalShaderUniforms.set("crt", "resolution", Vector2{1280, 700});
   globalShaderUniforms.set("crt", "noise_amount", 0.0f);
   globalShaderUniforms.set("crt", "scan_line_amount", -0.17f);
   globalShaderUniforms.set("crt", "grille_amount", 0.37f);

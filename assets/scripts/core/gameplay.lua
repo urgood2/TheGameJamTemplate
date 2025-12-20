@@ -9550,8 +9550,14 @@ function initPlanningUI()
             :addMinWidth(80)
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
             :addButtonCallback(function()
-                playSoundEffect("effects", "button-click")
-                CastExecutionGraphUI.toggle()
+                if CastExecutionGraphUI.toggleFromButton then
+                    if CastExecutionGraphUI.toggleFromButton() then
+                        playSoundEffect("effects", "button-click")
+                    end
+                else
+                    playSoundEffect("effects", "button-click")
+                    CastExecutionGraphUI.toggle()
+                end
             end)
             :build()
         )
@@ -9596,6 +9602,11 @@ function initPlanningUI()
     -- Set button bounds for click-outside exclusion
     -- Pass the button box entity so bounds can be updated dynamically each frame
     local execGraphButtonTransform = component_cache.get(planningUIEntities.exec_graph_button_box, Transform)
+    local execGraphBoundsEntity = planningUIEntities.exec_graph_button_box
+    if planningUIEntities.exec_graph_toggle_button
+        and planningUIEntities.exec_graph_toggle_button ~= entt_null then
+        execGraphBoundsEntity = planningUIEntities.exec_graph_toggle_button
+    end
     CastExecutionGraphUI.setToggleButtonBounds(
         {
             x = execGraphButtonTransform and execGraphButtonTransform.actualX or execGraphPosX,
@@ -9603,7 +9614,7 @@ function initPlanningUI()
             w = execGraphButtonTransform and execGraphButtonTransform.actualW or 120,
             h = execGraphButtonTransform and execGraphButtonTransform.actualH or 40
         },
-        planningUIEntities.exec_graph_button_box  -- Entity for dynamic bounds updates
+        execGraphBoundsEntity  -- Entity for dynamic bounds updates
     )
 
     if not playerStatsSignalRegistered then

@@ -617,6 +617,19 @@ function CastExecutionGraphUI.toggle()
     end
 end
 
+--- Toggle the execution graph via the on-screen toggle button.
+--- Uses a short cooldown so the UI button callback and manual hit-test logic
+--- can't double-toggle on the same click.
+--- @return boolean didToggle
+function CastExecutionGraphUI.toggleFromButton()
+    if CastExecutionGraphUI._buttonClickCooldown > 0 then
+        return false
+    end
+    CastExecutionGraphUI._buttonClickCooldown = 0.2 -- 200ms cooldown
+    CastExecutionGraphUI.toggle()
+    return true
+end
+
 --- Check if the graph is currently visible (or animating in)
 function CastExecutionGraphUI.isVisible()
     return CastExecutionGraphUI._slideState == "visible" or CastExecutionGraphUI._slideState == "entering"
@@ -648,6 +661,7 @@ end
 --- @param buttonEntity number|nil Optional entity to read dynamic bounds from
 function CastExecutionGraphUI.setToggleButtonBounds(bounds, buttonEntity)
     CastExecutionGraphUI._toggleButtonBounds = bounds
+    if buttonEntity == entt_null then buttonEntity = nil end
     CastExecutionGraphUI._toggleButtonEntity = buttonEntity
 end
 
@@ -660,17 +674,18 @@ local function updateButtonBoundsFromEntity()
     local t = component_cache.get(entity, Transform)
     if not t then return end
 
-    -- Only update if we have valid dimensions
+    local existing = CastExecutionGraphUI._toggleButtonBounds or { x = 0, y = 0, w = 0, h = 0 }
+
     local w = t.actualW or 0
     local h = t.actualH or 0
-    if w > 0 and h > 0 then
-        CastExecutionGraphUI._toggleButtonBounds = {
-            x = t.actualX or 0,
-            y = t.actualY or 0,
-            w = w,
-            h = h
-        }
-    end
+
+    existing.x = t.actualX or existing.x or 0
+    existing.y = t.actualY or existing.y or 0
+
+    if w > 0 then existing.w = w end
+    if h > 0 then existing.h = h end
+
+    CastExecutionGraphUI._toggleButtonBounds = existing
 end
 
 --- Update slide animation (call each frame)
@@ -741,10 +756,8 @@ function CastExecutionGraphUI.updateSlide(dt)
 
                 if insideButton then
                     -- Explicitly handle button click here to bypass any z-order issues
-                    -- Only toggle if cooldown has elapsed (prevents double-toggling)
-                    if CastExecutionGraphUI._buttonClickCooldown <= 0 then
-                        CastExecutionGraphUI._buttonClickCooldown = 0.2  -- 200ms cooldown
-                        CastExecutionGraphUI.toggle()
+                    if CastExecutionGraphUI.toggleFromButton() and playSoundEffect then
+                        playSoundEffect("effects", "button-click")
                     end
                 elseif CastExecutionGraphUI._slideState == "visible" then
                     -- Click outside - dismiss only when visible

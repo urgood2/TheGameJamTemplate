@@ -9440,6 +9440,10 @@ function initPlanningUI()
             :addHover(true)
             :addMinWidth(80)
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+            :addButtonCallback(function()
+                playSoundEffect("effects", "button-click")
+                TagSynergyPanel.toggle()
+            end)
             :build()
         )
         :addChild(synergyButtonLabel)
@@ -9472,26 +9476,16 @@ function initPlanningUI()
 
     local synergyButtonEntity = ui.box.GetUIEByID(registry, "synergy_toggle_button")
     planningUIEntities.synergy_toggle_button = synergyButtonEntity
-    if synergyButtonEntity and entity_cache.valid(synergyButtonEntity) then
-        local go = component_cache.get(synergyButtonEntity, GameObject)
-        if go then
-            go.state.hoverEnabled = true
-            go.state.collisionEnabled = true
-            go.methods.onClick = function()
-                TagSynergyPanel.toggle()
-            end
-        end
 
-        -- Set button bounds for click-outside exclusion
-        local buttonTransform = component_cache.get(planningUIEntities.synergy_button_box, Transform)
-        if buttonTransform then
-            TagSynergyPanel.setToggleButtonBounds({
-                x = buttonTransform.actualX or synergyPosX,
-                y = buttonTransform.actualY or synergyPosY,
-                w = buttonTransform.actualW or 100,
-                h = buttonTransform.actualH or 40
-            })
-        end
+    -- Set button bounds for click-outside exclusion
+    local buttonTransform = component_cache.get(planningUIEntities.synergy_button_box, Transform)
+    if buttonTransform then
+        TagSynergyPanel.setToggleButtonBounds({
+            x = buttonTransform.actualX or synergyPosX,
+            y = buttonTransform.actualY or synergyPosY,
+            w = buttonTransform.actualW or 100,
+            h = buttonTransform.actualH or 40
+        })
     end
 
     if not playerStatsSignalRegistered then

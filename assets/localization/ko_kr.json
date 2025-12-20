@@ -114,6 +114,7 @@
 		"stats_button": "능력치",
 		"detailed_button": "상세",
 		"synergies_button": "시너지",
+		"exec_graph_button": "완드 미리보기",
 		"on": "켜짐",
 		"off": "꺼짐",
 		"MK2_dust_collector_desc": "고래로부터 더 빠른 속도로 고래 먼지를 수집합니다.",

@@ -4352,6 +4352,11 @@ function initPlanningPhase()
             TagSynergyPanel.draw()
         end
 
+        -- Update execution graph slide animation
+        if CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
+            CastExecutionGraphUI.updateSlide(dt)
+        end
+
         if AvatarJokerStrip and AvatarJokerStrip.isActive and is_state_active
             and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE) or is_state_active(SHOP_STATE)) then
             local playerTarget = nil
@@ -9485,6 +9490,67 @@ function initPlanningUI()
             y = buttonTransform.actualY or synergyPosY,
             w = buttonTransform.actualW or 100,
             h = buttonTransform.actualH or 40
+        })
+    end
+
+    -- Execution graph toggle button
+    local execGraphButtonLabel = ui.definitions.getTextFromString("[" .. L("ui.exec_graph_button", "Wand Preview") .. "](color=white;fontSize=14;shadow=false)")
+    local execGraphButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addId("exec_graph_toggle_button")
+            :addColor(util.getColor("gray"))
+            :addPadding(8.0)
+            :addEmboss(2.0)
+            :addHover(true)
+            :addMinWidth(80)
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+            :addButtonCallback(function()
+                playSoundEffect("effects", "button-click")
+                CastExecutionGraphUI.toggle()
+            end)
+            :build()
+        )
+        :addChild(execGraphButtonLabel)
+        :build()
+
+    local execGraphRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+            :addColor(util.getColor("blank"))
+            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_BOTTOM))
+            :build()
+        )
+        :addChild(execGraphButtonTemplate)
+        :build()
+
+    -- Position execution graph button in bottom-left area
+    local execGraphPosX = 32
+    local execGraphPosY = globals.screenHeight() - 60
+    planningUIEntities.exec_graph_button_box = ui.box.Initialize({ x = execGraphPosX, y = execGraphPosY }, execGraphRoot)
+    local execGraphTransform = component_cache.get(planningUIEntities.exec_graph_button_box, Transform)
+    if execGraphTransform then
+        execGraphTransform.actualX = execGraphPosX
+        execGraphTransform.visualX = execGraphTransform.actualX
+        execGraphTransform.actualY = execGraphPosY
+        execGraphTransform.visualY = execGraphTransform.actualY
+    end
+    ui.box.ClearStateTagsFromUIBox(planningUIEntities.exec_graph_button_box)
+    ui.box.AddStateTagToUIBox(planningUIEntities.exec_graph_button_box, PLANNING_STATE)
+
+    local execGraphButtonEntity = ui.box.GetUIEByID(registry, "exec_graph_toggle_button")
+    planningUIEntities.exec_graph_toggle_button = execGraphButtonEntity
+
+    -- Set button bounds for click-outside exclusion
+    local execGraphButtonTransform = component_cache.get(planningUIEntities.exec_graph_button_box, Transform)
+    if execGraphButtonTransform then
+        CastExecutionGraphUI.setToggleButtonBounds({
+            x = execGraphButtonTransform.actualX or execGraphPosX,
+            y = execGraphButtonTransform.actualY or execGraphPosY,
+            w = execGraphButtonTransform.actualW or 120,
+            h = execGraphButtonTransform.actualH or 40
         })
     end
 

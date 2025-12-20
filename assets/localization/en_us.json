@@ -114,6 +114,7 @@
 		"stats_button": "Stats",
 		"detailed_button": "Detailed",
 		"synergies_button": "Synergies",
+		"exec_graph_button": "Wand Preview",
 		"on": "on",
 		"off": "off",
 		"MK2_dust_collector_desc": "Collects Whale Dust from Whales at a faster rate",

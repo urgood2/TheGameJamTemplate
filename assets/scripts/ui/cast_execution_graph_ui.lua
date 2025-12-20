@@ -39,6 +39,8 @@ end
 local DEFAULT_POS = defaultPosition()
 local MAX_DEPTH = 6
 
+local Easing = require("util.easing")
+
 CastExecutionGraphUI.position = { x = DEFAULT_POS.x, y = DEFAULT_POS.y }
 CastExecutionGraphUI.currentBox = nil
 CastExecutionGraphUI._lastFingerprint = nil
@@ -46,6 +48,13 @@ CastExecutionGraphUI._activeTooltip = nil
 CastExecutionGraphUI._activeTooltipOwner = nil
 CastExecutionGraphUI._fallbackTooltipActive = false
 CastExecutionGraphUI._fallbackTooltipKey = nil
+
+-- Slide animation state
+CastExecutionGraphUI._slideState = "hidden"  -- "hidden", "entering", "visible", "exiting"
+CastExecutionGraphUI._slideProgress = 0       -- 0 = fully hidden, 1 = fully visible
+CastExecutionGraphUI._slideSpeed = 4.0        -- Animation speed multiplier
+CastExecutionGraphUI._toggleButtonBounds = nil
+CastExecutionGraphUI._cachedHeight = 200      -- Cached panel height for slide offset
 
 -- Pending hover handlers to apply after spawn (workaround for initFunc not being called)
 local pendingTooltips = {}
@@ -579,6 +588,128 @@ function CastExecutionGraphUI.setPosition(pos)
     end
 end
 
+--- Show the execution graph with slide-up animation
+function CastExecutionGraphUI.show()
+    if CastExecutionGraphUI._slideState == "visible" or CastExecutionGraphUI._slideState == "entering" then
+        return
+    end
+    CastExecutionGraphUI._slideState = "entering"
+end
+
+--- Hide the execution graph with slide-down animation
+function CastExecutionGraphUI.hide()
+    if CastExecutionGraphUI._slideState == "hidden" or CastExecutionGraphUI._slideState == "exiting" then
+        return
+    end
+    CastExecutionGraphUI._slideState = "exiting"
+end
+
+--- Toggle the execution graph visibility
+function CastExecutionGraphUI.toggle()
+    if CastExecutionGraphUI._slideState == "visible" or CastExecutionGraphUI._slideState == "entering" then
+        CastExecutionGraphUI.hide()
+    else
+        CastExecutionGraphUI.show()
+    end
+end
+
+--- Check if the graph is currently visible (or animating in)
+function CastExecutionGraphUI.isVisible()
+    return CastExecutionGraphUI._slideState == "visible" or CastExecutionGraphUI._slideState == "entering"
+end
+
+--- Get the current panel bounds for hit-testing
+function CastExecutionGraphUI.getPanelBounds()
+    if not CastExecutionGraphUI.currentBox then return nil end
+    local t = component_cache.get(CastExecutionGraphUI.currentBox, Transform)
+    if not t then return nil end
+    return {
+        x = t.actualX or 0,
+        y = t.actualY or 0,
+        w = t.actualW or 0,
+        h = t.actualH or 0
+    }
+end
+
+--- Check if a point is inside the panel
+function CastExecutionGraphUI.containsPoint(px, py)
+    local bounds = CastExecutionGraphUI.getPanelBounds()
+    if not bounds then return false end
+    return px >= bounds.x and px <= bounds.x + bounds.w
+       and py >= bounds.y and py <= bounds.y + bounds.h
+end
+
+--- Set the toggle button bounds for click-outside exclusion
+function CastExecutionGraphUI.setToggleButtonBounds(bounds)
+    CastExecutionGraphUI._toggleButtonBounds = bounds
+end
+
+--- Update slide animation (call each frame)
+function CastExecutionGraphUI.updateSlide(dt)
+    if not dt then dt = GetFrameTime and GetFrameTime() or 0.016 end
+
+    local state = CastExecutionGraphUI._slideState
+    local progress = CastExecutionGraphUI._slideProgress
+    local speed = CastExecutionGraphUI._slideSpeed
+
+    if state == "entering" then
+        progress = math.min(1, progress + dt * speed)
+        CastExecutionGraphUI._slideProgress = progress
+        if progress >= 1 then
+            CastExecutionGraphUI._slideState = "visible"
+            CastExecutionGraphUI._slideProgress = 1
+        end
+    elseif state == "exiting" then
+        progress = math.max(0, progress - dt * speed)
+        CastExecutionGraphUI._slideProgress = progress
+        if progress <= 0 then
+            CastExecutionGraphUI._slideState = "hidden"
+            CastExecutionGraphUI._slideProgress = 0
+        end
+    end
+
+    -- Apply slide offset to the box position
+    if CastExecutionGraphUI.currentBox and component_cache then
+        local t = component_cache.get(CastExecutionGraphUI.currentBox, Transform)
+        if t then
+            -- Cache height for slide calculation
+            if t.actualH and t.actualH > 0 then
+                CastExecutionGraphUI._cachedHeight = t.actualH
+            end
+
+            local easedProgress
+            if state == "entering" or state == "exiting" then
+                easedProgress = Easing.outQuad.f(progress)
+            else
+                easedProgress = progress
+            end
+
+            local slideOffset = (1 - easedProgress) * (CastExecutionGraphUI._cachedHeight + 40)
+            t.actualY = CastExecutionGraphUI.position.y + slideOffset
+            t.visualY = t.actualY
+        end
+    end
+
+    -- Check for click-outside-to-dismiss when fully visible
+    if CastExecutionGraphUI._slideState == "visible" and input and input.action_down then
+        local clickedOutside = input.action_down("mouse_click")
+        if clickedOutside then
+            local mouse = input.getMousePos and input.getMousePos() or (input.getMousePosition and input.getMousePosition())
+            if mouse then
+                -- Check if click is inside toggle button (don't dismiss if clicking the button)
+                local buttonBounds = CastExecutionGraphUI._toggleButtonBounds
+                local insideButton = buttonBounds and
+                    mouse.x >= buttonBounds.x and mouse.x <= buttonBounds.x + buttonBounds.w and
+                    mouse.y >= buttonBounds.y and mouse.y <= buttonBounds.y + buttonBounds.h
+
+                if not insideButton and not CastExecutionGraphUI.containsPoint(mouse.x, mouse.y) then
+                    CastExecutionGraphUI.hide()
+                end
+            end
+        end
+    end
+end
+
 function CastExecutionGraphUI.clear()
     CastExecutionGraphUI._lastFingerprint = nil
     pendingTooltips = {}
@@ -596,8 +727,8 @@ function CastExecutionGraphUI.render(blocks, opts)
         CastExecutionGraphUI.clear()
         return nil
     end
-    if not isVisible() then
-        CastExecutionGraphUI.clear()
+    -- Check slide state instead of overlay toggle
+    if CastExecutionGraphUI._slideState == "hidden" then
         return nil
     end
     if not blocks or #blocks == 0 then

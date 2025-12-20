@@ -47,6 +47,12 @@ void TextHandler::draw(
     // Get content config for text-specific fields
     auto* contentConfig = registry.try_get<UIContentConfig>(entity);
     const auto contentVerticalText = contentConfig ? contentConfig->verticalText : config->verticalText;
+    float requestedSize = static_cast<float>(fontData.defaultSize);
+    if (contentConfig && contentConfig->fontSize) {
+        requestedSize = contentConfig->fontSize.value();
+    } else if (config->fontSize) {
+        requestedSize = config->fontSize.value();
+    }
 
     // Get style values
     const auto& styleColor = style.color;
@@ -98,7 +104,6 @@ void TextHandler::draw(
                 cmd->scaleY = scale;
             }, zIndex);
 
-            float requestedSize = static_cast<float>(fontData.defaultSize);
             const Font& bestFont = fontData.getBestFontForSize(requestedSize);
             float fontSize = static_cast<float>(bestFont.baseSize);
             if (config->text) {
@@ -155,7 +160,6 @@ void TextHandler::draw(
     }, zIndex);
 
     float spacing = config->textSpacing.value_or(fontData.spacing);
-    float requestedSize = static_cast<float>(fontData.defaultSize);
     const Font& bestFont = fontData.getBestFontForSize(requestedSize);
     float fontSize = static_cast<float>(bestFont.baseSize);
 

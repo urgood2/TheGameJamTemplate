@@ -64,12 +64,20 @@ namespace localization
   // Named font registry - for custom fonts like tooltip fonts
   extern std::unordered_map<std::string, globals::FontData> namedFonts;
   
-  /// Load a named font from file path with specified size
+  /// Load a named font from file path with specified size (single-size, for backwards compatibility)
   extern void loadNamedFont(const std::string& name, const std::string& path, float size);
-  
+
+  /// Load a named font from file path with multiple sizes (for multi-size font cache)
+  /// @param name The name to register the font under (e.g., "tooltip")
+  /// @param path The file path to the font file (TTF/OTF)
+  /// @param sizes Vector of sizes to load the font at
+  /// @param defaultSize The default size to use when none is specified
+  extern void loadNamedFontSizes(const std::string& name, const std::string& path,
+                                  const std::vector<int>& sizes, int defaultSize);
+
   /// Get a named font by name, falls back to current language font if not found
   extern const globals::FontData& getNamedFont(const std::string& name);
-  
+
   /// Check if a named font exists
   extern bool hasNamedFont(const std::string& name);
 

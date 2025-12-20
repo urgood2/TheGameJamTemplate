@@ -103,12 +103,9 @@ TagSynergyPanel._slideSpeed = 4.0        -- Animation speed multiplier
 
 local Easing = require("util.easing")
 
-if localization and localization.loadNamedFont then
-    local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
-    if not alreadyLoaded then
-        localization.loadNamedFont("tooltip", "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf", 44)
-    end
-end
+-- NOTE: Tooltip font is now loaded in gameplay.lua with language-specific selection
+-- at the correct size (22px to match tooltipStyle.fontSize). Removed duplicate load
+-- that was causing font size conflicts.
 
 local function clamp01(v)
     if v < 0 then return 0 end

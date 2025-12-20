@@ -1,27 +1,29 @@
 {
   "en_us": {
-    "file":   "fonts/en/Kenney Thick.ttf",
-    "loadedSize": 25.0,
-    "scale":  1.0,
+    "file": "fonts/en/Kenney Thick.ttf",
+    "sizes": [16, 22, 32, 44],
+    "defaultSize": 22,
+    "scale": 1.0,
     "spacing": 1.0,
     "offset": [0, 0],
     "ranges": [
-      [32, 126]           
+      [32, 126]
     ],
     "__Comment": "ranges: 0x0020 → 32, 0x007E → 126."
   },
 
   "ko_kr": {
-    "file":   "fonts/ko/Galmuri11-Bold.ttf",
-    "loadedSize": 32.0,
-    "scale":  1.0,
+    "file": "fonts/ko/Galmuri11-Bold.ttf",
+    "sizes": [11, 22, 33, 44],
+    "defaultSize": 22,
+    "scale": 1.0,
     "spacing": 1.2,
     "offset": [2, 0],
     "ranges": [
-      [32, 126],         
-      [4352, 4607],       
-      [12592, 12687],    
-      [44032, 55203]      
+      [32, 126],
+      [4352, 4607],
+      [12592, 12687],
+      [44032, 55203]
     ],
     "__Comment": "ranges: ASCII; 0x1100 → 4352, 0x11FF → 4607; 0x3130 → 12592, 0x318F → 12687; 0xAC00 → 44032, 0xD7A3 → 55203"
   }

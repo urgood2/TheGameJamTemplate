@@ -159,9 +159,9 @@ namespace ui
                 }(config);
 
                 // Use custom fontSize if specified, otherwise use default
-                float baseFontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.fontLoadedSize;
+                float baseFontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.defaultSize;
                 float fontSize = baseFontSize * scale * fontData.fontScale;
-                auto [w, h] = MeasureTextEx(fontData.font, config->text->c_str(), fontSize, fontData.spacing);
+                auto [w, h] = MeasureTextEx(fontData.getBestFontForSize(fontSize), config->text->c_str(), fontSize, fontData.spacing);
                 if (config->verticalText.value_or(false))
                     std::swap(w, h);
                 // FIXME: testing, commenting out
@@ -1709,9 +1709,9 @@ namespace ui
             }(uiConfig);
 
             // Use custom fontSize if specified, otherwise use default
-            float baseFontSize = uiConfig.fontSize.has_value() ? uiConfig.fontSize.value() : fontData.fontLoadedSize;
+            float baseFontSize = uiConfig.fontSize.has_value() ? uiConfig.fontSize.value() : fontData.defaultSize;
             float fontSize = baseFontSize * scaleFactor * fontData.fontScale;
-            auto [measuredWidth, measuredHeight] = MeasureTextEx(fontData.font, uiConfig.text.value().c_str(), fontSize, fontData.spacing);
+            auto [measuredWidth, measuredHeight] = MeasureTextEx(fontData.getBestFontForSize(fontSize), uiConfig.text.value().c_str(), fontSize, fontData.spacing);
 
             calcCurrentNodeTransform.w = measuredWidth;
             calcCurrentNodeTransform.h = measuredHeight;

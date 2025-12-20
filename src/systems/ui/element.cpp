@@ -1459,8 +1459,8 @@ namespace ui
             ZONE_SCOPED("UI Element: Text Logic");
             float rawScale = config->scale.value() * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
-            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
+            float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
             
             //TODO: if scale is smaller, make the shadow height smaller too
 
@@ -1508,12 +1508,14 @@ namespace ui
                     //     cmd->y = textY;
                     //     cmd->origin = {0, 0};
                     //     cmd->rotation = 0;
-                    //     cmd->fontSize = fontData.fontLoadedSize;
+                    //     cmd->fontSize = fontData.defaultSize;
                     //     cmd->spacing = spacing;
                     //     cmd->color = shadowColor;
                     // }, zIndex);
-                    float fontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.fontLoadedSize;
-                    layer::TextPro(config->text.value().c_str(), fontData.font, textX, textY, {0, 0}, 0, fontSize, spacing, shadowColor);
+                    float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
+                    const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+                    float actualSize = static_cast<float>(bestFont.baseSize);
+                    layer::TextPro(config->text.value().c_str(), bestFont, textX, textY, {0, 0}, 0, actualSize, spacing, shadowColor);
                     
                     // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
                 }
@@ -1571,12 +1573,14 @@ namespace ui
             //     cmd->y = textY;
             //     cmd->origin = {0, 0};
             //     cmd->rotation = 0;
-            //     cmd->fontSize = fontData.fontLoadedSize;
+            //     cmd->fontSize = fontData.defaultSize;
             //     cmd->spacing = spacing;
             //     cmd->color = renderColor;
             // }, zIndex);
-            float fontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.fontLoadedSize;
-            layer::TextPro(config->text.value().c_str(), fontData.font, textX, textY, {0, 0}, 0, fontSize, spacing, renderColor);
+            float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
+            const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+            float actualSize = static_cast<float>(bestFont.baseSize);
+            layer::TextPro(config->text.value().c_str(), bestFont, textX, textY, {0, 0}, 0, actualSize, spacing, renderColor);
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
@@ -1762,8 +1766,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
     // Parallax (match TEXT path)
     const float rawScale    = config->scale.value_or(1.0f) * fd.fontScale;
     const float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
-    const float textParallaxSX = node->shadowDisplacement->x * fd.fontLoadedSize * 0.04f * scaleFactor;
-    const float textParallaxSY = node->shadowDisplacement->y * fd.fontLoadedSize * -0.03f * scaleFactor;
+    const float textParallaxSX = node->shadowDisplacement->x * fd.defaultSize * 0.04f * scaleFactor;
+    const float textParallaxSY = node->shadowDisplacement->y * fd.defaultSize * -0.03f * scaleFactor;
 
     const bool drawShadow = (config->button_UIE && true) ||
                             (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
@@ -1775,7 +1779,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
     constexpr float kDesc = 0.22f;  // ~descent relative to fontSize
 
     // Check if fontSize is specified in config, otherwise use default
-    const float fontSize = config->fontSize.has_value() ? config->fontSize.value() : fd.fontLoadedSize;
+    const float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fd.defaultSize);
+    const Font& bestFont = fd.getBestFontForSize(requestedSize);
+    const float fontSize = static_cast<float>(bestFont.baseSize);
     const float invScale = (uiScale != 0.0f) ? 1.0f / uiScale : 1.0f;
     const float innerH   = transform->getActualH() * invScale;  // unscaled element height
 
@@ -1810,7 +1816,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             static_cast<unsigned char>(std::max(20.0f, config->color->a * 0.30f)) };
 
         layer::Scale(uiScale, uiScale);
-        layer::TextPro(s.c_str(), fd.font, shadowTextX, shadowBaseY, {0,fontSize / 2}, 0, fontSize, spacing, shadow);
+        layer::TextPro(s.c_str(), bestFont, shadowTextX, shadowBaseY, {0,fontSize / 2}, 0, fontSize, spacing, shadow);
         layer::PopMatrix();
     }
 
@@ -1825,7 +1831,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
     }
 
     layer::Scale(uiScale, uiScale);
-    layer::TextPro(s.c_str(), fd.font, textX, baseY, {0,fontSize / 2}, 0, fontSize, spacing, renderColor);
+    layer::TextPro(s.c_str(), bestFont, textX, baseY, {0,fontSize / 2}, 0, fontSize, spacing, renderColor);
 
     // --- 3) Blinking caret exactly on the same baseline
     if (ti.isActive) {
@@ -1833,7 +1839,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (blinkOn) {
             const size_t caretPos   = std::min<size_t>(s.size(), ti.cursorPos);
             const std::string left  = s.substr(0, caretPos);
-            const Vector2 lhsSize   = MeasureTextEx(fd.font, left.c_str(), fontSize, spacing);
+            const Vector2 lhsSize   = MeasureTextEx(bestFont, left.c_str(), fontSize, spacing);
 
             const float caretX      = textX + lhsSize.x;             // same X baseline
             const float caretTop    = baseY;       // align to cap top
@@ -2160,8 +2166,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             ZONE_SCOPED("UI Element: Text Logic");
             float rawScale = layoutScale.value() * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
-            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
+            float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
 
             //TODO: if scale is smaller, make the shadow height smaller too
 
@@ -2202,8 +2208,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         cmd->scaleY = scale;
                     }, zIndex);
 
-                    float fontSize = fontData.fontLoadedSize;
-                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = fontData.font, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
+                    float requestedSize = static_cast<float>(fontData.defaultSize);
+                    const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+                    float fontSize = static_cast<float>(bestFont.baseSize);
+                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = bestFont, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
                         cmd->text = text.c_str();
                         cmd->font = font;
                         cmd->x = textX;
@@ -2257,9 +2265,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             }, zIndex);
 
             float spacing = config->textSpacing.value_or(fontData.spacing);
-            
-            float fontSize = fontData.fontLoadedSize;
-            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = fontData.font, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
+
+            float requestedSize = static_cast<float>(fontData.defaultSize);
+            const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+            float fontSize = static_cast<float>(bestFont.baseSize);
+            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = bestFont, textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
                 cmd->text = text.c_str();
                 cmd->font = font;
                 cmd->x = textX;
@@ -2581,8 +2591,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             bool drawShadow = ((config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn));
             float rawScale = config->scale.value_or(1.0f) * fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
-            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
+            float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
 
             // Common translate (like TEXT): position at element origin + layer displacement
             Vector2 layerDisplacement = { node->layerDisplacement->x, node->layerDisplacement->y };
@@ -2604,11 +2614,13 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 float textX  = fontData.fontRenderOffset.x;
                 float textY  = fontData.fontRenderOffset.y;
                 float s      = scale;
-                float fontSize = fontData.fontLoadedSize;
+                float requestedSize = static_cast<float>(fontData.defaultSize);
+                const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+                float fontSize = static_cast<float>(bestFont.baseSize);
 
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [s](layer::CmdScale *cmd){ cmd->scaleX = s; cmd->scaleY = s; }, zIndex);
                 layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
-                                                                font = fontData.font,
+                                                                font = bestFont,
                                                                 textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
                     cmd->text     = t.c_str();
                     cmd->font     = font;
@@ -2638,14 +2650,16 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             float textX = fontData.fontRenderOffset.x;
             float textY = fontData.fontRenderOffset.y;
-            float fontSize = fontData.fontLoadedSize;
+            float requestedSize = static_cast<float>(fontData.defaultSize);
+            const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+            float fontSize = static_cast<float>(bestFont.baseSize);
 
             layer::QueueCommand<layer::CmdScale>(layerPtr, [s = scale](layer::CmdScale *cmd){
                 cmd->scaleX = s; cmd->scaleY = s;
             }, zIndex);
 
             layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
-                                                            font = fontData.font,
+                                                            font = bestFont,
                                                             textX, textY, spacing, renderColor, fontSize](layer::CmdTextPro *cmd) {
                 cmd->text     = t.c_str();
                 cmd->font     = font;
@@ -2666,9 +2680,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                     // Measure the text up to cursorPos at the *unscaled* font size,
                     // then add the unscaled render offset; finally we draw under the current scaling.
                     std::string left = displayText.substr(0, std::min<size_t>(displayText.size(), textInput.cursorPos));
-                    float fontSize   = fontData.fontLoadedSize;
                     // NOTE: MeasureTextEx returns *unscaled* pixel width for given fontSize and spacing.
-                    Vector2 lhsSize  = MeasureTextEx(fontData.font, left.c_str(), fontSize, spacing);
+                    // Use the same bestFont and fontSize from above
+                    Vector2 lhsSize  = MeasureTextEx(bestFont, left.c_str(), fontSize, spacing);
 
                     float caretX      = textX + lhsSize.x;
                     float caretY      = textY;                 // same baseline as text

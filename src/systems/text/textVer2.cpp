@@ -905,7 +905,7 @@ Character createImageCharacter(
 
   // get max line height
   float maxLineHeight =
-      MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
+      MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y;
   float lineHeight =
       text.fontSize *
       text.renderScale; // Approximate line height (same as text char height)
@@ -1086,7 +1086,7 @@ void parseText(entt::entity textEntity) {
         lineWidths.push_back(currentLineWidth); // Save current line width
         currentX = transform.getActualX();      // Reset X position
         currentY +=
-            MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+            MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
             text.renderScale;
         currentLineWidth = 0.0f;
         lineNumber++;
@@ -1121,7 +1121,7 @@ void parseText(entt::entity textEntity) {
           lookaheadChar = CodepointToString(lookaheadCodepoint);
           lookaheadCharString = lookaheadCharString + lookaheadChar;
           Vector2 charSize = MeasureTextEx(
-              text.fontData.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
+              text.fontData.getBestFontForSize(text.fontSize), lookaheadChar.c_str(), text.fontSize, 1.0f);
           charSize.x *= text.renderScale;
           charSize.y *= text.renderScale;
           nextWordWidth += charSize.x;
@@ -1142,7 +1142,7 @@ void parseText(entt::entity textEntity) {
           lineWidths.push_back(currentLineWidth); // Save current line width
           currentX = transform.getActualX();      // Reset X position
           currentY +=
-              MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+              MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
               text.renderScale; // Move to the next line
           currentLineWidth = 0.0f;
           lineNumber++;
@@ -1152,7 +1152,7 @@ void parseText(entt::entity textEntity) {
           //               currentX, currentY, lineNumber, lookaheadCharString);
         } else {
           auto character = createCharacter(
-              textEntity, codepoint, textPosition, text.fontData.font,
+              textEntity, codepoint, textPosition, text.fontData.getBestFontForSize(text.fontSize),
               text.fontSize, currentX, currentY, effectiveWrapWidth,
               text.alignment, currentLineWidth, lineWidths, codepointIndex,
               lineNumber);
@@ -1168,7 +1168,7 @@ void parseText(entt::entity textEntity) {
           continue;
         } else {
           auto character = createCharacter(
-              textEntity, codepoint, textPosition, text.fontData.font,
+              textEntity, codepoint, textPosition, text.fontData.getBestFontForSize(text.fontSize),
               text.fontSize, currentX, currentY, effectiveWrapWidth,
               text.alignment, currentLineWidth, lineWidths, codepointIndex,
               lineNumber);
@@ -1176,7 +1176,7 @@ void parseText(entt::entity textEntity) {
         }
       } else {
         auto character = createCharacter(
-            textEntity, codepoint, textPosition, text.fontData.font,
+            textEntity, codepoint, textPosition, text.fontData.getBestFontForSize(text.fontSize),
             text.fontSize, currentX, currentY, effectiveWrapWidth,
             text.alignment, currentLineWidth, lineWidths, codepointIndex,
             lineNumber);
@@ -1215,7 +1215,7 @@ void parseText(entt::entity textEntity) {
       // scaling for image
       // TODO: fetch the sprite size, scale it down to fit the text heigth
       float maxFontHeight =
-          MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+          MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
           text.renderScale;
       auto spriteFrame = init::getSpriteFrame(uuid, globals::g_ctx);
       auto desiredImageHeight = maxFontHeight * scale;
@@ -1301,7 +1301,7 @@ void parseText(entt::entity textEntity) {
       lineWidths.push_back(currentLineWidth); // Save current line width
       currentX = transform.getActualX();      // Reset X position
       currentY +=
-          MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+          MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
           text.renderScale;
       currentLineWidth = 0.0f;
       lineNumber++;
@@ -1335,7 +1335,7 @@ void parseText(entt::entity textEntity) {
         lookaheadChar = CodepointToString(lookaheadCodepoint);
         lookaheadCharString = lookaheadCharString + lookaheadChar;
         Vector2 charSize = MeasureTextEx(
-            text.fontData.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
+            text.fontData.getBestFontForSize(text.fontSize), lookaheadChar.c_str(), text.fontSize, 1.0f);
         charSize.x *= text.renderScale;
         charSize.y *= text.renderScale;
         nextWordWidth += charSize.x;
@@ -1351,7 +1351,7 @@ void parseText(entt::entity textEntity) {
         lineWidths.push_back(currentLineWidth); // Save current line width
         currentX = transform.getActualX();      // Reset X position
         currentY +=
-            MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+            MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
             text.renderScale; // Move to the next line
         currentLineWidth = 0.0f;
         lineNumber++;
@@ -1362,7 +1362,7 @@ void parseText(entt::entity textEntity) {
       } else {
         // FIXME: Ignore the space character if line changed
         auto character = createCharacter(
-            textEntity, codepoint, textPosition, text.fontData.font,
+            textEntity, codepoint, textPosition, text.fontData.getBestFontForSize(text.fontSize),
             text.fontSize, currentX, currentY, effectiveWrapWidth,
             text.alignment, currentLineWidth, lineWidths, codepointIndex,
             lineNumber);
@@ -1373,7 +1373,7 @@ void parseText(entt::entity textEntity) {
     {
       // does adding the char take us over the wrap width?
       if ((currentX - transform.getActualX()) +
-              MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x *
+              MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), " ", text.fontSize, 1.0f).x *
                   text.renderScale >
           effectiveWrapWidth) {
         // if so skip this space character
@@ -1384,7 +1384,7 @@ void parseText(entt::entity textEntity) {
         continue;
       } else {
         auto character = createCharacter(
-            textEntity, codepoint, textPosition, text.fontData.font,
+            textEntity, codepoint, textPosition, text.fontData.getBestFontForSize(text.fontSize),
             text.fontSize, currentX, currentY, effectiveWrapWidth,
             text.alignment, currentLineWidth, lineWidths, codepointIndex,
             lineNumber);
@@ -1392,7 +1392,7 @@ void parseText(entt::entity textEntity) {
       }
     } else {
       auto character = createCharacter(
-          textEntity, codepoint, textPosition, text.fontData.font,
+          textEntity, codepoint, textPosition, text.fontData.getBestFontForSize(text.fontSize),
           text.fontSize, currentX, currentY, effectiveWrapWidth, text.alignment,
           currentLineWidth, lineWidths, codepointIndex, lineNumber);
       text.characters.push_back(character);
@@ -1512,7 +1512,7 @@ void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths,
         // TODO: spacing should omitted if the previous character is a space or
         // the first character of the string
         nextWordWidth += text.fontData.spacing +
-                         MeasureTextEx(text.fontData.font, utf8Char.c_str(),
+                         MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), utf8Char.c_str(),
                                        text.fontSize, 1.0f)
                                  .x *
                              text.renderScale;
@@ -1526,7 +1526,7 @@ void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths,
         lineWidths.push_back(currentLineWidth);
         currentX = textPosition.x;
         currentY +=
-            MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+            MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
             text.renderScale;
         currentLineWidth = 0.0f;
         lineNumber++;
@@ -1538,7 +1538,7 @@ void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths,
       lineWidths.push_back(currentLineWidth);
       currentX = textPosition.x;
       currentY +=
-          MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+          MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
           text.renderScale;
       currentLineWidth = 0.0f;
       lineNumber++;
@@ -1564,7 +1564,7 @@ void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths,
           // TODO: spacing should omitted if the previous character is a space
           // or the first character of the string
           nextWordWidth += text.fontData.spacing +
-                           MeasureTextEx(text.fontData.font, utf8Char.c_str(),
+                           MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), utf8Char.c_str(),
                                          text.fontSize, 1.0f)
                                    .x *
                                text.renderScale;
@@ -1577,7 +1577,7 @@ void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths,
           lineWidths.push_back(currentLineWidth);
           currentX = textPosition.x;
           currentY +=
-              MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+              MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
               text.renderScale;
           currentLineWidth = 0.0f;
           lineNumber++;
@@ -1587,7 +1587,7 @@ void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths,
         }
       } else if (text.wrapMode == Text::WrapMode::CHARACTER) {
         float spaceWidth =
-            MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x *
+            MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), " ", text.fontSize, 1.0f).x *
             text.renderScale;
         if ((currentX - textPosition.x) + spaceWidth > effectiveWrapWidth) {
           // Skip space at start of line
@@ -1600,7 +1600,7 @@ void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths,
 
     // Create and store character
     auto character = createCharacter(
-        textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
+        textEntity, codepoint, textPosition, text.fontData.getBestFontForSize(text.fontSize), text.fontSize,
         currentX, currentY, effectiveWrapWidth, text.alignment,
         currentLineWidth, lineWidths, codepointIndex, lineNumber);
 
@@ -1674,7 +1674,7 @@ void setText(entt::entity textEntity, const std::string &text) {
 
   // Preserve existing font - only set default if no font was configured
   // This allows custom fonts (e.g., tooltip font) to persist across setText calls
-  if (textComponent.fontData.font.texture.id == 0) {
+  if (textComponent.fontData.fontsBySize.empty()) {
     textComponent.fontData = localization::getFontData();
   }
 
@@ -1909,13 +1909,13 @@ Vector2 calculateBoundingBox(entt::entity textEntity) {
         transform.getActualX() + character.offset.x * text.renderScale;
     float charY =
         transform.getActualY() + character.offset.y * text.renderScale;
-    float charWidth = MeasureTextEx(text.fontData.font,
+    float charWidth = MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize),
                                     CodepointToString(character.value).c_str(),
                                     text.fontSize, 1.0f)
                           .x *
                       text.renderScale;
     float charHeight =
-        MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y *
+        MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A", text.fontSize, 1.0f).y *
         text.renderScale; // Assuming height is same for all characters
 
     // Update min and max values
@@ -1927,7 +1927,7 @@ Vector2 calculateBoundingBox(entt::entity textEntity) {
 
   // auto &lastChar = text.characters.back();
   // // get line height of last character
-  // float lineHeight = MeasureTextEx(text.fontData.font, "A",
+  // float lineHeight = MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), "A",
   // text.fontSize, 1.0f).y; maxY = transform.getActualY() +
   // (lastChar.lineNumber + 1) * (lineHeight);
 
@@ -2039,7 +2039,7 @@ void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr,
     static Vector2 charSize = {0, 0};
     {
       ZONE_SCOPED("TextSystem::renderText-measure text size");
-      charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(),
+      charSize = MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), utf8String.c_str(),
                                text.fontSize, 1.0f);
       charSize.x *= text.renderScale;
       charSize.y *= text.renderScale;
@@ -2126,7 +2126,7 @@ void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr,
       float scaleFactor = std::clamp(rawScale * rawScale, 0.01f, 1.0f);
 
       // Adjust for font size (reduce shadow effect when font size < 30)
-      float fontSize = static_cast<float>(text.fontData.fontLoadedSize);
+      float fontSize = static_cast<float>(text.fontData.defaultSize);
       float fontFactor = std::clamp(
           fontSize / 60.0f, 0.05f,
           1.0f); // Tunable lower bound, higher denominator = less shadow
@@ -2190,7 +2190,7 @@ void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr,
         layer::QueueCommand<layer::CmdTextPro>(
             layerPtr,
             [text, fontSize = text.fontSize, spacing = text.fontData.spacing,
-             font = text.fontData.font, renderScale](layer::CmdTextPro *cmd) {
+             font = text.fontData.getBestFontForSize(text.fontSize), renderScale](layer::CmdTextPro *cmd) {
               cmd->text = utf8String.c_str();
               cmd->font = font;
               cmd->x = 0;
@@ -2246,7 +2246,7 @@ void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr,
       layer::QueueCommand<layer::CmdTextPro>(
           layerPtr,
           [fontSize = text.fontSize, spacing = text.fontData.spacing,
-           font = text.fontData.font, renderScale,
+           font = text.fontData.getBestFontForSize(text.fontSize), renderScale,
            color = Color{.r = character.color.r,
                          .g = character.color.g,
                          .b = character.color.b,
@@ -2424,7 +2424,7 @@ void renderTextImmediate(entt::entity textEntity,
     static Vector2 charSize = {0, 0};
     {
       ZONE_SCOPED("TextSystem::renderText-measure text size");
-      charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(),
+      charSize = MeasureTextEx(text.fontData.getBestFontForSize(text.fontSize), utf8String.c_str(),
                                text.fontSize, 1.0f);
       charSize.x *= text.renderScale;
       charSize.y *= text.renderScale;
@@ -2511,7 +2511,7 @@ void renderTextImmediate(entt::entity textEntity,
       float scaleFactor = std::clamp(rawScale * rawScale, 0.01f, 1.0f);
 
       // Adjust for font size (reduce shadow effect when font size < 30)
-      float fontSize = static_cast<float>(text.fontData.fontLoadedSize);
+      float fontSize = static_cast<float>(text.fontData.defaultSize);
       float fontFactor = std::clamp(
           fontSize / 60.0f, 0.05f,
           1.0f); // Tunable lower bound, higher denominator = less shadow
@@ -2575,7 +2575,7 @@ void renderTextImmediate(entt::entity textEntity,
         layer::ImmediateCommand<layer::CmdTextPro>(
             layerPtr,
             [text, fontSize = text.fontSize, spacing = text.fontData.spacing,
-             font = text.fontData.font, renderScale](layer::CmdTextPro *cmd) {
+             font = text.fontData.getBestFontForSize(text.fontSize), renderScale](layer::CmdTextPro *cmd) {
               cmd->text = utf8String.c_str();
               cmd->font = font;
               cmd->x = 0;
@@ -2631,7 +2631,7 @@ void renderTextImmediate(entt::entity textEntity,
       layer::ImmediateCommand<layer::CmdTextPro>(
           layerPtr,
           [fontSize = text.fontSize, spacing = text.fontData.spacing,
-           font = text.fontData.font, renderScale,
+           font = text.fontData.getBestFontForSize(text.fontSize), renderScale,
            color = Color{.r = character.color.r,
                          .g = character.color.g,
                          .b = character.color.b,
@@ -2759,7 +2759,7 @@ void debugPrintText(entt::entity textEntity) {
   auto &text = globals::getRegistry().get<Text>(textEntity);
   SPDLOG_DEBUG("Text Entity: {}", static_cast<int>(textEntity));
   SPDLOG_DEBUG("\tText: {}", text.rawText);
-  SPDLOG_DEBUG("\tFont: {}", text.fontData.font.baseSize);
+  SPDLOG_DEBUG("\tFont: {}", text.fontData.getBestFontForSize(text.fontSize).baseSize);
   SPDLOG_DEBUG("\tFont Size: {}", text.fontSize);
   // SPDLOG_DEBUG("Position: ({}, {})", text.position.x, text.position.y);
   SPDLOG_DEBUG("\tAlignment: {}",

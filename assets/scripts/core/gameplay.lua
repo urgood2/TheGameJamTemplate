@@ -305,10 +305,10 @@ local function loadTooltipFont()
     local tooltipFont, tooltipSize
     if lang == "ko_kr" then
         tooltipFont = "fonts/ko/Galmuri11-Bold.ttf"
-        tooltipSize = 32
+        tooltipSize = 22  -- Changed from 32 to match tooltipStyle.fontSize
     else
         tooltipFont = "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf"
-        tooltipSize = 44
+        tooltipSize = 22  -- Changed from 44 to match tooltipStyle.fontSize
     end
     localization.loadNamedFont("tooltip", tooltipFont, tooltipSize)
     TOOLTIP_FONT_VERSION = TOOLTIP_FONT_VERSION + 1

@@ -58,7 +58,6 @@ void loadFontData(const std::string &jsonPath) {
     globals::FontData fd;
 
     // --- Copy JSON parameters (with defaults) ---
-    fd.fontLoadedSize = fontJ.value("loadedSize", 32.0f);
     fd.fontScale = fontJ.value("scale", 1.0f);
     fd.spacing = fontJ.value("spacing", 1.0f);
 
@@ -66,6 +65,21 @@ void loadFontData(const std::string &jsonPath) {
         it != fontJ.end() && it->is_array() && it->size() == 2) {
       fd.fontRenderOffset = {(*it)[0].get<float>(), (*it)[1].get<float>()};
     }
+
+    // --- Parse sizes array (with fallback to legacy loadedSize) ---
+    std::vector<int> sizes;
+    if (fontJ.contains("sizes") && fontJ["sizes"].is_array()) {
+      for (auto &s : fontJ["sizes"]) {
+        sizes.push_back(s.get<int>());
+      }
+    } else if (fontJ.contains("loadedSize")) {
+      sizes.push_back(static_cast<int>(fontJ["loadedSize"].get<float>()));
+    } else {
+      sizes.push_back(22); // Ultimate fallback
+    }
+
+    // Parse defaultSize
+    fd.defaultSize = fontJ.value("defaultSize", sizes.empty() ? 22 : sizes[0]);
 
     // --- Gather ranges (or fallback to ASCII) ---
     std::vector<std::pair<int, int>> ranges;
@@ -85,18 +99,20 @@ void loadFontData(const std::string &jsonPath) {
         cps.push_back(cp);
     }
 
-    // --- Load font ---
+    // --- Load font at EACH size ---
     std::string file =
         util::getRawAssetPathNoUUID(fontJ["file"].get<std::string>());
     if (!file.empty()) {
-      fd.font = LoadFontEx(file.c_str(), static_cast<int>(fd.fontLoadedSize),
-                           cps.data(), static_cast<int>(cps.size()));
+      for (int size : sizes) {
+        Font font = LoadFontEx(file.c_str(), size, cps.data(), static_cast<int>(cps.size()));
 
-      if (fd.font.texture.id == 0) {
-        SPDLOG_ERROR("Failed to LoadFontEx '{}' for '{}'", file, lang);
-      } else {
-        SPDLOG_INFO("Loaded font '{}' ({} glyphs) for '{}'", file, cps.size(),
-                    lang);
+        if (font.texture.id == 0) {
+          SPDLOG_ERROR("Failed to LoadFontEx '{}' at {}px for '{}'", file, size, lang);
+        } else {
+          SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+          fd.fontsBySize[size] = font;
+          SPDLOG_INFO("Loaded font '{}' at {}px ({} glyphs) for '{}'", file, size, cps.size(), lang);
+        }
       }
     } else {
       SPDLOG_ERROR("Missing font file path for '{}'", lang);
@@ -123,7 +139,8 @@ const globals::FontData &getFontData() {
 void loadNamedFont(const std::string &name, const std::string &path,
                    float size) {
   globals::FontData fd;
-  fd.fontLoadedSize = size;
+  int loadedSize = static_cast<int>(size);
+  fd.defaultSize = loadedSize;
   fd.fontScale = 1.0f;
   fd.spacing = 1.0f;
   fd.fontRenderOffset = {0, 0};
@@ -143,13 +160,15 @@ void loadNamedFont(const std::string &name, const std::string &path,
 
   std::string filePath = util::getRawAssetPathNoUUID(path);
   if (!filePath.empty()) {
-    fd.font = LoadFontEx(filePath.c_str(), static_cast<int>(fd.fontLoadedSize),
+    Font font = LoadFontEx(filePath.c_str(), loadedSize,
                          fd.codepoints.data(),
                          static_cast<int>(fd.codepoints.size()));
 
-    if (fd.font.texture.id == 0) {
+    if (font.texture.id == 0) {
       SPDLOG_ERROR("Failed to load named font '{}' from '{}'", name, filePath);
     } else {
+      SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+      fd.fontsBySize[loadedSize] = font;
       SPDLOG_INFO("Loaded named font '{}' from '{}' ({} glyphs, size {})", name,
                   filePath, fd.codepoints.size(), size);
       namedFonts[name] = std::move(fd);
@@ -237,29 +256,22 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   // 1) Bind the functions and record their metadata simultaneously.
   // The get_or_create_table logic is now handled inside bind_function.
 
-  struct FontData {
-    Font font{};
-    float fontLoadedSize = 32.f; // the size of the font when loaded
-    float fontScale = 1.0f;      // the scale of the font when rendered
-    float spacing = 1.0f;        // the horizontal spacing for the font
-    Vector2 fontRenderOffset = {
-        2,
-        0}; // the offset of the font when rendered, applied to ensure text is
-            // centered correctly in ui, it is multiplied by scale when applied
-    // <— store your codepoint list if you ever need it later
-    std::vector<int> codepoints;
-  };
   // bind fontdata type.
   lua.new_usertype<Font>("Font", "baseSize", &Font::baseSize, "texture",
                          &Font::texture, "recs", &Font::recs);
 
-  lua.new_usertype<FontData>(
-      "FontData", "font", &FontData::font, "fontLoadedSize",
-      &FontData::fontLoadedSize, "fontScale", &FontData::fontScale, "spacing",
-      &FontData::spacing, "fontRenderOffset", &FontData::fontRenderOffset,
-      "codepoints", &FontData::codepoints);
+  lua.new_usertype<globals::FontData>(
+      "FontData",
+      "fontsBySize", &globals::FontData::fontsBySize,
+      "defaultSize", &globals::FontData::defaultSize,
+      "fontScale", &globals::FontData::fontScale,
+      "spacing", &globals::FontData::spacing,
+      "fontRenderOffset", &globals::FontData::fontRenderOffset,
+      "codepoints", &globals::FontData::codepoints,
+      "getBestFontForSize", &globals::FontData::getBestFontForSize,
+      "getDefaultFont", &globals::FontData::getDefaultFont);
   rec.add_type("FontData").doc =
-      "Structure containing font data for localization.";
+      "Structure containing font data for localization with multi-size font cache support.";
 
   rec.add_type("localization").doc = "namespace for localization functions";
 
@@ -356,14 +368,14 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
 
   rec.bind_function(
       lua, path, "getFont",
-      []() -> Font { return localization::getFontData().font; },
+      []() -> Font { return localization::getFontData().getDefaultFont(); },
       "---@return Font",
       "Gets the font data for the current language.");
 
   rec.bind_function(
       lua, path, "getTextWidthWithCurrentFont",
       [](const std::string &text, float fontSize, float spacing) -> float {
-        Font font = localization::getFontData().font;
+        const Font& font = localization::getFontData().getBestFontForSize(fontSize);
         if (font.baseSize <= 0)
           return 0.0f;
 
@@ -407,6 +419,44 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
                     "---@param name string # The name of the font to check.\n"
                     "---@return boolean # True if the named font exists.",
                     "Checks if a named font has been loaded.");
+
+  // getBestFontForSize (for named fonts)
+  rec.bind_function(
+      lua, path, "getBestFontForSize",
+      [](const std::string &fontName, float requestedSize) -> Font {
+        const auto &fontData = getNamedFont(fontName);
+        return fontData.getBestFontForSize(requestedSize);
+      },
+      "---@param fontName string # The name of the font to get.\n"
+      "---@param requestedSize number # The requested font size.\n"
+      "---@return Font # The best matching font for the requested size.",
+      "Gets the best font for the requested size from a named font, "
+      "preferring downscaling from larger sizes.");
+
+  // getBestFontSizeFor (for layout calculations)
+  rec.bind_function(
+      lua, path, "getBestFontSizeFor",
+      [](const std::string &fontName, float requestedSize) -> int {
+        const auto &fontData = getNamedFont(fontName);
+        return fontData.getBestFontForSize(requestedSize).baseSize;
+      },
+      "---@param fontName string # The name of the font to check.\n"
+      "---@param requestedSize number # The requested font size.\n"
+      "---@return number # The actual baseSize of the best matching font.",
+      "Gets the actual size of the best font for layout calculations.");
+
+  // getBestLangFontForSize (for current language font)
+  rec.bind_function(
+      lua, path, "getBestLangFontForSize",
+      [](float requestedSize) -> Font {
+        const auto &fontData = getFontData();
+        return fontData.getBestFontForSize(requestedSize);
+      },
+      "---@param requestedSize number # The requested font size.\n"
+      "---@return Font # The best matching font for the requested size from "
+      "the current language font.",
+      "Gets the best font for the requested size from the current language "
+      "font, preferring downscaling from larger sizes.");
 
   // onLanguageChanged
   rec.bind_function(

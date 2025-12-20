@@ -159,9 +159,13 @@ namespace ui
                 }(config);
 
                 // Use custom fontSize if specified, otherwise use default
+                // Include globalUIScaleFactor to match rendering calculation
                 float baseFontSize = config->fontSize.has_value() ? config->fontSize.value() : fontData.defaultSize;
-                float fontSize = baseFontSize * scale * fontData.fontScale;
-                auto [w, h] = MeasureTextEx(fontData.getBestFontForSize(fontSize), config->text->c_str(), fontSize, fontData.spacing);
+                float totalScale = scale * fontData.fontScale * globals::getGlobalUIScaleFactor();
+                float effectiveSize = baseFontSize * totalScale;
+                const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
+                float actualSize = static_cast<float>(bestFont.baseSize);
+                auto [w, h] = MeasureTextEx(bestFont, config->text->c_str(), actualSize, fontData.spacing);
                 if (config->verticalText.value_or(false))
                     std::swap(w, h);
                 // FIXME: testing, commenting out
@@ -1709,9 +1713,13 @@ namespace ui
             }(uiConfig);
 
             // Use custom fontSize if specified, otherwise use default
+            // Include globalUIScaleFactor to match rendering calculation
             float baseFontSize = uiConfig.fontSize.has_value() ? uiConfig.fontSize.value() : fontData.defaultSize;
-            float fontSize = baseFontSize * scaleFactor * fontData.fontScale;
-            auto [measuredWidth, measuredHeight] = MeasureTextEx(fontData.getBestFontForSize(fontSize), uiConfig.text.value().c_str(), fontSize, fontData.spacing);
+            float totalScale = scaleFactor * fontData.fontScale * globals::getGlobalUIScaleFactor();
+            float effectiveSize = baseFontSize * totalScale;
+            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
+            float actualSize = static_cast<float>(bestFont.baseSize);
+            auto [measuredWidth, measuredHeight] = MeasureTextEx(bestFont, uiConfig.text.value().c_str(), actualSize, fontData.spacing);
 
             calcCurrentNodeTransform.w = measuredWidth;
             calcCurrentNodeTransform.h = measuredHeight;

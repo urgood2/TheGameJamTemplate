@@ -8,6 +8,7 @@ if os.getenv("LUA_STRICT_MODE") == "1" or os.getenv("DEBUG") == "1" then
 end
 
 local component_cache = require("core.component_cache")
+require("core.localization_styled")
 
 globals = globals or {}
 

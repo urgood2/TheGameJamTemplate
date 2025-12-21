@@ -649,5 +649,12 @@
 			"total_slots": "Total Slots",
 			"always_casts": "Always Casts"
 		}
+	},
+	"test": {
+		"styled_damage": "Deal {damage|red} damage",
+		"styled_element": "Cast {element|fire} spell for {cost|blue} mana",
+		"styled_mixed": "A [powerful](color=gold) attack dealing {damage|red} damage",
+		"styled_no_color": "You have {count} items",
+		"styled_heal": "Restore {amount|green} HP to target"
 	}
 }

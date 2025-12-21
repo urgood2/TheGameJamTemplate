@@ -58,14 +58,27 @@ void TextHandler::draw(
     const auto& styleColor = style.color;
     const auto styleShadow = style.shadow;
 
-    // Calculate parallax values for shadow
-    float rawScale = layoutScale.value() * fontData.fontScale;
-    float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
-    float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
-    float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
+    const bool shadowsOn = globals::getSettings().shadowsOn;
+    const float spacing = config->textSpacing.value_or(fontData.spacing);
+    const float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
+
+    // Calculate effective size and select best font for that size
+    // This avoids GPU scaling which causes pixel gaps with TEXTURE_FILTER_POINT
+    const float effectiveSize = requestedSize * scale;
+    const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
+    const float fontSize = static_cast<float>(bestFont.baseSize);
+
+    // Only apply GPU scaling if we couldn't find an exact font match
+    const float fontScaleRatio = effectiveSize / fontSize;
+    const bool needsGpuScaling = std::abs(fontScaleRatio - 1.0f) > 0.01f;
+
+    // Scale shadow offset relative to rendered font size (in pixels)
+    Vector2& fixedShadow = globals::getFixedTextShadowOffset();
+    const float shadowOffsetX = fixedShadow.x * effectiveSize * 0.04f;
+    const float shadowOffsetY = fixedShadow.y * effectiveSize * -0.03f;
 
     bool drawShadow = (config->button_UIE && ctx.buttonActive) ||
-                      (!config->button_UIE && styleShadow && globals::getSettings().shadowsOn);
+                      (!config->button_UIE && styleShadow && shadowsOn);
 
     // Shadow pass
     if (drawShadow) {
@@ -73,8 +86,8 @@ void TextHandler::draw(
 
         Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
         layer::QueueCommand<layer::CmdTranslate>(layerPtr,
-            [x = ctx.actualX + textParallaxSX + layerDisplacement.x,
-             y = ctx.actualY + textParallaxSY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+            [x = ctx.actualX + layerDisplacement.x + shadowOffsetX,
+             y = ctx.actualY + layerDisplacement.y + shadowOffsetY](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
         }, zIndex);
@@ -89,25 +102,11 @@ void TextHandler::draw(
             }, zIndex);
         }
 
-        if ((styleShadow || (config->button_UIE && ctx.buttonActive)) && globals::getSettings().shadowsOn) {
+        if ((styleShadow || (config->button_UIE && ctx.buttonActive)) && shadowsOn) {
             Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor.value_or(WHITE).a * 0.3f)};
 
-            float textX = fontData.fontRenderOffset.x +
-                         (contentVerticalText ? textParallaxSY : textParallaxSX) * layoutScale.value_or(1.0f) * fontData.fontScale;
-            float textY = fontData.fontRenderOffset.y +
-                         (contentVerticalText ? textParallaxSX : textParallaxSY) * layoutScale.value_or(1.0f) * fontData.fontScale;
-            float spacing = config->textSpacing.value_or(fontData.spacing);
-            float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
-
-            // Calculate effective size and select best font for that size
-            // This avoids GPU scaling which causes pixel gaps with TEXTURE_FILTER_POINT
-            float effectiveSize = requestedSize * scale;
-            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-            float fontSize = static_cast<float>(bestFont.baseSize);
-
-            // Only apply GPU scaling if we couldn't find an exact font match
-            float fontScaleRatio = effectiveSize / fontSize;
-            bool needsGpuScaling = std::abs(fontScaleRatio - 1.0f) > 0.01f;
+            float textX = fontData.fontRenderOffset.x;
+            float textY = fontData.fontRenderOffset.y;
 
             if (needsGpuScaling) {
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [fontScaleRatio](layer::CmdScale *cmd) {
@@ -161,19 +160,6 @@ void TextHandler::draw(
 
     float textX = fontData.fontRenderOffset.x;
     float textY = fontData.fontRenderOffset.y;
-    float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
-
-    // Calculate effective size and select best font for that size
-    // This avoids GPU scaling which causes pixel gaps with TEXTURE_FILTER_POINT
-    float effectiveSize = requestedSize * scale;
-    const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-    float fontSize = static_cast<float>(bestFont.baseSize);
-    float spacing = config->textSpacing.value_or(fontData.spacing);
-
-    // Only apply GPU scaling if we couldn't find an exact font match
-    // (i.e., we need to scale from the closest available size)
-    float fontScaleRatio = effectiveSize / fontSize;
-    bool needsGpuScaling = std::abs(fontScaleRatio - 1.0f) > 0.01f;
 
     if (needsGpuScaling) {
         layer::QueueCommand<layer::CmdScale>(layerPtr, [fontScaleRatio](layer::CmdScale *cmd) {

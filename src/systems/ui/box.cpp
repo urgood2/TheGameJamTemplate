@@ -34,6 +34,46 @@ struct equal_to<ui::UIElementTemplateNode> {
 
 namespace ui
 {
+    namespace
+    {
+        bool IsVisibleWindowSurface(const UIConfig& config)
+        {
+            if (config.nPatchInfo || config.nPatchSourceTexture) {
+                return true;
+            }
+            if (config.outlineThickness && config.outlineThickness.value_or(0.0f) > 0.0f) {
+                return true;
+            }
+            if (config.color && config.color->a > 0) {
+                return true;
+            }
+            return false;
+        }
+
+        void ApplyUniformWindowPaddingIfNeeded(entt::registry& registry, entt::entity uiRoot)
+        {
+            auto* config = registry.try_get<UIConfig>(uiRoot);
+            if (!config || !config->uiType) {
+                return;
+            }
+
+            const auto type = config->uiType.value();
+            const bool isContainer = (type == UITypeEnum::VERTICAL_CONTAINER) ||
+                                     (type == UITypeEnum::HORIZONTAL_CONTAINER) ||
+                                     (type == UITypeEnum::ROOT) ||
+                                     (type == UITypeEnum::SCROLL_PANE);
+            if (!isContainer) {
+                return;
+            }
+
+            if (!IsVisibleWindowSurface(*config)) {
+                return;
+            }
+
+            config->padding = globals::getSettings().uiWindowPadding;
+        }
+    }
+
     // TODO: update function registry for methods that replace transform-provided methods
 
     // TODO: make sure all methods take into account that children can be uiboxes as well
@@ -249,6 +289,8 @@ namespace ui
         auto uiRoot = uiBox.uiRoot.value();
         auto &uiRootRole = registry.get<transform::InheritedProperties>(uiRoot);
 
+        ApplyUniformWindowPaddingIfNeeded(registry, uiRoot);
+
         // First, set parent-child relationships to create the tree structure
 
         // go through all children wihch are objects and reset size with void resetAnimationUIRenderScale(entt::entity e)
@@ -382,6 +424,9 @@ namespace ui
         auto *uiBox = registry.try_get<UIBoxComponent>(self);
         auto *uiBoxRole = registry.try_get<transform::InheritedProperties>(self);
         auto uiRoot = uiBox->uiRoot.value();
+
+        ApplyUniformWindowPaddingIfNeeded(registry, uiRoot);
+
         // Set the midpoint for any future alignments to use
         transform.middleEntityForAlignment = uiRoot;
         auto &uiRootRole = registry.get<transform::InheritedProperties>(uiRoot);

@@ -501,10 +501,18 @@ void setEngineContext(EngineContext* ctx) {
     std::map<std::string, Color> colors{};
 
     
-    float BASE_SHADOW_EXAGGERATION = 1.8f; 
+    float BASE_SHADOW_EXAGGERATION = 1.8f;
     float& getBaseShadowExaggeration() {
         if (g_ctx) return g_ctx->baseShadowExaggeration;
         return BASE_SHADOW_EXAGGERATION;
+    }
+
+    // Fixed text shadow offset - consistent regardless of screen position
+    // X = positive (shadow to the right), Y = negative (shadow below text)
+    // Values are relative multipliers, not absolute pixels
+    Vector2 FIXED_TEXT_SHADOW_OFFSET = {2.0f, -3.5f};
+    Vector2& getFixedTextShadowOffset() {
+        return FIXED_TEXT_SHADOW_OFFSET;
     }
 
     //TODO: document

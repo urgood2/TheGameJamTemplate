@@ -4072,7 +4072,7 @@ local function buildFourColumnBody(rows, opts) return buildNColumnBody(rows, 4, 
 local function makeDetailedStatsTooltip(snapshot)
     -- Compressed styling for detailed stats
     -- Use 13px (ProggyClean base size) for pixel-perfect small text
-    local compactPadding = 4
+    local compactPadding = tooltipStyle.outerPadding or 10
     local compactRowPadding = 1
     local compactFontSize = 13
     local opts = {
@@ -4159,7 +4159,7 @@ local function ensureDetailedStatsTooltip()
     return tooltip
 end
 function makePlayerStatsTooltip(snapshot)
-    local innerPad = 10  -- Increased padding for better fit
+    local innerPad = tooltipStyle.outerPadding or 10  -- Increased padding for better fit
     local opts = {
         colorCode = true,
         showHeaders = true,

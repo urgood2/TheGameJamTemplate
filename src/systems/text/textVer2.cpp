@@ -2134,15 +2134,12 @@ void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr,
       // Final combined scale factor
       float finalFactor = scaleFactor * fontFactor;
 
-      float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration *
+      // Use fixed text shadow offset for consistent shadows regardless of screen position
+      Vector2& fixedShadow = globals::getFixedTextShadowOffset();
+      float shadowOffsetX = fixedShadow.x * baseExaggeration *
                             heightFactor * finalFactor;
-      float shadowOffsetY = -character.shadowDisplacement.y * baseExaggeration *
+      float shadowOffsetY = -fixedShadow.y * baseExaggeration *
                             heightFactor * finalFactor;
-
-      // float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration
-      // * heightFactor * renderScale; float shadowOffsetY = -
-      // character.shadowDisplacement.y * baseExaggeration * heightFactor *
-      // renderScale; // make shadow stretch downward
 
       // apply offsets to shadow if any
       for (const auto &[effectName, offset] :
@@ -2519,15 +2516,12 @@ void renderTextImmediate(entt::entity textEntity,
       // Final combined scale factor
       float finalFactor = scaleFactor * fontFactor;
 
-      float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration *
+      // Use fixed text shadow offset for consistent shadows regardless of screen position
+      Vector2& fixedShadow = globals::getFixedTextShadowOffset();
+      float shadowOffsetX = fixedShadow.x * baseExaggeration *
                             heightFactor * finalFactor;
-      float shadowOffsetY = -character.shadowDisplacement.y * baseExaggeration *
+      float shadowOffsetY = -fixedShadow.y * baseExaggeration *
                             heightFactor * finalFactor;
-
-      // float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration
-      // * heightFactor * renderScale; float shadowOffsetY = -
-      // character.shadowDisplacement.y * baseExaggeration * heightFactor *
-      // renderScale; // make shadow stretch downward
 
       // apply offsets to shadow if any
       for (const auto &[effectName, offset] :

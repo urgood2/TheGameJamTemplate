@@ -424,6 +424,10 @@ extern layer::Layer backgroundLayer, gameLayer, uiLayer;
 extern float BASE_SHADOW_EXAGGERATION; // multiplied to shadow offsets
 float &getBaseShadowExaggeration();
 
+// Fixed text shadow offset - consistent regardless of screen position (not affected by parallax)
+extern Vector2 FIXED_TEXT_SHADOW_OFFSET;
+Vector2 &getFixedTextShadowOffset();
+
 extern std::optional<int> REFRESH_FRAME_MASTER_CACHE;
 
 extern bool shouldRefreshAlerts;
@@ -445,6 +449,7 @@ extern std::optional<bool> noModCursorStack; // TODO: document this
 struct Settings {
   bool shadowsOn = true;
   float uiPadding = 4.0f;  // Unified with globals::uiPadding (was 10.0f)
+  float uiWindowPadding = 10.0f; // Uniform padding for top-level UI windows/panels
 };
 
 extern Settings settings;

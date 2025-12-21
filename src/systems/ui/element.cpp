@@ -1457,66 +1457,52 @@ namespace ui
         if (config->uiType == UITypeEnum::TEXT && config->scale)
         {
             ZONE_SCOPED("UI Element: Text Logic");
-            float rawScale = config->scale.value() * fontData.fontScale;
-            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
-            float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
-            
-            //TODO: if scale is smaller, make the shadow height smaller too
+            const bool shadowsOn = globals::getSettings().shadowsOn;
+            const bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && shadowsOn);
 
-            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
+            Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
 
-            if (drawShadow)
+            // Calculate total scale for effective size calculation
+            float totalScale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
+            float spacing = config->textSpacing.value_or(fontData.spacing);
+
+            // Use effective size for font selection (no scaling transform)
+            float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
+            float effectiveSize = requestedSize * totalScale;
+            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
+            float actualSize = static_cast<float>(bestFont.baseSize);
+
+            // Scale text offsets manually (no transform scaling for crisp fonts)
+            float textX = fontData.fontRenderOffset.x * totalScale;
+            float textY = fontData.fontRenderOffset.y * totalScale;
+
+            // Scale shadow offset relative to the rendered font size (in pixels)
+            Vector2& fixedShadow = globals::getFixedTextShadowOffset();
+            float shadowOffsetX = fixedShadow.x * actualSize * 0.04f;
+            float shadowOffsetY = fixedShadow.y * actualSize * -0.03f;
+
+            if (drawShadow && shadowsOn)
             {
                 layer::PushMatrix();
-                
-                Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
-                layer::Translate(actualX + textParallaxSX + layerDisplacement.x, actualY + textParallaxSY + layerDisplacement.y);
-                
+
+                layer::Translate(actualX + layerDisplacement.x + shadowOffsetX,
+                                 actualY + layerDisplacement.y + shadowOffsetY);
+
                 if (config->verticalText)
                 {
-                    // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = actualH](layer::CmdTranslate *cmd) {
-                    //     cmd->x = x;
-                    //     cmd->y = y;
-                    // }, zIndex);
                     layer::Translate(0, actualH);
-                    // layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = -PI / 2](layer::CmdRotate *cmd) {
-                    //     cmd->angle = rotation;
-                    // }, zIndex);
                     layer::Rotate(-PI / 2);
                 }
-                if ((config->shadow || (config->button_UIE && buttonActive)) && globals::getSettings().shadowsOn)
-                {
-                    Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
 
-                    // Calculate total scale for effective size calculation
-                    float totalScale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
+                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+                layer::TextPro(config->text.value().c_str(), bestFont, textX, textY, {0, 0}, 0, actualSize, spacing, shadowColor);
 
-                    // Scale text offsets manually (no transform scaling for crisp fonts)
-                    float textX = (fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * fontData.fontScale) * totalScale;
-                    float textY = (fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * fontData.fontScale) * totalScale;
-                    float spacing = config->textSpacing.value_or(fontData.spacing);
-
-                    // Use effective size for font selection (no scaling transform)
-                    float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
-                    float effectiveSize = requestedSize * totalScale;
-                    const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-                    float actualSize = static_cast<float>(bestFont.baseSize);
-
-                    // Render at native font size (no scaling) for crisp text
-                    layer::TextPro(config->text.value().c_str(), bestFont, textX, textY, {0, 0}, 0, actualSize, spacing, shadowColor);
-
-                    // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
-                }
-
-                // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
                 layer::PopMatrix();
             }
 
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
-            Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + layerDisplacement.x, y = actualY + layerDisplacement.y](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
             //     cmd->y = y;
@@ -1539,21 +1525,6 @@ namespace ui
             {
                 renderColor = globals::uiTextInactive;
             }
-
-            // Calculate total scale for effective size calculation
-            float totalScale = config->scale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
-
-            // Scale text offsets manually (no transform scaling for crisp fonts)
-            float textX = fontData.fontRenderOffset.x * totalScale;
-            float textY = fontData.fontRenderOffset.y * totalScale;
-
-            float spacing = config->textSpacing.value_or(fontData.spacing);
-
-            // Use effective size for font selection (no scaling transform)
-            float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
-            float effectiveSize = requestedSize * totalScale;
-            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-            float actualSize = static_cast<float>(bestFont.baseSize);
 
             // DEBUG: Log font rendering info for tooltip fonts
             static int debugCounter = 0;
@@ -1744,24 +1715,23 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
     // Font & knobs (match TEXT path)
     const auto& fd        = fontData;
     const float totalScale = config->scale.value_or(1.0f) * fd.fontScale * globals::getGlobalUIScaleFactor();
-    const float spacing   = config->textSpacing.value_or(fd.spacing);
-    Color renderColor     = BLACK;
+	    const float spacing   = config->textSpacing.value_or(fd.spacing);
+	    Color renderColor     = BLACK;
 
-    // Parallax (match TEXT path)
-    const float rawScale    = config->scale.value_or(1.0f) * fd.fontScale;
-    const float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
-    const float textParallaxSX = node->shadowDisplacement->x * fd.defaultSize * 0.04f * scaleFactor;
-    const float textParallaxSY = node->shadowDisplacement->y * fd.defaultSize * -0.03f * scaleFactor;
-
-    const bool drawShadow = (config->button_UIE && true) ||
-                            (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
+	    const bool drawShadow = (config->button_UIE && true) ||
+	                            (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn);
 
     // ---- Use effective size for font selection (no scaling) --------------------------------
     // Calculate effective size to select the best font
     const float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fd.defaultSize);
-    const float effectiveSize = requestedSize * totalScale;
-    const Font& bestFont = fd.getBestFontForSize(effectiveSize);
-    const float fontSize = static_cast<float>(bestFont.baseSize);
+	    const float effectiveSize = requestedSize * totalScale;
+	    const Font& bestFont = fd.getBestFontForSize(effectiveSize);
+	    const float fontSize = static_cast<float>(bestFont.baseSize);
+	
+	    // Scale shadow offset relative to rendered font size (in pixels)
+	    Vector2& fixedShadow = globals::getFixedTextShadowOffset();
+	    const float shadowOffsetX = fixedShadow.x * fontSize * 0.04f;
+	    const float shadowOffsetY = fixedShadow.y * fontSize * -0.03f;
 
     // Vertical centering uses the actual element height (already scaled in layout)
     const float innerH = transform->getActualH();
@@ -1774,30 +1744,24 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     Vector2 layerDisp = { node->layerDisplacement->x, node->layerDisplacement->y };
 
-    // --- 1) Shadow pass (no scaling for crisp fonts)
-    if (drawShadow) {
-        layer::PushMatrix();
-        layer::Translate(transform->getActualX() + textParallaxSX * totalScale + layerDisp.x,
-                         transform->getActualY() + textParallaxSY * totalScale + layerDisp.y);
+	    // --- 1) Shadow pass (no scaling for crisp fonts)
+	    if (drawShadow) {
+	        layer::PushMatrix();
+	        layer::Translate(transform->getActualX() + shadowOffsetX + layerDisp.x,
+	                         transform->getActualY() + shadowOffsetY + layerDisp.y);
 
         if (config->verticalText) {
             layer::Translate(0, transform->getActualH());
             layer::Rotate(-PI / 2);
         }
 
-        // Shadow offsets already scaled
-        const float shadowTextX = textX + (config->verticalText ? textParallaxSY : textParallaxSX)
-                                            * config->scale.value_or(1.0f) * fd.fontScale * totalScale;
-        const float shadowBaseY = baseY + (config->verticalText ? textParallaxSX : textParallaxSY)
-                                            * config->scale.value_or(1.0f) * fd.fontScale * totalScale;
-
-        Color shadow = { 0, 0, 0,
-            static_cast<unsigned char>(std::max(20.0f, config->color->a * 0.30f)) };
-
-        // Render at native font size (no scaling) for crisp text
-        layer::TextPro(s.c_str(), bestFont, shadowTextX, shadowBaseY, {0, fontSize / 2}, 0, fontSize, spacing, shadow);
-        layer::PopMatrix();
-    }
+	        Color shadow = { 0, 0, 0,
+	            static_cast<unsigned char>(std::max(20.0f, config->color->a * 0.30f)) };
+	
+	        // Render at native font size (no scaling) for crisp text
+	        layer::TextPro(s.c_str(), bestFont, textX, baseY, {0, fontSize / 2}, 0, fontSize, spacing, shadow);
+	        layer::PopMatrix();
+	    }
 
     // --- 2) Main text pass (no scaling for crisp fonts)
     layer::PushMatrix();
@@ -2140,32 +2104,49 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 #endif
 
         // is it text?
-        if (config->uiType == UITypeEnum::TEXT && layoutScale)
-        {
-            ZONE_SCOPED("UI Element: Text Logic");
-            const bool snapToPixels = config->pixelatedRectangle;
-            auto snapPixel = [](float v) -> float { return std::round(v); };
-            float rawScale = layoutScale.value() * fontData.fontScale;
-            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
-            float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
+	        if (config->uiType == UITypeEnum::TEXT && layoutScale)
+	        {
+	            ZONE_SCOPED("UI Element: Text Logic");
+	            const bool snapToPixels = config->pixelatedRectangle;
+	            auto snapPixel = [](float v) -> float { return std::round(v); };
+	            const bool shadowsOn = globals::getSettings().shadowsOn;
+	            const bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && styleShadow && shadowsOn);
 
-            //TODO: if scale is smaller, make the shadow height smaller too
+	            // Calculate total scale for effective size calculation (matches immediate path)
+	            float totalScale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
+	            float spacing = config->textSpacing.value_or(fontData.spacing);
 
-            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && styleShadow && globals::getSettings().shadowsOn);
+	            // Use effective size for font selection (no scaling transform for crisp text)
+	            float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
+	            float effectiveSize = requestedSize * totalScale;
+	            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
+	            float actualSize = static_cast<float>(bestFont.baseSize);
 
-            if (drawShadow)
-            {
-                // util::PrepDraw(layerPtr, registry, entity, 0.97f);
-                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
-                Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
-                float shadowTranslateX = actualX + textParallaxSX + layerDisplacement.x;
-                float shadowTranslateY = actualY + textParallaxSY + layerDisplacement.y;
-                if (snapToPixels) {
-                    shadowTranslateX = snapPixel(shadowTranslateX);
-                    shadowTranslateY = snapPixel(shadowTranslateY);
-                }
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = shadowTranslateX, y = shadowTranslateY](layer::CmdTranslate *cmd) {
+	            // Scale text offsets manually (no transform scaling for crisp fonts)
+	            float textX = fontData.fontRenderOffset.x * totalScale;
+	            float textY = fontData.fontRenderOffset.y * totalScale;
+	            if (snapToPixels) {
+	                textX = snapPixel(textX);
+	                textY = snapPixel(textY);
+	            }
+
+	            // Scale shadow offset relative to the rendered font size (in pixels)
+	            Vector2& fixedShadow = globals::getFixedTextShadowOffset();
+	            float shadowOffsetX = fixedShadow.x * actualSize * 0.04f;
+	            float shadowOffsetY = fixedShadow.y * actualSize * -0.03f;
+
+	            if (drawShadow)
+	            {
+	                // util::PrepDraw(layerPtr, registry, entity, 0.97f);
+	                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+	                Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
+	                float shadowTranslateX = actualX + layerDisplacement.x + shadowOffsetX;
+	                float shadowTranslateY = actualY + layerDisplacement.y + shadowOffsetY;
+	                if (snapToPixels) {
+	                    shadowTranslateX = snapPixel(shadowTranslateX);
+	                    shadowTranslateY = snapPixel(shadowTranslateY);
+	                }
+	                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = shadowTranslateX, y = shadowTranslateY](layer::CmdTranslate *cmd) {
                     cmd->x = x;
                     cmd->y = y;
                 }, zIndex);
@@ -2177,34 +2158,16 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         cmd->y = y;
                     }, zIndex);
                     layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = -PI / 2](layer::CmdRotate *cmd) {
-                        cmd->angle = rotation;
-                    }, zIndex);
-                }
-                if ((styleShadow || (config->button_UIE && buttonActive)) && globals::getSettings().shadowsOn)
-                {
-                    Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor->a * 0.3f)};
+	                        cmd->angle = rotation;
+	                    }, zIndex);
+	                }
+	                if ((styleShadow || (config->button_UIE && buttonActive)) && shadowsOn)
+	                {
+	                    Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(styleColor->a * 0.3f)};
 
-                    // Calculate total scale for effective size calculation (matches immediate path)
-                    float totalScale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
-
-                    // Scale text offsets manually (no transform scaling for crisp fonts)
-                    float textX = (fontData.fontRenderOffset.x + (contentVerticalText ? textParallaxSY : textParallaxSX) * layoutScale.value_or(1.0f) * fontData.fontScale) * totalScale;
-                    float textY = (fontData.fontRenderOffset.y + (contentVerticalText ? textParallaxSX : textParallaxSY) * layoutScale.value_or(1.0f) * fontData.fontScale) * totalScale;
-                    if (snapToPixels) {
-                        textX = snapPixel(textX);
-                        textY = snapPixel(textY);
-                    }
-                    float spacing = config->textSpacing.value_or(fontData.spacing);
-
-                    // Use effective size for font selection (no scaling transform for crisp text)
-                    float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
-                    float effectiveSize = requestedSize * totalScale;
-                    const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-                    float actualSize = static_cast<float>(bestFont.baseSize);
-
-                    // Render at native font size (no CmdScale transform for crisp text)
-                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = bestFont, textX, textY, spacing, shadowColor, actualSize](layer::CmdTextPro *cmd) {
-                        cmd->text = text.c_str();
+	                    // Render at native font size (no CmdScale transform for crisp text)
+	                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = bestFont, textX, textY, spacing, shadowColor, actualSize](layer::CmdTextPro *cmd) {
+	                        cmd->text = text.c_str();
                         cmd->font = font;
                         cmd->x = textX;
                         cmd->y = textY;
@@ -2216,8 +2179,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                     }, zIndex);
                 }
 
-                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
-            }
+	                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+	            }
 
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
@@ -2243,33 +2206,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 }, zIndex);
             }
             Color renderColor = styleColor.value();
-            if (buttonActive == false)
-            {
-                renderColor = globals::uiTextInactive;
-            }
+	            if (buttonActive == false)
+	            {
+	                renderColor = globals::uiTextInactive;
+	            }
 
-            // Calculate total scale for effective size calculation (matches immediate path)
-            float totalScale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
-
-            // Scale text offsets manually (no transform scaling for crisp fonts)
-            float textX = fontData.fontRenderOffset.x * totalScale;
-            float textY = fontData.fontRenderOffset.y * totalScale;
-            if (snapToPixels) {
-                textX = snapPixel(textX);
-                textY = snapPixel(textY);
-            }
-
-            float spacing = config->textSpacing.value_or(fontData.spacing);
-
-            // Use effective size for font selection (no scaling transform for crisp text)
-            float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
-            float effectiveSize = requestedSize * totalScale;
-            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-            float actualSize = static_cast<float>(bestFont.baseSize);
-
-            // Render at native font size (no CmdScale transform for crisp text)
-            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = bestFont, textX, textY, spacing, renderColor, actualSize](layer::CmdTextPro *cmd) {
-                cmd->text = text.c_str();
+	            // Render at native font size (no CmdScale transform for crisp text)
+	            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = bestFont, textX, textY, spacing, renderColor, actualSize](layer::CmdTextPro *cmd) {
+	                cmd->text = text.c_str();
                 cmd->font = font;
                 cmd->x = textX;
                 cmd->y = textY;
@@ -2586,44 +2530,43 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             if (!buttonActive)
                 renderColor = globals::uiTextInactive;
 
-            // Shadow logic identical to TEXT (with parallax derived from the node's shadow)
-            bool drawShadow = ((config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn));
-            float rawScale = config->scale.value_or(1.0f) * fontData.fontScale;
-            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
-            float textParallaxSX = node->shadowDisplacement->x * fontData.defaultSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * fontData.defaultSize * -0.03f * scaleFactor;
+	            // Shadow logic identical to TEXT (with parallax derived from the node's shadow)
+	            bool drawShadow = ((config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::getSettings().shadowsOn));
 
-            // Common translate (like TEXT): position at element origin + layer displacement
-            Vector2 layerDisplacement = { node->layerDisplacement->x, node->layerDisplacement->y };
+	            // Use effective size for font selection (no scaling transform for crisp text)
+	            float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
+	            float effectiveSize = requestedSize * scale;
+	            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
+	            float actualSize = static_cast<float>(bestFont.baseSize);
 
-            // 1) Optional shadow pass
-            if (drawShadow) {
-                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](auto*){}, zIndex);
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + textParallaxSX + layerDisplacement.x,
-                                                                    y = actualY + textParallaxSY + layerDisplacement.y](layer::CmdTranslate *cmd) {
-                    cmd->x = x; cmd->y = y;
-                }, zIndex);
+	            // Scale shadow offset relative to rendered font size (in pixels)
+	            Vector2& fixedShadow = globals::getFixedTextShadowOffset();
+	            float shadowOffsetX = fixedShadow.x * actualSize * 0.04f;
+	            float shadowOffsetY = fixedShadow.y * actualSize * -0.03f;
+
+	            // Common translate (like TEXT): position at element origin + layer displacement
+	            Vector2 layerDisplacement = { node->layerDisplacement->x, node->layerDisplacement->y };
+	            float textX = fontData.fontRenderOffset.x * scale;
+	            float textY = fontData.fontRenderOffset.y * scale;
+
+	            // 1) Optional shadow pass
+	            if (drawShadow) {
+	                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](auto*){}, zIndex);
+	                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + layerDisplacement.x + shadowOffsetX,
+	                                                                    y = actualY + layerDisplacement.y + shadowOffsetY](layer::CmdTranslate *cmd) {
+	                    cmd->x = x; cmd->y = y;
+	                }, zIndex);
 
                 if (config->verticalText) {
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = actualH](layer::CmdTranslate *cmd) { cmd->x = 0; cmd->y = h; }, zIndex);
                     layer::QueueCommand<layer::CmdRotate>(layerPtr, [](layer::CmdRotate *cmd) { cmd->angle = -PI / 2; }, zIndex);
                 }
 
-                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+	                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
 
-                // Scale text offsets manually (no transform scaling for crisp fonts)
-                float textX  = fontData.fontRenderOffset.x * scale;
-                float textY  = fontData.fontRenderOffset.y * scale;
-
-                // Use effective size for font selection (no scaling transform for crisp text)
-                float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
-                float effectiveSize = requestedSize * scale;
-                const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-                float actualSize = static_cast<float>(bestFont.baseSize);
-
-                // Render at native font size (no CmdScale transform for crisp text)
-                layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
-                                                                font = bestFont,
+	                // Render at native font size (no CmdScale transform for crisp text)
+	                layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
+	                                                                font = bestFont,
                                                                 textX, textY, spacing, shadowColor, actualSize](layer::CmdTextPro *cmd) {
                     cmd->text     = t.c_str();
                     cmd->font     = font;
@@ -2646,24 +2589,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 cmd->x = x; cmd->y = y;
             }, zIndex);
 
-            if (config->verticalText) {
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = actualH](layer::CmdTranslate *cmd) { cmd->x = 0; cmd->y = h; }, zIndex);
-                layer::QueueCommand<layer::CmdRotate>(layerPtr, [](layer::CmdRotate *cmd) { cmd->angle = -PI / 2; }, zIndex);
-            }
+	            if (config->verticalText) {
+	                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = actualH](layer::CmdTranslate *cmd) { cmd->x = 0; cmd->y = h; }, zIndex);
+	                layer::QueueCommand<layer::CmdRotate>(layerPtr, [](layer::CmdRotate *cmd) { cmd->angle = -PI / 2; }, zIndex);
+	            }
 
-            // Scale text offsets manually (no transform scaling for crisp fonts)
-            float textX = fontData.fontRenderOffset.x * scale;
-            float textY = fontData.fontRenderOffset.y * scale;
-
-            // Use effective size for font selection (no scaling transform for crisp text)
-            float requestedSize = config->fontSize.has_value() ? config->fontSize.value() : static_cast<float>(fontData.defaultSize);
-            float effectiveSize = requestedSize * scale;
-            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
-            float actualSize = static_cast<float>(bestFont.baseSize);
-
-            // Render at native font size (no CmdScale transform for crisp text)
-            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
-                                                            font = bestFont,
+	            // Render at native font size (no CmdScale transform for crisp text)
+	            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
+	                                                            font = bestFont,
                                                             textX, textY, spacing, renderColor, actualSize](layer::CmdTextPro *cmd) {
                 cmd->text     = t.c_str();
                 cmd->font     = font;

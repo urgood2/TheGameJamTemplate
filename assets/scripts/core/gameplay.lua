@@ -555,6 +555,30 @@ local function makeSimpleTooltip(title, body, opts)
     return boxID
 end
 
+--- Create a tooltip with localized, color-coded text
+--- @param key string Localization key
+--- @param params table|nil Parameters for substitution (supports {value=X, color="Y"})
+--- @param opts table|nil Options: title, maxWidth, titleColor
+--- @return number|nil boxID The tooltip entity ID
+local function makeLocalizedTooltip(key, params, opts)
+    opts = opts or {}
+
+    -- Use styled localization for color markup
+    local text = localization.getStyled(key, params)
+
+    return makeSimpleTooltip(
+        opts.title or "",
+        text,
+        {
+            bodyCoded = true,  -- Enable [text](effects) parsing
+            maxWidth = opts.maxWidth or 320,
+            bodyColor = opts.bodyColor,
+            bodyFont = opts.bodyFont,
+            bodyFontSize = opts.bodyFontSize
+        }
+    )
+end
+
 local function cacheFetch(cache, key)
     local entry = cache[key]
     if not entry then return nil end

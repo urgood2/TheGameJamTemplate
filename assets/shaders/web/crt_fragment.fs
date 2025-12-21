@@ -45,7 +45,8 @@ float random(vec2 uv) {
 }
 
 vec3 fetch_pixel(vec2 uv, vec2 off) {
-    vec2 pos = floor(uv * resolution + off) / resolution + vec2(0.5) / resolution;
+    // Sample with continuous UVs (allows bilinear filtering / smooth scaling).
+    vec2 pos = uv + off / resolution;
     float noise = (noise_amount > 0.0) ? random(pos + fract(iTime)) * noise_amount : 0.0;
     if (max(abs(pos.x - 0.5), abs(pos.y - 0.5)) > 0.5) return vec3(0.0);
     return texture(texture0, pos).rgb + noise;

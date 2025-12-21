@@ -99,13 +99,22 @@ void TextHandler::draw(
             float spacing = config->textSpacing.value_or(fontData.spacing);
             float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
 
-            layer::QueueCommand<layer::CmdScale>(layerPtr, [scale](layer::CmdScale *cmd) {
-                cmd->scaleX = scale;
-                cmd->scaleY = scale;
-            }, zIndex);
-
-            const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+            // Calculate effective size and select best font for that size
+            // This avoids GPU scaling which causes pixel gaps with TEXTURE_FILTER_POINT
+            float effectiveSize = requestedSize * scale;
+            const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
             float fontSize = static_cast<float>(bestFont.baseSize);
+
+            // Only apply GPU scaling if we couldn't find an exact font match
+            float fontScaleRatio = effectiveSize / fontSize;
+            bool needsGpuScaling = std::abs(fontScaleRatio - 1.0f) > 0.01f;
+
+            if (needsGpuScaling) {
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [fontScaleRatio](layer::CmdScale *cmd) {
+                    cmd->scaleX = fontScaleRatio;
+                    cmd->scaleY = fontScaleRatio;
+                }, zIndex);
+            }
             if (config->text) {
                 layer::QueueCommand<layer::CmdTextPro>(layerPtr,
                     [text = config->text.value(), font = bestFont, textX, textY, spacing, shadowColor, fontSize](layer::CmdTextPro *cmd) {
@@ -154,14 +163,24 @@ void TextHandler::draw(
     float textY = fontData.fontRenderOffset.y;
     float scale = layoutScale.value_or(1.0f) * fontData.fontScale * globals::getGlobalUIScaleFactor();
 
-    layer::QueueCommand<layer::CmdScale>(layerPtr, [scale](layer::CmdScale *cmd) {
-        cmd->scaleX = scale;
-        cmd->scaleY = scale;
-    }, zIndex);
-
-    float spacing = config->textSpacing.value_or(fontData.spacing);
-    const Font& bestFont = fontData.getBestFontForSize(requestedSize);
+    // Calculate effective size and select best font for that size
+    // This avoids GPU scaling which causes pixel gaps with TEXTURE_FILTER_POINT
+    float effectiveSize = requestedSize * scale;
+    const Font& bestFont = fontData.getBestFontForSize(effectiveSize);
     float fontSize = static_cast<float>(bestFont.baseSize);
+    float spacing = config->textSpacing.value_or(fontData.spacing);
+
+    // Only apply GPU scaling if we couldn't find an exact font match
+    // (i.e., we need to scale from the closest available size)
+    float fontScaleRatio = effectiveSize / fontSize;
+    bool needsGpuScaling = std::abs(fontScaleRatio - 1.0f) > 0.01f;
+
+    if (needsGpuScaling) {
+        layer::QueueCommand<layer::CmdScale>(layerPtr, [fontScaleRatio](layer::CmdScale *cmd) {
+            cmd->scaleX = fontScaleRatio;
+            cmd->scaleY = fontScaleRatio;
+        }, zIndex);
+    }
 
     if (config->text) {
         layer::QueueCommand<layer::CmdTextPro>(layerPtr,

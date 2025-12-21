@@ -212,6 +212,11 @@ namespace shader_pipeline {
         pong = LoadRenderTexture(w, h);
         baseCache = LoadRenderTexture(w, h);
         postPassCache = LoadRenderTexture(w, h);
+
+        SetTextureFilter(ping.texture, TEXTURE_FILTER_POINT);
+        SetTextureFilter(pong.texture, TEXTURE_FILTER_POINT);
+        SetTextureFilter(baseCache.texture, TEXTURE_FILTER_POINT);
+        SetTextureFilter(postPassCache.texture, TEXTURE_FILTER_POINT);
     }
 
     inline void Resize(int newWidth, int newHeight) {

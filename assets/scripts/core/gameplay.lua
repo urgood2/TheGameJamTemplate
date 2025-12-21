@@ -9611,8 +9611,12 @@ function initPlanningUI()
         {
             x = execGraphButtonTransform and execGraphButtonTransform.actualX or execGraphPosX,
             y = execGraphButtonTransform and execGraphButtonTransform.actualY or execGraphPosY,
-            w = execGraphButtonTransform and execGraphButtonTransform.actualW or 120,
-            h = execGraphButtonTransform and execGraphButtonTransform.actualH or 40
+            -- Treat 0-sized bounds as "not ready yet" so the manual hit-test
+            -- doesn't get stuck failing until a later layout pass.
+            w = (execGraphButtonTransform and execGraphButtonTransform.actualW and execGraphButtonTransform.actualW > 0)
+                and execGraphButtonTransform.actualW or 120,
+            h = (execGraphButtonTransform and execGraphButtonTransform.actualH and execGraphButtonTransform.actualH > 0)
+                and execGraphButtonTransform.actualH or 40
         },
         execGraphBoundsEntity  -- Entity for dynamic bounds updates
     )

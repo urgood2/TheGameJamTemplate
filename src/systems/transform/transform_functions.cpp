@@ -639,7 +639,12 @@ namespace transform
             {
                 juiceFactor = 0;
             }
-            setSelfVisualS(selfActualS * (parentVisualS / parentActualS) + juiceFactor);
+            // Guard against divide-by-zero/NaNs when a parent has 0-scale (or invalid) springs.
+            const float parentScaleS =
+                (std::abs(parentActualS) > 1e-6f && std::isfinite(parentVisualS / parentActualS))
+                    ? (parentVisualS / parentActualS)
+                    : 1.0f;
+            setSelfVisualS(selfActualS * parentScaleS + juiceFactor);
         }
         else if (selfRole.scale_bond == InheritedProperties::Sync::Weak)
         {
@@ -648,9 +653,19 @@ namespace transform
 
         if (selfRole.size_bond == InheritedProperties::Sync::Strong)
         {
-            setSelfVisualX(selfVisualX + (0.5f * (1 - parentVisualW / parentActualW) * selfVisualW));
-            setSelfVisualW(selfActualW * (parentVisualW / parentActualW));
-            setSelfVisualH(selfActualH * (parentVisualH / parentActualH));
+            // Guard against divide-by-zero/NaNs when a parent has 0-sized springs.
+            const float parentScaleW =
+                (std::abs(parentActualW) > 1e-6f && std::isfinite(parentVisualW / parentActualW))
+                    ? (parentVisualW / parentActualW)
+                    : 1.0f;
+            const float parentScaleH =
+                (std::abs(parentActualH) > 1e-6f && std::isfinite(parentVisualH / parentActualH))
+                    ? (parentVisualH / parentActualH)
+                    : 1.0f;
+
+            setSelfVisualX(selfVisualX + (0.5f * (1.0f - parentScaleW) * selfVisualW));
+            setSelfVisualW(selfActualW * parentScaleW);
+            setSelfVisualH(selfActualH * parentScaleH);
         }
         else if (selfRole.size_bond == InheritedProperties::Sync::Weak)
         {

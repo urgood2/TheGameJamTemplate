@@ -152,7 +152,8 @@ end
 function dsl.anim(id, opts)
     opts = opts or {}
 
-    local generateNewAnimFromSprite   = not opts.isAnimation or true
+    -- When isAnimation=true, treat `id` as an existing animation id; otherwise treat it as a sprite id.
+    local generateNewAnimFromSprite = not opts.isAnimation
     local width      = opts.w or 40
     local height     = opts.h or 40
     local enableShadow = (opts.shadow ~= false)  -- default true unless explicitly false
@@ -229,10 +230,15 @@ end
 function dsl.spawn(pos, defNode, layerName, zIndex, opts)
     log_debug("DSL: Spawning UIBox at ("..pos.x..","..pos.y..")")
     local box = ui.box.Initialize(pos, defNode)
-    ui.box.AssignLayerOrderComponents(registry, box)
 
-    if layerName then
+    -- Assign the UIBox zIndex *before* propagating to children/owned objects,
+    -- otherwise collisions can be sorted using stale LayerOrderComponent values.
+    if layerName and layer_order_system and layer_order_system.assignZIndexToEntity then
         layer_order_system.assignZIndexToEntity(box, zIndex or 0)
+    end
+
+    if ui and ui.box and ui.box.AssignLayerOrderComponents then
+        ui.box.AssignLayerOrderComponents(registry, box)
     end
 
     if opts and opts.onBoxResize then

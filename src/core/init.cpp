@@ -836,6 +836,7 @@ auto base_init() -> void {
     startup_timer::ScopedPhase phase("window_graphics_init");
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(globals::getScreenWidth(), globals::getScreenHeight(), "Game");
+    SetTextureFilter(GetFontDefault().texture, TEXTURE_FILTER_POINT);
 
     // fixes mac input bug.
     SetGamepadMappings(LoadFileText(

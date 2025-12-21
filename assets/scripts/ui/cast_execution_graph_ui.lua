@@ -315,15 +315,25 @@ local function destroyBox()
     if not CastExecutionGraphUI.currentBox then return end
 
     local box = CastExecutionGraphUI.currentBox
-    local hasRegistry = registry and registry.valid
-    local boxValid = hasRegistry and registry:valid(box)
+    hideActiveTooltip()
 
-    
-    if boxValid then
-        registry:destroy(box)
+    -- Important: UIBoxes must be removed via ui.box.Remove so the UI root,
+    -- children, and attached OBJECT entities are cleaned up. A raw registry:destroy
+    -- will orphan the UI tree, causing "stuck" icons and input/collision issues.
+    local ok = false
+    if ui and ui.box and ui.box.Remove and registry then
+        ok = pcall(function()
+            ui.box.Remove(registry, box)
+        end)
     end
 
-    hideActiveTooltip()
+    if not ok then
+        local hasRegistry = registry and registry.valid
+        local boxValid = hasRegistry and registry:valid(box)
+        if boxValid then
+            registry:destroy(box)
+        end
+    end
 
     CastExecutionGraphUI.currentBox = nil
 end
@@ -801,7 +811,10 @@ function CastExecutionGraphUI.render(blocks, opts)
 
     local fp = fingerprint(blocks)
     if fp and fp == CastExecutionGraphUI._lastFingerprint then
-        return CastExecutionGraphUI.currentBox
+        -- If the UIBox was destroyed/invalidated externally, don't get stuck returning nil/invalid.
+        if CastExecutionGraphUI.currentBox and registry and registry.valid and registry:valid(CastExecutionGraphUI.currentBox) then
+            return CastExecutionGraphUI.currentBox
+        end
     end
     CastExecutionGraphUI._lastFingerprint = fp
 

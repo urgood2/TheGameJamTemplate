@@ -6729,7 +6729,7 @@ RenderTexture2D LoadRenderTextureStencilEnabled(int width, int height) {
   target.texture.height = height;
   target.texture.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
   target.texture.mipmaps = 1;
-  SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
+  SetTextureFilter(target.texture, TEXTURE_FILTER_POINT);
 
   rlFramebufferAttach(target.id, target.texture.id,
                       RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);

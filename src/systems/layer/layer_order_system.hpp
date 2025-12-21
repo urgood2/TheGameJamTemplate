@@ -20,6 +20,10 @@ namespace layer
             } else {
                 registry.emplace<LayerOrderComponent>(entity, newZIndex);
             }
+            // Keep UIBox children/owned objects in sync for collision ordering.
+            if (registry.any_of<ui::UIBoxComponent>(entity)) {
+                ui::box::AssignLayerOrderComponents(registry, entity);
+            }
             if (incrementIndexAfterwards) {
                 newZIndex++; // Increment the global Z-index counter
             }
@@ -59,6 +63,11 @@ namespace layer
             } else {
                 SetToTopZIndex(registry, a);
             }
+
+            // If A is a UIBox, propagate the new zIndex to its UI tree.
+            if (registry.any_of<ui::UIBoxComponent>(a)) {
+                ui::box::AssignLayerOrderComponents(registry, a);
+            }
         }
 
         inline void PutAOverB(entt::entity a, entt::entity b) {
@@ -89,6 +98,12 @@ namespace layer
                 registry.get<LayerOrderComponent>(entity).zIndex = zIndex;
             } else {
                 registry.emplace<LayerOrderComponent>(entity, zIndex);
+            }
+
+            // If this is a UIBox, also update all UI elements/owned objects so input sorting
+            // doesn't use stale per-entity LayerOrderComponent values.
+            if (registry.any_of<ui::UIBoxComponent>(entity)) {
+                ui::box::AssignLayerOrderComponents(registry, entity);
             }
         }
 

@@ -160,6 +160,7 @@ BakeNinePatchFromSprites(const NineSliceNames &names,
 
   // Allocate render target and draw
   RenderTexture2D rt = LoadRenderTexture(bakedW, bakedH);
+  SetTextureFilter(rt.texture, TEXTURE_FILTER_POINT);
   BeginTextureMode(rt);
   ClearBackground({0, 0, 0, 0});
 

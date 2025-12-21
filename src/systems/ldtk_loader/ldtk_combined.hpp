@@ -70,6 +70,7 @@ inline void InitRenderTexture(int width, int height) {
     auto& rt = internal_loader::renderTexture;
     if (rt.texture.id) UnloadRenderTexture(rt);
     rt = LoadRenderTexture(width, height);
+    SetTextureFilter(rt.texture, TEXTURE_FILTER_POINT);
 }
 
 // ---------------------- Config-driven loading ----------------------
@@ -873,6 +874,7 @@ inline void DrawGridLayer(int layerIdx, float scale = 1.0f) {
     auto& rt = internal_rule::renderer;
     if (rt.texture.id) UnloadRenderTexture(rt);
     rt = LoadRenderTexture(gw * tileSize, gh * tileSize);
+    SetTextureFilter(rt.texture, TEXTURE_FILTER_POINT);
 
     // fetch tileset texture
     std::string path = internal_rule::assetDirectory.empty() ? tileset->imagePath

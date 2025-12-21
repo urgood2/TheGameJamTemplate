@@ -268,6 +268,47 @@ Text.update(dt)
 
 ---
 
+## Styled Localization
+
+For color-coded text in tooltips, use `localization.getStyled()`:
+
+### JSON Syntax
+```json
+{
+  "tooltip": {
+    "attack_desc": "Deal {damage|red} {element|fire} damage"
+  }
+}
+```
+
+### Lua Usage
+```lua
+-- Uses JSON default colors
+local text = localization.getStyled("tooltip.attack_desc", {
+  damage = 25,
+  element = "Fire"
+})
+-- Result: "Deal [25](color=red) [Fire](color=fire) damage"
+
+-- Override color at runtime
+local text = localization.getStyled("tooltip.attack_desc", {
+  damage = { value = 25, color = "gold" }
+})
+-- Result: "Deal [25](color=gold) [Fire](color=fire) damage"
+```
+
+### Tooltip Helper
+```lua
+local tooltip = makeLocalizedTooltip("tooltip.attack_desc", {
+  damage = card.damage,
+  element = card.element
+}, { title = card.name })
+```
+
+**Named Colors:** `red`, `gold`, `green`, `blue`, `cyan`, `purple`, `fire`, `ice`, `poison`, `holy`, `void`, `electric`
+
+---
+
 ## Global Helper Functions
 
 **C++ bindings are globals—don't `require()` them:** `registry`, `component_cache`, `localization`, `physics`, `globals` are exposed from C++ and available everywhere without import.

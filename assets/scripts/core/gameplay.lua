@@ -9838,6 +9838,7 @@ _G.destroyAllSimpleTooltips = destroyAllSimpleTooltips
 _G.centerTooltipAboveEntity = centerTooltipAboveEntity
 _G.makeCardTooltip = makeCardTooltip
 _G.ensureCardTooltip = ensureCardTooltip
+_G.makeLocalizedTooltip = makeLocalizedTooltip
 
 -- Entity helpers
 _G.isEnemyEntity = isEnemyEntity

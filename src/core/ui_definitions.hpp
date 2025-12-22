@@ -203,34 +203,72 @@ namespace ui_defs
         return row;
     }
 
-    inline auto getTextFromString(std::string text) -> ui::UIElementTemplateNode
+    struct RichTextDefaults {
+        std::optional<float> fontSize;
+        std::optional<std::string> fontName;
+        std::optional<Color> color;
+        std::optional<bool> shadow;
+    };
+
+    inline auto getTextFromStringInternal(std::string text, const RichTextDefaults* defaults) -> ui::UIElementTemplateNode
     {
-        
+
         auto parseResult = static_ui_text_system::parseText(text);
         
         // debugDumpIds(parseResult);
 
+        const auto defaultFontSize = defaults ? defaults->fontSize : std::optional<float>{};
+        const auto defaultFontName = defaults ? defaults->fontName : std::optional<std::string>{};
+        const auto defaultColor = defaults ? defaults->color : std::optional<Color>{};
+        const auto defaultShadow = defaults ? defaults->shadow : std::optional<bool>{};
+
         auto rows = parseResult.lines.size();
 
         vector<ui::UIElementTemplateNode> textRowDefs{};
+        textRowDefs.reserve(rows);
 
-        for (auto i = 0; i < rows; i++) {
-            auto row = parseResult.lines[i];
-            auto segments = row.segments.size();
+        // Keep a flat list so we can return a single segment without wrappers
+        // (wrappers affect sizing/spacing vs a plain TEXT node).
+        vector<ui::UIElementTemplateNode> allSegmentDefs{};
+
+        using static_ui_text_system::StaticStyledTextSegmentType;
+
+        auto isWhitespaceOnly = [](const std::string& s) {
+            return s.find_first_not_of(" \t\r\n") == std::string::npos;
+        };
+
+        for (size_t i = 0; i < rows; i++) {
+            const auto& row = parseResult.lines[i];
+            const auto segments = row.segments.size();
+
+            // Trim leading/trailing whitespace-only plain segments.
+            size_t startSeg = 0;
+            size_t endSeg = segments;
+            auto isTrimmableEdgeSegment =
+                [&](const static_ui_text_system::StaticStyledTextSegment& seg) {
+                    return seg.type == StaticStyledTextSegmentType::TEXT &&
+                           seg.attributes.empty() && isWhitespaceOnly(seg.text);
+                };
+            while (startSeg < endSeg && isTrimmableEdgeSegment(row.segments[startSeg])) {
+                ++startSeg;
+            }
+            while (endSeg > startSeg && isTrimmableEdgeSegment(row.segments[endSeg - 1])) {
+                --endSeg;
+            }
 
             vector<ui::UIElementTemplateNode> textSegmentDefs{};
+            textSegmentDefs.reserve(endSeg - startSeg);
             
-            using static_ui_text_system::StaticStyledTextSegmentType;
-            for (auto j = 0; j < segments; j++) {
-                auto segment = row.segments[j];
+            for (size_t j = startSeg; j < endSeg; j++) {
+                const auto& segment = row.segments[j];
                 
                 if (segment.type == StaticStyledTextSegmentType::IMAGE) {
                     // handle case where this is an image, not text
                     // [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)
-                    auto uuid = std::get<std::string>(segment.attributes["uuid"]);
-                    auto scale = segment.attributes.find("scale") != segment.attributes.end() ? std::stof(std::get<std::string>(segment.attributes["scale"])) : 1.0f;
-                    auto fgColorString = segment.attributes.find("fg") != segment.attributes.end() ? std::get<std::string>(segment.attributes["fg"]) : "WHITE";
-                    auto shadow = segment.attributes.find("shadow") != segment.attributes.end() ? (std::get<std::string>(segment.attributes["shadow"]) == "true" ? true : false) : false;
+                    auto uuid = std::get<std::string>(segment.attributes.at("uuid"));
+                    auto scale = segment.attributes.find("scale") != segment.attributes.end() ? std::stof(std::get<std::string>(segment.attributes.at("scale"))) : 1.0f;
+                    auto fgColorString = segment.attributes.find("fg") != segment.attributes.end() ? std::get<std::string>(segment.attributes.at("fg")) : "WHITE";
+                    auto shadow = segment.attributes.find("shadow") != segment.attributes.end() ? (std::get<std::string>(segment.attributes.at("shadow")) == "true" ? true : false) : false;
                     auto fgColor = util::getColor(fgColorString);
                     
                     // now create a static animation object with uuid
@@ -267,10 +305,10 @@ namespace ui_defs
                 else if (segment.type == StaticStyledTextSegmentType::ANIMATION) {
                     
                     // [anim](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)
-                    auto uuid = std::get<std::string>(segment.attributes["uuid"]);
-                    auto scale = segment.attributes.find("scale") != segment.attributes.end() ? std::stof(std::get<std::string>(segment.attributes["scale"])) : 1.0f;
-                    auto fgColorString = segment.attributes.find("fg") != segment.attributes.end() ? std::get<std::string>(segment.attributes["fg"]) : "WHITE";
-                    auto shadow = segment.attributes.find("shadow") != segment.attributes.end() ? (std::get<std::string>(segment.attributes["shadow"]) == "true" ? true : false) : false;
+                    auto uuid = std::get<std::string>(segment.attributes.at("uuid"));
+                    auto scale = segment.attributes.find("scale") != segment.attributes.end() ? std::stof(std::get<std::string>(segment.attributes.at("scale"))) : 1.0f;
+                    auto fgColorString = segment.attributes.find("fg") != segment.attributes.end() ? std::get<std::string>(segment.attributes.at("fg")) : "WHITE";
+                    auto shadow = segment.attributes.find("shadow") != segment.attributes.end() ? (std::get<std::string>(segment.attributes.at("shadow")) == "true" ? true : false) : false;
                     auto fgColor = util::getColor(fgColorString);
                     
                     std::optional<std::string> elementID{std::nullopt};
@@ -309,6 +347,20 @@ namespace ui_defs
 
 
                 auto textSegmentDef = getNewTextEntry(segment.text);
+                // Avoid extra spacing between segments (including accidental empty segments).
+                textSegmentDef.config.padding = 0.f;
+                if (defaultFontSize) {
+                    textSegmentDef.config.fontSize = *defaultFontSize;
+                }
+                if (defaultFontName) {
+                    textSegmentDef.config.fontName = *defaultFontName;
+                }
+                if (defaultColor) {
+                    textSegmentDef.config.color = *defaultColor;
+                }
+                if (defaultShadow) {
+                    textSegmentDef.config.shadow = *defaultShadow;
+                }
                 
                 std::optional<std::string> elementID{std::nullopt};
                     
@@ -321,15 +373,15 @@ namespace ui_defs
                 }
 
                 if (segment.attributes.find("color") != segment.attributes.end()) {
-                    auto colorString = std::get<std::string>(segment.attributes["color"]);
+                    auto colorString = std::get<std::string>(segment.attributes.at("color"));
 
                     auto color = util::getColor(colorString);
 
                     textSegmentDef.config.color = color;
                 }
-                bool shadowEnabled = true;
+                bool shadowEnabled = textSegmentDef.config.shadow;
                 if (segment.attributes.find("fontSize") != segment.attributes.end()) {
-                    auto fontSizeString = std::get<std::string>(segment.attributes["fontSize"]);
+                    auto fontSizeString = std::get<std::string>(segment.attributes.at("fontSize"));
                     try {
                         textSegmentDef.config.fontSize = std::stof(fontSizeString);
                     } catch (...) {
@@ -338,19 +390,19 @@ namespace ui_defs
                 }
                 // Handle font override
                 if (segment.attributes.find("font") != segment.attributes.end()) {
-                    auto fontName = std::get<std::string>(segment.attributes["font"]);
+                    auto fontName = std::get<std::string>(segment.attributes.at("font"));
                     textSegmentDef.config.fontName = fontName;
                 } else if (segment.attributes.find("fontName") != segment.attributes.end()) {
-                    auto fontName = std::get<std::string>(segment.attributes["fontName"]);
+                    auto fontName = std::get<std::string>(segment.attributes.at("fontName"));
                     textSegmentDef.config.fontName = fontName;
                 }
                 if (segment.attributes.find("shadow") != segment.attributes.end()) {
-                    auto shadowString = std::get<std::string>(segment.attributes["shadow"]);
+                    auto shadowString = std::get<std::string>(segment.attributes.at("shadow"));
                     shadowEnabled = !(shadowString == "false" || shadowString == "0");
                 }
                 textSegmentDef.config.shadow = shadowEnabled;
                 if (segment.attributes.find("background") != segment.attributes.end()) {
-                    auto backgroundString = std::get<std::string>(segment.attributes["background"]);
+                    auto backgroundString = std::get<std::string>(segment.attributes.at("background"));
 
                     auto color = util::getColor(backgroundString);
 
@@ -373,13 +425,17 @@ namespace ui_defs
                 textSegmentDefs.push_back(textSegmentDef);
             }
 
+            // Skip empty rows (e.g. trailing newlines/whitespace-only lines).
+            if (textSegmentDefs.empty()) {
+                continue;
+            }
+
             auto textRowDef = ui::UIElementTemplateNode::Builder::create()
                 .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
                 .addConfig(
                     ui::UIConfig::Builder::create()
                         // .addColor(WHITE)
-                        .addPadding(1.f)
-                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                        .addPadding(0.f)
                         .build());
 
             for (auto &segmentDef : textSegmentDefs) {
@@ -387,6 +443,20 @@ namespace ui_defs
             }
 
             textRowDefs.push_back(textRowDef.build());
+            allSegmentDefs.insert(allSegmentDefs.end(), textSegmentDefs.begin(), textSegmentDefs.end());
+        }
+
+        if (allSegmentDefs.empty()) {
+            auto empty = getNewTextEntry("");
+            empty.config.padding = 0.f;
+            empty.config.shadow = false;
+            return empty;
+        }
+
+        // Optimization: if there is only 1 line with 1 segment, return the segment directly
+        // to keep sizing/spacing identical to a normal UI TEXT element.
+        if (textRowDefs.size() == 1 && allSegmentDefs.size() == 1) {
+            return allSegmentDefs[0];
         }
 
         // add the final to a vertical container
@@ -395,8 +465,7 @@ namespace ui_defs
             .addConfig(
                 ui::UIConfig::Builder::create()
                     // .addColor(WHITE)
-                    .addPadding(1.0f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .addPadding(0.0f)
                     .build());
         
         for (auto &rowDef : textRowDefs) {
@@ -404,6 +473,31 @@ namespace ui_defs
         }
 
         return textDef.build();
+    }
+
+    inline auto getTextFromString(std::string text) -> ui::UIElementTemplateNode
+    {
+        return getTextFromStringInternal(std::move(text), nullptr);
+    }
+
+    inline auto getTextFromString(std::string text, sol::table defaults) -> ui::UIElementTemplateNode
+    {
+        RichTextDefaults parsed{};
+        if (sol::optional<float> fontSize = defaults["fontSize"]; fontSize) {
+            parsed.fontSize = *fontSize;
+        }
+        if (sol::optional<std::string> fontName = defaults["fontName"]; fontName) {
+            parsed.fontName = *fontName;
+        } else if (sol::optional<std::string> fontName = defaults["font"]; fontName) {
+            parsed.fontName = *fontName;
+        }
+        if (sol::optional<std::string> colorName = defaults["color"]; colorName) {
+            parsed.color = util::getColor(*colorName);
+        }
+        if (sol::optional<bool> shadow = defaults["shadow"]; shadow) {
+            parsed.shadow = *shadow;
+        }
+        return getTextFromStringInternal(std::move(text), &parsed);
     }
 
 
@@ -1484,11 +1578,14 @@ namespace ui_defs
             true, false}
         );
 
-        // 3) getTextFromString(text)
-        elem.set_function("getTextFromString", &getTextFromString);
+        // 3) getTextFromString(text[, defaults])
+        elem.set_function("getTextFromString", sol::overload(
+            static_cast<ui::UIElementTemplateNode (*)(std::string)>(&getTextFromString),
+            static_cast<ui::UIElementTemplateNode (*)(std::string, sol::table)>(&getTextFromString)
+        ));
         rec.record_free_function(
             {"ui","definitions"},
-            {"getTextFromString", "---@param text string\n---@return UIElementTemplateNode", 
+            {"getTextFromString", "---@param text string\n---@param defaults? table\n---@return UIElementTemplateNode", 
             "Wrap a raw string into a UI text node.", 
             true, false}
         );

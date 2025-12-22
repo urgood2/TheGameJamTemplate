@@ -12350,6 +12350,7 @@ function ui.definitions.getNewDynamicTextEntry(...) end
 --- Wrap a raw string into a UI text node.
 ---
 ---@param text string
+---@param defaults? table
 ---@return UIElementTemplateNode
 function ui.definitions.getTextFromString(...) end
 

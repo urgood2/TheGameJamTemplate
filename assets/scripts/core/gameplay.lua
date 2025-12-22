@@ -403,12 +403,17 @@ local function makeTooltipTextDef(text, opts)
             if not params:find("fontName=") and fontName then
                 newParams = newParams .. ";fontName=" .. fontName
             end
+            if not params:find("shadow=") then
+                newParams = newParams .. ";shadow=" .. (opts.shadow and "true" or "false")
+            end
             return "](" .. newParams .. ")"
         end)
 
         return ui.definitions.getTextFromString(wrappedText, {
             fontSize = fontSize,
-            fontName = fontName
+            fontName = fontName,
+            color = opts.color or tooltipStyle.valueColor,
+            shadow = opts.shadow or false
         })
     end
 
@@ -3800,6 +3805,23 @@ StatTooltipSystem = {
         special = "Special", hazard = "Hazard", summon = "Summon", elemental = "Elemental"
     },
 
+    -- Optional: color-code stat labels (used for debugging/layout verification).
+    LABEL_GROUP_COLORS = {
+        core = "gold",
+        attributes = "orange",
+        combat = "cyan",
+        offense = "red",
+        defense = "blue",
+        utility = "purple",
+        movement = "yellow",
+        status = "fuchsia",
+        buffs = "green",
+        special = "pink",
+        hazard = "poison",
+        summon = "cyan",
+        elemental = "cyan"
+    },
+
     -- Stats where positive values are bad (inverted color)
     REVERSED_STATS = { damage_taken_reduction_pct = true }
 }
@@ -3962,11 +3984,19 @@ function StatTooltipSystem.makeRow(key, snapshot, opts)
     if not formatted then return nil end
 
     local label = StatTooltipSystem.getLabel(key)
+    local group = def and def.group or "other"
     local displayValue = value or 0
     local color = opts.colorCode and StatTooltipSystem.getValueColor(key, displayValue) or (tooltipStyle.valueColor or "white")
 
     -- Only enable coded parsing if the label actually contains markup
     local hasMarkup = label:find("%[") ~= nil
+    if opts.labelColorCode and not hasMarkup then
+        local groupColor = StatTooltipSystem.LABEL_GROUP_COLORS and StatTooltipSystem.LABEL_GROUP_COLORS[group]
+        if groupColor then
+            label = string.format("[%s](color=%s)", label, groupColor)
+            hasMarkup = true
+        end
+    end
 
     return makeTooltipRow(label, formatted, {
         rowPadding = opts.rowPadding or tooltipStyle.rowPadding,
@@ -4121,6 +4151,7 @@ local function makeDetailedStatsTooltip(snapshot)
     local compactFontSize = 13
     local opts = {
         colorCode = true,
+        labelColorCode = true,
         showHeaders = true,  -- Show section headers
         showZeros = true,
         rowPadding = compactRowPadding,
@@ -4206,6 +4237,7 @@ function makePlayerStatsTooltip(snapshot)
     local innerPad = tooltipStyle.outerPadding or 10  -- Increased padding for better fit
     local opts = {
         colorCode = true,
+        labelColorCode = true,
         showHeaders = true,
         rowPadding = 2,
         headerFontSize = 12,

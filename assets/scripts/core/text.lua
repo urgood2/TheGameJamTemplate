@@ -842,6 +842,33 @@ function Text.update(dt)
                     applyPopAnimation(handle)
                 end
 
+                -- Update fade animation (alpha over lifespan)
+                if handle._config.fade and handle._lifespan and handle._textRenderer then
+                    local progress = handle._elapsed / handle._lifespan
+                    local alpha = 255
+
+                    -- Handle fade-in (if configured)
+                    local fadeInPct = handle._config.fadeInPct or 0
+                    if fadeInPct > 0 and progress < fadeInPct then
+                        -- Fade in during first portion
+                        alpha = math.floor(255 * (progress / fadeInPct))
+                    elseif progress > (1 - fadeInPct) then
+                        -- Fade out during last portion (mirror of fade-in duration)
+                        local fadeOutStart = 1 - fadeInPct
+                        local fadeOutProgress = (progress - fadeOutStart) / fadeInPct
+                        alpha = math.floor(255 * (1 - fadeOutProgress))
+                    end
+
+                    -- If no fadeIn configured, fade out over entire lifespan
+                    if fadeInPct == 0 then
+                        alpha = math.floor(255 * (1 - progress))
+                    end
+
+                    if handle._textRenderer.set_base_alpha then
+                        handle._textRenderer:set_base_alpha(alpha)
+                    end
+                end
+
                 -- Update renderer
                 if handle._textRenderer and handle._textRenderer.update then
                     handle._textRenderer:update(dt)

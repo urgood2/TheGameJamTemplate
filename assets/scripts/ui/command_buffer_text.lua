@@ -178,6 +178,7 @@ function CommandBufferText:init(args)
   -- Base transform for whole-text animations (pop, bounce, etc.)
   self.base_scale = args.base_scale or 1
   self.base_rotation = args.base_rotation or 0
+  self.base_alpha = args.base_alpha or 255
   self.alignment = args.text_alignment or args.alignment or "left"
   self.anchor = args.anchor or "center"  -- "center" or "topleft"
   self.height_multiplier = args.height_multiplier or args.line_height or DEFAULT_LINE_HEIGHT
@@ -246,6 +247,12 @@ end
 --- @param r number Rotation in degrees
 function CommandBufferText:set_base_rotation(r)
   self.base_rotation = r or 0
+end
+
+--- Set base alpha for whole-text fade effects (multiplies with per-character alpha)
+--- @param a number Alpha value (0-255, where 255 = fully opaque)
+function CommandBufferText:set_base_alpha(a)
+  self.base_alpha = math.max(0, math.min(255, a or 255))
 end
 
 function CommandBufferText:_parse_text(raw)
@@ -579,7 +586,9 @@ function CommandBufferText:update(dt)
     local draw_color = ch.color or default_color
     -- Always convert to proper Col userdata to ensure C++ compatibility
     -- Effects may return plain tables, but command buffer expects Color userdata
-    local alpha = (ch.alpha and ch.alpha < 255) and ch.alpha or (draw_color.a or 255)
+    -- Combine per-character alpha with base_alpha (for whole-text fade effects)
+    local char_alpha = (ch.alpha and ch.alpha < 255) and ch.alpha or (draw_color.a or 255)
+    local alpha = math.floor(char_alpha * (self.base_alpha or 255) / 255)
     if draw_color.r and draw_color.g and draw_color.b then
       draw_color = Col(draw_color.r, draw_color.g, draw_color.b, alpha)
     end

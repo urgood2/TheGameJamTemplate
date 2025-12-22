@@ -187,11 +187,17 @@ popup.above(entity, text, opts)
 **Proposed - Declarative Composition:**
 ```lua
 enemies.goblin = {
-    behaviors = { "chase_player", { "dash_periodically", cooldown = 3.0 } }
+    behaviors = { "chase", { "dash", cooldown = "dash_cooldown" } }
 }
 ```
 
-**Status:** 🔲 TODO (larger refactor)
+**Status:** ✅ FIXED - Created `core/behaviors.lua` with:
+- Behavior registry with 8 built-in behaviors: chase, wander, flee, kite, dash, trap, summon, rush
+- Declarative composition via `behaviors = {}` array in enemy definitions
+- Auto-cleanup of all behavior timers on entity destroy
+- Config resolution: string values lookup ctx fields (e.g., `"dash_speed"` → `ctx.dash_speed`)
+- Custom behavior registration via `behaviors.register(name, def)`
+- Migrated all 7 enemies in `data/enemies.lua` to declarative format
 
 ---
 
@@ -238,12 +244,15 @@ end
 - [x] Documented timer.sequence() in CLAUDE.md (with examples)
 - [x] Created signal_group.lua for scoped handler cleanup
 - [x] Updated CLAUDE.md with all new APIs
+- [x] Created behaviors.lua for declarative enemy behaviors
+- [x] Migrated all enemies to declarative format
 
 ### Pending
 - [ ] Rename `test_label` → `display_name` in cards
 - [ ] Rename `weight` → `spawn_weight` in cards
-- [ ] Extract declarative enemy behavior library
 - [ ] Add joker event matching helper
+- [ ] PhysicsBuilder naming clarity (`:as()` / `:collidesWith()`)
+- [ ] Refactor nested timer.after() to timer.sequence()
 
 ---
 
@@ -280,6 +289,12 @@ end
    - `handlers:off(event, fn)` - Remove specific handler
    - `handlers:cleanup()` - Remove ALL handlers in group
    - `handlers:count()` - Get handler count (debugging)
+
+3. `assets/scripts/core/behaviors.lua` - Declarative enemy behaviors:
+   - `behaviors.register(name, def)` - Register custom behavior
+   - `behaviors.apply(e, ctx, helpers, list)` - Apply behaviors to entity
+   - `behaviors.cleanup(e)` - Cancel all behavior timers
+   - Built-in: chase, wander, flee, kite, dash, trap, summon, rush
 
 ## Files Still To Modify
 

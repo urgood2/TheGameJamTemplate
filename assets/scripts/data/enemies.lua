@@ -1,8 +1,37 @@
 -- assets/scripts/data/enemies.lua
--- Enemy definitions with inline timer-based behaviors
-
-local entity_cache = require("core.entity_cache")
-local timer = require("core.timer")
+-- Enemy definitions using declarative behavior composition
+--
+-- MIGRATION NOTES (DX Audit 2024):
+-- Before: Each enemy had on_spawn() with 8-15 lines of timer boilerplate
+-- After:  Declarative behaviors array - 1-3 lines, auto-cleanup
+--
+-- OLD FORMAT (still supported for backwards compatibility):
+--   on_spawn = function(e, ctx, helpers)
+--       timer.every(0.5, function()
+--           if not entity_cache.valid(e) then return false end
+--           helpers.move_toward_player(e, ctx.speed)
+--       end, "enemy_" .. e)
+--   end,
+--
+-- NEW FORMAT:
+--   behaviors = { "chase" },  -- Uses ctx.speed, interval 0.5, auto-cleanup
+--
+-- AVAILABLE BEHAVIORS:
+--   "chase"   - Move toward player (interval=0.5, speed=ctx.speed)
+--   "wander"  - Random movement (interval=0.5, speed=ctx.speed)
+--   "flee"    - Move away from player (distance=150)
+--   "kite"    - Maintain range from player (range=ctx.range)
+--   "dash"    - Periodic dash attack (cooldown=ctx.dash_cooldown, speed=ctx.dash_speed)
+--   "trap"    - Drop traps (cooldown=ctx.trap_cooldown, damage=ctx.trap_damage)
+--   "summon"  - Summon minions (cooldown=ctx.summon_cooldown, type=ctx.summon_type)
+--   "rush"    - Fast chase for aggressive enemies (interval=0.3)
+--
+-- OVERRIDE DEFAULTS with table syntax:
+--   { "chase", interval = 0.3, speed = 100 }
+--   { "dash", cooldown = 2.0, duration = 0.5 }
+--
+-- STRING REFERENCES look up ctx fields:
+--   { "dash", cooldown = "dash_cooldown" }  -- Uses ctx.dash_cooldown
 
 local enemies = {}
 
@@ -17,12 +46,9 @@ enemies.goblin = {
     damage = 5,
     size = { 32, 32 },
 
-    on_spawn = function(e, ctx, helpers)
-        timer.every(0.5, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.move_toward_player(e, ctx.speed)
-        end, "enemy_" .. e)
-    end,
+    behaviors = {
+        "chase",
+    },
 
     on_death = function(e, ctx, helpers)
         helpers.spawn_particles("enemy_death", e)
@@ -41,15 +67,10 @@ enemies.archer = {
     range = 200,
     size = { 32, 32 },
 
-    on_spawn = function(e, ctx, helpers)
-        timer.every(0.5, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.kite_from_player(e, ctx.speed, ctx.range)
-        end, "enemy_" .. e)
-
-        -- Ranged attack placeholder (projectiles handled by parallel work)
-        -- timer.every(2.0, function() ... end)
-    end,
+    behaviors = {
+        { "kite", range = "range" },
+        -- TODO: Add ranged attack behavior when projectile system ready
+    },
 
     on_death = function(e, ctx, helpers)
         helpers.spawn_particles("enemy_death", e)
@@ -69,19 +90,10 @@ enemies.dasher = {
     damage = 12,
     size = { 32, 32 },
 
-    on_spawn = function(e, ctx, helpers)
-        -- Wander between dashes
-        timer.every(0.5, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.wander(e, ctx.speed)
-        end, "enemy_" .. e)
-
-        -- Periodic dash attack
-        timer.every(ctx.dash_cooldown, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.dash_toward_player(e, ctx.dash_speed, 0.3)
-        end, "enemy_" .. e .. "_dash")
-    end,
+    behaviors = {
+        "wander",
+        { "dash", cooldown = "dash_cooldown", speed = "dash_speed", duration = 0.3 },
+    },
 
     on_death = function(e, ctx, helpers)
         helpers.spawn_particles("enemy_death", e)
@@ -102,19 +114,10 @@ enemies.trapper = {
     damage = 3,
     size = { 32, 32 },
 
-    on_spawn = function(e, ctx, helpers)
-        -- Slow wander
-        timer.every(0.5, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.wander(e, ctx.speed)
-        end, "enemy_" .. e)
-
-        -- Drop traps
-        timer.every(ctx.trap_cooldown, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.drop_trap(e, ctx.trap_damage, ctx.trap_lifetime)
-        end, "enemy_" .. e .. "_trap")
-    end,
+    behaviors = {
+        "wander",
+        { "trap", cooldown = "trap_cooldown", damage = "trap_damage", lifetime = "trap_lifetime" },
+    },
 
     on_death = function(e, ctx, helpers)
         helpers.spawn_particles("enemy_death", e)
@@ -135,19 +138,10 @@ enemies.summoner = {
     damage = 2,
     size = { 40, 40 },
 
-    on_spawn = function(e, ctx, helpers)
-        -- Flee from player
-        timer.every(0.5, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.flee_from_player(e, ctx.speed, 150)
-        end, "enemy_" .. e)
-
-        -- Summon minions
-        timer.every(ctx.summon_cooldown, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.summon_enemies(e, ctx.summon_type, ctx.summon_count)
-        end, "enemy_" .. e .. "_summon")
-    end,
+    behaviors = {
+        { "flee", distance = 150 },
+        { "summon", cooldown = "summon_cooldown", enemy_type = "summon_type", count = "summon_count" },
+    },
 
     on_death = function(e, ctx, helpers)
         helpers.spawn_particles("summoner_death", e)
@@ -167,13 +161,9 @@ enemies.exploder = {
     damage = 0, -- no contact damage, only explosion
     size = { 28, 28 },
 
-    on_spawn = function(e, ctx, helpers)
-        -- Rush player
-        timer.every(0.3, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.move_toward_player(e, ctx.speed)
-        end, "enemy_" .. e)
-    end,
+    behaviors = {
+        "rush",  -- Fast chase (0.3 interval)
+    },
 
     on_death = function(e, ctx, helpers)
         helpers.explode(e, ctx.explosion_radius, ctx.explosion_damage)
@@ -196,12 +186,9 @@ enemies.wanderer = {
     damage = 3,
     size = { 28, 28 },
 
-    on_spawn = function(e, ctx, helpers)
-        timer.every(0.5, function()
-            if not entity_cache.valid(e) then return false end
-            helpers.wander(e, ctx.speed)
-        end, "enemy_" .. e)
-    end,
+    behaviors = {
+        "wander",
+    },
 
     on_death = function(e, ctx, helpers)
         helpers.spawn_particles("enemy_death", e)

@@ -77,6 +77,48 @@ script:attach_ecs { create_new = false, existing_entity = entity }
 
 **Why:** `getScriptTableFromEntityID()` returns nil without proper initialization. Data assigned after `attach_ecs()` is lost.
 
+### Node.quick() and Node.create() - Safer Alternatives
+
+To prevent the data-loss bug, use these factory methods instead of manual initialization:
+
+```lua
+local Node = require("monobehavior.behavior_script_v2")
+
+-- For existing entity: assigns data BEFORE attach_ecs
+local script = Node.quick(entity, { health = 100, damage = 10 })
+
+-- For new entity: creates entity and attaches script
+local script = Node.create({ health = 100, damage = 10 })
+local entity = script:handle()
+
+-- With extended class
+local EntityType = Node:extend()
+local script = EntityType.quick(entity, { customData = { foo = "bar" } })
+```
+
+**Benefits:**
+- Guarantees correct initialization order
+- Cleaner syntax than manual attach_ecs
+- Works with both base Node and extended classes
+
+### State Management
+
+Use `script:setState()` instead of manual state tag manipulation:
+
+```lua
+-- Instead of:
+clear_state_tags(entity)
+add_state_tag(entity, PLANNING_STATE)
+
+-- Use:
+script:setState(PLANNING_STATE)
+```
+
+**Benefits:**
+- Automatically clears previous state tags
+- Shorter, more readable syntax
+- Works with all state constants (PLANNING_STATE, COMBAT_STATE, etc.)
+
 ---
 
 ## Event System: Signal Library
@@ -94,6 +136,34 @@ end)
 ```
 
 **Don't use `publishLuaEvent()`** - use `signal.emit()`.
+
+### Scoped Signal Groups (Recommended for Cleanup)
+
+Use `signal_group` when handlers need cleanup (e.g., per-entity or per-scene):
+
+```lua
+local signal_group = require("core.signal_group")
+
+-- Create a group for this module/entity
+local handlers = signal_group.new("combat_ui")
+
+-- Register handlers (tracked for cleanup)
+handlers:on("enemy_killed", function(entity)
+    updateKillCount()
+end)
+
+handlers:on("player_damaged", function(entity, data)
+    showDamageFlash()
+end)
+
+-- When done (e.g., entity destroyed, scene unloaded):
+handlers:cleanup()  -- Removes ALL handlers in this group at once
+```
+
+**Why use signal_group:**
+- Prevents memory leaks from orphaned handlers
+- Single cleanup call removes all handlers
+- Tracks count of registered handlers for debugging
 
 ### Two Event Systems (IMPORTANT)
 
@@ -193,6 +263,61 @@ local script = EntityBuilder.validated(MyScript, entity, { health = 100 })
 
 ---
 
+## Enemy Behavior Library
+
+Declarative behavior composition for enemies. Replaces repetitive timer boilerplate with composable behavior definitions.
+
+```lua
+local enemies = {}
+
+-- Simple: single behavior using ctx.speed
+enemies.goblin = {
+    sprite = "enemy_type_1.png",
+    hp = 30, speed = 60, damage = 5,
+    behaviors = { "chase" },
+}
+
+-- Composite: multiple behaviors with config
+enemies.dasher = {
+    sprite = "enemy_type_1.png",
+    hp = 25, speed = 50, dash_speed = 300, dash_cooldown = 3.0,
+    behaviors = {
+        "wander",
+        { "dash", cooldown = "dash_cooldown", speed = "dash_speed" },
+    },
+}
+```
+
+**Built-in Behaviors:**
+| Behavior | Default Config | Description |
+|----------|----------------|-------------|
+| `chase` | interval=0.5, speed=ctx.speed | Move toward player |
+| `wander` | interval=0.5, speed=ctx.speed | Random movement |
+| `flee` | interval=0.5, distance=150 | Move away from player |
+| `kite` | interval=0.5, range=ctx.range | Maintain distance (ranged) |
+| `dash` | cooldown=ctx.dash_cooldown | Periodic dash attack |
+| `trap` | cooldown=ctx.trap_cooldown | Drop hazards |
+| `summon` | cooldown=ctx.summon_cooldown | Spawn minions |
+| `rush` | interval=0.3 | Fast chase (aggressive) |
+
+**Config Resolution:** String values like `"dash_speed"` lookup `ctx.dash_speed`. Numbers used directly.
+
+**Auto-cleanup:** All behavior timers are automatically cancelled when entity is destroyed.
+
+**Register Custom Behaviors:**
+```lua
+local behaviors = require("core.behaviors")
+
+behaviors.register("teleport", {
+    defaults = { interval = 5.0, range = 100 },
+    on_tick = function(e, ctx, helpers, config)
+        helpers.teleport_random(e, config.range)
+    end,
+})
+```
+
+---
+
 ## Shader Builder API
 
 ```lua
@@ -228,19 +353,60 @@ draw.local_command(eid, "text_pro", {
 
 ## Timer API
 
+**PREFER `timer.sequence()` for multi-step animations!** Avoids callback hell and provides built-in cancellation.
+
+### timer.sequence() - Fluent Chain Builder (Recommended)
+
 ```lua
 local timer = require("core.timer")
 
+-- Basic sequence with group for cleanup
+timer.sequence("attack_animation")
+    :do_now(function() playSound("wind_up") end)
+    :wait(0.3)
+    :do_now(function() dealDamage(target, 50) end)
+    :wait(0.2)
+    :do_now(function() playSound("impact") end)
+    :onComplete(function() print("animation done!") end)
+    :start()  -- REQUIRED! Chain won't run without :start()
+
+-- Cancel entire sequence by group
+timer.kill_group("attack_animation")
+
+-- Pause/resume all timers in group
+timer.pause_group("attack_animation")
+timer.resume_group("attack_animation")
+```
+
+### Key Methods
+
+| Method | Purpose |
+|--------|---------|
+| `:wait(delay)` | Pause for N seconds |
+| `:do_now(fn)` | Execute function immediately |
+| `:after(delay, fn)` | Execute after delay |
+| `:onComplete(fn)` | Callback when chain finishes |
+| `:start()` | **REQUIRED** - actually runs the chain |
+| `:cancel()` | Stop all timers in this chain |
+
+### Single Timers (opts API)
+
+For one-off timers, use the `_opts` variants with named parameters:
+
+```lua
+-- Better than timer.after(delay, action, tag, group)
 timer.after_opts({ delay = 2.0, action = function() end, tag = "my_timer" })
 timer.every_opts({ delay = 0.5, action = fn, times = 10, immediate = true, tag = "update" })
+```
 
--- Fluent sequences
-timer.sequence("animation")
-    :wait(0.5)
-    :do_now(function() print("start") end)
-    :wait(0.3)
-    :do_now(function() print("end") end)
-    :start()
+### ⚠️ Avoid: Positional API
+
+```lua
+-- DON'T: 7 parameters are hard to remember!
+timer.every(delay, action, times, immediate, after, tag, group)
+
+-- DO: Use _opts or sequence instead
+timer.every_opts({ delay = 0.5, action = fn, times = 10, tag = "pulse" })
 ```
 
 ---
@@ -332,15 +498,64 @@ Single-letter import for minimal friction transform operations:
 ```lua
 local Q = require("core.Q")
 
--- Move entity to absolute position
-Q.move(entity, 100, 200)
+-- Position & Movement
+Q.move(entity, 100, 200)       -- Move to absolute position
+Q.offset(entity, 10, 0)        -- Move relative to current position
 
--- Get center point (returns x, y or nil, nil if invalid)
-local cx, cy = Q.center(entity)
-if cx then spawn_explosion(cx, cy) end
+-- Center Points
+local cx, cy = Q.center(entity)         -- Authoritative physics position
+local vx, vy = Q.visualCenter(entity)   -- Visual/rendered position (for effects)
 
--- Move relative to current position
-Q.offset(entity, 10, 0)  -- Nudge 10 pixels right
+-- Dimensions
+local w, h = Q.size(entity)    -- Get width, height
+
+-- Bounding Boxes
+local x, y, w, h = Q.bounds(entity)        -- Authoritative bounds
+local vx, vy, vw, vh = Q.visualBounds(entity)  -- Visual bounds
+
+-- Rotation
+local rad = Q.rotation(entity)         -- Get rotation in radians
+Q.setRotation(entity, math.pi / 4)     -- Set absolute rotation
+Q.rotate(entity, 0.1)                  -- Rotate by delta
+
+-- Entity Validation
+if Q.isValid(entity) then ... end      -- Check if entity exists
+Q.ensure(entity, "spawn_explosion")    -- Assert valid or error with context
+
+-- Spatial Queries
+local dist = Q.distance(e1, e2)                    -- Distance between entities
+local dist = Q.distanceToPoint(entity, x, y)       -- Distance to point
+if Q.isInRange(e1, e2, 100) then ... end           -- Range check
+
+-- Component Access
+local transform = Q.getTransform(entity)   -- Safe component get (returns nil if invalid)
+Q.withTransform(entity, function(t)        -- Execute only if valid
+    t.actualX = t.actualX + 10
+end)
+```
+
+### Visual vs Authoritative Position
+
+**Use `Q.center()` for:**
+- Physics calculations
+- Collision detection
+- AI pathfinding
+- Gameplay logic
+
+**Use `Q.visualCenter()` for:**
+- Spawning visual effects (particles, damage numbers)
+- Screen-space UI positioning
+- Camera following smoothed position
+
+**Example:**
+```lua
+-- Wrong: effect lags behind fast-moving entity
+local cx, cy = Q.center(enemy)
+popup.damage(enemy, 25)  -- Appears at physics position
+
+-- Right: effect spawns at rendered location
+local vx, vy = Q.visualCenter(enemy)
+-- popup.damage uses visualCenter internally
 ```
 
 **Replaces this boilerplate:**
@@ -354,6 +569,39 @@ end
 
 -- New way (1 line)
 Q.move(entity, x, y)
+```
+
+---
+
+## Popup Helpers
+
+Quick damage/heal numbers with automatic styling and positioning:
+
+```lua
+local popup = require("core.popup")
+
+-- Damage numbers (red, descending)
+popup.damage(entity, 25)
+
+-- Heal numbers (green, ascending)
+popup.heal(entity, 50)
+
+-- Custom text above entity
+popup.above(entity, "CRITICAL!", { color = "gold" })
+popup.above(entity, "+10 XP", { color = "cyan", offset = 20 })
+```
+
+**Features:**
+- Automatically uses visual position (not physics position)
+- Built-in animations (pop, fade, drift)
+- Color-coded by type (damage=red, heal=green)
+- Offsets prevent overlap when spawning multiple popups
+
+**Equivalent Text Builder code:**
+```lua
+-- popup.damage(entity, 25) replaces:
+local vx, vy = Q.visualCenter(entity)
+Text.define():content("[25](color=red;pop=0.2)"):size(20):fade():lifespan(0.8):spawn():at(vx, vy - 10)
 ```
 
 ---

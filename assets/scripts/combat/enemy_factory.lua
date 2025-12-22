@@ -48,6 +48,7 @@ local Node = require("monobehavior.behavior_script_v2")
 local PhysicsBuilder = require("core.physics_builder")
 local C = require("core.constants")
 local CombatSystem = require("combat.combat_system")
+local behaviors = require("core.behaviors")
 
 local WaveHelpers = require("combat.wave_helpers")
 local enemies = require("data.enemies")
@@ -296,9 +297,14 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         WaveHelpers.set_shader(e, "elite_glow")
     end
 
-    -- Run on_spawn callback from definition
+    -- Run on_spawn callback from definition (legacy support)
     if def.on_spawn then
         def.on_spawn(e, ctx, WaveHelpers)
+    end
+
+    -- Apply declarative behaviors (new system)
+    if def.behaviors then
+        behaviors.apply(e, ctx, WaveHelpers, def.behaviors)
     end
 
     -- Emit spawned event
@@ -326,7 +332,10 @@ function EnemyFactory.kill(e, ctx)
         timer.cancel(ctx._steering_timer_tag)
     end
 
-    -- Cleanup other timers tagged with this entity
+    -- Cleanup declarative behaviors (auto-tracked timers)
+    behaviors.cleanup(e)
+
+    -- Cleanup legacy timers tagged with this entity (for backwards compatibility)
     timer.cancel("enemy_" .. e)
     timer.cancel("enemy_" .. e .. "_dash")
     timer.cancel("enemy_" .. e .. "_trap")

@@ -22,6 +22,7 @@ local waveAnnounceRecipe = Text.define()
     :anchor("center")
     :pop(0.4)  -- bouncy entrance animation
     :fade()
+    :fadeOut(0.3)  -- fade only in last 30%
     :lifespan(4)
     :space("screen")
 
@@ -32,6 +33,7 @@ local eliteAnnounceRecipe = Text.define()
     :anchor("center")
     :pop(0.6)  -- stronger pop for emphasis
     :fade()
+    :fadeOut(0.3)  -- fade only in last 30%
     :lifespan(2.0)
     :space("screen")
 
@@ -42,6 +44,7 @@ local stageCompleteRecipe = Text.define()
     :anchor("center")
     :pop(0.5)  -- celebratory bounce
     :fade()
+    :fadeOut(0.3)  -- fade only in last 30%
     :lifespan(2.0)
     :space("screen")
 
@@ -51,6 +54,7 @@ local defaultTextRecipe = Text.define()
     :color("white")
     :anchor("center")
     :fade()
+    :fadeOut(0.3)  -- fade only in last 30%
     :lifespan(1.5)
     :space("screen")
 

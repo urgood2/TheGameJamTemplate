@@ -32,6 +32,14 @@ end
 function MockCommandBufferText:rebuild()
 end
 
+function MockCommandBufferText:set_base_scale(s)
+    self.base_scale = s
+end
+
+function MockCommandBufferText:set_base_rotation(r)
+    self.base_rotation = r
+end
+
 -- Make it callable
 setmetatable(MockCommandBufferText, {
     __call = function(cls, args)
@@ -802,6 +810,137 @@ TestRunner.describe("Integration: Complete workflow", function()
 
         -- Both name and HP bar should be removed via attachTo
         assert_equals(0, #Text._activeHandles, "All boss text should be removed with boss")
+    end)
+end)
+
+TestRunner.describe("Pop animation configuration", function()
+    it(":pop() stores default config", function()
+        local Text = require("core.text")
+        local recipe = Text.define():pop()
+        assert_not_nil(recipe._config.pop)
+        assert_equals(0.15, recipe._config.pop.scale)  -- 0.3 * 0.5
+        assert_equals(9, recipe._config.pop.rotation)  -- 0.3 * 30
+        assert_equals(0.25, recipe._config.pop.duration)
+    end)
+
+    it(":pop(intensity) scales config values", function()
+        local Text = require("core.text")
+        local recipe = Text.define():pop(0.5)
+        assert_equals(0.25, recipe._config.pop.scale)  -- 0.5 * 0.5
+        assert_equals(15, recipe._config.pop.rotation)  -- 0.5 * 30
+    end)
+
+    it(":pop(table) uses explicit config", function()
+        local Text = require("core.text")
+        local recipe = Text.define():pop({ scale = 0.4, rotation = 20, duration = 0.3 })
+        assert_equals(0.4, recipe._config.pop.scale)
+        assert_equals(20, recipe._config.pop.rotation)
+        assert_equals(0.3, recipe._config.pop.duration)
+    end)
+end)
+
+TestRunner.describe("Pop animation state", function()
+    it("handle has _anim when :pop() is used", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100):pop(0.5)
+        local handle = recipe:spawn():at(100, 200)
+
+        assert_not_nil(handle._anim, "Handle should have _anim")
+        assert_true(handle._anim.active, "Animation should be active")
+        assert_equals(0, handle._anim.elapsed)
+        assert_equals(0, handle._anim.currentScale)  -- starts at 0
+    end)
+
+    it("handle has no _anim without :pop()", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100)
+        local handle = recipe:spawn():at(100, 200)
+
+        assert_equals(nil, handle._anim)
+    end)
+
+    it("animation progresses over time", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100):pop(0.5)
+        local handle = recipe:spawn():at(100, 200)
+
+        -- Initial state
+        assert_equals(0, handle._anim.currentScale)
+
+        -- After first update
+        Text.update(0.05)
+        assert_true(handle._anim.currentScale > 0, "Scale should increase after update")
+        assert_true(handle._anim.active, "Animation should still be active")
+
+        -- After animation completes
+        Text.update(0.3)  -- total > 0.25 duration
+        assert_true(not handle._anim.active, "Animation should be complete")
+        assert_equals(1, handle._anim.currentScale, "Scale should be 1 after completion")
+        assert_equals(0, handle._anim.currentRotation, "Rotation should be 0 after completion")
+    end)
+end)
+
+TestRunner.describe("Pop animation rendering", function()
+    it("animation applies to text renderer base_scale", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local recipe = Text.define():content("test"):width(100):pop(0.5)
+        local handle = recipe:spawn():at(100, 200)
+
+        -- After updates, check that renderer received scale
+        Text.update(0.1)
+
+        -- MockCommandBufferText should have received set_base_scale call
+        -- We verify the _anim state is being computed correctly
+        assert_true(handle._anim.currentScale > 0)
+        assert_true(handle._anim.currentScale < 1.5)  -- shouldn't overshoot too much
+    end)
+end)
+
+TestRunner.describe("Integration: Pop animation with damage numbers", function()
+    it("Pop + fade + lifespan work together", function()
+        local Text = require("core.text")
+        Text._activeHandles = {}
+
+        local entity = createMockEntity(500, 100, 200)
+
+        local damageRecipe = Text.define()
+            :content("[%d](color=red)")
+            :size(20)
+            :pop(0.3)
+            :fade()
+            :lifespan(0.8)
+
+        local handle = damageRecipe:spawn(50):above(entity, 15)
+
+        -- Verify all features configured
+        assert_not_nil(handle._anim, "Pop animation should be initialized")
+        assert_true(handle._config.fade, "Fade should be enabled")
+        assert_equals(0.8, handle._lifespan, "Lifespan should be set")
+        assert_equals("[50](color=red)", handle._content, "Content should be formatted")
+
+        -- Animation should progress
+        Text.update(0.1)
+        assert_true(handle._anim.currentScale > 0.5, "Should have scaled up quickly")
+
+        -- Animation should complete before lifespan
+        Text.update(0.2)  -- total 0.3s > 0.25 duration
+        assert_true(not handle._anim.active, "Pop animation should be complete")
+        assert_equals(1, handle._anim.currentScale, "Scale should be 1")
+
+        -- Handle should still exist (lifespan not reached)
+        assert_equals(1, #Text._activeHandles, "Handle should still be active")
+
+        -- After lifespan, handle is removed
+        Text.update(0.6)  -- total 0.9s > 0.8 lifespan
+        assert_equals(0, #Text._activeHandles, "Handle should be removed after lifespan")
     end)
 end)
 

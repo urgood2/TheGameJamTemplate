@@ -174,6 +174,10 @@ function CommandBufferText:init(args)
 
   self.font = args.font or (localization and localization.getFont and localization.getFont())
   self.font_size = args.font_size or args.fontSize or 16
+
+  -- Base transform for whole-text animations (pop, bounce, etc.)
+  self.base_scale = args.base_scale or 1
+  self.base_rotation = args.base_rotation or 0
   self.alignment = args.text_alignment or args.alignment or "left"
   self.anchor = args.anchor or "center"  -- "center" or "topleft"
   self.height_multiplier = args.height_multiplier or args.line_height or DEFAULT_LINE_HEIGHT
@@ -230,6 +234,18 @@ function CommandBufferText:set_width(w)
     self.w = w
     self.dirty = true
   end
+end
+
+--- Set base scale for whole-text animations (multiplies with per-character scale)
+--- @param s number Scale value (1 = normal, 0 = invisible)
+function CommandBufferText:set_base_scale(s)
+  self.base_scale = s or 1
+end
+
+--- Set base rotation for whole-text animations (adds to per-character rotation)
+--- @param r number Rotation in degrees
+function CommandBufferText:set_base_rotation(r)
+  self.base_rotation = r or 0
 end
 
 function CommandBufferText:_parse_text(raw)
@@ -555,8 +571,9 @@ function CommandBufferText:update(dt)
     local draw_x = origin_x + (ch.x or 0) + (ch.ox or 0)
     local draw_y = origin_y + (ch.y or 0) + (ch.oy or 0)
     local draw_char = ch.codepoint or ch.c
-    local draw_rotation = ch.rotation or 0
-    local draw_scale = (ch.scale or 1)
+    -- Apply base transforms (for whole-text animations) + per-character transforms
+    local draw_rotation = (ch.rotation or 0) + (self.base_rotation or 0)
+    local draw_scale = (ch.scale or 1) * (self.base_scale or 1)
     local draw_scaleX = draw_scale * (ch.scaleX or 1)
     local draw_scaleY = draw_scale * (ch.scaleY or 1)
     local draw_color = ch.color or default_color

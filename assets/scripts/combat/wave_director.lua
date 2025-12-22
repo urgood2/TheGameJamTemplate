@@ -10,6 +10,9 @@ local EnemyFactory = require("combat.enemy_factory")
 local generators = require("combat.wave_generators")
 local elite_modifiers = require("data.elite_modifiers")
 
+-- Load visual handlers (registers signal listeners for show_floating_text, etc.)
+require("combat.wave_visuals")
+
 local WaveDirector = {}
 
 --============================================

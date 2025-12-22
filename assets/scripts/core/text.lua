@@ -86,6 +86,27 @@ function RecipeMethods:fade()
     return self
 end
 
+--- Enable pop-in entrance animation (scale from 0 with bounce)
+--- @param intensityOrConfig number|table Intensity (0-1) or config table {scale, rotation, duration}
+--- @return self
+function RecipeMethods:pop(intensityOrConfig)
+    if type(intensityOrConfig) == "table" then
+        self._config.pop = {
+            scale = intensityOrConfig.scale or 0.2,
+            rotation = intensityOrConfig.rotation or 15,
+            duration = intensityOrConfig.duration or 0.25,
+        }
+    else
+        local intensity = intensityOrConfig or 0.3
+        self._config.pop = {
+            scale = intensity * 0.5,      -- 0-0.5 range for bounce amplitude
+            rotation = intensity * 30,    -- 0-30 degrees for wobble
+            duration = 0.25,              -- fixed duration
+        }
+    end
+    return self
+end
+
 --- Set fade-in percentage
 --- @param pct number Percentage of lifespan for fade-in (0-1)
 --- @return self
@@ -596,6 +617,19 @@ function Text._createHandle(spawner)
     handle._shaders = spawner._shaders
     handle._richEffects = spawner._richEffects
 
+    -- Initialize pop animation state if configured
+    if config.pop then
+        handle._anim = {
+            active = true,
+            elapsed = 0,
+            duration = config.pop.duration or 0.25,
+            scaleAmount = config.pop.scale or 0.2,
+            rotationAmount = config.pop.rotation or 15,
+            currentScale = 0,      -- starts at 0 (invisible)
+            currentRotation = 0,
+        }
+    end
+
     -- Create real ECS entity if in entity mode (enables shader support)
     if spawner._asEntity then
         print(string.format("[TEXT] Creating shader entity with shaders: %s",
@@ -663,6 +697,69 @@ function Text.define()
         z = 0,
     }
     return recipe
+end
+
+--------------------------------------------------------------------------------
+-- POP ANIMATION
+--------------------------------------------------------------------------------
+
+--- Update pop animation for a handle (mirrors C++ DynamicMotion logic)
+--- @param handle Handle The text handle with _anim state
+--- @param dt number Delta time in seconds
+local function updatePopAnimation(handle, dt)
+    local anim = handle._anim
+    if not anim or not anim.active then return end
+
+    anim.elapsed = anim.elapsed + dt
+
+    if anim.elapsed >= anim.duration then
+        -- Animation complete, snap to final values
+        anim.active = false
+        anim.currentScale = 1
+        anim.currentRotation = 0
+        return
+    end
+
+    -- Progress ratio (0 → 1)
+    local t = anim.elapsed / anim.duration
+
+    -- Easing: power curve for decay (matches C++ pow(remaining, 2.8))
+    local remaining = 1 - t
+    local easing = remaining ^ 2.8
+
+    -- Oscillation: sine wave (matches C++ sin(51.2 * time) and sin(46.3 * time))
+    local scaleOsc = math.sin(51.2 * anim.elapsed)
+    local rotOsc = math.sin(46.3 * anim.elapsed)
+
+    -- Scale starts at 0, quickly ramps to 1, then bounces
+    -- Base scale ramps 0→1 in first 25% of duration, then add oscillating bounce
+    local baseScale = math.min(1, t * 4)
+    anim.currentScale = baseScale + (anim.scaleAmount * scaleOsc * easing)
+
+    -- Rotation oscillates and decays
+    anim.currentRotation = anim.rotationAmount * rotOsc * easing
+end
+
+--- Apply animation state to the handle's text renderer
+--- @param handle Handle The text handle
+local function applyPopAnimation(handle)
+    if not handle._textRenderer then return end
+    if not handle._anim then return end
+
+    local scale = handle._anim.currentScale
+    local rotation = handle._anim.currentRotation
+
+    -- Default to 1 if animation not active (ensures text is visible)
+    if not handle._anim.active and scale == 0 then
+        scale = 1
+    end
+
+    if handle._textRenderer.set_base_scale then
+        handle._textRenderer:set_base_scale(scale)
+    end
+    if handle._textRenderer.set_base_rotation then
+        handle._textRenderer:set_base_rotation(rotation)
+    end
 end
 
 --- Update all active text handles (call once per frame)
@@ -735,6 +832,12 @@ function Text.update(dt)
                             end
                         end
                     end
+                end
+
+                -- Update pop animation and apply to renderer
+                if handle._anim then
+                    updatePopAnimation(handle, dt)
+                    applyPopAnimation(handle)
                 end
 
                 -- Update renderer

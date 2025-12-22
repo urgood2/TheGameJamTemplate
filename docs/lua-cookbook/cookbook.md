@@ -87,7 +87,9 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Group timers for cleanup | \pageref{recipe:timer-scope} |
 | Synchronize with physics steps | \pageref{recipe:timer-physics} |
 | Emit and handle events | \pageref{recipe:signals} |
+| Group event handlers for cleanup | \pageref{recipe:signal-group} |
 | Bridge combat bus to signals | \pageref{recipe:event-bridge} |
+| Show popup text (damage, heal, etc.) | \pageref{recipe:popup} |
 | **Rendering & Shaders** | |
 | Add shader to entity | \pageref{recipe:add-shader} |
 | Stack multiple shaders | \pageref{recipe:stack-shaders} |
@@ -696,6 +698,148 @@ Add entries to `BRIDGED_EVENTS` in `event_bridge.lua`:
 
 ***
 
+## Signal Groups (Scoped Cleanup)
+
+\label{recipe:signal-group}
+
+**When to use:** Register event handlers that need cleanup when a module, entity, or scene is destroyed.
+
+```lua
+local signal_group = require("core.signal_group")
+
+-- Create a group for this module/entity
+local handlers = signal_group.new("combat_ui")
+
+-- Register handlers (same API as hump.signal)
+handlers:on("enemy_killed", function(entity)
+    updateKillCount()
+end)
+
+handlers:on("player_damaged", function(entity, data)
+    showDamageFlash()
+end)
+
+-- When done (e.g., scene unload, entity destroyed):
+handlers:cleanup()  -- Removes ALL handlers in this group at once
+```
+
+*— from core/signal_group.lua:1-164*
+
+**Why use signal_group:**
+- Prevents memory leaks from orphaned handlers
+- Single cleanup call removes all handlers
+- Tracks count of registered handlers for debugging
+
+**API Reference:**
+
+| Method | Description |
+|--------|-------------|
+| `signal_group.new(name?)` | Create a new group |
+| `group:on(event, handler)` | Register handler (alias: `:register`) |
+| `group:off(event, handler)` | Remove specific handler (alias: `:remove`) |
+| `group:cleanup()` | Remove ALL handlers in group |
+| `group:count()` | Get number of registered handlers |
+| `group:isCleanedUp()` | Check if already cleaned up |
+| `group:getName()` | Get group name (for debugging) |
+
+**Real usage example:**
+
+```lua
+-- Entity with scoped event handlers
+function createEnemy(entity)
+    local handlers = signal_group.new("enemy_" .. entity)
+
+    handlers:on("wave_complete", function()
+        -- React to wave ending
+    end)
+
+    -- When entity dies, clean up all handlers
+    signal.register("entity_destroyed", function(eid)
+        if eid == entity then
+            handlers:cleanup()
+        end
+    end)
+end
+```
+
+**Gotcha:** After `:cleanup()`, the group will warn if you try to register new handlers.
+
+***
+
+## Popup Helpers
+
+\label{recipe:popup}
+
+**When to use:** Quick damage/heal numbers and floating text without Text Builder boilerplate.
+
+```lua
+local popup = require("core.popup")
+
+-- Damage numbers (red, above entity)
+popup.damage(entity, 25)
+
+-- Heal numbers (green, above entity)
+popup.heal(entity, 50)
+
+-- Custom text above entity
+popup.above(entity, "CRITICAL!", { color = "gold" })
+
+-- Text at specific position
+popup.at(100, 200, "Hello!", { color = "white" })
+```
+
+*— from core/popup.lua:1-217*
+
+**Convenience functions:**
+
+```lua
+-- Combat feedback
+popup.damage(entity, amount)           -- Red damage number
+popup.heal(entity, amount)             -- Green heal number
+popup.critical(entity, amount)         -- Orange with pop effect
+popup.miss(entity)                     -- Gray "Miss!" text
+popup.blocked(entity)                  -- Gray "Blocked!" text
+
+-- Resource changes
+popup.mana(entity, amount)             -- Blue mana change
+popup.gold(entity, amount)             -- Gold currency change
+popup.xp(entity, amount)               -- Purple XP gain
+
+-- Generic
+popup.above(entity, text, opts)        -- Above entity center
+popup.below(entity, text, opts)        -- Below entity center
+popup.at(x, y, text, opts)             -- At specific position
+popup.status(entity, text, opts)       -- Status text (shorter duration)
+```
+
+**Options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `color` | string | Color name (e.g., "red", "gold", "pastel_blue") |
+| `duration` | number | Display duration in seconds (default: 3.0) |
+| `effect` | string | Text effects (e.g., "pop=0.2;shake=2") |
+| `offset_y` | number | Vertical offset from entity center |
+| `critical` | boolean | Add pop effect for critical hits |
+
+**Configuration (defaults):**
+
+```lua
+popup.defaults = {
+    duration = 3.0,
+    heal_color = "pastel_pink",
+    damage_color = "red",
+    mana_color = "pastel_blue",
+    gold_color = "gold",
+    xp_color = "pastel_purple",
+    offset_y = -20,
+}
+```
+
+**Gotcha:** Uses `Q.visualCenter()` internally, so popups appear at the rendered position (not physics position).
+
+***
+
 ## Safe Script Table Access
 
 \label{recipe:safe-script}
@@ -819,20 +963,68 @@ timer.cooldown_opts({
 ```lua
 local Q = require("core.Q")
 
--- Move entity to absolute position
-Q.move(entity, 100, 200)
+-- Position & Movement
+Q.move(entity, 100, 200)       -- Move to absolute position
+Q.offset(entity, 10, 0)        -- Move relative to current position
 
--- Get center point (returns x, y or nil, nil if invalid)
-local cx, cy = Q.center(entity)
-if cx then
-    spawn_explosion(cx, cy)
-end
+-- Center Points
+local cx, cy = Q.center(entity)         -- Authoritative physics position
+local vx, vy = Q.visualCenter(entity)   -- Visual/rendered position (for effects)
 
--- Move relative to current position
-Q.offset(entity, 10, 0)  -- Nudge 10 pixels right
+-- Dimensions
+local w, h = Q.size(entity)    -- Get width, height
+
+-- Bounding Boxes
+local x, y, w, h = Q.bounds(entity)        -- Authoritative bounds
+local vx, vy, vw, vh = Q.visualBounds(entity)  -- Visual bounds
+
+-- Rotation
+local rad = Q.rotation(entity)         -- Get rotation in radians
+Q.setRotation(entity, math.pi / 4)     -- Set absolute rotation
+Q.rotate(entity, 0.1)                  -- Rotate by delta
+
+-- Entity Validation
+if Q.isValid(entity) then ... end      -- Check if entity exists
+Q.ensure(entity, "spawn_explosion")    -- Assert valid or error with context
+
+-- Spatial Queries
+local dist = Q.distance(e1, e2)                    -- Distance between entities
+local dist = Q.distanceToPoint(entity, x, y)       -- Distance to point
+if Q.isInRange(e1, e2, 100) then ... end           -- Range check
+local dx, dy = Q.direction(e1, e2)                 -- Normalized direction vector
+
+-- Component Access
+local transform = Q.getTransform(entity)   -- Safe component get (returns nil if invalid)
+Q.withTransform(entity, function(t)        -- Execute only if valid
+    t.actualX = t.actualX + 10
+end)
 ```
 
-*— from core/Q.lua:32-62*
+*— from core/Q.lua:1-272*
+
+### Visual vs Authoritative Position
+
+**Use `Q.center()` for:**
+- Physics calculations
+- Collision detection
+- AI pathfinding
+- Gameplay logic
+
+**Use `Q.visualCenter()` for:**
+- Spawning visual effects (particles, damage numbers)
+- Screen-space UI positioning
+- Camera following smoothed position
+
+**Example:**
+```lua
+-- Wrong: effect lags behind fast-moving entity
+local cx, cy = Q.center(enemy)
+spawnParticles(cx, cy)  -- Appears at physics position
+
+-- Right: effect spawns at rendered location
+local vx, vy = Q.visualCenter(enemy)
+spawnParticles(vx, vy)  -- Appears where player sees entity
+```
 
 **Replace verbose patterns:**
 
@@ -853,8 +1045,23 @@ Q.move(entity, x, y)
 | Function | Returns | Description |
 |----------|---------|-------------|
 | `Q.move(entity, x, y)` | boolean | Set absolute position |
-| `Q.center(entity)` | x, y or nil, nil | Get center point |
+| `Q.center(entity)` | x, y or nil | Get authoritative center point |
+| `Q.visualCenter(entity)` | x, y or nil | Get visual/rendered center point |
 | `Q.offset(entity, dx, dy)` | boolean | Move relative to current position |
+| `Q.size(entity)` | w, h or nil | Get entity dimensions |
+| `Q.bounds(entity)` | x, y, w, h or nil | Get authoritative bounding box |
+| `Q.visualBounds(entity)` | x, y, w, h or nil | Get visual bounding box |
+| `Q.rotation(entity)` | radians or nil | Get rotation in radians |
+| `Q.setRotation(entity, rad)` | boolean | Set absolute rotation |
+| `Q.rotate(entity, delta)` | boolean | Rotate by delta radians |
+| `Q.isValid(entity)` | boolean | Check if entity exists |
+| `Q.ensure(entity, ctx?)` | entity or nil | Assert valid with optional error context |
+| `Q.distance(e1, e2)` | number or nil | Distance between entities |
+| `Q.distanceToPoint(e, x, y)` | number or nil | Distance to point |
+| `Q.isInRange(e1, e2, range)` | boolean | Check if within range |
+| `Q.direction(e1, e2)` | dx, dy or nil | Normalized direction vector |
+| `Q.getTransform(entity)` | Transform or nil | Get Transform component |
+| `Q.withTransform(e, fn)` | boolean | Execute callback with transform if valid |
 
 **Gotcha:** All functions return `false` or `nil` if the entity has no Transform component. Check return values when you need to know if the operation succeeded.
 
@@ -2847,6 +3054,8 @@ local recipe = Text.define()
     -- Behavior
     :fade()                        -- Alpha fade over lifetime
     :fadeIn(0.2)                   -- 20% of lifespan for fade-in
+    :fadeOut(0.3)                  -- 30% of lifespan for fade-out (independent)
+    :pop(0.15)                     -- Pop-in animation (scale 0→1 over 15% of lifespan)
     :lifespan(1.0)                 -- Auto-destroy after 1 second
     :lifespan(0.8, 1.2)            -- Random between 0.8-1.2
 
@@ -2935,6 +3144,8 @@ local handle = recipe:spawn("HP: 100")
 | `:effects(str)` | Default character effects |
 | `:fade()` | Enable alpha fade |
 | `:fadeIn(pct)` | Fade-in percentage (0-1) |
+| `:fadeOut(pct)` | Fade-out percentage (0-1), independent of fadeIn |
+| `:pop(pct)` | Pop-in entrance animation (scale 0→1) |
 | `:lifespan(min, max?)` | Auto-destroy lifespan |
 | `:width(n)` | Wrap width |
 | `:anchor("center"/"topleft")` | Anchor point |

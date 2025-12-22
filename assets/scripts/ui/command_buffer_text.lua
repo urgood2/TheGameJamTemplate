@@ -668,8 +668,8 @@ function CommandBufferText:update(dt)
         c.y = draw_y + center_y
       end, char_z, self.render_space)
       command_buffer.queueScale(layer_handle, function(c)
-        c.x = draw_scaleX
-        c.y = draw_scaleY
+        c.scaleX = draw_scaleX
+        c.scaleY = draw_scaleY
       end, char_z, self.render_space)
       command_buffer.queueTextPro(layer_handle, function(c)
         c.text = draw_char

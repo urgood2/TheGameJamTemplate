@@ -87,6 +87,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Group timers for cleanup | \pageref{recipe:timer-scope} |
 | Synchronize with physics steps | \pageref{recipe:timer-physics} |
 | Emit and handle events | \pageref{recipe:signals} |
+| Bridge combat bus to signals | \pageref{recipe:event-bridge} |
 | **Rendering & Shaders** | |
 | Add shader to entity | \pageref{recipe:add-shader} |
 | Stack multiple shaders | \pageref{recipe:stack-shaders} |
@@ -101,6 +102,8 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Create UI with DSL | \pageref{recipe:ui-dsl} |
 | Add tooltip on hover | \pageref{recipe:tooltip} |
 | Create grid layout | \pageref{recipe:ui-grid} |
+| Use styled localization for colored text | \pageref{recipe:styled-localization} |
+| Create localized tooltip with color codes | \pageref{recipe:localized-tooltip} |
 | **Combat** | |
 | Spawn projectile | \pageref{recipe:spawn-projectile} |
 | Configure projectile behavior | \pageref{recipe:projectile-preset} |
@@ -625,6 +628,71 @@ end)
 *— from external/hump/signal.lua:36-39*
 
 **Gotcha:** Use `signal.emit()`, NOT `publishLuaEvent()` (deprecated).
+
+***
+
+## Event Bridge (Combat Bus → Signals)
+
+\label{recipe:event-bridge}
+
+**When to use:** Connect combat system events (ctx.bus) to the signal system so both can respond to the same events.
+
+**Why this exists:** The combat system uses its own EventBus (`ctx.bus:emit`), while other systems like wave director use `signal.emit`. Without bridging, events only reach listeners of their own system.
+
+```lua
+local EventBridge = require("core.event_bridge")
+
+-- After creating combat context:
+EventBridge.attach(combat_context)
+
+-- Now combat events are automatically forwarded:
+-- ctx.bus:emit("OnDeath", data)  →  signal.emit("enemy_killed", entityId)
+```
+
+*— from core/event_bridge.lua:17-23*
+
+**Bridged Events:**
+
+| Combat Bus Event | Signal Event | Notes |
+|------------------|--------------|-------|
+| `OnEnemySpawned` | `enemy_spawned` | Enemy lifecycle |
+| `OnHitResolved` | `combat_hit` | Damage applied |
+| `OnDodge` | `combat_dodge` | Attack dodged |
+| `OnMiss` | `combat_miss` | Attack missed |
+| `OnCrit` | `combat_crit` | Critical hit |
+| `OnHealed` | `combat_healed` | Healing applied |
+| `OnStatusApplied` | `status_applied` | Status effect added |
+| `OnStatusRemoved` | `status_removed` | Status effect removed |
+
+**Special case — OnDeath:**
+
+`OnDeath` is NOT auto-bridged because combat bus passes a combat actor, not an entity ID. Handle manually:
+
+```lua
+-- In gameplay.lua
+ctx.bus:on("OnDeath", function(data)
+    local enemyEntity = combatActorToEntity[data.entity]
+    signal.emit("enemy_killed", enemyEntity)  -- Wave system expects entity ID
+end)
+```
+
+*— See gameplay.lua:5234*
+
+**Adding new bridges:**
+
+Add entries to `BRIDGED_EVENTS` in `event_bridge.lua`:
+
+```lua
+{
+    bus_event = "OnMyEvent",
+    signal_event = "my_event",  -- Optional: defaults to snake_case of bus_event
+    transform = function(data) return modified_data end  -- Optional
+}
+```
+
+**Gotcha:** Bridge is one-way (bus → signal) to avoid loops.
+
+**Gotcha:** Only explicitly listed events are bridged. Add to `BRIDGED_EVENTS` for new events.
 
 ***
 
@@ -3927,7 +3995,123 @@ local ui = dsl.root {
 }
 ```
 
-\newpage
+## Styled Localization
+
+\label{recipe:styled-localization}
+
+**When to use:** Create color-coded text in tooltips and UI using localization keys.
+
+**Pattern:** Define templates in JSON with `{param|color}` syntax, then substitute values via `localization.getStyled()`.
+
+### JSON Template Syntax
+
+```json
+{
+  "tooltip": {
+    "attack_desc": "Deal {damage|red} {element|fire} damage"
+  }
+}
+```
+
+### Lua Usage
+
+```lua
+-- Uses JSON default colors
+local text = localization.getStyled("tooltip.attack_desc", {
+    damage = 25,
+    element = "Fire"
+})
+-- Result: "Deal [25](color=red) [Fire](color=fire) damage"
+
+-- Override color at runtime
+local text = localization.getStyled("tooltip.attack_desc", {
+    damage = { value = 25, color = "gold" }
+})
+-- Result: "Deal [25](color=gold) [Fire](color=fire) damage"
+```
+
+*— from core/localization_styled.lua:15-54*
+
+**Named Colors:**
+
+| Color Name | Hex | Usage |
+|------------|-----|-------|
+| `red` | #FF5555 | Damage, danger |
+| `gold` | #FFD700 | Legendary, currency |
+| `green` | #55FF55 | Healing, success |
+| `blue` | #5555FF | Mana, water |
+| `cyan` | #55FFFF | Info, ice |
+| `purple` | #AA55FF | Rare, arcane |
+| `fire` | #FF6622 | Fire damage |
+| `ice` | #88CCFF | Ice damage |
+| `poison` | #88FF44 | Poison damage |
+| `holy` | #FFFFAA | Holy damage |
+| `void` | #AA44FF | Void damage |
+| `electric` | #FFFF44 | Lightning |
+
+**Gotcha:** If a parameter is missing, the placeholder `{param|color}` is preserved in output.
+
+**Gotcha:** Color names must match the palette in `util.getColor()`. Unknown colors fall back to white.
+
+***
+
+## Localized Tooltips
+
+\label{recipe:localized-tooltip}
+
+**When to use:** Create tooltips with color-coded text from localization keys.
+
+**Pattern:** `makeLocalizedTooltip()` combines styled localization with tooltip rendering.
+
+```lua
+-- Basic usage
+local boxID = makeLocalizedTooltip("tooltip.attack_desc", {
+    damage = card.damage,
+    element = card.element
+}, {
+    title = card.name  -- Optional title
+})
+
+-- With style overrides
+local boxID = makeLocalizedTooltip("tooltip.card_stats", {
+    damage = { value = 50, color = "gold" },  -- Override default color
+    cost = card.mana_cost
+}, {
+    title = "Card Details",
+    maxWidth = 400,
+    bodyFontSize = 14
+})
+```
+
+*— from core/gameplay.lua:584-601*
+
+**Options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `title` | string | Tooltip header text |
+| `maxWidth` | number | Max width in pixels (default: 320) |
+| `bodyColor` | Color | Override body text color |
+| `bodyFont` | Font | Override body font |
+| `bodyFontSize` | number | Override font size |
+
+**Gotcha:** The `bodyCoded = true` is set internally, enabling `[text](effects)` parsing.
+
+**Gotcha:** Returns the tooltip box entity ID for positioning/lifecycle management.
+
+**Real usage example:**
+
+```lua
+-- From card hover handler
+local tooltip = makeLocalizedTooltip("card.desc." .. card.id, {
+    damage = card.base_damage * damageMultiplier,
+    cost = card.mana_cost,
+    duration = card.effect_duration
+}, { title = localization.get("card.name." .. card.id) })
+
+-- Position above the card
+showSimpleTooltipAbove(cardEntity, tooltip)
+```
 
 \newpage
 

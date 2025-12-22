@@ -401,3 +401,20 @@
   - Fixed execution graph UI: tooltip lookup, tween-from-zero animation prevention, settings and hover handling improvements.
   - Added enemy physics friction(0) to prevent wall sticking, fixed collision tag to use PROJECTILE instead of BULLET.
   - Cleaned up UI state transitions: guard planning timer with state check, clear execution graph and block flash UI before action phase.
+
+12/20/2025
+  - Implemented multi-size font cache infrastructure: FontData now stores fonts at multiple sizes (13, 16, 20, 22, 32) with automatic size selection for pixel-perfect Korean text rendering.
+  - Added sliding UI panels: synergy panel and execution graph now slide in/out with toggle buttons, click-outside-to-dismiss behavior, and proper visual feedback.
+  - Completed card tooltip and detailed stats localization for English and Korean with derived stat calculations.
+  - Fixed font rendering crispness: switched to TEXTURE_FILTER_POINT, render text at native font sizes, and properly account for globalUIScaleFactor in layout measurement.
+
+12/21/2025
+  - Implemented styled localization system: new `getStyled()` function parses `{param|color}` syntax in JSON strings and outputs rich-text markup for color-coded tooltips.
+  - Added `makeLocalizedTooltip` helper for streamlined styled tooltip creation with automatic parameter substitution.
+  - Fixed CRT post-processing text pixelation by snapping UI text coordinates and adjusting resolution handling.
+  - Reverted font textures to point filtering to eliminate text blur artifacts.
+
+12/22/2025
+  - Added color-coded elemental damage stats in tooltips: Fire, Cold, Lightning, Acid, etc. now display with their corresponding element colors.
+  - Fixed rich-text spacing issues: improved single-segment optimization and ensured coded parsing only activates for labels with actual markup.
+  - Updated Lua cookbook with styled localization and event bridge recipes; added Text Builder pop animation design documentation.

@@ -3949,6 +3949,9 @@ function StatTooltipSystem.makeRow(key, snapshot, opts)
     local displayValue = value or 0
     local color = opts.colorCode and StatTooltipSystem.getValueColor(key, displayValue) or (tooltipStyle.valueColor or "white")
 
+    -- Only enable coded parsing if the label actually contains markup
+    local hasMarkup = label:find("%[") ~= nil
+
     return makeTooltipRow(label, formatted, {
         rowPadding = opts.rowPadding or tooltipStyle.rowPadding,
         labelOpts = {
@@ -3956,7 +3959,7 @@ function StatTooltipSystem.makeRow(key, snapshot, opts)
             color = tooltipStyle.labelColor,
             padding = opts.pillPadding or tooltipStyle.pillPadding,
             fontSize = opts.fontSize,
-            coded = true  -- Enable color markup parsing for labels
+            coded = hasMarkup  -- Only enable if label has [text](effects) markup
         },
         valueOpts = {
             color = color,

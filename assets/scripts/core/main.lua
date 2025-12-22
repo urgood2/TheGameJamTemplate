@@ -606,7 +606,26 @@ function main.init()
     if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
         require("lldebugger").start()
     end
-    
+
+    -- Run DX Audit smoke test to verify new Lua APIs work correctly
+    -- Set RUN_DX_AUDIT_TEST=1 to enable, or always run in debug builds
+    -- local runDxAuditTest = os.getenv("RUN_DX_AUDIT_TEST") == "1"
+    local runDxAuditTest = true
+    if runDxAuditTest then
+        local ok, test_module = pcall(require, "tests.test_dx_audit_changes")
+        if ok and test_module and test_module.run then
+            log_debug("[DX Audit] Running smoke test...")
+            local results = test_module.run()
+            if results.failed > 0 then
+                log_warn(string.format("[DX Audit] %d test(s) FAILED - check console output", results.failed))
+            else
+                log_debug(string.format("[DX Audit] All %d tests passed!", results.passed))
+            end
+        else
+            log_warn("[DX Audit] Could not load test module: " .. tostring(test_module))
+        end
+    end
+
     -- Legacy tooltip hide timer - no longer needed with DSL tooltips
     -- Tooltips now hide via onStopHover handlers in the DSL system
     -- This timer was used for mouse-following tooltips which are being phased out

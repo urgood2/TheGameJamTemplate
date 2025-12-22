@@ -265,6 +265,102 @@ function node:addStateTag(tag)
   return self
 end
 
+--------------------------------------------------------------------------------
+-- Quick Factory Methods (prevent data-loss bugs)
+--------------------------------------------------------------------------------
 
+--- Create a script attached to an existing entity with data safely assigned
+--- This prevents the common bug where data is assigned AFTER attach_ecs.
+---
+--- Usage:
+---   local script = Node.quick(entity, { health = 100, damage = 10 })
+---
+--- Equivalent to (but safer than):
+---   local MyType = Node:extend()
+---   local script = MyType {}
+---   script.health = 100
+---   script.damage = 10
+---   script:attach_ecs { create_new = false, existing_entity = entity }
+---
+--- @param entity number|nil Entity ID to attach to (if nil, creates new entity)
+--- @param data table|nil Initial data to assign to the script
+--- @param ScriptClass table|nil Optional custom script class (defaults to node:extend())
+--- @return table script The initialized script instance
+function node.quick(entity, data, ScriptClass)
+  ScriptClass = ScriptClass or node:extend()
+  local script = ScriptClass {}
+
+  -- Assign data BEFORE attach (critical for avoiding data-loss bug)
+  if data then
+    for k, v in pairs(data) do
+      script[k] = v
+    end
+  end
+
+  -- Now attach
+  if entity then
+    script:attach_ecs { create_new = false, existing_entity = entity }
+  else
+    script:attach_ecs { create_new = true }
+  end
+
+  return script
+end
+
+--- Create a new entity with script and data
+--- Shorthand for Node.quick(nil, data)
+---
+--- Usage:
+---   local script = Node.create({ health = 100, damage = 10 })
+---   local entity = script:handle()
+---
+--- @param data table|nil Initial data to assign
+--- @param ScriptClass table|nil Optional custom script class
+--- @return table script The initialized script instance
+function node.create(data, ScriptClass)
+  return node.quick(nil, data, ScriptClass)
+end
+
+--- Clear and set a single state tag (convenience for common pattern)
+---
+--- Usage:
+---   script:setState(PLANNING_STATE)
+---
+--- Equivalent to:
+---   clear_state_tags(entity)
+---   add_state_tag(entity, state)
+---
+--- @param state string The state tag to set
+--- @return table self For chaining
+function node:setState(state)
+  assert(type(state) == "string", "setState(state): state must be a string")
+
+  if self._eid then
+    clear_state_tags(self._eid)
+    add_state_tag(self._eid, state)
+  else
+    self:run_custom_func(function(eid, self)
+      clear_state_tags(eid)
+      add_state_tag(eid, state)
+    end)
+  end
+
+  return self
+end
+
+--- Remove all state tags from entity
+---
+--- @return table self For chaining
+function node:clearStateTags()
+  if self._eid then
+    clear_state_tags(self._eid)
+  else
+    self:run_custom_func(function(eid, self)
+      clear_state_tags(eid)
+    end)
+  end
+
+  return self
+end
 
 return node

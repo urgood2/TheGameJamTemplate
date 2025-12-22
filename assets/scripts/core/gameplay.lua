@@ -2540,10 +2540,6 @@ function killPlayer()
         local playerY = transform.actualY + transform.actualH * 0.5
         local playerW = transform.actualW
         local playerH = transform.actualH
-        local playerX = transform.actualX + transform.actualW * 0.5
-        local playerY = transform.actualY + transform.actualH * 0.5
-        local playerW = transform.actualW
-        local playerH = transform.actualH
         function DeathCircleType:update(dt)
             self.age = self.age + dt
             command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)

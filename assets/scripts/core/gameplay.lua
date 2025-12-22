@@ -3955,7 +3955,8 @@ function StatTooltipSystem.makeRow(key, snapshot, opts)
             background = tooltipStyle.labelBg,
             color = tooltipStyle.labelColor,
             padding = opts.pillPadding or tooltipStyle.pillPadding,
-            fontSize = opts.fontSize
+            fontSize = opts.fontSize,
+            coded = true  -- Enable color markup parsing for labels
         },
         valueOpts = {
             color = color,

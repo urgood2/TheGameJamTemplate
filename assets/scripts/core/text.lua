@@ -115,6 +115,14 @@ function RecipeMethods:fadeIn(pct)
     return self
 end
 
+--- Set fade-out percentage (independent of fade-in)
+--- @param pct number Percentage of lifespan for fade-out (0-1)
+--- @return self
+function RecipeMethods:fadeOut(pct)
+    self._config.fadeOutPct = pct
+    return self
+end
+
 --- Set auto-destroy lifespan
 --- @param minOrFixed number Lifespan in seconds, or min if max provided
 --- @param max number? Max lifespan for random range
@@ -847,20 +855,20 @@ function Text.update(dt)
                     local progress = handle._elapsed / handle._lifespan
                     local alpha = 255
 
-                    -- Handle fade-in (if configured)
                     local fadeInPct = handle._config.fadeInPct or 0
-                    if fadeInPct > 0 and progress < fadeInPct then
-                        -- Fade in during first portion
-                        alpha = math.floor(255 * (progress / fadeInPct))
-                    elseif progress > (1 - fadeInPct) then
-                        -- Fade out during last portion (mirror of fade-in duration)
-                        local fadeOutStart = 1 - fadeInPct
-                        local fadeOutProgress = (progress - fadeOutStart) / fadeInPct
-                        alpha = math.floor(255 * (1 - fadeOutProgress))
-                    end
+                    -- Use explicit fadeOutPct, or mirror fadeInPct for backwards compatibility
+                    local fadeOutPct = handle._config.fadeOutPct or fadeInPct
 
-                    -- If no fadeIn configured, fade out over entire lifespan
-                    if fadeInPct == 0 then
+                    -- Handle fade-in (if configured)
+                    if fadeInPct > 0 and progress < fadeInPct then
+                        alpha = math.floor(255 * (progress / fadeInPct))
+                    -- Handle fade-out (if configured)
+                    elseif fadeOutPct > 0 and progress > (1 - fadeOutPct) then
+                        local fadeOutStart = 1 - fadeOutPct
+                        local fadeOutProgress = (progress - fadeOutStart) / fadeOutPct
+                        alpha = math.floor(255 * (1 - fadeOutProgress))
+                    -- Default: fade out over entire lifespan if no fadeIn/fadeOut configured
+                    elseif fadeInPct == 0 and fadeOutPct == 0 then
                         alpha = math.floor(255 * (1 - progress))
                     end
 

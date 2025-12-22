@@ -22,7 +22,7 @@ local waveAnnounceRecipe = Text.define()
     :anchor("center")
     :pop(0.4)  -- bouncy entrance animation
     :fade()
-    :lifespan(1.5)
+    :lifespan(4)
     :space("screen")
 
 local eliteAnnounceRecipe = Text.define()

@@ -344,6 +344,9 @@ namespace static_ui_text_system {
         std::vector<ui::UIElementTemplateNode> textRowDefs{};
         textRowDefs.reserve(rows);
 
+        // Track all segments for single-segment optimization
+        std::vector<ui::UIElementTemplateNode> allSegmentDefs{};
+
         for (int i = 0; i < static_cast<int>(rows); i++) {
             const auto& row = parseResult.lines[i];
             const int segments = static_cast<int>(row.segments.size());
@@ -481,7 +484,7 @@ namespace static_ui_text_system {
                 .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
                 .addConfig(
                     ui::UIConfig::Builder::create()
-                        .addPadding(1.f)
+                        .addPadding(0.f)
                         .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT
                                 | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                         .build());
@@ -490,6 +493,13 @@ namespace static_ui_text_system {
                 textRowDef.addChild(segmentDef);
             }
             textRowDefs.push_back(textRowDef.build());
+            allSegmentDefs.insert(allSegmentDefs.end(), textSegmentDefs.begin(), textSegmentDefs.end());
+        }
+
+        // Optimization: if there's only 1 line with 1 segment, return just that segment
+        // This avoids container wrapping which affects spacing/alignment
+        if (textRowDefs.size() == 1 && allSegmentDefs.size() == 1) {
+            return allSegmentDefs[0];
         }
 
         // Final vertical container

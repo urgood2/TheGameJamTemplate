@@ -390,9 +390,25 @@ local function makeTooltipTextDef(text, opts)
 
     -- If coded option is set, use getTextFromString for rich text parsing
     if opts.coded and ui and ui.definitions and ui.definitions.getTextFromString then
-        return ui.definitions.getTextFromString(tostring(text), {
-            fontSize = opts.fontSize or tooltipStyle.fontSize,
-            fontName = opts.fontName or tooltipStyle.fontName
+        local fontSize = opts.fontSize or tooltipStyle.fontSize
+        local fontName = opts.fontName or tooltipStyle.fontName
+
+        -- Only inject font settings into existing markup blocks
+        -- Don't wrap plain text - it would create extra container elements with different spacing
+        local wrappedText = tostring(text):gsub("%]%(([^)]*)%)", function(params)
+            local newParams = params
+            if not params:find("fontSize=") then
+                newParams = newParams .. ";fontSize=" .. fontSize
+            end
+            if not params:find("fontName=") and fontName then
+                newParams = newParams .. ";fontName=" .. fontName
+            end
+            return "](" .. newParams .. ")"
+        end)
+
+        return ui.definitions.getTextFromString(wrappedText, {
+            fontSize = fontSize,
+            fontName = fontName
         })
     end
 

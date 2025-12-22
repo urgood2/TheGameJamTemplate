@@ -178,10 +178,24 @@ function CommandBufferText:init(args)
   self.anchor = args.anchor or "center"  -- "center" or "topleft"
   self.height_multiplier = args.height_multiplier or args.line_height or DEFAULT_LINE_HEIGHT
   self.letter_spacing = args.spacing or args.letter_spacing or 1
-  self.base_color = args.color or DEFAULT_COLOR
+  local base_color = args.color
+  if type(base_color) == "string" then
+    base_color = text_effects.get_color(string.lower(base_color))
+  end
+  self.base_color = base_color or DEFAULT_COLOR
   self.follow_transform = args.follow_transform ~= false
 
   self.text_effects = merge_effects(args.text_effects)
+
+  self.default_effects = nil
+  local default_effects = args.effects or args.default_effects
+  if default_effects then
+    if type(default_effects) == "string" then
+      self.default_effects = parse_effects(default_effects)
+    elseif type(default_effects) == "table" then
+      self.default_effects = default_effects
+    end
+  end
 
   -- Shader entity for rendering through shader pipeline
   -- When set, uses shader_draw_commands.add_local_command instead of command_buffer.queueTextPro
@@ -248,7 +262,18 @@ function CommandBufferText:_parse_text(raw)
     end
 
     if include then
-      table.insert(characters, { c = ch, effects = effects or {} })
+      local combined_effects = {}
+      if self.default_effects and #self.default_effects > 0 then
+        for _, eff in ipairs(self.default_effects) do
+          table.insert(combined_effects, eff)
+        end
+      end
+      if effects and #effects > 0 then
+        for _, eff in ipairs(effects) do
+          table.insert(combined_effects, eff)
+        end
+      end
+      table.insert(characters, { c = ch, effects = combined_effects })
     end
   end
 

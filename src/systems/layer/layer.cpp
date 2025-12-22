@@ -77,6 +77,9 @@ static void QueueScopedTransformCompositeRender(
   cmd->children.reserve(
       8); // tweak this number based on your typical batch size
 
+  // Populate shader/texture IDs for batching optimization
+  layer::layer_command_buffer::PopulateLastCommandIDs<layer::CmdScopedTransformCompositeRender>(layer, cmd);
+
   auto *prevList = layer->commands_ptr;
   layer->commands_ptr = &cmd->children;
 
@@ -1813,6 +1816,9 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
         cmd->entity = e;
         cmd->registry = registry;
         cmd->children.reserve(8);
+
+        // Populate shader/texture IDs for batching optimization
+        layer::layer_command_buffer::PopulateLastCommandIDs<layer::CmdScopedTransformCompositeRenderWithPipeline>(lyr, cmd);
 
         // Capture any child commands if the builder function is valid
         if (child_builder.valid()) {

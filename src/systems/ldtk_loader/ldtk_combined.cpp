@@ -1,7 +1,5 @@
 #include "ldtk_combined.hpp"
 
-
-
 namespace ldtk_loader {
 
     namespace internal_loader {
@@ -16,6 +14,7 @@ namespace ldtk_loader {
         std::string activeLevel{};
         std::string activePhysicsWorld{};
     }
+
 }
 
 namespace ldtk_rule_import {

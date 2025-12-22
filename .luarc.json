@@ -1,0 +1,30 @@
+{
+  "workspace.library": [
+    "assets/scripts/types"
+  ],
+  "diagnostics.globals": [
+    "registry",
+    "component_cache",
+    "signal",
+    "timer",
+    "physics",
+    "draw",
+    "log_debug",
+    "log_info",
+    "log_warn",
+    "log_error",
+    "ensure_entity",
+    "ensure_scripted_entity",
+    "safe_script_get",
+    "script_field",
+    "getScriptTableFromEntityID",
+    "setEntityAlias",
+    "getEntityByAlias",
+    "PLANNING_STATE"
+  ],
+  "runtime.version": "Lua 5.4",
+  "runtime.path": [
+    "assets/scripts/?.lua",
+    "assets/scripts/?/init.lua"
+  ]
+}

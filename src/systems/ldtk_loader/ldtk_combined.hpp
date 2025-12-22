@@ -1568,3 +1568,11 @@ inline TilesetInfo GetTilesetInfoForLayer(int layerIdx) {
 }
 
 } // namespace ldtk_rule_import
+
+// Forward declare sol::state for Lua bindings
+namespace sol { class state; }
+
+namespace ldtk_loader {
+    // Expose all LDtk functionality to Lua
+    void exposeToLua(sol::state& lua);
+}

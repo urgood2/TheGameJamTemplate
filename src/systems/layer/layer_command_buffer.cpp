@@ -21,6 +21,11 @@ namespace layer
                     std::stable_sort(layer->commands.begin(), layer->commands.end(), [](const DrawCommandV2& a, const DrawCommandV2& b) {
                         if (a.z != b.z) return a.z < b.z;
                         if (a.space != b.space) return a.space < b.space;
+                        // NEW: Optional shader/texture batching
+                        if (g_enableShaderTextureBatching) {
+                            if (a.shader_id != b.shader_id) return a.shader_id < b.shader_id;
+                            if (a.texture_id != b.texture_id) return a.texture_id < b.texture_id;
+                        }
                         return false;  // Preserve insertion order otherwise
                     });
                 } else {

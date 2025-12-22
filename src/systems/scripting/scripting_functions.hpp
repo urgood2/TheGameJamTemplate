@@ -26,6 +26,7 @@ namespace scripting {
 
     extern auto initLuaMasterState(sol::state & stateToInit, std::vector<std::string> filenames, EngineContext* ctx = globals::g_ctx) -> void;
     extern auto exposeGlobalsToLua(sol::state &lua) -> void;
+    extern void exposeScriptingUtilities(sol::state& lua);
 
     /**
      * ------------------------------------------------------

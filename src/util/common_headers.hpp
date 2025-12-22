@@ -35,6 +35,19 @@ using json = nlohmann::json;
 
 #include "entt/fwd.hpp"
 
+// Heavy headers - precompile to speed up builds
+// These are included in 40+ files each
+
+// EnTT - full header instead of just forward declarations
+// (entt/fwd.hpp already included above, but we need full entt for templates)
+#include "entt/entt.hpp"
+
+// Sol2 - Lua binding library (included in 45 files)
+#include "sol/sol.hpp"
+
+// Raylib - graphics library (included in 47 files)
+#include "raylib.h"
+
 #include "snowhouse/snowhouse.h" // Snowhouse assertion lib
 
 #define MAGIC_ENUM_RANGE_MIN -126

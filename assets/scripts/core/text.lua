@@ -680,6 +680,8 @@ function Text._createHandle(spawner)
         render_space = renderSpace,
         -- Pass entity for shader pipeline rendering
         shader_entity = handle._entityId,
+        -- If pop animation is configured, start at scale 0
+        base_scale = config.pop and 0 or 1,
     })
 
     return handle

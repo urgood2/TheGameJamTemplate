@@ -606,15 +606,17 @@ auto resizeAnimationObjectToFit(AnimationObject &animObj, float targetWidth,
   float scaleX = 1.0f;
   float scaleY = 1.0f;
 
-  // assert the animation list is not empty
-  using namespace snowhouse;
-  AssertThat(animObj.animationList.size(), IsGreaterThan(0));
+  // Runtime guard (assertions removed in release builds)
+  if (animObj.animationList.empty() ||
+      animObj.currentAnimIndex >= animObj.animationList.size()) {
+    SPDLOG_WARN("resizeAnimationObjectToFit: invalid animation state");
+    return;
+  }
 
   // get the scale factor which will fit the target width and height
-  scaleX = targetWidth / animObj.animationList.at(animObj.currentAnimIndex)
-                             .first.spriteFrame->frame.width;
-  scaleY = targetHeight / animObj.animationList.at(animObj.currentAnimIndex)
-                              .first.spriteFrame->frame.height;
+  const auto& currentFrame = animObj.animationList[animObj.currentAnimIndex].first;
+  scaleX = targetWidth / currentFrame.spriteFrame->frame.width;
+  scaleY = targetHeight / currentFrame.spriteFrame->frame.height;
   float scale = std::min(scaleX, scaleY);
   animObj.intrinsincRenderScale = scale;
 }

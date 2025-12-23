@@ -24,8 +24,11 @@ vec2 atlasUV(vec2 localUV) {
 
 void main()
 {
-    // compute your usual values
-    vec4  sceneColor = texture(texture0, fragTexCoord)*colDiffuse*fragColor;
+    // compute your usual values (straight alpha - multiply RGB and alpha separately)
+    vec4 tex = texture(texture0, fragTexCoord);
+    vec3 sceneRGB = tex.rgb * colDiffuse.rgb * fragColor.rgb;
+    float sceneA = tex.a * colDiffuse.a * fragColor.a;
+    vec4 sceneColor = vec4(sceneRGB, sceneA);
     vec2  gridLocal  = fract(world_position * scale);
     vec2  gridUV     = atlasUV(gridLocal);
     vec4  gridColor  = texture(atlas, gridUV);

@@ -27,7 +27,11 @@ float clamp01(float v) {
 }
 
 void main() {
-    vec4 baseColor = texture(texture0, fragTexCoord) * colDiffuse * fragColor;
+    // Straight alpha: multiply RGB and alpha separately to prevent darkening
+    vec4 tex = texture(texture0, fragTexCoord);
+    vec3 baseRGB = tex.rgb * colDiffuse.rgb * fragColor.rgb;
+    float baseA = tex.a * colDiffuse.a * fragColor.a;
+    vec4 baseColor = vec4(baseRGB, baseA);
 
     if (detailIntensity <= 0.0) {
         finalColor = baseColor;

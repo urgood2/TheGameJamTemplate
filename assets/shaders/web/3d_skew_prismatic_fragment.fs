@@ -75,7 +75,10 @@ vec2 localToAtlas(vec2 localUV) {
 }
 
 vec4 sampleTinted(vec2 uv) {
-    return texture(texture0, uv) * fragColor * colDiffuse;
+    vec4 tex = texture(texture0, uv);
+    vec3 rgb = tex.rgb * fragColor.rgb * colDiffuse.rgb;
+    float alpha = tex.a * fragColor.a * colDiffuse.a;
+    return vec4(rgb, alpha);
 }
 
 mat2 rotate2d(float a) {

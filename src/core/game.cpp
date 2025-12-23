@@ -2237,8 +2237,12 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
                 };
 
                 drawCanvas(background);
+                // Use premultiplied alpha blending for layers with transparent backgrounds
+                // because drawing with alpha to transparent RT inherently premultiplies
+                BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
                 drawCanvas(sprites);
                 drawCanvas(ui_layer);
+                EndBlendMode();
             }
         }
 

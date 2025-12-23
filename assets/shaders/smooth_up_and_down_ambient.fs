@@ -9,6 +9,9 @@ out vec4 finalColor;
 
 void main()
 {
-    // Simple pass-through of the texture color
-    finalColor = texture(texture0, fragTexCoord) * colDiffuse * fragColor;
+    // Simple pass-through (straight alpha: multiply RGB and alpha separately)
+    vec4 tex = texture(texture0, fragTexCoord);
+    vec3 rgb = tex.rgb * colDiffuse.rgb * fragColor.rgb;
+    float alpha = tex.a * colDiffuse.a * fragColor.a;
+    finalColor = vec4(rgb, alpha);
 }

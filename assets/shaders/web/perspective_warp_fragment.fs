@@ -69,15 +69,22 @@ void main()
 
     vec2 newUV = invBilinear(fragTexCoord, topleftUV, toprightUV, bottomrightUV, bottomleftUV);
 
+    // Straight alpha: multiply RGB and alpha separately to prevent darkening
     if (topleft.x == 0.0 || topright.x == 0.0) {
-        finalColor = texture(texture0, fragTexCoord) * colDiffuse * fragColor;
+        vec4 tex = texture(texture0, fragTexCoord);
+        vec3 rgb = tex.rgb * colDiffuse.rgb * fragColor.rgb;
+        float alpha = tex.a * colDiffuse.a * fragColor.a;
+        finalColor = vec4(rgb, alpha);
     }
     else {
         if (newUV == vec2(-1.0)) {
             finalColor = vec4(0.0);
         }
         else {
-            finalColor = texture(texture0, newUV) * colDiffuse * fragColor;
+            vec4 tex = texture(texture0, newUV);
+            vec3 rgb = tex.rgb * colDiffuse.rgb * fragColor.rgb;
+            float alpha = tex.a * colDiffuse.a * fragColor.a;
+            finalColor = vec4(rgb, alpha);
         }
     }
 }

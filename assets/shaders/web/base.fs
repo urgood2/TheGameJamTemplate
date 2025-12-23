@@ -21,8 +21,10 @@ void main()
 
     // NOTE: Implement here your fragment shader code
 
-    // final color is the color from the texture 
-    //    times the tint color (colDiffuse)
-    //    times the fragment color (interpolated vertex color)
-    finalColor = texelColor*colDiffuse*fragColor;
+    // Multiply RGB channels separately from alpha to prevent darkening
+    // when opacity < 1.0 (straight alpha blending fix)
+    vec3 rgb = texelColor.rgb * colDiffuse.rgb * fragColor.rgb;
+    float alpha = texelColor.a * colDiffuse.a * fragColor.a;
+
+    finalColor = vec4(rgb, alpha);
 }

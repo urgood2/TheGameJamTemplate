@@ -26,7 +26,11 @@ void main() {
     float bandLerp = clamp((transitionWidth - factor) * 2.0 / soft, 0.0, 1.0);
     float softLerp = clamp(factor * 2.0 / soft, 0.0, 1.0);
 
-    vec4 baseColor = texture(texture0, fragTexCoord) * colDiffuse * fragColor;
+    // Straight alpha: multiply RGB and alpha separately to prevent darkening
+    vec4 tex = texture(texture0, fragTexCoord);
+    vec3 baseRGB = tex.rgb * colDiffuse.rgb * fragColor.rgb;
+    float baseA = tex.a * colDiffuse.a * fragColor.a;
+    vec4 baseColor = vec4(baseRGB, baseA);
     vec4 bandColor = vec4(edgeColor.rgb, 1.0) * baseColor.a;
 
     float lerpFactor = bandLerp * softLerp;

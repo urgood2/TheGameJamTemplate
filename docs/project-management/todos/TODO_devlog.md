@@ -418,3 +418,16 @@
   - Added color-coded elemental damage stats in tooltips: Fire, Cold, Lightning, Acid, etc. now display with their corresponding element colors.
   - Fixed rich-text spacing issues: improved single-segment optimization and ensured coded parsing only activates for labels with actual markup.
   - Updated Lua cookbook with styled localization and event bridge recipes; added Text Builder pop animation design documentation.
+  - Implemented Text Builder pop-in entrance and fade-out animations with independent control via :pop() and :fadeOut() methods.
+  - Added declarative enemy behavior library: composable behaviors (chase, wander, flee, dash, etc.) with auto-cleanup and config resolution from context fields.
+  - Completed Lua Developer Experience audit improvements including EntityBuilder.validated(), EmmyLua type stubs, and documentation generator.
+
+12/23/2025
+  - Added Chain Lightning action card with cascading arcs that chain between up to 3 enemies, jagged lightning visuals, and modifier support for damage/heal/crit.
+  - Major C++ safety hardening pass: replaced 15+ assertion/crash points with runtime guards for animation bounds, JSON parsing, Sol2 conversions, map access, and physics shapes.
+  - Refactored scripting system: decomposed monolithic scripting_functions.cpp into modular binding files for physics, sound, and AI.
+  - Build improvements: expanded precompiled header with entt/sol2/raylib for faster compiles, auto-scaled parallelism, and opt-in shader/texture batching for draw commands.
+  - Added performance optimization: replaced std::vector<bool> with std::vector<uint8_t> to avoid proxy object overhead.
+
+12/24/2025
+  - Fixed alpha blending for transparent sprites and layers: separated RGB and alpha multiplication in 64 shaders and added BLEND_ALPHA_PREMULTIPLY for layer compositing to prevent fade-to-dark artifacts.

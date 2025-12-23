@@ -552,10 +552,13 @@ void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e,
   auto &transform = globals::getRegistry().get<transform::Transform>(e);
   auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
 
-  using namespace snowhouse;
-  AssertThat(animQueue.defaultAnimation.animationList.size(), IsGreaterThan(0));
+  // Runtime guard (assertions removed in release builds)
+  if (animQueue.defaultAnimation.animationList.empty()) {
+    SPDLOG_ERROR("resizeAnimationObjectsInEntityToFitAndCenterUI: empty animation list for entity {}", static_cast<int>(e));
+    return;
+  }
 
-  const auto &firstFrame = animQueue.defaultAnimation.animationList.at(0).first;
+  const auto &firstFrame = animQueue.defaultAnimation.animationList.front().first;
   float rawWidth = firstFrame.spriteFrame->frame.width;
   float rawHeight = firstFrame.spriteFrame->frame.height;
 

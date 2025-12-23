@@ -35,12 +35,16 @@ namespace graphics {
         AnimationQueueComponent &aqc = globals::getRegistry().get<AnimationQueueComponent>(entity);
         LocationComponent &lc = globals::getRegistry().get<LocationComponent>(entity);
 
-        // if there is a sprite component, center the camera on the sprite
-        float width=0, height=0;
+        // Guard: ensure animation list is not empty
+        if (aqc.defaultAnimation.animationList.empty()) {
+            SPDLOG_WARN("centerCameraOnEntity: entity {} has empty animation list", static_cast<int>(entity));
+            return;
+        }
 
-        // no sprite component. Cannot center camera.
-        width = aqc.defaultAnimation.animationList.at(0).first.spriteData.frame.width;
-        height = aqc.defaultAnimation.animationList.at(0).first.spriteData.frame.height;
+        // if there is a sprite component, center the camera on the sprite
+        const auto& firstFrame = aqc.defaultAnimation.animationList.front().first;
+        float width = firstFrame.spriteData.frame.width;
+        float height = firstFrame.spriteData.frame.height;
         globals::nextCameraTarget.x = lc.x * width + width / 2;
         globals::nextCameraTarget.y = lc.y * height + height / 2;
     }
@@ -116,20 +120,35 @@ namespace graphics {
         
         
         
-        // does the entity have a animation queue component? 
+        // does the entity have a animation queue component?
         if (globals::getRegistry().any_of<AnimationQueueComponent>(e)) {
             auto &aqc = globals::getRegistry().get<AnimationQueueComponent>(e);
 
-            auto debugSize = aqc.defaultAnimation.animationList.size();
-            
             // is the animation queue empty? Use default animation
             if (aqc.animationQueue.empty()) {
-                // FIXME: weird out of bounds error here - possibly only on windows?
-                sc = &aqc.defaultAnimation.animationList.at(aqc.defaultAnimation.currentAnimIndex).first;
+                // Guard: ensure default animation has frames
+                if (aqc.defaultAnimation.animationList.empty() ||
+                    aqc.defaultAnimation.currentAnimIndex >= aqc.defaultAnimation.animationList.size()) {
+                    SPDLOG_ERROR("Entity {} has invalid default animation state", static_cast<int>(e));
+                    return;
+                }
+                sc = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
             }
             else {
-                auto &currentAnimObject = aqc.animationQueue.at(aqc.currentAnimationIndex);
-                sc = &currentAnimObject.animationList.at(currentAnimObject.currentAnimIndex).first;
+                // Guard: ensure queue index is valid
+                if (aqc.currentAnimationIndex >= aqc.animationQueue.size()) {
+                    SPDLOG_ERROR("Entity {} has invalid animation queue index", static_cast<int>(e));
+                    return;
+                }
+                auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
+
+                // Guard: ensure animation frame index is valid
+                if (currentAnimObject.animationList.empty() ||
+                    currentAnimObject.currentAnimIndex >= currentAnimObject.animationList.size()) {
+                    SPDLOG_ERROR("Entity {} has invalid animation frame index", static_cast<int>(e));
+                    return;
+                }
+                sc = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
             }
         }
         else if (globals::getRegistry().any_of<SpriteComponentASCII>(e) == true) {

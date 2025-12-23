@@ -517,7 +517,14 @@ void resetAnimationUIRenderScale(entt::entity e) {
   // calc intrinsic size, set to transform
   auto &transform = globals::getRegistry().get<transform::Transform>(e);
   auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
-  auto &firstFrame = animQueue.defaultAnimation.animationList.at(0).first;
+
+  // Guard: ensure default animation has frames
+  if (animQueue.defaultAnimation.animationList.empty()) {
+    SPDLOG_WARN("resetAnimationUIRenderScale: empty animation list for entity {}", static_cast<int>(e));
+    return;
+  }
+
+  auto &firstFrame = animQueue.defaultAnimation.animationList.front().first;
   float rawWidth = firstFrame.spriteFrame->frame.width;
   float rawHeight = firstFrame.spriteFrame->frame.height;
   float intrinsicScale =

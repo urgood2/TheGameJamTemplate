@@ -54,7 +54,9 @@ TEST(SoundSystem, LoadFromJSONThrowsWhenMusicVolumeMissing) {
     EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
 }
 
-TEST(SoundSystem, LoadFromJSONThrowsWhenCategoriesMissing) {
+// Changed from EXPECT_THROW: function now handles missing categories gracefully
+// with warning log and early return instead of crashing
+TEST(SoundSystem, LoadFromJSONHandlesMissingCategoriesGracefully) {
     const char* jsonText = R"({
         "music_volume": 0.3
     })";
@@ -63,7 +65,7 @@ TEST(SoundSystem, LoadFromJSONThrowsWhenCategoriesMissing) {
         std::ofstream out(tmpPath);
         out << jsonText;
     }
-    EXPECT_THROW(sound_system::LoadFromJSON(tmpPath.string()), std::exception);
+    EXPECT_NO_THROW(sound_system::LoadFromJSON(tmpPath.string()));
 }
 
 TEST(SoundSystem, LoadFromJSONThrowsWhenMusicVolumeTypeInvalid) {

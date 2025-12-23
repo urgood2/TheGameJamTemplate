@@ -494,8 +494,15 @@ namespace game
 
         // Ensure result ends up back in mainCanvas
         if (src != mainCanvas) {
+            // Guard: ensure mainCanvas exists
+            auto canvasIt = layer->canvases.find(mainCanvas);
+            if (canvasIt == layer->canvases.end()) {
+                SPDLOG_WARN("run_shader_pipeline: mainCanvas '{}' not found", mainCanvas);
+                return;
+            }
+
             // Clear destination before drawing (prevents stale content bleed-through)
-            BeginTextureMode(layer->canvases.at(mainCanvas));
+            BeginTextureMode(canvasIt->second);
             ClearBackground(BLANK);
             EndTextureMode();
 

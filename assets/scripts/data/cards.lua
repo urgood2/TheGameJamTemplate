@@ -135,6 +135,29 @@ Cards.ACTION_BASIC_PROJECTILE = {
     sprite = "action-basic-projectile.png",
 }
 
+Cards.ACTION_CHAIN_LIGHTNING = {
+    id = "ACTION_CHAIN_LIGHTNING",
+    type = "action",
+    mana_cost = 5,
+    damage = 10,
+    spread_angle = 5,
+    projectile_speed = 500,
+    lifetime = 2000,
+    cast_delay = 100,
+    
+    
+    -- Chain-specific fields
+    chain_count = 2,
+    chain_range = 150,
+    chain_damage_mult = 0.5, -- chains have reduced damage
+    
+    tags = { "Arcane", "Lightning" },
+    damage_type = "lightning",            -- fire/ice/lightning/poison/arcane/holy/void/magic/physical
+    sprite = "action-chain-lightning.png",
+}
+
+
+
 Cards.ACTION_FAST_ACCURATE_PROJECTILE = {
     id = "ACTION_FAST_ACCURATE_PROJECTILE",
     type = "action",

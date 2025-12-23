@@ -29,6 +29,7 @@ local Node = require("monobehavior.behavior_script_v2")
 local CombatSystem = require("combat.combat_system")
 local z_orders = require("core.z_orders")
 local C = require("core.constants")
+require("util.util")
 
 ---@diagnostic disable: undefined-global
 -- Suppress warnings for runtime globals (registry, physics_manager)
@@ -1576,10 +1577,8 @@ local function applyEnemyHitFeedback(projectileEntity, targetEntity, behavior, p
     if world and physics and physics.ApplyImpulse then
         physics.ApplyImpulse(world, targetEntity, dirX * ENEMY_HIT_RECOIL_FORCE, dirY * ENEMY_HIT_RECOIL_FORCE)
     end
-
-    if hitFX and component_cache.get(targetEntity, Transform) then
-        hitFX(targetEntity, ENEMY_HIT_FLASH_SCALE, ENEMY_HIT_FLASH_DURATION)
-    end
+    
+    hitFX(targetEntity, ENEMY_HIT_FLASH_SCALE, ENEMY_HIT_FLASH_DURATION)
 end
 
 function ProjectileSystem.setupCollisionCallback(entity)

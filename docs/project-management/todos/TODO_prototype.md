@@ -64,6 +64,14 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- how will player know when a mod works with an action card or not?
+- add descriptor strings for each card, as well as an icon.
+
+- make tooltip text smaller, display right next to the card (left or right), or even better, split tinot two tooltips that are shown on top and left. so
+
+- sfx: enemy impact, critical hit, bleed (self), heal. lightning
+- make enemies blink/flash on hit. why aren't we doing that?
+
 - flip a card to see upgrate level & tags, add juice.
 - add stars to background, pulsing particles.
 - text builders still need some debugging.

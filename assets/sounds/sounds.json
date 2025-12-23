@@ -52,6 +52,10 @@
                 "dash_6": "WHOOSH_Deep_Smooth_02_mono copy.wav",
                 "dash_7": "WHOOSH_Fast_03_mono.wav",
                 
+                "chain_lightning_trigger": "wav_Thunder_spell_magical.wav",
+                "chain_lightning_individual_hit": "ZAP_Subtle_07_mono.wav",
+                
+                "new_achievement": "UIAlert_Achievement Unique Short-011_OS_Quute UI.wav",
                 
                 "walk_1": "FOOTSTEP_Rock_Walk_01_RR01_mono.wav",
                 "walk_2": "FOOTSTEP_Rock_Walk_01_RR02_mono.wav",

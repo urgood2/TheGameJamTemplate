@@ -741,17 +741,272 @@ function WandActions.applyShield(entity, amount, duration)
     log_debug("WandActions: Shield", entity, "for", amount, "duration", duration)
 end
 
---- Spawns chain lightning projectiles
---- @param sourceProjectile number Source projectile entity ID
---- @param hitTarget number Entity that was hit
---- @param hitData table Hit data
---- @param modifiers table Modifier aggregate
---- @param context table Execution context
-function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, modifiers, context)
-    -- TODO: Find nearby enemies and spawn homing projectiles
-    -- Requires spatial query system
 
-    log_debug("WandActions: Chain lightning from", hitTarget)
-end
+
+
+  --[[
+  ================================================================================
+  CHAIN LIGHTNING HELPERS
+  ================================================================================
+  ]] --
+
+  --- Finds enemies within range of a position using physics spatial query
+  --- @param position table {x, y}
+  --- @param range number Search radius in pixels
+  --- @param excludeEntities table|nil Entities to exclude (e.g., primary target)
+  --- @param maxCount number|nil Maximum enemies to return
+  --- @return table List of {entity, distance, x, y} sorted by distance
+  local function findEnemiesInRange(position, range, excludeEntities, maxCount)
+      local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
+      if not (physics and physics.GetObjectsInArea and world) then
+          return {}
+      end
+
+      local px, py = position.x, position.y
+      local excludeSet = {}
+      if excludeEntities then
+          for _, e in ipairs(excludeEntities) do
+              excludeSet[e] = true
+          end
+      end
+
+      -- AABB query (first pass - fast)
+      local candidates = physics.GetObjectsInArea(world, px - range, py - range, px + range, py + range) or {}
+
+      local found = {}
+      local rangeSq = range * range
+
+      for _, eid in ipairs(candidates) do
+          -- Skip excluded entities and non-enemies
+          if not excludeSet[eid] and isEnemyEntity(eid) then
+              local t = component_cache.get(eid, Transform)
+              if t then
+                  local ex = (t.actualX or 0) + (t.actualW or 0) * 0.5
+                  local ey = (t.actualY or 0) + (t.actualH or 0) * 0.5
+                  local dx, dy = ex - px, ey - py
+                  local distSq = dx * dx + dy * dy
+
+                  -- Circular range check (AABB was just first pass)
+                  if distSq <= rangeSq then
+                      found[#found + 1] = {
+                          entity = eid,
+                          distance = math.sqrt(distSq),
+                          x = ex,
+                          y = ey
+                      }
+                  end
+              end
+          end
+      end
+
+      -- Sort by distance (closest first)
+      table.sort(found, function(a, b) return a.distance < b.distance end)
+
+      -- Limit count if specified
+      if maxCount and #found > maxCount then
+          local limited = {}
+          for i = 1, maxCount do
+              limited[i] = found[i]
+          end
+          return limited
+      end
+
+      return found
+  end
+
+
+  
+  --- Draws a jagged lightning arc between two points
+  --- @param fromPos table {x, y}
+  --- @param toPos table {x, y}
+  --- @param duration number|nil How long the arc is visible (seconds), default 0.15
+  local function drawLightningArc(fromPos, toPos, duration)
+      local timer = require("core.timer")
+      local z_orders = require("core.z_orders")
+
+      duration = duration or 0.15
+      local segments = 6
+      local jitter = 12
+      local baseColor = util.getColor("CYAN")
+      local coreColor = util.getColor("WHITE")
+      local thickness = 3.0
+      local coreThickness = 1.5
+
+      -- Build jagged path (randomized once, then fades)
+      local points = {}
+      for i = 0, segments do
+          local t = i / segments
+          local x = fromPos.x + (toPos.x - fromPos.x) * t
+          local y = fromPos.y + (toPos.y - fromPos.y) * t
+
+          -- Add jitter to middle points only
+          if i > 0 and i < segments then
+              x = x + (math.random() - 0.5) * jitter * 2
+              y = y + (math.random() - 0.5) * jitter * 2
+          end
+          points[#points + 1] = { x = x, y = y }
+      end
+
+      -- Draw fading arc over duration
+      local elapsed = 0
+      local frameTime = 1 / 60
+      local timerTag = "lightning_arc_" .. tostring(math.random(100000))
+
+      timer.every_opts({
+          delay = frameTime,
+          action = function()
+              elapsed = elapsed + frameTime
+              local alpha = math.floor(255 * (1 - elapsed / duration))
+              if alpha <= 0 then
+                  timer.cancel(timerTag)
+                  return
+              end
+
+              -- Outer glow (cyan)
+              local glowColor = baseColor:clone():setAlpha(math.floor(alpha * 0.6))
+              for i = 1, #points - 1 do
+                  command_buffer.queueDrawLine(layers.sprites, function(c)
+                      c.x1, c.y1 = points[i].x, points[i].y
+                      c.x2, c.y2 = points[i + 1].x, points[i + 1].y
+                      c.color = glowColor
+                      c.thickness = thickness + 2
+                  end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+              end
+
+              -- Main arc (cyan)
+              local mainColor = baseColor:clone():setAlpha(alpha)
+              for i = 1, #points - 1 do
+                  command_buffer.queueDrawLine(layers.sprites, function(c)
+                      c.x1, c.y1 = points[i].x, points[i].y
+                      c.x2, c.y2 = points[i + 1].x, points[i + 1].y
+                      c.color = mainColor
+                      c.thickness = thickness
+                  end, z_orders.particle_vfx + 1, layer.DrawCommandSpace.World)
+              end
+
+              -- Core (white, brighter)
+              local coreAlpha = math.min(255, math.floor(alpha * 1.2))
+              local innerColor = coreColor:clone():setAlpha(coreAlpha)
+              for i = 1, #points - 1 do
+                  command_buffer.queueDrawLine(layers.sprites, function(c)
+                      c.x1, c.y1 = points[i].x, points[i].y
+                      c.x2, c.y2 = points[i + 1].x, points[i + 1].y
+                      c.color = innerColor
+                      c.thickness = coreThickness
+                  end, z_orders.particle_vfx + 2, layer.DrawCommandSpace.World)
+              end
+          end,
+          tag = timerTag,
+          times = math.ceil(duration / frameTime)
+      })
+  end
+  
+  
+  
+
+  With this:
+  --- Spawns chain lightning arcs to nearby enemies (instant damage, no projectiles)
+  --- @param sourceProjectile number Source projectile entity ID
+  --- @param hitTarget number Entity that was hit
+  --- @param hitData table Hit data from projectile
+  --- @param modifiers table Modifier aggregate
+  --- @param context table Execution context
+  --- @param actionCard table|nil The action card (for chain_count, chain_range, etc.)
+  function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, modifiers, context, actionCard)
+      -- Get source position (from projectile or hit target)
+      local sourcePos = nil
+      local sourceTransform = component_cache.get(sourceProjectile, Transform)
+      if sourceTransform then
+          sourcePos = {
+              x = sourceTransform.actualX + (sourceTransform.actualW or 0) * 0.5,
+              y = sourceTransform.actualY + (sourceTransform.actualH or 0) * 0.5
+          }
+      else
+          -- Fallback to hit target position
+          local targetTransform = component_cache.get(hitTarget, Transform)
+          if targetTransform then
+              sourcePos = {
+                  x = targetTransform.actualX + (targetTransform.actualW or 0) * 0.5,
+                  y = targetTransform.actualY + (targetTransform.actualH or 0) * 0.5
+              }
+          else
+              log_debug("WandActions.spawnChainLightning: No valid position")
+              return
+          end
+      end
+
+      -- Get chain parameters from card or modifiers
+      local chainCount = (actionCard and actionCard.chain_count) or modifiers.chainLightningTargets or 3
+      local chainRange = (actionCard and actionCard.chain_range) or 150
+      local chainDamageMult = (actionCard and actionCard.chain_damage_mult) or modifiers.chainLightningDamageMult or 0.5
+
+      -- MOD_BIG_SLOW: increase range based on size multiplier
+      chainRange = chainRange * (modifiers.sizeMultiplier or 1.0)
+
+      -- Calculate chain damage (modifiers already applied to hitData.damage)
+      local baseDamage = (hitData and hitData.damage) or 10
+      local chainDamage = baseDamage * chainDamageMult
+
+      -- MOD_FORCE_CRIT: apply crit multiplier to chain damage
+      if modifiers.forceCrit then
+          chainDamage = chainDamage * 2.0
+      end
+
+      -- Find nearby enemies (exclude the primary target)
+      local chainTargets = findEnemiesInRange(sourcePos, chainRange, { hitTarget }, chainCount)
+
+      if #chainTargets == 0 then
+          log_debug("WandActions.spawnChainLightning: No chain targets found")
+          return
+      end
+
+      -- Get combat context and owner for damage application
+      local ctx = rawget(_G, "combat_context")
+      local owner = context and context.playerEntity
+      local ActionAPI = require("combat.action_api")
+
+      -- Get owner's combat actor for damage source
+      local ownerActor = nil
+      if owner and entity_cache.valid(owner) then
+          local ownerScript = getScriptTableFromEntityID(owner)
+          ownerActor = ownerScript and ownerScript.combatTable
+      end
+
+      -- Process each chain target
+      local currentPos = sourcePos
+      for i, targetInfo in ipairs(chainTargets) do
+          local targetEntity = targetInfo.entity
+          local targetPos = { x = targetInfo.x, y = targetInfo.y }
+
+          -- Draw lightning arc visual (from current position to target)
+          drawLightningArc(currentPos, targetPos, 0.15)
+
+          -- Apply damage via combat system
+          if ctx and ActionAPI then
+              local targetScript = getScriptTableFromEntityID(targetEntity)
+              local targetActor = targetScript and targetScript.combatTable
+
+              if targetActor then
+                  -- Use lightning damage type
+                  ActionAPI.damage(ctx, ownerActor, targetActor, chainDamage, "lightning")
+                  log_debug("WandActions.spawnChainLightning: Hit", targetEntity, "for", chainDamage, "lightning damage")
+              end
+          end
+
+          -- MOD_HEAL_ON_HIT: heal for each chain hit
+          if modifiers.healOnHit and modifiers.healOnHit > 0 and owner then
+              -- Apply healing to player
+              if WandActions.applyHealing then
+                  WandActions.applyHealing(owner, modifiers.healOnHit)
+              end
+          end
+
+          -- Chain from this target to next (creates branching visual)
+          currentPos = targetPos
+      end
+
+      log_debug("WandActions.spawnChainLightning: Chained to", #chainTargets, "targets")
+  end
+
 
 return WandActions

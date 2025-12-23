@@ -59,6 +59,7 @@ CastExecutionGraphUI._toggleButtonBounds = nil
 CastExecutionGraphUI._toggleButtonEntity = nil  -- Reference to button entity for dynamic bounds
 CastExecutionGraphUI._cachedHeight = 200      -- Cached panel height for slide offset
 CastExecutionGraphUI._buttonClickCooldown = 0  -- Prevent double-toggling
+CastExecutionGraphUI._layoutPending = false   -- True when new box needs layout to stabilize
 
 -- Pending hover handlers to apply after spawn (workaround for initFunc not being called)
 local pendingTooltips = {}
@@ -268,13 +269,23 @@ local function applyPendingHovers(entity, depth)
 end
 
 -- Snap visual dimensions to prevent tween-from-zero animation
+-- Only snaps if actual dimensions are valid (> 0) to avoid setting to zero before layout completes
 local function snapVisualToActual(entity)
     if not entity or not registry:valid(entity) then return end
 
     local t = component_cache.get(entity, Transform)
     if t then
-        t.visualW = t.actualW or t.visualW
-        t.visualH = t.actualH or t.visualH
+        -- Only snap if actual dimensions are valid (not 0)
+        -- This prevents setting visual to 0 before layout completes
+        if t.actualW and t.actualW > 0 then
+            t.visualW = t.actualW
+        end
+        if t.actualH and t.actualH > 0 then
+            t.visualH = t.actualH
+        end
+        -- Also snap position to prevent tween from spawn position
+        if t.actualX then t.visualX = t.actualX end
+        if t.actualY then t.visualY = t.actualY end
     end
 
     local go = component_cache.get(entity, GameObject)
@@ -734,21 +745,34 @@ function CastExecutionGraphUI.updateSlide(dt)
     if CastExecutionGraphUI.currentBox and component_cache then
         local t = component_cache.get(CastExecutionGraphUI.currentBox, Transform)
         if t then
-            -- Cache height for slide calculation
+            -- Check if layout has completed (actualH > 0)
             if t.actualH and t.actualH > 0 then
+                -- Layout is now valid - update cached height
                 CastExecutionGraphUI._cachedHeight = t.actualH
+
+                -- Clear layout pending flag and snap dimensions if this is first valid frame
+                if CastExecutionGraphUI._layoutPending then
+                    CastExecutionGraphUI._layoutPending = false
+                    -- Snap visual dimensions now that layout is complete
+                    t.visualW = t.actualW
+                    t.visualH = t.actualH
+                end
             end
 
-            local easedProgress
-            if state == "entering" or state == "exiting" then
-                easedProgress = Easing.outQuad.f(progress)
-            else
-                easedProgress = progress
-            end
+            -- Only apply slide positioning if layout is not pending
+            -- This prevents using stale cached height for newly created boxes
+            if not CastExecutionGraphUI._layoutPending then
+                local easedProgress
+                if state == "entering" or state == "exiting" then
+                    easedProgress = Easing.outQuad.f(progress)
+                else
+                    easedProgress = progress
+                end
 
-            local slideOffset = (1 - easedProgress) * (CastExecutionGraphUI._cachedHeight + 40)
-            t.actualY = CastExecutionGraphUI.position.y + slideOffset
-            t.visualY = t.actualY
+                local slideOffset = (1 - easedProgress) * (CastExecutionGraphUI._cachedHeight + 40)
+                t.actualY = CastExecutionGraphUI.position.y + slideOffset
+                t.visualY = t.actualY
+            end
         end
     end
 
@@ -788,6 +812,7 @@ function CastExecutionGraphUI.clear()
     -- Reset slide state to ensure consistent behavior when re-entering planning
     CastExecutionGraphUI._slideState = "hidden"
     CastExecutionGraphUI._slideProgress = 0
+    CastExecutionGraphUI._layoutPending = false
 end
 
 local function planningActive()
@@ -828,6 +853,10 @@ function CastExecutionGraphUI.render(blocks, opts)
 
     CastExecutionGraphUI.currentBox = dsl.spawn(CastExecutionGraphUI.position, root, "ui",
         (z_orders.ui_tooltips or 0) + 5)
+
+    -- Mark layout as pending until actualH is valid
+    -- This prevents slide animation from using stale cached height
+    CastExecutionGraphUI._layoutPending = true
 
     -- Apply hover handlers after spawn (workaround for initFunc not being called via makeConfigFromTable)
     local pendingCount = 0

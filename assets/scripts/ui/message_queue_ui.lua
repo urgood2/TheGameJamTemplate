@@ -167,6 +167,7 @@ local function promotePending()
     if MessageQueueUI.onItemShown then
         pcall(MessageQueueUI.onItemShown, nextItem)
     end
+    playSoundEffect("effects", "new_achievement")
 end
 
 function MessageQueueUI.init(opts)

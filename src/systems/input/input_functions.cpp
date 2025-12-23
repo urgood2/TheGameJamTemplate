@@ -427,7 +427,8 @@ namespace input
         }
 
         // frame_set, when true, resets "frame" lock after 0.1s
-        if (inputState.activeInputLocks.at("frame_lock_reset_next_frame"))
+        auto it = inputState.activeInputLocks.find("frame_lock_reset_next_frame");
+        if (it != inputState.activeInputLocks.end() && it->second)
         {
             timer::TimerSystem::timer_after(constants::OVERLAY_MENU_FRAME_LOCK_DURATION, [&inputState](std::optional<float> notImportant)
                                             { inputState.activeInputLocks["frame"] = false; });

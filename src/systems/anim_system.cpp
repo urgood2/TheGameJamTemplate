@@ -356,10 +356,15 @@ auto createAnimatedObjectWithTransform(
 
   // set width and height to the animation size
   // TODO: optionally provide custom size upon init
-  transform.setActualW(animQueue.defaultAnimation.animationList.at(0)
-                           .first.spriteFrame->frame.width);
-  transform.setActualH(animQueue.defaultAnimation.animationList.at(0)
-                           .first.spriteFrame->frame.height);
+  if (!animQueue.defaultAnimation.animationList.empty()) {
+    const auto& firstFrame = animQueue.defaultAnimation.animationList.front().first;
+    transform.setActualW(firstFrame.spriteFrame->frame.width);
+    transform.setActualH(firstFrame.spriteFrame->frame.height);
+  } else {
+    SPDLOG_WARN("createAnimatedObjectWithTransform: empty animation list for entity {}", static_cast<int>(e));
+    transform.setActualW(1);  // Fallback to minimal valid dimensions
+    transform.setActualH(1);
+  }
 
   if (shaderPassConfig)
     shaderPassConfig(e); // pass the entity to the shader pass config function
@@ -391,10 +396,16 @@ auto replaceAnimatedObjectOnEntity(
         init::getAnimationObject(defaultAnimationIDorSpriteUUID);
   }
   // 4) size the transform to match the first frame
-  const auto &firstFrame =
-      animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame;
-  transform.setActualW(firstFrame.width);
-  transform.setActualH(firstFrame.height);
+  if (!animQueue.defaultAnimation.animationList.empty()) {
+    const auto &firstFrame =
+        animQueue.defaultAnimation.animationList.front().first.spriteFrame->frame;
+    transform.setActualW(firstFrame.width);
+    transform.setActualH(firstFrame.height);
+  } else {
+    SPDLOG_WARN("replaceAnimatedObjectOnEntity: empty animation list for entity {}", static_cast<int>(e));
+    transform.setActualW(1);  // Fallback to minimal valid dimensions
+    transform.setActualH(1);
+  }
 
   // transform.setActualW(newW);
   // transform.setActualH(newH);
@@ -657,24 +668,33 @@ auto update(float delta) -> void {
         ac.currentAnimationIndex = 0;
       }
 
-      auto &currentAnimation = ac.animationQueue.at(ac.currentAnimationIndex);
+      // Guard: queue should not be empty at this point
+      if (ac.animationQueue.empty()) {
+        continue;
+      }
+
+      auto &currentAnimation = ac.animationQueue[ac.currentAnimationIndex];
 
       // Update the current animation
       currentAnimation.currentElapsedTime += delta;
 
+      // Guard: ensure animation list has frames
+      if (currentAnimation.animationList.empty() ||
+          currentAnimation.currentAnimIndex >= currentAnimation.animationList.size()) {
+        continue;
+      }
+
       if (currentAnimation.currentElapsedTime >
-          currentAnimation.animationList.at(currentAnimation.currentAnimIndex)
-              .second) {
+          currentAnimation.animationList[currentAnimation.currentAnimIndex].second) {
         if (currentAnimation.currentAnimIndex >=
             currentAnimation.animationList.size() - 1) {
           // The current animation has completed
           if (ac.currentAnimationIndex + 1 < ac.animationQueue.size()) {
             // Move to the next animation in the queue
             ac.currentAnimationIndex++;
-            // Reset the next animation's state
-            ac.animationQueue.at(ac.currentAnimationIndex).currentAnimIndex = 0;
-            ac.animationQueue.at(ac.currentAnimationIndex).currentElapsedTime =
-                0;
+            // Reset the next animation's state (already bounds-checked above)
+            ac.animationQueue[ac.currentAnimationIndex].currentAnimIndex = 0;
+            ac.animationQueue[ac.currentAnimationIndex].currentElapsedTime = 0;
           } else {
             // All animations in the queue have completed
             ac.animationQueue.clear();

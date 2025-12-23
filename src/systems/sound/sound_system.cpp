@@ -449,10 +449,20 @@ void StopAllMusic() {
 }
 
     void LoadFromJSON(const std::string& filepath) {
-        std::ifstream file;
+        std::ifstream file(filepath);
+        if (!file.is_open()) {
+            SPDLOG_ERROR("[SOUND] Failed to open sound config: {}", filepath);
+            return;
+        }
+
         nlohmann::json soundData;
-        file.open(filepath);
-        soundData = json::parse(file);
+        try {
+            soundData = json::parse(file);
+        } catch (const json::parse_error& e) {
+            SPDLOG_ERROR("[SOUND] JSON parse error in {}: {}", filepath, e.what());
+            file.close();
+            return;
+        }
         file.close();
 
         musicVolume = soundData["music_volume"].get<float>();
@@ -531,7 +541,12 @@ void StopAllMusic() {
 
     // Play a new music track immediately
     void PlayMusic(const std::string& name, bool loop) {
-        Music m = LoadMusicStream(musicFiles.at(name).c_str());
+        auto it = musicFiles.find(name);
+        if (it == musicFiles.end()) {
+            SPDLOG_WARN("[SOUND] PlayMusic: music '{}' not found", name);
+            return;
+        }
+        Music m = LoadMusicStream(it->second.c_str());
         // apply combined volume: per-track * musicVolume * globalVolume
         SetMusicVolume(m, 1.0f * musicVolume * globalVolume);
         PlayMusicStream(m);

@@ -448,10 +448,16 @@ auto setupAnimatedObjectOnEntity(
   }
 
   // 4) size the transform to match the first frame
-  const auto &firstFrame =
-      animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame;
-  transform.setActualW(firstFrame.width);
-  transform.setActualH(firstFrame.height);
+  if (!animQueue.defaultAnimation.animationList.empty()) {
+    const auto &firstFrame =
+        animQueue.defaultAnimation.animationList.front().first.spriteFrame->frame;
+    transform.setActualW(firstFrame.width);
+    transform.setActualH(firstFrame.height);
+  } else {
+    SPDLOG_WARN("setupAnimatedObjectOnEntity: empty animation list for entity {}", static_cast<int>(e));
+    transform.setActualW(1);
+    transform.setActualH(1);
+  }
 
   // 5) run any custom shader‐pass config
   if (shaderPassConfig) {

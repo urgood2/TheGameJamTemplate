@@ -731,7 +731,7 @@ namespace input
         // LATER: not entirely sure I understand this. Need to review
         if (inputType == "press" && (button == GAMEPAD_BUTTON_LEFT_FACE_LEFT || button == GAMEPAD_BUTTON_LEFT_FACE_RIGHT) &&
             registry.valid(focused) && registry.valid(state.cursor_dragging_target) &&
-            state.gamepadHeldButtonDurations.at(xboxAButton) != 0 /** A for xbox */ > 0 && state.gamepadHeldButtonDurations[xboxAButton] < constants::BUTTON_HOLD_COYOTE_TIME &&
+            state.gamepadHeldButtonDurations.count(xboxAButton) && state.gamepadHeldButtonDurations[xboxAButton] != 0 && state.gamepadHeldButtonDurations[xboxAButton] < constants::BUTTON_HOLD_COYOTE_TIME &&
             focusedObjectHasEncompassingArea && focusedObjectCanBeHighlightedInItsArea)
         {
             ProcessLeftMouseButtonRelease(registry, state);                      // Release cursor

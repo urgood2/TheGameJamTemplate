@@ -410,9 +410,9 @@ extern float guiClippingRotation; // rotation for clipping in gui, used for
 extern std::map<std::string, gui::NinePatchData>
     ninePatchDataMap; // used for ninepatch drawing in imgui
 
-extern std::vector<std::vector<bool>> globalVisibilityMap;
+extern std::vector<std::vector<uint8_t>> globalVisibilityMap;
 extern bool useLineOfSight;
-std::vector<std::vector<bool>> &getGlobalVisibilityMap();
+std::vector<std::vector<uint8_t>> &getGlobalVisibilityMap();
 bool &getUseLineOfSight();
 
 extern sol::state lua; // for events

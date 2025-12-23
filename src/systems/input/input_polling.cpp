@@ -93,7 +93,7 @@ void set_provider(std::unique_ptr<IInputProvider> provider) {
 // ===========================
 
 // Track key down state from previous frame
-static std::vector<bool> s_keyDownLastFrame(KEY_KP_EQUAL + 1, false);
+static std::vector<uint8_t> s_keyDownLastFrame(KEY_KP_EQUAL + 1, 0);  // uint8_t for performance
 
 // Track mouse button state from previous frame
 static bool s_mouseLeftDownLastFrame = false;
@@ -129,7 +129,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
 
             // Detect first frame of key press
             if (!s_keyDownLastFrame[key]) {
-                s_keyDownLastFrame[key] = true;
+                s_keyDownLastFrame[key] = 1;
                 const bool shift = provider.is_key_down(KEY_LEFT_SHIFT) || provider.is_key_down(KEY_RIGHT_SHIFT);
                 const bool ctrl = provider.is_key_down(KEY_LEFT_CONTROL) || provider.is_key_down(KEY_RIGHT_CONTROL);
                 const bool alt = provider.is_key_down(KEY_LEFT_ALT) || provider.is_key_down(KEY_RIGHT_ALT);
@@ -140,7 +140,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
         if (provider.is_key_released(key)) {
             hid::reconfigure_device_info(state, InputDeviceInputCategory::KEYBOARD);
             keyboard::process_key_release(state, static_cast<KeyboardKey>(key));
-            s_keyDownLastFrame[key] = false;
+            s_keyDownLastFrame[key] = 0;
         }
     }
 

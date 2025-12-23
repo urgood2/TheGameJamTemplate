@@ -476,11 +476,11 @@ void setEngineContext(EngineContext* ctx) {
 
 
     // for line of sight
-    std::vector<std::vector<bool>> globalVisibilityMap{};
+    std::vector<std::vector<uint8_t>> globalVisibilityMap{};  // uint8_t for performance
     bool useLineOfSight{false};
-    std::vector<std::vector<bool>>& getGlobalVisibilityMap() { 
+    std::vector<std::vector<uint8_t>>& getGlobalVisibilityMap() {
         if (g_ctx) return g_ctx->visibilityMap;
-        return globalVisibilityMap; 
+        return globalVisibilityMap;
     }
     bool& getUseLineOfSight() { 
         if (g_ctx) return g_ctx->useLineOfSight;

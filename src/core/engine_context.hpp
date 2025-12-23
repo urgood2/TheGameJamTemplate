@@ -102,7 +102,7 @@ struct EngineContext {
     int worldWidth{0};
     int worldHeight{0};
     ::shaders::ShaderUniformComponent shaderUniforms{};
-    std::vector<std::vector<bool>> visibilityMap{};
+    std::vector<std::vector<uint8_t>> visibilityMap{};  // uint8_t for performance (vector<bool> is slow)
     bool useLineOfSight{false};
     float timerReal{0.0f};
     float timerTotal{0.0f};

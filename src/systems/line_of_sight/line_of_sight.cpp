@@ -22,12 +22,12 @@
 auto initLineOfSight() -> void {
     auto& registry = globals::getRegistry();
     // init visibility map
-    globals::getGlobalVisibilityMap() = std::vector<std::vector<bool>>(globals::getWorldWidth(), std::vector<bool>(globals::getWorldHeight(), false));
+    globals::getGlobalVisibilityMap() = std::vector<std::vector<uint8_t>>(globals::getWorldWidth(), std::vector<uint8_t>(globals::getWorldHeight(), 0));
 
     // init visibility functions
     los::MyVisibility::ActionSetVisible actionSetVisible = [&](int x, int y) {
         if (x >= 0 && x < globals::getWorldWidth() && y >= 0 && y < globals::getWorldHeight()) {
-            globals::getGlobalVisibilityMap()[x][y] = true; // Mark the tile as visible
+            globals::getGlobalVisibilityMap()[x][y] = 1;  // Mark the tile as visible (use 1/0 instead of true/false)
         }
     };
 

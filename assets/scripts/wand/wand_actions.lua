@@ -904,109 +904,108 @@ end
   
   
 
-  With this:
-  --- Spawns chain lightning arcs to nearby enemies (instant damage, no projectiles)
-  --- @param sourceProjectile number Source projectile entity ID
-  --- @param hitTarget number Entity that was hit
-  --- @param hitData table Hit data from projectile
-  --- @param modifiers table Modifier aggregate
-  --- @param context table Execution context
-  --- @param actionCard table|nil The action card (for chain_count, chain_range, etc.)
-  function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, modifiers, context, actionCard)
-      -- Get source position (from projectile or hit target)
-      local sourcePos = nil
-      local sourceTransform = component_cache.get(sourceProjectile, Transform)
-      if sourceTransform then
-          sourcePos = {
-              x = sourceTransform.actualX + (sourceTransform.actualW or 0) * 0.5,
-              y = sourceTransform.actualY + (sourceTransform.actualH or 0) * 0.5
-          }
-      else
-          -- Fallback to hit target position
-          local targetTransform = component_cache.get(hitTarget, Transform)
-          if targetTransform then
-              sourcePos = {
-                  x = targetTransform.actualX + (targetTransform.actualW or 0) * 0.5,
-                  y = targetTransform.actualY + (targetTransform.actualH or 0) * 0.5
-              }
-          else
-              log_debug("WandActions.spawnChainLightning: No valid position")
-              return
-          end
-      end
+--- Spawns chain lightning arcs to nearby enemies (instant damage, no projectiles)
+--- @param sourceProjectile number Source projectile entity ID
+--- @param hitTarget number Entity that was hit
+--- @param hitData table Hit data from projectile
+--- @param modifiers table Modifier aggregate
+--- @param context table Execution context
+--- @param actionCard table|nil The action card (for chain_count, chain_range, etc.)
+function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, modifiers, context, actionCard)
+    -- Get source position (from projectile or hit target)
+    local sourcePos = nil
+    local sourceTransform = component_cache.get(sourceProjectile, Transform)
+    if sourceTransform then
+        sourcePos = {
+            x = sourceTransform.actualX + (sourceTransform.actualW or 0) * 0.5,
+            y = sourceTransform.actualY + (sourceTransform.actualH or 0) * 0.5
+        }
+    else
+        -- Fallback to hit target position
+        local targetTransform = component_cache.get(hitTarget, Transform)
+        if targetTransform then
+            sourcePos = {
+                x = targetTransform.actualX + (targetTransform.actualW or 0) * 0.5,
+                y = targetTransform.actualY + (targetTransform.actualH or 0) * 0.5
+            }
+        else
+            log_debug("WandActions.spawnChainLightning: No valid position")
+            return
+        end
+    end
 
-      -- Get chain parameters from card or modifiers
-      local chainCount = (actionCard and actionCard.chain_count) or modifiers.chainLightningTargets or 3
-      local chainRange = (actionCard and actionCard.chain_range) or 150
-      local chainDamageMult = (actionCard and actionCard.chain_damage_mult) or modifiers.chainLightningDamageMult or 0.5
+    -- Get chain parameters from card or modifiers
+    local chainCount = (actionCard and actionCard.chain_count) or modifiers.chainLightningTargets or 3
+    local chainRange = (actionCard and actionCard.chain_range) or 150
+    local chainDamageMult = (actionCard and actionCard.chain_damage_mult) or modifiers.chainLightningDamageMult or 0.5
 
-      -- MOD_BIG_SLOW: increase range based on size multiplier
-      chainRange = chainRange * (modifiers.sizeMultiplier or 1.0)
+    -- MOD_BIG_SLOW: increase range based on size multiplier
+    chainRange = chainRange * (modifiers.sizeMultiplier or 1.0)
 
-      -- Calculate chain damage (modifiers already applied to hitData.damage)
-      local baseDamage = (hitData and hitData.damage) or 10
-      local chainDamage = baseDamage * chainDamageMult
+    -- Calculate chain damage (modifiers already applied to hitData.damage)
+    local baseDamage = (hitData and hitData.damage) or 10
+    local chainDamage = baseDamage * chainDamageMult
 
-      -- MOD_FORCE_CRIT: apply crit multiplier to chain damage
-      if modifiers.forceCrit then
-          chainDamage = chainDamage * 2.0
-      end
+    -- MOD_FORCE_CRIT: apply crit multiplier to chain damage
+    if modifiers.forceCrit then
+        chainDamage = chainDamage * 2.0
+    end
 
-      -- Find nearby enemies (exclude the primary target)
-      local chainTargets = findEnemiesInRange(sourcePos, chainRange, { hitTarget }, chainCount)
+    -- Find nearby enemies (exclude the primary target)
+    local chainTargets = findEnemiesInRange(sourcePos, chainRange, { hitTarget }, chainCount)
 
-      if #chainTargets == 0 then
-          log_debug("WandActions.spawnChainLightning: No chain targets found")
-          return
-      end
+    if #chainTargets == 0 then
+        log_debug("WandActions.spawnChainLightning: No chain targets found")
+        return
+    end
 
-      -- Get combat context and owner for damage application
-      local ctx = rawget(_G, "combat_context")
-      local owner = context and context.playerEntity
-      local ActionAPI = require("combat.action_api")
+    -- Get combat context and owner for damage application
+    local ctx = rawget(_G, "combat_context")
+    local owner = context and context.playerEntity
+    local ActionAPI = require("combat.action_api")
 
-      -- Get owner's combat actor for damage source
-      local ownerActor = nil
-      if owner and entity_cache.valid(owner) then
-          local ownerScript = getScriptTableFromEntityID(owner)
-          ownerActor = ownerScript and ownerScript.combatTable
-      end
+    -- Get owner's combat actor for damage source
+    local ownerActor = nil
+    if owner and entity_cache.valid(owner) then
+        local ownerScript = getScriptTableFromEntityID(owner)
+        ownerActor = ownerScript and ownerScript.combatTable
+    end
 
-      -- Process each chain target
-      local currentPos = sourcePos
-      for i, targetInfo in ipairs(chainTargets) do
-          local targetEntity = targetInfo.entity
-          local targetPos = { x = targetInfo.x, y = targetInfo.y }
+    -- Process each chain target
+    local currentPos = sourcePos
+    for i, targetInfo in ipairs(chainTargets) do
+        local targetEntity = targetInfo.entity
+        local targetPos = { x = targetInfo.x, y = targetInfo.y }
 
-          -- Draw lightning arc visual (from current position to target)
-          drawLightningArc(currentPos, targetPos, 0.15)
+        -- Draw lightning arc visual (from current position to target)
+        drawLightningArc(currentPos, targetPos, 0.15)
 
-          -- Apply damage via combat system
-          if ctx and ActionAPI then
-              local targetScript = getScriptTableFromEntityID(targetEntity)
-              local targetActor = targetScript and targetScript.combatTable
+        -- Apply damage via combat system
+        if ctx and ActionAPI then
+            local targetScript = getScriptTableFromEntityID(targetEntity)
+            local targetActor = targetScript and targetScript.combatTable
 
-              if targetActor then
-                  -- Use lightning damage type
-                  ActionAPI.damage(ctx, ownerActor, targetActor, chainDamage, "lightning")
-                  log_debug("WandActions.spawnChainLightning: Hit", targetEntity, "for", chainDamage, "lightning damage")
-              end
-          end
+            if targetActor then
+                -- Use lightning damage type
+                ActionAPI.damage(ctx, ownerActor, targetActor, chainDamage, "lightning")
+                log_debug("WandActions.spawnChainLightning: Hit", targetEntity, "for", chainDamage, "lightning damage")
+            end
+        end
 
-          -- MOD_HEAL_ON_HIT: heal for each chain hit
-          if modifiers.healOnHit and modifiers.healOnHit > 0 and owner then
-              -- Apply healing to player
-              if WandActions.applyHealing then
-                  WandActions.applyHealing(owner, modifiers.healOnHit)
-              end
-          end
+        -- MOD_HEAL_ON_HIT: heal for each chain hit
+        if modifiers.healOnHit and modifiers.healOnHit > 0 and owner then
+            -- Apply healing to player
+            if WandActions.applyHealing then
+                WandActions.applyHealing(owner, modifiers.healOnHit)
+            end
+        end
 
-          -- Chain from this target to next (creates branching visual)
-          currentPos = targetPos
-      end
+        -- Chain from this target to next (creates branching visual)
+        currentPos = targetPos
+    end
 
-      log_debug("WandActions.spawnChainLightning: Chained to", #chainTargets, "targets")
-  end
+    log_debug("WandActions.spawnChainLightning: Chained to", #chainTargets, "targets")
+end
 
 
 return WandActions

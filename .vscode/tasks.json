@@ -29,6 +29,21 @@
 			"runOptions": {
 				"runOn": "folderOpen"
 			}
+		},
+		{
+			"label": "Watch Sounds",
+			"type": "shell",
+			"command": "just watch-sounds",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "silent",
+				"panel": "dedicated",
+				"showReuseMessage": false
+			},
+			"runOptions": {
+				"runOn": "folderOpen"
+			}
 		}
 	]
 }

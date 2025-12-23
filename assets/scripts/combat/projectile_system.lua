@@ -604,21 +604,25 @@ function ProjectileSystem.spawn(params)
             end, z_orders.projectiles, layer.DrawCommandSpace.World)
         end
 
+        -- Main body color (customizable per card)
+        local mainColor = (data and data.projectileColor) or "white"
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
             c.x = 0
             c.y = 0
             c.rx = rx
             c.ry = ry
-            c.color = util.getColor("white")
+            c.color = util.getColor(mainColor)
             c.lineWidth = nil
         end, z_orders.projectiles, layer.DrawCommandSpace.World)
 
+        -- Core color (customizable per card)
+        local coreColor = (data and data.projectileCoreColor) or "yellow"
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
             c.x = rx * 0.25
             c.y = 0
             c.rx = rx * 0.6 * pulseScale
             c.ry = ry * 0.55 * pulseScale
-            c.color = util.getColor("yellow"):setAlpha(200)
+            c.color = util.getColor(coreColor):setAlpha(200)
             c.lineWidth = nil
         end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
 

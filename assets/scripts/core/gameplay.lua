@@ -937,12 +937,12 @@ local DAMAGE_NUMBER_LIFETIME            = 1.35 -- seconds to keep a floating dam
 local DAMAGE_NUMBER_VERTICAL_SPEED      = 60   -- initial upward velocity of a damage number
 local DAMAGE_NUMBER_HORIZONTAL_JITTER   = 14   -- horizontal scatter when spawning a damage number
 local DAMAGE_NUMBER_GRAVITY             = 28   -- downward accel that eases the rise of the numbers
-local DAMAGE_NUMBER_FONT_SIZE           = 22
+local DAMAGE_NUMBER_FONT_SIZE           = 28
 local PLAYER_PROJECTILE_RECOIL_STRENGTH = 120
 local PLAYER_PROJECTILE_RECOIL_DECAY    = 0.85
 local playerShotRecoil                  = { x = 0, y = 0 }
 local AUTO_AIM_RADIUS                   = 1200
-local autoAimEnabled                    = autoAimEnabled or (globals and globals.autoAimEnabled) or false
+local autoAimEnabled                    = autoAimEnabled or (globals and globals.autoAimEnabled) or true
 if globals then globals.autoAimEnabled = autoAimEnabled end
 local aimSpring = { ox = 0, oy = 0, vx = 0, vy = 0 } -- spring offsets for aim indicator
 
@@ -4731,7 +4731,7 @@ function initPlanningPhase()
 
 
     -- set default card size based on screen size
-    cardW = globals.screenWidth() * 0.10
+    cardW = globals.screenWidth() * 0.150
     cardH = cardW * (64 / 48) -- default card aspect ratio is 48:64
 
     -- make entire roster of cards
@@ -4850,8 +4850,8 @@ function initPlanningPhase()
         synergyPanelReserve = math.max(synergyPanelReserve, (layout.panelWidth or 0) + (layout.marginX or 0))
     end
 
-    boardHeight = screenH / 5
-    local planningRegionWidth = math.max(0, screenW - synergyPanelReserve)
+    boardHeight = screenH / 3.5
+    local planningRegionWidth = math.max(0, screenW)
     boardPadding = planningRegionWidth * 0.1 / 3
     local actionBoardWidth = planningRegionWidth * 0.7
     local triggerBoardWidth = planningRegionWidth * 0.2
@@ -6250,7 +6250,9 @@ function initCombatSystem()
                             dn.vy = (dn.vy or 0) + DAMAGE_NUMBER_GRAVITY * frameDt
 
                             local remaining = 1.0 - (dn.age / life)
-                            local alpha = math.max(0.0, math.min(1.0, remaining))
+                            -- Stay fully visible, only fade in the last 25% of lifetime
+                            local fadeStart = 0.25
+                            local alpha = remaining > fadeStart and 1.0 or math.max(0.0, remaining / fadeStart)
                             local color = dn.color or { r = 255, g = 255, b = 255, a = 255 }
                             local scale = (dn.crit and 1.15 or 1.0) * (1.0 + 0.05 * alpha)
                             local fontSize = (dn.fontSize or DAMAGE_NUMBER_FONT_SIZE) * scale
@@ -6260,16 +6262,7 @@ function initCombatSystem()
                             local a = color.a or 255
                             local z = z_orders.enemies + 3
 
-                            -- subtle shadow
-                            command_buffer.queueDrawText(layers.sprites, function(c)
-                                c.text = dn.text
-                                c.font = localization.getFont()
-                                c.x = dn.x + 1
-                                c.y = dn.y + 1
-                                c.color = Col(0, 0, 0, math.floor(180 * alpha))
-                                c.fontSize = fontSize
-                            end, z, layer.DrawCommandSpace.World)
-
+                            -- Main text
                             command_buffer.queueDrawText(layers.sprites, function(c)
                                 c.text = dn.text
                                 c.font = localization.getFont()

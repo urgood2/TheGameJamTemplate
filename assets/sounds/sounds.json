@@ -1,49 +1,39 @@
 {
-    
-
-    "music": 
-    {
+    "music": {
         "main-menu": "Tranquil Tides.wav",
-        
         "main-music-1": "SMILETRON - Self Titled - 01 SANCTUM.ogg",
         "main-music-2": "SMILETRON - Self Titled - 02 ORACLE.ogg",
         "main-music-3": "SMILETRON - Self Titled - 03 MICROCOSMIC.ogg",
         "main-music-4": "SMILETRON - Self Titled - 04 GEMINI.ogg",
-        "main-music-5": "SMILETRON - Self Titled - 05 CERULEAN.ogg"
+        "main-music-5": "SMILETRON - Self Titled - 05 CERULEAN.ogg",
+        
+        "lo_fi_wash_over_intensity_1": "Lo-Fi Wash Over Intensity 1.wav",
+        "lo_fi_wash_over_intensity_2": "Lo-Fi Wash Over Intensity 2.wav",
+        "lo_fi_wash_over_main": "Lo-Fi Wash Over Main.wav"
     },
     "music_volume": 0.5,
     "categories": {
         "effects": {
             "sounds": {
                 "button-click": "UI_Click_Snappy_mono.wav",
-                
                 "card_activate": "CHURCH_BELL_03_mono.wav",
-                
                 "trigger_activate": "SNAP_Clean_mono.wav",
-                
                 "card_pick_up": "CARDS_Deal_02_RR1_mono.wav",
                 "card_put_down_1": "CARDS_Deal_01_RR1_mono.wav",
                 "card_put_down_2": "CARDS_Deal_01_RR2_mono.wav",
                 "card_put_down_3": "CARDS_Deal_01_RR3_mono.wav",
                 "card_put_down_4": "CARDS_Deal_01_RR4_mono.wav",
-                
                 "card_focus": "UIClick_Bright positive click 3.wav",
                 "card_click": "UIClick_Cartoon button 2.wav",
-                
                 "time_slow": "TIME_WARP_Stop_08_mono.wav",
                 "time_back_to_normal": "TIME_WARP_Start_08_mono.wav",
-                
                 "transition_whoosh": "Ni Sound Dark Game Trailer Transitions Whoosh 01.wav",
                 "transition_whoosh_out": "Ni Sound Dark Game Trailer Transitions Whoosh 02.wav",
-                
                 "card_deal": "CARDS_Deal_01_RR4_mono.wav",
-                
                 "remove_area_triggered": "GORE_Deep_Short_Splat_02_mono.wav",
-                
                 "fire_bolt": "AXE_Chop_Tree_Subtle_01_RR2_mono.wav",
                 "place_trap": "MECHANICS_Metal_Mechanism_05_mono.wav",
                 "strength_bonus": "UI_Animate_Whisper_Appear_stereo.wav",
-                
                 "dash_1": "WHOOSH_Air_Slow_RR10_mono.wav",
                 "dash_2": "WHOOSH_Air_Super_Fast_RR1_mono.wav",
                 "dash_3": "WHOOSH_Air_Super_Fast_RR3_mono.wav",
@@ -51,12 +41,9 @@
                 "dash_5": "WHOOSH_Air_Super_Fast_RR6_mono.wav",
                 "dash_6": "WHOOSH_Deep_Smooth_02_mono copy.wav",
                 "dash_7": "WHOOSH_Fast_03_mono.wav",
-                
                 "chain_lightning_trigger": "wav_Thunder_spell_magical.wav",
                 "chain_lightning_individual_hit": "ZAP_Subtle_07_mono.wav",
-                
                 "new_achievement": "UIAlert_Achievement Unique Short-011_OS_Quute UI.wav",
-                
                 "walk_1": "FOOTSTEP_Rock_Walk_01_RR01_mono.wav",
                 "walk_2": "FOOTSTEP_Rock_Walk_01_RR02_mono.wav",
                 "walk_3": "FOOTSTEP_Rock_Walk_01_RR03_mono.wav",
@@ -67,26 +54,60 @@
                 "walk_8": "FOOTSTEP_Rock_Walk_01_RR08_mono.wav",
                 "walk_9": "FOOTSTEP_Rock_Walk_01_RR09_mono.wav",
                 "walk_10": "FOOTSTEP_Rock_Walk_01_RR10_mono.wav",
-                
                 "gain_exp_pickup": "Gems Loot 1.wav",
                 "level_up": "Casual Whoosh 8.wav",
                 "player_hurt": "Default Strike 3.wav",
-                
                 "item_appear_1": "IMPACT_Stone_On_Stone_01_Subtle_mono.wav",
-                "item_appear_2" : "IMPACT_Stone_On_Stone_02_Subtle_mono.wav",
-                "item_appear_3" : "IMPACT_Stone_On_Stone_03_Subtle_mono.wav",
-                "item_appear_4" : "IMPACT_Stone_On_Stone_04_Subtle_mono.wav",
-                
+                "item_appear_2": "IMPACT_Stone_On_Stone_02_Subtle_mono.wav",
+                "item_appear_3": "IMPACT_Stone_On_Stone_03_Subtle_mono.wav",
+                "item_appear_4": "IMPACT_Stone_On_Stone_04_Subtle_mono.wav",
                 "monster_appear_whoosh": "WHOOSH_Deep_Smooth_02_mono.wav",
-                
-                "planning_card_activation": "CAMERA_DSLR_Dial_Rotate_03_mono.wav"
-                
+                "planning_card_activation": "CAMERA_DSLR_Dial_Rotate_03_mono.wav",
+                "ambience_scifi_space_hangar_05_loop_stereo": "AMBIENCE_SciFi_Space_Hangar_05_loop_stereo.wav",
+                "building_place": "Building Place.wav",
+                "building_plop": "Building Plop.wav",
+                "cards_deal_01_rr5_mono": "CARDS_Deal_01_RR5_mono.wav",
+                "cash_register_cha_ching_04_mono": "CASH_REGISTER_Cha-ching_04_mono.wav",
+                "damage_tick": "Damage Tick.wav",
+                "default_strike": "Default Strike.wav",
+                "difficulty_1_fair_weather": "Difficulty 1 Fair Weather.wav",
+                "difficulty_3_acid_rain": "Difficulty 3 Acid Rain.wav",
+                "difficulty_4_radioactive_snow": "Difficulty 4 Radioactive Snow.wav",
+                "dig_sound": "Dig Sound.wav",
+                "dropped_into_duplicate_window": "Dropped into Duplicate Window.wav",
+                "dry_vegetation_default_footwear_walk_1": "Dry Vegetation - Default Footwear - Walk 1.wav",
+                "dry_vegetation_default_footwear_walk_2": "Dry Vegetation - Default Footwear - Walk 2.wav",
+                "dry_vegetation_default_footwear_walk_4": "Dry Vegetation - Default Footwear - Walk 4.wav",
+                "dry_vegetation_default_footwear_walk_5": "Dry Vegetation - Default Footwear - Walk 5.wav",
+                "dry_vegetation_default_footwear_walk_6": "Dry Vegetation - Default Footwear - Walk 6.wav",
+                "duplicate": "Duplicate.wav",
+                "end_of_day": "End of Day.wav",
+                "fabric_movement_fast_01_mono": "FABRIC_Movement_Fast_01_mono.wav",
+                "gold_gain": "Gold Gain.wav",
+                "magic_spell_spawn_mono": "MAGIC_SPELL_Spawn_mono.wav",
+                "monster_breath_01_mono": "MONSTER_Breath_01_mono.wav",
+                "main_menu_theme": "Main Menu Theme.wav",
+                "notification_subtle_07_mono": "NOTIFICATION_Subtle_07_mono.wav",
+                "pick_up": "Pick Up.wav",
+                "rain_ambience": "Rain Ambience.wav",
+                "regular_ambience": "Regular Ambience.wav",
+                "shop_buy": "Shop Buy.wav",
+                "snow_ambience": "Snow Ambience.wav",
+                "whoosh_air_blade_rr3_mono": "WHOOSH_Air_Blade_RR3_mono.wav",
+                "whoosh_air_super_fast_rr2_mono": "WHOOSH_Air_Super_Fast_RR2_mono.wav",
+                "door_metal_open_creak_stereo": "DOOR_Metal_Open_Creak_stereo.wav",
+                "splat_generic_extra_20_mono": "SPLAT_Generic_Extra_20_mono.wav",
+                "splat_generic_extra_21_mono": "SPLAT_Generic_Extra_21_mono.wav",
+                "splat_generic_extra_22_mono": "SPLAT_Generic_Extra_22_mono.wav",
+                "splat_generic_extra_23_mono": "SPLAT_Generic_Extra_23_mono.wav",
+                "splat_generic_extra_24_mono": "SPLAT_Generic_Extra_24_mono.wav",
+                "splat_generic_extra_25_mono": "SPLAT_Generic_Extra_25_mono.wav",
+                "blaster_zap_kickback_deep_stereo": "BLASTER_Zap_Kickback_Deep_stereo.wav"
             },
             "volume": 0.3
         },
         "ui": {
-            "sounds": {
-            },
+            "sounds": {},
             "volume": 0.5
         }
     }

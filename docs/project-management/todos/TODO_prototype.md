@@ -69,6 +69,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
 
 - make tooltip text smaller, display right next to the card (left or right), or even better, split tinot two tooltips that are shown on top and left. so
 
+- how to use crit feature in combat system with chain lightning and change the damage numbers to show?
+
 - sfx: enemy impact, critical hit, bleed (self), heal. lightning
 - make enemies blink/flash on hit. why aren't we doing that?
 

@@ -576,3 +576,24 @@ clean-sprites:
 	echo "=== Cleaning auto-exported sprites ==="
 	rm -f "{{export_dir}}"/*.png "{{export_dir}}"/*.json 2>/dev/null || true
 	echo "=== Clean complete ==="
+
+# =============================================================================
+# Sound File Automation
+# =============================================================================
+
+# Watch for new sound files and add to sounds.json (requires fswatch)
+watch-sounds:
+	#!/usr/bin/env bash
+
+	# Check if fswatch is available
+	if ! command -v fswatch &>/dev/null; then
+		echo "ERROR: fswatch not installed"
+		echo "  Install with: brew install fswatch"
+		exit 1
+	fi
+
+	python3 scripts/watch_sounds.py
+
+# Scan for new sounds once (no watching)
+scan-sounds:
+	python3 scripts/watch_sounds.py --once

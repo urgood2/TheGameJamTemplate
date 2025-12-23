@@ -392,6 +392,10 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         size = props.size or 16,
         shadow = true,
 
+        -- Custom projectile colors (for lightning, fire, etc.)
+        projectileColor = actionCard.projectile_color,
+        projectileCoreColor = actionCard.projectile_core_color,
+
         -- Multipliers
         speedMultiplier = 1.0,  -- already applied to baseSpeed
         damageMultiplier = 1.0, -- already applied to damage
@@ -496,8 +500,11 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
     end
 
     -- Chain lightning (spawn additional projectiles to nearby enemies)
-    if modifiers.chainLightning then
-        WandActions.spawnChainLightning(projectile, target, hitData, modifiers, context)
+    -- Chain lightning (from modifier OR from action card with chain_count)
+    local hasChainLightning = modifiers.chainLightning
+        or (actionCard and actionCard.chain_count and actionCard.chain_count > 0)
+    if hasChainLightning then
+        WandActions.spawnChainLightning(projectile, target, hitData, modifiers, context, actionCard)
     end
 
     log_debug("WandActions: Projectile hit", target)
@@ -827,10 +834,6 @@ end
       duration = duration or 0.15
       local segments = 6
       local jitter = 12
-      local baseColor = util.getColor("CYAN")
-      local coreColor = util.getColor("WHITE")
-      local thickness = 3.0
-      local coreThickness = 1.5
 
       -- Build jagged path (randomized once, then fades)
       local points = {}
@@ -856,43 +859,46 @@ end
           delay = frameTime,
           action = function()
               elapsed = elapsed + frameTime
-              local alpha = math.floor(255 * (1 - elapsed / duration))
-              if alpha <= 0 then
+              if elapsed >= duration then
                   timer.cancel(timerTag)
                   return
               end
 
-              -- Outer glow (cyan)
-              local glowColor = baseColor:clone():setAlpha(math.floor(alpha * 0.6))
+              -- Draw each segment - full opacity, no alpha fade
               for i = 1, #points - 1 do
-                  command_buffer.queueDrawLine(layers.sprites, function(c)
-                      c.x1, c.y1 = points[i].x, points[i].y
-                      c.x2, c.y2 = points[i + 1].x, points[i + 1].y
-                      c.color = glowColor
-                      c.thickness = thickness + 2
-                  end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
-              end
+                  local x1, y1 = points[i].x, points[i].y
+                  local x2, y2 = points[i + 1].x, points[i + 1].y
 
-              -- Main arc (cyan)
-              local mainColor = baseColor:clone():setAlpha(alpha)
-              for i = 1, #points - 1 do
+                  -- Outer glow (cyan) - draw multiple offset lines for thickness
+                  for offset = -2, 2 do
+                      command_buffer.queueDrawLine(layers.sprites, function(c)
+                          c.x1 = x1 + offset * 0.5
+                          c.y1 = y1 + offset * 0.5
+                          c.x2 = x2 + offset * 0.5
+                          c.y2 = y2 + offset * 0.5
+                          c.color = util.getColor("CYAN")
+                          c.lineWidth = 4
+                      end, z_orders.particle_vfx, layer.DrawCommandSpace.World)
+                  end
+
+                  -- Main arc (cyan)
                   command_buffer.queueDrawLine(layers.sprites, function(c)
-                      c.x1, c.y1 = points[i].x, points[i].y
-                      c.x2, c.y2 = points[i + 1].x, points[i + 1].y
-                      c.color = mainColor
-                      c.thickness = thickness
+                      c.x1 = x1
+                      c.y1 = y1
+                      c.x2 = x2
+                      c.y2 = y2
+                      c.color = util.getColor("CYAN")
+                      c.lineWidth = 4
                   end, z_orders.particle_vfx + 1, layer.DrawCommandSpace.World)
-              end
 
-              -- Core (white, brighter)
-              local coreAlpha = math.min(255, math.floor(alpha * 1.2))
-              local innerColor = coreColor:clone():setAlpha(coreAlpha)
-              for i = 1, #points - 1 do
+                  -- Core (white, bright)
                   command_buffer.queueDrawLine(layers.sprites, function(c)
-                      c.x1, c.y1 = points[i].x, points[i].y
-                      c.x2, c.y2 = points[i + 1].x, points[i + 1].y
-                      c.color = innerColor
-                      c.thickness = coreThickness
+                      c.x1 = x1
+                      c.y1 = y1
+                      c.x2 = x2
+                      c.y2 = y2
+                      c.color = util.getColor("WHITE")
+                      c.lineWidth = 4
                   end, z_orders.particle_vfx + 2, layer.DrawCommandSpace.World)
               end
           end,
@@ -912,26 +918,18 @@ end
 --- @param context table Execution context
 --- @param actionCard table|nil The action card (for chain_count, chain_range, etc.)
 function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, modifiers, context, actionCard)
-    -- Get source position (from projectile or hit target)
+    -- Get source position from the HIT ENEMY (not the projectile!)
+    -- The projectile already hit this enemy - chains start FROM this enemy
     local sourcePos = nil
-    local sourceTransform = component_cache.get(sourceProjectile, Transform)
-    if sourceTransform then
+    local targetTransform = component_cache.get(hitTarget, Transform)
+    if targetTransform then
         sourcePos = {
-            x = sourceTransform.actualX + (sourceTransform.actualW or 0) * 0.5,
-            y = sourceTransform.actualY + (sourceTransform.actualH or 0) * 0.5
+            x = targetTransform.actualX + (targetTransform.actualW or 0) * 0.5,
+            y = targetTransform.actualY + (targetTransform.actualH or 0) * 0.5
         }
     else
-        -- Fallback to hit target position
-        local targetTransform = component_cache.get(hitTarget, Transform)
-        if targetTransform then
-            sourcePos = {
-                x = targetTransform.actualX + (targetTransform.actualW or 0) * 0.5,
-                y = targetTransform.actualY + (targetTransform.actualH or 0) * 0.5
-            }
-        else
-            log_debug("WandActions.spawnChainLightning: No valid position")
-            return
-        end
+        log_debug("WandActions.spawnChainLightning: No valid hit target position")
+        return
     end
 
     -- Get chain parameters from card or modifiers
@@ -951,14 +949,6 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
         chainDamage = chainDamage * 2.0
     end
 
-    -- Find nearby enemies (exclude the primary target)
-    local chainTargets = findEnemiesInRange(sourcePos, chainRange, { hitTarget }, chainCount)
-
-    if #chainTargets == 0 then
-        log_debug("WandActions.spawnChainLightning: No chain targets found")
-        return
-    end
-
     -- Get combat context and owner for damage application
     local ctx = rawget(_G, "combat_context")
     local owner = context and context.playerEntity
@@ -971,9 +961,24 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
         ownerActor = ownerScript and ownerScript.combatTable
     end
 
-    -- Process each chain target
+    -- sfx
+    playSoundEffect("effects", "blaster_zap_kickback_deep_stereo")
+
+    -- TRUE CASCADING: Find next enemy from current position, chain outward
     local currentPos = sourcePos
-    for i, targetInfo in ipairs(chainTargets) do
+    local hitEntities = { hitTarget }  -- Track all hit entities to avoid hitting same one twice
+    local chainsRemaining = chainCount
+
+    while chainsRemaining > 0 do
+        -- Find nearest enemy from current position (excluding already-hit enemies)
+        local nearbyEnemies = findEnemiesInRange(currentPos, chainRange, hitEntities, 1)
+
+        if #nearbyEnemies == 0 then
+            log_debug("WandActions.spawnChainLightning: No more chain targets found")
+            break
+        end
+
+        local targetInfo = nearbyEnemies[1]
         local targetEntity = targetInfo.entity
         local targetPos = { x = targetInfo.x, y = targetInfo.y }
 
@@ -989,22 +994,27 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
                 -- Use lightning damage type
                 ActionAPI.damage(ctx, ownerActor, targetActor, chainDamage, "lightning")
                 log_debug("WandActions.spawnChainLightning: Hit", targetEntity, "for", chainDamage, "lightning damage")
+
+                -- hit sfx
+                playSoundEffect("effects", "chain_lightning_individual_hit")
             end
         end
 
         -- MOD_HEAL_ON_HIT: heal for each chain hit
         if modifiers.healOnHit and modifiers.healOnHit > 0 and owner then
-            -- Apply healing to player
             if WandActions.applyHealing then
                 WandActions.applyHealing(owner, modifiers.healOnHit)
             end
         end
 
-        -- Chain from this target to next (creates branching visual)
+        -- Mark this enemy as hit and move to its position for next chain
+        hitEntities[#hitEntities + 1] = targetEntity
         currentPos = targetPos
+        chainsRemaining = chainsRemaining - 1
     end
 
-    log_debug("WandActions.spawnChainLightning: Chained to", #chainTargets, "targets")
+    local totalChains = chainCount - chainsRemaining
+    log_debug("WandActions.spawnChainLightning: Chained to", totalChains, "targets")
 end
 
 

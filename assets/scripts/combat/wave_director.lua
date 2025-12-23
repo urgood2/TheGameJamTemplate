@@ -179,6 +179,21 @@ end
 
 function WaveDirector.on_enemy_killed(e)
     if not state.alive_enemies[e] then return end
+    
+    -- Table of splat sound names
+    local splat_sounds = {
+        "splat_generic_extra_20_mono",
+        "splat_generic_extra_21_mono",
+        "splat_generic_extra_22_mono",
+        "splat_generic_extra_23_mono",
+        "splat_generic_extra_24_mono",
+        "splat_generic_extra_25_mono",
+    }
+    
+    -- random choose
+    local sound = random_utils.random_element_string(splat_sounds)
+    
+    playSoundEffect("effects", sound)
 
     state.alive_enemies[e] = nil
     WaveDirector.check_wave_complete()

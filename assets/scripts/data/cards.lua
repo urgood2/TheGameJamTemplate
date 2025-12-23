@@ -144,15 +144,21 @@ Cards.ACTION_CHAIN_LIGHTNING = {
     projectile_speed = 500,
     lifetime = 2000,
     cast_delay = 100,
-    
-    
+
     -- Chain-specific fields
-    chain_count = 2,
+    chain_count = 3,
     chain_range = 150,
-    chain_damage_mult = 0.5, -- chains have reduced damage
-    
+    chain_damage_mult = 0.5,
+
+    -- Custom projectile colors (lightning theme)
+    projectile_color = "CYAN",
+    projectile_core_color = "WHITE",
+
+    -- Size (affects collision and visual)
+    size = 3,                 -- base size in pixels (small, zippy bolt)
+
     tags = { "Arcane", "Lightning" },
-    damage_type = "lightning",            -- fire/ice/lightning/poison/arcane/holy/void/magic/physical
+    damage_type = "lightning",
     sprite = "action-chain-lightning.png",
 }
 

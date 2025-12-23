@@ -510,8 +510,9 @@ function WandModifiers.applyToAction(actionCard, modifiers)
     modified.lifetime = (baseLifetime + cardLifetimeMod * 1000) * modifiers.lifetimeMultiplier /
     1000                                                                                              -- convert to seconds
 
-    -- Size: from modifier only (cards don't have base size usually)
-    modified.size = 16 * modifiers.sizeMultiplier
+    -- Size: base from card (default 16), then apply modifier multiplier
+    local baseSize = actionCard.size or 16
+    modified.size = baseSize * modifiers.sizeMultiplier
 
     -- Spread angle: base + card's spread + modifier's spread
     local baseSpread = actionCard.spread_angle or 0

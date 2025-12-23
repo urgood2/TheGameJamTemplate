@@ -387,25 +387,31 @@ namespace ai_system
 
     void load_actions_from_lua(GOAPComponent &comp, actionplanner_t &planner)
     {
-        sol::table actions = comp.def["actions"];
-        for (auto &[key, val] : actions)
-        {
-            std::string name = key.as<std::string>();
-            sol::table tbl = val.as<sol::table>();
-
-            int cost = tbl["cost"].get_or(1);
-            goap_set_cost(&planner, name.c_str(), cost);
-
-            sol::table pre = tbl["pre"];
-            for (auto &[pre_key, pre_val] : pre)
-                goap_set_pre(&planner, name.c_str(), pre_key.as<std::string>().c_str(), pre_val.as<bool>());
-
-            sol::table post = tbl["post"];
-            for (auto &[post_key, post_val] : post)
+        try {
+            sol::table actions = comp.def["actions"];
+            for (auto &[key, val] : actions)
             {
-                goap_set_pst(&planner, name.c_str(), post_key.as<std::string>().c_str(), post_val.as<bool>());
-                allPostconditionsForEveryAction[name][post_key.as<std::string>()] = post_val.as<bool>();
+                std::string name = key.as<std::string>();
+                sol::table tbl = val.as<sol::table>();
+
+                int cost = tbl["cost"].get_or(1);
+                goap_set_cost(&planner, name.c_str(), cost);
+
+                sol::table pre = tbl["pre"];
+                for (auto &[pre_key, pre_val] : pre)
+                    goap_set_pre(&planner, name.c_str(), pre_key.as<std::string>().c_str(), pre_val.as<bool>());
+
+                sol::table post = tbl["post"];
+                for (auto &[post_key, post_val] : post)
+                {
+                    goap_set_pst(&planner, name.c_str(), post_key.as<std::string>().c_str(), post_val.as<bool>());
+                    allPostconditionsForEveryAction[name][post_key.as<std::string>()] = post_val.as<bool>();
+                }
             }
+        } catch (const sol::error& e) {
+            SPDLOG_ERROR("Lua error in load_actions_from_lua: {}", e.what());
+        } catch (const std::exception& e) {
+            SPDLOG_ERROR("Exception in load_actions_from_lua: {}", e.what());
         }
     }
 

@@ -24,6 +24,7 @@ std::pair<entt::entity, entt::entity> LuaArbiter::entities() const {
   cpArbiterGetShapes(arb, &sa, &sb);
 
   auto getE = [](cpShape *s) -> entt::entity {
+    if (!s) return entt::entity{entt::null};  // Guard against null shape
     if (void *ud = cpShapeGetUserData(s)) {
       return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(ud));
     }
@@ -36,6 +37,8 @@ std::pair<entt::entity, entt::entity> LuaArbiter::entities() const {
 std::pair<std::string, std::string> LuaArbiter::tags(PhysicsWorld &W) const {
   cpShape *sa, *sb;
   cpArbiterGetShapes(arb, &sa, &sb);
+  // Guard against null shapes
+  if (!sa || !sb) return {"", ""};
   auto fA = cpShapeGetFilter(sa);
   auto fB = cpShapeGetFilter(sb);
   return {W.GetTagFromCategory(int(fA.categories)),

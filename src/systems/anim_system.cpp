@@ -670,12 +670,14 @@ auto update(float delta) -> void {
       if (ac.defaultAnimation.animationList.empty()) {
         continue; // nothing to update
       }
+      // Guard: clamp index to valid range
+      if (ac.defaultAnimation.currentAnimIndex >= ac.defaultAnimation.animationList.size()) {
+        ac.defaultAnimation.currentAnimIndex = 0;
+      }
       ac.defaultAnimation.currentElapsedTime += delta;
 
       if (ac.defaultAnimation.currentElapsedTime >
-          ac.defaultAnimation.animationList
-              .at(ac.defaultAnimation.currentAnimIndex)
-              .second) {
+          ac.defaultAnimation.animationList[ac.defaultAnimation.currentAnimIndex].second) {
         ac.defaultAnimation.currentAnimIndex =
             (++ac.defaultAnimation.currentAnimIndex %
              ac.defaultAnimation.animationList.size());

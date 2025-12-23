@@ -461,7 +461,7 @@ void StopAllMusic() {
         } catch (const json::parse_error& e) {
             SPDLOG_ERROR("[SOUND] JSON parse error in {}: {}", filepath, e.what());
             file.close();
-            return;
+            throw;  // Rethrow - invalid JSON is a fail-fast condition
         }
         file.close();
 

@@ -3033,10 +3033,11 @@ void RenderAllLayersToCurrentRenderTarget(Camera2D *camera) {
 void DrawCustomLamdaToSpecificCanvas(const std::shared_ptr<Layer> layer,
                                      const std::string &canvasName,
                                      std::function<void()> drawActions) {
-  if (layer->canvases.find(canvasName) == layer->canvases.end())
+  auto it = layer->canvases.find(canvasName);
+  if (it == layer->canvases.end())
     return; // no canvas to draw to
 
-  BeginTextureMode(layer->canvases.at(canvasName));
+  BeginTextureMode(it->second);
 
   // clear screen
   ClearBackground(layer->backgroundColor);
@@ -3236,12 +3237,20 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
   if (layerPtr->postProcessShaders.empty())
     return;
 
-  // 2) Make sure your “ping” buffer exists:
+  // 2) Make sure your "ping" buffer exists:
   const std::string ping = canvasName;
   const std::string pong = canvasName + "_double";
+
+  // First ensure ping canvas exists
+  auto pingIt = layerPtr->canvases.find(ping);
+  if (pingIt == layerPtr->canvases.end()) {
+    SPDLOG_WARN("ApplyPostProcessShaders: ping canvas '{}' not found", ping);
+    return;
+  }
+
   if (layerPtr->canvases.find(pong) == layerPtr->canvases.end()) {
     // create it with same size as ping:
-    auto &srcTex = layerPtr->canvases.at(ping);
+    auto &srcTex = pingIt->second;
     layerPtr->canvases[pong] =
         // LoadRenderTexture(srcTex.texture.width, srcTex.texture.height);
         LoadRenderTextureStencilEnabled(srcTex.texture.width,
@@ -3251,8 +3260,11 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
   // 3) Run the full-screen shader chain:
   std::string src = ping, dst = pong;
   for (auto &shaderName : layerPtr->postProcessShaders) {
-    // clear dst
-    BeginTextureMode(layerPtr->canvases.at(dst));
+    // clear dst - use operator[] since we know pong was just created
+    auto dstIt = layerPtr->canvases.find(dst);
+    if (dstIt == layerPtr->canvases.end()) continue;
+
+    BeginTextureMode(dstIt->second);
     ClearBackground(BLANK);
     EndTextureMode();
 
@@ -3266,10 +3278,13 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
     std::swap(src, dst);
   }
 
-  // 4) If the final result isn’t back in “main”, copy it home:
+  // 4) If the final result isn't back in "main", copy it home:
   if (src != canvasName) {
+    auto canvasIt = layerPtr->canvases.find(canvasName);
+    if (canvasIt == layerPtr->canvases.end()) return;
+
     // clear original ping
-    BeginTextureMode(layerPtr->canvases.at(canvasName));
+    BeginTextureMode(canvasIt->second);
     ClearBackground(BLANK);
     EndTextureMode();
     layer::DrawCanvasOntoOtherLayer(layerPtr, src, layerPtr, canvasName, 0, 0,
@@ -4301,8 +4316,12 @@ void DrawCanvasToCurrentRenderTargetWithTransform(
     float y, float rotation, float scaleX, float scaleY, const Color &color,
     std::string shaderName, bool flat) {
 
-  if (layer->canvases.find(canvasName) == layer->canvases.end())
+  auto canvasIt = layer->canvases.find(canvasName);
+  if (canvasIt == layer->canvases.end()) {
+    SPDLOG_WARN("DrawCanvasToCurrentRenderTargetWithTransform: canvas '{}' not found", canvasName);
     return;
+  }
+  const auto& canvas = canvasIt->second;
 
   Shader shader = shaders::getShader(shaderName);
 
@@ -4315,13 +4334,13 @@ void DrawCanvasToCurrentRenderTargetWithTransform(
                               shaderName);
   }
 
-  // Set color
+  // Set color - use cached canvas reference instead of .at()
   DrawTexturePro(
-      layer->canvases.at(canvasName).texture,
-      {0, 0, (float)layer->canvases.at(canvasName).texture.width,
-       (float)-layer->canvases.at(canvasName).texture.height},
-      {x, y, (float)layer->canvases.at(canvasName).texture.width * scaleX,
-       (float)-layer->canvases.at(canvasName).texture.height * scaleY},
+      canvas.texture,
+      {0, 0, (float)canvas.texture.width,
+       (float)-canvas.texture.height},
+      {x, y, (float)canvas.texture.width * scaleX,
+       (float)-canvas.texture.height * scaleY},
       {0, 0}, rotation, {color.r, color.g, color.b, color.a});
 
   if (shader.id != 0)

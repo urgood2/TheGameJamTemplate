@@ -458,7 +458,11 @@ void StopAllMusic() {
         musicVolume = soundData["music_volume"].get<float>();
         SPDLOG_DEBUG("Got initial music volume: {}", musicVolume);
 
-        for (const auto& category : soundData.at("categories").items()) {
+        if (!soundData.contains("categories")) {
+            SPDLOG_WARN("[SOUND] No 'categories' key in sound data JSON");
+            return;
+        }
+        for (const auto& category : soundData["categories"].items()) {
             std::string categoryName = category.key();
             categories[categoryName] = SoundCategory();
             SPDLOG_DEBUG("[SOUND] Loading category: {}", categoryName);

@@ -245,6 +245,15 @@ local function endAltPreview()
     alt_preview_original_z = nil
 end
 
+-- Per-frame check: end alt-preview if Alt released
+local function updateAltPreview()
+    if not alt_preview_entity then return end
+
+    if not isAltHeld() then
+        endAltPreview()
+    end
+end
+
 local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then
         return
@@ -5300,6 +5309,9 @@ function initPlanningPhase()
 
     -- let's set up an update timer for triggers.
     setUpLogicTimers()
+
+    -- Per-frame alt-preview update
+    timer.every(0.016, updateAltPreview)
 end
 
 local ctx = nil

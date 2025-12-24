@@ -1,4 +1,5 @@
 local z_orders = require("core.z_orders")
+local Particles = require("core.particles")
 
 --[[
 ================================================================================
@@ -177,9 +178,36 @@ Cards.ACTION_CHAIN_LIGHTNING = {
     size = 7,                 -- base size in pixels (small, zippy bolt)
     collision_radius = 12,
 
+    -- Trail particles (electric sparks behind the bolt)
+    trail_particles = function()
+        return Particles.define()
+            :shape("circle")
+            :size(2, 4)
+            :color("cyan", "blue")
+            :velocity(20, 50)
+            :lifespan(0.1, 0.2)
+            :fade()
+    end,
+    trail_rate = 0.02,  -- Spawn every 20ms for dense trail
+
+    -- On-hit impact particles (directional spark burst)
+    on_hit_particles = {
+        recipe = Particles.define()
+            :shape("circle")
+            :size(3, 6)
+            :color("white", "cyan")
+            :velocity(80, 150)
+            :lifespan(0.15, 0.3)
+            :fade(),
+        count = 8,
+        spread = 45,  -- degrees from impact direction
+    },
+
     tags = { "Arcane", "Lightning" },
     damage_type = "lightning",
     sprite = "action-chain-lightning.png",
+
+    spawn_sfx = "electric_spell_cast_2",
 }
 
 

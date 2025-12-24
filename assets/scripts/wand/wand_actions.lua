@@ -29,6 +29,7 @@ local BehaviorRegistry = require("wand.card_behavior_registry")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local CardRegistry = require("wand.card_registry")
+local Particles = require("core.particles")
 
 -- Helper to get raw card definition from card script/instance
 -- Card scripts don't have all properties (like custom_render), so we look up the definition
@@ -429,6 +430,13 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         spriteId = cardDef.projectile_sprite_id,
         customRender = cardDef.custom_render,
 
+        -- Trail particles (recipe or factory function)
+        trailRecipe = cardDef.trail_particles,
+        trailRate = cardDef.trail_rate,
+
+        -- On-hit particles config
+        onHitParticles = cardDef.on_hit_particles,
+
         -- Multipliers
         speedMultiplier = 1.0,  -- already applied to baseSpeed
         damageMultiplier = 1.0, -- already applied to damage
@@ -497,8 +505,43 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
         })
     end
 
-    -- Custom upgrade behaviors
+    -- Spawn on-hit particles with directional context
     local hitPosition = getProjectilePosition(projectile)
+    if hitData and hitData.onHitParticles and hitPosition then
+        local targetTransform = component_cache.get(target, Transform)
+        if targetTransform then
+            local tx = targetTransform.actualX + (targetTransform.actualW or 0) * 0.5
+            local ty = targetTransform.actualY + (targetTransform.actualH or 0) * 0.5
+
+            -- Calculate direction: projectile → target (impact direction)
+            local dx = tx - hitPosition.x
+            local dy = ty - hitPosition.y
+            local impactAngle = math.deg(math.atan(dy, dx))
+
+            local config = hitData.onHitParticles
+            -- config can be a table { recipe, count, spread } or a factory function
+            local recipe, count, spread
+            if type(config) == "function" then
+                -- Factory function returns { recipe, count, spread }
+                local result = config()
+                recipe = result.recipe or result[1]
+                count = result.count or result[2] or 6
+                spread = result.spread or result[3] or 30
+            else
+                recipe = config.recipe or config[1]
+                count = config.count or config[2] or 6
+                spread = config.spread or config[3] or 30
+            end
+
+            if recipe and recipe.burst then
+                recipe:burst(count)
+                    :angle(impactAngle - spread, impactAngle + spread)
+                    :at(tx, ty)
+            end
+        end
+    end
+
+    -- Custom upgrade behaviors
     runUpgradeBehaviors("on_hit", upgradeBehaviors, {
         card = actionCard,
         projectile = projectile,

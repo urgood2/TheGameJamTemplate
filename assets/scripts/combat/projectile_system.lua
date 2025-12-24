@@ -29,6 +29,7 @@ local Node = require("monobehavior.behavior_script_v2")
 local CombatSystem = require("combat.combat_system")
 local z_orders = require("core.z_orders")
 local C = require("core.constants")
+local Particles = require("core.particles")
 require("util.util")
 
 ---@diagnostic disable: undefined-global
@@ -195,6 +196,14 @@ function ProjectileSystem.createProjectileData(params)
         useSprite = params.useSprite or false,           -- Use sprite instead of ellipse
         spriteId = params.spriteId,                      -- Sprite ID for custom rendering
         customRender = params.customRender,              -- Custom render function(entity, data, transform, dt)
+
+        -- Trail particles (spawned every frame while projectile is alive)
+        trailRecipe = params.trailRecipe,                -- Particles.define() recipe or factory function
+        trailRate = params.trailRate or 0.03,            -- Spawn interval in seconds
+        trailTimer = 0,                                  -- Internal timer
+
+        -- On-hit particles config (spawned when hitting an enemy with directional context)
+        onHitParticles = params.onHitParticles,          -- { recipe, count, spread } or factory function
 
         -- Event hooks
         onSpawnCallback = params.onSpawn,
@@ -562,6 +571,22 @@ function ProjectileSystem.spawn(params)
             cy = t.actualY + th * 0.5
         end
 
+        -- Spawn trail particles (runs before any rendering path)
+        if data and data.trailRecipe then
+            data.trailTimer = (data.trailTimer or 0) + dt
+            if data.trailTimer >= (data.trailRate or 0.03) then
+                data.trailTimer = 0
+                -- trailRecipe can be a recipe object or a factory function
+                local recipe = data.trailRecipe
+                if type(recipe) == "function" then
+                    recipe = recipe()  -- Call factory to get fresh recipe
+                end
+                if recipe and recipe.burst then
+                    recipe:burst(1):at(cx, cy)
+                end
+            end
+        end
+
         -- Option 1: Use sprite/animation rendering (show the animation, skip ellipse)
         if data and data.useSprite then
             -- Let the animation system render (don't hide it)
@@ -758,6 +783,12 @@ function ProjectileSystem.spawn(params)
     -- Call onSpawn callback if provided
     if projectileData.onSpawnCallback then
         projectileData.onSpawnCallback(entity, params)
+    end
+    
+      -- Play card-specific spawn sound
+    local spawnSfx = cardDef.spawn_sfx
+    if spawnSfx then
+        playSoundEffect("effects", spawnSfx)
     end
 
     -- Emit spawn event for wand system

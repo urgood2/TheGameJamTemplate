@@ -169,4 +169,15 @@ void process_pending_callbacks() {
     }
 }
 
+void register_lua_bindings(sol::state& lua) {
+    sol::table save_io_table = lua.create_named_table("save_io");
+
+    save_io_table.set_function("load_file", &load_file);
+    save_io_table.set_function("file_exists", &file_exists);
+    save_io_table.set_function("delete_file", &delete_file);
+    save_io_table.set_function("save_file_async", &save_file_async);
+
+    SPDLOG_DEBUG("save_io Lua bindings registered");
+}
+
 } // namespace save_io

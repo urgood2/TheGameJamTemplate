@@ -1,6 +1,6 @@
 {
   "en_us": {
-    "file": "fonts/en/Kenney Thick.ttf",
+    "file": "fonts/en/Tomorrow_Night.ttf",
     "sizes": [13, 16, 22, 32, 44],
     "defaultSize": 22,
     "scale": 1.0,
@@ -26,5 +26,21 @@
       [44032, 55203]
     ],
     "__Comment": "ranges: ASCII; 0x1100 → 4352, 0x11FF → 4607; 0x3130 → 12592, 0x318F → 12687; 0xAC00 → 44032, 0xD7A3 → 55203"
+  },
+
+  "namedFonts": {
+    "tooltip": {
+      "en_us": {
+        "file": "fonts/en/Tomorrow_Night.ttf",
+        "sizes": [16, 22, 32, 44],
+        "defaultSize": 22
+      },
+      "ko_kr": {
+        "file": "fonts/ko/Galmuri11-Bold.ttf",
+        "sizes": [11, 22, 33, 44],
+        "defaultSize": 22
+      },
+      "__Comment": "Tooltip font - per-language configuration. Falls back to en_us if language not found."
+    }
   }
 }

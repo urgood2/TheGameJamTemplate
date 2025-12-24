@@ -55,6 +55,11 @@ void loadFontData(const std::string &jsonPath) {
   }
 
   for (auto &[lang, fontJ] : j.items()) {
+    // Skip non-language entries (namedFonts, comments, etc.)
+    if (!fontJ.is_object() || !fontJ.contains("file")) {
+      continue;
+    }
+
     globals::FontData fd;
 
     // --- Copy JSON parameters (with defaults) ---
@@ -119,6 +124,78 @@ void loadFontData(const std::string &jsonPath) {
     }
 
     languageFontData[lang] = std::move(fd);
+  }
+
+  // --- Parse namedFonts section ---
+  if (j.contains("namedFonts") && j["namedFonts"].is_object()) {
+    for (auto &[fontName, fontConfig] : j["namedFonts"].items()) {
+      if (!fontConfig.is_object()) continue;
+
+      // Determine which language variant to use
+      std::string langToUse = currentLang.empty() ? "en_us" : currentLang;
+      if (!fontConfig.contains(langToUse)) {
+        langToUse = "en_us";  // Fallback to English
+      }
+      if (!fontConfig.contains(langToUse)) {
+        SPDLOG_WARN("Named font '{}' has no config for '{}' or 'en_us'", fontName, currentLang);
+        continue;
+      }
+
+      auto &langConfig = fontConfig[langToUse];
+      if (!langConfig.contains("file")) {
+        SPDLOG_WARN("Named font '{}' missing 'file' for '{}'", fontName, langToUse);
+        continue;
+      }
+
+      globals::FontData fd;
+      fd.fontScale = langConfig.value("scale", 1.0f);
+      fd.spacing = langConfig.value("spacing", 1.0f);
+
+      if (auto it = langConfig.find("offset");
+          it != langConfig.end() && it->is_array() && it->size() == 2) {
+        fd.fontRenderOffset = {(*it)[0].get<float>(), (*it)[1].get<float>()};
+      }
+
+      // Parse sizes
+      std::vector<int> sizes;
+      if (langConfig.contains("sizes") && langConfig["sizes"].is_array()) {
+        for (auto &s : langConfig["sizes"]) {
+          sizes.push_back(s.get<int>());
+        }
+      } else {
+        sizes.push_back(22);
+      }
+      fd.defaultSize = langConfig.value("defaultSize", sizes.empty() ? 22 : sizes[0]);
+
+      // Use codepoints from the corresponding language font, or ASCII fallback
+      if (auto it = languageFontData.find(langToUse); it != languageFontData.end()) {
+        fd.codepoints = it->second.codepoints;
+      } else {
+        for (int cp = 0x0020; cp <= 0x007E; ++cp) {
+          fd.codepoints.push_back(cp);
+        }
+      }
+
+      // Load font at each size
+      std::string file = util::getRawAssetPathNoUUID(langConfig["file"].get<std::string>());
+      if (!file.empty()) {
+        for (int size : sizes) {
+          Font font = LoadFontEx(file.c_str(), size, fd.codepoints.data(),
+                                 static_cast<int>(fd.codepoints.size()));
+          if (font.texture.id == 0) {
+            SPDLOG_ERROR("Failed to load named font '{}' at {}px from '{}'", fontName, size, file);
+          } else {
+            SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+            fd.fontsBySize[size] = font;
+            SPDLOG_INFO("Loaded named font '{}' at {}px ({} glyphs, lang={})",
+                        fontName, size, fd.codepoints.size(), langToUse);
+          }
+        }
+        if (!fd.fontsBySize.empty()) {
+          namedFonts[fontName] = std::move(fd);
+        }
+      }
+    }
   }
 }
 

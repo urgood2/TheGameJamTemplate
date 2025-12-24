@@ -947,12 +947,7 @@ auto startInit() -> void {
     localization::setCurrentLanguage("en_us");
     localization::loadFontData(
         util::getRawAssetPathNoUUID("localization/fonts.json"));
-    // Preload the tooltip font so UI elements can resolve it before any tooltips spawn.
-    if (!localization::hasNamedFont("tooltip")) {
-      localization::loadNamedFont("tooltip",
-                                  "fonts/en/JetBrainsMonoNerdFont-Regular.ttf",
-                                  44.0f);
-    }
+    // Named fonts (like "tooltip") are now loaded from fonts.json namedFonts section
   }
 
   // moved over from next task to see if this helps with crash

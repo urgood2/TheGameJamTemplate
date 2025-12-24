@@ -273,7 +273,7 @@ local function unpack_rect_like(rectLike, fallbackTable)
 end
 
 local tooltipStyle = {
-    fontSize = 26,  -- ProggyClean base is 13px, use 2x for readability
+    fontSize = 22,  -- eight-bit-dragon default size
     labelBg = "black",
     idBg = "gold",
     idTextColor = "black",
@@ -294,54 +294,24 @@ local tooltipStyle = {
 }
 local TOOLTIP_FONT_VERSION = 2
 
--- Load tooltip font based on current language
--- Korean requires a font with Hangul support; English uses Proggy
--- Loads at multiple sizes to support body (22px) and title (24px) text
-local function loadTooltipFont()
-    if not (localization and localization.loadNamedFont) then
+-- Tooltip font is now configured in fonts.json under namedFonts.tooltip
+-- The C++ localization system loads it automatically at startup.
+-- This function reloads it when language changes (for language-specific fonts)
+local function reloadTooltipFontForLanguage()
+    if not (localization and localization.loadFontData) then
         return
     end
-
-    local lang = localization.getCurrentLanguage and localization.getCurrentLanguage() or "en_us"
-    local tooltipFont
-    local tooltipSizes
-    local defaultSize
-
-    if lang == "ko_kr" then
-        -- Galmuri11 is designed at 11px - use multiples of 11 for pixel-perfect rendering
-        tooltipFont = "fonts/ko/Galmuri11-Bold.ttf"
-        tooltipSizes = {11, 22, 33, 44, 55, 66}
-        defaultSize = 22  -- 2x base size for readability
-    else
-        -- ProggyClean is designed at 13px - use multiples of 13 for pixel-perfect rendering
-        tooltipFont = "fonts/en/ProggyCleanCENerdFontMono-Regular.ttf"
-        tooltipSizes = {13, 26, 39, 52, 65, 78}
-        defaultSize = 26  -- 2x base size for readability
-    end
-
-    if localization.loadNamedFontSizes then
-        localization.loadNamedFontSizes("tooltip", tooltipFont, tooltipSizes, defaultSize)
-    else
-        -- Fallback for backwards compatibility
-        localization.loadNamedFont("tooltip", tooltipFont, defaultSize)
-    end
+    -- Reload fonts.json to pick up the correct language variant
+    localization.loadFontData("localization/fonts.json")
     TOOLTIP_FONT_VERSION = TOOLTIP_FONT_VERSION + 1
-end
-
--- Initialize tooltip font at startup
-if localization and localization.loadNamedFont then
-    local alreadyLoaded = localization.hasNamedFont and localization.hasNamedFont("tooltip")
-    if not alreadyLoaded then
-        loadTooltipFont()
-    end
 end
 
 -- Register language change callback to reload tooltip font and clear caches
 -- This ensures tooltips are rebuilt with the new language's text and font
 if localization and localization.onLanguageChanged then
     localization.onLanguageChanged(function(newLang)
-        -- Reload tooltip font for new language (increments TOOLTIP_FONT_VERSION)
-        loadTooltipFont()
+        -- Reload fonts.json for new language (picks correct named font variants)
+        reloadTooltipFontForLanguage()
 
         -- Clear all tooltip caches so they get rebuilt with new language
         for id, entity in pairs(card_tooltip_cache or {}) do
@@ -4141,10 +4111,10 @@ local function buildFourColumnBody(rows, opts) return buildNColumnBody(rows, 4, 
 
 local function makeDetailedStatsTooltip(snapshot)
     -- Compressed styling for detailed stats
-    -- Use 13px (ProggyClean base size) for pixel-perfect small text
+    -- Use 16px for compact text (smallest eight-bit-dragon size)
     local compactPadding = tooltipStyle.outerPadding or 10
     local compactRowPadding = 1
-    local compactFontSize = 13
+    local compactFontSize = 16
     local opts = {
         colorCode = true,
         labelColorCode = true,

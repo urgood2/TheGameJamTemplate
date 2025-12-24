@@ -209,6 +209,42 @@ local alt_preview_entity = nil
 local alt_preview_original_z = nil
 local currently_hovered_card = nil  -- Track which card is hovered for alt-check
 
+-- Check if Alt key is held
+local function isAltHeld()
+    return IsKeyDown(KeyboardKey.KEY_LEFT_ALT) or IsKeyDown(KeyboardKey.KEY_RIGHT_ALT)
+end
+
+-- Begin alt-preview: elevate card to top Z
+local function beginAltPreview(entity)
+    if alt_preview_entity == entity then return end
+    if alt_preview_entity then
+        -- End previous preview first
+        local prevLayerOrder = component_cache.get(alt_preview_entity, LayerOrderComponent)
+        if prevLayerOrder and alt_preview_original_z then
+            prevLayerOrder.zIndex = alt_preview_original_z
+        end
+    end
+
+    local layerOrder = component_cache.get(entity, LayerOrderComponent)
+    if layerOrder then
+        alt_preview_original_z = layerOrder.zIndex
+        layerOrder.zIndex = z_orders.top_card
+    end
+    alt_preview_entity = entity
+end
+
+-- End alt-preview: restore card to original Z
+local function endAltPreview()
+    if not alt_preview_entity then return end
+
+    local layerOrder = component_cache.get(alt_preview_entity, LayerOrderComponent)
+    if layerOrder and alt_preview_original_z then
+        layerOrder.zIndex = alt_preview_original_z
+    end
+    alt_preview_entity = nil
+    alt_preview_original_z = nil
+end
+
 local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then
         return

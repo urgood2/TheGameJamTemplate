@@ -38,6 +38,7 @@ add_executable(unit_tests
     unit/test_layer_batching.cpp
     unit/test_startup_timer.cpp
     unit/test_render_stack_safety.cpp
+    unit/test_save_file_io.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp
@@ -71,6 +72,7 @@ add_executable(unit_tests
     ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/ui/core/ui_components.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/layer/layer_command_buffer.cpp
+    ${CMAKE_SOURCE_DIR}/src/systems/save/save_file_io.cpp
     helpers/object_pool_stubs.cpp
 )
 

@@ -437,6 +437,9 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         -- On-hit particles config
         onHitParticles = cardDef.on_hit_particles,
 
+        -- Sound effects
+        wallHitSfx = cardDef.wall_hit_sfx,  -- Override default wall impact sound
+
         -- Multipliers
         speedMultiplier = 1.0,  -- already applied to baseSpeed
         damageMultiplier = 1.0, -- already applied to damage
@@ -449,6 +452,14 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         subCast = childInfo,
 
         -- Event hooks
+        onSpawn = function(proj, params)
+            -- Call card-defined onSpawn if present
+            local cardOnSpawn = cardDef.on_spawn or cardDef.onSpawn
+            if cardOnSpawn then
+                cardOnSpawn(proj, params, actionCard, modifiers, context)
+            end
+        end,
+
         onHit = function(proj, target, data)
             WandActions.handleProjectileHit(proj, target, data, modifiers, context, upgradeBehaviors, actionCard,
                 collisionBehavior)
@@ -1071,21 +1082,33 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
         ownerActor = ownerScript and ownerScript.combatTable
     end
 
-    -- sfx
-    playSoundEffect("effects", "blaster_zap_kickback_deep_stereo")
+    -- Initial chain start sfx
+    local startSfx = (actionCard and actionCard.chain_start_sfx) or "electric_layer"
+    playSoundEffect("effects", startSfx)
 
-    -- TRUE CASCADING: Find next enemy from current position, chain outward
-    local currentPos = sourcePos
-    local hitEntities = { hitTarget }  -- Track all hit entities to avoid hitting same one twice
-    local chainsRemaining = chainCount
+    -- Stagger timing config
+    local baseDelay = 0.4  -- seconds between first chains
+    local hitSfx = (actionCard and actionCard.chain_hit_sfx) or "chain_lightning_individual_hit"
 
-    while chainsRemaining > 0 do
+    -- TRUE CASCADING with stagger: recursive timer-based chaining
+    local hitEntities = { hitTarget }
+    local totalChainsDone = 0
+    local timer = require("core.timer")
+    local z_orders = require("core.z_orders")
+
+    -- Recursive function to process each chain with stagger
+    local function processNextChain(currentPos, chainsRemaining)
+        if chainsRemaining <= 0 then
+            log_debug("WandActions.spawnChainLightning: Chained to", totalChainsDone, "targets")
+            return
+        end
+
         -- Find nearest enemy from current position (excluding already-hit enemies)
         local nearbyEnemies = findEnemiesInRange(currentPos, chainRange, hitEntities, 1)
 
         if #nearbyEnemies == 0 then
-            log_debug("WandActions.spawnChainLightning: No more chain targets found")
-            break
+            log_debug("WandActions.spawnChainLightning: No more chain targets found after", totalChainsDone, "chains")
+            return
         end
 
         local targetInfo = nearbyEnemies[1]
@@ -1104,9 +1127,11 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
                 -- Use lightning damage type
                 ActionAPI.damage(ctx, ownerActor, targetActor, chainDamage, "lightning")
                 log_debug("WandActions.spawnChainLightning: Hit", targetEntity, "for", chainDamage, "lightning damage")
-
-                -- hit sfx
-                playSoundEffect("effects", "chain_lightning_individual_hit")
+                
+                hitFX(targetEntity, 5, 0.3)
+                
+                -- Hit sfx (plays each chain)
+                playSoundEffect("effects", hitSfx)
 
                 -- Spawn line particles flying away from where lightning came from
                 if particle and particle.spawnDirectionalLinesCone then
@@ -1119,7 +1144,6 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
                         dx, dy = 1, 0  -- fallback direction
                     end
 
-                    local z_orders = require("core.z_orders")
                     particle.spawnDirectionalLinesCone(Vec2(targetPos.x, targetPos.y), 8, 0.2, {
                         direction = Vec2(dx, dy),  -- away from source
                         spread = 35,
@@ -1145,14 +1169,28 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
             end
         end
 
-        -- Mark this enemy as hit and move to its position for next chain
+        -- Mark this enemy as hit
         hitEntities[#hitEntities + 1] = targetEntity
-        currentPos = targetPos
-        chainsRemaining = chainsRemaining - 1
+        totalChainsDone = totalChainsDone + 1
+
+        -- Calculate delay for next chain (cubic falloff: faster as chain progresses)
+        -- remaining/total gives 1.0 → 0.0, cubed makes it decay faster at the end
+        local remaining = chainsRemaining - 1
+        local progress = remaining / chainCount  -- 1.0 at start, approaches 0 at end
+        local delay = baseDelay * (progress * progress * progress)  -- cubic falloff
+
+        -- Schedule next chain
+        if remaining > 0 then
+            timer.after(delay, function()
+                processNextChain(targetPos, remaining)
+            end)
+        else
+            log_debug("WandActions.spawnChainLightning: Chained to", totalChainsDone, "targets")
+        end
     end
 
-    local totalChains = chainCount - chainsRemaining
-    log_debug("WandActions.spawnChainLightning: Chained to", totalChains, "targets")
+    -- Start the chain from the initially hit enemy
+    processNextChain(sourcePos, chainCount)
 end
 
 

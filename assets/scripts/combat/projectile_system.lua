@@ -205,6 +205,9 @@ function ProjectileSystem.createProjectileData(params)
         -- On-hit particles config (spawned when hitting an enemy with directional context)
         onHitParticles = params.onHitParticles,          -- { recipe, count, spread } or factory function
 
+        -- Sound effects
+        wallHitSfx = params.wallHitSfx,                  -- Sound to play on wall impact (nil = default)
+
         -- Event hooks
         onSpawnCallback = params.onSpawn,
         onHitCallback = params.onHit,
@@ -1355,16 +1358,13 @@ local function spawnWallImpactFx(projectileScript, transform, behavior, collisio
         })
     end
 
-    -- if spawnImpactSmear then
-    --     spawnImpactSmear(
-    --         cx,
-    --         cy,
-    --         Vec2(dirX, dirY),
-    --         util.getColor("white"),
-    --         0.16,
-    --         { single = true, maxLength = 46, maxThickness = 9 }
-    --     )
-    -- end
+    -- Wall hit sound with random pitch (0.7 to 1.3)
+    local data = projectileScript.projectileData
+    local wallSfx = (data and data.wallHitSfx) or "projectile_hit_wall_default"
+    local randomPitch = 0.7 + math.random() * 0.6  -- 0.7 to 1.3
+    if playSoundEffect then
+        playSoundEffect("effects", wallSfx, randomPitch)
+    end
 end
 
 function ProjectileSystem.handleWorldBoundaryCollision(entity, projectileScript, transform, collisionInfo)

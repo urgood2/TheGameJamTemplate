@@ -7907,7 +7907,7 @@ function initSurvivorEntity()
                                         {
                                             x = playerT.actualX + playerT.actualW / 2,
                                             y = playerT.actualY + playerT.actualH / 2
-                                        }, 1.0, 60)
+                                        }, 0.1, 60)
                                 else
                                     -- cancel timer, entity no longer valid
                                     timer.cancel("player_magnet_steering_" .. tostring(itemEntity))

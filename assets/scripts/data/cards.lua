@@ -189,25 +189,25 @@ Cards.ACTION_CHAIN_LIGHTNING = {
             :fade()
     end,
     trail_rate = 0.02,  -- Spawn every 20ms for dense trail
+    
+    on_spawn = function(projectileEntity, params, actionCard, modifiers, context)
+          -- Play spawn sound
+          playSoundEffect("effects", "electric_spell_cast_2")
 
-    -- On-hit impact particles (directional spark burst)
-    on_hit_particles = {
-        recipe = Particles.define()
-            :shape("circle")
-            :size(3, 6)
-            :color("white", "cyan")
-            :velocity(80, 150)
-            :lifespan(0.15, 0.3)
-            :fade(),
-        count = 8,
-        spread = 45,  -- degrees from impact direction
-    },
+          -- Or spawn particles, apply effects, etc.
+    end,
+    
+    -- these are specific to chain lightning (spawnChainLightning)
+    chain_start_sfx = "electric_layer",           -- plays once at start
+    chain_hit_sfx = "electric_individual_hit",  -- plays per enemy hit
 
+    
+    -- wall_hit_sfx = "ice_shatter",  -- Custom wall hit sound
+    
     tags = { "Arcane", "Lightning" },
     damage_type = "lightning",
     sprite = "action-chain-lightning.png",
 
-    spawn_sfx = "electric_spell_cast_2",
 }
 
 

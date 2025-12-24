@@ -6,7 +6,6 @@
         "main-music-3": "SMILETRON - Self Titled - 03 MICROCOSMIC.ogg",
         "main-music-4": "SMILETRON - Self Titled - 04 GEMINI.ogg",
         "main-music-5": "SMILETRON - Self Titled - 05 CERULEAN.ogg",
-        
         "lo_fi_wash_over_intensity_1": "Lo-Fi Wash Over Intensity 1.wav",
         "lo_fi_wash_over_intensity_2": "Lo-Fi Wash Over Intensity 2.wav",
         "lo_fi_wash_over_main": "Lo-Fi Wash Over Main.wav"
@@ -102,7 +101,11 @@
                 "splat_generic_extra_23_mono": "SPLAT_Generic_Extra_23_mono.wav",
                 "splat_generic_extra_24_mono": "SPLAT_Generic_Extra_24_mono.wav",
                 "splat_generic_extra_25_mono": "SPLAT_Generic_Extra_25_mono.wav",
-                "blaster_zap_kickback_deep_stereo": "BLASTER_Zap_Kickback_Deep_stereo.wav"
+                "blaster_zap_kickback_deep_stereo": "BLASTER_Zap_Kickback_Deep_stereo.wav",
+                "electric_layer": "Electric_Layer.wav",
+                "electric_spell_cast_2": "Electric_Spell-Cast_2.wav",
+                "electric_individual_hit": "THUD_Bright_01_mono.wav",
+                "projectile_hit_wall_default": "IMPACT_Metal_Cling_Clean_mono.wav"
             },
             "volume": 0.3
         },

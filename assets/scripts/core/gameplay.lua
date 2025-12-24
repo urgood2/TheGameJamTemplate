@@ -1191,13 +1191,16 @@ local function canBoardAcceptCard(boardEntityID, cardScript)
     local currentCount = board.cards and #board.cards or 0
 
     -- Get capacity from the board set's wand definition
-    local maxCapacity = 99 -- default fallback
+    local maxCapacity = 1 -- default for trigger boards
     if board_sets then
         for _, boardSet in ipairs(board_sets) do
             if boardSet.action_board_id == boardEntityID then
                 if boardSet.wandDef and boardSet.wandDef.total_card_slots then
                     maxCapacity = boardSet.wandDef.total_card_slots
                 end
+                break
+            elseif boardSet.trigger_board_id == boardEntityID then
+                -- Trigger boards: keep default capacity of 1
                 break
             end
         end

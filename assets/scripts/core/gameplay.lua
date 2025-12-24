@@ -946,7 +946,7 @@ local autoAimEnabled                    = autoAimEnabled or (globals and globals
 if globals then globals.autoAimEnabled = autoAimEnabled end
 local aimSpring = { ox = 0, oy = 0, vx = 0, vy = 0 } -- spring offsets for aim indicator
 
-local EXP_PICKUP_ANIMATION_ID = "b8090.png"
+local EXP_PICKUP_ANIMATION_ID = "exp_pickup.png"
 local EXP_PICKUP_SOUNDS = {
     "item_appear_1",
     "item_appear_2",

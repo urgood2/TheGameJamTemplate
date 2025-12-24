@@ -390,11 +390,19 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         -- Visual
         sprite = actionCard.projectileSprite or actionCard.sprite or "b7835.png",
         size = props.size or 16,
-        shadow = true,
+        shadow = actionCard.projectile_shadow ~= false,  -- default true unless explicitly false
 
         -- Custom projectile colors (for lightning, fire, etc.)
         projectileColor = actionCard.projectile_color,
         projectileCoreColor = actionCard.projectile_core_color,
+
+        -- Collision radius (separate from visual size)
+        collisionRadius = actionCard.collision_radius,
+
+        -- Custom rendering options
+        useSprite = actionCard.use_sprite or false,           -- Use sprite instead of ellipse
+        spriteId = actionCard.projectile_sprite_id,           -- Sprite ID for custom rendering
+        customRender = actionCard.custom_render,              -- Custom render function
 
         -- Multipliers
         speedMultiplier = 1.0,  -- already applied to baseSpeed
@@ -504,6 +512,40 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
     local hasChainLightning = modifiers.chainLightning
         or (actionCard and actionCard.chain_count and actionCard.chain_count > 0)
     if hasChainLightning then
+        -- Spawn impact particles for the initial hit (facing away from projectile)
+        if particle and particle.spawnDirectionalLinesCone then
+            local projPos = getProjectilePosition(projectile)
+            local targetTransform = component_cache.get(target, Transform)
+            if projPos and targetTransform then
+                local tx = targetTransform.actualX + (targetTransform.actualW or 0) * 0.5
+                local ty = targetTransform.actualY + (targetTransform.actualH or 0) * 0.5
+                local dx = tx - projPos.x
+                local dy = ty - projPos.y
+                local len = math.sqrt(dx * dx + dy * dy)
+                if len > 0.01 then
+                    dx, dy = dx / len, dy / len
+                else
+                    dx, dy = 1, 0
+                end
+
+                local z_orders = require("core.z_orders")
+                particle.spawnDirectionalLinesCone(Vec2(tx, ty), 8, 0.2, {
+                    direction = Vec2(dx, dy),  -- away from projectile
+                    spread = 35,
+                    colors = { util.getColor("CYAN"), util.getColor("WHITE"), util.getColor("BLUE") },
+                    minSpeed = 120,
+                    maxSpeed = 280,
+                    minLength = 8,
+                    maxLength = 22,
+                    minThickness = 1.0,
+                    maxThickness = 2.5,
+                    shrink = true,
+                    space = "world",
+                    z = z_orders.particle_vfx
+                })
+            end
+        end
+
         WandActions.spawnChainLightning(projectile, target, hitData, modifiers, context, actionCard)
     end
 
@@ -997,6 +1039,34 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
 
                 -- hit sfx
                 playSoundEffect("effects", "chain_lightning_individual_hit")
+
+                -- Spawn line particles flying away from where lightning came from
+                if particle and particle.spawnDirectionalLinesCone then
+                    local dx = targetPos.x - currentPos.x
+                    local dy = targetPos.y - currentPos.y
+                    local len = math.sqrt(dx * dx + dy * dy)
+                    if len > 0.01 then
+                        dx, dy = dx / len, dy / len
+                    else
+                        dx, dy = 1, 0  -- fallback direction
+                    end
+
+                    local z_orders = require("core.z_orders")
+                    particle.spawnDirectionalLinesCone(Vec2(targetPos.x, targetPos.y), 8, 0.2, {
+                        direction = Vec2(dx, dy),  -- away from source
+                        spread = 35,
+                        colors = { util.getColor("CYAN"), util.getColor("WHITE"), util.getColor("BLUE") },
+                        minSpeed = 120,
+                        maxSpeed = 280,
+                        minLength = 8,
+                        maxLength = 22,
+                        minThickness = 1.0,
+                        maxThickness = 2.5,
+                        shrink = true,
+                        space = "world",
+                        z = z_orders.particle_vfx
+                    })
+                end
             end
         end
 

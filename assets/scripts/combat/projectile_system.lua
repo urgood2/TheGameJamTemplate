@@ -179,6 +179,15 @@ function ProjectileSystem.createProjectileData(params)
         sizeMultiplier = params.sizeMultiplier or 1.0,
         hitCooldown = params.hitCooldown or params.rehitCooldown or 0.25, -- allow re-hits after this many seconds
 
+        -- Visual customization (colors for ellipse rendering)
+        projectileColor = params.projectileColor,
+        projectileCoreColor = params.projectileCoreColor,
+
+        -- Custom rendering options
+        useSprite = params.useSprite or false,           -- Use sprite instead of ellipse
+        spriteId = params.spriteId,                      -- Sprite ID for custom rendering
+        customRender = params.customRender,              -- Custom render function(entity, data, transform, dt)
+
         -- Event hooks
         onSpawnCallback = params.onSpawn,
         onHitCallback = params.onHit,
@@ -502,6 +511,51 @@ function ProjectileSystem.spawn(params)
         local eid = self._eid or self.projectileEntity or entity
         if not eid or not entity_cache.valid(eid) then return end
 
+        local data = self.projectileData
+        local t = component_cache.get(eid, Transform)
+        if not t then return end
+
+        -- Option 1: Use sprite/animation rendering (show the animation, skip ellipse)
+        if data and data.useSprite then
+            -- Let the animation system render (don't hide it)
+            if not self._spriteSetup then
+                local animComp = component_cache.get(eid, AnimationQueueComponent)
+                if animComp then
+                    animComp.noDraw = false  -- Show the animation
+                end
+                self._spriteSetup = true
+            end
+            -- Update rotation to face travel direction
+            local behavior = self.projectileBehavior
+            local vx, vy = 0, 0
+            local world = getPhysicsWorld(self)
+            if world and physics and physics.GetVelocity then
+                local vel = physics.GetVelocity(world, eid)
+                if vel then vx, vy = vel.x or 0, vel.y or 0 end
+            end
+            if (vx == 0 and vy == 0) and behavior and behavior.velocity then
+                vx, vy = behavior.velocity.x or 0, behavior.velocity.y or 0
+            end
+            if vx ~= 0 or vy ~= 0 then
+                t.actualR = math.atan(vy, vx)
+            end
+            return
+        end
+
+        -- Option 2: Custom render function
+        if data and data.customRender then
+            -- Hide default animation
+            if not self._renderNoSprite then
+                local animComp = component_cache.get(eid, AnimationQueueComponent)
+                if animComp then animComp.noDraw = true end
+                self._renderNoSprite = true
+            end
+            -- Call custom render with all context
+            data.customRender(eid, data, t, dt, self)
+            return
+        end
+
+        -- Option 3: Default ellipse rendering
         -- Hide default animation/sprite once
         if not self._renderNoSprite then
             local animComp = component_cache.get(eid, AnimationQueueComponent)
@@ -510,9 +564,6 @@ function ProjectileSystem.spawn(params)
             end
             self._renderNoSprite = true
         end
-
-        local t = component_cache.get(eid, Transform)
-        if not t then return end
 
         local behavior = self.projectileBehavior
         local vx, vy = 0, 0
@@ -540,7 +591,6 @@ function ProjectileSystem.spawn(params)
         local speed = math.sqrt(vx * vx + vy * vy)
         local speedNorm = math.min(1.0, speed / 600.0)
         local ry = baseRy * (1.0 - 0.5 * speedNorm) -- faster → flatter
-        local data = self.projectileData
         local damageValue = computeProjectileDamage(data)
         local highDamageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
         local isHighDamage = damageValue >= highDamageThreshold
@@ -648,17 +698,25 @@ function ProjectileSystem.spawn(params)
     ProjectileSystem.projectile_scripts[entity] = projectileScript
 
     -- Custom render: oriented ellipse that faces travel direction (disable sprite).
-    if _G.entity and _G.entity.set_draw_override then
+    -- NOTE: This is a fallback path. Primary rendering happens in ProjectileType:update()
+    -- Skip draw_override if using sprite or custom render (handled in update())
+    if _G.entity and _G.entity.set_draw_override and not params.useSprite and not params.customRender then
         _G.entity.set_draw_override(entity, function(w, h)
             local t = component_cache.get(entity, Transform)
             if not t then return end
 
             local script = ProjectileSystem.getProjectileScript(entity)
+            local data = script and script.projectileData
+
+            -- Skip if using sprite or custom render (let update() handle it)
+            if data and (data.useSprite or data.customRender) then
+                return
+            end
+
             local behavior = script and script.projectileBehavior
             local vx = (behavior and behavior.velocity and behavior.velocity.x) or 0
             local vy = (behavior and behavior.velocity and behavior.velocity.y) or 0
             local angle = (vx ~= 0 or vy ~= 0) and math.atan(vy, vx) or (t.actualR or 0)
-            local data = script and script.projectileData
             local damageValue = computeProjectileDamage(data)
             local highDamageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
             local pulseClock = (script and script._pulseClock) or 0
@@ -670,6 +728,10 @@ function ProjectileSystem.spawn(params)
             local cy = t.actualY + h * 0.5
             local rx = (w * 0.65)
             local ry = (h * 0.35)
+
+            -- Use customizable colors from projectileData
+            local mainColor = (data and data.projectileColor) or "white"
+            local coreColor = (data and data.projectileCoreColor) or "yellow"
 
             command_buffer.queuePushMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
             command_buffer.queueTranslate(layers.sprites, function(c)
@@ -696,7 +758,7 @@ function ProjectileSystem.spawn(params)
                 c.y = 0
                 c.rx = rx
                 c.ry = ry
-                c.color = util.getColor("white")
+                c.color = util.getColor(mainColor)
                 c.lineWidth = nil
             end, z_orders.projectiles, layer.DrawCommandSpace.World)
 
@@ -705,7 +767,7 @@ function ProjectileSystem.spawn(params)
                 c.y = 0
                 c.rx = rx * 0.6 * pulseScale
                 c.ry = ry * 0.55 * pulseScale
-                c.color = util.getColor("yellow"):setAlpha(200)
+                c.color = util.getColor(coreColor):setAlpha(200)
                 c.lineWidth = nil
             end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
 
@@ -764,6 +826,16 @@ function ProjectileSystem.setupPhysics(entity, params, projectileScript)
     end
     local transform = component_cache.get(entity, Transform)
 
+    -- Handle separate collision radius from visual size
+    -- Store visual dimensions to restore after physics creation
+    local visualW, visualH = transform.actualW, transform.actualH
+    local collisionRadius = params.collisionRadius
+    if collisionRadius and collisionRadius > 0 then
+        -- Temporarily set transform to collision dimensions for physics creation
+        transform.actualW = collisionRadius * 2
+        transform.actualH = collisionRadius * 2
+    end
+
     -- Determine shape and config
     local shapeType = params.shapeType or "circle"
     local isSensor = (params.collisionBehavior == ProjectileSystem.CollisionBehavior.PASS_THROUGH)
@@ -784,6 +856,12 @@ function ProjectileSystem.setupPhysics(entity, params, projectileScript)
         "world",
         config
     )
+
+    -- Restore visual dimensions after physics body is created
+    if collisionRadius and collisionRadius > 0 then
+        transform.actualW = visualW
+        transform.actualH = visualH
+    end
 
     -- Set additional physics properties
     -- Make it a bullet for high-speed collision detection

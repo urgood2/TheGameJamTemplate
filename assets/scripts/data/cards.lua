@@ -1,3 +1,5 @@
+local z_orders = require("core.z_orders")
+
 --[[
 ================================================================================
 CARD DEFINITIONS
@@ -149,13 +151,34 @@ Cards.ACTION_CHAIN_LIGHTNING = {
     chain_count = 3,
     chain_range = 150,
     chain_damage_mult = 0.5,
+    
+    -- sprite projectiles
+    -- use_sprite = true,                         -- Enable sprite rendering
+    -- projectileSprite = "lightning-projectile.png",   -- Sprite to use (or animation)
 
     -- Custom projectile colors (lightning theme)
     projectile_color = "CYAN",
     projectile_core_color = "WHITE",
+    
+    custom_render = function(entity, data, transform, dt, script)
+        -- Your custom rendering code here
+        local cx = transform.actualX + transform.actualW * 0.5
+        local cy = transform.actualY + transform.actualH * 0.5
+
+        -- Draw a line instead of ellipse
+        command_buffer.queueDrawLine(layers.sprites, function(c)
+            c.x1 = cx - 20
+            c.y1 = cy
+            c.x2 = cx + 20
+            c.y2 = cy
+            c.color = util.getColor("CYAN")
+            c.lineWidth = 3
+        end, z_orders.projectiles, layer.DrawCommandSpace.World)
+    end,
 
     -- Size (affects collision and visual)
-    size = 3,                 -- base size in pixels (small, zippy bolt)
+    size = 7,                 -- base size in pixels (small, zippy bolt)
+    collision_radius = 6,
 
     tags = { "Arcane", "Lightning" },
     damage_type = "lightning",

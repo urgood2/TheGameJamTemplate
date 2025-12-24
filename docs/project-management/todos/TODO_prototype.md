@@ -64,6 +64,8 @@ https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
     
 # programming side
 
+- tooltip needs to never cover the card. right now it slightly does.
+
 - how will player know when a mod works with an action card or not?
 - add descriptor strings for each card, as well as an icon.
 

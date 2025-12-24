@@ -35,6 +35,7 @@ local MessageQueueUI = require("ui.message_queue_ui")
 local CurrencyDisplay = require("ui.currency_display")
 local TagSynergyPanel = require("ui.tag_synergy_panel")
 local AvatarJokerStrip = require("ui.avatar_joker_strip")
+local TriggerStripUI = require("ui.trigger_strip_ui")
 local LevelUpScreen = require("ui.level_up_screen")
 local HoverRegistry = require("ui.hover_registry")
 local ContentDebugPanel = require("ui.content_debug_panel")
@@ -101,6 +102,12 @@ local function ensureMessageQueueHooks()
         -- Re-evaluate tag thresholds when deck changes (shop purchases, loot, etc.)
         if reevaluateDeckTags then
             reevaluateDeckTags()
+        end
+    end)
+
+    signal.register("trigger_activated", function(wandId, triggerType)
+        if TriggerStripUI and TriggerStripUI.onTriggerActivated then
+            TriggerStripUI.onTriggerActivated(wandId, triggerType)
         end
     end)
 end
@@ -4572,7 +4579,8 @@ function initPlanningPhase()
         layout = { marginX = 24, marginTop = 18, panelWidth = 360 }
     })
     AvatarJokerStrip.init({ margin = 20 })
-    
+    TriggerStripUI.init()
+
     MessageQueueUI.enqueueTest()
     
     -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
@@ -4649,6 +4657,10 @@ function initPlanningPhase()
             AvatarJokerStrip.syncFrom(playerTarget)
             AvatarJokerStrip.update(dt)
             AvatarJokerStrip.draw()
+        end
+
+        if TriggerStripUI and is_state_active and is_state_active(ACTION_STATE) then
+            TriggerStripUI.update(dt)
         end
 
         if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
@@ -7062,6 +7074,7 @@ function startPlanningPhase()
 	    CastBlockFlashUI.clear()
 	    SubcastDebugUI.clear()
 	    SubcastDebugUI.init()
+	    TriggerStripUI.hide()
 
     if record_telemetry then
         local now = os.clock()
@@ -8721,6 +8734,7 @@ function initActionPhase()
     CastFeedUI.init()
     WandCooldownUI.init()
     SubcastDebugUI.init()
+    TriggerStripUI.show()
     
     -- add shader to backgorund layer
     add_layer_shader("background", "peaches_background")

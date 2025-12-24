@@ -10,6 +10,7 @@
 #include "../localization/localization.hpp"
 #include "../particles/particle.hpp"
 #include "../random/random.hpp"
+#include "../save/save_file_io.hpp"
 #include "../shaders/shader_draw_commands.hpp"
 #include "../shaders/shader_pipeline.hpp"
 #include "../shaders/shader_presets.hpp"
@@ -368,6 +369,11 @@ auto initLuaMasterState(sol::state &stateToInit,
   // game state management functions (for entity gamestate management)
   // ------------------------------------------------------
   entity_gamestate_management::exposeToLua(stateToInit);
+
+  //---------------------------------------------------------
+  // methods from save/save_file_io.cpp. These can be called from lua
+  //---------------------------------------------------------
+  save_io::register_lua_bindings(stateToInit);
 
   // ------------------------------------------------------
   // Expose global variables to Lua

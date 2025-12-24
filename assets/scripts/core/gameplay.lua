@@ -4992,6 +4992,15 @@ function initPlanningPhase()
     -- make a trigger card and add it to the trigger board.
     -- local triggerCard = createNewCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE) -- offscreen for now
 
+    -- ======================== TEST CARDS FOR DEVELOPMENT ========================
+    -- Add lightning card to action board & "every N seconds" trigger to trigger board
+    local testTriggerCard = createNewTriggerSlotCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE)
+    addCardToBoard(testTriggerCard, set.trigger_board_id)
+
+    local testActionCard = createNewCard("ACTION_CHAIN_LIGHTNING", 4000, 4000, PLANNING_STATE)
+    addCardToBoard(testActionCard, set.action_board_id)
+    -- =============================================================================
+
     -- -------------------------------------------------------------------------- --
     --       make a large board at bottom that will serve as the inventory, with a trigger inventory on the left.       --
     -- --------------------------------------------------------------------------
@@ -7898,7 +7907,7 @@ function initSurvivorEntity()
                                         {
                                             x = playerT.actualX + playerT.actualW / 2,
                                             y = playerT.actualY + playerT.actualH / 2
-                                        }, 1.0, 20)
+                                        }, 1.0, 60)
                                 else
                                     -- cancel timer, entity no longer valid
                                     timer.cancel("player_magnet_steering_" .. tostring(itemEntity))

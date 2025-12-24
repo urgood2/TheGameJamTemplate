@@ -562,11 +562,17 @@ function ProjectileSystem.spawn(params)
         local visualSize = (data and data.visualSize) or 16
         if physPos then
             cx, cy = physPos.x, physPos.y
-            -- Snap transform to physics position every frame
-            t.visualX = physPos.x - visualSize * 0.5
-            t.visualY = physPos.y - visualSize * 0.5
+            -- Snap BOTH actual and visual transform to physics position
+            -- (actualX/Y is used by sprite rendering, visualX/Y by shader pipeline)
+            local halfSize = visualSize * 0.5
+            t.actualX = physPos.x - halfSize
+            t.actualY = physPos.y - halfSize
+            t.visualX = physPos.x - halfSize
+            t.visualY = physPos.y - halfSize
         else
-            local tw, th = t.actualW or 0, t.actualH or 0
+            -- Fallback: use transform center (actualW/H might be sprite size, not visualSize)
+            local tw = t.actualW or visualSize
+            local th = t.actualH or visualSize
             cx = t.actualX + tw * 0.5
             cy = t.actualY + th * 0.5
         end
@@ -582,6 +588,8 @@ function ProjectileSystem.spawn(params)
                     recipe = recipe()  -- Call factory to get fresh recipe
                 end
                 if recipe and recipe.burst then
+                    -- Set z-order below projectile (projectiles = 10, trail = 5)
+                    recipe:z(z_orders.projectiles - 5)
                     recipe:burst(1):at(cx, cy)
                 end
             end
@@ -785,11 +793,6 @@ function ProjectileSystem.spawn(params)
         projectileData.onSpawnCallback(entity, params)
     end
     
-      -- Play card-specific spawn sound
-    local spawnSfx = cardDef.spawn_sfx
-    if spawnSfx then
-        playSoundEffect("effects", spawnSfx)
-    end
 
     -- Emit spawn event for wand system
     if params.emitEvents ~= false then

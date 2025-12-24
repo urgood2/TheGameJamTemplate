@@ -263,6 +263,23 @@ local function updateAltPreview()
     end
 end
 
+-- Per-frame check for right-click on hovered card
+local function updateRightClickTransfer()
+    if not currently_hovered_card then return end
+    if not entity_cache.valid(currently_hovered_card) then
+        currently_hovered_card = nil
+        return
+    end
+
+    -- Check for right-click this frame
+    if input.isMousePressed(MouseButton.MOUSE_BUTTON_RIGHT) then
+        local cardScript = getScriptTableFromEntityID(currently_hovered_card)
+        if cardScript then
+            transferCardViaRightClick(currently_hovered_card, cardScript)
+        end
+    end
+end
+
 local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then
         return
@@ -5417,8 +5434,11 @@ function initPlanningPhase()
     -- let's set up an update timer for triggers.
     setUpLogicTimers()
 
-    -- Per-frame alt-preview update
-    timer.every(0.016, updateAltPreview)
+    -- Per-frame card UI updates (alt-preview and right-click transfer)
+    timer.every(0.016, function()
+        updateAltPreview()
+        updateRightClickTransfer()
+    end)
 end
 
 local ctx = nil

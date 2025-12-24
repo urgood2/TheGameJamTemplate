@@ -2277,11 +2277,11 @@ function createNewCard(id, x, y, gameStateToApply)
 
     nodeComp.methods.onHover = function()
         log_debug("card onHover called for", card)
-        
+
         -- inject dynamic motion
         transform.InjectDynamicMotion(card, 0, 1)
-        
-        
+
+
         -- get script
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
@@ -2311,6 +2311,14 @@ function createNewCard(id, x, y, gameStateToApply)
         -- propagate_state_effects_to_ui_box(tooltip)
 
         previously_hovered_tooltip = tooltip
+
+        -- Track for alt-preview
+        currently_hovered_card = card
+
+        -- If Alt is already held, begin preview
+        if isAltHeld() then
+            beginAltPreview(card)
+        end
     end
 
     nodeComp.methods.onStopHover = function()
@@ -2325,11 +2333,23 @@ function createNewCard(id, x, y, gameStateToApply)
             -- propagate_state_effects_to_ui_box(previously_hovered_tooltip)
             previously_hovered_tooltip = nil
         end
+
+        -- Clear hover tracking and end alt-preview if this was the previewed card
+        currently_hovered_card = nil
+        if alt_preview_entity == card then
+            endAltPreview()
+        end
     end
 
     nodeComp.methods.onDrag = function()
         -- sound
         -- playSoundEffect("effects", "card_pick_up", 1.0)
+
+        -- If alt-previewing this card, clear state (drag takes over at top Z)
+        if alt_preview_entity == card then
+            alt_preview_entity = nil
+            alt_preview_original_z = nil
+        end
 
         cardScript.isBeingDragged = true
 

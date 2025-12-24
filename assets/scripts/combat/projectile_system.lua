@@ -159,6 +159,11 @@ PROJECTILE DATA STRUCTURES
 -- ProjectileData component (attached to entity)
 -- Stores damage, owner, piercing state, and modifiers
 function ProjectileSystem.createProjectileData(params)
+    -- Store visual size explicitly (separate from transform which may be modified by physics)
+    local visualSize = params.size or 16
+    local sizeMultiplier = params.sizeMultiplier or 1.0
+    local finalVisualSize = visualSize * sizeMultiplier
+
     return {
         -- Core damage data
         damage = params.damage or 10,
@@ -176,8 +181,11 @@ function ProjectileSystem.createProjectileData(params)
         modifiers = params.modifiers or {},
         speedMultiplier = params.speedMultiplier or 1.0,
         damageMultiplier = params.damageMultiplier or 1.0,
-        sizeMultiplier = params.sizeMultiplier or 1.0,
+        sizeMultiplier = sizeMultiplier,
         hitCooldown = params.hitCooldown or params.rehitCooldown or 0.25, -- allow re-hits after this many seconds
+
+        -- Visual size (stored separately to survive physics sync)
+        visualSize = finalVisualSize,
 
         -- Visual customization (colors for ellipse rendering)
         projectileColor = params.projectileColor,
@@ -491,6 +499,12 @@ function ProjectileSystem.spawn(params)
     end
 
     -- Create projectile components
+    -- Debug: log if custom_render is being passed
+    if params.customRender then
+        log_debug("[Projectile spawn] custom_render passed, type:", type(params.customRender))
+    else
+        log_debug("[Projectile spawn] custom_render is nil")
+    end
     local projectileData = ProjectileSystem.createProjectileData(params)
     local projectileBehavior = ProjectileSystem.createProjectileBehavior(params)
     local projectileLifetime = ProjectileSystem.createProjectileLifetime({
@@ -515,6 +529,39 @@ function ProjectileSystem.spawn(params)
         local t = component_cache.get(eid, Transform)
         if not t then return end
 
+        -- Get physics position for snapping visuals to collision body
+        local behavior = self.projectileBehavior
+        local vx, vy = 0, 0
+        local world = getPhysicsWorld(self)
+        local physPos = nil
+        if world and physics then
+            if physics.GetVelocity then
+                local vel = physics.GetVelocity(world, eid)
+                if vel then vx, vy = vel.x or 0, vel.y or 0 end
+            end
+            -- Get authoritative physics position for visual snapping
+            if physics.GetPosition then
+                physPos = physics.GetPosition(world, eid)
+            end
+        end
+        if (vx == 0 and vy == 0) and behavior and behavior.velocity then
+            vx, vy = behavior.velocity.x or 0, behavior.velocity.y or 0
+        end
+
+        -- Calculate center position (snap to physics if available)
+        local cx, cy
+        local visualSize = (data and data.visualSize) or 16
+        if physPos then
+            cx, cy = physPos.x, physPos.y
+            -- Snap transform to physics position every frame
+            t.visualX = physPos.x - visualSize * 0.5
+            t.visualY = physPos.y - visualSize * 0.5
+        else
+            local tw, th = t.actualW or 0, t.actualH or 0
+            cx = t.actualX + tw * 0.5
+            cy = t.actualY + th * 0.5
+        end
+
         -- Option 1: Use sprite/animation rendering (show the animation, skip ellipse)
         if data and data.useSprite then
             -- Let the animation system render (don't hide it)
@@ -526,33 +573,43 @@ function ProjectileSystem.spawn(params)
                 self._spriteSetup = true
             end
             -- Update rotation to face travel direction
-            local behavior = self.projectileBehavior
-            local vx, vy = 0, 0
-            local world = getPhysicsWorld(self)
-            if world and physics and physics.GetVelocity then
-                local vel = physics.GetVelocity(world, eid)
-                if vel then vx, vy = vel.x or 0, vel.y or 0 end
-            end
-            if (vx == 0 and vy == 0) and behavior and behavior.velocity then
-                vx, vy = behavior.velocity.x or 0, behavior.velocity.y or 0
-            end
             if vx ~= 0 or vy ~= 0 then
                 t.actualR = math.atan(vy, vx)
             end
+            -- Transform already snapped to physics above
             return
         end
 
         -- Option 2: Custom render function
         if data and data.customRender then
+            log_debug("[Projectile] Using custom_render for entity", eid)
             -- Hide default animation
             if not self._renderNoSprite then
                 local animComp = component_cache.get(eid, AnimationQueueComponent)
                 if animComp then animComp.noDraw = true end
                 self._renderNoSprite = true
             end
-            -- Call custom render with all context
-            data.customRender(eid, data, t, dt, self)
+            -- Call custom render with all context (pass physics center position)
+            local renderContext = {
+                cx = cx,
+                cy = cy,
+                vx = vx,
+                vy = vy,
+                angle = (vx ~= 0 or vy ~= 0) and math.atan(vy, vx) or (t.actualR or 0),
+                speed = math.sqrt(vx * vx + vy * vy),
+                visualSize = (data and data.visualSize) or 16
+            }
+            local ok, err = pcall(data.customRender, eid, data, t, dt, self, renderContext)
+            if not ok then
+                log_error("[Projectile] custom_render error:", err)
+            end
             return
+        elseif data then
+            -- Debug: log if customRender is nil
+            if not self._debugLoggedOnce then
+                log_debug("[Projectile] data.customRender is nil for entity", eid, "- using default ellipse")
+                self._debugLoggedOnce = true
+            end
         end
 
         -- Option 3: Default ellipse rendering
@@ -565,28 +622,12 @@ function ProjectileSystem.spawn(params)
             self._renderNoSprite = true
         end
 
-        local behavior = self.projectileBehavior
-        local vx, vy = 0, 0
-        local world = getPhysicsWorld(self)
-        if world and physics and physics.GetVelocity then
-            local vel = physics.GetVelocity(world, eid)
-            if vel then
-                vx = vel.x or 0
-                vy = vel.y or 0
-            end
-        end
-        if (vx == 0 and vy == 0) and behavior and behavior.velocity then
-            vx = behavior.velocity.x or 0
-            vy = behavior.velocity.y or 0
-        end
-
         local angle = (vx ~= 0 or vy ~= 0) and math.atan(vy, vx) or (t.actualR or 0)
 
-        local w, h = t.actualW or 0, t.actualH or 0
-        local cx = t.actualX + w * 0.5
-        local cy = t.actualY + h * 0.5
-        local rx = w * 0.65
-        local baseRy = h * 0.35
+        -- Use visual size from projectileData (NOT transform, which may be collision-sized)
+        local visualSize = (data and data.visualSize) or 16
+        local rx = visualSize * 0.65 * 0.5  -- half-width for ellipse radius
+        local baseRy = visualSize * 0.35 * 0.5  -- half-height
 
         local speed = math.sqrt(vx * vx + vy * vy)
         local speedNorm = math.min(1.0, speed / 600.0)
@@ -665,14 +706,14 @@ function ProjectileSystem.spawn(params)
             c.lineWidth = nil
         end, z_orders.projectiles, layer.DrawCommandSpace.World)
 
-        -- Core color (customizable per card)
+        -- Core color (customizable per card) - draw on top
         local coreColor = (data and data.projectileCoreColor) or "yellow"
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-            c.x = rx * 0.25
+            c.x = rx * 0.3
             c.y = 0
-            c.rx = rx * 0.6 * pulseScale
-            c.ry = ry * 0.55 * pulseScale
-            c.color = util.getColor(coreColor):setAlpha(200)
+            c.rx = rx * 0.5 * pulseScale
+            c.ry = ry * 0.5 * pulseScale
+            c.color = util.getColor(coreColor)
             c.lineWidth = nil
         end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
 
@@ -697,83 +738,8 @@ function ProjectileSystem.spawn(params)
     projectileScript:attach_ecs { create_new = false, existing_entity = entity }
     ProjectileSystem.projectile_scripts[entity] = projectileScript
 
-    -- Custom render: oriented ellipse that faces travel direction (disable sprite).
-    -- NOTE: This is a fallback path. Primary rendering happens in ProjectileType:update()
-    -- Skip draw_override if using sprite or custom render (handled in update())
-    if _G.entity and _G.entity.set_draw_override and not params.useSprite and not params.customRender then
-        _G.entity.set_draw_override(entity, function(w, h)
-            local t = component_cache.get(entity, Transform)
-            if not t then return end
-
-            local script = ProjectileSystem.getProjectileScript(entity)
-            local data = script and script.projectileData
-
-            -- Skip if using sprite or custom render (let update() handle it)
-            if data and (data.useSprite or data.customRender) then
-                return
-            end
-
-            local behavior = script and script.projectileBehavior
-            local vx = (behavior and behavior.velocity and behavior.velocity.x) or 0
-            local vy = (behavior and behavior.velocity and behavior.velocity.y) or 0
-            local angle = (vx ~= 0 or vy ~= 0) and math.atan(vy, vx) or (t.actualR or 0)
-            local damageValue = computeProjectileDamage(data)
-            local highDamageThreshold = (data and data.visualDamageThreshold) or ProjectileSystem.highDamageVisualThreshold
-            local pulseClock = (script and script._pulseClock) or 0
-            local isHighDamage = damageValue >= highDamageThreshold
-            local pulseScale = isHighDamage and (1 + HIGH_DAMAGE_PULSE_SCALE * (0.5 + 0.5 * math.sin(pulseClock * 8))) or 1
-            local pulseAlpha = isHighDamage and (150 + 70 * (0.5 + 0.5 * math.sin(pulseClock * 10))) or nil
-
-            local cx = t.actualX + w * 0.5
-            local cy = t.actualY + h * 0.5
-            local rx = (w * 0.65)
-            local ry = (h * 0.35)
-
-            -- Use customizable colors from projectileData
-            local mainColor = (data and data.projectileColor) or "white"
-            local coreColor = (data and data.projectileCoreColor) or "yellow"
-
-            command_buffer.queuePushMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
-            command_buffer.queueTranslate(layers.sprites, function(c)
-                c.x = cx
-                c.y = cy
-            end, z_orders.projectiles, layer.DrawCommandSpace.World)
-            command_buffer.queueRotate(layers.sprites, function(c)
-                c.angle = math.deg(angle)
-            end, z_orders.projectiles, layer.DrawCommandSpace.World)
-
-            if isHighDamage then
-                command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-                    c.x = 0
-                    c.y = 0
-                    c.rx = rx * pulseScale * 1.05
-                    c.ry = ry * pulseScale * 1.05
-                    c.color = util.getColor("ORANGE"):setAlpha(pulseAlpha or 170)
-                    c.lineWidth = nil
-                end, z_orders.projectiles, layer.DrawCommandSpace.World)
-            end
-
-            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-                c.x = 0
-                c.y = 0
-                c.rx = rx
-                c.ry = ry
-                c.color = util.getColor(mainColor)
-                c.lineWidth = nil
-            end, z_orders.projectiles, layer.DrawCommandSpace.World)
-
-            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-                c.x = rx * 0.25
-                c.y = 0
-                c.rx = rx * 0.6 * pulseScale
-                c.ry = ry * 0.55 * pulseScale
-                c.color = util.getColor(coreColor):setAlpha(200)
-                c.lineWidth = nil
-            end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
-
-            command_buffer.queuePopMatrix(layers.sprites, function() end, z_orders.projectiles, layer.DrawCommandSpace.World)
-        end, true)
-    end
+    -- NOTE: All projectile rendering is handled in ProjectileType:update() above.
+    -- We do NOT use set_draw_override anymore to avoid double-rendering issues.
 
     -- Setup physics body for projectile
     if wantsPhysics then

@@ -7882,7 +7882,7 @@ function initSurvivorEntity()
                     local itemScript = getScriptTableFromEntityID(itemEntity)
                     if itemScript and itemScript.isPickup and not itemScript.pickedUp then
                         -- enable steering towards player
-                        steering.make_steerable(registry, itemEntity, 4000.0, 15000.0, math.pi * 2.0, 10)
+                        steering.make_steerable(registry, itemEntity, 10000.0, 15000.0, math.pi * 2.0, 10)
 
 
                         -- add a timer to move towards player
@@ -7898,7 +7898,7 @@ function initSurvivorEntity()
                                         {
                                             x = playerT.actualX + playerT.actualW / 2,
                                             y = playerT.actualY + playerT.actualH / 2
-                                        }, 1.0, 10)
+                                        }, 1.0, 20)
                                 else
                                     -- cancel timer, entity no longer valid
                                     timer.cancel("player_magnet_steering_" .. tostring(itemEntity))

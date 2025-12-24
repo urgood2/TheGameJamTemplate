@@ -28,6 +28,28 @@ local CardUpgrade = require("wand.card_upgrade_system")
 local BehaviorRegistry = require("wand.card_behavior_registry")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
+local CardRegistry = require("wand.card_registry")
+
+-- Helper to get raw card definition from card script/instance
+-- Card scripts don't have all properties (like custom_render), so we look up the definition
+local function getRawCardDefinition(cardInstance)
+    if not cardInstance then return nil end
+    -- Use card_id first (always a string), then id (might be a function on script objects)
+    local cardId = cardInstance.card_id
+    if not cardId or type(cardId) ~= "string" then
+        cardId = cardInstance.id
+        if type(cardId) ~= "string" then
+            return nil
+        end
+    end
+    local def = CardRegistry.get_card(cardId)
+    if def then
+        log_debug("[WandActions] Found raw card definition for:", cardId)
+    else
+        log_debug("[WandActions] No raw card definition found for:", cardId)
+    end
+    return def
+end
 
 local PLAYER_LAUNCH_RECOIL_STRENGTH = 120
 local PLAYER_LAUNCH_SCALE_MULT = 1.08
@@ -317,6 +339,9 @@ end
 --- @return number Entity ID of spawned projectile
 function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context, position, angle, childInfo,
     upgradeBehaviors)
+    -- Get raw card definition (card scripts don't have all properties like custom_render)
+    local cardDef = getRawCardDefinition(actionCard) or actionCard
+
     -- Determine movement type
     local movementType = ProjectileSystem.MovementType.STRAIGHT
 
@@ -387,22 +412,22 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         -- Lifetime
         lifetime = props.lifetime,
 
-        -- Visual
-        sprite = actionCard.projectileSprite or actionCard.sprite or "b7835.png",
+        -- Visual (use cardDef for properties not on card scripts)
+        sprite = cardDef.projectileSprite or cardDef.sprite or "b7835.png",
         size = props.size or 16,
-        shadow = actionCard.projectile_shadow ~= false,  -- default true unless explicitly false
+        shadow = cardDef.projectile_shadow ~= false,  -- default true unless explicitly false
 
         -- Custom projectile colors (for lightning, fire, etc.)
-        projectileColor = actionCard.projectile_color,
-        projectileCoreColor = actionCard.projectile_core_color,
+        projectileColor = cardDef.projectile_color,
+        projectileCoreColor = cardDef.projectile_core_color,
 
         -- Collision radius (separate from visual size)
-        collisionRadius = actionCard.collision_radius,
+        collisionRadius = cardDef.collision_radius,
 
-        -- Custom rendering options
-        useSprite = actionCard.use_sprite or false,           -- Use sprite instead of ellipse
-        spriteId = actionCard.projectile_sprite_id,           -- Sprite ID for custom rendering
-        customRender = actionCard.custom_render,              -- Custom render function
+        -- Custom rendering options (from raw card definition)
+        useSprite = cardDef.use_sprite or false,
+        spriteId = cardDef.projectile_sprite_id,
+        customRender = cardDef.custom_render,
 
         -- Multipliers
         speedMultiplier = 1.0,  -- already applied to baseSpeed

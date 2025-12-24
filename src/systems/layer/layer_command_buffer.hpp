@@ -22,12 +22,13 @@ namespace layer::layer_command_buffer {
 // Feature flag for state-aware batching optimization
 // When enabled, commands are sorted by space (World/Screen) within same z-level
 // This reduces camera mode toggles during rendering
-inline bool g_enableStateBatching = false;  // Off by default for safety
+inline bool g_enableStateBatching = true;  // Enable for batching optimization
 
 // Feature flag for shader/texture batching optimization (opt-in)
 // When enabled, commands are additionally sorted by shader_id and texture_id
 // This reduces GPU state changes during rendering
-inline bool g_enableShaderTextureBatching = false;  // Off by default for safety
+// NOTE: Requires g_enableStateBatching = true to have effect
+inline bool g_enableShaderTextureBatching = true;  // Enable for GPU state optimization
 
 template <typename T>
 DynamicObjectPoolWrapper<T> &GetDrawCommandPool(Layer &layer);
@@ -412,6 +413,41 @@ inline void PopulateLastCommandIDs(std::shared_ptr<Layer> &layer, const T* cmd) 
   auto &lastCmd = layer->commands_ptr->back();
   lastCmd.shader_id = ExtractShaderID<T>(cmd);
   lastCmd.texture_id = ExtractTextureID<T>(cmd);
+}
+
+// Infer render state (shader/texture) for all commands in a layer.
+// Must be called before sorting when g_enableShaderTextureBatching is true.
+// This pass propagates state from SetShader/SetTexture commands to all subsequent
+// draw commands, enabling proper batching by shader/texture ID.
+inline void InferRenderState(std::vector<DrawCommandV2>& commands) {
+  unsigned int currentShader = 0;
+  unsigned int currentTexture = 0;
+
+  for (auto& cmd : commands) {
+    // Update current state based on state-changing commands
+    switch (cmd.type) {
+      case DrawCommandType::SetShader: {
+        auto* data = static_cast<CmdSetShader*>(cmd.data);
+        currentShader = data->shader.id;
+        break;
+      }
+      case DrawCommandType::ResetShader: {
+        currentShader = 0;
+        break;
+      }
+      case DrawCommandType::SetTexture: {
+        auto* data = static_cast<CmdSetTexture*>(cmd.data);
+        currentTexture = data->texture.id;
+        break;
+      }
+      default:
+        break;
+    }
+
+    // Assign current state to command (enables sorting by state)
+    cmd.shader_id = currentShader;
+    cmd.texture_id = currentTexture;
+  }
 }
 
 template <typename T>

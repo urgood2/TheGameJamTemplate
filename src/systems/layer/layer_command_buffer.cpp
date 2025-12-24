@@ -16,6 +16,12 @@ namespace layer
                 ZoneName("CommandBuffer Sort", 18);
 #endif
 
+                // Infer shader/texture state for batching optimization
+                // This propagates state from SetShader/SetTexture to subsequent commands
+                if (g_enableShaderTextureBatching) {
+                    InferRenderState(layer->commands);
+                }
+
                 if (g_enableStateBatching) {
                     // Sort by z, then by space (groups World commands together, Screen together)
                     std::stable_sort(layer->commands.begin(), layer->commands.end(), [](const DrawCommandV2& a, const DrawCommandV2& b) {

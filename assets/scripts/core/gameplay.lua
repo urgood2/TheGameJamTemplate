@@ -245,12 +245,21 @@ local function endAltPreview()
     alt_preview_original_z = nil
 end
 
--- Per-frame check: end alt-preview if Alt released
+-- Per-frame check: manage alt-preview based on Alt key and hover state
 local function updateAltPreview()
-    if not alt_preview_entity then return end
+    local altHeld = isAltHeld()
 
-    if not isAltHeld() then
+    -- If Alt released while previewing, end preview
+    if alt_preview_entity and not altHeld then
         endAltPreview()
+        return
+    end
+
+    -- If Alt pressed while hovering a card (and not already previewing), begin preview
+    if altHeld and currently_hovered_card and not alt_preview_entity then
+        if entity_cache.valid(currently_hovered_card) then
+            beginAltPreview(currently_hovered_card)
+        end
     end
 end
 

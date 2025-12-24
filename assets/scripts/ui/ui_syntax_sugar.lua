@@ -184,23 +184,37 @@ local function attachHover(eid, hover)
     go.state.hoverEnabled = true
     go.state.collisionEnabled = true
 
-    go.methods.onHover = function(_, hoveredOn, hovered)
-        local tooltipKey = "dsl_hover_" .. tostring(eid)
-        if showSimpleTooltipAbove then
-            showSimpleTooltipAbove(
-                tooltipKey,
-                localization.get(hover.title),
-                localization.get(hover.body),
-                eid
-            )
-        end
-        -- Store key for cleanup
-        go._tooltipKey = tooltipKey
-    end
+    -- Generate unique tooltip name for this entity
+    local tooltipName = "dsl_hover_" .. tostring(eid)
 
-    go.methods.onStopHover = function()
-        if hideSimpleTooltip and go._tooltipKey then
-            hideSimpleTooltip(go._tooltipKey)
+    -- Try to use tooltip_registry if available
+    local tooltip_registry_ok, tooltip_registry = pcall(require, "core.tooltip_registry")
+
+    if tooltip_registry_ok and tooltip_registry then
+        -- Register and attach via registry
+        tooltip_registry.register(tooltipName, {
+            title = localization.get(hover.title),
+            body = localization.get(hover.body)
+        })
+        tooltip_registry.attachToEntity(eid, tooltipName, {})
+    else
+        -- Fallback to old behavior
+        go.methods.onHover = function(_, hoveredOn, hovered)
+            if showSimpleTooltipAbove then
+                showSimpleTooltipAbove(
+                    tooltipName,
+                    localization.get(hover.title),
+                    localization.get(hover.body),
+                    eid
+                )
+            end
+            go._tooltipKey = tooltipName
+        end
+
+        go.methods.onStopHover = function()
+            if hideSimpleTooltip and go._tooltipKey then
+                hideSimpleTooltip(go._tooltipKey)
+            end
         end
     end
 end

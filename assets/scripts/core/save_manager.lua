@@ -29,7 +29,7 @@ function SaveManager.register(key, collector)
         error("SaveManager.register: collector must have 'collect' and 'distribute' functions")
     end
     SaveManager.collectors[key] = collector
-    SPDLOG_DEBUG("SaveManager: registered collector '%s'", key)
+    SPDLOG_DEBUG(string.format("SaveManager: registered collector '%s'", key))
 end
 
 --- Collect all data from registered collectors
@@ -45,7 +45,7 @@ function SaveManager.collect_all()
         if success then
             data[key] = result
         else
-            SPDLOG_WARN("SaveManager: collector '%s' failed: %s", key, tostring(result))
+            SPDLOG_WARN(string.format("SaveManager: collector '%s' failed: %s", key, tostring(result)))
         end
     end
 
@@ -59,7 +59,7 @@ function SaveManager.distribute_all(data)
         if data[key] then
             local success, err = pcall(collector.distribute, data[key])
             if not success then
-                SPDLOG_WARN("SaveManager: distributor '%s' failed: %s", key, tostring(err))
+                SPDLOG_WARN(string.format("SaveManager: distributor '%s' failed: %s", key, tostring(err)))
             end
         end
     end

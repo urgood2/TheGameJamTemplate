@@ -128,7 +128,36 @@ function SaveManager.save(callback)
         if SaveManager.pending_save then
             local queued = SaveManager.pending_save
             SaveManager.pending_save = nil
-            SaveManager.save(queued.callback)
+
+            -- Use the pre-collected data instead of re-collecting
+            SaveManager.save_in_progress = true
+            local content = json.encode(queued.data)
+
+            save_io.save_file_async(SaveManager.SAVE_PATH, content, function(success)
+                SaveManager.save_in_progress = false
+
+                if queued.callback then
+                    queued.callback(success)
+                end
+
+                if success then
+                    SaveManager.cache = queued.data
+                    SPDLOG_DEBUG("SaveManager: queued save complete")
+                else
+                    SPDLOG_WARN("SaveManager: queued save failed")
+                end
+
+                -- Process next queued save if any
+                if SaveManager.pending_save then
+                    local next_queued = SaveManager.pending_save
+                    SaveManager.pending_save = nil
+                    SaveManager.save_in_progress = false
+
+                    -- Recursively process by calling save with the callback
+                    -- but this will collect new data (intentional for next save)
+                    SaveManager.save(next_queued.callback)
+                end
+            end)
         end
     end)
 end

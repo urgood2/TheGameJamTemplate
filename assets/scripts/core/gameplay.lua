@@ -1152,6 +1152,101 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
     notifyDeckChanged(boardEntityID)
 end
 
+-- Get the appropriate inventory board for a card type
+local function getInventoryForCardType(cardScript)
+    if cardScript.cardType == "trigger" then
+        return trigger_inventory_board_id
+    else
+        return inventory_board_id
+    end
+end
+
+-- Get the appropriate active board for a card type
+local function getActiveBoardForCardType(cardScript)
+    local activeSet = board_sets and board_sets[current_board_set_index]
+    if not activeSet then return nil end
+
+    if cardScript.cardType == "trigger" then
+        return activeSet.trigger_board_id
+    else
+        return activeSet.action_board_id
+    end
+end
+
+-- Check if a board can accept another card
+local function canBoardAcceptCard(boardEntityID, cardScript)
+    if not boardEntityID or not entity_cache.valid(boardEntityID) then
+        return false
+    end
+
+    -- Inventory boards have unlimited capacity
+    if boardEntityID == inventory_board_id or boardEntityID == trigger_inventory_board_id then
+        return true
+    end
+
+    -- Check against wand capacity
+    local board = boards[boardEntityID]
+    if not board then return false end
+
+    local currentCount = board.cards and #board.cards or 0
+
+    -- Get capacity from the board set's wand definition
+    local maxCapacity = 99 -- default fallback
+    if board_sets then
+        for _, boardSet in ipairs(board_sets) do
+            if boardSet.action_board_id == boardEntityID then
+                if boardSet.wandDef and boardSet.wandDef.total_card_slots then
+                    maxCapacity = boardSet.wandDef.total_card_slots
+                end
+                break
+            end
+        end
+    end
+
+    return currentCount < maxCapacity
+end
+
+-- Transfer card via right-click
+local function transferCardViaRightClick(cardEntity, cardScript)
+    local currentBoard = cardScript.currentBoardEntity
+    if not currentBoard or not entity_cache.valid(currentBoard) then
+        return
+    end
+
+    local targetBoard
+    local isFromInventory = (currentBoard == inventory_board_id or currentBoard == trigger_inventory_board_id)
+
+    if isFromInventory then
+        targetBoard = getActiveBoardForCardType(cardScript)
+    else
+        targetBoard = getInventoryForCardType(cardScript)
+    end
+
+    if not targetBoard or not entity_cache.valid(targetBoard) then
+        return
+    end
+
+    -- Check capacity
+    if not canBoardAcceptCard(targetBoard, cardScript) then
+        playSoundEffect("effects", "error_buzz", 0.8)
+        return
+    end
+
+    -- Transfer
+    removeCardFromBoard(cardEntity, currentBoard)
+    addCardToBoard(cardEntity, targetBoard)
+
+    -- Clear selection state
+    cardScript.selected = false
+    local nodeComp = component_cache.get(cardEntity, GameObject)
+    if nodeComp then
+        nodeComp.state.isBeingFocused = false
+    end
+
+    -- Play feedback sound
+    playSoundEffect("effects", "card_put_down_1", 0.9)
+end
+
 -- Moves all selected cards from the inventory board to the current set's action board.
 function sendSelectedInventoryCardsToActiveActionBoard()
     if not inventory_board_id or inventory_board_id == entt_null or not entity_cache.valid(inventory_board_id) then

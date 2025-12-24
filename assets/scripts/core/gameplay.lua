@@ -204,6 +204,10 @@ wand_tooltip_cache = {}
 card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
+-- Alt-preview state: show hovered card at top Z while Alt is held
+local alt_preview_entity = nil
+local alt_preview_original_z = nil
+local currently_hovered_card = nil  -- Track which card is hovered for alt-check
 
 local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then

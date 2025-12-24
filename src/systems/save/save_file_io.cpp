@@ -5,6 +5,7 @@
 #include <mutex>
 #include <queue>
 #include <sstream>
+#include <thread>
 
 #include "spdlog/spdlog.h"
 
@@ -30,6 +31,54 @@ void queue_callback(sol::function callback, bool success) {
     if (!callback.valid()) return;
     std::lock_guard<std::mutex> lock(g_callback_mutex);
     g_pending_callbacks.push({std::move(callback), success});
+}
+
+bool write_atomic(const std::string& path, const std::string& content) {
+    const std::string temp_path = path + ".tmp";
+    const std::string backup_path = path + ".bak";
+
+    // Ensure parent directory exists
+    std::error_code ec;
+    fs::path parent = fs::path(path).parent_path();
+    if (!parent.empty()) {
+        fs::create_directories(parent, ec);
+        if (ec) {
+            SPDLOG_WARN("save_io::write_atomic - failed to create directory: {}", parent.string());
+            return false;
+        }
+    }
+
+    // Write to temp file
+    {
+        std::ofstream file(temp_path, std::ios::binary | std::ios::trunc);
+        if (!file.is_open()) {
+            SPDLOG_WARN("save_io::write_atomic - failed to open temp file: {}", temp_path);
+            return false;
+        }
+        file << content;
+        file.flush();
+        if (file.fail()) {
+            SPDLOG_WARN("save_io::write_atomic - write failed: {}", temp_path);
+            return false;
+        }
+    }
+
+    // Atomic rename temp -> target
+    fs::rename(temp_path, path, ec);
+    if (ec) {
+        SPDLOG_WARN("save_io::write_atomic - rename failed: {} -> {}", temp_path, path);
+        fs::remove(temp_path, ec);
+        return false;
+    }
+
+    // Create backup (non-fatal if fails)
+    fs::copy_file(path, backup_path, fs::copy_options::overwrite_existing, ec);
+    if (ec) {
+        SPDLOG_DEBUG("save_io::write_atomic - backup copy failed (non-fatal): {}", backup_path);
+    }
+
+    SPDLOG_DEBUG("save_io::write_atomic - saved successfully: {}", path);
+    return true;
 }
 
 } // anonymous namespace
@@ -63,6 +112,41 @@ auto delete_file(const std::string& path) -> bool {
         return true; // Already doesn't exist
     }
     return fs::remove(path, ec);
+}
+
+void save_file_async(const std::string& path,
+                     const std::string& content,
+                     sol::function on_complete) {
+#if defined(__EMSCRIPTEN__)
+    // Web: Write to MEMFS (sync), then async persist to IndexedDB
+    bool success = write_atomic(path, content);
+
+    if (success) {
+        // Async sync to IndexedDB
+        EM_ASM({
+            if (typeof FS !== 'undefined' && FS.syncfs) {
+                FS.syncfs(false, function(err) {
+                    if (err) {
+                        console.warn('IDBFS sync failed:', err);
+                    }
+                });
+            }
+        });
+    }
+
+    // Callback immediately - MEMFS write is what matters for gameplay
+    queue_callback(std::move(on_complete), success);
+
+#else
+    // Desktop: Background thread
+    // Copy callback to shared_ptr for thread safety
+    auto callback_ptr = std::make_shared<sol::function>(std::move(on_complete));
+
+    std::thread([path, content, callback_ptr]() {
+        bool success = write_atomic(path, content);
+        queue_callback(std::move(*callback_ptr), success);
+    }).detach();
+#endif
 }
 
 void process_pending_callbacks() {

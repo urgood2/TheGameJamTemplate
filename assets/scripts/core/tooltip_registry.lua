@@ -38,6 +38,7 @@ local tooltip_definitions = {}      -- name → { title, body, opts }
 local entity_attachments = {}       -- entity → { name, params, originalOnHover, originalOnStopHover }
 local active_tooltip = nil          -- Currently visible tooltip entity
 local active_target = nil           -- Entity the tooltip is shown for
+local active_cache_key = nil        -- cache key used for active tooltip
 
 --------------------------------------------------------------------------------
 -- Template Interpolation
@@ -195,6 +196,7 @@ function tooltips.showFor(entity)
 
     -- Create tooltip using existing system
     local cacheKey = "tooltip_registry:" .. getCacheKey(attachment.name, attachment.params)
+    active_cache_key = cacheKey  -- Store for hide()
 
     if showSimpleTooltipAbove then
         active_tooltip = showSimpleTooltipAbove(cacheKey, title, body, entity, def.opts)
@@ -204,18 +206,12 @@ end
 
 --- Hide the currently visible tooltip
 function tooltips.hide()
-    if active_tooltip and hideSimpleTooltip then
-        -- The cache key was used when creating, find it
-        for entity, attachment in pairs(entity_attachments) do
-            if entity == active_target then
-                local cacheKey = "tooltip_registry:" .. getCacheKey(attachment.name, attachment.params)
-                hideSimpleTooltip(cacheKey)
-                break
-            end
-        end
+    if active_tooltip and hideSimpleTooltip and active_cache_key then
+        hideSimpleTooltip(active_cache_key)
     end
     active_tooltip = nil
     active_target = nil
+    active_cache_key = nil
 end
 
 --- Get the currently active tooltip entity (if any)

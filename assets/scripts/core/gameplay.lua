@@ -41,6 +41,7 @@ local ContentDebugPanel = require("ui.content_debug_panel")
 local CombatDebugPanel = require("ui.combat_debug_panel")
 local UIOverlayToggles = require("ui.ui_overlay_toggles")
 local EntityInspector = require("ui.entity_inspector")
+local tooltip_registry = require("core.tooltip_registry")
 local C = require("core.constants")
 local CardsData = require("data.cards")
 

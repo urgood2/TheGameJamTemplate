@@ -5,6 +5,7 @@
 #include "systems/scripting/binding_recorder.hpp"
 #include "util/utilities.hpp"
 #include "systems/transform/transform.hpp"
+#include "systems/camera/camera_manager.hpp"
 #include "raylib.h"
 #include "spdlog/spdlog.h"
 #include <algorithm>
@@ -170,8 +171,21 @@ void executeEntityPipelineWithCommands(
     center = {basePosX + baseVisualW * 0.5f,
               basePosY + baseVisualH * 0.5f};
     Rectangle destRect{center.x, center.y, destW, destH};
+
+    // Convert world-space center to screen-space for mouse-relative tilt calculation.
+    // The mouse position is in screen coordinates, so skewCenter must also be in screen
+    // coordinates for the shader's tilt math to work correctly with camera zoom/pan.
+    // Also scale skewSize by camera zoom so the mouse-relative calculation works correctly.
     Vector2 skewCenter{destRect.x, destRect.y};
     Vector2 skewSize{std::abs(destRect.width), std::abs(destRect.height)};
+    if (camera_manager::Exists("world_camera")) {
+        auto worldCamera = camera_manager::Get("world_camera");
+        skewCenter = GetWorldToScreen2D(center, worldCamera->cam);
+        // Scale size by camera zoom to match screen-space dimensions
+        float zoom = worldCamera->cam.zoom;
+        skewSize.x *= zoom;
+        skewSize.y *= zoom;
+    }
     static int debugRotationLogs = 0;
     if (debugRotationLogs < 8) {
         SPDLOG_INFO("material_card_overlay rotation rad={} deg={} hasTransform={}",

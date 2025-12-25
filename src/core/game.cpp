@@ -1534,7 +1534,8 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             for (auto e : textView)
             {
                 // check if the entity is active
-                if (!entity_gamestate_management::active_states_instance().is_active(globals::getRegistry().get<entity_gamestate_management::StateTag>(e)))
+                // PERF: Use view.get instead of registry.get (avoids extra lookup)
+                if (!entity_gamestate_management::active_states_instance().is_active(textView.get<entity_gamestate_management::StateTag>(e)))
                     continue; // skip inactive entities
                 TextSystem::Functions::updateText(e, delta);
             }

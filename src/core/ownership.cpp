@@ -136,12 +136,12 @@ void renderTamperWarningIfNeeded(int screenWidth, int screenHeight) {
     DrawText("Official sources:", boxX + padding, textY, fontSize, YELLOW);
 
     textY += fontSize + 10;
-    // Store strings in variables to avoid dangling pointers in TextFormat
-    std::string discordText = std::string("Discord: ") + std::string(DISCORD_LINK);
+    // PERF: Use static strings to avoid per-frame allocation
+    static const std::string discordText = std::string("Discord: ").append(DISCORD_LINK);
     DrawText(discordText.c_str(), boxX + padding, textY, fontSize, SKYBLUE);
 
     textY += fontSize + 5;
-    std::string itchText = std::string("Itch.io: ") + std::string(ITCH_LINK);
+    static const std::string itchText = std::string("Itch.io: ").append(ITCH_LINK);
     DrawText(itchText.c_str(), boxX + padding, textY, fontSize, SKYBLUE);
 
     textY += fontSize + 20;

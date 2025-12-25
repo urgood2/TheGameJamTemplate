@@ -18,8 +18,10 @@ namespace ui_indicators {
         auto& registry = globals::getRegistry();
 
         // update all indicators
-        for (auto entity : registry.view<NinePatchComponent>()) {
-            auto &nPatchComp = registry.get<NinePatchComponent>(entity);
+        // PERF: Use view.get instead of registry.get (avoids extra lookup)
+        auto view = registry.view<NinePatchComponent>();
+        for (auto entity : view) {
+            auto &nPatchComp = view.get<NinePatchComponent>(entity);
             nPatchComp.timeAlive += dt;
             if (nPatchComp.timeAlive > nPatchComp.timeToLive) {
                 entitiesToDestroy.push_back(entity);
@@ -44,8 +46,10 @@ namespace ui_indicators {
     auto draw() -> void {
         auto& registry = globals::getRegistry();
         // draw all indicators
-        for (auto entity : registry.view<NinePatchComponent>()) {
-            auto &nPatchComp = registry.get<NinePatchComponent>(entity);
+        // PERF: Use view.get instead of registry.get (avoids extra lookup)
+        auto view = registry.view<NinePatchComponent>();
+        for (auto entity : view) {
+            auto &nPatchComp = view.get<NinePatchComponent>(entity);
                 if (nPatchComp.isVisible) { // Only draw if the component is visible
                     // SPDLOG_DEBUG("Drawing NinePatchComponent entity {}", static_cast<int>(entity));
                     DrawTextureNPatch(nPatchComp.texture, nPatchComp.nPatchInfo, nPatchComp.destRect, {0, 0}, 0.0f, WHITE);

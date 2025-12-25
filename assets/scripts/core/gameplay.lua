@@ -35,6 +35,7 @@ local MessageQueueUI = require("ui.message_queue_ui")
 local CurrencyDisplay = require("ui.currency_display")
 local TagSynergyPanel = require("ui.tag_synergy_panel")
 local AvatarJokerStrip = require("ui.avatar_joker_strip")
+local TriggerStripUI = require("ui.trigger_strip_ui")
 local LevelUpScreen = require("ui.level_up_screen")
 local HoverRegistry = require("ui.hover_registry")
 local ContentDebugPanel = require("ui.content_debug_panel")
@@ -101,6 +102,12 @@ local function ensureMessageQueueHooks()
         -- Re-evaluate tag thresholds when deck changes (shop purchases, loot, etc.)
         if reevaluateDeckTags then
             reevaluateDeckTags()
+        end
+    end)
+
+    signal.register("trigger_activated", function(wandId, triggerType)
+        if TriggerStripUI and TriggerStripUI.onTriggerActivated then
+            TriggerStripUI.onTriggerActivated(wandId, triggerType)
         end
     end)
 end
@@ -4572,7 +4579,8 @@ function initPlanningPhase()
         layout = { marginX = 24, marginTop = 18, panelWidth = 360 }
     })
     AvatarJokerStrip.init({ margin = 20 })
-    
+    TriggerStripUI.init()
+
     MessageQueueUI.enqueueTest()
     
     -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
@@ -4649,6 +4657,11 @@ function initPlanningPhase()
             AvatarJokerStrip.syncFrom(playerTarget)
             AvatarJokerStrip.update(dt)
             AvatarJokerStrip.draw()
+        end
+
+        if TriggerStripUI and is_state_active and is_state_active(ACTION_STATE) then
+            TriggerStripUI.update(dt)
+            TriggerStripUI.draw()
         end
 
         if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
@@ -6966,6 +6979,12 @@ function startActionPhase()
         setPlanningPeekMode(false)
     end
 
+    -- Explicitly deactivate planning phase tooltip states
+    if deactivate_state then
+        deactivate_state(WAND_TOOLTIP_STATE)
+        deactivate_state(CARD_TOOLTIP_STATE)
+    end
+
     -- Clean up planning phase UI elements to prevent flicker
     CastExecutionGraphUI.clear()
 
@@ -6997,6 +7016,7 @@ function startActionPhase()
     loadWandsIntoExecutorFromBoards()
     CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
     CastBlockFlashUI.init()
+    TriggerStripUI.show()
 
     playStateTransition()
     apply_peaches_background_phase("action")
@@ -7062,6 +7082,7 @@ function startPlanningPhase()
 	    CastBlockFlashUI.clear()
 	    SubcastDebugUI.clear()
 	    SubcastDebugUI.init()
+	    TriggerStripUI.hide()
 
     if record_telemetry then
         local now = os.clock()
@@ -7079,6 +7100,7 @@ function startPlanningPhase()
 
     activate_state(PLANNING_STATE)
     activate_state("default_state")     -- just for defaults, keep them open
+    activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
 
     remove_layer_shader("sprites", "pixelate_image")
 
@@ -8721,6 +8743,7 @@ function initActionPhase()
     CastFeedUI.init()
     WandCooldownUI.init()
     SubcastDebugUI.init()
+    TriggerStripUI.show()
     
     -- add shader to backgorund layer
     add_layer_shader("background", "peaches_background")
@@ -9982,6 +10005,9 @@ function initPlanningUI()
                 go.state.collisionEnabled = true
                 go.state.clickEnabled = true
                 go.methods.onHover = function()
+                    -- Only show wand tooltips during planning phase
+                    if not is_state_active or not is_state_active(PLANNING_STATE) then return end
+
                     local wandDef = thisBoardSet and thisBoardSet.wandDef
                     if not wandDef then return end
 

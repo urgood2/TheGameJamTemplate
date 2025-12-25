@@ -185,6 +185,7 @@ function WandTriggers.setupTimerTrigger(registration, interval)
         if registration.enabled and registration.executor then
             log_debug("WandTriggers: Timer trigger fired for wand", wandId)
             registration.executor(wandId, "timer_trigger")
+            signal.emit("trigger_activated", wandId, registration.triggerType)
         end
     end, -1, false, nil, timerTag)  -- infinite repetitions
 
@@ -209,6 +210,7 @@ function WandTriggers.setupCooldownTrigger(registration)
         if registration.enabled and registration.executor then
             log_debug("WandTriggers: Cooldown trigger fired for wand", wandId)
             registration.executor(wandId, "cooldown_trigger")
+            signal.emit("trigger_activated", wandId, registration.triggerType)
         end
     end, -1, nil, timerTag)  -- infinite repetitions
 
@@ -335,6 +337,7 @@ function WandTriggers.processPendingEvents()
         local registration = WandTriggers.registrations[evt.wandId]
         if registration and registration.enabled and registration.executor then
             registration.executor(evt.wandId, evt.eventType, evt.eventData)
+            signal.emit("trigger_activated", evt.wandId, registration.triggerType)
         end
     end
 end
@@ -381,6 +384,7 @@ function WandTriggers.updateDistanceTriggers(playerEntity)
                 if registration and registration.enabled and registration.executor then
                     log_debug("WandTriggers: Distance trigger fired for wand", wandId, "distance", tracking.totalDistance)
                     registration.executor(wandId, "distance_trigger")
+                    signal.emit("trigger_activated", wandId, registration.triggerType)
 
                     -- Reset distance
                     tracking.totalDistance = 0

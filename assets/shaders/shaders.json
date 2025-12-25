@@ -799,5 +799,14 @@
             "vertex": "web/atlas_outline_vertex.vs",
             "fragment": "web/atlas_outline_fragment.fs"
         }
+    },
+    "cooldown_pie": {
+        "vertex": "cooldown_pie_vertex.vs",
+        "fragment": "cooldown_pie_fragment.fs",
+
+        "web": {
+            "vertex": "web/cooldown_pie_vertex.vs",
+            "fragment": "web/cooldown_pie_fragment.fs"
+        }
     }
 }

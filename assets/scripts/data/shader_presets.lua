@@ -83,4 +83,17 @@ ShaderPresets.legendary_card = {
     },
 }
 
+-- Trigger card with cooldown pie overlay
+ShaderPresets.trigger_card = {
+    id = "trigger_card",
+    passes = {"3d_skew_holo", "cooldown_pie"},
+    needs_atlas_uniforms = true,
+    uniforms = {
+        sheen_strength = 0.6,
+        cooldown_progress = 0.0,
+        dim_amount = 0.4,
+        flash_intensity = 0.0,
+    },
+}
+
 return ShaderPresets

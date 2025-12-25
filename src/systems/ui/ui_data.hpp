@@ -991,6 +991,10 @@ namespace ui
                    transform::Transform
                  >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>)) globalUIGroup;
 
+    // PERF: Cached view for UIBoxComponent queries (avoids repeated view creation in hot paths)
+    extern bool uiBoxViewInitialized;
+    extern decltype(std::declval<entt::registry&>().view<UIBoxComponent>()) globalUIBoxView;
+
     // Detect conflicting alignment flags (e.g., VERTICAL_CENTER | VERTICAL_BOTTOM)
     // Returns true if conflicts exist, optionally fills conflictDescription with details
     bool hasConflictingAlignmentFlags(int flags, std::string* conflictDescription = nullptr);

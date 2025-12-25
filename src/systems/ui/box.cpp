@@ -859,15 +859,19 @@ namespace ui
 
     std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, const std::string &id)
     {
-        auto view = registry.view<UIBoxComponent>();
-        for (auto entity : view)
+        // PERF: Use cached view instead of creating new one each call
+        if (!uiBoxViewInitialized) {
+            uiBoxViewInitialized = true;
+            globalUIBoxView = registry.view<UIBoxComponent>();
+        }
+        for (auto entity : globalUIBoxView)
         {
             // Check the UIBox entity itself
             if (auto result = SearchUIHierarchy(registry, entity, id); result)
                 return result;
 
             // Check the UIBox's root node and its children
-            const auto &uiBox = view.get<UIBoxComponent>(entity);
+            const auto &uiBox = globalUIBoxView.get<UIBoxComponent>(entity);
             if (uiBox.uiRoot.has_value())
             {
                 entt::entity uiRoot = uiBox.uiRoot.value();
@@ -2508,26 +2512,16 @@ namespace ui
         
         std::vector<ActiveScissor> scissorStack;
 
-        // TODO call for all ui boxes
-        auto view = registry.view<UIBoxComponent>();
-        for (auto ent : view)
-        {
-            // auto &stateTag = registry.get<entity_gamestate_management::StateTag>(ent);
-            // bool isActive = entity_gamestate_management::active_states_instance().is_active(stateTag);
-            // check if the entity is active
-            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
-                continue; // skip inactive entities
-            // TODO: probably sort these with layer order
-            buildUIBoxDrawList(registry, ent, drawOrder);
-        }
-
         // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
-        //    of the “always‐present” components every drawable element needs:
+        //    of the "always‐present" components every drawable element needs:
+        // PERF: Initialize both cached view and group together on first call
         if (uiGroupInitialized == false)
         {
             // This is a static group that will be reused for all draws.
             // It contains the five components we need to draw any UI element.
             uiGroupInitialized = true;
+            uiBoxViewInitialized = true;
+            globalUIBoxView = registry.view<UIBoxComponent>();
 
             globalUIGroup = globals::getRegistry().group<
                 UIElementComponent,
@@ -2536,6 +2530,16 @@ namespace ui
                 transform::GameObject,
                 transform::Transform
               >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
+        }
+
+        // PERF: Use cached view for UIBoxComponent iteration
+        for (auto ent : globalUIBoxView)
+        {
+            // check if the entity is active
+            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
+                continue; // skip inactive entities
+            // TODO: probably sort these with layer order
+            buildUIBoxDrawList(registry, ent, drawOrder);
         }
 
         entt::entity uiBoxEntity{entt::null};
@@ -2707,7 +2711,7 @@ namespace ui
         // 4) If you still want to draw bounding boxes for each UIBox itself:
         if (globals::getDrawDebugInfo())
         {
-            for (auto box : view)
+            for (auto box : globalUIBoxView)
             {
                 transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
             }
@@ -2804,24 +2808,16 @@ namespace ui
         std::vector<UIDrawListItem> drawOrder;
         drawOrder.reserve(200); // or an estimate of your total UI element count
 
-        // TODO call for all ui boxes
-        auto view = registry.view<UIBoxComponent>();
-        for (auto ent : view)
-        {
-            // check if the entity is active
-            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
-                continue; // skip inactive entities
-            // TODO: probably sort these with layer order
-            buildUIBoxDrawList(registry, ent, drawOrder);
-        }
-
         // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
-        //    of the “always‐present” components every drawable element needs:
+        //    of the "always‐present" components every drawable element needs:
+        // PERF: Initialize both cached view and group together on first call
         if (uiGroupInitialized == false)
         {
             // This is a static group that will be reused for all draws.
             // It contains the five components we need to draw any UI element.
             uiGroupInitialized = true;
+            uiBoxViewInitialized = true;
+            globalUIBoxView = registry.view<UIBoxComponent>();
 
             globalUIGroup = registry.group<
                     UIElementComponent,
@@ -2830,6 +2826,16 @@ namespace ui
                     transform::GameObject,
                     transform::Transform
                 >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>);
+        }
+
+        // PERF: Use cached view for UIBoxComponent iteration
+        for (auto ent : globalUIBoxView)
+        {
+            // check if the entity is active
+            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
+                continue; // skip inactive entities
+            // TODO: probably sort these with layer order
+            buildUIBoxDrawList(registry, ent, drawOrder);
         }
 
         entt::entity uiBoxEntity{entt::null};
@@ -2893,7 +2899,7 @@ namespace ui
         // 4) If you still want to draw bounding boxes for each UIBox itself:
         if (globals::getDrawDebugInfo())
         {
-            for (auto box : view)
+            for (auto box : globalUIBoxView)
             {
                 transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
             }

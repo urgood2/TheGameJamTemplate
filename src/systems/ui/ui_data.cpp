@@ -14,6 +14,10 @@ namespace ui {
               >(entt::get<>, entt::exclude<entity_gamestate_management::InactiveTag>) )
         globalUIGroup{};
 
+    // PERF: Cached UIBoxComponent view for hot-path queries
+    bool uiBoxViewInitialized = false;
+    decltype(std::declval<entt::registry&>().view<UIBoxComponent>()) globalUIBoxView{};
+
     bool hasConflictingAlignmentFlags(int flags, std::string* conflictDescription) {
         using Align = transform::InheritedProperties::Alignment;
 

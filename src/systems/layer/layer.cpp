@@ -3005,7 +3005,8 @@ void RemoveLayerFromCanvas(std::shared_ptr<Layer> layer) {
 }
 
 void RenderAllLayersToCurrentRenderTarget(Camera2D *camera) {
-  SortLayers(); // FIXME: not sorting, feature relaly isn't used
+  // PERF: Removed unconditional SortLayers() - called every frame but "feature isn't used"
+  // Sort is still performed in UpdateLayerZIndex() when z-index actually changes
 
   using namespace snowhouse;
   AssertThat(layers.size(), IsGreaterThan(0));
@@ -3148,14 +3149,16 @@ void DrawCanvasOntoOtherLayerWithShader(
     const std::shared_ptr<Layer> &dstLayer, const std::string &dstCanvasName,
     float x, float y, float rotation, float scaleX, float scaleY,
     const Color &tint, std::string shaderName) {
-  // Check canvas validity
-  if (srcLayer->canvases.find(srcCanvasName) == srcLayer->canvases.end())
+  // PERF: Use find result directly instead of find + at (was double lookup)
+  auto srcIt = srcLayer->canvases.find(srcCanvasName);
+  if (srcIt == srcLayer->canvases.end())
     return;
-  if (dstLayer->canvases.find(dstCanvasName) == dstLayer->canvases.end())
+  auto dstIt = dstLayer->canvases.find(dstCanvasName);
+  if (dstIt == dstLayer->canvases.end())
     return;
 
-  const RenderTexture2D &srcCanvas = srcLayer->canvases.at(srcCanvasName);
-  RenderTexture2D &dstCanvas = dstLayer->canvases.at(dstCanvasName);
+  const RenderTexture2D &srcCanvas = srcIt->second;
+  RenderTexture2D &dstCanvas = dstIt->second;
 
   BeginTextureMode(dstCanvas);
 
@@ -3191,14 +3194,16 @@ void DrawCanvasOntoOtherLayer(const std::shared_ptr<Layer> &srcLayer,
                               const std::string &dstCanvasName, float x,
                               float y, float rotation, float scaleX,
                               float scaleY, const Color &tint) {
-  // Check if both layers and canvases exist
-  if (srcLayer->canvases.find(srcCanvasName) == srcLayer->canvases.end())
+  // PERF: Use find result directly instead of find + at (was double lookup)
+  auto srcIt = srcLayer->canvases.find(srcCanvasName);
+  if (srcIt == srcLayer->canvases.end())
     return;
-  if (dstLayer->canvases.find(dstCanvasName) == dstLayer->canvases.end())
+  auto dstIt = dstLayer->canvases.find(dstCanvasName);
+  if (dstIt == dstLayer->canvases.end())
     return;
 
-  RenderTexture2D src = srcLayer->canvases.at(srcCanvasName);
-  RenderTexture2D &dst = dstLayer->canvases.at(dstCanvasName);
+  RenderTexture2D src = srcIt->second;
+  RenderTexture2D &dst = dstIt->second;
 
   BeginTextureMode(dst);
 
@@ -3295,10 +3300,12 @@ void DrawLayerCommandsToSpecificCanvasApplyAllShaders(
 void DrawLayerCommandsToSpecificCanvasOptimizedVersion(
     std::shared_ptr<Layer> layer, const std::string &canvasName,
     Camera2D *camera) {
-  if (layer->canvases.find(canvasName) == layer->canvases.end())
+  // PERF: Use find result directly instead of find + operator[] (was double lookup)
+  auto it = layer->canvases.find(canvasName);
+  if (it == layer->canvases.end())
     return;
 
-  render_stack_switch_internal::Push(layer->canvases[canvasName]);
+  render_stack_switch_internal::Push(it->second);
 
   ClearBackground(layer->backgroundColor);
 
@@ -3365,13 +3372,14 @@ void DrawLayerCommandsToSpecificCanvasOptimizedVersion(
 void DrawLayerCommandsToSpecificCanvas(std::shared_ptr<Layer> layer,
                                        const std::string &canvasName,
                                        Camera2D *camera) {
-  if (layer->canvases.find(canvasName) == layer->canvases.end())
+  // PERF: Use find result directly instead of find + operator[] (was double lookup)
+  auto it = layer->canvases.find(canvasName);
+  if (it == layer->canvases.end())
     return;
 
   // SPDLOG_DEBUG("Drawing commands to canvas: {}", canvasName);
 
-  // BeginTextureMode(layer->canvases[canvasName]);
-  render_stack_switch_internal::Push(layer->canvases[canvasName]);
+  render_stack_switch_internal::Push(it->second);
 
   // Clear the canvas with the background color
   ClearBackground(layer->backgroundColor);
@@ -4351,7 +4359,9 @@ void DrawCanvasToCurrentRenderTargetWithTransform(
 void DrawCanvasToCurrentRenderTargetWithDestRect(
     const std::shared_ptr<Layer> layer, const std::string &canvasName,
     const Rectangle &destRect, const Color &color, std::string shaderName) {
-  if (layer->canvases.find(canvasName) == layer->canvases.end())
+  // PERF: Use find result directly instead of find + at (was double lookup)
+  auto it = layer->canvases.find(canvasName);
+  if (it == layer->canvases.end())
     return;
 
   Shader shader = shaders::getShader(shaderName);
@@ -4366,10 +4376,11 @@ void DrawCanvasToCurrentRenderTargetWithDestRect(
   }
 
   // Draw the texture to the specified destination rectangle
+  const auto& canvas = it->second;
   DrawTexturePro(
-      layer->canvases.at(canvasName).texture,
-      {0, 0, (float)layer->canvases.at(canvasName).texture.width,
-       (float)-layer->canvases.at(canvasName).texture.height},
+      canvas.texture,
+      {0, 0, (float)canvas.texture.width,
+       (float)-canvas.texture.height},
       destRect, // Destination rectangle
       {0, 0},   // Origin for rotation (set to top-left here, can be adjusted)
       0.0f,     // No rotation

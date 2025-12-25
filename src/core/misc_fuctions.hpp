@@ -8,6 +8,8 @@
 #include "systems/ui/editor/pack_editor.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
+#include "systems/save/save_file_io.hpp"
+#include "systems/ai/ai_system.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -167,6 +169,202 @@ namespace game {
                         packEditorState.isOpen = true;
                     }
                     ImGui::Text("Use this tool to create and edit UI asset packs");
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Save System")) {
+                    // Platform info
+#if defined(__EMSCRIPTEN__)
+                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Platform: Web (Emscripten)");
+                    ImGui::Text("Storage: IndexedDB via IDBFS");
+#else
+                    ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Platform: Desktop");
+                    ImGui::Text("Storage: Local filesystem");
+#endif
+                    ImGui::Separator();
+
+                    // Save file status
+                    static const std::string savePath = "saves/profile.json";
+                    static const std::string backupPath = "saves/profile.json.bak";
+                    bool saveExists = save_io::file_exists(savePath);
+                    bool backupExists = save_io::file_exists(backupPath);
+
+                    ImGui::Text("Save Path: %s", savePath.c_str());
+                    if (saveExists) {
+                        ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "  Status: EXISTS");
+                        // Show file contents preview
+                        static std::string lastContent;
+                        static bool showContent = false;
+                        if (ImGui::Button("Preview Save File")) {
+                            auto content = save_io::load_file(savePath);
+                            lastContent = content.value_or("<failed to load>");
+                            showContent = true;
+                        }
+                        if (showContent && !lastContent.empty()) {
+                            ImGui::SameLine();
+                            if (ImGui::Button("Hide")) {
+                                showContent = false;
+                            }
+                            ImGui::BeginChild("SavePreview", ImVec2(0, 150), true);
+                            ImGui::TextWrapped("%s", lastContent.c_str());
+                            ImGui::EndChild();
+                        }
+                    } else {
+                        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "  Status: NO SAVE FILE");
+                    }
+
+                    ImGui::Text("Backup: %s", backupPath.c_str());
+                    if (backupExists) {
+                        ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "  Status: EXISTS");
+                    } else {
+                        ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "  Status: No backup");
+                    }
+
+                    ImGui::Separator();
+                    ImGui::Text("Actions:");
+
+                    // Call SaveManager.save() via Lua
+                    if (ImGui::Button("Save Now")) {
+                        try {
+                            sol::table saveManager = ai_system::masterStateLua["SaveManager"];
+                            if (saveManager.valid()) {
+                                sol::function saveFn = saveManager["save"];
+                                if (saveFn.valid()) {
+                                    saveFn();
+                                    SPDLOG_INFO("[DebugUI] Triggered SaveManager.save()");
+                                }
+                            }
+                        } catch (const std::exception& e) {
+                            SPDLOG_WARN("[DebugUI] Failed to call SaveManager.save(): {}", e.what());
+                        }
+                    }
+
+                    ImGui::SameLine();
+
+                    // Call SaveManager.load() via Lua
+                    if (ImGui::Button("Reload Save")) {
+                        try {
+                            sol::table saveManager = ai_system::masterStateLua["SaveManager"];
+                            if (saveManager.valid()) {
+                                sol::function loadFn = saveManager["load"];
+                                if (loadFn.valid()) {
+                                    loadFn();
+                                    SPDLOG_INFO("[DebugUI] Triggered SaveManager.load()");
+                                }
+                            }
+                        } catch (const std::exception& e) {
+                            SPDLOG_WARN("[DebugUI] Failed to call SaveManager.load(): {}", e.what());
+                        }
+                    }
+
+                    ImGui::SameLine();
+
+                    // Delete save with confirmation
+                    static bool confirmDelete = false;
+                    if (!confirmDelete) {
+                        if (ImGui::Button("Delete Save")) {
+                            confirmDelete = true;
+                        }
+                    } else {
+                        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Confirm delete?");
+                        ImGui::SameLine();
+                        if (ImGui::Button("Yes, Delete")) {
+                            try {
+                                sol::table saveManager = ai_system::masterStateLua["SaveManager"];
+                                if (saveManager.valid()) {
+                                    sol::function deleteFn = saveManager["delete_save"];
+                                    if (deleteFn.valid()) {
+                                        deleteFn();
+                                        SPDLOG_INFO("[DebugUI] Triggered SaveManager.delete_save()");
+                                    }
+                                }
+                            } catch (const std::exception& e) {
+                                SPDLOG_WARN("[DebugUI] Failed to call SaveManager.delete_save(): {}", e.what());
+                            }
+                            confirmDelete = false;
+                        }
+                        ImGui::SameLine();
+                        if (ImGui::Button("Cancel")) {
+                            confirmDelete = false;
+                        }
+                    }
+
+                    ImGui::Separator();
+
+                    // Show registered collectors (from Lua)
+                    ImGui::Text("Registered Collectors:");
+                    try {
+                        sol::table saveManager = ai_system::masterStateLua["SaveManager"];
+                        if (saveManager.valid()) {
+                            sol::table collectors = saveManager["collectors"];
+                            if (collectors.valid()) {
+                                int count = 0;
+                                for (auto& [key, value] : collectors) {
+                                    ImGui::BulletText("%s", key.as<std::string>().c_str());
+                                    count++;
+                                }
+                                if (count == 0) {
+                                    ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "  (none registered)");
+                                }
+                            }
+                        }
+                    } catch (const std::exception& e) {
+                        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Error: %s", e.what());
+                    }
+
+                    ImGui::Separator();
+
+                    // Live Statistics Editor
+                    ImGui::Text("Statistics (Live Edit):");
+                    try {
+                        sol::table stats = ai_system::masterStateLua["Statistics"];
+                        if (stats.valid()) {
+                            static int runs = 0, wave = 0, kills = 0, gold = 0;
+                            static bool initialized = false;
+
+                            // Read current values
+                            if (!initialized || ImGui::Button("Refresh")) {
+                                runs = stats.get_or("runs_completed", 0);
+                                wave = stats.get_or("highest_wave", 0);
+                                kills = stats.get_or("total_kills", 0);
+                                gold = stats.get_or("total_gold_earned", 0);
+                                initialized = true;
+                            }
+
+                            ImGui::InputInt("Runs Completed", &runs);
+                            ImGui::InputInt("Highest Wave", &wave);
+                            ImGui::InputInt("Total Kills", &kills);
+                            ImGui::InputInt("Total Gold", &gold);
+
+                            if (ImGui::Button("Apply Changes")) {
+                                stats["runs_completed"] = runs;
+                                stats["highest_wave"] = wave;
+                                stats["total_kills"] = kills;
+                                stats["total_gold_earned"] = gold;
+                                SPDLOG_INFO("[DebugUI] Applied Statistics changes");
+                            }
+                            ImGui::SameLine();
+                            if (ImGui::Button("Apply & Save")) {
+                                stats["runs_completed"] = runs;
+                                stats["highest_wave"] = wave;
+                                stats["total_kills"] = kills;
+                                stats["total_gold_earned"] = gold;
+
+                                sol::table saveManager = ai_system::masterStateLua["SaveManager"];
+                                if (saveManager.valid()) {
+                                    sol::function saveFn = saveManager["save"];
+                                    if (saveFn.valid()) {
+                                        saveFn();
+                                        SPDLOG_INFO("[DebugUI] Applied Statistics and triggered save");
+                                    }
+                                }
+                            }
+                        } else {
+                            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Statistics module not loaded");
+                        }
+                    } catch (const std::exception& e) {
+                        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Error: %s", e.what());
+                    }
+
                     ImGui::EndTabItem();
                 }
                 ImGui::EndTabBar();

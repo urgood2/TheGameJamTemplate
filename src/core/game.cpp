@@ -53,6 +53,7 @@
 #include "../systems/localization/localization.hpp"
 #include "../systems/collision/broad_phase.hpp"
 #include "../systems/collision/Quadtree.h"
+#include "../systems/save/save_file_io.hpp"
 #include "../systems/scripting/scripting_functions.hpp"
 #include "../systems/scripting/scripting_system.hpp"
 #include "core/events.hpp"
@@ -1377,11 +1378,13 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
     auto update(float delta) -> void
     {
-        
-        
+
+        // Process pending save callbacks on main thread
+        save_io::process_pending_callbacks();
+
         // physicsWorld->Update(delta);
         // _tileCache->ensureRect(cpBBNew(0, 0, globals::VIRTUAL_WIDTH, globals::VIRTUAL_HEIGHT));
-        
+
         camera_manager::UpdateAll(delta);
         
         auto worldCamera = camera_manager::Get("world_camera");

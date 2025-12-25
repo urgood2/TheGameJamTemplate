@@ -2610,3 +2610,4 @@ build_attempt.log
 .worktrees/
 docs/lua-cookbook/output/*.pdf
 build-tracy/
+saves/

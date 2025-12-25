@@ -22,7 +22,7 @@ local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
-local SaveManager = require("core.save_manager")
+SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 -- Represents game loop main module
 main = main or {}
 
@@ -544,7 +544,7 @@ function main.init()
     SaveManager.init()
 
     -- Load modules that register collectors
-    require("core.statistics")
+    Statistics = require("core.statistics") -- Global for C++ debug UI access
 
     math.randomseed(12345)
     if PROFILE_ENABLED then

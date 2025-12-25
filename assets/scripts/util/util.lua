@@ -77,10 +77,33 @@ end
 --- @param warn_on_nil boolean? If true, logs a warning when script is not found (default: false)
 --- @return table|nil The script table or nil
 function safe_script_get(eid, warn_on_nil)
-    local script = getScriptTableFromEntityID(eid)
-    if not script and warn_on_nil then
-        log_warn(("safe_script_get: Script table missing for entity %s"):format(tostring(eid)))
+    -- Check for nil entity
+    if not eid then
+        if warn_on_nil then
+            log_warn("safe_script_get: nil entity provided")
+        end
+        return nil
     end
+
+    -- Validate entity exists in registry
+    if registry and registry.valid then
+        if not registry:valid(eid) then
+            if warn_on_nil then
+                log_warn(("safe_script_get: Invalid entity %s"):format(tostring(eid)))
+            end
+            return nil
+        end
+    end
+
+    -- Try to get script table with pcall for extra safety
+    local ok, script = pcall(getScriptTableFromEntityID, eid)
+    if not ok or not script then
+        if warn_on_nil then
+            log_warn(("safe_script_get: Script table missing for entity %s"):format(tostring(eid)))
+        end
+        return nil
+    end
+
     return script
 end
 
@@ -90,11 +113,18 @@ end
 --- @param default any Default value if script or field is nil
 --- @return any The field value or default
 function script_field(eid, field, default)
-    local script = getScriptTableFromEntityID(eid)
+    local script = safe_script_get(eid)
     if not script then return default end
     local value = script[field]
     if value == nil then return default end
     return value
+end
+
+--- Check if an entity has a valid script table.
+--- @param eid number Entity ID
+--- @return boolean True if entity has a script table
+function has_script(eid)
+    return safe_script_get(eid) ~= nil
 end
 
 --- Check if an entity is valid and active.
@@ -4076,6 +4106,7 @@ _G.ensure_entity = ensure_entity
 _G.ensure_scripted_entity = ensure_scripted_entity
 _G.safe_script_get = safe_script_get
 _G.script_field = script_field
+_G.has_script = has_script
 
 -- Re-export getScriptTableFromEntityID (already global, but ensure it)
 if not _G.getScriptTableFromEntityID then

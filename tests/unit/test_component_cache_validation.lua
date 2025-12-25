@@ -39,6 +39,15 @@ function test_validation.test_ensure_entity_returns_false_for_invalid()
     return true
 end
 
+function test_validation.test_safe_get_returns_nil_and_false_for_invalid()
+    local component_cache = require("core.component_cache")
+    local comp, valid = component_cache.safe_get(999999999, _G.Transform)
+    assert(comp == nil, "Should return nil component for invalid entity")
+    assert(valid == false, "Should return false validity flag")
+    print("✓ safe_get returns nil,false for invalid entity")
+    return true
+end
+
 function test_validation.run_all()
     print("\n=== Component Cache Validation Tests ===\n")
     local tests = {
@@ -46,6 +55,7 @@ function test_validation.run_all()
         test_validation.test_get_returns_nil_for_invalid_entity,
         test_validation.test_ensure_entity_returns_false_for_nil,
         test_validation.test_ensure_entity_returns_false_for_invalid,
+        test_validation.test_safe_get_returns_nil_and_false_for_invalid,
     }
     local passed, failed = 0, 0
     for _, test_func in ipairs(tests) do

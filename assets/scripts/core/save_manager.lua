@@ -7,6 +7,12 @@
 local json = require("external.json")
 local migrations = require("core.save_migrations")
 
+-- Safe logging: use print() which always works
+local function log_debug(msg) print("[SaveManager] " .. msg) end
+local function log_info(msg)  print("[SaveManager] " .. msg) end
+local function log_warn(msg)  print("[SaveManager] WARN: " .. msg) end
+local function log_error(msg) print("[SaveManager] ERROR: " .. msg) end
+
 local SaveManager = {
     SAVE_VERSION = 1,
     SAVE_PATH = "saves/profile.json",
@@ -30,7 +36,7 @@ function SaveManager.register(key, collector)
         error("SaveManager.register: collector must have 'collect' and 'distribute' functions")
     end
     SaveManager.collectors[key] = collector
-    SPDLOG_DEBUG(string.format("SaveManager: registered collector '%s'", key))
+    log_debug(string.format("registered collector '%s'", key))
 end
 
 --- Collect all data from registered collectors
@@ -46,7 +52,7 @@ function SaveManager.collect_all()
         if success then
             data[key] = result
         else
-            SPDLOG_WARN(string.format("SaveManager: collector '%s' failed: %s", key, tostring(result)))
+            log_warn(string.format("collector '%s' failed: %s", key, tostring(result)))
         end
     end
 
@@ -60,7 +66,7 @@ function SaveManager.distribute_all(data)
         if data[key] then
             local success, err = pcall(collector.distribute, data[key])
             if not success then
-                SPDLOG_WARN(string.format("SaveManager: distributor '%s' failed: %s", key, tostring(err)))
+                log_warn(string.format(" distributor '%s' failed: %s", key, tostring(err)))
             end
         end
     end
@@ -78,13 +84,13 @@ local function migrate(data)
         local migration = migrations[next_version]
 
         if migration then
-            SPDLOG_INFO(string.format("SaveManager: migrating v%d → v%d", save_version, next_version))
+            log_info(string.format(" migrating v%d → v%d", save_version, next_version))
             local success, result = pcall(migration, data)
             if success then
                 data = result
                 data.version = next_version
             else
-                SPDLOG_ERROR(string.format("SaveManager: migration to v%d failed: %s", next_version, tostring(result)))
+                log_error(string.format(" migration to v%d failed: %s", next_version, tostring(result)))
                 break
             end
         end
@@ -103,7 +109,7 @@ function SaveManager.save(callback)
     if SaveManager.save_in_progress then
         -- Queue this save for later
         SaveManager.pending_save = { data = data, callback = callback }
-        SPDLOG_DEBUG("SaveManager: save queued (another in progress)")
+        log_debug(" save queued (another in progress)")
         return
     end
 
@@ -119,9 +125,9 @@ function SaveManager.save(callback)
 
         if success then
             SaveManager.cache = data
-            SPDLOG_DEBUG("SaveManager: save complete")
+            log_debug(" save complete")
         else
-            SPDLOG_WARN("SaveManager: save failed")
+            log_warn(" save failed")
         end
 
         -- Process queued save if any
@@ -142,9 +148,9 @@ function SaveManager.save(callback)
 
                 if success then
                     SaveManager.cache = queued.data
-                    SPDLOG_DEBUG("SaveManager: queued save complete")
+                    log_debug(" queued save complete")
                 else
-                    SPDLOG_WARN("SaveManager: queued save failed")
+                    log_warn(" queued save failed")
                 end
 
                 -- Process next queued save if any
@@ -180,10 +186,10 @@ function SaveManager.load()
             end
 
             SaveManager.distribute_all(data)
-            SPDLOG_INFO(string.format("SaveManager: loaded save (v%d)", data.version or 1))
+            log_info(string.format(" loaded save (v%d)", data.version or 1))
             return
         end
-        SPDLOG_WARN("SaveManager: main save corrupted, trying backup")
+        log_warn(" main save corrupted, trying backup")
     end
 
     -- Try backup
@@ -194,14 +200,14 @@ function SaveManager.load()
             data = migrate(data)
             SaveManager.distribute_all(data)
             SaveManager.save() -- Repair main save
-            SPDLOG_INFO("SaveManager: restored from backup")
+            log_info(" restored from backup")
             return
         end
-        SPDLOG_WARN("SaveManager: backup also corrupted")
+        log_warn(" backup also corrupted")
     end
 
     -- Fresh start
-    SPDLOG_INFO("SaveManager: no valid save found, starting fresh")
+    log_info(" no valid save found, starting fresh")
     SaveManager.create_new()
 end
 
@@ -225,7 +231,7 @@ function SaveManager.delete_save()
     save_io.delete_file(SaveManager.SAVE_PATH)
     save_io.delete_file(SaveManager.BACKUP_PATH)
     SaveManager.cache = {}
-    SPDLOG_INFO("SaveManager: save deleted")
+    log_info(" save deleted")
 end
 
 --- Get cached data for a key without loading
@@ -237,7 +243,7 @@ end
 
 --- Initialize the save system (call early in startup)
 function SaveManager.init()
-    SPDLOG_INFO("SaveManager: initializing")
+    log_info(" initializing")
     SaveManager.load()
 end
 

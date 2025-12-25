@@ -305,6 +305,33 @@ Require design changes or touch many systems.
 
 ---
 
+## Follow-Up Tasks (from Code Review)
+
+### HIGH: Audit Push() call sites
+The `[[nodiscard]]` attribute on `render_stack_switch_internal::Push()` creates compiler warnings,
+but ~15 call sites in `layer.cpp` don't explicitly handle the return value.
+
+**Action:** Add return value checking to all Push() calls:
+```cpp
+if (!render_stack_switch_internal::Push(texture, "context")) {
+    SPDLOG_ERROR("Failed to push render target");
+    return;
+}
+```
+
+### MEDIUM: Integrate emit_combat_event()
+The `emit_combat_event()` helper in combat_system.lua exists but ~20 bus:emit calls don't use it.
+
+**Action:** Replace dual-emission patterns:
+```lua
+-- Before:
+ctx.bus:emit('OnHitResolved', data)
+-- After (if event should also emit to signal system):
+emit_combat_event(ctx, 'OnHitResolved', data, 'combat_hit')
+```
+
+---
+
 ## Next Actions
 
 1. Create helper script to find global usages

@@ -2611,3 +2611,6 @@ build_attempt.log
 docs/lua-cookbook/output/*.pdf
 build-tracy/
 saves/
+
+# Audio processing marker file
+assets/sounds/.audio_processed.json

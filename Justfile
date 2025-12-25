@@ -597,3 +597,15 @@ watch-sounds:
 # Scan for new sounds once (no watching)
 scan-sounds:
 	python3 scripts/watch_sounds.py --once
+
+# Process audio files (normalize, convert to ogg, update sounds.json)
+audio-process *args:
+	python3 scripts/process_audio.py {{args}}
+
+# Preview audio processing changes without modifying files
+audio-process-dry:
+	python3 scripts/process_audio.py --dry-run
+
+# Force reprocess all audio files
+audio-process-force:
+	python3 scripts/process_audio.py --force

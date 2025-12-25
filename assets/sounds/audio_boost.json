@@ -1,0 +1,5 @@
+{
+    "_comment": "Per-file volume boost in dB (applied before normalization). Target RMS in dBFS.",
+    "boost_db": {},
+    "target_rms_db": -18
+}

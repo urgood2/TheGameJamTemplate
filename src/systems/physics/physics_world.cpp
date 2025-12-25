@@ -299,8 +299,7 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
 
   entt::entity entityA =
       static_cast<entt::entity>(reinterpret_cast<uintptr_t>(dataA));
-  entt::entity entityB =
-      static_cast<entt::entity>(reinterpret_cast<uintptr_t>(dataB));
+  // PERF: entityB no longer needed after removing per-entity collision storage
 
   const auto filterA = cpShapeGetFilter(shapeA);
   const auto filterB = cpShapeGetFilter(shapeB);
@@ -327,12 +326,12 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
 
   if (isTriggerA || isTriggerB) {
     if (isTriggerA && allows(tagA, tagB)) {
-      registry->get<ColliderComponent>(entityA).triggerEnter.push_back(dataB);
+      // PERF: Removed per-entity triggerEnter.push_back() - never read
       triggerEnter[key].push_back(dataB);
       triggerActive[key].insert(dataB);  // PERF: O(1) set insert
     }
     if (isTriggerB && allows(tagB, tagA)) {
-      registry->get<ColliderComponent>(entityB).triggerEnter.push_back(dataA);
+      // PERF: Removed per-entity triggerEnter.push_back() - never read
       triggerEnter[key].push_back(dataA);
       triggerActive[key].insert(dataA);  // PERF: O(1) set insert
     }
@@ -370,12 +369,7 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
   globals::recordMouseClick({event.x1, event.y1}, -1,
                             entityA); // track for diagnostics/selection
 
-  if (registry->all_of<ColliderComponent>(entityA))
-    registry->get<ColliderComponent>(entityA).collisionEnter.push_back(event);
-  event.objectA = dataB;
-  event.objectB = dataA;
-  if (registry->all_of<ColliderComponent>(entityB))
-    registry->get<ColliderComponent>(entityB).collisionEnter.push_back(event);
+  // PERF: Removed per-entity collisionEnter.push_back() calls - vectors never read
 }
 
 void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
@@ -391,10 +385,7 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
   if (!dataA || !dataB)
     return;
 
-  entt::entity entityA =
-      static_cast<entt::entity>(reinterpret_cast<uintptr_t>(dataA));
-  entt::entity entityB =
-      static_cast<entt::entity>(reinterpret_cast<uintptr_t>(dataB));
+  // PERF: entityA/entityB no longer needed after removing per-entity collision storage
 
   const auto filterA = cpShapeGetFilter(shapeA);
   const auto filterB = cpShapeGetFilter(shapeB);
@@ -408,25 +399,7 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
   std::string key = MakeKey(k1, k2);
 
   if (isTriggerA || isTriggerB) {
-    if (registry->all_of<ColliderComponent>(entityA)) {
-      auto &colliderA = registry->get<ColliderComponent>(entityA);
-      colliderA.triggerExit.push_back(dataB);
-
-      colliderA.triggerActive.erase(std::remove(colliderA.triggerActive.begin(),
-                                                colliderA.triggerActive.end(),
-                                                dataB),
-                                    colliderA.triggerActive.end());
-    }
-
-    if (registry->all_of<ColliderComponent>(entityB)) {
-      auto &colliderB = registry->get<ColliderComponent>(entityB);
-      colliderB.triggerExit.push_back(dataA);
-
-      colliderB.triggerActive.erase(std::remove(colliderB.triggerActive.begin(),
-                                                colliderB.triggerActive.end(),
-                                                dataA),
-                                    colliderB.triggerActive.end());
-    }
+    // PERF: Removed per-entity triggerExit.push_back() and O(n) triggerActive.erase() - never read
 
     triggerExit[key].push_back(dataA);
 
@@ -448,30 +421,7 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
   SPDLOG_TRACE("Active prune: key='{}' collisions now={}", key,
                (int)collisionActive[key].size());
 
-  if (registry->all_of<ColliderComponent>(entityA)) {
-    auto &colliderA = registry->get<ColliderComponent>(entityA);
-
-    colliderA.collisionExit.push_back(event);
-    colliderA.collisionActive.erase(
-        std::remove_if(
-            colliderA.collisionActive.begin(), colliderA.collisionActive.end(),
-            [dataB](const CollisionEvent &e) { return e.objectB == dataB; }),
-        colliderA.collisionActive.end());
-  }
-
-  if (registry->all_of<ColliderComponent>(entityB)) {
-    auto &colliderB = registry->get<ColliderComponent>(entityB);
-
-    event.objectA = dataB;
-    event.objectB = dataA;
-
-    colliderB.collisionExit.push_back(event);
-    colliderB.collisionActive.erase(
-        std::remove_if(
-            colliderB.collisionActive.begin(), colliderB.collisionActive.end(),
-            [dataA](const CollisionEvent &e) { return e.objectB == dataA; }),
-        colliderB.collisionActive.end());
-  }
+  // PERF: Removed per-entity collisionExit.push_back() and O(n) collisionActive.erase() - never read
 
   // Defer event publishing to PostUpdate
   // globals::getEventBus().publish(

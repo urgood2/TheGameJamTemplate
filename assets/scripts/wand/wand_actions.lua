@@ -512,6 +512,11 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
     -- Apply on-hit effects from modifiers
     if not target or target == entt_null then return end
 
+    -- Dependencies for mark damage application
+    local signal = require("external.hump.signal")
+    local ActionAPI = require("combat.action_api")
+    local ctx = rawget(_G, "combat_context")
+
     -- Collision-triggered sub-cast
     if hitData and hitData.subCast and hitData.subCast.collision then
         local WandExecutor = require("wand.wand_executor")
@@ -612,9 +617,16 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
 
     -- Apply bonus damage from detonation
     if detonation.bonus_damage > 0 then
-        -- Add to the damage or deal separately
-        local signal = require("external.hump.signal")
-        signal.emit("mark_bonus_damage", target, detonation.bonus_damage)
+        local targetScript = getScriptTableFromEntityID(target)
+        local targetActor = targetScript and targetScript.combatTable
+        if targetActor and ctx then
+            local ownerScript = getScriptTableFromEntityID(hitData.owner)
+            local ownerActor = ownerScript and ownerScript.combatTable
+            if ownerActor then
+                ActionAPI.damage(ctx, ownerActor, targetActor, detonation.bonus_damage, damage_type)
+                signal.emit("mark_bonus_damage", target, detonation.bonus_damage)
+            end
+        end
     end
 
     -- Process detonation effects
@@ -635,9 +647,24 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
                 local sx = sourceTransform.actualX + (sourceTransform.actualW or 0) * 0.5
                 local sy = sourceTransform.actualY + (sourceTransform.actualH or 0) * 0.5
                 local marked = MarkSystem.findMarkedInRange(sx, sy, effect.range, effect.mark_id, { [target] = true })
+
+                -- Get owner actor once for all chain targets
+                local ownerScript = getScriptTableFromEntityID(hitData.owner)
+                local ownerActor = ownerScript and ownerScript.combatTable
+
                 for _, m in ipairs(marked) do
                     -- Chain detonation to other marked enemies
-                    MarkSystem.checkDetonation(m.entity, damage_type, hitData.damage * 0.5, hitData.owner)
+                    local chainDet = MarkSystem.checkDetonation(m.entity, damage_type, hitData.damage * 0.5, hitData.owner)
+
+                    -- Apply chain detonation damage
+                    if chainDet.bonus_damage > 0 and ctx and ownerActor then
+                        local chainScript = getScriptTableFromEntityID(m.entity)
+                        local chainActor = chainScript and chainScript.combatTable
+                        if chainActor then
+                            ActionAPI.damage(ctx, ownerActor, chainActor, chainDet.bonus_damage, damage_type)
+                            signal.emit("mark_bonus_damage", m.entity, chainDet.bonus_damage)
+                        end
+                    end
                 end
             end
         end

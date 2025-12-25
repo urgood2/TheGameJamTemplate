@@ -2,6 +2,7 @@
 #include "nlohmann/json.hpp"
 
 #include "../../util/utilities.hpp"
+#include "util/common_headers.hpp"
 #include "util/error_handling.hpp"
 
 #include "sol/sol.hpp"
@@ -680,6 +681,7 @@ void StopAllMusic() {
 
     // Main update: advance streams, handle fades and completion
     void Update(float dt) {
+        ZONE_SCOPED("sound_system::Update");
         static float musicUpdateAccum = 0.0f;
         const float musicUpdateRate = 1.0f / 120.0f; // update 120 Hz no matter what
 

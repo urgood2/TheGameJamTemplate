@@ -204,6 +204,7 @@ void CapturePostPhysicsPositions(entt::registry &R) {
 }
 
 void PhysicsWorld::Update(float deltaTime) {
+  ZONE_SCOPED("PhysicsWorld::Update");
   // Update interpolation cache before stepping
   auto &registryRef = *registry;
   registryRef.view<physics::ColliderComponent>().each([&](auto e, auto &CC) {
@@ -230,6 +231,7 @@ void PhysicsWorld::Update(float deltaTime) {
 }
 
 void PhysicsWorld::PostUpdate() {
+  ZONE_SCOPED("PhysicsWorld::PostUpdate");
   // Process deferred collision events
   for (const auto &[key, eventList] : collisionEnter) {
     for (const auto &event : eventList) {

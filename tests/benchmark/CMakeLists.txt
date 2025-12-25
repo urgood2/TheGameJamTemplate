@@ -6,8 +6,9 @@ set(BENCHMARK_SOURCES
     benchmark_lua_boundary.cpp
     benchmark_rendering.cpp
     benchmark_coroutines.cpp
-    # benchmark_physics.cpp - Task 1.5
-    # benchmark_layer.cpp - Task 1.6
+    benchmark_ecs.cpp
+    benchmark_physics.cpp
+    benchmark_layer.cpp
 )
 
 # Only create executable if we have benchmark sources
@@ -45,6 +46,7 @@ if(BENCHMARK_SOURCES)
         ${CMAKE_SOURCE_DIR}/src/systems/ui/ui_data.cpp
         ${CMAKE_SOURCE_DIR}/src/systems/ui/core/ui_components.cpp
         ${CMAKE_SOURCE_DIR}/src/systems/layer/layer_command_buffer.cpp
+        # Note: layer.cpp removed - layer benchmarks use simplified local structs
         ${CMAKE_CURRENT_SOURCE_DIR}/../helpers/test_stubs.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../helpers/object_pool_stubs.cpp
         # ImGui sources needed for shader_system.cpp

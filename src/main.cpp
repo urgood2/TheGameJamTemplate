@@ -48,6 +48,7 @@
 #include "core/ownership.hpp"
 
 #include "util/utilities.hpp" // global utilty methods
+#include "util/perf_overlay.hpp"
 
 #define JSON_DIAGNOSTICS 1
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
@@ -265,6 +266,51 @@ void RunGameLoop() {
 
     using namespace main_loop;
 
+    // F3 toggles performance overlay
+    if (IsKeyPressed(KEY_F3)) {
+      perf_overlay::toggle();
+    }
+
+    // F4 toggles hot-path analyzer (Lua profiler)
+    if (IsKeyPressed(KEY_F4)) {
+      static bool hotpathRunning = false;
+      if (ai_system::masterStateLua.lua_state()) {
+        try {
+          if (!hotpathRunning) {
+            ai_system::masterStateLua.script(R"(
+              local hotpath = require("tools.hotpath_analyzer")
+              hotpath.start()
+              print("[F4] Hot-path analyzer started - press F4 again to stop and report")
+            )");
+            hotpathRunning = true;
+          } else {
+            ai_system::masterStateLua.script(R"(
+              local hotpath = require("tools.hotpath_analyzer")
+              hotpath.stop()
+              hotpath.report(20)
+            )");
+            hotpathRunning = false;
+          }
+        } catch (...) {
+          SPDLOG_WARN("F4 hotpath toggle failed");
+        }
+      }
+    }
+
+    // F5 prints ECS dashboard report
+    if (IsKeyPressed(KEY_F5)) {
+      if (ai_system::masterStateLua.lua_state()) {
+        try {
+          ai_system::masterStateLua.script(R"(
+            local ecs = require("tools.ecs_dashboard")
+            ecs.report()
+          )");
+        } catch (...) {
+          SPDLOG_WARN("F5 ECS dashboard failed");
+        }
+      }
+    }
+
     if (crash_reporter::IsEnabled() && IsKeyPressed(KEY_F10)) {
       auto report = crash_reporter::CaptureReport("Manual capture (F10)");
       auto path = crash_reporter::PersistReport(report);
@@ -353,12 +399,18 @@ void RunGameLoop() {
       // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
     }
 
+    // Update performance overlay metrics
+    perf_overlay::update();
+
     // Render-time timers must run before we enqueue draw commands, otherwise
     // anything they queue gets wiped by layer::Begin() next frame.
     timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
 
     // Pass real render deltaTime to renderer
     MainLoopRenderAbstraction(scaledStep);
+
+    // Render performance overlay (uses ImGui)
+    perf_overlay::render();
 
 #ifndef __EMSCRIPTEN__
     // Draw ImGui console (toggle with ` backtick key)
@@ -429,6 +481,9 @@ void RunGameLoop() {
                 globals::g_ctx);
 
     game::init();
+
+    // Initialize performance overlay (F3 toggle)
+    perf_overlay::init();
 
 #ifdef __EMSCRIPTEN__
     telemetry::SetVisibilityChangeCallback([](const std::string &reason, bool visible) {

@@ -552,7 +552,7 @@ namespace game
         ClearLayers();
 
         // Reset graphics state that persists across layers
-        layer::render_stack_switch_internal::ForceClear(); // clear render stack to avoid stale render targets
+        layer::render_stack_switch_internal::ForceClear("hot reload cleanup"); // clear render stack to avoid stale render targets
         shader_pipeline::ShaderPipelineUnload(); // unload shader pipeline render textures (re-inits on first use)
         EndBlendMode(); // reset OpenGL blend mode to default
         EndShaderMode(); // reset any active shader
@@ -2289,7 +2289,7 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
             // Ensure ImGui renders to the real backbuffer without any leftover
             // render-target or scissor state from the layered passes.
             if (layer::render_stack_switch_internal::IsActive()) {
-                layer::render_stack_switch_internal::ForceClear();
+                layer::render_stack_switch_internal::ForceClear("ImGui backbuffer reset");
             }
             EndScissorMode();
             

@@ -14,7 +14,7 @@ TEST(RenderStackSafety, ErrorContainsContext) {
     EXPECT_NE(msg.find("during UI render"), std::string::npos);
 }
 
-TEST(RenderStackSafety, PushThrowsOnOverflow) {
+TEST(RenderStackSafety, RenderStackErrorIsCatchable) {
     // Note: This test requires a mock or the actual render stack
     // For now, we test the error type exists and can be caught
     try {

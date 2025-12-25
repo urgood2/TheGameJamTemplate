@@ -44,7 +44,7 @@ namespace layer
 
         // Push a new render target, auto-ending the previous one if needed
         // Returns true on success, false on failure (overflow or invalid texture)
-        inline bool Push(RenderTexture2D target, const char* context = nullptr)
+        [[nodiscard]] inline bool Push(RenderTexture2D target, const char* context = nullptr)
         {
             // FIX #6: Validate stack depth with proper error
             if (renderStack.size() >= MAX_RENDER_STACK_DEPTH) {

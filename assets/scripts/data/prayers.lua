@@ -103,19 +103,47 @@ local Prayers = {
         cooldown = 15,
         range = 150,
 
-        on_cast = function(ctx, caster)
+        effect = function(ctx, caster)
             local MarkSystem = require("systems.mark_system")
+            local PhysicsManager = require("core.physics_manager")
+            local Particles = require("core.particles")
+
             local caster_transform = component_cache.get(caster, Transform)
             if not caster_transform then return end
 
             local cx = caster_transform.actualX + (caster_transform.actualW or 0) * 0.5
             local cy = caster_transform.actualY + (caster_transform.actualH or 0) * 0.5
 
-            -- Find nearby enemies
-            local nearby = findEnemiesInRange({ x = cx, y = cy }, 150, {}, 999)
+            -- Find nearby enemies using physics spatial query
+            local nearby = {}
+            local range = 150
+            local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
 
-            for _, info in ipairs(nearby) do
-                local enemy = info.entity
+            if physics and physics.GetObjectsInArea and world then
+                -- AABB query (first pass - fast)
+                local candidates = physics.GetObjectsInArea(world, cx - range, cy - range, cx + range, cy + range) or {}
+                local rangeSq = range * range
+
+                for _, eid in ipairs(candidates) do
+                    -- Skip non-enemies
+                    if isEnemyEntity(eid) then
+                        local t = component_cache.get(eid, Transform)
+                        if t then
+                            local ex = (t.actualX or 0) + (t.actualW or 0) * 0.5
+                            local ey = (t.actualY or 0) + (t.actualH or 0) * 0.5
+                            local dx, dy = ex - cx, ey - cy
+                            local distSq = dx * dx + dy * dy
+
+                            -- Circular range check
+                            if distSq <= rangeSq then
+                                nearby[#nearby + 1] = eid
+                            end
+                        end
+                    end
+                end
+            end
+
+            for _, enemy in ipairs(nearby) do
                 -- Apply stun
                 if ActionAPI then
                     ActionAPI.apply_stun(ctx, enemy, 1.5)
@@ -127,17 +155,16 @@ local Prayers = {
             -- Play sound
             playSoundEffect("effects", "thunderclap")
 
-            -- Visual effect
-            if particle and particle.spawnRadialBurst then
-                particle.spawnRadialBurst({
-                    x = cx, y = cy,
-                    count = 20,
-                    color1 = "cyan",
-                    color2 = "white",
-                    speed = 200,
-                    lifespan = 0.3,
-                })
-            end
+            -- Visual effect - radial burst of cyan/white particles
+            local thunderBurst = Particles.define()
+                :shape("circle")
+                :size(4, 8)
+                :color("cyan", "white")
+                :velocity(150, 250)
+                :lifespan(0.3)
+                :fade()
+
+            thunderBurst:burst(20):at(cx, cy):outward()
         end
     }
 }

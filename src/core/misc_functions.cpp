@@ -172,6 +172,7 @@ void SetUpShaderUniforms() {
   // TODO: hue offset can be animated with timer
 
   // flash shader
+  globalShaderUniforms.set("flash", "flashStartTime", 0.0f);  // default: no offset (per-entity overrides this)
   shaders::registerUniformUpdate(
       "flash", [](Shader &shader) { // update iTime every frame
         globalShaderUniforms.set("flash", "iTime",

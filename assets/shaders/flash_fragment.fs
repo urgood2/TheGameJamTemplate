@@ -6,7 +6,8 @@ in vec4 fragColor;
 
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
-uniform float iTime;  // Time for animation
+uniform float iTime;           // Global time for animation
+uniform float flashStartTime;  // Per-entity: when this entity's flash started (default 0.0)
 
 out vec4 finalColor;
 
@@ -14,8 +15,12 @@ out vec4 finalColor;
 
 void main()
 {
+    // Compute per-entity local time (time since flash started)
+    float localTime = iTime - flashStartTime;
+
     // Calculate flashing intensity using a sine wave
-    float flashIntensity = 0.5 + 0.5 * sin(iTime * 5.0);  // Adjusted to range between 0.0 and 1.0
+    // +1.5708 (π/2) phase offset ensures flash starts on WHITE when localTime=0
+    float flashIntensity = 0.5 + 0.5 * sin(localTime * 5.0 + 1.5708);
 
     // Sample the texture color
     vec4 texelColor = texture(texture0, fragTexCoord);

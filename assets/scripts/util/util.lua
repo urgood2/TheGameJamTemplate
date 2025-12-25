@@ -2228,11 +2228,18 @@ function hitFX(entity, magnitude, duration)
   if registry:has(entity, shader_pipeline.ShaderPipelineComponent) == false then
     return
   end
-  
+
   shaderPipelineComp = component_cache.get(entity, shader_pipeline.ShaderPipelineComponent)
-  
+
   shaderPipelineComp:addPass("flash")
-  
+
+  -- Set per-entity flashStartTime so flash starts at white
+  if not registry:has(entity, shaders.ShaderUniformComponent) then
+    registry:emplace(entity, shaders.ShaderUniformComponent)
+  end
+  local uniforms = registry:get(entity, shaders.ShaderUniformComponent)
+  uniforms:set("flash", "flashStartTime", GetTime())
+
   -- remove after duration, or 0.1s if not specified
   timer.after(
     duration or 0.1,

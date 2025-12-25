@@ -4712,6 +4712,13 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
     TryApplyUniforms(shader, globals::getGlobalShaderUniforms(),
                      pass.shaderName);
+
+    // Apply per-entity uniforms (override global uniforms for this entity)
+    if (registry.any_of<shaders::ShaderUniformComponent>(e)) {
+        auto& entityUniforms = registry.get<shaders::ShaderUniformComponent>(e);
+        entityUniforms.applyToShaderForEntity(shader, pass.shaderName, e, registry);
+    }
+
     // DrawTextureRec(shader_pipeline::front().texture,
     //                {0, 0, (float)renderWidth * xFlipModifier,
     //                 (float)-renderHeight * yFlipModifier},
@@ -4857,6 +4864,12 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     }
     TryApplyUniforms(shader, globals::getGlobalShaderUniforms(),
                      overlay.shaderName);
+
+    // Apply per-entity uniforms (override global uniforms for this entity)
+    if (registry.any_of<shaders::ShaderUniformComponent>(e)) {
+        auto& entityUniforms = registry.get<shaders::ShaderUniformComponent>(e);
+        entityUniforms.applyToShaderForEntity(shader, overlay.shaderName, e, registry);
+    }
 
     RenderTexture2D &source =
         (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)

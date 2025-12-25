@@ -136,6 +136,14 @@ function EntityCleanup.play_death_effects(entity_id, position, config)
         local pipeline = registry:try_get(entity_id, shader_pipeline.ShaderPipelineComponent)
         if pipeline then
             pipeline:addPass("flash")
+            -- Set per-entity flashStartTime so flash starts at white
+            if shaders and shaders.ShaderUniformComponent then
+                if not registry:has(entity_id, shaders.ShaderUniformComponent) then
+                    registry:emplace(entity_id, shaders.ShaderUniformComponent)
+                end
+                local uniforms = registry:get(entity_id, shaders.ShaderUniformComponent)
+                uniforms:set("flash", "flashStartTime", GetTime())
+            end
         end
     end
 

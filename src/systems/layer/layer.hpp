@@ -19,6 +19,7 @@
 #include "layer_optimized.hpp"
 #include "layer_dynamic_pool_wrapper.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
+#include "systems/layer/render_stack_error.hpp"
 #include "sol/sol.hpp"
 
 #include "entt/fwd.hpp"
@@ -39,24 +40,27 @@ namespace layer
         constexpr int MAX_RENDER_STACK_DEPTH = 16;
         
         // Forward declaration
-        inline void ForceClear();
+        inline void ForceClear(const char* reason = nullptr);
 
         // Push a new render target, auto-ending the previous one if needed
-        inline void Push(RenderTexture2D target)
+        // Returns true on success, false on failure (overflow or invalid texture)
+        inline bool Push(RenderTexture2D target, const char* context = nullptr)
         {
-            // FIX #6: Validate stack depth
+            // FIX #6: Validate stack depth with proper error
             if (renderStack.size() >= MAX_RENDER_STACK_DEPTH) {
-                SPDLOG_ERROR("Render stack overflow! Size: {}. Forcing clear.", renderStack.size());
-                ForceClear();
-                return;
+                std::string ctx = context ? context : "unknown";
+                SPDLOG_ERROR("Render stack overflow at depth {}! Context: {}",
+                             renderStack.size(), ctx);
+                // Return false instead of calling ForceClear - let caller handle
+                return false;
             }
-            
+
             // FIX #10: Validate texture before pushing
             if (target.id == 0) {
-                SPDLOG_ERROR("Attempted to push invalid render texture (id=0)");
-                return;
+                SPDLOG_WARN("Attempted to push invalid render texture (id=0)");
+                return false;
             }
-            
+
             if (!renderStack.empty())
             {
                 // Flush any pending draw commands before switching render targets
@@ -68,9 +72,10 @@ namespace layer
 
             renderStack.push(target);
             BeginTextureMode(target);
-            
+
             // Debug logging (can be disabled in production)
             // SPDLOG_DEBUG("Pushed render target {} (stack depth: {})", target.id, renderStack.size());
+            return true;
         }
 
         // Pop the top render target and resume the previous one
@@ -119,20 +124,21 @@ namespace layer
             return renderStack.size();
         }
 
-        // Clear the entire stack and end current mode — use with caution
-        inline void ForceClear()
+        // Clear the entire stack - use only for error recovery, not normal flow
+        inline void ForceClear(const char* reason)
         {
             if (!renderStack.empty())
             {
+                SPDLOG_WARN("ForceClear called with {} items on stack. Reason: {}",
+                            renderStack.size(), reason ? reason : "unspecified");
+
                 // Flush any pending draw commands before switching render targets
                 // to prevent them from being rendered to the wrong target
                 rlDrawRenderBatchActive();
                 EndTextureMode();
+
+                while (!renderStack.empty()) renderStack.pop();
             }
-
-            while (!renderStack.empty()) renderStack.pop();
-
-            SPDLOG_WARN("Render stack force cleared");
         }
         
         //------------------------------------------------------------------------------------

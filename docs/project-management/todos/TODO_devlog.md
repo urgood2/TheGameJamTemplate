@@ -431,3 +431,15 @@
 
 12/24/2025
   - Fixed alpha blending for transparent sprites and layers: separated RGB and alpha multiplication in 64 shaders and added BLEND_ALPHA_PREMULTIPLY for layer compositing to prevent fade-to-dark artifacts.
+  - Implemented trigger strip UI with cooldown pie shader: wand buttons show active triggers, cooldown visualization, wave interaction feedback, and dual tooltips for card/wand info.
+  - Added card UI enhancements: Alt-preview shows card destination on hover, right-click quick-transfer between boards, improved trigger board capacity checks.
+  - Created tooltip registry module for centralized tooltip lifecycle management with cache key storage for efficient hide/show.
+
+12/25/2025
+  - Shipped cross-platform save system: C++ save_io with async writes and atomic file operations, Lua SaveManager with collector pattern, Statistics module example, IDBFS web persistence, migrations scaffold, and ImGui debug tab.
+  - Major performance optimization pass: eliminated O(n) collision clearing in physics PostUpdate, removed duplicate transform cache storage, cached UIBoxComponent view for hot-path queries, replaced O(n) vector erase with O(1) unordered_set.
+  - Added performance profiling overlay (F12): real-time FPS, frame time, draw calls, entity counts with configurable display options.
+  - Extended Lua DSL with button, progressBar, and layout helper functions for more expressive UI definitions.
+  - Improved shader system: per-entity uniform support for flash effects, fixed 3D skew tilt to follow mouse position relative to sprite center.
+  - Added entity validation helpers: safe_script_get and script_field functions for defensive script table access with fallback defaults.
+  - Refactored event system: added dual-emission helper for combat bus→signal bridging, signal system architecture tests, and RenderStackError exception class for better error context.

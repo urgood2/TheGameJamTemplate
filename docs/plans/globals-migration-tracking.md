@@ -288,9 +288,25 @@ Require design changes or touch many systems.
 
 ---
 
+## Completed Migrations
+
+### uiPadding (2025-12-25)
+
+**Status:** ✅ Already migrated - accessors redirect to EngineContext
+
+**Details:**
+- `globals::getUiPadding()` → returns `ctx->uiPadding` when ctx available
+- `globals::getSettings()` → returns `ctx->settings` when ctx available
+- No direct extern usages found in codebase
+- Both `ctx->uiPadding` (internal) and `ctx->settings.uiPadding` (user prefs) unified at 4.0f
+
+**Call sites verified:**
+- `src/systems/ui/ui_data.hpp:329` uses `globals::getSettings().uiPadding` ✓
+
+---
+
 ## Next Actions
 
-1. **Task 5.2:** Migrate `uiPadding` as proof-of-concept
-2. Create helper script to find global usages
-3. Batch-migrate screen dimensions (4 globals at once)
-4. Create subsystem structs (CameraShake, LoadingState, etc.)
+1. Create helper script to find global usages
+2. Batch-migrate screen dimensions (4 globals at once)
+3. Create subsystem structs (CameraShake, LoadingState, etc.)

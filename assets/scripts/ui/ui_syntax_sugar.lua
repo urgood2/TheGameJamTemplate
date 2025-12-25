@@ -14,12 +14,8 @@ BASIC USAGE:
                 config = { spacing = 6 },
                 children = {
                     dsl.text("Title", { fontSize = 24, color = "white" }),
-                    dsl.hbox {
-                        children = {
-                            dsl.anim("sprite_id", { w = 40, h = 40 }),
-                            dsl.text("Subtitle", { fontSize = 16 })
-                        }
-                    }
+                    dsl.button("Click Me", { onClick = fn, color = "blue" }),
+                    dsl.progressBar({ getValue = fn, fullColor = "green" }),
                 }
             }
         }
@@ -31,22 +27,36 @@ CONTAINERS:
     dsl.root { config, children }    -- Root container (required at top)
     dsl.vbox { config, children }    -- Vertical layout
     dsl.hbox { config, children }    -- Horizontal layout
+    dsl.section(title, opts)         -- Titled section with content area
 
 ELEMENTS:
-    dsl.text(text, opts)             -- Text element
+    dsl.text(text, opts)             -- Static text
         opts: { fontSize, color, align, onClick, hover }
+
+    dsl.richText(text, opts)         -- Styled text with markup
+        Example: "[Health](color=red): 100"
+
+    dsl.dynamicText(fn, fontSize, effect, opts)  -- Auto-updating text
 
     dsl.anim(id, opts)               -- Animated sprite
         opts: { w, h, shadow, isAnimation }
 
-    dsl.dynamicText(fn, fontSize, effect, opts)  -- Auto-updating text
-        fn: function returning string
+INTERACTIVE:
+    dsl.button(label, opts)          -- Clickable button
+        opts: { onClick, color, hover, disabled, minWidth, minHeight }
 
-HOVER/TOOLTIP:
-    dsl.text("Button", {
-        hover = { title = "Button Title", body = "Description" },
-        onClick = function() print("clicked") end
-    })
+    dsl.progressBar(opts)            -- Animated progress bar
+        opts: { getValue, emptyColor, fullColor, minWidth, minHeight }
+
+LAYOUT HELPERS:
+    dsl.spacer(w, h?)                -- Empty spacing element
+    dsl.divider(direction, opts)     -- Horizontal/vertical line
+    dsl.iconLabel(icon, text, opts)  -- Icon + text pattern
+    dsl.grid(rows, cols, genFn)      -- Uniform grid layout
+
+DATA-DRIVEN:
+    dsl.list(data, mapperFn)         -- Generate nodes from array
+    dsl.when(condition, node)        -- Conditional rendering
 
 SPAWNING:
     dsl.spawn(pos, defNode, layerName?, zIndex?, opts?)
@@ -276,6 +286,260 @@ function dsl.grid(rows, cols, gen)
         table.insert(grid, def(row))
     end
     return grid
+end
+
+------------------------------------------------------------
+-- 8️⃣ Button Element
+-- Composable button with hover, click, and optional tooltip.
+------------------------------------------------------------
+-- Example:
+-- dsl.button("Click Me", {
+--     onClick = function() print("clicked!") end,
+--     color = "red",
+--     hover = { title = "Button", body = "Click to confirm" },
+--     disabled = false,
+--     minWidth = 100,
+--     minHeight = 40
+-- })
+------------------------------------------------------------
+function dsl.button(label, opts)
+    opts = opts or {}
+
+    local textNode = dsl.text(label, {
+        fontSize = opts.fontSize or 16,
+        color = opts.textColor or "white",
+        shadow = opts.shadow ~= false
+    })
+
+    return def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            id             = opts.id,
+            color          = color(opts.color or "gray"),
+            hover          = true,
+            buttonCallback = opts.onClick,
+            tooltip        = opts.tooltip,
+            hover          = opts.hover,
+            emboss         = opts.emboss or 2,
+            minWidth       = opts.minWidth,
+            minHeight      = opts.minHeight,
+            disableButton  = opts.disabled,
+            align          = opts.align or (bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)),
+        },
+        children = { textNode }
+    }
+end
+
+------------------------------------------------------------
+-- 9️⃣ Progress Bar Element
+-- Animated progress bar with value callback.
+------------------------------------------------------------
+-- Example:
+-- dsl.progressBar({
+--     getValue = function() return playerHealth / maxHealth end,
+--     emptyColor = "gray",
+--     fullColor = "green",
+--     minWidth = 200,
+--     minHeight = 20
+-- })
+------------------------------------------------------------
+function dsl.progressBar(opts)
+    opts = opts or {}
+
+    return def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            id                    = opts.id,
+            color                 = color(opts.color or "gray"),
+            minWidth              = opts.minWidth or 200,
+            minHeight             = opts.minHeight or 20,
+            progressBar           = true,
+            progressBarMaxValue   = opts.maxValue or 1.0,
+            progressBarEmptyColor = color(opts.emptyColor or "darkgray"),
+            progressBarFullColor  = color(opts.fullColor or "green"),
+            progressBarFetchValueLambda = opts.getValue,
+            align                 = opts.align or (bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)),
+        },
+        children = opts.children or {}
+    }
+end
+
+------------------------------------------------------------
+-- 🔟 Spacer Element
+-- Empty element for layout spacing.
+------------------------------------------------------------
+-- Example:
+-- dsl.spacer(20)  -- 20px vertical spacer
+-- dsl.spacer(20, 40)  -- 20w x 40h spacer
+------------------------------------------------------------
+function dsl.spacer(w, h)
+    return def{
+        type = "RECT_SHAPE",
+        config = {
+            color    = { 0, 0, 0, 0 }, -- transparent
+            minWidth = w or 10,
+            minHeight = h or w or 10,
+        }
+    }
+end
+
+------------------------------------------------------------
+-- 1️⃣1️⃣ Divider Element
+-- Horizontal or vertical divider line.
+------------------------------------------------------------
+-- Example:
+-- dsl.divider("horizontal", { color = "white", thickness = 2 })
+------------------------------------------------------------
+function dsl.divider(direction, opts)
+    opts = opts or {}
+    local thickness = opts.thickness or 1
+
+    if direction == "vertical" then
+        return def{
+            type = "RECT_SHAPE",
+            config = {
+                color     = color(opts.color or "white"),
+                minWidth  = thickness,
+                minHeight = opts.length or 20,
+            }
+        }
+    else
+        return def{
+            type = "RECT_SHAPE",
+            config = {
+                color     = color(opts.color or "white"),
+                minWidth  = opts.length or 100,
+                minHeight = thickness,
+            }
+        }
+    end
+end
+
+------------------------------------------------------------
+-- 1️⃣2️⃣ Icon with Label
+-- Common pattern: icon + text side by side.
+------------------------------------------------------------
+-- Example:
+-- dsl.iconLabel("coin.png", "100 Gold", { iconSize = 24, fontSize = 16 })
+------------------------------------------------------------
+function dsl.iconLabel(iconId, label, opts)
+    opts = opts or {}
+    local iconSize = opts.iconSize or 24
+
+    return def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            id      = opts.id,
+            padding = opts.padding or 2,
+            align   = opts.align or (bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)),
+        },
+        children = {
+            dsl.anim(iconId, { w = iconSize, h = iconSize, shadow = opts.shadow }),
+            dsl.text(label, { fontSize = opts.fontSize or 16, color = opts.textColor or "white" })
+        }
+    }
+end
+
+------------------------------------------------------------
+-- 1️⃣3️⃣ Rich Text (styled text with markup)
+-- Uses C++ getTextFromString for parsing.
+------------------------------------------------------------
+-- Example:
+-- dsl.richText("[Health](color=red): 100", { fontSize = 16 })
+------------------------------------------------------------
+function dsl.richText(text, opts)
+    opts = opts or {}
+    local defaults = {
+        fontSize = opts.fontSize,
+        fontName = opts.fontName,
+        color    = opts.color,
+        shadow   = opts.shadow
+    }
+    return ui.definitions.getTextFromString(text, defaults)
+end
+
+------------------------------------------------------------
+-- 1️⃣4️⃣ Titled Section
+-- Container with a title bar and content area.
+------------------------------------------------------------
+-- Example:
+-- dsl.section("Inventory", {
+--     color = "darkgray",
+--     children = { ... }
+-- })
+------------------------------------------------------------
+function dsl.section(title, opts)
+    opts = opts or {}
+
+    local titleNode = dsl.text(title, {
+        fontSize = opts.titleSize or 18,
+        color = opts.titleColor or "white",
+        shadow = true
+    })
+
+    local titleBar = def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            color   = color(opts.titleBg or "black"),
+            padding = opts.titlePadding or 4,
+            align   = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = { titleNode }
+    }
+
+    local contentBox = def{
+        type = "VERTICAL_CONTAINER",
+        config = {
+            color   = color(opts.color or "gray"),
+            padding = opts.padding or 6,
+        },
+        children = opts.children or {}
+    }
+
+    return def{
+        type = "VERTICAL_CONTAINER",
+        config = {
+            id      = opts.id,
+            padding = 0,
+            emboss  = opts.emboss or 2,
+        },
+        children = { titleBar, contentBox }
+    }
+end
+
+------------------------------------------------------------
+-- 1️⃣5️⃣ Conditional Rendering
+-- Only include children if condition is true.
+------------------------------------------------------------
+-- Example:
+-- dsl.when(showDebug, dsl.text("Debug: ON"))
+------------------------------------------------------------
+function dsl.when(condition, node)
+    if condition then
+        return node
+    else
+        return nil  -- Will be filtered out
+    end
+end
+
+------------------------------------------------------------
+-- 1️⃣6️⃣ List from Data
+-- Generate UI nodes from a data array.
+------------------------------------------------------------
+-- Example:
+-- dsl.list(inventory, function(item, i)
+--     return dsl.iconLabel(item.icon, item.name)
+-- end)
+------------------------------------------------------------
+function dsl.list(data, mapper)
+    local nodes = {}
+    for i, item in ipairs(data) do
+        local node = mapper(item, i)
+        if node then
+            table.insert(nodes, node)
+        end
+    end
+    return nodes
 end
 
 ------------------------------------------------------------

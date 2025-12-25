@@ -271,8 +271,9 @@ void RunGameLoop() {
       perf_overlay::toggle();
     }
 
-    // F4 toggles hot-path analyzer (Lua profiler)
-    if (IsKeyPressed(KEY_F4)) {
+    // F7 toggles hot-path analyzer (Lua profiler)
+    // Note: F4 is used by game.cpp for physics debug
+    if (IsKeyPressed(KEY_F7)) {
       static bool hotpathRunning = false;
       if (ai_system::masterStateLua.lua_state()) {
         try {
@@ -280,7 +281,7 @@ void RunGameLoop() {
             ai_system::masterStateLua.script(R"(
               local hotpath = require("tools.hotpath_analyzer")
               hotpath.start()
-              print("[F4] Hot-path analyzer started - press F4 again to stop and report")
+              print("[F7] Hot-path analyzer started - press F7 again to stop and report")
             )");
             hotpathRunning = true;
           } else {
@@ -292,13 +293,14 @@ void RunGameLoop() {
             hotpathRunning = false;
           }
         } catch (...) {
-          SPDLOG_WARN("F4 hotpath toggle failed");
+          SPDLOG_WARN("F7 hotpath toggle failed");
         }
       }
     }
 
-    // F5 prints ECS dashboard report
-    if (IsKeyPressed(KEY_F5)) {
+    // F8 prints ECS dashboard report
+    // Note: F5 is used by shader_system.cpp for hot reload
+    if (IsKeyPressed(KEY_F8)) {
       if (ai_system::masterStateLua.lua_state()) {
         try {
           ai_system::masterStateLua.script(R"(
@@ -306,7 +308,7 @@ void RunGameLoop() {
             ecs.report()
           )");
         } catch (...) {
-          SPDLOG_WARN("F5 ECS dashboard failed");
+          SPDLOG_WARN("F8 ECS dashboard failed");
         }
       }
     }
@@ -399,15 +401,15 @@ void RunGameLoop() {
       // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
     }
 
-    // Update performance overlay metrics
-    perf_overlay::update();
-
     // Render-time timers must run before we enqueue draw commands, otherwise
     // anything they queue gets wiped by layer::Begin() next frame.
     timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
 
     // Pass real render deltaTime to renderer
     MainLoopRenderAbstraction(scaledStep);
+
+    // Update performance overlay metrics AFTER rendering so draw call stats are populated
+    perf_overlay::update();
 
     // Render performance overlay (uses ImGui)
     perf_overlay::render();

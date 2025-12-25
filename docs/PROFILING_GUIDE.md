@@ -7,8 +7,9 @@ This guide covers how to use the performance tools available in the game engine.
 | Key | Action |
 |-----|--------|
 | **F3** | Toggle performance overlay (FPS, draw calls, memory) |
-| **F4** | Toggle hot-path analyzer (press once to start, again to stop and report) |
-| **F5** | Print ECS dashboard report (entity/component stats) |
+| **F4** | Toggle physics debug rendering |
+| **F7** | Toggle hot-path analyzer (press once to start, again to stop and report) |
+| **F8** | Print ECS dashboard report (entity/component stats) |
 | **F10** | Capture crash report (if crash reporter enabled) |
 
 ---

@@ -245,6 +245,74 @@ local Jokers = {
             end
         end
     },
+
+    --===========================================================================
+    -- LIGHTNING JOKERS
+    --===========================================================================
+
+    conductor = {
+        id = "conductor",
+        name = "The Conductor",
+        description = "Chain lightning applies Static Charge. Mark detonations chain to other marked enemies.",
+        rarity = "Rare",
+        sprite = "joker-conductor.png",
+
+        calculate = function(self, context)
+            -- Chain hits apply static_charge
+            if context.event == "on_chain_hit" and context.damage_type == "lightning" then
+                return {
+                    apply_mark = { mark_id = "static_charge", stacks = 1 },
+                    message = "Charged!"
+                }
+            end
+
+            -- Detonations chain to other marked
+            if context.event == "on_mark_detonated" then
+                return {
+                    chain_to_marked = { range = 200, mark_id = context.mark_id },
+                    message = "Conducted!"
+                }
+            end
+        end
+    },
+
+    storm_battery = {
+        id = "storm_battery",
+        name = "Storm Battery",
+        description = "+5% lightning damage per Static Charge stack on any enemy.",
+        rarity = "Uncommon",
+        sprite = "joker-storm-battery.png",
+
+        calculate = function(self, context)
+            if context.event == "calculate_damage" and context.damage_type == "lightning" then
+                local MarkSystem = require("systems.mark_system")
+                local total_stacks = MarkSystem.countAllStacks("static_charge")
+                if total_stacks > 0 then
+                    return {
+                        damage_mult = 1 + (total_stacks * 0.05),
+                        message = string.format("Battery +%d%%", total_stacks * 5)
+                    }
+                end
+            end
+        end
+    },
+
+    arc_reactor = {
+        id = "arc_reactor",
+        name = "Arc Reactor",
+        description = "Electrocute heals you for 2 HP per tick.",
+        rarity = "Rare",
+        sprite = "joker-arc-reactor.png",
+
+        calculate = function(self, context)
+            if context.event == "on_dot_tick" and context.dot_type == "electrocute" then
+                return {
+                    heal_player = 2,
+                    message = "Arc Heal!"
+                }
+            end
+        end
+    },
 }
 
 -- Apply defaults to all jokers at load time

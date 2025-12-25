@@ -131,6 +131,28 @@ function component_cache.get(eid, comp)
     return c
 end
 
+--- Validate that an entity exists and is valid.
+--- Use this before accessing cached components when entity lifetime is uncertain.
+---@param eid entt.entity
+---@return boolean valid True if entity exists and is valid
+function component_cache.ensure(eid)
+    if not eid then return false end
+    local vfn = valid
+    if not vfn then return false end
+    return vfn(registry, eid) == true
+end
+
+--- Safe component access with automatic validation.
+--- Returns nil if entity is invalid, otherwise returns component.
+---@param eid entt.entity
+---@param comp any
+---@return table|nil component, boolean valid
+function component_cache.safe_get(eid, comp)
+    if not component_cache.ensure(eid) then
+        return nil, false
+    end
+    return component_cache.get(eid, comp), true
+end
 
 --- Invalidate cached value(s).
 ---@param eid entt.entity

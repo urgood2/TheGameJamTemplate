@@ -6979,6 +6979,12 @@ function startActionPhase()
         setPlanningPeekMode(false)
     end
 
+    -- Explicitly deactivate planning phase tooltip states
+    if deactivate_state then
+        deactivate_state(WAND_TOOLTIP_STATE)
+        deactivate_state(CARD_TOOLTIP_STATE)
+    end
+
     -- Clean up planning phase UI elements to prevent flicker
     CastExecutionGraphUI.clear()
 
@@ -7094,6 +7100,7 @@ function startPlanningPhase()
 
     activate_state(PLANNING_STATE)
     activate_state("default_state")     -- just for defaults, keep them open
+    activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
 
     remove_layer_shader("sprites", "pixelate_image")
 
@@ -9998,6 +10005,9 @@ function initPlanningUI()
                 go.state.collisionEnabled = true
                 go.state.clickEnabled = true
                 go.methods.onHover = function()
+                    -- Only show wand tooltips during planning phase
+                    if not is_state_active or not is_state_active(PLANNING_STATE) then return end
+
                     local wandDef = thisBoardSet and thisBoardSet.wandDef
                     if not wandDef then return end
 

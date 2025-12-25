@@ -37,6 +37,7 @@ add_executable(unit_tests
     unit/test_layer_state_batching.cpp
     unit/test_layer_batching.cpp
     unit/test_startup_timer.cpp
+    unit/test_render_stack_safety.cpp
     helpers/test_stubs.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_system.cpp
     ${CMAKE_SOURCE_DIR}/src/systems/shaders/shader_presets.cpp

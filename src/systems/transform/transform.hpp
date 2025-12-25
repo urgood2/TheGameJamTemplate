@@ -456,25 +456,11 @@ namespace transform
         entt::entity h;
         entt::entity r;
         entt::entity s;
-        
-        // ====== CACHED VALUES, updated once per frame ======
-        // Add plain‐float members for the precomputed values:
-        float cachedActualX;
-        float cachedActualY;
-        float cachedActualW;
-        float cachedActualH;
-        float cachedActualR;
-        float cachedActualS;
-        float cachedVisualX;
-        float cachedVisualY;
-        float cachedVisualW;
-        float cachedVisualH;
-        float cachedVisualRWithDynamicMotionAndXLeaning;
-        float cachedVisualS;
-        float cachedVisualR; 
-        float cachedVisualSWithHoverAndDynamicMotionReflected;
 
         // ====== CACHED VALUES, updated once per frame ======
+        // PERF: Removed duplicate individual cachedActualX/cachedVisualX floats
+        // that were written by dead code (updateTransformCacheForAllTransforms).
+        // Only this struct is actually used by the getters.
         struct Cached
         {
             float actualX, actualY, actualW, actualH, actualR, actualS;

@@ -1429,60 +1429,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         springH.velocity = 0;
     }
     
-    // Call this  method every update loop to keep transform values updated.
+    // PERF: This function was dead code - never called (all call sites were commented out).
+    // Transform caching is now done lazily via Transform::updateCachedValues() on first
+    // getter access per frame. Keeping stub for ABI compatibility with header declaration.
     void updateTransformCacheForAllTransforms() {
-        
-        auto view = globals::getRegistry().view<Transform>();
-        
-        // owning group of springs
-        
-        for (auto e : view) {
-            auto &transform = globals::getRegistry().get<Transform>(e);
-            
-            auto &springX = globals::getRegistry().get<Spring>(transform.x);
-            auto &springY = globals::getRegistry().get<Spring>(transform.y);
-            auto &springW = globals::getRegistry().get<Spring>(transform.w);
-            auto &springH = globals::getRegistry().get<Spring>(transform.h);
-            auto &springR = globals::getRegistry().get<Spring>(transform.r);
-            auto &springS = globals::getRegistry().get<Spring>(transform.s);
-            
-            transform.cachedActualX = springX.targetValue;
-            transform.cachedActualY = springY.targetValue;
-            transform.cachedActualW = springW.targetValue;
-            transform.cachedActualH = springH.targetValue;
-            transform.cachedActualR = springR.targetValue;
-            transform.cachedActualS = springS.targetValue;
-            
-            transform.cachedVisualX = springX.value;
-            transform.cachedVisualY = springY.value;
-            transform.cachedVisualW = springW.value;
-            transform.cachedVisualH = springH.value;
-            transform.cachedVisualRWithDynamicMotionAndXLeaning = springR.value + transform.rotationOffset;
-            transform.cachedVisualS = springS.value;
-            transform.cachedVisualR = springR.value;
-            
-            
-            // cachedVisualSWithHoverAndDynamicMotionReflected
-            float base = transform.cachedVisualS;
-            if (globals::getRegistry().any_of<GameObject>(e))
-            {
-                auto &gameObj = globals::getRegistry().get<GameObject>(e);
-                if (gameObj.state.isBeingHovered && gameObj.state.enlargeOnHover)
-                {
-                    base *= 1.f + COLLISION_BUFFER_ON_HOVER_PERCENTAGE; // increase scale when hovered
-                }
-                if (gameObj.state.isBeingDragged && gameObj.state.enlargeOnDrag)
-                {
-                    base += COLLISION_BUFFER_ON_HOVER_PERCENTAGE * 2; // increase scale when dragged
-                }
-            }
-
-            float added = (transform.dynamicMotion ? transform.dynamicMotion->scale : 0);
-
-            transform.cachedVisualSWithHoverAndDynamicMotionReflected =  base + added;
-            
-        }
-            
+        // No-op: caching is now handled lazily by Transform::updateCachedValues()
     }
     
 

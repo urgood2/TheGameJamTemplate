@@ -34,6 +34,104 @@ DESIGN PRINCIPLES:
     - Debuggable: Optional logging for troubleshooting
 
 Dependencies: external.hump.signal
+
+================================================================================
+ARCHITECTURE: TWO EVENT SYSTEMS EXPLAINED
+================================================================================
+
+This codebase has TWO SEPARATE event systems that must be kept in sync:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 1. HUMP.SIGNAL (Primary System)                                        │
+│    Location: external/hump/signal.lua                                   │
+│    Usage: Gameplay events, wave system, UI, general game logic         │
+│    API: signal.emit("event_name", ...)                                  │
+│         signal.register("event_name", handler)                          │
+│    Examples:                                                             │
+│      - signal.emit("enemy_killed", entityID)                            │
+│      - signal.emit("wave_complete")                                      │
+│      - signal.emit("player_damaged", entityID, {damage=10})             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 2. CTX.BUS (Combat EventBus)                                            │
+│    Location: combat/combat_context.lua                                  │
+│    Usage: Combat system internals (damage, status effects, abilities)  │
+│    API: ctx.bus:emit("EventName", data)                                 │
+│         ctx.bus:on("EventName", handler)                                │
+│    Examples:                                                             │
+│      - ctx.bus:emit("OnHitResolved", {entity=actor, damage=50})        │
+│      - ctx.bus:emit("OnStatusApplied", {entity=actor, status="burn"})  │
+│      - ctx.bus:emit("OnDeath", {entity=combatActor, killer=src})       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+WHY TWO SYSTEMS?
+----------------
+- Combat system was built with its own EventBus for internal messaging
+- Rest of the game uses hump.signal as the standard event system
+- Both systems exist for historical reasons and different architectural needs
+- The EventBridge prevents these systems from becoming disconnected
+
+HOW THE BRIDGE WORKS:
+---------------------
+1. Combat system emits event on ctx.bus:
+   ctx.bus:emit("OnHitResolved", {entity=actor, damage=50})
+
+2. EventBridge listens to ctx.bus and forwards to signal:
+   signal.emit("combat_hit", {entity=actor, damage=50})
+
+3. Both systems now receive the event:
+   - Combat listeners (ctx.bus:on) get it immediately
+   - Game listeners (signal.register) get it via bridge
+
+WHEN TO USE WHICH SYSTEM:
+--------------------------
+USE SIGNAL (signal.emit/register):
+  ✓ New gameplay features
+  ✓ Wave system integration
+  ✓ UI updates
+  ✓ General game events
+  ✓ Cross-system communication
+
+USE CTX.BUS (ctx.bus:emit/on):
+  ✓ Only when adding combat-specific logic
+  ✓ When working inside combat_context.lua
+  ✓ For combat ability/status effect internals
+
+IMPORTANT: If adding new combat events, add them to BRIDGED_EVENTS below
+so they reach the signal system!
+
+THE OnDeath SPECIAL CASE:
+--------------------------
+OnDeath is NOT bridged here because it requires special data transformation:
+
+Problem:
+  - ctx.bus emits data.entity as a combat ACTOR (Lua table)
+  - signal listeners expect an entity ID (integer)
+  - Actors must be converted to entity IDs before forwarding
+
+Solution (in gameplay.lua ~line 5234):
+  ctx.bus:on('OnDeath', function(data)
+      local actor = data.entity
+      local enemyEntity = combatActorToEntity[actor]  -- Convert actor to ID
+      if enemyEntity then
+          signal.emit("enemy_killed", enemyEntity)    -- Emit with entity ID
+      end
+  end)
+
+Why not bridge it here:
+  - The actor→entity mapping (combatActorToEntity) is in gameplay.lua
+  - EventBridge can't access that mapping without creating circular deps
+  - Manual handling in gameplay.lua is clearer and more maintainable
+
+FUTURE IMPROVEMENTS:
+--------------------
+Eventually, the two event systems could be unified by:
+  1. Migrating combat system to use signal instead of ctx.bus
+  2. Or creating a unified event facade that wraps both
+  3. Or standardizing on ctx.bus and replacing signal usage
+
+For now, the EventBridge keeps them synchronized with minimal friction.
 ]]
 
 local signal = require("external.hump.signal")

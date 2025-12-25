@@ -82,7 +82,31 @@ local Origins = {
             Arcane = 1.3,
             Summon = 1.2
         }
-    }
+    },
+
+    storm_caller = {
+        name = "Storm Caller",
+        description = "Born in the heart of the tempest.",
+        tags = { "Lightning", "Arcane" },
+
+        passive_stats = {
+            lightning_modifier_pct = 15,
+            chain_count_bonus = 1,
+            electrocute_duration_pct = 20,
+        },
+
+        prayer = "thunderclap",
+
+        tag_weights = {
+            Lightning = 1.5,
+            Arcane = 1.2,
+        },
+
+        starting_cards = {
+            "ACTION_CHAIN_LIGHTNING",
+            "ACTION_STATIC_CHARGE",
+        },
+    },
 }
 
 --- Get localized name for an origin (call at runtime when localization is ready)

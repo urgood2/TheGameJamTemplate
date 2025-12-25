@@ -26,7 +26,15 @@ namespace main_loop {
     void initMainLoopData(std::optional<int>, std::optional<int>) {}
 } // namespace main_loop
 
-// Note: ImGui stubs removed - using full ImGui implementation in benchmarks
+// ImGui stubs for functions used by misc_fuctions.hpp inline functions
+namespace ImGui {
+    bool BeginChild(const char*, const ImVec2&, int, int) { return true; }
+    void BulletText(const char*, ...) {}
+    void TextWrapped(const char*, ...) {}
+    void EndChild() {}
+    bool InputInt(const char*, int*, int, int, int) { return false; }
+    void SameLine(float, float) {}
+}
 
 // Stub out UI traversal/interaction hooks used by input_functions.
 namespace ui {

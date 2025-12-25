@@ -12,6 +12,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace physics {
@@ -643,6 +644,27 @@ struct CollisionEvent {
   float x1, y1, x2, y2, nx, ny;
 };
 
+// Optimized collision pair for O(1) set operations
+// Stores pointers in canonical order for consistent hashing
+struct CollisionPair {
+  void* a;
+  void* b;
+
+  CollisionPair(void* x, void* y)
+    : a(std::min(x, y)), b(std::max(x, y)) {}
+
+  bool operator==(const CollisionPair& other) const {
+    return a == other.a && b == other.b;
+  }
+};
+
+struct CollisionPairHash {
+  size_t operator()(const CollisionPair& p) const {
+    // Combine hashes using XOR and bit shift
+    return std::hash<void*>()(p.a) ^ (std::hash<void*>()(p.b) << 1);
+  }
+};
+
 struct ColliderComponent {
   std::shared_ptr<cpBody> body;   // Pointer to the Chipmunk body
   std::shared_ptr<cpShape> shape; // Pointer to the Chipmunk shape
@@ -752,12 +774,14 @@ public:
 
   // Collision Event Maps
   std::unordered_map<std::string, std::vector<CollisionEvent>> collisionEnter;
-  std::unordered_map<std::string, std::vector<CollisionEvent>> collisionActive;
+  // PERF: Changed from vector to set for O(1) erase (was O(n) with erase-remove)
+  std::unordered_map<std::string, std::unordered_set<CollisionPair, CollisionPairHash>> collisionActive;
   std::unordered_map<std::string, std::vector<CollisionEvent>> collisionExit;
 
   // Trigger Event Maps
   std::unordered_map<std::string, std::vector<void *>> triggerEnter;
-  std::unordered_map<std::string, std::vector<void *>> triggerActive;
+  // PERF: Changed from vector to set for O(1) erase (was O(n) with erase-remove)
+  std::unordered_map<std::string, std::unordered_set<void *>> triggerActive;
   std::unordered_map<std::string, std::vector<void *>> triggerExit;
 
   // Collision and Tag Management

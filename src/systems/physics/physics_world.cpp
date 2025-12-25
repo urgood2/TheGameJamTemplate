@@ -324,12 +324,12 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
     if (isTriggerA && allows(tagA, tagB)) {
       registry->get<ColliderComponent>(entityA).triggerEnter.push_back(dataB);
       triggerEnter[key].push_back(dataB);
-      triggerActive[key].push_back(dataB);
+      triggerActive[key].insert(dataB);  // PERF: O(1) set insert
     }
     if (isTriggerB && allows(tagB, tagA)) {
       registry->get<ColliderComponent>(entityB).triggerEnter.push_back(dataA);
       triggerEnter[key].push_back(dataA);
-      triggerActive[key].push_back(dataA);
+      triggerActive[key].insert(dataA);  // PERF: O(1) set insert
     }
     return;
   }
@@ -357,7 +357,7 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
   }
 
   collisionEnter[key].push_back(event);
-  collisionActive[key].push_back(event);
+  collisionActive[key].insert(CollisionPair(dataA, dataB));  // PERF: O(1) set insert
   // Defer event publishing to PostUpdate to avoid reentrancy issues during
   // cpSpaceStep globals::getEventBus().publish(
   //     events::CollisionStarted{entityA, entityB, Vector2{event.x1,
@@ -425,10 +425,8 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
 
     triggerExit[key].push_back(dataA);
 
-    auto &activeTriggers = triggerActive[key];
-    activeTriggers.erase(
-        std::remove(activeTriggers.begin(), activeTriggers.end(), dataA),
-        activeTriggers.end());
+    // PERF: O(1) set erase (was O(n) with erase-remove)
+    triggerActive[key].erase(dataA);
     return;
   }
 
@@ -439,17 +437,11 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
   CollisionEvent event = {dataA, dataB};
   collisionExit[key].push_back(event);
 
-  auto &activeCollisions = collisionActive[key];
-  activeCollisions.erase(
-      std::remove_if(activeCollisions.begin(), activeCollisions.end(),
-                     [dataA, dataB](const CollisionEvent &e) {
-                       return (e.objectA == dataA && e.objectB == dataB) ||
-                              (e.objectA == dataB && e.objectB == dataA);
-                     }),
-      activeCollisions.end());
+  // PERF: O(1) set erase (was O(n) with erase-remove)
+  collisionActive[key].erase(CollisionPair(dataA, dataB));
 
   SPDLOG_TRACE("Active prune: key='{}' collisions now={}", key,
-               (int)activeCollisions.size());
+               (int)collisionActive[key].size());
 
   if (registry->all_of<ColliderComponent>(entityA)) {
     auto &colliderA = registry->get<ColliderComponent>(entityA);

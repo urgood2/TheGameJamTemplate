@@ -69,10 +69,11 @@ end
 local function destroyEntry(entry)
     if not entry then return end
 
-    -- Hide tooltip if showing for this entry
+    -- Hide tooltips if showing for this entry (both card and wand)
     if activeTooltipEntry == entry then
         if hideSimpleTooltip then
-            hideSimpleTooltip("trigger_strip_" .. entry.entity)
+            hideSimpleTooltip("trigger_strip_card_" .. entry.entity)
+            hideSimpleTooltip("trigger_strip_wand_" .. entry.entity)
         end
         activeTooltipEntry = nil
     end
@@ -315,10 +316,11 @@ function TriggerStripUI.hide()
 
     log_debug("TriggerStripUI.hide called from:", debug.traceback())
 
-    -- Hide any active tooltip
+    -- Hide any active tooltips (both card and wand)
     if activeTooltipEntry then
         if hideSimpleTooltip then
-            hideSimpleTooltip("trigger_strip_" .. activeTooltipEntry.entity)
+            hideSimpleTooltip("trigger_strip_card_" .. activeTooltipEntry.entity)
+            hideSimpleTooltip("trigger_strip_wand_" .. activeTooltipEntry.entity)
         end
         activeTooltipEntry = nil
     end
@@ -445,44 +447,152 @@ end
 -- TOOLTIPS
 --------------------------------------------------------------------------------
 
+-- Smaller font sizes for compact dual-tooltip display
+local TOOLTIP_TITLE_SIZE = 18
+local TOOLTIP_BODY_SIZE = 14
+local TOOLTIP_GAP = 4  -- Gap between stacked tooltips
+
+-- Helper to get wandDef from entry's wandId (action board entity)
+local function getWandDefForEntry(entry)
+    if not entry or not entry.wandId then return nil end
+    if not board_sets then return nil end
+
+    for _, boardSet in ipairs(board_sets) do
+        if boardSet.action_board_id == entry.wandId then
+            return boardSet.wandDef
+        end
+    end
+    return nil
+end
+
+-- Build compact wand stats text
+local function buildWandStatsText(wandDef)
+    if not wandDef then return "" end
+
+    local parts = {}
+
+    if wandDef.cast_block_size and wandDef.cast_block_size > 0 then
+        table.insert(parts, "Cast: " .. wandDef.cast_block_size)
+    end
+    if wandDef.cast_delay and wandDef.cast_delay > 0 then
+        table.insert(parts, "Delay: " .. string.format("%.1fs", wandDef.cast_delay))
+    end
+    if wandDef.recharge_time and wandDef.recharge_time > 0 then
+        table.insert(parts, "Recharge: " .. string.format("%.1fs", wandDef.recharge_time))
+    end
+    if wandDef.total_card_slots and wandDef.total_card_slots > 0 then
+        table.insert(parts, "Slots: " .. wandDef.total_card_slots)
+    end
+
+    return table.concat(parts, " | ")
+end
+
 local function showTriggerTooltip(entry)
     if not entry or not registry:valid(entry.entity) then return end
-    if not showSimpleTooltipAbove then return end
+    if not ensureSimpleTooltip then return end
 
     -- Get trigger card definition
-    local title = entry.triggerId or "Trigger"
-    local body = ""
+    local triggerTitle = entry.triggerId or "Trigger"
+    local triggerBody = ""
 
     if WandEngine and WandEngine.trigger_card_defs then
         local cardDef = WandEngine.trigger_card_defs[entry.triggerId]
         if cardDef then
-            title = cardDef.name or entry.triggerId
-            body = cardDef.description or ""
-
-            -- Add trigger type info
-            if cardDef.trigger_type then
-                body = body .. "\n\nType: " .. cardDef.trigger_type
-            end
+            triggerTitle = cardDef.name or entry.triggerId
+            triggerBody = cardDef.description or ""
         end
     end
 
-    showSimpleTooltipAbove(
-        "trigger_strip_" .. entry.entity,
-        title,
-        body,
-        entry.entity,
-        { titleFontSize = 28, bodyFontSize = 24, offset = 10 }
-    )
+    -- Get wand definition
+    local wandDef = getWandDefForEntry(entry)
+    local wandTitle = wandDef and (wandDef.name or wandDef.id or "Wand") or "Wand"
+    local wandBody = buildWandStatsText(wandDef)
+
+    -- Calculate position for stacked tooltips
+    -- We'll position the trigger tooltip above, and wand tooltip below it
+    local entryTransform = component_cache.get(entry.entity, Transform)
+    if not entryTransform then return end
+
+    local anchorX = (entryTransform.actualX or 0) + (entryTransform.actualW or CARD_WIDTH) + 10
+    local anchorY = entryTransform.actualY or 0
+
+    -- Create/show trigger tooltip (on top)
+    local triggerKey = "trigger_strip_card_" .. entry.entity
+    local triggerTooltip = ensureSimpleTooltip(triggerKey, triggerTitle, triggerBody, {
+        titleFontSize = TOOLTIP_TITLE_SIZE,
+        bodyFontSize = TOOLTIP_BODY_SIZE,
+        maxWidth = 200,
+    })
+
+    if triggerTooltip and registry:valid(triggerTooltip) then
+        -- Add state tags for visibility
+        if ui and ui.box and ui.box.AddStateTagToUIBox then
+            ui.box.ClearStateTagsFromUIBox(triggerTooltip)
+            if PLANNING_STATE then ui.box.AddStateTagToUIBox(triggerTooltip, PLANNING_STATE) end
+            if ACTION_STATE then ui.box.AddStateTagToUIBox(triggerTooltip, ACTION_STATE) end
+        end
+
+        -- Position to the right of the card
+        local tt = component_cache.get(triggerTooltip, Transform)
+        if tt then
+            tt.actualX = anchorX
+            tt.actualY = anchorY
+            tt.visualX = tt.actualX
+            tt.visualY = tt.actualY
+        end
+    end
+
+    -- Create/show wand tooltip (below trigger tooltip)
+    local wandKey = "trigger_strip_wand_" .. entry.entity
+    local wandTooltip = ensureSimpleTooltip(wandKey, wandTitle, wandBody, {
+        titleFontSize = TOOLTIP_TITLE_SIZE,
+        bodyFontSize = TOOLTIP_BODY_SIZE,
+        maxWidth = 200,
+    })
+
+    if wandTooltip and registry:valid(wandTooltip) then
+        -- Add state tags for visibility
+        if ui and ui.box and ui.box.AddStateTagToUIBox then
+            ui.box.ClearStateTagsFromUIBox(wandTooltip)
+            if PLANNING_STATE then ui.box.AddStateTagToUIBox(wandTooltip, PLANNING_STATE) end
+            if ACTION_STATE then ui.box.AddStateTagToUIBox(wandTooltip, ACTION_STATE) end
+        end
+
+        -- Position below trigger tooltip
+        local triggerHeight = 0
+        if triggerTooltip and registry:valid(triggerTooltip) then
+            local triggerT = component_cache.get(triggerTooltip, Transform)
+            if triggerT then
+                triggerHeight = triggerT.actualH or 40
+            end
+        end
+
+        local wt = component_cache.get(wandTooltip, Transform)
+        if wt then
+            wt.actualX = anchorX
+            wt.actualY = anchorY + triggerHeight + TOOLTIP_GAP
+            wt.visualX = wt.actualX
+            wt.visualY = wt.actualY
+        end
+    end
 
     activeTooltipEntry = entry
+end
+
+local function hideTriggerTooltips(entry)
+    if not entry then return end
+    if hideSimpleTooltip then
+        hideSimpleTooltip("trigger_strip_card_" .. entry.entity)
+        hideSimpleTooltip("trigger_strip_wand_" .. entry.entity)
+    end
 end
 
 function TriggerStripUI.updateTooltip()
     -- Focus changed - reset tooltip
     if focusedEntry ~= activeTooltipEntry then
-        -- Hide existing tooltip
-        if activeTooltipEntry and hideSimpleTooltip then
-            hideSimpleTooltip("trigger_strip_" .. activeTooltipEntry.entity)
+        -- Hide existing tooltips (both card and wand)
+        if activeTooltipEntry then
+            hideTriggerTooltips(activeTooltipEntry)
         end
 
         -- Cancel pending tooltip timer
@@ -491,21 +601,23 @@ function TriggerStripUI.updateTooltip()
             tooltipTimerTag = nil
         end
 
+        -- Track the new focused entry immediately to prevent timer reset loop
+        activeTooltipEntry = focusedEntry
+
         -- Start new delayed tooltip if we have a focused entry
         if focusedEntry then
             tooltipTimerTag = "trigger_strip_tooltip_" .. focusedEntry.entity
             timer.after_opts({
                 delay = TOOLTIP_DELAY,
                 action = function()
-                    if focusedEntry and strip_visible then
+                    -- Verify focus hasn't changed during delay
+                    if activeTooltipEntry == focusedEntry and strip_visible then
                         showTriggerTooltip(focusedEntry)
                     end
                 end,
                 tag = tooltipTimerTag
             })
         end
-
-        activeTooltipEntry = nil
     end
 end
 

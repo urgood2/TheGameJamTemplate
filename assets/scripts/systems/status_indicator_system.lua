@@ -271,16 +271,15 @@ function StatusIndicatorSystem.startParticles(entity, status_id, def)
         local cy = transform.actualY + (transform.actualH or 0) * 0.5
 
         local particleDef = def.particles()
-        if particleDef then
+        if particleDef and particleDef.burst then
             if def.particle_orbit then
                 -- Spawn in orbit pattern
                 local angle = os.clock() * 3 + math.random() * 0.5
                 local radius = 20
-                particleDef:at(cx + math.cos(angle) * radius, cy + math.sin(angle) * radius)
+                particleDef:burst(1):at(cx + math.cos(angle) * radius, cy + math.sin(angle) * radius)
             else
-                particleDef:at(cx, cy)
+                particleDef:burst(1):at(cx, cy)
             end
-            particleDef:spawn()
         end
     end, -1, false, nil, tag)
 

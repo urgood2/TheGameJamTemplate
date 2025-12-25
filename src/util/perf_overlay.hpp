@@ -25,6 +25,7 @@
 #include <array>
 #include <string>
 #include <cstdint>
+#include "sol/sol.hpp"
 
 namespace perf_overlay {
 
@@ -84,6 +85,6 @@ float getAverageFPS();
 float getFrameTimeP99();
 
 // Lua binding
-void exposeToLua(struct sol::state& lua);
+void exposeToLua(sol::state& lua);
 
 }  // namespace perf_overlay

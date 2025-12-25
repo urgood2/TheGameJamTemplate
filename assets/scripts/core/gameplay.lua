@@ -44,6 +44,8 @@ local CombatDebugPanel = require("ui.combat_debug_panel")
 local UIOverlayToggles = require("ui.ui_overlay_toggles")
 local EntityInspector = require("ui.entity_inspector")
 local tooltip_registry = require("core.tooltip_registry")
+local StatusIndicatorSystem = require("systems.status_indicator_system")
+local MarkSystem = require("systems.mark_system")
 local C = require("core.constants")
 local CardsData = require("data.cards")
 
@@ -4675,6 +4677,14 @@ function initPlanningPhase()
             LevelUpScreen.draw()
         end
 
+        -- Update combat systems
+        if StatusIndicatorSystem then
+            StatusIndicatorSystem.update(dt)
+        end
+        if MarkSystem then
+            MarkSystem.update(dt)
+        end
+
         -- Process hover regions after all UIs have registered
         HoverRegistry.update()
     end)
@@ -7089,6 +7099,12 @@ function startPlanningPhase()
 	    SubcastDebugUI.clear()
 	    SubcastDebugUI.init()
 	    TriggerStripUI.hide()
+	    if StatusIndicatorSystem and StatusIndicatorSystem.cleanup then
+	        StatusIndicatorSystem.cleanup()
+	    end
+	    if MarkSystem and MarkSystem.cleanup then
+	        MarkSystem.cleanup()
+	    end
 
     if record_telemetry then
         local now = os.clock()
@@ -7149,6 +7165,12 @@ function startShopPhase()
         setPlanningPeekMode(false)
     end
     WandExecutor.cleanup()
+    if StatusIndicatorSystem and StatusIndicatorSystem.cleanup then
+        StatusIndicatorSystem.cleanup()
+    end
+    if MarkSystem and MarkSystem.cleanup then
+        MarkSystem.cleanup()
+    end
 
     if record_telemetry then
         local now = os.clock()

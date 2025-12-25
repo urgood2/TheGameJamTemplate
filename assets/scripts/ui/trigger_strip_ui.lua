@@ -465,26 +465,26 @@ local function getWandDefForEntry(entry)
     return nil
 end
 
--- Build compact wand stats text
+-- Build wand stats text (multi-line for proper wrapping)
 local function buildWandStatsText(wandDef)
     if not wandDef then return "" end
 
-    local parts = {}
+    local lines = {}
 
     if wandDef.cast_block_size and wandDef.cast_block_size > 0 then
-        table.insert(parts, "Cast: " .. wandDef.cast_block_size)
+        table.insert(lines, "Cast: " .. wandDef.cast_block_size)
     end
     if wandDef.cast_delay and wandDef.cast_delay > 0 then
-        table.insert(parts, "Delay: " .. string.format("%.1fs", wandDef.cast_delay))
+        table.insert(lines, "Delay: " .. string.format("%.1fs", wandDef.cast_delay))
     end
     if wandDef.recharge_time and wandDef.recharge_time > 0 then
-        table.insert(parts, "Recharge: " .. string.format("%.1fs", wandDef.recharge_time))
+        table.insert(lines, "Recharge: " .. string.format("%.1fs", wandDef.recharge_time))
     end
     if wandDef.total_card_slots and wandDef.total_card_slots > 0 then
-        table.insert(parts, "Slots: " .. wandDef.total_card_slots)
+        table.insert(lines, "Slots: " .. wandDef.total_card_slots)
     end
 
-    return table.concat(parts, " | ")
+    return table.concat(lines, "\n")
 end
 
 local function showTriggerTooltip(entry)
@@ -508,15 +508,20 @@ local function showTriggerTooltip(entry)
     local wandTitle = wandDef and (wandDef.name or wandDef.id or "Wand") or "Wand"
     local wandBody = buildWandStatsText(wandDef)
 
-    -- Calculate position for stacked tooltips
-    -- We'll position the trigger tooltip above, and wand tooltip below it
+    -- Get card position and dimensions
     local entryTransform = component_cache.get(entry.entity, Transform)
     if not entryTransform then return end
 
-    local anchorX = (entryTransform.actualX or 0) + (entryTransform.actualW or CARD_WIDTH) + 10
-    local anchorY = entryTransform.actualY or 0
+    local cardX = entryTransform.actualX or 0
+    local cardY = entryTransform.actualY or 0
+    local cardW = entryTransform.actualW or CARD_WIDTH
+    local cardH = entryTransform.actualH or CARD_HEIGHT
+    local cardCenterY = cardY + cardH / 2
 
-    -- Create/show trigger tooltip (on top)
+    -- X position: to the right of the card
+    local tooltipX = cardX + cardW + 10
+
+    -- Create both tooltips first (to measure their heights)
     local triggerKey = "trigger_strip_card_" .. entry.entity
     local triggerTooltip = ensureSimpleTooltip(triggerKey, triggerTitle, triggerBody, {
         titleFontSize = TOOLTIP_TITLE_SIZE,
@@ -524,25 +529,6 @@ local function showTriggerTooltip(entry)
         maxWidth = 200,
     })
 
-    if triggerTooltip and registry:valid(triggerTooltip) then
-        -- Add state tags for visibility
-        if ui and ui.box and ui.box.AddStateTagToUIBox then
-            ui.box.ClearStateTagsFromUIBox(triggerTooltip)
-            if PLANNING_STATE then ui.box.AddStateTagToUIBox(triggerTooltip, PLANNING_STATE) end
-            if ACTION_STATE then ui.box.AddStateTagToUIBox(triggerTooltip, ACTION_STATE) end
-        end
-
-        -- Position to the right of the card
-        local tt = component_cache.get(triggerTooltip, Transform)
-        if tt then
-            tt.actualX = anchorX
-            tt.actualY = anchorY
-            tt.visualX = tt.actualX
-            tt.visualY = tt.actualY
-        end
-    end
-
-    -- Create/show wand tooltip (below trigger tooltip)
     local wandKey = "trigger_strip_wand_" .. entry.entity
     local wandTooltip = ensureSimpleTooltip(wandKey, wandTitle, wandBody, {
         titleFontSize = TOOLTIP_TITLE_SIZE,
@@ -550,27 +536,53 @@ local function showTriggerTooltip(entry)
         maxWidth = 200,
     })
 
+    -- Measure tooltip heights
+    local triggerHeight = 0
+    local wandHeight = 0
+
+    if triggerTooltip and registry:valid(triggerTooltip) then
+        local tt = component_cache.get(triggerTooltip, Transform)
+        if tt then triggerHeight = tt.actualH or 40 end
+    end
+
     if wandTooltip and registry:valid(wandTooltip) then
-        -- Add state tags for visibility
+        local wt = component_cache.get(wandTooltip, Transform)
+        if wt then wandHeight = wt.actualH or 40 end
+    end
+
+    -- Calculate total height and centered Y position
+    local totalHeight = triggerHeight + TOOLTIP_GAP + wandHeight
+    local startY = cardCenterY - totalHeight / 2
+
+    -- Position trigger tooltip (on top)
+    if triggerTooltip and registry:valid(triggerTooltip) then
+        if ui and ui.box and ui.box.AddStateTagToUIBox then
+            ui.box.ClearStateTagsFromUIBox(triggerTooltip)
+            if PLANNING_STATE then ui.box.AddStateTagToUIBox(triggerTooltip, PLANNING_STATE) end
+            if ACTION_STATE then ui.box.AddStateTagToUIBox(triggerTooltip, ACTION_STATE) end
+        end
+
+        local tt = component_cache.get(triggerTooltip, Transform)
+        if tt then
+            tt.actualX = tooltipX
+            tt.actualY = startY
+            tt.visualX = tt.actualX
+            tt.visualY = tt.actualY
+        end
+    end
+
+    -- Position wand tooltip (below trigger tooltip)
+    if wandTooltip and registry:valid(wandTooltip) then
         if ui and ui.box and ui.box.AddStateTagToUIBox then
             ui.box.ClearStateTagsFromUIBox(wandTooltip)
             if PLANNING_STATE then ui.box.AddStateTagToUIBox(wandTooltip, PLANNING_STATE) end
             if ACTION_STATE then ui.box.AddStateTagToUIBox(wandTooltip, ACTION_STATE) end
         end
 
-        -- Position below trigger tooltip
-        local triggerHeight = 0
-        if triggerTooltip and registry:valid(triggerTooltip) then
-            local triggerT = component_cache.get(triggerTooltip, Transform)
-            if triggerT then
-                triggerHeight = triggerT.actualH or 40
-            end
-        end
-
         local wt = component_cache.get(wandTooltip, Transform)
         if wt then
-            wt.actualX = anchorX
-            wt.actualY = anchorY + triggerHeight + TOOLTIP_GAP
+            wt.actualX = tooltipX
+            wt.actualY = startY + triggerHeight + TOOLTIP_GAP
             wt.visualX = wt.actualX
             wt.visualY = wt.actualY
         end

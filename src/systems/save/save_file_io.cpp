@@ -169,6 +169,37 @@ void process_pending_callbacks() {
     }
 }
 
+void init_filesystem() {
+#if defined(__EMSCRIPTEN__)
+    // Create saves directory and mount IDBFS for web persistence
+    EM_ASM({
+        // Create directory if needed
+        try {
+            FS.mkdir('/saves');
+        } catch (e) {
+            // Directory may already exist
+        }
+
+        // Mount IDBFS for persistent storage
+        FS.mount(IDBFS, {}, '/saves');
+
+        // Load existing data from IndexedDB into MEMFS
+        FS.syncfs(true, function(err) {
+            if (err) {
+                console.error('[save_io] Failed to load from IndexedDB:', err);
+            } else {
+                console.log('[save_io] IDBFS initialized, existing saves loaded');
+            }
+        });
+    });
+    SPDLOG_INFO("save_io: IDBFS mounted at /saves");
+#else
+    // Desktop: just ensure saves directory exists
+    fs::create_directories("saves");
+    SPDLOG_INFO("save_io: saves directory ready");
+#endif
+}
+
 void register_lua_bindings(sol::state& lua) {
     sol::table save_io_table = lua.create_named_table("save_io");
 
@@ -176,6 +207,7 @@ void register_lua_bindings(sol::state& lua) {
     save_io_table.set_function("file_exists", &file_exists);
     save_io_table.set_function("delete_file", &delete_file);
     save_io_table.set_function("save_file_async", &save_file_async);
+    save_io_table.set_function("init_filesystem", &init_filesystem);
 
     SPDLOG_DEBUG("save_io Lua bindings registered");
 }

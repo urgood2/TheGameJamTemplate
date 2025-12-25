@@ -28,6 +28,12 @@ void save_file_async(const std::string& path,
 /// Process pending callbacks on main thread. Call once per frame.
 void process_pending_callbacks();
 
+/// Initialize filesystem for saves.
+/// Desktop: Creates saves/ directory.
+/// Web: Mounts IDBFS and loads existing saves from IndexedDB.
+/// Call once at startup before any save/load operations.
+void init_filesystem();
+
 /// Register Lua bindings for save_io module.
 void register_lua_bindings(sol::state& lua);
 

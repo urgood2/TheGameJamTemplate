@@ -243,7 +243,11 @@ end
 
 --- Initialize the save system (call early in startup)
 function SaveManager.init()
-    log_info(" initializing")
+    log_info("initializing")
+
+    -- Initialize filesystem (creates saves/ dir on desktop, mounts IDBFS on web)
+    save_io.init_filesystem()
+
     SaveManager.load()
 end
 

@@ -95,6 +95,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Stack multiple shaders | \pageref{recipe:stack-shaders} |
 | Draw text | \pageref{recipe:draw-text} |
 | Spawn dynamic text (damage numbers) | \pageref{recipe:text-builder} |
+| Flash entity on hit | \pageref{recipe:hitfx} |
 | **Particles** | |
 | Define particle effect | \pageref{recipe:particle-builder} |
 | Configure emission (where/how) | \pageref{recipe:particle-emission} |
@@ -103,10 +104,12 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | **UI** | |
 | Create UI with DSL | \pageref{recipe:ui-dsl} |
 | Add tooltip on hover | \pageref{recipe:tooltip} |
+| Use tooltip registry (reusable templates) | \pageref{recipe:tooltip-registry} |
 | Create grid layout | \pageref{recipe:ui-grid} |
 | Use styled localization for colored text | \pageref{recipe:styled-localization} |
 | Create localized tooltip with color codes | \pageref{recipe:localized-tooltip} |
 | **Combat** | |
+| Define enemy behaviors declaratively | \pageref{recipe:enemy-behaviors} |
 | Spawn projectile | \pageref{recipe:spawn-projectile} |
 | Configure projectile behavior | \pageref{recipe:projectile-preset} |
 | **Cards & Wands** | |
@@ -3006,6 +3009,81 @@ end
 
 ***
 
+## Hit Flash Effects (hitfx)
+
+\label{recipe:hitfx}
+
+**When to use:** Flash an entity white when hit by damage, with proper per-entity timing.
+
+```lua
+local hitfx = require("core.hitfx")
+
+-- Flash entity for default duration (0.2s)
+hitfx.flash(enemy)
+
+-- Flash with custom duration
+hitfx.flash(enemy, 0.3)  -- 300ms flash
+
+-- Get cancel function to stop early
+local cancel = hitfx.flash(enemy, 0.5)
+-- Later...
+cancel()  -- Stop flash immediately
+
+-- Flash indefinitely until manually stopped
+local stop = hitfx.flash_start(enemy)
+-- When damage animation ends:
+stop()
+
+-- Or stop by entity
+hitfx.flash_stop(enemy)
+```
+
+*— from core/hitfx.lua:94-151*
+
+**API Reference:**
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `hitfx.flash(entity, duration?)` | entity, duration (default 0.2) | cancel function | Flash and auto-stop after duration |
+| `hitfx.flash_start(entity)` | entity | cancel function | Flash indefinitely until stopped |
+| `hitfx.flash_stop(entity)` | entity | - | Stop any active flash on entity |
+
+**How it works:**
+
+1. Adds `flash` shader pass to entity's shader pipeline
+2. Sets per-entity `flashStartTime` uniform to current time (so flash starts at white)
+3. Schedules removal of shader pass after duration
+4. Returns cancel function for early termination
+
+**Real usage example:**
+
+```lua
+-- When enemy takes damage
+signal.register("combat_hit", function(entity, data)
+    if entity_cache.valid(entity) then
+        hitfx.flash(entity, 0.15)
+    end
+end)
+
+-- In damage application
+function applyDamage(target, amount)
+    local script = safe_script_get(target)
+    if script then
+        script.health = script.health - amount
+        hitfx.flash(target)  -- Visual feedback
+        popup.damage(target, amount)  -- Damage number
+    end
+end
+```
+
+**Gotcha:** hitfx automatically manages shader components. You don't need to pre-add the flash shader.
+
+**Gotcha:** Multiple rapid flashes on the same entity will restart the timer each time, keeping the entity flashing.
+
+**Gotcha:** If the entity is destroyed, the scheduled cleanup is automatically skipped.
+
+***
+
 ## Text Builder (Fluent API)
 
 \label{recipe:text-builder}
@@ -3915,6 +3993,104 @@ dsl.text("Info", {
 
 ***
 
+## Tooltip Registry (Reusable Templates)
+
+\label{recipe:tooltip-registry}
+
+**When to use:** Define tooltip templates once and attach them to entities by name, with parameterized content.
+
+**Pattern:** Register templates with `{param}` placeholders, attach to entities for automatic hover behavior.
+
+```lua
+local tooltips = require("core.tooltip_registry")
+
+-- 1. Register a tooltip template (usually at startup)
+tooltips.register("fire_damage", {
+    title = "Fire Damage",
+    body = "Deals {damage|red} fire damage to the target"
+})
+
+-- 2. Attach to entity (shows on hover automatically)
+tooltips.attachToEntity(enemy, "fire_damage", { damage = 25 })
+
+-- 3. Programmatic show/hide (optional)
+tooltips.showFor(enemy)
+tooltips.hide()
+
+-- 4. Cleanup when entity is destroyed
+tooltips.detachFromEntity(enemy)
+```
+
+*— from core/tooltip_registry.lua:93-171*
+
+**Template Syntax:**
+
+| Syntax | Description | Example |
+|--------|-------------|---------|
+| `{param}` | Simple substitution | `"Deals {damage} damage"` → `"Deals 25 damage"` |
+| `{param\|color}` | Substitution with color | `"Deals {damage\|red} damage"` → `"Deals [25](color=red) damage"` |
+
+**API Reference:**
+
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| `tooltips.register(name, def)` | name: string, def: { title, body, opts? } | Register a named template |
+| `tooltips.isRegistered(name)` | name: string | Check if template exists |
+| `tooltips.attachToEntity(entity, name, params?)` | entity, tooltipName, params table | Attach tooltip with params |
+| `tooltips.detachFromEntity(entity)` | entity | Remove tooltip attachment |
+| `tooltips.showFor(entity)` | entity | Manually show attached tooltip |
+| `tooltips.hide()` | - | Hide current tooltip |
+| `tooltips.getActiveTooltip()` | - | Get current tooltip entity ID |
+| `tooltips.clearAll()` | - | Detach all tooltips and hide |
+
+**Real usage example:**
+
+```lua
+-- At game startup, register all tooltip templates
+local tooltips = require("core.tooltip_registry")
+
+tooltips.register("enemy_stats", {
+    title = "{name}",
+    body = "HP: {hp|red}\nDamage: {damage|gold}"
+})
+
+tooltips.register("item_pickup", {
+    title = "{item_name|gold}",
+    body = "{description}"
+})
+
+-- When spawning enemies
+function spawnEnemy(def)
+    local entity = EntityBuilder.create({
+        sprite = def.sprite,
+        position = { x = def.x, y = def.y }
+    })
+
+    tooltips.attachToEntity(entity, "enemy_stats", {
+        name = def.name,
+        hp = def.hp,
+        damage = def.damage
+    })
+
+    return entity
+end
+```
+
+**How it works:**
+
+1. `register()` stores template definitions by name
+2. `attachToEntity()` wraps the entity's hover handlers
+3. On hover, template is interpolated with params and shown via `showSimpleTooltipAbove()`
+4. On stop hover, tooltip is hidden via `hideSimpleTooltip()`
+
+**Gotcha:** Original hover handlers are preserved and called before showing the tooltip.
+
+**Gotcha:** Templates are cached by name + params for efficient reuse.
+
+**Gotcha:** Call `tooltips.clearAll()` when resetting the game to prevent stale attachments.
+
+***
+
 ## Click Handlers on UI Elements
 
 **When to use:** Make UI elements respond to clicks (buttons, cards, interactive icons).
@@ -4328,7 +4504,200 @@ showSimpleTooltipAbove(cardEntity, tooltip)
 
 # Combat & Projectiles
 
-This chapter covers the projectile system for spawning, moving, and destroying projectiles with various behaviors.
+This chapter covers the projectile system, enemy behavior composition, and combat mechanics.
+
+## Enemy Behavior Library (Declarative Composition)
+
+\label{recipe:enemy-behaviors}
+
+**When to use:** Define enemy AI behaviors declaratively instead of writing repetitive timer-based code.
+
+**Pattern:** Define behaviors as arrays in enemy data, library handles timers and cleanup automatically.
+
+### Defining Enemies with Behaviors
+
+```lua
+-- In data/enemies.lua
+enemies.goblin = {
+    sprite = "enemy_type_1.png",
+    hp = 30, speed = 60, damage = 5,
+    size = { 32, 32 },
+
+    behaviors = {
+        "chase",  -- Simple: uses ctx.speed, default interval
+    },
+}
+
+enemies.dasher = {
+    sprite = "enemy_type_1.png",
+    hp = 25, speed = 50, dash_speed = 300, dash_cooldown = 3.0,
+
+    behaviors = {
+        "wander",
+        { "dash", cooldown = "dash_cooldown", speed = "dash_speed" },
+    },
+}
+
+enemies.summoner = {
+    sprite = "enemy_type_2.png",
+    hp = 40, speed = 30, summon_cooldown = 5.0,
+
+    behaviors = {
+        { "summon", cooldown = "summon_cooldown" },
+        "flee",
+    },
+}
+```
+
+*— from core/behaviors.lua:8-29*
+
+### Built-in Behaviors
+
+| Behavior | Default Config | Description |
+|----------|----------------|-------------|
+| `"chase"` | interval=0.5, speed=ctx.speed | Move toward player |
+| `"wander"` | interval=0.5, speed=ctx.speed | Random movement |
+| `"flee"` | interval=0.5, distance=150 | Move away from player |
+| `"kite"` | interval=0.5, range=ctx.range | Maintain distance (ranged) |
+| `"dash"` | cooldown=ctx.dash_cooldown | Periodic dash attack |
+| `"trap"` | cooldown=ctx.trap_cooldown | Drop hazards |
+| `"summon"` | cooldown=ctx.summon_cooldown | Spawn minions |
+| `"rush"` | interval=0.3 | Fast chase (aggressive) |
+
+### Config Value Resolution
+
+Config values can reference enemy context fields:
+
+```lua
+behaviors = {
+    -- String value = lookup from ctx
+    { "dash", speed = "dash_speed" },  -- Uses ctx.dash_speed
+
+    -- Number value = use directly
+    { "chase", interval = 0.3 },       -- 0.3 second interval
+
+    -- Function value = computed
+    { "flee", distance = function(ctx) return ctx.hp * 2 end },
+}
+```
+
+*— from core/behaviors.lua:75-89*
+
+### Registering Custom Behaviors
+
+```lua
+local behaviors = require("core.behaviors")
+
+behaviors.register("teleport", {
+    -- Default config values
+    defaults = {
+        interval = 5.0,
+        range = 100
+    },
+
+    -- Called once when behavior starts
+    on_start = function(e, ctx, helpers, config)
+        print("Teleport behavior started for", e)
+    end,
+
+    -- Called each interval (timer-based)
+    on_tick = function(e, ctx, helpers, config)
+        local angle = math.random() * math.pi * 2
+        local dx = math.cos(angle) * config.range
+        local dy = math.sin(angle) * config.range
+        helpers.teleport(e, dx, dy)
+    end,
+
+    -- Called when behavior stops
+    on_stop = function(e, ctx, helpers, config)
+        print("Teleport behavior stopped")
+    end,
+})
+```
+
+*— from core/behaviors.lua:122-148*
+
+### API Reference
+
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| `behaviors.register(name, def)` | name: string, def: table | Register a named behavior |
+| `behaviors.is_registered(name)` | name: string | Check if behavior exists |
+| `behaviors.list()` | - | Get all registered behavior names |
+| `behaviors.apply(e, ctx, helpers, list)` | entity, context, helpers, behavior_list | Apply behaviors to entity |
+| `behaviors.cleanup(e)` | entity | Stop all behaviors for entity |
+
+### Behavior Definition Structure
+
+```lua
+{
+    -- Default config values (optional)
+    defaults = {
+        interval = 0.5,    -- Timer interval in seconds
+        speed = "speed",   -- String = lookup from ctx
+    },
+
+    -- Called once when behavior starts (optional)
+    on_start = function(e, ctx, helpers, config) end,
+
+    -- Called each interval (required for timer-based behaviors)
+    on_tick = function(e, ctx, helpers, config) end,
+
+    -- Called when behavior stops (optional)
+    on_stop = function(e, ctx, helpers, config) end,
+}
+```
+
+**Auto-Cleanup:**
+
+- All behavior timers are tagged with entity ID
+- `behaviors.cleanup(e)` cancels all timers for that entity
+- Call cleanup when entity is destroyed to prevent memory leaks
+
+**Real usage example:**
+
+```lua
+-- In EnemyFactory.spawn()
+local behaviors = require("core.behaviors")
+
+function EnemyFactory.spawn(def, x, y)
+    local entity, script = EntityBuilder.create({
+        sprite = def.sprite,
+        position = { x = x, y = y },
+        data = { hp = def.hp, speed = def.speed, damage = def.damage }
+    })
+
+    -- Build context from enemy definition
+    local ctx = {
+        speed = def.speed,
+        dash_speed = def.dash_speed,
+        dash_cooldown = def.dash_cooldown,
+        -- ... other properties
+    }
+
+    -- Apply behaviors
+    if def.behaviors then
+        behaviors.apply(entity, ctx, wave_helpers, def.behaviors)
+    end
+
+    -- Cleanup on death
+    signal.register("entity_destroyed", function(eid)
+        if eid == entity then
+            behaviors.cleanup(entity)
+        end
+    end)
+
+    return entity
+end
+```
+
+**Gotcha:** Behavior names must match registered behaviors exactly. Use `behaviors.list()` to see available behaviors.
+
+**Gotcha:** Config strings that match ctx field names are auto-resolved. Use literal strings with different names to avoid accidental resolution.
+
+**Gotcha:** The `helpers` object provides utility functions like `move_toward_player`, `teleport`, etc. These are passed from the wave system.
+
+***
 
 ## Spawn Basic Projectile
 
@@ -13265,6 +13634,11 @@ Alphabetical listing of all documented functions and APIs.
 | `animation_system.createStillAnimationFromSpriteUUID()` | `core.animation_system` | \pageref{recipe:animation-system} |
 | `animation_system.resizeAnimationObjectsInEntityToFit()` | `core.animation_system` | \pageref{recipe:animation-system} |
 | `animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI()` | `core.animation_system` | \pageref{recipe:animation-system} |
+| `behaviors.apply()` | `core.behaviors` | \pageref{recipe:enemy-behaviors} |
+| `behaviors.cleanup()` | `core.behaviors` | \pageref{recipe:enemy-behaviors} |
+| `behaviors.is_registered()` | `core.behaviors` | \pageref{recipe:enemy-behaviors} |
+| `behaviors.list()` | `core.behaviors` | \pageref{recipe:enemy-behaviors} |
+| `behaviors.register()` | `core.behaviors` | \pageref{recipe:enemy-behaviors} |
 | `component_cache.get()` | `core.component_cache` | \pageref{recipe:get-component} |
 | `dsl.anim()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
 | `dsl.dynamic()` | `ui.ui_syntax_sugar` | \pageref{recipe:ui-dsl} |
@@ -13290,6 +13664,9 @@ Alphabetical listing of all documented functions and APIs.
 | `GetWorldToScreen2D()` | Global | \pageref{recipe:screen-camera} |
 | `globals.camera` | Global | \pageref{recipe:screen-camera} |
 | `hardReset()` | Global | \pageref{recipe:game-control} |
+| `hitfx.flash()` | `core.hitfx` | \pageref{recipe:hitfx} |
+| `hitfx.flash_start()` | `core.hitfx` | \pageref{recipe:hitfx} |
+| `hitfx.flash_stop()` | `core.hitfx` | \pageref{recipe:hitfx} |
 | `is_state_active()` | `util.lua` | \pageref{recipe:validate-entity} |
 | `JokerSystem.add_joker()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
 | `JokerSystem.clear_jokers()` | `wand.joker_system` | \pageref{recipe:joker-manage} |
@@ -13339,6 +13716,14 @@ Alphabetical listing of all documented functions and APIs.
 | `timer.every()` | `core.timer` | \pageref{recipe:timer-every} |
 | `timer.every_opts()` | `core.timer` | \pageref{recipe:timer-every} |
 | `timer.every_physics_step()` | `core.timer` | \pageref{recipe:timer-physics} |
+| `tooltips.attachToEntity()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `tooltips.clearAll()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `tooltips.detachFromEntity()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `tooltips.getActiveTooltip()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `tooltips.hide()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `tooltips.isRegistered()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `tooltips.register()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `tooltips.showFor()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
 | `unpauseGame()` | Global | \pageref{recipe:game-control} |
 | `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
 | `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |

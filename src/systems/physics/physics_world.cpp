@@ -258,14 +258,19 @@ void PhysicsWorld::PostUpdate() {
   triggerEnter.clear();
   triggerExit.clear();
 
-  registry->view<ColliderComponent>().each([](auto &collider) {
-    collider.collisionEnter.clear();
-    collider.collisionActive.clear();
-    collider.collisionExit.clear();
-    collider.triggerEnter.clear();
-    collider.triggerActive.clear();
-    collider.triggerExit.clear();
-  });
+  // PERF: Skip per-entity collision clearing - these vectors are never populated.
+  // All collision data is stored in world-level maps (collisionEnter, collisionActive, etc.)
+  // The per-entity vectors in ColliderComponent are legacy/unused code paths.
+  // Removing this O(n) loop where n = number of entities with ColliderComponent.
+  //
+  // registry->view<ColliderComponent>().each([](auto &collider) {
+  //   collider.collisionEnter.clear();
+  //   collider.collisionActive.clear();
+  //   collider.collisionExit.clear();
+  //   collider.triggerEnter.clear();
+  //   collider.triggerActive.clear();
+  //   collider.triggerExit.clear();
+  // });
 }
 
 void PhysicsWorld::SetGravity(float gravityX, float gravityY) {

@@ -54,22 +54,23 @@ local function L(key, fallback)
     return fallback or key
 end
 
-local LEVEL_UP_MODAL_DELAY = 0.5
-local ENABLE_SURVIVOR_MASK = false
--- local bit = require("bit") -- LuaJIT's bit library
+-- Consolidated config/state to stay under Lua's 200 local variable limit
+local gameplay_cfg = {
+    LEVEL_UP_MODAL_DELAY = 0.5,
+    ENABLE_SURVIVOR_MASK = false,
+    messageQueueHooksRegistered = false,
+    avatarTestEventsFired = false,
+    DEBUG_AVATAR_TEST_EVENTS = rawget(_G, "DEBUG_AVATAR_TEST_EVENTS") or (os.getenv("ENABLE_AVATAR_DEBUG_EVENTS") == "1"),
+    cardW = 80,   -- card dimensions, reset on init
+    cardH = 112,
+}
 
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
-local messageQueueHooksRegistered = false
-local avatarTestEventsFired = false
-local DEBUG_AVATAR_TEST_EVENTS = rawget(_G, "DEBUG_AVATAR_TEST_EVENTS")
-if DEBUG_AVATAR_TEST_EVENTS == nil then
-    DEBUG_AVATAR_TEST_EVENTS = os.getenv("ENABLE_AVATAR_DEBUG_EVENTS") == "1"
-end
 
 local function ensureMessageQueueHooks()
-    if messageQueueHooksRegistered then return end
-    messageQueueHooksRegistered = true
+    if gameplay_cfg.messageQueueHooksRegistered then return end
+    gameplay_cfg.messageQueueHooksRegistered = true
 
     local function ensureMQ()
         if not MessageQueueUI.isActive then
@@ -105,8 +106,8 @@ local function ensureMessageQueueHooks()
 end
 
 local function fireAvatarDebugEvents()
-    if avatarTestEventsFired or not DEBUG_AVATAR_TEST_EVENTS then return end
-    avatarTestEventsFired = true
+    if gameplay_cfg.avatarTestEventsFired or not gameplay_cfg.DEBUG_AVATAR_TEST_EVENTS then return end
+    gameplay_cfg.avatarTestEventsFired = true
 
     local testPlayer = {}
     local cards = {}
@@ -170,8 +171,7 @@ local modifier_card_defs = {
     }
 }
 
--- card sizes
-local cardW, cardH = 80, 112 -- these are reset on init.
+-- card sizes: see gameplay_cfg.cardW and gameplay_cfg.cardH
 
 
 -- save game state strings
@@ -206,77 +206,78 @@ card_tooltip_cache = {}
 card_tooltip_disabled_cache = {}
 previously_hovered_tooltip = nil
 -- Alt-preview state: show hovered card at top Z while Alt is held
-local alt_preview_entity = nil
-local alt_preview_original_z = nil
-local currently_hovered_card = nil  -- Track which card is hovered for alt-check
+-- Consolidated into a table to stay under Lua's 200 local variable limit
+local card_ui_state = {
+    alt_entity = nil,       -- Currently previewing entity
+    alt_original_z = nil,   -- Original Z to restore
+    hovered_card = nil,     -- Currently hovered card for alt/right-click
+}
 
--- Check if Alt key is held
+-- Alt-preview and right-click transfer helper functions (using card_ui_state)
 local function isAltHeld()
-    return IsKeyDown(KeyboardKey.KEY_LEFT_ALT) or IsKeyDown(KeyboardKey.KEY_RIGHT_ALT)
+    return input.isKeyDown(KeyboardKey.KEY_LEFT_ALT) or input.isKeyDown(KeyboardKey.KEY_RIGHT_ALT)
 end
 
--- Begin alt-preview: elevate card to top Z
 local function beginAltPreview(entity)
-    if alt_preview_entity == entity then return end
-    if alt_preview_entity then
-        -- End previous preview first
-        local prevLayerOrder = component_cache.get(alt_preview_entity, LayerOrderComponent)
-        if prevLayerOrder and alt_preview_original_z then
-            prevLayerOrder.zIndex = alt_preview_original_z
+    if card_ui_state.alt_entity == entity then return end
+    if card_ui_state.alt_entity then
+        local prevLayerOrder = component_cache.get(card_ui_state.alt_entity, layer.LayerOrderComponent)
+        if prevLayerOrder and card_ui_state.alt_original_z then
+            prevLayerOrder.zIndex = card_ui_state.alt_original_z
         end
     end
-
-    local layerOrder = component_cache.get(entity, LayerOrderComponent)
+    local layerOrder = component_cache.get(entity, layer.LayerOrderComponent)
     if layerOrder then
-        alt_preview_original_z = layerOrder.zIndex
+        card_ui_state.alt_original_z = layerOrder.zIndex
         layerOrder.zIndex = z_orders.top_card
     end
-    alt_preview_entity = entity
+    card_ui_state.alt_entity = entity
 end
 
--- End alt-preview: restore card to original Z
 local function endAltPreview()
-    if not alt_preview_entity then return end
-
-    local layerOrder = component_cache.get(alt_preview_entity, LayerOrderComponent)
-    if layerOrder and alt_preview_original_z then
-        layerOrder.zIndex = alt_preview_original_z
+    if not card_ui_state.alt_entity then return end
+    local layerOrder = component_cache.get(card_ui_state.alt_entity, layer.LayerOrderComponent)
+    if layerOrder and card_ui_state.alt_original_z then
+        layerOrder.zIndex = card_ui_state.alt_original_z
     end
-    alt_preview_entity = nil
-    alt_preview_original_z = nil
+    card_ui_state.alt_entity = nil
+    card_ui_state.alt_original_z = nil
 end
 
--- Per-frame check: manage alt-preview based on Alt key and hover state
 local function updateAltPreview()
     local altHeld = isAltHeld()
-
-    -- If Alt released while previewing, end preview
-    if alt_preview_entity and not altHeld then
+    if card_ui_state.alt_entity and not altHeld then
         endAltPreview()
         return
     end
-
-    -- If Alt pressed while hovering a card (and not already previewing), begin preview
-    if altHeld and currently_hovered_card and not alt_preview_entity then
-        if entity_cache.valid(currently_hovered_card) then
-            beginAltPreview(currently_hovered_card)
+    if altHeld and card_ui_state.hovered_card and not card_ui_state.alt_entity then
+        if entity_cache.valid(card_ui_state.hovered_card) then
+            beginAltPreview(card_ui_state.hovered_card)
         end
+    end
+    -- Re-apply z-index every frame while alt-previewing (to counter any overrides)
+    if card_ui_state.alt_entity and altHeld and entity_cache.valid(card_ui_state.alt_entity) then
+        layer_order_system.assignZIndexToEntity(card_ui_state.alt_entity, z_orders.top_card)
     end
 end
 
--- Per-frame check for right-click on hovered card
 local function updateRightClickTransfer()
-    if not currently_hovered_card then return end
-    if not entity_cache.valid(currently_hovered_card) then
-        currently_hovered_card = nil
+    if not card_ui_state.hovered_card then return end
+    if not entity_cache.valid(card_ui_state.hovered_card) then
+        card_ui_state.hovered_card = nil
         return
     end
-
-    -- Check for right-click this frame
-    if input.isMousePressed(MouseButton.MOUSE_BUTTON_RIGHT) then
-        local cardScript = getScriptTableFromEntityID(currently_hovered_card)
+    -- Right-click OR Alt+Left-click triggers transfer
+    local rightClick = input.isMousePressed(MouseButton.MOUSE_BUTTON_RIGHT)
+    local altClick = isAltHeld() and input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
+    if rightClick or altClick then
+        log_debug("[Transfer] Click detected (right:", rightClick, "altClick:", altClick, ") on card:", card_ui_state.hovered_card)
+        local cardScript = getScriptTableFromEntityID(card_ui_state.hovered_card)
         if cardScript then
-            transferCardViaRightClick(currently_hovered_card, cardScript)
+            log_debug("[Transfer] Card script found, currentBoard:", cardScript.currentBoardEntity)
+            transferCardViaRightClick(card_ui_state.hovered_card, cardScript)
+        else
+            log_debug("[Transfer] No card script found!")
         end
     end
 end
@@ -288,14 +289,17 @@ local function hideCardTooltip(entity)
     clear_state_tags(entity)
     ui.box.ClearStateTagsFromUIBox(entity)
 end
-local playerStatsTooltipEntity = nil
-local detailedStatsTooltipEntity = nil
-local playerStatsTooltipVersion = 0
-local detailedStatsTooltipVersion = 0
-local playerStatsSignalRegistered = false
-local makePlayerStatsTooltip
-local testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
-    getSpriteFrameTextureInfo("graphics/pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy/b138.png")
+-- Player stats tooltip state (consolidated to save local slots)
+local stats_tooltip = {
+    entity = nil,
+    detailedEntity = nil,
+    version = 0,
+    detailedVersion = 0,
+    signalRegistered = false,
+    makeTooltip = nil,  -- forward declaration
+    testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
+        getSpriteFrameTextureInfo("graphics/pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy/b138.png"),
+}
 
 local function make_rect(x, y, w, h)
     if Rectangle and Rectangle.new then
@@ -1230,30 +1234,37 @@ end
 -- Transfer card via right-click
 local function transferCardViaRightClick(cardEntity, cardScript)
     local currentBoard = cardScript.currentBoardEntity
+    log_debug("[Transfer] currentBoard:", currentBoard, "inventory_board_id:", inventory_board_id)
     if not currentBoard or not entity_cache.valid(currentBoard) then
+        log_debug("[Transfer] No valid current board, aborting")
         return
     end
 
     local targetBoard
     local isFromInventory = (currentBoard == inventory_board_id or currentBoard == trigger_inventory_board_id)
+    log_debug("[Transfer] isFromInventory:", isFromInventory)
 
     if isFromInventory then
         targetBoard = getActiveBoardForCardType(cardScript)
     else
         targetBoard = getInventoryForCardType(cardScript)
     end
+    log_debug("[Transfer] targetBoard:", targetBoard)
 
     if not targetBoard or not entity_cache.valid(targetBoard) then
+        log_debug("[Transfer] No valid target board, aborting")
         return
     end
 
     -- Check capacity
     if not canBoardAcceptCard(targetBoard, cardScript) then
+        log_debug("[Transfer] Target board full, playing error")
         playSoundEffect("effects", "error_buzz", 0.8)
         return
     end
 
     -- Transfer
+    log_debug("[Transfer] Transferring card!")
     removeCardFromBoard(cardEntity, currentBoard)
     addCardToBoard(cardEntity, targetBoard)
 
@@ -2070,15 +2081,15 @@ function createNewCard(id, x, y, gameStateToApply)
                                     true -- force text pass (uses uv_passthrough in 3d_skew)
                                 )
 
-                                if testStickerInfo then
+                                if stats_tooltip.testStickerInfo then
                                     shader_draw_commands.add_local_command(
                                         registry, eid, "texture_pro",
                                         function(c)
                                             local size = (t and t.visualW or 32) * 0.22
                                             local vec = (_G.Vector2 and _G.Vector2(size, size)) or { x = size, y = size }
                                             local center = (_G.Vector2 and _G.Vector2(size * 0.5, size * 0.5)) or { x = size * 0.5, y = size * 0.5 }
-                                            c.texture = testStickerInfo.atlas
-                                            local x, y, w, h = unpack_rect_like(testStickerInfo.gridRect, testStickerInfo.frame)
+                                            c.texture = stats_tooltip.testStickerInfo.atlas
+                                            local x, y, w, h = unpack_rect_like(stats_tooltip.testStickerInfo.gridRect, stats_tooltip.testStickerInfo.frame)
                                             c.source = make_rect(x, y, w, h)
                                             c.offsetX = (t and t.visualW or 0) * 0.5 - size * 0.5
                                             c.offsetY = (t and t.visualH or 0) * 0.1
@@ -2256,8 +2267,8 @@ function createNewCard(id, x, y, gameStateToApply)
 
     animation_system.resizeAnimationObjectsInEntityToFit(
         card,
-        cardW, -- width
-        cardH  -- height
+        gameplay_cfg.cardW, -- width
+        gameplay_cfg.cardH  -- height
     )
 
     -- registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
@@ -2447,7 +2458,7 @@ function createNewCard(id, x, y, gameStateToApply)
         previously_hovered_tooltip = tooltip
 
         -- Track for alt-preview
-        currently_hovered_card = card
+        card_ui_state.hovered_card = card
 
         -- If Alt is already held, begin preview
         if isAltHeld() then
@@ -2456,7 +2467,6 @@ function createNewCard(id, x, y, gameStateToApply)
     end
 
     nodeComp.methods.onStopHover = function()
-        log_debug("card onStopHover called for", card)
         -- get script
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
@@ -2469,8 +2479,8 @@ function createNewCard(id, x, y, gameStateToApply)
         end
 
         -- Clear hover tracking and end alt-preview if this was the previewed card
-        currently_hovered_card = nil
-        if alt_preview_entity == card then
+        card_ui_state.hovered_card = nil
+        if card_ui_state.alt_entity == card then
             endAltPreview()
         end
     end
@@ -2480,9 +2490,9 @@ function createNewCard(id, x, y, gameStateToApply)
         -- playSoundEffect("effects", "card_pick_up", 1.0)
 
         -- If alt-previewing this card, clear state (drag takes over at top Z)
-        if alt_preview_entity == card then
-            alt_preview_entity = nil
-            alt_preview_original_z = nil
+        if card_ui_state.alt_entity == card then
+            card_ui_state.alt_entity = nil
+            card_ui_state.alt_original_z = nil
         end
 
         cardScript.isBeingDragged = true
@@ -3761,11 +3771,11 @@ function ensureCardTooltip(card_def, opts)
 end
 
 local function destroyPlayerStatsTooltip()
-    if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) then
-        registry:destroy(playerStatsTooltipEntity)
+    if stats_tooltip.entity and entity_cache.valid(stats_tooltip.entity) then
+        registry:destroy(stats_tooltip.entity)
     end
-    playerStatsTooltipEntity = nil
-    playerStatsTooltipVersion = 0
+    stats_tooltip.entity = nil
+    stats_tooltip.version = 0
 end
 
 local function collectPlayerStatsSnapshot()
@@ -3878,17 +3888,17 @@ end
 
 
 local function ensurePlayerStatsTooltip()
-    if playerStatsTooltipEntity and entity_cache.valid(playerStatsTooltipEntity) and playerStatsTooltipVersion == TOOLTIP_FONT_VERSION then
-        return playerStatsTooltipEntity
+    if stats_tooltip.entity and entity_cache.valid(stats_tooltip.entity) and stats_tooltip.version == TOOLTIP_FONT_VERSION then
+        return stats_tooltip.entity
     end
 
     destroyPlayerStatsTooltip()
 
-    local tooltip = makePlayerStatsTooltip(collectPlayerStatsSnapshot())
+    local tooltip = stats_tooltip.makeTooltip(collectPlayerStatsSnapshot())
     if not tooltip then return nil end
 
-    playerStatsTooltipEntity = tooltip
-    playerStatsTooltipVersion = TOOLTIP_FONT_VERSION
+    stats_tooltip.entity = tooltip
+    stats_tooltip.version = TOOLTIP_FONT_VERSION
 
     layer_order_system.assignZIndexToEntity(
         tooltip,
@@ -3899,11 +3909,11 @@ local function ensurePlayerStatsTooltip()
 end
 
 local function destroyDetailedStatsTooltip()
-    if detailedStatsTooltipEntity and entity_cache.valid(detailedStatsTooltipEntity) then
-        registry:destroy(detailedStatsTooltipEntity)
+    if stats_tooltip.detailedEntity and entity_cache.valid(stats_tooltip.detailedEntity) then
+        registry:destroy(stats_tooltip.detailedEntity)
     end
-    detailedStatsTooltipEntity = nil
-    detailedStatsTooltipVersion = 0
+    stats_tooltip.detailedEntity = nil
+    stats_tooltip.detailedVersion = 0
 end
 
 -- ============================================================================
@@ -4374,8 +4384,8 @@ local function makeDetailedStatsTooltip(snapshot)
 end
 
 local function ensureDetailedStatsTooltip()
-    if detailedStatsTooltipEntity and entity_cache.valid(detailedStatsTooltipEntity) and detailedStatsTooltipVersion == TOOLTIP_FONT_VERSION then
-        return detailedStatsTooltipEntity
+    if stats_tooltip.detailedEntity and entity_cache.valid(stats_tooltip.detailedEntity) and stats_tooltip.detailedVersion == TOOLTIP_FONT_VERSION then
+        return stats_tooltip.detailedEntity
     end
 
     destroyDetailedStatsTooltip()
@@ -4383,8 +4393,8 @@ local function ensureDetailedStatsTooltip()
     local tooltip = makeDetailedStatsTooltip(collectPlayerStatsSnapshot())
     if not tooltip then return nil end
 
-    detailedStatsTooltipEntity = tooltip
-    detailedStatsTooltipVersion = TOOLTIP_FONT_VERSION
+    stats_tooltip.detailedEntity = tooltip
+    stats_tooltip.detailedVersion = TOOLTIP_FONT_VERSION
 
     layer_order_system.assignZIndexToEntity(
         tooltip,
@@ -4393,7 +4403,7 @@ local function ensureDetailedStatsTooltip()
 
     return tooltip
 end
-function makePlayerStatsTooltip(snapshot)
+function stats_tooltip.makeTooltip(snapshot)
     local innerPad = tooltipStyle.outerPadding or 10  -- Increased padding for better fit
     local opts = {
         colorCode = true,
@@ -4472,10 +4482,10 @@ local function showPlayerStatsTooltip(anchorEntity)
 end
 
 local function hidePlayerStatsTooltip()
-    if not playerStatsTooltipEntity or not entity_cache.valid(playerStatsTooltipEntity) then return end
+    if not stats_tooltip.entity or not entity_cache.valid(stats_tooltip.entity) then return end
     deactivate_state(PLAYER_STATS_TOOLTIP_STATE)
-    clear_state_tags(playerStatsTooltipEntity)
-    ui.box.ClearStateTagsFromUIBox(playerStatsTooltipEntity)
+    clear_state_tags(stats_tooltip.entity)
+    ui.box.ClearStateTagsFromUIBox(stats_tooltip.entity)
 end
 
 local function showDetailedStatsTooltip(anchorEntity)
@@ -4499,10 +4509,10 @@ local function showDetailedStatsTooltip(anchorEntity)
 end
 
 local function hideDetailedStatsTooltip()
-    if not detailedStatsTooltipEntity or not entity_cache.valid(detailedStatsTooltipEntity) then return end
+    if not stats_tooltip.detailedEntity or not entity_cache.valid(stats_tooltip.detailedEntity) then return end
     deactivate_state(DETAILED_STATS_TOOLTIP_STATE)
-    clear_state_tags(detailedStatsTooltipEntity)
-    ui.box.ClearStateTagsFromUIBox(detailedStatsTooltipEntity)
+    clear_state_tags(stats_tooltip.detailedEntity)
+    ui.box.ClearStateTagsFromUIBox(stats_tooltip.detailedEntity)
 end
 
 local function refreshPlayerStatsTooltip(anchorEntity)
@@ -4895,8 +4905,8 @@ function initPlanningPhase()
 
 
     -- set default card size based on screen size
-    cardW = globals.screenWidth() * 0.150
-    cardH = cardW * (64 / 48) -- default card aspect ratio is 48:64
+    gameplay_cfg.cardW = globals.screenWidth() * 0.150
+    gameplay_cfg.cardH = gameplay_cfg.cardW * (64 / 48) -- default card aspect ratio is 48:64
 
     -- make entire roster of cards
     local catalog = WandEngine.card_defs
@@ -7391,7 +7401,10 @@ local function relayoutBoardCardsInOrder(board)
             end
             local zi = z_orders.card + (i - 1)
             board.z_order_cache_per_card[cardEid] = zi
-            layer_order_system.assignZIndexToEntity(cardEid, zi)
+            -- Skip z-index assignment if this card is being alt-previewed
+            if cardEid ~= card_ui_state.alt_entity then
+                layer_order_system.assignZIndexToEntity(cardEid, zi)
+            end
         end
     end
 end
@@ -7779,7 +7792,7 @@ function initSurvivorEntity()
     local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
 
     -- give mask (optional)
-    if ENABLE_SURVIVOR_MASK then
+    if gameplay_cfg.ENABLE_SURVIVOR_MASK then
         survivorMaskEntity = createJointedMask(survivorEntity, "world")
     else
         survivorMaskEntity = nil
@@ -8038,7 +8051,7 @@ function initSurvivorEntity()
         log_debug("Player leveled up!")
         playSoundEffect("effects", "level_up", 1.0)
         local playerScript = getScriptTableFromEntityID(survivorEntity)
-        timer.after(LEVEL_UP_MODAL_DELAY, function()
+        timer.after(gameplay_cfg.LEVEL_UP_MODAL_DELAY, function()
             LevelUpScreen.push({
                 playerEntity = survivorEntity,
                 actor = playerScript and playerScript.combatTable
@@ -8686,7 +8699,7 @@ function initActionPhase()
         MessageQueueUI.init()
     end
     ensureMessageQueueHooks()
-    if DEBUG_AVATAR_TEST_EVENTS then
+    if gameplay_cfg.DEBUG_AVATAR_TEST_EVENTS then
         fireAvatarDebugEvents()
     end
 
@@ -8830,7 +8843,7 @@ function initActionPhase()
 
 
         local maskEntity = survivorMaskEntity
-        if ENABLE_SURVIVOR_MASK and maskEntity and entity_cache.valid(maskEntity) then
+        if gameplay_cfg.ENABLE_SURVIVOR_MASK and maskEntity and entity_cache.valid(maskEntity) then
             -- Apply rotational impulse (torque) to make mask spin
             local torqueStrength = 800 -- Tuned for lighter, mostly-weightless mask
             -- physics.ApplyTorque(world, maskEntity, torqueStrength)
@@ -9865,7 +9878,7 @@ function initPlanningUI()
         execGraphBoundsEntity  -- Entity for dynamic bounds updates
     )
 
-    if not playerStatsSignalRegistered then
+    if not stats_tooltip.signalRegistered then
         signal.register("stats_recomputed", function(payload)
             local ctx = combat_context
             local playerActor = ctx and ctx.side1 and ctx.side1[1]
@@ -9882,7 +9895,7 @@ function initPlanningUI()
             local detailedAnchor = planningUIEntities and planningUIEntities.player_stats_detailed_button
             refreshDetailedStatsTooltip(detailedAnchor or anchor)
         end)
-        playerStatsSignalRegistered = true
+        stats_tooltip.signalRegistered = true
     end
 
     planningUIEntities.wand_buttons = {}

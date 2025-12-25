@@ -136,6 +136,10 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Quick transform helpers (Q.lua) | \pageref{recipe:q-helpers} |
 | Type-safe constants | \pageref{recipe:constants} |
 | Hot-reload modules (dev) | \pageref{recipe:hot-reload} |
+| **Persistence** | |
+| Save/load game state | \pageref{recipe:save-manager} |
+| Track statistics (kills, playtime) | \pageref{recipe:statistics} |
+| Handle save file migrations | \pageref{recipe:save-migrations} |
 
 \newpage
 
@@ -9416,6 +9420,124 @@ end
 | Function | Parameters | Returns | Description |
 |----------|------------|---------|-------------|
 | `listDerivations()` | - | - | Print all registered derivations |
+
+***
+
+## Save System
+
+\label{recipe:save-system}
+
+**When to use:** Persisting game state across sessions (progress, statistics, settings).
+
+The Save System provides a cross-platform persistence layer that works on desktop and web (via IDBFS). It uses a collector pattern where modules register themselves to provide and receive save data.
+
+### SaveManager
+
+\label{recipe:save-manager}
+
+**When to use:** Register your module's data for automatic save/load.
+
+```lua
+local SaveManager = require("core.save_manager")
+
+-- Register a collector for your module
+SaveManager.register("my_module", {
+    -- Called when saving - return your data
+    collect = function()
+        return {
+            level = currentLevel,
+            unlocks = unlockedItems,
+            settings = userSettings,
+        }
+    end,
+
+    -- Called when loading - receive your data
+    distribute = function(data)
+        currentLevel = data.level or 1
+        unlockedItems = data.unlocks or {}
+        userSettings = data.settings or {}
+    end
+})
+
+-- Trigger a save (debounced, queues if save in progress)
+SaveManager.save()
+
+-- Load saved data (calls all distribute functions)
+SaveManager.load()
+```
+
+*— from core/save_manager.lua:35-88*
+
+### Statistics Module
+
+\label{recipe:statistics}
+
+**When to use:** Track persistent gameplay statistics (kills, playtime, high scores).
+
+```lua
+local Statistics = require("core.statistics")
+
+-- Increment a stat (auto-saves)
+Statistics.increment("total_kills")
+Statistics.increment("total_gold_earned", 100)
+
+-- Set high score (only updates if higher, auto-saves)
+Statistics.set_high("highest_wave", currentWave)
+
+-- Read stats
+print("Kills:", Statistics.total_kills)
+print("Best wave:", Statistics.highest_wave)
+```
+
+*— from core/statistics.lua:1-54*
+
+**Available statistics:**
+
+| Stat | Type | Description |
+|------|------|-------------|
+| `runs_completed` | counter | Number of completed runs |
+| `highest_wave` | high score | Highest wave reached |
+| `total_kills` | counter | Total enemies killed |
+| `total_gold_earned` | counter | Total gold accumulated |
+| `playtime_seconds` | counter | Total play time |
+
+### Save Migrations
+
+\label{recipe:save-migrations}
+
+**When to use:** Handle save file format changes between game versions.
+
+```lua
+local migrations = require("core.save_migrations")
+
+-- Register a migration from version 1 to 2
+migrations.register(1, 2, function(data)
+    -- Transform old format to new format
+    data.settings = data.settings or {}
+    data.settings.volume = data.sound_volume or 1.0
+    data.sound_volume = nil  -- Remove old key
+    return data
+end)
+```
+
+*— from core/save_migrations.lua*
+
+The SaveManager automatically applies migrations when loading older save files.
+
+### SaveManager API Reference
+
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `register(key, collector)` | `string, {collect, distribute}` | - | Register save data collector |
+| `save()` | - | - | Queue a save operation |
+| `load()` | `boolean?` | `boolean` | Load and distribute save data |
+| `collect_all()` | - | `table` | Collect data from all collectors |
+| `has_save()` | - | `boolean` | Check if save file exists |
+| `delete_save()` | - | `boolean` | Delete save file |
+
+**Gotcha:** Collectors must handle missing data gracefully (use `data.key or default`).
+
+**Gotcha:** Web builds use IDBFS which is asynchronous. The engine handles this, but avoid calling `load()` immediately after `save()`.
 
 ***
 

@@ -231,7 +231,7 @@ Cards.ACTION_STATIC_CHARGE = {
 
     tags = { "Lightning", "Debuff" },
     test_label = "STATIC\nCHARGE",
-    sprite = "action-static-charge.png",
+    sprite = "action-chain-lightning.png",  -- TODO: replace with action-static-charge.png
 }
 
 -- Defensive counter: applies shield mark to self
@@ -247,7 +247,7 @@ Cards.ACTION_STATIC_SHIELD = {
 
     tags = { "Lightning", "Defense" },
     test_label = "STATIC\nSHIELD",
-    sprite = "action-static-shield.png",
+    sprite = "action-chain-lightning.png",  -- TODO: replace with action-static-shield.png
 }
 
 

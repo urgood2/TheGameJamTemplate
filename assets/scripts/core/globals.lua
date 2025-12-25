@@ -951,3 +951,4 @@ end
 function globals.isEnemyEntity(eid)
     return false
 end
+

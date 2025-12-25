@@ -34,6 +34,25 @@ local util = {}
 local signal = require("external.hump.signal")
 
 -- ============================================================================
+-- Event Emission Helper
+-- Emits to both ctx.bus (for combat internals) and signal (for external listeners)
+-- ============================================================================
+
+--- Emit a combat event to both internal and external event systems.
+--  @param ctx table: combat context containing the event bus
+--  @param event_name string: name of the event to emit
+--  @param data table: event payload
+--  @param signal_name string|nil: optional override for signal event name (defaults to event_name)
+local function emit_combat_event(ctx, event_name, data, signal_name)
+    -- Emit to combat bus for internal listeners
+    if ctx.bus then
+        ctx.bus:emit(event_name, data)
+    end
+    -- Emit to signal for external listeners (wave system, UI, etc.)
+    signal.emit(signal_name or event_name, data)
+end
+
+-- ============================================================================
 -- Gameplay Modules (namespaces)
 -- These are placeholders for organization; you can attach functions later.
 -- NOTE: Using tables here avoids require-time cycles and allows late binding.

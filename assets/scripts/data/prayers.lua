@@ -94,6 +94,51 @@ local Prayers = {
                 })
             end
         end
+    },
+
+    thunderclap = {
+        id = "thunderclap",
+        name = "Thunderclap",
+        description = "Stun all nearby enemies for 1.5s and apply Static Charge.",
+        cooldown = 15,
+        range = 150,
+
+        on_cast = function(ctx, caster)
+            local MarkSystem = require("systems.mark_system")
+            local caster_transform = component_cache.get(caster, Transform)
+            if not caster_transform then return end
+
+            local cx = caster_transform.actualX + (caster_transform.actualW or 0) * 0.5
+            local cy = caster_transform.actualY + (caster_transform.actualH or 0) * 0.5
+
+            -- Find nearby enemies
+            local nearby = findEnemiesInRange({ x = cx, y = cy }, 150, {}, 999)
+
+            for _, info in ipairs(nearby) do
+                local enemy = info.entity
+                -- Apply stun
+                if ActionAPI then
+                    ActionAPI.apply_stun(ctx, enemy, 1.5)
+                end
+                -- Apply static_charge mark
+                MarkSystem.apply(enemy, "static_charge", { stacks = 1, source = caster })
+            end
+
+            -- Play sound
+            playSoundEffect("effects", "thunderclap")
+
+            -- Visual effect
+            if particle and particle.spawnRadialBurst then
+                particle.spawnRadialBurst({
+                    x = cx, y = cy,
+                    count = 20,
+                    color1 = "cyan",
+                    color2 = "white",
+                    speed = 200,
+                    lifespan = 0.3,
+                })
+            end
+        end
     }
 }
 

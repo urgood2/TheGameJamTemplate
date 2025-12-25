@@ -106,13 +106,21 @@ local function createStripEntry(sourceCardEntity, wandId, triggerId, index, tota
     local spriteId = "sample_card.png"  -- Default fallback
     if sourceCardEntity and registry:valid(sourceCardEntity) then
         local sourceScript = getScriptTableFromEntityID(sourceCardEntity)
-        if sourceScript and sourceScript.cardID then
-            local cardDef = WandEngine and WandEngine.trigger_card_defs and WandEngine.trigger_card_defs[sourceScript.cardID]
-            if cardDef and cardDef.sprite then
-                spriteId = cardDef.sprite
+        if sourceScript then
+            -- Try cardID lookup first
+            if sourceScript.cardID then
+                local cardDef = WandEngine and WandEngine.trigger_card_defs and WandEngine.trigger_card_defs[sourceScript.cardID]
+                if cardDef and cardDef.sprite then
+                    spriteId = cardDef.sprite
+                end
+            end
+            -- Fall back to sprite directly on script
+            if spriteId == "sample_card.png" and sourceScript.sprite then
+                spriteId = sourceScript.sprite
             end
         end
     end
+    log_debug("TriggerStripUI: creating entry with sprite:", spriteId, "for trigger", triggerId)
 
     -- Calculate position
     local yPos = calculateYPosition(index, totalCount)
@@ -127,6 +135,13 @@ local function createStripEntry(sourceCardEntity, wandId, triggerId, index, tota
     -- Set to screen space
     if transform and transform.set_space then
         transform.set_space(entity, "screen")
+    end
+
+    -- Mark as UI-attached for proper screen-space rendering
+    if registry and registry.valid and ObjectAttachedToUITag and registry:valid(entity) then
+        if not registry:has(entity, ObjectAttachedToUITag) then
+            registry:emplace(entity, ObjectAttachedToUITag)
+        end
     end
 
     -- Resize to trigger strip size
@@ -283,8 +298,7 @@ function TriggerStripUI.show()
             local t = component_cache.get(entry.entity, Transform)
             if t then
                 t.actualX = PEEK_X
-                t.actualScaleX = 1.0
-                t.actualScaleY = 1.0
+                t.scale = 1.0
             end
         end
     end
@@ -298,6 +312,8 @@ end
 
 function TriggerStripUI.hide()
     if not strip_visible then return end
+
+    log_debug("TriggerStripUI.hide called from:", debug.traceback())
 
     -- Hide any active tooltip
     if activeTooltipEntry then
@@ -352,14 +368,33 @@ function TriggerStripUI.update(dt)
 
     -- Get mouse position (screen space)
     local mouseX, mouseY = 0, 0
-    if input and input.getMousePosition then
-        mouseX, mouseY = input.getMousePosition()
+    if input then
+        -- input.getMousePosition() returns a table {x=..., y=...}
+        if input.getMousePos then
+            local m = input.getMousePos()
+            if m and m.x and m.y then
+                mouseX, mouseY = m.x, m.y
+            end
+        elseif input.getMousePosition then
+            local m = input.getMousePosition()
+            if m and m.x and m.y then
+                mouseX, mouseY = m.x, m.y
+            end
+        end
     elseif globals and globals.mouseX then
         mouseX = globals.mouseX
         mouseY = globals.mouseY or 0
     end
 
     local inStripArea = mouseX < STRIP_HOVER_ZONE
+
+    -- Debug: log periodically when in strip area
+    if inStripArea then
+        if not TriggerStripUI._lastDebugTime or (os.clock() - TriggerStripUI._lastDebugTime) > 1.0 then
+            TriggerStripUI._lastDebugTime = os.clock()
+            log_debug("TriggerStripUI: mouse=", mouseX, ",", mouseY, " entries=", #strip_entries)
+        end
+    end
 
     previousFocusedEntry = focusedEntry
     focusedEntry = nil
@@ -385,8 +420,7 @@ function TriggerStripUI.update(dt)
         local t = component_cache.get(entry.entity, Transform)
         if t then
             local scale = 1.0 + (MAX_SCALE_BUMP * entry.influence)
-            t.actualScaleX = scale
-            t.actualScaleY = scale
+            t.scale = scale
             t.actualX = PEEK_X + (MAX_SLIDE_OUT * entry.influence)
         end
 
@@ -519,8 +553,7 @@ function TriggerStripUI.onTriggerActivated(wandId, triggerId)
     -- Pop: quick scale bump
     local t = component_cache.get(entry.entity, Transform)
     if t then
-        t.actualScaleX = ACTIVATION_SCALE
-        t.actualScaleY = ACTIVATION_SCALE
+        t.scale = ACTIVATION_SCALE
     end
 
     -- Jiggle
@@ -545,6 +578,48 @@ function TriggerStripUI.onTriggerActivated(wandId, triggerId)
     end
 
     log_debug("TriggerStripUI: activation feedback for wand", wandId)
+end
+
+--------------------------------------------------------------------------------
+-- DRAW
+--------------------------------------------------------------------------------
+
+function TriggerStripUI.draw()
+    if not strip_visible then
+        return
+    end
+    if not command_buffer or not layers or not layers.ui then
+        log_debug("TriggerStripUI.draw: missing command_buffer or layers")
+        return
+    end
+
+    local z = (z_orders and z_orders.ui_tooltips or 0) - 5
+    local space = layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen
+
+    local drawCount = 0
+    for _, entry in ipairs(strip_entries) do
+        if entry.entity and registry and registry:valid(entry.entity) then
+            local hasPipeline = false
+            if shader_pipeline and shader_pipeline.ShaderPipelineComponent then
+                hasPipeline = registry:has(entry.entity, shader_pipeline.ShaderPipelineComponent)
+            end
+
+            local queue = hasPipeline and command_buffer.queueDrawTransformEntityAnimationPipeline
+                or command_buffer.queueDrawTransformEntityAnimation
+
+            if queue then
+                queue(layers.ui, function(cmd)
+                    cmd.registry = registry
+                    cmd.e = entry.entity
+                end, z, space)
+                drawCount = drawCount + 1
+            end
+        end
+    end
+
+    if drawCount > 0 then
+        log_debug("TriggerStripUI.draw: queued", drawCount, "entities")
+    end
 end
 
 --------------------------------------------------------------------------------

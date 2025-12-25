@@ -4661,6 +4661,7 @@ function initPlanningPhase()
 
         if TriggerStripUI and is_state_active and is_state_active(ACTION_STATE) then
             TriggerStripUI.update(dt)
+            TriggerStripUI.draw()
         end
 
         if SubcastDebugUI and is_state_active and is_state_active(ACTION_STATE) then
@@ -7009,6 +7010,7 @@ function startActionPhase()
     loadWandsIntoExecutorFromBoards()
     CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
     CastBlockFlashUI.init()
+    TriggerStripUI.show()
 
     playStateTransition()
     apply_peaches_background_phase("action")

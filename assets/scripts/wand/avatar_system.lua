@@ -159,6 +159,40 @@ local TRIGGER_HANDLERS = {
             end
         end)
     end,
+
+    --- Trigger when player takes physical damage
+    --- @param handlers SignalGroup Signal group for cleanup
+    --- @param player table Player script table
+    --- @param effect table Effect definition with .config
+    on_physical_damage_taken = function(handlers, player, effect)
+        local config = effect.config or {}
+        local damage_per_stack = config.damage_per_stack or 10
+        local max_stacks = config.max_stacks or 20
+        local bonus_per_stack = config.damage_bonus_per_stack or 5
+
+        handlers:on("player_damaged", function(entity, data)
+            -- Only process physical damage
+            if data.damage_type ~= "physical" then return end
+
+            local stacks_gained = math.floor((data.amount or 0) / damage_per_stack)
+            if stacks_gained < 1 then return end
+
+            -- Get or create conduit state
+            player.conduit_stacks = player.conduit_stacks or 0
+            local old_stacks = player.conduit_stacks
+            player.conduit_stacks = math.min(max_stacks, old_stacks + stacks_gained)
+            local actual_gained = player.conduit_stacks - old_stacks
+
+            if actual_gained > 0 then
+                -- Apply damage bonus
+                local combatActor = player.combatTable
+                if combatActor and combatActor.stats then
+                    combatActor.stats:add_add_pct("all_damage_pct", actual_gained * bonus_per_stack)
+                    combatActor.stats:recompute()
+                end
+            end
+        end)
+    end,
 }
 
 --[[

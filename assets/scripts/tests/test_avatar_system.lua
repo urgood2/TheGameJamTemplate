@@ -32,6 +32,7 @@ MessageQueueUI.init({ maxVisible = 10 })
 
 -- stub signal to capture emits
 local emitted = {}
+local registered_handlers = {}  -- Track registered handlers for testing
 local signal = {
     emit = function(event, payload)
         table.insert(emitted, { event = event, payload = payload })
@@ -43,6 +44,29 @@ local signal = {
             text = text .. " spell=" .. tostring(payload.spell_type)
         end
         MessageQueueUI.enqueue(text)
+
+        -- Call registered handlers
+        if registered_handlers[event] then
+            for _, handler in ipairs(registered_handlers[event]) do
+                handler(payload)
+            end
+        end
+    end,
+    register = function(event, handler)
+        if not registered_handlers[event] then
+            registered_handlers[event] = {}
+        end
+        table.insert(registered_handlers[event], handler)
+    end,
+    remove = function(event, handler)
+        if registered_handlers[event] then
+            for i, h in ipairs(registered_handlers[event]) do
+                if h == handler then
+                    table.remove(registered_handlers[event], i)
+                    break
+                end
+            end
+        end
     end
 }
 package.loaded["external.hump.signal"] = signal
@@ -185,6 +209,108 @@ local function run_tests()
     print("-- stat_buff and rule tests passed --\n")
 end
 
+--[[
+================================================================================
+PROC SYSTEM TESTS
+================================================================================
+]]--
+
+--- Test that register_procs creates a signal group
+local function test_register_procs_creates_handlers()
+    local player = {
+        avatar_state = { unlocked = { bloodgod = true }, equipped = nil },
+        avatar_progress = {},
+    }
+
+    AvatarSystem.register_procs(player, "bloodgod")
+
+    assert_true(player.avatar_state._proc_handlers ~= nil, "Should create _proc_handlers")
+    assert_true(player.avatar_state._proc_handlers:count() > 0, "Should have registered handlers")
+
+    -- Cleanup
+    AvatarSystem.cleanup_procs(player)
+    print("[PASS] test_register_procs_creates_handlers")
+end
+
+--- Test that cleanup_procs removes the signal group
+local function test_cleanup_procs_removes_handlers()
+    local player = {
+        avatar_state = { unlocked = { bloodgod = true }, equipped = nil },
+        avatar_progress = {},
+    }
+
+    AvatarSystem.register_procs(player, "bloodgod")
+    assert_true(player.avatar_state._proc_handlers ~= nil, "Should have handlers before cleanup")
+
+    AvatarSystem.cleanup_procs(player)
+    assert_true(player.avatar_state._proc_handlers == nil, "Should remove handlers after cleanup")
+
+    print("[PASS] test_cleanup_procs_removes_handlers")
+end
+
+--- Test that equip() registers procs
+local function test_equip_registers_procs()
+    local player = {
+        avatar_state = { unlocked = { bloodgod = true }, equipped = nil },
+        avatar_progress = {},
+    }
+
+    AvatarSystem.equip(player, "bloodgod")
+
+    assert_true(player.avatar_state._proc_handlers ~= nil, "equip() should register procs")
+
+    -- Cleanup
+    AvatarSystem.unequip(player)
+    print("[PASS] test_equip_registers_procs")
+end
+
+--- Test that unequip() cleans up procs
+local function test_unequip_cleans_up_procs()
+    local player = {
+        avatar_state = { unlocked = { bloodgod = true }, equipped = nil },
+        avatar_progress = {},
+    }
+
+    AvatarSystem.equip(player, "bloodgod")
+    AvatarSystem.unequip(player)
+
+    assert_true(player.avatar_state._proc_handlers == nil, "unequip() should cleanup procs")
+
+    print("[PASS] test_unequip_cleans_up_procs")
+end
+
+--- Test that switching avatars cleans up old procs
+local function test_switch_avatar_cleans_old_procs()
+    local player = {
+        avatar_state = { unlocked = { bloodgod = true, citadel = true }, equipped = nil },
+        avatar_progress = {},
+    }
+
+    AvatarSystem.equip(player, "bloodgod")
+    local oldHandlers = player.avatar_state._proc_handlers
+
+    AvatarSystem.equip(player, "citadel")
+
+    assert_true(oldHandlers:isCleanedUp(), "Old handlers should be cleaned up")
+    assert_true(player.avatar_state._proc_handlers ~= oldHandlers, "Should have new handlers")
+
+    -- Cleanup
+    AvatarSystem.unequip(player)
+    print("[PASS] test_switch_avatar_cleans_old_procs")
+end
+
+-- Run proc tests
+local function run_proc_tests()
+    print("\n=== PROC SYSTEM TESTS ===")
+    test_register_procs_creates_handlers()
+    test_cleanup_procs_removes_handlers()
+    test_equip_registers_procs()
+    test_unequip_cleans_up_procs()
+    test_switch_avatar_cleans_old_procs()
+    print("=== ALL PROC TESTS PASSED ===\n")
+end
+
 run_tests()
+run_proc_tests()
 
 print("All avatar tests passed.")

@@ -938,6 +938,89 @@ void executeEntityPipelineWithCommands(
     }
 }
 
+void executeEntityWithShaders(
+    entt::registry& registry,
+    entt::entity e,
+    const std::vector<std::string>& shaders,
+    DrawCommandBatch& batch
+) {
+    // Get animation/sprite data (same pattern as executeEntityPipelineWithCommands)
+    if (!registry.all_of<AnimationQueueComponent>(e)) return;
+    auto& aqc = registry.get<AnimationQueueComponent>(e);
+    if (aqc.noDraw) return;
+
+    // Get current sprite (copy to avoid dangling refs)
+    SpriteComponentASCII currentSpriteData{};
+    SpriteComponentASCII* currentSprite = nullptr;
+    Rectangle animationFrameData{};
+    Rectangle* animationFrame = nullptr;
+    bool flipX = false;
+    bool flipY = false;
+
+    if (aqc.animationQueue.empty()) {
+        if (!aqc.defaultAnimation.animationList.empty()) {
+            currentSpriteData = aqc.defaultAnimation
+                .animationList[aqc.defaultAnimation.currentAnimIndex].first;
+            animationFrameData = currentSpriteData.spriteData.frame;
+            currentSprite = &currentSpriteData;
+            animationFrame = &animationFrameData;
+            flipX = aqc.defaultAnimation.flippedHorizontally;
+            flipY = aqc.defaultAnimation.flippedVertically;
+        }
+    } else {
+        auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
+        currentSpriteData = currentAnimObject
+            .animationList[currentAnimObject.currentAnimIndex].first;
+        animationFrameData = currentSpriteData.spriteData.frame;
+        currentSprite = &currentSpriteData;
+        animationFrame = &animationFrameData;
+        flipX = currentAnimObject.flippedHorizontally;
+        flipY = currentAnimObject.flippedVertically;
+    }
+
+    if (!currentSprite || !animationFrame) return;
+
+    // Get transform
+    transform::Transform* transformComp = registry.try_get<transform::Transform>(e);
+    if (!transformComp) return;
+    transformComp->updateCachedValues();
+
+    // Get sprite atlas
+    Texture2D* spriteAtlas = currentSprite->spriteData.texture;
+    if (!spriteAtlas || spriteAtlas->id == 0) return;
+
+    // Build rectangles
+    Rectangle atlasRect = *animationFrame;
+    float srcW = atlasRect.width;
+    float srcH = atlasRect.height;
+    if (flipX) srcW = -srcW;
+    if (flipY) srcH = -srcH;
+    Rectangle srcRect = {atlasRect.x, atlasRect.y, srcW, srcH};
+
+    float destW = transformComp->getVisualW();
+    float destH = transformComp->getVisualH();
+    Rectangle destRect = {transformComp->getVisualX(), transformComp->getVisualY(), destW, destH};
+
+    Vector2 origin = {0, 0};
+    float cardRotationDeg = transformComp->getVisualRWithDynamicMotionAndXLeaning();
+
+    Color fgColor = currentSprite->fgColor;
+    if (fgColor.a == 0) fgColor = WHITE;
+
+    // Execute shader passes
+    if (shaders.empty()) {
+        // No shaders - just draw sprite directly
+        batch.addDrawTexturePro(*spriteAtlas, srcRect, destRect, origin, cardRotationDeg, fgColor);
+    } else {
+        // Apply each shader pass
+        for (const auto& shaderName : shaders) {
+            batch.addBeginShader(shaderName);
+            batch.addDrawTexturePro(*spriteAtlas, srcRect, destRect, origin, cardRotationDeg, fgColor);
+            batch.addEndShader();
+        }
+    }
+}
+
 void exposeToLua(sol::state& lua) {
     auto& rec = BindingRecorder::instance();
 

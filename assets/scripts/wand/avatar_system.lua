@@ -78,6 +78,56 @@ local function execute_effect(player, effect)
     end
 end
 
+--[[
+================================================================================
+TRIGGER HANDLERS REGISTRY
+================================================================================
+Maps trigger types to signal registration logic. Each receives (handlers, player, effect).
+State (counters, accumulators) lives in closures - cleaned up with signal_group.
+]]--
+
+local TRIGGER_HANDLERS = {
+    --- Trigger on enemy kill
+    --- @param handlers SignalGroup Signal group for cleanup
+    --- @param player table Player script table
+    --- @param effect table Effect definition
+    on_kill = function(handlers, player, effect)
+        handlers:on("enemy_killed", function(enemyEntity)
+            execute_effect(player, effect)
+        end)
+    end,
+
+    --- Trigger every 4th spell cast
+    --- @param handlers SignalGroup Signal group for cleanup
+    --- @param player table Player script table
+    --- @param effect table Effect definition
+    on_cast_4th = function(handlers, player, effect)
+        local count = 0
+        handlers:on("on_spell_cast", function(castData)
+            count = count + 1
+            if count % 4 == 0 then
+                execute_effect(player, effect)
+            end
+        end)
+    end,
+
+    --- Trigger every 5 meters moved
+    --- @param handlers SignalGroup Signal group for cleanup
+    --- @param player table Player script table
+    --- @param effect table Effect definition
+    distance_moved_5m = function(handlers, player, effect)
+        local accumulated = 0
+        local THRESHOLD = 80  -- ~5 meters in pixels (16px per unit)
+        handlers:on("player_moved", function(data)
+            accumulated = accumulated + (data.delta or 0)
+            while accumulated >= THRESHOLD do
+                accumulated = accumulated - THRESHOLD
+                execute_effect(player, effect)
+            end
+        end)
+    end,
+}
+
 local function loadDefs()
     if avatarDefs then return avatarDefs end
     avatarDefs = require("data.avatars")

@@ -1209,6 +1209,13 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
         hitEntities[#hitEntities + 1] = targetEntity
         totalChainsDone = totalChainsDone + 1
 
+        -- Track chain propagation for avatar unlock
+        local playerScript = context and context.playerScript
+        if playerScript then
+            local AvatarSystem = require("wand.avatar_system")
+            AvatarSystem.record_progress(playerScript, "chain_lightning_propagations", 1)
+        end
+
         -- Calculate delay for next chain (cubic falloff: faster as chain progresses)
         -- remaining/total gives 1.0 → 0.0, cubed makes it decay faster at the end
         local remaining = chainsRemaining - 1

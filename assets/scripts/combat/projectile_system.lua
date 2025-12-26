@@ -1836,6 +1836,13 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
             else
                 log_warn("Player entity missing script table; avatar progress not tracked")
             end
+
+            -- Emit player_damaged signal for avatar procs
+            local signal = require("external.hump.signal")
+            signal.emit("player_damaged", targetEntity, {
+                amount = finalDamage,
+                damage_type = dmgType
+            })
         end
 
         return targetCombatActor, sourceCombatActor

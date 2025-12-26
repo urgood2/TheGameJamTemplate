@@ -5656,6 +5656,12 @@ local function resetGameToStart()
     -- 6. Cleanup wand executor (destroys projectiles and wand state)
     WandExecutor.cleanup()
 
+    -- 6.5. Reset wave director state
+    local ok, WaveDirector = pcall(require, "combat.wave_director")
+    if ok and WaveDirector and WaveDirector.cleanup then
+        WaveDirector.cleanup()
+    end
+
     -- 7. Reset UI systems
     if CastBlockFlashUI and CastBlockFlashUI.clear then
         CastBlockFlashUI.clear()

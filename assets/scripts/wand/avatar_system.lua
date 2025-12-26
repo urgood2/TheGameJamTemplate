@@ -129,6 +129,36 @@ local TRIGGER_HANDLERS = {
     end,
 }
 
+--- Register proc handlers for an avatar's effects
+--- @param player table Player script table
+--- @param avatarId string Avatar ID to register procs for
+function AvatarSystem.register_procs(player, avatarId)
+    if not player or not avatarId then return end
+
+    local defs = loadDefs()
+    local avatar = defs and defs[avatarId]
+    if not avatar or not avatar.effects then return end
+
+    local state = ensureState(player)
+
+    -- Create signal group for cleanup
+    local signal_group = require("core.signal_group")
+    local handlers = signal_group.new("avatar_procs_" .. avatarId)
+    state._proc_handlers = handlers
+
+    -- Register each proc effect
+    for _, effect in ipairs(avatar.effects) do
+        if effect.type == "proc" then
+            local triggerHandler = TRIGGER_HANDLERS[effect.trigger]
+            if triggerHandler then
+                triggerHandler(handlers, player, effect)
+            else
+                print(string.format("[AvatarSystem] Unknown trigger: %s", tostring(effect.trigger)))
+            end
+        end
+    end
+end
+
 local function loadDefs()
     if avatarDefs then return avatarDefs end
     avatarDefs = require("data.avatars")

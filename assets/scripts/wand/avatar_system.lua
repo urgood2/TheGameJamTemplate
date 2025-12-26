@@ -159,6 +159,16 @@ function AvatarSystem.register_procs(player, avatarId)
     end
 end
 
+--- Cleanup all proc handlers for player
+--- @param player table Player script table
+function AvatarSystem.cleanup_procs(player)
+    local state = player and player.avatar_state
+    if state and state._proc_handlers then
+        state._proc_handlers:cleanup()
+        state._proc_handlers = nil
+    end
+end
+
 local function loadDefs()
     if avatarDefs then return avatarDefs end
     avatarDefs = require("data.avatars")

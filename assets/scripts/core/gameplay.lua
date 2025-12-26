@@ -5555,6 +5555,122 @@ local function spawnDamageNumber(targetEntity, amount, isCrit)
     }
 end
 
+-- Reset game to starting state for new run
+local function resetGameToStart()
+    log_debug("[gameplay] Resetting game to start...")
+
+    -- 1. Kill all timers
+    timer.kill_group("combat")
+    timer.kill_group("death_animation")
+    timer.kill_group("combat_state_timer")
+
+    -- 2. Reset globals to starting values
+    globals.currency = 30
+    if globals.shopState then
+        globals.shopState.playerLevel = 1
+        globals.shopState.avatarPurchases = {}
+        globals.shopState.cards = {}
+    else
+        globals.shopState = { playerLevel = 1, avatarPurchases = {}, cards = {} }
+    end
+    globals.ownedRelics = {
+        { id = "proto_umbrella" }
+    }
+
+    -- 3. Clear jokers and reset to defaults
+    JokerSystem.clear_jokers()
+    JokerSystem.add_joker("lightning_rod")  -- default starting joker
+
+    -- 4. Clear all cards from boards
+    if board_sets then
+        for _, boardSet in ipairs(board_sets) do
+            -- Destroy card entities
+            if boardSet.cardIDs then
+                for _, cardEID in ipairs(boardSet.cardIDs) do
+                    if cardEID and entity_cache.valid(cardEID) then
+                        registry:destroy(cardEID)
+                    end
+                end
+                boardSet.cardIDs = {}
+            end
+            -- Clear card pool references
+            if boardSet.cards then
+                boardSet.cards = {}
+            end
+        end
+        log_debug("[gameplay] Cleared cards from all boards")
+    else
+        log_debug("[gameplay] No board_sets found, skipping board clear")
+    end
+
+    -- 4b. Clear inventory boards (separate from board_sets)
+    local function clearInventoryBoard(boardId, boardName)
+        if boardId and entity_cache.valid(boardId) then
+            local board = boards[boardId]
+            if board and board.cards then
+                for _, cardEID in ipairs(board.cards) do
+                    if cardEID and entity_cache.valid(cardEID) then
+                        registry:destroy(cardEID)
+                    end
+                end
+                board.cards = {}
+                log_debug("[gameplay] Cleared " .. boardName)
+            end
+        end
+    end
+    clearInventoryBoard(inventory_board_id, "inventory_board")
+    clearInventoryBoard(trigger_inventory_board_id, "trigger_inventory_board")
+
+    -- 5. Reset player health and remove dissolve shader
+    if survivorEntity and entity_cache.valid(survivorEntity) then
+        local playerScript = getScriptTableFromEntityID(survivorEntity)
+        if playerScript and playerScript.combatTable then
+            local hero = playerScript.combatTable
+            if hero.stats then
+                hero.hp = hero.stats:get("max_health") or hero.max_health or 100
+            elseif hero.max_health then
+                hero.hp = hero.max_health
+            end
+        end
+
+        -- Remove dissolve shader using ShaderBuilder
+        local ok, ShaderBuilder = pcall(require, "core.shader_builder")
+        if ok and ShaderBuilder then
+            ShaderBuilder.for_entity(survivorEntity):clear():apply()
+        end
+    end
+
+    -- 6. Cleanup wand executor (destroys projectiles and wand state)
+    WandExecutor.cleanup()
+
+    -- 7. Reset UI systems
+    if CastBlockFlashUI and CastBlockFlashUI.clear then
+        CastBlockFlashUI.clear()
+    end
+    if SubcastDebugUI and SubcastDebugUI.clear then
+        SubcastDebugUI.clear()
+    end
+
+    -- 8. Clear combat context sides (enemies)
+    if combat_context then
+        if combat_context.side2 then
+            -- Destroy enemy entities
+            for _, actor in ipairs(combat_context.side2) do
+                local enemyEntity = combatActorToEntity and combatActorToEntity[actor]
+                if enemyEntity and entity_cache.valid(enemyEntity) then
+                    registry:destroy(enemyEntity)
+                end
+            end
+            combat_context.side2 = {}
+        end
+    end
+
+    -- 9. Start fresh planning phase
+    startPlanningPhase()
+
+    log_debug("[gameplay] Game reset complete - now in planning phase")
+end
+
 -- Player death animation with dissolve shader and blood particles
 local function playPlayerDeathAnimation(playerEntity, onComplete)
     local Q = require("core.Q")

@@ -181,9 +181,15 @@ function WandTriggers.setupTimerTrigger(registration, interval)
     local wandId = registration.wandId
     local timerTag = "wand_trigger_" .. wandId
 
+    -- Initialize elapsed time tracking for cooldown UI
+    registration.elapsed = 0
+    registration.interval = interval
+
     timer.every(interval, function()
         if registration.enabled and registration.executor then
             log_debug("WandTriggers: Timer trigger fired for wand", wandId)
+            -- Reset elapsed time when trigger fires
+            registration.elapsed = 0
             registration.executor(wandId, "timer_trigger")
             signal.emit("trigger_activated", wandId, registration.triggerType)
         end
@@ -355,8 +361,21 @@ function WandTriggers.update(dt, playerEntity)
     -- Run any event triggers that were queued during physics callbacks
     WandTriggers.processPendingEvents()
 
+    -- Update elapsed time for timer-based triggers (for cooldown UI visualization)
+    WandTriggers.updateTimerElapsed(dt)
+
     -- Update distance-traveled triggers
     WandTriggers.updateDistanceTriggers(playerEntity)
+end
+
+--- Updates elapsed time for timer-based triggers
+--- @param dt number Delta time in seconds
+function WandTriggers.updateTimerElapsed(dt)
+    for wandId, registration in pairs(WandTriggers.registrations) do
+        if registration.triggerType == "every_N_seconds" and registration.enabled then
+            registration.elapsed = (registration.elapsed or 0) + dt
+        end
+    end
 end
 
 --- Updates distance-traveled triggers
@@ -383,6 +402,16 @@ function WandTriggers.updateDistanceTriggers(playerEntity)
                 local registration = WandTriggers.registrations[wandId]
                 if registration and registration.enabled and registration.executor then
                     log_debug("WandTriggers: Distance trigger fired for wand", wandId, "distance", tracking.totalDistance)
+
+                    -- Avatar Rule: move_casts_trigger_onhit
+                    -- Movement-triggered wands fire on-hit effects (Miasma avatar)
+                    -- See docs/plans/2025-12-26-avatar-rule-change-guide.md
+                    local AvatarSystem = require("wand.avatar_system")
+                    local playerScript = playerEntity and getScriptTableFromEntityID and getScriptTableFromEntityID(playerEntity)
+                    if playerScript and AvatarSystem.has_rule(playerScript, "move_casts_trigger_onhit") then
+                        print("[AvatarRule] move_casts_trigger_onhit would apply here")
+                    end
+
                     registration.executor(wandId, "distance_trigger")
                     signal.emit("trigger_activated", wandId, registration.triggerType)
 

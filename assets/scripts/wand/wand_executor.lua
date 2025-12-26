@@ -742,6 +742,14 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
     local childCastMap = buildChildCastMap(block, blockIndex, context)
     context._childCastMap = childCastMap
 
+    -- Avatar Rule: multicast_loops
+    -- Multicast modifiers loop the cast block instead of simultaneous cast (Wildfire avatar)
+    -- See docs/plans/2025-12-26-avatar-rule-change-guide.md
+    local player = context.playerScript
+    if modifiers.multicastCount > 1 and player and AvatarSystem.has_rule(player, "multicast_loops") then
+        print("[AvatarRule] multicast_loops would apply here")
+    end
+
     -- Execute each action card in the block
     for cardIndex, actionCard in ipairs(block.cards) do
         if actionCard.type == "action" then

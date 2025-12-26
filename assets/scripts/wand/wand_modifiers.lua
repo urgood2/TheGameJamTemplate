@@ -572,6 +572,14 @@ function WandModifiers.mergePlayerStats(agg, playerStats)
         agg.manaCostMultiplier = (agg.manaCostMultiplier or 1.0) * (1.0 - snapshot.skill_energy_cost_reduction / 100)
     end
 
+    -- Avatar Rule: missing_hp_dmg
+    -- See docs/plans/2025-12-26-avatar-rule-change-guide.md
+    local AvatarSystem = require("wand.avatar_system")
+    local player = agg._playerScript  -- Set by caller if available
+    if player and AvatarSystem.has_rule(player, "missing_hp_dmg") then
+        print("[AvatarRule] missing_hp_dmg would apply here")
+    end
+
     -- Crit Chance
     -- if snapshot.crit_chance_pct and snapshot.crit_chance_pct ~= 0 then
     --     agg.critChanceBonus = agg.critChanceBonus + snapshot.crit_chance_pct

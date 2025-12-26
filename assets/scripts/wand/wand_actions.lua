@@ -325,6 +325,16 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context, chi
         end
     end
 
+    -- Avatar Rule: summon_cast_share
+    -- When player casts projectile, summons also cast a copy (Voidwalker avatar)
+    -- See docs/plans/2025-12-26-avatar-rule-change-guide.md
+    local AvatarSystem = require("wand.avatar_system")
+    local player = context and context.playerScript
+    local isFromSummonShare = context and context._fromSummonShare  -- Prevent recursion
+    if not isFromSummonShare and player and AvatarSystem.has_rule(player, "summon_cast_share") then
+        print("[AvatarRule] summon_cast_share would apply here")
+    end
+
     return spawnedProjectiles
 end
 
@@ -587,6 +597,16 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
     end
 
     -- Chain lightning (spawn additional projectiles to nearby enemies)
+    -- Avatar Rule: crit_chains
+    -- Critical hits always chain to nearby enemy (Stormlord avatar)
+    -- See docs/plans/2025-12-26-avatar-rule-change-guide.md
+    local AvatarSystem = require("wand.avatar_system")
+    local player = context and context.playerScript
+    local isCriticalHit = hitData and hitData.isCrit
+    if isCriticalHit and player and AvatarSystem.has_rule(player, "crit_chains") then
+        print("[AvatarRule] crit_chains would apply here")
+    end
+
     -- Chain lightning (from modifier OR from action card with chain_count)
     local hasChainLightning = modifiers.chainLightning
         or (actionCard and actionCard.chain_count and actionCard.chain_count > 0)
@@ -754,6 +774,16 @@ function WandActions.executeSummonAction(actionCard, modifiers, context)
     -- TODO: Summon entity
     -- This requires entity spawning system
     log_debug("WandActions: Summoning", actionCard.summon_entity)
+
+    -- Avatar Rule: summons_inherit_block
+    -- Summons inherit 100% of player's Block Chance and Thorns (Citadel avatar)
+    -- See docs/plans/2025-12-26-avatar-rule-change-guide.md
+    local AvatarSystem = require("wand.avatar_system")
+    local player = context and context.playerScript
+    if player and AvatarSystem.has_rule(player, "summons_inherit_block") then
+        print("[AvatarRule] summons_inherit_block would apply here")
+        -- When implemented: copy player's block_chance and thorns stats to summon
+    end
 
     return nil
 end

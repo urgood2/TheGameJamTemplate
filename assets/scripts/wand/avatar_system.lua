@@ -64,6 +64,20 @@ local PROC_EFFECTS = {
     end,
 }
 
+--- Execute a proc effect by name
+--- @param player table Player script table
+--- @param effect table Effect definition with .effect field
+local function execute_effect(player, effect)
+    if not effect or not effect.effect then return end
+
+    local handler = PROC_EFFECTS[effect.effect]
+    if handler then
+        handler(player, effect)
+    else
+        print(string.format("[AvatarSystem] Unknown proc effect: %s", tostring(effect.effect)))
+    end
+end
+
 local function loadDefs()
     if avatarDefs then return avatarDefs end
     avatarDefs = require("data.avatars")

@@ -348,22 +348,24 @@ function AvatarSystem.remove_stat_buffs(player)
 end
 
 -- Equip an already-unlocked avatar (for session-based choice)
--- Handles stat buff application/removal when switching avatars
+-- Handles stat buff and proc handler application/removal when switching avatars
 function AvatarSystem.equip(player, avatarId)
     local state = ensureState(player)
     if not state or not state.unlocked[avatarId] then
         return false, "avatar_locked"
     end
 
-    -- Remove old avatar's stat buffs if switching
+    -- Remove old avatar's effects if switching
     if state.equipped and state.equipped ~= avatarId then
+        AvatarSystem.cleanup_procs(player)
         AvatarSystem.remove_stat_buffs(player)
     end
 
     state.equipped = avatarId
 
-    -- Apply new avatar's stat buffs
+    -- Apply new avatar's effects
     AvatarSystem.apply_stat_buffs(player, avatarId)
+    AvatarSystem.register_procs(player, avatarId)
 
     return true
 end

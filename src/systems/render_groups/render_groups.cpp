@@ -1,6 +1,7 @@
 #include "render_groups.hpp"
 #include <algorithm>
 #include "spdlog/spdlog.h"
+#include "sol/sol.hpp"
 
 namespace render_groups {
 
@@ -139,6 +140,59 @@ void resetToDefault(const std::string& groupName, entt::entity e) {
             return;
         }
     }
+}
+
+void exposeToLua(sol::state& lua) {
+    auto tbl = lua.create_named_table("render_groups");
+
+    // Group management
+    tbl["create"] = [](const std::string& name, sol::table shaderList) {
+        std::vector<std::string> shaders;
+        for (auto& kv : shaderList) {
+            if (kv.second.is<std::string>()) {
+                shaders.push_back(kv.second.as<std::string>());
+            }
+        }
+        createGroup(name, shaders);
+    };
+
+    tbl["clearGroup"] = clearGroup;
+    tbl["clearAll"] = clearAll;
+
+    // Entity management - add() with optional shader override
+    tbl["add"] = sol::overload(
+        [](const std::string& groupName, entt::entity e) {
+            addEntity(groupName, e);
+        },
+        [](const std::string& groupName, entt::entity e, sol::table shaderList) {
+            std::vector<std::string> shaders;
+            for (auto& kv : shaderList) {
+                if (kv.second.is<std::string>()) {
+                    shaders.push_back(kv.second.as<std::string>());
+                }
+            }
+            addEntityWithShaders(groupName, e, shaders);
+        }
+    );
+
+    tbl["remove"] = removeEntity;
+    tbl["removeFromAll"] = removeFromAll;
+
+    // Per-entity shader manipulation
+    tbl["addShader"] = addShader;
+    tbl["removeShader"] = removeShader;
+
+    tbl["setShaders"] = [](const std::string& groupName, entt::entity e, sol::table shaderList) {
+        std::vector<std::string> shaders;
+        for (auto& kv : shaderList) {
+            if (kv.second.is<std::string>()) {
+                shaders.push_back(kv.second.as<std::string>());
+            }
+        }
+        setShaders(groupName, e, shaders);
+    };
+
+    tbl["resetToDefault"] = resetToDefault;
 }
 
 }  // namespace render_groups

@@ -313,4 +313,36 @@ end
 run_tests()
 run_proc_tests()
 
+-- Test: Conduit avatar unlocks via chain_lightning_propagations metric
+reset()
+local playerConduit = {}
+for _ = 1, 20 do
+    AvatarSystem.record_progress(playerConduit, "chain_lightning_propagations", 1)
+end
+assert_true(playerConduit.avatar_state.unlocked.conduit,
+    "conduit should unlock after 20 chain_lightning_propagations")
+print("✓ Conduit unlock test passed")
+
+-- Test: Conduit stat buffs applied on equip
+reset()
+local playerConduit2 = {
+    avatar_state = { unlocked = { conduit = true } },
+    combatTable = {
+        stats = {
+            _values = {},
+            add_add_pct = function(self, stat, value)
+                self._values[stat] = (self._values[stat] or 0) + value
+            end,
+            recompute = function(self) end,
+            get = function(self, stat) return self._values[stat] or 0 end
+        }
+    }
+}
+AvatarSystem.equip(playerConduit2, "conduit")
+assert_equals(playerConduit2.combatTable.stats._values["lightning_resist_pct"], 30,
+    "conduit should add 30% lightning resistance")
+assert_equals(playerConduit2.combatTable.stats._values["lightning_modifier_pct"], 30,
+    "conduit should add 30% lightning damage")
+print("✓ Conduit stat buffs test passed")
+
 print("All avatar tests passed.")

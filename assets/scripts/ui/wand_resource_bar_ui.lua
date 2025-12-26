@@ -189,8 +189,10 @@ function M.update(wandDef, cardPool)
     state.maxMana = wandDef.mana_max or 100
     state.castBlockCount = #(simResult.blocks or {})
 
-    -- Calculate overuse penalty
-    if totalMana > state.maxMana then
+    -- Calculate overuse penalty (guard against division by zero)
+    if state.maxMana <= 0 then
+        state.overusePenaltySeconds = 0
+    elseif totalMana > state.maxMana then
         local deficit = totalMana - state.maxMana
         local ratio = deficit / state.maxMana
         local penaltyFactor = wandDef.overheat_penalty_factor or 5.0
@@ -212,5 +214,10 @@ function M.getMaxMana() return state.maxMana end
 function M.getCastBlockCount() return state.castBlockCount end
 function M.getOverusePenalty() return state.overusePenaltySeconds end
 function M.isOverusing() return state.totalManaCost > state.maxMana end
+
+-- Lifecycle cleanup
+function M.cleanup()
+    M.hide()
+end
 
 return M

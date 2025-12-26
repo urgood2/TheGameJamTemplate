@@ -19,6 +19,7 @@
 ]]
 
 local timer = require("core.timer")
+local signal = require("external.hump.signal")
 
 local CombatStateMachine = {}
 CombatStateMachine.__index = CombatStateMachine
@@ -420,6 +421,9 @@ function CombatStateMachine:enter_defeat()
         })
     end
 
+    -- Emit to global signal system for death animation
+    signal.emit("player_died", self.player_entity)
+
     -- Callback
     if self.on_defeat then
         self.on_defeat()
@@ -469,6 +473,9 @@ function CombatStateMachine:enter_game_over()
     if self.on_game_over then
         self.on_game_over()
     end
+
+    -- Show death screen via global signal
+    signal.emit("show_death_screen")
 
     self.running = false
 end

@@ -25,17 +25,56 @@ JOKER EFFECT SCHEMA - How to Wire New Joker Effects
 ================================================================================
 This schema defines how joker return values map to modifier fields.
 
+INTEGRATION FLOW (End-to-End):
+------------------------------
+The joker → wand action pipeline uses in-place mutation:
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ wand_executor.lua:executeCastBlock()                                │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  1. aggregate(modifierCards)     → Creates modifiers table          │
+  │     modifiers.pierceCount = 0       (from modifier cards only)      │
+  │                                                                     │
+  │  2. JokerSystem.trigger_event()  → Jokers return effects            │
+  │     jokerEffects = { extra_pierce = 2 }                             │
+  │                                                                     │
+  │  3. applyJokerEffects(modifiers, jokerEffects)  ← MUTATES IN-PLACE  │
+  │     Schema: extra_pierce → pierceCount                              │
+  │     modifiers.pierceCount = 0 + 2 = 2                               │
+  │                                                                     │
+  │  4. WandActions.execute(actionCard, modifiers, ...)                 │
+  │     Passes the NOW-MUTATED modifiers table                          │
+  └─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ wand_actions.lua:executeProjectileAction()                          │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  5. applyToAction(actionCard, modifiers)   ← READS FROM MODIFIERS   │
+  │     props.pierceCount = modifiers.pierceCount  (now 2!)             │
+  │                                                                     │
+  │  6. spawnSingleProjectile(..., props, ...)                          │
+  │     maxPierceCount = props.pierceCount = 2                          │
+  └─────────────────────────────────────────────────────────────────────┘
+
+KEY INSIGHT: The `modifiers` table is passed by reference. applyJokerEffects()
+mutates it, then applyToAction() reads from the same mutated table.
+
 HOW TO ADD A NEW JOKER EFFECT:
 ------------------------------
 1. Add an entry to JOKER_EFFECT_SCHEMA below:
 
    my_new_effect = { mode = "add", target = "existingModifierField" },
 
-2. Use it in your joker's calculate() function:
+2. Use it in your joker's calculate() function (data/jokers.lua):
 
    return { my_new_effect = 5, message = "Effect triggered!" }
 
-3. That's it! The effect will automatically:
+3. Ensure the target field exists in createAggregate() with a default value.
+
+4. Ensure applyToAction() copies it to the props table if wand_actions needs it.
+
+5. That's it! The effect will automatically:
    - Aggregate across multiple jokers (using the mode)
    - Apply to the modifier field before projectile spawn
 
@@ -54,19 +93,74 @@ NAMING CONVENTION:
 
   If no explicit mapping exists, snake_case auto-converts to camelCase.
 
-EXAMPLE - Adding "extra_pierce" for a piercing joker:
------------------------------------------------------
-  1. Schema entry:
+CONSUMPTION REFERENCE - Where Joker Effects Are Used:
+------------------------------------------------------
+This table shows where each joker effect ends up in wand_actions.lua.
+Use this to verify your joker effect is wired correctly end-to-end.
+
+  Joker Field        → Modifier Field            → wand_actions.lua Usage
+  ─────────────────────────────────────────────────────────────────────────
+  damage_mod         → damageBonus               → props.damage (line 400)
+  damage_mult        → damageMultiplier          → props.damage (line 400)
+  extra_pierce       → pierceCount               → maxPierceCount (line 407)
+  extra_bounce       → bounceCount               → maxBounces (line 408)
+  extra_chain        → chainLightningTargets     → jokerChainBonus (line 1058)
+  chain_range_mod    → chainLightningRange       → jokerRangeBonus (line 1062)
+  repeat_cast        → multicastCount            → calculateMulticastAngles (line 304)
+  crit_chance        → critChanceBonus           → (passed to combat system)
+  heal_on_hit        → healOnHit                 → modifiers.healOnHit (line 567, 1172)
+  lifesteal          → lifesteal                 → (passed to combat system)
+  knockback          → knockback                 → modifiers.knockback (line 585)
+  mana_restore       → manaRestore               → (passed to wand state)
+  mana_cost_mult     → manaCostMultiplier        → (passed to wand executor)
+
+  On-Hit Effects (read directly from modifiers in handleProjectileHit):
+  ─────────────────────────────────────────────────────────────────────────
+  freezeOnHit        → freezeOnHit               → modifiers.freezeOnHit (line 573)
+  slowOnHit          → slowOnHit                 → modifiers.slowOnHit (line 578)
+  forceCrit          → forceCrit                 → modifiers.forceCrit (line 1075)
+
+  NEW/CUSTOM FIELDS (not in schema):
+  ─────────────────────────────────────────────────────────────────────────
+  my_custom_field    → myCustomField (auto)      → NOT CONSUMED BY DEFAULT!
+                                                   You must add consumption code:
+                                                   1. applyToAction(): modified.myField = modifiers.myField
+                                                   2. wand_actions.lua: read from props.myField or modifiers.myField
+
+  To consume a new field, choose one of these patterns:
+    A) Via props (for projectile spawn config):
+       - Add to applyToAction(): modified.myField = modifiers.myField
+       - Use in wand_actions.lua: myConfigValue = props.myField or 0,
+
+    B) Directly from modifiers (for on-hit effects):
+       - Read in handleProjectileHit(): if modifiers.myField > 0 then ... end
+
+COMPLETE EXAMPLE - Adding "extra_pierce" for a piercing joker:
+--------------------------------------------------------------
+  1. Schema entry (this file, JOKER_EFFECT_SCHEMA):
      extra_pierce = { mode = "add", target = "pierceCount" },
 
-  2. Joker code:
-     calculate = function(self, context)
-         if context.tags and context.tags.Projectile then
-             return { extra_pierce = 2, message = "Pierce +2!" }
-         end
-     end
+  2. Default value (this file, createAggregate()):
+     pierceCount = 0,
 
-  3. Result: pierceCount increases by 2 when casting Projectile-tagged spells
+  3. Props copy (this file, applyToAction()):
+     modified.pierceCount = modifiers.pierceCount
+
+  4. Consumption (wand_actions.lua:407):
+     maxPierceCount = props.pierceCount or 0,
+
+  5. Joker definition (data/jokers.lua):
+     piercing_specialist = {
+         id = "piercing_specialist",
+         name = "Piercing Specialist",
+         calculate = function(self, context)
+             if context.tags and context.tags.Projectile then
+                 return { extra_pierce = 2, message = "Pierce +2!" }
+             end
+         end
+     }
+
+  Result: pierceCount increases by 2 when casting Projectile-tagged spells
 ]] --
 
 WandModifiers.JOKER_EFFECT_SCHEMA = {

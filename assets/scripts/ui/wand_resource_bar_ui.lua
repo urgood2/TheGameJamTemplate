@@ -1,7 +1,6 @@
 -- wand_resource_bar_ui.lua
 -- Planning phase UI showing mana cost prediction and overuse penalty
 
-local signal = require("external.hump.signal")
 local dsl = require("ui.ui_syntax_sugar")
 local cardEval = require("core.card_eval_order_test")
 

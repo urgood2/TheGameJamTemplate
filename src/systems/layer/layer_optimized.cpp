@@ -22,6 +22,8 @@
 #include "systems/ui/ui_data.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
 #include "systems/shaders/shader_draw_commands.hpp"
+#include "systems/render_groups/render_groups.hpp"
+#include "systems/layer/layer_order_system.hpp"
 
 namespace layer
 {
@@ -372,6 +374,62 @@ namespace layer
         batch.execute();
     }
 
+    void ExecuteDrawRenderGroup(std::shared_ptr<layer::Layer> layer, CmdDrawRenderGroup* c) {
+        auto* group = render_groups::getGroup(c->groupName);
+        if (!group) {
+            SPDLOG_WARN("ExecuteDrawRenderGroup: group '{}' not found", c->groupName);
+            return;
+        }
+
+        // 1. Collect valid entities with z-order, remove invalid
+        std::vector<std::pair<int, size_t>> sortedIndices;
+        sortedIndices.reserve(group->entities.size());
+
+        for (size_t i = 0; i < group->entities.size(); ) {
+            entt::entity e = group->entities[i].entity;
+
+            // Lazy cleanup of invalid entities
+            if (!c->registry->valid(e)) {
+                group->entities[i] = group->entities.back();
+                group->entities.pop_back();
+                continue;
+            }
+
+            if (!c->registry->all_of<AnimationQueueComponent>(e)) {
+                ++i;
+                continue;
+            }
+
+            auto& anim = c->registry->get<AnimationQueueComponent>(e);
+            if (anim.noDraw) {
+                ++i;
+                continue;
+            }
+
+            int z = layer_order_system::GetZIndex(*c->registry, e);
+            sortedIndices.emplace_back(z, i);
+            ++i;
+        }
+
+        // 2. Sort by z-order
+        std::sort(sortedIndices.begin(), sortedIndices.end());
+
+        // 3. Batch render
+        shader_draw_commands::DrawCommandBatch batch;
+        batch.beginRecording();
+
+        for (auto& [z, idx] : sortedIndices) {
+            auto& entry = group->entities[idx];
+            const auto& shaders = entry.shaders.empty() ? group->defaultShaders : entry.shaders;
+
+            shader_draw_commands::executeEntityWithShaders(*c->registry, entry.entity, shaders, batch);
+        }
+
+        batch.endRecording();
+        if (c->autoOptimize) batch.optimize();
+        batch.execute();
+    }
+
 
     // -------------------------------------------------------------------------------------
     // Command Registration Functions
@@ -472,6 +530,7 @@ namespace layer
         RegisterRenderer<CmdDrawDashedRoundedRect>(DrawCommandType::DrawDashedRoundedRect, ExecuteDrawDashedRoundedRect);
         RegisterRenderer<CmdDrawDashedLine>(DrawCommandType::DrawDashedLine, ExecuteDrawDashedLine);
         RegisterRenderer<CmdDrawBatchedEntities>(DrawCommandType::DrawBatchedEntities, ExecuteDrawBatchedEntities);
+        RegisterRenderer<CmdDrawRenderGroup>(DrawCommandType::DrawRenderGroup, ExecuteDrawRenderGroup);
 
     }
 }

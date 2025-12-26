@@ -5555,6 +5555,58 @@ local function spawnDamageNumber(targetEntity, amount, isCrit)
     }
 end
 
+-- Player death animation with dissolve shader and blood particles
+local function playPlayerDeathAnimation(playerEntity, onComplete)
+    local Q = require("core.Q")
+    local ShaderBuilder = require("core.shader_builder")
+    local ok, Particles = pcall(require, "core.particles")
+
+    -- Get player position for blood particles
+    local cx, cy = Q.center(playerEntity)
+
+    -- Blood particle burst (only if Particles loaded successfully)
+    if ok and Particles then
+        local blood = Particles.define()
+            :shape("circle")
+            :size(3, 8)
+            :color(255, 0, 0)          -- red
+            :velocity(50, 150)
+            :gravity(300)
+            :lifespan(0.6, 1.2)
+            :fade()
+
+        blood:burst(25):inCircle(cx, cy, 20):outward()
+    end
+
+    -- Apply dissolve shader to player
+    ShaderBuilder.for_entity(playerEntity)
+        :add("dissolve_with_burn_edge", { dissolve_value = 0.0 })
+        :apply()
+
+    -- Animate dissolve from 0 to 1 over 1.5 seconds
+    local duration = 1.5
+    local elapsed = 0
+
+    timer.every_opts({
+        delay = 0.016,
+        action = function()
+            elapsed = elapsed + 0.016
+            local progress = math.min(elapsed / duration, 1.0)
+
+            -- Update dissolve uniform
+            globalShaderUniforms:set("dissolve_with_burn_edge", "dissolve_value", progress)
+
+            if progress >= 1.0 then
+                if onComplete then onComplete() end
+                return false  -- stop timer
+            end
+            return true  -- continue
+        end,
+        tag = "player_death_dissolve",
+        group = "death_animation"
+    })
+end
+
 function initCombatSystem()
     -- init combat system.
 

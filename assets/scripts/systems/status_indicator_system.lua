@@ -27,6 +27,10 @@ local StatusIndicatorSystem = {
     -- { [entity_id] = { [status_id] = indicator_data } }
     active_indicators = {},
 
+    -- Track applied shaders per entity per status
+    -- { [entity_id] = { [status_id] = shader_name } }
+    applied_shaders = {},
+
     -- Config
     MAX_FLOATING_ICONS = 2,
     ICON_BOB_SPEED = 2.0,
@@ -153,6 +157,9 @@ function StatusIndicatorSystem.hideAll(entity)
     for status_id, _ in pairs(StatusIndicatorSystem.active_indicators[entity]) do
         StatusIndicatorSystem.hide(entity, status_id)
     end
+
+    -- Cleanup shader tracking
+    StatusIndicatorSystem.applied_shaders[entity] = nil
 end
 
 --- Update stack count for an indicator
@@ -379,22 +386,62 @@ end
 
 --- Apply shader effect to entity
 function StatusIndicatorSystem.applyShader(entity, status_id, def, stacks)
-    -- TODO: Integrate with ShaderBuilder
-    -- ShaderBuilder.for_entity(entity):add(def.shader, def.shader_uniforms):apply()
+    if not def.shader then return end
+
+    local ShaderBuilder = require("core.shader_builder")
+
+    -- Determine uniforms (stack-based or default)
+    local uniforms = def.shader_uniforms or {}
+    if def.shader_uniforms_per_stack and stacks then
+        local idx = math.min(stacks, #def.shader_uniforms_per_stack)
+        uniforms = def.shader_uniforms_per_stack[idx]
+    end
+
+    -- Apply shader
+    ShaderBuilder.for_entity(entity)
+        :add(def.shader, uniforms)
+        :apply()
+
+    -- Track for removal
+    if not StatusIndicatorSystem.applied_shaders[entity] then
+        StatusIndicatorSystem.applied_shaders[entity] = {}
+    end
+    StatusIndicatorSystem.applied_shaders[entity][status_id] = def.shader
 end
 
 --- Remove shader effect from entity
 function StatusIndicatorSystem.removeShader(entity, status_id)
-    -- TODO: Remove shader from entity's shader stack
+    if not StatusIndicatorSystem.applied_shaders[entity] then return end
+
+    local shader_name = StatusIndicatorSystem.applied_shaders[entity][status_id]
+    if not shader_name then return end
+
+    local ShaderBuilder = require("core.shader_builder")
+
+    -- Remove the specific shader
+    ShaderBuilder.for_entity(entity)
+        :remove(shader_name)
+        :apply()
+
+    StatusIndicatorSystem.applied_shaders[entity][status_id] = nil
+
+    -- Cleanup empty entity entry
+    if next(StatusIndicatorSystem.applied_shaders[entity]) == nil then
+        StatusIndicatorSystem.applied_shaders[entity] = nil
+    end
 end
 
 --- Update shader uniforms based on stacks
 function StatusIndicatorSystem.updateShaderForStacks(entity, status_id, def, stacks)
-    local uniforms = def.shader_uniforms_per_stack
-    if uniforms then
-        local idx = math.min(stacks, #uniforms)
-        -- TODO: Update shader uniforms
-    end
+    if not def.shader_uniforms_per_stack then return end
+
+    local idx = math.min(stacks, #def.shader_uniforms_per_stack)
+    local uniforms = def.shader_uniforms_per_stack[idx]
+
+    local ShaderBuilder = require("core.shader_builder")
+    ShaderBuilder.for_entity(entity)
+        :update(def.shader, uniforms)
+        :apply()
 end
 
 --- Start particle emitter for status

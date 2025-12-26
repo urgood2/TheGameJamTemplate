@@ -32,6 +32,7 @@ local Core = {}
 -- ============================================================================
 local util = {}
 local signal = require("external.hump.signal")
+local MarkSystem = require("systems.mark_system")
 
 -- ============================================================================
 -- Event Emission Helper
@@ -2218,6 +2219,39 @@ Effects.deal_damage = function(p)
       return
     end
 
+    -- Defensive marks check ---------------------------------------------------
+    -- Skip defensive marks if this is already a counter/reflect to prevent infinite loops
+    local defensive_mark_result = { block = 0, reflect = 0, counter_damage = 0, effects = {} }
+    if not (tags and (tags.counter or tags.reflect or tags.defensive_mark)) then
+        local tgt_entity = tgt.entity  -- Get entity ID from combat actor
+        if tgt_entity and MarkSystem then
+        -- Calculate pre-defense damage estimate for defensive mark triggers
+        local pre_defense_total = 0
+        for _, c in ipairs(comps) do
+            pre_defense_total = pre_defense_total + (c.amount or 0)
+        end
+        pre_defense_total = pre_defense_total * crit_mult
+
+        -- Determine primary damage type
+        local primary_damage_type = "physical"
+        local max_amt = 0
+        for _, c in ipairs(comps) do
+            if c.amount > max_amt then
+                max_amt = c.amount
+                primary_damage_type = c.type
+            end
+        end
+
+        local src_entity = src.entity
+        defensive_mark_result = MarkSystem.checkDefensiveMarks(
+            tgt_entity,
+            primary_damage_type,
+            pre_defense_total,
+            src_entity
+        )
+        end
+    end
+
     -- Shield block ------------------------------------------------------------
     -- Uses target cooldown gate; chance and amount can be pierced by attacker.
     tgt.timers      = tgt.timers or {}
@@ -2245,6 +2279,12 @@ Effects.deal_damage = function(p)
       ctx.time:set_cooldown(tgt.timers, 'block', math.max(0.1, rec))
       dbg("Block triggered: chance=%.1f%% amt=%.1f next_ready=%.2f",
         blk_chance, block_amt, tgt.timers['block'] or -1)
+    end
+
+    -- Add defensive mark block (stacks with shield block)
+    block_amt = block_amt + (defensive_mark_result.block or 0)
+    if defensive_mark_result.block and defensive_mark_result.block > 0 then
+      dbg("Defensive mark block: +%.1f", defensive_mark_result.block)
     end
 
     -- Aggregate per-type and apply crit --------------------------------------
@@ -2394,6 +2434,36 @@ Effects.deal_damage = function(p)
       tags       = tags,      -- free-form classification (aoe, projectile, retaliation, etc.)
       components = sums,      -- pre-defense per-type totals (post-crit & attacker mods)
     })
+
+    -- Process defensive mark effects ------------------------------------------
+    if defensive_mark_result.effects and #defensive_mark_result.effects > 0 then
+        for _, effect in ipairs(defensive_mark_result.effects) do
+            if effect.type == "chain" and src then
+                -- Counter-attack chain lightning
+                local chain_damage = defensive_mark_result.counter_damage or effect.damage or 25
+                dbg("Defensive mark counter-attack: chain lightning for %.1f damage", chain_damage)
+                Effects.deal_damage {
+                    components = {{ type = "lightning", amount = chain_damage }},
+                    reason = "counter",
+                    tags = { counter = true, defensive_mark = true }
+                }(ctx, tgt, src)
+            elseif effect.type == "apply_to_attacker" and effect.target then
+                -- Apply mark to attacker
+                dbg("Defensive mark effect: applying %s to attacker", effect.status)
+                MarkSystem.apply(effect.target, effect.status, { stacks = 1, source = tgt_entity })
+            end
+        end
+    end
+
+    -- Reflect damage from defensive marks -------------------------------------
+    if defensive_mark_result.reflect and defensive_mark_result.reflect > 0 and src then
+        dbg("Defensive mark reflect: %.1f damage", defensive_mark_result.reflect)
+        Effects.deal_damage {
+            components = {{ type = primary_damage_type or "physical", amount = defensive_mark_result.reflect }},
+            reason = "reflect",
+            tags = { reflect = true, defensive_mark = true }
+        }(ctx, tgt, src)
+    end
   end
 end
 

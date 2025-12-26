@@ -370,13 +370,14 @@ function AvatarSystem.equip(player, avatarId)
     return true
 end
 
---- Unequip current avatar (removes stat buffs)
+--- Unequip current avatar (removes stat buffs and procs)
 --- @param player table Player script table
 --- @return boolean success
 function AvatarSystem.unequip(player)
     local state = player and player.avatar_state
     if not state or not state.equipped then return true end
 
+    AvatarSystem.cleanup_procs(player)
     AvatarSystem.remove_stat_buffs(player)
     state.equipped = nil
     return true

@@ -63,6 +63,7 @@ local gameplay_cfg = {
     messageQueueHooksRegistered = false,
     avatarTestEventsFired = false,
     DEBUG_AVATAR_TEST_EVENTS = rawget(_G, "DEBUG_AVATAR_TEST_EVENTS") or (os.getenv("ENABLE_AVATAR_DEBUG_EVENTS") == "1"),
+    DEBUG_AUTO_EQUIP_AVATAR = "conduit",  -- Set to avatar ID to auto-equip, or nil to disable
     cardW = 80,   -- card dimensions, reset on init
     cardH = 112,
 }
@@ -4653,9 +4654,14 @@ function initPlanningPhase()
             and (is_state_active(PLANNING_STATE) or is_state_active(ACTION_STATE) or is_state_active(SHOP_STATE)) then
             local playerTarget = nil
             if getTagEvaluationTargets then
-                playerTarget = select(1, getTagEvaluationTargets())
+                -- Use second return value (playerScript with avatar_state), not first (combatTable)
+                local _, playerScript = getTagEvaluationTargets()
+                playerTarget = playerScript
             end
-            AvatarJokerStrip.syncFrom(playerTarget)
+            -- Only sync if we have a valid player with avatar_state
+            if playerTarget and playerTarget.avatar_state then
+                AvatarJokerStrip.syncFrom(playerTarget)
+            end
             AvatarJokerStrip.update(dt)
             AvatarJokerStrip.draw()
         end
@@ -5614,6 +5620,34 @@ function initCombatSystem()
     assert(playerScript, "Failed to get script table for survivor entity in combat system init!")
     playerScript.combatTable  = hero
     combatActorToEntity[hero] = survivorEntity
+
+    -- DEBUG: Auto-equip avatar for testing
+    if gameplay_cfg.DEBUG_AUTO_EQUIP_AVATAR then
+        local avatarId = gameplay_cfg.DEBUG_AUTO_EQUIP_AVATAR
+        playerScript.avatar_state = playerScript.avatar_state or { unlocked = {}, equipped = nil }
+        playerScript.avatar_state.unlocked[avatarId] = true  -- Force unlock
+        local ok, err = AvatarSystem.equip(playerScript, avatarId)
+        print(string.format("[DEBUG] Auto-equipped avatar: %s (ok=%s, err=%s)", avatarId, tostring(ok), tostring(err)))
+        print(string.format("[DEBUG] avatar_state.equipped = %s", tostring(playerScript.avatar_state.equipped)))
+
+        -- Sync avatar strip UI (delayed to ensure strip is ready)
+        -- Store reference to avoid closure issues
+        local capturedPlayer = playerScript
+        timer.after_opts({
+            delay = 0.5,
+            action = function()
+                if AvatarJokerStrip and AvatarJokerStrip.isActive and AvatarJokerStrip.syncFrom then
+                    print("[DEBUG] Syncing avatar strip with captured player...")
+                    print("[DEBUG] capturedPlayer=" .. tostring(capturedPlayer))
+                    print("[DEBUG] capturedPlayer.avatar_state.equipped=" .. tostring(capturedPlayer and capturedPlayer.avatar_state and capturedPlayer.avatar_state.equipped))
+                    AvatarJokerStrip.syncFrom(capturedPlayer)
+                else
+                    print("[DEBUG] Avatar strip not ready: isActive=" .. tostring(AvatarJokerStrip and AvatarJokerStrip.isActive))
+                end
+            end,
+            tag = "debug_avatar_sync"
+        })
+    end
 
     -- attach defs/derivations to ctx for easy access later for pets
     ctx._defs                 = combatStatDefs
@@ -6619,8 +6653,9 @@ reevaluateDeckTags = function()
     if TagSynergyPanel and TagSynergyPanel.isActive then
         TagSynergyPanel.setData(playerTarget.tag_counts, TagEvaluator.get_breakpoints())
     end
-    if AvatarJokerStrip and AvatarJokerStrip.isActive then
-        AvatarJokerStrip.syncFrom(playerTarget)
+    if AvatarJokerStrip and AvatarJokerStrip.isActive and playerScript and playerScript.avatar_state then
+        -- Use playerScript (has avatar_state), not playerTarget (may be combatTable)
+        AvatarJokerStrip.syncFrom(playerScript)
     end
 
     if playerScript and playerTarget ~= playerScript then

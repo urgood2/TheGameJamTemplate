@@ -88,11 +88,18 @@ local PROC_EFFECTS = {
                         combatActor.stats:add_add_pct("all_damage_pct", -bonus_per_stack)
                         combatActor.stats:recompute()
                     end
+
+                    -- Debug: Log decay
+                    local totalBonus = player.conduit_stacks * bonus_per_stack
+                    print(string.format("[Conduit] Decay: now %d stacks (+%d%% damage)",
+                        player.conduit_stacks, totalBonus))
                 end
             end,
             tag = "conduit_decay",
             group = "avatar_conduit"
         })
+
+        print("[Conduit] Charge system initialized (decay every 5s)")
     end,
 }
 
@@ -190,6 +197,11 @@ local TRIGGER_HANDLERS = {
                     combatActor.stats:add_add_pct("all_damage_pct", actual_gained * bonus_per_stack)
                     combatActor.stats:recompute()
                 end
+
+                -- Debug: Log and show popup
+                local totalBonus = player.conduit_stacks * bonus_per_stack
+                print(string.format("[Conduit] +%d stacks (total: %d, +%d%% damage)",
+                    actual_gained, player.conduit_stacks, totalBonus))
             end
         end)
     end,
@@ -404,6 +416,7 @@ function AvatarSystem.apply_stat_buffs(player, avatarId)
     local state = ensureState(player)
     state._applied_buffs = state._applied_buffs or {}
 
+    print(string.format("[Avatar] Applying stat buffs for '%s':", avatarId))
     for _, effect in ipairs(avatar.effects) do
         if effect.type == "stat_buff" then
             local stat = effect.stat
@@ -412,10 +425,12 @@ function AvatarSystem.apply_stat_buffs(player, avatarId)
             -- Apply as additive percentage (like items)
             stats:add_add_pct(stat, value)
             table.insert(state._applied_buffs, { stat = stat, value = value })
+            print(string.format("  +%d%% %s", value, stat))
         end
     end
 
     stats:recompute()
+    print("[Avatar] Stat buffs applied and recomputed")
     return true
 end
 

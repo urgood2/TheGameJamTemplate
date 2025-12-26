@@ -32,40 +32,68 @@ local function createBarUI()
         state.uiBoxId = nil
     end
 
-    local function getFillRatio()
-        if state.maxMana <= 0 then return 0 end
-        return math.min(state.totalManaCost / state.maxMana, 1.0)
+    -- Calculate values at creation time (we recreate on refresh anyway)
+    local fillRatio = 0
+    if state.maxMana > 0 then
+        fillRatio = math.min(state.totalManaCost / state.maxMana, 1.0)
     end
 
-    local function getOverflowRatio()
-        if state.maxMana <= 0 then return 0 end
+    local overflowRatio = 0
+    if state.maxMana > 0 then
         local overflow = math.max(0, state.totalManaCost - state.maxMana)
-        return math.min(overflow / state.maxMana, 1.0)  -- Cap at 100% overflow
+        overflowRatio = math.min(overflow / state.maxMana, 1.0)
     end
 
-    local function getBarColor()
-        if state.totalManaCost > state.maxMana then
-            return "orange"
-        elseif state.totalManaCost >= state.maxMana * 0.9 then
-            return "yellow"
-        else
-            return "cyan"
-        end
+    local barColor = "cyan"
+    if state.totalManaCost > state.maxMana then
+        barColor = "orange"
+    elseif state.totalManaCost >= state.maxMana * 0.9 then
+        barColor = "yellow"
     end
 
-    local function getStatsText()
-        local text = string.format("%d/%d mana  ·  %d cast blocks",
-            state.totalManaCost, state.maxMana, state.castBlockCount)
+    local statsText = string.format("%d/%d mana  |  %d cast blocks",
+        state.totalManaCost, state.maxMana, state.castBlockCount)
+    if state.overusePenaltySeconds > 0 then
+        statsText = statsText .. string.format("  |  +%.1fs Overuse Penalty", state.overusePenaltySeconds)
+    end
 
-        if state.overusePenaltySeconds > 0 then
-            text = text .. string.format("  ·  +%.1fs Overuse Penalty", state.overusePenaltySeconds)
-        end
+    -- Calculate widths
+    local fillWidth = math.max(1, math.floor(CONFIG.barWidth * fillRatio))
+    local emptyWidth = math.max(0, CONFIG.barWidth - fillWidth)
+    local overflowWidth = math.floor(CONFIG.barWidth * 0.5 * overflowRatio)
 
-        return text
+    -- Build children list dynamically to avoid nil elements
+    local barChildren = {}
+
+    -- Fill portion (only if > 0)
+    if fillWidth > 0 then
+        table.insert(barChildren, dsl.progressBar({
+            getValue = function() return 1.0 end,  -- Always full
+            emptyColor = barColor,
+            fullColor = barColor,
+            minWidth = fillWidth,
+            minHeight = CONFIG.barHeight,
+        }))
+    end
+
+    -- Empty portion (only if > 0)
+    if emptyWidth > 0 then
+        table.insert(barChildren, dsl.spacer(emptyWidth, CONFIG.barHeight))
+    end
+
+    -- Overflow zone (only if overflowing)
+    if overflowWidth > 0 then
+        table.insert(barChildren, dsl.progressBar({
+            getValue = function() return 1.0 end,
+            emptyColor = "red",
+            fullColor = "red",
+            minWidth = overflowWidth,
+            minHeight = CONFIG.barHeight,
+        }))
     end
 
     local barUI = dsl.root {
-        config = { padding = 4, background = "dark_panel" },
+        config = { padding = 4 },
         children = {
             dsl.vbox {
                 config = { gap = 4 },
@@ -73,51 +101,10 @@ local function createBarUI()
                     -- Main mana bar
                     dsl.hbox {
                         config = { gap = 0 },
-                        children = {
-                            -- Fill portion
-                            dsl.box {
-                                config = {
-                                    minWidth = function()
-                                        return CONFIG.barWidth * getFillRatio()
-                                    end,
-                                    minHeight = CONFIG.barHeight,
-                                    background = getBarColor,
-                                },
-                            },
-                            -- Empty portion (up to capacity)
-                            dsl.box {
-                                config = {
-                                    minWidth = function()
-                                        return CONFIG.barWidth * (1.0 - getFillRatio())
-                                    end,
-                                    minHeight = CONFIG.barHeight,
-                                    background = "dark_gray",
-                                },
-                            },
-                            -- Capacity marker
-                            dsl.box {
-                                config = {
-                                    minWidth = 2,
-                                    minHeight = CONFIG.barHeight + 4,
-                                    background = "white",
-                                },
-                            },
-                            -- Overflow zone
-                            dsl.box {
-                                config = {
-                                    minWidth = function()
-                                        return CONFIG.barWidth * 0.5 * getOverflowRatio()
-                                    end,
-                                    minHeight = CONFIG.barHeight,
-                                    background = function()
-                                        return getOverflowRatio() > 0 and "red" or "transparent"
-                                    end,
-                                },
-                            },
-                        },
+                        children = barChildren,
                     },
                     -- Stats text
-                    dsl.text(getStatsText, { fontSize = 12, color = "white" }),
+                    dsl.text(statsText, { fontSize = 12 }),
                 },
             },
         },

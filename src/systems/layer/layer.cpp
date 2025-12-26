@@ -909,6 +909,10 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
            &layer::CmdDrawBatchedEntities::registry, "entities",
            &layer::CmdDrawBatchedEntities::entities, "autoOptimize",
            &layer::CmdDrawBatchedEntities::autoOptimize)
+  BIND_CMD(DrawRenderGroup, "registry",
+           &layer::CmdDrawRenderGroup::registry, "groupName",
+           &layer::CmdDrawRenderGroup::groupName, "autoOptimize",
+           &layer::CmdDrawRenderGroup::autoOptimize)
 #undef BIND_CMD
 
   rec.add_type("layer.CmdBeginDrawing", true);
@@ -1772,6 +1776,7 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   QUEUE_CMD(DrawGradientRectCentered)
   QUEUE_CMD(DrawGradientRectRoundedCentered)
   QUEUE_CMD(DrawBatchedEntities)
+  QUEUE_CMD(DrawRenderGroup)
 
 #undef QUEUE_CMD
 

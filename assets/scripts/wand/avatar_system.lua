@@ -24,6 +24,46 @@ local AvatarSystem = {}
 
 local avatarDefs = nil
 
+--[[
+================================================================================
+PROC EFFECTS REGISTRY
+================================================================================
+Maps effect names to execution functions. Each receives (player, effect).
+]]--
+
+local PROC_EFFECTS = {
+    --- Heal the player for flat HP
+    --- @param player table Player script table
+    --- @param effect table Effect definition with .value
+    heal = function(player, effect)
+        local combatActor = player.combatTable
+        if combatActor and combatActor.heal then
+            combatActor:heal(effect.value or 0)
+        end
+    end,
+
+    --- Apply barrier as % of max HP
+    --- @param player table Player script table
+    --- @param effect table Effect definition with .value (percentage)
+    global_barrier = function(player, effect)
+        local combatActor = player.combatTable
+        if combatActor and combatActor.stats and combatActor.addBarrier then
+            local maxHp = combatActor.stats:get("max_hp") or 100
+            local barrier = math.floor(maxHp * ((effect.value or 0) / 100))
+            combatActor:addBarrier(barrier)
+        end
+    end,
+
+    --- Spread poison in radius around player
+    --- @param player table Player script table
+    --- @param effect table Effect definition with .radius
+    poison_spread = function(player, effect)
+        -- TODO: Implement when poison system is ready
+        -- For now, just log that it would trigger
+        print(string.format("[AvatarProc] poison_spread triggered, radius=%d", effect.radius or 5))
+    end,
+}
+
 local function loadDefs()
     if avatarDefs then return avatarDefs end
     avatarDefs = require("data.avatars")

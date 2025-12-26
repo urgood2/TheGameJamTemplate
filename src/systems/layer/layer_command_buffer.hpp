@@ -320,6 +320,10 @@ template <>
 inline DrawCommandType GetDrawCommandType<CmdDrawBatchedEntities>() {
   return DrawCommandType::DrawBatchedEntities;
 }
+template <>
+inline DrawCommandType GetDrawCommandType<CmdDrawRenderGroup>() {
+  return DrawCommandType::DrawRenderGroup;
+}
 
 template <typename T> struct PoolBlockSize {
   static constexpr ::detail::index_t value = 128;

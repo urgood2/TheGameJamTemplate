@@ -129,6 +129,33 @@ local TRIGGER_HANDLERS = {
     end,
 }
 
+--[[
+================================================================================
+HELPER FUNCTIONS
+================================================================================
+Local helper functions used by the public API.
+]]--
+
+local function loadDefs()
+    if avatarDefs then return avatarDefs end
+    avatarDefs = require("data.avatars")
+    return avatarDefs
+end
+
+-- Ensure player has the required avatar state/progress tables
+local function ensureState(player)
+    if type(player) ~= "table" then return nil end
+    player.avatar_state = player.avatar_state or { unlocked = {}, equipped = nil }
+    player.avatar_progress = player.avatar_progress or {}
+    return player.avatar_state, player.avatar_progress
+end
+
+--[[
+================================================================================
+PROC REGISTRATION AND CLEANUP
+================================================================================
+]]--
+
 --- Register proc handlers for an avatar's effects
 --- @param player table Player script table
 --- @param avatarId string Avatar ID to register procs for
@@ -167,20 +194,6 @@ function AvatarSystem.cleanup_procs(player)
         state._proc_handlers:cleanup()
         state._proc_handlers = nil
     end
-end
-
-local function loadDefs()
-    if avatarDefs then return avatarDefs end
-    avatarDefs = require("data.avatars")
-    return avatarDefs
-end
-
--- Ensure player has the required avatar state/progress tables
-local function ensureState(player)
-    if type(player) ~= "table" then return nil end
-    player.avatar_state = player.avatar_state or { unlocked = {}, equipped = nil }
-    player.avatar_progress = player.avatar_progress or {}
-    return player.avatar_state, player.avatar_progress
 end
 
 -- Normalize a tag key from unlock fields like "OR_fire_tags" or "fire_tags"

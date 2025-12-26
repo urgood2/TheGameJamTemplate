@@ -201,13 +201,53 @@ Cards.ACTION_CHAIN_LIGHTNING = {
     chain_start_sfx = "electric_layer",           -- plays once at start
     chain_hit_sfx = "electric_individual_hit",  -- plays per enemy hit
 
-    
+    -- Status effect application
+    apply_status = "electrocute",
+    status_duration = 3,
+    status_dps = 5,
+
     -- wall_hit_sfx = "ice_shatter",  -- Custom wall hit sound
-    
+
     tags = { "Arcane", "Lightning" },
     damage_type = "lightning",
     sprite = "action-chain-lightning.png",
 
+}
+
+-- Setup card: applies static_charge mark
+Cards.ACTION_STATIC_CHARGE = {
+    id = "ACTION_STATIC_CHARGE",
+    type = "action",
+    mana_cost = 4,
+    damage = 5,
+    damage_type = "lightning",
+    projectile_speed = 600,
+    lifetime = 1500,
+    cast_delay = 80,
+
+    -- Mark application
+    apply_mark = "static_charge",
+    mark_stacks = 1,
+
+    tags = { "Lightning", "Debuff" },
+    test_label = "STATIC\nCHARGE",
+    sprite = "action-chain-lightning.png",  -- TODO: replace with action-static-charge.png
+}
+
+-- Defensive counter: applies shield mark to self
+Cards.ACTION_STATIC_SHIELD = {
+    id = "ACTION_STATIC_SHIELD",
+    type = "action",
+    mana_cost = 8,
+    cast_delay = 50,
+
+    -- Self-applied defensive mark
+    apply_to_self = "static_shield",
+    self_mark_stacks = 1,
+
+    tags = { "Lightning", "Defense" },
+    test_label = "STATIC\nSHIELD",
+    sprite = "action-chain-lightning.png",  -- TODO: replace with action-static-shield.png
 }
 
 

@@ -6,13 +6,14 @@ local z_orders = {
   card       = 101, -- bottom z order of cards, climbs with new cards in an area
   top_card   = 200, -- when dragging a card, it goes to the top
   card_text  = 250, -- card text is above the card itself
-  
-  
+
+
   -- game scene
   projectiles = 10,
   player_vfx = 20,
   enemies    = 30,
-  
+  status_icons = 850, -- Above entities, below UI
+
   -- general
   particle_vfx = 0,
   player_char = 1,

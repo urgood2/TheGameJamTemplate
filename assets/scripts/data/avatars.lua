@@ -90,8 +90,8 @@ local Avatars = {
         description = "Ride the lightning.",
 
         unlock = {
-            crits_dealt = 50,
-            OR_arcane_tags = 7
+            electrocute_kills = 50,
+            OR_lightning_tags = 7
         },
 
         effects = {
@@ -101,9 +101,20 @@ local Avatars = {
                 desc = "Critical hits always Chain to a nearby enemy."
             },
             {
+                type = "rule_change",
+                rule = "chain_applies_marks",
+                desc = "All chain effects apply Static Charge."
+            },
+            {
                 type = "stat_buff",
-                stat = "cast_speed",
-                value = 0.5 -- +50% cast speed
+                stat = "chain_count_bonus",
+                value = 2
+            },
+            {
+                type = "proc",
+                trigger = "on_mark_detonated",
+                effect = "electrocute_nearby",
+                radius = 100
             }
         }
     },

@@ -30,6 +30,9 @@ local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local CardRegistry = require("wand.card_registry")
 local Particles = require("core.particles")
+local StatusIndicatorSystem = require("systems.status_indicator_system")
+local MarkSystem = require("systems.mark_system")
+local StatusEffects = require("data.status_effects")
 
 -- Helper to get raw card definition from card script/instance
 -- Card scripts don't have all properties (like custom_render), so we look up the definition
@@ -216,7 +219,7 @@ function WandActions.getActionType(card)
     -- Check for explicit type markers
     if card.summon_entity then return "summon" end
     if card.teleport_to_impact or card.teleport_on_hit then return "teleport" end
-    if card.heal_amount or card.shield_strength then return "effect" end
+    if card.heal_amount or card.shield_strength or card.apply_to_self then return "effect" end
     if card.leave_hazard then return "hazard" end
     if card.add_mana_amount then return "meta" end
 
@@ -509,6 +512,11 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
     -- Apply on-hit effects from modifiers
     if not target or target == entt_null then return end
 
+    -- Dependencies for mark damage application
+    local signal = require("external.hump.signal")
+    local ActionAPI = require("combat.action_api")
+    local ctx = rawget(_G, "combat_context")
+
     -- Collision-triggered sub-cast
     if hitData and hitData.subCast and hitData.subCast.collision then
         local WandExecutor = require("wand.wand_executor")
@@ -594,6 +602,72 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
     -- Knockback
     if modifiers.knockback and modifiers.knockback > 0 then
         WandActions.applyKnockback(projectile, target, modifiers.knockback)
+    end
+
+    -- Apply mark if action card specifies
+    if actionCard and actionCard.apply_mark then
+        local mark_id = actionCard.apply_mark
+        local stacks = actionCard.mark_stacks or 1
+        MarkSystem.apply(target, mark_id, { stacks = stacks, source = hitData.owner })
+    end
+
+    -- Check for mark detonation
+    local damage_type = actionCard and actionCard.damage_type or "physical"
+    local detonation = MarkSystem.checkDetonation(target, damage_type, hitData.damage, hitData.owner)
+
+    -- Apply bonus damage from detonation
+    if detonation.bonus_damage > 0 then
+        local targetScript = getScriptTableFromEntityID(target)
+        local targetActor = targetScript and targetScript.combatTable
+        if targetActor and ctx then
+            local ownerScript = getScriptTableFromEntityID(hitData.owner)
+            local ownerActor = ownerScript and ownerScript.combatTable
+            if ownerActor then
+                ActionAPI.damage(ctx, ownerActor, targetActor, detonation.bonus_damage, damage_type)
+                signal.emit("mark_bonus_damage", target, detonation.bonus_damage)
+            end
+        end
+    end
+
+    -- Process detonation effects
+    for _, effect in ipairs(detonation.effects) do
+        if effect.type == "stun" then
+            local targetScript = getScriptTableFromEntityID(target)
+            local targetActor = targetScript and targetScript.combatTable
+            if targetActor and ActionAPI then
+                local ctx = rawget(_G, "combat_context")
+                if ctx then
+                    ActionAPI.apply_stun(ctx, targetActor, effect.duration)
+                end
+            end
+        elseif effect.type == "chain_to_marked" then
+            -- Find other marked enemies and chain to them
+            local sourceTransform = component_cache.get(target, Transform)
+            if sourceTransform then
+                local sx = sourceTransform.actualX + (sourceTransform.actualW or 0) * 0.5
+                local sy = sourceTransform.actualY + (sourceTransform.actualH or 0) * 0.5
+                local marked = MarkSystem.findMarkedInRange(sx, sy, effect.range, effect.mark_id, { [target] = true })
+
+                -- Get owner actor once for all chain targets
+                local ownerScript = getScriptTableFromEntityID(hitData.owner)
+                local ownerActor = ownerScript and ownerScript.combatTable
+
+                for _, m in ipairs(marked) do
+                    -- Chain detonation to other marked enemies
+                    local chainDet = MarkSystem.checkDetonation(m.entity, damage_type, hitData.damage * 0.5, hitData.owner)
+
+                    -- Apply chain detonation damage
+                    if chainDet.bonus_damage > 0 and ctx and ownerActor then
+                        local chainScript = getScriptTableFromEntityID(m.entity)
+                        local chainActor = chainScript and chainScript.combatTable
+                        if chainActor then
+                            ActionAPI.damage(ctx, ownerActor, chainActor, chainDet.bonus_damage, damage_type)
+                            signal.emit("mark_bonus_damage", m.entity, chainDet.bonus_damage)
+                        end
+                    end
+                end
+            end
+        end
     end
 
     -- Chain lightning (spawn additional projectiles to nearby enemies)
@@ -708,6 +782,18 @@ Actions that apply effects to entities (heal, buff, debuff, etc.)
 --- @param context table Execution context
 --- @return boolean Success
 function WandActions.executeEffectAction(actionCard, modifiers, context)
+    -- Handle self-applied marks
+    if actionCard.apply_to_self then
+        local mark_id = actionCard.apply_to_self
+        local stacks = actionCard.self_mark_stacks or 1
+        if context.playerEntity then
+            MarkSystem.apply(context.playerEntity, mark_id, {
+                stacks = stacks,
+                source = context.playerEntity
+            })
+        end
+    end
+
     -- Healing
     if actionCard.heal_amount then
         local healAmount = actionCard.heal_amount
@@ -1163,7 +1249,16 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
                 -- Use lightning damage type
                 ActionAPI.damage(ctx, ownerActor, targetActor, chainDamage, "lightning")
                 log_debug("WandActions.spawnChainLightning: Hit", targetEntity, "for", chainDamage, "lightning damage")
-                
+
+                -- Apply electrocute DoT if action card specifies it
+                if actionCard and actionCard.apply_status then
+                    local status = actionCard.apply_status
+                    local duration = actionCard.status_duration or 3
+                    local dps = actionCard.status_dps or 5
+                    ActionAPI.apply_dot(ctx, ownerActor, targetActor, status, dps, duration, 1.0)
+                    StatusIndicatorSystem.show(targetEntity, status, duration)
+                end
+
                 hitFX(targetEntity, 5, 0.3)
                 
                 -- Hit sfx (plays each chain)

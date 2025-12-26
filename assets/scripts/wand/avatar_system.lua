@@ -62,6 +62,38 @@ local PROC_EFFECTS = {
         -- For now, just log that it would trigger
         print(string.format("[AvatarProc] poison_spread triggered, radius=%d", effect.radius or 5))
     end,
+
+    --- Initialize Conduit Charge system with decay timer
+    --- @param player table Player script table
+    --- @param effect table Effect definition with .config
+    conduit_charge = function(player, effect)
+        local config = effect.config or {}
+        local decay_interval = config.decay_interval or 5.0
+        local bonus_per_stack = config.damage_bonus_per_stack or 5
+
+        -- Initialize stack counter
+        player.conduit_stacks = 0
+
+        -- Start decay timer
+        local timer = require("core.timer")
+        timer.every_opts({
+            delay = decay_interval,
+            action = function()
+                if player.conduit_stacks and player.conduit_stacks > 0 then
+                    player.conduit_stacks = player.conduit_stacks - 1
+
+                    -- Remove one stack's worth of bonus
+                    local combatActor = player.combatTable
+                    if combatActor and combatActor.stats then
+                        combatActor.stats:add_add_pct("all_damage_pct", -bonus_per_stack)
+                        combatActor.stats:recompute()
+                    end
+                end
+            end,
+            tag = "conduit_decay",
+            group = "avatar_conduit"
+        })
+    end,
 }
 
 --- Execute a proc effect by name

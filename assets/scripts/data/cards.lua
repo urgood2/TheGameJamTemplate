@@ -242,8 +242,8 @@ Cards.ACTION_STATIC_SHIELD = {
     cast_delay = 50,
 
     -- Self-applied defensive mark
-    apply_mark = "static_shield",
-    apply_to_self = true,
+    apply_to_self = "static_shield",
+    self_mark_stacks = 1,
 
     tags = { "Lightning", "Defense" },
     test_label = "STATIC\nSHIELD",

@@ -2223,7 +2223,7 @@ Effects.deal_damage = function(p)
     -- Skip defensive marks if this is already a counter/reflect to prevent infinite loops
     local defensive_mark_result = { block = 0, reflect = 0, counter_damage = 0, effects = {} }
     if not (tags and (tags.counter or tags.reflect or tags.defensive_mark)) then
-        local tgt_entity = tgt.entity  -- Get entity ID from combat actor
+        local tgt_entity = tgt.entity_id  -- Get entity ID from combat actor (entity_id is set for both player and enemies)
         if tgt_entity and MarkSystem then
         -- Calculate pre-defense damage estimate for defensive mark triggers
         local pre_defense_total = 0
@@ -2242,7 +2242,7 @@ Effects.deal_damage = function(p)
             end
         end
 
-        local src_entity = src.entity
+        local src_entity = src.entity_id
         defensive_mark_result = MarkSystem.checkDefensiveMarks(
             tgt_entity,
             primary_damage_type,

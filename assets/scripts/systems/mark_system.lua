@@ -73,6 +73,9 @@ function MarkSystem.apply(entity, mark_id, opts)
         StatusIndicatorSystem.show(entity, mark_id, duration, marks[mark_id].stacks)
     end
 
+    print(string.format("[MarkSystem] ✅ Mark applied: %s to entity %d (stacks=%d, defensive=%s)",
+        mark_id, entity, marks[mark_id].stacks, tostring(def.trigger == "on_damaged")))
+
     signal.emit("mark_applied", entity, mark_id, marks[mark_id].stacks)
     return true
 end
@@ -248,6 +251,22 @@ function MarkSystem.checkDefensiveMarks(entity, damage_type, incoming_damage, at
         absorb_to_mana = 0,
         effects = {},
     }
+
+    -- Debug: log what entity is being checked
+    local has_marks = MarkSystem.active_marks[entity] ~= nil
+    print(string.format("[MarkSystem] checkDefensiveMarks called: entity=%s, has_marks=%s, damage_type=%s",
+        tostring(entity), tostring(has_marks), tostring(damage_type)))
+
+    -- Debug: show all entities with marks
+    if not has_marks then
+        local marked_entities = {}
+        for e, _ in pairs(MarkSystem.active_marks) do
+            table.insert(marked_entities, tostring(e))
+        end
+        if #marked_entities > 0 then
+            print(string.format("[MarkSystem] Entities with marks: %s", table.concat(marked_entities, ", ")))
+        end
+    end
 
     if not MarkSystem.active_marks[entity] then
         return result

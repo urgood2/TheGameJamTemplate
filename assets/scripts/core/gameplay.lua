@@ -68,6 +68,15 @@ local gameplay_cfg = {
     DEBUG_AUTO_EQUIP_AVATAR = "conduit",  -- Set to avatar ID to auto-equip, or nil to disable
     cardW = 80,   -- card dimensions, reset on init
     cardH = 112,
+    -- Lazy-loaded modules (to avoid hot-path requires and stay under 200 local limit)
+    DeathScreen = nil,
+    -- Lazy getter for DeathScreen (avoids require in hot path)
+    getDeathScreen = function()
+        if not gameplay_cfg.DeathScreen then
+            gameplay_cfg.DeathScreen = require("ui.death_screen")
+        end
+        return gameplay_cfg.DeathScreen
+    end,
 }
 
 require("core.type_defs") -- for Node customizations
@@ -5739,8 +5748,7 @@ end)
 -- Handle game over - show death screen
 signal.register("show_death_screen", function()
     log_debug("[gameplay] Showing death screen")
-    local DeathScreen = require("ui.death_screen")
-    DeathScreen.show()
+    gameplay_cfg.getDeathScreen().show()
 end)
 
 -- Handle restart request - fade and reset
@@ -9375,6 +9383,15 @@ function initActionPhase()
     -- create input timer. this must run every frame.
     timer.every_physics_step(
         function()
+            -- Check for death screen click (any click to restart)
+            local ds = gameplay_cfg.getDeathScreen()
+            if ds.isVisible then
+                if input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT) then
+                    ds.handleAnyClick()
+                end
+                return  -- Block all other input while death screen is visible
+            end
+
             if input and input.action_pressed and input.action_pressed("toggle_auto_aim") then
                 autoAimEnabled = not autoAimEnabled
                 if globals then globals.autoAimEnabled = autoAimEnabled end

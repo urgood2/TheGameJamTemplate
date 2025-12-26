@@ -68,6 +68,8 @@ local gameplay_cfg = {
     DEBUG_AUTO_EQUIP_AVATAR = "conduit",  -- Set to avatar ID to auto-equip, or nil to disable
     cardW = 80,   -- card dimensions, reset on init
     cardH = 112,
+    -- Guard to prevent double-death during animation
+    isPlayerDying = false,
     -- Lazy-loaded modules (to avoid hot-path requires and stay under 200 local limit)
     DeathScreen = nil,
     -- Lazy getter for DeathScreen (avoids require in hot path)
@@ -5566,6 +5568,8 @@ end
 
 -- Reset game to starting state for new run
 local function resetGameToStart()
+    -- Reset death guard so player can die again in new run
+    gameplay_cfg.isPlayerDying = false
     log_debug("[gameplay] Resetting game to start...")
 
     -- 1. Kill all timers
@@ -5682,6 +5686,9 @@ end
 
 -- Player death animation with dissolve shader and blood particles
 local function playPlayerDeathAnimation(playerEntity, onComplete)
+    if gameplay_cfg.isPlayerDying then return end
+    gameplay_cfg.isPlayerDying = true
+
     local Q = require("core.Q")
     local ShaderBuilder = require("core.shader_builder")
     local ok, Particles = pcall(require, "core.particles")
@@ -9383,10 +9390,12 @@ function initActionPhase()
     -- create input timer. this must run every frame.
     timer.every_physics_step(
         function()
-            -- Check for death screen click (any click to restart)
+            -- Check for death screen click or key press (any input to restart)
             local ds = gameplay_cfg.getDeathScreen()
             if ds.isVisible then
-                if input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT) then
+                local clicked = input.isMousePressed(MouseButton.MOUSE_BUTTON_LEFT)
+                local keyPressed = isKeyPressed("enter") or isKeyPressed("space")
+                if clicked or keyPressed then
                     ds.handleAnyClick()
                 end
                 return  -- Block all other input while death screen is visible

@@ -380,6 +380,17 @@ void executeEntityPipelineWithCommands(
 );
 
 /**
+ * @brief Render entity with specified shaders (no ShaderPipelineComponent needed)
+ * Used by render groups to apply shaders dynamically without requiring a component.
+ */
+void executeEntityWithShaders(
+    entt::registry& registry,
+    entt::entity e,
+    const std::vector<std::string>& shaders,
+    DrawCommandBatch& batch
+);
+
+/**
  * @brief Expose draw command system to Lua
  */
 void exposeToLua(sol::state& lua);

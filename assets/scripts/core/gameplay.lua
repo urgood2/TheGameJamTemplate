@@ -43,6 +43,7 @@ local ContentDebugPanel = require("ui.content_debug_panel")
 local CombatDebugPanel = require("ui.combat_debug_panel")
 local UIOverlayToggles = require("ui.ui_overlay_toggles")
 local EntityInspector = require("ui.entity_inspector")
+local wandResourceBar = require("ui.wand_resource_bar_ui")
 local tooltip_registry = require("core.tooltip_registry")
 local StatusIndicatorSystem = require("systems.status_indicator_system")
 local MarkSystem = require("systems.mark_system")
@@ -106,6 +107,10 @@ local function ensureMessageQueueHooks()
         -- Re-evaluate tag thresholds when deck changes (shop purchases, loot, etc.)
         if reevaluateDeckTags then
             reevaluateDeckTags()
+        end
+        -- Update wand resource bar prediction
+        if updateWandResourceBar then
+            updateWandResourceBar()
         end
     end)
 
@@ -950,6 +955,7 @@ board_sets = {}
 current_board_set_index = 1
 
 local reevaluateDeckTags -- forward declaration; defined after deck helpers
+local updateWandResourceBar -- forward declaration; defined after collectCardPoolForBoardSet
 
 local function notifyDeckChanged(boardEntityID)
     if not boardEntityID or not board_sets or #board_sets == 0 then return end
@@ -958,6 +964,9 @@ local function notifyDeckChanged(boardEntityID)
         if boardSet.action_board_id == boardEntityID or boardSet.trigger_board_id == boardEntityID then
             if reevaluateDeckTags then
                 reevaluateDeckTags()
+            end
+            if updateWandResourceBar then
+                updateWandResourceBar()
             end
             return
         end
@@ -5193,6 +5202,9 @@ function initPlanningPhase()
 
     runningYValue = runningYValue + boardHeight + boardPadding
 
+    -- Initialize wand resource bar below the boards
+    wandResourceBar.init(leftAlignValueTriggerBoardX, runningYValue + 10)
+
     -- let's create a card board
 
 
@@ -6616,6 +6628,19 @@ local function collectCardPoolForBoardSet(boardSet)
     return pool
 end
 
+-- Update wand resource bar with current board set data
+updateWandResourceBar = function()
+    if not board_sets or #board_sets == 0 then return end
+    local currentSet = board_sets[current_board_set_index]
+    if not currentSet then return end
+
+    local wandDef = currentSet.wandDef
+    local cardPool = collectCardPoolForBoardSet(currentSet)
+
+    wandResourceBar.update(wandDef, cardPool)
+    wandResourceBar.refresh()
+end
+
 local tagEvaluationFallbackPlayer = { active_tag_bonuses = {}, active_procs = {} }
 
 local function buildDeckSnapshotFromBoards()
@@ -7041,6 +7066,7 @@ function startActionPhase()
 
     -- Clean up planning phase UI elements to prevent flicker
     CastExecutionGraphUI.clear()
+    wandResourceBar.hide()
 
     if record_telemetry then
         local now = os.clock()
@@ -7161,6 +7187,12 @@ function startPlanningPhase()
     activate_state(PLANNING_STATE)
     activate_state("default_state")     -- just for defaults, keep them open
     activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
+
+    -- Show wand resource bar in planning phase and update with current data
+    wandResourceBar.show()
+    if updateWandResourceBar then
+        updateWandResourceBar()
+    end
 
     remove_layer_shader("sprites", "pixelate_image")
 

@@ -782,6 +782,18 @@ Actions that apply effects to entities (heal, buff, debuff, etc.)
 --- @param context table Execution context
 --- @return boolean Success
 function WandActions.executeEffectAction(actionCard, modifiers, context)
+    -- Handle self-applied marks
+    if actionCard.apply_to_self then
+        local mark_id = actionCard.apply_to_self
+        local stacks = actionCard.self_mark_stacks or 1
+        if context.playerEntity then
+            MarkSystem.apply(context.playerEntity, mark_id, {
+                stacks = stacks,
+                source = context.playerEntity
+            })
+        end
+    end
+
     -- Healing
     if actionCard.heal_amount then
         local healAmount = actionCard.heal_amount

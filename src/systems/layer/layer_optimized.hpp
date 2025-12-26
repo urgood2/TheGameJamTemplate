@@ -152,6 +152,7 @@ namespace layer
         DrawGradientRectCentered,
         DrawGradientRectRoundedCentered,
         DrawBatchedEntities,
+        DrawRenderGroup,
 
         Count // <--- always last
     };
@@ -629,6 +630,12 @@ namespace layer
         bool autoOptimize = true;
     };
 
+    struct CmdDrawRenderGroup {
+        entt::registry* registry;
+        std::string groupName;
+        bool autoOptimize = true;
+    };
+
 
 
 
@@ -727,6 +734,7 @@ namespace layer
     extern void ExecuteDrawGradientRectCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectCentered* c) ;
     extern void ExecuteDrawGradientRectRoundedCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectRoundedCentered* c) ;
     extern void ExecuteDrawBatchedEntities(std::shared_ptr<layer::Layer> layer, CmdDrawBatchedEntities* c);
+    extern void ExecuteDrawRenderGroup(std::shared_ptr<layer::Layer> layer, CmdDrawRenderGroup* c);
 
 
     // ===========================

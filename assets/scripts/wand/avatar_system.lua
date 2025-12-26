@@ -115,6 +115,7 @@ local TRIGGER_HANDLERS = {
     --- @param handlers SignalGroup Signal group for cleanup
     --- @param player table Player script table
     --- @param effect table Effect definition
+    -- TODO: Requires player_moved signal to be emitted from movement system
     distance_moved_5m = function(handlers, player, effect)
         local accumulated = 0
         local THRESHOLD = 80  -- ~5 meters in pixels (16px per unit)

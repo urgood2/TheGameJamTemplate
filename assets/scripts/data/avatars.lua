@@ -148,6 +148,39 @@ local Avatars = {
                 value = 5 -- Heal 5 flat HP
             }
         }
+    },
+
+    conduit = {
+        name = "Avatar of the Conduit",
+        description = "Pain becomes power. Lightning becomes you.",
+
+        unlock = {
+            chain_lightning_propagations = 20
+        },
+
+        effects = {
+            {
+                type = "stat_buff",
+                stat = "lightning_resist_pct",
+                value = 30
+            },
+            {
+                type = "stat_buff",
+                stat = "lightning_modifier_pct",
+                value = 30
+            },
+            {
+                type = "proc",
+                trigger = "on_physical_damage_taken",
+                effect = "conduit_charge",
+                config = {
+                    damage_per_stack = 10,
+                    max_stacks = 20,
+                    damage_bonus_per_stack = 5,
+                    decay_interval = 5.0
+                }
+            }
+        }
     }
 }
 

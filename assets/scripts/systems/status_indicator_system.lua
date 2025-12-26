@@ -416,6 +416,15 @@ function StatusIndicatorSystem.removeShader(entity, status_id)
     local shader_name = StatusIndicatorSystem.applied_shaders[entity][status_id]
     if not shader_name then return end
 
+    -- Check entity is still valid before trying to remove shader
+    if not registry:valid(entity) then
+        StatusIndicatorSystem.applied_shaders[entity][status_id] = nil
+        if next(StatusIndicatorSystem.applied_shaders[entity]) == nil then
+            StatusIndicatorSystem.applied_shaders[entity] = nil
+        end
+        return
+    end
+
     local ShaderBuilder = require("core.shader_builder")
 
     -- Remove the specific shader

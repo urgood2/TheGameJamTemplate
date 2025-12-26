@@ -219,7 +219,7 @@ function WandActions.getActionType(card)
     -- Check for explicit type markers
     if card.summon_entity then return "summon" end
     if card.teleport_to_impact or card.teleport_on_hit then return "teleport" end
-    if card.heal_amount or card.shield_strength then return "effect" end
+    if card.heal_amount or card.shield_strength or card.apply_to_self then return "effect" end
     if card.leave_hazard then return "hazard" end
     if card.add_mana_amount then return "meta" end
 

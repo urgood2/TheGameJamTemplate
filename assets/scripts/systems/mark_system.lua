@@ -160,6 +160,8 @@ function MarkSystem.checkDetonation(entity, damage_type, base_damage, source, ta
         local def = StatusEffects.get(mark_id)
         if def and StatusEffects.shouldTrigger(def, damage_type, tags) then
             local stacks = mark_data.stacks
+            print(string.format("[MarkSystem] ⚡ DETONATION! %s x%d on entity %d (damage_type=%s, bonus=%d)",
+                mark_id, stacks, entity, damage_type, (def.damage or 0) * stacks))
 
             -- Apply vulnerable (damage taken multiplier)
             if def.vulnerable then
@@ -258,6 +260,8 @@ function MarkSystem.checkDefensiveMarks(entity, damage_type, incoming_damage, at
         local def = StatusEffects.get(mark_id)
         if def and StatusEffects.isDefensiveMark(def) then
             local stacks = mark_data.stacks
+            print(string.format("[MarkSystem] 🛡️ DEFENSIVE TRIGGER! %s on entity %d (block=%d, counter=%d, uses_left=%d)",
+                mark_id, entity, def.block or 0, (def.damage or 0) * stacks, mark_data.uses))
 
             -- Block damage
             if def.block then

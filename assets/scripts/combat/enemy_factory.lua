@@ -256,6 +256,7 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         if _G.combatActorToEntity then
             _G.combatActorToEntity[combatActor] = e
         end
+        combatActor.entity_id = e  -- For combat_system.lua signal emission
     end
 
     -- Register in enemyHealthUiState (CRITICAL: required for isEnemyEntity() to work)

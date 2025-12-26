@@ -177,12 +177,33 @@ local TRIGGER_HANDLERS = {
         local max_stacks = config.max_stacks or 20
         local bonus_per_stack = config.damage_bonus_per_stack or 5
 
-        handlers:on("player_damaged", function(entity, data)
-            -- Only process physical damage
-            if data.damage_type ~= "physical" then return end
+        -- Initialize conduit system (starts decay timer)
+        execute_effect(player, effect)
 
-            local stacks_gained = math.floor((data.amount or 0) / damage_per_stack)
-            if stacks_gained < 1 then return end
+        -- Track accumulated damage for partial stacks
+        player.conduit_damage_accumulated = 0
+
+        handlers:on("player_damaged", function(entity, data)
+            print(string.format("[Conduit] Hit! amount=%.1f type=%s", data.amount or 0, data.damage_type or "?"))
+
+            -- Only process physical damage
+            if data.damage_type ~= "physical" then
+                print("[Conduit] Ignoring non-physical damage")
+                return
+            end
+
+            -- Accumulate damage for partial stacks
+            player.conduit_damage_accumulated = (player.conduit_damage_accumulated or 0) + (data.amount or 0)
+            local stacks_gained = math.floor(player.conduit_damage_accumulated / damage_per_stack)
+
+            if stacks_gained < 1 then
+                print(string.format("[Conduit] Accumulating: %.1f/%d damage",
+                    player.conduit_damage_accumulated, damage_per_stack))
+                return
+            end
+
+            -- Consume the damage used for stacks
+            player.conduit_damage_accumulated = player.conduit_damage_accumulated - (stacks_gained * damage_per_stack)
 
             -- Get or create conduit state
             player.conduit_stacks = player.conduit_stacks or 0
@@ -194,14 +215,17 @@ local TRIGGER_HANDLERS = {
                 -- Apply damage bonus
                 local combatActor = player.combatTable
                 if combatActor and combatActor.stats then
+                    local before = combatActor.stats:get("all_damage_pct") or 0
                     combatActor.stats:add_add_pct("all_damage_pct", actual_gained * bonus_per_stack)
                     combatActor.stats:recompute()
-                end
+                    local after = combatActor.stats:get("all_damage_pct") or 0
 
-                -- Debug: Log and show popup
-                local totalBonus = player.conduit_stacks * bonus_per_stack
-                print(string.format("[Conduit] +%d stacks (total: %d, +%d%% damage)",
-                    actual_gained, player.conduit_stacks, totalBonus))
+                    print(string.format("[Conduit] +%d stacks! Total: %d stacks (+%d%% damage)",
+                        actual_gained, player.conduit_stacks, player.conduit_stacks * bonus_per_stack))
+                    print(string.format("[Conduit] all_damage_pct: %.1f%% -> %.1f%%", before, after))
+                else
+                    print("[Conduit] WARNING: No combatActor.stats available!")
+                end
             end
         end)
     end,
@@ -238,11 +262,15 @@ PROC REGISTRATION AND CLEANUP
 --- @param player table Player script table
 --- @param avatarId string Avatar ID to register procs for
 function AvatarSystem.register_procs(player, avatarId)
+    log_debug("[AvatarSystem] register_procs called: avatarId=", avatarId, "player=", player)
     if not player or not avatarId then return end
 
     local defs = loadDefs()
     local avatar = defs and defs[avatarId]
-    if not avatar or not avatar.effects then return end
+    if not avatar or not avatar.effects then
+        log_debug("[AvatarSystem] No avatar or effects found for:", avatarId)
+        return
+    end
 
     local state = ensureState(player)
 
@@ -256,12 +284,14 @@ function AvatarSystem.register_procs(player, avatarId)
         if effect.type == "proc" then
             local triggerHandler = TRIGGER_HANDLERS[effect.trigger]
             if triggerHandler then
+                log_debug("[AvatarSystem] Registering trigger:", effect.trigger, "->", effect.effect)
                 triggerHandler(handlers, player, effect)
             else
-                print(string.format("[AvatarSystem] Unknown trigger: %s", tostring(effect.trigger)))
+                log_debug("[AvatarSystem] Unknown trigger:", effect.trigger)
             end
         end
     end
+    log_debug("[AvatarSystem] Proc registration complete, handler count:", handlers:count())
 end
 
 --- Cleanup all proc handlers for player
@@ -283,6 +313,7 @@ function AvatarSystem.cleanup_procs(player)
         end
         player.conduit_stacks = 0
     end
+    player.conduit_damage_accumulated = nil
 
     -- Kill the decay timer
     local timer = require("core.timer")

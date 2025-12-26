@@ -398,7 +398,12 @@
 		"press_key_auto_aim": "{key} 키를 눌러 자동 조준 전환",
 		"wave_label": "웨이브",
 		"tutorial_to_move": "이동",
-		"tutorial_to_dash": "대시"
+		"tutorial_to_dash": "대시",
+		"pickup_gold_title": "골드",
+		"pickup_gold_body": "상점 통화",
+		"pickup_health_potion_title": "체력 물약",
+		"pickup_health_potion_body": "체력 25 회복",
+		"wand_last_cast": "마지막 시전"
 	},
 	"joker": {
 		"pyromaniac": {
@@ -649,5 +654,12 @@
 			"total_slots": "총 슬롯",
 			"always_casts": "항상 시전"
 		}
+	},
+	"test": {
+		"styled_damage": "{damage|red} 피해를 줍니다",
+		"styled_element": "{cost|blue} 마나로 {element|fire} 주문을 시전합니다",
+		"styled_mixed": "{damage|red} 피해를 주는 [강력한](color=gold) 공격",
+		"styled_no_color": "{count}개의 아이템을 보유하고 있어요",
+		"styled_heal": "대상에게 {amount|green} HP를 회복합니다"
 	}
 }

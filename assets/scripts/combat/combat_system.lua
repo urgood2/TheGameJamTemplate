@@ -2394,6 +2394,25 @@ Effects.deal_damage = function(p)
       tags       = tags,      -- free-form classification (aoe, projectile, retaliation, etc.)
       components = sums,      -- pre-defense per-type totals (post-crit & attacker mods)
     })
+
+    -- Emit player_damaged signal for avatar procs when player takes damage
+    if tgt.side == 1 and dealt > 0 then
+      -- Determine primary damage type from components (largest contributor)
+      local primary_type = "physical"
+      local max_amount = 0
+      for dtype, amt in pairs(sums or {}) do
+        if amt > max_amount then
+          max_amount = amt
+          primary_type = dtype
+        end
+      end
+
+      signal.emit("player_damaged", tgt.entity_id, {
+        amount = dealt,
+        damage_type = primary_type,
+        source = src.entity_id
+      })
+    end
   end
 end
 

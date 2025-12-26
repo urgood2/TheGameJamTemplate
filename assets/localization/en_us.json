@@ -398,7 +398,12 @@
 		"press_key_auto_aim": "Press {key} to toggle auto-aim.",
 		"wave_label": "Wave",
 		"tutorial_to_move": "to move",
-		"tutorial_to_dash": "to dash"
+		"tutorial_to_dash": "to dash",
+		"pickup_gold_title": "Gold",
+		"pickup_gold_body": "Currency for shops",
+		"pickup_health_potion_title": "Health Potion",
+		"pickup_health_potion_body": "Restores 25 HP",
+		"wand_last_cast": "Last Cast"
 	},
 	"joker": {
 		"pyromaniac": {

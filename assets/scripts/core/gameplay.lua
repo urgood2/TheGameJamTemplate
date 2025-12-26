@@ -3191,6 +3191,9 @@ function setUpLogicTimers()
         CombatSystem.Game.Effects.deal_damage { weapon = true, scale_pct = 100 } (combat_context, enemyCombatTable,
             playerCombatTable)
 
+        -- NOTE: player_damaged signal is emitted from combat_system.lua OnHitResolved
+        -- when tgt.side == 1 (player). No need to emit here.
+
         -- pull player hp spring
         if hpBarScaleSpringEntity and entity_cache.valid(hpBarScaleSpringEntity) then
             local hpBarSpringRef = spring.get(registry, hpBarScaleSpringEntity)
@@ -5620,6 +5623,7 @@ function initCombatSystem()
     assert(playerScript, "Failed to get script table for survivor entity in combat system init!")
     playerScript.combatTable  = hero
     combatActorToEntity[hero] = survivorEntity
+    hero.entity_id            = survivorEntity  -- For combat_system.lua signal emission
 
     -- DEBUG: Auto-equip avatar for testing
     if gameplay_cfg.DEBUG_AUTO_EQUIP_AVATAR then
@@ -5627,8 +5631,8 @@ function initCombatSystem()
         playerScript.avatar_state = playerScript.avatar_state or { unlocked = {}, equipped = nil }
         playerScript.avatar_state.unlocked[avatarId] = true  -- Force unlock
         local ok, err = AvatarSystem.equip(playerScript, avatarId)
-        print(string.format("[DEBUG] Auto-equipped avatar: %s (ok=%s, err=%s)", avatarId, tostring(ok), tostring(err)))
-        print(string.format("[DEBUG] avatar_state.equipped = %s", tostring(playerScript.avatar_state.equipped)))
+        log_debug("[Avatar] Auto-equipped avatar:", avatarId, "ok=", ok, "err=", err)
+        log_debug("[Avatar] avatar_state.equipped =", playerScript.avatar_state.equipped)
 
         -- Sync avatar strip UI (delayed to ensure strip is ready)
         -- Store reference to avoid closure issues
@@ -5637,12 +5641,11 @@ function initCombatSystem()
             delay = 0.5,
             action = function()
                 if AvatarJokerStrip and AvatarJokerStrip.isActive and AvatarJokerStrip.syncFrom then
-                    print("[DEBUG] Syncing avatar strip with captured player...")
-                    print("[DEBUG] capturedPlayer=" .. tostring(capturedPlayer))
-                    print("[DEBUG] capturedPlayer.avatar_state.equipped=" .. tostring(capturedPlayer and capturedPlayer.avatar_state and capturedPlayer.avatar_state.equipped))
+                    log_debug("[Avatar] Syncing avatar strip with captured player")
+                    log_debug("[Avatar] capturedPlayer.avatar_state.equipped =", capturedPlayer and capturedPlayer.avatar_state and capturedPlayer.avatar_state.equipped)
                     AvatarJokerStrip.syncFrom(capturedPlayer)
                 else
-                    print("[DEBUG] Avatar strip not ready: isActive=" .. tostring(AvatarJokerStrip and AvatarJokerStrip.isActive))
+                    log_debug("[Avatar] Avatar strip not ready: isActive=", AvatarJokerStrip and AvatarJokerStrip.isActive)
                 end
             end,
             tag = "debug_avatar_sync"
@@ -9409,6 +9412,7 @@ function initActionPhase()
                 enemyScriptNode.combatTable = ogre
                 enemyScriptNode:attach_ecs { create_new = false, existing_entity = enemyEntity }
                 combatActorToEntity[ogre] = enemyEntity
+                ogre.entity_id = enemyEntity  -- For combat_system.lua signal emission
                 enemyHealthUiState[enemyEntity] = { actor = ogre, visibleUntil = 0 }
 
 

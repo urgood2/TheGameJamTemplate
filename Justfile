@@ -33,7 +33,7 @@ help:
 build-with-config config:
 	@mkdir -p build
 	@cd build && cmake .. -DENABLE_UNIT_TESTS=OFF
-	@cmake --build ./build --config {{config}} --target raylib-cpp-cmake-template -j --
+	@cmake --build ./build --config {{config}} --target raylib-cpp-cmake-template -j4 --
 
 build-debug:
 	@just build-with-config Debug
@@ -48,24 +48,24 @@ clean:
 # Separate single-config build dirs to avoid CMake cache churn.
 build-debug-fast:
 	cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug -DENABLE_UNIT_TESTS=OFF
-	cmake --build build-debug --target raylib-cpp-cmake-template -j --
+	cmake --build build-debug --target raylib-cpp-cmake-template -j4 --
 
 build-release-fast:
 	cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DENABLE_UNIT_TESTS=OFF
-	cmake --build build-release --target raylib-cpp-cmake-template -j --
+	cmake --build build-release --target raylib-cpp-cmake-template -j4 --
 
 build-debug-ninja:
 	cmake -B build-debug-ninja -G Ninja -DCMAKE_BUILD_TYPE=Debug
-	cmake --build build-debug-ninja --target raylib-cpp-cmake-template -j --
+	cmake --build build-debug-ninja --target raylib-cpp-cmake-template -j4 --
 
 build-release-ninja:
 	cmake -B build-release-ninja -G Ninja -DCMAKE_BUILD_TYPE=Release
-	cmake --build build-release-ninja --target raylib-cpp-cmake-template -j --
+	cmake --build build-release-ninja --target raylib-cpp-cmake-template -j4 --
 
 # Tracy profiler build (RelWithDebInfo + Tracy enabled)
 build-tracy:
 	cmake -B build-tracy -DTRACY_ENABLE=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_UNIT_TESTS=OFF
-	cmake --build build-tracy --target raylib-cpp-cmake-template -j --
+	cmake --build build-tracy --target raylib-cpp-cmake-template -j4 --
 
 # =============================================================================
 # Testing

@@ -48,6 +48,7 @@
 #include "systems/spring/spring_lua_bindings.hpp"
 #include "systems/text/static_ui_text.hpp"
 #include "systems/telemetry/telemetry.hpp"
+#include "systems/render_groups/render_groups.hpp"
 #include "util/utilities.hpp"
 
 #include "core/ownership.hpp"
@@ -374,6 +375,11 @@ auto initLuaMasterState(sol::state &stateToInit,
   // methods from save/save_file_io.cpp. These can be called from lua
   //---------------------------------------------------------
   save_io::register_lua_bindings(stateToInit);
+
+  //---------------------------------------------------------
+  // render groups system for batched shader rendering
+  //---------------------------------------------------------
+  render_groups::exposeToLua(stateToInit);
 
   // ------------------------------------------------------
   // Expose global variables to Lua

@@ -260,6 +260,21 @@ function AvatarSystem.cleanup_procs(player)
         state._proc_handlers:cleanup()
         state._proc_handlers = nil
     end
+
+    -- Clean up Conduit Charge stacks and timer
+    if player.conduit_stacks and player.conduit_stacks > 0 then
+        local combatActor = player.combatTable
+        if combatActor and combatActor.stats then
+            -- Remove all stacks' worth of bonus (5% per stack)
+            combatActor.stats:add_add_pct("all_damage_pct", -player.conduit_stacks * 5)
+            combatActor.stats:recompute()
+        end
+        player.conduit_stacks = 0
+    end
+
+    -- Kill the decay timer
+    local timer = require("core.timer")
+    timer.kill_group("avatar_conduit")
 end
 
 -- Normalize a tag key from unlock fields like "OR_fire_tags" or "fire_tags"

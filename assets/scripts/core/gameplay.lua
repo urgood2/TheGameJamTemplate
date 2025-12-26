@@ -5723,6 +5723,49 @@ local function playPlayerDeathAnimation(playerEntity, onComplete)
     })
 end
 
+-- ============================================================================
+-- PLAYER DEATH FLOW SIGNALS
+-- ============================================================================
+
+-- Handle player death - trigger animation
+signal.register("player_died", function(playerEntity)
+    log_debug("[gameplay] Player died - starting death animation")
+    playPlayerDeathAnimation(playerEntity, function()
+        log_debug("[gameplay] Death animation complete")
+        -- Animation complete callback - state machine handles transition to GAME_OVER
+    end)
+end)
+
+-- Handle game over - show death screen
+signal.register("show_death_screen", function()
+    log_debug("[gameplay] Showing death screen")
+    local DeathScreen = require("ui.death_screen")
+    DeathScreen.show()
+end)
+
+-- Handle restart request - fade and reset
+signal.register("restart_game", function()
+    log_debug("[gameplay] Restart requested - fading to black")
+    local timer = require("core.timer")
+
+    -- Simple fade to black (if fade system exists)
+    if fadeToBlack then
+        fadeToBlack(0.5, function()
+            resetGameToStart()
+            fadeFromBlack(0.5)
+        end)
+    else
+        -- No fade system - just reset immediately
+        timer.after_opts({
+            delay = 0.1,
+            action = function()
+                resetGameToStart()
+            end,
+            tag = "restart_delay"
+        })
+    end
+end)
+
 function initCombatSystem()
     -- init combat system.
 

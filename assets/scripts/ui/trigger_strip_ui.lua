@@ -21,6 +21,16 @@ local timer = require("core.timer")
 local signal = require("external.hump.signal")
 local signal_group = require("core.signal_group")
 
+-- Lazy-load WandExecutor to avoid circular dependencies
+local WandExecutor
+local function getWandExecutor()
+    if not WandExecutor then
+        local ok, mod = pcall(require, "wand.wand_executor")
+        if ok then WandExecutor = mod end
+    end
+    return WandExecutor
+end
+
 -- Constants
 local CARD_WIDTH = 60           -- 75% of 80
 local CARD_HEIGHT = 84          -- 75% of 112
@@ -97,7 +107,7 @@ end
 -- ENTITY CREATION
 --------------------------------------------------------------------------------
 
-local function createStripEntry(sourceCardEntity, wandId, triggerId, index, totalCount)
+local function createStripEntry(sourceCardEntity, wandId, triggerId, index, totalCount, actionBoardId)
     if not animation_system then
         log_error("TriggerStripUI: animation_system not available")
         return nil
@@ -138,21 +148,25 @@ local function createStripEntry(sourceCardEntity, wandId, triggerId, index, tota
         transform.set_space(entity, "screen")
     end
 
-    -- Mark as UI-attached for proper screen-space rendering
-    if registry and registry.valid and ObjectAttachedToUITag and registry:valid(entity) then
-        if not registry:has(entity, ObjectAttachedToUITag) then
-            registry:emplace(entity, ObjectAttachedToUITag)
+    -- NOTE: Don't add ObjectAttachedToUITag - it excludes entities from shader rendering pipeline!
+    -- Screen-space rendering is handled by transform.set_space("screen") above.
+    -- The shader pipeline requires entities to go through the normal animation rendering path.
+
+    -- Add ScreenSpaceCollisionMarker for proper screen-space coordinate handling
+    if registry and registry.valid and collision and collision.ScreenSpaceCollisionMarker and registry:valid(entity) then
+        if not registry:has(entity, collision.ScreenSpaceCollisionMarker) then
+            registry:emplace(entity, collision.ScreenSpaceCollisionMarker)
         end
     end
 
     -- Resize to trigger strip size
     animation_system.resizeAnimationObjectsInEntityToFit(entity, CARD_WIDTH, CARD_HEIGHT)
 
-    -- Apply shader preset with cooldown pie
+    -- Apply shader preset with cooldown pie (top-down fill)
     if applyShaderPreset then
         applyShaderPreset(registry, entity, "trigger_card", {
-            cooldown_progress = 0.0,
-            dim_amount = 0.4,
+            cooldown_progress = 0.0,   -- 0.0 = ready, 1.0 = full cooldown
+            dim_amount = 0.5,
             flash_intensity = 0.0,
         })
     end
@@ -166,6 +180,7 @@ local function createStripEntry(sourceCardEntity, wandId, triggerId, index, tota
         entity = entity,
         sourceCardEntity = sourceCardEntity,
         wandId = wandId,
+        actionBoardId = actionBoardId,  -- For UI positioning and board_sets lookup
         triggerId = triggerId,
         centerY = yPos + CARD_HEIGHT / 2,
         influence = 0,
@@ -179,22 +194,30 @@ end
 local function collectEquippedTriggers()
     local triggers = {}
 
-    -- Access the trigger_board_id_to_action_board_id mapping from gameplay
-    if not trigger_board_id_to_action_board_id then return triggers end
-    if not boards then return triggers end
+    -- Access the board_sets from gameplay which contains wandDef with the actual wandId
+    if not board_sets then return triggers end
 
     local index = 1
-    for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
-        if ensure_entity(triggerBoardID) then
+    for _, boardSet in ipairs(board_sets) do
+        local triggerBoardID = boardSet.trigger_board_id
+        local actionBoardID = boardSet.action_board_id
+        local wandDef = boardSet.wandDef
+
+        if triggerBoardID and ensure_entity(triggerBoardID) and boards then
             local triggerBoard = boards[triggerBoardID]
             if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
                 local cardEntity = triggerBoard.cards[1]
                 if ensure_entity(cardEntity) then
                     local script = getScriptTableFromEntityID(cardEntity)
                     local triggerId = script and script.cardID or "unknown"
+
+                    -- Use wandDef.id as wandId to match WandTriggers registration key
+                    local wandId = wandDef and wandDef.id or tostring(actionBoardID)
+
                     table.insert(triggers, {
                         cardEntity = cardEntity,
-                        wandId = actionBoardID,  -- Use action board ID as wand identifier
+                        wandId = wandId,  -- Use wand definition ID to match WandTriggers
+                        actionBoardId = actionBoardID,  -- Keep for UI positioning
                         triggerId = triggerId,
                         index = index,
                     })
@@ -263,7 +286,8 @@ function TriggerStripUI.sync()
                 trigger.wandId,
                 trigger.triggerId,
                 idx,
-                totalCount
+                totalCount,
+                trigger.actionBoardId
             )
             if entry then
                 table.insert(strip_entries, entry)
@@ -452,13 +476,16 @@ local TOOLTIP_TITLE_SIZE = 18
 local TOOLTIP_BODY_SIZE = 14
 local TOOLTIP_GAP = 4  -- Gap between stacked tooltips
 
--- Helper to get wandDef from entry's wandId (action board entity)
+-- Helper to get wandDef from entry's actionBoardId
 local function getWandDefForEntry(entry)
-    if not entry or not entry.wandId then return nil end
+    if not entry then return nil end
     if not board_sets then return nil end
 
     for _, boardSet in ipairs(board_sets) do
-        if boardSet.action_board_id == entry.wandId then
+        -- Match by actionBoardId (entity) or wandId (definition ID)
+        if boardSet.action_board_id == entry.actionBoardId then
+            return boardSet.wandDef
+        elseif boardSet.wandDef and boardSet.wandDef.id == entry.wandId then
             return boardSet.wandDef
         end
     end
@@ -637,28 +664,80 @@ end
 -- COOLDOWN UPDATES
 --------------------------------------------------------------------------------
 
+-- Helper to set per-entity shader uniform (using ShaderUniformComponent pattern)
+local function setEntityShaderUniform(entity, shaderName, uniformName, value)
+    if not registry:valid(entity) then
+        log_debug("setEntityShaderUniform: invalid entity")
+        return false
+    end
+    if not shaders or not shaders.ShaderUniformComponent then
+        log_debug("setEntityShaderUniform: shaders or ShaderUniformComponent not available")
+        return false
+    end
+
+    -- Ensure ShaderUniformComponent exists
+    if not registry:has(entity, shaders.ShaderUniformComponent) then
+        log_debug("setEntityShaderUniform: emplacing ShaderUniformComponent for entity", entity)
+        registry:emplace(entity, shaders.ShaderUniformComponent)
+    end
+
+    local uniforms = registry:get(entity, shaders.ShaderUniformComponent)
+    if uniforms and uniforms.set then
+        uniforms:set(shaderName, uniformName, value)
+        log_debug("setEntityShaderUniform: set", shaderName, uniformName, "=", value, "on entity", entity)
+        return true
+    else
+        log_debug("setEntityShaderUniform: uniforms.set not available")
+        return false
+    end
+end
+
+-- Debug: throttle logging
+local lastCooldownLogTime = 0
+local COOLDOWN_LOG_INTERVAL = 2.0  -- Log every 2 seconds
+
 function TriggerStripUI.updateCooldowns()
-    if not WandTriggers or not WandTriggers.registrations then return end
-    if not setShaderUniform then return end
+    local now = GetTime and GetTime() or 0
+    local shouldLog = (now - lastCooldownLogTime) > COOLDOWN_LOG_INTERVAL
+
+    if shouldLog then
+        log_debug("TriggerStripUI.updateCooldowns: checking", #strip_entries, "entries")
+        lastCooldownLogTime = now
+    end
+
+    -- Get WandExecutor for cooldown queries
+    local executor = getWandExecutor()
 
     for _, entry in ipairs(strip_entries) do
         if not registry:valid(entry.entity) then goto continue end
 
-        local registration = WandTriggers.registrations[entry.wandId]
-        if registration then
-            local progress = 0.0
+        local progress = 1.0  -- Default to ready
 
-            -- Calculate cooldown progress based on trigger type
-            if registration.triggerType == "every_N_seconds" then
-                -- Timer-based: check remaining time
-                local interval = registration.triggerDef.interval or 1.0
-                local elapsed = registration.elapsed or 0
-                progress = 1.0 - (elapsed / interval)
-                progress = math.max(0, math.min(1, progress))
+        -- Check wand cooldown directly from executor
+        if executor and executor.getCooldown then
+            local remaining = executor.getCooldown(entry.wandId)
+            if remaining > 0 then
+                -- Get the wand's base cooldown from definition
+                local wandDef = entry.wandDef
+                local baseCooldown = wandDef and wandDef.cooldown or 1.0
+                -- Progress: 0 = just fired (full cooldown), 1 = ready
+                progress = 1.0 - math.min(1, remaining / baseCooldown)
+
+                if shouldLog then
+                    log_debug("  COOLDOWN:", entry.wandId, "remaining:", remaining, "base:", baseCooldown, "progress:", progress)
+                end
             end
+        end
 
-            -- Update shader uniform
-            setShaderUniform(entry.entity, "cooldown_pie", "cooldown_progress", progress)
+        progress = math.max(0, math.min(1, progress))
+
+        -- Update shader uniform using per-entity uniform component
+        local shaderProgress = 1.0 - progress
+        setEntityShaderUniform(entry.entity, "cooldown_pie", "cooldown_progress", shaderProgress)
+
+        -- Always log when cooldown is active (non-zero)
+        if shaderProgress > 0.01 then
+            log_debug("COOLDOWN ACTIVE: entity", entry.entity, "shaderProgress =", shaderProgress)
         end
 
         ::continue::
@@ -671,37 +750,42 @@ end
 
 function TriggerStripUI.onTriggerActivated(wandId, triggerId)
     local entry = findEntryByWandId(wandId)
-    if not entry then return end
+    if not entry then
+        log_debug("TriggerStripUI: no entry found for wandId", wandId)
+        return
+    end
     if not registry:valid(entry.entity) then return end
+
+    log_debug("TriggerStripUI: triggering activation feedback for wand", wandId, "entity", entry.entity)
 
     -- Pop: quick scale bump
     local t = component_cache.get(entry.entity, Transform)
     if t then
         t.scale = ACTIVATION_SCALE
+        log_debug("TriggerStripUI: set scale to", ACTIVATION_SCALE)
     end
 
-    -- Jiggle
+    -- Jiggle via dynamic motion injection
     if transform and transform.InjectDynamicMotion then
         transform.InjectDynamicMotion(entry.entity, 0.3, 1.5)
+        log_debug("TriggerStripUI: injected dynamic motion")
     end
 
-    -- Flash via shader uniform
-    if setShaderUniform then
-        setShaderUniform(entry.entity, "cooldown_pie", "flash_intensity", 1.0)
+    -- Flash via per-entity shader uniform
+    setEntityShaderUniform(entry.entity, "cooldown_pie", "flash_intensity", 1.0)
 
-        -- Reset flash after short delay
-        timer.after_opts({
-            delay = FLASH_DURATION,
-            action = function()
-                if registry:valid(entry.entity) then
-                    setShaderUniform(entry.entity, "cooldown_pie", "flash_intensity", 0.0)
-                end
-            end,
-            tag = "trigger_flash_" .. entry.entity
-        })
-    end
+    -- Reset flash after short delay
+    timer.after_opts({
+        delay = FLASH_DURATION,
+        action = function()
+            if registry:valid(entry.entity) then
+                setEntityShaderUniform(entry.entity, "cooldown_pie", "flash_intensity", 0.0)
+            end
+        end,
+        tag = "trigger_flash_" .. entry.entity
+    })
 
-    log_debug("TriggerStripUI: activation feedback for wand", wandId)
+    log_debug("TriggerStripUI: activation feedback complete for wand", wandId)
 end
 
 --------------------------------------------------------------------------------

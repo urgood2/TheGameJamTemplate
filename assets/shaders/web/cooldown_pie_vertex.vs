@@ -1,12 +1,13 @@
 // web/cooldown_pie_vertex.vs
-#version 100
+#version 300 es
+precision mediump float;
 
-attribute vec3 vertexPosition;
-attribute vec2 vertexTexCoord;
-attribute vec4 vertexColor;
+in vec3 vertexPosition;
+in vec2 vertexTexCoord;
+in vec4 vertexColor;
 
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
+out vec2 fragTexCoord;
+out vec4 fragColor;
 
 uniform mat4 mvp;
 

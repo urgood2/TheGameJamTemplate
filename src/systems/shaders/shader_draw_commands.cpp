@@ -596,7 +596,9 @@ void executeEntityPipelineWithCommands(
                                     skewSize,
                                     customPrePass,
                                     tiltEnabled,
-                                    applySkewUniforms]() {
+                                    applySkewUniforms,
+                                    e,
+                                    &registry]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -630,6 +632,12 @@ void executeEntityPipelineWithCommands(
                         shader,
                         globals::getGlobalShaderUniforms(),
                         shaderName);
+
+                    // Apply per-entity uniforms (override global uniforms for this entity)
+                    if (registry.any_of<shaders::ShaderUniformComponent>(e)) {
+                        auto& entityUniforms = registry.get<shaders::ShaderUniformComponent>(e);
+                        entityUniforms.applyToShaderForEntity(shader, shaderName, e, registry);
+                    }
                 }
             });
         }
@@ -738,7 +746,9 @@ void executeEntityPipelineWithCommands(
                                     skewSize,
                                     tiltEnabled,
                                     customPrePass,
-                                    applySkewUniforms]() {
+                                    applySkewUniforms,
+                                    e,
+                                    &registry]() {
                 if (injectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -772,6 +782,12 @@ void executeEntityPipelineWithCommands(
                         shader,
                         globals::getGlobalShaderUniforms(),
                         shaderName);
+
+                    // Apply per-entity uniforms (override global uniforms for this entity)
+                    if (registry.any_of<shaders::ShaderUniformComponent>(e)) {
+                        auto& entityUniforms = registry.get<shaders::ShaderUniformComponent>(e);
+                        entityUniforms.applyToShaderForEntity(shader, shaderName, e, registry);
+                    }
                 }
             });
         }
@@ -812,7 +828,9 @@ void executeEntityPipelineWithCommands(
                                     skewCenter,
                                     skewSize,
                                     tiltEnabled,
-                                    applySkewUniforms]() {
+                                    applySkewUniforms,
+                                    e,
+                                    &registry]() {
                 if (stickerInjectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -838,6 +856,12 @@ void executeEntityPipelineWithCommands(
                         shader,
                         globals::getGlobalShaderUniforms(),
                         stickerShaderName);
+
+                    // Apply per-entity uniforms (override global uniforms for this entity)
+                    if (registry.any_of<shaders::ShaderUniformComponent>(e)) {
+                        auto& entityUniforms = registry.get<shaders::ShaderUniformComponent>(e);
+                        entityUniforms.applyToShaderForEntity(shader, stickerShaderName, e, registry);
+                    }
                 }
             });
             batch.addCustomCommand(makeLocalCommandEmitter(localStickerCommands, /*beforeSprite=*/true, stickerIs3DSkew, stickerShaderName));
@@ -861,7 +885,9 @@ void executeEntityPipelineWithCommands(
                                     skewCenter,
                                     skewSize,
                                     tiltEnabled,
-                                    applySkewUniforms]() {
+                                    applySkewUniforms,
+                                    e,
+                                    &registry]() {
                 if (textInjectAtlas) {
                     shaders::injectAtlasUniforms(
                         globals::getGlobalShaderUniforms(),
@@ -887,6 +913,12 @@ void executeEntityPipelineWithCommands(
                         shader,
                         globals::getGlobalShaderUniforms(),
                         textShaderName);
+
+                    // Apply per-entity uniforms (override global uniforms for this entity)
+                    if (registry.any_of<shaders::ShaderUniformComponent>(e)) {
+                        auto& entityUniforms = registry.get<shaders::ShaderUniformComponent>(e);
+                        entityUniforms.applyToShaderForEntity(shader, textShaderName, e, registry);
+                    }
                 }
             });
 

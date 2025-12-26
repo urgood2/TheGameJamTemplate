@@ -204,6 +204,53 @@ function StatusIndicatorSystem.getStatuses(entity)
     return result
 end
 
+--- Calculate icon position above entity
+--- @param transform table Entity's Transform component
+--- @param indicator_data table Indicator data with bob_phase
+--- @param icon_index number Which icon (0-indexed) for horizontal offset
+--- @param total_icons number Total icons being rendered
+--- @return number, number x, y position
+local function calculateIconPosition(transform, indicator_data, icon_index, total_icons)
+    local def = StatusEffects.get(indicator_data.status_id)
+    local icon_offset = def and def.icon_offset or { x = 0, y = 0 }
+
+    -- Entity center
+    local cx = transform.actualX + (transform.actualW or 0) * 0.5
+    local cy = transform.actualY
+
+    -- Base offset above entity
+    local base_y = cy + StatusIndicatorSystem.BAR_OFFSET_Y + (icon_offset.y or 0)
+
+    -- Bob animation
+    local bob = math.sin(indicator_data.bob_phase) * StatusIndicatorSystem.ICON_BOB_AMPLITUDE
+
+    -- Horizontal spread for multiple icons (16px spacing, centered)
+    local spacing = 16
+    local total_width = (total_icons - 1) * spacing
+    local start_x = cx - total_width * 0.5
+    local x = start_x + icon_index * spacing + (icon_offset.x or 0)
+
+    return x, base_y + bob
+end
+
+--- Get color for status type (fallback when no sprite)
+--- @param status_id string Status effect ID
+--- @return table Color
+function StatusIndicatorSystem.getStatusColor(status_id)
+    local color_map = {
+        electrocute = "CYAN",
+        static_charge = "CYAN",
+        static_shield = "BLUE",
+        burning = "RED",
+        frozen = "ICE",
+        exposed = "YELLOW",
+        heat_buildup = "ORANGE",
+        oil_slick = "PURPLE",
+    }
+    local color_name = color_map[status_id] or "WHITE"
+    return util.getColor(color_name)
+end
+
 --- Update display mode based on status count
 --- @param entity number Entity ID
 function StatusIndicatorSystem.updateDisplayMode(entity)
@@ -222,8 +269,58 @@ end
 
 --- Show floating icons (1-2 statuses)
 function StatusIndicatorSystem.showFloatingIcons(entity, indicators)
-    -- TODO: Implement floating icon rendering
-    -- This will create/update icon entities positioned above the target entity
+    local transform = component_cache.get(entity, Transform)
+    if not transform then return end
+
+    -- Count and collect indicators
+    local indicator_list = {}
+    for status_id, data in pairs(indicators) do
+        table.insert(indicator_list, data)
+    end
+    local total = #indicator_list
+
+    -- Render each icon
+    for i, data in ipairs(indicator_list) do
+        local def = StatusEffects.get(data.status_id)
+        if not def then goto continue end
+
+        local x, y = calculateIconPosition(transform, data, i - 1, total)
+        local icon_size = 16
+
+        -- Try to render sprite, fallback to colored circle
+        local sprite_id = def.icon
+        if sprite_id and sprites and sprites[sprite_id] then
+            command_buffer.queueDrawSprite(layers.sprites, function(c)
+                c.sprite = sprite_id
+                c.x = x - icon_size * 0.5
+                c.y = y - icon_size * 0.5
+                c.w = icon_size
+                c.h = icon_size
+            end, z_orders.status_icons, layer.DrawCommandSpace.World)
+        else
+            -- Fallback: colored circle based on status type
+            local color = StatusIndicatorSystem.getStatusColor(data.status_id)
+            command_buffer.queueDrawCircleFilled(layers.sprites, function(c)
+                c.x = x
+                c.y = y
+                c.radius = icon_size * 0.4
+                c.color = color
+            end, z_orders.status_icons, layer.DrawCommandSpace.World)
+        end
+
+        -- Stack count (if applicable)
+        if def.show_stacks and data.stacks > 1 then
+            command_buffer.queueDrawText(layers.sprites, function(c)
+                c.text = tostring(data.stacks)
+                c.x = x + 6
+                c.y = y + 4
+                c.fontSize = 10
+                c.color = util.getColor("WHITE")
+            end, z_orders.status_icons + 1, layer.DrawCommandSpace.World)
+        end
+
+        ::continue::
+    end
 end
 
 --- Show condensed status bar (3+ statuses)
@@ -319,6 +416,20 @@ function StatusIndicatorSystem.update(dt)
             StatusIndicatorSystem.hide(removal.entity, removal.status_id)
         else
             StatusIndicatorSystem.hideAll(removal.entity)
+        end
+    end
+
+    -- Render indicators for all entities
+    for entity, indicators in pairs(StatusIndicatorSystem.active_indicators) do
+        if registry:valid(entity) then
+            local count = 0
+            for _ in pairs(indicators) do count = count + 1 end
+
+            if count <= StatusIndicatorSystem.MAX_FLOATING_ICONS then
+                StatusIndicatorSystem.showFloatingIcons(entity, indicators)
+            else
+                StatusIndicatorSystem.showStatusBar(entity, indicators)
+            end
         end
     end
 end

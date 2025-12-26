@@ -125,13 +125,113 @@ function AvatarSystem.record_progress(player, metric, delta, opts)
     return AvatarSystem.check_unlocks(player, opts)
 end
 
+--[[
+================================================================================
+STAT BUFF APPLICATION
+================================================================================
+Applies/removes stat_buff effects from avatars to the player's combat stats.
+Uses player.combatTable.stats (the combat actor's stat system).
+]] --
+
+-- Get the stats object from player (via combatTable link)
+local function getPlayerStats(player)
+    if not player then return nil end
+    local combatActor = player.combatTable
+    if combatActor and combatActor.stats then
+        return combatActor.stats
+    end
+    return nil
+end
+
+--- Apply stat_buff effects from an avatar to player stats
+--- @param player table Player script table
+--- @param avatarId string Avatar ID to apply
+--- @return boolean success
+function AvatarSystem.apply_stat_buffs(player, avatarId)
+    if not player or not avatarId then return false end
+
+    local defs = loadDefs()
+    local avatar = defs and defs[avatarId]
+    if not avatar or not avatar.effects then return false end
+
+    local stats = getPlayerStats(player)
+    if not stats then
+        -- No combat stats available yet (may be called before combat init)
+        -- Store pending buffs to apply later
+        player._pending_avatar_buffs = avatarId
+        return true
+    end
+
+    local state = ensureState(player)
+    state._applied_buffs = state._applied_buffs or {}
+
+    for _, effect in ipairs(avatar.effects) do
+        if effect.type == "stat_buff" then
+            local stat = effect.stat
+            local value = effect.value or 0
+
+            -- Apply as additive percentage (like items)
+            stats:add_add_pct(stat, value)
+            table.insert(state._applied_buffs, { stat = stat, value = value })
+        end
+    end
+
+    stats:recompute()
+    return true
+end
+
+--- Remove previously applied stat_buff effects from player
+--- @param player table Player script table
+--- @return boolean success
+function AvatarSystem.remove_stat_buffs(player)
+    if not player then return false end
+
+    local state = player.avatar_state
+    if not state or not state._applied_buffs then return true end
+
+    local stats = getPlayerStats(player)
+    if not stats then return true end
+
+    -- Reverse all applied buffs
+    for _, buff in ipairs(state._applied_buffs) do
+        stats:add_add_pct(buff.stat, -buff.value)
+    end
+
+    stats:recompute()
+    state._applied_buffs = {}
+    return true
+end
+
 -- Equip an already-unlocked avatar (for session-based choice)
+-- Handles stat buff application/removal when switching avatars
 function AvatarSystem.equip(player, avatarId)
     local state = ensureState(player)
     if not state or not state.unlocked[avatarId] then
         return false, "avatar_locked"
     end
+
+    -- Remove old avatar's stat buffs if switching
+    if state.equipped and state.equipped ~= avatarId then
+        AvatarSystem.remove_stat_buffs(player)
+    end
+
     state.equipped = avatarId
+
+    -- Apply new avatar's stat buffs
+    AvatarSystem.apply_stat_buffs(player, avatarId)
+
+    return true
+end
+
+--- Unequip current avatar (removes stat buffs)
+--- @param player table Player script table
+--- @return boolean success
+function AvatarSystem.unequip(player)
+    local state = player and player.avatar_state
+    if not state or not state.equipped then return true end
+
+    AvatarSystem.remove_stat_buffs(player)
+    state.equipped = nil
     return true
 end
 
@@ -140,6 +240,26 @@ function AvatarSystem.get_equipped(player)
     if type(player) ~= "table" then return nil end
     local state = player.avatar_state
     return state and state.equipped or nil
+end
+
+--- Check if player has a specific avatar rule active
+--- @param player table Player script table
+--- @param rule string Rule ID to check (e.g., "crit_chains")
+--- @return boolean True if rule is active
+function AvatarSystem.has_rule(player, rule)
+    local avatarId = AvatarSystem.get_equipped(player)
+    if not avatarId then return false end
+
+    local defs = loadDefs()
+    local avatar = defs and defs[avatarId]
+    if not avatar or not avatar.effects then return false end
+
+    for _, effect in ipairs(avatar.effects) do
+        if effect.type == "rule_change" and effect.rule == rule then
+            return true
+        end
+    end
+    return false
 end
 
 return AvatarSystem

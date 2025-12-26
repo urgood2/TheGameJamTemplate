@@ -111,6 +111,78 @@ local function run_tests()
     for i, item in ipairs(MessageQueueUI.pending) do
         print(string.format("[QUEUE %d] %s", i, item.text))
     end
+
+    -- Test 5: has_rule() helper function
+    print("\n-- Testing has_rule helper --")
+    local player5 = { avatar_state = { unlocked = { stormlord = true }, equipped = "stormlord" } }
+    assert_true(AvatarSystem.has_rule(player5, "crit_chains"),
+        "stormlord should have crit_chains rule")
+    assert_true(not AvatarSystem.has_rule(player5, "multicast_loops"),
+        "stormlord should NOT have multicast_loops rule")
+    print("✓ has_rule correctly identifies avatar rules")
+
+    -- Test 6: has_rule with no equipped avatar
+    local player6 = { avatar_state = { unlocked = {}, equipped = nil } }
+    assert_true(not AvatarSystem.has_rule(player6, "crit_chains"),
+        "no equipped avatar should return false for any rule")
+    print("✓ has_rule handles no equipped avatar")
+
+    -- Test 7: apply_stat_buffs stores pending when no combatTable
+    print("\n-- Testing stat_buff application --")
+    local player7 = { avatar_state = { unlocked = { stormlord = true }, equipped = nil } }
+    -- No combatTable, so buffs should be marked as pending
+    local applied = AvatarSystem.apply_stat_buffs(player7, "stormlord")
+    assert_true(applied, "apply_stat_buffs should return true even without combatTable")
+    assert_equals(player7._pending_avatar_buffs, "stormlord",
+        "should store pending avatar buffs when no combat stats available")
+    print("✓ stat_buff application handles missing combatTable gracefully")
+
+    -- Test 8: Mock stats object to verify stat application
+    local mockStats = {
+        _values = {},
+        add_add_pct = function(self, stat, value)
+            self._values[stat] = (self._values[stat] or 0) + value
+        end,
+        recompute = function(self) end
+    }
+    local player8 = {
+        combatTable = { stats = mockStats },
+        avatar_state = { unlocked = { stormlord = true }, equipped = nil }
+    }
+    AvatarSystem.apply_stat_buffs(player8, "stormlord")
+    assert_equals(mockStats._values.cast_speed, 0.5,
+        "stormlord should apply +0.5 cast_speed to stats")
+    print("✓ stat_buff correctly applies to combat stats")
+
+    -- Test 9: remove_stat_buffs reverses applied buffs
+    AvatarSystem.remove_stat_buffs(player8)
+    assert_equals(mockStats._values.cast_speed, 0,
+        "remove_stat_buffs should reverse applied buffs")
+    print("✓ remove_stat_buffs correctly reverses applied buffs")
+
+    -- Test 10: unequip removes stat buffs
+    local mockStats2 = {
+        _values = {},
+        add_add_pct = function(self, stat, value)
+            self._values[stat] = (self._values[stat] or 0) + value
+        end,
+        recompute = function(self) end
+    }
+    local player10 = {
+        combatTable = { stats = mockStats2 },
+        avatar_state = { unlocked = { wildfire = true }, equipped = nil }
+    }
+    AvatarSystem.equip(player10, "wildfire")
+    assert_equals(mockStats2._values.hazard_tick_rate_pct, 100,
+        "equip should apply wildfire's hazard_tick_rate_pct buff")
+    AvatarSystem.unequip(player10)
+    assert_equals(mockStats2._values.hazard_tick_rate_pct, 0,
+        "unequip should remove hazard_tick_rate_pct buff")
+    assert_equals(player10.avatar_state.equipped, nil,
+        "unequip should clear equipped avatar")
+    print("✓ unequip removes stat buffs and clears equipped")
+
+    print("-- stat_buff and rule tests passed --\n")
 end
 
 run_tests()

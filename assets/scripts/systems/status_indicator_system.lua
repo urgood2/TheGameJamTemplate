@@ -325,8 +325,56 @@ end
 
 --- Show condensed status bar (3+ statuses)
 function StatusIndicatorSystem.showStatusBar(entity, indicators)
-    -- TODO: Implement status bar rendering
-    -- This will render a horizontal strip of mini-icons
+    local transform = component_cache.get(entity, Transform)
+    if not transform then return end
+
+    -- Entity center
+    local cx = transform.actualX + (transform.actualW or 0) * 0.5
+    local cy = transform.actualY + StatusIndicatorSystem.BAR_OFFSET_Y
+
+    -- Collect indicators
+    local indicator_list = {}
+    for status_id, data in pairs(indicators) do
+        table.insert(indicator_list, data)
+    end
+    local total = #indicator_list
+
+    -- Calculate bar dimensions
+    local icon_size = StatusIndicatorSystem.BAR_ICON_SIZE
+    local spacing = StatusIndicatorSystem.BAR_SPACING
+    local total_width = total * icon_size + (total - 1) * spacing
+    local start_x = cx - total_width * 0.5
+
+    -- Render each mini icon
+    for i, data in ipairs(indicator_list) do
+        local def = StatusEffects.get(data.status_id)
+        if not def then goto continue end
+
+        local x = start_x + (i - 1) * (icon_size + spacing) + icon_size * 0.5
+        local y = cy
+
+        -- Try sprite, fallback to mini colored circle
+        local sprite_id = def.icon
+        if sprite_id and sprites and sprites[sprite_id] then
+            command_buffer.queueDrawSprite(layers.sprites, function(c)
+                c.sprite = sprite_id
+                c.x = x - icon_size * 0.5
+                c.y = y - icon_size * 0.5
+                c.w = icon_size
+                c.h = icon_size
+            end, z_orders.status_icons, layer.DrawCommandSpace.World)
+        else
+            local color = StatusIndicatorSystem.getStatusColor(data.status_id)
+            command_buffer.queueDrawCircleFilled(layers.sprites, function(c)
+                c.x = x
+                c.y = y
+                c.radius = icon_size * 0.35
+                c.color = color
+            end, z_orders.status_icons, layer.DrawCommandSpace.World)
+        end
+
+        ::continue::
+    end
 end
 
 --- Apply shader effect to entity

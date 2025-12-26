@@ -202,6 +202,30 @@ function ShaderBuilder.for_entity(entity)
             end
             return self
         end,
+
+        -- Remove a specific shader pass by name
+        -- @param shaderName string - Name of the shader to remove
+        -- @return self - For method chaining
+        remove = function(self, shaderName)
+            local comp = component_cache.get(self._entity, shader_pipeline.ShaderPipelineComponent)
+            if comp then
+                comp:removePass(shaderName)
+            end
+            return self
+        end,
+
+        -- Update uniforms for an existing shader without removing/re-adding
+        -- @param shaderName string - Name of the shader
+        -- @param uniforms table - New uniform values
+        -- @return self - For method chaining
+        update = function(self, shaderName, uniforms)
+            if uniforms then
+                for k, v in pairs(uniforms) do
+                    globalShaderUniforms:set(shaderName, k, v)
+                end
+            end
+            return self
+        end,
     }
 end
 

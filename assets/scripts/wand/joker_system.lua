@@ -40,32 +40,52 @@ function JokerSystem.clear_jokers()
 end
 
 --- Trigger an event and collect effects from all Jokers
--- @param event_name: String name of the event (e.g., "on_spell_cast")
--- @param context: Table containing event data (spell_type, tags, player, etc.)
--- @return table: Aggregated effects { damage_mod = 0, damage_mult = 1, ... }
+--- Jokers can return ANY field - no need to register fields here.
+--- Aggregation mode is determined by JOKER_EFFECT_SCHEMA in wand_modifiers.lua
+--- @param event_name string Name of the event (e.g., "on_spell_cast", "on_player_damaged")
+--- @param context table Event data (spell_type, tags, player, etc.)
+--- @return table Aggregated effects from all jokers
 function JokerSystem.trigger_event(event_name, context)
     context = context or {}
     context.event = event_name
 
-    local aggregate = {
-        damage_mod = 0,
-        damage_mult = 1,
-        repeat_cast = 0,
-        messages = {}
-    }
+    local aggregate = { messages = {} }
+
+    -- Load schema for determining aggregation mode
+    local WandModifiers = require("wand.wand_modifiers")
+    local schema = WandModifiers.JOKER_EFFECT_SCHEMA
 
     for _, joker in ipairs(JokerSystem.jokers) do
         if joker.calculate then
             local result = joker:calculate(context)
             if result then
-                -- Aggregate numerical effects
-                if result.damage_mod then aggregate.damage_mod = aggregate.damage_mod + result.damage_mod end
-                if result.damage_mult then aggregate.damage_mult = aggregate.damage_mult * result.damage_mult end
-                if result.repeat_cast then aggregate.repeat_cast = aggregate.repeat_cast + result.repeat_cast end
+                -- Auto-aggregate all fields from joker result
+                for field, value in pairs(result) do
+                    if field == "message" then
+                        -- Collect UI messages
+                        table.insert(aggregate.messages, { joker = joker.name, text = value })
+                    elseif type(value) == "number" then
+                        -- Determine aggregation mode from schema
+                        local fieldSchema = schema[field]
+                        local mode = fieldSchema and fieldSchema.mode or "add"
 
-                -- Collect UI messages
-                if result.message then
-                    table.insert(aggregate.messages, { joker = joker.name, text = result.message })
+                        if mode == "multiply" then
+                            aggregate[field] = (aggregate[field] or 1) * value
+                        elseif mode == "max" then
+                            aggregate[field] = math.max(aggregate[field] or 0, value)
+                        elseif mode == "min" then
+                            aggregate[field] = math.min(aggregate[field] or value, value)
+                        else -- "add" is the default
+                            aggregate[field] = (aggregate[field] or 0) + value
+                        end
+                    elseif type(value) == "table" then
+                        -- Tables (like buff definitions) are collected into arrays
+                        aggregate[field] = aggregate[field] or {}
+                        table.insert(aggregate[field], value)
+                    elseif type(value) == "boolean" and value then
+                        -- Booleans OR together (any true = true)
+                        aggregate[field] = true
+                    end
                 end
             end
         end

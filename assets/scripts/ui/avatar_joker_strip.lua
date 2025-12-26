@@ -168,7 +168,8 @@ local function createSprite(entry, defaultSprite, accent, itemType)
 
     animation_system.resizeAnimationObjectsInEntityToFit(entity,
         AvatarJokerStrip.layout.cardW, AvatarJokerStrip.layout.cardH)
-    animation_system.setFGColorForAllAnimationObjects(entity, accent or Col(255, 255, 255, 255))
+    -- Use white (no tint) for sprites so custom art displays correctly
+    animation_system.setFGColorForAllAnimationObjects(entity, Col(255, 255, 255, 255))
 
     -- Pass item type and ID for localization lookup at hover time
     applyTooltip(entity, itemType, entry.id, entry.name or entry.id, entry.description)
@@ -415,7 +416,7 @@ function AvatarJokerStrip.syncFrom(player, jokers)
             name = joker.name or (def and def.name) or joker.id,
             description = (def and def.description) or "Passive joker",
             rarity = (def and def.rarity) or joker.rarity,
-            sprite = AvatarJokerStrip.layout.jokerSprite
+            sprite = (def and def.sprite) or AvatarJokerStrip.layout.jokerSprite  -- Use joker's custom sprite if defined
         })
     end
 

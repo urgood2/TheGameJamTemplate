@@ -15,6 +15,31 @@ local function L(key, fallback)
 end
 
 local Jokers = {
+    
+    lightning_rod = {
+        id = "lightning_rod",
+        name = "Lightning Rod",
+        description = "+15 Damage to Lightning spells. Critical hits chain to one extra enemy.",
+        rarity = "Uncommon",
+        sprite = "test_lightning_artifact.png",  -- Use your new sprite!
+
+        calculate = function(self, context)
+            -- React to spell casting
+            if context.event == "on_spell_cast" then
+                -- Check if the spell has the Lightning tag
+                if context.tags and context.tags.Lightning then
+                    print("[JOKER] Lightning Rod triggered! +15 damage, +1 chain")
+                    return {
+                        damage_mod = 15,           -- Flat damage increase
+                        extra_chain = 1,           -- +1 chain target
+                        message = "Lightning Rod!"
+                    }
+                end
+            end
+        end
+    },
+    
+    
     -- Example 1: The "Pyromaniac" (Buffs Fire Spells)
     pyromaniac = {
         id = "pyromaniac",

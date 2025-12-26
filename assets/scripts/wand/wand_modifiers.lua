@@ -21,6 +21,132 @@ local WandModifiers = {}
 
 --[[
 ================================================================================
+JOKER EFFECT SCHEMA - How to Wire New Joker Effects
+================================================================================
+This schema defines how joker return values map to modifier fields.
+
+HOW TO ADD A NEW JOKER EFFECT:
+------------------------------
+1. Add an entry to JOKER_EFFECT_SCHEMA below:
+
+   my_new_effect = { mode = "add", target = "existingModifierField" },
+
+2. Use it in your joker's calculate() function:
+
+   return { my_new_effect = 5, message = "Effect triggered!" }
+
+3. That's it! The effect will automatically:
+   - Aggregate across multiple jokers (using the mode)
+   - Apply to the modifier field before projectile spawn
+
+AVAILABLE MODES:
+----------------
+  "add"      - Values sum together (damage_mod, extra_chain)
+  "multiply" - Values multiply together (damage_mult)
+  "max"      - Highest value wins (range bonuses)
+  "min"      - Lowest value wins (cost reductions)
+  "set"      - Last value overwrites (flags)
+
+NAMING CONVENTION:
+------------------
+  Joker fields use snake_case:   extra_chain, crit_chance, mana_restore
+  Modifier fields use camelCase: extraChain, critChance, manaRestore
+
+  If no explicit mapping exists, snake_case auto-converts to camelCase.
+
+EXAMPLE - Adding "extra_pierce" for a piercing joker:
+-----------------------------------------------------
+  1. Schema entry:
+     extra_pierce = { mode = "add", target = "pierceCount" },
+
+  2. Joker code:
+     calculate = function(self, context)
+         if context.tags and context.tags.Projectile then
+             return { extra_pierce = 2, message = "Pierce +2!" }
+         end
+     end
+
+  3. Result: pierceCount increases by 2 when casting Projectile-tagged spells
+]] --
+
+WandModifiers.JOKER_EFFECT_SCHEMA = {
+    -- Damage effects
+    damage_mod      = { mode = "add",      target = "damageBonus" },
+    damage_mult     = { mode = "multiply", target = "damageMultiplier" },
+
+    -- Cast effects
+    repeat_cast     = { mode = "add",      target = "multicastCount" },
+
+    -- Chain lightning
+    extra_chain     = { mode = "add",      target = "chainLightningTargets" },
+    chain_range_mod = { mode = "add",      target = "chainLightningRange" },
+
+    -- Projectile behavior
+    extra_pierce    = { mode = "add",      target = "pierceCount" },
+    extra_bounce    = { mode = "add",      target = "bounceCount" },
+
+    -- Crit
+    crit_chance     = { mode = "add",      target = "critChanceBonus" },
+
+    -- Healing
+    heal_on_hit     = { mode = "add",      target = "healOnHit" },
+    lifesteal       = { mode = "add",      target = "lifesteal" },
+
+    -- Knockback
+    knockback       = { mode = "add",      target = "knockback" },
+
+    -- Mana (for future implementation)
+    mana_restore    = { mode = "add",      target = "manaRestore" },
+    mana_cost_mult  = { mode = "multiply", target = "manaCostMultiplier" },
+}
+
+--- Convert snake_case to camelCase
+--- @param str string The snake_case string
+--- @return string The camelCase string
+local function snakeToCamel(str)
+    return str:gsub("_(%l)", function(c) return c:upper() end)
+end
+
+--- Apply joker effects to a modifier aggregate using the schema
+--- Called by wand_executor after JokerSystem.trigger_event()
+--- @param modifiers table The modifier aggregate to update
+--- @param jokerEffects table Effects returned from JokerSystem.trigger_event()
+function WandModifiers.applyJokerEffects(modifiers, jokerEffects)
+    if not jokerEffects then return end
+
+    for field, value in pairs(jokerEffects) do
+        -- Skip non-numeric fields (messages handled separately)
+        if field ~= "messages" and type(value) == "number" then
+            local schema = WandModifiers.JOKER_EFFECT_SCHEMA[field]
+            local target, mode
+
+            if schema then
+                target = schema.target
+                mode = schema.mode
+            else
+                -- Auto-convert: extra_pierce → extraPierce, default to "add"
+                target = snakeToCamel(field)
+                mode = "add"
+            end
+
+            -- Apply based on mode
+            if mode == "add" then
+                modifiers[target] = (modifiers[target] or 0) + value
+            elseif mode == "multiply" then
+                modifiers[target] = (modifiers[target] or 1) * value
+            elseif mode == "max" then
+                modifiers[target] = math.max(modifiers[target] or 0, value)
+            elseif mode == "min" then
+                modifiers[target] = math.min(modifiers[target] or value, value)
+            elseif mode == "set" then
+                modifiers[target] = value
+            end
+        end
+    end
+end
+
+--[[
+================================================================================
 MODIFIER AGGREGATION
 ================================================================================
 Takes a list of modifier cards and combines them into a single aggregate.
@@ -82,7 +208,8 @@ function WandModifiers.createAggregate()
         freezeDuration = 2.0,
 
         chainLightning = false,
-        chainLightningTargets = 3,
+        chainLightningTargets = 0,    -- Bonus chains from jokers (base comes from card)
+        chainLightningRange = 0,      -- Bonus range from jokers (base comes from card)
         chainLightningDamageMult = 0.5,
 
         lifesteal = 0, -- percent of damage healed

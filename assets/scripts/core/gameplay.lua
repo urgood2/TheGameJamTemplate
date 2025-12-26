@@ -21,6 +21,7 @@ local WandExecutor = require("wand.wand_executor")
 local WandTriggers = require("wand.wand_triggers")
 local TagEvaluator = require("wand.tag_evaluator")
 local AvatarSystem = require("wand.avatar_system")
+local JokerSystem = require("wand.joker_system")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
 local component_cache = require("core.component_cache")
@@ -6669,6 +6670,11 @@ local function loadWandsIntoExecutorFromBoards()
     WandExecutor.cleanup()
     WandExecutor.init()
     virtualCardCounter = 0
+
+    -- Add default jokers for testing
+    JokerSystem.clear_jokers()
+    JokerSystem.add_joker("lightning_rod")  -- +15 damage & +1 chain for Lightning spells
+    print("[JOKER] Added lightning_rod joker. Total jokers: " .. #JokerSystem.jokers)
 
     WandExecutor.getPlayerEntity = function()
         return survivorEntity

@@ -1053,9 +1053,15 @@ function WandActions.spawnChainLightning(sourceProjectile, hitTarget, hitData, m
         return
     end
 
-    -- Get chain parameters from card or modifiers
-    local chainCount = (actionCard and actionCard.chain_count) or modifiers.chainLightningTargets or 3
-    local chainRange = (actionCard and actionCard.chain_range) or 150
+    -- Get chain parameters from card, PLUS joker bonuses from modifiers
+    local baseChainCount = (actionCard and actionCard.chain_count) or 3
+    local jokerChainBonus = modifiers.chainLightningTargets or 0  -- From jokers via extra_chain
+    local chainCount = baseChainCount + jokerChainBonus
+
+    local baseChainRange = (actionCard and actionCard.chain_range) or 150
+    local jokerRangeBonus = modifiers.chainLightningRange or 0    -- From jokers via chain_range_mod
+    local chainRange = baseChainRange + jokerRangeBonus
+
     local chainDamageMult = (actionCard and actionCard.chain_damage_mult) or modifiers.chainLightningDamageMult or 0.5
 
     -- MOD_BIG_SLOW: increase range based on size multiplier

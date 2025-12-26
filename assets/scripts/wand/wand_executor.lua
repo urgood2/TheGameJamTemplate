@@ -661,28 +661,14 @@ function WandExecutor.executeCastBlock(block, context, state, blockIndex)
 
         local jokerEffects = JokerSystem.trigger_event("on_spell_cast", jokerContext)
 
-        -- 3. Apply Joker Effects to Modifiers
+        -- 3. Apply Joker Effects to Modifiers (uses JOKER_EFFECT_SCHEMA)
         if jokerEffects then
-            -- Damage Multiplier
-            if jokerEffects.damage_mult and jokerEffects.damage_mult ~= 1 then
-                modifiers.damageMultiplier = modifiers.damageMultiplier * jokerEffects.damage_mult
-            end
-
-            -- Damage Bonus (Flat)
-            if jokerEffects.damage_mod and jokerEffects.damage_mod ~= 0 then
-                modifiers.damageBonus = modifiers.damageBonus + jokerEffects.damage_mod
-            end
-
-            -- Multicast / Repeat Cast
-            if jokerEffects.repeat_cast and jokerEffects.repeat_cast > 0 then
-                modifiers.multicastCount = modifiers.multicastCount + jokerEffects.repeat_cast
-            end
+            -- Apply all numeric effects via schema-driven utility
+            WandModifiers.applyJokerEffects(modifiers, jokerEffects)
 
             -- UI Feedback (Messages)
             if jokerEffects.messages and #jokerEffects.messages > 0 then
                 for _, msg in ipairs(jokerEffects.messages) do
-                    -- print(string.format("[JOKER] %s triggered: %s", msg.joker, msg.text))
-                    -- Emit signal for UI
                     local signal = require("external.hump.signal")
                     signal.emit("on_joker_trigger", { joker_name = msg.joker, message = msg.text })
                 end

@@ -69,6 +69,11 @@ local gameplay_cfg = {
     DEBUG_AUTO_EQUIP_AVATAR = "conduit",  -- Set to avatar ID to auto-equip, or nil to disable
     cardW = 80,   -- card dimensions, reset on init
     cardH = 112,
+    TESTED_CARD_IDS = {},
+    playerFootStepSounds = {
+        "walk_1", "walk_2", "walk_3", "walk_4", "walk_5",
+        "walk_6", "walk_7", "walk_8", "walk_9", "walk_10"
+    },
 }
 
 require("core.type_defs") -- for Node customizations
@@ -1404,6 +1409,8 @@ function createNewBoard(x, y, w, h)
                 for i, eid in ipairs(boardScript.cards) do
                     if eid == released then
                         table.remove(boardScript.cards, i)
+                        notifyDeckChanged(boardEid)
+                        break
                     end
                 end
             end
@@ -4648,6 +4655,10 @@ function initPlanningPhase()
             end
         end
 
+        if wandResourceBar then
+            wandResourceBar.draw()
+        end
+
         -- Update execution graph slide animation
         if CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
             CastExecutionGraphUI.updateSlide(dt)
@@ -5202,8 +5213,8 @@ function initPlanningPhase()
 
     runningYValue = runningYValue + boardHeight + boardPadding
 
-    -- Initialize wand resource bar below the boards
-    wandResourceBar.init(leftAlignValueTriggerBoardX, runningYValue + 10)
+    -- Initialize wand resource bar below the action board
+    wandResourceBar.init(leftAlignValueActionBoardX, runningYValue + 10)
 
     -- let's create a card board
 
@@ -6628,17 +6639,26 @@ local function collectCardPoolForBoardSet(boardSet)
     return pool
 end
 
--- Update wand resource bar with current board set data
 updateWandResourceBar = function()
-    if not board_sets or #board_sets == 0 then return end
+    if not board_sets or #board_sets == 0 then 
+        print("[updateWandResourceBar] No board_sets")
+        return 
+    end
     local currentSet = board_sets[current_board_set_index]
-    if not currentSet then return end
+    if not currentSet then 
+        print("[updateWandResourceBar] No currentSet at index", current_board_set_index)
+        return 
+    end
 
     local wandDef = currentSet.wandDef
     local cardPool = collectCardPoolForBoardSet(currentSet)
+    
+    local actionBoard = boards[currentSet.action_board_id]
+    local cardCount = actionBoard and actionBoard.cards and #actionBoard.cards or 0
+    print(string.format("[updateWandResourceBar] boardIndex=%d, actionBoardCards=%d, poolSize=%s, wandId=%s",
+        current_board_set_index, cardCount, cardPool and #cardPool or "nil", wandDef and wandDef.id or "nil"))
 
     wandResourceBar.update(wandDef, cardPool)
-    wandResourceBar.refresh()
 end
 
 local tagEvaluationFallbackPlayer = { active_tag_bonuses = {}, active_procs = {} }
@@ -7188,11 +7208,12 @@ function startPlanningPhase()
     activate_state("default_state")     -- just for defaults, keep them open
     activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
 
-    -- Show wand resource bar in planning phase and update with current data
     wandResourceBar.show()
-    if updateWandResourceBar then
-        updateWandResourceBar()
-    end
+    timer.after(0.05, function()
+        if updateWandResourceBar then
+            updateWandResourceBar()
+        end
+    end, "wand_resource_bar_deferred_update")
 
     remove_layer_shader("sprites", "pixelate_image")
 
@@ -7294,7 +7315,6 @@ end
 local lastFrame = -1
 
 -- Debug card spawner ---------------------------------------------------------
-local TESTED_CARD_IDS = {}
 local cardSpawnerState = {
     built = false,
     target = "inventory",
@@ -7304,7 +7324,7 @@ local cardSpawnerState = {
 
 local function rebuildCardSpawnerLists()
     local testedLookup = {}
-    for _, id in ipairs(TESTED_CARD_IDS) do
+    for _, id in ipairs(gameplay_cfg.TESTED_CARD_IDS) do
         testedLookup[id] = true
     end
 
@@ -8269,8 +8289,6 @@ function ensureShopSystemInitialized()
     shop_system_initialized = true
 end
 
-local planningPeekEntities = {}
-
 local function refreshShopUIFromInstance(shop)
     if globals.ui and globals.ui.refreshShopUIFromInstance then
         globals.ui.refreshShopUIFromInstance(shop or active_shop_instance)
@@ -8649,19 +8667,6 @@ SCREEN_BOUND_TOP = 0
 SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
 SCREEN_BOUND_THICKNESS = 30
-
-local playerFootStepSounds = {
-    "walk_1",
-    "walk_2",
-    "walk_3",
-    "walk_4",
-    "walk_5",
-    "walk_6",
-    "walk_7",
-    "walk_8",
-    "walk_9",
-    "walk_10"
-}
 
 local function spawnWalkDust()
     -- Lightweight puff at the player's feet while walking
@@ -9274,7 +9279,7 @@ function initActionPhase()
                     -- timer not active. turn it on.
                     timer.every(0.8, function()
                         -- play footstep sound at survivor position
-                        playSoundEffect("effects", random_utils.random_element_string(playerFootStepSounds))
+                        playSoundEffect("effects", random_utils.random_element_string(gameplay_cfg.playerFootStepSounds))
                     end, 0, true, nil, timerName)
                 else
                     -- timer active, do nothing.

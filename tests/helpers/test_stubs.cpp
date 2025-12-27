@@ -100,3 +100,9 @@ namespace NavMesh {
 namespace ai_system {
     sol::state masterStateLua{};
 }
+
+// Stub GC pause tracking used by misc_fuctions.hpp ShowDebugUI.
+namespace game {
+    double g_maxGcPauseMs{0.0};
+    double g_avgGcPauseMs{0.0};
+}

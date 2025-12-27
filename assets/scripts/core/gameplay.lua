@@ -72,14 +72,21 @@ local gameplay_cfg = {
     isPlayerDying = false,
     -- Lazy-loaded modules (to avoid hot-path requires and stay under 200 local limit)
     DeathScreen = nil,
-    -- Lazy getter for DeathScreen (avoids require in hot path)
-    getDeathScreen = function()
-        if not gameplay_cfg.DeathScreen then
-            gameplay_cfg.DeathScreen = require("ui.death_screen")
-        end
-        return gameplay_cfg.DeathScreen
-    end,
+    -- Moved here to stay under 200 local limit
+    debugQuickAccessState = { lastMessage = nil },
+    planningPeekEntities = {},
+    playerFootStepSounds = {
+        "walk_1", "walk_2", "walk_3", "walk_4", "walk_5",
+        "walk_6", "walk_7", "walk_8", "walk_9", "walk_10"
+    },
 }
+
+function gameplay_cfg.getDeathScreen()
+    if not gameplay_cfg.DeathScreen then
+        gameplay_cfg.DeathScreen = require("ui.death_screen")
+    end
+    return gameplay_cfg.DeathScreen
+end
 
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
@@ -5639,18 +5646,33 @@ local function resetGameToStart()
         local playerScript = getScriptTableFromEntityID(survivorEntity)
         if playerScript and playerScript.combatTable then
             local hero = playerScript.combatTable
-            if hero.stats then
-                hero.hp = hero.stats:get("max_health") or hero.max_health or 100
-            elseif hero.max_health then
-                hero.hp = hero.max_health
-            end
+            local maxHp = hero.max_health or (hero.stats and hero.stats:get("health")) or 100
+            hero.hp = maxHp
+            log_debug("[gameplay] Reset player HP to", maxHp)
         end
 
-        -- Remove dissolve shader using ShaderBuilder
         local ok, ShaderBuilder = pcall(require, "core.shader_builder")
         if ok and ShaderBuilder then
             ShaderBuilder.for_entity(survivorEntity):clear():apply()
         end
+
+        local survivorTransform = component_cache.get(survivorEntity, Transform)
+        if survivorTransform then
+            survivorTransform.actualX = globals.screenWidth() / 2
+            survivorTransform.actualY = globals.screenHeight() / 2
+            survivorTransform.visualX = survivorTransform.actualX
+            survivorTransform.visualY = survivorTransform.actualY
+        end
+    end
+
+    -- 5b. Re-add starting cards to boards
+    if board_sets and #board_sets > 0 then
+        local set = board_sets[1]
+        local testTriggerCard = createNewTriggerSlotCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE)
+        addCardToBoard(testTriggerCard, set.trigger_board_id)
+        local testActionCard = createNewCard("ACTION_CHAIN_LIGHTNING", 4000, 4000, PLANNING_STATE)
+        addCardToBoard(testActionCard, set.action_board_id)
+        log_debug("[gameplay] Re-added starting cards to boards")
     end
 
     -- 6. Cleanup wand executor (destroys projectiles and wand state)
@@ -5929,7 +5951,11 @@ function initCombatSystem()
             local playerActor = ev.target
             if playerActor and playerActor.hp and playerActor.max_health then
                 local healthPct = playerActor.hp / playerActor.max_health
-                if healthPct < 0.3 and healthPct > 0 then
+                if healthPct <= 0 and not gameplay_cfg.isPlayerDying then
+                    gameplay_cfg.isPlayerDying = true
+                    signal.emit("player_died", survivorEntity)
+                    signal.emit("show_death_screen")
+                elseif healthPct < 0.3 then
                     signal.emit("on_low_health", {
                         entity = survivorEntity,
                         health_pct = healthPct
@@ -7649,10 +7675,8 @@ local function renderCardSpawnerDebugUI()
     ImGui.End()
 end
 
-local debugQuickAccessState = { lastMessage = nil }
-
 local function setQuickAccessMessage(message)
-    debugQuickAccessState.lastMessage = message
+    gameplay_cfg.debugQuickAccessState.lastMessage = message
 end
 
 local function shuffleList(list)
@@ -7846,8 +7870,8 @@ function debugUI()
                 setQuickAccessMessage(result or "Failed to shuffle cards")
             end
         end
-        if debugQuickAccessState.lastMessage then
-            ImGui.Text(debugQuickAccessState.lastMessage)
+if gameplay_cfg.debugQuickAccessState.lastMessage then
+        ImGui.Text(gameplay_cfg.debugQuickAccessState.lastMessage)
         end
         ImGui.Separator()
         ImGui.Text("Debug Panels")
@@ -8469,8 +8493,6 @@ function ensureShopSystemInitialized()
     shop_system_initialized = true
 end
 
-local planningPeekEntities = {}
-
 local function refreshShopUIFromInstance(shop)
     if globals.ui and globals.ui.refreshShopUIFromInstance then
         globals.ui.refreshShopUIFromInstance(shop or active_shop_instance)
@@ -8849,19 +8871,6 @@ SCREEN_BOUND_TOP = 0
 SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
 SCREEN_BOUND_THICKNESS = 30
-
-local playerFootStepSounds = {
-    "walk_1",
-    "walk_2",
-    "walk_3",
-    "walk_4",
-    "walk_5",
-    "walk_6",
-    "walk_7",
-    "walk_8",
-    "walk_9",
-    "walk_10"
-}
 
 local function spawnWalkDust()
     -- Lightweight puff at the player's feet while walking
@@ -9485,7 +9494,7 @@ function initActionPhase()
                     -- timer not active. turn it on.
                     timer.every(0.8, function()
                         -- play footstep sound at survivor position
-                        playSoundEffect("effects", random_utils.random_element_string(playerFootStepSounds))
+                        playSoundEffect("effects", random_utils.random_element_string(gameplay_cfg.playerFootStepSounds))
                     end, 0, true, nil, timerName)
                 else
                     -- timer active, do nothing.

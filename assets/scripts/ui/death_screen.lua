@@ -25,8 +25,8 @@ function DeathScreen.show()
     if DeathScreen.isVisible then return end
     DeathScreen.isVisible = true
 
-    local screenW = getScreenWidth()
-    local screenH = getScreenHeight()
+    local screenW = globals.screenWidth()
+    local screenH = globals.screenHeight()
     local centerX = screenW / 2
     local centerY = screenH / 2
 

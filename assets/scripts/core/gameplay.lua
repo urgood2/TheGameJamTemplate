@@ -43,6 +43,7 @@ local ContentDebugPanel = require("ui.content_debug_panel")
 local CombatDebugPanel = require("ui.combat_debug_panel")
 local UIOverlayToggles = require("ui.ui_overlay_toggles")
 local EntityInspector = require("ui.entity_inspector")
+wandResourceBar = require("ui.wand_resource_bar_ui") -- global to avoid local variable limit
 local tooltip_registry = require("core.tooltip_registry")
 local StatusIndicatorSystem = require("systems.status_indicator_system")
 local MarkSystem = require("systems.mark_system")
@@ -68,13 +69,11 @@ local gameplay_cfg = {
     DEBUG_AUTO_EQUIP_AVATAR = "conduit",  -- Set to avatar ID to auto-equip, or nil to disable
     cardW = 80,   -- card dimensions, reset on init
     cardH = 112,
-    -- Guard to prevent double-death during animation
     isPlayerDying = false,
-    -- Lazy-loaded modules (to avoid hot-path requires and stay under 200 local limit)
     DeathScreen = nil,
-    -- Moved here to stay under 200 local limit
     debugQuickAccessState = { lastMessage = nil },
     planningPeekEntities = {},
+    TESTED_CARD_IDS = {}
     playerFootStepSounds = {
         "walk_1", "walk_2", "walk_3", "walk_4", "walk_5",
         "walk_6", "walk_7", "walk_8", "walk_9", "walk_10"
@@ -124,6 +123,10 @@ local function ensureMessageQueueHooks()
         -- Re-evaluate tag thresholds when deck changes (shop purchases, loot, etc.)
         if reevaluateDeckTags then
             reevaluateDeckTags()
+        end
+        -- Update wand resource bar prediction
+        if updateWandResourceBar then
+            updateWandResourceBar()
         end
     end)
 
@@ -968,6 +971,7 @@ board_sets = {}
 current_board_set_index = 1
 
 local reevaluateDeckTags -- forward declaration; defined after deck helpers
+-- updateWandResourceBar defined as global at line ~6642 (forward decl removed to stay under 200 local limit)
 
 local function notifyDeckChanged(boardEntityID)
     if not boardEntityID or not board_sets or #board_sets == 0 then return end
@@ -976,6 +980,9 @@ local function notifyDeckChanged(boardEntityID)
         if boardSet.action_board_id == boardEntityID or boardSet.trigger_board_id == boardEntityID then
             if reevaluateDeckTags then
                 reevaluateDeckTags()
+            end
+            if updateWandResourceBar then
+                updateWandResourceBar()
             end
             return
         end
@@ -1413,6 +1420,8 @@ function createNewBoard(x, y, w, h)
                 for i, eid in ipairs(boardScript.cards) do
                     if eid == released then
                         table.remove(boardScript.cards, i)
+                        notifyDeckChanged(boardEid)
+                        break
                     end
                 end
             end
@@ -4657,6 +4666,10 @@ function initPlanningPhase()
             end
         end
 
+        if wandResourceBar then
+            wandResourceBar.draw()
+        end
+
         -- Update execution graph slide animation
         if CastExecutionGraphUI and is_state_active and is_state_active(PLANNING_STATE) then
             CastExecutionGraphUI.updateSlide(dt)
@@ -5104,6 +5117,9 @@ function initPlanningPhase()
     local leftAlignValueActionBoardX = leftAlignValueTriggerBoardX + triggerBoardWidth + boardPadding
     local leftAlignValueRemoveBoardX = leftAlignValueActionBoardX + actionBoardWidth + boardPadding
 
+    local resourceBarHeight = 52
+    wandResourceBar.init(leftAlignValueActionBoardX, runningYValue)
+    runningYValue = runningYValue + resourceBarHeight + 4
 
     -- board draw function, for all baords
     -- Changed from timer.run() to timer.run_every_render_frame() to fix flickering
@@ -5227,6 +5243,8 @@ function initPlanningPhase()
     toggleBoardSetVisibility(set3, false)
 
     runningYValue = runningYValue + boardHeight + boardPadding
+
+    -- Wand resource bar is now initialized ABOVE the action board (see line ~5091)
 
     -- let's create a card board
 
@@ -7074,26 +7092,48 @@ local function collectCardPoolForBoardSet(boardSet)
     if not actionBoard or not actionBoard.cards or #actionBoard.cards == 0 then return nil end
 
     local pool = {}
+    local modStats = { total = 0, valid = 0, invalid = 0, noScript = 0 }
 
     local function pushCard(cardScript)
         if not cardScript then return end
+        local stackLen = cardScript.cardStack and #cardScript.cardStack or 0
+        print(string.format("[MANABAR] card=%s stack=%s len=%d", 
+            cardScript.card_id or "?", 
+            cardScript.cardStack and "exists" or "nil", 
+            stackLen))
         if cardScript.cardStack and #cardScript.cardStack > 0 then
             for _, modEid in ipairs(cardScript.cardStack) do
+                modStats.total = modStats.total + 1
                 if modEid and entity_cache.valid(modEid) then
                     local modScript = getScriptTableFromEntityID(modEid)
                     if modScript then
+                        modStats.valid = modStats.valid + 1
                         table.insert(pool, modScript)
+                    else
+                        modStats.noScript = modStats.noScript + 1
                     end
+                else
+                    modStats.invalid = modStats.invalid + 1
+                    print(string.format("[MANABAR] INVALID mod entity: %s (on card %s)", 
+                        tostring(modEid), cardScript.card_id or "?"))
                 end
             end
         end
         table.insert(pool, cardScript)
     end
 
+    local sortedCards = {}
     for _, cardEid in ipairs(actionBoard.cards) do
         if cardEid and entity_cache.valid(cardEid) then
-            pushCard(getScriptTableFromEntityID(cardEid))
+            local t = component_cache.get(cardEid, Transform)
+            local x = t and t.visualX or 0
+            table.insert(sortedCards, { eid = cardEid, x = x })
         end
+    end
+    table.sort(sortedCards, function(a, b) return a.x < b.x end)
+
+    for _, entry in ipairs(sortedCards) do
+        pushCard(getScriptTableFromEntityID(entry.eid))
     end
 
     if boardSet.wandDef and boardSet.wandDef.always_cast_cards then
@@ -7106,7 +7146,34 @@ local function collectCardPoolForBoardSet(boardSet)
         end
     end
 
+    if modStats.total > 0 then
+        print(string.format("[MANABAR] modCards: total=%d valid=%d invalid=%d noScript=%d",
+            modStats.total, modStats.valid, modStats.invalid, modStats.noScript))
+    end
+
     return pool
+end
+
+updateWandResourceBar = function()
+    if not board_sets or #board_sets == 0 then 
+        print("[MANABAR] No board_sets")
+        return 
+    end
+    local currentSet = board_sets[current_board_set_index]
+    if not currentSet then 
+        print("[MANABAR] No currentSet at index", current_board_set_index)
+        return 
+    end
+
+    local wandDef = currentSet.wandDef
+    local cardPool = collectCardPoolForBoardSet(currentSet)
+    
+    local actionBoard = boards[currentSet.action_board_id]
+    local cardCount = actionBoard and actionBoard.cards and #actionBoard.cards or 0
+    print(string.format("[MANABAR] boardIndex=%d, boardCards=%d, pool=%s, wand=%s",
+        current_board_set_index, cardCount, cardPool and #cardPool or "nil", wandDef and wandDef.id or "nil"))
+
+    wandResourceBar.update(wandDef, cardPool)
 end
 
 local tagEvaluationFallbackPlayer = { active_tag_bonuses = {}, active_procs = {} }
@@ -7534,6 +7601,7 @@ function startActionPhase()
 
     -- Clean up planning phase UI elements to prevent flicker
     CastExecutionGraphUI.clear()
+    wandResourceBar.hide()
 
     if record_telemetry then
         local now = os.clock()
@@ -7655,6 +7723,11 @@ function startPlanningPhase()
     activate_state("default_state")     -- just for defaults, keep them open
     activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
 
+    if updateWandResourceBar then
+        updateWandResourceBar()
+    end
+    wandResourceBar.show()
+
     remove_layer_shader("sprites", "pixelate_image")
 
     input.set_context("planning-phase") -- set input context to planning phase.
@@ -7755,7 +7828,6 @@ end
 local lastFrame = -1
 
 -- Debug card spawner ---------------------------------------------------------
-local TESTED_CARD_IDS = {}
 local cardSpawnerState = {
     built = false,
     target = "inventory",
@@ -7765,7 +7837,7 @@ local cardSpawnerState = {
 
 local function rebuildCardSpawnerLists()
     local testedLookup = {}
-    for _, id in ipairs(TESTED_CARD_IDS) do
+    for _, id in ipairs(gameplay_cfg.TESTED_CARD_IDS) do
         testedLookup[id] = true
     end
 

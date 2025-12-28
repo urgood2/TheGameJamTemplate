@@ -750,12 +750,13 @@ function CastExecutionGraphUI.updateSlide(dt)
                 -- Layout is now valid - update cached height
                 CastExecutionGraphUI._cachedHeight = t.actualH
 
-                -- Clear layout pending flag and snap dimensions if this is first valid frame
                 if CastExecutionGraphUI._layoutPending then
                     CastExecutionGraphUI._layoutPending = false
-                    -- Snap visual dimensions now that layout is complete
-                    t.visualW = t.actualW
-                    t.visualH = t.actualH
+                    local uiBoxComp = component_cache.get(CastExecutionGraphUI.currentBox, UIBoxComponent)
+                    if uiBoxComp and uiBoxComp.uiRoot then
+                        snapVisualToActual(uiBoxComp.uiRoot)
+                    end
+                    snapVisualToActual(CastExecutionGraphUI.currentBox)
                 end
             end
 

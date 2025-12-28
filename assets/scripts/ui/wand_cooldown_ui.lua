@@ -59,10 +59,17 @@ end
 local function ensureEntry(wandId, wandDef)
     local entry = WandCooldownUI.entries[wandId]
     if not entry then
+        -- Calculate base cooldown from wand definition for proper progress display
+        local baseCooldown = 0
+        if wandDef and wandDef.recharge_time then
+            baseCooldown = wandDef.recharge_time / 1000  -- Convert ms to seconds
+        end
         entry = {
             label = (wandDef and wandDef.id) or tostring(wandId),
-            cooldownMax = 0,
+            cooldownMax = baseCooldown,
             cooldownRemaining = 0,
+            currentMana = 0,
+            maxMana = 0,
         }
         WandCooldownUI.entries[wandId] = entry
     end

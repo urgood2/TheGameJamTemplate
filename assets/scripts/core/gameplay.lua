@@ -73,7 +73,7 @@ local gameplay_cfg = {
     DeathScreen = nil,
     debugQuickAccessState = { lastMessage = nil },
     planningPeekEntities = {},
-    TESTED_CARD_IDS = {}
+    TESTED_CARD_IDS = {},
     playerFootStepSounds = {
         "walk_1", "walk_2", "walk_3", "walk_4", "walk_5",
         "walk_6", "walk_7", "walk_8", "walk_9", "walk_10"

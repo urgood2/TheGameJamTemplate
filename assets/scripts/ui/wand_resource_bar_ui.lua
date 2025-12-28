@@ -24,8 +24,8 @@ local CONFIG = {
     gap = 6, -- Gap between bar and text
 }
 
--- Z-ordering
-local Z_BASE = z_orders.ui_tooltips + 5
+-- Z-ordering (below cards at z_orders.card=101, below board at z_orders.board=100)
+local Z_BASE = z_orders.board - 10
 local SPACE = layer.DrawCommandSpace.Screen
 
 -- Colors
@@ -94,14 +94,19 @@ function M.update(wandDef, cardPool)
         end
     end
 
-    print(string.format("[WandResourceBar] CardPool: total=%d, valid=%d, skipped=%d", 
+    print(string.format("[MANABAR] pool: total=%d valid=%d skipped=%d", 
         #cardPool, #validPool, skipped))
 
     if #validPool == 0 then return end
 
+    for i, card in ipairs(validPool) do
+        print(string.format("[MANABAR] simInput[%d]: %s mana=%s", 
+            i, card.card_id or "?", tostring(card.mana_cost)))
+    end
+
     local ok, simResult = pcall(cardEval.simulate_wand, wandDef, validPool)
     if not ok or not simResult then 
-        print("[WandResourceBar] Simulation failed or no result")
+        print("[MANABAR] sim FAILED")
         return 
     end
 
@@ -120,8 +125,8 @@ function M.update(wandDef, cardPool)
     local newMaxMana = wandDef.mana_max or 100
     local blockCount = #(simResult.blocks or {})
     
-    print(string.format("[WandResourceBar] Update: validPool=%d, totalMana=%d, maxMana=%d, blocks=%d, wandId=%s",
-        #validPool, totalMana, newMaxMana, blockCount, tostring(wandDef.id)))
+    print(string.format("[MANABAR] result: mana=%d/%d blocks=%d wand=%s",
+        totalMana, newMaxMana, blockCount, tostring(wandDef.id)))
 
     state.totalManaCost = totalMana
     state.maxMana = newMaxMana
@@ -239,13 +244,14 @@ function M.draw()
         end, Z_BASE + 2, SPACE)
     end
 
-    -- 4. Capacity marker (vertical line at 100% capacity, contained within bar)
+    -- 4. Capacity marker (vertical tick at 100% capacity, aligned with bar bottom)
     local capacityX = barX + totalWidth
+    local tickHeight = 8
     command_buffer.queueDrawRectangle(layers.ui, function(c)
         c.x = capacityX - 1
-        c.y = barY
+        c.y = barY + totalHeight - tickHeight
         c.width = 2
-        c.height = totalHeight
+        c.height = tickHeight
         c.color = COLOR_CAPACITY_MARKER
     end, Z_BASE + 3, SPACE)
 

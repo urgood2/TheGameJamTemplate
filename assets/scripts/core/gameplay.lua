@@ -4962,6 +4962,16 @@ function initPlanningPhase()
     -- make entire roster of cards
     local catalog = WandEngine.card_defs
 
+    print("[gameplay] ====== INITIAL CARD SPAWN DEBUG ======")
+    print("[gameplay] catalog:", catalog and "exists" or "nil")
+    local catalogCount = 0
+    local cardsWithSprites = 0
+    for id, def in pairs(catalog or {}) do
+        catalogCount = catalogCount + 1
+        if def.sprite then cardsWithSprites = cardsWithSprites + 1 end
+    end
+    print("[gameplay] Total cards in catalog:", catalogCount, "Cards with sprites:", cardsWithSprites)
+
     local cardsToChange = {}
 
     for cardID, cardDef in pairs(catalog) do
@@ -4971,6 +4981,7 @@ function initPlanningPhase()
         end
 
         local card = createNewCard(cardID, 4000, 4000, PLANNING_STATE) -- offscreen for now
+        print("[gameplay] Created card:", cardID, "entity:", card)
 
         table.insert(cardsToChange, card)
 
@@ -4999,13 +5010,19 @@ function initPlanningPhase()
         end
     end
 
+    print("[gameplay] Cards to deal:", #cardsToChange)
     local cardDelay = 4.0 -- start X seconds after game init
     for _, card in ipairs(cardsToChange) do
         if ensure_entity(card) then
             timer.after(cardDelay, function()
+                print("[gameplay] Card deal timer fired, inventory_board_id:", inventory_board_id)
                 local t = component_cache.get(card, Transform)
 
                 local inventoryBoardTransform = component_cache.get(inventory_board_id, Transform)
+                if not inventoryBoardTransform then
+                    print("[gameplay] ERROR: inventoryBoardTransform is nil!")
+                    return
+                end
 
                 -- slide it into place at x, y (offset random)
                 local targetX = globals.screenWidth() * 0.8
@@ -5573,16 +5590,60 @@ local function spawnDamageNumber(targetEntity, amount, isCrit)
     }
 end
 
+-- Reset hero combat actor to baseline stats (level 1, no accumulated bonuses)
+local function resetHeroToBaseline(hero)
+    if not hero then return end
+
+    -- Reset level/xp/points to starting values
+    local oldLevel = hero.level or 1
+    hero.level = 1
+    hero.xp = 0
+    hero.attr_points = 0
+    hero.skill_points = 0
+    hero.masteries = 0
+
+    -- Calculate and remove level-up stat bonuses (10 OA/DA per level gained)
+    local levelsGained = oldLevel - 1
+    if levelsGained > 0 and hero.stats then
+        -- Remove the accumulated OA/DA from level-ups
+        hero.stats:add_base('offensive_ability', -10 * levelsGained)
+        hero.stats:add_base('defensive_ability', -10 * levelsGained)
+        log_debug("[gameplay] Removed", levelsGained, "levels worth of OA/DA bonuses")
+    end
+
+    -- Recompute stats to get correct max health
+    if hero.stats and hero.stats.recompute then
+        hero.stats:recompute()
+    end
+
+    -- Reset HP to new max
+    local maxHp = hero.max_health or (hero.stats and hero.stats:get("health")) or 100
+    hero.hp = maxHp
+
+    log_debug("[gameplay] Reset hero to level 1, HP:", maxHp)
+end
+
 -- Reset game to starting state for new run
 local function resetGameToStart()
     -- Reset death guard so player can die again in new run
     gameplay_cfg.isPlayerDying = false
     log_debug("[gameplay] Resetting game to start...")
 
-    -- 1. Kill all timers
+    -- 1. Kill all timers (including wave timers)
     timer.kill_group("combat")
     timer.kill_group("death_animation")
     timer.kill_group("combat_state_timer")
+    -- Kill wave telegraph/spawn timers
+    for i = 1, 50 do
+        timer.cancel("wave_telegraph_" .. i)
+        timer.cancel("wave_spawn_" .. i)
+        timer.cancel("telegraph_anim_" .. tostring(i))
+    end
+    timer.cancel("wave_spawn_complete")
+    timer.cancel("wave_advance")
+    timer.cancel("elite_spawn")
+    timer.cancel("stage_transition")
+    timer.cancel("reset_card_fly_in")
 
     -- 2. Reset globals to starting values
     globals.currency = 30
@@ -5641,21 +5702,28 @@ local function resetGameToStart()
     clearInventoryBoard(inventory_board_id, "inventory_board")
     clearInventoryBoard(trigger_inventory_board_id, "trigger_inventory_board")
 
-    -- 5. Reset player health and remove dissolve shader
+    -- 5. Reset player to baseline (level 1, full HP, no accumulated stats)
     if survivorEntity and entity_cache.valid(survivorEntity) then
         local playerScript = getScriptTableFromEntityID(survivorEntity)
-        if playerScript and playerScript.combatTable then
-            local hero = playerScript.combatTable
-            local maxHp = hero.max_health or (hero.stats and hero.stats:get("health")) or 100
-            hero.hp = maxHp
-            log_debug("[gameplay] Reset player HP to", maxHp)
+        if playerScript then
+            -- Reset hero combat stats to baseline
+            if playerScript.combatTable then
+                resetHeroToBaseline(playerScript.combatTable)
+            end
+
+            -- Clear avatar state (unequip any equipped avatar)
+            if playerScript.avatar_state then
+                playerScript.avatar_state = { unlocked = {}, equipped = nil }
+            end
         end
 
+        -- Remove any shaders (dissolve, etc.)
         local ok, ShaderBuilder = pcall(require, "core.shader_builder")
         if ok and ShaderBuilder then
             ShaderBuilder.for_entity(survivorEntity):clear():apply()
         end
 
+        -- Reset position to center
         local survivorTransform = component_cache.get(survivorEntity, Transform)
         if survivorTransform then
             survivorTransform.actualX = globals.screenWidth() / 2
@@ -5665,14 +5733,134 @@ local function resetGameToStart()
         end
     end
 
-    -- 5b. Re-add starting cards to boards
+    -- 5b. Re-add starting cards to boards with fly-in animation
+    log_debug("[gameplay] board_sets count:", board_sets and #board_sets or 0)
     if board_sets and #board_sets > 0 then
         local set = board_sets[1]
+        log_debug("[gameplay] Using board set 1, trigger_board:", set.trigger_board_id, "action_board:", set.action_board_id)
+        local cardsToAnimate = {}
+
+        -- Create trigger card
         local testTriggerCard = createNewTriggerSlotCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE)
-        addCardToBoard(testTriggerCard, set.trigger_board_id)
+        log_debug("[gameplay] Created trigger card:", testTriggerCard)
+        table.insert(cardsToAnimate, { card = testTriggerCard, board = set.trigger_board_id })
+
+        -- Create action card
         local testActionCard = createNewCard("ACTION_CHAIN_LIGHTNING", 4000, 4000, PLANNING_STATE)
-        addCardToBoard(testActionCard, set.action_board_id)
-        log_debug("[gameplay] Re-added starting cards to boards")
+        log_debug("[gameplay] Created action card:", testActionCard)
+        table.insert(cardsToAnimate, { card = testActionCard, board = set.action_board_id })
+
+        -- Animate cards flying in with staggered delay
+        local cardDelay = 0.3
+        for _, entry in ipairs(cardsToAnimate) do
+            local card = entry.card
+            local boardId = entry.board
+
+            -- Set initial position offscreen
+            local t = component_cache.get(card, Transform)
+            if t then
+                t.actualX = -500
+                t.actualY = -500
+                t.visualX = t.actualX
+                t.visualY = t.actualY
+            end
+
+            -- Animate in after delay
+            timer.after_opts({
+                delay = cardDelay,
+                action = function()
+                    log_debug("[gameplay] Card fly-in timer fired for card:", card)
+                    if not entity_cache.valid(card) then
+                        log_debug("[gameplay] Card no longer valid:", card)
+                        return
+                    end
+                    local transform = component_cache.get(card, Transform)
+                    local boardTransform = component_cache.get(boardId, Transform)
+                    log_debug("[gameplay] Card transform:", transform and "valid" or "nil", "Board transform:", boardTransform and "valid" or "nil")
+                    if transform and boardTransform then
+                        -- Set target position
+                        transform.actualX = boardTransform.actualX + boardTransform.actualW / 2
+                        transform.actualY = boardTransform.actualY
+                        -- Start visual position offscreen right for fly-in effect
+                        transform.visualX = globals.screenWidth() * 1.2
+                        transform.visualY = transform.actualY - 100
+                        log_debug("[gameplay] Card positioned at actual:", transform.actualX, transform.actualY, "visual:", transform.visualX, transform.visualY)
+
+                        -- Play card deal sound
+                        playSoundEffect("effects", "card_deal", 0.7 + math.random() * 0.3)
+                    end
+                    addCardToBoard(card, boardId)
+                    log_debug("[gameplay] Card added to board")
+                end,
+                tag = "reset_card_fly_in"
+            })
+            cardDelay = cardDelay + 0.15
+        end
+
+        log_debug("[gameplay] Re-added starting cards with fly-in animation")
+    end
+
+    -- 5c. Re-spawn inventory cards from catalog
+    if inventory_board_id and entity_cache.valid(inventory_board_id) then
+        local catalog = WandEngine.card_defs
+        local inventoryCardsToAnimate = {}
+
+        for cardID, cardDef in pairs(catalog) do
+            if cardDef.sprite then
+                local card = createNewCard(cardID, 4000, 4000, PLANNING_STATE)
+                table.insert(inventoryCardsToAnimate, card)
+
+                if controller_nav and controller_nav.ud and controller_nav.ud.add_entity then
+                    controller_nav.ud:add_entity("planning-phase", card)
+                end
+            end
+        end
+
+        local inventoryCardDelay = 0.5
+        for _, card in ipairs(inventoryCardsToAnimate) do
+            if entity_cache.valid(card) then
+                local t = component_cache.get(card, Transform)
+                if t then
+                    t.actualX = -500
+                    t.actualY = -500
+                    t.visualX = t.actualX
+                    t.visualY = t.actualY
+                end
+
+                timer.after(inventoryCardDelay, function()
+                    if not entity_cache.valid(card) then return end
+                    local transform = component_cache.get(card, Transform)
+                    local inventoryBoardTransform = component_cache.get(inventory_board_id, Transform)
+
+                    if transform and inventoryBoardTransform then
+                        local targetX = globals.screenWidth() * 0.8
+                        local targetY = inventoryBoardTransform.actualY
+                        transform.actualX = targetX
+                        transform.actualY = targetY
+                        transform.visualY = targetY - 100
+                        transform.visualX = globals.screenWidth() * 1.2
+
+                        playSoundEffect("effects", "card_deal", 0.7 + math.random() * 0.3)
+                    end
+                    addCardToBoard(card, inventory_board_id)
+                end)
+                inventoryCardDelay = inventoryCardDelay + 0.1
+            end
+        end
+        log_debug("[gameplay] Re-spawned", #inventoryCardsToAnimate, "inventory cards")
+    end
+
+    -- 5d. Re-spawn trigger inventory cards
+    if trigger_inventory_board_id and entity_cache.valid(trigger_inventory_board_id) then
+        for id, def in pairs(WandEngine.trigger_card_defs) do
+            local triggerCard = createNewTriggerSlotCard(id, 4000, 4000, PLANNING_STATE)
+            addCardToBoard(triggerCard, trigger_inventory_board_id)
+
+            if controller_nav and controller_nav.ud and controller_nav.ud.add_entity then
+                controller_nav.ud:add_entity("planning-phase", triggerCard)
+            end
+        end
+        log_debug("[gameplay] Re-spawned trigger inventory cards")
     end
 
     -- 6. Cleanup wand executor (destroys projectiles and wand state)
@@ -5684,6 +5872,12 @@ local function resetGameToStart()
         WaveDirector.cleanup()
     end
 
+    -- 6.6. Cleanup wave visuals (telegraphs)
+    local ok2, WaveVisuals = pcall(require, "combat.wave_visuals")
+    if ok2 and WaveVisuals and WaveVisuals.cleanup then
+        WaveVisuals.cleanup()
+    end
+
     -- 7. Reset UI systems
     if CastBlockFlashUI and CastBlockFlashUI.clear then
         CastBlockFlashUI.clear()
@@ -5692,10 +5886,10 @@ local function resetGameToStart()
         SubcastDebugUI.clear()
     end
 
-    -- 8. Clear combat context sides (enemies)
+    -- 8. Clear combat context (enemies and accumulated state)
     if combat_context then
+        -- Destroy enemy entities
         if combat_context.side2 then
-            -- Destroy enemy entities
             for _, actor in ipairs(combat_context.side2) do
                 local enemyEntity = combatActorToEntity and combatActorToEntity[actor]
                 if enemyEntity and entity_cache.valid(enemyEntity) then
@@ -5704,9 +5898,50 @@ local function resetGameToStart()
             end
             combat_context.side2 = {}
         end
+
+        -- Reset combat time (affects DoTs, cooldowns)
+        if combat_context.time and combat_context.time.reset then
+            combat_context.time:reset()
+        elseif combat_context.time then
+            combat_context.time.elapsed = 0
+        end
     end
 
-    -- 9. Start fresh planning phase
+    -- 9. Clear actor-entity mapping (keeps only player)
+    -- DISABLED FOR DEBUG: Bisecting crash
+    -- if combatActorToEntity then
+    --     local playerActor = nil
+    --     if survivorEntity and entity_cache.valid(survivorEntity) then
+    --         local playerScript = getScriptTableFromEntityID(survivorEntity)
+    --         if playerScript then
+    --             playerActor = playerScript.combatTable
+    --         end
+    --     end
+    --     for k in pairs(combatActorToEntity) do
+    --         if k ~= playerActor then
+    --             combatActorToEntity[k] = nil
+    --         end
+    --     end
+    -- end
+
+    -- 10. Clear damage numbers and enemy health UI
+    -- DISABLED FOR DEBUG: Bisecting crash
+    -- if damageNumbers then
+    --     for k in pairs(damageNumbers) do damageNumbers[k] = nil end
+    -- end
+    -- if enemyHealthUiState then
+    --     for k in pairs(enemyHealthUiState) do enemyHealthUiState[k] = nil end
+    -- end
+
+    -- 11. Reset dash state
+    playerIsDashing = false
+    playerDashCooldownRemaining = 0
+    playerDashTimeRemaining = 0
+    dashBufferTimer = 0
+    bufferedDashDir = nil
+    playerStaminaTickerTimer = 0
+
+    -- 12. Start fresh planning phase
     startPlanningPhase()
 
     log_debug("[gameplay] Game reset complete - now in planning phase")

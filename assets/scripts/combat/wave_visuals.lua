@@ -281,12 +281,32 @@ signal.register("spawn_trap", function(data)
 end)
 
 --============================================
--- INIT
+-- INIT / CLEANUP
 --============================================
 
 function WaveVisuals.init()
     -- Any initialization needed
     print("WaveVisuals initialized")
+end
+
+--- Cleanup all active telegraphs (call on game reset)
+function WaveVisuals.cleanup()
+    for id, telegraph in pairs(active_telegraphs) do
+        -- Cancel the animation timer
+        timer.cancel("telegraph_anim_" .. id)
+
+        -- Destroy the telegraph entity
+        if telegraph.entity and entity_cache.valid(telegraph.entity) then
+            registry:destroy(telegraph.entity)
+        end
+    end
+
+    -- Clear the table
+    for k in pairs(active_telegraphs) do
+        active_telegraphs[k] = nil
+    end
+
+    print("[WaveVisuals] Cleanup complete")
 end
 
 return WaveVisuals

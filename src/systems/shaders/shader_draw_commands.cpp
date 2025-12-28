@@ -944,12 +944,10 @@ void executeEntityWithShaders(
     const std::vector<std::string>& shaders,
     DrawCommandBatch& batch
 ) {
-    // Get animation/sprite data (same pattern as executeEntityPipelineWithCommands)
     if (!registry.all_of<AnimationQueueComponent>(e)) return;
     auto& aqc = registry.get<AnimationQueueComponent>(e);
     if (aqc.noDraw) return;
 
-    // Get current sprite (copy to avoid dangling refs)
     SpriteComponentASCII currentSpriteData{};
     SpriteComponentASCII* currentSprite = nullptr;
     Rectangle animationFrameData{};
@@ -980,16 +978,13 @@ void executeEntityWithShaders(
 
     if (!currentSprite || !animationFrame) return;
 
-    // Get transform
     transform::Transform* transformComp = registry.try_get<transform::Transform>(e);
     if (!transformComp) return;
     transformComp->updateCachedValues();
 
-    // Get sprite atlas
     Texture2D* spriteAtlas = currentSprite->spriteData.texture;
     if (!spriteAtlas || spriteAtlas->id == 0) return;
 
-    // Build rectangles
     Rectangle atlasRect = *animationFrame;
     float srcW = atlasRect.width;
     float srcH = atlasRect.height;
@@ -997,24 +992,103 @@ void executeEntityWithShaders(
     if (flipY) srcH = -srcH;
     Rectangle srcRect = {atlasRect.x, atlasRect.y, srcW, srcH};
 
-    float destW = transformComp->getVisualW();
-    float destH = transformComp->getVisualH();
-    Rectangle destRect = {transformComp->getVisualX(), transformComp->getVisualY(), destW, destH};
+    const float baseVisualW = transformComp->getVisualW();
+    const float baseVisualH = transformComp->getVisualH();
+    const float basePosX = transformComp->getVisualX();
+    const float basePosY = transformComp->getVisualY();
 
-    Vector2 origin = {0, 0};
+    const float scale = transformComp->getVisualScaleWithHoverAndDynamicMotionReflected();
+    float destW = baseVisualW * scale;
+    float destH = baseVisualH * scale;
+
+    Vector2 center = {basePosX + baseVisualW * 0.5f, basePosY + baseVisualH * 0.5f};
+    Rectangle destRect = {center.x, center.y, destW, destH};
+    Vector2 origin = {destW * 0.5f, destH * 0.5f};
+
     float cardRotationDeg = transformComp->getVisualRWithDynamicMotionAndXLeaning();
+    float cardRotationRad = cardRotationDeg * DEG2RAD;
 
     Color fgColor = currentSprite->fgColor;
     if (fgColor.a == 0) fgColor = WHITE;
 
-    // Execute shader passes
+    Vector2 atlasSize = {static_cast<float>(spriteAtlas->width),
+                         static_cast<float>(spriteAtlas->height)};
+    Vector2 regionRate = {atlasRect.width / atlasSize.x, atlasRect.height / atlasSize.y};
+    Vector2 pivot = {atlasRect.x / atlasSize.x, atlasRect.y / atlasSize.y};
+
+    Vector2 skewCenter = center;
+    Vector2 skewSize = {destW, destH};
+    if (camera_manager::Exists("world_camera")) {
+        auto worldCamera = camera_manager::Get("world_camera");
+        skewCenter = GetWorldToScreen2D(center, worldCamera->cam);
+        float zoom = worldCamera->cam.zoom;
+        skewSize.x *= zoom;
+        skewSize.y *= zoom;
+    }
+
+    bool tiltEnabled = false;
+    if (registry.any_of<transform::GameObject>(e)) {
+        const auto& node = registry.get<transform::GameObject>(e);
+        tiltEnabled = node.state.isBeingHovered || node.state.isBeingFocused;
+    }
+
+    auto shaderIsPseudo3DSkew = [](const std::string& name) {
+        return name == "3d_skew" ||
+               name == "3d_skew_aurora" ||
+               name == "3d_skew_foil" ||
+               name == "3d_skew_gold_seal" ||
+               name == "3d_skew_holo" ||
+               name == "3d_skew_hologram" ||
+               name == "3d_skew_iridescent" ||
+               name == "3d_skew_negative" ||
+               name == "3d_skew_negative_tint" ||
+               name == "3d_skew_negative_shine" ||
+               name == "3d_skew_nebula" ||
+               name == "3d_skew_crystalline" ||
+               name == "3d_skew_glitch" ||
+               name == "3d_skew_oil_slick" ||
+               name == "3d_skew_plasma" ||
+               name == "3d_skew_polychrome" ||
+               name == "3d_skew_polka_dot" ||
+               name == "3d_skew_prismatic" ||
+               name == "3d_skew_thermal" ||
+               name == "3d_skew_voucher";
+    };
+
     if (shaders.empty()) {
-        // No shaders - just draw sprite directly
         batch.addDrawTexturePro(*spriteAtlas, srcRect, destRect, origin, cardRotationDeg, fgColor);
     } else {
-        // Apply each shader pass
         for (const auto& shaderName : shaders) {
             batch.addBeginShader(shaderName);
+
+            const bool is3DSkew = shaderIsPseudo3DSkew(shaderName);
+            batch.addCustomCommand([shaderName, is3DSkew, atlasRect, atlasSize, regionRate, pivot,
+                                    skewCenter, skewSize, tiltEnabled, cardRotationRad,
+                                    e, &registry]() {
+                auto& uniforms = globals::getGlobalShaderUniforms();
+                shaders::injectAtlasUniforms(uniforms, shaderName, atlasRect, atlasSize);
+
+                if (is3DSkew) {
+                    uniforms.set(shaderName, "regionRate", regionRate);
+                    uniforms.set(shaderName, "pivot", pivot);
+                    uniforms.set(shaderName, "quad_center", skewCenter);
+                    uniforms.set(shaderName, "quad_size", skewSize);
+                    uniforms.set(shaderName, "tilt_enabled", tiltEnabled ? 1.0f : 0.0f);
+                    uniforms.set(shaderName, "card_rotation", cardRotationRad);
+                    uniforms.set(shaderName, "uv_passthrough", 0.0f);
+                }
+
+                Shader shader = shaders::getShader(shaderName);
+                if (shader.id) {
+                    shaders::TryApplyUniforms(shader, uniforms, shaderName);
+
+                    if (registry.any_of<shaders::ShaderUniformComponent>(e)) {
+                        auto& entityUniforms = registry.get<shaders::ShaderUniformComponent>(e);
+                        entityUniforms.applyToShaderForEntity(shader, shaderName, e, registry);
+                    }
+                }
+            });
+
             batch.addDrawTexturePro(*spriteAtlas, srcRect, destRect, origin, cardRotationDeg, fgColor);
             batch.addEndShader();
         }

@@ -22,6 +22,7 @@ local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
+local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 -- Represents game loop main module
 main = main or {}
@@ -104,8 +105,12 @@ function initMainMenu()
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     record_telemetry_once("scene_main_menu", "scene_enter", { scene = "main_menu" })
     setCategoryVolume("effects", 0.5)
-    playMusic("main-menu", true) 
+    playMusic("main-menu", true)
     setTrackVolume("main-menu", 0.3)
+
+    -- Initialize render groups visual test
+    RenderGroupsTest.init()
+
     -- create start game button
     
     
@@ -415,6 +420,9 @@ function clearMainMenu()
     -- Stop TextBuilder demo
     TextBuilderDemo.stop()
 
+    -- Clean up render groups test
+    RenderGroupsTest.cleanup()
+
     -- for each entity in mainMenuEntities, push it down out of view
     for _, entity in pairs(mainMenuEntities) do
         if registry:has(entity, Transform) then
@@ -710,6 +718,8 @@ function main.update(dt)
 
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
+        -- Draw render groups test entity with shader
+        RenderGroupsTest.draw()
     end
 
     if isPaused then

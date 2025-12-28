@@ -381,6 +381,13 @@ namespace layer
             return;
         }
 
+        static int callCount = 0;
+        if (callCount < 5) {
+            SPDLOG_INFO("[render_groups] ExecuteDrawRenderGroup called for '{}' with {} entities",
+                       c->groupName, group->entities.size());
+            callCount++;
+        }
+
         // 1. Collect valid entities with z-order, remove invalid
         std::vector<std::pair<int, size_t>> sortedIndices;
         sortedIndices.reserve(group->entities.size());

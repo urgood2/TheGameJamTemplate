@@ -631,9 +631,8 @@ namespace ui
             InitializeVisualTransform(registry, child);
         }
 
-        // STEP 4: Snap visual dimensions to actual (prevents spring animation from zero)
-        transform->setVisualW(transform->getActualW());
-        transform->setVisualH(transform->getActualH());
+        // STEP 4: Snap visual to actual + zero velocity (prevents spring animation)
+        transform::SnapVisualTransformValues(&registry, entity);
 
         // STEP 5: If this is a TEXT UI element, update its text
         if (uiElement->UIT == UITypeEnum::TEXT)

@@ -824,7 +824,7 @@ local function init_static_defaults()
 
     -- peaches_background
     set("peaches_background", "resolution", Vector2{ x = VIRTUAL_W, y = VIRTUAL_H })
-    set("peaches_background", "iTime", get_time())
+    -- set("peaches_background", "iTime", get_time())
     set("peaches_background", "resolution", Vector2{ x = 1440.0, y = 900.0 })
     set("peaches_background", "blob_count", 5.02)
     set("peaches_background", "blob_spacing", -0.89)
@@ -1329,7 +1329,7 @@ local function init_updates()
     end)
 
     register("peaches_background", function(_shader)
-        set("peaches_background", "iTime", get_time() * 0.5)
+        set("peaches_background", "iTime", get_time() * 0.05)
     end)
 
     register("foil", function(_shader)

@@ -1339,7 +1339,7 @@ void SetUpShaderUniforms() {
       Vector2{(float)globals::VIRTUAL_WIDTH, (float)globals::VIRTUAL_HEIGHT});
   shaders::registerUniformUpdate("peaches_background", [](Shader &shader) {
     globalShaderUniforms.set("peaches_background", "iTime",
-                             (float)main_loop::getTime() * 0.2f);
+                             (float)main_loop::getTime() * 0.01f);
   });
   globalShaderUniforms.set(
       "peaches_background", "resolution",

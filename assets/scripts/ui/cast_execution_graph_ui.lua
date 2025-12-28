@@ -26,15 +26,23 @@ local function isVisible()
 end
 local STYLING_ROUNDED = UIStylingType and UIStylingType.RoundedRectangle or nil
 
+local function getAvatarPanelTopY()
+    local ok, AvatarJokerStrip = pcall(require, "ui.avatar_joker_strip")
+    if ok and AvatarJokerStrip and AvatarJokerStrip.getPanelTopY then
+        return AvatarJokerStrip.getPanelTopY()
+    end
+    return nil
+end
+
 local function defaultPosition()
     local h = nil
     if globals then
         if globals.screenHeight then h = globals.screenHeight() end
         if not h and globals.getScreenHeight then h = globals.getScreenHeight() end
     end
-    -- Position graph higher (h - 280) to leave room for toggle button at h - 60
-    -- This gives ~220px vertical clearance before overlapping the button
-    local y = h and (h - 280) or 480
+    local panelTopY = getAvatarPanelTopY()
+    local buttonHeight = 50
+    local y = panelTopY and (panelTopY - buttonHeight - 220) or (h and (h - 320) or 480)
     return { x = 32, y = y }
 end
 
@@ -553,6 +561,27 @@ local function buildBlockRow(block, depth, label)
     }
 end
 
+local function buildCloseButton()
+    return dsl.hbox{
+        config = {
+            id = "exec_graph_close_btn",
+            color = resolveColor("red"),
+            padding = 4,
+            minWidth = 24,
+            minHeight = 24,
+            outlineThickness = 1,
+            outlineColor = colors.outline,
+            stylingType = STYLING_ROUNDED,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            hover = true,
+            canCollide = true,
+        },
+        children = {
+            dsl.text("X", { fontSize = 14, color = resolveColor("white") })
+        }
+    }
+end
+
 local function buildRoot(blocks, opts)
     local rows = {}
     for i, block in ipairs(blocks or {}) do
@@ -565,18 +594,27 @@ local function buildRoot(blocks, opts)
     local headerText = opts and opts.title or defaultTitle
     local subtitle = opts and opts.wandId and (wandPrefix .. tostring(opts.wandId)) or nil
 
-    local headerChildren = { dsl.text(headerText, { fontSize = 16, color = colors.text }) }
-    if subtitle then
-        table.insert(headerChildren, dsl.text(subtitle, { fontSize = 12, color = colors.text }))
-    end
+    local titleColumn = dsl.vbox{
+        config = {
+            color = Col(0, 0, 0, 0),
+            padding = 0,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = subtitle and {
+            dsl.text(headerText, { fontSize = 16, color = colors.text }),
+            dsl.text(subtitle, { fontSize = 12, color = colors.text })
+        } or {
+            dsl.text(headerText, { fontSize = 16, color = colors.text })
+        }
+    }
 
-    local headerRow = dsl.vbox{
+    local headerRow = dsl.hbox{
         config = {
             color = colors.backdrop,
             padding = 8,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
         },
-        children = headerChildren
+        children = { titleColumn, buildCloseButton() }
     }
 
     local column = dsl.vbox{
@@ -760,8 +798,6 @@ function CastExecutionGraphUI.updateSlide(dt)
                 end
             end
 
-            -- Only apply slide positioning if layout is not pending
-            -- This prevents using stale cached height for newly created boxes
             if not CastExecutionGraphUI._layoutPending then
                 local easedProgress
                 if state == "entering" or state == "exiting" then
@@ -770,7 +806,9 @@ function CastExecutionGraphUI.updateSlide(dt)
                     easedProgress = progress
                 end
 
-                local slideOffset = (1 - easedProgress) * (CastExecutionGraphUI._cachedHeight + 40)
+                local screenH = globals and globals.screenHeight and globals.screenHeight() or 800
+                local hiddenY = screenH + 50
+                local slideOffset = (1 - easedProgress) * (hiddenY - CastExecutionGraphUI.position.y)
                 t.actualY = CastExecutionGraphUI.position.y + slideOffset
                 t.visualY = t.actualY
             end
@@ -871,6 +909,20 @@ function CastExecutionGraphUI.render(blocks, opts)
             applyPendingHovers(uiBoxComp.uiRoot)
         else
             log_debug("[ExecGraph] render: No uiBoxComp or uiRoot!")
+        end
+
+        local closeBtn = ui.box.GetUIEByID(registry, "exec_graph_close_btn")
+        if closeBtn and registry:valid(closeBtn) then
+            local go = component_cache.get(closeBtn, GameObject)
+            if go then
+                go.state.hoverEnabled = true
+                go.state.collisionEnabled = true
+                go.state.clickEnabled = true
+                go.methods.onClick = function()
+                    if playSoundEffect then playSoundEffect("effects", "button-click") end
+                    CastExecutionGraphUI.hide()
+                end
+            end
         end
     end
 

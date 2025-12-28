@@ -315,10 +315,14 @@ local function drawSprites(list, z, space)
     end
 end
 
+local function getCornerRadius(w, h)
+    return math.max(math.max(w, h) / 60, 12)
+end
+
 local function drawGroup(box, accent, label, baseZ)
     if not command_buffer or not layers then return end
     local space = layer.DrawCommandSpace.Screen
-    local radius = AvatarJokerStrip.layout.bgRadius
+    local radius = getCornerRadius(box.w, box.h)
     local font = localization.getFont()
 
     -- Drop shadow layer (offset down-right)
@@ -473,69 +477,32 @@ function AvatarJokerStrip.draw()
     drawSprites(AvatarJokerStrip.avatarSprites, baseZ + 3, space)
     drawSprites(AvatarJokerStrip.jokerSprites, baseZ + 3, space)
 
-    -- Optional center divider for balance
-    local a = AvatarJokerStrip._layoutCache.avatar
-    local j = AvatarJokerStrip._layoutCache.joker
-    if a and j and command_buffer and layers then
-        local left = a.x + a.w
-        local right = j.x
-        local mid = left + (right - left) * 0.5
-        local dividerH = math.max(a.h, j.h) - 12
-        command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-            c.x = mid
-            c.y = math.min(a.y, j.y) + 6 + dividerH * 0.5
-            c.w = 3
-            c.h = dividerH
-            c.rx = 2
-            c.ry = 2
-            c.color = colors.divider
-        end, baseZ + 1, space)
-    end
+
 
     local jokerBox = AvatarJokerStrip._layoutCache.joker
-    if jokerBox and command_buffer and layers and localization and localization.getFont then
+    local inActionPhase = is_state_active and ACTION_STATE and is_state_active(ACTION_STATE)
+    if inActionPhase and jokerBox and command_buffer and layers and localization and localization.getFont then
         local font = localization.getFont()
         local fontSize = AvatarJokerStrip.layout.labelSize
-        -- Use localization with key placeholder for "Press {key} to toggle auto-aim"
-        local fullText = localization and localization.get and localization.get("ui.press_key_auto_aim", { key = "" }) or "Press {key} to toggle auto-aim."
-        -- Split around the placeholder to draw key icon in between
-        local leftText, rightText = fullText:match("^(.-)%{key%}(.*)$")
-        if not leftText then leftText = "Press " end
-        if not rightText then rightText = " to toggle auto-aim." end
+        local autoAimOn = globals and globals.autoAimEnabled
+        local stateText = autoAimOn and (localization.get("ui.on") or "ON") or (localization.get("ui.off") or "OFF")
+        local labelText = " Auto-aim " .. stateText
         local textWidthFn = localization.getTextWidthWithCurrentFont
-        local leftW = (textWidthFn and textWidthFn(leftText, fontSize, 1)) or (#leftText * fontSize * 0.5)
-        local rightW = (textWidthFn and textWidthFn(rightText, fontSize, 1)) or (#rightText * fontSize * 0.5)
+        local labelW = (textWidthFn and textWidthFn(labelText, fontSize, 1)) or (#labelText * fontSize * 0.5)
         local keySize = 18
-        local iconPad = 6
-        local totalW = leftW + rightW + keySize + iconPad * 2
+        local iconPad = 4
+        local totalW = keySize + iconPad + labelW
         local startX = jokerBox.x + (jokerBox.w - totalW) * 0.5
         local promptY = jokerBox.y - fontSize - 6
-        local iconX = startX + leftW + iconPad + keySize * 0.5
-        local textRightX = startX + leftW + iconPad * 2 + keySize
+        local iconX = startX + keySize * 0.5
+        local textX = startX + keySize + iconPad
         local centerY = promptY + fontSize * 0.5
         local shadowOffset = 1
-
-        command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = leftText
-            c.font = font
-            c.x = startX + shadowOffset
-            c.y = promptY + shadowOffset
-            c.color = Col(0, 0, 0, 140)
-            c.fontSize = fontSize
-        end, baseZ + 5, space)
-
-        command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = leftText
-            c.font = font
-            c.x = startX
-            c.y = promptY
-            c.color = colors.text
-            c.fontSize = fontSize
-        end, baseZ + 6, space)
+        local stateColor = autoAimOn and util.getColor("mint_green") or util.getColor("red")
 
         if command_buffer.queueDrawSpriteCentered then
             command_buffer.queueDrawSpriteCentered(layers.ui, function(c)
-                c.spriteName = "keyboard_f.png"
+                c.spriteName = "keyboard_p.png"
                 c.x = iconX + shadowOffset
                 c.y = centerY + shadowOffset
                 c.dstW = keySize
@@ -544,7 +511,7 @@ function AvatarJokerStrip.draw()
             end, baseZ + 5, space)
 
             command_buffer.queueDrawSpriteCentered(layers.ui, function(c)
-                c.spriteName = "keyboard_f.png"
+                c.spriteName = "keyboard_p.png"
                 c.x = iconX
                 c.y = centerY
                 c.dstW = keySize
@@ -554,20 +521,20 @@ function AvatarJokerStrip.draw()
         end
 
         command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = rightText
+            c.text = labelText
             c.font = font
-            c.x = textRightX + shadowOffset
+            c.x = textX + shadowOffset
             c.y = promptY + shadowOffset
             c.color = Col(0, 0, 0, 140)
             c.fontSize = fontSize
         end, baseZ + 5, space)
 
         command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = rightText
+            c.text = labelText
             c.font = font
-            c.x = textRightX
+            c.x = textX
             c.y = promptY
-            c.color = colors.text
+            c.color = stateColor
             c.fontSize = fontSize
         end, baseZ + 6, space)
     end
@@ -582,6 +549,20 @@ function AvatarJokerStrip.shutdown()
     AvatarJokerStrip.jokerSprites = {}
     AvatarJokerStrip.isActive = false
     AvatarJokerStrip._layoutCache = nil
+end
+
+function AvatarJokerStrip.getPanelTopY()
+    if not AvatarJokerStrip._layoutCache then return nil end
+    local avatarBox = AvatarJokerStrip._layoutCache.avatar
+    local jokerBox = AvatarJokerStrip._layoutCache.joker
+    if not avatarBox and not jokerBox then return nil end
+    local topY = math.min(avatarBox and avatarBox.y or 9999, jokerBox and jokerBox.y or 9999)
+    return topY
+end
+
+function AvatarJokerStrip.getPanelHeight()
+    local layout = AvatarJokerStrip.layout
+    return layout.pad * 2 + layout.cardH + layout.labelSize + 6
 end
 
 return AvatarJokerStrip

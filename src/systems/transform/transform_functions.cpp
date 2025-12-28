@@ -18,6 +18,7 @@
 #include "systems/ui/inventory_ui.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
+#include "systems/camera/camera_manager.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -2043,28 +2044,28 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         Vector2 tempOffsetPoint{};
         Vector2 tempOffsetTranslation{};
 
-        if (trueForClickFalseForHover == true)
-        {
-            // SPDLOG_DEBUG("Setting click offset for entity {}", static_cast<int>(e));
-        }
-        else
-        {
-            // SPDLOG_DEBUG("Setting hover offset for entity {}", static_cast<int>(e));
-        }
-
         auto &transform = registry->get<Transform>(e);
         auto &role = registry->get<InheritedProperties>(e);
         auto &node = registry->get<GameObject>(e);
         
         if (registry->valid(node.container) == false || node.container == entt::null)
         {
-            // SPDLOG_DEBUG("Entity {} has no valid container. Click offset not set.", static_cast<int>(e));
             return;
         }
         auto &containerTransform = registry->get<Transform>(node.container);
 
         tempOffsetPoint.x = point.x;
         tempOffsetPoint.y = point.y;
+
+        bool isScreenSpace = registry->any_of<collision::ScreenSpaceCollisionMarker>(e);
+        if (!isScreenSpace) {
+            auto worldCamera = camera_manager::Get("world_camera");
+            if (worldCamera) {
+                Vector2 worldPos = GetScreenToWorld2D(tempOffsetPoint, worldCamera->cam);
+                tempOffsetPoint.x = worldPos.x;
+                tempOffsetPoint.y = worldPos.y;
+            }
+        }
 
         // Translate to the Middle of the Container
         tempOffsetTranslation.x = -containerTransform.getActualW() * 0.5;
@@ -2094,12 +2095,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
     }
 
-    // offset will be click offset set by click handler unless specified otherwise
-    // transform must be set to draggable for this to work
     auto handleDefaultTransformDrag(entt::registry *registry, entt::entity e, std::optional<Vector2> offset) -> void
     {
-        // TODO: some ui stuff like a pop-up that appears when you drag a node, shoudl handle in ui pass I make later, for node
-
         auto &node = registry->get<GameObject>(e);
         if (node.state.dragEnabled == false && offset.has_value() == false)
         {
@@ -2115,6 +2112,17 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         dragCursorTransform.x = cursorTransform.getActualX();
         dragCursorTransform.y = cursorTransform.getActualY();
+
+        bool isScreenSpace = registry->any_of<collision::ScreenSpaceCollisionMarker>(e);
+        if (!isScreenSpace) {
+            auto worldCamera = camera_manager::Get("world_camera");
+            if (worldCamera) {
+                Vector2 screenPos = {dragCursorTransform.x, dragCursorTransform.y};
+                Vector2 worldPos = GetScreenToWorld2D(screenPos, worldCamera->cam);
+                dragCursorTransform.x = worldPos.x;
+                dragCursorTransform.y = worldPos.y;
+            }
+        }
 
         dragCursorTranslation.x = -myContainerTransform.getActualW() * 0.5;
         dragCursorTranslation.y = -myContainerTransform.getActualH() * 0.5;

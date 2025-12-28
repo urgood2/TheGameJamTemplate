@@ -661,5 +661,35 @@
 		"styled_mixed": "A [powerful](color=gold) attack dealing {damage|red} damage",
 		"styled_no_color": "You have {count} items",
 		"styled_heal": "Restore {amount|green} HP to target"
+	},
+	"joker": {
+		"lightning_rod": {
+			"name": "Lightning Rod",
+			"description": "+15 Damage to Lightning spells. Critical hits chain to one extra enemy."
+		},
+		"conductor": {
+			"name": "The Conductor",
+			"description": "Chain lightning applies Static Charge. Mark detonations chain to other marked enemies."
+		},
+		"storm_battery": {
+			"name": "Storm Battery",
+			"description": "+5% lightning damage per Static Charge stack on any enemy."
+		},
+		"arc_reactor": {
+			"name": "Arc Reactor",
+			"description": "Electrocute heals you for 2 HP per tick."
+		}
+	},
+	"avatar": {
+		"stormlord": {
+			"name": "Avatar of the Storm",
+			"description": "Ride the lightning.",
+			"effect": "Critical hits always Chain to a nearby enemy. Chain effects apply Static Charge."
+		},
+		"conduit": {
+			"name": "Avatar of the Conduit",
+			"description": "Pain becomes power. Lightning becomes you.",
+			"effect": "+30% Lightning Resistance and Damage. Physical damage taken becomes Conduit Charge."
+		}
 	}
 }

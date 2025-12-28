@@ -10408,8 +10408,7 @@ function initPlanningUI()
         :addChild(synergyButtonTemplate)
         :build()
 
-    -- Position synergy button in top-right area
-    local synergyPosX = globals.screenWidth() - 120
+    local synergyPosX = globals.screenWidth() - 140
     local synergyPosY = 20
     planningUIEntities.synergy_button_box = ui.box.Initialize({ x = synergyPosX, y = synergyPosY }, synergyRoot)
     local synergyTransform = component_cache.get(planningUIEntities.synergy_button_box, Transform)
@@ -10481,9 +10480,10 @@ function initPlanningUI()
         :addChild(execGraphButtonTemplate)
         :build()
 
-    -- Position execution graph button in bottom-left area
+    local AvatarJokerStrip = require("ui.avatar_joker_strip")
+    local panelTopY = AvatarJokerStrip.getPanelTopY() or (globals.screenHeight() - 120)
     local execGraphPosX = 32
-    local execGraphPosY = globals.screenHeight() - 60
+    local execGraphPosY = panelTopY - 50
     planningUIEntities.exec_graph_button_box = ui.box.Initialize({ x = execGraphPosX, y = execGraphPosY }, execGraphRoot)
     local execGraphTransform = component_cache.get(planningUIEntities.exec_graph_button_box, Transform)
     if execGraphTransform then

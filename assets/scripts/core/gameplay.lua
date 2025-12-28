@@ -6973,8 +6973,14 @@ local function buildTriggerDefForBoardSet(boardSet)
 end
 
 local function loadWandsIntoExecutorFromBoards()
+    -- Preserve wand states (mana, cooldowns, charges) across phase transitions
+    local preservedStates = WandExecutor.wandStates or {}
+
     WandExecutor.cleanup()
     WandExecutor.init()
+
+    -- Restore preserved states so mana/cooldowns persist
+    WandExecutor.wandStates = preservedStates
     virtualCardCounter = 0
 
     -- Add default jokers for testing

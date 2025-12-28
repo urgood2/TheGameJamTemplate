@@ -431,6 +431,154 @@ function log_warn(...) end
 function log_warn(...) end
 
 ---
+--- Sets a value in the entity's current world state.
+---
+---@param entity Entity
+---@param key string
+---@param value boolean
+---@return nil
+function setCurrentWorldStateValue(...) end
+
+---
+--- Gets a value from the entity's current world state.
+---
+---@param entity Entity
+---@param key string
+---@return boolean|nil
+function getCurrentWorldStateValue(...) end
+
+---
+--- Clears the entity's current world state.
+---
+---@param entity Entity
+---@return nil
+function clearCurrentWorldState(...) end
+
+---
+--- Sets a value in the entity's goal world state.
+---
+---@param entity Entity
+---@param key string
+---@param value boolean
+---@return nil
+function setGoalWorldStateValue(...) end
+
+---
+--- Gets a value from the entity's goal world state.
+---
+---@param entity Entity
+---@param key string
+---@return boolean|nil
+function getGoalWorldStateValue(...) end
+
+---
+--- Clears the entity's goal world state.
+---
+---@param entity Entity
+---@return nil
+function clearGoalWorldState(...) end
+
+---
+--- Sets a float value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value number
+---@return nil
+function setBlackboardFloat(...) end
+
+---
+--- Gets a float value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return number
+function getBlackboardFloat(...) end
+
+---
+--- Sets a Vector2 value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value Vector2
+---@return nil
+function setBlackboardVector2(...) end
+
+---
+--- Gets a Vector2 value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return Vector2
+function getBlackboardVector2(...) end
+
+---
+--- Sets a boolean value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value boolean
+---@return nil
+function setBlackboardBool(...) end
+
+---
+--- Gets a boolean value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return boolean
+function getBlackboardBool(...) end
+
+---
+--- Checks if the blackboard contains a specific key.
+---
+---@param entity Entity
+---@param key string
+---@return boolean
+function blackboardContains(...) end
+
+---
+--- Sets an integer value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value integer
+---@return nil
+function setBlackboardInt(...) end
+
+---
+--- Gets an integer value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return integer
+function getBlackboardInt(...) end
+
+---
+--- Sets a string value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value string
+---@return nil
+function setBlackboardString(...) end
+
+---
+--- Gets a string value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return string
+function getBlackboardString(...) end
+
+---
+--- Checks if a specific keyboard key is currently pressed.
+---
+---@param key string
+---@return boolean
+function isKeyPressed(...) end
+
+---
 --- Pauses the game.
 ---
 ---@return nil
@@ -441,13 +589,6 @@ function pauseGame(...) end
 ---
 ---@return nil
 function unpauseGame(...) end
-
----
---- Checks if a specific keyboard key is currently pressed.
----
----@param key string
----@return boolean
-function isKeyPressed(...) end
 
 ---
 --- Recursively applies state effects to all elements in the specified UI box.
@@ -635,19 +776,6 @@ function GetWorldToScreen2D(...) end
 ---@param camera Camera2D
 ---@return Vector2
 function GetScreenToWorld2D(...) end
-
----
---- Enable/disable shader and texture batching optimization. When enabled, draw commands are sorted by shader_id and texture_id to minimize GPU state changes. Default: disabled.
----
----@param enabled boolean
----@return nil
-function set_shader_texture_batching(...) end
-
----
---- Returns whether shader and texture batching optimization is currently enabled.
----
----@return boolean
-function get_shader_texture_batching(...) end
 
 ---
 --- Fetches atlas texture + frame metadata for a sprite identifier.

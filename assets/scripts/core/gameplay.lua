@@ -1823,7 +1823,7 @@ function setUpCardAndWandStatDisplay()
         else
             -- else, show wand stats.
 
-            local currentWandDef = board_sets[current_board_set_index].wand_def
+            local currentWandDef = board_sets[current_board_set_index].wandDef
 
             if currentWandDef then
                 local statsToDraw = {
@@ -7326,6 +7326,8 @@ function startActionPhase()
     PhysicsManager.enable_step("world", true)
 
     loadWandsIntoExecutorFromBoards()
+    WandCooldownUI.clear()    -- Clear stale entries from previous action phase
+    WandCooldownUI.init()     -- Re-initialize with fresh state
     CastBlockFlashUI.clear()  -- Clear before init to prevent duplicate items
     CastBlockFlashUI.init()
     TriggerStripUI.show()

@@ -631,9 +631,9 @@ namespace ui
             InitializeVisualTransform(registry, child);
         }
 
-        // STEP 4: Copy width & height from actual transform (`T`) to visual transform (`VT`)
-        transform->setActualW(transform->getActualW());
-        transform->setActualH(transform->getActualH());
+        // STEP 4: Snap visual dimensions to actual (prevents spring animation from zero)
+        transform->setVisualW(transform->getActualW());
+        transform->setVisualH(transform->getActualH());
 
         // STEP 5: If this is a TEXT UI element, update its text
         if (uiElement->UIT == UITypeEnum::TEXT)

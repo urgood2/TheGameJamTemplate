@@ -895,11 +895,16 @@ function CastExecutionGraphUI.render(blocks, opts)
         ui.box.RenewAlignment(registry, CastExecutionGraphUI.currentBox)
     end
 
-    -- Snap visual dimensions to prevent tween-from-zero animation
     local uiBoxComp = registry:get(CastExecutionGraphUI.currentBox, UIBoxComponent)
     if uiBoxComp and uiBoxComp.uiRoot then
         snapVisualToActual(uiBoxComp.uiRoot)
-        snapVisualToActual(CastExecutionGraphUI.currentBox)
+    end
+    snapVisualToActual(CastExecutionGraphUI.currentBox)
+
+    local t = component_cache.get(CastExecutionGraphUI.currentBox, Transform)
+    if t and t.actualH and t.actualH > 0 then
+        CastExecutionGraphUI._cachedHeight = t.actualH
+        CastExecutionGraphUI._layoutPending = false
     end
 
     return CastExecutionGraphUI.currentBox

@@ -7300,6 +7300,11 @@ function startActionPhase()
     -- Clean up planning phase UI elements to prevent flicker
     CastExecutionGraphUI.clear()
 
+    -- Clear wand cooldown UI entries to prevent stale values on re-entry
+    if WandCooldownUI and WandCooldownUI.clear then
+        WandCooldownUI.clear()
+    end
+
     if record_telemetry then
         local now = os.clock()
         if _G.current_phase and _G.phase_started_at then

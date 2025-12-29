@@ -443,3 +443,30 @@
   - Improved shader system: per-entity uniform support for flash effects, fixed 3D skew tilt to follow mouse position relative to sprite center.
   - Added entity validation helpers: safe_script_get and script_field functions for defensive script table access with fallback defaults.
   - Refactored event system: added dual-emission helper for combat bus→signal bridging, signal system architecture tests, and RenderStackError exception class for better error context.
+  - Implemented lightning system foundation: status effects and marks data registry, status indicator system with floating icons and condensed bar for 3+ effects, shader integration for visual feedback.
+  - Added mark system for detonatable combo mechanics: Static Charge/Static Shield cards, mark application on projectile hits, bonus damage via ActionAPI.
+  - Added lightning-themed content: Storm Caller origin, Thunderclap prayer, Conductor/Storm Battery/Arc Reactor jokers, enhanced Stormlord avatar with mark and chain synergies.
+
+12/26/2025
+  - Implemented avatar proc effects system: PROC_EFFECTS registry (heal, barrier, poison), TRIGGER_HANDLERS (on_kill, on_cast_4th, distance_moved_5m), stat_buff effect application, register/cleanup lifecycle for equipped avatars.
+  - Added Avatar of the Conduit: tracks chain lightning propagations for unlock, conduit_charge proc effect with decay timer, on_physical_damage_taken trigger, auto-equip and avatar strip sync.
+  - Added extensible joker effect system with Lightning Rod implementation and integration flow documentation.
+  - Implemented full death flow: player death animation with dissolve and blood particles, death screen UI with Text Builder, game reset function, signal emission from combat state machine, keyboard/click restart support.
+  - Built wand resource bar: mana cost calculation, bar rendering integrated with planning phase, positioned above action board with proper z-level.
+  - Fixed defensive marks to trigger when player is hit, HP reset and deck repopulation on game reset, WaveDirector cleanup.
+
+12/27/2025
+  - Implemented render_groups system: core group/entity management, CmdDrawRenderGroup command type, ExecuteDrawRenderGroup with z-sorting and lazy cleanup, Lua bindings exposed at startup.
+  - Added executeEntityWithShaders function to render any entity with arbitrary shader list, enabling 3d_skew shader support with proper uniform setup.
+  - Refactored resource bar from DSL to direct rendering for better control and performance.
+
+12/28/2025
+  - Fixed execution graph UI animation: SnapVisualTransformValues eliminates spring velocity to make graph appear instantly without lag or freeze.
+  - Repositioned resource bar above action board with lowered z-level for cleaner visual hierarchy.
+  - Fixed death flow: inventory cards now re-spawn with sequential animation on game reset.
+
+12/29/2025
+  - Added on-kill trigger card for wand system with documentation for trigger implementation patterns.
+  - Implemented unified cast origin resolution system for consistent projectile spawning across different trigger types.
+  - Comprehensive UI improvements for planning and action phases: better visual feedback, state transitions, and layout polish.
+  - Standardized corner rounding in Lua to match C++ util::getCornerSizeForRect for consistent UI appearance.

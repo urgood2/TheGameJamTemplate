@@ -320,47 +320,34 @@ local function drawSprites(list, z, space)
     end
 end
 
-local function getCornerRadius(w, h)
-    return math.max(math.max(w, h) / 60, 12)
-end
-
 local function drawGroup(box, accent, label, baseZ)
     if not command_buffer or not layers then return end
     local space = layer.DrawCommandSpace.Screen
-    local radius = getCornerRadius(box.w, box.h)
     local font = localization.getFont()
 
-    -- Drop shadow layer (offset down-right)
+    -- Drop shadow layer (offset down-right) using stepped rectangle
     local shadowOffset = 4
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = box.x + box.w * 0.5 + shadowOffset
         c.y = box.y + box.h * 0.5 + shadowOffset
         c.w = box.w + 4
         c.h = box.h + 4
-        c.rx = radius + 2
-        c.ry = radius + 2
-        c.color = Col(0, 0, 0, 80)
+        c.fillColor = Col(0, 0, 0, 80)
+        c.borderColor = Col(0, 0, 0, 0)
+        c.borderWidth = 0
+        c.numSteps = 4
     end, baseZ - 1, space)
 
-    -- Outline layer (slightly larger)
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-        c.x = box.x + box.w * 0.5
-        c.y = box.y + box.h * 0.5
-        c.w = box.w + 4
-        c.h = box.h + 4
-        c.rx = radius + 2
-        c.ry = radius + 2
-        c.color = colors.outline
-    end, baseZ, space)
-
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+    -- Main panel with stepped corners and border
+    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = box.x + box.w * 0.5
         c.y = box.y + box.h * 0.5
         c.w = box.w
         c.h = box.h
-        c.rx = radius
-        c.ry = radius
-        c.color = colors.panel
+        c.fillColor = colors.panel
+        c.borderColor = colors.outline
+        c.borderWidth = 2
+        c.numSteps = 4
     end, baseZ + 1, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)

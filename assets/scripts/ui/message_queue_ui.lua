@@ -375,36 +375,27 @@ function MessageQueueUI.draw()
     local shadowColor = colWithAlpha(cfg.shadowColor, alpha)
 
     -- Drop shadow
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = centerX + 6
         c.y = centerY + 10
         c.w = boxWidth + 14
         c.h = boxHeight + 10
-        c.rx = cornerRadius + 6
-        c.ry = cornerRadius + 6
-        c.color = shadowColor
+        c.fillColor = shadowColor
+        c.borderColor = Col(0, 0, 0, 0)
+        c.borderWidth = 0
+        c.numSteps = 4
     end, cfg.baseZ - 1, space)
 
-    -- Border
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-        c.x = centerX
-        c.y = centerY
-        c.w = boxWidth + borderWidth * 2
-        c.h = boxHeight + borderWidth * 2
-        c.rx = borderRadius
-        c.ry = borderRadius
-        c.color = colWithAlpha(cfg.borderColor, alpha)
-    end, cfg.baseZ, space)
-
-    -- Main body
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+    -- Main body with border
+    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = centerX
         c.y = centerY
         c.w = boxWidth
         c.h = boxHeight
-        c.rx = cornerRadius
-        c.ry = cornerRadius
-        c.color = bgColor
+        c.fillColor = bgColor
+        c.borderColor = colWithAlpha(cfg.borderColor, alpha)
+        c.borderWidth = borderWidth
+        c.numSteps = 4
     end, bodyZ, space)
 
     -- Accent slash

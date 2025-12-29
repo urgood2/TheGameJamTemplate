@@ -919,31 +919,32 @@ end
 local function drawSegment(left, top, width, height, fill, accent, tag, threshold, z, space, font)
     local centerX = left + width * 0.5
     local centerY = top + height * 0.5
-    local radius = height * 0.45
     local partialColor = Col(accent.r, accent.g, accent.b, 180)
     local trackColor = colors.track
 
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = centerX
         c.y = centerY
         c.w = width
         c.h = height
-        c.rx = radius
-        c.ry = radius
-        c.color = trackColor
+        c.fillColor = trackColor
+        c.borderColor = Col(0, 0, 0, 0)
+        c.borderWidth = 0
+        c.numSteps = 2
     end, z, space)
 
     if fill > 0 then
         local fillWidth = math.max(math.min(width, width * clamp01(fill)), math.min(width, 6))
         local fillCenter = left + fillWidth * 0.5
-        command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
             c.x = fillCenter
             c.y = centerY
             c.w = fillWidth
             c.h = height
-            c.rx = radius
-            c.ry = radius
-            c.color = (fill >= 1) and accent or partialColor
+            c.fillColor = (fill >= 1) and accent or partialColor
+            c.borderColor = Col(0, 0, 0, 0)
+            c.borderWidth = 0
+            c.numSteps = 2
         end, z + 1, space)
     end
 
@@ -1023,24 +1024,15 @@ function TagSynergyPanel.draw()
     local panelCenterY = layoutCache.panelCenterY + slideOffset
     local panelTop = layoutCache.panelTop + slideOffset
 
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-        c.x = layoutCache.panelCenterX
-        c.y = panelCenterY
-        c.w = layoutCache.panelW + layoutCache.outlineWidth * 2
-        c.h = layoutCache.totalHeight + layoutCache.outlineWidth * 2
-        c.rx = layoutCache.panelRadius + layoutCache.outlineWidth
-        c.ry = layoutCache.panelRadius + layoutCache.outlineWidth
-        c.color = colors.outline
-    end, baseZ - 1, space)
-
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = layoutCache.panelCenterX
         c.y = panelCenterY
         c.w = layoutCache.panelW
         c.h = layoutCache.totalHeight
-        c.rx = layoutCache.panelRadius
-        c.ry = layoutCache.panelRadius
-        c.color = colors.panel
+        c.fillColor = colors.panel
+        c.borderColor = colors.outline
+        c.borderWidth = layoutCache.outlineWidth
+        c.numSteps = 4
     end, baseZ, space)
 
     command_buffer.queueDrawText(layers.ui, function(c)
@@ -1064,14 +1056,15 @@ function TagSynergyPanel.draw()
         local nameSize = 20 * (1 + pulse * 0.08)
         local subtitleSize = 14
 
-        command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+        command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
             c.x = row.rowLeft + row.rowWidth * 0.5
             c.y = rowCenterY
             c.w = row.rowWidth
             c.h = row.rowHeight
-            c.rx = 12
-            c.ry = 12
-            c.color = colors.row
+            c.fillColor = colors.row
+            c.borderColor = Col(0, 0, 0, 0)
+            c.borderWidth = 0
+            c.numSteps = 3
         end, baseZ + 1, space)
 
         -- Title

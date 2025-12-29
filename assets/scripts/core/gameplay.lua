@@ -3533,7 +3533,7 @@ function makeWandTooltip(wand_def)
     local root = dsl.root {
         config = {
             color = tooltipStyle.bgColor,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
             padding = tooltipStyle.innerPadding,
             outlineThickness = 2,
             outlineColor = tooltipStyle.outlineColor,
@@ -4367,7 +4367,7 @@ local function makeDetailedStatsTooltip(snapshot)
         config = {
             color = tooltipStyle.bgColor,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
-            padding = 2,
+            padding = innerPad,
             outlineThickness = 2,
             outlineColor = tooltipStyle.outlineColor,
             shadow = true
@@ -5123,6 +5123,7 @@ function initPlanningPhase()
             if self.noDashedBorder then
                 local baseColor = self.borderColor or util.getColor("yellow")
                 local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 40)
+                local borderThickness = 3
                 local cornerRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x     = area.actualX + area.actualW * 0.5
@@ -5131,22 +5132,16 @@ function initPlanningPhase()
                     c.h     = math.max(0, area.actualH)
                     c.rx    = cornerRadius
                     c.ry    = cornerRadius
-                    c.color = fillColor
+                    c.color = baseColor
                 end, z_orders.board, layer.DrawCommandSpace.World)
-                command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
-                    c.rec       = Rectangle.new(
-                        area.actualX,
-                        area.actualY,
-                        math.max(0, area.actualW),
-                        math.max(0, area.actualH)
-                    )
-                    c.radius    = cornerRadius
-                    c.dashLen   = 9999
-                    c.gapLen    = 0
-                    c.phase     = 0
-                    c.arcSteps  = 14
-                    c.thickness = 3
-                    c.color     = baseColor
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x     = area.actualX + area.actualW * 0.5
+                    c.y     = area.actualY + area.actualH * 0.5
+                    c.w     = math.max(0, area.actualW - borderThickness * 2)
+                    c.h     = math.max(0, area.actualH - borderThickness * 2)
+                    c.rx    = math.max(0, cornerRadius - borderThickness)
+                    c.ry    = math.max(0, cornerRadius - borderThickness)
+                    c.color = fillColor
                 end, z_orders.board + 1, layer.DrawCommandSpace.World)
                 goto continue
             end
@@ -5232,7 +5227,7 @@ function initPlanningPhase()
     -- --------------------------------------------------------------------------
 
     local triggerInventoryWidth  = planningRegionWidth * 0.2
-    local triggerInventoryHeight = (screenH - runningYValue) * 0.55
+    local triggerInventoryHeight = (screenH - runningYValue) * 0.80
 
     local inventoryBoardWidth    = planningRegionWidth * 0.65
     local inventoryBoardHeight   = triggerInventoryHeight
@@ -5288,128 +5283,6 @@ function initPlanningPhase()
 
     -- map
     inventory_board_id = inventoryBoardID
-
-    -- Send selected inventory cards up to the active action board.
-    local sendUpButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.send_up") end, -- initial text
-        18.0,
-        "color=apricot_cream"
-    )
-
-    local canSendInventorySelection
-
-    local sendUpButtonTemplate = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-            :addId("inventory_send_up_button")
-            :addColor(util.getColor("gray"))
-            :addPadding(10.0)
-            :addEmboss(2.0)
-            :addHover(true)
-            :addButtonCallback(function()
-                if canSendInventorySelection and not canSendInventorySelection() then
-                    return
-                end
-                local moved = sendSelectedInventoryCardsToActiveActionBoard()
-                if moved then
-                    playSoundEffect("effects", "card_put_down_3", 0.9 + math.random() * 0.2)
-                end
-            end)
-            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
-            :build()
-        )
-        :addChild(sendUpButtonText)
-        :build()
-
-    local sendUpRoot = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.ROOT)
-        :addConfig(
-            UIConfigBuilder.create()
-            :addColor(util.getColor("blank"))
-            :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
-            :build()
-        )
-        :addChild(sendUpButtonTemplate)
-        :build()
-
-    local sendUpMargin = boardPadding * 0.25
-
-    planningUIEntities.send_up_button_box = ui.box.Initialize(
-        { x = inventoryBoardX + inventoryBoardWidth * 0.5, y = inventoryBoardY + inventoryBoardHeight + sendUpMargin },
-        sendUpRoot
-    )
-
-    ui.box.RenewAlignment(registry, planningUIEntities.send_up_button_box)
-    local sendUpBoxTransform = component_cache.get(planningUIEntities.send_up_button_box, Transform)
-    local inventoryTransform = inventoryBoard and inventoryBoard:handle() and component_cache.get(inventoryBoard:handle(),
-        Transform)
-
-    local function recenterSendUpButton()
-        if not sendUpBoxTransform or not inventoryTransform then return end
-        sendUpBoxTransform.actualX = inventoryTransform.actualX + (inventoryTransform.actualW * 0.5) -
-                                         (sendUpBoxTransform.actualW * 0.5)
-        sendUpBoxTransform.actualY = inventoryTransform.actualY + inventoryTransform.actualH + sendUpMargin
-        sendUpBoxTransform.visualX = sendUpBoxTransform.actualX
-        sendUpBoxTransform.visualY = sendUpBoxTransform.actualY
-        ui.box.RenewAlignment(registry, planningUIEntities.send_up_button_box)
-    end
-
-    recenterSendUpButton()
-    timer.after(0, recenterSendUpButton, nil, nil, "send_up_button_recentering")
-
-    ui.box.AssignStateTagsToUIBox(planningUIEntities.send_up_button_box, PLANNING_STATE)
-    remove_default_state_tag(planningUIEntities.send_up_button_box)
-
-    local sendUpButtonEntity = ui.box.GetUIEByID(registry, "inventory_send_up_button")
-    planningUIEntities.send_up_button = sendUpButtonEntity
-
-    -- Helper used by both UI state and button callback.
-    function canSendInventorySelection()
-        if not inventoryBoard or not inventoryBoard.cards then
-            return false
-        end
-
-        local hasSelection = false
-        for _, cardEid in ipairs(inventoryBoard.cards) do
-            local script = getScriptTableFromEntityID(cardEid)
-            if script and script.selected then
-                hasSelection = true
-                break
-            end
-        end
-
-        local activeSet = board_sets and board_sets[current_board_set_index]
-        local hasDestination = activeSet and activeSet.action_board_id and entity_cache.valid(activeSet.action_board_id)
-        return hasSelection and hasDestination
-    end
-
-    local lastDisabledState = nil
-    local function updateSendUpButtonState()
-        if not sendUpButtonEntity or not entity_cache.valid(sendUpButtonEntity) then return end
-        if not is_state_active or not is_state_active(PLANNING_STATE) then return end
-
-        local disabled = not canSendInventorySelection()
-        if disabled == lastDisabledState then return end
-        lastDisabledState = disabled
-
-        local config = component_cache.get(sendUpButtonEntity, UIConfig)
-        if config then
-            config.disable_button = disabled
-        end
-
-        local go = component_cache.get(sendUpButtonEntity, GameObject)
-        if go then
-            go.state.hoverEnabled = true
-            go.state.collisionEnabled = true
-            go.state.clickEnabled = true
-        end
-    end
-
-    timer.run(function()
-        updateSendUpButtonState()
-    end, nil, "inventory_send_up_button_state")
-
 
     -- -------------------------------------------------------------------------- --
     --       make a separate trigger inventory on the left of the inventory.      --
@@ -7639,30 +7512,45 @@ function startActionPhase()
         return
     end
 
-    -- Define the pulsing star recipe (now using built-in :pulse() method!)
-    local pulsingStar = Particles.define()
-        :shape("circle")
-        :size(1, 4)                    -- Small stars, random sizes
-        :color(255, 255, 220)          -- Warm white
-        :lifespan(9.0, 12.0)            -- Live for 3-8 seconds (random)
-        :fade()                        -- Fade out when dying
-        :velocity(0, 0)                -- Static
-        :space("world")                -- World space
-        :z(-100)                       -- Behind everything
-        :pulse(0.4, 2.0, 6.0)          -- ±40% size, random 2-6 Hz per particle
-
-    -- Spawn initial batch of stars
-    pulsingStar:burst(100):inRect(-1440, -900, 2500, 1800)
-    -- Create continuous stream to replace dying stars
-    local starStream = pulsingStar
-        :burst(5)
-        :inRect(-1440, -900, 2500, 1800)
-        :stream()
-        :every(1.0)  -- Spawn 5 new stars every second
-
-    -- Register the stream for updates
-    timer.every(0.016, function()  -- ~60fps
-        starStream:update(0.016)
+    local screenW = globals.screenWidth()
+    local screenH = globals.screenHeight()
+    
+    local starLayers = {}
+    local starStreams = {}
+    
+    local layerConfigs = {
+        { z = -100, size = { 1, 2 }, alpha = 80,  count = 40,  pulse = { 0.3, 1.5, 3.0 } },
+        { z = -90,  size = { 1, 3 }, alpha = 120, count = 35,  pulse = { 0.35, 2.0, 4.0 } },
+        { z = -80,  size = { 2, 4 }, alpha = 180, count = 25,  pulse = { 0.4, 2.5, 5.0 } },
+    }
+    
+    for i, cfg in ipairs(layerConfigs) do
+        local starRecipe = Particles.define()
+            :shape("circle")
+            :size(cfg.size[1], cfg.size[2])
+            :color(255, 255, 220, cfg.alpha)
+            :lifespan(9.0, 12.0)
+            :fade()
+            :velocity(0, 0)
+            :space("screen")
+            :z(cfg.z)
+            :pulse(cfg.pulse[1], cfg.pulse[2], cfg.pulse[3])
+        
+        starRecipe:burst(cfg.count):inRect(0, 0, screenW, screenH)
+        
+        local stream = starRecipe
+            :burst(math.ceil(cfg.count / 20))
+            :inRect(0, 0, screenW, screenH)
+            :stream()
+            :every(1.0)
+        
+        starStreams[i] = stream
+    end
+    
+    timer.every(0.016, function()
+        for _, stream in ipairs(starStreams) do
+            stream:update(0.016)
+        end
     end)
 end
 
@@ -7701,6 +7589,12 @@ function startPlanningPhase()
     activate_state(PLANNING_STATE)
     activate_state("default_state")     -- just for defaults, keep them open
     activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
+
+    if board_sets and #board_sets > 0 then
+        for index, boardSet in ipairs(board_sets) do
+            toggleBoardSetVisibility(boardSet, index == current_board_set_index)
+        end
+    end
 
     if updateWandResourceBar then
         updateWandResourceBar()
@@ -8841,9 +8735,7 @@ local function collectPlanningPeekTargets()
         end
     end
 
-    if planningUIEntities then
-        add(planningUIEntities.send_up_button_box)
-    end
+
 
     return targets
 end
@@ -10096,8 +9988,6 @@ end
 
 planningUIEntities = {
     start_action_button_box = nil,
-    send_up_button_box = nil,
-    send_up_button = nil,
     wand_buttons = {},
     player_stats_button_box = nil,
     player_stats_button = nil

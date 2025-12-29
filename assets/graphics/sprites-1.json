@@ -4538,7 +4538,7 @@
             "frame": {
                 "h": 154,
                 "w": 84,
-                "x": 1306,
+                "x": 1399,
                 "y": 527
             },
             "rotated": false,
@@ -4670,7 +4670,7 @@
             "frame": {
                 "h": 156,
                 "w": 467,
-                "x": 1401,
+                "x": 1494,
                 "y": 527
             },
             "rotated": false,
@@ -5198,7 +5198,7 @@
             "frame": {
                 "h": 203,
                 "w": 401,
-                "x": 2807,
+                "x": 2900,
                 "y": 527
             },
             "rotated": false,
@@ -5220,7 +5220,7 @@
             "frame": {
                 "h": 185,
                 "w": 400,
-                "x": 1879,
+                "x": 1972,
                 "y": 527
             },
             "rotated": false,
@@ -5242,7 +5242,7 @@
             "frame": {
                 "h": 200,
                 "w": 506,
-                "x": 2290,
+                "x": 2383,
                 "y": 527
             },
             "rotated": false,
@@ -5264,7 +5264,7 @@
             "frame": {
                 "h": 203,
                 "w": 509,
-                "x": 3219,
+                "x": 3312,
                 "y": 527
             },
             "rotated": false,
@@ -5511,14 +5511,36 @@
             },
             "rotated": false,
             "sourceSize": {
-                "h": 1000,
-                "w": 1000
+                "h": 2000,
+                "w": 2000
             },
             "spriteSourceSize": {
                 "h": 130,
                 "w": 82,
-                "x": 415,
-                "y": 462
+                "x": 915,
+                "y": 962
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "kill_on_trigger",
+            "filename": "trigger-on-kill.png",
+            "frame": {
+                "h": 130,
+                "w": 82,
+                "x": 1306,
+                "y": 527
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 2000,
+                "w": 2000
+            },
+            "spriteSourceSize": {
+                "h": 130,
+                "w": 82,
+                "x": 1009,
+                "y": 962
             },
             "trimmed": true
         },
@@ -7098,7 +7120,7 @@
             "h": 4096,
             "w": 4096
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:ebffad6dd094f4fa524dcda05f5f8d5b:b876c9f866acc6522a44895aeceb2f57:2bbe3b05147ba790fd87830b7012f958$",
+        "smartupdate": "$TexturePacker:SmartUpdate:45096ecd260edb864804eed792837bca:700660d7f927bbf2b44986df7024b136:2bbe3b05147ba790fd87830b7012f958$",
         "version": "1.0"
     }
 }

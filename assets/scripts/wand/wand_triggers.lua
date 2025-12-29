@@ -138,6 +138,9 @@ function WandTriggers.register(wandId, triggerDef, executor, opts)
 
     elseif triggerType == "on_pickup" then
         registration.eventType = triggerType
+        
+    elseif triggerType == "enemy_killed" then
+        registration.eventType = triggerType
 
     elseif triggerType == "on_low_health" then
         registration.eventType = triggerType
@@ -253,6 +256,7 @@ function WandTriggers.subscribeToEvents()
         "on_dash",
         "on_pickup",
         "on_low_health",
+        "enemy_killed"
     }
 
     for _, eventName in ipairs(eventNames) do

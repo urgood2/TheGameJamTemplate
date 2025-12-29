@@ -14,7 +14,7 @@
     "categories": {
         "effects": {
             "sounds": {
-                "button-click": "UI_Click_Snappy_mono.ogg",
+                "button-click": "UIClick_Button Press Small-009_OS_Quute UI.wav",
                 "card_activate": "CHURCH_BELL_03_mono.ogg",
                 "trigger_activate": "SNAP_Clean_mono.ogg",
                 "card_pick_up": "CARDS_Deal_02_RR1_mono.ogg",
@@ -105,7 +105,12 @@
                 "electric_layer": "Electric_Layer.ogg",
                 "electric_spell_cast_2": "Electric_Spell-Cast_2.ogg",
                 "electric_individual_hit": "THUD_Bright_01_mono.ogg",
-                "projectile_hit_wall_default": "IMPACT_Metal_Cling_Clean_mono.ogg"
+                "projectile_hit_wall_default": "IMPACT_Metal_Cling_Clean_mono.ogg",
+                "wand-button-click": "UIClick_Button Select Poppy Playful-045_OS_Quute UI.wav",
+                "simple_button": "Simple Button.wav",
+                "cycle-wand-set": "Simple Button.wav",
+                "button-hover-sound": "UIClick_Button Plip Pop Bubble-001_OS_Quute UI.wav",
+                "card-hover": "Discard Card 9.wav"
             },
             "volume": 0.3
         },

@@ -93,6 +93,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | **Rendering & Shaders** | |
 | Add shader to entity | \pageref{recipe:add-shader} |
 | Stack multiple shaders | \pageref{recipe:stack-shaders} |
+| Batch render entities with shared shaders | \pageref{recipe:render-groups} |
 | Draw text | \pageref{recipe:draw-text} |
 | Spawn dynamic text (damage numbers) | \pageref{recipe:text-builder} |
 | Flash entity on hit | \pageref{recipe:hitfx} |
@@ -3085,6 +3086,101 @@ end
 **Gotcha:** Multiple rapid flashes on the same entity will restart the timer each time, keeping the entity flashing.
 
 **Gotcha:** If the entity is destroyed, the scheduled cleanup is automatically skipped.
+
+***
+
+## Render Groups (Batch Shader Rendering)
+
+\label{recipe:render-groups}
+
+**When to use:** Batch-render multiple entities with shared shaders for better performance. Ideal for enemy groups, particle-like systems, or any scenario where many entities share the same shader effects.
+
+**Pattern:** Create a render group with default shaders, add entities to it, then queue batch draws via command buffer.
+
+```lua
+-- 1. Create a render group with default shaders
+render_groups.create("enemies", {"flash", "outline"})
+
+-- 2. Add entities to the group
+render_groups.add("enemies", enemy1)           -- Uses group defaults
+render_groups.add("enemies", enemy2, {"3d_skew"})  -- Custom shaders
+
+-- 3. Queue batch render in draw loop
+command_buffer.queueDrawRenderGroup(layers.sprites, function(cmd)
+    cmd.registry = registry
+    cmd.groupName = "enemies"
+    cmd.autoOptimize = true
+end, 100, layer.DrawCommandSpace.World)
+```
+
+*— from src/systems/render_groups/render_groups.cpp:145-196, tests/test_render_groups.lua*
+
+**API Reference:**
+
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| `render_groups.create(name, {shaders})` | group name, default shader list | Create a render group |
+| `render_groups.add(group, entity)` | group name, entity | Add entity with group's default shaders |
+| `render_groups.add(group, entity, {shaders})` | group name, entity, shader list | Add entity with custom shaders |
+| `render_groups.remove(group, entity)` | group name, entity | Remove entity from group |
+| `render_groups.removeFromAll(entity)` | entity | Remove entity from all groups |
+| `render_groups.clearGroup(group)` | group name | Clear all entities from group |
+| `render_groups.clearAll()` | - | Clear all groups |
+
+**Per-entity shader manipulation:**
+
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| `render_groups.addShader(group, entity, shader)` | group, entity, shader name | Add shader to entity's list |
+| `render_groups.removeShader(group, entity, shader)` | group, entity, shader name | Remove shader from entity |
+| `render_groups.setShaders(group, entity, {shaders})` | group, entity, shader list | Replace entity's shader list |
+| `render_groups.resetToDefault(group, entity)` | group, entity | Reset to group's default shaders |
+
+**Complete example with visual test:**
+
+```lua
+local testGroup = "visual_test_3d_skew"
+
+-- Initialize: create group and add entity
+function init()
+    render_groups.create(testGroup, {"3d_skew_holo"})
+    
+    local entity = animation_system.createAnimatedObjectWithTransform(
+        "enemy_type_1.png", true
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(entity, 128, 128)
+    
+    local transform = component_cache.get(entity, Transform)
+    transform.actualX = globals.screenWidth() / 2
+    transform.actualY = 100
+    
+    render_groups.add(testGroup, entity)
+end
+
+-- Draw: queue the batch render
+function draw()
+    command_buffer.queueDrawRenderGroup(layers.sprites, function(cmd)
+        cmd.registry = registry
+        cmd.groupName = testGroup
+        cmd.autoOptimize = true
+    end, 1000, layer.DrawCommandSpace.World)
+end
+
+-- Cleanup: remove entities before destruction
+function cleanup()
+    render_groups.removeFromAll(entity)
+    registry:destroy(entity)
+    render_groups.clearGroup(testGroup)
+end
+```
+
+*— from tests/test_render_groups_visual.lua*
+
+**Gotcha:** Always call `render_groups.removeFromAll(entity)` or `render_groups.remove(group, entity)` before destroying an entity. The render group holds entity references.
+
+**Gotcha:** Empty shader list in `add()` uses group defaults. To render without shaders, create a group with empty defaults.
+
+**Gotcha:** `queueDrawRenderGroup` requires `cmd.registry`, `cmd.groupName`, and optionally `cmd.autoOptimize` in the callback.
 
 ***
 

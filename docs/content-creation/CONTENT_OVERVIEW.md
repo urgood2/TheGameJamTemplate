@@ -10,6 +10,7 @@ Quick index for adding new content to the game.
 |--------------|-------|-----------|
 | Card (action/modifier/trigger) | [ADDING_CARDS.md](ADDING_CARDS.md) | `assets/scripts/data/cards.lua` |
 | Joker (passive artifact) | [ADDING_JOKERS.md](ADDING_JOKERS.md) | `assets/scripts/data/jokers.lua` |
+| Trigger card + event wiring | [ADDING_TRIGGERS.md](ADDING_TRIGGERS.md) | `wand/wand_triggers.lua` |
 | Projectile preset | [ADDING_PROJECTILES.md](ADDING_PROJECTILES.md) | `assets/scripts/data/projectiles.lua` |
 | Avatar (ascension) | [ADDING_AVATARS.md](ADDING_AVATARS.md) | `assets/scripts/data/avatars.lua` |
 

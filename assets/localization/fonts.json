@@ -1,6 +1,6 @@
 {
   "en_us": {
-    "file": "fonts/en/Coder'sCrux2.ttf",
+    "file": "fonts/en/Tomorrow_Night.ttf",
     "sizes": [13, 16, 22, 32, 44],
     "defaultSize": 13,
     "scale": 1.0,
@@ -31,9 +31,9 @@
   "namedFonts": {
     "tooltip": {
       "en_us": {
-        "file": "fonts/en/Coder'sCrux2.ttf",
-        "sizes": [16, 22, 32, 44],
-        "defaultSize": 16
+        "file": "fonts/en/Tomorrow_Night.ttf",
+        "sizes": [12, 22, 32, 44],
+        "defaultSize": 12
       },
       "ko_kr": {
         "file": "fonts/ko/Galmuri11-Bold.ttf",

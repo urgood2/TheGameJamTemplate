@@ -10,6 +10,15 @@ Welcome to the comprehensive documentation for the Game Jam Template. This index
 - [Lua Debugging](assets/DEBUGGING_LUA.md) - Debug your Lua scripts
 - [Game Design Context](../GAME_DESIGN_CONTEXT.md) - Central gameplay/design tenets
 
+## Content Creation
+
+- [Content Overview](content-creation/CONTENT_OVERVIEW.md) - Quick index for adding game content
+- [Adding Cards](content-creation/ADDING_CARDS.md) - Action, modifier, trigger cards
+- [Adding Jokers](content-creation/ADDING_JOKERS.md) - Passive artifacts
+- [Adding Triggers](content-creation/ADDING_TRIGGERS.md) - Trigger cards & event wiring
+- [Adding Projectiles](content-creation/ADDING_PROJECTILES.md) - Projectile presets
+- [Adding Avatars](content-creation/ADDING_AVATARS.md) - Ascension system
+
 ## Architecture & Standards
 - [System Architecture Overview](guides/SYSTEM_ARCHITECTURE.md)
 - [C++ Documentation Standards](guides/DOCUMENTATION_STANDARDS.md)

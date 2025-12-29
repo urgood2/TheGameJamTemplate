@@ -3283,7 +3283,8 @@ function setUpLogicTimers()
                                         log_debug("trigger_simul_timer fired for action board:", actionBoardID)
                                         log_debug("action board has", #actionBoard.cards, "cards")
                                         log_debug("Now simulating wand", currentSet.wandDef.id) -- wand def is stored in the set
-
+                                        
+                                        
                                         -- run the simulation, then take the return value to pulse the cards that would be fired.
 
                                         local deck = {}
@@ -3309,47 +3310,6 @@ function setUpLogicTimers()
                                             return
                                         end
 
-                                        local pitchToUse = 0.7
-                                        local castSequenceID = tostring(actionBoardID) ..
-                                            "_" .. tostring(os.clock()) .. "_" .. tostring(math.random(1000000))
-
-                                        -- inspect the cast blocks. for each block, pulse the corresponding cards.
-                                        for blockIdx, castBlock in ipairs(simulatedResult.blocks) do
-                                            log_debug(" - cast block", blockIdx, "type:", castBlock.type)
-                                            
-
-                                            -- Use card_delays for precise timing
-                                            for cardIdx, delayInfo in ipairs(castBlock.card_delays) do
-                                                local card = delayInfo.card
-                                                local cumulativeDelay = delayInfo.cumulative_delay /
-                                                    1000.0 -- Convert ms to seconds
-                                                local timerTag = "cast_block_" ..
-                                                    castSequenceID .. "_block" .. blockIdx .. "_card" .. cardIdx
-
-                                                timer.after(
-                                                    cumulativeDelay,
-                                                    function()
-                                                        log_debug("   - Firing card:", card.cardID, "at", cumulativeDelay,
-                                                            "seconds")
-                                                        local cardTransform = component_cache.get(card:handle(),
-                                                            Transform)
-                                                        if cardTransform then
-                                                            cardTransform.visualS = 1.5
-                                                            playSoundEffect("effects", "planning_card_activation",
-                                                                0.8 + math.random() * 0.4 + pitchToUse)
-                                                            pitchToUse = pitchToUse + 0.05
-
-                                                            -- pulse the card
-                                                            addPulseEffectBehindCard(card:handle(),
-                                                                util.getColor("red"), util.getColor("black"))
-                                                        end
-                                                    end,
-                                                    timerTag
-                                                )
-                                            end
-
-                                            -- TODO: use total_cast_delay and total_recharge_time to determine wand visual activation.
-                                        end
                                     end,
                                     0,
                                     false,
@@ -7060,6 +7020,14 @@ function cycleBoardSets(amount)
         end
     end
 
+    
+    -- cam jiggle
+    local cam = camera.Get("world_camera")
+    cam:SetVisualRotation(1)
+    
+    -- sfx
+    playSoundEffect("effects", "cycle-wand-set")
+
     -- activate tooltip state
     activate_state(WAND_TOOLTIP_STATE)
 end
@@ -8154,10 +8122,6 @@ function debugUI()
         end
         if ImGui.Button("Next Board Set") then
             cycleBoardSets(1)
-
-            -- cam jiggle
-            local cam = camera.Get("world_camera")
-            cam:SetVisualRotation(1)
         end
         ImGui.Separator()
         ImGui.Text("Action board helpers")
@@ -10587,6 +10551,7 @@ function initPlanningUI()
                     :addMinWidth(defaultButtonWidth)
                     :addMinHeight(defaultButtonHeight)
                     :addButtonCallback(function()
+                        playSoundEffect("effects", "wand-button-click")
                         cycleBoardSet(buttonIndex)
                     end)
                     :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))

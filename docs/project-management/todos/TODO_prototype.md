@@ -1,324 +1,418 @@
+# TODO Prototype - Organized Status Report
+> Last verified: Dec 29, 2025
+
+
+
+- cpp ui is rounded more than drawn ui from lua. lua rounding needs to match cpp versoin.
+- transition to shop after stage is complete from wave manager. we want a miinimal implmeentation, 3 random cards offered, with buttnos for reroll & lock. then, when player is ready, they can return to planning phase & restart loop.
+- tooltips over threshholds in the tag synergies panel are rendered under the tag synergy panel. make sure they draw OVER. also, synergies panel should never overlap the synergies button.
+- let's make the triggers & actions areas in the planning phase solid in color.
+- enlarge the board sets & trigger inventory & cards inventory vertically so that the cards fit.
+- make avatars panel show situated on right edge of screen, vertically centered on the entire screen. just say "avatar" instead of "avatars" since there is only one avatar at one given time. move jokers panel to bottom left.
+- "start action phase" button looks wrong (outline is much bigger than actual button?). Text needs to be much bigger.
+- we need to make sure tooltips shown for cards (for anything using our tooltip system) are right next to the card in question, and alighned vertically if shown to the side (horizontally otherwise.)
+- spacing in card tooltips is uneven at the bottom (too much extra space at the bottom of tooltip)
+- the mini cards on left of action phase work correctly except for the progress shader, they don't seem to be shown. also, the every 5 seconds trigger card pulses even when it's on cooldown. it should only pulse exactly when activated, then stop until next activation.
+- text for level up screen seems to be missing localization keys (for the three offers)
+- permanently turn off cast feed. 
+- the achievement sound seems bugged not sure why: 
+```
+[2025-12-29 10:45:08.073] [combined] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg)
+INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg] File loaded successfully
+[2025-12-29 10:45:08.074] [combined] [error] [sound_system.cpp:489] [SOUND] Failed to load sound: new_achievement from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg
+```
+- let's add a hover sound to every button in the game. the sound is "button-hover-sound". make the pitch random.
+- every card hover gets a sound "card-hover". let's make the pitch random.
+- rework the gold display on the left.  we just want a gold icon (rendered circle) with a textbuider text that wobbles very slightly.
+- when mobs spawn, they should fit the sprite's size. (big sprites are squahsed to be smaller rn)
+- get rid fo "X of 3" text in planning phase.
+
+---
+
+## Projectiles
+
+| Status | Item |
+|--------|------|
+| ~~DONE~~ | ~~Basic test projectile~~ |
+| ~~DONE~~ | ~~Fast, accurate projectile~~ |
+| ~~DONE~~ | ~~Slow orb with medium damage~~ |
+| ~~DONE~~ | ~~Explosive fire projectile~~ |
+| ~~DONE~~ | ~~Ricochets off surfaces~~ |
+| ~~DONE~~ | ~~Heavy gravity-affected object projectile~~ |
+| **STUB** | Sucks in other projectiles & creatures (data defined, logic NOT IMPL) |
+
+---
+
+## Modifiers
+
+| Status | Item |
+|--------|------|
+| ~~DONE~~ | ~~Seeks enemies (MOD_HOMING, MOD_SEEKING)~~ |
+| ~~DONE~~ | ~~Increases projectile speed (MOD_SPEED_UP)~~ |
+| ~~DONE~~ | ~~Decreases projectile speed (MOD_SPEED_DOWN, MOD_BIG_SLOW)~~ |
+| ~~DONE~~ | ~~Reduces spread angle (MOD_REDUCE_SPREAD)~~ |
+| ~~DONE~~ | ~~Increases projectile damage (MOD_DAMAGE_UP)~~ |
+| ~~DONE~~ | ~~Shortens projectile lifetime (MOD_SHORT_LIFETIME)~~ |
+| ~~DONE~~ | ~~Casts next spell on hit - Add trigger (MOD_TRIGGER_ON_HIT)~~ |
+| ~~DONE~~ | ~~Casts next spell after delay - Add timer (MOD_TRIGGER_TIMER)~~ |
+| ~~DONE~~ | ~~Triggers next spell on projectile death (MOD_TRIGGER_ON_DEATH)~~ |
+
+---
+
+## Multicasts
+
+| Status | Item |
+|--------|------|
+| ~~DONE~~ | ~~Casts next two spells at the same time (MULTI_DOUBLE_CAST)~~ |
+| ~~DONE~~ | ~~Casts next three spells (MULTI_TRIPLE_CAST)~~ |
+| ~~DONE~~ | ~~Casts next five projectiles in circular formation (MULTI_CIRCLE_FIVE_CAST)~~ |
+
+---
+
+## Utilities
+
+| Status | Item |
+|--------|------|
+| **STUB** | Moves caster to impact point (UTIL_TELEPORT_TO_IMPACT - data exists, logic stub) |
+| **PARTIAL** | Creates healing area at current location (UTIL_HEAL_AREA - self-heal works, AoE stub) |
+| **STUB** | Creates a shield bubble at current location (UTIL_SHIELD_BUBBLE - data exists, logic stub) |
+| **STUB** | Summons an ally entity (UTIL_SUMMON_ALLY - data exists, spawning logic stub) |
+
+---
+
+## Super Recasts & Meta
+
+| Status | Item |
+|--------|------|
+| **NOT IMPL** | Recasts first spell in wand (META_RECAST_FIRST - flag exists, no executor logic) |
+| **NOT IMPL** | Applies all modifiers in wand to next projectile (META_APPLY_ALL_MODS_NEXT - flag exists, no logic) |
+| **PARTIAL** | Casts all spells in wand at once (META_CAST_ALL_AT_ONCE - works via multicast_count=999, flag ignored) |
+| **NOT IMPL** | Converts encumbrance into damage (META_CONVERT_WEIGHT_TO_DAMAGE - flag exists, no logic) |
+
+---
+
+## Stats System
+
+| Status | Item |
+|--------|------|
+| ~~DONE~~ | ~~Physique: health (100 + Physique*10)~~ |
+| ~~DONE~~ | ~~Physique: health regen~~ |
+| **NOT IMPL** | Physique: armor derivation |
+| **NOT IMPL** | Physique: knockback resistance derivation |
+| ~~DONE~~ | ~~Cunning: damage modifiers (physical_modifier_pct, pierce_modifier_pct)~~ |
+| **NOT IMPL** | Cunning: critical chance derivation |
+| **NOT IMPL** | Cunning: attack speed derivation |
+| ~~DONE~~ | ~~Spirit: energy/energy regen~~ |
+| **NOT IMPL** | Spirit: cooldown reduction derivation |
+| **NOT IMPL** | Spirit: luck derivation |
+| ~~DONE~~ | ~~Stat-based dash distance (+2 per Physique)~~ |
+| ~~DONE~~ | ~~Player level system~~ |
+| **MISMATCH** | Level-up grants stat bonus (currently +2, TODO says +5) |
+| ~~DONE~~ | ~~Character classes/Origins with starting stats (origins.lua)~~ |
+
+---
+
+## Genre Analysis & Design Notes
+
+- Reference: https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
+
+### Stat Ideas (Design Notes - Not Code TODOs)
+- Everything casts via triggers. Artifacts hold triggers, wands do projectile actions.
+- Triggers and actions as part of bigger wand/deck with fixed triggers, shuffle, max slots, cast block size, cast speed, wand cooldown.
+- Maybe give wand equip requirements? Triggers as well?
+- Basic stats: physique (health, armor, knockback), cunning (damage, crit, atk speed), spirit (CDR, luck)
+
+### Non-stat values
+- Player level (DONE)
+
+---
+
+## Things to Do in Downtime
+
+| Status | Item |
+|--------|------|
+| **OPEN** | Web build resuming visibility is terrible |
+| **OPEN** | Disable telemetry for now until demo |
+| **OPEN** | Intermittent flicker when projectiles are wiped |
+| **OPEN** | Test the new batching queue system |
+| **OPEN** | Performance pass with Tracy & profiling necessary |
+
+---
+
+## Programming Side
+
+| Status | Item |
+|--------|------|
+| ~~FIXED~~ | ~~Enemies spawning outside arena bounds~~ |
+| **DONE** | When alt key is down, bring hovered card to front |
+| ~~DONE~~ | ~~Tooltip needs to never cover the card (positioned to right with gaps)~~ |
+| **OPEN** | How will player know when a mod works with an action card or not? |
+| ~~DONE~~ | ~~Add descriptor strings for each card, as well as an icon~~ |
+| ~~DONE~~ | ~~Make tooltip text smaller, display next to card~~ |
+| **OPEN** | How to use crit feature in combat system with chain lightning and change the damage numbers to show? |
+| **PARTIAL** | SFX: enemy impact, critical hit, bleed (self), heal, lightning (impact/heal/lightning done, bleed missing) |
+| ~~DONE~~ | ~~Make enemies blink/flash on hit (hitfx.lua)~~ |
+| **PARTIAL** | Flip a card to see upgrade level & tags (upgrade stars done, flip animation missing) |
+| ~~DONE~~ | ~~Add stars to background, pulsing particles~~ |
+| **OPEN** | Text builders still need some debugging |
+| **OPEN** | Use new aseprite workflow to design own versions of cards |
+| ~~DONE~~ | ~~Make shop a simple three-card thing~~ |
+| **OPEN** | Consider using cute UI sounds |
+| **OPEN** | Add other versions of JetBrains font |
+| **OPEN** | Dropped frame issue with imgui & graphics commands lua side |
+| **OPEN** | Get things ready to add content |
+| **OPEN** | Sometimes the tutorial buttons are translucent, sometimes solid |
+| ~~DONE~~ | ~~Move execution preview out of its window, place under card inventories~~ |
+| ~~DONE~~ | ~~Treasure opening sequence (darken, chest shake, shader bg, escalations, particles)~~ |
+| **OPEN** | Find assets, start designing better card graphics |
+| **OPEN** | Use non-serif font for reading, serifs for titles, good contrast |
+| **OPEN** | Apply texture shader overlay to UI |
+| **OPEN** | Replace card sprites with real ones |
+| **OPEN** | After UI/functionality in place, ensure easy ways to add interactions/items |
+| **OPEN** | Sound pass to make interactions juicy, add music from ovani |
+| **OPEN** | Make a prompt guideline based on current scripts |
+| **OPEN** | Destructible objects that spawn and give resources |
+| ~~DONE~~ | ~~Show current level number on action phase screen~~ |
+| **OPEN** | Button to show current player stats |
+
+---
+
+## Shop System
+
+| Status | Item |
+|--------|------|
+| ~~DONE~~ | ~~Rounded rect for 3 shop offers~~ |
+| **UI DISABLED** | Button for removing a card (logic in shop_system.lua:449, UI commented out) |
+| **UI DISABLED** | Button for locking shop offers (logic in shop_system.lua:368, UI commented out) |
+| ~~DONE~~ | ~~Lock sprite indicator (buildLockIcon in ui_defs.lua)~~ |
+| **UI DISABLED** | Button for rerolling shop at escalating cost (logic exists, UI commented out) |
+| ~~DONE~~ | ~~Dynamic text for current gold balance~~ |
+| ~~DONE~~ | ~~Rounded rect area for purchasing jokers (Joker Shelf)~~ |
+| ~~DONE~~ | ~~Fancy dynamic text for "SHOP" header~~ |
+
+---
+
+## Testing New Features
+
+| Status | Item |
+|--------|------|
+| **OPEN** | Test the new shader implementation with player sprite |
+| **OPEN** | Test the new LDtk impl |
+| **OPEN** | Test the new UI impl (won't use this time) |
+
+---
+
+## Gameplay Mechanics
+
+| Status | Item |
+|--------|------|
+| **OPEN** | Moving after dash is infinite - might make a mechanic from that |
+| **OPEN** | Refer to balatro_analysis folder for design elements |
+| ~~DONE~~ | ~~Cast combo UI: show cast feed UI in both action and planning state~~ |
+| **OPEN** | Discovery tags: show with toasts |
+| **OPEN** | Display the tags in the card UI |
+| ~~DONE~~ | ~~Make card tooltips appear next to cards~~ |
+| ~~DONE~~ | ~~Get basic wand executor, discovery, cast events firing and UI showing~~ |
+| **OPEN** | Player progresses through 3 stages, last is extra hard |
+| **OPEN** | Flesh out shop: preview player belongings/wands/inventory, return to planning, go button |
+| **OPEN** | Avatar slot (empty for now, maybe stencil with animated stripes) |
+| **OPEN** | Relic slot (maybe RoR-like bar) |
+| **OPEN** | Brainstorm visualization of execution order (arrows?) |
+| **OPEN** | Exp drops, leveling, stat integration, currency + autobattle loop with interest |
+| ~~DONE~~ | ~~Make tooltips jump to full size instead of tweening~~ |
+| **OPEN** | Cumulative wand state per cycle, per cast block state |
+| **OPEN** | Make artifacts that add trigger + effects, equippable & upgradeable |
+| ~~DONE~~ | ~~Implement level-ups (currently +2, intended +5)~~ |
+| **OPEN** | Character classes focusing on different stats with specific triggers/actions/mods |
+| **OPEN** | Add basic triggers, actions, modifiers and hook to gameplay |
+| **OPEN** | mods projectile_pierces_twice and summon_minion_wandering not implemented |
+| **OPEN** | Apply card tag synergies: mobility, defense, hazard, brute |
+| **OPEN** | Think up and apply card upgrades (e.g., bolt -> element -> pierces -> explodes) |
+
+---
+
+## Errors / Bugs
+
+| Status | Item |
+|--------|------|
+| ~~FIXED~~ | ~~Toasts show icon below bg rectangle (z-order +100 fix applied)~~ |
+| **OPEN** | Memory leak in WASM version (fix proposed, not applied) |
+| **OPEN** | starry_tunnel shader not working |
+| **OPEN** | Using 3d_skew shader on cards makes player invisible |
+| ~~FIXED~~ | ~~Rendering background sometimes goes translucent (ClearTextures fix applied)~~ |
+| **OPEN** | UI strings in tooltips overlap bounds (wrapTextToWidth proposed, not applied) |
+| ~~FIXED~~ | ~~Entities not getting filtered properly, camera not always kicking in~~ |
+| **OPEN** | Boards stop updating when I change state |
+| **OPEN** | Transform lerping to body issues (fix proposed, not applied) |
+| **OPEN** | Enemies move too slowly? |
+| **OPEN** | Cards to immediate left & right jitter when pushed aside for selection |
+| **OPEN** | Physics timer / physics jerking issues |
+| **OPEN** | Transforms sometimes get jerky (physics-transform sync) |
+| **OPEN** | Z-orders not correct when cards overlap first time (fix proposed, not applied) |
+| **OPEN** | Card areas don't shift cards reliably with many cards (fix proposed, not applied) |
+| **OPEN** | Stacking cards z-order misbehavior |
+| **OPEN** | Need way to nudge colliders inward for better player fit |
+| **OPEN** | Make transform authoritative rotation sync always to transform rotation |
+| **OPEN** | Make a timer setting that ensures something gets called every render frame |
+| **OPEN** | Drag & drop with physics bodies doesn't always work (fix proposed, not applied) |
+
+---
+
+## Design Questions (Not Code TODOs)
+
+- Should trigger slots only have one trigger, or multiple?
+- What properties do triggers have? Delay? Chance?
+- Should there be limits to actions/modifiers per card/area?
+- Better actions like varied weapons (area attacks, melee, etc.)
+
+---
+
+## UI/UX Questions (Not Code TODOs)
+
+- Should remove area only appear when player drags a card?
+- Should we show overlay over invalid drop targets? How to detect?
+
+---
+
+## Performance Considerations
+
+| Status | Item |
+|--------|------|
+| **OPEN** | Consider draw command injector for shader start/end to prevent texture ping-pong |
+| **SKIP** | Use LuaJIT (doesn't work for web) |
+| **OPEN** | Make timers state-sensitive with cached game state |
+| **OPEN** | Continue profiling |
+| **OPEN** | Consider LuaJIT for release (non-web) |
+
+---
+
+## Shaders to Add
+
+| Status | Shader | Source |
+|--------|--------|--------|
+| ~~DONE~~ | ~~2dradial-shine-2 (radial_shine_2d)~~ | godotshaders.com |
+| ~~DONE~~ | ~~2dfireworks (fireworks_2d)~~ | godotshaders.com |
+| ~~DONE~~ | ~~2dstarry-tunnel (starry_tunnel) - EXISTS but BROKEN~~ | godotshaders.com |
+| **NOT IMPL** | double-sided-transparent-gradient (cyclic UI) | godotshaders.com |
+| **NOT IMPL** | occlusion-outline (sprite occlusion) | godotshaders.com |
+| **NOT IMPL** | polar-coordinate-black-hole (spell effect) | godotshaders.com |
+| ~~DONE~~ | ~~vacuum-collapse (vanish/appear effect)~~ | godotshaders.com |
+| **NOT IMPL** | liquid-plasma-swirl (background) | godotshaders.com |
+| **NOT IMPL** | abstract-3d (background) | godotshaders.com |
+| ~~DONE~~ | ~~clockwise-pixel-outline-progress-display (cooldown_pie)~~ | godotshaders.com |
+| **NOT IMPL** | edge-gradient-border-shader (cards) | godotshaders.com |
+| ~~DONE~~ | ~~item-pulse-glow (item_glow)~~ | godotshaders.com |
+
+---
+
+## Polish Phase
+
+| Status | Item |
+|--------|------|
+| ~~DONE~~ | ~~Quick buttons to send card to wand/inventory (right-click, alt-click)~~ |
+| ~~DONE~~ | ~~Color-code wand slots + trigger area + card area~~ |
+| **OPEN** | Web - scanline things disappear on web |
+| **OPEN** | Cursor hover doesn't work fully correctly with controller |
+| ~~DONE~~ | ~~Move health bar to player and hide when not in use~~ |
+| ~~DONE~~ | ~~Show health bars for enemies~~ |
+| ~~DONE~~ | ~~Add stamina ticker that vanishes after not dashing~~ |
+| ~~DONE~~ | ~~Card 3D rotation for when initially dropped~~ |
+| ~~DONE~~ | ~~Dashed lines only for valid trigger+action~~ |
+| **NOT IMPL** | Main menu navigable with controller (infrastructure exists, not integrated) |
+| **NOT IMPL** | Controller prompts (L trigger + direction, bumpers) - assets exist, not integrated |
+| ~~DONE~~ | ~~Wand cooldown icons from itch assets (cooldown_pie shader)~~ |
+| **NOT IMPL** | More variation in coin collect sounds |
+| ~~DONE~~ | ~~Disable decel on arrival (disableArrival flag)~~ |
+| ~~DONE~~ | ~~Turn pickups into sensors~~ |
+| ~~DONE~~ | ~~Drop shadow implementation~~ |
+| ~~DONE~~ | ~~Camera rotation jiggle~~ |
+| **OPEN** | Record scratching sound for time slow |
+| **OPEN** | Give initial impulse when spawning items |
+| **DISABLED** | Slow time slightly when player gets too close to enemy (logic exists, disabled) |
+| **OPEN** | Add after() to each particle method for chaining |
+| **OPEN** | Function to give UI bump, flash, vanish, ambient rotate |
+| ~~DONE~~ | ~~Some ambient movement (rocking) to items/UI~~ |
+| **NOT IMPL** | Integrate new music from eagle folder |
+| **OPEN** | Some bg or shader overlay effects for sprites/map |
+| **OPEN** | Normalize sound effects |
+| **OPEN** | Layer particle effects of different colors |
+| **OPEN** | Limit camera movement beyond center |
+| **OPEN** | Size boing not working for player on hit |
+| **OPEN** | Add physics sync mode that completely desyncs rotation |
+| **OPEN** | Juice UI bars with springs |
+| **OPEN** | Per-card 3D skew shader pass (disabled when interacted) |
+| **OPEN** | Graphics need to coalesce (SNKRX reference) |
+| **OPEN** | Particles with specific arc (directional splashing) |
+| **OPEN** | Glowing background behind card for selection |
+| **OPEN** | Nice UI reference: https://www.youtube.com/watch?v=Rkd5SYT10UQ |
+| **OPEN** | Add glow to CRT and proper scanlines |
+| ~~DONE~~ | ~~Integrate proper hit fx with blinking~~ |
+| **OPEN** | Make steering face direction of movement |
+| ~~DONE~~ | ~~Make sprites blink upon hit fx~~ |
+| **OPEN** | Buttons with scrolling background |
+| **OPEN** | Need to apply crossed lines for CRT |
+| **OPEN** | Glow for selected sprites, noise-based squiggly rainbow background |
+| **OPEN** | Just images - cards with numbers, color-coded text with icons |
+| **OPEN** | Sound effects pass |
+| **OPEN** | Steering should turn toward direction |
+| **NOT IMPL** | Music integration |
+| ~~DONE~~ | ~~Make sprites blink for dying/damage effect~~ |
+| **OPEN** | Shader pass for legibility (change CRT maybe) |
+
+---
+
+## Potential Soundtracks (Ask Permission First)
 
-
-- Projectiles
-Basic test projectile
-Fast, accurate projectile
-Slow orb with medium damage
-Explosive fire projectile
-Ricochets off surfaces
-Heavy gravity-affected object projectile
-Sucks in other projectiles & creatures
-
-- Modifiers
-Seeks enemies
-Increases projectile speed
-Decreases projectile speed
-Reduces spread angle
-Increases projectile damage
-Shortens projectile lifetime
-Casts next spell on hit (Add trigger)
-Casts next spell after delay (Add timer)
-Triggers next spell on projectile death
-
-- Multicasts
-Casts next two spells at the same time
-Casts next three spells
-Casts next five projectiles in circular formation
-
-- Utilities
-Moves caster to impact point
-Creates healing area at current location
-Creates a shield bubble at current location
-Summons an ally entity
-
-- Super recasts & meta
-Recasts first spell in wand
-Applies all modifiers in wand to next projectile
-Casts all spells in wand at once
-Converts encumbrance into damage
-
-# Genre analysis
-https://chatgpt.com/share/69192a61-8814-800a-8e04-eb8fb8001d38
-
-
-# stat ideas
-- everything casts via triggers. artifacts hold triggers, and so do wands. artifacts should have more far-reaching or global effects, while wands mostly do projectile and other in game actions. 
-- what actions matter? dash, touching enemy, killing enemy... put together a list of triggers we can use, and let's arrive at three stats we can boil them down to. then we will tie the attack, defense, attack speed, and other stats that we will be allowing the player to upgrade upon level up.
-- triggers and actions as part of a bigger wand (item? artifact?) that you can move around and replace? maybe  a deck that can be clicked to expand it (for better ux.) decks could have fixed triggers & sometimes always casts (or shuffle) and variations in max card slot size, cast block size, cast speed, wand cooldown,  etc to make things more interesting.
-- Maybe give wand equip requirements? triggers as well?
-- Some basic stats:
-    - physique: health, armor, knockback resistance
-    - cunning: damage, critical chance, attack speed
-    - spirit: cooldown reduction, luck
-- make dash distance stat-based, and vary particle effects based on that.
-
-# Non-stat values:
-- player level. 
-
-# Things to do in downtime.
-- web build resuming visibility is terrible. also disable telemetry for now until we do a demo.
-- intermittent flicker when projectiles are wiped? not sure why.
-- got to also test the new batching queue system.
-- performance pass iwth tracy & profiling necessary.
-
-    
-# programming side
-
-- enemies sometimes spawn outside the bounds of the arena, should not happen.
-- when alt key is down, bring hovered card to front (reset after stop hover, just like the way drag works right now)
-- tooltip needs to never cover the card. right now it slightly does.
-
-- how will player know when a mod works with an action card or not?
-- add descriptor strings for each card, as well as an icon.
-
-- make tooltip text smaller, display right next to the card (left or right), or even better, split tinot two tooltips that are shown on top and left. so
-
-- how to use crit feature in combat system with chain lightning and change the damage numbers to show?
-
-- sfx: enemy impact, critical hit, bleed (self), heal. lightning
-- make enemies blink/flash on hit. why aren't we doing that?
-
-- flip a card to see upgrate level & tags, add juice.
-- add stars to background, pulsing particles.
-- text builders still need some debugging.
-
-- use new aseprite workflow to design my own versions of cards.
-
-- make shop a really simple three-card thing, and we'll flesh out later after adding content.
-
-- consider using cute ui sounds.
-
-- add other versions of jetbrains font. also 
-
-- dropped frame issue with imgui & graphics commands lua side.
-
-- get things ready to add content.
-
-- sometimes the tutorial buttons to translucent, sometimes solid.
-
-- can we move execution preview out of its window (so blank background), ditch the "execution preview" panel, and place it under the card inventories?
-
-- treasure opening sequence.
-    - darken screen.
-    - show a chest. it should start to shake, and halo of particles from behind it shoud expand and spin.
-    - an exciting shader background that is colorful and dynamic.
-    - there should be three escalations, like fanfare, box jerking each time, which will modify the shader background color, maybe make it pulse.
-    - it shoudl turn white when it opens, release a pulse (shader), then play a satisfying sound, (maybe a stinger afterward.). Plenty of particles everywhere.
-    -  maybe escalate the background with this? https://www.shadertoy.com/view/MdGGRW move it to the center, make it vary in color as the sound escalates, then show fireworks, then boom.
-    - Then show the reward, with ambient animation.
-    - fireworks background https://www.shadertoy.com/view/4lfXRf
-    - confetti twister https://www.shadertoy.com/view/WsByRW
-    - existing ripple shader for opening impact 
-    - varied particles for opening impact
-    - shake box upon opening.
-    - some kind of rainbow streaknig as well?
-    - https://godotshaders.com/shader/2dradial-shine-2/ for shine
-    - godotshaders.com/shader/pixel-perfect-halo-radiant-glow/ for glow
-    
-
-- find assets. start designing better card graphics.
-
-- use non serif font for reading. titles should have serifs. use bolded text with reason. text should have good contrast all the time.
-
-
-- also apply some sort of texture shader to the ui (overlay)
-
-- replace card sprites with real ones. 
-
-- affter all ui and functionality in place, we'll make sure I have easy ways of adding new interactions and items and hooking them up, then get started content wise.
-
-- sound pass to make interactions as juicy and satisfying as possible. also add music from ovani.
-
-- probably make a prompt guideline based on my current scripts.
-
-- destrutible objects that spawn from time to time and give resources?
-
-- we should show current level number somewhere on the actoin phase screen.
-- we need a button that will show current stats of the player (those that are relevant.)
-
-- we need to flesh out the shop. let's extend how it looks now. there should be a rounded rect for showing 3 shop offers (just cards)
-- A button for removing a card.
-- a button for locking the offers of the shop. when lock is in place, a sprite should be rendered above each item offered by the shop to indicate it is locked.
-- A button for rerolling the shop, at escalating cost (initial cost is 5 gold)
-- A dynamic text for showing current gold balance (gold is decimal internally, round for display)
-- a rounded rect area for purchasing jokers.
-- a fancy dynamic text for "SHOP" somewhere prominent. 
-- please suggest other features from shop_system.lua
-
-
-- test the new shader implemnetation with player sprite.
-- test the new ldtk impl.
-- test the new ui impl, but we won't be using it this time.
-
-
-- right now, moving after dash is infinite, might want to make a mechanic from that.
-
-- refer to balatro_analysis folder for design elements.
-
-- cast combo ui: just show cast feed ui in both action and planning state.
-- discovery tags: we need to show this with toasts sort of thing.
-- Display the tags in the card ui.
-- make card tooltips appear next to cards.
-- Get basic systems like wand executor, discovery, most importantly cast events firing and the ui showing, up so I can get started.
-
-
-- then player progresses through 3 stages, the last of which is extra hard.
-
-
-- flesh out shop. display currency with dynamic text, add reroll and lock buttons. we should probably have a way to preview player's belongings & wands & inventory. as well as a return to planning button, and a go button for action.
-- Avatar slot. leave empty for now. maybe use stencil to have a rectangle area that has stripes animated through it.
-- Relic slot. Maybe ROR like bar which can be filled. 
-
-
-- brainstorm how best to visualize the execution order of the cards to the player. maybe use arrows?
-
-- exp drops, leveling, stat integration. start with hp  also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
-
-- make all tooltips newly created jump to full size instead of tweening size, which is the default.
-- need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
-
-- make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.
-
-- implement level-ups. just grant +5 to a chosen stat.
-- maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
-- add basic triggers, actions, and modifiers and hook them up to gameplay.
-- mods projectile_pierces_twice and summon_minion_wandering not implemented. 
-- apply card tag synergies: mobility, defense, hazard, brute
-- think up and  apply card upgrades. e.g., bolt -> takes on an element -> pierces 3 times -> explodes on impact. We  need an upgrade resource, and an area where upgrades can be applied.
-
-# errors
-- toasts show icon below the bg rectangle.
-- there's a memory leak in the wasm version.
-- starry_tunnel shader not working.
-- Using 3d_skew shader on cards makes player invisible. why?
-- rendeirng background sometimes goes translucent. not sure why?
-- ui strings in tooltips overlap bounds for some reason.
-- entities not getting filtured porperly, camera not always kicking in.
-- boards stop updating when I change state. why?
-- test that transform lerping to body is working.
-- enemies move too slowly?
-- cards to immeidate left & right jitter when pushed aside for selection.
-- probably make a physics timer that runs every physics step, instead of relying on main loop timer. how to do this with lua, though? callbacks are slow. physics is jerking from place to place. why is that? jumping back and forth.
-- transforms sometimes get jerky. why? -> take a look at sync between physics and transform.
-- z orders are not correct when cards overlap for the first time?
-- card areas don't shift cards reliably when there are lots of cards in an area, and cards are dragged around inside -> probably a bug in the card area shifting logic.
-- stacking cards misbehave in terms of z-order. Sometimes they move when clicked when they shouldn't.
-- need a way to nudge colliders inward (or just center them) for better fit for player.
-- Make it so when transform is authoritative rotation syncs always to transform rotation. Also, sometimes drag and drop stops working for cards, maybe because physics and transform? The collider seems to become inaccurate.
-- Make a timer setting that ensures something gets called every render frame.
-- drag & drop with physics bodies & transforms doesn't always work. objects will sometimes become unreactive or the collision shapes for transform change position. not sure why. only solution I've found is to complete remove physics afterward: physics.remove_physics(PhysicsManager.get_world("world"), card, true)
-
-# design questions
-- should trigger slots only have one trigger, or multiple?
-- what properties do triggers have? delay between activations? chance to activate?
-- should there be limits to how many actions and modifiers you can add to a card or area?
-- better actions, like varied weapons in survivors such as area attacks, melee, etc.
-
-# ui/ux questions
-- should remove area only appear when player drags a card?
-- should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
-
-# performance considerations
-- Consider making a draw command injector and hand-coding shader start/end for pipeline instead of using pipeline as it stands if there are many sprites (like skew for cards) this will prevent texture ping-pong.
-- Use luajit. It doesn't work ATM. (doens't work for web anyway, skip?)
-- make timers state-sensitive by using cached games state, with optional parameter when creating timer to indicate this.
-- Continue profiling.
-- Consider using luajit for release.
-
-# shaders to add
-- [ ] https://godotshaders.com/shader/2dradial-shine-2/
-- [ ] https://godotshaders.com/shader/2dfireworks/
-- [ ] https://godotshaders.com/shader/2dstarry-tunnel/
-- [ ] The above three for item scenes.
-- [ ] For cyclic ui: https://godotshaders.com/shader/double-sided-transparent-gradient/
-- [ ] sprite occlusion: https://godotshaders.com/shader/occlusion-outline-for-godot-4/ (maybe)
-- [ ] black hole effect for spells: https://godotshaders.com/shader/polar-coordinate-black-hole/
-- [ ] really nice vanishing/appear effect https://godotshaders.com/shader/vacuum-collapse/
-- [ ] backgrounds belwo:
-- [ ] https://godotshaders.com/shader/liquid-plasma-swirl/
-- [ ] https://godotshaders.com/shader/abstract-3d/
-- [ ] rotating progress display clockwise for icons https://godotshaders.com/shader/clockwise-pixel-outline-progress-display/
-- [ ] edge gradient color for cards, etc. https://godotshaders.com/shader/edge-gradient-border-shader/
-- [ ] Add glow to specfiic sprites: https://godotshaders.com/shader/item-pulse-glow/
-
-# polish phase
-- buttons of some kind to quickly press to send card up to wand or back to inventory, maybe popping out behind card? what would this look like?
-- color code wand slots + trigger area + card area so that it's easy to swap between them.
-- Then have a button that pops up when you click a card (or a pip if it's controller) that says "to wand" or (if already in wand) "to inven". Shortcut keys to swap to trigger inventory or card inventory.
-- web - why do the scanline things disappear on web?
-- [ ] cursor hover doesn't work fully correctly when controller (points to wrong card sometimes)
-- [ ] Move health bar to player and hide when not in use. Show health bars for enemies too. 
-- [ ] add stamina ticker to player that vanishes after a few seconds of not dashing.
-- Add card 3d rotation for when initially dropped?
-- make dashed lines be used only when a trigger + action is valid and active.
-- Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
-- add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
-
-
-- use the new itch assets to indicate icons for wands & when they are on cooldown.
-- more variation in coin collect sounds
-- [ ] disable decel on arrival 
-- [ ] turn pickups into sensors?
-- [ ] drop shadow implementation (do lua side, avoid bugs)
-- [ ] be sure to use camera rotation jiggle on polish
-- [ ] Record scratching sound for when time slow?
-- [ ] give initial impulse when spawning items.
-
-- [ ] slow time slightly when player gets too close to an enemy?
-- [ ] add after() to each particle method that allows chaining another particle effect after the first one ends.
-- [ ] function to give ui a bump, as well as flash for a moment, as well as vanish. as well as ambient rotate. -> it works, but needs some work, since buttons that contain images, etc. can't do this yet.
-- [ ] Some ambient movement (rocking) to items/ui
-- [ ] integrate new music from eagle folder.
-- [ ] Some bg or shader overlay effects for individual sprites  / map\
-- normalize sound effects?
-- layer particle effects of different colors
-- limit camera movement to not go certain distance beyond center?
-- size boing not working fo rplayer on hit.
-- add a physics sync mode that completey desyncs rotation. then test using it with the skellies.
-- juice the ui bars with springs.
-- add per-card 3d skew shader pass, disabled when card interacted with. also change 3d skew shader to make card tilt toward mouse, right now it's not facing mouse.
-- graphics need to coalesce. snkrx looks nice. how to replicate?
-- particles with a specific arc (like splashing in a certain direction)
-- experiment with glowing background behind a card to show selection/effect (colorful, glowing, random)
-- some nice ui https://www.youtube.com/watch?v=Rkd5SYT10UQ as reference
-- add glow to crt as well, and add proper scanlines.
-- integrate proper hit fx, with blinking.
-- make steering face direction of movement.
-- mmake sprites blink upon hit fx. 
-- [ ] buttons with a scrolling background.
-- [ ] Need to apply the crossed lines for crt.
-- [ ] glow for selected sprites. Also, do a background, noise based and squiggly, and make it glow with rainbow coolors.
-- [ ] just images - cards. Attach numbwers to them. Then show color-coded text to the side, with Icons.
-- sound effects.
-- steering should turn toward direction it is going.
-- music.
-- make sprites blink for effect, like dying or damage.
-- shader pass for legibility (change crt maybe)
-
-
-# potential soundtracks (ask for permission first)
 - https://smiletron.bandcamp.com/album/self-titled (4/5)
 - https://smiletron.bandcamp.com/album/signals (3/5)
 - https://smiletron.bandcamp.com/album/solstice (4/5)
-- https://soundcloud.com/biggiantcircles/the-glory-days-sevcon-full?si=405318c952a14c879be01f1c9d926b9f&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing -> (4/5)
+- https://soundcloud.com/biggiantcircles/the-glory-days-sevcon-full (4/5)
 
-# release & testing
-- clean up web builds to not include .mds and stuff
-- Enable github actions + auto loading to itch.io on new release.
-- Explore ways to cleanly remove tracy instrumentation from lua scripts & c++ for release builds.
-- Clean up build files so that no docs or unnecessary source files are included.
-- Playtest and get feedback from friends.
+---
 
+## Release & Testing
 
-# particle polish considerations
-- [ ] Chromatic abberation on hit. 
-- [ ] Particles that dwindle in size iregularly (pixelation + rotation) + gravity
-- [ ] Same colored expanding circle outline
-- [ ] Flash with filled circle
-- [ ] Diamond hit fx centered on impact point& roatated to face the point + dwindling after
-- [ ] The sprite itself changing size in hit and going back to normal
-- [ ] Spreading circular ripple - irregular shape + fading
-- [ ] Multiple-point shader distortion (ripple)
-- [ ] Pulsing points of light as sources for lightning
-- [ ] Particles in area traveling toward center & concentric circles traveling toward center & causing wobble + growing circle size + exploding with fat particles, directin
-- [ ] Lightning lines from a to b
+| Status | Item |
+|--------|------|
+| **PARTIAL** | Clean up web builds to not include .mds (docs/ excluded, no global *.md filter) |
+| ~~DONE~~ | ~~Enable GitHub Actions + auto loading to itch.io on new release~~ |
+| **PARTIAL** | Remove Tracy instrumentation for release (forced OFF for web, manual for native) |
+| ~~DONE~~ | ~~Clean up build files (no docs/unnecessary source)~~ |
+| ~~DONE~~ | ~~Playtest feedback system (web shell with bug report, clipboard, JSON download)~~ |
+
+---
+
+## Particle Polish Considerations
+
+| Status | Item |
+|--------|------|
+| **OPEN** | Chromatic aberration on hit |
+| **OPEN** | Particles that dwindle irregularly (pixelation + rotation + gravity) |
+| **OPEN** | Same colored expanding circle outline |
+| **OPEN** | Flash with filled circle |
+| **OPEN** | Diamond hit fx centered on impact & rotated + dwindling |
+| **OPEN** | Sprite size change on hit and back to normal |
+| **OPEN** | Spreading circular ripple - irregular + fading |
+| **OPEN** | Multiple-point shader distortion (ripple) |
+| **OPEN** | Pulsing points of light as sources for lightning |
+| **OPEN** | Particles traveling toward center + concentric circles + wobble + exploding |
+| **OPEN** | Lightning lines from A to B |
+
+---
+
+## Summary Statistics
+
+| Category | Done | Partial/Stub | Open/Not Impl |
+|----------|------|--------------|---------------|
+| Projectiles | 6 | 1 | 0 |
+| Modifiers | 9 | 0 | 0 |
+| Multicasts | 3 | 0 | 0 |
+| Utilities | 0 | 1 | 3 |
+| Super Recasts | 0 | 1 | 3 |
+| Stats System | 8 | 0 | 7 |
+| Shaders | 6 | 0 | 6 |
+| Errors/Bugs | 3 | 0 | 16 |
+| Shop System | 5 | 0 | 3 (UI disabled) |
+| Polish | ~18 | 1 | ~25 |
+| Release | 3 | 2 | 0 |
+

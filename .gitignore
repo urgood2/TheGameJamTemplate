@@ -2614,3 +2614,11 @@ saves/
 
 # Audio processing marker file
 assets/sounds/.audio_processed.json
+combat_scripts.txt
+data_scripts.txt
+grep_projectiles.txt
+search_input.txt
+search_stats_vfx.txt
+search_ui_cards.txt
+search_world.txt
+src_projectiles.txt

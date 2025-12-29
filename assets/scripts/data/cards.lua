@@ -967,6 +967,19 @@ TriggerCards.TEST_TRIGGER_EVERY_N_SECONDS = {
     sprite = "trigger-every-5.png",
 }
 
+TriggerCards.TRIGGER_ON_KILL = {
+    id = "enemy_killed",                    -- Must match event name in wand_triggers.lua
+    type = "trigger",                  -- Required: identifies as trigger card
+    max_uses = -1,                     -- -1 = infinite uses
+    mana_cost = 0,                     -- Triggers typically cost no mana
+    weight = 0,                        -- 0 = not in random pools
+    tags = { "Combat" },               -- Tags for joker synergies
+    description = "Casts spells when you kill an enemy.",
+    trigger_type = "kill",             -- For UI categorization
+    test_label = "TRIGGER\non\nkill",  -- Display label
+    sprite = "trigger-on-kill.png",    -- Visual
+}
+
 TriggerCards.TEST_TRIGGER_ON_BUMP_ENEMY = {
     id = "on_bump_enemy",
     type = "trigger",

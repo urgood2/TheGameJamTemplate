@@ -2329,6 +2329,29 @@ layer.CmdDrawCenteredFilledRoundedRect = {
 
 ---
 ---
+---@class layer.CmdDrawSteppedRoundedRect
+layer.CmdDrawSteppedRoundedRect = {
+    ---@type number
+    x = nil,  -- Center X
+    ---@type number
+    y = nil,  -- Center Y
+    ---@type number
+    w = nil,  -- Width
+    ---@type number
+    h = nil,  -- Height
+    ---@type Color
+    fillColor = nil,  -- Fill color
+    ---@type Color
+    borderColor = nil,  -- Border color
+    ---@type number
+    borderWidth = nil,  -- Border thickness
+    ---@type number
+    numSteps = nil  -- Steps per corner (default 4)
+}
+
+
+---
+---
 ---@class layer.CmdDrawSpriteCentered
 layer.CmdDrawSpriteCentered = {
     ---@type string
@@ -8263,6 +8286,24 @@ function command_buffer.queueDrawCenteredFilledRoundedRect(...) end
 function command_buffer.executeDrawCenteredFilledRoundedRect(...) end
 
 ---
+--- Queues layer.CmdDrawSteppedRoundedRect into a layer via command_buffer (World or Screen space).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawSteppedRoundedRect)
+---@param z integer
+---@param renderSpace? layer.DrawCommandSpace
+---@return void
+function command_buffer.queueDrawSteppedRoundedRect(...) end
+
+---
+--- Executes layer.CmdDrawSteppedRoundedRect immediately (bypasses the command queue).
+---
+---@param layer Layer
+---@param init_fn fun(c: layer.CmdDrawSteppedRoundedRect)
+---@return void
+function command_buffer.executeDrawSteppedRoundedRect(...) end
+
+---
 --- Queues layer.CmdDrawSpriteCentered into a layer via command_buffer (World or Screen space).
 ---
 ---@param layer Layer
@@ -8956,6 +8997,16 @@ function layer.queueDrawTriangleEquilateral(...) end
 ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
 ---@return void
 function layer.queueDrawCenteredFilledRoundedRect(...) end
+
+---
+--- Queues a CmdDrawSteppedRoundedRect into the layer draw list. Draws rounded rectangle with stepped corners matching C++ UI appearance.
+---
+---@param layer Layer # Target layer to queue into
+---@param init_fn fun(c: layer.CmdDrawSteppedRoundedRect) # Function to initialize the command
+---@param z number # Z-order depth to queue at
+---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+---@return void
+function layer.queueDrawSteppedRoundedRect(...) end
 
 ---
 --- Queues a CmdDrawSpriteCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.

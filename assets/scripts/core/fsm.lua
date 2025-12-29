@@ -5,6 +5,10 @@ fsm.lua - Declarative Finite State Machine
 State machine helper with automatic state tag management. Reduces boilerplate
 for entity state transitions.
 
+NOTE: FSM state names are independent of global state constants (PLANNING_STATE,
+COMBAT_STATE, etc.). If you need to sync with ECS state tags, use the syncTags
+option or call script:setState() manually in enter/exit callbacks.
+
 Usage:
     local FSM = require("core.fsm")
 

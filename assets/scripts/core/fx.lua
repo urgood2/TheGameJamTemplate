@@ -35,9 +35,12 @@ if _G.__FX__ then return _G.__FX__ end
 local Fx = {}
 
 local Q = require("core.Q")
-local hitfx = require("core.hitfx")
-local popup = require("core.popup")
 local timer = require("core.timer")
+
+local ok_hitfx, hitfx = pcall(require, "core.hitfx")
+local ok_popup, popup = pcall(require, "core.popup")
+if not ok_hitfx then hitfx = nil end
+if not ok_popup then popup = nil end
 
 local FxChain = {}
 FxChain.__index = FxChain
@@ -66,7 +69,7 @@ end
 
 function FxChain:flash(duration)
     table.insert(self._actions, function()
-        if self._entity and Q.isValid(self._entity) then
+        if hitfx and self._entity and Q.isValid(self._entity) then
             hitfx.flash(self._entity, duration or 0.2)
         end
     end)
@@ -115,11 +118,12 @@ end
 
 function FxChain:popup(text, opts)
     table.insert(self._actions, function()
+        if not popup then return end
         if self._entity then
             popup.above(self._entity, text, opts)
         else
             local x, y = self._x, self._y
-            if x then
+            if x and popup.at then
                 popup.at(x, y, text, opts)
             end
         end
@@ -129,7 +133,7 @@ end
 
 function FxChain:damage(amount, opts)
     table.insert(self._actions, function()
-        if self._entity then
+        if popup and self._entity then
             popup.damage(self._entity, amount, opts)
         end
     end)
@@ -138,7 +142,7 @@ end
 
 function FxChain:heal(amount, opts)
     table.insert(self._actions, function()
-        if self._entity then
+        if popup and self._entity then
             popup.heal(self._entity, amount, opts)
         end
     end)

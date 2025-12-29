@@ -97,6 +97,64 @@ Q.withTransform(entity, function(t)
 end)
 ```
 
+## Physics Helpers (Chipmunk)
+
+These functions work with physics-enabled entities (entities with Chipmunk bodies).
+
+### Velocity
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `Q.velocity(e)` | Get velocity | `local vx, vy = Q.velocity(e)` |
+| `Q.setVelocity(e, vx, vy)` | Set velocity | `Q.setVelocity(e, 100, 0)` |
+| `Q.speed(e)` | Get speed (magnitude) | `local s = Q.speed(e)` |
+
+### Forces & Impulses
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `Q.impulse(e, ix, iy)` | Apply instant impulse | `Q.impulse(e, 500, -200)` |
+| `Q.force(e, fx, fy)` | Apply continuous force | `Q.force(e, 100, 0)` |
+
+### Angular Velocity
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `Q.spin(e)` | Get angular velocity | `local av = Q.spin(e)` |
+| `Q.setSpin(e, av)` | Set angular velocity | `Q.setSpin(e, math.pi)` |
+
+### Movement Helpers
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `Q.moveToward(e, x, y, speed)` | Move toward point | `Q.moveToward(e, 100, 200, 50)` |
+| `Q.chase(e, target, speed)` | Chase another entity | `Q.chase(enemy, player, 60)` |
+| `Q.flee(e, threat, speed)` | Flee from entity | `Q.flee(enemy, player, 80)` |
+
+```lua
+-- Simple AI movement
+function updateEnemy(enemy, dt)
+    local dist = Q.distance(enemy, player)
+    if dist < 50 then
+        Q.flee(enemy, player, 80)
+    elseif dist < 200 then
+        Q.chase(enemy, player, 60)
+    else
+        Q.setVelocity(enemy, 0, 0)
+    end
+end
+
+-- Knockback on hit
+function onHit(entity, sourceX, sourceY)
+    local cx, cy = Q.center(entity)
+    local dx, dy = cx - sourceX, cy - sourceY
+    local len = math.sqrt(dx*dx + dy*dy)
+    if len > 0 then
+        Q.impulse(entity, (dx/len) * 500, (dy/len) * 500)
+    end
+end
+```
+
 ## Replaces This Boilerplate
 
 ```lua

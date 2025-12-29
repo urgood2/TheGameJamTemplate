@@ -585,8 +585,7 @@ function timer.update(dt, is_render_frame)
         elseif ttype == "tween_scalar" then
             local ratio = math.min(1, t.timer / t.delay)
             local eased = t.method(ratio)
-            local start = t.getter()
-            t.setter(start + (t.target - start) * eased)
+            t.setter(t.initial + (t.target - t.initial) * eased)
             if t.timer > t.delay then
                 t.after()
                 remove = true

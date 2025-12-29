@@ -114,6 +114,21 @@ local function setup_tooltip(entity, nodeComp, hover)
     end
 end
 
+local function apply_shaders(entity, shaders)
+    local ok, ShaderBuilder = pcall(require, "core.shader_builder")
+    if ok and ShaderBuilder then
+        local builder = ShaderBuilder.for_entity(entity)
+        for _, shader in ipairs(shaders) do
+            if type(shader) == "string" then
+                builder:add(shader)
+            elseif type(shader) == "table" then
+                builder:add(shader[1], shader[2])
+            end
+        end
+        builder:apply()
+    end
+end
+
 local function setup_interactions(entity, nodeComp, interactive)
     if not interactive then return end
 
@@ -230,20 +245,7 @@ function EntityBuilder.create(opts)
 
     -- Apply shaders
     if shaders then
-        local ok, ShaderBuilder = pcall(require, "core.shader_builder")
-        if ok then
-            local builder = ShaderBuilder.for_entity(entity)
-            for _, shader in ipairs(shaders) do
-                if type(shader) == "string" then
-                    builder:add(shader)
-                elseif type(shader) == "table" then
-                    builder:add(shader[1], shader[2])
-                end
-            end
-            builder:apply()
-        else
-            log_warn("EntityBuilder: ShaderBuilder not available")
-        end
+        apply_shaders(entity, shaders)
     end
 
     return entity, script
@@ -448,18 +450,7 @@ function EntityBuilder.spawn(sprite, x, y, opts)
     end
     
     if opts.shaders then
-        local ok, ShaderBuilder = pcall(require, "core.shader_builder")
-        if ok and ShaderBuilder then
-            local builder = ShaderBuilder.for_entity(entity)
-            for _, shader in ipairs(opts.shaders) do
-                if type(shader) == "string" then
-                    builder:add(shader)
-                elseif type(shader) == "table" then
-                    builder:add(shader[1], shader[2])
-                end
-            end
-            builder:apply()
-        end
+        apply_shaders(entity, opts.shaders)
     end
     
     return entity, script

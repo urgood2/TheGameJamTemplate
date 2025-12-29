@@ -37,6 +37,9 @@ local timer = require("core.timer")
 local pools = {}
 
 function Pool.create(opts)
+    assert(opts.factory, "Pool.create: factory function required")
+    assert(type(opts.factory) == "function", "Pool.create: factory must be a function")
+    
     local self = setmetatable({}, Pool)
     
     self._name = opts.name or ("pool_" .. tostring(os.time()))

@@ -10,6 +10,7 @@ local z_orders = require("core.z_orders")
 CurrencyDisplay.amount = 0
 CurrencyDisplay.displayAmount = 0
 CurrencyDisplay.pulse = 0
+CurrencyDisplay.wobbleTime = 0
 CurrencyDisplay.isActive = false
 CurrencyDisplay.position = { x = 20, y = 16 }
 CurrencyDisplay.margins = { x = 16, y = 16 }
@@ -54,6 +55,7 @@ function CurrencyDisplay.update(dt)
         (CurrencyDisplay.amount - CurrencyDisplay.displayAmount) * lerpRate
 
     CurrencyDisplay.pulse = math.max(0, CurrencyDisplay.pulse - dt * 3.2)
+    CurrencyDisplay.wobbleTime = CurrencyDisplay.wobbleTime + dt
 end
 
 local function drawIcon(centerX, centerY, radius, z, space)
@@ -102,7 +104,7 @@ function CurrencyDisplay.draw()
     local centerY = clampedY + h * 0.5
     local space = layer.DrawCommandSpace.Screen
     local baseZ = (z_orders.ui_tooltips or 0) - 4
-    local radius = 16
+    local radius = math.max(math.max(w, h) / 60, 12)
     local outlineWidth = 2
     local font = localization.getFont()
     local accentCenterX = clampedX + accentWidth * 0.5
@@ -166,11 +168,12 @@ function CurrencyDisplay.draw()
         c.fontSize = labelSize
     end, baseZ + 3, space)
 
+    local wobbleOffset = math.sin(CurrencyDisplay.wobbleTime * 3.5) * 2 * (0.3 + CurrencyDisplay.pulse * 0.7)
     command_buffer.queueDrawText(layers.ui, function(c)
         c.text = tostring(amount)
         c.font = font
         c.x = iconCenterX + 18
-        c.y = centerY + 2
+        c.y = centerY + 2 + wobbleOffset
         c.color = colors.text
         c.fontSize = amountSize
     end, baseZ + 3, space)

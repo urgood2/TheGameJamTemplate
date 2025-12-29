@@ -212,7 +212,7 @@ local function rebuildSprites()
     AvatarJokerStrip._dirty = false
 end
 
-local function computeLayout(list, anchorRight, title)
+local function computeLayout(list, anchorRight, title, verticalCenter)
     local layout = AvatarJokerStrip.layout
     local screenW = (globals.screenWidth and globals.screenWidth()) or (globals.getScreenWidth and globals.getScreenWidth()) or 1920
     local screenH = (globals.screenHeight and globals.screenHeight()) or (globals.getScreenHeight and globals.getScreenHeight()) or 1080
@@ -231,7 +231,12 @@ local function computeLayout(list, anchorRight, title)
     local h = layout.pad * 2 + layout.cardH + layout.labelSize + 6
 
     local x = anchorRight and (screenW - layout.margin - w) or layout.margin
-    local y = screenH - layout.margin - h
+    local y
+    if verticalCenter then
+        y = (screenH - h) / 2
+    else
+        y = screenH - layout.margin - h
+    end
 
     return {
         x = x,
@@ -451,10 +456,10 @@ function AvatarJokerStrip.update()
         rebuildSprites()
     end
 
-    local avatarLabel = localization and localization.get and localization.get("ui.avatars_label") or "Avatars"
+    local avatarLabel = localization and localization.get and localization.get("ui.avatar_label") or "Avatar"
     local jokerLabel = localization and localization.get and localization.get("ui.jokers_label") or "Jokers"
-    local avatarBox = computeLayout(AvatarJokerStrip.avatarSprites, false, avatarLabel)
-    local jokerBox = computeLayout(AvatarJokerStrip.jokerSprites, true, jokerLabel)
+    local avatarBox = computeLayout(AvatarJokerStrip.avatarSprites, true, avatarLabel, true)
+    local jokerBox = computeLayout(AvatarJokerStrip.jokerSprites, false, jokerLabel, false)
     AvatarJokerStrip._layoutCache = { avatar = avatarBox, joker = jokerBox }
 
     local baseZ = (z_orders.ui_tooltips or 0) - 8
@@ -469,7 +474,7 @@ function AvatarJokerStrip.draw()
     local baseZ = (z_orders.ui_tooltips or 0) - 8
     local space = layer.DrawCommandSpace.Screen
 
-    local avatarLabel = localization and localization.get and localization.get("ui.avatars_label") or "Avatars"
+    local avatarLabel = localization and localization.get and localization.get("ui.avatar_label") or "Avatar"
     local jokerLabel = localization and localization.get and localization.get("ui.jokers_label") or "Jokers"
     drawGroup(AvatarJokerStrip._layoutCache.avatar, colors.avatarAccent, avatarLabel, baseZ)
     drawGroup(AvatarJokerStrip._layoutCache.joker, colors.jokerAccent, jokerLabel, baseZ)

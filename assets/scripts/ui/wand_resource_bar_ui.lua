@@ -11,17 +11,24 @@ local M = {}
 -- CONFIGURATION
 --------------------------------------------------------------------------------
 
+-- Match C++ util::getCornerSizeForRect: max(max(w,h)/60, 12)
+local function getCornerRadius(w, h)
+    return math.max(math.max(w, h) / 60, 12)
+end
+
+local function getBarRadius(h)
+    return math.max(h * 0.5, 4)
+end
+
 local CONFIG = {
     barWidth = 220,
     barHeight = 16,
-    overflowMaxWidth = 110, -- 50% of barWidth for overflow visualization
-    cornerRadius = 6,
-    barCornerRadius = 3,
+    overflowMaxWidth = 110,
     x = 20,
     y = 500,
     textFontSize = 14,
     padding = 8,
-    gap = 6, -- Gap between bar and text
+    gap = 6,
 }
 
 -- Z-ordering (below cards at z_orders.card=101, below board at z_orders.board=100)
@@ -205,13 +212,14 @@ function M.draw()
     local containerCenterX = CONFIG.x + containerWidth / 2
     local containerCenterY = CONFIG.y + containerHeight / 2
 
+    local containerRadius = getCornerRadius(containerWidth, containerHeight)
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = containerCenterX
         c.y = containerCenterY
         c.w = containerWidth
         c.h = containerHeight
-        c.rx = CONFIG.cornerRadius
-        c.ry = CONFIG.cornerRadius
+        c.rx = containerRadius
+        c.ry = containerRadius
         c.color = COLOR_BG
     end, Z_BASE, SPACE)
 
@@ -219,27 +227,27 @@ function M.draw()
     local barCenterX = barX + totalWidth / 2
     local barCenterY = barY + totalHeight / 2
 
+    local barRadius = getBarRadius(totalHeight)
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = barCenterX
         c.y = barCenterY
         c.w = totalWidth
         c.h = totalHeight
-        c.rx = CONFIG.barCornerRadius
-        c.ry = CONFIG.barCornerRadius
+        c.rx = barRadius
+        c.ry = barRadius
         c.color = COLOR_EMPTY
     end, Z_BASE + 1, SPACE)
 
     -- 3. Fill bar (mana used, clamped to capacity)
     if fillWidth > 0 then
-        -- Draw from left edge
         local fillCenterX = barX + fillWidth / 2
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
             c.x = fillCenterX
             c.y = barCenterY
             c.w = fillWidth
             c.h = totalHeight
-            c.rx = CONFIG.barCornerRadius
-            c.ry = CONFIG.barCornerRadius
+            c.rx = barRadius
+            c.ry = barRadius
             c.color = Col(fillColor.r or 0, fillColor.g or 0, fillColor.b or 0, 255)
         end, Z_BASE + 2, SPACE)
     end
@@ -257,15 +265,15 @@ function M.draw()
 
     -- 5. Overflow zone (past capacity, rendered in red)
     if overflowWidth > 0 then
-        local overflowStartX = capacityX + 3 -- Small gap after marker
+        local overflowStartX = capacityX + 3
         local overflowCenterX = overflowStartX + overflowWidth / 2
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
             c.x = overflowCenterX
             c.y = barCenterY
             c.w = overflowWidth
             c.h = totalHeight
-            c.rx = CONFIG.barCornerRadius
-            c.ry = CONFIG.barCornerRadius
+            c.rx = barRadius
+            c.ry = barRadius
             c.color = Col(COLOR_OVERFLOW.r or 0, COLOR_OVERFLOW.g or 0, COLOR_OVERFLOW.b or 0, 255)
         end, Z_BASE + 2, SPACE)
     end

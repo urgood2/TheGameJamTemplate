@@ -348,7 +348,7 @@ function MessageQueueUI.draw()
     local boxWidth = math.max(cfg.minWidth, math.min(cfg.maxWidth, idealWidth))
     local boxHeight = cfg.height
     local availableTextWidth = boxWidth - (cfg.padding * 2 + cfg.iconSize + cfg.iconPadding)
-    local cornerRadius = cfg.cornerRadius or DEFAULT_CONFIG.cornerRadius or 0
+    local cornerRadius = math.max(math.max(boxWidth, boxHeight) / 60, 12)
     local borderWidth = 2
     local borderRadius = cornerRadius + borderWidth
     local bodyZ = cfg.baseZ + 1

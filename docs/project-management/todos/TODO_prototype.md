@@ -2,30 +2,69 @@
 > Last verified: Dec 29, 2025
 
 
+- create a background shader for me that has the oily slick look of this
+```
+// Original by localthunk (https://www.playbalatro.com)
 
-- cpp ui is rounded more than drawn ui from lua. lua rounding needs to match cpp versoin.
-- transition to shop after stage is complete from wave manager. we want a miinimal implmeentation, 3 random cards offered, with buttnos for reroll & lock. then, when player is ready, they can return to planning phase & restart loop.
-- tooltips over threshholds in the tag synergies panel are rendered under the tag synergy panel. make sure they draw OVER. also, synergies panel should never overlap the synergies button.
-- let's make the triggers & actions areas in the planning phase solid in color.
-- enlarge the board sets & trigger inventory & cards inventory vertically so that the cards fit.
-- make avatars panel show situated on right edge of screen, vertically centered on the entire screen. just say "avatar" instead of "avatars" since there is only one avatar at one given time. move jokers panel to bottom left.
-- "start action phase" button looks wrong (outline is much bigger than actual button?). Text needs to be much bigger.
-- we need to make sure tooltips shown for cards (for anything using our tooltip system) are right next to the card in question, and alighned vertically if shown to the side (horizontally otherwise.)
-- spacing in card tooltips is uneven at the bottom (too much extra space at the bottom of tooltip)
+// Configuration (modify these values to change the effect)
+#define SPIN_ROTATION -2.0
+#define SPIN_SPEED 7.0
+#define OFFSET vec2(0.0)
+#define COLOUR_1 vec4(0.871, 0.267, 0.231, 1.0)
+#define COLOUR_2 vec4(0.0, 0.42, 0.706, 1.0)
+#define COLOUR_3 vec4(0.086, 0.137, 0.145, 1.0)
+#define CONTRAST 3.5
+#define LIGTHING 0.4
+#define SPIN_AMOUNT 0.25
+#define PIXEL_FILTER 745.0
+#define SPIN_EASE 1.0
+#define PI 3.14159265359
+#define IS_ROTATE false
+
+vec4 effect(vec2 screenSize, vec2 screen_coords) {
+    float pixel_size = length(screenSize.xy) / PIXEL_FILTER;
+    vec2 uv = (floor(screen_coords.xy*(1./pixel_size))*pixel_size - 0.5*screenSize.xy)/length(screenSize.xy) - OFFSET;
+    float uv_len = length(uv);
+    
+    float speed = (SPIN_ROTATION*SPIN_EASE*0.2);
+    if(IS_ROTATE){
+       speed = iTime * speed;
+    }
+    speed += 302.2;
+    float new_pixel_angle = atan(uv.y, uv.x) + speed - SPIN_EASE*20.*(1.*SPIN_AMOUNT*uv_len + (1. - 1.*SPIN_AMOUNT));
+    vec2 mid = (screenSize.xy/length(screenSize.xy))/2.;
+    uv = (vec2((uv_len * cos(new_pixel_angle) + mid.x), (uv_len * sin(new_pixel_angle) + mid.y)) - mid);
+    
+    uv *= 30.;
+    speed = iTime*(SPIN_SPEED);
+    vec2 uv2 = vec2(uv.x+uv.y);
+    
+    for(int i=0; i < 5; i++) {
+        uv2 += sin(max(uv.x, uv.y)) + uv;
+        uv  += 0.5*vec2(cos(5.1123314 + 0.353*uv2.y + speed*0.131121),sin(uv2.x - 0.113*speed));
+        uv  -= 1.0*cos(uv.x + uv.y) - 1.0*sin(uv.x*0.711 - uv.y);
+    }
+    
+    float contrast_mod = (0.25*CONTRAST + 0.5*SPIN_AMOUNT + 1.2);
+    float paint_res = min(2., max(0.,length(uv)*(0.035)*contrast_mod));
+    float c1p = max(0.,1. - contrast_mod*abs(1.-paint_res));
+    float c2p = max(0.,1. - contrast_mod*abs(paint_res));
+    float c3p = 1. - min(1., c1p + c2p);
+    float light = (LIGTHING - 0.2)*max(c1p*5. - 4., 0.) + LIGTHING*max(c2p*5. - 4., 0.);
+    return (0.3/CONTRAST)*COLOUR_1 + (1. - 0.3/CONTRAST)*(COLOUR_1*c1p + COLOUR_2*c2p + vec4(c3p*COLOUR_3.rgb, c3p*COLOUR_1.a)) + light;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord/iResolution.xy;
+    
+    fragColor = effect(iResolution.xy, uv * iResolution.xy);
+}
+```
+but isn't spiral based, it's more like curly water with so specific direction. it needs to be able to shift colors by uniforms so I can change on the fly for different scenes.
+
+
+
 - the mini cards on left of action phase work correctly except for the progress shader, they don't seem to be shown. also, the every 5 seconds trigger card pulses even when it's on cooldown. it should only pulse exactly when activated, then stop until next activation.
-- text for level up screen seems to be missing localization keys (for the three offers)
-- permanently turn off cast feed. 
-- the achievement sound seems bugged not sure why: 
-```
-[2025-12-29 10:45:08.073] [combined] [debug] [utilities.cpp:179] getRawAssetPathNoUUID(sounds/UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg)
-INFO: FILEIO: [/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg] File loaded successfully
-[2025-12-29 10:45:08.074] [combined] [error] [sound_system.cpp:489] [SOUND] Failed to load sound: new_achievement from /Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg
-```
-- let's add a hover sound to every button in the game. the sound is "button-hover-sound". make the pitch random.
-- every card hover gets a sound "card-hover". let's make the pitch random.
-- rework the gold display on the left.  we just want a gold icon (rendered circle) with a textbuider text that wobbles very slightly.
-- when mobs spawn, they should fit the sprite's size. (big sprites are squahsed to be smaller rn)
-- get rid fo "X of 3" text in planning phase.
 
 ---
 

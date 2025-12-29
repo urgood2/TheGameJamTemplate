@@ -251,6 +251,15 @@
             "fragment": "web/peaches_background_fragment.fs"
         }
     },
+    "oily_water_background": {
+        "vertex": "oily_water_background_vertex.vs",
+        "fragment": "oily_water_background_fragment.fs",
+
+        "web": {
+            "vertex": "web/oily_water_background_vertex.vs",
+            "fragment": "web/oily_water_background_fragment.fs"
+        }
+    },
     "fade_zoom": {
         "vertex": "fade_zoom_vertex.vs",
         "fragment": "fade_zoom_fragment.fs",

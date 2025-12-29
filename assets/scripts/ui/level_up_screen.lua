@@ -29,41 +29,43 @@ LevelUpScreen._layout = {
     hitboxH = 240,
 }
 
-local defaultChoices = {
-    {
-        id = "physique",
-        title = localization.get("stats.physique"),
-        description = localization.get("ui.levelup_physique_desc"),
-        apply = function(actor)
-            if not actor or not actor.stats then return end
-            actor.stats:add_base("physique", 2)
-            actor.stats:recompute()
-            actor.attr_points = math.max(0, (actor.attr_points or 0) - 1)
-        end
-    },
-    {
-        id = "cunning",
-        title = localization.get("stats.cunning"),
-        description = localization.get("ui.levelup_cunning_desc"),
-        apply = function(actor)
-            if not actor or not actor.stats then return end
-            actor.stats:add_base("cunning", 2)
-            actor.stats:recompute()
-            actor.attr_points = math.max(0, (actor.attr_points or 0) - 1)
-        end
-    },
-    {
-        id = "spirit",
-        title = localization.get("stats.spirit"),
-        description = localization.get("ui.levelup_spirit_desc"),
-        apply = function(actor)
-            if not actor or not actor.stats then return end
-            actor.stats:add_base("spirit", 2)
-            actor.stats:recompute()
-            actor.attr_points = math.max(0, (actor.attr_points or 0) - 1)
-        end
+local function getDefaultChoices()
+    return {
+        {
+            id = "physique",
+            title = localization.get("stats.physique") or "Physique",
+            description = localization.get("ui.levelup_physique_desc") or "+2 Physique",
+            apply = function(actor)
+                if not actor or not actor.stats then return end
+                actor.stats:add_base("physique", 2)
+                actor.stats:recompute()
+                actor.attr_points = math.max(0, (actor.attr_points or 0) - 1)
+            end
+        },
+        {
+            id = "cunning",
+            title = localization.get("stats.cunning") or "Cunning",
+            description = localization.get("ui.levelup_cunning_desc") or "+2 Cunning",
+            apply = function(actor)
+                if not actor or not actor.stats then return end
+                actor.stats:add_base("cunning", 2)
+                actor.stats:recompute()
+                actor.attr_points = math.max(0, (actor.attr_points or 0) - 1)
+            end
+        },
+        {
+            id = "spirit",
+            title = localization.get("stats.spirit") or "Spirit",
+            description = localization.get("ui.levelup_spirit_desc") or "+2 Spirit",
+            apply = function(actor)
+                if not actor or not actor.stats then return end
+                actor.stats:add_base("spirit", 2)
+                actor.stats:recompute()
+                actor.attr_points = math.max(0, (actor.attr_points or 0) - 1)
+            end
+        }
     }
-}
+end
 
 local function resolveScreen()
     local screenW = (globals and globals.screenWidth and globals.screenWidth()) or 1920
@@ -112,7 +114,7 @@ local function buildChoices(ctx)
     local startX = screenW * 0.5 - spacing
     local baseY = screenH * 0.5
 
-    for i, def in ipairs(defaultChoices) do
+    for i, def in ipairs(getDefaultChoices()) do
         local slot = {
             id = def.id,
             title = def.title,
@@ -244,6 +246,9 @@ end
 function LevelUpScreen.select(choice)
     if not choice or LevelUpScreen._state == "closing" then return end
     LevelUpScreen._state = "closing"
+    if playSoundEffect then
+        playSoundEffect("effects", "level-up-choose", 0.9 + math.random() * 0.2)
+    end
     spawnSelectionBurst(choice)
     if choice.apply then
         choice.apply(LevelUpScreen._actor)

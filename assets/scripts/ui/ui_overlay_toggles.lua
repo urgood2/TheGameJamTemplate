@@ -11,10 +11,10 @@ ImGui panel providing checkboxes to toggle visibility of action mode UI overlays
 
 local UIOverlayToggles = {}
 
--- Default visibility states (all enabled by default)
+-- Default visibility states (all enabled by default except cast_feed which is permanently off)
 UIOverlayToggles.state = {
     show_wand_cooldown = true,
-    show_cast_feed = true,
+    show_cast_feed = false,  -- Permanently disabled
     show_cast_execution_graph = true,
     show_subcast_debug = true,
 }

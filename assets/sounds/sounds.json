@@ -42,7 +42,7 @@
                 "dash_7": "WHOOSH_Fast_03_mono.ogg",
                 "chain_lightning_trigger": "wav_Thunder_spell_magical.ogg",
                 "chain_lightning_individual_hit": "ZAP_Subtle_07_mono.ogg",
-                "new_achievement": "UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg",
+                "new_achievement": "UIAlert_Achievement_Unique_Short-011.ogg",
                 "walk_1": "FOOTSTEP_Rock_Walk_01_RR01_mono.ogg",
                 "walk_2": "FOOTSTEP_Rock_Walk_01_RR02_mono.ogg",
                 "walk_3": "FOOTSTEP_Rock_Walk_01_RR03_mono.ogg",
@@ -110,7 +110,11 @@
                 "simple_button": "Simple Button.wav",
                 "cycle-wand-set": "Simple Button.wav",
                 "button-hover-sound": "UIClick_Button Plip Pop Bubble-001_OS_Quute UI.wav",
-                "card-hover": "Discard Card 9.wav"
+                "card-hover": "Discard Card 9.wav",
+                "level-up-choose": "UIAlert_Achievement_Unique_Short-006.wav",
+                "ui_click_snappy_mono": "UI_Click_Snappy_mono.ogg",
+                "uialert_achievement_unique_short_006": "UIAlert_Achievement_Unique_Short-006.wav",
+                "uialert_achievement_unique_short_011": "UIAlert_Achievement_Unique_Short-011.ogg"
             },
             "volume": 0.3
         },

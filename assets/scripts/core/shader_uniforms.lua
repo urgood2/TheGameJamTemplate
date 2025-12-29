@@ -845,6 +845,22 @@ local function init_static_defaults()
     set("peaches_background", "blob_offset", Vector2{ x = 0.0, y = -0.1 })
     set("peaches_background", "movement_randomness", 16.2)
 
+    -- oily_water_background (curly flowing oil slick effect)
+    set("oily_water_background", "resolution", Vector2{ x = VIRTUAL_W, y = VIRTUAL_H })
+    set("oily_water_background", "color1", Vector3{ x = 0.871, y = 0.267, z = 0.231 })     -- Balatro red
+    set("oily_water_background", "color2", Vector3{ x = 0.0, y = 0.42, z = 0.706 })        -- Balatro blue
+    set("oily_water_background", "color3", Vector3{ x = 0.086, y = 0.137, z = 0.145 })     -- Dark teal
+    set("oily_water_background", "flow_speed", 0.8)
+    set("oily_water_background", "curl_scale", 3.0)
+    set("oily_water_background", "curl_intensity", 1.5)
+    set("oily_water_background", "color_shift", 0.0)
+    set("oily_water_background", "iridescence", 0.6)
+    set("oily_water_background", "contrast", 1.2)
+    set("oily_water_background", "brightness", 0.0)
+    set("oily_water_background", "noise_octaves", 4.0)
+    set("oily_water_background", "pixel_size", 4.0)
+    set("oily_water_background", "pixel_enable", 1.0)
+
     -- foil
     set("foil", "time", get_time())
     set("foil", "dissolve", 0.0)
@@ -1330,6 +1346,10 @@ local function init_updates()
 
     register("peaches_background", function(_shader)
         set("peaches_background", "iTime", get_time() * 0.05)
+    end)
+
+    register("oily_water_background", function(_shader)
+        set("oily_water_background", "iTime", get_time() * 0.1)
     end)
 
     register("foil", function(_shader)

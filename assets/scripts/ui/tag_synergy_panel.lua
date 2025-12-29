@@ -359,8 +359,17 @@ local function getOrBuildTooltip(target)
 
     destroyTooltip(target.key)
     local def = buildTooltipDef(target.title or "Synergy", target.rows or {}, colorForTag(target.entry and target.entry.tag))
-    local z = (z_orders.ui_tooltips or 0) + 10
-    local entity = dsl.spawn({ x = -2000, y = -2000 }, def, "ui", z)
+    local tooltipZ = (z_orders.ui_tooltips or 0) + 50
+    local entity = dsl.spawn({ x = -2000, y = -2000 }, def, "ui", tooltipZ)
+    
+    if transform and transform.set_space then
+        transform.set_space(entity, "screen")
+    end
+    
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(entity, tooltipZ)
+    end
+    
     if ui and ui.box and ui.box.RenewAlignment then
         ui.box.RenewAlignment(registry, entity)
     end
@@ -546,7 +555,15 @@ local function computeLayoutCache()
     local totalRows = math.min(#TagSynergyPanel.entries, MAX_ROWS)
     local layout = TagSynergyPanel.layout
     local marginX = math.max(12, layout.marginX or 18)
-    local marginTop = math.max(12, layout.marginTop or 60)
+    local baseMarginTop = math.max(12, layout.marginTop or 60)
+    
+    local buttonBounds = TagSynergyPanel._toggleButtonBounds
+    local marginTop = baseMarginTop
+    if buttonBounds then
+        local buttonBottom = (buttonBounds.y or 0) + (buttonBounds.h or 40) + 12
+        marginTop = math.max(baseMarginTop, buttonBottom)
+    end
+    
     local panelW = math.max(240, math.min(layout.panelWidth or 360, screenW - marginX * 2))
     local paddingX = 14
     local paddingY = 14

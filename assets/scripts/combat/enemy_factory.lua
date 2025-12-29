@@ -114,14 +114,17 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
     add_state_tag(e, ACTION_STATE)
     remove_default_state_tag(e)
 
-    -- Build context from definition
+    local spriteTransform = component_cache.get(e, Transform)
+    local spriteW = (spriteTransform and spriteTransform.actualW) or 32
+    local spriteH = (spriteTransform and spriteTransform.actualH) or 32
     local ctx = {
         type = enemy_type,
         hp = def.hp,
         max_hp = def.hp,
         speed = def.speed,
         damage = def.damage or 0,
-        size = def.size or { 32, 32 },
+        size = def.size or { spriteW, spriteH },
+        has_explicit_size = def.size ~= nil,
 
         entity = e,
         is_elite = #modifiers > 0,
@@ -172,8 +175,9 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
         transform.visualY = transform.actualY
     end
 
-    -- Resize animation
-    animation_system.resizeAnimationObjectsInEntityToFit(e, ctx.size[1], ctx.size[2])
+    if ctx.has_explicit_size or ctx.is_elite then
+        animation_system.resizeAnimationObjectsInEntityToFit(e, ctx.size[1], ctx.size[2])
+    end
 
     -- Give physics body using PhysicsBuilder (replaces 20+ lines of manual setup)
     -- Use circle shape to prevent corner wedging (rectangles can get stuck in corners)

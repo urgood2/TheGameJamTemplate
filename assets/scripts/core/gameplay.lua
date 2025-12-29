@@ -2482,7 +2482,7 @@ function createNewCard(id, x, y, gameStateToApply)
         if not tooltip then
             return
         end
-        centerTooltipAboveEntity(tooltip, card, 12)
+        positionTooltipRightOfEntity(tooltip, card, { gap = 12 })
         -- hide the previously hovered tooltip (avoid clearing hundreds of cached tooltips every frame)
         if previously_hovered_tooltip and previously_hovered_tooltip ~= tooltip then
             hideCardTooltip(previously_hovered_tooltip)
@@ -4366,9 +4366,9 @@ local function makeDetailedStatsTooltip(snapshot)
     local root = dsl.root {
         config = {
             color = tooltipStyle.bgColor,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = compactPadding,
-            outlineThickness = 1,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+            padding = 2,
+            outlineThickness = 2,
             outlineColor = tooltipStyle.outlineColor,
             shadow = true
         },
@@ -4754,8 +4754,7 @@ function initPlanningPhase()
 
     controller_nav.set_group_callbacks("planning-phase", {
         on_focus = function(e)
-            -- sound
-            playSoundEffect("effects", "card_focus", 0.9 + math.random() * 0.2)
+            playSoundEffect("effects", "card-hover", 0.9 + math.random() * 0.2)
 
             -- update to move cursor to entity
             input.updateCursorFocus()
@@ -5065,7 +5064,7 @@ function initPlanningPhase()
         synergyPanelReserve = math.max(synergyPanelReserve, (layout.panelWidth or 0) + (layout.marginX or 0))
     end
 
-    boardHeight = screenH / 3.5
+    boardHeight = screenH / 2.8
     local planningRegionWidth = math.max(0, screenW)
     boardPadding = planningRegionWidth * 0.1 / 3
     local actionBoardWidth = planningRegionWidth * 0.7
@@ -5088,18 +5087,7 @@ function initPlanningPhase()
 
         -- log_debug("Drawing board borders")
 
-        if is_state_active(PLANNING_STATE) then
-            -- draw which board set is selected (text), below the trigger board.
-            local text = tostring(current_board_set_index) .. " of " .. tostring(#board_sets)
-            command_buffer.queueDrawText(layers.sprites, function(c)
-                c.text = text
-                c.x = leftAlignValueTriggerBoardX
-                c.y = boardPadding + boardHeight + 30
-                c.fontSize = 30
-                c.font = localization.getFont()
-                c.color = util.getColor("purple")
-            end, z_orders.card_text, layer.DrawCommandSpace.World)
-        end
+
 
 
 
@@ -5133,18 +5121,36 @@ function initPlanningPhase()
 
 
             if self.noDashedBorder then
+                local baseColor = self.borderColor or util.getColor("yellow")
+                local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 40)
+                local cornerRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x         = area.actualX + area.actualW * 0.5
-                    c.y         = area.actualY + area.actualH * 0.5
-                    c.w         = math.max(0, area.actualW)
-                    c.h         = math.max(0, area.actualH)
-                    c.rx        = 10
-                    c.ry        = 10
-                    c.color     = self.borderColor or util.getColor("yellow")
-                    c.lineWidth = 5
+                    c.x     = area.actualX + area.actualW * 0.5
+                    c.y     = area.actualY + area.actualH * 0.5
+                    c.w     = math.max(0, area.actualW)
+                    c.h     = math.max(0, area.actualH)
+                    c.rx    = cornerRadius
+                    c.ry    = cornerRadius
+                    c.color = fillColor
                 end, z_orders.board, layer.DrawCommandSpace.World)
+                command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
+                    c.rec       = Rectangle.new(
+                        area.actualX,
+                        area.actualY,
+                        math.max(0, area.actualW),
+                        math.max(0, area.actualH)
+                    )
+                    c.radius    = cornerRadius
+                    c.dashLen   = 9999
+                    c.gapLen    = 0
+                    c.phase     = 0
+                    c.arcSteps  = 14
+                    c.thickness = 3
+                    c.color     = baseColor
+                end, z_orders.board + 1, layer.DrawCommandSpace.World)
                 goto continue
             end
+            local dashedRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)
             command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
                 c.rec       = Rectangle.new(
                     area.actualX,
@@ -5152,7 +5158,7 @@ function initPlanningPhase()
                     math.max(0, area.actualW),
                     math.max(0, area.actualH)
                 )
-                c.radius    = 10
+                c.radius    = dashedRadius
                 c.dashLen   = 12
                 c.gapLen    = 8
                 c.phase     = shapeAnimationPhase
@@ -5226,7 +5232,7 @@ function initPlanningPhase()
     -- --------------------------------------------------------------------------
 
     local triggerInventoryWidth  = planningRegionWidth * 0.2
-    local triggerInventoryHeight = (screenH - runningYValue) * 0.4
+    local triggerInventoryHeight = (screenH - runningYValue) * 0.55
 
     local inventoryBoardWidth    = planningRegionWidth * 0.65
     local inventoryBoardHeight   = triggerInventoryHeight
@@ -7558,6 +7564,8 @@ local function apply_peaches_background_phase(phase)
     tween_peaches_background(peaches_background_targets[phase], 1.0)
 end
 
+local oily_water_bg = require("core.oily_water_background")
+
 function startActionPhase()
     clear_states() -- disable all states.
     if setPlanningPeekMode then
@@ -7605,7 +7613,7 @@ function startActionPhase()
     TriggerStripUI.show()
 
     playStateTransition()
-    apply_peaches_background_phase("action")
+    oily_water_bg.apply_phase("action")
 
     if record_telemetry then
         record_telemetry("phase_enter", { phase = "action", session_id = telemetry_session_id() })
@@ -7720,7 +7728,7 @@ function startPlanningPhase()
     end
 
     playStateTransition()
-    apply_peaches_background_phase("planning")
+    oily_water_bg.apply_phase("planning")
 
     if record_telemetry then
         record_telemetry("phase_enter", { phase = "planning", session_id = telemetry_session_id() })
@@ -7782,7 +7790,7 @@ function startShopPhase()
     end
 
     transitionGoldInterest(1.35, preShopGold, interestPreview)
-    apply_peaches_background_phase("shop")
+    oily_water_bg.apply_phase("shop")
 
     if record_telemetry then
         record_telemetry("phase_enter", { phase = "shop", session_id = telemetry_session_id() })
@@ -9336,7 +9344,8 @@ function initActionPhase()
     TriggerStripUI.show()
     
     -- add shader to backgorund layer
-    add_layer_shader("background", "peaches_background")
+    add_layer_shader("background", "oily_water_background")
+    -- add_layer_shader("background", "peaches_background")
     -- add_layer_shader("background", "fireworks")
     -- add_layer_shader("background", "starry_tunnel")
     -- add_layer_shader("background", "vacuum_collapse")
@@ -10211,17 +10220,17 @@ end
 function initPlanningUI()
     -- makeWandTooltip()
 
-    -- simple button to start action phase.
     local startButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.start_action_phase") end, -- initial text
-        15.0,                                                            -- font size
-        "color=fuchsia"                                                  -- animation spec
+        function() return localization.get("ui.start_action_phase") end,
+        28.0,
+        "color=fuchsia"
     )
     local startButtonTemplate = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
             :addColor(util.getColor("gray"))
+            :addPadding(16.0)
             :addEmboss(2.0)
             :addHover(true)                                -- needed for button effect
             :addButtonCallback(function()

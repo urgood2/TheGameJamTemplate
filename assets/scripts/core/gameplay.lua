@@ -5124,25 +5124,16 @@ function initPlanningPhase()
                 local baseColor = self.borderColor or util.getColor("yellow")
                 local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 40)
                 local borderThickness = 3
-                local cornerRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)
-                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = area.actualX + area.actualW * 0.5
-                    c.y     = area.actualY + area.actualH * 0.5
-                    c.w     = math.max(0, area.actualW)
-                    c.h     = math.max(0, area.actualH)
-                    c.rx    = cornerRadius
-                    c.ry    = cornerRadius
-                    c.color = baseColor
+                command_buffer.queueDrawSteppedRoundedRect(layers.sprites, function(c)
+                    c.x           = area.actualX + area.actualW * 0.5
+                    c.y           = area.actualY + area.actualH * 0.5
+                    c.w           = math.max(0, area.actualW)
+                    c.h           = math.max(0, area.actualH)
+                    c.fillColor   = fillColor
+                    c.borderColor = baseColor
+                    c.borderWidth = borderThickness
+                    c.numSteps    = 4
                 end, z_orders.board, layer.DrawCommandSpace.World)
-                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    c.x     = area.actualX + area.actualW * 0.5
-                    c.y     = area.actualY + area.actualH * 0.5
-                    c.w     = math.max(0, area.actualW - borderThickness * 2)
-                    c.h     = math.max(0, area.actualH - borderThickness * 2)
-                    c.rx    = math.max(0, cornerRadius - borderThickness)
-                    c.ry    = math.max(0, cornerRadius - borderThickness)
-                    c.color = fillColor
-                end, z_orders.board + 1, layer.DrawCommandSpace.World)
                 goto continue
             end
             local dashedRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)

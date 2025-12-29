@@ -343,33 +343,43 @@ function EnemySpawner:spawn_enemy(enemy_type, wave_config)
     return entity_id
 end
 
---[[
-    Get spawn position based on spawn configuration
+local function clamp_to_arena(pos)
+    if not pos then return nil end
+    local margin = 30
+    local left = (rawget(_G, "SCREEN_BOUND_LEFT") or 0) + margin
+    local top = (rawget(_G, "SCREEN_BOUND_TOP") or 0) + margin
+    local right = (rawget(_G, "SCREEN_BOUND_RIGHT") or 1280) - margin
+    local bottom = (rawget(_G, "SCREEN_BOUND_BOTTOM") or 720) - margin
+    return {
+        x = math.max(left, math.min(right, pos.x)),
+        y = math.max(top, math.min(bottom, pos.y))
+    }
+end
 
-    @param spawn_config table
-    @return {x, y} or nil
-]]
 function EnemySpawner:get_spawn_position(spawn_config)
     local spawn_type = spawn_config.type or self.SpawnPointTypes.RANDOM_AREA
+    local pos = nil
 
     if spawn_type == self.SpawnPointTypes.RANDOM_AREA then
-        return self:get_random_area_position(spawn_config)
+        pos = self:get_random_area_position(spawn_config)
 
     elseif spawn_type == self.SpawnPointTypes.FIXED_POINTS then
-        return self:get_fixed_point_position(spawn_config)
+        pos = self:get_fixed_point_position(spawn_config)
 
     elseif spawn_type == self.SpawnPointTypes.OFF_SCREEN then
-        return self:get_off_screen_position(spawn_config)
+        pos = self:get_off_screen_position(spawn_config)
 
     elseif spawn_type == self.SpawnPointTypes.AROUND_PLAYER then
-        return self:get_around_player_position(spawn_config)
+        pos = self:get_around_player_position(spawn_config)
 
     elseif spawn_type == self.SpawnPointTypes.CIRCLE then
-        return self:get_circle_position(spawn_config)
+        pos = self:get_circle_position(spawn_config)
     else
         log_error("[EnemySpawner] Unknown spawn point type:", spawn_type)
         return nil
     end
+
+    return clamp_to_arena(pos)
 end
 
 -- Random position within defined area

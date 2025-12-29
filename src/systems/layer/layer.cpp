@@ -1651,6 +1651,7 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
       "DrawArc",
       "DrawTriangleEquilateral",
       "DrawCenteredFilledRoundedRect",
+      "DrawSteppedRoundedRect",
       "DrawSpriteCentered",
       "DrawSpriteTopLeft",
       "DrawDashedCircle",
@@ -1794,6 +1795,7 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   QUEUE_CMD(DrawArc)
   QUEUE_CMD(DrawTriangleEquilateral)
   QUEUE_CMD(DrawCenteredFilledRoundedRect)
+  QUEUE_CMD(DrawSteppedRoundedRect)
   QUEUE_CMD(DrawSpriteCentered)
   QUEUE_CMD(DrawSpriteTopLeft)
   QUEUE_CMD(DrawDashedCircle)

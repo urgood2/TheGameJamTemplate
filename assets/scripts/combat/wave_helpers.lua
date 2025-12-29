@@ -447,11 +447,28 @@ end
 -- SPAWN POSITION HELPERS
 --============================================
 
+local function get_arena_bounds()
+    local margin = 30
+    return {
+        left = (rawget(_G, "SCREEN_BOUND_LEFT") or 0) + margin,
+        top = (rawget(_G, "SCREEN_BOUND_TOP") or 0) + margin,
+        right = (rawget(_G, "SCREEN_BOUND_RIGHT") or 1280) - margin,
+        bottom = (rawget(_G, "SCREEN_BOUND_BOTTOM") or 720) - margin
+    }
+end
+
+local function clamp_to_arena(pos)
+    local bounds = get_arena_bounds()
+    return {
+        x = math.max(bounds.left, math.min(bounds.right, pos.x)),
+        y = math.max(bounds.top, math.min(bounds.bottom, pos.y))
+    }
+end
+
 function WaveHelpers.get_spawn_positions(spawn_config, count)
     local positions = {}
     local config = spawn_config
 
-    -- Handle shorthand
     if type(spawn_config) == "string" then
         config = { type = spawn_config }
     end
@@ -467,48 +484,50 @@ function WaveHelpers.get_spawn_positions(spawn_config, count)
         for i = 1, count do
             local angle = (i / count) * math.pi * 2 + math.random() * 0.5
             local radius = min_r + math.random() * (max_r - min_r)
-            table.insert(positions, {
+            local pos = {
                 x = player_pos.x + math.cos(angle) * radius,
                 y = player_pos.y + math.sin(angle) * radius
-            })
+            }
+            table.insert(positions, clamp_to_arena(pos))
         end
 
     elseif config.type == "random_area" then
-        local area = config.area or { x = 0, y = 0, w = 800, h = 600 }
+        local bounds = get_arena_bounds()
+        local area = config.area or { x = bounds.left, y = bounds.top, w = bounds.right - bounds.left, h = bounds.bottom - bounds.top }
         for i = 1, count do
-            table.insert(positions, {
+            local pos = {
                 x = area.x + math.random() * area.w,
                 y = area.y + math.random() * area.h
-            })
+            }
+            table.insert(positions, clamp_to_arena(pos))
         end
 
     elseif config.type == "fixed_points" then
         local points = config.points or {}
         for i = 1, count do
             local pt = points[((i - 1) % #points) + 1] or { 0, 0 }
-            table.insert(positions, { x = pt[1], y = pt[2] })
+            table.insert(positions, clamp_to_arena({ x = pt[1], y = pt[2] }))
         end
 
     elseif config.type == "off_screen" then
+        local bounds = get_arena_bounds()
         local padding = config.padding or 50
-        local screen_w = globals.screenWidth and globals.screenWidth() or 800
-        local screen_h = globals.screenHeight and globals.screenHeight() or 600
-
+        
         for i = 1, count do
             local side = math.random(1, 4)
             local pos = { x = 0, y = 0 }
-            if side == 1 then -- top
-                pos.x = math.random() * screen_w
-                pos.y = -padding
-            elseif side == 2 then -- bottom
-                pos.x = math.random() * screen_w
-                pos.y = screen_h + padding
-            elseif side == 3 then -- left
-                pos.x = -padding
-                pos.y = math.random() * screen_h
-            else -- right
-                pos.x = screen_w + padding
-                pos.y = math.random() * screen_h
+            if side == 1 then
+                pos.x = bounds.left + math.random() * (bounds.right - bounds.left)
+                pos.y = bounds.top
+            elseif side == 2 then
+                pos.x = bounds.left + math.random() * (bounds.right - bounds.left)
+                pos.y = bounds.bottom
+            elseif side == 3 then
+                pos.x = bounds.left
+                pos.y = bounds.top + math.random() * (bounds.bottom - bounds.top)
+            else
+                pos.x = bounds.right
+                pos.y = bounds.top + math.random() * (bounds.bottom - bounds.top)
             end
             table.insert(positions, pos)
         end

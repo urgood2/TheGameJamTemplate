@@ -144,6 +144,7 @@ namespace layer
         DrawArc,
         DrawTriangleEquilateral,
         DrawCenteredFilledRoundedRect,
+        DrawSteppedRoundedRect,
         DrawSpriteCentered,
         DrawSpriteTopLeft,
         DrawDashedCircle,
@@ -562,6 +563,14 @@ namespace layer
         std::optional<float> lineWidth = {};
     };
     
+    struct CmdDrawSteppedRoundedRect {
+        float x, y, w, h;
+        Color fillColor = WHITE;
+        Color borderColor = WHITE;
+        float borderWidth = 2.0f;
+        int numSteps = 4;
+    };
+    
     struct CmdDrawSpriteCentered {
         std::string spriteName;
         float x, y;
@@ -726,6 +735,7 @@ namespace layer
     extern void ExecuteDrawArc(std::shared_ptr<layer::Layer> layer, CmdDrawArc* c);
     extern void ExecuteDrawTriangleEquilateral(std::shared_ptr<layer::Layer> layer, CmdDrawTriangleEquilateral* c);
     extern void ExecuteDrawCenteredFilledRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredFilledRoundedRect* c);
+    extern void ExecuteDrawSteppedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawSteppedRoundedRect* c);
     extern void ExecuteDrawSpriteCentered(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteCentered* c);
     extern void ExecuteDrawSpriteTopLeft(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteTopLeft* c);
     extern void ExecuteDrawDashedCircle(std::shared_ptr<layer::Layer> layer, CmdDrawDashedCircle* c);

@@ -126,6 +126,7 @@ namespace layer
                     DELETE_COMMAND(layer, DrawArc, CmdDrawArc)
                     DELETE_COMMAND(layer, DrawTriangleEquilateral, CmdDrawTriangleEquilateral)
                     DELETE_COMMAND(layer, DrawCenteredFilledRoundedRect, CmdDrawCenteredFilledRoundedRect)
+                    DELETE_COMMAND(layer, DrawSteppedRoundedRect, CmdDrawSteppedRoundedRect)
                     DELETE_COMMAND(layer, DrawSpriteCentered, CmdDrawSpriteCentered)
                     DELETE_COMMAND(layer, DrawSpriteTopLeft, CmdDrawSpriteTopLeft)
                     DELETE_COMMAND(layer, DrawDashedCircle, CmdDrawDashedCircle)

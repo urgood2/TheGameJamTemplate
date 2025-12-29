@@ -848,6 +848,15 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
            &layer::CmdDrawCenteredFilledRoundedRect::ry, "color",
            &layer::CmdDrawCenteredFilledRoundedRect::color, "lineWidth",
            &layer::CmdDrawCenteredFilledRoundedRect::lineWidth)
+  BIND_CMD(DrawSteppedRoundedRect, "x",
+           &layer::CmdDrawSteppedRoundedRect::x, "y",
+           &layer::CmdDrawSteppedRoundedRect::y, "w",
+           &layer::CmdDrawSteppedRoundedRect::w, "h",
+           &layer::CmdDrawSteppedRoundedRect::h, "fillColor",
+           &layer::CmdDrawSteppedRoundedRect::fillColor, "borderColor",
+           &layer::CmdDrawSteppedRoundedRect::borderColor, "borderWidth",
+           &layer::CmdDrawSteppedRoundedRect::borderWidth, "numSteps",
+           &layer::CmdDrawSteppedRoundedRect::numSteps)
   BIND_CMD(DrawSpriteCentered, "spriteName",
            &layer::CmdDrawSpriteCentered::spriteName, "x",
            &layer::CmdDrawSpriteCentered::x, "y",
@@ -1051,6 +1060,23 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   rec.record_property(
       "layer.CmdDrawCenteredFilledRoundedRect",
       {"lineWidth", "number|nil", "Line width for outline; nil for filled"});
+  rec.add_type("layer.CmdDrawSteppedRoundedRect", true);
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"x", "number", "Center X"});
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"y", "number", "Center Y"});
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"w", "number", "Width"});
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"h", "number", "Height"});
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"fillColor", "Color", "Fill color"});
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"borderColor", "Color", "Border color"});
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"borderWidth", "number", "Border thickness"});
+  rec.record_property("layer.CmdDrawSteppedRoundedRect",
+                      {"numSteps", "number", "Steps per corner (default 4)"});
   rec.add_type("layer.CmdDrawSpriteCentered", true);
   rec.record_property("layer.CmdDrawSpriteCentered",
                       {"spriteName", "string", "Name of the sprite"});
@@ -2189,6 +2215,19 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawCenteredFilledRoundedRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueDrawSteppedRoundedRect",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawSteppedRoundedRect) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdDrawSteppedRoundedRect into the layer draw list. Draws rounded rectangle with stepped corners matching C++ UI appearance.)",
           .is_static = true,
           .is_overload = false});
   rec.record_free_function(

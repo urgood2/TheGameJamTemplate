@@ -335,6 +335,135 @@ namespace layer
     void ExecuteDrawCenteredFilledRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredFilledRoundedRect* c) {
         rectangle(c->x, c->y, c->w, c->h, c->rx, c->ry, c->color, c->lineWidth);
     }
+    
+    void ExecuteDrawSteppedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawSteppedRoundedRect* c) {
+        float width = c->w;
+        float height = c->h;
+        float x = c->x - width * 0.5f;
+        float y = c->y - height * 0.5f;
+        float borderWidth = c->borderWidth;
+        int numSteps = c->numSteps;
+        
+        float cornerSize = std::max(std::max(width, height) / 60.0f, 12.0f);
+        float outerRadius = cornerSize;
+        float innerRadius = std::max(outerRadius - borderWidth, 0.0f);
+        
+        Rectangle outerRec = {x, y, width, height};
+        Rectangle innerRec = {x + borderWidth, y + borderWidth, 
+                              width - 2 * borderWidth, height - 2 * borderWidth};
+        
+        const Vector2 outerCenters[4] = {
+            {outerRec.x + outerRadius, outerRec.y + outerRadius},
+            {outerRec.x + outerRec.width - outerRadius, outerRec.y + outerRadius},
+            {outerRec.x + outerRec.width - outerRadius, outerRec.y + outerRec.height - outerRadius},
+            {outerRec.x + outerRadius, outerRec.y + outerRec.height - outerRadius}
+        };
+        
+        const Vector2 innerCenters[4] = {
+            {innerRec.x + innerRadius, innerRec.y + innerRadius},
+            {innerRec.x + innerRec.width - innerRadius, innerRec.y + innerRadius},
+            {innerRec.x + innerRec.width - innerRadius, innerRec.y + innerRec.height - innerRadius},
+            {innerRec.x + innerRadius, innerRec.y + innerRec.height - innerRadius}
+        };
+        
+        const float angles[4] = {180.0f, 270.0f, 0.0f, 90.0f};
+        float stepLength = 90.0f / static_cast<float>(numSteps);
+        
+        std::vector<Vector2> outerVertices;
+        std::vector<Vector2> innerVertices;
+        
+        for (int k = 0; k < 4; ++k) {
+            float angle = angles[k];
+            const Vector2& outerCenter = outerCenters[k];
+            const Vector2& innerCenter = innerCenters[k];
+            
+            for (int i = 0; i < numSteps; i++) {
+                Vector2 outerStart = {
+                    outerCenter.x + cosf(DEG2RAD * angle) * outerRadius,
+                    outerCenter.y + sinf(DEG2RAD * angle) * outerRadius
+                };
+                Vector2 outerEnd = {
+                    outerCenter.x + cosf(DEG2RAD * (angle + stepLength)) * outerRadius,
+                    outerCenter.y + sinf(DEG2RAD * (angle + stepLength)) * outerRadius
+                };
+                Vector2 innerStart = {
+                    innerCenter.x + cosf(DEG2RAD * angle) * innerRadius,
+                    innerCenter.y + sinf(DEG2RAD * angle) * innerRadius
+                };
+                Vector2 innerEnd = {
+                    innerCenter.x + cosf(DEG2RAD * (angle + stepLength)) * innerRadius,
+                    innerCenter.y + sinf(DEG2RAD * (angle + stepLength)) * innerRadius
+                };
+                
+                Vector2 outerStep1, outerStep2, innerStep1, innerStep2;
+                if (k == 0 || k == 2) {
+                    outerStep1 = {outerEnd.x, outerStart.y};
+                    outerStep2 = outerEnd;
+                    innerStep1 = {innerEnd.x, innerStart.y};
+                    innerStep2 = innerEnd;
+                } else {
+                    outerStep1 = {outerStart.x, outerEnd.y};
+                    outerStep2 = outerEnd;
+                    innerStep1 = {innerStart.x, innerEnd.y};
+                    innerStep2 = innerEnd;
+                }
+                
+                outerVertices.push_back(outerStart);
+                outerVertices.push_back(outerStep1);
+                outerVertices.push_back(outerStep1);
+                outerVertices.push_back(outerStep2);
+                
+                innerVertices.push_back(innerStart);
+                innerVertices.push_back(innerStep1);
+                innerVertices.push_back(innerStep1);
+                innerVertices.push_back(innerStep2);
+                
+                angle += stepLength;
+            }
+        }
+        
+        Vector2 outerEdges[8] = {
+            {outerRec.x + outerRadius, outerRec.y}, 
+            {outerRec.x + outerRec.width - outerRadius, outerRec.y},
+            {outerRec.x + outerRec.width, outerRec.y + outerRadius},
+            {outerRec.x + outerRec.width, outerRec.y + outerRec.height - outerRadius},
+            {outerRec.x + outerRec.width - outerRadius, outerRec.y + outerRec.height},
+            {outerRec.x + outerRadius, outerRec.y + outerRec.height},
+            {outerRec.x, outerRec.y + outerRec.height - outerRadius},
+            {outerRec.x, outerRec.y + outerRadius}
+        };
+        
+        Vector2 innerEdges[8] = {
+            {innerRec.x + innerRadius, innerRec.y}, 
+            {innerRec.x + innerRec.width - innerRadius, innerRec.y},
+            {innerRec.x + innerRec.width, innerRec.y + innerRadius},
+            {innerRec.x + innerRec.width, innerRec.y + innerRec.height - innerRadius},
+            {innerRec.x + innerRec.width - innerRadius, innerRec.y + innerRec.height},
+            {innerRec.x + innerRadius, innerRec.y + innerRec.height},
+            {innerRec.x, innerRec.y + innerRec.height - innerRadius},
+            {innerRec.x, innerRec.y + innerRadius}
+        };
+        
+        for (int i = 0; i < 8; i += 2) {
+            outerVertices.push_back(outerEdges[i]);
+            outerVertices.push_back(outerEdges[i + 1]);
+            innerVertices.push_back(innerEdges[i]);
+            innerVertices.push_back(innerEdges[i + 1]);
+        }
+        
+        if (c->fillColor.a > 0 && innerVertices.size() >= 3) {
+            DrawTriangleFan(innerVertices.data(), static_cast<int>(innerVertices.size()), c->fillColor);
+        }
+        
+        if (c->borderColor.a > 0 && outerVertices.size() >= 2) {
+            for (size_t i = 0; i < outerVertices.size(); i += 2) {
+                if (i + 1 < outerVertices.size()) {
+                    DrawLineEx(outerVertices[i], outerVertices[i + 1], borderWidth, c->borderColor);
+                }
+            }
+        }
+    }
+    
     void ExecuteDrawSpriteCentered(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteCentered* c) {
         DrawSpriteCentered(c->spriteName, c->x, c->y, c->dstW, c->dstH, c->tint);
     }
@@ -531,6 +660,7 @@ namespace layer
         RegisterRenderer<CmdDrawArc>(DrawCommandType::DrawArc, ExecuteDrawArc);
         RegisterRenderer<CmdDrawTriangleEquilateral>(DrawCommandType::DrawTriangleEquilateral, ExecuteDrawTriangleEquilateral);
         RegisterRenderer<CmdDrawCenteredFilledRoundedRect>(DrawCommandType::DrawCenteredFilledRoundedRect, ExecuteDrawCenteredFilledRoundedRect);
+        RegisterRenderer<CmdDrawSteppedRoundedRect>(DrawCommandType::DrawSteppedRoundedRect, ExecuteDrawSteppedRoundedRect);
         RegisterRenderer<CmdDrawSpriteCentered>(DrawCommandType::DrawSpriteCentered, ExecuteDrawSpriteCentered);
         RegisterRenderer<CmdDrawSpriteTopLeft>(DrawCommandType::DrawSpriteTopLeft, ExecuteDrawSpriteTopLeft);
         RegisterRenderer<CmdDrawDashedCircle>(DrawCommandType::DrawDashedCircle, ExecuteDrawDashedCircle);

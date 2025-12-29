@@ -303,6 +303,10 @@ template <>
 inline DrawCommandType GetDrawCommandType<CmdDrawCenteredFilledRoundedRect>() {
   return DrawCommandType::DrawCenteredFilledRoundedRect;
 }
+template <>
+inline DrawCommandType GetDrawCommandType<CmdDrawSteppedRoundedRect>() {
+  return DrawCommandType::DrawSteppedRoundedRect;
+}
 template <> inline DrawCommandType GetDrawCommandType<CmdDrawSpriteCentered>() {
   return DrawCommandType::DrawSpriteCentered;
 }
@@ -626,8 +630,9 @@ inline void LogAllPoolStats(const std::shared_ptr<Layer> &layer) {
       CmdEndStencilMode, CmdBeginStencilMask, CmdEndStencilMask,
       CmdDrawCenteredEllipse, CmdDrawRoundedLine, CmdDrawPolyline, CmdDrawArc,
       CmdDrawTriangleEquilateral, CmdDrawCenteredFilledRoundedRect,
-      CmdDrawSpriteCentered, CmdDrawSpriteTopLeft, CmdDrawDashedCircle,
-      CmdDrawDashedRoundedRect, CmdDrawDashedLine, CmdDrawBatchedEntities
+      CmdDrawSteppedRoundedRect, CmdDrawSpriteCentered, CmdDrawSpriteTopLeft, 
+      CmdDrawDashedCircle, CmdDrawDashedRoundedRect, CmdDrawDashedLine, 
+      CmdDrawBatchedEntities
 
       >;
 

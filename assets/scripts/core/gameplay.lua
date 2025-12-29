@@ -6201,9 +6201,6 @@ function initCombatSystem()
         if enemyEntity then
             enemyHealthUiState[enemyEntity] = nil
 
-            -- Notify wave system that enemy was killed (for wave progression)
-            signal.emit("enemy_killed", enemyEntity)
-
             local dropX, dropY = nil, nil
             if entity_cache.valid(enemyEntity) then
                 local t = component_cache.get(enemyEntity, Transform)
@@ -6212,6 +6209,12 @@ function initCombatSystem()
                     dropY = t.actualY + t.actualH * 0.5
                 end
             end
+
+            local deathPosition = (dropX and dropY) and { x = dropX, y = dropY } or nil
+            signal.emit("enemy_killed", enemyEntity, { 
+                position = deathPosition, 
+                entity = enemyEntity 
+            })
 
             timer.after(0.01, function()
                 if dropX and dropY then
@@ -8512,8 +8515,17 @@ function initSurvivorEntity()
                 enemyEntity = b
             end
 
-            -- fire off signal
-            signal.emit("on_bump_enemy", enemyEntity)
+            local bumpPosition = nil
+            if enemyEntity and component_cache then
+                local t = component_cache.get(enemyEntity, Transform)
+                if t then
+                    bumpPosition = { x = t.actualX + t.actualW * 0.5, y = t.actualY + t.actualH * 0.5 }
+                end
+            end
+            signal.emit("on_bump_enemy", enemyEntity, {
+                position = bumpPosition,
+                entity = enemyEntity
+            })
         end
 
         hitFX(survivorEntity, 10, 0.2)
@@ -9460,7 +9472,15 @@ function initActionPhase()
         physics.ApplyImpulse(world, survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
         -- end, "dash_impulse_timer")
 
-        signal.emit("on_dash", { player = survivorEntity })
+        local dashPosition = nil
+        local st = component_cache.get(survivorEntity, Transform)
+        if st then
+            dashPosition = { x = st.actualX + st.actualW * 0.5, y = st.actualY + st.actualH * 0.5 }
+        end
+        signal.emit("on_dash", { player = survivorEntity }, {
+            position = dashPosition,
+            entity = survivorEntity
+        })
 
         playSoundEffect("effects", random_utils.random_element_string(dash_sfx_list), 0.9 + math.random() * 0.2)
 

@@ -923,6 +923,18 @@ Cards.MOD_TELEPORT_CAST = {
     test_label = "MOD\nteleport\ncast",
 }
 
+Cards.MOD_CAST_FROM_EVENT = {
+    id = "MOD_CAST_FROM_EVENT",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 5,
+    cast_from_event = true,
+    weight = 3,
+    tags = { "Arcane" },
+    description = "Spells originate from the trigger location.",
+    test_label = "MOD\ncast\nfrom\nevent",
+}
+
 -- Blood to damage (sacrifice health)
 Cards.MOD_BLOOD_TO_DAMAGE = {
     id = "MOD_BLOOD_TO_DAMAGE",

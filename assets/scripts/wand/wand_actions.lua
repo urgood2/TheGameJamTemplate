@@ -274,8 +274,9 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context, chi
     local upgradeBehaviors = collectUpgradeBehaviors(actionCard)
     applyUpgradeBehaviorsToProps(props, upgradeBehaviors, modifiers)
 
-    -- Get spawn position and base angle
-    local spawnPos = context.playerPosition or { x = 0, y = 0 }
+    local WandExecutor = require("wand.wand_executor")
+    local castOrigin = WandExecutor.resolveCastOrigin(context, modifiers, childInfo)
+    local spawnPos = castOrigin.pos
     local baseAngle = context.playerAngle or 0
     do
         -- Re-read the live aim angle (gameplay.lua writes globals.mouseAimAngle)
@@ -520,10 +521,12 @@ function WandActions.handleProjectileHit(projectile, target, hitData, modifiers,
     -- Collision-triggered sub-cast
     if hitData and hitData.subCast and hitData.subCast.collision then
         local WandExecutor = require("wand.wand_executor")
+        local projectilePos = getProjectilePosition(projectile)
         WandExecutor.enqueueSubCast({
             block = hitData.subCast.block,
             inheritedModifiers = hitData.subCast.inheritedModifiers or modifiers,
             context = hitData.subCast.context or context,
+            projectilePos = projectilePos,
             source = {
                 trigger = "collision",
                 blockIndex = hitData.subCast.parent and hitData.subCast.parent.blockIndex,
@@ -737,10 +740,12 @@ function WandActions.handleProjectileDestroy(projectile, destroyData, modifiers,
     collisionBehavior)
     if destroyData and destroyData.subCast and destroyData.subCast.death then
         local WandExecutor = require("wand.wand_executor")
+        local projectilePos = getProjectilePosition(projectile)
         WandExecutor.enqueueSubCast({
             block = destroyData.subCast.block,
             inheritedModifiers = destroyData.subCast.inheritedModifiers or modifiers,
             context = destroyData.subCast.context or context,
+            projectilePos = projectilePos,
             source = {
                 trigger = "death",
                 blockIndex = destroyData.subCast.parent and destroyData.subCast.parent.blockIndex,

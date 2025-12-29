@@ -325,6 +325,7 @@ function WandModifiers.createAggregate()
         phaseInOut = false,
         longDistanceCast = false,
         teleportCastFromEnemy = false,
+        castFromEvent = false,
 
         forceCrit = false,
 
@@ -514,6 +515,11 @@ function WandModifiers.applyCardToAggregate(agg, card)
     -- Teleport cast
     if card.teleport_cast_from_enemy then
         agg.teleportCastFromEnemy = true
+    end
+
+    -- Cast from event position
+    if card.cast_from_event then
+        agg.castFromEvent = true
     end
 end
 

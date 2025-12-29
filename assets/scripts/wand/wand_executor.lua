@@ -251,8 +251,8 @@ function WandExecutor.loadWand(wandDef, cardPool, triggerDef)
 
     -- Register trigger
     if triggerDef then
-        WandTriggers.register(wandId, triggerDef, function(wId, triggerType)
-            WandExecutor.execute(wId, triggerType)
+        WandTriggers.register(wandId, triggerDef, function(wId, triggerType, eventData)
+            WandExecutor.execute(wId, triggerType, eventData)
         end, {
             canCast = function(targetWandId)
                 return WandExecutor.canCast(targetWandId or wandId)
@@ -378,8 +378,9 @@ MAIN EXECUTION
 --- Executes a wand (called by trigger)
 --- @param wandId string Wand identifier
 --- @param triggerType string Trigger type that fired
+--- @param eventData table|nil Event data from trigger (position, entity, etc.)
 --- @return boolean Success
-function WandExecutor.execute(wandId, triggerType)
+function WandExecutor.execute(wandId, triggerType, eventData)
     local activeWand = WandExecutor.activeWands[wandId]
     if not activeWand then
         print("[WandExecutor] Error: No active wand", wandId)
@@ -398,8 +399,8 @@ function WandExecutor.execute(wandId, triggerType)
         return false
     end
 
-    -- Create execution context
-    local context = WandExecutor.createExecutionContext(wandId, state, activeWand)
+    -- Create execution context with event data
+    local context = WandExecutor.createExecutionContext(wandId, state, activeWand, eventData)
 
     -- Evaluate cards
     local evaluationResult = cardEval.simulate_wand(activeWand.definition, activeWand.cardPool)
@@ -999,6 +1000,7 @@ function WandExecutor.processPendingSubCasts()
             trigger = payload.source and payload.source.trigger,
             parentBlockIndex = payload.source and payload.source.blockIndex,
             parentCardIndex = payload.source and payload.source.cardIndex,
+            projectilePos = payload.projectilePos,
             traceId = payload.traceId
         })
     end
@@ -1041,8 +1043,9 @@ EXECUTION CONTEXT
 --- @param wandId string Wand identifier
 --- @param state table Wand state
 --- @param activeWand table Active wand data
+--- @param eventData table|nil Event data from trigger (position, entity, etc.)
 --- @return table Execution context
-function WandExecutor.createExecutionContext(wandId, state, activeWand)
+function WandExecutor.createExecutionContext(wandId, state, activeWand, eventData)
     local playerEntity = WandExecutor.getPlayerEntity()
     local playerScript = WandExecutor.getPlayerScript(playerEntity)
     local playerPos = WandExecutor.getPlayerPosition(playerEntity)
@@ -1051,6 +1054,22 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
     -- Fetch player stats (prefer combatTable stats, fall back to a proxy with safe get)
     local playerStats = resolvePlayerStats(playerEntity, playerScript)
     playerStats = createStatsProxy(playerStats)
+
+    -- Extract event position from eventData
+    local eventPosition = nil
+    local eventEntity = nil
+    if eventData then
+        if eventData.position then
+            eventPosition = eventData.position
+        end
+        eventEntity = eventData.entity or eventData.enemy or eventData.target or eventData.value
+        if not eventPosition and eventEntity and component_cache then
+            local t = component_cache.get(eventEntity, Transform)
+            if t then
+                eventPosition = { x = t.actualX + t.actualW * 0.5, y = t.actualY + t.actualH * 0.5 }
+            end
+        end
+    end
 
     local context = {
         wandId = wandId,
@@ -1063,6 +1082,10 @@ function WandExecutor.createExecutionContext(wandId, state, activeWand)
         playerPosition = playerPos,
         playerAngle = playerAngle,
         playerStats = playerStats,
+
+        eventData = eventData,
+        eventPosition = eventPosition,
+        eventEntity = eventEntity,
 
         timestamp = os.clock(),
 
@@ -1287,6 +1310,69 @@ function WandExecutor.findNearestEnemy(position, radius)
     end
 
     return nil
+end
+
+--- Gets entity center position
+--- @param entity number Entity ID
+--- @return table|nil {x, y} or nil if invalid
+function WandExecutor.getEntityCenter(entity)
+    if not entity or not component_cache then return nil end
+    local t = component_cache.get(entity, Transform)
+    if not t then return nil end
+    return { x = t.actualX + t.actualW * 0.5, y = t.actualY + t.actualH * 0.5 }
+end
+
+--- Resolves cast origin based on context, modifiers, and sub-cast metadata
+--- @param context table Execution context
+--- @param modifiers table Modifier aggregate
+--- @param subcastMeta table|nil Sub-cast metadata (contains projectilePos for triggers)
+--- @return table { pos = {x, y}, kind = string }
+function WandExecutor.resolveCastOrigin(context, modifiers, subcastMeta)
+    local origin = { pos = nil, kind = "player" }
+
+    if subcastMeta and subcastMeta.projectilePos then
+        origin.pos = subcastMeta.projectilePos
+        origin.kind = "projectile"
+    elseif context.eventPosition then
+        origin.pos = context.eventPosition
+        origin.kind = "event"
+    else
+        origin.pos = context.playerPosition
+        origin.kind = "player"
+    end
+
+    if modifiers.castFromEvent and context.eventPosition then
+        origin.pos = context.eventPosition
+        origin.kind = "event"
+    end
+
+    if modifiers.teleportCastFromEnemy and origin.pos then
+        local enemy = context.findNearestEnemy(origin.pos, 500)
+        if enemy then
+            local enemyPos = WandExecutor.getEntityCenter(enemy)
+            if enemyPos then
+                origin.pos = enemyPos
+                origin.kind = "nearest_enemy"
+            end
+        end
+    end
+
+    if modifiers.longDistanceCast and origin.pos then
+        local angle = context.playerAngle or 0
+        local offset = 120
+        origin.pos = {
+            x = origin.pos.x + math.cos(angle) * offset,
+            y = origin.pos.y + math.sin(angle) * offset
+        }
+        origin.kind = origin.kind .. "+offset"
+    end
+
+    if not origin.pos then
+        origin.pos = context.playerPosition or { x = 0, y = 0 }
+        origin.kind = "player"
+    end
+
+    return origin
 end
 
 --[[

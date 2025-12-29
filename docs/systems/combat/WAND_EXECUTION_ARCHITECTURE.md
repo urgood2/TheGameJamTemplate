@@ -504,6 +504,91 @@ end)
 6. **Chain Lightning**: On-hit trigger + sub-cast
 7. **Timer Bomb**: Timer trigger + delayed sub-cast
 
+## Cast Origin Resolution
+
+The wand system supports configurable spawn positions for projectiles through a unified origin resolution system.
+
+### Origin Priority Chain
+
+When spawning projectiles, the system resolves the spawn position using this priority:
+
+1. **Sub-cast projectile position** - For collision/death triggers, spawn at the projectile's location
+2. **Event position** - For event-based triggers (enemy_killed, on_bump), spawn at the event location
+3. **Player position** - Default fallback
+
+### Origin Modifiers
+
+Modifiers can override or transform the resolved origin:
+
+| Modifier | Effect | Example Use |
+|----------|--------|-------------|
+| `castFromEvent` | Prefer event position over player | Corpse explosion on kill |
+| `teleportCastFromEnemy` | Find nearest enemy, spawn there | Teleporting strikes |
+| `longDistanceCast` | Offset 120px forward from origin | Sniper-style spells |
+
+### API
+
+```lua
+-- Resolve cast origin with full modifier support
+local origin = WandExecutor.resolveCastOrigin(context, modifiers, subcastMeta)
+-- Returns: { pos = {x, y}, kind = "player"|"event"|"projectile"|"nearest_enemy" }
+```
+
+### Event Position Snapshotting
+
+Event-based triggers now include position data, snapshotted at emit time:
+
+```lua
+-- enemy_killed signal includes death position
+signal.emit("enemy_killed", enemyEntity, { 
+    position = { x = deathX, y = deathY }, 
+    entity = enemyEntity 
+})
+
+-- on_bump_enemy signal includes bump position
+signal.emit("on_bump_enemy", enemyEntity, {
+    position = { x = bumpX, y = bumpY },
+    entity = enemyEntity
+})
+```
+
+### Behavior by Trigger Type
+
+| Trigger | Default Origin | With `cast_from_event` Modifier |
+|---------|---------------|--------------------------------|
+| `enemy_killed` | Player | Enemy death position |
+| `on_bump_enemy` | Player | Enemy position |
+| `on_dash` | Player | Dash position |
+| `every_N_seconds` | Player | Player (no event) |
+| `trigger_on_collision` | Hit position | Hit position |
+| `trigger_on_death` | Projectile position | Projectile position |
+
+### Example: Corpse Explosion Wand
+
+```lua
+-- Wand that spawns explosions at enemy death locations
+{
+    trigger = "enemy_killed",
+    cards = {
+        "MOD_CAST_FROM_EVENT",  -- Spawn at kill location
+        "ACTION_EXPLOSION"       -- Explosion action
+    }
+}
+```
+
+### Example: Teleporting Strike
+
+```lua
+-- Projectile spawns at nearest enemy
+{
+    trigger = "every_N_seconds",
+    cards = {
+        "MOD_TELEPORT_CAST",    -- Find nearest enemy
+        "ACTION_SPARK_BOLT"     -- Fires FROM the enemy
+    }
+}
+```
+
 ## Extension Points
 
 ### Adding New Action Types

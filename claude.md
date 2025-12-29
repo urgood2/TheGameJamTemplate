@@ -699,6 +699,43 @@ script:attach_ecs { ... }     -- Attach LAST
 
 ---
 
+## Core Lua Module Quick Reference
+
+All modules in `assets/scripts/core/` - import with `require("core.<name>")`:
+
+| Module | Purpose |
+|--------|---------|
+| `Q` | Quick transform helpers: position, rotation, bounds, physics velocity |
+| `timer` | Centralized timing: `after`, `every`, `sequence`, `delay`, `loop`, `pulse` |
+| `timer_chain` | Fluent sequential animations (used via `timer.sequence()`) |
+| `draw` | Draw command API for rendering primitives, text, sprites |
+| `text` | Animated text builder with rich formatting, fades, pops |
+| `popup` | Quick damage/heal numbers with auto-positioning |
+| `fx` | Unified visual effects: flash, shake, particles (NEW) |
+| `tween` | Simplified property tweening with easing (NEW) |
+| `fsm` | Declarative finite state machine (NEW) |
+| `pool` | Generic object pooling for allocation reduction (NEW) |
+| `debug` | Visual debugging: draw bounds, velocities, labels (NEW) |
+| `entity_builder` | Entity creation with `create()`, `spawn()`, `quickSpawn()` |
+| `physics_builder` | Fluent physics body creation |
+| `shader_builder` | Fluent shader attachment |
+| `behaviors` | Declarative enemy behavior composition |
+| `signal_group` | Scoped event handlers with cleanup |
+| `event_bridge` | Bridges combat bus events to signal system |
+| `component_cache` | Cached ECS component access |
+| `entity_cache` | Entity lookup by tag/name |
+| `hitfx` | Hit effects (flash, shake, freeze-frame) |
+| `particles` | Particle system wrapper |
+| `localization_styled` | Color-coded localized text |
+| `save_manager` | Save/load game state |
+| `stat_system` | Character stats with modifiers |
+| `globals` | Global game state and constants |
+| `constants` | Game-wide constant values |
+
+**NEW modules** added in this session provide friction-reducing APIs for common patterns.
+
+---
+
 ## References
 
 - [Troubleshooting](docs/TROUBLESHOOTING.md)

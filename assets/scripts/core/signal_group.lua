@@ -1,6 +1,6 @@
 --[[
 ================================================================================
-signal_group.lua - Scoped event registration with automatic cleanup
+signal_group.lua - Scoped Event Registration with Automatic Cleanup
 ================================================================================
 Provides grouped signal handlers that can be cleaned up with a single call.
 Prevents memory leaks from orphaned event handlers.
@@ -22,7 +22,26 @@ Usage:
 
     -- When done (e.g., scene unload, entity destroyed):
     handlers:cleanup()  -- Removes ALL handlers in this group
+
+Dependencies:
+    - external.hump.signal (event emitter)
+
+See Also:
+    - docs/api/signal_system.md for full event system documentation
 ]]
+
+---@class SignalGroup
+---@field _name string Group name for debugging
+---@field _handlers table<string, function[]> Registered handlers by event
+---@field _cleaned_up boolean Whether cleanup() has been called
+---@field on fun(self: SignalGroup, event_name: string, handler: function): function Register handler
+---@field register fun(self: SignalGroup, event_name: string, handler: function): function Alias for on()
+---@field off fun(self: SignalGroup, event_name: string, handler: function) Remove handler
+---@field remove fun(self: SignalGroup, event_name: string, handler: function) Alias for off()
+---@field cleanup fun(self: SignalGroup) Remove all handlers in group
+---@field isCleanedUp fun(self: SignalGroup): boolean Check if cleaned up
+---@field count fun(self: SignalGroup): number Get handler count
+---@field getName fun(self: SignalGroup): string Get group name
 
 -- Singleton guard
 if _G.__signal_group__ then return _G.__signal_group__ end

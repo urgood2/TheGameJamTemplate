@@ -268,5 +268,193 @@ function Q.withTransform(entity, fn)
     return true
 end
 
+--------------------------------------------------------------------------------
+-- Physics Helpers (Chipmunk integration)
+--------------------------------------------------------------------------------
+
+local _physics = nil
+local _PhysicsManager = nil
+
+local function get_physics()
+    if not _physics then _physics = _G.physics end
+    return _physics
+end
+
+local function get_world()
+    if not _PhysicsManager then _PhysicsManager = _G.PhysicsManager end
+    if _PhysicsManager and _PhysicsManager.get_world then
+        return _PhysicsManager.get_world("world")
+    end
+    return nil
+end
+
+--- Get velocity of physics-enabled entity
+--- @param entity number Entity ID
+--- @return number|nil vx Velocity X, or nil if no physics body
+--- @return number|nil vy Velocity Y, or nil if no physics body
+function Q.velocity(entity)
+    local physics = get_physics()
+    local world = get_world()
+    if not physics or not world then return nil, nil end
+    if not Q.isValid(entity) then return nil, nil end
+    
+    local vel = physics.GetVelocity and physics.GetVelocity(world, entity)
+    if vel then
+        return vel.x, vel.y
+    end
+    return nil, nil
+end
+
+--- Set velocity of physics-enabled entity
+--- @param entity number Entity ID
+--- @param vx number Velocity X
+--- @param vy number Velocity Y
+--- @return boolean success True if velocity was set
+function Q.setVelocity(entity, vx, vy)
+    local physics = get_physics()
+    local world = get_world()
+    if not physics or not world then return false end
+    if not Q.isValid(entity) then return false end
+    
+    if physics.SetVelocity then
+        physics.SetVelocity(world, entity, { x = vx, y = vy })
+        return true
+    end
+    return false
+end
+
+--- Get speed (magnitude of velocity)
+--- @param entity number Entity ID
+--- @return number|nil speed Speed in pixels/second, or nil if no physics
+function Q.speed(entity)
+    local vx, vy = Q.velocity(entity)
+    if not vx then return nil end
+    return math.sqrt(vx * vx + vy * vy)
+end
+
+--- Apply impulse to entity
+--- @param entity number Entity ID
+--- @param ix number Impulse X
+--- @param iy number Impulse Y
+--- @return boolean success True if impulse was applied
+function Q.impulse(entity, ix, iy)
+    local physics = get_physics()
+    local world = get_world()
+    if not physics or not world then return false end
+    if not Q.isValid(entity) then return false end
+    
+    if physics.ApplyImpulse then
+        physics.ApplyImpulse(world, entity, ix, iy)
+        return true
+    end
+    return false
+end
+
+--- Apply force to entity (for continuous pushing)
+--- @param entity number Entity ID
+--- @param fx number Force X
+--- @param fy number Force Y
+--- @return boolean success True if force was applied
+function Q.force(entity, fx, fy)
+    local physics = get_physics()
+    local world = get_world()
+    if not physics or not world then return false end
+    if not Q.isValid(entity) then return false end
+    
+    if physics.ApplyForce then
+        physics.ApplyForce(world, entity, fx, fy)
+        return true
+    end
+    return false
+end
+
+--- Set angular velocity (spin)
+--- @param entity number Entity ID
+--- @param angularVel number Angular velocity in radians/second
+--- @return boolean success
+function Q.setSpin(entity, angularVel)
+    local physics = get_physics()
+    local world = get_world()
+    if not physics or not world then return false end
+    if not Q.isValid(entity) then return false end
+    
+    if physics.SetAngularVelocity then
+        physics.SetAngularVelocity(world, entity, angularVel)
+        return true
+    end
+    return false
+end
+
+--- Get angular velocity (spin)
+--- @param entity number Entity ID
+--- @return number|nil angularVel Angular velocity in radians/second
+function Q.spin(entity)
+    local physics = get_physics()
+    local world = get_world()
+    if not physics or not world then return nil end
+    if not Q.isValid(entity) then return nil end
+    
+    if physics.GetAngularVelocity then
+        return physics.GetAngularVelocity(world, entity)
+    end
+    return nil
+end
+
+--- Move toward a target point (sets velocity directly)
+--- @param entity number Entity ID
+--- @param targetX number Target X position
+--- @param targetY number Target Y position
+--- @param speed number Speed in pixels/second
+--- @return boolean success
+function Q.moveToward(entity, targetX, targetY, speed)
+    local cx, cy = Q.center(entity)
+    if not cx then return false end
+    
+    local dx, dy = targetX - cx, targetY - cy
+    local len = math.sqrt(dx * dx + dy * dy)
+    
+    if len < 1 then
+        return Q.setVelocity(entity, 0, 0)
+    end
+    
+    local vx = (dx / len) * speed
+    local vy = (dy / len) * speed
+    return Q.setVelocity(entity, vx, vy)
+end
+
+--- Move toward another entity
+--- @param entity number Entity to move
+--- @param target number Target entity to move toward
+--- @param speed number Speed in pixels/second
+--- @return boolean success
+function Q.chase(entity, target, speed)
+    local tx, ty = Q.center(target)
+    if not tx then return false end
+    return Q.moveToward(entity, tx, ty, speed)
+end
+
+--- Move away from another entity
+--- @param entity number Entity to move
+--- @param threat number Entity to flee from
+--- @param speed number Speed in pixels/second
+--- @return boolean success
+function Q.flee(entity, threat, speed)
+    local cx, cy = Q.center(entity)
+    local tx, ty = Q.center(threat)
+    if not cx or not tx then return false end
+    
+    local dx, dy = cx - tx, cy - ty
+    local len = math.sqrt(dx * dx + dy * dy)
+    
+    if len < 0.0001 then
+        dx, dy = 1, 0
+        len = 1
+    end
+    
+    local vx = (dx / len) * speed
+    local vy = (dy / len) * speed
+    return Q.setVelocity(entity, vx, vy)
+end
+
 _G.__Q__ = Q
 return Q

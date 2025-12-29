@@ -223,6 +223,48 @@ function timer.sequence(group)
     return TimerChain.new(group)
 end
 
+--------------------------------------------------------
+-- Convenience Aliases (Friction-Reducing)
+--------------------------------------------------------
+
+--- Alias for timer.after_opts - cleaner name for one-shot delays
+--- @param opts TimerAfterOpts
+--- @return string tag
+timer.delay = timer.after_opts
+
+--- Infinite loop timer (times=0 means run forever)
+--- @param opts {delay: number, action: fun(), tag?: string, group?: string, immediate?: boolean}
+--- @return string tag
+function timer.loop(opts)
+    return timer.every_opts({
+        delay = opts.delay,
+        action = opts.action,
+        times = 0,  -- infinite
+        immediate = opts.immediate or false,
+        tag = opts.tag,
+        group = opts.group,
+    })
+end
+
+--- Simple infinite pulse - minimal friction version of loop
+--- @param interval number Interval in seconds
+--- @param action fun() Action to run
+--- @param tag? string Optional tag
+--- @return string tag
+function timer.pulse(interval, action, tag)
+    return timer.every(interval, action, 0, false, nil, tag)
+end
+
+--- Run action every frame for duration (alias for for_time with cleaner name)
+--- @param duration number Duration in seconds
+--- @param action fun(dt: number) Action called each frame
+--- @param after? fun() Callback when done
+--- @param tag? string Optional tag
+--- @return string tag
+function timer.during(duration, action, after, tag)
+    return timer.for_time(duration, action, after, tag)
+end
+
 function timer.every_step(start_delay, end_delay, times, action, immediate, step_method, after, tag, group)
   assert(times >= 2, "timer.every_step requires times >= 2")
   tag = ensure_valid_tag(tag)

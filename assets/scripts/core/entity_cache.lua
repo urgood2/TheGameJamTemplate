@@ -1,7 +1,59 @@
-------------------------------------------------------------
--- entity_cache.lua
--- Global per-frame cache for validity & active-state checks.
--- Optimizes registry:valid(eid) and is_entity_active(eid).
+--[[
+================================================================================
+entity_cache.lua - Per-Frame Entity Validity Caching
+================================================================================
+Caches entity validity and active-state checks within a single frame,
+reducing expensive C++ registry calls when the same entity is checked repeatedly.
+
+Use Cases:
+    - Checking `registry:valid(eid)` multiple times per frame (now cached)
+    - Checking `is_entity_active(eid)` for state-filtered logic
+    - Checking game state with `is_state_active()` (e.g., "COMBAT_STATE")
+
+The cache automatically clears at frame start via GetFrameCount() detection.
+
+Usage:
+    local entity_cache = require("core.entity_cache")
+
+    -- Check if entity exists (replaces registry:valid())
+    if entity_cache.valid(entity) then
+        -- Entity exists
+    end
+
+    -- Check if entity is active (has active state tag)
+    if entity_cache.active(entity) then
+        -- Entity is active and should be updated
+    end
+
+    -- Check global game state
+    if entity_cache.state_active("COMBAT_STATE") then
+        -- Currently in combat
+    end
+
+    -- Manual invalidation (after entity destruction)
+    entity_cache.invalidate(entity)
+
+    -- Clear all caches (on scene reload)
+    entity_cache.clear()
+
+Performance:
+    - First check: ~same as registry:valid()
+    - Subsequent checks (same frame): ~10x faster (table lookup)
+
+See Also:
+    - component_cache.lua - Caches component access
+    - Q.isValid() - Convenience wrapper using this cache
+]]
+
+---@class EntityCache
+---@field valid fun(eid: number): boolean Check entity validity (cached)
+---@field active fun(eid: number): boolean Check entity active state (cached)
+---@field state_active fun(state_name: string): boolean Check game state (cached)
+---@field invalidate fun(eid: number) Clear cache for entity
+---@field invalidate_many fun(list: number[]) Clear cache for multiple entities
+---@field clear fun() Clear entire cache
+---@field update_frame fun() Force frame advance
+
 ------------------------------------------------------------
 
 if _G.entity_cache then

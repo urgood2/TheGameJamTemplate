@@ -412,5 +412,73 @@ function BuilderInstance:build()
     return eid, self._script
 end
 
+--------------------------------------------------------------------------------
+-- SPAWN - One-liner entity creation with physics and shaders
+--------------------------------------------------------------------------------
+
+--- Spawn an entity with sprite, position, physics, and shaders in one call.
+--- Combines EntityBuilder.create(), PhysicsBuilder, and ShaderBuilder.
+--- @param sprite string Sprite/animation ID
+--- @param x number X position
+--- @param y number Y position
+--- @param opts table? Options: { size, data, physics, shaders, shadow, state, interactive }
+--- @return number entity The entity ID
+--- @return table|nil script The script table (if data provided)
+function EntityBuilder.spawn(sprite, x, y, opts)
+    opts = opts or {}
+    
+    local entityOpts = {
+        sprite = sprite,
+        x = x,
+        y = y,
+        size = opts.size,
+        data = opts.data,
+        shadow = opts.shadow,
+        state = opts.state,
+        interactive = opts.interactive,
+    }
+    
+    local entity, script = EntityBuilder.create(entityOpts)
+    
+    if opts.physics then
+        local ok, PhysicsBuilder = pcall(require, "core.physics_builder")
+        if ok and PhysicsBuilder then
+            PhysicsBuilder.quick(entity, opts.physics)
+        end
+    end
+    
+    if opts.shaders then
+        local ok, ShaderBuilder = pcall(require, "core.shader_builder")
+        if ok and ShaderBuilder then
+            local builder = ShaderBuilder.for_entity(entity)
+            for _, shader in ipairs(opts.shaders) do
+                if type(shader) == "string" then
+                    builder:add(shader)
+                elseif type(shader) == "table" then
+                    builder:add(shader[1], shader[2])
+                end
+            end
+            builder:apply()
+        end
+    end
+    
+    return entity, script
+end
+
+--- Quick spawn with minimal options (sprite + position + size)
+--- @param sprite string Sprite/animation ID
+--- @param x number X position
+--- @param y number Y position
+--- @param w number? Width (default 32)
+--- @param h number? Height (default 32)
+--- @param opts table? Additional options passed to spawn()
+--- @return number entity
+--- @return table|nil script
+function EntityBuilder.quickSpawn(sprite, x, y, w, h, opts)
+    opts = opts or {}
+    opts.size = { w or 32, h or 32 }
+    return EntityBuilder.spawn(sprite, x, y, opts)
+end
+
 _G.__ENTITY_BUILDER__ = EntityBuilder
 return EntityBuilder

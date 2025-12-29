@@ -1,8 +1,58 @@
-------------------------------------------------------------
--- component_cache.lua
--- Global per-frame caching system for component_cache.get() calls.
--- Caches arbitrary component types (Transform, Sprite, etc.)
--- and auto-invalidates each frame.
+--[[
+================================================================================
+component_cache.lua - Per-Frame Component Access Caching
+================================================================================
+Caches ECS component lookups within a single frame, dramatically reducing
+repeated registry:get() calls for the same entity/component pairs.
+
+The cache automatically invalidates at the start of each frame, ensuring
+you always get fresh data while still benefiting from within-frame caching.
+
+Usage:
+    local component_cache = require("core.component_cache")
+
+    -- Basic usage (most common)
+    local transform = component_cache.get(entity, Transform)
+    if transform then
+        transform.actualX = 100
+    end
+
+    -- Safe access with validation
+    local sprite, is_valid = component_cache.safe_get(entity, Sprite)
+    if is_valid then
+        sprite.visible = true
+    end
+
+    -- Check entity validity before accessing
+    if component_cache.ensure(entity) then
+        local transform = component_cache.get(entity, Transform)
+    end
+
+    -- Manual invalidation (rarely needed)
+    component_cache.invalidate(entity, Transform)  -- Invalidate specific
+    component_cache.invalidate(entity)             -- Invalidate all for entity
+
+Performance:
+    - First access: ~same as registry:get()
+    - Subsequent accesses (same frame): ~10x faster (table lookup vs C++ call)
+    - Automatically clears at frame start
+
+Dependencies:
+    - registry (global ECS registry)
+    - GetFrameCount() (engine frame counter)
+]]
+
+---@class ComponentCache
+---@field get fun(eid: number, comp: any): table|nil Fetch component with caching
+---@field safe_get fun(eid: number, comp: any): table|nil, boolean Safe fetch with validation
+---@field ensure fun(eid: number): boolean Check entity validity
+---@field invalidate fun(eid: number, comp?: any) Clear cache for entity
+---@field clear fun() Clear entire cache
+---@field register_hook fun(comp: any, hook_table: table) Register component hooks
+---@field begin_frame fun() Start batched mode
+---@field end_frame fun() End batched mode
+---@field update_frame fun() Force frame advance check
+
 ------------------------------------------------------------
 
 -- ensure single global instance

@@ -327,9 +327,8 @@ end
 function EnemyFactory.kill(e, ctx)
     if not entity_cache.valid(e) then return end
 
-    -- Call on_death callback
     if ctx and ctx.on_death then
-        ctx.on_death(e, ctx, {}, WaveHelpers)
+        ctx.on_death(e, ctx, WaveHelpers)
     end
 
     -- Cancel steering timer

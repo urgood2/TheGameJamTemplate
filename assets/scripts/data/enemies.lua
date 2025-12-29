@@ -56,7 +56,7 @@ enemies.goblin = {
 }
 
 --============================================
--- ARCHER - Kites from player (ranged placeholder)
+-- ARCHER - Kites and fires at player
 --============================================
 
 enemies.archer = {
@@ -64,12 +64,14 @@ enemies.archer = {
     hp = 20,
     speed = 40,
     damage = 8,
-    range = 200,
+    attack_range = 200,
+    attack_cooldown = 1.5,
+    projectile_preset = "enemy_arrow",
     size = { 32, 32 },
 
     behaviors = {
-        { "kite", range = "range" },
-        -- TODO: Add ranged attack behavior when projectile system ready
+        { "kite", range = "attack_range" },
+        { "ranged_attack", interval = "attack_cooldown", range = "attack_range", damage = "damage", projectile = "projectile_preset" },
     },
 
     on_death = function(e, ctx, helpers)
@@ -188,6 +190,224 @@ enemies.wanderer = {
 
     behaviors = {
         "wander",
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("enemy_death", e)
+    end,
+}
+
+--============================================
+-- ORBITER - Circles around player while shooting
+--============================================
+
+enemies.orbiter = {
+    sprite = "enemy_type_2.png",
+    hp = 25,
+    speed = 80,
+    damage = 6,
+    orbit_radius = 120,
+    orbit_speed = 1.5,
+    attack_cooldown = 2.0,
+    attack_range = 200,
+    projectile_preset = "enemy_basic_shot",
+    size = { 28, 28 },
+
+    behaviors = {
+        { "orbit", radius = "orbit_radius", angular_speed = "orbit_speed", speed = "speed" },
+        { "ranged_attack", interval = "attack_cooldown", range = "attack_range", damage = "damage", projectile = "projectile_preset" },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("enemy_death", e)
+    end,
+}
+
+--============================================
+-- SNIPER - Long range, flees when close
+--============================================
+
+enemies.sniper = {
+    sprite = "enemy_type_2.png",
+    hp = 15,
+    speed = 35,
+    damage = 15,
+    attack_range = 350,
+    min_range = 150,
+    attack_cooldown = 2.5,
+    projectile_preset = "enemy_sniper_shot",
+    size = { 32, 32 },
+
+    behaviors = {
+        { "flee", distance = "min_range", speed = "speed" },
+        { "ranged_attack", interval = "attack_cooldown", range = "attack_range", min_range = "min_range", damage = "damage", projectile = "projectile_preset" },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("enemy_death", e)
+    end,
+}
+
+--============================================
+-- SHOTGUNNER - Close range spread shot
+--============================================
+
+enemies.shotgunner = {
+    sprite = "enemy_type_1.png",
+    hp = 35,
+    speed = 45,
+    damage = 5,
+    attack_range = 100,
+    attack_cooldown = 2.0,
+    projectile_preset = "enemy_pellet",
+    size = { 36, 36 },
+
+    behaviors = {
+        "chase",
+        { "spread_shot", interval = "attack_cooldown", range = "attack_range", damage = "damage", projectile = "projectile_preset", count = 5, spread_angle = 0.9 },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("enemy_death", e)
+        helpers.explode(e, 30, 10)
+    end,
+}
+
+--============================================
+-- BOMBER - Fires ring of projectiles periodically
+--============================================
+
+enemies.bomber = {
+    sprite = "elite_porcupine.png",
+    hp = 60,
+    speed = 25,
+    damage = 8,
+    attack_cooldown = 3.0,
+    projectile_preset = "enemy_bomb",
+    ring_count = 12,
+    size = { 40, 40 },
+
+    behaviors = {
+        "wander",
+        { "ring_shot", interval = "attack_cooldown", damage = "damage", projectile = "projectile_preset", count = "ring_count" },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.fire_projectile_ring(e, "enemy_bomb", 10, 16)
+        helpers.spawn_particles("summoner_death", e)
+    end,
+}
+
+--============================================
+-- ZIGZAGGER - Erratic movement pattern
+--============================================
+
+enemies.zigzagger = {
+    sprite = "enemy_type_1.png",
+    hp = 20,
+    speed = 70,
+    damage = 7,
+    zigzag_amplitude = 60,
+    zigzag_frequency = 3.0,
+    size = { 28, 28 },
+
+    behaviors = {
+        { "zigzag", speed = "speed", zigzag_amplitude = "zigzag_amplitude", zigzag_frequency = "zigzag_frequency" },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("enemy_death", e)
+    end,
+}
+
+--============================================
+-- TELEPORTER_ENEMY - Blinks around the arena
+--============================================
+
+enemies.teleporter_enemy = {
+    sprite = "enemy_type_2.png",
+    hp = 30,
+    speed = 30,
+    damage = 10,
+    teleport_cooldown = 3.0,
+    attack_cooldown = 1.0,
+    attack_range = 150,
+    projectile_preset = "enemy_magic_bolt",
+    size = { 32, 32 },
+
+    behaviors = {
+        { "teleport", interval = "teleport_cooldown", min_distance = 80, max_distance = 150 },
+        { "ranged_attack", interval = "attack_cooldown", range = "attack_range", damage = "damage", projectile = "projectile_preset" },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("teleport_out", e)
+        helpers.spawn_particles("enemy_death", e)
+    end,
+}
+
+--============================================
+-- AMBUSHER - Hides until player gets close
+--============================================
+
+enemies.ambusher = {
+    sprite = "enemy_type_1.png",
+    hp = 40,
+    speed = 120,
+    damage = 15,
+    trigger_range = 100,
+    size = { 32, 32 },
+
+    behaviors = {
+        { "ambush", trigger_range = "trigger_range", speed = "speed" },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("enemy_death", e)
+    end,
+}
+
+--============================================
+-- STRAFER - Dodges while attacking
+--============================================
+
+enemies.strafer = {
+    sprite = "enemy_type_2.png",
+    hp = 22,
+    speed = 55,
+    damage = 7,
+    attack_cooldown = 1.2,
+    attack_range = 180,
+    projectile_preset = "enemy_basic_shot",
+    size = { 30, 30 },
+
+    behaviors = {
+        { "strafe", speed = "speed", direction_change_chance = 0.15 },
+        { "ranged_attack", interval = "attack_cooldown", range = "attack_range", damage = "damage", projectile = "projectile_preset" },
+    },
+
+    on_death = function(e, ctx, helpers)
+        helpers.spawn_particles("enemy_death", e)
+    end,
+}
+
+--============================================
+-- BURST_SHOOTER - Fires in bursts
+--============================================
+
+enemies.burst_shooter = {
+    sprite = "enemy_type_2.png",
+    hp = 28,
+    speed = 40,
+    damage = 4,
+    burst_cooldown = 2.5,
+    attack_range = 200,
+    projectile_preset = "enemy_basic_shot",
+    size = { 32, 32 },
+
+    behaviors = {
+        { "kite", range = "attack_range" },
+        { "burst_fire", interval = "burst_cooldown", range = "attack_range", damage = "damage", projectile = "projectile_preset", burst_count = 4, burst_delay = 0.15 },
     },
 
     on_death = function(e, ctx, helpers)

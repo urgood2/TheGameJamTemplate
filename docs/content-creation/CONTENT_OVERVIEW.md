@@ -13,6 +13,7 @@ Quick index for adding new content to the game.
 | Trigger card + event wiring | [ADDING_TRIGGERS.md](ADDING_TRIGGERS.md) | `wand/wand_triggers.lua` |
 | Projectile preset | [ADDING_PROJECTILES.md](ADDING_PROJECTILES.md) | `assets/scripts/data/projectiles.lua` |
 | Avatar (ascension) | [ADDING_AVATARS.md](ADDING_AVATARS.md) | `assets/scripts/data/avatars.lua` |
+| Enemy (wave mode) | [ADDING_ENEMIES.md](ADDING_ENEMIES.md) | `assets/scripts/data/enemies.lua` |
 
 ## Quick Start (30 seconds)
 

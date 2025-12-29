@@ -151,8 +151,8 @@ Dependencies:
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local timer = require("core.timer")
+local signal = require("external.hump.signal")
 
--- Localize globals for performance
 local GetFrameTime = _G.GetFrameTime
 
 local WaveHelpers = {}
@@ -309,13 +309,275 @@ function WaveHelpers.dash_toward_player(e, dash_speed, duration)
 end
 
 --============================================
+-- DISTANCE & RANGE HELPERS
+--============================================
+
+--- Get distance from entity to player
+--- @param e number Entity ID
+--- @return number Distance in pixels (math.huge if invalid)
+function WaveHelpers.distance_to_player(e)
+    local pos = WaveHelpers.get_entity_position(e)
+    if not pos then return math.huge end
+    local player = WaveHelpers.get_player_position()
+    local dx = pos.x - player.x
+    local dy = pos.y - player.y
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+--- Get distance between two entities
+--- @param e1 number First entity ID
+--- @param e2 number Second entity ID
+--- @return number Distance in pixels (math.huge if invalid)
+function WaveHelpers.distance_between(e1, e2)
+    local pos1 = WaveHelpers.get_entity_position(e1)
+    local pos2 = WaveHelpers.get_entity_position(e2)
+    if not pos1 or not pos2 then return math.huge end
+    local dx = pos1.x - pos2.x
+    local dy = pos1.y - pos2.y
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+--- Check if entity is within range of player
+--- @param e number Entity ID
+--- @param range number Range in pixels
+--- @return boolean True if within range
+function WaveHelpers.is_in_range(e, range)
+    return WaveHelpers.distance_to_player(e) <= range
+end
+
+--- Get direction vector from entity to player (normalized)
+--- @param e number Entity ID
+--- @return table|nil { x, y } normalized direction or nil
+function WaveHelpers.direction_to_player(e)
+    local pos = WaveHelpers.get_entity_position(e)
+    if not pos then return nil end
+    local player = WaveHelpers.get_player_position()
+    local dx = player.x - pos.x
+    local dy = player.y - pos.y
+    local dist = math.sqrt(dx * dx + dy * dy)
+    if dist < 1 then return { x = 0, y = 0 } end
+    return { x = dx / dist, y = dy / dist }
+end
+
+--- Get angle from entity to player in radians
+--- @param e number Entity ID
+--- @return number Angle in radians (0 if invalid)
+function WaveHelpers.angle_to_player(e)
+    local pos = WaveHelpers.get_entity_position(e)
+    if not pos then return 0 end
+    local player = WaveHelpers.get_player_position()
+    return math.atan2(player.y - pos.y, player.x - pos.x)
+end
+
+--============================================
+-- ADVANCED MOVEMENT HELPERS
+--============================================
+
+--- Move entity toward a specific point
+--- @param e number Entity ID
+--- @param target_x number Target X coordinate
+--- @param target_y number Target Y coordinate
+--- @param speed number Movement speed (pixels/sec)
+function WaveHelpers.move_toward_point(e, target_x, target_y, speed)
+    if not entity_cache.valid(e) then return end
+    local transform = component_cache.get(e, Transform)
+    if not transform then return end
+
+    local dx = target_x - transform.actualX
+    local dy = target_y - transform.actualY
+    local dist = math.sqrt(dx * dx + dy * dy)
+
+    if dist > 1 then
+        local dt = GetFrameTime()
+        local move_dist = math.min(speed * dt, dist)  -- Don't overshoot
+        transform.actualX = transform.actualX + (dx / dist) * move_dist
+        transform.actualY = transform.actualY + (dy / dist) * move_dist
+    end
+end
+
+--- Move entity in a direction (angle-based)
+--- @param e number Entity ID
+--- @param angle number Angle in radians
+--- @param speed number Movement speed (pixels/sec)
+function WaveHelpers.move_in_direction(e, angle, speed)
+    if not entity_cache.valid(e) then return end
+    local transform = component_cache.get(e, Transform)
+    if not transform then return end
+
+    local dt = GetFrameTime()
+    transform.actualX = transform.actualX + math.cos(angle) * speed * dt
+    transform.actualY = transform.actualY + math.sin(angle) * speed * dt
+end
+
+--- Strafe perpendicular to player (for dodging/orbiting)
+--- @param e number Entity ID
+--- @param speed number Movement speed (pixels/sec)
+--- @param direction number 1 for clockwise, -1 for counter-clockwise
+function WaveHelpers.strafe_around_player(e, speed, direction)
+    if not entity_cache.valid(e) then return end
+    local angle = WaveHelpers.angle_to_player(e)
+    -- Add 90 degrees perpendicular
+    local strafe_angle = angle + (math.pi / 2) * (direction or 1)
+    WaveHelpers.move_in_direction(e, strafe_angle, speed)
+end
+
+--============================================
+-- PROJECTILE HELPERS
+--============================================
+
+--- Fire a projectile from entity toward player
+--- @param e number Entity ID (source)
+--- @param preset string Projectile preset name
+--- @param damage number Damage value
+--- @param opts table|nil Optional: { speed, size, piercing, homing }
+function WaveHelpers.fire_projectile(e, preset, damage, opts)
+    if not entity_cache.valid(e) then return end
+    local pos = WaveHelpers.get_entity_position(e)
+    if not pos then return end
+
+    opts = opts or {}
+    local signal = require("external.hump.signal")
+    
+    -- Calculate direction to player
+    local dir = WaveHelpers.direction_to_player(e)
+    if not dir then return end
+
+    signal.emit("spawn_enemy_projectile", {
+        x = pos.x,
+        y = pos.y,
+        dir_x = dir.x,
+        dir_y = dir.y,
+        preset = preset or "enemy_basic_shot",
+        damage = damage or 10,
+        speed = opts.speed,
+        size = opts.size,
+        piercing = opts.piercing,
+        homing = opts.homing,
+        source = e,
+    })
+end
+
+--- Fire a projectile with leading (predict player movement)
+--- @param e number Entity ID (source)
+--- @param preset string Projectile preset name
+--- @param damage number Damage value
+--- @param projectile_speed number Speed of projectile (for prediction)
+function WaveHelpers.fire_projectile_leading(e, preset, damage, projectile_speed)
+    if not entity_cache.valid(e) then return end
+    local pos = WaveHelpers.get_entity_position(e)
+    if not pos then return end
+
+    local player_pos = WaveHelpers.get_player_position()
+    local player_vel = WaveHelpers.get_player_velocity()
+    
+    -- Simple leading: predict where player will be
+    local dist = WaveHelpers.distance_to_player(e)
+    local flight_time = dist / (projectile_speed or 200)
+    
+    local predicted_x = player_pos.x + (player_vel.x or 0) * flight_time
+    local predicted_y = player_pos.y + (player_vel.y or 0) * flight_time
+    
+    local dx = predicted_x - pos.x
+    local dy = predicted_y - pos.y
+    local len = math.sqrt(dx * dx + dy * dy)
+    if len < 1 then return end
+
+    signal.emit("spawn_enemy_projectile", {
+        x = pos.x,
+        y = pos.y,
+        dir_x = dx / len,
+        dir_y = dy / len,
+        preset = preset or "enemy_basic_shot",
+        damage = damage or 10,
+        speed = projectile_speed,
+        source = e,
+    })
+end
+
+--- Fire projectiles in a spread pattern
+--- @param e number Entity ID (source)
+--- @param preset string Projectile preset name
+--- @param damage number Damage per projectile
+--- @param count number Number of projectiles
+--- @param spread_angle number Total spread angle in radians
+function WaveHelpers.fire_projectile_spread(e, preset, damage, count, spread_angle)
+    if not entity_cache.valid(e) then return end
+    local pos = WaveHelpers.get_entity_position(e)
+    if not pos then return end
+
+    count = count or 3
+    spread_angle = spread_angle or (math.pi / 4)  -- 45 degrees default
+
+    local base_angle = WaveHelpers.angle_to_player(e)
+    local start_angle = base_angle - spread_angle / 2
+    local angle_step = count > 1 and (spread_angle / (count - 1)) or 0
+
+    local signal = require("external.hump.signal")
+    for i = 0, count - 1 do
+        local angle = start_angle + angle_step * i
+        signal.emit("spawn_enemy_projectile", {
+            x = pos.x,
+            y = pos.y,
+            dir_x = math.cos(angle),
+            dir_y = math.sin(angle),
+            preset = preset or "enemy_basic_shot",
+            damage = damage or 10,
+            source = e,
+        })
+    end
+end
+
+--- Fire projectiles in a ring pattern (360 degrees)
+--- @param e number Entity ID (source)
+--- @param preset string Projectile preset name
+--- @param damage number Damage per projectile
+--- @param count number Number of projectiles
+function WaveHelpers.fire_projectile_ring(e, preset, damage, count)
+    if not entity_cache.valid(e) then return end
+    local pos = WaveHelpers.get_entity_position(e)
+    if not pos then return end
+
+    count = count or 8
+    local angle_step = (math.pi * 2) / count
+
+    local signal = require("external.hump.signal")
+    for i = 0, count - 1 do
+        local angle = angle_step * i
+        signal.emit("spawn_enemy_projectile", {
+            x = pos.x,
+            y = pos.y,
+            dir_x = math.cos(angle),
+            dir_y = math.sin(angle),
+            preset = preset or "enemy_basic_shot",
+            damage = damage or 10,
+            source = e,
+        })
+    end
+end
+
+--- Get player velocity (for leading shots)
+--- @return table { x, y } velocity or { x = 0, y = 0 }
+function WaveHelpers.get_player_velocity()
+    if not _G.survivorEntity or not entity_cache.valid(_G.survivorEntity) then
+        return { x = 0, y = 0 }
+    end
+    -- Try to get velocity from physics body
+    local vel = { x = 0, y = 0 }
+    if physics and physics.get_velocity then
+        local vx, vy = physics.get_velocity(_G.survivorEntity)
+        if vx and vy then
+            vel.x, vel.y = vx, vy
+        end
+    end
+    return vel
+end
+
+--============================================
 -- COMBAT HELPERS
 --============================================
 
 function WaveHelpers.deal_damage_to_player(damage)
-    if not survivorEntity or not entity_cache.valid(survivorEntity) then return end
-    -- Route through combat system
-    local signal = require("external.hump.signal")
+    if not _G.survivorEntity or not entity_cache.valid(_G.survivorEntity) then return end
     signal.emit("damage_player", damage)
 end
 
@@ -360,7 +622,6 @@ function WaveHelpers.drop_trap(e, damage, lifetime)
     if not pos then return end
 
     -- Create trap entity (simplified - expand based on your entity creation patterns)
-    local signal = require("external.hump.signal")
     signal.emit("spawn_trap", { x = pos.x, y = pos.y, damage = damage, lifetime = lifetime })
 end
 
@@ -386,7 +647,6 @@ function WaveHelpers.explode(e, radius, damage)
     local pos = WaveHelpers.get_entity_position(e)
     if not pos then return end
 
-    local signal = require("external.hump.signal")
     signal.emit("explosion", { x = pos.x, y = pos.y, radius = radius, damage = damage, source = e })
 end
 
@@ -396,13 +656,11 @@ end
 
 function WaveHelpers.spawn_telegraph(position, enemy_type, duration)
     duration = duration or 1.0
-    local signal = require("external.hump.signal")
     signal.emit("spawn_telegraph", { x = position.x, y = position.y, enemy_type = enemy_type, duration = duration })
 end
 
 function WaveHelpers.show_floating_text(text, opts)
     opts = opts or {}
-    local signal = require("external.hump.signal")
     signal.emit("show_floating_text", { text = text, style = opts.style, x = opts.x, y = opts.y })
 end
 
@@ -415,12 +673,10 @@ function WaveHelpers.spawn_particles(effect_name, e_or_position)
     end
     if not pos then return end
 
-    local signal = require("external.hump.signal")
     signal.emit("spawn_particles", { effect = effect_name, x = pos.x, y = pos.y })
 end
 
 function WaveHelpers.screen_shake(duration, intensity)
-    local signal = require("external.hump.signal")
     signal.emit("screen_shake", { duration = duration, intensity = intensity })
 end
 
@@ -436,7 +692,7 @@ function WaveHelpers.set_shader(e, shader_name)
     end
 end
 
-function WaveHelpers.clear_shader(e, shader_name)
+function WaveHelpers.clear_shader(e)
     local ok, ShaderBuilder = pcall(require, "core.shader_builder")
     if ok and ShaderBuilder then
         ShaderBuilder.for_entity(e):clear():apply()

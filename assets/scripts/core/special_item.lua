@@ -32,7 +32,7 @@ Usage:
             enabled = true,
             color = { 255, 215, 0, 255 },
             thickness = 2,
-            type = 8,
+            type = 2,  -- 0=none, 1=4-way, 2=8-way
         },
     })
 
@@ -71,14 +71,6 @@ local entity_cache = require("core.entity_cache")
 local Node = require("monobehavior.behavior_script_v2")
 local ShaderBuilder = require("core.shader_builder")
 local Particles = require("core.particles")
-
---------------------------------------------------------------------------------
--- RENDER GROUP CONSTANTS
---------------------------------------------------------------------------------
--- Use render_groups system for reliable shader rendering (matches RenderGroupsTest pattern)
-
-local RENDER_GROUP_NAME = "special_items"
-local renderGroupInitialized = false
 
 local unpack = table.unpack or unpack
 
@@ -234,16 +226,16 @@ function SpecialItemScript:cleanup()
         self.particleStream:stop()
         self.particleStream = nil
     end
-    if render_groups and self:handle() then
-        render_groups.removeFromAll(self:handle())
-    end
     activeItems[self:handle()] = nil
 end
 
 function SpecialItemScript:destroy()
+    if self._destroying then return end
+    self._destroying = true
     self:cleanup()
-    if entity_cache.valid(self:handle()) then
-        registry:destroy(self:handle())
+    local eid = self:handle()
+    if eid and entity_cache.valid(eid) then
+        registry:destroy(eid)
     end
 end
 
@@ -266,7 +258,7 @@ function SpecialItem.create(opts)
     local shader = opts.shader or "3d_skew_holo"
     local shaderUniforms = opts.shaderUniforms or {}
     local particleConfig = opts.particles or { enabled = true, preset = "bubble" }
-    local outlineConfig = opts.outline or { enabled = true, color = "gold", thickness = 2, type = 8 }
+    local outlineConfig = opts.outline or { enabled = true, color = "gold", thickness = 2, type = 2 }  -- type: 0=none, 1=4-way, 2=8-way
     local shadow = opts.shadow or false
     
     -- Create base entity
@@ -317,32 +309,21 @@ function SpecialItem.create(opts)
         
         builder:add("efficient_pixel_outline", {
             outlineColor = outlineColor,
-            outlineType = outlineConfig.type or 8,
+            outlineType = outlineConfig.type or 2,  -- 0=none, 1=4-way, 2=8-way
             thickness = outlineConfig.thickness or 2,
         })
     end
     
     builder:apply()
     
-    if not renderGroupInitialized and render_groups then
-        render_groups.create(RENDER_GROUP_NAME, {})
-        renderGroupInitialized = true
-    end
-    
-    if render_groups then
-        local shaderList = { shader }
-        if outlineConfig.enabled then
-            table.insert(shaderList, "efficient_pixel_outline")
-        end
-        render_groups.add(RENDER_GROUP_NAME, entity, shaderList)
-    end
+
     
     local script = SpecialItemScript {
         config = {
             particles = particleConfig,
             outline = outlineConfig,
             shader = shader,
-        }
+        },
     }
     script:attach_ecs { create_new = false, existing_entity = entity }
     activeItems[script:handle()] = script
@@ -413,7 +394,7 @@ function SpecialItem.new(sprite)
         shader = "3d_skew_holo",
         shaderUniforms = {},
         particles = { enabled = true, preset = "bubble" },
-        outline = { enabled = true, color = "gold", thickness = 2, type = 8 },
+        outline = { enabled = true, color = "gold", thickness = 2, type = 2 },
     }
     return self
 end
@@ -462,11 +443,12 @@ function BuilderMethods:outline(color, thickness, outlineType)
     if color == false then
         self._opts.outline = { enabled = false }
     else
+        -- outlineType: 0=none, 1=4-way, 2=8-way (shader samples 4*outlineType neighbors)
         self._opts.outline = {
             enabled = true,
             color = color or "gold",
             thickness = thickness or 2,
-            type = outlineType or 8,
+            type = outlineType or 2,
         }
     end
     return self
@@ -503,17 +485,12 @@ function SpecialItem.update(dt)
     end
 end
 
---- Draw all special items via render_groups (call in game loop after update)
---- @param z number? Optional z-index for draw order (default: 1000)
+--- Draw all special items (entities render via normal shader pipeline)
+--- @param z number? Optional z-index (unused, kept for API compatibility)
 function SpecialItem.draw(z)
-    if not renderGroupInitialized then return end
-    if not command_buffer or not layers or not layers.sprites then return end
-    
-    command_buffer.queueDrawRenderGroup(layers.sprites, function(cmd)
-        cmd.registry = registry
-        cmd.groupName = RENDER_GROUP_NAME
-        cmd.autoOptimize = true
-    end, z or 1000, layer.DrawCommandSpace.World)
+    -- Entities with ShaderPipelineComponent render automatically via the engine's
+    -- batched entity rendering. This function is kept for API compatibility but
+    -- no explicit draw call is needed.
 end
 
 --- Get particle preset names

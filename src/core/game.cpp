@@ -2171,6 +2171,11 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         }
         
         {
+            ZONE_SCOPED("Stencil Masked Particles");
+            particle::DrawAllStencilMaskedParticles(globals::getRegistry(), sprites);
+        }
+        
+        {
             ZONE_SCOPED("Tilemap draw");
             if (ldtk_loader::HasActiveProject() && ldtk_loader::HasActiveLevel() && worldCamera) {
                 // simple camera-based culling rectangle (pad to avoid pop-in)

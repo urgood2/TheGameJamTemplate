@@ -1863,6 +1863,26 @@ Color = {
 
 
 ---
+---
+---@class particle.StencilMaskSource
+particle.StencilMaskSource = {
+    ---@type number
+    paddingPx = nil  -- Padding to expand/contract the mask bounds
+}
+
+
+---
+---
+---@class particle.StencilMaskedParticle
+particle.StencilMaskedParticle = {
+    ---@type Entity
+    sourceEntity = nil,  -- The entity whose bounds define the stencil mask
+    ---@type number
+    zBias = nil  -- Relative z ordering within local commands
+}
+
+
+---
 --- Root table for shader pipeline helpers and types.
 ---
 ---@class shader_pipeline
@@ -9849,6 +9869,26 @@ function particle.CreateParticleEmitter(...) end
 ---@param tag      string?                        # optional tag to attach to the particle
 ---@return entt::entity                            # newly created particle entity
 function particle.CreateParticle(...) end
+
+---
+--- Creates a particle that is masked by the source entity's bounds
+---
+---@param location Vector2
+---@param size Vector2
+---@param opts table
+---@param sourceEntity Entity # Entity providing stencil mask
+---@param animCfg table?
+---@param tag string?
+---@return Entity
+function particle.CreateStencilMaskedParticle(...) end
+
+---
+--- Marks an entity as a stencil mask source for particles
+---
+---@param entity Entity
+---@param padding number?
+---@return nil
+function particle.AddStencilMaskSource(...) end
 
 ---
 --- Defines ordered collision tags (also initializes trigger tags, categories, and type ids).

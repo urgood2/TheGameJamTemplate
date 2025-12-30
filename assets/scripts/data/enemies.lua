@@ -138,7 +138,7 @@ enemies.summoner = {
     summon_type = "goblin",
     summon_count = 2,
     damage = 2,
-    size = { 40, 40 },
+    size = { 64, 32 },
 
     behaviors = {
         { "flee", distance = 150 },

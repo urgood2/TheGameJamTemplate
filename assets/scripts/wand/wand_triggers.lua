@@ -193,8 +193,10 @@ function WandTriggers.setupTimerTrigger(registration, interval)
             log_debug("WandTriggers: Timer trigger fired for wand", wandId)
             -- Reset elapsed time when trigger fires
             registration.elapsed = 0
-            registration.executor(wandId, "timer_trigger")
-            signal.emit("trigger_activated", wandId, registration.triggerType)
+            local success = registration.executor(wandId, "timer_trigger")
+            if success then
+                signal.emit("trigger_activated", wandId, registration.triggerType)
+            end
         end
     end, -1, false, nil, timerTag)  -- infinite repetitions
 
@@ -218,8 +220,10 @@ function WandTriggers.setupCooldownTrigger(registration)
     end, function()
         if registration.enabled and registration.executor then
             log_debug("WandTriggers: Cooldown trigger fired for wand", wandId)
-            registration.executor(wandId, "cooldown_trigger")
-            signal.emit("trigger_activated", wandId, registration.triggerType)
+            local success = registration.executor(wandId, "cooldown_trigger")
+            if success then
+                signal.emit("trigger_activated", wandId, registration.triggerType)
+            end
         end
     end, -1, nil, timerTag)  -- infinite repetitions
 
@@ -346,8 +350,10 @@ function WandTriggers.processPendingEvents()
     for _, evt in ipairs(queued) do
         local registration = WandTriggers.registrations[evt.wandId]
         if registration and registration.enabled and registration.executor then
-            registration.executor(evt.wandId, evt.eventType, evt.eventData)
-            signal.emit("trigger_activated", evt.wandId, registration.triggerType)
+            local success = registration.executor(evt.wandId, evt.eventType, evt.eventData)
+            if success then
+                signal.emit("trigger_activated", evt.wandId, registration.triggerType)
+            end
         end
     end
 end
@@ -416,8 +422,10 @@ function WandTriggers.updateDistanceTriggers(playerEntity)
                         print("[AvatarRule] move_casts_trigger_onhit would apply here")
                     end
 
-                    registration.executor(wandId, "distance_trigger")
-                    signal.emit("trigger_activated", wandId, registration.triggerType)
+                    local success = registration.executor(wandId, "distance_trigger")
+                    if success then
+                        signal.emit("trigger_activated", wandId, registration.triggerType)
+                    end
 
                     -- Reset distance
                     tracking.totalDistance = 0

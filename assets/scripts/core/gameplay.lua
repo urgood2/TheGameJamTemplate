@@ -8439,7 +8439,7 @@ function initSurvivorEntity()
 
 
         -- play sound
-        -- playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
+        playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
 
         -- DISABLED: time slow and music silencing effects
         -- playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)

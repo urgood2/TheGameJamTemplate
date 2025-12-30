@@ -1013,6 +1013,273 @@ inline void WipeTagged(const std::string &tag) {
   }
 }
 
+// ============================================================================
+// STENCIL-MASKED PARTICLES
+// Allows particles to be rendered only within the bounds of a source entity's
+// sprite, using stencil buffer masking. Works with shader pipeline.
+// ============================================================================
+
+/// Marker component: indicates this entity provides a stencil mask for particles
+struct StencilMaskSource {
+  float paddingPx = 0.0f;  // Optional: expand/contract mask rect
+};
+
+/// Marker component: indicates this particle should be masked by a source entity
+struct StencilMaskedParticle {
+  entt::entity sourceEntity = entt::null;  // Entity whose bounds define stencil mask
+  float zBias = 0.0f;  // Relative z ordering within local commands
+};
+
+/// Draw stencil-masked particles for a specific source entity.
+/// This function queues stencil commands as LOCAL commands on the source entity,
+/// so particles are captured in the shader pipeline input and processed with shaders.
+/// 
+/// Call this BEFORE the shader pipeline renders the entity.
+/// 
+/// @param registry The ECS registry
+/// @param sourceEntity The entity providing the stencil mask (must have StencilMaskSource)
+/// @param layerPtr The layer to queue commands to (for fallback if no shader pipeline)
+inline void DrawStencilMaskedParticlesForEntity(
+    entt::registry &registry,
+    entt::entity sourceEntity,
+    std::shared_ptr<layer::Layer> layerPtr) {
+  
+  // Validate source entity
+  if (!registry.valid(sourceEntity)) {
+    return;
+  }
+  
+  // Source must have StencilMaskSource component
+  if (!registry.any_of<StencilMaskSource>(sourceEntity)) {
+    return;
+  }
+  
+  // Get source transform for mask bounds
+  auto* srcTransform = registry.try_get<transform::Transform>(sourceEntity);
+  if (!srcTransform) {
+    return;
+  }
+  
+  auto& maskSource = registry.get<StencilMaskSource>(sourceEntity);
+  
+  // Collect all particles masked by this source
+  std::vector<entt::entity> maskedParticles;
+  auto view = registry.view<Particle, StencilMaskedParticle, transform::Transform>();
+  for (auto [particleEntity, particle, maskedComp, transform] : view.each()) {
+    if (maskedComp.sourceEntity == sourceEntity) {
+      maskedParticles.push_back(particleEntity);
+    }
+  }
+  
+  // No particles to draw
+  if (maskedParticles.empty()) {
+    return;
+  }
+  
+  // Determine rendering space from first particle (assume all same space)
+  layer::DrawCommandSpace drawCommandSpace = layer::DrawCommandSpace::World;
+  {
+    auto& firstParticle = registry.get<Particle>(maskedParticles[0]);
+    if (firstParticle.space.has_value()) {
+      drawCommandSpace = (firstParticle.space.value() == RenderSpace::Screen)
+                             ? layer::DrawCommandSpace::Screen
+                             : layer::DrawCommandSpace::World;
+    }
+  }
+  
+  // Get mask bounds from source transform
+  srcTransform->updateCachedValues();
+  float maskX = srcTransform->getVisualX() - maskSource.paddingPx;
+  float maskY = srcTransform->getVisualY() - maskSource.paddingPx;
+  float maskW = srcTransform->getVisualW() + maskSource.paddingPx * 2.0f;
+  float maskH = srcTransform->getVisualH() + maskSource.paddingPx * 2.0f;
+  float maskRotation = srcTransform->getVisualR();
+  float maskScale = srcTransform->getVisualScaleWithHoverAndDynamicMotionReflected();
+  
+  // Base z for stencil commands (render before normal particles)
+  const int baseZ = -100;
+  
+  // Queue stencil commands
+  // 1. Begin stencil mode
+  layer::QueueCommand<layer::CmdBeginStencilMode>(
+      layerPtr, [](layer::CmdBeginStencilMode* cmd) {
+        cmd->dummy = 0;
+      }, baseZ, drawCommandSpace);
+  
+  // 2. Begin stencil mask (draw to stencil buffer)
+  layer::QueueCommand<layer::CmdBeginStencilMask>(
+      layerPtr, [](layer::CmdBeginStencilMask* cmd) {
+        cmd->dummy = 0;
+      }, baseZ + 1, drawCommandSpace);
+  
+  // 3. Draw mask rectangle (with rotation and scale)
+  layer::QueueCommand<layer::CmdPushMatrix>(
+      layerPtr, [](layer::CmdPushMatrix* cmd) {}, baseZ + 2, drawCommandSpace);
+  
+  // Translate to center
+  layer::QueueCommand<layer::CmdTranslate>(
+      layerPtr, [maskX, maskY, maskW, maskH](layer::CmdTranslate* cmd) {
+        cmd->x = maskX + maskW * 0.5f;
+        cmd->y = maskY + maskH * 0.5f;
+      }, baseZ + 3, drawCommandSpace);
+  
+  // Apply scale
+  layer::QueueCommand<layer::CmdScale>(
+      layerPtr, [maskScale](layer::CmdScale* cmd) {
+        cmd->scaleX = maskScale;
+        cmd->scaleY = maskScale;
+      }, baseZ + 4, drawCommandSpace);
+  
+  // Apply rotation
+  layer::QueueCommand<layer::CmdRotate>(
+      layerPtr, [maskRotation](layer::CmdRotate* cmd) {
+        cmd->angle = maskRotation;
+      }, baseZ + 5, drawCommandSpace);
+  
+  // Offset back from center
+  layer::QueueCommand<layer::CmdTranslate>(
+      layerPtr, [maskW, maskH](layer::CmdTranslate* cmd) {
+        cmd->x = -maskW * 0.5f;
+        cmd->y = -maskH * 0.5f;
+      }, baseZ + 6, drawCommandSpace);
+  
+  // Draw the mask rectangle (invisible to color, writes to stencil)
+  layer::QueueCommand<layer::CmdDrawRectanglePro>(
+      layerPtr, [maskW, maskH](layer::CmdDrawRectanglePro* cmd) {
+        cmd->offsetX = 0;
+        cmd->offsetY = 0;
+        cmd->size.x = maskW;
+        cmd->size.y = maskH;
+        cmd->color = WHITE;  // Color doesn't matter, stencil mask blocks color write
+      }, baseZ + 7, drawCommandSpace);
+  
+  layer::QueueCommand<layer::CmdPopMatrix>(
+      layerPtr, [](layer::CmdPopMatrix* cmd) {}, baseZ + 8, drawCommandSpace);
+  
+  // 4. End stencil mask (switch to stencil test mode)
+  layer::QueueCommand<layer::CmdEndStencilMask>(
+      layerPtr, [](layer::CmdEndStencilMask* cmd) {
+        cmd->dummy = 0;
+      }, baseZ + 9, drawCommandSpace);
+  
+  // 5. Draw all masked particles (only visible where stencil == 1)
+  int particleZ = baseZ + 10;
+  for (auto particleEntity : maskedParticles) {
+    auto& particle = registry.get<Particle>(particleEntity);
+    auto& particleTransform = registry.get<transform::Transform>(particleEntity);
+    auto& gameObject = registry.get<transform::GameObject>(particleEntity);
+    
+    float visualX = particleTransform.getVisualX();
+    float visualY = particleTransform.getVisualY();
+    float visualW = particleTransform.getVisualW();
+    float visualH = particleTransform.getVisualH();
+    float visualR = particleTransform.getVisualRWithDynamicMotionAndXLeaning();
+    float visualScale = particleTransform.getVisualScaleWithHoverAndDynamicMotionReflected();
+    
+    Color drawColor = particle.color.value_or(WHITE);
+    
+    // Push matrix for this particle
+    layer::QueueCommand<layer::CmdPushMatrix>(
+        layerPtr, [](layer::CmdPushMatrix* cmd) {}, particleZ, drawCommandSpace);
+    
+    layer::QueueCommand<layer::CmdTranslate>(
+        layerPtr, [visualX, visualY, visualW, visualH](layer::CmdTranslate* cmd) {
+          cmd->x = visualX + visualW * 0.5f;
+          cmd->y = visualY + visualH * 0.5f;
+        }, particleZ + 1, drawCommandSpace);
+    
+    layer::QueueCommand<layer::CmdScale>(
+        layerPtr, [visualScale](layer::CmdScale* cmd) {
+          cmd->scaleX = visualScale;
+          cmd->scaleY = visualScale;
+        }, particleZ + 2, drawCommandSpace);
+    
+    layer::QueueCommand<layer::CmdRotate>(
+        layerPtr, [visualR](layer::CmdRotate* cmd) {
+          cmd->angle = visualR;
+        }, particleZ + 3, drawCommandSpace);
+    
+    layer::QueueCommand<layer::CmdTranslate>(
+        layerPtr, [visualW, visualH](layer::CmdTranslate* cmd) {
+          cmd->x = -visualW * 0.5f;
+          cmd->y = -visualH * 0.5f;
+        }, particleZ + 4, drawCommandSpace);
+    
+    // Draw particle based on render type
+    switch (particle.renderType) {
+      case ParticleRenderType::CIRCLE_FILLED:
+        layer::QueueCommand<layer::CmdDrawCircleFilled>(
+            layerPtr,
+            [radius = std::max(visualW, visualH), drawColor](layer::CmdDrawCircleFilled* cmd) {
+              cmd->x = radius / 2;
+              cmd->y = radius / 2;
+              cmd->radius = radius;
+              cmd->color = drawColor;
+            }, particleZ + 5, drawCommandSpace);
+        break;
+        
+      case ParticleRenderType::RECTANGLE_FILLED:
+        layer::QueueCommand<layer::CmdDrawRectanglePro>(
+            layerPtr,
+            [visualW, visualH, drawColor](layer::CmdDrawRectanglePro* cmd) {
+              cmd->offsetX = 0;
+              cmd->offsetY = 0;
+              cmd->size.x = visualW;
+              cmd->size.y = visualH;
+              cmd->color = drawColor;
+            }, particleZ + 5, drawCommandSpace);
+        break;
+        
+      case ParticleRenderType::ELLIPSE:
+        layer::QueueCommand<layer::CmdDrawCenteredEllipse>(
+            layerPtr,
+            [radiusX = visualW * 0.5f, radiusY = visualH * 0.5f, drawColor](layer::CmdDrawCenteredEllipse* cmd) {
+              cmd->x = radiusX;
+              cmd->y = radiusY;
+              cmd->rx = radiusX;
+              cmd->ry = radiusY;
+              cmd->color = drawColor;
+              cmd->lineWidth.reset();
+            }, particleZ + 5, drawCommandSpace);
+        break;
+        
+      default:
+        // For other types, draw as circle
+        layer::QueueCommand<layer::CmdDrawCircleFilled>(
+            layerPtr,
+            [radius = std::max(visualW, visualH), drawColor](layer::CmdDrawCircleFilled* cmd) {
+              cmd->x = radius / 2;
+              cmd->y = radius / 2;
+              cmd->radius = radius;
+              cmd->color = drawColor;
+            }, particleZ + 5, drawCommandSpace);
+        break;
+    }
+    
+    layer::QueueCommand<layer::CmdPopMatrix>(
+        layerPtr, [](layer::CmdPopMatrix* cmd) {}, particleZ + 6, drawCommandSpace);
+    
+    particleZ += 10;  // Space for next particle
+  }
+  
+  // 6. End stencil mode
+  layer::QueueCommand<layer::CmdEndStencilMode>(
+      layerPtr, [](layer::CmdEndStencilMode* cmd) {
+        cmd->dummy = 0;
+      }, particleZ, drawCommandSpace);
+}
+
+/// Draw all stencil-masked particles across all source entities
+inline void DrawAllStencilMaskedParticles(
+    entt::registry &registry,
+    std::shared_ptr<layer::Layer> layerPtr) {
+  
+  auto view = registry.view<StencilMaskSource>();
+  for (auto sourceEntity : view) {
+    DrawStencilMaskedParticlesForEntity(registry, sourceEntity, layerPtr);
+  }
+}
+
 inline void exposeToLua(sol::state &lua) {
 
   auto &rec = BindingRecorder::instance();
@@ -1791,5 +2058,89 @@ inline void exposeToLua(sol::state &lua) {
   rec.record_property("Color", {"g", "number", "Green channel (0–255)"});
   rec.record_property("Color", {"b", "number", "Blue channel (0–255)"});
   rec.record_property("Color", {"a", "number", "Alpha channel (0–255)"});
+
+  // Stencil-masked particle components
+  p.new_usertype<particle::StencilMaskSource>(
+      "StencilMaskSource", sol::constructors<>(),
+      "paddingPx", &particle::StencilMaskSource::paddingPx,
+      "type_id", []() { return entt::type_hash<particle::StencilMaskSource>::value(); }
+  );
+  rec.add_type("particle.StencilMaskSource", true);
+  rec.record_property("particle.StencilMaskSource",
+      {"paddingPx", "number", "Padding to expand/contract the mask bounds"});
+
+  p.new_usertype<particle::StencilMaskedParticle>(
+      "StencilMaskedParticle", sol::constructors<>(),
+      "sourceEntity", &particle::StencilMaskedParticle::sourceEntity,
+      "zBias", &particle::StencilMaskedParticle::zBias,
+      "type_id", []() { return entt::type_hash<particle::StencilMaskedParticle>::value(); }
+  );
+  rec.add_type("particle.StencilMaskedParticle", true);
+  rec.record_property("particle.StencilMaskedParticle",
+      {"sourceEntity", "Entity", "The entity whose bounds define the stencil mask"});
+  rec.record_property("particle.StencilMaskedParticle",
+      {"zBias", "number", "Relative z ordering within local commands"});
+
+  auto luaCreateStencilMaskedParticle = [](
+      Vector2 location, Vector2 size, sol::table opts,
+      entt::entity sourceEntity,
+      sol::optional<sol::table> animOpts,
+      sol::optional<std::string> tag) -> entt::entity {
+    
+    particle::Particle pData;
+    pData.renderType = opts.get_or("renderType", pData.renderType);
+    pData.velocity = opts.get_or("velocity", pData.velocity);
+    pData.rotation = opts.get_or("rotation", pData.rotation);
+    pData.rotationSpeed = opts.get_or("rotationSpeed", pData.rotationSpeed);
+    pData.scale = opts.get_or("scale", pData.scale);
+    pData.lifespan = opts.get_or("lifespan", pData.lifespan);
+    pData.color = opts.get_or("color", pData.color);
+    pData.gravity = opts.get_or("gravity", pData.gravity);
+    pData.startColor = opts.get_or("startColor", pData.startColor);
+    pData.endColor = opts.get_or("endColor", pData.endColor);
+    
+    std::optional<particle::ParticleAnimationConfig> cfg = std::nullopt;
+    if (animOpts && animOpts->valid()) {
+      particle::ParticleAnimationConfig a;
+      a.loop = (*animOpts).get_or("loop", a.loop);
+      a.animationName = (*animOpts).get_or("animationName", a.animationName);
+      cfg = a;
+      pData.renderType = particle::ParticleRenderType::TEXTURE;
+    }
+    
+    auto entity = CreateParticle(globals::getRegistry(), location, size, pData, cfg,
+                                 tag.value_or(""));
+    
+    particle::StencilMaskedParticle maskedComp;
+    maskedComp.sourceEntity = sourceEntity;
+    maskedComp.zBias = opts.get_or("zBias", 0.0f);
+    globals::getRegistry().emplace_or_replace<particle::StencilMaskedParticle>(entity, maskedComp);
+    
+    return entity;
+  };
+
+  rec.bind_function(
+      lua, particlePath, "CreateStencilMaskedParticle", luaCreateStencilMaskedParticle,
+      "---@param location Vector2\n"
+      "---@param size Vector2\n"
+      "---@param opts table\n"
+      "---@param sourceEntity Entity # Entity providing stencil mask\n"
+      "---@param animCfg table?\n"
+      "---@param tag string?\n"
+      "---@return Entity",
+      "Creates a particle that is masked by the source entity's bounds");
+
+  auto luaAddStencilMaskSource = [](entt::entity entity, sol::optional<float> padding) {
+    particle::StencilMaskSource comp;
+    comp.paddingPx = padding.value_or(0.0f);
+    globals::getRegistry().emplace_or_replace<particle::StencilMaskSource>(entity, comp);
+  };
+
+  rec.bind_function(
+      lua, particlePath, "AddStencilMaskSource", luaAddStencilMaskSource,
+      "---@param entity Entity\n"
+      "---@param padding number?\n"
+      "---@return nil",
+      "Marks an entity as a stencil mask source for particles");
 }
 } // namespace particle

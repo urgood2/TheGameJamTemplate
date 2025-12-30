@@ -22,7 +22,7 @@ local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
-local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups
+-- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 -- Represents game loop main module
@@ -109,8 +109,7 @@ function initMainMenu()
     playMusic("main-menu", true)
     setTrackVolume("main-menu", 0.3)
 
-    -- Initialize render groups visual test
-    RenderGroupsTest.init()
+    -- RenderGroupsTest.init() -- disabled
 
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
@@ -447,7 +446,7 @@ function startGameButtonCallback()
 end
 function clearMainMenu()
     TextBuilderDemo.stop()
-    RenderGroupsTest.cleanup()
+    -- RenderGroupsTest.cleanup()
 
     if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
     if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end
@@ -748,7 +747,7 @@ function main.update(dt)
 
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
-        RenderGroupsTest.draw()
+        -- RenderGroupsTest.draw()
         SpecialItem.update(dt)
         SpecialItem.draw()
     end

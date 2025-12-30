@@ -23,6 +23,7 @@ lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
 local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups
+local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 -- Represents game loop main module
 main = main or {}
@@ -110,6 +111,34 @@ function initMainMenu()
 
     -- Initialize render groups visual test
     RenderGroupsTest.init()
+
+    local screenW = globals.screenWidth()
+    local screenH = globals.screenHeight()
+    local centerY = screenH / 2 - 100
+    
+    mainMenuEntities.special_item_1 = SpecialItem.new("frame0012.png")
+        :at(screenW / 2 - 150, centerY)
+        :size(64, 64)
+        :shader("3d_skew_holo")
+        :particles("bubble", { colors = { "cyan", "magenta", "yellow" } })
+        :outline("gold", 2)
+        :build()
+    
+    mainMenuEntities.special_item_2 = SpecialItem.new("frame0012.png")
+        :at(screenW / 2, centerY)
+        :size(64, 64)
+        :shader("3d_skew_prismatic")
+        :particles("sparkle", { colors = { "white", "gold" } })
+        :outline("cyan", 2)
+        :build()
+    
+    mainMenuEntities.special_item_3 = SpecialItem.new("frame0012.png")
+        :at(screenW / 2 + 150, centerY)
+        :size(64, 64)
+        :shader("3d_skew_foil")
+        :particles("magical", { colors = { "purple", "blue", "pink" } })
+        :outline("purple", 2)
+        :build()
 
     -- create start game button
     
@@ -417,11 +446,12 @@ function startGameButtonCallback()
     
 end
 function clearMainMenu()
-    -- Stop TextBuilder demo
     TextBuilderDemo.stop()
-
-    -- Clean up render groups test
     RenderGroupsTest.cleanup()
+
+    if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
+    if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end
+    if mainMenuEntities.special_item_3 then mainMenuEntities.special_item_3:destroy(); mainMenuEntities.special_item_3 = nil end
 
     -- for each entity in mainMenuEntities, push it down out of view
     for _, entity in pairs(mainMenuEntities) do
@@ -718,8 +748,9 @@ function main.update(dt)
 
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
-        -- Draw render groups test entity with shader
         RenderGroupsTest.draw()
+        SpecialItem.update(dt)
+        SpecialItem.draw()
     end
 
     if isPaused then

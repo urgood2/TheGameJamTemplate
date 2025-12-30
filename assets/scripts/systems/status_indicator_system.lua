@@ -297,7 +297,7 @@ function StatusIndicatorSystem.showFloatingIcons(entity, indicators)
         -- Try to render sprite, fallback to colored circle
         local sprite_id = def.icon
         if sprite_id and sprites and sprites[sprite_id] then
-            command_buffer.queueDrawSprite(layers.sprites, function(c)
+            command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
                 c.sprite = sprite_id
                 c.x = x - icon_size * 0.5
                 c.y = y - icon_size * 0.5
@@ -363,7 +363,7 @@ function StatusIndicatorSystem.showStatusBar(entity, indicators)
         -- Try sprite, fallback to mini colored circle
         local sprite_id = def.icon
         if sprite_id and sprites and sprites[sprite_id] then
-            command_buffer.queueDrawSprite(layers.sprites, function(c)
+            command_buffer.queueDrawSpriteTopLeft(layers.sprites, function(c)
                 c.sprite = sprite_id
                 c.x = x - icon_size * 0.5
                 c.y = y - icon_size * 0.5

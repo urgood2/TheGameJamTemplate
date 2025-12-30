@@ -1,14 +1,27 @@
-local TutorialDialogue = require("tutorial.dialogue")
+local TutorialDialogue = require("tutorial.dialogue.init")
+local timer = require("core.timer")
 
 local TutorialDialogueDemo = {}
 
+-- Track active dialogue to prevent duplicates
+local activeDialogue = nil
+
+local function cleanupActiveDialogue()
+    if activeDialogue then
+        activeDialogue:stop()
+        activeDialogue = nil
+    end
+end
+
 function TutorialDialogueDemo.runBasicDemo()
+    cleanupActiveDialogue()
+
     local dialogue = TutorialDialogue.new({
         speaker = {
             sprite = "sample_pack.png",
             position = "left",
             size = { 96, 96 },
-            shaders = { "efficient_pixel_outline" },
+            shaders = {},  -- outline shader removed (failed to compile)
             jiggle = { enabled = true, intensity = 0.1, speed = 10 },
             idleFloat = { enabled = true, amplitude = 5, speed = 1.2 },
         },
@@ -27,6 +40,7 @@ function TutorialDialogueDemo.runBasicDemo()
             enabled = true,
             size = 0.35,
             feather = 0.15,
+            delay = 1.0,  -- wait 1 second so we can see components appear
         },
         input = {
             prompt = "Press [SPACE] to continue",
@@ -47,13 +61,16 @@ function TutorialDialogueDemo.runBasicDemo()
         :say("Excellent! You're a quick learner.")
         :onComplete(function()
             print("[Tutorial] Demo complete!")
+            activeDialogue = nil
         end)
         :start()
-    
+
+    activeDialogue = dialogue
     return dialogue
 end
 
 function TutorialDialogueDemo.runMultiSpeakerDemo()
+    cleanupActiveDialogue()
     local dialogue = TutorialDialogue.new({
         speaker = {
             sprite = "sample_pack.png",
@@ -87,13 +104,16 @@ function TutorialDialogueDemo.runMultiSpeakerDemo()
         :say("First, you must prove yourself worthy.")
         :onComplete(function()
             print("[Tutorial] Multi-speaker demo complete!")
+            activeDialogue = nil
         end)
         :start()
-    
+
+    activeDialogue = dialogue
     return dialogue
 end
 
 function TutorialDialogueDemo.runSpotlightDemo()
+    cleanupActiveDialogue()
     local screenW = (globals and globals.screenWidth and globals.screenWidth()) or 1920
     local screenH = (globals and globals.screenHeight and globals.screenHeight()) or 1080
     
@@ -112,6 +132,7 @@ function TutorialDialogueDemo.runSpotlightDemo()
             enabled = true,
             size = 0.25,
             feather = 0.1,
+            delay = 0.8,  -- short delay to see components first
         },
     })
     
@@ -127,9 +148,11 @@ function TutorialDialogueDemo.runSpotlightDemo()
         :say("That concludes the UI overview!")
         :onComplete(function()
             print("[Tutorial] Spotlight demo complete!")
+            activeDialogue = nil
         end)
         :start()
-    
+
+    activeDialogue = dialogue
     return dialogue
 end
 
@@ -138,15 +161,19 @@ function TutorialDialogueDemo.runQuickMessage(text, opts)
 end
 
 function TutorialDialogueDemo.runStyleShowcase()
+    -- Clean up any existing dialogue first
+    cleanupActiveDialogue()
+
     local styles = { "default", "dark", "light", "magical" }
     local currentIndex = 1
-    
+
     local function showNextStyle()
         if currentIndex > #styles then
             print("[Tutorial] Style showcase complete!")
+            activeDialogue = nil
             return
         end
-        
+
         local style = styles[currentIndex]
         local dialogue = TutorialDialogue.new({
             speaker = {
@@ -161,7 +188,9 @@ function TutorialDialogueDemo.runStyleShowcase()
             },
             spotlight = { enabled = false },
         })
-        
+
+        activeDialogue = dialogue
+
         dialogue
             :say("This is the '" .. style .. "' style.", { speaker = "Demo" })
             :say("Notice the colors and appearance.")
@@ -171,7 +200,7 @@ function TutorialDialogueDemo.runStyleShowcase()
             end)
             :start()
     end
-    
+
     showNextStyle()
 end
 

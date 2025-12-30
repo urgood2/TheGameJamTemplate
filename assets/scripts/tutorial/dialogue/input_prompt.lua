@@ -20,6 +20,21 @@ local KEY_DISPLAY_NAMES = {
     alt = "ALT",
 }
 
+-- Sprite names for keys that have icons
+local KEY_SPRITES = {
+    space = "keyboard_space.png",
+    enter = "keyboard_enter.png",
+    escape = "keyboard_escape.png",
+    e = "keyboard_e.png",
+    f = "keyboard_f.png",
+    q = "keyboard_q.png",
+    r = "keyboard_r.png",
+    tab = "key_tab.png",
+    shift = "keyboard_shift.png",
+    ctrl = "keyboard_ctrl.png",
+    alt = "keyboard_alt.png",
+}
+
 local KEY_TO_RAYLIB = {
     space = "KEY_SPACE",
     enter = "KEY_ENTER",
@@ -141,34 +156,75 @@ end
 
 function InputPrompt:draw()
     if self._alpha <= 0.01 then return end
-    
+
     local screenSpace = layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen
     local uiLayer = layers and layers.ui
     local baseZ = 950
-    
+
     if not uiLayer or not command_buffer then return end
-    
-    local displayText = self:_getDisplayText()
+
+    local pulse = 0.7 + math.sin(self._pulsePhase * 3) * 0.3
+    local finalAlpha = math.floor(255 * self._alpha * pulse)
+
+    local keySprite = KEY_SPRITES[self._key]
+    local spriteSize = 24  -- Icon size in pixels
+    local spacing = 6      -- Space between icon and text
+
+    -- Calculate total width for centering
+    local displayText = "to continue"
     local font = localization and localization.getFont and localization.getFont()
     local fontSize = 14
-    
-    local pulse = 0.7 + math.sin(self._pulsePhase * 3) * 0.3
-    local finalAlpha = math.floor(200 * self._alpha * pulse)
-    
+
+    -- Position icon and text (icon on left, text on right)
+    local iconX = self._position.x
+    local iconY = self._position.y
+    local textX = iconX + spriteSize + spacing
+    local textY = iconY + (spriteSize - fontSize) / 2  -- Vertically center text with icon
+
+    -- Draw key icon if available
+    if keySprite then
+        -- Shadow
+        command_buffer.queueDrawSpriteTopLeft(uiLayer, function(c)
+            c.spriteName = keySprite
+            c.x = iconX + 2
+            c.y = iconY + 2
+            c.dstW = spriteSize
+            c.dstH = spriteSize
+            c.tint = Col(0, 0, 0, math.floor(finalAlpha * 0.5))
+        end, baseZ, screenSpace)
+
+        -- Main icon with pulse effect
+        local iconScale = 1.0 + math.sin(self._pulsePhase * 3) * 0.05
+        local scaledSize = spriteSize * iconScale
+        local offset = (scaledSize - spriteSize) / 2
+
+        command_buffer.queueDrawSpriteTopLeft(uiLayer, function(c)
+            c.spriteName = keySprite
+            c.x = iconX - offset
+            c.y = iconY - offset
+            c.dstW = scaledSize
+            c.dstH = scaledSize
+            c.tint = Col(255, 255, 255, finalAlpha)
+        end, baseZ + 1, screenSpace)
+    end
+
+    -- Draw "to continue" text
+    -- Shadow
     command_buffer.queueDrawText(uiLayer, function(c)
         c.text = displayText
         c.font = font
-        c.x = self._position.x + 1
-        c.y = self._position.y + 1
+        c.x = textX + 1
+        c.y = textY + 1
         c.color = Col(0, 0, 0, math.floor(finalAlpha * 0.5))
         c.fontSize = fontSize
     end, baseZ, screenSpace)
-    
+
+    -- Main text
     command_buffer.queueDrawText(uiLayer, function(c)
         c.text = displayText
         c.font = font
-        c.x = self._position.x
-        c.y = self._position.y
+        c.x = textX
+        c.y = textY
         c.color = Col(200, 210, 230, finalAlpha)
         c.fontSize = fontSize
     end, baseZ + 1, screenSpace)

@@ -21,6 +21,16 @@ local timer = require("core.timer")
 local signal = require("external.hump.signal")
 local signal_group = require("core.signal_group")
 
+-- Lazy-load WandTriggers to avoid circular dependencies
+local WandTriggers
+local function getWandTriggers()
+    if not WandTriggers then
+        local ok, mod = pcall(require, "wand.wand_triggers")
+        if ok then WandTriggers = mod end
+    end
+    return WandTriggers
+end
+
 -- Lazy-load WandExecutor to avoid circular dependencies
 local WandExecutor
 local function getWandExecutor()
@@ -180,10 +190,11 @@ local function createStripEntry(sourceCardEntity, wandId, triggerId, index, tota
         entity = entity,
         sourceCardEntity = sourceCardEntity,
         wandId = wandId,
-        actionBoardId = actionBoardId,  -- For UI positioning and board_sets lookup
+        actionBoardId = actionBoardId,
         triggerId = triggerId,
         centerY = yPos + CARD_HEIGHT / 2,
         influence = 0,
+        popUntil = 0,
     }
 end
 
@@ -442,11 +453,14 @@ function TriggerStripUI.update(dt)
             focusedEntry = entry
         end
 
-        -- Apply wave to transform
         local t = component_cache.get(entry.entity, Transform)
         if t then
-            local scale = 1.0 + (MAX_SCALE_BUMP * entry.influence)
-            t.scale = scale
+            local now = GetTime and GetTime() or 0
+            local isActivationPopActive = entry.popUntil and now < entry.popUntil
+
+            if not isActivationPopActive then
+                t.scale = 1.0 + (MAX_SCALE_BUMP * entry.influence)
+            end
             t.actualX = PEEK_X + (MAX_SLIDE_OUT * entry.influence)
         end
 
@@ -705,38 +719,42 @@ function TriggerStripUI.updateCooldowns()
         lastCooldownLogTime = now
     end
 
-    -- Get WandExecutor for cooldown queries
-    local executor = getWandExecutor()
+    local triggers = getWandTriggers()
 
     for _, entry in ipairs(strip_entries) do
         if not registry:valid(entry.entity) then goto continue end
 
-        local progress = 1.0  -- Default to ready
+        local progress = 1.0  -- 1.0 = ready, 0.0 = just fired
 
-        -- Check wand cooldown directly from executor
-        if executor and executor.getCooldown then
-            local remaining = executor.getCooldown(entry.wandId)
-            if remaining > 0 then
-                -- Get the wand's base cooldown from definition
-                local wandDef = entry.wandDef
-                local baseCooldown = wandDef and wandDef.cooldown or 1.0
-                -- Progress: 0 = just fired (full cooldown), 1 = ready
-                progress = 1.0 - math.min(1, remaining / baseCooldown)
+        if triggers and triggers.getRegistration then
+            local registration = triggers.getRegistration(entry.wandId)
+            if registration then
+                if registration.triggerType == "every_N_seconds" then
+                    local elapsed = registration.elapsed or 0
+                    local interval = registration.interval or 1.0
+                    progress = math.min(1.0, elapsed / interval)
 
-                if shouldLog then
-                    log_debug("  COOLDOWN:", entry.wandId, "remaining:", remaining, "base:", baseCooldown, "progress:", progress)
+                    if shouldLog then
+                        log_debug("  TIMER:", entry.wandId, "elapsed:", elapsed, "interval:", interval, "progress:", progress)
+                    end
+                elseif registration.triggerType == "on_distance_traveled" then
+                    local distTracking = triggers.distanceTracking and triggers.distanceTracking[entry.wandId]
+                    if distTracking then
+                        local dist = distTracking.totalDistance or 0
+                        local threshold = distTracking.threshold or 100
+                        progress = math.min(1.0, dist / threshold)
+                    end
                 end
             end
         end
 
         progress = math.max(0, math.min(1, progress))
 
-        -- Update shader uniform using per-entity uniform component
+        -- shaderProgress: 0.0 = ready (no dim), 1.0 = full cooldown (full dim)
         local shaderProgress = 1.0 - progress
         setEntityShaderUniform(entry.entity, "cooldown_pie", "cooldown_progress", shaderProgress)
 
-        -- Always log when cooldown is active (non-zero)
-        if shaderProgress > 0.01 then
+        if shouldLog and shaderProgress > 0.01 then
             log_debug("COOLDOWN ACTIVE: entity", entry.entity, "shaderProgress =", shaderProgress)
         end
 
@@ -748,6 +766,8 @@ end
 -- ACTIVATION FEEDBACK
 --------------------------------------------------------------------------------
 
+local POP_DURATION = 0.25
+
 function TriggerStripUI.onTriggerActivated(wandId, triggerId)
     local entry = findEntryByWandId(wandId)
     if not entry then
@@ -758,23 +778,22 @@ function TriggerStripUI.onTriggerActivated(wandId, triggerId)
 
     log_debug("TriggerStripUI: triggering activation feedback for wand", wandId, "entity", entry.entity)
 
-    -- Pop: quick scale bump
+    local now = GetTime and GetTime() or 0
+    entry.popUntil = now + POP_DURATION
+
     local t = component_cache.get(entry.entity, Transform)
     if t then
         t.scale = ACTIVATION_SCALE
         log_debug("TriggerStripUI: set scale to", ACTIVATION_SCALE)
     end
 
-    -- Jiggle via dynamic motion injection
     if transform and transform.InjectDynamicMotion then
         transform.InjectDynamicMotion(entry.entity, 0.3, 1.5)
         log_debug("TriggerStripUI: injected dynamic motion")
     end
 
-    -- Flash via per-entity shader uniform
     setEntityShaderUniform(entry.entity, "cooldown_pie", "flash_intensity", 1.0)
 
-    -- Reset flash after short delay
     timer.after_opts({
         delay = FLASH_DURATION,
         action = function()
@@ -783,6 +802,17 @@ function TriggerStripUI.onTriggerActivated(wandId, triggerId)
             end
         end,
         tag = "trigger_flash_" .. entry.entity
+    })
+
+    timer.after_opts({
+        delay = POP_DURATION,
+        action = function()
+            if registry:valid(entry.entity) then
+                local tr = component_cache.get(entry.entity, Transform)
+                if tr then tr.scale = 1.0 end
+            end
+        end,
+        tag = "trigger_pop_reset_" .. entry.entity
     })
 
     log_debug("TriggerStripUI: activation feedback complete for wand", wandId)

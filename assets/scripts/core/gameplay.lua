@@ -2291,20 +2291,17 @@ function createNewCard(id, x, y, gameStateToApply)
     end
 
     -- Add outline shader pass (applied after 3d_skew transformation)
-    do
-        local outlinePass = shaderPipelineComp:addPass("efficient_pixel_outline", false) -- false = don't inject atlas uniforms (not needed for post-pass)
-        outlinePass.customPrePassFunction = function()
-            if globalShaderUniforms then
-                -- Configure outline appearance
-                -- outlineColor: RGBA (default black with full opacity)
-                globalShaderUniforms:set("efficient_pixel_outline", "outlineColor", Vector4{ x = 0.0, y = 0.0, z = 0.0, w = 1.0 })
-                -- outlineType: 1 = 4-way (cardinal), 2 = 8-way (includes diagonals)
-                globalShaderUniforms:set("efficient_pixel_outline", "outlineType", 2)
-                -- thickness: outline width in pixels
-                globalShaderUniforms:set("efficient_pixel_outline", "thickness", 1.0)
-            end
-        end
-    end
+    -- Uncomment to enable card outlines:
+    -- do
+    --     local outlinePass = shaderPipelineComp:addPass("efficient_pixel_outline", false)
+    --     outlinePass.customPrePassFunction = function()
+    --         if globalShaderUniforms then
+    --             globalShaderUniforms:set("efficient_pixel_outline", "outlineColor", Vector4{ x = 0.0, y = 0.0, z = 0.0, w = 1.0 })
+    --             globalShaderUniforms:set("efficient_pixel_outline", "outlineType", 2)
+    --             globalShaderUniforms:set("efficient_pixel_outline", "thickness", 1.0)
+    --         end
+    --     end
+    -- end
 
     -- shaderPipelineComp:addPass("3d_polychrome")
     -- shaderPipelineComp:addPass("material_card_overlay_new_dissolve")

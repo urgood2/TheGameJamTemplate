@@ -2,6 +2,10 @@
 > Last verified: Dec 29, 2025
 
 
+- need to test particle stencil working.
+- get all three special items working properly.
+- fill areas for panels + card areas. 
+- sound effect for notification still not playing.
 
 
 - shader a la rocket rats

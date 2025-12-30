@@ -115,29 +115,125 @@ function initMainMenu()
     local screenH = globals.screenHeight()
     local centerY = screenH / 2 - 100
     
+    -- TEST: Using same shader for all 3 items to isolate shader vs position issue
+    -- Uncomment one of these options to test:
+    -- OPTION A: All prismatic (currently working shader)
+    local testShader = "3d_skew_prismatic"
+    -- OPTION B: All holo (currently not working)
+    -- local testShader = "3d_skew_holo"
+
+    log_debug("[SpecialItem Test] Using shader: " .. testShader .. " for all items")
+
     mainMenuEntities.special_item_1 = SpecialItem.new("frame0012.png")
         :at(screenW / 2 - 150, centerY)
         :size(64, 64)
-        :shader("3d_skew_holo")
+        :shader(testShader)
         :particles("bubble", { colors = { "cyan", "magenta", "yellow" } })
         :outline("gold", 2)
         :build()
-    
+
     mainMenuEntities.special_item_2 = SpecialItem.new("frame0012.png")
         :at(screenW / 2, centerY)
         :size(64, 64)
-        :shader("3d_skew_prismatic")
+        :shader(testShader)
         :particles("sparkle", { colors = { "white", "gold" } })
         :outline("cyan", 2)
         :build()
-    
+
     mainMenuEntities.special_item_3 = SpecialItem.new("frame0012.png")
         :at(screenW / 2 + 150, centerY)
         :size(64, 64)
-        :shader("3d_skew_foil")
+        :shader(testShader)
         :particles("magical", { colors = { "purple", "blue", "pink" } })
         :outline("purple", 2)
         :build()
+
+    -- DEBUG: Verify SpecialItem components
+    local function debugSpecialItem(name, item)
+        if not item then
+            log_warn("[SpecialItem Debug] " .. name .. " is nil!")
+            return
+        end
+        local eid = item:handle()
+        if not entity_cache.valid(eid) then
+            log_warn("[SpecialItem Debug] " .. name .. " has invalid entity handle!")
+            return
+        end
+        local transform = component_cache.get(eid, Transform)
+        local hasShaderPipeline = registry:has(eid, shader_pipeline.ShaderPipelineComponent)
+        local hasAnimQueue = registry:has(eid, AnimationQueueComponent)
+        local hasGameObject = registry:has(eid, GameObject)
+
+        -- Check shader pipeline details
+        local shaderInfo = "none"
+        if hasShaderPipeline then
+            local comp = component_cache.get(eid, shader_pipeline.ShaderPipelineComponent)
+            if comp and comp.getPassCount then
+                shaderInfo = tostring(comp:getPassCount()) .. " passes"
+            else
+                shaderInfo = "present"
+            end
+        end
+
+        -- Check draw layer
+        local layerInfo = "unknown"
+        if hasGameObject then
+            local go = component_cache.get(eid, GameObject)
+            if go and go.layer then
+                layerInfo = tostring(go.layer)
+            end
+        end
+
+        log_debug(string.format("[SpecialItem Debug] %s: entity=%s, pos=(%.0f,%.0f), size=(%.0f,%.0f), shader=%s, animQueue=%s, layer=%s, particles=%s",
+            name,
+            tostring(eid),
+            transform and transform.actualX or -1,
+            transform and transform.actualY or -1,
+            transform and transform.actualW or -1,
+            transform and transform.actualH or -1,
+            shaderInfo,
+            hasAnimQueue and "YES" or "NO",
+            layerInfo,
+            item.particleStream and "YES" or "NO"
+        ))
+    end
+
+    debugSpecialItem("special_item_1", mainMenuEntities.special_item_1)
+    debugSpecialItem("special_item_2", mainMenuEntities.special_item_2)
+    debugSpecialItem("special_item_3", mainMenuEntities.special_item_3)
+    log_debug("[SpecialItem Debug] Active count: " .. SpecialItem.getActiveCount())
+
+    -- Additional debug: Check entity version and renderer state
+    local function checkEntityRenderState(name, item)
+        if not item then return end
+        local eid = item:handle()
+        if not entity_cache.valid(eid) then return end
+
+        -- Check if entity has a visible sprite frame
+        local animQueue = component_cache.get(eid, AnimationQueueComponent)
+        if animQueue then
+            local defaultAnim = animQueue.defaultAnimation
+            local animListEmpty = (not defaultAnim or not defaultAnim.animationList or #defaultAnim.animationList == 0)
+            log_debug(string.format("[SpecialItem Debug] %s animList empty: %s", name, tostring(animListEmpty)))
+        else
+            log_debug(string.format("[SpecialItem Debug] %s has NO AnimationQueueComponent!", name))
+        end
+
+        -- Check draw layer in GameObject
+        local go = component_cache.get(eid, GameObject)
+        if go then
+            log_debug(string.format("[SpecialItem Debug] %s drawLayer: %s, visible: %s, zIndex: %s",
+                name,
+                tostring(go.layer or "nil"),
+                tostring(go.visible),
+                tostring(go.zIndex or "nil")
+            ))
+        end
+    end
+
+    checkEntityRenderState("special_item_1", mainMenuEntities.special_item_1)
+    checkEntityRenderState("special_item_2", mainMenuEntities.special_item_2)
+    checkEntityRenderState("special_item_3", mainMenuEntities.special_item_3)
 
     -- create start game button
     

@@ -5122,7 +5122,7 @@ function initPlanningPhase()
 
             if self.noDashedBorder then
                 local baseColor = self.borderColor or util.getColor("yellow")
-                local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 40)
+                local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 100)
                 local borderThickness = 3
                 command_buffer.queueDrawSteppedRoundedRect(layers.sprites, function(c)
                     c.x           = area.actualX + area.actualW * 0.5
@@ -5138,7 +5138,7 @@ function initPlanningPhase()
             end
             local dashedRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)
             local baseColor = self.borderColor or util.getColor("yellow")
-            local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 30)
+            local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 80)
             
             command_buffer.queueDrawSteppedRoundedRect(layers.sprites, function(c)
                 c.x           = area.actualX + area.actualW * 0.5

@@ -181,6 +181,13 @@ local function createStripEntry(sourceCardEntity, wandId, triggerId, index, tota
         })
     end
 
+    -- Ensure entity is drawn through the legacy pipeline for shader rendering
+    -- This is required because the shader pipeline component needs DrawTransformEntityWithAnimationWithPipeline
+    local animComp = component_cache.get(entity, AnimationQueueComponent)
+    if animComp then
+        animComp.drawWithLegacyPipeline = true
+    end
+
     -- Start hidden (not in any render state)
     if clear_state_tags then
         clear_state_tags(entity)

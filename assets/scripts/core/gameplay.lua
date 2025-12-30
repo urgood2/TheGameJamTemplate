@@ -5137,6 +5137,20 @@ function initPlanningPhase()
                 goto continue
             end
             local dashedRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)
+            local baseColor = self.borderColor or util.getColor("yellow")
+            local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 30)
+            
+            command_buffer.queueDrawSteppedRoundedRect(layers.sprites, function(c)
+                c.x           = area.actualX + area.actualW * 0.5
+                c.y           = area.actualY + area.actualH * 0.5
+                c.w           = math.max(0, area.actualW)
+                c.h           = math.max(0, area.actualH)
+                c.fillColor   = fillColor
+                c.borderColor = Col(0, 0, 0, 0)
+                c.borderWidth = 0
+                c.numSteps    = 4
+            end, z_orders.board - 1, layer.DrawCommandSpace.World)
+            
             command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
                 c.rec       = Rectangle.new(
                     area.actualX,
@@ -5150,7 +5164,7 @@ function initPlanningPhase()
                 c.phase     = shapeAnimationPhase
                 c.arcSteps  = 14
                 c.thickness = 5
-                c.color     = self.borderColor or util.getColor("yellow")
+                c.color     = baseColor
             end, z_orders.board, layer.DrawCommandSpace.World)
             -- end
 

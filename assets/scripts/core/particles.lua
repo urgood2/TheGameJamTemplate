@@ -1008,6 +1008,27 @@ function HandleMethods:isActive()
     return self._active
 end
 
+--- Update spawn position for the stream
+--- @param x number X position
+--- @param y number Y position
+function HandleMethods:setPosition(x, y)
+    if self._emission then
+        self._emission._position = { x = x, y = y }
+    end
+end
+
+--- Update spawn rect bounds for the stream
+--- @param x number Left X
+--- @param y number Top Y  
+--- @param w number Width
+--- @param h number Height
+function HandleMethods:setSpawnRect(x, y, w, h)
+    if self._emission then
+        self._emission._spawnMode = "rect"
+        self._emission._spawnRect = { x = x, y = y, w = w, h = h }
+    end
+end
+
 --- Update the stream (call every frame)
 --- @param dt number Delta time in seconds
 function HandleMethods:update(dt)

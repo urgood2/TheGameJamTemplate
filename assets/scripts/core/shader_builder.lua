@@ -82,9 +82,35 @@ local families = {
             wave_amplitude = 0.1,
         },
     },
-    -- Add more families as needed:
-    -- ["energy"] = { ... },
-    -- ["particle"] = { ... },
+    ["efficient_pixel_outline"] = {
+        uniforms = {
+            "outlineColor",
+            "outlineType",
+            "thickness"
+        },
+        defaults = {
+            outlineType = 8,
+            thickness = 2.0,
+        },
+    },
+    ["colorful_outline"] = {
+        uniforms = {
+            "intensity",
+            "precision",
+            "flipColors",
+            "outline_color",
+            "outline_color_2",
+            "use_outline_uv",
+            "useTexture"
+        },
+        defaults = {
+            intensity = 1,
+            precision = 1.0,
+            flipColors = false,
+            use_outline_uv = false,
+            useTexture = false,
+        },
+    },
 }
 
 --------------------------------------------------------------------------------

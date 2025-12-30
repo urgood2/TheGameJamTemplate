@@ -369,92 +369,113 @@ namespace layer
         const float angles[4] = {180.0f, 270.0f, 0.0f, 90.0f};
         float stepLength = 90.0f / static_cast<float>(numSteps);
         
+        // Build outline vertices (for border drawing - uses pairs for line segments)
         std::vector<Vector2> outerVertices;
-        std::vector<Vector2> innerVertices;
         
+        // Build fill vertices separately (for triangle fan - proper polygon winding)
+        std::vector<Vector2> fillVertices;
+        
+        // Center point for triangle fan
+        Vector2 innerCenter = {
+            innerRec.x + innerRec.width * 0.5f,
+            innerRec.y + innerRec.height * 0.5f
+        };
+        fillVertices.push_back(innerCenter);
+        
+        // Build stepped corners - going clockwise starting from top-left
+        // Corner order: top-left (k=0), top-right (k=1), bottom-right (k=2), bottom-left (k=3)
         for (int k = 0; k < 4; ++k) {
             float angle = angles[k];
-            const Vector2& outerCenter = outerCenters[k];
-            const Vector2& innerCenter = innerCenters[k];
+            const Vector2& outerCornerCenter = outerCenters[k];
+            const Vector2& innerCornerCenter = innerCenters[k];
             
             for (int i = 0; i < numSteps; i++) {
                 Vector2 outerStart = {
-                    outerCenter.x + cosf(DEG2RAD * angle) * outerRadius,
-                    outerCenter.y + sinf(DEG2RAD * angle) * outerRadius
+                    outerCornerCenter.x + cosf(DEG2RAD * angle) * outerRadius,
+                    outerCornerCenter.y + sinf(DEG2RAD * angle) * outerRadius
                 };
                 Vector2 outerEnd = {
-                    outerCenter.x + cosf(DEG2RAD * (angle + stepLength)) * outerRadius,
-                    outerCenter.y + sinf(DEG2RAD * (angle + stepLength)) * outerRadius
+                    outerCornerCenter.x + cosf(DEG2RAD * (angle + stepLength)) * outerRadius,
+                    outerCornerCenter.y + sinf(DEG2RAD * (angle + stepLength)) * outerRadius
                 };
                 Vector2 innerStart = {
-                    innerCenter.x + cosf(DEG2RAD * angle) * innerRadius,
-                    innerCenter.y + sinf(DEG2RAD * angle) * innerRadius
+                    innerCornerCenter.x + cosf(DEG2RAD * angle) * innerRadius,
+                    innerCornerCenter.y + sinf(DEG2RAD * angle) * innerRadius
                 };
                 Vector2 innerEnd = {
-                    innerCenter.x + cosf(DEG2RAD * (angle + stepLength)) * innerRadius,
-                    innerCenter.y + sinf(DEG2RAD * (angle + stepLength)) * innerRadius
+                    innerCornerCenter.x + cosf(DEG2RAD * (angle + stepLength)) * innerRadius,
+                    innerCornerCenter.y + sinf(DEG2RAD * (angle + stepLength)) * innerRadius
                 };
                 
-                Vector2 outerStep1, outerStep2, innerStep1, innerStep2;
+                Vector2 outerStep1, innerStep1;
                 if (k == 0 || k == 2) {
                     outerStep1 = {outerEnd.x, outerStart.y};
-                    outerStep2 = outerEnd;
                     innerStep1 = {innerEnd.x, innerStart.y};
-                    innerStep2 = innerEnd;
                 } else {
                     outerStep1 = {outerStart.x, outerEnd.y};
-                    outerStep2 = outerEnd;
                     innerStep1 = {innerStart.x, innerEnd.y};
-                    innerStep2 = innerEnd;
                 }
                 
+                // Outline: pairs of vertices for line segments
                 outerVertices.push_back(outerStart);
                 outerVertices.push_back(outerStep1);
                 outerVertices.push_back(outerStep1);
-                outerVertices.push_back(outerStep2);
+                outerVertices.push_back(outerEnd);
                 
-                innerVertices.push_back(innerStart);
-                innerVertices.push_back(innerStep1);
-                innerVertices.push_back(innerStep1);
-                innerVertices.push_back(innerStep2);
+                // Fill: add vertices in order for triangle fan (no duplicates)
+                fillVertices.push_back(innerStart);
+                fillVertices.push_back(innerStep1);
                 
                 angle += stepLength;
             }
+            
+            // After each corner, add the straight edge to the next corner
+            // Edge indices: after corner k, add edge from corner k to corner (k+1)%4
+            Vector2 edgeStart, edgeEnd;
+            Vector2 innerEdgeStart, innerEdgeEnd;
+            
+            if (k == 0) { // top edge (after top-left corner)
+                edgeStart = {outerRec.x + outerRadius, outerRec.y};
+                edgeEnd = {outerRec.x + outerRec.width - outerRadius, outerRec.y};
+                innerEdgeStart = {innerRec.x + innerRadius, innerRec.y};
+                innerEdgeEnd = {innerRec.x + innerRec.width - innerRadius, innerRec.y};
+            } else if (k == 1) { // right edge (after top-right corner)
+                edgeStart = {outerRec.x + outerRec.width, outerRec.y + outerRadius};
+                edgeEnd = {outerRec.x + outerRec.width, outerRec.y + outerRec.height - outerRadius};
+                innerEdgeStart = {innerRec.x + innerRec.width, innerRec.y + innerRadius};
+                innerEdgeEnd = {innerRec.x + innerRec.width, innerRec.y + innerRec.height - innerRadius};
+            } else if (k == 2) { // bottom edge (after bottom-right corner)
+                edgeStart = {outerRec.x + outerRec.width - outerRadius, outerRec.y + outerRec.height};
+                edgeEnd = {outerRec.x + outerRadius, outerRec.y + outerRec.height};
+                innerEdgeStart = {innerRec.x + innerRec.width - innerRadius, innerRec.y + innerRec.height};
+                innerEdgeEnd = {innerRec.x + innerRadius, innerRec.y + innerRec.height};
+            } else { // left edge (after bottom-left corner)
+                edgeStart = {outerRec.x, outerRec.y + outerRec.height - outerRadius};
+                edgeEnd = {outerRec.x, outerRec.y + outerRadius};
+                innerEdgeStart = {innerRec.x, innerRec.y + innerRec.height - innerRadius};
+                innerEdgeEnd = {innerRec.x, innerRec.y + innerRadius};
+            }
+            
+            // Outline edge
+            outerVertices.push_back(edgeStart);
+            outerVertices.push_back(edgeEnd);
+            
+            // Fill edge vertices
+            fillVertices.push_back(innerEdgeStart);
+            fillVertices.push_back(innerEdgeEnd);
         }
         
-        Vector2 outerEdges[8] = {
-            {outerRec.x + outerRadius, outerRec.y}, 
-            {outerRec.x + outerRec.width - outerRadius, outerRec.y},
-            {outerRec.x + outerRec.width, outerRec.y + outerRadius},
-            {outerRec.x + outerRec.width, outerRec.y + outerRec.height - outerRadius},
-            {outerRec.x + outerRec.width - outerRadius, outerRec.y + outerRec.height},
-            {outerRec.x + outerRadius, outerRec.y + outerRec.height},
-            {outerRec.x, outerRec.y + outerRec.height - outerRadius},
-            {outerRec.x, outerRec.y + outerRadius}
-        };
-        
-        Vector2 innerEdges[8] = {
-            {innerRec.x + innerRadius, innerRec.y}, 
-            {innerRec.x + innerRec.width - innerRadius, innerRec.y},
-            {innerRec.x + innerRec.width, innerRec.y + innerRadius},
-            {innerRec.x + innerRec.width, innerRec.y + innerRec.height - innerRadius},
-            {innerRec.x + innerRec.width - innerRadius, innerRec.y + innerRec.height},
-            {innerRec.x + innerRadius, innerRec.y + innerRec.height},
-            {innerRec.x, innerRec.y + innerRec.height - innerRadius},
-            {innerRec.x, innerRec.y + innerRadius}
-        };
-        
-        for (int i = 0; i < 8; i += 2) {
-            outerVertices.push_back(outerEdges[i]);
-            outerVertices.push_back(outerEdges[i + 1]);
-            innerVertices.push_back(innerEdges[i]);
-            innerVertices.push_back(innerEdges[i + 1]);
+        // Close the triangle fan by adding the first perimeter vertex again
+        if (fillVertices.size() > 2) {
+            fillVertices.push_back(fillVertices[1]);
         }
         
-        if (c->fillColor.a > 0 && innerVertices.size() >= 3) {
-            DrawTriangleFan(innerVertices.data(), static_cast<int>(innerVertices.size()), c->fillColor);
+        // Draw fill using triangle fan
+        if (c->fillColor.a > 0 && fillVertices.size() >= 3) {
+            DrawTriangleFan(fillVertices.data(), static_cast<int>(fillVertices.size()), c->fillColor);
         }
         
+        // Draw border using line segments
         if (c->borderColor.a > 0 && outerVertices.size() >= 2) {
             for (size_t i = 0; i < outerVertices.size(); i += 2) {
                 if (i + 1 < outerVertices.size()) {

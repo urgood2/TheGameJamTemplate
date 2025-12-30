@@ -4981,7 +4981,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   // turn the camera back on if it was active (since we're rendering to the
   // screen now, and to restore camera state in the command buffer)
-  if (camera) {
+  bool isScreenSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+  if (camera && !isScreenSpace) {
     camera_manager::Begin(*camera);
   }
 

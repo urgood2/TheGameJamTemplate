@@ -372,15 +372,14 @@ namespace layer
         // Build outline vertices (for border drawing - uses pairs for line segments)
         std::vector<Vector2> outerVertices;
         
-        // Build fill vertices separately (for triangle fan - proper polygon winding)
+        // Build fill vertices as pairs (same format as outline, for RL_TRIANGLES rendering)
         std::vector<Vector2> fillVertices;
         
-        // Center point for triangle fan
-        Vector2 innerCenter = {
-            innerRec.x + innerRec.width * 0.5f,
-            innerRec.y + innerRec.height * 0.5f
+        // Center point for triangle rendering
+        Vector2 fillCenter = {
+            x + width * 0.5f,
+            y + height * 0.5f
         };
-        fillVertices.push_back(innerCenter);
         
         // Build stepped corners - going clockwise starting from top-left
         // Corner order: top-left (k=0), top-right (k=1), bottom-right (k=2), bottom-left (k=3)
@@ -416,15 +415,15 @@ namespace layer
                     innerStep1 = {innerStart.x, innerEnd.y};
                 }
                 
-                // Outline: pairs of vertices for line segments
                 outerVertices.push_back(outerStart);
                 outerVertices.push_back(outerStep1);
                 outerVertices.push_back(outerStep1);
                 outerVertices.push_back(outerEnd);
                 
-                // Fill: add vertices in order for triangle fan (no duplicates)
-                fillVertices.push_back(innerStart);
-                fillVertices.push_back(innerStep1);
+                fillVertices.push_back(outerStart);
+                fillVertices.push_back(outerStep1);
+                fillVertices.push_back(outerStep1);
+                fillVertices.push_back(outerEnd);
                 
                 angle += stepLength;
             }
@@ -456,23 +455,25 @@ namespace layer
                 innerEdgeEnd = {innerRec.x, innerRec.y + innerRadius};
             }
             
-            // Outline edge
             outerVertices.push_back(edgeStart);
             outerVertices.push_back(edgeEnd);
             
-            // Fill edge vertices
-            fillVertices.push_back(innerEdgeStart);
-            fillVertices.push_back(innerEdgeEnd);
+            fillVertices.push_back(edgeStart);
+            fillVertices.push_back(edgeEnd);
         }
         
-        // Close the triangle fan by adding the first perimeter vertex again
-        if (fillVertices.size() > 2) {
-            fillVertices.push_back(fillVertices[1]);
-        }
-        
-        // Draw fill using triangle fan
-        if (c->fillColor.a > 0 && fillVertices.size() >= 3) {
-            DrawTriangleFan(fillVertices.data(), static_cast<int>(fillVertices.size()), c->fillColor);
+        if (c->fillColor.a > 0 && fillVertices.size() >= 2) {
+            rlSetTexture(0);
+            rlBegin(RL_TRIANGLES);
+            for (size_t i = 0; i < fillVertices.size(); i += 2) {
+                rlColor4ub(c->fillColor.r, c->fillColor.g, c->fillColor.b, c->fillColor.a);
+                rlVertex2f(fillCenter.x, fillCenter.y);
+                rlColor4ub(c->fillColor.r, c->fillColor.g, c->fillColor.b, c->fillColor.a);
+                rlVertex2f(fillVertices[i + 1].x, fillVertices[i + 1].y);
+                rlColor4ub(c->fillColor.r, c->fillColor.g, c->fillColor.b, c->fillColor.a);
+                rlVertex2f(fillVertices[i].x, fillVertices[i].y);
+            }
+            rlEnd();
         }
         
         // Draw border using line segments

@@ -6,9 +6,12 @@
 - get all three special items working properly.
 - fill areas for panels + card areas. 
 - sound effect for notification still not playing.
+- tooltips should appear right next to the object they represent, never covering it, never going out of bounds, and vertically/laterally cnetered when possible in terms of alignment.
+- new wave, stage completed, elite spawn, monster spawn sounds. 
 
 
-- shader a la rocket rats
+- shader a la rocket rats -> we may want to just layer a shader that adds bubbly rainbow particles over the image.
+- why is outline shader not working?
 - card packs for each card type, opening sequence, choose 3 cards.
 - state of enemy behaviors and ai setup>
 - experiemnt with few-frame talking sprite character for tutorial.

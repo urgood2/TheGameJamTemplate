@@ -19,6 +19,7 @@
 
 #include "core/globals.hpp"
 #include "core/init.hpp"
+#include "systems/shaders/shader_system.hpp"
 
 #include <limits>
 #include <optional>
@@ -1112,7 +1113,35 @@ inline void DrawStencilMaskedParticlesForEntity(
         cmd->dummy = 0;
       }, baseZ + 1, drawCommandSpace);
   
-  // 3. Draw mask rectangle (with rotation and scale)
+  // 3. Draw mask shape (sprite or rectangle, with rotation and scale)
+  bool hasSpriteMask = registry.any_of<AnimationQueueComponent>(sourceEntity);
+  Texture2D maskTexture = {};
+  Rectangle maskFrame = {};
+  
+  if (hasSpriteMask) {
+    auto& aqc = registry.get<AnimationQueueComponent>(sourceEntity);
+    if (!aqc.animationQueue.empty()) {
+      auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
+      if (!currentAnimObject.animationList.empty()) {
+        auto& currentFrame = currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
+        if (currentFrame.spriteData.texture) {
+          maskTexture = *currentFrame.spriteData.texture;
+          maskFrame = currentFrame.spriteData.frame;
+        }
+      }
+    } else if (!aqc.defaultAnimation.animationList.empty()) {
+      auto& currentFrame = aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
+      if (currentFrame.spriteData.texture) {
+        maskTexture = *currentFrame.spriteData.texture;
+        maskFrame = currentFrame.spriteData.frame;
+      }
+    }
+    
+    if (maskTexture.id == 0 || maskFrame.width <= 0 || maskFrame.height <= 0) {
+      hasSpriteMask = false;
+    }
+  }
+  
   layer::QueueCommand<layer::CmdPushMatrix>(
       layerPtr, [](layer::CmdPushMatrix* cmd) {}, baseZ + 2, drawCommandSpace);
   
@@ -1143,27 +1172,50 @@ inline void DrawStencilMaskedParticlesForEntity(
         cmd->y = -maskH * 0.5f;
       }, baseZ + 6, drawCommandSpace);
   
-  // Draw the mask rectangle (invisible to color, writes to stencil)
-  layer::QueueCommand<layer::CmdDrawRectanglePro>(
-      layerPtr, [maskW, maskH](layer::CmdDrawRectanglePro* cmd) {
-        cmd->offsetX = 0;
-        cmd->offsetY = 0;
-        cmd->size.x = maskW;
-        cmd->size.y = maskH;
-        cmd->color = WHITE;  // Color doesn't matter, stencil mask blocks color write
-      }, baseZ + 7, drawCommandSpace);
+  if (hasSpriteMask) {
+    Shader cutoutShader = shaders::getShader("alpha_cutout");
+    
+    layer::QueueCommand<layer::CmdSetShader>(
+        layerPtr, [cutoutShader](layer::CmdSetShader* cmd) {
+          cmd->shader = cutoutShader;
+        }, baseZ + 7, drawCommandSpace);
+    
+    layer::QueueCommand<layer::CmdTexturePro>(
+        layerPtr, [maskTexture, maskFrame, maskW, maskH](layer::CmdTexturePro* cmd) {
+          cmd->texture = maskTexture;
+          cmd->source = maskFrame;
+          cmd->offsetX = 0;
+          cmd->offsetY = 0;
+          cmd->size = {maskW, maskH};
+          cmd->rotationCenter = {0, 0};
+          cmd->rotation = 0;
+          cmd->color = WHITE;
+        }, baseZ + 8, drawCommandSpace);
+    
+    layer::QueueCommand<layer::CmdResetShader>(
+        layerPtr, [](layer::CmdResetShader* cmd) {}, baseZ + 9, drawCommandSpace);
+  } else {
+    layer::QueueCommand<layer::CmdDrawRectanglePro>(
+        layerPtr, [maskW, maskH](layer::CmdDrawRectanglePro* cmd) {
+          cmd->offsetX = 0;
+          cmd->offsetY = 0;
+          cmd->size.x = maskW;
+          cmd->size.y = maskH;
+          cmd->color = WHITE;
+        }, baseZ + 7, drawCommandSpace);
+  }
   
   layer::QueueCommand<layer::CmdPopMatrix>(
-      layerPtr, [](layer::CmdPopMatrix* cmd) {}, baseZ + 8, drawCommandSpace);
+      layerPtr, [](layer::CmdPopMatrix* cmd) {}, baseZ + 10, drawCommandSpace);
   
   // 4. End stencil mask (switch to stencil test mode)
   layer::QueueCommand<layer::CmdEndStencilMask>(
       layerPtr, [](layer::CmdEndStencilMask* cmd) {
         cmd->dummy = 0;
-      }, baseZ + 9, drawCommandSpace);
+      }, baseZ + 11, drawCommandSpace);
   
   // 5. Draw all masked particles (only visible where stencil == 1)
-  int particleZ = baseZ + 10;
+  int particleZ = baseZ + 12;
   for (auto particleEntity : maskedParticles) {
     auto& particle = registry.get<Particle>(particleEntity);
     auto& particleTransform = registry.get<transform::Transform>(particleEntity);

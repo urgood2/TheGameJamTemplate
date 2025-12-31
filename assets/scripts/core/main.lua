@@ -329,7 +329,7 @@ function initMainMenu()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Discord link
                     record_telemetry("discord_button_clicked", { scene = "main_menu" })
-                    OpenURL("https://discord.gg/urpjVuPwjW") 
+                    OpenURL("https://discord.gg/rp6yXxKu5z") 
                 end)
                 :addShadow(true)
                 :addMinWidth(500) -- minimum width of the button

@@ -1,11 +1,6 @@
 {
     "music": {
         "main-menu": "Tranquil Tides.wav",
-        "main-music-1": "SMILETRON - Self Titled - 01 SANCTUM.ogg",
-        "main-music-2": "SMILETRON - Self Titled - 02 ORACLE.ogg",
-        "main-music-3": "SMILETRON - Self Titled - 03 MICROCOSMIC.ogg",
-        "main-music-4": "SMILETRON - Self Titled - 04 GEMINI.ogg",
-        "main-music-5": "SMILETRON - Self Titled - 05 CERULEAN.ogg",
         "lo_fi_wash_over_intensity_1": "Lo-Fi Wash Over Intensity 1.wav",
         "lo_fi_wash_over_intensity_2": "Lo-Fi Wash Over Intensity 2.wav",
         "lo_fi_wash_over_main": "Lo-Fi Wash Over Main.wav"
@@ -124,7 +119,12 @@
                 "stage-complete": "UIMisc_Interact Playful Phrase-010_OS_Quute UI.wav",
                 "new-wave": "UIMisc_Interact Playful Short-035_OS_Quute UI.wav",
                 "elite-default-spawn": "UIMisc_Interact Playful Phrase-008_OS_Quute UI.wav",
-                "default-spawn": "Spawn - Venom Burst 2.wav"            },
+                "default-spawn": "Spawn - Venom Burst 2.wav",
+                "uimisc_interact_percussive_005_os_quute_ui": "UIMisc_Interact Percussive-005_OS_Quute UI.wav",
+                "uimisc_interact_playful_phrase_008_os_quute_ui": "UIMisc_Interact Playful Phrase-008_OS_Quute UI.ogg",
+                "uimisc_interact_playful_phrase_010_os_quute_ui": "UIMisc_Interact Playful Phrase-010_OS_Quute UI.ogg",
+                "uimisc_interact_playful_short_035_os_quute_ui": "UIMisc_Interact Playful Short-035_OS_Quute UI.ogg"
+            },
             "volume": 0.3
         },
         "ui": {

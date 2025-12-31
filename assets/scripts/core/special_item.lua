@@ -287,32 +287,11 @@ function SpecialItem.create(opts)
     -- Apply main shader
     local builder = ShaderBuilder.for_entity(entity):add(shader, shaderUniforms)
     
-    if outlineConfig.enabled then
-        local outlineColor = outlineConfig.color
-        if type(outlineColor) == "string" then
-            outlineColor = OUTLINE_COLORS[outlineColor] or OUTLINE_COLORS.gold
-        elseif type(outlineColor) == "table" then
-            if outlineColor.x ~= nil then
-            elseif #outlineColor >= 3 then
-                outlineColor = toVec4Color(outlineColor[1], outlineColor[2], outlineColor[3], outlineColor[4])
-            elseif outlineColor.r then
-                outlineColor = toVec4Color(outlineColor.r, outlineColor.g, outlineColor.b, outlineColor.a)
-            else
-                if _G.log_warn then
-                    log_warn("SpecialItem: invalid outline color format, using gold")
-                end
-                outlineColor = OUTLINE_COLORS.gold
-            end
-        else
-            outlineColor = OUTLINE_COLORS.gold
-        end
-        
-        builder:add("efficient_pixel_outline", {
-            outlineColor = outlineColor,
-            outlineType = outlineConfig.type or 2,  -- 0=none, 1=4-way, 2=8-way
-            thickness = outlineConfig.thickness or 2,
-        })
-    end
+    -- NOTE: Outline effect disabled - efficient_pixel_outline shader fails to compile
+    -- TODO: Re-enable when outline shader is fixed or replaced
+    -- if outlineConfig.enabled then
+    --     builder:add("efficient_pixel_outline", { ... })
+    -- end
     
     builder:apply()
     

@@ -1,7 +1,6 @@
 #version 300 es
 precision mediump float;
 
-
 // interpolated inputs
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -10,7 +9,7 @@ in vec4 fragColor;
 uniform sampler2D texture0;
 uniform vec4     colDiffuse;
 
-// your circle‐mask uniforms
+// circle‐mask uniforms
 uniform float circle_size;      // radius of circle in UV‐space (0..1)
 uniform float feather;          // width of the smooth edge
 uniform vec2  circle_position;  // center of circle in UV (0..1)
@@ -26,24 +25,23 @@ void main()
     // 2) apply tint & vertex color
     vec4 base  = texel * colDiffuse * fragColor;
 
-    // 3) compute aspect‐corrected UV for a true circle
-    float ratio       = screen_width / screen_height;
-    vec2  adjustedUV  = vec2(
-        mix(circle_position.x, fragTexCoord.x, ratio),
-        fragTexCoord.y
-    );
+    // 3) compute aspect‐corrected distance for a true circle
+    // Scale X coordinate so circle doesn't stretch with aspect ratio
+    float aspect = screen_width / screen_height;
+
+    // Adjust both fragment and center X by aspect ratio
+    vec2 adjustedFrag = vec2(fragTexCoord.x * aspect, fragTexCoord.y);
+    vec2 adjustedCenter = vec2(circle_position.x * aspect, circle_position.y);
 
     // 4) distance from center, then smoothstep for feathering
-    float dist       = distance(circle_position, adjustedUV);
+    float dist       = distance(adjustedFrag, adjustedCenter);
     float edgeStart  = circle_size - feather;
     float edgeEnd    = circle_size + feather;
     float mask       = smoothstep(edgeStart, edgeEnd, dist);
 
-    // after computing `mask = smoothstep(edgeStart, edgeEnd, dist);`
-    float m = 1.0 - mask;
     // inside circle: m = 1.0, outside: m → 0.0
+    float m = 1.0 - mask;
 
     vec3 darkened = base.rgb * m;       // black outside
     finalColor = vec4(darkened, base.a);
-
 }

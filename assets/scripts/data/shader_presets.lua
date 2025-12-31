@@ -96,48 +96,30 @@ ShaderPresets.trigger_card = {
     },
 }
 
--- Card outline effect (standalone)
--- Use as a post-pass after 3d_skew for outlined cards
-ShaderPresets.card_outline = {
-    id = "card_outline",
-    passes = {"efficient_pixel_outline"},
-    needs_atlas_uniforms = false, -- works on post-pass texture, not atlas
-    uniforms = {
-        outlineColor = {0.0, 0.0, 0.0, 1.0}, -- black outline
-        outlineType = 2, -- 8-way (includes diagonals for smoother outlines)
-        thickness = 1.0, -- 1 pixel thick
-    },
-}
+-- NOTE: Card outline presets disabled - efficient_pixel_outline shader fails to compile
+-- The outline effect has been integrated directly into 3d_skew shader instead
+-- See: docs/plans/2025-12-30-3d-skew-outline-design.md
 
--- Card with colored outline (example: gold for rare cards)
-ShaderPresets.card_outline_gold = {
-    id = "card_outline_gold",
-    passes = {"efficient_pixel_outline"},
-    needs_atlas_uniforms = false,
-    uniforms = {
-        outlineColor = {1.0, 0.84, 0.0, 1.0}, -- gold outline (#FFD700)
-        outlineType = 2,
-        thickness = 1.5,
-    },
-}
+-- Card outline effect (standalone) - DISABLED
+-- ShaderPresets.card_outline = {
+--     id = "card_outline",
+--     passes = {"efficient_pixel_outline"},
+--     ...
+-- }
 
--- Full card effect: 3d_skew + outline combined
--- Use this preset to replace the default card shader setup
-ShaderPresets.card_with_outline = {
-    id = "card_with_outline",
-    passes = {"3d_skew", "efficient_pixel_outline"},
-    pass_uniforms = {
-        ["efficient_pixel_outline"] = {
-            outlineColor = {0.0, 0.0, 0.0, 1.0},
-            outlineType = 2,
-            thickness = 1.0,
-        },
-    },
-    -- 3d_skew needs atlas uniforms, outline doesn't
-    pass_atlas_uniforms = {
-        ["3d_skew"] = true,
-        ["efficient_pixel_outline"] = false,
-    },
-}
+-- Card with colored outline - DISABLED
+-- ShaderPresets.card_outline_gold = {
+--     id = "card_outline_gold",
+--     passes = {"efficient_pixel_outline"},
+--     ...
+-- }
+
+-- Full card effect: 3d_skew + outline combined - DISABLED
+-- Use 3d_skew with outline_enabled uniform instead
+-- ShaderPresets.card_with_outline = {
+--     id = "card_with_outline",
+--     passes = {"3d_skew", "efficient_pixel_outline"},
+--     ...
+-- }
 
 return ShaderPresets

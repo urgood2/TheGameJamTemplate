@@ -10,13 +10,13 @@ A configurable dialogue system for tutorials featuring:
 
 Usage:
     local TutorialDialogue = require("tutorial.dialogue")
-    
+
     -- Create a dialogue session
     local dialogue = TutorialDialogue.new({
         speaker = {
             sprite = "tutorial_guide.png",
             position = "left",  -- "left", "right", "center"
-            shaders = { "efficient_pixel_outline" },
+            shaders = {},  -- e.g. { "3d_skew_holo" }
             size = { 128, 128 },
         },
         box = {
@@ -106,6 +106,7 @@ TutorialDialogue.DEFAULTS = {
         feather = 0.1,
         position = nil,           -- auto-calculated if nil
         dimColor = { 0, 0, 0, 180 },
+        delay = 0,                -- delay before spotlight activates (seconds)
     },
     input = {
         prompt = "Press [SPACE] to continue",
@@ -307,13 +308,36 @@ function TutorialDialogue:start()
         log_warn("[TutorialDialogue] Already active, ignoring start()")
         return self
     end
-    
+
     self._active = true
     self:_createComponents()
     self:_showComponents()
+    self:_startUpdateLoop()
     self:_processNext()
-    
+
     return self
+end
+
+--- Start the per-frame update loop for rendering components
+function TutorialDialogue:_startUpdateLoop()
+    timer.every(0.016, function()
+        if not self._active then return end
+        self:_update(0.016)
+    end, 0, false, nil, nil, self._group .. "_update")
+end
+
+--- Per-frame update - renders all visual components
+--- (Spotlight uses layer shader, no draw needed)
+function TutorialDialogue:_update(dt)
+    if self._speaker then
+        self._speaker:update(dt)
+    end
+    if self._box then
+        self._box:update(dt)
+    end
+    if self._prompt then
+        self._prompt:update(dt)
+    end
 end
 
 --- Skip current dialogue line (if typing) or advance to next.
@@ -330,12 +354,13 @@ end
 --- Stop and cleanup the dialogue.
 function TutorialDialogue:stop()
     if not self._active then return end
-    
+
     self._active = false
     timer.kill_group(self._group)
+    timer.kill_group(self._group .. "_update")
     self:_hideComponents()
     self:_destroyComponents()
-    
+
     self._queue = {}
     self._currentAction = nil
 end
@@ -364,18 +389,20 @@ end
 
 function TutorialDialogue:_showComponents()
     local fadeIn = self.config.timing.fadeInDuration
-    
+    local spotlightDelay = self.config.spotlight.delay or 0
+
+    -- Show speaker and box FIRST, then spotlight after delay
     timer.sequence(self._group)
-        :do_now(function()
-            if self._spotlight then self._spotlight:show(fadeIn) end
-        end)
-        :wait(fadeIn * 0.3)
         :do_now(function()
             if self._speaker then self._speaker:show(fadeIn * 0.7) end
         end)
         :wait(fadeIn * 0.3)
         :do_now(function()
             if self._box then self._box:show(fadeIn * 0.5) end
+        end)
+        :wait(spotlightDelay)
+        :do_now(function()
+            if self._spotlight then self._spotlight:show(fadeIn) end
         end)
         :start()
 end
@@ -585,12 +612,13 @@ end
 
 function TutorialDialogue:_finish()
     self._active = false
-    
+    timer.kill_group(self._group .. "_update")
+
     self:_hideComponents()
-    
+
     timer.after(self.config.timing.fadeOutDuration + 0.15, function()
         self:_destroyComponents()
-        
+
         if self._onComplete then
             self._onComplete()
         end

@@ -2,17 +2,8 @@ local Speaker = {}
 Speaker.__index = Speaker
 
 local timer = require("core.timer")
-local entity_cache = require("core.entity_cache")
-local component_cache = require("core.component_cache")
 
-local EntityBuilder, ShaderBuilder
-local function lazyLoadBuilders()
-    if not EntityBuilder then
-        EntityBuilder = require("core.entity_builder")
-        ShaderBuilder = require("core.shader_builder")
-    end
-end
-
+-- Position presets return TOP-LEFT corner positions
 local POSITION_PRESETS = {
     left = function(screenW, screenH, size)
         return { x = screenW * 0.15, y = screenH * 0.5 - size[2] * 0.3 }
@@ -32,21 +23,19 @@ local POSITION_PRESETS = {
 }
 
 function Speaker.new(config, timerGroup)
-    lazyLoadBuilders()
-    
     local self = setmetatable({}, Speaker)
-    
+
     self._group = timerGroup or "speaker_" .. math.random(1, 9999)
     self._config = config or {}
-    self._entity = nil
     self._visible = false
     self._talking = false
     self._alpha = 0
     self._basePos = { x = 0, y = 0 }
     self._currentOffset = { x = 0, y = 0 }
+    self._currentScale = { w = 1, h = 1 }
     self._elapsed = 0
     self._jigglePhase = 0
-    
+
     return self
 end
 
@@ -54,7 +43,7 @@ function Speaker:_resolvePosition()
     local screenW = (globals and globals.screenWidth and globals.screenWidth()) or 1920
     local screenH = (globals and globals.screenHeight and globals.screenHeight()) or 1080
     local size = self._config.size or { 96, 96 }
-    
+
     local pos = self._config.position
     if type(pos) == "string" then
         local preset = POSITION_PRESETS[pos] or POSITION_PRESETS.left
@@ -62,66 +51,72 @@ function Speaker:_resolvePosition()
     elseif type(pos) == "table" then
         return { x = pos.x or pos[1] or 0, y = pos.y or pos[2] or 0 }
     end
-    
+
     return POSITION_PRESETS.left(screenW, screenH, size)
 end
 
-function Speaker:_createEntity()
-    if self._entity and entity_cache.valid(self._entity) then
-        return
-    end
-    
+--- Draw the speaker sprite to UI layer (avoids spotlight shader on sprites layer)
+function Speaker:draw()
+    if self._alpha <= 0 then return end
+    if not command_buffer or not layers or not layers.ui then return end
+
     local size = self._config.size or { 96, 96 }
-    self._basePos = self:_resolvePosition()
-    
-    local opts = {
-        sprite = self._config.sprite,
-        x = self._basePos.x,
-        y = self._basePos.y,
-        size = size,
-        shadow = self._config.shadow ~= false,
-    }
-    
-    self._entity = EntityBuilder.create(opts)
-    
-    if self._config.shaders and #self._config.shaders > 0 then
-        local builder = ShaderBuilder.for_entity(self._entity)
-        for _, shader in ipairs(self._config.shaders) do
-            if type(shader) == "string" then
-                builder:add(shader)
-            elseif type(shader) == "table" then
-                builder:add(shader[1], shader[2])
-            end
-        end
-        builder:apply()
+    local baseW, baseH = size[1], size[2]
+    local scaledW = baseW * self._currentScale.w
+    local scaledH = baseH * self._currentScale.h
+
+    -- Calculate center position (base + offsets)
+    local centerX = self._basePos.x + baseW * 0.5 + self._currentOffset.x
+    local centerY = self._basePos.y + baseH * 0.5 + self._currentOffset.y
+
+    local space = layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen
+    local baseZ = 850  -- Below dialogue box (900) but above world content
+
+    local alphaInt = math.floor(self._alpha)
+
+    -- Draw shadow if enabled
+    if self._config.shadow ~= false then
+        local shadowOffset = 4
+        command_buffer.queueDrawSpriteCentered(layers.ui, function(c)
+            c.spriteName = self._config.sprite
+            c.x = centerX + shadowOffset
+            c.y = centerY + shadowOffset
+            c.dstW = scaledW
+            c.dstH = scaledH
+            c.tint = Col(0, 0, 0, math.floor(alphaInt * 0.5))
+        end, baseZ - 1, space)
     end
-    
-    local t = component_cache.get(self._entity, Transform)
-    if t then
-        t.visualAlpha = 0
-    end
+
+    -- Draw main sprite
+    command_buffer.queueDrawSpriteCentered(layers.ui, function(c)
+        c.spriteName = self._config.sprite
+        c.x = centerX
+        c.y = centerY
+        c.dstW = scaledW
+        c.dstH = scaledH
+        c.tint = Col(255, 255, 255, alphaInt)
+    end, baseZ, space)
 end
 
 function Speaker:show(duration)
     duration = duration or 0.3
-    
-    self:_createEntity()
+
+    self._basePos = self:_resolvePosition()
     self._visible = true
     self._elapsed = 0
-    
-    local t = component_cache.get(self._entity, Transform)
-    if not t then return end
-    
-    local startY = self._basePos.y + 30
-    t.actualY = startY
-    t.visualY = startY
-    t.visualAlpha = 0
-    
+    self._currentScale = { w = 1, h = 1 }
+
+    -- Start with offset for slide-in animation
+    local startOffsetY = 30
+    self._currentOffset = { x = 0, y = startOffsetY }
+    self._alpha = 0
+
+    -- Tween alpha and Y offset
     timer.tween_tracks(duration, {
-        { get = function() return t.visualAlpha or 0 end, set = function(v) t.visualAlpha = v end, to = 255 },
-        { get = function() return t.actualY end, set = function(v) t.actualY = v; t.visualY = v end, to = self._basePos.y },
+        { get = function() return self._alpha end, set = function(v) self._alpha = v end, to = 255 },
+        { get = function() return self._currentOffset.y end, set = function(v) self._currentOffset.y = v end, to = 0 },
     }, function(x) return x < 0.5 and 2*x*x or 1 - (-2*x + 2)^2 / 2 end, nil, nil, self._group)
-    
+
     self:_startIdleAnimation()
 end
 
@@ -129,15 +124,12 @@ function Speaker:hide(duration)
     duration = duration or 0.25
     self._visible = false
     self._talking = false
-    
+
     timer.kill_group(self._group .. "_idle")
     timer.kill_group(self._group .. "_jiggle")
-    
-    local t = component_cache.get(self._entity, Transform)
-    if not t then return end
-    
+
     timer.tween_tracks(duration, {
-        { get = function() return t.visualAlpha or 255 end, set = function(v) t.visualAlpha = v end, to = 0 },
+        { get = function() return self._alpha end, set = function(v) self._alpha = v end, to = 0 },
     }, nil, nil, nil, self._group)
 end
 
@@ -145,102 +137,94 @@ function Speaker:destroy()
     timer.kill_group(self._group)
     timer.kill_group(self._group .. "_idle")
     timer.kill_group(self._group .. "_jiggle")
-    
-    if self._entity and entity_cache.valid(self._entity) then
-        registry:destroy(self._entity)
-    end
-    self._entity = nil
+    self._visible = false
+    self._alpha = 0
 end
 
 function Speaker:_startIdleAnimation()
     if not self._config.idleFloat or not self._config.idleFloat.enabled then
         return
     end
-    
+
     local amp = self._config.idleFloat.amplitude or 4
     local speed = self._config.idleFloat.speed or 1.5
     local phase = math.random() * math.pi * 2
-    
+
     timer.every(0.016, function()
-        if not self._visible or not self._entity or not entity_cache.valid(self._entity) then
-            return
-        end
-        
+        if not self._visible then return end
+
         self._elapsed = self._elapsed + 0.016
-        
+
+        -- Idle float animation adds to current offset (jiggle is separate)
         local floatY = math.sin(self._elapsed * speed + phase) * amp
         local floatX = math.sin(self._elapsed * speed * 0.7 + phase * 0.5) * (amp * 0.5)
-        
-        local t = component_cache.get(self._entity, Transform)
-        if t then
-            t.actualX = self._basePos.x + floatX + self._currentOffset.x
-            t.actualY = self._basePos.y + floatY + self._currentOffset.y
-            t.visualX = t.actualX
-            t.visualY = t.actualY
-        end
+
+        -- Only update idle component of offset (jiggle adds its own)
+        self._idleOffset = { x = floatX, y = floatY }
     end, 0, false, nil, nil, self._group .. "_idle")
+
+    self._idleOffset = { x = 0, y = 0 }
 end
 
 function Speaker:startTalking()
     if self._talking then return end
     self._talking = true
-    
+
     local jiggle = self._config.jiggle or {}
     if jiggle.enabled == false then return end
-    
+
     local intensity = jiggle.intensity or 0.08
     local speed = jiggle.speed or 8
-    
+
     timer.every(0.016, function()
-        if not self._talking or not self._entity or not entity_cache.valid(self._entity) then
-            self._currentOffset = { x = 0, y = 0 }
+        if not self._talking then
             return
         end
-        
+
         self._jigglePhase = self._jigglePhase + 0.016 * speed
-        
-        local t = component_cache.get(self._entity, Transform)
-        if t then
-            local baseW = self._config.size and self._config.size[1] or 96
-            local baseH = self._config.size and self._config.size[2] or 96
-            
-            local scaleJiggle = math.sin(self._jigglePhase * 6) * intensity
-            t.actualW = baseW * (1 + scaleJiggle)
-            t.actualH = baseH * (1 - scaleJiggle * 0.5)
-            t.visualW = t.actualW
-            t.visualH = t.actualH
-            
-            self._currentOffset.y = math.sin(self._jigglePhase * 4) * 2
-        end
+
+        -- Scale jiggle (squash & stretch)
+        local scaleJiggle = math.sin(self._jigglePhase * 6) * intensity
+        self._currentScale.w = 1 + scaleJiggle
+        self._currentScale.h = 1 - scaleJiggle * 0.5
+
+        -- Y jiggle offset
+        self._jiggleOffset = { y = math.sin(self._jigglePhase * 4) * 2 }
     end, 0, false, nil, nil, self._group .. "_jiggle")
+
+    self._jiggleOffset = { y = 0 }
 end
 
 function Speaker:stopTalking()
     self._talking = false
     timer.kill_group(self._group .. "_jiggle")
-    
-    if self._entity and entity_cache.valid(self._entity) then
-        local t = component_cache.get(self._entity, Transform)
-        if t then
-            local baseW = self._config.size and self._config.size[1] or 96
-            local baseH = self._config.size and self._config.size[2] or 96
-            
-            timer.tween_tracks(0.15, {
-                { get = function() return t.actualW end, set = function(v) t.actualW = v; t.visualW = v end, to = baseW },
-                { get = function() return t.actualH end, set = function(v) t.actualH = v; t.visualH = v end, to = baseH },
-            }, nil, nil, nil, self._group)
-        end
-    end
-    
-    self._currentOffset = { x = 0, y = 0 }
-end
 
-function Speaker:getEntity()
-    return self._entity
+    -- Tween scale back to 1
+    timer.tween_tracks(0.15, {
+        { get = function() return self._currentScale.w end, set = function(v) self._currentScale.w = v end, to = 1 },
+        { get = function() return self._currentScale.h end, set = function(v) self._currentScale.h = v end, to = 1 },
+    }, nil, nil, nil, self._group)
+
+    self._jiggleOffset = { y = 0 }
 end
 
 function Speaker:getPosition()
     return { x = self._basePos.x, y = self._basePos.y }
+end
+
+--- Per-frame update: combines offsets and calls draw
+function Speaker:update(dt)
+    if not self._visible and self._alpha <= 0 then return end
+
+    -- Combine idle + jiggle offsets
+    local idleX = self._idleOffset and self._idleOffset.x or 0
+    local idleY = self._idleOffset and self._idleOffset.y or 0
+    local jiggleY = self._jiggleOffset and self._jiggleOffset.y or 0
+
+    self._currentOffset.x = idleX
+    self._currentOffset.y = idleY + jiggleY
+
+    self:draw()
 end
 
 return Speaker

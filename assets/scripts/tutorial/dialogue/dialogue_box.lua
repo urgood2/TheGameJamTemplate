@@ -185,9 +185,11 @@ function DialogueBox:getDisplayedText()
 end
 
 function DialogueBox:getPromptPosition()
+    -- Position prompt BELOW the dialogue box, centered horizontally
+    local promptWidth = 120  -- Approximate width of "[SPACE] to continue"
     return {
-        x = self._pos.x + self._size.w - 20,
-        y = self._pos.y + self._size.h - 10,
+        x = self._pos.x + (self._size.w - promptWidth) / 2,
+        y = self._pos.y + self._size.h + 10,  -- Below the box with padding
     }
 end
 
@@ -210,61 +212,72 @@ function DialogueBox:draw()
     
     if not uiLayer or not command_buffer then return end
     
-    command_buffer.queueDrawCenteredFilledRoundedRect(uiLayer, function(c)
-        c.x = self._pos.x + self._size.w * 0.5
-        c.y = self._pos.y + self._size.h * 0.5
+    -- Draw box with fill and border using stepped rounded rect
+    -- NOTE: queueDrawSteppedRoundedRect expects CENTERED coordinates (x,y = center of rect)
+    local centerX = self._pos.x + self._size.w * 0.5
+    local centerY = self._pos.y + self._size.h * 0.5
+
+    command_buffer.queueDrawSteppedRoundedRect(uiLayer, function(c)
+        c.x = centerX
+        c.y = centerY
         c.w = self._size.w
         c.h = self._size.h
-        c.rx = cornerRadius
-        c.ry = cornerRadius
-        c.color = Col(bgColor[1], bgColor[2], bgColor[3], math.floor(bgColor[4] * alphaScale))
+        c.fillColor = Col(bgColor[1], bgColor[2], bgColor[3], math.floor(bgColor[4] * alphaScale))
+        c.borderColor = Col(borderColor[1], borderColor[2], borderColor[3], math.floor(borderColor[4] * alphaScale))
+        c.borderWidth = 2
+        c.numSteps = cornerRadius
     end, baseZ, screenSpace)
-    
-    command_buffer.queueDrawCenteredRoundedRect(uiLayer, function(c)
-        c.x = self._pos.x + self._size.w * 0.5
-        c.y = self._pos.y + self._size.h * 0.5
-        c.w = self._size.w
-        c.h = self._size.h
-        c.rx = cornerRadius
-        c.ry = cornerRadius
-        c.thickness = 2
-        c.color = Col(borderColor[1], borderColor[2], borderColor[3], math.floor(borderColor[4] * alphaScale))
-    end, baseZ + 1, screenSpace)
     
     if self._speakerName and self._boxConfig.nameplate ~= false then
         local npHeight = 28
-        local npWidth = 120
+        local npFontSize = 14
+        -- Dynamically size nameplate based on text length
+        local textPadding = 24  -- Padding on each side
+        local estimatedCharWidth = npFontSize * 0.6  -- Approximate character width
+        local estimatedTextWidth = #self._speakerName * estimatedCharWidth
+        local npWidth = math.max(80, estimatedTextWidth + textPadding * 2)
+
+        -- Nameplate positioned at top-left corner of dialogue box, offset slightly
         local npX = self._pos.x + 16
         local npY = self._pos.y - npHeight * 0.5
-        
-        command_buffer.queueDrawCenteredFilledRoundedRect(uiLayer, function(c)
-            c.x = npX + npWidth * 0.5
-            c.y = npY + npHeight * 0.5
+        -- Center coordinates for stepped rounded rect
+        local npCenterX = npX + npWidth * 0.5
+        local npCenterY = npY + npHeight * 0.5
+
+        -- Nameplate background
+        command_buffer.queueDrawSteppedRoundedRect(uiLayer, function(c)
+            c.x = npCenterX
+            c.y = npCenterY
             c.w = npWidth
             c.h = npHeight
-            c.rx = 4
-            c.ry = 4
-            c.color = Col(npBgColor[1], npBgColor[2], npBgColor[3], math.floor(npBgColor[4] * alphaScale))
-        end, baseZ + 2, screenSpace)
-        
+            c.fillColor = Col(npBgColor[1], npBgColor[2], npBgColor[3], math.floor(npBgColor[4] * alphaScale))
+            c.borderColor = Col(0, 0, 0, 0)  -- no border
+            c.borderWidth = 0
+            c.numSteps = 4
+        end, baseZ + 1, screenSpace)
+
+        -- Center the text in the nameplate
         local font = localization and localization.getFont and localization.getFont()
+        local textX = npX + (npWidth - estimatedTextWidth) / 2
+        local textY = npY + (npHeight - npFontSize) / 2
+
         command_buffer.queueDrawText(uiLayer, function(c)
             c.text = self._speakerName
             c.font = font
-            c.x = npX + 8
-            c.y = npY + 6
+            c.x = textX
+            c.y = textY
             c.color = Col(255, 255, 255, math.floor(255 * alphaScale))
-            c.fontSize = 14
-        end, baseZ + 3, screenSpace)
+            c.fontSize = npFontSize
+        end, baseZ + 2, screenSpace)
     end
-    
+
     local displayedText = self:getDisplayedText()
     if displayedText and #displayedText > 0 then
         local textX = self._pos.x + padding
         local textY = self._pos.y + padding + 10
         local font = localization and localization.getFont and localization.getFont()
         local fontSize = self._textConfig.fontSize or 18
-        
+
         command_buffer.queueDrawText(uiLayer, function(c)
             c.text = displayedText
             c.font = font
@@ -272,7 +285,7 @@ function DialogueBox:draw()
             c.y = textY
             c.color = Col(255, 255, 255, math.floor(255 * alphaScale))
             c.fontSize = fontSize
-        end, baseZ + 4, screenSpace)
+        end, baseZ + 3, screenSpace)
     end
 end
 

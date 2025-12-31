@@ -22,6 +22,7 @@ local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
+local TutorialDialogueDemo = require("tutorial.dialogue.demo")
 -- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
@@ -492,6 +493,12 @@ function initMainMenu()
 
     -- Start TextBuilder visual demo in the top area
     TextBuilderDemo.start()
+    
+    timer.after(1.0, function()
+        TutorialDialogueDemo.runBasicDemo()
+        -- TutorialDialogueDemo.runSpotlightDemo()
+        -- TutorialDialogueDemo.runStyleShowcase()
+    end)
 end
 
 function startGameButtonCallback()

@@ -35,6 +35,10 @@ local PIE_THICKNESS = 6
 local LABEL_FONT_SIZE = 20
 local STATUS_FONT_SIZE = 14
 
+local MP_BAR_WIDTH = 6
+local MP_BAR_MARGIN = 10
+local MP_BAR_VPAD = 8
+
 local Z_BASE = z_orders.ui_tooltips + 7
 local SPACE = layer.DrawCommandSpace.Screen
 
@@ -92,7 +96,6 @@ function WandCooldownUI.clear()
     WandCooldownUI.entries = {}
 end
 
---- Update entries from WandExecutor state
 function WandCooldownUI.update(dt)
     if not WandCooldownUI.isActive then return end
     if not is_state_active or not is_state_active(ACTION_STATE) then return end
@@ -113,15 +116,21 @@ function WandCooldownUI.update(dt)
             entry.overheatMult = overheatMult
             entry.castProgress = state.currentCastProgress
 
-            -- Track the last known max cooldown to compute progress.
             if currentCooldown > (entry.cooldownMax or 0) + 0.01 then
                 entry.cooldownMax = currentCooldown
             end
+            
+            local targetManaRatio = 0
+            if entry.maxMana > 0 then
+                targetManaRatio = clamp01(entry.currentMana / entry.maxMana)
+            end
+            entry._smoothManaRatio = entry._smoothManaRatio or targetManaRatio
+            local lerpRate = math.min(1, dt * 8)
+            entry._smoothManaRatio = entry._smoothManaRatio + (targetManaRatio - entry._smoothManaRatio) * lerpRate
         end
         seen[wandId] = true
     end
 
-    -- Remove entries for wands that are no longer active
     for wandId, _ in pairs(WandCooldownUI.entries) do
         if not seen[wandId] then
             WandCooldownUI.entries[wandId] = nil
@@ -237,16 +246,38 @@ function WandCooldownUI.draw()
                 c.color = COLOR_TEXT
             end, Z_BASE + 4, SPACE)
 
-            -- Mana readout (for debugging/verification)
-            local manaText = string.format("Mana: %.1f / %.1f", entry.currentMana or 0, entry.maxMana or 0)
-            command_buffer.queueDrawText(layers.ui, function(c)
-                c.text = manaText
-                c.font = localization.getFont()
-                c.fontSize = STATUS_FONT_SIZE
-                c.x = textX
-                c.y = manaY
-                c.color = COLOR_TEXT
-            end, Z_BASE + 4, SPACE)
+            local manaRatio = entry._smoothManaRatio or 0
+            if manaRatio < 0.99 then
+                local barX = anchorX + (CARD_WIDTH * 0.5) - MP_BAR_MARGIN - (MP_BAR_WIDTH * 0.5)
+                local barTotalH = CARD_HEIGHT - (MP_BAR_VPAD * 2)
+                local barTop = centerY - (CARD_HEIGHT * 0.5) + MP_BAR_VPAD
+                
+                local bgAlpha = 80
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+                    c.x = barX
+                    c.y = centerY
+                    c.w = MP_BAR_WIDTH
+                    c.h = barTotalH
+                    c.rx = MP_BAR_WIDTH * 0.5
+                    c.ry = MP_BAR_WIDTH * 0.5
+                    c.color = Col(40, 40, 50, bgAlpha)
+                end, Z_BASE + 2, SPACE)
+                
+                local fillH = barTotalH * manaRatio
+                if fillH > 1 then
+                    local fillY = barTop + barTotalH - (fillH * 0.5)
+                    local manaColor = COLOR_ACCENT
+                    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+                        c.x = barX
+                        c.y = fillY
+                        c.w = MP_BAR_WIDTH
+                        c.h = fillH
+                        c.rx = MP_BAR_WIDTH * 0.5
+                        c.ry = MP_BAR_WIDTH * 0.5
+                        c.color = Col(manaColor.r, manaColor.g, manaColor.b, 200)
+                    end, Z_BASE + 3, SPACE)
+                end
+            end
         end
     end
 end

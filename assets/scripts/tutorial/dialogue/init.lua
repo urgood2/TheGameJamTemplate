@@ -177,6 +177,13 @@ function TutorialDialogue.new(config)
     self._spotlight = nil
     self._prompt = nil
     
+    -- Skip system state
+    self._skipHoldTime = 0
+    self._skipHoldThreshold = 2.0
+    self._onSkipAll = nil
+    self._lastClickState = false
+    self._lastEscState = false
+    
     return self
 end
 
@@ -297,6 +304,14 @@ function TutorialDialogue:onComplete(fn)
     return self
 end
 
+--- Set callback for when user holds ESC to skip entire tutorial.
+--- @param fn function Callback
+--- @return TutorialDialogue self
+function TutorialDialogue:onSkipAll(fn)
+    self._onSkipAll = fn
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- EXECUTION
 --------------------------------------------------------------------------------
@@ -326,8 +341,6 @@ function TutorialDialogue:_startUpdateLoop()
     end, 0, false, nil, nil, self._group .. "_update")
 end
 
---- Per-frame update - renders all visual components
---- (Spotlight uses layer shader, no draw needed)
 function TutorialDialogue:_update(dt)
     if self._speaker then
         self._speaker:update(dt)
@@ -337,6 +350,90 @@ function TutorialDialogue:_update(dt)
     end
     if self._prompt then
         self._prompt:update(dt)
+    end
+    
+    self:_handleSkipInput(dt)
+end
+
+function TutorialDialogue:_handleSkipInput(dt)
+    local escDown = false
+    local escPressed = false
+    local clickPressed = false
+    
+    if isKeyDown then
+        escDown = isKeyDown("KEY_ESCAPE")
+    end
+    if isKeyPressed then
+        escPressed = isKeyPressed("KEY_ESCAPE")
+    end
+    if IsMouseButtonPressed then
+        clickPressed = IsMouseButtonPressed(0)
+    elseif input and input.action_pressed then
+        clickPressed = input.action_pressed("mouse_click")
+    end
+    
+    if escDown then
+        self._skipHoldTime = self._skipHoldTime + dt
+        if self._skipHoldTime >= self._skipHoldThreshold then
+            self:_triggerSkipAll()
+            return
+        end
+    else
+        self._skipHoldTime = 0
+    end
+    
+    if escPressed or clickPressed then
+        self:skip()
+    end
+    
+    self:_drawSkipHint()
+end
+
+function TutorialDialogue:_drawSkipHint()
+    if not command_buffer or not layers then return end
+    
+    local screenW = (globals and globals.screenWidth and globals.screenWidth()) or 1920
+    local screenH = (globals and globals.screenHeight and globals.screenHeight()) or 1080
+    local space = layer and layer.DrawCommandSpace and layer.DrawCommandSpace.Screen
+    local baseZ = 960
+    local font = localization and localization.getFont and localization.getFont()
+    local fontSize = 14
+    
+    local hintText = "Press ESC to skip"
+    if self._skipHoldTime > 0.3 then
+        local remaining = math.max(0, self._skipHoldThreshold - self._skipHoldTime)
+        hintText = string.format("Hold ESC to skip all (%.1fs)", remaining)
+    end
+    
+    local textWidth = 0
+    if localization and localization.getTextWidthWithCurrentFont then
+        textWidth = localization.getTextWidthWithCurrentFont(hintText, fontSize, 1)
+    else
+        textWidth = #hintText * fontSize * 0.5
+    end
+    
+    local x = screenW - textWidth - 20
+    local y = 20
+    local alpha = 120
+    
+    if self._skipHoldTime > 0 then
+        alpha = math.min(200, 120 + self._skipHoldTime * 80)
+    end
+    
+    command_buffer.queueDrawText(layers.ui, function(c)
+        c.text = hintText
+        c.font = font
+        c.x = x
+        c.y = y
+        c.color = Col(255, 255, 255, math.floor(alpha))
+        c.fontSize = fontSize
+    end, baseZ, space)
+end
+
+function TutorialDialogue:_triggerSkipAll()
+    self:stop()
+    if self._onSkipAll then
+        self._onSkipAll()
     end
 end
 

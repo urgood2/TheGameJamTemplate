@@ -1,5 +1,9 @@
 {
     "seed": 3048337,
+    "build": {
+        "version": "0.1.0",
+        "is_demo": true
+    },
     "world_data" : {
         "width": 10,
         "height": 10,

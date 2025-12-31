@@ -87,6 +87,27 @@ function gameplay_cfg.getDeathScreen()
     return gameplay_cfg.DeathScreen
 end
 
+function gameplay_cfg.getDemoFooterUI()
+    if not gameplay_cfg.DemoFooterUI then
+        gameplay_cfg.DemoFooterUI = require("ui.demo_footer_ui")
+    end
+    return gameplay_cfg.DemoFooterUI
+end
+
+function gameplay_cfg.getManualTriggerPromptUI()
+    if not gameplay_cfg.ManualTriggerPromptUI then
+        gameplay_cfg.ManualTriggerPromptUI = require("ui.manual_trigger_prompt_ui")
+    end
+    return gameplay_cfg.ManualTriggerPromptUI
+end
+
+function gameplay_cfg.getShopPackUI()
+    if not gameplay_cfg.ShopPackUI then
+        gameplay_cfg.ShopPackUI = require("ui.shop_pack_ui")
+    end
+    return gameplay_cfg.ShopPackUI
+end
+
 require("core.type_defs") -- for Node customizations
 local BaseCreateExecutionContext = WandExecutor.createExecutionContext
 
@@ -4672,6 +4693,30 @@ function initPlanningPhase()
             CurrencyDisplay.draw()
         end
 
+        do
+            local DemoFooterUI = gameplay_cfg.getDemoFooterUI()
+            if DemoFooterUI then
+                DemoFooterUI.update(dt)
+                DemoFooterUI.draw()
+            end
+        end
+
+        if is_state_active and is_state_active(ACTION_STATE) then
+            local ManualTriggerPromptUI = gameplay_cfg.getManualTriggerPromptUI()
+            if ManualTriggerPromptUI then
+                ManualTriggerPromptUI.update(dt)
+                ManualTriggerPromptUI.draw()
+            end
+        end
+
+        if is_state_active and is_state_active(SHOP_STATE) then
+            local ShopPackUI = gameplay_cfg.getShopPackUI()
+            if ShopPackUI then
+                ShopPackUI.update(dt)
+                ShopPackUI.draw()
+            end
+        end
+
         if TagSynergyPanel and TagSynergyPanel.isActive and is_state_active
             and is_state_active(PLANNING_STATE) then
             TagSynergyPanel.update(dt)
@@ -9115,6 +9160,9 @@ function initShopPhase()
             --TODO: buy logic.
         end
     end
+    
+    local ShopPackUI = gameplay_cfg.getShopPackUI()
+    if ShopPackUI then ShopPackUI.init() end
 end
 
 SCREEN_BOUND_LEFT = 0
@@ -9302,6 +9350,13 @@ function initActionPhase()
     WandCooldownUI.init()
     SubcastDebugUI.init()
     TriggerStripUI.show()
+    
+    -- Demo polish UIs
+    local DemoFooterUI = gameplay_cfg.getDemoFooterUI()
+    if DemoFooterUI then DemoFooterUI.init() end
+    
+    local ManualTriggerPromptUI = gameplay_cfg.getManualTriggerPromptUI()
+    if ManualTriggerPromptUI then ManualTriggerPromptUI.init() end
     
     -- add shader to backgorund layer
     add_layer_shader("background", "oily_water_background")

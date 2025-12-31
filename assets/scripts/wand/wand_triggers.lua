@@ -509,4 +509,71 @@ function WandTriggers.getTriggerDisplayName(triggerType)
     return names[triggerType] or triggerType
 end
 
+--- Manually fires a specific wand's registered trigger once (for E-key activation)
+--- @param wandId string Wand identifier
+--- @param eventData table|nil Optional event data to pass
+--- @return boolean success
+function WandTriggers.fireManual(wandId, eventData)
+    local registration = WandTriggers.registrations[wandId]
+    if not registration then
+        log_debug("WandTriggers.fireManual: no registration for wand", wandId)
+        return false
+    end
+    
+    if not registration.enabled then
+        log_debug("WandTriggers.fireManual: trigger disabled for wand", wandId)
+        return false
+    end
+    
+    if not registration.executor then
+        log_debug("WandTriggers.fireManual: no executor for wand", wandId)
+        return false
+    end
+    
+    log_debug("WandTriggers: Manual trigger fired for wand", wandId)
+    
+    local payload = eventData or {}
+    payload._source_event_type = "manual_trigger"
+    
+    local success = registration.executor(wandId, "manual_trigger", payload)
+    if success then
+        signal.emit("trigger_activated", wandId, registration.triggerType)
+    end
+    
+    return success
+end
+
+--- Manually fires ALL registered wand triggers once (for E-key burst activation)
+--- @param eventData table|nil Optional event data to pass
+--- @return integer firedCount Number of triggers that fired successfully
+function WandTriggers.fireManualAll(eventData)
+    local firedCount = 0
+    
+    for wandId, registration in pairs(WandTriggers.registrations) do
+        if registration.enabled and registration.executor then
+            local success = WandTriggers.fireManual(wandId, eventData)
+            if success then
+                firedCount = firedCount + 1
+            end
+        end
+    end
+    
+    if firedCount > 0 then
+        log_debug("WandTriggers: Manual burst fired", firedCount, "triggers")
+    end
+    
+    return firedCount
+end
+
+--- Checks if any triggers are available for manual firing
+--- @return boolean hasManualTriggers
+function WandTriggers.hasManualTriggers()
+    for wandId, registration in pairs(WandTriggers.registrations) do
+        if registration.enabled and registration.executor then
+            return true
+        end
+    end
+    return false
+end
+
 return WandTriggers

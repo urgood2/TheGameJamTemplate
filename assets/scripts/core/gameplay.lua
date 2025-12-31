@@ -385,22 +385,47 @@ local function unpack_rect_like(rectLike, fallbackTable)
 end
 
 local tooltipStyle = {
-    fontSize = 22,  -- eight-bit-dragon default size
+    -- COMPACT FONT SIZES (reduced from 22)
+    fontSize = 16,              -- Base text size (was 22)
+    titleFontSize = 18,         -- Title/header size
+    labelFontSize = 14,         -- Label text size
+    valueFontSize = 14,         -- Value text size
+    
+    -- COLORS
     labelBg = "black",
     idBg = "gold",
     idTextColor = "black",
     labelColor = "apricot_cream",
     valueColor = "white",
-    innerPadding = 6,
-    rowPadding = 2,
-    textPadding = 2,
-    pillPadding = 4,
-    outerPadding = 10,
-    labelColumnMinWidth = 140,
-    valueColumnMinWidth = 80,
+    
+    -- COMPACT PADDING (reduced from original)
+    innerPadding = 4,           -- Was 6
+    rowPadding = 1,             -- Was 2
+    textPadding = 1,            -- Was 2
+    pillPadding = 3,            -- Was 4
+    outerPadding = 6,           -- Was 10
+    
+    -- COMPACT COLUMN WIDTHS
+    labelColumnMinWidth = 100,  -- Was 140
+    valueColumnMinWidth = 60,   -- Was 80
+    maxWidth = 280,             -- Max tooltip width
+    
+    -- BACKGROUND COLORS
     bgColor = Col(18, 22, 32, 255),       -- Fully opaque
     innerColor = Col(28, 32, 44, 255),    -- Fully opaque
     outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255),
+    
+    -- TITLE TEXT EFFECTS (dynamic text from C++ text system)
+    -- Available effects: pop, slide, bounce, pulse, float, wiggle, shake, rainbow, fade, highlight
+    titleEffects = {
+        default = "pop=0.15,0.03,in",                    -- Subtle pop entrance
+        card = "slide=0.2,0.02,in,l",                    -- Slide from left
+        trigger = "bounce=500,-10,0.35,0.02",            -- Bouncy entrance
+        joker = "pop=0.2,0.04,in;float=1.5,2,0.15",      -- Pop + gentle float
+        wand = "slide=0.18,0.02,in,r",                   -- Slide from right
+        stats = "pop=0.12,0.02,in",                      -- Very subtle pop
+    },
+    
     -- Named font for tooltip text (loaded below)
     fontName = "tooltip"
 }
@@ -520,17 +545,31 @@ local function makeTooltipPill(text, opts)
         align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
     }
     if opts.minWidth then cfg.minWidth = opts.minWidth end
+    
+    local displayText = tostring(text)
+    local effects = opts.effects or opts.titleEffects
+    local useCoded = opts.coded or false
+    
+    if effects and effects ~= "" then
+        local colorName = opts.color
+        if type(colorName) ~= "string" then
+            colorName = "apricot_cream"
+        end
+        displayText = "[" .. displayText .. "](" .. effects .. ";color=" .. colorName .. ")"
+        useCoded = true
+    end
+    
     local textOpts = {
         color = opts.color or tooltipStyle.labelColor,
-        fontSize = opts.fontSize,
+        fontSize = opts.fontSize or tooltipStyle.titleFontSize,
         align = opts.textAlign,
         fontName = opts.fontName or tooltipStyle.fontName,
         shadow = opts.shadow,
-        coded = opts.coded
+        coded = useCoded
     }
     return dsl.hbox {
         config = cfg,
-        children = { makeTooltipTextDef(text, textOpts) }
+        children = { makeTooltipTextDef(displayText, textOpts) }
     }
 end
 
@@ -596,36 +635,39 @@ end
 -- Simple tooltip for title + description (jokers, avatars, relics, buttons)
 local function makeSimpleTooltip(title, body, opts)
     opts = opts or {}
-    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding or 10
+    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding
     local rows = {}
 
-    -- Title pill (styled like card ID pill) - slightly larger font
+    local tooltipType = opts.tooltipType or "default"
+    local titleEffect = opts.titleEffects
+        or (tooltipStyle.titleEffects and tooltipStyle.titleEffects[tooltipType])
+        or (tooltipStyle.titleEffects and tooltipStyle.titleEffects.default)
+
     if title and title ~= "" then
         table.insert(rows, makeTooltipPill(title, {
             background = opts.titleBg or tooltipStyle.labelBg,
             color = opts.titleColor or tooltipStyle.labelColor,
             fontName = opts.titleFont or tooltipStyle.fontName,
-            fontSize = opts.titleFontSize or (tooltipStyle.fontSize + 2),
-            coded = opts.titleCoded,
+            fontSize = opts.titleFontSize or tooltipStyle.titleFontSize,
+            effects = titleEffect,
+            coded = true,
             padding = tooltipStyle.pillPadding
         }))
     end
 
-    -- Body text (wrapped, no pill background)
     if body and body ~= "" then
         table.insert(rows, makeTooltipValueBox(body, {
             color = opts.bodyColor or tooltipStyle.valueColor,
             fontName = opts.bodyFont or tooltipStyle.fontName,
-            fontSize = opts.bodyFontSize or tooltipStyle.fontSize,
+            fontSize = opts.bodyFontSize or tooltipStyle.valueFontSize,
             coded = opts.bodyCoded,
-            maxWidth = opts.maxWidth or 320,
+            maxWidth = opts.maxWidth or tooltipStyle.maxWidth,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = 4
+            padding = tooltipStyle.textPadding
         }))
     end
 
-    -- Build with DSL (single column)
-    local innerPad = tooltipStyle.innerPadding or 6
+    local innerPad = tooltipStyle.innerPadding
     local v = dsl.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
@@ -3562,9 +3604,11 @@ function makeCardTooltip(card_def, opts)
 
     local cardId = card_def.id or card_def.cardID
     local rowPadding = tooltipStyle.rowPadding
-    local innerPad = tooltipStyle.innerPadding or 6
+    local innerPad = tooltipStyle.innerPadding
 
-    -- Helper function to check if value should be excluded
+    local tooltipType = card_def.type == "trigger" and "trigger" or "card"
+    local titleEffect = tooltipStyle.titleEffects and tooltipStyle.titleEffects[tooltipType]
+
     local function shouldExclude(value)
         if value == nil then return true end
         if value == -1 then return true end
@@ -3573,9 +3617,12 @@ function makeCardTooltip(card_def, opts)
         return false
     end
 
-    -- Helper function to add a line if value is not excluded
     local function addLine(rows, label, value, labelOpts, valueOpts)
         if shouldExclude(value) then return end
+        labelOpts = labelOpts or {}
+        valueOpts = valueOpts or {}
+        labelOpts.fontSize = labelOpts.fontSize or tooltipStyle.labelFontSize
+        valueOpts.fontSize = valueOpts.fontSize or tooltipStyle.valueFontSize
         local row = makeTooltipRow(label, value, {
             rowPadding = rowPadding,
             labelOpts = labelOpts,
@@ -3598,7 +3645,9 @@ function makeCardTooltip(card_def, opts)
             children = {
                 makeTooltipPill(L("card.label.id_prefix", "ID: ") .. tostring(cardId), {
                     background = tooltipStyle.idBg,
-                    color = tooltipStyle.idTextColor or tooltipStyle.labelColor
+                    color = tooltipStyle.idTextColor or tooltipStyle.labelColor,
+                    fontSize = tooltipStyle.titleFontSize,
+                    effects = titleEffect
                 })
             }
         })

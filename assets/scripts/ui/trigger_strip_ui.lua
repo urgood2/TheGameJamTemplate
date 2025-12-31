@@ -471,10 +471,9 @@ end
 -- TOOLTIPS
 --------------------------------------------------------------------------------
 
--- Smaller font sizes for compact dual-tooltip display
-local TOOLTIP_TITLE_SIZE = 18
-local TOOLTIP_BODY_SIZE = 14
-local TOOLTIP_GAP = 4  -- Gap between stacked tooltips
+local TOOLTIP_TITLE_SIZE = 16
+local TOOLTIP_BODY_SIZE = 12
+local TOOLTIP_GAP = 3
 
 -- Helper to get wandDef from entry's actionBoardId
 local function getWandDefForEntry(entry)

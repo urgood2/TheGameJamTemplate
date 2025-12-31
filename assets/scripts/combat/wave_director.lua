@@ -87,6 +87,7 @@ function WaveDirector.start_next_wave()
     local waveLabel = localization.get("ui.wave_label")
     WaveHelpers.show_floating_text(waveLabel .. " " .. state.current_wave_index, { style = "wave_announce" })
     signal.emit("wave_started", state.current_wave_index, wave)
+    playSoundEffect("effects", "new-wave")
 
     -- Get spawn positions
     local spawn_config = state.current_stage.spawn or "around_player"
@@ -173,6 +174,7 @@ function WaveDirector.spawn_elite()
 
         if e and ctx then
             signal.emit("elite_spawned", e, ctx)
+            playSoundEffect("effects", "elite-default-spawn")
         end
     end, "elite_spawn")
 end
@@ -244,6 +246,7 @@ function WaveDirector.complete_stage()
     }
 
     signal.emit("stage_completed", results)
+    playSoundEffect("effects", "stage-complete")
 
     -- Handle transition after delay
     timer.after(1.5, function()

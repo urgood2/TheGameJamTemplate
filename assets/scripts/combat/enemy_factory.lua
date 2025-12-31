@@ -315,6 +315,10 @@ function EnemyFactory.spawn(enemy_type, position, modifiers)
     -- Emit spawned event
     signal.emit("enemy_spawned", e, ctx)
 
+    -- Play spawn sound (use definition's spawn_sound or default)
+    local spawn_sound = def.spawn_sound or "default-spawn"
+    playSoundEffect("effects", spawn_sound)
+
     return e, ctx
 end
 

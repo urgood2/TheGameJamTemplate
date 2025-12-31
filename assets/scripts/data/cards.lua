@@ -941,6 +941,7 @@ Cards.MOD_TELEPORT_CAST = {
 Cards.MOD_CAST_FROM_EVENT = {
     id = "MOD_CAST_FROM_EVENT",
     type = "modifier",
+    sprite = "mod-cast-from-event.png",
     max_uses = -1,
     mana_cost = 5,
     cast_from_event = true,

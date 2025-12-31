@@ -18,7 +18,7 @@ function TutorialDialogueDemo.runBasicDemo()
 
     local dialogue = TutorialDialogue.new({
         speaker = {
-            sprite = "sample_pack.png",
+            sprite = "talker_open_mouth_1.png",
             position = "left",
             size = { 96, 96 },
             shaders = {},  -- outline shader removed (failed to compile)

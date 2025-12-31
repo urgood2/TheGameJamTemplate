@@ -42,7 +42,7 @@
                 "dash_7": "WHOOSH_Fast_03_mono.ogg",
                 "chain_lightning_trigger": "wav_Thunder_spell_magical.ogg",
                 "chain_lightning_individual_hit": "ZAP_Subtle_07_mono.ogg",
-                "new_achievement": "UIAlert_Achievement_Unique_Short-011.ogg",
+                "new_achievement": "UIAlert_Achievement Unique Short-011_OS_Quute UI.wav",
                 "walk_1": "FOOTSTEP_Rock_Walk_01_RR01_mono.ogg",
                 "walk_2": "FOOTSTEP_Rock_Walk_01_RR02_mono.ogg",
                 "walk_3": "FOOTSTEP_Rock_Walk_01_RR03_mono.ogg",
@@ -114,8 +114,17 @@
                 "level-up-choose": "UIAlert_Achievement_Unique_Short-006.wav",
                 "ui_click_snappy_mono": "UI_Click_Snappy_mono.ogg",
                 "uialert_achievement_unique_short_006": "UIAlert_Achievement_Unique_Short-006.wav",
-                "uialert_achievement_unique_short_011": "UIAlert_Achievement_Unique_Short-011.ogg"
-            },
+                "uialert_achievement_unique_short_011": "UIAlert_Achievement_Unique_Short-011.ogg",
+                "tutorial-talk-1": "ROBTVox_Robo Assistant Vocalization Playful-002_OS_Quute UI.wav",
+                "tutorial-talk-2": "ROBTVox_Robo Assistant Vocalization Playful-004_OS_Quute UI.wav",
+                "tutorial-talk-3": "ROBTVox_Robo Assistant Vocalization Playful-007_OS_Quute UI.wav",
+                "tutorial-talk-4": "ROBTVox_Robo Assistant Vocalization Playful-009_OS_Quute UI.wav",
+                "tutorial-talk-5": "ROBTVox_Robo Assistant Vocalization Playful-014_OS_Quute UI.wav",
+                "tutorial-talk-6": "ROBTVox_Robo Assistant Vocalization Playful-016_OS_Quute UI.wav",
+                "stage-complete": "UIMisc_Interact Playful Phrase-010_OS_Quute UI.wav",
+                "new-wave": "UIMisc_Interact Playful Short-035_OS_Quute UI.wav",
+                "elite-default-spawn": "UIMisc_Interact Playful Phrase-008_OS_Quute UI.wav",
+                "default-spawn": "Spawn - Venom Burst 2.wav"            },
             "volume": 0.3
         },
         "ui": {

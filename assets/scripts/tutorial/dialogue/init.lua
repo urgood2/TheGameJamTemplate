@@ -483,12 +483,16 @@ end
 function TutorialDialogue:_executeSay(action)
     local text = action.text
     local opts = action.opts
-    
+
+    -- Play a random tutorial talk sound
+    local soundIndex = math.random(1, 6)
+    playSoundEffect("effects", "tutorial-talk-" .. soundIndex, 1.0)
+
     -- Update speaker name if provided
     if opts.speaker and self._box then
         self._box:setName(opts.speaker)
     end
-    
+
     -- Start jiggle on speaker
     if self._speaker then
         self._speaker:startTalking()

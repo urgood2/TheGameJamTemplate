@@ -2,6 +2,8 @@
 > Last verified: Dec 29, 2025
 
 
+- ogg transition utility stops sound from working. some sounds work though. not sure why.
+
 - need to test particle stencil working.
 - get all three special items working properly.
 - fill areas for panels + card areas. 

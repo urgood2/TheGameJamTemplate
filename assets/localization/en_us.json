@@ -110,6 +110,29 @@
 			"dur_pct": "Dur %"
 		}
 	},
+	"stats_panel": {
+		"title": "Character Stats",
+		"tab": {
+			"combat": "Combat",
+			"resist": "Resist",
+			"mods": "Mods",
+			"dots": "DoTs",
+			"utility": "Utility"
+		},
+		"section": {
+			"vitals": "Vitals",
+			"attributes": "Attributes",
+			"offense": "Offense",
+			"defense": "Defense",
+			"elements": "Elements",
+			"movement": "Movement",
+			"resources": "Resources",
+			"buffs": "Buffs",
+			"summon": "Summon",
+			"hazard": "Hazard",
+			"special": "Special"
+		}
+	},
 	"ui": {
 		"stats_button": "Stats",
 		"detailed_button": "Detailed",

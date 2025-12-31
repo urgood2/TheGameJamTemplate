@@ -94,6 +94,13 @@ function gameplay_cfg.getDemoFooterUI()
     return gameplay_cfg.DemoFooterUI
 end
 
+function gameplay_cfg.getStatsPanel()
+    if not gameplay_cfg.StatsPanel then
+        gameplay_cfg.StatsPanel = require("ui.stats_panel")
+    end
+    return gameplay_cfg.StatsPanel
+end
+
 function gameplay_cfg.getManualTriggerPromptUI()
     if not gameplay_cfg.ManualTriggerPromptUI then
         gameplay_cfg.ManualTriggerPromptUI = require("ui.manual_trigger_prompt_ui")
@@ -236,6 +243,7 @@ WAND_TOOLTIP_STATE = "WAND_TOOLTIP_STATE" -- we use this to show wand tooltips a
 CARD_TOOLTIP_STATE = "CARD_TOOLTIP_STATE" -- we use this to show card tooltips and hide them when needed.
 PLAYER_STATS_TOOLTIP_STATE = "PLAYER_STATS_TOOLTIP_STATE"
 DETAILED_STATS_TOOLTIP_STATE = "DETAILED_STATS_TOOLTIP_STATE"
+STATS_PANEL_STATE = "STATS_PANEL_STATE"
 
 -- combat context, to be used with the combat system.
 combat_context = nil
@@ -4793,6 +4801,13 @@ function initPlanningPhase()
             MarkSystem.update(dt)
         end
 
+        -- Update StatsPanel (available in planning, action, and shop phases)
+        local StatsPanel = gameplay_cfg.getStatsPanel()
+        if StatsPanel then
+            StatsPanel.handleInput()
+            StatsPanel.update(dt)
+        end
+
         -- Process hover regions after all UIs have registered
         HoverRegistry.update()
     end)
@@ -5480,10 +5495,9 @@ function initPlanningPhase()
     end
 
 
-    -- let's set up an update timer for triggers.
     setUpLogicTimers()
 
-    -- Per-frame card UI updates (alt-preview and right-click transfer)
+    -- Timer for preview updates (StatsPanel now updated in main loop)
     timer.every(0.016, function()
         updateAltPreview()
         updateRightClickTransfer()
@@ -8641,6 +8655,17 @@ function initSurvivorEntity()
         trigger = "Pressed",
         context = "gameplay"
     })
+
+    for _, ctx in ipairs({ "gameplay", "planning-phase" }) do
+        input.bind("toggle_stats_panel", { device = "keyboard", key = KeyboardKey.KEY_C, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_next_tab", { device = "keyboard", key = KeyboardKey.KEY_TAB, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_close", { device = "keyboard", key = KeyboardKey.KEY_ESCAPE, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_1", { device = "keyboard", key = KeyboardKey.KEY_ONE, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_2", { device = "keyboard", key = KeyboardKey.KEY_TWO, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_3", { device = "keyboard", key = KeyboardKey.KEY_THREE, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_4", { device = "keyboard", key = KeyboardKey.KEY_FOUR, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_5", { device = "keyboard", key = KeyboardKey.KEY_FIVE, trigger = "Pressed", context = ctx })
+    end
 
     --also allow gamepad.
     -- same dash

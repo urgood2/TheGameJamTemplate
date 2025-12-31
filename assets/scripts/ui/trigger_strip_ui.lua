@@ -908,6 +908,14 @@ function TriggerStripUI.draw()
                     local fillH = barHeight * ms.smoothRatio
                     if fillH > 1 then
                         local fillY = barTop + barHeight - fillH * 0.5
+                        local barColor
+                        if ms.smoothRatio < 0.25 then
+                            barColor = Col(255, 80, 80, 200)
+                        elseif ms.smoothRatio < 0.50 then
+                            barColor = Col(255, 200, 80, 200)
+                        else
+                            barColor = Col(80, 200, 255, 200)
+                        end
                         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
                             c.x = barX + MP_BAR_WIDTH * 0.5
                             c.y = fillY
@@ -915,7 +923,7 @@ function TriggerStripUI.draw()
                             c.h = fillH
                             c.rx = MP_BAR_WIDTH * 0.5
                             c.ry = MP_BAR_WIDTH * 0.5
-                            c.color = Col(80, 200, 255, 200)
+                            c.color = barColor
                         end, z + 2, space)
                     end
                 end

@@ -79,52 +79,81 @@ local function isMousePressed()
 end
 
 local function drawDiscordIcon(cx, cy, size, isHovered, z, space)
-    local color = isHovered and colors.discordHover or colors.discord
     local s = isHovered and size * CONFIG.hoverScale or size
-    local r = s * 0.5
     
-    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
-        c.x = cx
-        c.y = cy
-        c.w = s
-        c.h = s
-        c.rx = 6
-        c.ry = 6
-        c.color = color
-    end, z, space)
-    
-    command_buffer.queueDrawText(layers.ui, function(c)
-        c.text = "D"
-        c.font = localization and localization.getFont() or nil
-        c.x = cx - 5
-        c.y = cy - 8
-        c.color = Col(255, 255, 255, 255)
-        c.fontSize = 16
-    end, z + 1, space)
+    if command_buffer.queueDrawSprite then
+        command_buffer.queueDrawSprite(layers.ui, function(c)
+            c.sprite = "Socials 16x16_Discord.png"
+            c.x = cx - s * 0.5
+            c.y = cy - s * 0.5
+            c.w = s
+            c.h = s
+        end, z, space)
+    else
+        local color = isHovered and colors.discordHover or colors.discord
+        command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+            c.x = cx
+            c.y = cy
+            c.w = s
+            c.h = s
+            c.rx = 6
+            c.ry = 6
+            c.color = color
+        end, z, space)
+    end
 end
 
-local function drawFormsIcon(cx, cy, size, isHovered, z, space)
+local function drawFeedbackButton(cx, cy, isHovered, z, space)
+    local text = "Feedback"
+    local fontSize = 14
+    local paddingX = 10
+    local paddingY = 6
+    
+    local textWidth = 0
+    if localization and localization.getTextWidthWithCurrentFont then
+        textWidth = localization.getTextWidthWithCurrentFont(text, fontSize, 1)
+    else
+        textWidth = #text * fontSize * 0.5
+    end
+    
+    local btnW = textWidth + paddingX * 2
+    local btnH = fontSize + paddingY * 2
     local color = isHovered and colors.formsHover or colors.forms
-    local s = isHovered and size * CONFIG.hoverScale or size
     
     command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
         c.x = cx
         c.y = cy
-        c.w = s
-        c.h = s
-        c.rx = 6
-        c.ry = 6
+        c.w = btnW
+        c.h = btnH
+        c.rx = 4
+        c.ry = 4
         c.color = color
     end, z, space)
     
     command_buffer.queueDrawText(layers.ui, function(c)
-        c.text = "?"
+        c.text = text
         c.font = localization and localization.getFont() or nil
-        c.x = cx - 4
-        c.y = cy - 8
+        c.x = cx - textWidth * 0.5
+        c.y = cy - fontSize * 0.5
         c.color = Col(255, 255, 255, 255)
-        c.fontSize = 16
+        c.fontSize = fontSize
     end, z + 1, space)
+    
+    return btnW, btnH
+end
+
+local function getFeedbackButtonSize()
+    local text = "Feedback"
+    local fontSize = 14
+    local paddingX = 10
+    local paddingY = 6
+    local textWidth = 0
+    if localization and localization.getTextWidthWithCurrentFont then
+        textWidth = localization.getTextWidthWithCurrentFont(text, fontSize, 1)
+    else
+        textWidth = #text * fontSize * 0.5
+    end
+    return textWidth + paddingX * 2, fontSize + paddingY * 2
 end
 
 function DemoFooterUI.update(dt)
@@ -141,19 +170,20 @@ function DemoFooterUI.update(dt)
         textWidth = #demoText * CONFIG.fontSize * 0.5
     end
     
-    local textX = screenW - CONFIG.marginRight - textWidth
     local textY = screenH - CONFIG.marginBottom - CONFIG.fontSize
     
-    local halfIcon = CONFIG.iconSize * 0.5
-    local iconsY = textY - CONFIG.iconTextGap - halfIcon
-    local formsX = screenW - CONFIG.marginRight - halfIcon
-    local discordX = formsX - CONFIG.iconGap - CONFIG.iconSize
+    local feedbackW, feedbackH = getFeedbackButtonSize()
+    local feedbackX = screenW - CONFIG.marginRight - feedbackW * 0.5
+    local iconsY = textY - CONFIG.iconTextGap - math.max(feedbackH, CONFIG.iconSize) * 0.5
+    
+    local discordX = feedbackX - feedbackW * 0.5 - CONFIG.iconGap - CONFIG.iconSize * 0.5
     
     state.hoveredButton = nil
     
+    local halfIcon = CONFIG.iconSize * 0.5
     if isMouseInRect(discordX - halfIcon, iconsY - halfIcon, CONFIG.iconSize, CONFIG.iconSize) then
         state.hoveredButton = "discord"
-    elseif isMouseInRect(formsX - halfIcon, iconsY - halfIcon, CONFIG.iconSize, CONFIG.iconSize) then
+    elseif isMouseInRect(feedbackX - feedbackW * 0.5, iconsY - feedbackH * 0.5, feedbackW, feedbackH) then
         state.hoveredButton = "forms"
     end
     
@@ -194,12 +224,14 @@ function DemoFooterUI.draw()
         c.fontSize = CONFIG.fontSize
     end, baseZ, space)
     
-    local iconsY = textY - CONFIG.iconTextGap - CONFIG.iconSize * 0.5
-    local formsX = screenW - CONFIG.marginRight - CONFIG.iconSize * 0.5
-    local discordX = formsX - CONFIG.iconGap - CONFIG.iconSize
+    local feedbackW, feedbackH = getFeedbackButtonSize()
+    local feedbackX = screenW - CONFIG.marginRight - feedbackW * 0.5
+    local iconsY = textY - CONFIG.iconTextGap - math.max(feedbackH, CONFIG.iconSize) * 0.5
+    
+    local discordX = feedbackX - feedbackW * 0.5 - CONFIG.iconGap - CONFIG.iconSize * 0.5
     
     drawDiscordIcon(discordX, iconsY, CONFIG.iconSize, state.hoveredButton == "discord", baseZ + 1, space)
-    drawFormsIcon(formsX, iconsY, CONFIG.iconSize, state.hoveredButton == "forms", baseZ + 1, space)
+    drawFeedbackButton(feedbackX, iconsY, state.hoveredButton == "forms", baseZ + 1, space)
 end
 
 function DemoFooterUI.cleanup()

@@ -144,11 +144,10 @@ function DemoFooterUI.update(dt)
     local textX = screenW - CONFIG.marginRight - textWidth
     local textY = screenH - CONFIG.marginBottom - CONFIG.fontSize
     
-    local iconsY = textY - CONFIG.iconTextGap - CONFIG.iconSize
-    local formsX = screenW - CONFIG.marginRight - CONFIG.iconSize * 0.5
-    local discordX = formsX - CONFIG.iconGap - CONFIG.iconSize
-    
     local halfIcon = CONFIG.iconSize * 0.5
+    local iconsY = textY - CONFIG.iconTextGap - halfIcon
+    local formsX = screenW - CONFIG.marginRight - halfIcon
+    local discordX = formsX - CONFIG.iconGap - CONFIG.iconSize
     
     state.hoveredButton = nil
     

@@ -399,33 +399,55 @@ function TutorialDialogue:_drawSkipHint()
     local font = localization and localization.getFont and localization.getFont()
     local fontSize = 14
     
-    local hintText = "Press ESC to skip"
+    local skipText = "ESC to skip"
     if self._skipHoldTime > 0.3 then
         local remaining = math.max(0, self._skipHoldThreshold - self._skipHoldTime)
-        hintText = string.format("Hold ESC to skip all (%.1fs)", remaining)
+        skipText = string.format("Hold ESC to skip all (%.1fs)", remaining)
     end
     
-    local textWidth = 0
+    local skipWidth = 0
     if localization and localization.getTextWidthWithCurrentFont then
-        textWidth = localization.getTextWidthWithCurrentFont(hintText, fontSize, 1)
+        skipWidth = localization.getTextWidthWithCurrentFont(skipText, fontSize, 1)
     else
-        textWidth = #hintText * fontSize * 0.5
+        skipWidth = #skipText * fontSize * 0.5
     end
     
-    local x = screenW - textWidth - 20
-    local y = 20
-    local alpha = 120
+    local skipX = screenW - skipWidth - 20
+    local skipY = 20
+    local skipAlpha = 120
     
     if self._skipHoldTime > 0 then
-        alpha = math.min(200, 120 + self._skipHoldTime * 80)
+        skipAlpha = math.min(200, 120 + self._skipHoldTime * 80)
     end
     
     command_buffer.queueDrawText(layers.ui, function(c)
-        c.text = hintText
+        c.text = skipText
         c.font = font
-        c.x = x
-        c.y = y
-        c.color = Col(255, 255, 255, math.floor(alpha))
+        c.x = skipX
+        c.y = skipY
+        c.color = Col(255, 255, 255, math.floor(skipAlpha))
+        c.fontSize = fontSize
+    end, baseZ, space)
+    
+    local continueText = "Click or Space to continue"
+    local continueWidth = 0
+    if localization and localization.getTextWidthWithCurrentFont then
+        continueWidth = localization.getTextWidthWithCurrentFont(continueText, fontSize, 1)
+    else
+        continueWidth = #continueText * fontSize * 0.5
+    end
+    
+    local continueX = (screenW - continueWidth) * 0.5
+    local continueY = screenH - 60
+    
+    local pulseAlpha = 140 + math.sin((GetTime and GetTime() or 0) * 3) * 40
+    
+    command_buffer.queueDrawText(layers.ui, function(c)
+        c.text = continueText
+        c.font = font
+        c.x = continueX
+        c.y = continueY
+        c.color = Col(255, 255, 255, math.floor(pulseAlpha))
         c.fontSize = fontSize
     end, baseZ, space)
 end

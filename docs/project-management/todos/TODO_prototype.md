@@ -3,6 +3,7 @@
 
 
 - ogg transition utility stops sound from working. some sounds work though. not sure why.
+- make sure cast from event is working.
 
 - need to test particle stencil working.
 - get all three special items working properly.

@@ -137,9 +137,13 @@ def process_audio_file(
 
     # Build ffmpeg command
     # Uses volume filter for adjustment, then converts to OGG
+    # IMPORTANT: -vn strips embedded album art (video streams) that break stb_vorbis
+    # IMPORTANT: -ar 44100 resamples to standard rate (96kHz breaks stb_vorbis)
     cmd = [
         "ffmpeg", "-y",  # Overwrite output
         "-i", str(input_path),
+        "-vn",           # Strip video streams (album art) - stb_vorbis can't handle them
+        "-ar", "44100",  # Resample to 44.1kHz - stb_vorbis struggles with 96kHz
         "-af", f"volume={adjustment_db}dB",
         "-c:a", "libvorbis",
         "-q:a", str(OGG_QUALITY),

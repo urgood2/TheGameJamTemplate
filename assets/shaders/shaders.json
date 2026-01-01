@@ -440,6 +440,15 @@
             "fragment": "web/spotlight_fragment.fs"
         }
     },
+    "lighting": {
+        "vertex": "lighting_vertex.vs",
+        "fragment": "lighting_fragment.fs",
+
+        "web": {
+            "vertex": "web/lighting_vertex.vs",
+            "fragment": "web/lighting_fragment.fs"
+        }
+    },
     "custom_polychrome": {
         "vertex": "custom_polychrome_vertex.vs",
         "fragment": "custom_polychrome_fragment.fs",

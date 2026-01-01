@@ -23,6 +23,7 @@ lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
 local TutorialDialogueDemo = require("tutorial.dialogue.demo")
+local LightingDemo = require("demos.lighting_demo")
 -- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
@@ -491,14 +492,6 @@ function initMainMenu()
     languageButtonTransform.actualX = globals.screenWidth() - languageButtonTransform.actualW - 20
     languageButtonTransform.actualY = globals.screenHeight() - languageButtonTransform.actualH - 20
 
-    -- Start TextBuilder visual demo in the top area
-    TextBuilderDemo.start()
-    
-    timer.after(1.0, function()
-        TutorialDialogueDemo.runBasicDemo()
-        -- TutorialDialogueDemo.runSpotlightDemo()
-        -- TutorialDialogueDemo.runStyleShowcase()
-    end)
 end
 
 function startGameButtonCallback()
@@ -548,7 +541,7 @@ function startGameButtonCallback()
     
 end
 function clearMainMenu()
-    TextBuilderDemo.stop()
+
     -- RenderGroupsTest.cleanup()
 
     if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
@@ -643,6 +636,8 @@ function initMainGame()
         local WandTests = require("wand.wand_test_examples")
         WandTests.runAllTests()
     end
+
+    LightingDemo.start()
 
 end
 

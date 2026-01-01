@@ -50,7 +50,7 @@ Design:
 local Lighting = {}
 
 -- Debug flag - set to true to see uniform sync output
-local DEBUG_LIGHTING = true  -- TEMP: Enable for debugging
+local DEBUG_LIGHTING = false
 
 --------------------------------------------------------------------------------
 -- VECTOR HELPERS

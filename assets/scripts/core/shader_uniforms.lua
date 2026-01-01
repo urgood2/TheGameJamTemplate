@@ -1191,6 +1191,24 @@ local function init_static_defaults()
     set("fade", "slide_direction", Vector2{ x = 1.0, y = 0.0 })
     set("fade", "fade_color", Vector3{ x = 0.0, y = 0.0, z = 0.0 })
 
+    -- lighting (multi-light layer shader)
+    set("lighting", "screen_width", VW)
+    set("lighting", "screen_height", VH)
+    set("lighting", "u_lightCount", 0)
+    set("lighting", "u_ambientLevel", 0.2)
+    set("lighting", "u_blendMode", 0)
+    set("lighting", "u_feather", 0.2)
+    for i = 0, 15 do
+        set("lighting", "u_lightPositions[" .. i .. "]", Vector2{ x = 0.0, y = 0.0 })
+        set("lighting", "u_lightRadii[" .. i .. "]", 0.0)
+        set("lighting", "u_lightIntensities[" .. i .. "]", 0.0)
+        set("lighting", "u_lightColors[" .. i .. "]", Vector3{ x = 1.0, y = 1.0, z = 1.0 })
+        set("lighting", "u_lightTypes[" .. i .. "]", 0)
+        set("lighting", "u_lightBlendModes[" .. i .. "]", 0)
+        set("lighting", "u_lightDirections[" .. i .. "]", 0.0)
+        set("lighting", "u_lightAngles[" .. i .. "]", 0.0)
+    end
+
     -- Additional shader defaults still need to be ported from C++.
     -- Refer to src/core/misc_functions.cpp for the remaining uniforms.
 end
@@ -1447,6 +1465,16 @@ local function init_updates()
 
     register("fade", function(_shader)
         set("fade", "time", get_time())
+    end)
+
+    register("lighting", function(_shader)
+        local ok, Lighting = pcall(require, "core.lighting")
+        if ok and Lighting then
+            Lighting._update()
+            for layerName, _ in pairs(Lighting._layers) do
+                Lighting._syncUniforms(layerName)
+            end
+        end
     end)
 end
 

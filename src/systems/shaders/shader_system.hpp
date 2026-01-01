@@ -194,6 +194,19 @@ namespace shaders
             // SPDLOG_DEBUG("Set uniform {} for shader {}", uniformName, shaderName);
         }
 
+        // Explicit integer setter - Lua numbers are floats by default, so we need this
+        // to ensure int uniforms (like u_lightCount) are set correctly
+        void setInt(const std::string &shaderName, const std::string &uniformName, int value)
+        {
+            shaderUniforms[shaderName].set(uniformName, value);
+        }
+
+        // Explicit float setter for symmetry
+        void setFloat(const std::string &shaderName, const std::string &uniformName, float value)
+        {
+            shaderUniforms[shaderName].set(uniformName, value);
+        }
+
         // returns nullptr if nothing stored
         const ShaderUniformValue *get(const std::string &shaderName,
                                       const std::string &uniformName) const

@@ -179,6 +179,8 @@ namespace shaders
         sh.new_usertype<shaders::ShaderUniformComponent>("ShaderUniformComponent",
             sol::constructors<>(),
             "set", &shaders::ShaderUniformComponent::set,
+            "setInt", &shaders::ShaderUniformComponent::setInt,
+            "setFloat", &shaders::ShaderUniformComponent::setFloat,
             "registerEntityUniformCallback", &shaders::ShaderUniformComponent::registerEntityUniformCallback,
             "getSet", &shaders::ShaderUniformComponent::getSet,
             // --- OVERRIDE get for Lua: ---

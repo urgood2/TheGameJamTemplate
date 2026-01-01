@@ -724,18 +724,18 @@ function Lighting._syncUniforms(layerName)
     globalShaderUniforms:set("lighting", "screen_width", screenW)
     globalShaderUniforms:set("lighting", "screen_height", screenH)
     globalShaderUniforms:set("lighting", "u_ambientLevel", state.ambient)
-    globalShaderUniforms:set("lighting", "u_blendMode", state.blendMode)
+    globalShaderUniforms:setInt("lighting", "u_blendMode", state.blendMode)  -- int uniform
     globalShaderUniforms:set("lighting", "u_feather", 0.2)  -- Default feather
     
     -- If paused, set light count to 0
     if state.paused then
-        globalShaderUniforms:set("lighting", "u_lightCount", 0)
+        globalShaderUniforms:setInt("lighting", "u_lightCount", 0)
         return
     end
-    
-    -- Set light count
+
+    -- Set light count (must use setInt for GLSL int uniforms!)
     local lightCount = math.min(#state.lights, MAX_LIGHTS)
-    globalShaderUniforms:set("lighting", "u_lightCount", lightCount)
+    globalShaderUniforms:setInt("lighting", "u_lightCount", lightCount)
 
     if DEBUG_LIGHTING and lightCount > 0 then
         print(string.format("[Lighting] Syncing %d lights for layer '%s'", lightCount, layerName))
@@ -771,11 +771,11 @@ function Lighting._syncUniforms(layerName)
             globalShaderUniforms:set("lighting", "u_lightColors[" .. idx .. "]",
                 Vector3(light.color[1], light.color[2], light.color[3]))
             
-            -- Type (0=point, 1=spot)
-            globalShaderUniforms:set("lighting", "u_lightTypes[" .. idx .. "]", light.type)
-            
-            -- Blend mode
-            globalShaderUniforms:set("lighting", "u_lightBlendModes[" .. idx .. "]", 
+            -- Type (0=point, 1=spot) - int uniform
+            globalShaderUniforms:setInt("lighting", "u_lightTypes[" .. idx .. "]", light.type)
+
+            -- Blend mode - int uniform
+            globalShaderUniforms:setInt("lighting", "u_lightBlendModes[" .. idx .. "]",
                 light.blendMode)
             
             -- Spotlight-specific: direction (radians) and angle (cosine)
@@ -786,14 +786,14 @@ function Lighting._syncUniforms(layerName)
             globalShaderUniforms:set("lighting", "u_lightAngles[" .. idx .. "]", angleCos)
         else
             -- Zero out unused slots to prevent stale data
-            globalShaderUniforms:set("lighting", "u_lightPositions[" .. idx .. "]", 
+            globalShaderUniforms:set("lighting", "u_lightPositions[" .. idx .. "]",
                 Vector2(0, 0))
             globalShaderUniforms:set("lighting", "u_lightRadii[" .. idx .. "]", 0)
             globalShaderUniforms:set("lighting", "u_lightIntensities[" .. idx .. "]", 0)
             globalShaderUniforms:set("lighting", "u_lightColors[" .. idx .. "]",
                 Vector3(0, 0, 0))
-            globalShaderUniforms:set("lighting", "u_lightTypes[" .. idx .. "]", 0)
-            globalShaderUniforms:set("lighting", "u_lightBlendModes[" .. idx .. "]", 0)
+            globalShaderUniforms:setInt("lighting", "u_lightTypes[" .. idx .. "]", 0)
+            globalShaderUniforms:setInt("lighting", "u_lightBlendModes[" .. idx .. "]", 0)
             globalShaderUniforms:set("lighting", "u_lightDirections[" .. idx .. "]", 0)
             globalShaderUniforms:set("lighting", "u_lightAngles[" .. idx .. "]", 0)
         end

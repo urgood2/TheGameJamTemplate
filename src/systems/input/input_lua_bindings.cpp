@@ -409,6 +409,12 @@ namespace input::lua_bindings {
             auto& reg = resolveRegistry();
             UpdateCursor(state, reg);
         });
+        
+        // Clear the active scroll pane reference (used when rebuilding UI to fix stale entity references)
+        in.set_function("clearActiveScrollPane", []() {
+            auto& state = resolveInputState();
+            state.activeScrollPane = entt::null;
+        });
 
         // Gamepad
         in.set_function("isPadConnected", &IsGamepadAvailable);
@@ -833,6 +839,14 @@ namespace input::lua_bindings {
             "updateCursorFocus",
             "---@return nil",
             "Update cursor focus based on current input state.",
+            /*is_static=*/true,
+            /*is_overload=*/false
+        });
+
+        rec.record_free_function(inputPath, MethodDef{
+            "clearActiveScrollPane",
+            "---@return nil",
+            "Clear stale scroll pane reference after UI rebuild.",
             /*is_static=*/true,
             /*is_overload=*/false
         });

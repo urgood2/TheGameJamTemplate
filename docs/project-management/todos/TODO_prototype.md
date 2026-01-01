@@ -2,6 +2,12 @@
 > Last verified: Dec 29, 2025
 
 
+- remove click to enable card skew.
+- extract description to new box under tooltip. 
+- give name of card special effect.
+- put rest in compact box.
+- 
+
 - ogg transition utility stops sound from working. some sounds work though. not sure why.
 - make sure cast from event is working.
 

@@ -83,6 +83,10 @@ local function color(c)
     return type(c) == "string" and util.getColor(c) or c
 end
 
+-- Cache a transparent color at module load time (used by dsl.spacer)
+-- CRITICAL: Must use Color.new() to create proper userdata, not Lua table
+local TRANSPARENT_COLOR = Color and Color.new and Color.new(0, 0, 0, 0) or nil
+
 ------------------------------------------------------------
 -- 1️⃣ Base container constructors
 ------------------------------------------------------------
@@ -390,7 +394,7 @@ function dsl.spacer(w, h)
     return def{
         type = "RECT_SHAPE",
         config = {
-            color    = { 0, 0, 0, 0 }, -- transparent
+            color    = TRANSPARENT_COLOR, -- Cached at module load, nil triggers skip in ui_definition_helper
             minWidth = w or 10,
             minHeight = h or w or 10,
         }

@@ -96,7 +96,7 @@ end
 
 function gameplay_cfg.getStatsPanel()
     if not gameplay_cfg.StatsPanel then
-        gameplay_cfg.StatsPanel = require("ui.stats_panel")
+        gameplay_cfg.StatsPanel = require("ui.stats_panel_v2")
     end
     return gameplay_cfg.StatsPanel
 end
@@ -8658,7 +8658,6 @@ function initSurvivorEntity()
 
     for _, ctx in ipairs({ "gameplay", "planning-phase" }) do
         input.bind("toggle_stats_panel", { device = "keyboard", key = KeyboardKey.KEY_C, trigger = "Pressed", context = ctx })
-        input.bind("stats_panel_next_tab", { device = "keyboard", key = KeyboardKey.KEY_TAB, trigger = "Pressed", context = ctx })
         input.bind("stats_panel_close", { device = "keyboard", key = KeyboardKey.KEY_ESCAPE, trigger = "Pressed", context = ctx })
         input.bind("stats_panel_tab_1", { device = "keyboard", key = KeyboardKey.KEY_ONE, trigger = "Pressed", context = ctx })
         input.bind("stats_panel_tab_2", { device = "keyboard", key = KeyboardKey.KEY_TWO, trigger = "Pressed", context = ctx })

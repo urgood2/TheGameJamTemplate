@@ -136,6 +136,7 @@ end
 ---@return table|nil
 function component_cache.get(eid, comp)
     if not eid then return nil end
+    if not comp then return nil end  -- Defensive: prevent "table index is nil" crash
 
     local cache = component_cache
 

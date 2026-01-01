@@ -52,7 +52,13 @@ local function makeConfigFromTable(tbl)
             end
             -- Validate that v is now a userdata (Color)
             if type(v) ~= "userdata" then
-                log_debug("[ui.def] Invalid type for " .. k .. ": expected Color userdata, got " .. type(v) .. ", skipping")
+                local tableInfo = ""
+                if type(v) == "table" then
+                    local keys = {}
+                    for tk, _ in pairs(v) do keys[#keys+1] = tostring(tk) end
+                    tableInfo = " (keys: " .. table.concat(keys, ", ") .. ")"
+                end
+                log_debug("[ui.def] Invalid type for " .. k .. ": expected Color userdata, got " .. type(v) .. tableInfo .. ", skipping")
                 goto continue
             end
         elseif k == "tooltip" and type(v) == "table" then

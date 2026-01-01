@@ -8576,6 +8576,12 @@ function controller_nav.focus_entity(...) end
 function input.updateCursorFocus(...) end
 
 ---
+--- Clear stale scroll pane reference after UI rebuild.
+---
+---@return nil
+function input.clearActiveScrollPane(...) end
+
+---
 --- Bind an action to a device code with a trigger.
 ---
 ---@param action string

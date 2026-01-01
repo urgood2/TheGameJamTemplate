@@ -124,7 +124,7 @@ namespace ui {
 
         // 8) Tooltip
         lua.new_usertype<Tooltip>("Tooltip",
-            sol::constructors<>(),
+            sol::constructors<Tooltip()>(),
             "title", &Tooltip::title,
             "text",  &Tooltip::text,
             "type_id", []() { return entt::type_hash<Tooltip>::value(); }
@@ -136,7 +136,7 @@ namespace ui {
 
         // 9) FocusArgs
         lua.new_usertype<FocusArgs>("FocusArgs",
-            sol::constructors<>(),
+            sol::constructors<FocusArgs()>(),
             "button",            &FocusArgs::button,
             "snap_to",           &FocusArgs::snap_to,
             "registered",        &FocusArgs::registered,

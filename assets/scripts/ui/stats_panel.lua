@@ -35,7 +35,16 @@ if _G.__STATS_PANEL__ then return _G.__STATS_PANEL__ end
 local component_cache = require("core.component_cache")
 local dsl = require("ui.ui_syntax_sugar")
 local timer = require("core.timer")
-local PlayerStatsAccessor = nil  -- lazy load
+local tooltip_registry = nil
+local PlayerStatsAccessor = nil
+
+local function ensureTooltipRegistry()
+    if not tooltip_registry then
+        local ok, tr = pcall(require, "core.tooltip_registry")
+        if ok then tooltip_registry = tr end
+    end
+    return tooltip_registry
+end
 
 local function ensurePlayerStatsAccessor()
     if not PlayerStatsAccessor then
@@ -50,13 +59,14 @@ end
 --------------------------------------------------------------------------------
 local PANEL_WIDTH = 320
 local PANEL_PADDING = 10
-local SLIDE_DURATION = 0.3  -- 300ms
+local SLIDE_DURATION = 0.3
 local TAB_COUNT = 5
 local PILL_HEIGHT = 22
 local PILL_FONT_SIZE = 14
 local HEADER_FONT_SIZE = 12
 local TAB_HEIGHT = 28
 local TAB_WIDTH = 58
+local SCROLL_VIEWPORT_HEIGHT = 400
 
 -- Tab definitions
 local TABS = {
@@ -67,20 +77,55 @@ local TABS = {
     { id = "utility", label = "Utility" },
 }
 
--- Tier 1 stats (always visible at top)
-local TIER1_STATS = {
-    "level", "health",
-    "physique", "cunning", "spirit",
-    "damage", "attack_speed", "crit_damage_pct",
-    "armor", "dodge_chance_pct"
+-- Tier 1 stats organized into 6 always-visible category groups (21 stats total)
+-- Per spec: these are always expanded, never collapsible
+local TIER1_GROUPS = {
+    {
+        id = "vitals",
+        header = "Vitals",
+        stats = { "level", "xp", "health", "health_regen" }
+    },
+    {
+        id = "attributes",
+        header = "Attributes",
+        stats = { "physique", "cunning", "spirit" }
+    },
+    {
+        id = "offense",
+        header = "Offense",
+        stats = { "offensive_ability", "damage", "attack_speed", "cast_speed", "crit_damage_pct", "all_damage_pct", "life_steal_pct" }
+    },
+    {
+        id = "defense",
+        header = "Defense",
+        stats = { "defensive_ability", "armor", "dodge_chance_pct" }
+    },
+    {
+        id = "utility",
+        header = "Utility",
+        stats = { "cooldown_reduction", "skill_energy_cost_reduction" }
+    },
+    {
+        id = "movement",
+        header = "Movement",
+        stats = { "run_speed", "move_speed_pct" }
+    },
 }
+
+-- Flat list for backward compatibility
+local TIER1_STATS = {}
+for _, group in ipairs(TIER1_GROUPS) do
+    for _, stat in ipairs(group.stats) do
+        TIER1_STATS[#TIER1_STATS + 1] = stat
+    end
+end
 
 -- Tab-specific stats layout
 local TAB_LAYOUTS = {
     combat = {
         { header = "Offense", stats = {
-            "all_damage_pct", "weapon_damage_pct", "life_steal_pct",
-            "cooldown_reduction", "cast_speed", "offensive_ability"
+            "all_damage_pct", "weapon_damage_pct", "crit_damage_pct", "life_steal_pct",
+            "cooldown_reduction", "attack_speed", "cast_speed", "offensive_ability"
         }},
         { header = "Melee", stats = {
             "melee_damage_pct", "melee_crit_chance_pct"
@@ -88,13 +133,12 @@ local TAB_LAYOUTS = {
     },
     resist = {
         { header = "Defense", stats = {
-            "defensive_ability", "block_chance_pct", "block_amount",
-            "percent_absorb_pct", "flat_absorb", "armor_absorption_bonus_pct"
+            "defensive_ability", "armor", "dodge_chance_pct", "block_chance_pct", "block_amount",
+            "block_recovery_reduction_pct", "percent_absorb_pct", "flat_absorb", "armor_absorption_bonus_pct"
         }},
         { header = "Damage Reduction", stats = {
-            "damage_taken_reduction_pct", "max_resist_cap_pct"
+            "damage_taken_reduction_pct", "reflect_damage_pct", "max_resist_cap_pct", "min_resist_cap_pct"
         }},
-        -- Dynamic: per-element resists added at build time
     },
     mods = {
         { header = "Elemental Damage", stats = {
@@ -122,7 +166,7 @@ local TAB_LAYOUTS = {
             "run_speed", "move_speed_pct"
         }},
         { header = "Resources", stats = {
-            "skill_energy_cost_reduction", "experience_gained_pct", "healing_received_pct"
+            "skill_energy_cost_reduction", "experience_gained_pct", "healing_received_pct", "health_pct"
         }},
         { header = "Buffs", stats = {
             "buff_duration_pct", "buff_effect_pct"
@@ -142,7 +186,14 @@ local TAB_LAYOUTS = {
 
 -- Color palette - Use named colors from the palette via util.getColor()
 -- This ensures consistent Color objects that work with the DSL
+-- Reset to nil on each load to pick up any changes during hot reload
 local COLORS = nil
+
+-- Force color cache reset (useful for hot reload)
+function StatsPanel._resetColorCache()
+    COLORS = nil
+    log_debug("[StatsPanel] Color cache reset")
+end
 local function getColors()
     if COLORS then return COLORS end
 
@@ -152,24 +203,28 @@ local function getColors()
     local FALLBACK_COLOR = Color and Color.new and Color.new(0, 0, 0, 255) or nil
 
     -- Safely get a color from the palette, with fallback
+    -- CRITICAL: Must validate that we get userdata (Color), not table
     local function safeGetColor(name, fallbackName)
         if util and util.getColor then
             local ok, c = pcall(util.getColor, name)
-            if ok and c then return c end
+            if ok and c and type(c) == "userdata" then return c end
+            if ok and c and type(c) ~= "userdata" then
+                log_debug("[StatsPanel] WARNING: util.getColor('" .. name .. "') returned " .. type(c) .. ", expected userdata")
+            end
             if fallbackName then
                 local ok2, c2 = pcall(util.getColor, fallbackName)
-                if ok2 and c2 then return c2 end
+                if ok2 and c2 and type(c2) == "userdata" then return c2 end
             end
         end
         -- Last resort: return a hardcoded fallback color, NEVER nil
         -- Creating Color objects with raylib's Color.new if available
-        if FALLBACK_COLOR then
+        if FALLBACK_COLOR and type(FALLBACK_COLOR) == "userdata" then
             return FALLBACK_COLOR
         end
         -- If Color.new isn't available, try one more time with a known-safe color
         if util and util.getColor then
             local ok, c = pcall(util.getColor, "black")
-            if ok and c then return c end
+            if ok and c and type(c) == "userdata" then return c end
         end
         -- This should never happen, but log if it does
         log_debug("[StatsPanel] CRITICAL: Could not create any fallback color!")
@@ -193,6 +248,13 @@ local function getColors()
         transparent = safeGetColor("black"),  -- Will need alpha handling separately
         tab_bar_bg = safeGetColor("black"),
     }
+
+    -- Validate all colors are userdata
+    for k, v in pairs(COLORS) do
+        if type(v) ~= "userdata" then
+            log_debug("[StatsPanel] ERROR: COLORS." .. k .. " is " .. type(v) .. ", expected userdata!")
+        end
+    end
 
     log_debug("[StatsPanel] Colors initialized via util.getColor")
     return COLORS
@@ -233,14 +295,23 @@ local ELEMENT_COLORS = {
 --------------------------------------------------------------------------------
 StatsPanel._state = {
     visible = false,
-    slideProgress = 0,         -- 0 = hidden, 1 = fully visible
-    slideDirection = "idle",   -- "entering", "exiting", "idle"
+    slideProgress = 0,
+    slideDirection = "idle",
     currentTab = 1,
-    expandedSections = {},     -- section_id -> bool
-    panelEntity = nil,
+    expandedSections = {},
     snapshot = nil,
     snapshotHash = nil,
     lastUpdateTime = 0,
+    previousSnapshot = nil,
+    tabScrollOffsets = {},
+    
+    panelEntity = nil,
+    headerEntity = nil,
+    tier1Entity = nil,
+    scrollPaneEntity = nil,
+    tabContentEntity = nil,
+    tabBarEntity = nil,
+    footerEntity = nil,
 }
 
 --------------------------------------------------------------------------------
@@ -268,8 +339,34 @@ local function getScreenSize()
     return w, h
 end
 
+local function createScrollPane(children, opts)
+    opts = opts or {}
+    local height = opts.height or SCROLL_VIEWPORT_HEIGHT
+    local padding = opts.padding or 4
+    local bgColor = opts.color or getColors().bg
+    
+    return ui.definitions.def {
+        type = "SCROLL_PANE",
+        config = {
+            id = opts.id or "stats_panel_scroll",
+            maxHeight = height,
+            height = height,
+            padding = padding,
+            color = bgColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+        },
+        children = children,
+    }
+end
+
 local function getStatDefs()
-    return StatTooltipSystem and StatTooltipSystem.DEFS or {}
+    local defs = StatTooltipSystem and StatTooltipSystem.DEFS or {}
+    if not StatTooltipSystem then
+        log_debug("[StatsPanel] getStatDefs: StatTooltipSystem is nil!")
+    elseif not StatTooltipSystem.DEFS then
+        log_debug("[StatsPanel] getStatDefs: StatTooltipSystem.DEFS is nil!")
+    end
+    return defs
 end
 
 local function getStatFormat()
@@ -297,27 +394,103 @@ local function getCategoryColor(statKey)
     return CATEGORY_COLORS[group] or "white"  -- Already strings like "gold", "cyan"
 end
 
-local function formatStatValue(statKey, value, snapshot)
-    if StatTooltipSystem and StatTooltipSystem.formatValue then
-        return StatTooltipSystem.formatValue(statKey, value, snapshot, false)
+local function formatDelta(delta)
+    if delta == nil or math.abs(delta) < 0.5 then
+        return nil
+    end
+    local sign = delta > 0 and "+" or ""
+    return string.format("(%s%d)", sign, math.floor(delta + 0.5))
+end
+
+local function getStatBaseValue(statKey)
+    local psa = ensurePlayerStatsAccessor()
+    if not psa then return nil end
+    local raw = psa.get_raw(statKey)
+    return raw and raw.base or nil
+end
+
+local function getStatRawData(statKey)
+    local psa = ensurePlayerStatsAccessor()
+    if not psa then return nil end
+    return psa.get_raw(statKey)
+end
+
+local function buildStatTooltipBody(statKey, value, snapshot)
+    local raw = getStatRawData(statKey)
+    if not raw then return nil end
+    
+    local lines = {}
+    
+    if raw.base and raw.base ~= 0 then
+        table.insert(lines, string.format("Base: %d", math.floor(raw.base + 0.5)))
     end
     
-    -- Fallback formatting
-    if type(value) == "number" then
-        if statKey:match("_pct$") then
-            return string.format("%d%%", math.floor(value + 0.5))
-        end
-        return tostring(math.floor(value + 0.5))
+    if raw.add_pct and math.abs(raw.add_pct) > 0.01 then
+        local sign = raw.add_pct > 0 and "+" or ""
+        table.insert(lines, string.format("Additive: %s%d%%", sign, math.floor(raw.add_pct + 0.5)))
     end
-    return tostring(value or "-")
+    
+    if raw.mul_pct and math.abs(raw.mul_pct) > 0.01 then
+        local sign = raw.mul_pct > 0 and "+" or ""
+        table.insert(lines, string.format("Multiplier: %s%d%%", sign, math.floor(raw.mul_pct + 0.5)))
+    end
+    
+    if value and type(value) == "number" then
+        table.insert(lines, string.format("Current: %d", math.floor(value + 0.5)))
+    end
+    
+    if #lines == 0 then return nil end
+    return table.concat(lines, "\n")
+end
+
+local function formatStatValue(statKey, value, snapshot, showDelta)
+    local formatted = nil
+    
+    if StatTooltipSystem and StatTooltipSystem.formatValue then
+        formatted = StatTooltipSystem.formatValue(statKey, value, snapshot, false)
+    else
+        if type(value) == "number" then
+            if statKey:match("_pct$") then
+                formatted = string.format("%d%%", math.floor(value + 0.5))
+            else
+                formatted = tostring(math.floor(value + 0.5))
+            end
+        else
+            formatted = tostring(value or "-")
+        end
+    end
+    
+    if showDelta and type(value) == "number" then
+        local baseValue = getStatBaseValue(statKey)
+        if baseValue and type(baseValue) == "number" then
+            local delta = value - baseValue
+            local deltaStr = formatDelta(delta)
+            if deltaStr then
+                formatted = formatted .. " " .. deltaStr
+            end
+        end
+    end
+    
+    return formatted
+end
+
+local function formatFallbackLabel(statKey)
+    return statKey
+        :gsub("_pct$", "")
+        :gsub("_", " ")
+        :gsub("(%a)([%w]*)", function(first, rest)
+            return first:upper() .. rest
+        end)
 end
 
 local function getStatLabel(statKey)
     if StatTooltipSystem and StatTooltipSystem.getLabel then
-        return StatTooltipSystem.getLabel(statKey)
+        local label = StatTooltipSystem.getLabel(statKey)
+        if label and label ~= statKey then
+            return label
+        end
     end
-    -- Fallback: convert stat_key to "Stat Key"
-    return statKey:gsub("_pct$", ""):gsub("_", " "):gsub("^%l", string.upper)
+    return formatFallbackLabel(statKey)
 end
 
 -- Returns a color NAME string for use with dsl.text()
@@ -333,13 +506,24 @@ end
 --------------------------------------------------------------------------------
 function StatsPanel._collectSnapshot()
     local psa = ensurePlayerStatsAccessor()
-    if not psa then return nil end
-    
+    if not psa then
+        log_debug("[StatsPanel] _collectSnapshot: PlayerStatsAccessor not available")
+        return nil
+    end
+
     local player = psa.get_player()
-    if not player then return nil end
-    
+    if not player then
+        log_debug("[StatsPanel] _collectSnapshot: No player (combat_context.side1[1] is nil)")
+        return nil
+    end
+
     local stats = psa.get_stats()
-    if not stats then return nil end
+    if not stats then
+        log_debug("[StatsPanel] _collectSnapshot: Player has no stats")
+        return nil
+    end
+
+    log_debug("[StatsPanel] _collectSnapshot: Got player and stats successfully")
     
     -- Build snapshot similar to collectPlayerStatsSnapshot in gameplay.lua
     local snapshot = {
@@ -409,10 +593,150 @@ local function easeInQuad(t)
 end
 
 --------------------------------------------------------------------------------
+-- Scroll State Management
+--------------------------------------------------------------------------------
+
+function StatsPanel._getScrollOffset()
+    local state = StatsPanel._state
+    if not state.panelEntity or not entity_cache or not entity_cache.valid(state.panelEntity) then
+        return nil
+    end
+
+    local scrollPane = ui.box.GetUIEByID(registry, state.panelEntity, "stats_panel_scroll")
+    if not scrollPane or not entity_cache.valid(scrollPane) then
+        return nil
+    end
+
+    -- UIScrollComponent may not be bound to Lua yet - guard against nil
+    if not UIScrollComponent then
+        return nil
+    end
+
+    local scrollComp = component_cache.get(scrollPane, UIScrollComponent)
+    if scrollComp then
+        return scrollComp.offset, scrollComp.maxOffset
+    end
+    return nil
+end
+
+-- Debug function to check scroll state
+function StatsPanel.debugScrollState()
+    local state = StatsPanel._state
+    if not state.panelEntity then
+        log_debug("[StatsPanel DEBUG] No panel entity")
+        return
+    end
+
+    local scrollPane = ui.box.GetUIEByID(registry, state.panelEntity, "stats_panel_scroll")
+    if not scrollPane then
+        log_debug("[StatsPanel DEBUG] No scroll pane found")
+        return
+    end
+
+    log_debug(string.format("[StatsPanel DEBUG] scrollPane entity=%s, valid=%s",
+        tostring(scrollPane),
+        tostring(entity_cache and entity_cache.valid(scrollPane))))
+
+    local scrollComp = UIScrollComponent and component_cache.get(scrollPane, UIScrollComponent)
+    if scrollComp then
+        local atBottom = scrollComp.offset >= (scrollComp.maxOffset or 0) - 0.1
+        local atTop = scrollComp.offset <= (scrollComp.minOffset or 0) + 0.1
+        log_debug(string.format("[StatsPanel DEBUG] offset=%.1f, maxOffset=%.1f, prevOffset=%.1f, vertical=%s, atTop=%s, atBottom=%s",
+            scrollComp.offset or 0,
+            scrollComp.maxOffset or 0,
+            scrollComp.prevOffset or 0,
+            tostring(scrollComp.vertical),
+            tostring(atTop),
+            tostring(atBottom)))
+    else
+        log_debug("[StatsPanel DEBUG] No UIScrollComponent")
+    end
+
+    -- Check if scroll pane has collision enabled
+    local go = component_cache.get(scrollPane, GameObject)
+    if go then
+        log_debug(string.format("[StatsPanel DEBUG] collisionEnabled=%s, isColliding=%s, isHovered=%s",
+            tostring(go.state.collisionEnabled),
+            tostring(go.state.isColliding),
+            tostring(go.state.isBeingHovered)))
+    end
+
+    -- Check transform bounds
+    local t = component_cache.get(scrollPane, Transform)
+    if t then
+        log_debug(string.format("[StatsPanel DEBUG] bounds: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
+            t.actualX or 0, t.actualY or 0, t.actualW or 0, t.actualH or 0))
+    end
+
+    -- Check mouse position relative to scroll pane
+    if input and input.getMousePos then
+        local mx, my = input.getMousePos()
+        if t then
+            local inBounds = mx >= t.actualX and mx <= (t.actualX + t.actualW) and
+                             my >= t.actualY and my <= (t.actualY + t.actualH)
+            log_debug(string.format("[StatsPanel DEBUG] mouse=(%.0f, %.0f), inBounds=%s",
+                mx or 0, my or 0, tostring(inBounds)))
+        end
+    end
+end
+
+-- Continuous debug logging (call from update loop temporarily)
+local debugCounter = 0
+function StatsPanel._debugUpdateTick()
+    debugCounter = debugCounter + 1
+    if debugCounter % 60 == 0 then -- Log every ~1 second at 60fps
+        StatsPanel.debugScrollState()
+    end
+end
+
+function StatsPanel._restoreScrollOffset()
+    local state = StatsPanel._state
+    local savedOffset = state.tabScrollOffsets[state.currentTab]
+
+    -- Store reference to the new scroll pane for collision detection
+    local scrollPane = ui.box.GetUIEByID(registry, state.panelEntity, "stats_panel_scroll")
+    state.scrollPaneEntity = scrollPane
+
+    if not savedOffset or savedOffset == 0 then
+        -- No need to clear activeScrollPane - the C++ side will detect the old entity
+        -- is invalid and clear it automatically, then re-detect the new scroll pane
+        return
+    end
+
+    if not scrollPane or not entity_cache or not entity_cache.valid(scrollPane) then
+        return
+    end
+
+    -- UIScrollComponent may not be bound to Lua yet - guard against nil
+    if not UIScrollComponent then
+        return
+    end
+
+    local scrollComp = component_cache.get(scrollPane, UIScrollComponent)
+    if scrollComp then
+        scrollComp.offset = math.min(savedOffset, scrollComp.maxOffset or savedOffset)
+        scrollComp.prevOffset = scrollComp.offset
+
+        ui.box.TraverseUITreeBottomUp(registry, scrollPane, function(child)
+            local go = component_cache.get(child, GameObject)
+            if go then
+                go.scrollPaneDisplacement = { x = 0, y = -scrollComp.offset }
+            end
+        end, true)
+    end
+
+    -- Note: We intentionally do NOT call clearActiveScrollPane() here anymore.
+    -- The C++ input system will automatically:
+    -- 1. Detect the old scroll pane entity is invalid (registry.valid() returns false)
+    -- 2. Clear activeScrollPane to null in the else branch
+    -- 3. Re-detect the new scroll pane via MarkEntitiesCollidingWithCursor
+    -- Calling clearActiveScrollPane() here was redundant and could cause timing issues.
+end
+
+--------------------------------------------------------------------------------
 -- UI Components
 --------------------------------------------------------------------------------
 
--- Creates a single stat pill: [Label: Value]
 local function createStatPill(statKey, snapshot, opts)
     opts = opts or {}
     local defs = getStatDefs()
@@ -421,24 +745,39 @@ local function createStatPill(statKey, snapshot, opts)
     local value
     if def and def.keys then
         value = snapshot[def.keys[1]]
+    elseif def then
+        value = snapshot[statKey]
     else
         value = snapshot[statKey]
     end
     
-    -- Skip zero/nil values unless forced
-    local isZero = value == nil or (type(value) == "number" and math.abs(value) < 0.001)
+    if value == nil then
+        value = 0
+    end
+    
+    local isZero = type(value) == "number" and math.abs(value) < 0.001
     if isZero and not opts.showZeros then
         return nil
     end
     
-    local formatted = formatStatValue(statKey, value, snapshot)
-    if not formatted then return nil end
+    local showDelta = opts.showDelta ~= false
+    local baseFormatted = formatStatValue(statKey, value, snapshot, false)
+    if not baseFormatted then
+        if type(value) == "number" then
+            if statKey:match("_pct$") then
+                baseFormatted = string.format("%d%%", math.floor(value + 0.5))
+            else
+                baseFormatted = tostring(math.floor(value + 0.5))
+            end
+        else
+            baseFormatted = tostring(value)
+        end
+    end
     
     local label = getStatLabel(statKey)
     local labelColor = getCategoryColor(statKey)
     local valueColor = opts.colorValues and getValueColor(value) or "white"
     
-    -- Warning state for health
     local pillBg = getColors().pill_bg
     if statKey == "health" and snapshot.hp and snapshot.max_hp then
         local ratio = snapshot.hp / math.max(1, snapshot.max_hp)
@@ -449,26 +788,53 @@ local function createStatPill(statKey, snapshot, opts)
         end
     end
     
+    local children = {
+        dsl.text(label .. ":", {
+            fontSize = PILL_FONT_SIZE,
+            color = labelColor,
+            shadow = false,
+        }),
+        dsl.spacer(4),
+        dsl.text(baseFormatted, {
+            fontSize = PILL_FONT_SIZE,
+            color = valueColor,
+            shadow = false,
+        }),
+    }
+    
+    if showDelta and type(value) == "number" then
+        local baseValue = getStatBaseValue(statKey)
+        if baseValue and type(baseValue) == "number" then
+            local delta = value - baseValue
+            local deltaStr = formatDelta(delta)
+            if deltaStr then
+                local deltaColor = delta > 0 and "mint_green" or "fiery_red"
+                table.insert(children, dsl.spacer(2))
+                table.insert(children, dsl.text(deltaStr, {
+                    fontSize = PILL_FONT_SIZE - 2,
+                    color = deltaColor,
+                    shadow = false,
+                }))
+            end
+        end
+    end
+    
+    local tooltipBody = buildStatTooltipBody(statKey, value, snapshot)
+    
     return dsl.hbox {
         config = {
+            id = "stat_pill_" .. statKey,
             padding = 3,
             color = pillBg,
             align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
             minHeight = PILL_HEIGHT,
+            hover = tooltipBody ~= nil,
+            tooltip = tooltipBody and {
+                title = label,
+                body = tooltipBody,
+            } or nil,
         },
-        children = {
-            dsl.text(label .. ":", {
-                fontSize = PILL_FONT_SIZE,
-                color = labelColor,
-                shadow = false,
-            }),
-            dsl.spacer(4),
-            dsl.text(formatted, {
-                fontSize = PILL_FONT_SIZE,
-                color = valueColor,
-                shadow = false,
-            }),
-        }
+        children = children,
     }
 end
 
@@ -538,29 +904,59 @@ end
 -- Panel Building
 --------------------------------------------------------------------------------
 
--- Build Tier 1 section (always visible)
+local function buildTier1GroupHeader(title)
+    return dsl.hbox {
+        config = {
+            padding = 2,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = {
+            dsl.text(title, {
+                fontSize = 10,
+                color = "gray",
+                shadow = false,
+            }),
+        }
+    }
+end
+
 local function buildTier1Section(snapshot)
-    local rows = {}
-    
-    -- Group stats into rows of 2
-    for i = 1, #TIER1_STATS, 2 do
-        local rowChildren = {}
-        for j = 0, 1 do
-            local statKey = TIER1_STATS[i + j]
-            if statKey then
-                local pill = createStatPill(statKey, snapshot, { showZeros = true, colorValues = true })
-                if pill then
-                    table.insert(rowChildren, pill)
-                    if j == 0 then table.insert(rowChildren, dsl.spacer(4)) end
+    log_debug("[StatsPanel] buildTier1Section called, snapshot keys: " ..
+        (snapshot and tostring((function() local c=0; for _ in pairs(snapshot) do c=c+1 end; return c end)()) or "nil"))
+    local groupElements = {}
+    local totalPills = 0
+
+    for _, group in ipairs(TIER1_GROUPS) do
+        local groupChildren = {}
+
+        table.insert(groupChildren, buildTier1GroupHeader(group.header))
+
+        local statsRow = {}
+        for i, statKey in ipairs(group.stats) do
+            local pill = createStatPill(statKey, snapshot, { showZeros = true, colorValues = true })
+            if pill then
+                totalPills = totalPills + 1
+                table.insert(statsRow, pill)
+                if i < #group.stats then
+                    table.insert(statsRow, dsl.spacer(4))
                 end
             end
         end
-        if #rowChildren > 0 then
-            table.insert(rows, dsl.hbox {
-                config = { padding = 1 },
-                children = rowChildren,
+        
+        if #statsRow > 0 then
+            table.insert(groupChildren, dsl.hbox {
+                config = {
+                    padding = 2,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+                },
+                children = statsRow,
             })
         end
+        
+        table.insert(groupElements, dsl.vbox {
+            config = { padding = 2 },
+            children = groupChildren,
+        })
     end
     
     return dsl.vbox {
@@ -568,7 +964,7 @@ local function buildTier1Section(snapshot)
             padding = 6,
             color = getColors().section_bg,
         },
-        children = rows,
+        children = groupElements,
     }
 end
 
@@ -576,23 +972,23 @@ end
 local function buildSection(sectionDef, snapshot, sectionId)
     local state = StatsPanel._state
     local isExpanded = state.expandedSections[sectionId] ~= false
-    
-    -- Collect non-zero stats
+
+    -- Show all stats including zeros so tabs aren't empty
     local statPills = {}
     for _, statKey in ipairs(sectionDef.stats) do
-        local pill = createStatPill(statKey, snapshot, { showZeros = false, colorValues = true })
+        local pill = createStatPill(statKey, snapshot, { showZeros = true, colorValues = true })
         if pill then
             table.insert(statPills, pill)
         end
     end
-    
-    -- Skip section if no stats
+
+    -- Skip section if no stats defined (shouldn't happen)
     if #statPills == 0 then return nil end
     
     local children = {
         createSectionHeader(sectionId, sectionDef.header, isExpanded, function()
             state.expandedSections[sectionId] = not isExpanded
-            StatsPanel.rebuild()
+            StatsPanel._rebuildTabContent()
         end)
     }
     
@@ -612,7 +1008,30 @@ local function buildSection(sectionDef, snapshot, sectionId)
     }
 end
 
--- Build elemental resistance grid (for Resist tab)
+local ELEMENT_ICONS = {
+    fire = "🔥", cold = "❄️", lightning = "⚡", acid = "☠️",
+    vitality = "💀", aether = "✨", chaos = "🌀",
+    physical = "🗡️", pierce = "🗡️", bleed = "🩸",
+}
+
+local function formatGridValue(value, hasResist)
+    if value == nil then
+        return hasResist and "--" or "--"
+    end
+    if math.abs(value) < 0.01 then
+        return "0%"
+    end
+    local sign = value > 0 and "+" or ""
+    return string.format("%s%d%%", sign, math.floor(value + 0.5))
+end
+
+local function getGridValueColor(value)
+    if value == nil or math.abs(value or 0) < 0.01 then
+        return "gray"
+    end
+    return value > 0 and "mint_green" or "fiery_red"
+end
+
 local function buildElementalResistGrid(snapshot)
     if not snapshot.per_type or #snapshot.per_type == 0 then return nil end
     
@@ -620,39 +1039,75 @@ local function buildElementalResistGrid(snapshot)
     local sectionId = "elemental_resists"
     local isExpanded = state.expandedSections[sectionId] ~= false
     
-    local resistRows = {}
-    for _, entry in ipairs(snapshot.per_type) do
-        local resist = entry.resist
-        if resist and math.abs(resist) > 0.01 then
-            local elementColor = ELEMENT_COLORS[entry.type] or "white"
-            local valueColor = resist >= 0 and "mint_green" or "fiery_red"
-            
-            table.insert(resistRows, dsl.hbox {
-                config = { padding = 2 },
-                children = {
-                    dsl.text(entry.type:sub(1,1):upper() .. entry.type:sub(2), {
-                        fontSize = PILL_FONT_SIZE,
-                        color = elementColor,
-                    }),
-                    dsl.spacer(4),
-                    dsl.text(string.format("%d%%", math.floor(resist + 0.5)), {
-                        fontSize = PILL_FONT_SIZE,
-                        color = valueColor,
-                    }),
-                }
-            })
-        end
-    end
+    local COL_WIDTH = 55
+    local ELEMENT_COL_WIDTH = 75
     
-    if #resistRows == 0 then return nil end
+    local headerRow = dsl.hbox {
+        config = {
+            padding = 2,
+            color = getColors().section_bg,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = {
+            dsl.text("Element", { fontSize = 10, color = "gray", minWidth = ELEMENT_COL_WIDTH }),
+            dsl.text("Resist", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.text("Damage", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+            dsl.text("Duration", { fontSize = 10, color = "gray", minWidth = COL_WIDTH }),
+        }
+    }
+    
+    local gridRows = { headerRow }
+    
+    for _, entry in ipairs(snapshot.per_type) do
+        local elementType = entry.type
+        local elementColor = ELEMENT_COLORS[elementType] or "white"
+        local icon = ELEMENT_ICONS[elementType] or ""
+        local displayName = elementType:sub(1,1):upper() .. elementType:sub(2)
+        
+        local hasResist = elementType ~= "physical" and elementType ~= "pierce" and elementType ~= "bleed"
+        local hasDuration = elementType ~= "physical" and elementType ~= "pierce"
+        
+        local resistText = hasResist and formatGridValue(entry.resist, true) or "--"
+        local modText = formatGridValue(entry.mod, false)
+        local durationText = hasDuration and formatGridValue(entry.duration, false) or "--"
+        
+        table.insert(gridRows, dsl.hbox {
+            config = {
+                padding = 2,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
+            },
+            children = {
+                dsl.text(icon .. " " .. displayName, {
+                    fontSize = PILL_FONT_SIZE - 1,
+                    color = elementColor,
+                    minWidth = ELEMENT_COL_WIDTH,
+                }),
+                dsl.text(resistText, {
+                    fontSize = PILL_FONT_SIZE - 1,
+                    color = hasResist and getGridValueColor(entry.resist) or "gray",
+                    minWidth = COL_WIDTH,
+                }),
+                dsl.text(modText, {
+                    fontSize = PILL_FONT_SIZE - 1,
+                    color = getGridValueColor(entry.mod),
+                    minWidth = COL_WIDTH,
+                }),
+                dsl.text(durationText, {
+                    fontSize = PILL_FONT_SIZE - 1,
+                    color = hasDuration and getGridValueColor(entry.duration) or "gray",
+                    minWidth = COL_WIDTH,
+                }),
+            }
+        })
+    end
     
     local function toggleSection()
         state.expandedSections[sectionId] = not isExpanded
-        StatsPanel.rebuild()
+        StatsPanel._rebuildTabContent()
     end
     
     local children = {
-        createSectionHeader(sectionId, "Elemental Resists", isExpanded, toggleSection),
+        createSectionHeader(sectionId, "Elemental Grid", isExpanded, toggleSection),
     }
     
     if isExpanded then
@@ -661,7 +1116,7 @@ local function buildElementalResistGrid(snapshot)
                 padding = 4,
                 color = getColors().section_content_bg,
             },
-            children = resistRows,
+            children = gridRows,
         })
     end
     
@@ -673,14 +1128,21 @@ end
 
 -- Build tab content
 local function buildTabContent(tabIndex, snapshot)
+    log_debug("[StatsPanel] buildTabContent called, tabIndex=" .. tostring(tabIndex))
     local tab = TABS[tabIndex]
-    if not tab then return dsl.text("Invalid tab", { color = "red" }) end
-    
+    if not tab then
+        log_debug("[StatsPanel] buildTabContent: invalid tab index")
+        return dsl.text("Invalid tab", { color = "red" })
+    end
+
     local layout = TAB_LAYOUTS[tab.id]
-    if not layout then return dsl.text("No data", { color = "gray" }) end
-    
+    if not layout then
+        log_debug("[StatsPanel] buildTabContent: no layout for tab " .. tab.id)
+        return dsl.text("No data", { color = "gray" })
+    end
+
     local sections = {}
-    
+
     for i, sectionDef in ipairs(layout) do
         local sectionId = tab.id .. "_" .. i
         local section = buildSection(sectionDef, snapshot, sectionId)
@@ -689,7 +1151,7 @@ local function buildTabContent(tabIndex, snapshot)
             table.insert(sections, dsl.spacer(2))
         end
     end
-    
+
     -- Add elemental resists for Resist tab
     if tab.id == "resist" then
         local resistGrid = buildElementalResistGrid(snapshot)
@@ -697,7 +1159,8 @@ local function buildTabContent(tabIndex, snapshot)
             table.insert(sections, resistGrid)
         end
     end
-    
+
+    log_debug("[StatsPanel] buildTabContent: " .. #sections .. " sections for tab " .. tab.id)
     if #sections == 0 then
         return dsl.text("No stats in this category", { fontSize = 11, color = "gray" })
     end
@@ -708,12 +1171,77 @@ local function buildTabContent(tabIndex, snapshot)
     }
 end
 
--- Build the complete panel definition
+local function buildHeader()
+    return dsl.hbox {
+        config = {
+            id = "stats_panel_header",
+            padding = 6,
+            color = getColors().header_bg,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = {
+            dsl.text(L("stats_panel.title", "Character Stats"), {
+                fontSize = 16,
+                color = "apricot_cream",
+                shadow = true,
+            }),
+        }
+    }
+end
+
+local function buildFooter()
+    return dsl.text("C: toggle  1-5: tabs  Esc: close", {
+        fontSize = 9,
+        color = "gray",
+        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+    })
+end
+
+local function buildTabContentContainer(snapshot)
+    local state = StatsPanel._state
+    return dsl.vbox {
+        config = {
+            id = "stats_panel_tab_content",
+            padding = 0,
+        },
+        children = {
+            buildTabContent(state.currentTab, snapshot),
+        }
+    }
+end
+
+local function buildScrollableContent(snapshot)
+    return dsl.vbox {
+        config = {
+            id = "stats_panel_scrollable_content",
+            padding = 0,
+        },
+        children = {
+            buildTier1Section(snapshot),
+            
+            dsl.spacer(4),
+            
+            dsl.divider("horizontal", { color = "gray", thickness = 1, length = PANEL_WIDTH - 24 }),
+            
+            dsl.spacer(4),
+            
+            buildTabContentContainer(snapshot),
+        }
+    }
+end
+
 local function buildPanelDefinition(snapshot)
     local state = StatsPanel._state
     
+    local scrollableContent = buildScrollableContent(snapshot)
+    local scrollPane = createScrollPane({ scrollableContent }, {
+        id = "stats_panel_scroll",
+        height = SCROLL_VIEWPORT_HEIGHT,
+    })
+    
     return dsl.root {
         config = {
+            id = "stats_panel_root",
             color = getColors().bg,
             padding = PANEL_PADDING,
             outlineThickness = 2,
@@ -724,55 +1252,28 @@ local function buildPanelDefinition(snapshot)
         },
         children = {
             dsl.vbox {
-                config = { padding = 0 },
+                config = {
+                    id = "stats_panel_main_container",
+                    padding = 0,
+                },
                 children = {
-                    -- Title bar
-                    dsl.hbox {
-                        config = {
-                            padding = 6,
-                            color = getColors().header_bg,
-                            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-                        },
-                        children = {
-                            dsl.text(L("stats_panel.title", "Character Stats"), {
-                                fontSize = 16,
-                                color = "apricot_cream",
-                                shadow = true,
-                            }),
-                        }
-                    },
+                    buildHeader(),
                     
                     dsl.spacer(4),
                     
-                    -- Tier 1 stats
-                    buildTier1Section(snapshot),
+                    scrollPane,
                     
                     dsl.spacer(4),
                     
-                    -- Divider
-                    dsl.divider("horizontal", { color = "gray", thickness = 1, length = PANEL_WIDTH - 24 }),
-                    
-                    dsl.spacer(4),
-                    
-                    -- Tab content
-                    buildTabContent(state.currentTab, snapshot),
-                    
-                    dsl.spacer(4),
-                    
-                    -- Tab bar
                     createTabBar(state.currentTab, function(newTab)
+                        log_debug("[StatsPanel] Tab clicked: " .. tostring(newTab))
                         state.currentTab = newTab
-                        StatsPanel.rebuild()
+                        StatsPanel._rebuildTabContent()
                     end),
                     
                     dsl.spacer(4),
                     
-                    -- Keyboard hint
-                    dsl.text("C: toggle  Tab: cycle  1-5: jump  Esc: close", {
-                        fontSize = 9,
-                        color = "gray",
-                        align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-                    }),
+                    buildFooter(),
                 }
             }
         }
@@ -812,8 +1313,9 @@ end
 -- Panel Lifecycle
 --------------------------------------------------------------------------------
 function StatsPanel._createPanel()
+    log_debug("[StatsPanel] _createPanel called")
     local state = StatsPanel._state
-    
+
     -- Destroy existing
     if state.panelEntity and entity_cache and entity_cache.valid(state.panelEntity) then
         registry:destroy(state.panelEntity)
@@ -830,7 +1332,13 @@ function StatsPanel._createPanel()
         log_debug("[StatsPanel] No snapshot available")
         return
     end
-    
+
+    -- Log some key snapshot values for debugging
+    local keyCount = 0
+    for _ in pairs(snapshot) do keyCount = keyCount + 1 end
+    log_debug("[StatsPanel] Snapshot has " .. keyCount .. " keys, level=" ..
+        tostring(snapshot.level) .. ", hp=" .. tostring(snapshot.hp))
+
     local ok, def = pcall(buildPanelDefinition, snapshot)
     if not ok then
         log_debug("[StatsPanel] buildPanelDefinition failed: " .. tostring(def))
@@ -879,10 +1387,36 @@ end
 
 function StatsPanel._destroyPanel()
     local state = StatsPanel._state
+    
+    StatsPanel._stopHPWarningPulse()
+    timer.kill_group("stat_anim")
+    
     if state.panelEntity and entity_cache and entity_cache.valid(state.panelEntity) then
         registry:destroy(state.panelEntity)
     end
     state.panelEntity = nil
+    state.tabContentEntity = nil
+end
+
+function StatsPanel._rebuildTabContent()
+    log_debug("[StatsPanel] _rebuildTabContent called, currentTab=" .. tostring(StatsPanel._state.currentTab))
+    local state = StatsPanel._state
+    
+    local currentScrollOffset = StatsPanel._getScrollOffset()
+    if currentScrollOffset then
+        state.tabScrollOffsets[state.currentTab] = currentScrollOffset
+    end
+    
+    local savedSlideProgress = state.slideProgress
+    local savedSlideDirection = state.slideDirection
+
+    StatsPanel._createPanel()
+
+    state.slideProgress = savedSlideProgress
+    state.slideDirection = savedSlideDirection
+    StatsPanel._updatePosition()
+    
+    StatsPanel._restoreScrollOffset()
 end
 
 --------------------------------------------------------------------------------
@@ -939,7 +1473,28 @@ end
 
 function StatsPanel.rebuild()
     if not StatsPanel._state.visible then return end
+
+    -- Save current scroll position before rebuilding
+    local state = StatsPanel._state
+    local currentOffset = StatsPanel._getScrollOffset()
+    if currentOffset then
+        state.tabScrollOffsets[state.currentTab] = currentOffset
+    end
+
+    -- Save slide state
+    local savedSlideProgress = state.slideProgress
+    local savedSlideDirection = state.slideDirection
+
+    -- Rebuild panel
     StatsPanel._createPanel()
+
+    -- Restore slide state
+    state.slideProgress = savedSlideProgress
+    state.slideDirection = savedSlideDirection
+    StatsPanel._updatePosition()
+
+    -- Restore scroll position
+    StatsPanel._restoreScrollOffset()
 end
 
 function StatsPanel.setTab(tabIndex)
@@ -986,21 +1541,152 @@ function StatsPanel.update(dt)
         end
     end
     
-    -- Refresh snapshot periodically when visible
     if state.visible and state.panelEntity then
         state.lastUpdateTime = (state.lastUpdateTime or 0) + dt
-        if state.lastUpdateTime > 0.5 then  -- Check every 0.5s
+        if state.lastUpdateTime > 0.5 then
             state.lastUpdateTime = 0
             local newSnapshot = StatsPanel._collectSnapshot()
             if newSnapshot then
                 local newHash = StatsPanel._computeSnapshotHash(newSnapshot)
                 if newHash ~= state.snapshotHash then
+                    local changedStats = StatsPanel._detectChangedStats(state.previousSnapshot, newSnapshot)
+                    
+                    state.previousSnapshot = state.snapshot
                     state.snapshot = newSnapshot
                     state.snapshotHash = newHash
+                    
                     StatsPanel.rebuild()
+                    
+                    if changedStats and #changedStats > 0 then
+                        StatsPanel._triggerValueAnimations(changedStats)
+                    end
+                    
+                    StatsPanel._checkHPWarningState()
                 end
             end
         end
+    end
+end
+
+function StatsPanel._detectChangedStats(oldSnapshot, newSnapshot)
+    if not oldSnapshot or not newSnapshot then return nil end
+    
+    local changed = {}
+    for key, newValue in pairs(newSnapshot) do
+        if key ~= "per_type" and type(newValue) == "number" then
+            local oldValue = oldSnapshot[key]
+            if oldValue and type(oldValue) == "number" then
+                if math.abs(newValue - oldValue) > 0.01 then
+                    table.insert(changed, {
+                        key = key,
+                        oldValue = oldValue,
+                        newValue = newValue,
+                        delta = newValue - oldValue,
+                    })
+                end
+            end
+        end
+    end
+    return changed
+end
+
+function StatsPanel._triggerValueAnimations(changedStats)
+    local state = StatsPanel._state
+    if not state.panelEntity or not entity_cache.valid(state.panelEntity) then return end
+    
+    for _, change in ipairs(changedStats) do
+        local pillId = "stat_pill_" .. change.key
+        local pillEntity = ui.box.GetUIEByID(registry, state.panelEntity, pillId)
+        
+        if pillEntity and entity_cache.valid(pillEntity) then
+            local flashColor = change.delta > 0 and "mint_green" or "fiery_red"
+            
+            timer.sequence("stat_anim_" .. change.key)
+                :do_now(function()
+                    local uie = component_cache.get(pillEntity, UIElementComponent)
+                    if uie then
+                        uie._originalColor = uie.settings.color
+                        uie.settings.color = util.getColor(flashColor)
+                    end
+                end)
+                :wait(0.3)
+                :do_now(function()
+                    local uie = component_cache.get(pillEntity, UIElementComponent)
+                    if uie and uie._originalColor then
+                        uie.settings.color = uie._originalColor
+                        uie._originalColor = nil
+                    end
+                end)
+                :start()
+        end
+    end
+end
+
+function StatsPanel._startHPWarningPulse()
+    local state = StatsPanel._state
+    if state.hpPulseActive then return end
+    
+    state.hpPulseActive = true
+    state.hpPulsePhase = false
+    
+    timer.every_opts({
+        delay = 0.5,
+        tag = "hp_warning_pulse",
+        action = function()
+            if not StatsPanel.isVisible() then
+                StatsPanel._stopHPWarningPulse()
+                return
+            end
+            
+            local pillEntity = ui.box.GetUIEByID(registry, state.panelEntity, "stat_pill_health")
+            if not pillEntity or not entity_cache.valid(pillEntity) then return end
+            
+            local uie = component_cache.get(pillEntity, UIElementComponent)
+            if not uie then return end
+
+            state.hpPulsePhase = not state.hpPulsePhase
+            
+            local snapshot = state.snapshot
+            local ratio = snapshot and snapshot.hp and snapshot.max_hp 
+                and (snapshot.hp / math.max(1, snapshot.max_hp)) or 1
+            
+            if ratio <= 0.10 then
+                uie.settings.color = state.hpPulsePhase 
+                    and getColors().warning_critical 
+                    or getColors().pill_bg
+            elseif ratio <= 0.25 then
+                uie.settings.color = state.hpPulsePhase 
+                    and getColors().warning_low 
+                    or getColors().pill_bg
+            else
+                uie.settings.color = getColors().pill_bg
+                StatsPanel._stopHPWarningPulse()
+            end
+        end,
+    })
+end
+
+function StatsPanel._stopHPWarningPulse()
+    local state = StatsPanel._state
+    if not state.hpPulseActive then return end
+    
+    timer.kill("hp_warning_pulse")
+    state.hpPulseActive = false
+    state.hpPulsePhase = false
+end
+
+function StatsPanel._checkHPWarningState()
+    local state = StatsPanel._state
+    if not state.snapshot then return end
+    
+    local hp = state.snapshot.hp or 0
+    local maxHp = state.snapshot.max_hp or 1
+    local ratio = hp / math.max(1, maxHp)
+    
+    if ratio <= 0.25 then
+        StatsPanel._startHPWarningPulse()
+    else
+        StatsPanel._stopHPWarningPulse()
     end
 end
 
@@ -1023,8 +1709,8 @@ function StatsPanel.handleInput()
         return true
     end
     
-    if input.action_pressed and input.action_pressed("stats_panel_next_tab") then
-        StatsPanel.nextTab()
+    if input.key_pressed and (input.key_pressed(KEY_ESCAPE) or input.key_pressed(256)) then
+        StatsPanel.hide()
         return true
     end
     
@@ -1048,10 +1734,19 @@ function StatsPanel.init()
         slideDirection = "idle",
         currentTab = 1,
         expandedSections = {},
-        panelEntity = nil,
         snapshot = nil,
         snapshotHash = nil,
         lastUpdateTime = 0,
+        previousSnapshot = nil,
+        tabScrollOffsets = {},
+        
+        panelEntity = nil,
+        headerEntity = nil,
+        tier1Entity = nil,
+        scrollPaneEntity = nil,
+        tabContentEntity = nil,
+        tabBarEntity = nil,
+        footerEntity = nil,
     }
 end
 

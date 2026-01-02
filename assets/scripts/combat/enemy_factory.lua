@@ -331,7 +331,18 @@ end
 function EnemyFactory.kill(e, ctx)
     if not entity_cache.valid(e) then return end
 
-    if ctx and ctx.on_death then
+    -- IMPORTANT: Capture death position BEFORE any cleanup or destroy
+    -- This is needed for MOD_CAST_FROM_EVENT + TRIGGER_ON_KILL to spawn projectiles
+    -- at the enemy death location instead of at the player position
+    local Q = require("core.Q")
+    local deathX, deathY = Q.center(e)
+    
+    -- Store death position in ctx for event handlers
+    ctx = ctx or {}
+    ctx.death_position = { x = deathX or 0, y = deathY or 0 }
+    ctx.position = ctx.death_position  -- Alias for wand trigger system
+
+    if ctx.on_death then
         ctx.on_death(e, ctx, WaveHelpers)
     end
 

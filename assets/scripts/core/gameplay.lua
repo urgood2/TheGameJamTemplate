@@ -5542,8 +5542,10 @@ local function formatDamageNumber(amount)
     return string.format("%.1f", amount)
 end
 
-local function pickDamageColor(amount)
-    -- Damage above zero → opaque red, non-damage/zero → white
+local function pickDamageColor(amount, isCrit)
+    if isCrit then
+        return { r = 255, g = 215, b = 0, a = 255 }
+    end
     if amount and amount > 0 then
         return { r = 255, g = 70, b = 70, a = 255 }
     end
@@ -5570,7 +5572,7 @@ local function spawnDamageNumber(targetEntity, amount, isCrit)
         text     = formatDamageNumber(amount),
         crit     = isCrit or false,
         fontSize = DAMAGE_NUMBER_FONT_SIZE,
-        color    = pickDamageColor(amount),
+        color    = pickDamageColor(amount, isCrit),
     }
 end
 
@@ -7567,10 +7569,12 @@ end
 local oily_water_bg = require("core.oily_water_background")
 
 function startActionPhase()
-    clear_states() -- disable all states.
+    clear_states()
     if setPlanningPeekMode then
         setPlanningPeekMode(false)
     end
+
+    remove_fullscreen_shader("planning_phase_sepia")
 
     -- Explicitly deactivate planning phase tooltip states
     if deactivate_state then
@@ -7714,8 +7718,12 @@ function startPlanningPhase()
     end
 
     activate_state(PLANNING_STATE)
-    activate_state("default_state")     -- just for defaults, keep them open
-    activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
+    activate_state("default_state")
+    activate_state(WAND_TOOLTIP_STATE)
+
+    add_fullscreen_shader("planning_phase_sepia")
+    globalShaderUniforms:set("planning_phase_sepia", "u_phase_blend", 1.0)
+    globalShaderUniforms:set("planning_phase_sepia", "u_intensity", 0.5)
 
     if board_sets and #board_sets > 0 then
         for index, boardSet in ipairs(board_sets) do

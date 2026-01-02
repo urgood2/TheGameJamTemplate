@@ -71,7 +71,8 @@ local Node = require("monobehavior.behavior_script_v2")
 
 ---@class EntityBuilderInteractive
 ---@field hover {title: string, body: string, id: string?}? Tooltip configuration
----@field click fun(registry: any, entity: number)? Click callback
+---@field click fun(registry: any, entity: number)? Left-click callback
+---@field rightClick fun(registry: any, entity: number)? Right-click callback
 ---@field drag boolean|fun()? Enable drag (true) or custom drag handler
 ---@field stopDrag fun()? Stop drag callback
 ---@field collision boolean? Enable collision detection
@@ -143,6 +144,11 @@ local function setup_interactions(entity, nodeComp, interactive)
     if interactive.click then
         state.clickEnabled = true
         nodeComp.methods.onClick = interactive.click
+    end
+
+    if interactive.rightClick then
+        state.rightClickEnabled = true
+        nodeComp.methods.onRightClick = interactive.rightClick
     end
 
     if interactive.drag then
@@ -349,6 +355,12 @@ end
 function BuilderInstance:onClick(fn)
     self._opts.interactive = self._opts.interactive or {}
     self._opts.interactive.click = fn
+    return self
+end
+
+function BuilderInstance:onRightClick(fn)
+    self._opts.interactive = self._opts.interactive or {}
+    self._opts.interactive.rightClick = fn
     return self
 end
 

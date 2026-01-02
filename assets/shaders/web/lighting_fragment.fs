@@ -76,7 +76,9 @@ void main() {
     
     // Aspect ratio correction for proper circles
     float aspect = screen_width / screen_height;
-    vec2 correctedFrag = vec2(fragTexCoord.x * aspect, fragTexCoord.y);
+    // Flip Y because RenderTexture has inverted Y compared to screen coordinates
+    vec2 flippedTexCoord = vec2(fragTexCoord.x, 1.0 - fragTexCoord.y);
+    vec2 correctedFrag = vec2(flippedTexCoord.x * aspect, flippedTexCoord.y);
     
     // Accumulate light contributions
     vec3 totalAdditiveLight = vec3(0.0);

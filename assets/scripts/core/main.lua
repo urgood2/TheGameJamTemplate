@@ -27,6 +27,7 @@ local LightingDemo = require("demos.lighting_demo")
 -- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
+local PatchNotesModal = require("ui.patch_notes_modal")
 -- Represents game loop main module
 main = main or {}
 
@@ -492,6 +493,81 @@ function initMainMenu()
     languageButtonTransform.actualX = globals.screenWidth() - languageButtonTransform.actualW - 20
     languageButtonTransform.actualY = globals.screenHeight() - languageButtonTransform.actualH - 20
 
+    PatchNotesModal.init()
+    createPatchNotesButton()
+end
+
+function createPatchNotesButton()
+    local dsl = require("ui.ui_syntax_sugar")
+    
+    local hasUnread = PatchNotesModal.hasUnread()
+    
+    local buttonDef = dsl.root {
+        config = {
+            color = util.getColor("gray"),
+            padding = 8,
+            emboss = 2,
+        },
+        children = {
+            dsl.hbox {
+                config = { spacing = 4 },
+                children = {
+                    dsl.text("Notes", {
+                        fontSize = 14,
+                        color = "white",
+                        shadow = true
+                    }),
+                }
+            }
+        }
+    }
+    
+    mainMenuEntities.patch_notes_button = dsl.spawn(
+        { x = 20, y = globals.screenHeight() - 60 },
+        buttonDef,
+        "ui",
+        100
+    )
+    
+    local go = component_cache.get(mainMenuEntities.patch_notes_button, GameObject)
+    if go then
+        go.state.hoverEnabled = true
+        go.state.clickEnabled = true
+        go.state.collisionEnabled = true
+        go.methods.onClick = function()
+            if playSoundEffect then
+                playSoundEffect("effects", "button-click")
+            end
+            PatchNotesModal.open()
+        end
+    end
+    
+    mainMenuEntities._patchNotesHasUnread = hasUnread
+end
+
+function drawPatchNotesBadge()
+    if not mainMenuEntities.patch_notes_button then return end
+    if not mainMenuEntities._patchNotesHasUnread then return end
+    if not PatchNotesModal.hasUnread() then 
+        mainMenuEntities._patchNotesHasUnread = false
+        return 
+    end
+    
+    local t = component_cache.get(mainMenuEntities.patch_notes_button, Transform)
+    if not t then return end
+    
+    local badgeX = t.actualX + t.actualW - 4
+    local badgeY = t.actualY + 4
+    local badgeRadius = 6
+    local space = layer.DrawCommandSpace.Screen
+    
+    command_buffer.queueDrawCenteredEllipse(layers.ui, function(c)
+        c.x = badgeX
+        c.y = badgeY
+        c.rx = badgeRadius
+        c.ry = badgeRadius
+        c.color = util.getColor("red")
+    end, 150, space)
 end
 
 function startGameButtonCallback()
@@ -580,6 +656,11 @@ function clearMainMenu()
         ui.box.Remove(registry, mainMenuEntities.language_button_uibox)
         mainMenuEntities.language_button_uibox = nil
     end
+    if mainMenuEntities.patch_notes_button and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, mainMenuEntities.patch_notes_button)
+        mainMenuEntities.patch_notes_button = nil
+    end
+    PatchNotesModal.close()
     if entity_cache and entity_cache.valid and entity_cache.valid(globals.ui.logo) then
         registry:destroy(globals.ui.logo)
         globals.ui.logo = nil
@@ -845,9 +926,11 @@ function main.update(dt)
 
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
-        -- RenderGroupsTest.draw()
         SpecialItem.update(dt)
         SpecialItem.draw()
+        PatchNotesModal.update(dt)
+        PatchNotesModal.draw()
+        drawPatchNotesBadge()
     end
 
     if isPaused then

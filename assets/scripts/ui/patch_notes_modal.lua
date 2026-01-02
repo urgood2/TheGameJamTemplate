@@ -59,15 +59,15 @@ SaveManager.register("patch_notes", {
 ---@return table|nil
 local function loadPatchNotes()
     local currentLang = localization.getCurrentLanguage() or "en_us"
-    local path = "assets/localization/patch_notes_" .. currentLang .. ".json"
+    local relativePath = "localization/patch_notes_" .. currentLang .. ".json"
+    local path = util.getRawAssetPathNoUUID(relativePath)
     
-    -- Try current locale first
     local content = save_io.load_file(path)
     if not content then
-        -- Fallback to English
         if currentLang ~= "en_us" then
             print("[PatchNotesModal] WARN: Missing patch notes for " .. currentLang .. ", falling back to en_us")
-            path = "assets/localization/patch_notes_en_us.json"
+            relativePath = "localization/patch_notes_en_us.json"
+            path = util.getRawAssetPathNoUUID(relativePath)
             content = save_io.load_file(path)
         end
     end

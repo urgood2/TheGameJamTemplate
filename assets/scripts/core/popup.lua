@@ -209,7 +209,7 @@ end
 function popup.critical(entity, amount, opts)
     opts = opts or {}
     opts.critical = true
-    opts.color = opts.color or "orange"
+    opts.color = opts.color or "gold"
     return popup.damage(entity, amount, opts)
 end
 

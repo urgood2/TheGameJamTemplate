@@ -28,6 +28,9 @@ void handle_hover_event(InputState& state, entt::registry& registry);
 /// Propagates click events to GameObject onClick callbacks
 void propagate_clicks(entt::registry& registry, InputState& state);
 
+/// Propagates right-click events to GameObject onRightClick callbacks
+void propagate_right_clicks(entt::registry& registry, InputState& state);
+
 /// Propagates drag events to GameObject onDrag callbacks
 void propagate_drag(entt::registry& registry, InputState& state);
 

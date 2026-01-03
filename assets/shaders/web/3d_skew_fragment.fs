@@ -44,6 +44,10 @@ uniform float spread_strength;
 uniform float distortion_strength;
 uniform float fade_start;
 
+uniform vec4 outline_color;
+uniform float outline_thickness;
+uniform float outline_enabled;
+
 out vec4 finalColor;
 
 // 2D rotation helper
@@ -87,6 +91,38 @@ vec4 sampleTinted(vec2 uv) {
     vec3 rgb = tex.rgb * fragColor.rgb * colDiffuse.rgb;
     float alpha = tex.a * fragColor.a * colDiffuse.a;
     return vec4(rgb, alpha);
+}
+
+vec4 applyOutline(vec2 atlasUV, vec4 baseColor) {
+    if (outline_enabled < 0.5) return baseColor;
+    if (baseColor.a > 0.1) return baseColor;
+
+    vec2 pixelSize = outline_thickness / uImageSize;
+    vec2 minBound = uGridRect.xy / uImageSize;
+    vec2 maxBound = (uGridRect.xy + uGridRect.zw) / uImageSize;
+
+    float neighborAlpha = 0.0;
+    for (int i = 0; i < 8; i++) {
+        vec2 offset;
+        if (i == 0) offset = vec2(-1.0, 0.0);
+        else if (i == 1) offset = vec2(1.0, 0.0);
+        else if (i == 2) offset = vec2(0.0, -1.0);
+        else if (i == 3) offset = vec2(0.0, 1.0);
+        else if (i == 4) offset = vec2(-1.0, -1.0);
+        else if (i == 5) offset = vec2(1.0, -1.0);
+        else if (i == 6) offset = vec2(-1.0, 1.0);
+        else offset = vec2(1.0, 1.0);
+
+        vec2 sampleUV = atlasUV + offset * pixelSize;
+        sampleUV = clamp(sampleUV, minBound, maxBound);
+        neighborAlpha = max(neighborAlpha, texture(texture0, sampleUV).a);
+    }
+
+    if (neighborAlpha > 0.1) {
+        return outline_color;
+    }
+
+    return baseColor;
 }
 
 vec4 applyOverlay(vec2 atlasUV) {
@@ -185,7 +221,8 @@ void main()
         vec2 finalUV = identityAtlas
             ? clamped
             : (pivot + clamped * regionRate);
-        finalColor = applyOverlay(finalUV);
+        vec4 overlayColor = applyOverlay(finalUV);
+        finalColor = applyOutline(finalUV, overlayColor);
     } else {
         // Full atlas-aware path for sprites.
         float cosX = tiltCos.x;
@@ -211,6 +248,7 @@ void main()
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
 
         vec2 finalUV = pivot + uv * regionRate;
-        finalColor = applyOverlay(finalUV);
+        vec4 overlayColor = applyOverlay(finalUV);
+        finalColor = applyOutline(finalUV, overlayColor);
     }
 }

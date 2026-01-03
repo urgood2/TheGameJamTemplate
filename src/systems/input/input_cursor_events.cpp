@@ -485,18 +485,40 @@ void enqueue_left_press(InputState &state, float x, float y)
     state.L_cursor_queue = {x, y};
 }
 
-// save press to be handled by update() function
 void enqueue_right_press(InputState &state, float x, float y)
 {
-    // Exit early if the frame is locked
     if (state.activeInputLocks["frame"])
     {
         return;
     }
+    state.R_cursor_queue = Vector2{x, y};
+}
 
-    // Handle right cursor press logic when the game is not paused and an object is highlighted, for example
-    if (!globals::getIsGamePaused() && state.cursor_focused_target != entt::null)
+void propagate_right_clicks(entt::registry &registry, input::InputState &inputState)
+{
+    if (!inputState.R_cursor_queue) return;
+    inputState.R_cursor_queue.reset();
+
+    entt::entity target = entt::null;
+
+    if (registry.valid(inputState.current_designated_hover_target))
     {
+        target = inputState.current_designated_hover_target;
+    }
+    else if (registry.valid(inputState.cursor_focused_target))
+    {
+        target = inputState.cursor_focused_target;
+    }
+
+    if (!registry.valid(target)) return;
+
+    auto *node = registry.try_get<transform::GameObject>(target);
+    if (!node) return;
+
+    if (node->state.rightClickEnabled && node->methods.onRightClick)
+    {
+        node->methods.onRightClick(registry, target);
+        SPDLOG_DEBUG("Right-clicked on entity {}", static_cast<int>(target));
     }
 }
 

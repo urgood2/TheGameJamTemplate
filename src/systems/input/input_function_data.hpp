@@ -214,6 +214,7 @@ namespace input
         float cursor_hover_time = 0.0f;                // Time since cursor started hovering
 
         std::optional<Vector2> L_cursor_queue; // Stores queued left cursor press position for delayed execution
+        std::optional<Vector2> R_cursor_queue; // Stores queued right cursor press position for delayed execution
 
         // -------------------------------
         // Key States

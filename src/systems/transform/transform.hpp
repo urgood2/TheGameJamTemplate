@@ -182,7 +182,8 @@ namespace transform
             std::function<void(std::shared_ptr<layer::Layer>, entt::registry &, entt::entity)> draw; // should be called every frame if this object has this method
 
             // Action methods(customizable)
-            std::function<void(entt::registry &, entt::entity)> onClick;                 // Click handler for the node
+            std::function<void(entt::registry &, entt::entity)> onClick;                 // Click handler for the node (left-click)
+            std::function<void(entt::registry &, entt::entity)> onRightClick;            // Right-click handler for the node
             std::function<void(entt::registry &, entt::entity, entt::entity)> onRelease; // a click release function, when the cursor is released on this node
             std::function<void(entt::registry &, entt::entity)> onHover;                 // Hover handler for the node
             std::function<void(entt::registry &, entt::entity)> onStopHover;             // Stop hover handler for the node
@@ -234,6 +235,8 @@ namespace transform
 
             bool clickEnabled = false;   // set to true if the entity can be clicked
             bool isBeingClicked = false; // set to true if the entity is currently being clicked
+
+            bool rightClickEnabled = false; // set to true if the entity can be right-clicked
 
             bool dragEnabled = false;    // set to true if the entity can be dragged
             bool isBeingDragged = false; // set to true if the entity is currently being dragged

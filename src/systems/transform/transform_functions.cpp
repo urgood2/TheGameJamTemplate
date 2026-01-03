@@ -2727,6 +2727,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
         "enlargeOnDrag",           &GameObject::State::enlargeOnDrag,
         "clickEnabled",            &GameObject::State::clickEnabled,
         "isBeingClicked",          &GameObject::State::isBeingClicked,
+        "rightClickEnabled",       &GameObject::State::rightClickEnabled,
         "dragEnabled",             &GameObject::State::dragEnabled,
         "isBeingDragged",          &GameObject::State::isBeingDragged,
         "triggerOnReleaseEnabled", &GameObject::State::triggerOnReleaseEnabled,
@@ -2746,6 +2747,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     rec.record_property("GameObjectState", {"enlargeOnDrag", "boolean"});
     rec.record_property("GameObjectState", {"clickEnabled", "boolean"});
     rec.record_property("GameObjectState", {"isBeingClicked", "boolean"});
+    rec.record_property("GameObjectState", {"rightClickEnabled", "boolean"});
     rec.record_property("GameObjectState", {"dragEnabled", "boolean"});
     rec.record_property("GameObjectState", {"isBeingDragged", "boolean"});
     rec.record_property("GameObjectState", {"triggerOnReleaseEnabled", "boolean"});

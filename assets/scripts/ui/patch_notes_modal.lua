@@ -16,13 +16,13 @@ local PatchNotesModal = {}
 
 local json = require("external.json")
 local signal = require("external.hump.signal")
+local timer = require("core.timer")
 local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 local layer_order_system = _G.layer_order_system
 local SaveManager = require("core.save_manager")
 
--- Module state
 PatchNotesModal.isOpen = false
 PatchNotesModal._data = nil
 PatchNotesModal._backdrop = nil
@@ -30,10 +30,10 @@ PatchNotesModal._modalBox = nil
 PatchNotesModal._closeButton = nil
 PatchNotesModal._lastReadVersion = ""
 
--- Modal dimensions
 local MODAL_WIDTH = 500
 local MODAL_HEIGHT = 400
 local BACKDROP_ALPHA = 180
+local TWEEN_DURATION = 0.25
 
 --------------------------------------------------------------------------------
 -- Save System Integration
@@ -194,7 +194,6 @@ local function createCloseButton(modalX, modalY)
     return closeEntity
 end
 
---- Build the modal UI using DSL
 local function buildModalUI()
     local dsl = require("ui.ui_syntax_sugar")
     local data = PatchNotesModal._data
@@ -205,62 +204,55 @@ local function buildModalUI()
     local versionText = string.format(localization.get("ui.patch_notes_version") or "Version %s", data.version or "?")
     local dateText = string.format(localization.get("ui.patch_notes_date") or "%s", data.date or "")
     
-    -- Split content into lines for display
     local contentLines = {}
     local content = data.content or ""
     for line in content:gmatch("[^\n]+") do
         table.insert(contentLines, line)
     end
     
-    -- Build content nodes
     local contentNodes = {}
     for _, line in ipairs(contentLines) do
         table.insert(contentNodes, dsl.text(line, {
-            fontSize = 14,
+            fontSize = 16,
             color = "white",
             shadow = true
         }))
-        table.insert(contentNodes, dsl.spacer(4))
+        table.insert(contentNodes, dsl.spacer(6))
     end
     
     local modalDef = dsl.root {
         config = {
             color = util.getColor("blackberry"),
-            padding = 16,
+            padding = 20,
             emboss = 3,
             minWidth = MODAL_WIDTH,
             minHeight = MODAL_HEIGHT,
         },
         children = {
             dsl.vbox {
-                config = { spacing = 8 },
+                config = { spacing = 10 },
                 children = {
-                    -- Title
                     dsl.text(titleText, {
-                        fontSize = 24,
+                        fontSize = 28,
                         color = "gold",
                         shadow = true
                     }),
-                    -- Version
                     dsl.text(versionText, {
-                        fontSize = 16,
+                        fontSize = 18,
                         color = "cyan",
                         shadow = true
                     }),
-                    -- Date
                     dsl.text(dateText, {
                         fontSize = 14,
-                        color = "gray",
+                        color = "lightgray",
                         shadow = true
                     }),
-                    -- Divider
-                    dsl.divider("horizontal", { color = "gray", thickness = 2, length = MODAL_WIDTH - 40 }),
+                    dsl.divider("horizontal", { color = "gray", thickness = 2, length = MODAL_WIDTH - 50 }),
                     dsl.spacer(8),
-                    -- Content (in a vbox for scrolling)
                     dsl.vbox {
                         config = {
-                            padding = 4,
-                            spacing = 2,
+                            padding = 8,
+                            spacing = 4,
                         },
                         children = contentNodes
                     }
@@ -276,42 +268,30 @@ end
 -- Public API
 --------------------------------------------------------------------------------
 
---- Initialize the patch notes system
 function PatchNotesModal.init()
     PatchNotesModal._data = loadPatchNotes()
 end
 
---- Open the patch notes modal
-function PatchNotesModal.open()
-    if PatchNotesModal.isOpen then return end
+local function ensureModalCreated()
+    if PatchNotesModal._modalBox and registry:valid(PatchNotesModal._modalBox) then
+        return true
+    end
     
-    -- Load data if not already loaded
     if not PatchNotesModal._data then
         PatchNotesModal._data = loadPatchNotes()
     end
     
     if not PatchNotesModal._data then
-        print("[PatchNotesModal] Cannot open: no patch notes data")
-        return
+        print("[PatchNotesModal] Cannot create: no patch notes data")
+        return false
     end
     
-    PatchNotesModal.isOpen = true
-    
-    -- Mark as read immediately when opened
-    markAsRead()
-    
-    -- Emit signal
-    signal.emit("patch_notes_opened")
-    
-    -- Create backdrop
-    PatchNotesModal._backdrop = createBackdrop()
-    
-    -- Calculate modal position (centered)
     local screenW, screenH = resolveScreen()
     local modalX = (screenW - MODAL_WIDTH) / 2
     local modalY = (screenH - MODAL_HEIGHT) / 2
     
-    -- Create modal UI
+    PatchNotesModal._backdrop = createBackdrop()
+    
     local dsl = require("ui.ui_syntax_sugar")
     local modalDef = buildModalUI()
     
@@ -322,49 +302,133 @@ function PatchNotesModal.open()
             "ui",
             (z_orders.ui_modal or 900) + 5
         )
+        ui.box.set_draw_layer(PatchNotesModal._modalBox, "ui")
     end
     
-    -- Create close button
     PatchNotesModal._closeButton = createCloseButton(modalX, modalY)
+    
+    PatchNotesModal._modalY = modalY
+    
+    return true
+end
+
+local function setModalVisible(visible)
+    local screenW, screenH = resolveScreen()
+    local offscreenY = screenH + 1000
+    local onscreenY = PatchNotesModal._modalY or ((screenH - MODAL_HEIGHT) / 2)
+    local btnOnscreenY = onscreenY + 8
+    
+    timer.cancel("patch_notes_tween")
+    timer.cancel("patch_notes_tween_btn")
+    
+    if PatchNotesModal._backdrop and registry:valid(PatchNotesModal._backdrop) then
+        local t = component_cache.get(PatchNotesModal._backdrop, Transform)
+        if t then
+            t.actualY = visible and 0 or offscreenY
+        end
+    end
+    
+    local modalEntity = PatchNotesModal._modalBox
+    if modalEntity and registry:valid(modalEntity) then
+        local t = component_cache.get(modalEntity, Transform)
+        if t then
+            local startY = visible and offscreenY or onscreenY
+            local endY = visible and onscreenY or offscreenY
+            t.actualY = startY
+            timer.tween_scalar(
+                TWEEN_DURATION,
+                function()
+                    if not registry:valid(modalEntity) then return endY end
+                    local tr = component_cache.get(modalEntity, Transform)
+                    return tr and tr.actualY or endY
+                end,
+                function(v)
+                    if not registry:valid(modalEntity) then return end
+                    local tr = component_cache.get(modalEntity, Transform)
+                    if tr then tr.actualY = v end
+                end,
+                endY,
+                nil, nil,
+                "patch_notes_tween"
+            )
+        end
+    end
+    
+    local btnEntity = PatchNotesModal._closeButton
+    if btnEntity and registry:valid(btnEntity) then
+        local t = component_cache.get(btnEntity, Transform)
+        if t then
+            local startY = visible and offscreenY or btnOnscreenY
+            local endY = visible and btnOnscreenY or offscreenY
+            t.actualY = startY
+            timer.tween_scalar(
+                TWEEN_DURATION,
+                function()
+                    if not registry:valid(btnEntity) then return endY end
+                    local tr = component_cache.get(btnEntity, Transform)
+                    return tr and tr.actualY or endY
+                end,
+                function(v)
+                    if not registry:valid(btnEntity) then return end
+                    local tr = component_cache.get(btnEntity, Transform)
+                    if tr then tr.actualY = v end
+                end,
+                endY,
+                nil, nil,
+                "patch_notes_tween_btn"
+            )
+        end
+    end
+end
+
+function PatchNotesModal.open()
+    if PatchNotesModal.isOpen then return end
+    
+    if not ensureModalCreated() then return end
+    
+    PatchNotesModal.isOpen = true
+    markAsRead()
+    signal.emit("patch_notes_opened")
+    
+    setModalVisible(true)
     
     if playSoundEffect then
         playSoundEffect("effects", "button-click")
     end
 end
 
---- Close the patch notes modal
 function PatchNotesModal.close()
     if not PatchNotesModal.isOpen then return end
     
     PatchNotesModal.isOpen = false
-    
-    -- Emit signal
     signal.emit("patch_notes_closed")
     
-    -- Destroy backdrop
-    if PatchNotesModal._backdrop and entity_cache.valid(PatchNotesModal._backdrop) then
-        registry:destroy(PatchNotesModal._backdrop)
-        PatchNotesModal._backdrop = nil
-    end
+    setModalVisible(false)
+end
+
+function PatchNotesModal.destroy()
+    PatchNotesModal.close()
     
-    -- Destroy modal box
+    if PatchNotesModal._backdrop and registry:valid(PatchNotesModal._backdrop) then
+        registry:destroy(PatchNotesModal._backdrop)
+    end
+    PatchNotesModal._backdrop = nil
+    
     if PatchNotesModal._modalBox then
         if ui and ui.box and ui.box.Remove then
             ui.box.Remove(registry, PatchNotesModal._modalBox)
-        elseif entity_cache.valid(PatchNotesModal._modalBox) then
+        elseif registry:valid(PatchNotesModal._modalBox) then
             registry:destroy(PatchNotesModal._modalBox)
         end
-        PatchNotesModal._modalBox = nil
     end
+    PatchNotesModal._modalBox = nil
     
-    -- Destroy close button
-    if PatchNotesModal._closeButton and entity_cache.valid(PatchNotesModal._closeButton) then
+    if PatchNotesModal._closeButton and registry:valid(PatchNotesModal._closeButton) then
         registry:destroy(PatchNotesModal._closeButton)
-        PatchNotesModal._closeButton = nil
     end
+    PatchNotesModal._closeButton = nil
 end
 
---- Toggle the modal open/closed
 function PatchNotesModal.toggle()
     if PatchNotesModal.isOpen then
         PatchNotesModal.close()
@@ -373,11 +437,9 @@ function PatchNotesModal.toggle()
     end
 end
 
---- Update function (check for ESC key)
 function PatchNotesModal.update(dt)
     if not PatchNotesModal.isOpen then return end
     
-    -- Check for ESC key to close
     if input and input.action_pressed then
         if input.action_pressed("ui_cancel") or input.action_pressed("escape") then
             PatchNotesModal.close()
@@ -387,7 +449,6 @@ function PatchNotesModal.update(dt)
     end
 end
 
---- Draw function (render backdrop)
 function PatchNotesModal.draw()
     if not PatchNotesModal.isOpen then return end
     
@@ -395,7 +456,6 @@ function PatchNotesModal.draw()
     local space = layer.DrawCommandSpace.Screen
     local baseZ = (z_orders.ui_modal or 900)
     
-    -- Draw semi-transparent backdrop
     if command_buffer and command_buffer.queueDrawCenteredFilledRoundedRect then
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
             c.x = screenW * 0.5
@@ -408,26 +468,27 @@ function PatchNotesModal.draw()
         end, baseZ, space)
     end
     
-    -- Draw close button (red X)
-    if PatchNotesModal._closeButton and entity_cache.valid(PatchNotesModal._closeButton) then
+    if PatchNotesModal._closeButton and registry:valid(PatchNotesModal._closeButton) then
         local t = component_cache.get(PatchNotesModal._closeButton, Transform)
+        local go = component_cache.get(PatchNotesModal._closeButton, GameObject)
         if t then
             local btnX = t.actualX + t.actualW / 2
             local btnY = t.actualY + t.actualH / 2
             local font = localization.getFont()
+            local isHovered = go and go.state and go.state.isHovered
+            local btnColor = isHovered and util.getColor("orange") or util.getColor("red")
+            local btnSize = isHovered and 30 or 28
             
-            -- Button background
             command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
                 c.x = btnX
                 c.y = btnY
-                c.w = 28
-                c.h = 28
+                c.w = btnSize
+                c.h = btnSize
                 c.rx = 4
                 c.ry = 4
-                c.color = util.getColor("red")
+                c.color = btnColor
             end, baseZ + 8, space)
             
-            -- X text
             command_buffer.queueDrawText(layers.ui, function(c)
                 c.text = "X"
                 c.font = font

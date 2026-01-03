@@ -502,6 +502,7 @@ function createPatchNotesButton()
     
     local hasUnread = PatchNotesModal.hasUnread()
     
+    -- Use dsl.button which properly handles click via buttonCallback
     local buttonDef = dsl.root {
         config = {
             color = util.getColor("gray"),
@@ -509,38 +510,28 @@ function createPatchNotesButton()
             emboss = 2,
         },
         children = {
-            dsl.hbox {
-                config = { spacing = 4 },
-                children = {
-                    dsl.text("Notes", {
-                        fontSize = 14,
-                        color = "white",
-                        shadow = true
-                    }),
-                }
-            }
+            dsl.button("Notes", {
+                fontSize = 14,
+                color = "transparent", -- Use transparent so root color shows through
+                textColor = "white",
+                shadow = true,
+                onClick = function()
+                    if playSoundEffect then
+                        playSoundEffect("effects", "button-click")
+                    end
+                    PatchNotesModal.open()
+                end
+            })
         }
     }
-    
+
     mainMenuEntities.patch_notes_button = dsl.spawn(
         { x = 20, y = globals.screenHeight() - 60 },
         buttonDef,
         "ui",
         100
     )
-    
-    local go = component_cache.get(mainMenuEntities.patch_notes_button, GameObject)
-    if go then
-        go.state.hoverEnabled = true
-        go.state.clickEnabled = true
-        go.state.collisionEnabled = true
-        go.methods.onClick = function()
-            if playSoundEffect then
-                playSoundEffect("effects", "button-click")
-            end
-            PatchNotesModal.open()
-        end
-    end
+    ui.box.set_draw_layer(mainMenuEntities.patch_notes_button, "ui")
     
     mainMenuEntities._patchNotesHasUnread = hasUnread
 end
@@ -553,7 +544,11 @@ function drawPatchNotesBadge()
         return 
     end
     
-    local t = component_cache.get(mainMenuEntities.patch_notes_button, Transform)
+    -- Get position from UIBoxComponent's uiRoot (UIBox entities store transform there)
+    local boxComp = component_cache.get(mainMenuEntities.patch_notes_button, UIBoxComponent)
+    if not boxComp or not boxComp.uiRoot then return end
+    
+    local t = component_cache.get(boxComp.uiRoot, Transform)
     if not t then return end
     
     local badgeX = t.actualX + t.actualW - 4
@@ -624,11 +619,12 @@ function clearMainMenu()
     if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end
     if mainMenuEntities.special_item_3 then mainMenuEntities.special_item_3:destroy(); mainMenuEntities.special_item_3 = nil end
 
-    -- for each entity in mainMenuEntities, push it down out of view
     for _, entity in pairs(mainMenuEntities) do
-        if registry:has(entity, Transform) then
+        if type(entity) == "number" and registry:valid(entity) and registry:has(entity, Transform) then
             local transform = component_cache.get(entity, Transform)
-            transform.actualY = globals.screenHeight() + 500 -- push it down out of view
+            if transform then
+                transform.actualY = globals.screenHeight() + 500
+            end
         end
     end
     
@@ -660,7 +656,7 @@ function clearMainMenu()
         ui.box.Remove(registry, mainMenuEntities.patch_notes_button)
         mainMenuEntities.patch_notes_button = nil
     end
-    PatchNotesModal.close()
+    PatchNotesModal.destroy()
     if entity_cache and entity_cache.valid and entity_cache.valid(globals.ui.logo) then
         registry:destroy(globals.ui.logo)
         globals.ui.logo = nil

@@ -3805,6 +3805,8 @@ GameObjectMethods = {
     ---@type function|nil
     onClick = nil,  -- Called on click.
     ---@type function|nil
+    onRightClick = nil,  -- Called on right-click.
+    ---@type function|nil
     onRelease = nil,  -- Called on click release.
     ---@type function|nil
     onHover = nil,  -- Called when hover starts.
@@ -3844,6 +3846,8 @@ GameObjectState = {
     clickEnabled = nil,
     ---@type boolean
     isBeingClicked = nil,
+    ---@type boolean
+    rightClickEnabled = nil,
     ---@type boolean
     dragEnabled = nil,
     ---@type boolean

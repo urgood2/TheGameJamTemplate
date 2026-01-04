@@ -2383,10 +2383,10 @@ function createNewCard(id, x, y, gameStateToApply)
     nodeComp.shadowMode = ShadowMode.SpriteBased
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
-    -- gameObjectState.triggerOnReleaseEnabled = true
     gameObjectState.collisionEnabled = true
     gameObjectState.clickEnabled = true
-    gameObjectState.dragEnabled = true -- allow dragging the colonist
+    gameObjectState.dragEnabled = true
+    gameObjectState.rightClickEnabled = true
 
     animation_system.resizeAnimationObjectsInEntityToFit(
         card,
@@ -2541,6 +2541,10 @@ function createNewCard(id, x, y, gameStateToApply)
     nodeComp.methods.onClick = function(registry, clickedEntity)
         cardScript.selected = not cardScript.selected
         nodeComp.state.isBeingFocused = cardScript.selected
+    end
+
+    nodeComp.methods.onRightClick = function(registry, clickedEntity)
+        transferCardViaRightClick(card, cardScript)
     end
 
     nodeComp.methods.onHover = function()
@@ -7569,6 +7573,7 @@ end
 local oily_water_bg = require("core.oily_water_background")
 
 function startActionPhase()
+    local previousState = is_state_active(PLANNING_STATE) and "PLANNING" or (is_state_active(SHOP_STATE) and "SHOP" or "default")
     clear_states()
     if setPlanningPeekMode then
         setPlanningPeekMode(false)
@@ -7601,7 +7606,8 @@ function startActionPhase()
     end
 
     activate_state(ACTION_STATE)
-    activate_state("default_state") -- just for defaults, keep them open
+    activate_state("default_state")
+    signal.emit("game_state_changed", { previous = previousState, current = "SURVIVORS" })
 
     add_layer_shader("sprites", "pixelate_image")
 
@@ -7686,7 +7692,8 @@ function startActionPhase()
 end
 
 function startPlanningPhase()
-	    clear_states() -- disable all states.
+    local previousState = is_state_active(ACTION_STATE) and "SURVIVORS" or (is_state_active(SHOP_STATE) and "SHOP" or "default")
+	    clear_states()
 	    if setPlanningPeekMode then
 	        setPlanningPeekMode(false)
 	    end
@@ -7720,10 +7727,12 @@ function startPlanningPhase()
     activate_state(PLANNING_STATE)
     activate_state("default_state")
     activate_state(WAND_TOOLTIP_STATE)
+    signal.emit("game_state_changed", { previous = previousState, current = "PLANNING" })
 
-    add_fullscreen_shader("planning_phase_sepia")
-    globalShaderUniforms:set("planning_phase_sepia", "u_phase_blend", 1.0)
-    globalShaderUniforms:set("planning_phase_sepia", "u_intensity", 0.5)
+    -- DISABLED: planning phase sepia effect (uncomment to re-enable)
+    -- add_fullscreen_shader("planning_phase_sepia")
+    -- globalShaderUniforms:set("planning_phase_sepia", "u_phase_blend", 1.0)
+    -- globalShaderUniforms:set("planning_phase_sepia", "u_intensity", 0.5)
 
     if board_sets and #board_sets > 0 then
         for index, boardSet in ipairs(board_sets) do
@@ -7770,9 +7779,10 @@ function startPlanningPhase()
 end
 
 function startShopPhase()
+    local previousState = is_state_active(ACTION_STATE) and "SURVIVORS" or (is_state_active(PLANNING_STATE) and "PLANNING" or "default")
     local preShopGold = globals.currency or 0
     local interestPreview = ShopSystem.calculateInterest(preShopGold)
-    clear_states() -- disable all states.
+    clear_states()
     if setPlanningPeekMode then
         setPlanningPeekMode(false)
     end
@@ -7799,7 +7809,8 @@ function startShopPhase()
     end
 
     activate_state(SHOP_STATE)
-    activate_state("default_state") -- just for defaults, keep them open
+    activate_state("default_state")
+    signal.emit("game_state_changed", { previous = previousState, current = "SHOP" })
 
     remove_layer_shader("sprites", "pixelate_image")
 

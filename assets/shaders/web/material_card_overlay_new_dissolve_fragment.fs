@@ -14,7 +14,7 @@ uniform float dissolve;    // Drives the collapse (0 → 1)
 uniform float time;
 uniform vec4 texture_details; // kept for uniform parity
 uniform vec2 image_details;   // kept for uniform parity
-uniform bool shadow;
+uniform float shadow;
 uniform vec4 burn_colour_1;
 uniform vec4 burn_colour_2;
 
@@ -125,7 +125,7 @@ void main() {
     }
 
     // --- Shadow / final output ---
-    if (shadow) {
+    if (shadow > 0.5) {
         finalColor = vec4(vec3(0.0), alpha * 0.35);
     } else {
         finalColor = vec4(lit, alpha);

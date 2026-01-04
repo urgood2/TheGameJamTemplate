@@ -8,6 +8,20 @@
 - put rest in compact box.
 - 
 
+- need something that alters the cast delay/wand delay.
+- make the lighting system optionally work only based on states? so if a entity light is attached to is not active, don't activate the light 
+- how to show empty wands? emtpy wand slots? where to display the icons?
+
+
+
+- [ ] #to-process 00:43 how to display wand (“deck”) image icon? Better tooltips. 
+- tooltips should appear right next to the object they represent, never covering it, never going out of bounds, and vertically/laterally cnetered when possible in terms of alignment.
+- extract description to new box under tooltip. 
+- give name of card special effect.
+- put rest in compact box.
+- [ ] Bouncing projectiles. 
+- [ ] Crit damage how does it work? Is it manipulatable? Differenciate in damage text. 
+
 - ogg transition utility stops sound from working. some sounds work though. not sure why.
 - make sure cast from event is working.
 

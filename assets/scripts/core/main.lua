@@ -714,7 +714,7 @@ function initMainGame()
         WandTests.runAllTests()
     end
 
-    LightingDemo.start()
+    -- LightingDemo.start()
 
 end
 

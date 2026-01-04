@@ -119,6 +119,12 @@ Lighting._layers = {}
 -- Default layer for new lights
 Lighting._defaultLayer = nil
 
+-- State index for O(1) lookup: Lighting._stateIndex[stateName] = { light1, light2, ... }
+Lighting._stateIndex = {}
+
+-- Global debug toggle: when true, all lights visible regardless of state
+Lighting._ignoreStates = false
+
 -- Light ID counter for unique handles
 local _lightIdCounter = 0
 
@@ -200,11 +206,12 @@ local function getLayerState(layerName)
     return Lighting._layers[layerName]
 end
 
--- Remove a light from its layer
 local function removeLightFromLayer(light)
     if not light or not light._layerName then return end
     local state = Lighting._layers[light._layerName]
     if not state then return end
+    
+    Lighting._removeFromStateIndex(light)
     
     for i, l in ipairs(state.lights) do
         if l._id == light._id then
@@ -350,6 +357,9 @@ end
 function Lighting.removeAll(layerName)
     local state = Lighting._layers[layerName]
     if state then
+        for _, light in ipairs(state.lights) do
+            Lighting._removeFromStateIndex(light)
+        end
         state.lights = {}
     end
 end
@@ -357,8 +367,108 @@ end
 --- Clear all lights from all layers
 function Lighting.clear()
     for layerName, state in pairs(Lighting._layers) do
+        for _, light in ipairs(state.lights) do
+            Lighting._removeFromStateIndex(light)
+        end
         state.lights = {}
     end
+end
+
+--- Set global debug toggle to ignore state gating
+-- @param ignore boolean - If true, all lights visible regardless of state
+function Lighting.setIgnoreStates(ignore)
+    Lighting._ignoreStates = ignore == true
+    Lighting._updateAllVisibility()
+end
+
+--- Add a light to the state index for each of its active states
+function Lighting._addToStateIndex(light)
+    if not light._activeStates then return end
+    for _, stateName in ipairs(light._activeStates) do
+        Lighting._stateIndex[stateName] = Lighting._stateIndex[stateName] or {}
+        table.insert(Lighting._stateIndex[stateName], light)
+    end
+end
+
+--- Remove a light from all state index entries
+function Lighting._removeFromStateIndex(light)
+    if not light._activeStates then return end
+    for _, stateName in ipairs(light._activeStates) do
+        local index = Lighting._stateIndex[stateName]
+        if index then
+            for i = #index, 1, -1 do
+                if index[i]._id == light._id then
+                    table.remove(index, i)
+                    break
+                end
+            end
+        end
+    end
+end
+
+--- Update visibility for all lights based on current state
+function Lighting._updateAllVisibility()
+    for _, state in pairs(Lighting._layers) do
+        for _, light in ipairs(state.lights) do
+            Lighting._updateLightVisibility(light)
+        end
+    end
+end
+
+--- Update visibility for a single light
+function Lighting._updateLightVisibility(light)
+    if Lighting._ignoreStates then
+        light._hidden = false
+        return
+    end
+    
+    if light._activeStates == nil then
+        if light.attachedEntity then
+            light._hidden = not Lighting._isEntityStateActive(light.attachedEntity)
+        else
+            light._hidden = false
+        end
+    elseif #light._activeStates == 0 then
+        light._hidden = false
+    else
+        light._hidden = not Lighting._isAnyStateActive(light._activeStates)
+    end
+end
+
+--- Check if any of the given states are currently active
+function Lighting._isAnyStateActive(states)
+    for _, stateName in ipairs(states) do
+        if _G.is_state_active and _G.is_state_active(stateName) then
+            return true
+        end
+    end
+    return false
+end
+
+--- Check if entity's state tags match any active global state
+function Lighting._isEntityStateActive(entity)
+    ensureDependencies()
+    
+    if not entity_cache.valid(entity) then
+        return false
+    end
+    
+    local stateTag = component_cache.get(entity, _G.StateTag)
+    if not stateTag or not stateTag.names or #stateTag.names == 0 then
+        return true
+    end
+    
+    for _, tagName in ipairs(stateTag.names) do
+        if _G.is_state_active and _G.is_state_active(tagName) then
+            return true
+        end
+    end
+    return false
+end
+
+--- Handle game_state_changed signal
+function Lighting._onStateChanged(previous, current)
+    Lighting._updateAllVisibility()
 end
 
 --------------------------------------------------------------------------------
@@ -453,6 +563,29 @@ function LightHandle:detach()
     return self
 end
 
+function LightHandle:isVisible()
+    if not self._light then return false end
+    if Lighting._ignoreStates then return true end
+    return not self._light._hidden
+end
+
+function LightHandle:getActiveStates()
+    if not self._light then return nil end
+    return self._light._activeStates
+end
+
+function LightHandle:setActiveStates(states)
+    if not self._light then return self end
+    
+    Lighting._removeFromStateIndex(self._light)
+    self._light._activeStates = states
+    self._light._autoInheritStates = (states == nil)
+    Lighting._addToStateIndex(self._light)
+    Lighting._updateLightVisibility(self._light)
+    
+    return self
+end
+
 --------------------------------------------------------------------------------
 -- FLUENT BUILDER - POINT LIGHT
 --------------------------------------------------------------------------------
@@ -496,6 +629,11 @@ function PointLightBuilder:layer(layerName)
     return self
 end
 
+function PointLightBuilder:activeStates(states)
+    self._activeStates = states
+    return self
+end
+
 function PointLightBuilder:create()
     local layerName = self._layerName or Lighting._defaultLayer
     
@@ -517,11 +655,13 @@ function PointLightBuilder:create()
         return setmetatable({ _light = nil }, LightHandle)
     end
     
-    -- Create light object
     local light = {
         _id = newLightId(),
         _layerName = layerName,
         _destroyed = false,
+        _hidden = false,
+        _activeStates = self._activeStates,
+        _autoInheritStates = (self._activeStates == nil and self._entity ~= nil),
         type = LIGHT_TYPE_POINT,
         worldX = self._x or 0,
         worldY = self._y or 0,
@@ -530,12 +670,13 @@ function PointLightBuilder:create()
         color = self._color or { 1.0, 1.0, 1.0 },
         blendMode = self._blendMode or 0,
         attachedEntity = self._entity,
-        -- Spot-only fields (unused for point)
         directionDeg = 0,
         angleDeg = 360,
     }
 
     table.insert(state.lights, light)
+    Lighting._addToStateIndex(light)
+    Lighting._updateLightVisibility(light)
 
     if DEBUG_LIGHTING then
         print(string.format("[Lighting] Created point light #%d at (%.0f, %.0f) r=%d on layer '%s'",
@@ -557,6 +698,7 @@ function Lighting.point()
         _blendMode = 0,
         _entity = nil,
         _layerName = nil,
+        _activeStates = nil,
     }, PointLightBuilder)
 end
 
@@ -613,6 +755,11 @@ function SpotLightBuilder:layer(layerName)
     return self
 end
 
+function SpotLightBuilder:activeStates(states)
+    self._activeStates = states
+    return self
+end
+
 function SpotLightBuilder:create()
     local layerName = self._layerName or Lighting._defaultLayer
     
@@ -634,11 +781,13 @@ function SpotLightBuilder:create()
         return setmetatable({ _light = nil }, LightHandle)
     end
     
-    -- Create light object
     local light = {
         _id = newLightId(),
         _layerName = layerName,
         _destroyed = false,
+        _hidden = false,
+        _activeStates = self._activeStates,
+        _autoInheritStates = (self._activeStates == nil and self._entity ~= nil),
         type = LIGHT_TYPE_SPOT,
         worldX = self._x or 0,
         worldY = self._y or 0,
@@ -652,6 +801,8 @@ function SpotLightBuilder:create()
     }
     
     table.insert(state.lights, light)
+    Lighting._addToStateIndex(light)
+    Lighting._updateLightVisibility(light)
     
     return setmetatable({ _light = light }, LightHandle)
 end
@@ -670,6 +821,7 @@ function Lighting.spot()
         _angle = 45,
         _entity = nil,
         _layerName = nil,
+        _activeStates = nil,
     }, SpotLightBuilder)
 end
 
@@ -720,31 +872,35 @@ function Lighting._syncUniforms(layerName)
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
     
-    -- Set global uniforms
     globalShaderUniforms:set("lighting", "screen_width", screenW)
     globalShaderUniforms:set("lighting", "screen_height", screenH)
     globalShaderUniforms:set("lighting", "u_ambientLevel", state.ambient)
-    globalShaderUniforms:setInt("lighting", "u_blendMode", state.blendMode)  -- int uniform
-    globalShaderUniforms:set("lighting", "u_feather", 0.2)  -- Default feather
+    globalShaderUniforms:setInt("lighting", "u_blendMode", state.blendMode)
+    globalShaderUniforms:set("lighting", "u_feather", 0.2)
     
-    -- If paused, set light count to 0
     if state.paused then
         globalShaderUniforms:setInt("lighting", "u_lightCount", 0)
         return
     end
 
-    -- Set light count (must use setInt for GLSL int uniforms!)
-    local lightCount = math.min(#state.lights, MAX_LIGHTS)
+    local visibleLights = {}
+    for _, light in ipairs(state.lights) do
+        if not light._hidden then
+            table.insert(visibleLights, light)
+            if #visibleLights >= MAX_LIGHTS then break end
+        end
+    end
+    
+    local lightCount = #visibleLights
     globalShaderUniforms:setInt("lighting", "u_lightCount", lightCount)
 
     if DEBUG_LIGHTING and lightCount > 0 then
-        print(string.format("[Lighting] Syncing %d lights for layer '%s'", lightCount, layerName))
+        print(string.format("[Lighting] Syncing %d visible lights for layer '%s'", lightCount, layerName))
     end
     
-    -- Sync each light's uniforms using indexed names
     for i = 1, MAX_LIGHTS do
-        local idx = i - 1  -- 0-based for shader arrays
-        local light = state.lights[i]
+        local idx = i - 1
+        local light = visibleLights[i]
         
         if light and i <= lightCount then
             -- Convert world position to UV
@@ -824,5 +980,22 @@ function Lighting.getDebugInfo()
     
     return info
 end
+
+--------------------------------------------------------------------------------
+-- SIGNAL REGISTRATION (auto-registers on require)
+--------------------------------------------------------------------------------
+
+local function registerSignalHandler()
+    local ok, signal = pcall(require, "external.hump.signal")
+    if ok and signal then
+        signal.register("game_state_changed", function(data)
+            local previous = data and data.previous
+            local current = data and data.current
+            Lighting._onStateChanged(previous, current)
+        end)
+    end
+end
+
+registerSignalHandler()
 
 return Lighting

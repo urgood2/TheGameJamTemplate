@@ -49,8 +49,10 @@ local StatusIndicatorSystem = require("systems.status_indicator_system")
 local MarkSystem = require("systems.mark_system")
 local C = require("core.constants")
 local CardsData = require("data.cards")
+TooltipV2 = require("ui.tooltip_v2") -- global to avoid local variable limit
 
--- Localization helper: returns localized string or fallback
+USE_TOOLTIP_V2 = true
+
 local function L(key, fallback)
     if localization and localization.get then
         local result = localization.get(key)
@@ -347,8 +349,12 @@ local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then
         return
     end
-    clear_state_tags(entity)
-    ui.box.ClearStateTagsFromUIBox(entity)
+    if USE_TOOLTIP_V2 then
+        TooltipV2.hide(entity)
+    else
+        clear_state_tags(entity)
+        ui.box.ClearStateTagsFromUIBox(entity)
+    end
 end
 -- Player stats tooltip state (consolidated to save local slots)
 local stats_tooltip = {
@@ -499,6 +505,10 @@ if localization and localization.onLanguageChanged then
         card_tooltip_disabled_cache = {}
         wand_tooltip_cache = {}
         previously_hovered_tooltip = nil
+        
+        if TooltipV2 and TooltipV2.clearCache then
+            TooltipV2.clearCache()
+        end
     end)
 end
 
@@ -2567,22 +2577,27 @@ function createNewCard(id, x, y, gameStateToApply)
             tooltipOpts = { status = "disabled", statusColor = "red" }
         end
 
-        local tooltip = ensureCardTooltip(cardDef, tooltipOpts)
-        if not tooltip then
-            return
+        if USE_TOOLTIP_V2 then
+            if previously_hovered_tooltip and previously_hovered_tooltip ~= card then
+                TooltipV2.hide(previously_hovered_tooltip)
+            end
+            TooltipV2.showCard(card, cardDef, tooltipOpts)
+            activate_state(CARD_TOOLTIP_STATE)
+            previously_hovered_tooltip = card
+        else
+            local tooltip = ensureCardTooltip(cardDef, tooltipOpts)
+            if not tooltip then
+                return
+            end
+            positionTooltipRightOfEntity(tooltip, card, { gap = 12 })
+            if previously_hovered_tooltip and previously_hovered_tooltip ~= tooltip then
+                hideCardTooltip(previously_hovered_tooltip)
+            end
+            add_state_tag(tooltip, CARD_TOOLTIP_STATE)
+            activate_state(CARD_TOOLTIP_STATE)
+            ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE)
+            previously_hovered_tooltip = tooltip
         end
-        positionTooltipRightOfEntity(tooltip, card, { gap = 12 })
-        -- hide the previously hovered tooltip (avoid clearing hundreds of cached tooltips every frame)
-        if previously_hovered_tooltip and previously_hovered_tooltip ~= tooltip then
-            hideCardTooltip(previously_hovered_tooltip)
-        end
-
-        add_state_tag(tooltip, CARD_TOOLTIP_STATE)
-        activate_state(CARD_TOOLTIP_STATE)
-        ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE)
-        -- propagate_state_effects_to_ui_box(tooltip)
-
-        previously_hovered_tooltip = tooltip
 
         -- Track for alt-preview
         card_ui_state.hovered_card = card
@@ -2594,18 +2609,18 @@ function createNewCard(id, x, y, gameStateToApply)
     end
 
     nodeComp.methods.onStopHover = function()
-        -- get script
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
 
-        -- disable the currently active tooltip
         if previously_hovered_tooltip then
-            hideCardTooltip(previously_hovered_tooltip)
-            -- propagate_state_effects_to_ui_box(previously_hovered_tooltip)
+            if USE_TOOLTIP_V2 then
+                TooltipV2.hide(previously_hovered_tooltip)
+            else
+                hideCardTooltip(previously_hovered_tooltip)
+            end
             previously_hovered_tooltip = nil
         end
 
-        -- Clear hover tracking and end alt-preview if this was the previewed card
         card_ui_state.hovered_card = nil
         if card_ui_state.alt_entity == card then
             endAltPreview()

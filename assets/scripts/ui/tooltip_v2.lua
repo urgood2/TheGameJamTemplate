@@ -1,0 +1,927 @@
+--[[
+================================================================================
+TOOLTIP V2 SYSTEM - 3-Box Vertical Stack Design
+================================================================================
+Complete replacement of the existing tooltip system with new 3-box architecture.
+
+STRUCTURE:
+    ┌─────────────────────────┐
+    │       CARD NAME         │  ← Box 1: Name (title only, larger font + pop entrance)
+    └─────────────────────────┘
+               4px gap
+    ┌─────────────────────────┐
+    │   Effect description    │  ← Box 2: Description (supports [text](color) markup)
+    │   text goes here...     │
+    └─────────────────────────┘
+               4px gap
+    ┌─────────────────────────┐
+    │ Damage: 25    Mana: 12  │  ← Box 3: Info (stats grid + tag pills)
+    │ [Fire] [Projectile]     │
+    └─────────────────────────┘
+
+USAGE:
+    local TooltipV2 = require("ui.tooltip_v2")
+    
+    -- Show tooltip for any entity
+    TooltipV2.show(anchorEntity, {
+        name = "Fireball",
+        description = "Deal [25](color=red) fire damage to target enemy",
+        info = {
+            stats = {
+                { label = "Damage", value = 25 },
+                { label = "Mana", value = 12 },
+            },
+            tags = { "Fire", "Projectile", "AoE" }
+        }
+    })
+    
+    -- Hide tooltip
+    TooltipV2.hide(anchorEntity)
+    
+    -- Card-specific helper (builds from card_def)
+    TooltipV2.showCard(anchorEntity, cardDef)
+
+POSITIONING:
+    Priority order: RIGHT → LEFT → ABOVE → BELOW
+    - Never covers anchor entity
+    - Top-aligns with anchor, shifts down if clipping
+    - 12px minimum edge gap
+
+================================================================================
+]]
+
+local dsl = require("ui.ui_syntax_sugar")
+local component_cache = require("core.component_cache")
+local z_orders = require("core.z_orders")
+local entity_cache = require("core.entity_cache")
+
+-- Safe require for optional dependencies
+local CardsData = nil
+local CardRarityTags = nil
+pcall(function() CardsData = require("data.cards") end)
+pcall(function() CardRarityTags = require("data.card_rarity_tags") end)
+
+--------------------------------------------------------------------------------
+-- STYLE CONFIGURATION
+--------------------------------------------------------------------------------
+local Style = {
+    -- Fixed dimensions (per spec)
+    BOX_WIDTH = 280,            -- Fixed width for all 3 boxes
+    BOX_GAP = 4,                -- Gap between boxes
+    EDGE_GAP = 12,              -- Minimum screen edge margin
+    OUTLINE_THICKNESS = 2,      -- Outline thickness for all boxes
+    
+    -- Box padding
+    namePadding = 6,
+    descPadding = 8,
+    infoPadding = 6,
+    
+    -- Font sizes
+    nameFontSize = 20,          -- Larger/bolder for name box
+    descFontSize = 14,          -- Standard for description
+    statLabelFontSize = 12,     -- Stat labels
+    statValueFontSize = 14,     -- Stat values
+    tagFontSize = 12,           -- Tag pills
+    
+    -- Colors (matched from existing tooltipStyle in gameplay.lua)
+    bgColor = nil,              -- Will be set from util.getColor or fallback
+    innerColor = nil,
+    outlineColor = nil,
+    nameColor = "apricot_cream",
+    descColor = "white",
+    labelColor = "apricot_cream",
+    valueColor = "white",
+    
+    -- Tag colors (reused from existing system)
+    tagColors = {
+        -- Elements
+        Fire = "orange",
+        Ice = "cyan",
+        Lightning = "yellow",
+        Poison = "green",
+        Arcane = "purple",
+        Holy = "gold",
+        Void = "dark_purple",
+        
+        -- Mechanics
+        Projectile = "blue",
+        AoE = "red",
+        Hazard = "brown",
+        Summon = "teal",
+        Buff = "lime",
+        Debuff = "maroon",
+        
+        -- Playstyle
+        Mobility = "orange",
+        Defense = "green",
+        Brute = "red",
+    },
+    
+    -- Default tag color
+    defaultTagColor = "dim_gray",
+    
+    -- Text effects (for name box entrance)
+    nameEntranceEffect = "pop=0.2,0.04,in",
+    
+    -- Font name (uses named font from fonts.json if available)
+    fontName = "tooltip",
+    
+    -- Minimum box heights when empty
+    minNameHeight = 24,
+    minDescHeight = 20,
+    minInfoHeight = 20,
+}
+
+-- Initialize colors from util (or use fallback)
+local function initColors()
+    if util and util.getColor then
+        Style.bgColor = Col(18, 22, 32, 255)          -- Dark background
+        Style.innerColor = Col(28, 32, 44, 255)       -- Slightly lighter
+        Style.outlineColor = util.getColor("apricot_cream") or Col(255, 214, 170, 255)
+    else
+        Style.bgColor = Col(18, 22, 32, 255)
+        Style.innerColor = Col(28, 32, 44, 255)
+        Style.outlineColor = Col(255, 214, 170, 255)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- STATE MANAGEMENT
+--------------------------------------------------------------------------------
+local State = {
+    -- Active tooltips: anchorEntity → { nameBox, descBox, infoBox }
+    active = {},
+    
+    -- Cache: cacheKey → { boxes = {...}, version = N }
+    cache = {},
+    
+    -- Version for cache invalidation (increment on language change, font reload)
+    version = 1,
+}
+
+--------------------------------------------------------------------------------
+-- HELPER FUNCTIONS
+--------------------------------------------------------------------------------
+
+-- Get color safely
+local function getColor(name)
+    if type(name) == "string" then
+        return (util and util.getColor and util.getColor(name)) or name
+    end
+    return name
+end
+
+-- Localization helper with fallback
+local function L(key, fallback)
+    if localization and localization.get then
+        local result = localization.get(key)
+        if result and result ~= key then return result end
+    end
+    return fallback
+end
+
+-- Check if font is available
+local function hasFont(fontName)
+    return localization and localization.hasNamedFont and localization.hasNamedFont(fontName)
+end
+
+-- Get font name or nil for fallback
+local function getFontName()
+    if hasFont(Style.fontName) then
+        return Style.fontName
+    end
+    return nil
+end
+
+-- Generate cache key from tooltip data
+local function generateCacheKey(data)
+    local parts = { "tooltipV2" }
+    
+    if data.name then
+        table.insert(parts, tostring(data.name))
+    end
+    
+    if data.description then
+        table.insert(parts, tostring(data.description):sub(1, 50))  -- First 50 chars
+    end
+    
+    if data.info then
+        if data.info.stats then
+            for _, s in ipairs(data.info.stats) do
+                table.insert(parts, tostring(s.label) .. "=" .. tostring(s.value))
+            end
+        end
+        if data.info.tags then
+            table.insert(parts, table.concat(data.info.tags, ","))
+        end
+    end
+    
+    if data.status then
+        table.insert(parts, "status=" .. tostring(data.status))
+    end
+    
+    return table.concat(parts, "|")
+end
+
+-- Snap tooltip visual position to prevent size animation from 0
+local function snapBoxVisual(boxId)
+    if not boxId then return end
+    
+    ui.box.RenewAlignment(registry, boxId)
+    
+    local t = component_cache.get(boxId, Transform)
+    if t then
+        t.visualX = t.actualX
+        t.visualY = t.actualY
+        t.visualW = t.actualW
+        t.visualH = t.actualH
+    end
+end
+
+--------------------------------------------------------------------------------
+-- BOX BUILDERS
+--------------------------------------------------------------------------------
+
+-- Build Name Box (Box 1)
+-- Contains: title only, larger font, pop entrance effect
+local function buildNameBox(name, opts)
+    opts = opts or {}
+    
+    local displayName = name or "???"
+    local effects = Style.nameEntranceEffect
+    
+    -- Apply text effects
+    local styledName = "[" .. displayName .. "](" .. effects .. ";color=" .. Style.nameColor .. ")"
+    
+    local textNode = ui.definitions.getTextFromString(styledName, {
+        fontSize = Style.nameFontSize,
+        fontName = getFontName(),
+        shadow = true,
+    })
+    
+    return dsl.root {
+        config = {
+            color = Style.bgColor,
+            minWidth = Style.BOX_WIDTH,
+            maxWidth = Style.BOX_WIDTH,
+            minHeight = Style.minNameHeight,
+            padding = Style.namePadding,
+            outlineThickness = Style.OUTLINE_THICKNESS,
+            outlineColor = Style.outlineColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            shadow = true,
+        },
+        children = { textNode }
+    }
+end
+
+-- Build Description Box (Box 2)
+-- Contains: effect text with [text](color=X) markup support
+local function buildDescriptionBox(description, opts)
+    opts = opts or {}
+    
+    local children = {}
+    
+    if description and description ~= "" then
+        -- Use rich text for markup support
+        local textNode = ui.definitions.getTextFromString(description, {
+            fontSize = Style.descFontSize,
+            fontName = getFontName(),
+            color = getColor(Style.descColor),
+            shadow = false,
+        })
+        table.insert(children, textNode)
+    else
+        -- Empty placeholder (spacer)
+        table.insert(children, dsl.spacer(Style.BOX_WIDTH - Style.descPadding * 2, Style.minDescHeight))
+    end
+    
+    return dsl.root {
+        config = {
+            color = Style.bgColor,
+            minWidth = Style.BOX_WIDTH,
+            maxWidth = Style.BOX_WIDTH,
+            minHeight = Style.minDescHeight,
+            padding = Style.descPadding,
+            outlineThickness = Style.OUTLINE_THICKNESS,
+            outlineColor = Style.outlineColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+            shadow = true,
+        },
+        children = children
+    }
+end
+
+-- Build a single stat row (label: value)
+local function buildStatRow(label, value)
+    local labelNode = dsl.text(tostring(label) .. ":", {
+        fontSize = Style.statLabelFontSize,
+        color = Style.labelColor,
+        fontName = getFontName(),
+        shadow = false,
+    })
+    
+    local valueNode = dsl.text(tostring(value), {
+        fontSize = Style.statValueFontSize,
+        color = Style.valueColor,
+        fontName = getFontName(),
+        shadow = false,
+    })
+    
+    return dsl.hbox {
+        config = {
+            padding = 2,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = { labelNode, dsl.spacer(4), valueNode }
+    }
+end
+
+-- Build a tag pill
+local function buildTagPill(tag)
+    local tagColor = Style.tagColors[tag] or Style.defaultTagColor
+    
+    return dsl.hbox {
+        config = {
+            color = getColor(tagColor),
+            padding = 3,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+        },
+        children = {
+            dsl.text(tostring(tag), {
+                fontSize = Style.tagFontSize,
+                color = "white",
+                fontName = getFontName(),
+                shadow = false,
+            })
+        }
+    }
+end
+
+-- Build Info Box (Box 3)
+-- Contains: stats grid + tag pills
+local function buildInfoBox(info, opts)
+    opts = opts or {}
+    
+    local children = {}
+    
+    -- Stats grid
+    if info and info.stats and #info.stats > 0 then
+        local statRows = {}
+        for _, stat in ipairs(info.stats) do
+            if stat.value and stat.value ~= 0 and stat.value ~= -1 then
+                table.insert(statRows, buildStatRow(stat.label, stat.value))
+            end
+        end
+        
+        if #statRows > 0 then
+            -- Wrap stats in a vbox
+            table.insert(children, dsl.vbox {
+                config = {
+                    padding = 2,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+                },
+                children = statRows
+            })
+        end
+    end
+    
+    -- Tag pills
+    if info and info.tags and #info.tags > 0 then
+        local pillNodes = {}
+        for _, tag in ipairs(info.tags) do
+            table.insert(pillNodes, buildTagPill(tag))
+            table.insert(pillNodes, dsl.spacer(4, 1))  -- Small gap between pills
+        end
+            table.remove(pillNodes)
+        
+        table.insert(children, dsl.hbox {
+            config = {
+                padding = 2,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            },
+            children = pillNodes
+        })
+    end
+    
+    -- If no content, add spacer
+    if #children == 0 then
+        table.insert(children, dsl.spacer(Style.BOX_WIDTH - Style.infoPadding * 2, Style.minInfoHeight))
+    end
+    
+    return dsl.root {
+        config = {
+            color = Style.bgColor,
+            minWidth = Style.BOX_WIDTH,
+            maxWidth = Style.BOX_WIDTH,
+            minHeight = Style.minInfoHeight,
+            padding = Style.infoPadding,
+            outlineThickness = Style.OUTLINE_THICKNESS,
+            outlineColor = Style.outlineColor,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+            shadow = true,
+        },
+        children = { 
+            dsl.vbox {
+                config = {
+                    padding = 2,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+                },
+                children = children
+            }
+        }
+    }
+end
+
+--------------------------------------------------------------------------------
+-- SPAWN & POSITIONING
+--------------------------------------------------------------------------------
+
+-- Spawn all 3 boxes
+local function spawnTooltipAssembly(nameDef, descDef, infoDef)
+    local zOrder = z_orders.ui_tooltips or 900
+    
+    -- Spawn at offscreen position initially
+    local offscreen = { x = -2000, y = -2000 }
+    
+    local nameBox = dsl.spawn(offscreen, nameDef, "ui", zOrder)
+    local descBox = dsl.spawn(offscreen, descDef, "ui", zOrder)
+    local infoBox = dsl.spawn(offscreen, infoDef, "ui", zOrder)
+    
+    -- Set draw layer for each
+    if ui and ui.box and ui.box.set_draw_layer then
+        ui.box.set_draw_layer(nameBox, "ui")
+        ui.box.set_draw_layer(descBox, "ui")
+        ui.box.set_draw_layer(infoBox, "ui")
+    end
+    
+    -- Snap visuals
+    snapBoxVisual(nameBox)
+    snapBoxVisual(descBox)
+    snapBoxVisual(infoBox)
+    
+    return { nameBox = nameBox, descBox = descBox, infoBox = infoBox }
+end
+
+-- Get box dimensions
+local function getBoxSize(boxId)
+    if not boxId then return 0, 0 end
+    local t = component_cache.get(boxId, Transform)
+    if not t then return 0, 0 end
+    return t.actualW or 0, t.actualH or 0
+end
+
+-- Measure total height of tooltip stack
+local function measureTooltipStack(boxes)
+    local _, nameH = getBoxSize(boxes.nameBox)
+    local _, descH = getBoxSize(boxes.descBox)
+    local _, infoH = getBoxSize(boxes.infoBox)
+    
+    local totalHeight = nameH + Style.BOX_GAP + descH + Style.BOX_GAP + infoH
+    return Style.BOX_WIDTH, totalHeight, nameH, descH, infoH
+end
+
+-- Try positioning tooltip on a specific side
+-- Returns { x, y, fits } where fits is true if tooltip doesn't overlap anchor or go offscreen
+local function tryPosition(totalW, totalH, anchorX, anchorY, anchorW, anchorH, side, screenW, screenH)
+    local gap = Style.EDGE_GAP
+    local tooltipX, tooltipY
+    local fits = false
+    
+    if side == "right" then
+        tooltipX = anchorX + anchorW + gap
+        tooltipY = anchorY  -- Top-align
+        
+        -- Check if fits
+        local fitsHoriz = tooltipX + totalW <= screenW - gap
+        local fitsVert = tooltipY >= gap and tooltipY + totalH <= screenH - gap
+        
+        -- Shift down if clipping top (shouldn't happen for top-align)
+        if tooltipY < gap then
+            tooltipY = gap
+        end
+        -- Shift up if clipping bottom
+        if tooltipY + totalH > screenH - gap then
+            tooltipY = math.max(gap, screenH - totalH - gap)
+        end
+        
+        fits = fitsHoriz
+        
+    elseif side == "left" then
+        tooltipX = anchorX - totalW - gap
+        tooltipY = anchorY  -- Top-align
+        
+        local fitsHoriz = tooltipX >= gap
+        
+        -- Shift if clipping
+        if tooltipY < gap then tooltipY = gap end
+        if tooltipY + totalH > screenH - gap then
+            tooltipY = math.max(gap, screenH - totalH - gap)
+        end
+        
+        fits = fitsHoriz
+        
+    elseif side == "above" then
+        tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5  -- Center horizontally
+        tooltipY = anchorY - totalH - gap
+        
+        local fitsVert = tooltipY >= gap
+        
+        -- Shift horizontally if clipping
+        if tooltipX < gap then tooltipX = gap end
+        if tooltipX + totalW > screenW - gap then
+            tooltipX = math.max(gap, screenW - totalW - gap)
+        end
+        
+        fits = fitsVert
+        
+    elseif side == "below" then
+        tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5  -- Center horizontally
+        tooltipY = anchorY + anchorH + gap
+        
+        local fitsVert = tooltipY + totalH <= screenH - gap
+        
+        -- Shift horizontally if clipping
+        if tooltipX < gap then tooltipX = gap end
+        if tooltipX + totalW > screenW - gap then
+            tooltipX = math.max(gap, screenW - totalW - gap)
+        end
+        
+        fits = fitsVert
+    end
+    
+    return tooltipX, tooltipY, fits
+end
+
+-- Position tooltip relative to anchor entity
+local function positionTooltipV2(boxes, anchorEntity)
+    if not anchorEntity then return end
+    
+    local anchorT = component_cache.get(anchorEntity, Transform)
+    if not anchorT then return end
+    
+    -- Get anchor bounds
+    local anchorX = anchorT.actualX or 0
+    local anchorY = anchorT.actualY or 0
+    local anchorW = anchorT.actualW or 32
+    local anchorH = anchorT.actualH or 32
+    
+    -- Get screen size
+    local screenW = globals.screenWidth and globals.screenWidth() or 1920
+    local screenH = globals.screenHeight and globals.screenHeight() or 1080
+    
+    -- Measure tooltip stack
+    local totalW, totalH, nameH, descH, infoH = measureTooltipStack(boxes)
+    
+    -- Try positions in priority order: RIGHT → LEFT → ABOVE → BELOW
+    local sides = { "right", "left", "above", "below" }
+    local finalX, finalY
+    
+    for _, side in ipairs(sides) do
+        local x, y, fits = tryPosition(totalW, totalH, anchorX, anchorY, anchorW, anchorH, side, screenW, screenH)
+        if fits then
+            finalX, finalY = x, y
+            break
+        end
+        -- Keep last attempted position as fallback
+        finalX, finalY = x, y
+    end
+    
+    -- Safety clamp
+    local gap = Style.EDGE_GAP
+    finalX = math.max(gap, math.min(finalX, screenW - totalW - gap))
+    finalY = math.max(gap, math.min(finalY, screenH - totalH - gap))
+    
+    -- Position each box in vertical stack
+    local nameT = component_cache.get(boxes.nameBox, Transform)
+    local descT = component_cache.get(boxes.descBox, Transform)
+    local infoT = component_cache.get(boxes.infoBox, Transform)
+    
+    if nameT then
+        nameT.actualX = finalX
+        nameT.actualY = finalY
+        nameT.visualX = finalX
+        nameT.visualY = finalY
+    end
+    
+    if descT then
+        descT.actualX = finalX
+        descT.actualY = finalY + nameH + Style.BOX_GAP
+        descT.visualX = descT.actualX
+        descT.visualY = descT.actualY
+    end
+    
+    if infoT then
+        infoT.actualX = finalX
+        infoT.actualY = finalY + nameH + Style.BOX_GAP + descH + Style.BOX_GAP
+        infoT.visualX = infoT.actualX
+        infoT.visualY = infoT.actualY
+    end
+end
+
+-- Add state tags to tooltip boxes
+local function addStateTags(boxes)
+    local states = { PLANNING_STATE, ACTION_STATE, SHOP_STATE, CARD_TOOLTIP_STATE }
+    
+    for _, boxId in pairs(boxes) do
+        if boxId and entity_cache.valid(boxId) then
+            if ui and ui.box and ui.box.ClearStateTagsFromUIBox then
+                ui.box.ClearStateTagsFromUIBox(boxId)
+            end
+            for _, state in ipairs(states) do
+                if state then
+                    if ui and ui.box and ui.box.AddStateTagToUIBox then
+                        ui.box.AddStateTagToUIBox(boxId, state)
+                    end
+                    if add_state_tag then
+                        add_state_tag(boxId, state)
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Clear state tags from tooltip boxes
+local function clearStateTags(boxes)
+    for _, boxId in pairs(boxes) do
+        if boxId and entity_cache.valid(boxId) then
+            if clear_state_tags then
+                clear_state_tags(boxId)
+            end
+            if ui and ui.box and ui.box.ClearStateTagsFromUIBox then
+                ui.box.ClearStateTagsFromUIBox(boxId)
+            end
+        end
+    end
+end
+
+-- Move boxes offscreen (for hiding while keeping cached)
+local function moveOffscreen(boxes)
+    for _, boxId in pairs(boxes) do
+        if boxId and entity_cache.valid(boxId) then
+            local t = component_cache.get(boxId, Transform)
+            if t then
+                t.actualX = -2000
+                t.actualY = -2000
+                t.visualX = -2000
+                t.visualY = -2000
+            end
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
+-- PUBLIC API
+--------------------------------------------------------------------------------
+
+local TooltipV2 = {}
+
+--- Show tooltip for an entity
+--- @param anchorEntity number Entity ID to anchor tooltip to
+--- @param data table { name, description, info = { stats, tags } }
+function TooltipV2.show(anchorEntity, data)
+    if not anchorEntity then return nil end
+    if not entity_cache.valid(anchorEntity) then return nil end
+    
+    -- Initialize colors on first use
+    if not Style.bgColor then
+        initColors()
+    end
+    
+    data = data or {}
+    
+    -- Generate cache key
+    local cacheKey = generateCacheKey(data)
+    
+    -- Check if already showing for this anchor
+    local existing = State.active[anchorEntity]
+    if existing then
+        -- Just reposition
+        positionTooltipV2(existing, anchorEntity)
+        addStateTags(existing)
+        return existing
+    end
+    
+    -- Check cache
+    local cached = State.cache[cacheKey]
+    if cached and cached.version == State.version then
+        -- Validate all boxes still exist
+        local valid = true
+        for _, boxId in pairs(cached.boxes) do
+            if not entity_cache.valid(boxId) then
+                valid = false
+                break
+            end
+        end
+        
+        if valid then
+            -- Reuse cached boxes
+            State.active[anchorEntity] = cached.boxes
+            positionTooltipV2(cached.boxes, anchorEntity)
+            addStateTags(cached.boxes)
+            return cached.boxes
+        end
+    end
+    
+    -- Build new tooltip
+    local nameDef = buildNameBox(data.name)
+    local descDef = buildDescriptionBox(data.description)
+    local infoDef = buildInfoBox(data.info)
+    
+    local boxes = spawnTooltipAssembly(nameDef, descDef, infoDef)
+    
+    -- Cache it
+    State.cache[cacheKey] = {
+        boxes = boxes,
+        version = State.version,
+    }
+    
+    -- Track as active
+    State.active[anchorEntity] = boxes
+    
+    -- Position and show
+    positionTooltipV2(boxes, anchorEntity)
+    addStateTags(boxes)
+    
+    return boxes
+end
+
+--- Hide tooltip for an entity
+--- @param anchorEntity number Entity ID
+function TooltipV2.hide(anchorEntity)
+    if not anchorEntity then return end
+    
+    local boxes = State.active[anchorEntity]
+    if not boxes then return end
+    
+    -- Clear state tags and move offscreen
+    clearStateTags(boxes)
+    moveOffscreen(boxes)
+    State.active[anchorEntity] = nil
+end
+
+--- Show card tooltip (builds data from card definition)
+--- @param anchorEntity number Entity ID to anchor tooltip to
+--- @param cardDef table Card definition from cards.lua
+--- @param opts table? Optional { status = "disabled", statusColor = "red" }
+function TooltipV2.showCard(anchorEntity, cardDef, opts)
+    if not anchorEntity or not cardDef then return nil end
+    
+    opts = opts or {}
+    local cardId = cardDef.id or cardDef.cardID or "unknown"
+    
+    -- Build name
+    local name = L("card.name." .. cardId, cardId)
+    
+    -- Build description with status prefix if disabled
+    local description = cardDef.description or ""
+    if opts.status then
+        local statusColor = opts.statusColor or "red"
+        description = "[" .. tostring(opts.status):upper() .. "](color=" .. statusColor .. ")\n" .. description
+    end
+    
+    -- Build stats list
+    local stats = {}
+    
+    local function addStat(label, value, locKey)
+        if value and value ~= 0 and value ~= -1 and value ~= "N/A" then
+            local localizedLabel = L("card.label." .. locKey, label)
+            table.insert(stats, { label = localizedLabel, value = value })
+        end
+    end
+    
+    addStat("Type", L("card.type." .. (cardDef.type or "action"), cardDef.type), "type")
+    addStat("Damage", cardDef.damage, "damage")
+    addStat("Mana", cardDef.mana_cost, "mana_cost")
+    addStat("Lifetime", cardDef.lifetime, "lifetime")
+    addStat("Cast Delay", cardDef.cast_delay, "cast_delay")
+    addStat("Speed", cardDef.projectile_speed, "projectile_speed")
+    addStat("Spread", cardDef.spread_angle, "spread_angle")
+    addStat("Radius", cardDef.radius_of_effect, "radius_of_effect")
+    addStat("Uses", cardDef.max_uses, "max_uses")
+    
+    -- Modifier-specific stats
+    addStat("Damage Mod", cardDef.damage_modifier, "damage_modifier")
+    addStat("Speed Mod", cardDef.speed_modifier, "speed_modifier")
+    addStat("Spread Mod", cardDef.spread_modifier, "spread_modifier")
+    addStat("Crit Mod", cardDef.critical_hit_chance_modifier, "crit_modifier")
+    addStat("Multicast", cardDef.multicast_count, "multicast_count")
+    
+    -- Build tags list
+    local tags = {}
+    
+    -- Get from card definition
+    if cardDef.tags then
+        for _, tag in ipairs(cardDef.tags) do
+            table.insert(tags, tag)
+        end
+    end
+    
+    -- Get from CardRarityTags if available
+    if CardRarityTags then
+        local assignment = nil
+        if CardRarityTags.cardAssignments then
+            assignment = CardRarityTags.cardAssignments[cardId]
+        end
+        if not assignment and CardRarityTags.triggerAssignments then
+            assignment = CardRarityTags.triggerAssignments[cardId]
+        end
+        
+        if assignment then
+            if assignment.rarity then
+                -- Add rarity as first tag
+                table.insert(tags, 1, L("card.rarity." .. assignment.rarity, assignment.rarity))
+            end
+            if assignment.tags then
+                for _, tag in ipairs(assignment.tags) do
+                    -- Avoid duplicates
+                    local found = false
+                    for _, existing in ipairs(tags) do
+                        if existing == tag then found = true; break end
+                    end
+                    if not found then
+                        table.insert(tags, tag)
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Call show with built data
+    return TooltipV2.show(anchorEntity, {
+        name = name,
+        description = description,
+        info = {
+            stats = stats,
+            tags = tags,
+        },
+        status = opts.status,
+    })
+end
+
+--- Clear all tooltip cache and destroy all cached boxes
+function TooltipV2.clearCache()
+    -- Destroy all cached boxes
+    for _, cached in pairs(State.cache) do
+        if cached.boxes then
+            for _, boxId in pairs(cached.boxes) do
+                if boxId and registry and registry:valid(boxId) then
+                    registry:destroy(boxId)
+                end
+            end
+        end
+    end
+    
+    -- Clear active tooltips
+    for anchorEntity, boxes in pairs(State.active) do
+        for _, boxId in pairs(boxes) do
+            if boxId and registry and registry:valid(boxId) then
+                registry:destroy(boxId)
+            end
+        end
+    end
+    
+    State.cache = {}
+    State.active = {}
+end
+
+--- Invalidate cache (bump version, old entries will be rebuilt on next use)
+function TooltipV2.invalidateCache()
+    State.version = State.version + 1
+end
+
+--- Hide all active tooltips
+function TooltipV2.hideAll()
+    for anchorEntity, _ in pairs(State.active) do
+        TooltipV2.hide(anchorEntity)
+    end
+end
+
+--- Get currently active tooltip boxes for an entity
+--- @param anchorEntity number Entity ID
+--- @return table? boxes { nameBox, descBox, infoBox } or nil
+function TooltipV2.getActive(anchorEntity)
+    return State.active[anchorEntity]
+end
+
+--------------------------------------------------------------------------------
+-- LEGACY API COMPATIBILITY
+--------------------------------------------------------------------------------
+
+-- These functions allow gradual migration from old tooltip system
+
+--- Show tooltip V2 (alias for show)
+TooltipV2.showTooltipV2 = TooltipV2.show
+
+--- Hide tooltip V2 (alias for hide)
+TooltipV2.hideTooltipV2 = TooltipV2.hide
+
+--- Show card tooltip V2 (alias for showCard)
+TooltipV2.showCardTooltipV2 = TooltipV2.showCard
+
+--------------------------------------------------------------------------------
+-- MODULE EXPORT
+--------------------------------------------------------------------------------
+
+return TooltipV2

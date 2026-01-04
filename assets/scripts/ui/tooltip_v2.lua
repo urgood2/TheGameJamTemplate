@@ -25,6 +25,7 @@ USAGE:
     -- Show tooltip for any entity
     TooltipV2.show(anchorEntity, {
         name = "Fireball",
+        nameEffects = "pop=0.2,0.04,in;rainbow=40,8,0",  -- Optional: C++ text effects
         description = "Deal [25](color=red) fire damage to target enemy",
         info = {
             stats = {
@@ -38,7 +39,7 @@ USAGE:
     -- Hide tooltip
     TooltipV2.hide(anchorEntity)
     
-    -- Card-specific helper (builds from card_def)
+    -- Card-specific helper (auto-applies rarity-based effects)
     TooltipV2.showCard(anchorEntity, cardDef)
 
 POSITIONING:
@@ -69,6 +70,7 @@ local Style = {
     BOX_WIDTH = 280,            -- Fixed width for all 3 boxes
     BOX_GAP = 4,                -- Gap between boxes
     EDGE_GAP = 12,              -- Minimum screen edge margin
+    ANCHOR_GAP = 6,             -- Gap between tooltip and anchor entity
     OUTLINE_THICKNESS = 2,      -- Outline thickness for all boxes
     
     -- Box padding
@@ -122,6 +124,34 @@ local Style = {
     
     -- Text effects (for name box entrance)
     nameEntranceEffect = "pop=0.2,0.04,in",
+    
+    -- Available C++ text effects (for reference when using dynamic effects)
+    -- Each effect can take parameters via effect=arg1,arg2,... syntax
+    -- Multiple effects can be combined with semicolons: "effect1;effect2=args"
+    AVAILABLE_EFFECTS = {
+        -- Entrance/Exit effects (one-time animations)
+        "pop",        -- pop=duration,stagger,mode(in/out) - Scale pop in/out
+        "slide",      -- slide=duration,stagger,mode(in/out),dir(l/r/t/b) - Slide from direction
+        "bounce",     -- bounce=gravity,height,duration,stagger - Drop with bounce
+        "scramble",   -- scramble=duration,stagger,rate - Random character scramble before reveal
+        
+        -- Continuous effects (animated loops)
+        "shake",      -- shake=x,y - Shake offset per character
+        "pulse",      -- pulse=min,max,speed,stagger - Scale pulsing
+        "float",      -- float=speed,amplitude,stagger - Vertical floating
+        "bump",       -- bump=speed,amplitude,threshold,stagger - Jump/bump effect
+        "wiggle",     -- wiggle=speed,angle,stagger - Rotation wiggle
+        "rotate",     -- rotate=speed,angle - Continuous rotation
+        "spin",       -- spin=speed,stagger - Full 360 spin
+        "fade",       -- fade=speed,minAlpha,maxAlpha,stagger - Alpha pulsing
+        "rainbow",    -- rainbow=speed,stagger,thresholdStep - Hue cycling
+        "highlight",  -- highlight=speed,brightness,stagger,dir,mode - Color highlight wave
+        "expand",     -- expand=min,max,speed,stagger,axis(x/y/both) - Scale on axis
+        
+        -- Static effects
+        "color",      -- color=colorName - Set text color
+        "fan",        -- fan=maxAngle - Fan characters out from center
+    },
     
     -- Font name (uses named font from fonts.json if available)
     fontName = "tooltip",
@@ -193,18 +223,41 @@ local function getFontName()
     return nil
 end
 
+-- Simple string hash for long descriptions (prevents truncation collisions)
+local function hashString(str)
+    local hash = 0
+    for i = 1, #str do
+        hash = (hash * 31 + str:byte(i)) % 2147483647
+    end
+    return hash
+end
+
 -- Generate cache key from tooltip data
 local function generateCacheKey(data)
     local parts = { "tooltipV2" }
-    
+
     if data.name then
         table.insert(parts, tostring(data.name))
     end
-    
-    if data.description then
-        table.insert(parts, tostring(data.description):sub(1, 50))  -- First 50 chars
+
+    if data.nameEffects then
+        table.insert(parts, "fx=" .. tostring(data.nameEffects))
     end
-    
+
+    if data.nameColor then
+        table.insert(parts, "nc=" .. tostring(data.nameColor))
+    end
+
+    -- Use hash for long descriptions to prevent collision from truncation
+    if data.description then
+        local desc = tostring(data.description)
+        if #desc > 50 then
+            table.insert(parts, "desc_h=" .. tostring(hashString(desc)))
+        else
+            table.insert(parts, desc)
+        end
+    end
+
     if data.info then
         if data.info.stats then
             for _, s in ipairs(data.info.stats) do
@@ -215,11 +268,11 @@ local function generateCacheKey(data)
             table.insert(parts, table.concat(data.info.tags, ","))
         end
     end
-    
+
     if data.status then
         table.insert(parts, "status=" .. tostring(data.status))
     end
-    
+
     return table.concat(parts, "|")
 end
 
@@ -243,22 +296,24 @@ end
 --------------------------------------------------------------------------------
 
 -- Build Name Box (Box 1)
--- Contains: title only, larger font, pop entrance effect
+-- Contains: title only, larger font, customizable text effects
+-- opts.effects: C++ text effect string (e.g., "pop=0.2;rainbow=50")
+-- opts.nameColor: Override color (e.g., "gold" for legendary)
 local function buildNameBox(name, opts)
     opts = opts or {}
-    
+
     local displayName = name or "???"
-    local effects = Style.nameEntranceEffect
-    
-    -- Apply text effects
-    local styledName = "[" .. displayName .. "](" .. effects .. ";color=" .. Style.nameColor .. ")"
-    
+    local effects = opts.effects or Style.nameEntranceEffect
+    local nameColor = opts.nameColor or Style.nameColor
+
+    local styledName = "[" .. displayName .. "](" .. effects .. ";color=" .. nameColor .. ")"
+
     local textNode = ui.definitions.getTextFromString(styledName, {
         fontSize = Style.nameFontSize,
         fontName = getFontName(),
         shadow = true,
     })
-    
+
     return dsl.root {
         config = {
             color = Style.bgColor,
@@ -484,72 +539,77 @@ end
 -- Try positioning tooltip on a specific side
 -- Returns { x, y, fits } where fits is true if tooltip doesn't overlap anchor or go offscreen
 local function tryPosition(totalW, totalH, anchorX, anchorY, anchorW, anchorH, side, screenW, screenH)
-    local gap = Style.EDGE_GAP
+    local edgeGap = Style.EDGE_GAP      -- Screen edge margin
+    local anchorGap = Style.ANCHOR_GAP  -- Gap between tooltip and anchor
     local tooltipX, tooltipY
     local fits = false
-    
+
     if side == "right" then
-        tooltipX = anchorX + anchorW + gap
-        tooltipY = anchorY  -- Top-align
-        
-        -- Check if fits
-        local fitsHoriz = tooltipX + totalW <= screenW - gap
-        local fitsVert = tooltipY >= gap and tooltipY + totalH <= screenH - gap
-        
-        -- Shift down if clipping top (shouldn't happen for top-align)
-        if tooltipY < gap then
-            tooltipY = gap
+        tooltipX = anchorX + anchorW + anchorGap
+        -- Center tooltip vertically relative to anchor
+        local anchorCenterY = anchorY + anchorH * 0.5
+        tooltipY = anchorCenterY - totalH * 0.5
+
+        -- Check if fits horizontally
+        local fitsHoriz = tooltipX + totalW <= screenW - edgeGap
+
+        -- Clamp vertically within screen bounds
+        if tooltipY < edgeGap then
+            tooltipY = edgeGap
         end
-        -- Shift up if clipping bottom
-        if tooltipY + totalH > screenH - gap then
-            tooltipY = math.max(gap, screenH - totalH - gap)
+        if tooltipY + totalH > screenH - edgeGap then
+            tooltipY = math.max(edgeGap, screenH - totalH - edgeGap)
         end
-        
+
         fits = fitsHoriz
-        
+
     elseif side == "left" then
-        tooltipX = anchorX - totalW - gap
-        tooltipY = anchorY  -- Top-align
-        
-        local fitsHoriz = tooltipX >= gap
-        
-        -- Shift if clipping
-        if tooltipY < gap then tooltipY = gap end
-        if tooltipY + totalH > screenH - gap then
-            tooltipY = math.max(gap, screenH - totalH - gap)
+        tooltipX = anchorX - totalW - anchorGap
+        -- Center tooltip vertically relative to anchor
+        local anchorCenterY = anchorY + anchorH * 0.5
+        tooltipY = anchorCenterY - totalH * 0.5
+
+        local fitsHoriz = tooltipX >= edgeGap
+
+        -- Clamp vertically within screen bounds
+        if tooltipY < edgeGap then tooltipY = edgeGap end
+        if tooltipY + totalH > screenH - edgeGap then
+            tooltipY = math.max(edgeGap, screenH - totalH - edgeGap)
         end
-        
+
         fits = fitsHoriz
-        
+
     elseif side == "above" then
-        tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5  -- Center horizontally
-        tooltipY = anchorY - totalH - gap
-        
-        local fitsVert = tooltipY >= gap
-        
-        -- Shift horizontally if clipping
-        if tooltipX < gap then tooltipX = gap end
-        if tooltipX + totalW > screenW - gap then
-            tooltipX = math.max(gap, screenW - totalW - gap)
+        -- Center horizontally relative to anchor
+        tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5
+        tooltipY = anchorY - totalH - anchorGap
+
+        local fitsVert = tooltipY >= edgeGap
+
+        -- Clamp horizontally within screen bounds
+        if tooltipX < edgeGap then tooltipX = edgeGap end
+        if tooltipX + totalW > screenW - edgeGap then
+            tooltipX = math.max(edgeGap, screenW - totalW - edgeGap)
         end
-        
+
         fits = fitsVert
-        
+
     elseif side == "below" then
-        tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5  -- Center horizontally
-        tooltipY = anchorY + anchorH + gap
-        
-        local fitsVert = tooltipY + totalH <= screenH - gap
-        
-        -- Shift horizontally if clipping
-        if tooltipX < gap then tooltipX = gap end
-        if tooltipX + totalW > screenW - gap then
-            tooltipX = math.max(gap, screenW - totalW - gap)
+        -- Center horizontally relative to anchor
+        tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5
+        tooltipY = anchorY + anchorH + anchorGap
+
+        local fitsVert = tooltipY + totalH <= screenH - edgeGap
+
+        -- Clamp horizontally within screen bounds
+        if tooltipX < edgeGap then tooltipX = edgeGap end
+        if tooltipX + totalW > screenW - edgeGap then
+            tooltipX = math.max(edgeGap, screenW - totalW - edgeGap)
         end
-        
+
         fits = fitsVert
     end
-    
+
     return tooltipX, tooltipY, fits
 end
 
@@ -725,7 +785,10 @@ function TooltipV2.show(anchorEntity, data)
     end
     
     -- Build new tooltip
-    local nameDef = buildNameBox(data.name)
+    local nameDef = buildNameBox(data.name, {
+        effects = data.nameEffects,
+        nameColor = data.nameColor,
+    })
     local descDef = buildDescriptionBox(data.description)
     local infoDef = buildInfoBox(data.info)
     
@@ -764,14 +827,13 @@ end
 --- Show card tooltip (builds data from card definition)
 --- @param anchorEntity number Entity ID to anchor tooltip to
 --- @param cardDef table Card definition from cards.lua
---- @param opts table? Optional { status = "disabled", statusColor = "red" }
+--- @param opts table? Optional { status, statusColor, nameEffects }
 function TooltipV2.showCard(anchorEntity, cardDef, opts)
     if not anchorEntity or not cardDef then return nil end
     
     opts = opts or {}
     local cardId = cardDef.id or cardDef.cardID or "unknown"
     
-    -- Build name
     local name = L("card.name." .. cardId, cardId)
     
     -- Build description with status prefix if disabled
@@ -848,9 +910,37 @@ function TooltipV2.showCard(anchorEntity, cardDef, opts)
         end
     end
     
-    -- Call show with built data
+    -- Get rarity-based effects and color for card name
+    local nameEffects = opts.nameEffects
+    local nameColor = opts.nameColor
+    local cardRarity = nil
+
+    if CardRarityTags then
+        local assignment = CardRarityTags.cardAssignments and CardRarityTags.cardAssignments[cardId]
+            or CardRarityTags.triggerAssignments and CardRarityTags.triggerAssignments[cardId]
+        if assignment and assignment.rarity then
+            cardRarity = assignment.rarity:lower()
+        end
+    end
+
+    -- Apply rarity-based effects and color if not overridden
+    if cardRarity then
+        local TooltipEffects = nil
+        pcall(function() TooltipEffects = require("core.tooltip_effects") end)
+        if TooltipEffects then
+            if not nameEffects and TooltipEffects.get then
+                nameEffects = TooltipEffects.get(cardRarity)
+            end
+            if not nameColor and TooltipEffects.getColor then
+                nameColor = TooltipEffects.getColor(cardRarity)
+            end
+        end
+    end
+
     return TooltipV2.show(anchorEntity, {
         name = name,
+        nameEffects = nameEffects,
+        nameColor = nameColor,
         description = description,
         info = {
             stats = stats,

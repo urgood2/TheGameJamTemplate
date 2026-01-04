@@ -9,7 +9,8 @@ USAGE:
     -- Register a tooltip template
     tooltips.register("fire_damage", {
         title = "Fire Damage",
-        body = "Deals {damage} fire damage"
+        body = "Deals {damage} fire damage",
+        info = { tags = { "Fire" } }  -- Optional: stats/tags for V2
     })
 
     -- Attach to entity (shows on hover)
@@ -22,6 +23,11 @@ USAGE:
 TEMPLATE SYNTAX:
     {param}         -- Simple substitution
     {param|color}   -- Substitution with color (uses styled markup)
+
+TOOLTIP V2 INTEGRATION:
+    When USE_TOOLTIP_V2 is true (set in gameplay.lua), this registry
+    automatically uses the new 3-box TooltipV2 system instead of the
+    legacy makeSimpleTooltip approach.
 ]]
 
 local tooltips = {}
@@ -29,6 +35,16 @@ local tooltips = {}
 -- Dependencies (will be set during init)
 local component_cache = require("core.component_cache")
 local entity_cache = _G.entity_cache
+
+-- Lazy-load TooltipV2 to avoid circular dependency
+local TooltipV2 = nil
+local function getTooltipV2()
+    if TooltipV2 == nil then
+        local ok, module = pcall(require, "ui.tooltip_v2")
+        TooltipV2 = ok and module or false
+    end
+    return TooltipV2 or nil
+end
 
 --------------------------------------------------------------------------------
 -- Internal State
@@ -89,11 +105,12 @@ end
 
 --- Register a tooltip template by name
 --- @param name string Unique identifier for the tooltip
---- @param def table { title = string, body = string, opts = table? }
+--- @param def table { title = string, body = string, info = { stats, tags }?, opts = table? }
 function tooltips.register(name, def)
     tooltip_definitions[name] = {
         title = def.title or "",
         body = def.body or "",
+        info = def.info,  -- V2: { stats = {...}, tags = {...} }
         opts = def.opts or {}
     }
 end
@@ -179,6 +196,36 @@ function tooltips.showFor(entity)
     local def = tooltip_definitions[attachment.name]
     if not def then return end
 
+    -- Use TooltipV2 if available and enabled
+    local v2 = USE_TOOLTIP_V2 and getTooltipV2()
+    if v2 then
+        -- Same target? V2 handles repositioning internally
+        if active_target == entity then
+            return
+        end
+
+        -- Hide previous tooltip
+        if active_target then
+            v2.hide(active_target)
+        end
+
+        -- Interpolate template
+        local title = interpolateTemplate(def.title, attachment.params)
+        local body = interpolateTemplate(def.body, attachment.params)
+
+        -- Show V2 tooltip
+        v2.show(entity, {
+            name = title,
+            description = body,
+            info = def.info,
+            nameEffects = def.opts and def.opts.nameEffects,
+        })
+        active_target = entity
+        active_tooltip = true  -- V2 manages actual entities
+        return
+    end
+
+    -- Fallback: Legacy tooltip system
     -- Same target? Just reposition
     if active_target == entity and active_tooltip then
         if centerTooltipAboveEntity then
@@ -206,6 +253,16 @@ end
 
 --- Hide the currently visible tooltip
 function tooltips.hide()
+    -- Use TooltipV2 if available and enabled
+    local v2 = USE_TOOLTIP_V2 and getTooltipV2()
+    if v2 and active_target then
+        v2.hide(active_target)
+        active_tooltip = nil
+        active_target = nil
+        return
+    end
+
+    -- Fallback: Legacy tooltip system
     if active_tooltip and hideSimpleTooltip and active_cache_key then
         hideSimpleTooltip(active_cache_key)
     end
@@ -226,6 +283,18 @@ function tooltips.clearAll()
         tooltips.detachFromEntity(entity)
     end
     tooltips.hide()
+
+    -- Also clear V2 cache if available
+    local v2 = getTooltipV2()
+    if v2 and v2.clearCache then
+        v2.clearCache()
+    end
+end
+
+--- Check if using TooltipV2 system
+--- @return boolean
+function tooltips.isUsingV2()
+    return USE_TOOLTIP_V2 and getTooltipV2() ~= nil
 end
 
 return tooltips

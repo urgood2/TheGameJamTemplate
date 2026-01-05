@@ -1051,11 +1051,20 @@ board_sets = {}
 current_board_set_index = 1
 
 local reevaluateDeckTags -- forward declaration; defined after deck helpers
+local relayoutBoardCardsInOrder -- forward declaration; defined at ~line 8044
 -- updateWandResourceBar defined as global at line ~6642 (forward decl removed to stay under 200 local limit)
 
 local function notifyDeckChanged(boardEntityID)
-    if not boardEntityID or not board_sets or #board_sets == 0 then return end
+    if not boardEntityID then return end
 
+    -- Always relayout the board when cards change
+    local board = boards[boardEntityID]
+    if board and relayoutBoardCardsInOrder then
+        relayoutBoardCardsInOrder(board)
+    end
+
+    -- Board set-specific updates (deck tags, resource bar)
+    if not board_sets or #board_sets == 0 then return end
     for _, boardSet in ipairs(board_sets) do
         if boardSet.action_board_id == boardEntityID or boardSet.trigger_board_id == boardEntityID then
             if reevaluateDeckTags then
@@ -8041,7 +8050,7 @@ local function getActiveActionBoard()
     return board, set, set.action_board_id
 end
 
-local function relayoutBoardCardsInOrder(board)
+relayoutBoardCardsInOrder = function(board)
     if not board or not board.cards or #board.cards == 0 then return end
     local boardTransform = component_cache.get(board:handle(), Transform)
     if not boardTransform then return end
@@ -8059,18 +8068,36 @@ local function relayoutBoardCardsInOrder(board)
 
     local padding = 20
     local availW = math.max(0, boardTransform.actualW - padding * 2)
-    local minGap = 12
+    local preferredGap = 24  -- Gap between card edges when there's room
+    local minGap = 4         -- Minimum visible gap/offset when overlapping
     local n = #board.cards
     local spacing, groupW
+
     if n == 1 then
         spacing, groupW = 0, cardW
     else
-        local fitSpacing = (availW - cardW) / (n - 1)
-        spacing = math.max(minGap, fitSpacing)
-        groupW = cardW + spacing * (n - 1)
-        if groupW > availW then
-            spacing = math.max(0, fitSpacing)
-            groupW = cardW + spacing * (n - 1)
+        -- Ideal layout: cards separated with gaps between them (no overlap)
+        local idealGroupW = n * cardW + preferredGap * (n - 1)
+
+        if idealGroupW <= availW then
+            -- Room for full separation: offset = cardW + gap
+            spacing = cardW + preferredGap
+            groupW = idealGroupW
+        else
+            -- Not enough room - need to compress
+            -- First try: reduce gap while keeping cards separate (no overlap)
+            local gapSpace = availW - n * cardW
+            if gapSpace >= minGap * (n - 1) then
+                -- Can fit with reduced gaps (no overlap)
+                local reducedGap = gapSpace / (n - 1)
+                spacing = cardW + reducedGap
+                groupW = availW
+            else
+                -- Must overlap - use minimum visible offset
+                local fitSpacing = (availW - cardW) / (n - 1)
+                spacing = math.max(minGap, fitSpacing)
+                groupW = cardW + spacing * (n - 1)
+            end
         end
     end
 
@@ -10682,11 +10709,10 @@ function initPlanningUI()
             local resolvedButtonHeight = (boxTransform and boxTransform.actualH) or defaultButtonHeight
             local resolvedButtonWidth = (boxTransform and boxTransform.actualW) or defaultButtonWidth
             if boxTransform then
-                local targetX = startX - (resolvedButtonWidth + buttonMargin)
                 local totalHeight = (#board_sets) * (resolvedButtonHeight + verticalSpacing) - verticalSpacing
                 local centeredTop = (usableScreenH - totalHeight) * 0.5
                 local clampedY = math.max(buttonMargin, math.min(centeredTop, usableScreenH - totalHeight - buttonMargin))
-                boxTransform.actualX = math.max(buttonMargin, targetX)
+                boxTransform.actualX = buttonMargin
                 boxTransform.actualY = clampedY + (buttonIndex - 1) * (resolvedButtonHeight + verticalSpacing)
             end
 

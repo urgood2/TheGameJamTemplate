@@ -115,7 +115,7 @@ void main() {
     float edgeDistance = length(warpedLocal - clampedLocal);
     float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
 
-    if (!shadow && burn_colour_1.a > 0.01) {
+    if (shadow < 0.5 && burn_colour_1.a > 0.01) {
         vec3 burnMix = burn_colour_1.rgb;
         if (burn_colour_2.a > 0.01) {
             float t = clamp(edgeDistance / 0.04, 0.0, 1.0);

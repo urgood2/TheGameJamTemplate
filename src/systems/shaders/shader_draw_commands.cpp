@@ -198,7 +198,8 @@ void executeEntityPipelineWithCommands(
     bool tiltEnabled = false;
     if (registry.any_of<transform::GameObject>(e)) {
         const auto& node = registry.get<transform::GameObject>(e);
-        tiltEnabled = node.state.isBeingHovered || node.state.isBeingFocused;
+        // Only enable tilt when hovering (not dragging) or when focused via controller
+        tiltEnabled = (node.state.isBeingHovered && !node.state.isBeingDragged) || node.state.isBeingFocused;
     }
 
     // Background fill to match legacy pipeline
@@ -1029,7 +1030,8 @@ void executeEntityWithShaders(
     bool tiltEnabled = false;
     if (registry.any_of<transform::GameObject>(e)) {
         const auto& node = registry.get<transform::GameObject>(e);
-        tiltEnabled = node.state.isBeingHovered || node.state.isBeingFocused;
+        // Only enable tilt when hovering (not dragging) or when focused via controller
+        tiltEnabled = (node.state.isBeingHovered && !node.state.isBeingDragged) || node.state.isBeingFocused;
     }
 
     auto shaderIsPseudo3DSkew = [](const std::string& name) {

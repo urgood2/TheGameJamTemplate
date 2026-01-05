@@ -49,18 +49,21 @@ function BoardType:update(dt)
     ------------------------------------------------------------
     local padding = 20
     local availW = math_max(0, area.actualW - padding * 2)
-    local minGap = 12
+    local preferredGap = 24  -- Comfortable spacing between cards
+    local minGap = 4         -- Minimum spacing when compressed
 
     local n = #cards
     local spacing, groupW
     if n == 1 then
         spacing, groupW = 0, cardW
     else
-        local fitSpacing = (availW - cardW) / (n - 1)
-        spacing = math_max(minGap, fitSpacing)
+        -- Start with preferred spacing (clumping behavior - cards stay together)
+        spacing = preferredGap
         groupW = cardW + spacing * (n - 1)
+        -- Gradually compress spacing if cards don't fit
         if groupW > availW then
-            spacing = math_max(0, fitSpacing)
+            local fitSpacing = (availW - cardW) / (n - 1)
+            spacing = math_max(minGap, fitSpacing)
             groupW = cardW + spacing * (n - 1)
         end
     end

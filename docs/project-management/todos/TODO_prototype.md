@@ -1,15 +1,29 @@
 # TODO Prototype - Organized Status Report
 > Last verified: Dec 29, 2025
 
-- 3d skew shaders not working. inspect recent changes and investigate.
-
-- card areas currently have a logic where they spread to fill available area (if two cards are in an area, they move to either end). We want cards to clump together when there is extra space, instead of spreading like this. otherwise, keep behavior as is.
+- ui updates: wand bar horizontal for showing wand ui at a glance?
+  │  ┌─────────────────────────────────────────────────────────────────────┐   │
+  │  │ WAND BAR: [Fireball] [Burn Mod] [Explosive] [Chain] [Ice]           │   │
+  │  │ Mana: ████████░░ 80/100    Cast Delay: 0.2s                         │   │
+  │  └─────────────────────────────────────────────────────────────────────┘
+- ui updates: show applied effects from synergy?
+  │  ┌─────────────┐                              ┌─────────────────────────┐   │
+  │  │ TAG SYNERGY │                              │    AVATAR & JOKERS      │   │
+  │  │   PANEL     │                              │                         │   │
+  │  │             │                              │  ┌───┐ ┌───┐ ┌───┐     │   │
+  │  │ Fire  ●●●○○ │                              │  │🔥 │ │⚡│ │🎭│     │   │
+  │  │ Ice   ●○○○○ │                              │  │Wld│ │Pyr│ │Tag│     │   │
+  │  │ Light ●○○○○ │                              │  └───┘ └───┘ └───┘     │   │
+  │  │ Brute ○○○○○ │                              │  Avatar  Joker  Joker   │   │
+  │  │             │                              │                         │   │
+  │  │ Active:     │                              │  Hover for tooltips     │   │
+  │  │ +10% burn   │                              └─────────────────────────┘   │
+  │  └─────────────┘
 
 - remove click to enable card skew.
 
 - need something that alters the cast delay/wand delay.
 - how to show empty wands? emtpy wand slots? where to display the icons?
-
 
 - [ ] #to-process 09:11 full picture of synergies, avatars, jokers? Or get game loop first? Not sure. Compare with actual noita soells and list what to add
 - [ ] Start replacing a few sprites
@@ -19,16 +33,13 @@
 
 - [ ] #to-process 00:43 how to display wand (“deck”) image icon? Better tooltips. 
 - tooltips should appear right next to the object they represent, never covering it, never going out of bounds, and vertically/laterally cnetered when possible in terms of alignment.
-- extract description to new box under tooltip. 
-- give name of card special effect.
-- put rest in compact box.
+
 - [ ] Bouncing projectiles. 
 - [ ] Crit damage how does it work? Is it manipulatable? Differenciate in damage text. 
 
 - ogg transition utility stops sound from working. some sounds work though. not sure why.
 - make sure cast from event is working.
 
-- need to test particle stencil working.
 - get all three special items working properly.
 - fill areas for panels + card areas. 
 - sound effect for notification still not playing.

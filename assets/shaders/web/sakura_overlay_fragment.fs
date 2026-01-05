@@ -97,8 +97,7 @@ vec4 dissolve_mask(vec4 tex, vec2 /*texcoord*/, vec2 uv_scaled) {
         - (floored.x < borders.x ? (borders.x - floored.x)*(5.0+5.0*dissolve) : 0.0)*dissolve
         - (floored.y < borders.x ? (borders.x - floored.y)*(5.0+5.0*dissolve) : 0.0)*dissolve;
 
-    if (tex.a > 0.01 && burn_colour_1.a > 0.01 && !shadow
-        && res < adj + 0.8*(0.5 - abs(adj - 0.5))
+    if (tex.a > 0.01 && burn_colour_1.a > 0.01 && shadow < 0.5         && res < adj + 0.8*(0.5 - abs(adj - 0.5))
         && res > adj) {
         if (res < adj + 0.5*(0.5 - abs(adj - 0.5))) {
             tex = burn_colour_1;

@@ -363,4 +363,52 @@ function node:clearStateTags()
   return self
 end
 
+--- Link this entity to a target: this entity dies when target dies.
+--- @param target number The target entity to link to
+--- @return table self For chaining
+function node:linkTo(target)
+  assert(type(target) == "number", "linkTo(target): target must be an entity ID")
+  
+  local EntityLinks = require("core.entity_links")
+  if self._eid then
+    EntityLinks.link(self._eid, target)
+  else
+    self:run_custom_func(function(eid)
+      EntityLinks.link(eid, target)
+    end)
+  end
+  return self
+end
+
+--- Unlink this entity from a target.
+--- @param target number The target entity to unlink from
+--- @return table self For chaining
+function node:unlinkFrom(target)
+  assert(type(target) == "number", "unlinkFrom(target): target must be an entity ID")
+  
+  local EntityLinks = require("core.entity_links")
+  if self._eid then
+    EntityLinks.unlink(self._eid, target)
+  else
+    self:run_custom_func(function(eid)
+      EntityLinks.unlink(eid, target)
+    end)
+  end
+  return self
+end
+
+--- Unlink this entity from all targets.
+--- @return table self For chaining
+function node:unlinkAll()
+  local EntityLinks = require("core.entity_links")
+  if self._eid then
+    EntityLinks.unlinkAll(self._eid)
+  else
+    self:run_custom_func(function(eid)
+      EntityLinks.unlinkAll(eid)
+    end)
+  end
+  return self
+end
+
 return node

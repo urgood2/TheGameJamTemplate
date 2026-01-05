@@ -131,7 +131,7 @@ vec4 applyOverlay(vec2 atlasUV) {
         abs(sheen_strength) < EPS &&
         burn_colour_1.a < EPS &&
         burn_colour_2.a < EPS &&
-        !shadow &&
+        shadow < 0.5 &&
         length(material_tint - vec3(1.0)) < EPS;
 
     if (effectInactive && (abs(polka_dot.x) + abs(polka_dot.y)) < EPS) {

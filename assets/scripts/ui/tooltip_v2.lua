@@ -55,6 +55,7 @@ local dsl = require("ui.ui_syntax_sugar")
 local component_cache = require("core.component_cache")
 local z_orders = require("core.z_orders")
 local entity_cache = require("core.entity_cache")
+local Q = require("core.Q")
 
 -- Safe require for optional dependencies
 local CardsData = nil
@@ -70,7 +71,7 @@ local Style = {
     BOX_WIDTH = 280,            -- Fixed width for all 3 boxes
     BOX_GAP = 4,                -- Gap between boxes
     EDGE_GAP = 12,              -- Minimum screen edge margin
-    ANCHOR_GAP = 6,             -- Gap between tooltip and anchor entity
+    ANCHOR_GAP = 0,             -- Gap between tooltip and anchor entity (0 = flush)
     OUTLINE_THICKNESS = 2,      -- Outline thickness for all boxes
     
     -- Box padding
@@ -536,13 +537,19 @@ local function measureTooltipStack(boxes)
     return Style.BOX_WIDTH, totalHeight, nameH, descH, infoH
 end
 
+-- Check if two rectangles overlap
+local function rectsOverlap(x1, y1, w1, h1, x2, y2, w2, h2)
+    return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and y1 + h1 > y2
+end
+
 -- Try positioning tooltip on a specific side
 -- Returns { x, y, fits } where fits is true if tooltip doesn't overlap anchor or go offscreen
+-- Now performs overlap check AFTER clamping to catch edge cases
 local function tryPosition(totalW, totalH, anchorX, anchorY, anchorW, anchorH, side, screenW, screenH)
     local edgeGap = Style.EDGE_GAP      -- Screen edge margin
     local anchorGap = Style.ANCHOR_GAP  -- Gap between tooltip and anchor
     local tooltipX, tooltipY
-    local fits = false
+    local fitsInitial = false
 
     if side == "right" then
         tooltipX = anchorX + anchorW + anchorGap
@@ -550,8 +557,8 @@ local function tryPosition(totalW, totalH, anchorX, anchorY, anchorW, anchorH, s
         local anchorCenterY = anchorY + anchorH * 0.5
         tooltipY = anchorCenterY - totalH * 0.5
 
-        -- Check if fits horizontally
-        local fitsHoriz = tooltipX + totalW <= screenW - edgeGap
+        -- Check if fits horizontally (before clamping)
+        fitsInitial = tooltipX + totalW <= screenW - edgeGap
 
         -- Clamp vertically within screen bounds
         if tooltipY < edgeGap then
@@ -561,15 +568,13 @@ local function tryPosition(totalW, totalH, anchorX, anchorY, anchorW, anchorH, s
             tooltipY = math.max(edgeGap, screenH - totalH - edgeGap)
         end
 
-        fits = fitsHoriz
-
     elseif side == "left" then
         tooltipX = anchorX - totalW - anchorGap
         -- Center tooltip vertically relative to anchor
         local anchorCenterY = anchorY + anchorH * 0.5
         tooltipY = anchorCenterY - totalH * 0.5
 
-        local fitsHoriz = tooltipX >= edgeGap
+        fitsInitial = tooltipX >= edgeGap
 
         -- Clamp vertically within screen bounds
         if tooltipY < edgeGap then tooltipY = edgeGap end
@@ -577,55 +582,97 @@ local function tryPosition(totalW, totalH, anchorX, anchorY, anchorW, anchorH, s
             tooltipY = math.max(edgeGap, screenH - totalH - edgeGap)
         end
 
-        fits = fitsHoriz
-
     elseif side == "above" then
         -- Center horizontally relative to anchor
         tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5
         tooltipY = anchorY - totalH - anchorGap
 
-        local fitsVert = tooltipY >= edgeGap
+        fitsInitial = tooltipY >= edgeGap
 
         -- Clamp horizontally within screen bounds
         if tooltipX < edgeGap then tooltipX = edgeGap end
         if tooltipX + totalW > screenW - edgeGap then
             tooltipX = math.max(edgeGap, screenW - totalW - edgeGap)
         end
-
-        fits = fitsVert
 
     elseif side == "below" then
         -- Center horizontally relative to anchor
         tooltipX = anchorX + anchorW * 0.5 - totalW * 0.5
         tooltipY = anchorY + anchorH + anchorGap
 
-        local fitsVert = tooltipY + totalH <= screenH - edgeGap
+        fitsInitial = tooltipY + totalH <= screenH - edgeGap
 
         -- Clamp horizontally within screen bounds
         if tooltipX < edgeGap then tooltipX = edgeGap end
         if tooltipX + totalW > screenW - edgeGap then
             tooltipX = math.max(edgeGap, screenW - totalW - edgeGap)
         end
-
-        fits = fitsVert
     end
 
+    -- CRITICAL: Check for overlap AFTER clamping
+    -- This catches edge cases where clamping pushes tooltip back onto anchor
+    local overlapsAnchor = rectsOverlap(
+        tooltipX, tooltipY, totalW, totalH,
+        anchorX, anchorY, anchorW, anchorH
+    )
+
+    local fits = fitsInitial and not overlapsAnchor
+
     return tooltipX, tooltipY, fits
+end
+
+-- Default anchor size when dimensions are missing or zero
+-- Based on typical card sizes in the UI (see trigger_strip_ui, wand_cooldown_ui)
+local DEFAULT_ANCHOR_W = 80
+local DEFAULT_ANCHOR_H = 112
+
+-- Convert world-space position to screen-space using camera
+-- Returns screenX, screenY
+local function worldToScreen(worldX, worldY, cam)
+    if not cam then return worldX, worldY end
+
+    local target = cam:GetVisualTarget()
+    local offset = cam:GetVisualOffset()
+    local zoom = cam:GetVisualZoom() or 1
+
+    local screenX = (worldX - target.x) * zoom + offset.x
+    local screenY = (worldY - target.y) * zoom + offset.y
+
+    return screenX, screenY
 end
 
 -- Position tooltip relative to anchor entity
 local function positionTooltipV2(boxes, anchorEntity)
     if not anchorEntity then return end
-    
-    local anchorT = component_cache.get(anchorEntity, Transform)
-    if not anchorT then return end
-    
-    -- Get anchor bounds
-    local anchorX = anchorT.actualX or 0
-    local anchorY = anchorT.actualY or 0
-    local anchorW = anchorT.actualW or 32
-    local anchorH = anchorT.actualH or 32
-    
+
+    -- Prefer visual bounds (accounts for animations) over actual bounds
+    local anchorX, anchorY, anchorW, anchorH = Q.visualBounds(anchorEntity)
+
+    -- Fallback to actual bounds if visual not available
+    if not anchorX then
+        anchorX, anchorY, anchorW, anchorH = Q.bounds(anchorEntity)
+    end
+
+    -- Final fallback if entity has no transform
+    if not anchorX then return end
+
+    -- Use sensible defaults for missing/zero dimensions
+    -- (UI boxes sometimes have 0 size on first frame before layout)
+    if not anchorW or anchorW <= 0 then anchorW = DEFAULT_ANCHOR_W end
+    if not anchorH or anchorH <= 0 then anchorH = DEFAULT_ANCHOR_H end
+
+    -- Get camera for coordinate conversion
+    local cam = camera and camera.Get and camera.Get("world_camera")
+    local zoom = (cam and cam.GetVisualZoom and cam:GetVisualZoom()) or 1
+
+    -- Convert world-space anchor position to screen-space
+    if cam then
+        anchorX, anchorY = worldToScreen(anchorX, anchorY, cam)
+        -- Scale dimensions by zoom (world units → screen pixels)
+        anchorW = anchorW * zoom
+        anchorH = anchorH * zoom
+    end
+
     -- Get screen size
     local screenW = globals.screenWidth and globals.screenWidth() or 1920
     local screenH = globals.screenHeight and globals.screenHeight() or 1080

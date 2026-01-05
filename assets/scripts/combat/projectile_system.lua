@@ -64,13 +64,15 @@ ProjectileSystem.physics_step_timer_tag = "projectile_system_update"
 ProjectileSystem.physics_step_timer_active = false
 ProjectileSystem.use_physics_step_timer = true  -- Set to true to update on physics steps
 
--- Movement pattern constants
 ProjectileSystem.MovementType = {
     STRAIGHT = "straight",
     HOMING = "homing",
     ORBITAL = "orbital",
-    ARC = "arc",           -- gravity-affected
-    CUSTOM = "custom"      -- uses custom update function
+    ARC = "arc",
+    CUSTOM = "custom",
+    BOOMERANG = "boomerang",
+    SPIRAL = "spiral",
+    PINGPONG = "pingpong",
 }
 
 -- Collision behavior constants
@@ -170,7 +172,8 @@ function ProjectileSystem.createProjectileData(params)
         damage = params.damage or 10,
         damageType = params.damageType or "physical",
         owner = params.owner or entt_null,
-        faction = params.faction or "player", -- for friendly fire logic
+        faction = params.faction or "player",
+        friendlyFire = params.friendlyFire or false,
         visualDamageThreshold = params.highDamageVisualThreshold or ProjectileSystem.highDamageVisualThreshold,
 
         -- Piercing/hit tracking
@@ -340,6 +343,14 @@ local function resolveCollisionTargets(params)
 
     local targetTag = params.targetCollisionTag or C.CollisionTags.ENEMY
     addIfNotPresent(targets, seen, targetTag)
+
+    if params.friendlyFire then
+        local ownerFaction = params.faction or "player"
+        local ownFactionTag = (ownerFaction == "player") 
+            and C.CollisionTags.PLAYER 
+            or C.CollisionTags.ENEMY
+        addIfNotPresent(targets, seen, ownFactionTag)
+    end
 
     local collideWithWorld = params.collideWithWorld
     if collideWithWorld == nil then
@@ -1130,6 +1141,15 @@ function ProjectileSystem.updateProjectile(entity, dt, projectileScript)
         if behavior.customUpdate then
             behavior.customUpdate(entity, dt, transform, behavior, data)
         end
+
+    elseif behavior.movementType == ProjectileSystem.MovementType.BOOMERANG then
+        ProjectileSystem.updateBoomerangMovement(entity, dt, transform, behavior, projectileScript)
+
+    elseif behavior.movementType == ProjectileSystem.MovementType.SPIRAL then
+        ProjectileSystem.updateSpiralMovement(entity, dt, transform, behavior, projectileScript)
+
+    elseif behavior.movementType == ProjectileSystem.MovementType.PINGPONG then
+        ProjectileSystem.updatePingPongMovement(entity, dt, transform, behavior, projectileScript)
     end
 
     -- Update distance traveled
@@ -1624,7 +1644,6 @@ function ProjectileSystem.updateOrbitalMovement(entity, dt, transform, behavior,
 end
 
 function ProjectileSystem.updateArcMovement(entity, dt, transform, behavior, projectileScript)
-    -- Manual integration for consistent parabolic arcs regardless of world gravity.
     behavior.velocity.y = behavior.velocity.y + (MANUAL_GRAVITY_ACCEL * behavior.gravityScale * dt)
     transform.actualX = transform.actualX + behavior.velocity.x * dt
     transform.actualY = transform.actualY + behavior.velocity.y * dt
@@ -1633,12 +1652,163 @@ function ProjectileSystem.updateArcMovement(entity, dt, transform, behavior, pro
 
     local world = getPhysicsWorld(projectileScript)
     if world then
-        -- Keep physics body aligned with our kinematic integration for collision.
         local centerX = transform.actualX + (transform.actualW or 0) * 0.5
         local centerY = transform.actualY + (transform.actualH or 0) * 0.5
         physics.SetPosition(world, entity, { x = centerX, y = centerY })
         physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
     end
+end
+
+function ProjectileSystem.updateBoomerangMovement(entity, dt, transform, behavior, projectileScript)
+    if not behavior._boomerangState then
+        behavior._boomerangState = {
+            returning = false,
+            startX = transform.actualX + (transform.actualW or 0) * 0.5,
+            startY = transform.actualY + (transform.actualH or 0) * 0.5,
+            maxDistance = behavior.boomerangDistance or 300,
+            returnSpeed = behavior.baseSpeed * 1.2,
+        }
+    end
+    
+    local state = behavior._boomerangState
+    local cx = transform.actualX + (transform.actualW or 0) * 0.5
+    local cy = transform.actualY + (transform.actualH or 0) * 0.5
+    
+    if not state.returning then
+        local dx = cx - state.startX
+        local dy = cy - state.startY
+        local dist = math.sqrt(dx * dx + dy * dy)
+        
+        if dist >= state.maxDistance then
+            state.returning = true
+        end
+    end
+    
+    local world = getPhysicsWorld(projectileScript)
+    
+    if state.returning then
+        local owner = projectileScript.projectileData and projectileScript.projectileData.owner
+        local targetX, targetY = state.startX, state.startY
+        
+        if owner and entity_cache.valid(owner) then
+            local ownerT = component_cache.get(owner, Transform)
+            if ownerT then
+                targetX = ownerT.actualX + (ownerT.actualW or 0) * 0.5
+                targetY = ownerT.actualY + (ownerT.actualH or 0) * 0.5
+            end
+        end
+        
+        local dx = targetX - cx
+        local dy = targetY - cy
+        local dist = math.sqrt(dx * dx + dy * dy)
+        
+        if dist < 30 then
+            projectileScript.projectileLifetime.shouldDespawn = true
+            projectileScript.projectileLifetime.despawnReason = "boomerang_returned"
+            return
+        end
+        
+        if dist > 0.1 then
+            local speed = state.returnSpeed
+            behavior.velocity.x = (dx / dist) * speed
+            behavior.velocity.y = (dy / dist) * speed
+        end
+    end
+    
+    if world then
+        physics.SetVelocity(world, entity, behavior.velocity.x, behavior.velocity.y)
+    else
+        transform.actualX = transform.actualX + behavior.velocity.x * dt
+        transform.actualY = transform.actualY + behavior.velocity.y * dt
+    end
+    
+    if behavior.velocity.x ~= 0 or behavior.velocity.y ~= 0 then
+        transform.actualR = math.atan(behavior.velocity.y, behavior.velocity.x)
+        transform.visualR = transform.actualR
+    end
+end
+
+function ProjectileSystem.updateSpiralMovement(entity, dt, transform, behavior, projectileScript)
+    if not behavior._spiralState then
+        behavior._spiralState = {
+            angle = 0,
+            spiralRate = behavior.spiralRate or 8.0,
+            spiralAmplitude = behavior.spiralAmplitude or 30,
+        }
+    end
+    
+    local state = behavior._spiralState
+    state.angle = state.angle + state.spiralRate * dt
+    
+    local baseVx = behavior.velocity.x
+    local baseVy = behavior.velocity.y
+    local speed = math.sqrt(baseVx * baseVx + baseVy * baseVy)
+    
+    if speed > 0.1 then
+        local perpX = -baseVy / speed
+        local perpY = baseVx / speed
+        local offset = math.sin(state.angle) * state.spiralAmplitude
+        
+        local targetX = transform.actualX + baseVx * dt + perpX * offset * dt
+        local targetY = transform.actualY + baseVy * dt + perpY * offset * dt
+        
+        transform.actualX = targetX
+        transform.actualY = targetY
+    end
+    
+    local world = getPhysicsWorld(projectileScript)
+    if world then
+        local cx = transform.actualX + (transform.actualW or 0) * 0.5
+        local cy = transform.actualY + (transform.actualH or 0) * 0.5
+        physics.SetPosition(world, entity, { x = cx, y = cy })
+    end
+    
+    transform.actualR = math.atan(baseVy, baseVx)
+    transform.visualR = transform.actualR
+end
+
+function ProjectileSystem.updatePingPongMovement(entity, dt, transform, behavior, projectileScript)
+    if not behavior._pingpongState then
+        behavior._pingpongState = {
+            timer = 0,
+            zigInterval = behavior.zigInterval or 0.15,
+            zigAmplitude = behavior.zigAmplitude or 60,
+            direction = 1,
+        }
+    end
+    
+    local state = behavior._pingpongState
+    state.timer = state.timer + dt
+    
+    if state.timer >= state.zigInterval then
+        state.timer = 0
+        state.direction = -state.direction
+    end
+    
+    local baseVx = behavior.velocity.x
+    local baseVy = behavior.velocity.y
+    local speed = math.sqrt(baseVx * baseVx + baseVy * baseVy)
+    
+    if speed > 0.1 then
+        local perpX = -baseVy / speed
+        local perpY = baseVx / speed
+        
+        local zigVx = baseVx + perpX * state.zigAmplitude * state.direction
+        local zigVy = baseVy + perpY * state.zigAmplitude * state.direction
+        
+        transform.actualX = transform.actualX + zigVx * dt
+        transform.actualY = transform.actualY + zigVy * dt
+    end
+    
+    local world = getPhysicsWorld(projectileScript)
+    if world then
+        local cx = transform.actualX + (transform.actualW or 0) * 0.5
+        local cy = transform.actualY + (transform.actualH or 0) * 0.5
+        physics.SetPosition(world, entity, { x = cx, y = cy })
+    end
+    
+    transform.actualR = math.atan(baseVy, baseVx)
+    transform.visualR = transform.actualR
 end
 
 --[[
@@ -1673,16 +1843,14 @@ end
 
 -- Handle collision between projectile and another entity
 function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
-    print("[ProjectileSystem.handleCollision] CALLED - projectile:", projectileEntity, "other:", otherEntity)
+    log_debug("[ProjectileSystem.handleCollision] projectile:", projectileEntity, "other:", otherEntity)
 
     if not entity_cache.valid(projectileEntity) then
-        print("[ProjectileSystem.handleCollision] projectile invalid, returning")
         return
     end
 
     local projectileScript = ProjectileSystem.getProjectileScript(projectileEntity)
     if not projectileScript or not projectileScript.projectileData then
-        print("[ProjectileSystem.handleCollision] no projectileScript or projectileData, returning")
         return
     end
 
@@ -1694,7 +1862,6 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     local otherIsValid = ensure_entity(otherEntity)
     local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
     local isDamageable = targetGameObject ~= nil
-    print("[ProjectileSystem.handleCollision] otherIsValid:", otherIsValid, "isDamageable:", isDamageable)
     local now = os.clock()
 
     -- Check if already hit this entity (for piercing) – only track damageable targets
@@ -1765,11 +1932,23 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     end
 end
 
--- Apply damage to target entity
 function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, precomputedGameObject)
-    -- Check if target has health
     local targetGameObj = precomputedGameObject or component_cache.get(targetEntity, GameObject)
     if not targetGameObj then return nil, nil end
+
+    if not data.friendlyFire then
+        local ownerFaction = data.faction or "player"
+        local targetScript = getScriptTableFromEntityID(targetEntity)
+        local targetFaction = targetScript and targetScript.faction or "enemy"
+        
+        if ownerFaction == targetFaction then
+            return nil, nil
+        end
+        
+        if targetEntity == data.owner then
+            return nil, nil
+        end
+    end
 
     local function combatActorForEntity(eid)
         if not eid or eid == entt_null or not entity_cache.valid(eid) then
@@ -1783,11 +1962,10 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
     local targetCombatActor = combatActorForEntity(targetEntity)
     local sourceCombatActor = combatActorForEntity(data.owner)
 
-    -- DEBUG: Trace damage application
-    print("[ProjectileSystem.applyDamage] targetEntity:", targetEntity)
-    print("[ProjectileSystem.applyDamage] ctx:", ctx and "EXISTS" or "NIL")
-    print("[ProjectileSystem.applyDamage] targetCombatActor:", targetCombatActor and "EXISTS" or "NIL")
-    print("[ProjectileSystem.applyDamage] CombatSystem.Game.Effects:", CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and "EXISTS" or "NIL")
+    log_debug("[ProjectileSystem.applyDamage] targetEntity:", targetEntity)
+    log_debug("[ProjectileSystem.applyDamage] ctx:", ctx and "EXISTS" or "NIL")
+    log_debug("[ProjectileSystem.applyDamage] targetCombatActor:", targetCombatActor and "EXISTS" or "NIL")
+    log_debug("[ProjectileSystem.applyDamage] CombatSystem.Game.Effects:", CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and "EXISTS" or "NIL")
 
     -- Use combat system if available
     if CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and ctx and targetCombatActor then

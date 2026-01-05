@@ -344,6 +344,12 @@ function WandModifiers.createAggregate()
 
         -- Cost scaling from player stats
         manaCostMultiplier = 1.0,
+
+        friendlyFire = false,
+        formation = nil,
+        divideCount = 1,
+        divideDamageMultiplier = 1.0,
+        movementType = nil,
     }
 end
 
@@ -521,6 +527,26 @@ function WandModifiers.applyCardToAggregate(agg, card)
     if card.cast_from_event then
         agg.castFromEvent = true
     end
+
+    if card.friendly_fire then
+        agg.friendlyFire = true
+    end
+
+    if card.formation then
+        agg.formation = card.formation
+    end
+
+    if card.divide_count then
+        agg.divideCount = (agg.divideCount or 1) * card.divide_count
+    end
+
+    if card.divide_damage_multiplier then
+        agg.divideDamageMultiplier = (agg.divideDamageMultiplier or 1.0) * card.divide_damage_multiplier
+    end
+
+    if card.movement_type then
+        agg.movementType = card.movement_type
+    end
 end
 
 --- Merges player stats into the modifier aggregate
@@ -663,6 +689,34 @@ function WandModifiers.calculateMulticastAngles(modifiers, baseAngle)
         end
     end
 
+    return angles
+end
+
+WandModifiers.FORMATIONS = {
+    pentagon = { 0, math.pi * 2/5, math.pi * 4/5, math.pi * 6/5, math.pi * 8/5 },
+    hexagon = { 0, math.pi/3, math.pi * 2/3, math.pi, math.pi * 4/3, math.pi * 5/3 },
+    behind_back = { 0, math.pi },
+    bifurcated = { -math.pi/12, math.pi/12 },
+    trifurcated = { -math.pi/9, 0, math.pi/9 },
+    above_below = { -math.pi/2, math.pi/2 },
+}
+
+function WandModifiers.calculateFormationAngles(modifiers, baseAngle)
+    local formation = modifiers.formation
+    if not formation then
+        return WandModifiers.calculateMulticastAngles(modifiers, baseAngle)
+    end
+    
+    local pattern = WandModifiers.FORMATIONS[formation]
+    if not pattern then
+        return { baseAngle }
+    end
+    
+    local angles = {}
+    for _, offset in ipairs(pattern) do
+        angles[#angles + 1] = baseAngle + offset
+    end
+    
     return angles
 end
 

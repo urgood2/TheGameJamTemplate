@@ -1048,7 +1048,154 @@ TriggerCards.TEST_TRIGGER_ON_DISTANCE_TRAVELED = {
     sprite = "trigger-on-distance-travelled.png",
 }
 
--- Apply defaults to all cards at load time
+Cards.SPARK_BOLT = {
+    id = "SPARK_BOLT",
+    type = "action",
+    mana_cost = 5,
+    damage = 3,
+    projectile_speed = 800,
+    lifetime = 0.67,
+    cast_delay = 50,
+    spread_angle = -1,
+    critical_hit_chance = 5,
+    tags = { "Projectile", "Arcane" },
+    description = "A weak but enchanting sparkling projectile",
+}
+
+Cards.BOUNCING_BURST = {
+    id = "BOUNCING_BURST",
+    type = "action",
+    mana_cost = 5,
+    damage = 3,
+    projectile_speed = 700,
+    lifetime = 12.5,
+    cast_delay = -30,
+    ricochet_count = 10,
+    spread_angle = -1,
+    tags = { "Projectile" },
+    description = "A bouncing projectile with long lifetime",
+}
+
+Cards.BOMB = {
+    id = "BOMB",
+    type = "action",
+    max_uses = 3,
+    mana_cost = 25,
+    damage = 125,
+    radius_of_effect = 60,
+    projectile_speed = 60,
+    lifetime = 3.0,
+    cast_delay = 1670,
+    gravity_affected = true,
+    friendly_fire = true,
+    tags = { "AoE", "Brute" },
+    description = "An explosive bomb affected by gravity",
+}
+
+Cards.TELEPORT_BOLT = {
+    id = "TELEPORT_BOLT",
+    type = "action",
+    mana_cost = 40,
+    projectile_speed = 800,
+    lifetime = 2.0,
+    cast_delay = 50,
+    teleport_on_hit = true,
+    tags = { "Mobility", "Arcane" },
+    description = "Teleports you to where the bolt lands",
+}
+
+Cards.FORMATION_PENTAGON = {
+    id = "FORMATION_PENTAGON",
+    type = "modifier",
+    mana_cost = 5,
+    formation = "pentagon",
+    tags = { "Arcane", "AoE" },
+    description = "Casts in 5 directions",
+}
+
+Cards.FORMATION_HEXAGON = {
+    id = "FORMATION_HEXAGON",
+    type = "modifier",
+    mana_cost = 6,
+    formation = "hexagon",
+    tags = { "Arcane", "AoE" },
+    description = "Casts in 6 directions",
+}
+
+Cards.FORMATION_BEHIND_BACK = {
+    id = "FORMATION_BEHIND_BACK",
+    type = "modifier",
+    mana_cost = 0,
+    formation = "behind_back",
+    tags = { "Defense" },
+    description = "Also casts behind you",
+}
+
+Cards.MOD_BOOMERANG = {
+    id = "MOD_BOOMERANG",
+    type = "modifier",
+    mana_cost = 10,
+    movement_type = "boomerang",
+    tags = { "Projectile" },
+    description = "Projectile returns to caster",
+}
+
+Cards.MOD_SPIRAL_ARC = {
+    id = "MOD_SPIRAL_ARC",
+    type = "modifier",
+    mana_cost = 0,
+    cast_delay = -100,
+    lifetime_modifier = 50,
+    movement_type = "spiral",
+    tags = { "Projectile" },
+    description = "Spiraling corkscrew path",
+}
+
+Cards.DIVIDE_BY_2 = {
+    id = "DIVIDE_BY_2",
+    type = "modifier",
+    mana_cost = 35,
+    cast_delay = 330,
+    divide_count = 2,
+    divide_damage_multiplier = 0.6,
+    tags = { "Arcane" },
+    description = "Splits the next spell into 2 weaker copies",
+}
+
+Cards.DIVIDE_BY_4 = {
+    id = "DIVIDE_BY_4",
+    type = "modifier",
+    mana_cost = 70,
+    cast_delay = 830,
+    divide_count = 4,
+    divide_damage_multiplier = 0.4,
+    tags = { "Arcane" },
+    description = "Splits the next spell into 4 weaker copies",
+}
+
+Cards.PIERCING_SHOT = {
+    id = "PIERCING_SHOT",
+    type = "modifier",
+    mana_cost = 20,
+    pierce_count = 3,
+    friendly_fire = true,
+    tags = { "Projectile", "Brute" },
+    description = "Pierces enemies but can hurt you",
+}
+
+Cards.LIGHTNING_BOLT = {
+    id = "LIGHTNING_BOLT",
+    type = "action",
+    mana_cost = 60,
+    damage = 25,
+    damage_type = "lightning",
+    projectile_speed = 2000,
+    lifetime = 0.5,
+    friendly_fire = true,
+    tags = { "Projectile", "Lightning" },
+    description = "Extremely fast lightning. Can hurt you!",
+}
+
 local ContentDefaults = require("data.content_defaults")
 
 for key, card in pairs(Cards) do

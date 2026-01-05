@@ -179,12 +179,35 @@ MAIN ACTION EXECUTION
 ================================================================================
 ]] --
 
---- Executes an action card with the given modifiers
---- @param actionCard table Action card definition
---- @param modifiers table Modifier aggregate from WandModifiers
---- @param context table Execution context
---- @param childInfo table|nil Sub-cast metadata for this action
---- @return table|nil Result of action execution (e.g., spawned entities)
+function WandActions.buildExecutionContext(casterEntity, opts)
+    opts = opts or {}
+    
+    local faction = opts.faction
+    if not faction then
+        local casterScript = getScriptTableFromEntityID and getScriptTableFromEntityID(casterEntity)
+        faction = casterScript and casterScript.faction or "player"
+    end
+    
+    local position = opts.position
+    if not position and component_cache then
+        local transform = component_cache.get(casterEntity, Transform)
+        if transform then
+            position = {
+                x = transform.actualX + (transform.actualW or 0) * 0.5,
+                y = transform.actualY + (transform.actualH or 0) * 0.5
+            }
+        end
+    end
+    
+    return {
+        casterEntity = casterEntity,
+        playerEntity = casterEntity,
+        faction = faction,
+        playerPosition = position,
+        playerAngle = opts.angle or 0,
+    }
+end
+
 function WandActions.execute(actionCard, modifiers, context, childInfo)
     if not actionCard or actionCard.type ~= "action" then
         log_debug("WandActions.execute: invalid action card")
@@ -304,28 +327,39 @@ function WandActions.executeProjectileAction(actionCard, modifiers, context, chi
         baseAngle = baseAngle + spreadOffset
     end
 
-    -- Calculate multicast angles
-    local angles = WandModifiers.calculateMulticastAngles(modifiers, baseAngle)
+    local angles = WandModifiers.calculateFormationAngles(modifiers, baseAngle)
 
     applyPlayerLaunchFeedback(context, baseAngle)
 
+    local divideCount = modifiers.divideCount or 1
+    local divideDamageMultiplier = modifiers.divideDamageMultiplier or 1.0
     local spawnedProjectiles = {}
 
-    -- Spawn projectiles for each angle
     for _, angle in ipairs(angles) do
-        local projectileId = WandActions.spawnSingleProjectile(
-            actionCard,
-            props,
-            modifiers,
-            context,
-            spawnPos,
-            angle,
-            childInfo,
-            upgradeBehaviors
-        )
+        for d = 1, divideCount do
+            local dividedProps = props
+            if divideCount > 1 then
+                dividedProps = {}
+                for k, v in pairs(props) do
+                    dividedProps[k] = v
+                end
+                dividedProps.damage = (dividedProps.damage or 0) * divideDamageMultiplier
+            end
+            
+            local projectileId = WandActions.spawnSingleProjectile(
+                actionCard,
+                dividedProps,
+                modifiers,
+                context,
+                spawnPos,
+                angle,
+                childInfo,
+                upgradeBehaviors
+            )
 
-        if projectileId and projectileId ~= entt_null then
-            table.insert(spawnedProjectiles, projectileId)
+            if projectileId and projectileId ~= entt_null then
+                table.insert(spawnedProjectiles, projectileId)
+            end
         end
     end
 
@@ -357,10 +391,16 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
     -- Get raw card definition (card scripts don't have all properties like custom_render)
     local cardDef = getRawCardDefinition(actionCard) or actionCard
 
-    -- Determine movement type
     local movementType = ProjectileSystem.MovementType.STRAIGHT
 
-    if props.homingEnabled or modifiers.autoAim then
+    local cardMovement = actionCard.movement_type or cardDef.movement_type
+    local modMovement = modifiers.movementType
+    
+    if cardMovement and ProjectileSystem.MovementType[string.upper(cardMovement)] then
+        movementType = ProjectileSystem.MovementType[string.upper(cardMovement)]
+    elseif modMovement and ProjectileSystem.MovementType[string.upper(modMovement)] then
+        movementType = ProjectileSystem.MovementType[string.upper(modMovement)]
+    elseif props.homingEnabled or modifiers.autoAim then
         movementType = ProjectileSystem.MovementType.HOMING
     elseif actionCard.gravity_affected then
         movementType = ProjectileSystem.MovementType.ARC
@@ -410,11 +450,11 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
         -- Gravity (for arc movement)
         gravityScale = actionCard.gravity_affected and 1.5 or 0,
 
-        -- Damage
         damage = props.damage,
         damageType = props.damageType,
-        owner = context.playerEntity or entt_null,
-        faction = "player",
+        owner = context.casterEntity or context.playerEntity or entt_null,
+        faction = context.faction or "player",
+        friendlyFire = actionCard.friendly_fire or modifiers.friendlyFire or false,
 
         -- Collision behavior
         collisionBehavior = collisionBehavior,
@@ -886,17 +926,80 @@ TELEPORT ACTIONS
 Actions that teleport the player
 ]] --
 
---- Executes a teleport action card
---- @param actionCard table Action card definition
---- @param modifiers table Modifier aggregate
---- @param context table Execution context
---- @return boolean Success
 function WandActions.executeTeleportAction(actionCard, modifiers, context)
-    -- TODO: Teleport player
-    -- This requires physics/transform manipulation
-    log_debug("WandActions: Teleporting player")
-
+    local caster = context.casterEntity or context.playerEntity
+    if not caster then
+        return false
+    end
+    
+    if actionCard.teleport_on_hit or actionCard.teleport_to_impact then
+        local props = WandModifiers.applyToAction(actionCard, modifiers)
+        local spawnPos = context.playerPosition
+        local angle = context.playerAngle or 0
+        
+        local projectileId = ProjectileSystem.spawn({
+            position = spawnPos,
+            positionIsCenter = true,
+            angle = angle,
+            movementType = ProjectileSystem.MovementType.STRAIGHT,
+            baseSpeed = props.speed or actionCard.projectile_speed or 800,
+            damage = props.damage or 0,
+            damageType = props.damageType or "arcane",
+            owner = caster,
+            faction = context.faction or "player",
+            lifetime = props.lifetime or actionCard.lifetime or 2.0,
+            collisionBehavior = ProjectileSystem.CollisionBehavior.DESTROY,
+            size = 8,
+            
+            onHit = function(proj, target, data)
+                local transform = component_cache.get(proj, Transform)
+                if transform then
+                    WandActions.teleportEntity(caster, 
+                        transform.actualX + (transform.actualW or 0) * 0.5,
+                        transform.actualY + (transform.actualH or 0) * 0.5)
+                end
+            end,
+            onDestroy = function(proj, data)
+                if data.despawnReason ~= "timeout" then
+                    local transform = component_cache.get(proj, Transform)
+                    if transform then
+                        WandActions.teleportEntity(caster,
+                            transform.actualX + (transform.actualW or 0) * 0.5,
+                            transform.actualY + (transform.actualH or 0) * 0.5)
+                    end
+                end
+            end,
+        })
+        
+        return projectileId ~= entt_null
+    end
+    
     return false
+end
+
+function WandActions.teleportEntity(entity, x, y)
+    if not entity then return end
+    if entity_cache and not entity_cache.valid(entity) then return end
+    
+    local transform = component_cache and component_cache.get(entity, Transform)
+    if not transform then return end
+    
+    local oldX = transform.actualX + (transform.actualW or 0) * 0.5
+    local oldY = transform.actualY + (transform.actualH or 0) * 0.5
+    
+    transform.actualX = x - (transform.actualW or 0) * 0.5
+    transform.actualY = y - (transform.actualH or 0) * 0.5
+    
+    local world = PhysicsManager and PhysicsManager.get_world and PhysicsManager.get_world("world")
+    if world and physics and physics.SetPosition then
+        physics.SetPosition(world, entity, { x = x, y = y })
+        if physics.SetVelocity then
+            physics.SetVelocity(world, entity, 0, 0)
+        end
+    end
+    
+    local signal = require("external.hump.signal")
+    signal.emit("entity_teleported", entity, { from = { x = oldX, y = oldY }, to = { x = x, y = y } })
 end
 
 --[[

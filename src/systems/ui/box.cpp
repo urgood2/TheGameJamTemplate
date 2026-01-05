@@ -36,6 +36,8 @@ namespace ui
 {
     namespace
     {
+        thread_local std::unordered_set<entt::entity> boxesBeingRemoved;
+        
         bool IsVisibleWindowSurface(const UIConfig& config)
         {
             if (config.nPatchInfo || config.nPatchSourceTexture) {
@@ -1902,12 +1904,10 @@ namespace ui
                 return {};
         }
 
-        // Try to retrieve necessary components
         auto *node = registry.try_get<transform::GameObject>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
 
-        // Ensure the node exists
-        AssertThat(node, Is().Not().EqualTo(nullptr));
+        if (!node) return ingroup;
 
         // Recursively traverse child nodes
         for (auto childEntry : node->orderedChildren)
@@ -1928,45 +1928,59 @@ namespace ui
 
     void box::Remove(entt::registry &registry, entt::entity entity)
     {
-        // Ensure entity exists
         if (!registry.valid(entity))
             return;
 
-        // If this is the overlay menu, refresh alerts
+        if (boxesBeingRemoved.contains(entity)) {
+            spdlog::warn("box::Remove cycle detected for entity {}", static_cast<uint32_t>(entity));
+            return;
+        }
+        boxesBeingRemoved.insert(entity);
+
         if (entity == globals::getOverlayMenu())
         {
             globals::shouldRefreshAlerts = true;
         }
 
-        auto &uiBox = registry.get<UIBoxComponent>(entity);
-
-        ui::element::Remove(registry, uiBox.uiRoot.value());
-
-        // Remove entity from global registry
-        auto instanceType = registry.get<UIConfig>(entity).instanceType.value_or("UIBOX");
-        auto &instanceList = globals::getGlobalUIInstanceMap()[instanceType];
-
-        auto it = std::find(instanceList.begin(), instanceList.end(), entity);
-        if (it != instanceList.end())
+        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+        if (uiBox && uiBox->uiRoot && registry.valid(uiBox->uiRoot.value()))
         {
-            instanceList.erase(it);
+            ui::element::Remove(registry, uiBox->uiRoot.value());
         }
 
-        // Remove all children recursively
-        auto &node = registry.get<transform::GameObject>(entity);
-        for (auto childEntry : node.children)
+        auto *uiConfig = registry.try_get<UIConfig>(entity);
+        if (uiConfig)
         {
-            auto child = childEntry.second;
-            util::RemoveAll(registry, child);
-        }
-        node.children.clear();
-        node.orderedChildren.clear();
+            auto instanceType = uiConfig->instanceType.value_or("UIBOX");
+            auto &instanceList = globals::getGlobalUIInstanceMap()[instanceType];
 
-        // Remove transform component
+            auto it = std::find(instanceList.begin(), instanceList.end(), entity);
+            if (it != instanceList.end())
+            {
+                instanceList.erase(it);
+            }
+        }
+
+        auto *node = registry.try_get<transform::GameObject>(entity);
+        if (node)
+        {
+            std::vector<entt::entity> childrenCopy;
+            childrenCopy.reserve(node->children.size());
+            for (auto &childEntry : node->children)
+            {
+                childrenCopy.push_back(childEntry.second);
+            }
+            node->children.clear();
+            node->orderedChildren.clear();
+            
+            for (auto child : childrenCopy)
+            {
+                util::RemoveAll(registry, child);
+            }
+        }
+
         transform::RemoveEntity(&registry, entity);
-
-        // Finally, destroy the entity
-        // registry.destroy(entity);
+        boxesBeingRemoved.erase(entity);
     }
 
     // entity is a uibox.
@@ -2070,18 +2084,14 @@ namespace ui
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)
     {
-        using namespace snowhouse;
-        bool doNotUse = true;
-        AssertThat(doNotUse, Is().EqualTo(false)); // TODO: this method should be deleted
-
+        if (!registry.valid(entity)) return;
+        
         auto *uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *uiBoxRole = registry.try_get<transform::InheritedProperties>(entity);
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *uiState = registry.try_get<UIState>(entity);
 
-        AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
-        AssertThat(uiState, Is().Not().EqualTo(nullptr));
+        if (!uiBox || !transform || !uiState) return;
 
         // 1️⃣ Calculate proper position, width, and height (recursive layout processing)
         auto rootEntity = uiBox->uiRoot.value();
@@ -3055,11 +3065,12 @@ namespace ui
 
     void box::SetContainer(entt::registry &registry, entt::entity self, entt::entity container)
     {
+        if (!registry.valid(self)) return;
+        
         auto *transform = registry.try_get<transform::Transform>(self);
         auto *uiBox = registry.try_get<UIBoxComponent>(self);
 
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
-        AssertThat(uiBox, Is().Not().EqualTo(nullptr));
+        if (!transform || !uiBox) return;
 
         // TODO: document what a container is relative to hierarchy too
 
@@ -3108,16 +3119,18 @@ namespace ui
     }
     std::string box::DebugPrint(entt::registry &registry, entt::entity self, int indent)
     {
+        if (!registry.valid(self)) return "[invalid entity]";
+        
         auto *transform = registry.try_get<transform::Transform>(self);
         auto *uiBox = registry.try_get<UIBoxComponent>(self);
         auto *uiBoxObject = registry.try_get<transform::GameObject>(self);
         auto *config = registry.try_get<UIConfig>(self);
         auto *role = registry.try_get<transform::InheritedProperties>(self);
+        
+        if (!transform || !uiBox || !config) return "[missing components]";
+        if (!uiBox->uiRoot) return "[no uiRoot]";
+        
         auto *uiConfig = registry.try_get<UIConfig>(uiBox->uiRoot.value());
-
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
-        AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-        AssertThat(config, Is().Not().EqualTo(nullptr));
 
         auto layerOrderComp = globals::getRegistry().try_get<layer::LayerOrderComponent>(self);
 

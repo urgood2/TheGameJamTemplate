@@ -32,6 +32,9 @@ namespace ui
 {
     namespace
     {
+        // Track entities currently being removed to detect cycles
+        thread_local std::unordered_set<entt::entity> entitiesBeingRemoved;
+        
         // Resolve the font for a given UI configuration, falling back to the current language font.
         const globals::FontData& resolveFontData(const UIConfig* config)
         {
@@ -202,14 +205,14 @@ namespace ui
 
     void element::SetValues(entt::registry &registry, entt::entity entity, const LocalTransform &transformReference, bool recalculate)
     {
+        if (!registry.valid(entity)) return;
+        
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *uiElement = registry.try_get<UIElementComponent>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *uiState = registry.try_get<UIState>(entity);
 
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(uiState, Is().Not().EqualTo(nullptr));
+        if (!uiElement || !uiConfig || !uiState) return;
 
         // Initialize transform if it's a new element or not recalculating
         if (!recalculate || transform == nullptr)
@@ -614,11 +617,7 @@ namespace ui
         auto *uiState = registry.try_get<UIState>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
 
-        // Ensure required components exist
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
-        AssertThat(uiState, Is().Not().EqualTo(nullptr));
+        if (!uiElement || !uiConfig || !transform || !uiState || !node) return;
 
         // STEP 1: Align with major parent
         transform::MoveWithMaster(entity, 0, *transform, registry.get<transform::InheritedProperties>(entity), *node);
@@ -675,9 +674,7 @@ namespace ui
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *transform = registry.try_get<transform::Transform>(entity);
 
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
+        if (!uiElement || !uiConfig || !transform) return;
 
         // If this UI element represents an OBJECT (UIT.O), delegate to the associated object
         if (uiElement->UIT == UITypeEnum::OBJECT && uiConfig->object)
@@ -695,14 +692,13 @@ namespace ui
     
     std::optional<entt::entity> element::CanBeDragged(entt::registry &registry, entt::entity entity)
     {
-        // Retrieve UIElementComponent and UIConfig
+        if (!registry.valid(entity)) return std::nullopt;
+        
         auto *uiElement = registry.try_get<UIElementComponent>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
 
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
+        if (!uiElement || !uiConfig || !node) return std::nullopt;
 
         // Step 1: Check if the element itself can be dragged
         if (node->state.dragEnabled)
@@ -881,15 +877,14 @@ namespace ui
 
     std::pair<float, float> element::SetWH(entt::registry &registry, entt::entity entity)
     {
+        if (!registry.valid(entity)) return {0.f, 0.f};
+        
         auto *uiElement = registry.try_get<UIElementComponent>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
         auto *transform = registry.try_get<transform::Transform>(entity);
 
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
+        if (!uiElement || !uiConfig || !node || !transform) return {0.f, 0.f};
 
         float padding = uiConfig->effectivePadding();
         float max_w = 0.f, max_h = 0.f;
@@ -1119,9 +1114,7 @@ namespace ui
             auto *node = registry.try_get<transform::GameObject>(entity);
             auto *transform = registry.try_get<transform::Transform>(entity);
 
-            AssertThat(config, Is().Not().EqualTo(nullptr));
-            AssertThat(node, Is().Not().EqualTo(nullptr));
-            AssertThat(transform, Is().Not().EqualTo(nullptr));
+            if (!config || !node || !transform) continue;
 
             float padding = config->effectivePadding();
 
@@ -1137,9 +1130,7 @@ namespace ui
                 auto *childTransform = registry.try_get<transform::Transform>(child);
                 auto *childUIState = registry.try_get<UIState>(child);
 
-                AssertThat(childConfig, Is().Not().EqualTo(nullptr));
-                AssertThat(childTransform, Is().Not().EqualTo(nullptr));
-                AssertThat(childUIState, Is().Not().EqualTo(nullptr));
+                if (!childConfig || !childTransform || !childUIState) continue;
 
                 // Apply vertical alignment
                 if (config->alignmentFlags && *config->alignmentFlags & transform::InheritedProperties::Alignment::VERTICAL_CENTER)
@@ -2885,17 +2876,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     bool element::CollidesWithPoint(entt::registry &registry, entt::entity entity, const Vector2 &cursorPosition)
     {
-        // Retrieve UI element and UI box components
+        if (!registry.valid(entity)) return false;
+        
         auto *uiElement = registry.try_get<UIElementComponent>(entity);
         auto *uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
 
-        // Ensure valid components exist
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
+        if (!uiElement || !uiBox || !node) return false;
 
-        // Check if the UIBox allows collision
         if (node->state.collisionEnabled)
         {
             transform::CheckCollisionWithPoint(&registry, entity, cursorPosition);
@@ -2906,16 +2894,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     void element::Click(entt::registry &registry, entt::entity entity)
     {
+        if (!registry.valid(entity)) return;
+        
         auto *uiElement = registry.try_get<UIElementComponent>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *uiState = registry.try_get<UIState>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
 
-        // Ensure valid components exist
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
-        AssertThat(uiState, Is().Not().EqualTo(nullptr));
+        if (!uiElement || !uiConfig || !uiState || !node) return;
 
         // Ensure button conditions are met before proceeding
         float currentTime = main_loop::mainLoop.realtimeTimer;
@@ -2996,12 +2982,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
 
-        // Ensure valid components exist
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
+        if (!uiConfig || !node) return {0, 0};
 
         // Check if this element has tabbed navigation
-        if (uiConfig && uiConfig->focusArgs && uiConfig->focusArgs->type == "tab")
+        if (uiConfig->focusArgs && uiConfig->focusArgs->type == "tab")
         { // TODO: document focus arg type
             for (auto childEntry : node->orderedChildren)
             {
@@ -3028,55 +3012,59 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     void element::Remove(entt::registry &registry, entt::entity entity)
     {
+        if (!registry.valid(entity)) return;
+        
+        if (entitiesBeingRemoved.contains(entity)) {
+            spdlog::warn("element::Remove cycle detected for entity {}", static_cast<uint32_t>(entity));
+            return;
+        }
+        entitiesBeingRemoved.insert(entity);
+        
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
 
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
-
-        // Step 1: Remove associated object (if any)
-        if (uiConfig && uiConfig->object)
+        if (uiConfig && uiConfig->object && registry.valid(uiConfig->object.value()))
         {
-            registry.destroy(uiConfig->object.value()); // Destroy linked entity
+            registry.destroy(uiConfig->object.value());
             uiConfig->object = std::nullopt;
         }
 
-        // Step 2: Reset text input hook if this is the active one
         if (globals::getInputState().text_input_hook && globals::getInputState().text_input_hook.value() == entity)
         {
             globals::getInputState().text_input_hook.reset();
         }
 
-        // Step 3: Recursively remove all children
         if (node)
         {
-            for (auto childEntry : node->children)
+            std::vector<entt::entity> childrenCopy;
+            childrenCopy.reserve(node->children.size());
+            for (auto &childEntry : node->children)
             {
-                auto child = childEntry.second;
+                childrenCopy.push_back(childEntry.second);
+            }
+            node->children.clear();
+            node->orderedChildren.clear();
+            
+            for (auto child : childrenCopy)
+            {
                 Remove(registry, child);
             }
-            node->children.clear(); // Ensure child list is empty
-            node->orderedChildren.clear(); // Ensure ordered child list is empty
         }
 
-        // Step 4: Remove entity from registry
         transform::RemoveEntity(&registry, entity);
+        entitiesBeingRemoved.erase(entity);
     }
 
     void element::ApplyHover(entt::registry &registry, entt::entity entity)
     {
+        if (!registry.valid(entity)) return;
         
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
         auto *roomTransform = registry.try_get<transform::Transform>(globals::gameWorldContainerEntity);
 
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
-        AssertThat(roomTransform, Is().Not().EqualTo(nullptr));
-        
-        // SPDLOG_DEBUG("ApplyHover(): Applying hover for entity: {}", static_cast<int>(entity));
+        if (!uiConfig || !transform || !node || !roomTransform) return;
 
         // Step 1: Handle On-Demand Tooltip
         if (uiConfig->onDemandTooltip)
@@ -3127,11 +3115,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     void element::StopHover(entt::registry &registry, entt::entity entity)
     {
+        if (!registry.valid(entity)) return;
+        
         auto *node = registry.try_get<transform::GameObject>(entity);
         auto *uiConfig = registry.try_get<UIConfig>(entity);
 
-        AssertThat(node, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
+        if (!node || !uiConfig) return;
 
         if (node->methods.onStopHover)
         {

@@ -2333,7 +2333,7 @@ void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr,
 }
 
 void renderTextImmediate(entt::entity textEntity,
-                         std::shared_ptr<layer::Layer> layerPtr, bool debug) {
+                         layer::Layer* layerPtr, bool debug) {
   ZONE_SCOPED("TextSystem::renderText");
   auto &text = globals::getRegistry().get<Text>(textEntity);
   auto &textTransform =

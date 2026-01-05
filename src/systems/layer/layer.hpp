@@ -338,11 +338,11 @@ namespace layer
     
     auto pushEntityTransformsToMatrix(entt::registry &registry,
                                   entt::entity e,
-                                  std::shared_ptr<layer::Layer> layer,
+                                  Layer* layer,
                                   int zOrder = 0) -> void;
     auto pushEntityTransformsToMatrixImmediate(entt::registry &registry,
                                   entt::entity e,
-                                  std::shared_ptr<layer::Layer> layer,
+                                  Layer* layer,
                                   int zOrder = 0) -> void;
 
     // Command helpers - These functions add draw commands to the specified layer
@@ -428,14 +428,14 @@ namespace layer
     void SetLineWidth(float lineWidth);
     void SetColor(const Color &color);
     void SetRLTexture(Texture2D texture);
-    void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color);
-    void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, entt::entity cacheEntity, const Color color, bool useFull);
+    void RenderRectVerticesFilledLayer(Layer* layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color);
+    void RenderRectVerticlesOutlineLayer(Layer* layerPtr, entt::entity cacheEntity, const Color color, bool useFull);
     void renderSliceOffscreenFromDrawList(
         entt::registry& registry,
         const std::vector<ui::UIDrawListItem>& drawList,
         size_t startIndex,
         size_t endIndex,
-        std::shared_ptr<layer::Layer> layerPtr,
+        Layer* layerPtr,
         float pad = 0.0f);
         
 

@@ -1556,7 +1556,7 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   cb.set_function("pushEntityTransformsToMatrix",
                   [](entt::registry &registry, entt::entity e,
                      std::shared_ptr<layer::Layer> layer, int zOrder) {
-                    return pushEntityTransformsToMatrix(registry, e, layer,
+                    return pushEntityTransformsToMatrix(registry, e, layer.get(),
                                                         zOrder);
                   });
 
@@ -1872,6 +1872,8 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
   // -----------------------------------------------------------------------------
 // Immediate versions (execute immediately instead of queuing)
 // -----------------------------------------------------------------------------
+// PERF: Execute* functions now take Layer* instead of shared_ptr<Layer>
+// to avoid ref-count overhead on every draw command call
 #define EXEC_CMD(execFunc, cmdName)                                            \
   cb.set_function("execute" #cmdName, [](std::shared_ptr<layer::Layer> lyr,    \
                                          sol::function init) {                 \
@@ -1884,7 +1886,7 @@ void exposeToLua(sol::state &lua, EngineContext *ctx) {
                      r.error().c_str());                                       \
       }                                                                        \
     }                                                                          \
-    ::layer::execFunc(lyr, &c);                                                \
+    ::layer::execFunc(lyr.get(), &c);                                          \
   });
 
   // Circle & primitives
@@ -3395,7 +3397,7 @@ void DrawLayerCommandsToSpecificCanvasOptimizedVersion(
 
     auto it = dispatcher.find(command.type);
     if (it != dispatcher.end()) {
-      it->second(layer, command.data);
+      it->second(layer.get(), command.data);
       IncrementDrawCallStats(command.type);
     } else {
       SPDLOG_ERROR("Unhandled draw command type {}");
@@ -3752,14 +3754,14 @@ void DrawLayerCommandsToSpecificCanvas(std::shared_ptr<Layer> layer,
       bool progressOrFullBackground = std::get<bool>(command.args[1]);
       entt::entity cache = std::get<entt::entity>(command.args[2]);
       Color color = std::get<Color>(command.args[3]);
-      RenderRectVerticesFilledLayer(layer, outerRec, progressOrFullBackground,
+      RenderRectVerticesFilledLayer(layer.get(), outerRec, progressOrFullBackground,
                                     cache, color);
     } else if (command.type == "render_rect_verticles_outline_layer") {
       AssertThat(command.args.size(), Equals(3));
       entt::entity cache = std::get<entt::entity>(command.args[0]);
       Color color = std::get<Color>(command.args[1]);
       bool useFullVertices = std::get<bool>(command.args[2]);
-      RenderRectVerticlesOutlineLayer(layer, cache, color, useFullVertices);
+      RenderRectVerticlesOutlineLayer(layer.get(), cache, color, useFullVertices);
     } else if (command.type == "polygon") {
       AssertThat(command.args.size(), Equals(3));
       std::vector<Vector2> vertices =
@@ -4241,7 +4243,7 @@ void DrawGradientRectRoundedCentered(
   rlPopMatrix();
 }
 
-void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr,
+void RenderRectVerticesFilledLayer(Layer* layerPtr,
                                    const Rectangle outerRec,
                                    bool progressOrFullBackground,
                                    entt::entity cacheEntity,
@@ -4298,7 +4300,7 @@ void AddRenderRectVerticlesOutlineLayer(std::shared_ptr<Layer> layer,
                  {cacheEntity, color, useFullVertices}, z);
 }
 
-void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr,
+void RenderRectVerticlesOutlineLayer(Layer* layerPtr,
                                      entt::entity cacheEntity,
                                      const Color color, bool useFullVertices) {
 
@@ -5175,7 +5177,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 // FIXME: doesn't use queue, immediate commands. maybe change?
 void renderSliceOffscreenFromDrawList(
     entt::registry &registry, const std::vector<ui::UIDrawListItem> &drawList,
-    size_t startIndex, size_t endIndex, std::shared_ptr<layer::Layer> layerPtr,
+    size_t startIndex, size_t endIndex, Layer* layerPtr,
     float pad) {
 
   Camera2D *camera = nullptr;
@@ -5741,7 +5743,7 @@ auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x,
 // Pushes the transform commands for an entity's transform component onto the
 // layer's command queue. remember to pair with a CmdPopMatrix!
 auto pushEntityTransformsToMatrix(entt::registry &registry, entt::entity e,
-                                  std::shared_ptr<layer::Layer> layer,
+                                  Layer* layer,
                                   int zOrder) -> void {
   // Determine whether the entity renders in world or screen space.
   bool isScreenSpace =
@@ -5803,7 +5805,7 @@ auto pushEntityTransformsToMatrix(entt::registry &registry, entt::entity e,
 
 auto pushEntityTransformsToMatrixImmediate(entt::registry &registry,
                                            entt::entity e,
-                                           std::shared_ptr<layer::Layer> layer,
+                                           Layer* layer,
                                            int zOrder) -> void {
   auto &t = registry.get<transform::Transform>(e);
 

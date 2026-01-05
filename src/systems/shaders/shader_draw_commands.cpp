@@ -253,7 +253,7 @@ void executeEntityPipelineWithCommands(
     auto renderLocalCommand = [](const OwnedDrawCommand& oc) {
         auto it = layer::dispatcher.find(oc.cmd.type);
         if (it != layer::dispatcher.end()) {
-            std::shared_ptr<layer::Layer> dummyLayer{};
+            layer::Layer* dummyLayer = nullptr;
             it->second(dummyLayer, oc.cmd.data);
         }
     };

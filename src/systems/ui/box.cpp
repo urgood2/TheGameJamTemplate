@@ -3144,4 +3144,67 @@ namespace ui
         return result;
     }
 
+    bool box::ReplaceChildren(
+        entt::registry& registry,
+        entt::entity parent,
+        UIElementTemplateNode& newDefinition
+    ) {
+        if (!registry.valid(parent)) {
+            SPDLOG_WARN("ReplaceChildren: Invalid parent entity");
+            return false;
+        }
+        
+        auto* uiElement = registry.try_get<UIElementComponent>(parent);
+        if (!uiElement) {
+            SPDLOG_WARN("ReplaceChildren: Parent {} has no UIElementComponent", 
+                        static_cast<int>(parent));
+            return false;
+        }
+        
+        entt::entity uiBox = uiElement->uiBox;
+        if (!registry.valid(uiBox)) {
+            SPDLOG_WARN("ReplaceChildren: UIBox {} is invalid", 
+                        static_cast<int>(uiBox));
+            return false;
+        }
+        
+        auto* node = registry.try_get<transform::GameObject>(parent);
+        if (!node) {
+            SPDLOG_WARN("ReplaceChildren: Parent {} has no GameObject", 
+                        static_cast<int>(parent));
+            return false;
+        }
+        
+        std::vector<entt::entity> childrenToDestroy;
+        childrenToDestroy.reserve(node->orderedChildren.size());
+        for (auto child : node->orderedChildren) {
+            if (registry.valid(child)) {
+                childrenToDestroy.push_back(child);
+            }
+        }
+        
+        for (auto child : childrenToDestroy) {
+            box::TraverseUITreeBottomUp(registry, child, [&](entt::entity e) {
+                if (auto* cfg = registry.try_get<UIConfig>(e)) {
+                    if (cfg->object && registry.valid(cfg->object.value())) {
+                        registry.destroy(cfg->object.value());
+                    }
+                }
+                registry.destroy(e);
+            }, false);
+        }
+        
+        node->children.clear();
+        node->orderedChildren.clear();
+        
+        BuildUIElementTree(registry, uiBox, newDefinition, parent);
+        
+        RenewAlignment(registry, uiBox);
+        
+        SPDLOG_DEBUG("ReplaceChildren: Replaced {} old children with new content on entity {}", 
+                     childrenToDestroy.size(), static_cast<int>(parent));
+        
+        return true;
+    }
+
 }

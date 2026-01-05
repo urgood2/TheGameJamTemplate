@@ -1145,6 +1145,12 @@ namespace ui {
         box.set_function("TraverseUITreeBottomUp", &ui::box::TraverseUITreeBottomUp);
         rec.record_free_function({"ui", "box"}, {"TraverseUITreeBottomUp", "---@param registry registry\n---@param rootUIElement Entity\n---@param visitor fun(entity: Entity)\n---@return nil", "Traverses the UI tree from the leaves up to the root, calling the visitor function on each element.", true, false});
 
+        box.set_function("ReplaceChildren", [](entt::entity parent, ui::UIElementTemplateNode definition) -> bool {
+            auto& registry = globals::getRegistry();
+            return ui::box::ReplaceChildren(registry, parent, definition);
+        });
+        rec.record_free_function({"ui", "box"}, {"ReplaceChildren", "---@param parent Entity\n---@param definition UIElementTemplateNode\n---@return boolean", "Replaces all children of a UI element with new content from a definition.", true, false});
+
         // 9) Drawing lists
         box.set_function("drawAllBoxes", &ui::box::drawAllBoxes);
         rec.record_free_function({"ui", "box"}, {"drawAllBoxes", "---@param registry registry\n---@param layerPtr Layer\n---@return nil", "Draws all UI boxes in the registry.", true, false});

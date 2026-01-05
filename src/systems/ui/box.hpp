@@ -73,6 +73,23 @@ namespace ui {
                 entt::entity        boxEntity,
                 std::vector<UIDrawListItem> &out,
                 int depth = 0);
+        
+        /// Replace all children of a UI element with new content from a definition.
+        /// Safely destroys existing children, builds new tree, and recalculates layout.
+        /// 
+        /// @param registry EnTT registry
+        /// @param parent Element whose children will be replaced (must be valid)
+        /// @param newDefinition UI definition tree to build as new children
+        /// @return true if replacement succeeded, false on error
+        /// 
+        /// @note Thread-safety: NOT thread-safe, must be called from main thread
+        /// @note The parent element itself is NOT destroyed, only its children
+        /// @note Triggers automatic recalculation of the containing UIBox
+        bool ReplaceChildren(
+            entt::registry& registry,
+            entt::entity parent,
+            UIElementTemplateNode& newDefinition
+        );
                 
         
 

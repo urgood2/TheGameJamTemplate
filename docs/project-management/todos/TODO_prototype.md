@@ -20,7 +20,7 @@
   │  │ +10% burn   │                              └─────────────────────────┘   │
   │  └─────────────┘
 
-- remove click to enable card skew.
+- need to make path notes and stats panel snap to full size.
 
 - need something that alters the cast delay/wand delay.
 - how to show empty wands? emtpy wand slots? where to display the icons?

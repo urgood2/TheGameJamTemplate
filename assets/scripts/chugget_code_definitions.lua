@@ -12264,6 +12264,14 @@ function ui.box.DebugPrint(...) end
 function ui.box.TraverseUITreeBottomUp(...) end
 
 ---
+--- Replaces all children of a UI element with new content from a definition.
+---
+---@param parent Entity
+---@param definition UIElementTemplateNode
+---@return boolean
+function ui.box.ReplaceChildren(...) end
+
+---
 --- Draws all UI boxes in the registry.
 ---
 ---@param registry registry

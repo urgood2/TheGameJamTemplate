@@ -602,6 +602,11 @@ scan-sounds:
 audio-process *args:
 	python3 scripts/process_audio.py {{args}}
 
+# Convert Claude session transcripts (JSONL) to readable Markdown
+# Usage: just transcript <input.jsonl> [output.md]
+transcript *args:
+	python3 scripts/jsonl-to-markdown.py {{args}}
+
 # Preview audio processing changes without modifying files
 audio-process-dry:
 	python3 scripts/process_audio.py --dry-run

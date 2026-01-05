@@ -364,8 +364,7 @@ local stats_tooltip = {
     detailedVersion = 0,
     signalRegistered = false,
     makeTooltip = nil,  -- forward declaration
-    testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
-        getSpriteFrameTextureInfo("graphics/pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy/b138.png"),
+    testStickerInfo = nil,
 }
 
 local function make_rect(x, y, w, h)
@@ -2200,6 +2199,9 @@ function createNewCard(id, x, y, gameStateToApply)
                                     true -- force text pass (uses uv_passthrough in 3d_skew)
                                 )
 
+                                if not stats_tooltip.testStickerInfo then
+                                    stats_tooltip.testStickerInfo = getSpriteFrameTextureInfo("b138.png")
+                                end
                                 if stats_tooltip.testStickerInfo then
                                     shader_draw_commands.add_local_command(
                                         registry, eid, "texture_pro",

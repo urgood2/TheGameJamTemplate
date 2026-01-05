@@ -1,17 +1,20 @@
 # TODO Prototype - Organized Status Report
 > Last verified: Dec 29, 2025
 
+- 3d skew shaders not working. inspect recent changes and investigate.
+
+- card areas currently have a logic where they spread to fill available area (if two cards are in an area, they move to either end). We want cards to clump together when there is extra space, instead of spreading like this. otherwise, keep behavior as is.
 
 - remove click to enable card skew.
-- extract description to new box under tooltip. 
-- give name of card special effect.
-- put rest in compact box.
-- 
 
 - need something that alters the cast delay/wand delay.
-- make the lighting system optionally work only based on states? so if a entity light is attached to is not active, don't activate the light 
 - how to show empty wands? emtpy wand slots? where to display the icons?
 
+
+- [ ] #to-process 09:11 full picture of synergies, avatars, jokers? Or get game loop first? Not sure. Compare with actual noita soells and list what to add
+- [ ] Start replacing a few sprites
+
+- [ ] #to-process 01:01 find out how balatro does tabs + apply it to make a progression codex for each category. Use active states to show/hide entities. Tab switching should be turned into pattern that can be repeated
 
 
 - [ ] #to-process 00:43 how to display wand (“deck”) image icon? Better tooltips. 

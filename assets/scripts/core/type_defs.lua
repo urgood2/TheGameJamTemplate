@@ -45,15 +45,118 @@ function BoardType:update(dt)
     end
 
     ------------------------------------------------------------
-    -- Layout math
+    -- Branch: Grid layout vs Row layout
     ------------------------------------------------------------
+    if self.layoutMode == "grid" then
+        self:_layoutGrid(area, cards, cardW, cardH)
+    else
+        self:_layoutRow(area, cards, cardW, cardH)
+    end
+
+    -- tracy.zoneEnd()
+end
+
+------------------------------------------------------------
+-- Grid layout implementation
+------------------------------------------------------------
+function BoardType:_layoutGrid(area, cards, originalCardW, originalCardH)
+    local n = #cards
+    local padding = 20
+    local availW = math_max(0, area.actualW - padding * 2)
+    local availH = math_max(0, area.actualH - padding * 2)
+    
+    -- Grid sizing constraints
+    local minCardSize = 40
+    local maxCardSize = 80
+    local cardGap = 6
+    
+    -- Calculate optimal card size and grid dimensions
+    local cardSize, cols, rows
+    local aspectRatio = originalCardH / originalCardW  -- Preserve card aspect ratio
+    
+    -- Try to fit all cards, starting with larger sizes
+    for trySize = maxCardSize, minCardSize, -4 do
+        local tryW = trySize
+        local tryH = math_floor(trySize * aspectRatio + 0.5)
+        
+        cols = math_floor(availW / (tryW + cardGap))
+        if cols < 1 then cols = 1 end
+        
+        rows = math.ceil(n / cols)
+        local totalHeight = rows * (tryH + cardGap) - cardGap
+        
+        if totalHeight <= availH then
+            cardSize = trySize
+            break
+        end
+    end
+    
+    -- Fallback to minimum size
+    if not cardSize then
+        cardSize = minCardSize
+        local tryH = math_floor(minCardSize * aspectRatio + 0.5)
+        cols = math_floor(availW / (minCardSize + cardGap))
+        if cols < 1 then cols = 1 end
+        rows = math.ceil(n / cols)
+    end
+    
+    local gridCardW = cardSize
+    local gridCardH = math_floor(cardSize * aspectRatio + 0.5)
+    
+    -- Calculate scale factor for cards
+    local scaleX = gridCardW / originalCardW
+    local scaleY = gridCardH / originalCardH
+    
+    -- Center the grid within available space
+    local gridW = cols * (gridCardW + cardGap) - cardGap
+    local gridH = rows * (gridCardH + cardGap) - cardGap
+    local startX = area.actualX + padding + (availW - gridW) * 0.5
+    local startY = area.actualY + padding + (availH - gridH) * 0.5
+    
+    -- Z-order cache
+    local zcache = self.z_order_cache_per_card
+    if not zcache then
+        zcache = {}
+        self.z_order_cache_per_card = zcache
+    end
+    
+    -- Layout cards in grid (left-to-right, top-to-bottom)
+    for i = 1, n do
+        local cardEid = cards[i]
+        local ct = component_cache.get(cardEid, Transform)
+        if ct then
+            local col = (i - 1) % cols
+            local row = math_floor((i - 1) / cols)
+            
+            local x = startX + col * (gridCardW + cardGap)
+            local y = startY + row * (gridCardH + cardGap)
+            
+            ct.actualX = math_floor(x + 0.5)
+            ct.actualY = math_floor(y + 0.5)
+            
+            -- Apply scale for grid view
+            ct.scaleX = scaleX
+            ct.scaleY = scaleY
+        end
+        
+        -- Assign Z order (row-major: top-left is lowest)
+        local zi = cardBaseZ + (i - 1)
+        zcache[cardEid] = zi
+        assignZ(cardEid, zi)
+    end
+end
+
+------------------------------------------------------------
+-- Row layout implementation (original behavior)
+------------------------------------------------------------
+function BoardType:_layoutRow(area, cards, cardW, cardH)
+    local n = #cards
     local padding = 20
     local availW = math_max(0, area.actualW - padding * 2)
     local preferredGap = 24  -- Minimum comfortable gap between card edges
     local maxGap = 60        -- Maximum gap when spreading cards to fill space
     local minGap = 4         -- Minimum spacing when compressed
 
-    local n = #cards
     local spacing, groupW
     if n == 1 then
         spacing, groupW = 0, cardW
@@ -135,6 +238,10 @@ function BoardType:update(dt)
 
             ct.actualX = math_floor(x + 0.5)
             ct.actualY = math_floor(y + 0.5)
+            
+            -- Reset scale for row view (in case switching from grid)
+            ct.scaleX = 1.0
+            ct.scaleY = 1.0
         end
 
         --------------------------------------------------------
@@ -149,8 +256,6 @@ function BoardType:update(dt)
             assignZ(cardEid, z_orders.top_card + 1)
         end
     end
-
-    -- tracy.zoneEnd()
 end
 
 function BoardType:swapCardWithNeighbor(selectedEid, direction)

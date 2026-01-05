@@ -20,6 +20,15 @@
   │  │ +10% burn   │                              └─────────────────────────┘   │
   │  └─────────────┘
 
+
+- refine ui. cutout buttons on left and right side, sticking out of off screen for better look. slide in and out?
+- combine dsl with the synergy panel? make the lua ui objects hcildren to the other ui elements in the tree, allow lua element to render itself on top. would this work? how ?
+- make the x button in patch notes part of window, use x sprite.
+- need to make progress window with avatars, jokers, and varioud card previews.
+- hook up shop, also with dsl ui + lua objects and make it so we have a functioning econoym
+- replace gold circle with srpite
+- consider giving new art for the board itself.
+
 - need to make path notes and stats panel snap to full size.
 
 - need something that alters the cast delay/wand delay.

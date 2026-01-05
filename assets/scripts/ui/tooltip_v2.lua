@@ -79,12 +79,12 @@ local Style = {
     descPadding = 8,
     infoPadding = 6,
     
-    -- Font sizes
-    nameFontSize = 20,          -- Larger/bolder for name box
-    descFontSize = 14,          -- Standard for description
-    statLabelFontSize = 12,     -- Stat labels
-    statValueFontSize = 14,     -- Stat values
-    tagFontSize = 12,           -- Tag pills
+    -- Font sizes (standardized for visual consistency)
+    nameFontSize = 16,          -- Title - larger but not too large
+    descFontSize = 12,          -- Description text
+    statLabelFontSize = 11,     -- Stat labels
+    statValueFontSize = 12,     -- Stat values (same as desc for consistency)
+    tagFontSize = 10,           -- Tag pills (slightly smaller)
     
     -- Colors (matched from existing tooltipStyle in gameplay.lua)
     bgColor = nil,              -- Will be set from util.getColor or fallback
@@ -297,10 +297,6 @@ end
 -- BOX BUILDERS
 --------------------------------------------------------------------------------
 
--- Build Name Box (Box 1)
--- Contains: title only, larger font, customizable text effects
--- opts.effects: C++ text effect string (e.g., "pop=0.2;rainbow=50")
--- opts.nameColor: Override color (e.g., "gold" for legendary)
 local function buildNameBox(name, opts)
     opts = opts or {}
 
@@ -308,13 +304,23 @@ local function buildNameBox(name, opts)
     local effects = opts.effects or Style.nameEntranceEffect
     local nameColor = opts.nameColor or Style.nameColor
 
-    local styledName = "[" .. displayName .. "](" .. effects .. ";color=" .. nameColor .. ")"
-
-    local textNode = ui.definitions.getTextFromString(styledName, {
-        fontSize = Style.nameFontSize,
-        fontName = getFontName(),
-        shadow = true,
-    })
+    local textNode
+    if effects and effects ~= "" and ui.definitions.getNewDynamicTextEntry then
+        local dynamicText = "[" .. displayName .. "](color=" .. nameColor .. ")"
+        textNode = ui.definitions.getNewDynamicTextEntry(
+            dynamicText,
+            Style.nameFontSize,
+            nil,
+            effects
+        )
+    else
+        local styledName = "[" .. displayName .. "](color=" .. nameColor .. ")"
+        textNode = ui.definitions.getTextFromString(styledName, {
+            fontSize = Style.nameFontSize,
+            fontName = getFontName(),
+            shadow = true,
+        })
+    end
 
     return dsl.root {
         config = {
@@ -339,6 +345,9 @@ local function buildDescriptionBox(description, opts)
     
     local children = {}
     
+    -- Calculate text area width (box width minus padding on both sides)
+    local textAreaWidth = Style.BOX_WIDTH - (Style.descPadding * 2)
+    
     if description and description ~= "" then
         -- Use rich text for markup support
         local textNode = ui.definitions.getTextFromString(description, {
@@ -347,10 +356,19 @@ local function buildDescriptionBox(description, opts)
             color = getColor(Style.descColor),
             shadow = false,
         })
-        table.insert(children, textNode)
+        
+        -- Wrap text in a container with maxWidth to enable word wrapping
+        local textWrapper = dsl.vbox {
+            config = {
+                maxWidth = textAreaWidth,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            },
+            children = { textNode }
+        }
+        table.insert(children, textWrapper)
     else
         -- Empty placeholder (spacer)
-        table.insert(children, dsl.spacer(Style.BOX_WIDTH - Style.descPadding * 2, Style.minDescHeight))
+        table.insert(children, dsl.spacer(textAreaWidth, Style.minDescHeight))
     end
     
     return dsl.root {
@@ -362,7 +380,7 @@ local function buildDescriptionBox(description, opts)
             padding = Style.descPadding,
             outlineThickness = Style.OUTLINE_THICKNESS,
             outlineColor = Style.outlineColor,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
             shadow = true,
         },
         children = children
@@ -398,10 +416,14 @@ end
 local function buildTagPill(tag)
     local tagColor = Style.tagColors[tag] or Style.defaultTagColor
     
+    -- Calculate pill height based on font size + padding for proper centering
+    local pillHeight = Style.tagFontSize + 6  -- font size + vertical padding
+    
     return dsl.hbox {
         config = {
             color = getColor(tagColor),
             padding = 3,
+            minHeight = pillHeight,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
@@ -410,6 +432,7 @@ local function buildTagPill(tag)
                 color = "white",
                 fontName = getFontName(),
                 shadow = false,
+                align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
             })
         }
     }

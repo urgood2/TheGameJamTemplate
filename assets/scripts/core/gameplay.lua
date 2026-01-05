@@ -533,33 +533,72 @@ end
 local function makeTooltipTextDef(text, opts)
     opts = opts or {}
 
-    -- If coded option is set, use getTextFromString for rich text parsing
-    if opts.coded and ui and ui.definitions and ui.definitions.getTextFromString then
+    if opts.coded and ui and ui.definitions then
         local fontSize = opts.fontSize or tooltipStyle.fontSize
         local fontName = opts.fontName or tooltipStyle.fontName
+        local textStr = tostring(text)
+        
+        local dynamicEffects = {
+            pop=1, slide=1, bounce=1, float=1, pulse=1, wiggle=1, shake=1, rainbow=1,
+            highlight=1, fade=1, scramble=1, spin=1, fan=1, expand=1, rotate=1, bump=1
+        }
+        
+        local function hasAnimEffects(s)
+            for eff in pairs(dynamicEffects) do
+                if s:find(eff .. "=") or s:find(eff .. ";") or s:find(eff .. "%)") then
+                    return true
+                end
+            end
+            return false
+        end
+        
+        if hasAnimEffects(textStr) and ui.definitions.getNewDynamicTextEntry then
+            local plainText = textStr:match("%[([^%]]+)%]") or textStr
+            
+            local params = textStr:match("%]%(([^)]+)%)")
+            local effectParts = {}
+            if params then
+                for part in params:gmatch("([^;]+)") do
+                    local effName = part:match("^([^=]+)")
+                    if effName and dynamicEffects[effName] then
+                        table.insert(effectParts, part)
+                    end
+                end
+            end
+            local effectString = #effectParts > 0 and table.concat(effectParts, ";") or nil
+            
+            local colorName = opts.color
+            if type(colorName) ~= "string" then
+                colorName = "apricot_cream"
+            end
+            
+            local dynamicText = "[" .. plainText .. "](color=" .. colorName .. ")"
+            
+            return ui.definitions.getNewDynamicTextEntry(dynamicText, fontSize, nil, effectString)
+        end
+        
+        if ui.definitions.getTextFromString then
+            local wrappedText = textStr:gsub("%]%(([^)]*)%)", function(params)
+                local newParams = params
+                if not params:find("fontSize=") then
+                    newParams = newParams .. ";fontSize=" .. fontSize
+                end
+                if not params:find("fontName=") and fontName then
+                    newParams = newParams .. ";fontName=" .. fontName
+                end
+                if not params:find("shadow=") then
+                    newParams = newParams .. ";shadow=" .. (opts.shadow and "true" or "false")
+                end
+                return "](" .. newParams .. ")"
+            end)
 
-        -- Only inject font settings into existing markup blocks
-        -- Don't wrap plain text - it would create extra container elements with different spacing
-        local wrappedText = tostring(text):gsub("%]%(([^)]*)%)", function(params)
-            local newParams = params
-            if not params:find("fontSize=") then
-                newParams = newParams .. ";fontSize=" .. fontSize
-            end
-            if not params:find("fontName=") and fontName then
-                newParams = newParams .. ";fontName=" .. fontName
-            end
-            if not params:find("shadow=") then
-                newParams = newParams .. ";shadow=" .. (opts.shadow and "true" or "false")
-            end
-            return "](" .. newParams .. ")"
-        end)
-
-        return ui.definitions.getTextFromString(wrappedText, {
-            fontSize = fontSize,
-            fontName = fontName,
-            color = opts.color or tooltipStyle.valueColor,
-            shadow = opts.shadow or false
-        })
+            return ui.definitions.getTextFromString(wrappedText, {
+                fontSize = fontSize,
+                fontName = fontName,
+                color = opts.color or tooltipStyle.valueColor,
+                shadow = opts.shadow or false
+            })
+        end
     end
 
     return ui.definitions.def {
@@ -2639,10 +2678,14 @@ function createNewCard(id, x, y, gameStateToApply)
     end
 
     nodeComp.methods.onDrag = function()
-        -- sound
-        -- playSoundEffect("effects", "card_pick_up", 1.0)
+        local currentBoardEid = cardScript.currentBoardEntity
+        if currentBoardEid then
+            local currentBoard = boards[currentBoardEid]
+            if currentBoard and currentBoard.layoutMode == "grid" then
+                return
+            end
+        end
 
-        -- If alt-previewing this card, clear state (drag takes over at top Z)
         if card_ui_state.alt_entity == card then
             card_ui_state.alt_entity = nil
             card_ui_state.alt_original_z = nil
@@ -2656,11 +2699,7 @@ function createNewCard(id, x, y, gameStateToApply)
         end
 
         local board = boards[boardEntityID]
-        -- dunno why, board can be nil
         if not board then return end
-        -- set z order to top so it can be seen
-
-
 
         log_debug("dragging card, bringing to top z:", z_orders.top_card)
         layer_order_system.assignZIndexToEntity(card, z_orders.top_card)
@@ -5441,6 +5480,92 @@ function initPlanningPhase()
 
     -- map
     inventory_board_id = inventoryBoardID
+
+    local function createInventoryLayoutToggle()
+        local rowIcon = ui.definitions.getTextFromString("[=](color=white;fontSize=16;shadow=false)")
+        local gridIcon = ui.definitions.getTextFromString("[#](color=white;fontSize=16;shadow=false)")
+
+        local rowButtonTemplate = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                :addId("inventory_row_toggle")
+                :addColor(util.getColor("gray"))
+                :addPadding(6.0)
+                :addEmboss(2.0)
+                :addHover(true)
+                :addMinWidth(28)
+                :addMinHeight(28)
+                :addButtonCallback(function()
+                    playSoundEffect("effects", "button-click")
+                    local board = boards[inventory_board_id]
+                    if board then
+                        board.layoutMode = "row"
+                    end
+                end)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+                :build()
+            )
+            :addChild(rowIcon)
+            :build()
+
+        local gridButtonTemplate = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                :addId("inventory_grid_toggle")
+                :addColor(util.getColor("dark_gray_slate"))
+                :addPadding(6.0)
+                :addEmboss(2.0)
+                :addHover(true)
+                :addMinWidth(28)
+                :addMinHeight(28)
+                :addButtonCallback(function()
+                    playSoundEffect("effects", "button-click")
+                    local board = boards[inventory_board_id]
+                    if board then
+                        board.layoutMode = "grid"
+                    end
+                end)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+                :build()
+            )
+            :addChild(gridIcon)
+            :build()
+
+        local toggleContainer = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                :addId("inventory_layout_toggle_container")
+                :addColor(util.getColor("blank"))
+                :addPadding(4.0)
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER))
+                :build()
+            )
+            :addChild(rowButtonTemplate)
+            :addChild(gridButtonTemplate)
+            :build()
+
+        local toggleRoot = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.ROOT)
+            :addConfig(
+                UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_RIGHT, AlignmentFlag.VERTICAL_TOP))
+                :build()
+            )
+            :addChild(toggleContainer)
+            :build()
+
+        local toggleBox = ui.box.Initialize({ x = inventoryBoardX + inventoryBoardWidth - 70, y = inventoryBoardY - 35 }, toggleRoot)
+        ui.box.AssignStateTagsToUIBox(toggleBox, PLANNING_STATE)
+        remove_default_state_tag(toggleBox)
+
+        planningUIEntities.inventory_layout_toggle = toggleBox
+    end
+
+    createInventoryLayoutToggle()
 
     -- -------------------------------------------------------------------------- --
     --       make a separate trigger inventory on the left of the inventory.      --
@@ -10673,11 +10798,20 @@ function initPlanningUI()
         local startX = (anchorTransform and anchorTransform.actualX) or (screenW * 0.08)
         local startY = math.max(buttonMargin, (usableScreenH - estimatedTotalHeight) * 0.5)
 
+        local wandIconSprites = {
+            "modern_icons_330.png",
+            "modern_icons_331.png",
+            "modern_icons_332.png",
+        }
+
         for index, boardSet in ipairs(board_sets) do
             local buttonIndex = index
             local thisBoardSet = boardSet
             local buttonId = "wand_selector_button_" .. buttonIndex
-            local label = ui.definitions.getTextFromString("[" .. tostring(buttonIndex) .. "](color=" .. tooltipStyle.labelColor .. ";fontSize=24;shadow=false)")
+            local spriteId = wandIconSprites[buttonIndex] or wandIconSprites[1]
+            local iconEntity = animation_system.createAnimatedObjectWithTransform(spriteId, true, 0, 0, nil, false)
+            animation_system.resizeAnimationObjectsInEntityToFit(iconEntity, 32, 32)
+            local label = ui.definitions.wrapEntityInsideObjectElement(iconEntity)
 
             local buttonTemplate = UIElementTemplateNodeBuilder.create()
                 :addType(UITypeEnum.HORIZONTAL_CONTAINER)

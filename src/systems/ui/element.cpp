@@ -1636,11 +1636,10 @@ namespace ui
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS){
-                        
-                        
+                        // Draw empty portion first (background)
                         util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, config->progressBarEmptyColor.value_or(GRAY), parallaxDist, std::nullopt);
-                        
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, config->progressBarEmptyColor.value_or(GRAY), parallaxDist, progress);
+                        // Draw filled portion on top with fullColor
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, config->progressBarFullColor.value_or(GREEN), parallaxDist, progress);
                     }
                     
                 }
@@ -1833,9 +1832,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (config->chosen.value_or(false))
         {
             // triangle floats above the object, slightly bobbing with sine
-            float TRIANGLE_DISTANCE = 10.f * globals::getGlobalUIScaleFactor();
-            float TRIANGLE_HEIGHT = 25.f * globals::getGlobalUIScaleFactor();
-            float TRIANGLE_WIDTH = 25.f * globals::getGlobalUIScaleFactor();
+            // Reduced size from 25x25 to 12x12 for better visual proportion
+            float TRIANGLE_DISTANCE = 6.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_HEIGHT = 12.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_WIDTH = 12.f * globals::getGlobalUIScaleFactor();
             auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
 
             auto centerX = actualX + actualW * 0.5f;
@@ -2373,8 +2373,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
                     if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt, zIndex);
-                    else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, progress, zIndex);
+                    else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS) {
+                        // Draw empty portion first (background)
+                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, styleProgressBarEmptyColor.value_or(GRAY), parallaxDist, std::nullopt, zIndex);
+                        // Draw filled portion on top with fullColor
+                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, colorToUse, parallaxDist, progress, zIndex);
+                    }
 
                 }
                 else
@@ -2680,9 +2684,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (config->chosen.value_or(false))
         {
             // triangle floats above the object, slightly bobbing with sine
-            float TRIANGLE_DISTANCE = 10.f * globals::getGlobalUIScaleFactor();
-            float TRIANGLE_HEIGHT = 25.f * globals::getGlobalUIScaleFactor();
-            float TRIANGLE_WIDTH = 25.f * globals::getGlobalUIScaleFactor();
+            // Reduced size from 25x25 to 12x12 for better visual proportion
+            float TRIANGLE_DISTANCE = 6.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_HEIGHT = 12.f * globals::getGlobalUIScaleFactor();
+            float TRIANGLE_WIDTH = 12.f * globals::getGlobalUIScaleFactor();
             auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
 
             auto centerX = actualX + actualW * 0.5f;

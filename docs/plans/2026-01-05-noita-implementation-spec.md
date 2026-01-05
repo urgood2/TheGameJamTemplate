@@ -20,13 +20,18 @@ This spec provides **exact code locations and snippets** for implementing Noita-
 
 ---
 
+
+
 ## 1. Friendly Fire System
 
 ### Problem
 Currently projectiles only damage enemies. Noita has many spells that can hurt the caster.
 
 ### Solution
-Add `friendlyFire` flag to projectile data and check faction before applying damage.
+Add `friendlyFire` flag to projectile data, check faction before applying damage, AND enable physics collision with caster's faction.
+
+### Part A: Damage Check (Faction Filter)
+Prevents same-faction damage unless `friendlyFire = true`.
 
 ### File: `assets/scripts/combat/projectile_system.lua`
 
@@ -69,6 +74,63 @@ end
 friendlyFire = actionCard.friendly_fire or modifiers.friendlyFire or false,
 ```
 
+### Part B: Physics Collision (Trigger On Caster's Faction)
+
+**Problem:** Without physics collision enabled for the caster's faction, friendly fire projectiles won't trigger their `onHit` callbacks even if damage checks allow it.
+
+**File:** `assets/scripts/combat/projectile_system.lua`
+
+**Location:** Modify `resolveCollisionTargets()` (line ~330)
+
+```lua
+local function resolveCollisionTargets(params)
+    local targets = {}
+    local seen = {}
+
+    if params.collideWithTags then
+        for _, tag in ipairs(params.collideWithTags) do
+            addIfNotPresent(targets, seen, tag)
+        end
+        return targets
+    end
+
+    -- Default: collide with opposite faction
+    local targetTag = params.targetCollisionTag or C.CollisionTags.ENEMY
+    addIfNotPresent(targets, seen, targetTag)
+
+    -- NEW: Friendly fire enables collision with own faction
+    if params.friendlyFire then
+        local ownerFaction = params.faction or "player"
+        local ownFactionTag = (ownerFaction == "player") 
+            and C.CollisionTags.PLAYER 
+            or C.CollisionTags.ENEMY
+        addIfNotPresent(targets, seen, ownFactionTag)
+    end
+
+    local collideWithWorld = params.collideWithWorld
+    if collideWithWorld == nil then
+        collideWithWorld = true
+    end
+
+    if collideWithWorld then
+        addIfNotPresent(targets, seen, C.CollisionTags.WORLD)
+    end
+
+    return targets
+end
+```
+
+**Location:** Pass `friendlyFire` to spawn params in `wand_actions.lua` (line ~417)
+
+```lua
+local spawnParams = {
+    -- ... existing params ...
+    faction = context.faction or "player",  -- Use context faction, not hardcoded
+    friendlyFire = actionCard.friendly_fire or modifiers.friendlyFire or false,
+    -- ...
+}
+```
+
 ### Card Definition Pattern
 ```lua
 Cards.PIERCING_SHOT = {
@@ -76,10 +138,114 @@ Cards.PIERCING_SHOT = {
     type = "action",
     mana_cost = 30,
     damage = 40,
-    friendly_fire = true,  -- NEW: Can hurt caster
+    friendly_fire = true,  -- NEW: Can hurt caster AND enables physics collision with own faction
     -- ...
 }
 ```
+
+---
+
+## 1.5 Faction-Agnostic Wand Execution (Mob Support)
+
+### Problem
+Currently `wand_actions.lua` hardcodes `faction = "player"` at line ~417. This prevents mobs from casting wands with proper faction targeting.
+
+### Solution
+1. Change hardcoded faction to use execution context
+2. Ensure `context` includes `casterEntity` and `faction` fields
+3. Update teleport system to use `context.casterEntity` instead of `context.playerEntity`
+
+### File: `assets/scripts/wand/wand_actions.lua`
+
+**Location:** `spawnSingleProjectile()` (line ~417)
+
+```lua
+-- BEFORE (hardcoded player faction):
+faction = "player",
+
+-- AFTER (context-driven faction):
+faction = context.faction or "player",
+```
+
+**Location:** `buildExecutionContext()` (line ~180)
+
+```lua
+--- Build execution context for wand actions
+--- @param casterEntity number Entity casting the wand
+--- @param opts table Optional overrides { faction, position, angle }
+--- @return table context
+function WandActions.buildExecutionContext(casterEntity, opts)
+    opts = opts or {}
+    
+    -- Determine faction from entity script or override
+    local faction = opts.faction
+    if not faction then
+        local casterScript = getScriptTableFromEntityID(casterEntity)
+        faction = casterScript and casterScript.faction or "player"
+    end
+    
+    -- Get position from entity transform or override
+    local position = opts.position
+    if not position then
+        local transform = component_cache.get(casterEntity, Transform)
+        if transform then
+            position = {
+                x = transform.actualX + (transform.actualW or 0) * 0.5,
+                y = transform.actualY + (transform.actualH or 0) * 0.5
+            }
+        end
+    end
+    
+    return {
+        casterEntity = casterEntity,
+        playerEntity = casterEntity,  -- Backwards compatibility
+        faction = faction,
+        playerPosition = position,
+        playerAngle = opts.angle or 0,
+    }
+end
+```
+
+**Location:** `executeTeleportAction()` - use `context.casterEntity` (line ~454)
+
+```lua
+-- BEFORE:
+if not context.playerEntity then
+
+-- AFTER (supports mob teleportation):
+local caster = context.casterEntity or context.playerEntity
+if not caster then
+    log_warn("WandActions.executeTeleportAction: no caster entity")
+    return false
+end
+
+-- And in teleport callbacks:
+WandActions.teleportEntity(caster, x, y)
+```
+
+### Usage Examples
+
+```lua
+-- Player casting (unchanged)
+local context = WandActions.buildExecutionContext(playerEntity)
+WandActions.executeWand(wand, context)
+
+-- Mob casting (new!)
+local context = WandActions.buildExecutionContext(mobEntity, { faction = "enemy" })
+WandActions.executeWand(mobWand, context)
+
+-- Neutral/arena hazard (new!)
+local context = WandActions.buildExecutionContext(trapEntity, { faction = "neutral" })
+WandActions.executeWand(trapWand, context)
+```
+
+### Collision Behavior by Faction
+
+| Caster Faction | Default Targets | With `friendlyFire = true` |
+|----------------|-----------------|----------------------------|
+| `"player"` | enemies | enemies + player |
+| `"enemy"` | player | player + enemies |
+| `"neutral"` | none (must specify) | all |
 
 ---
 
@@ -519,6 +685,7 @@ end
 
 ---
 
+
 ## 5. Divide System
 
 ### Problem
@@ -533,6 +700,7 @@ Divide is different from multicast:
 ```lua
 -- Divide (spell duplication)
 divideCount = 1,  -- 1 = no divide, 2 = duplicate, etc.
+divideDamageMultiplier = 1.0,  -- Damage per copy (0.5 = 50% damage each)
 ```
 
 **Location:** Add to `aggregate()` loop
@@ -540,6 +708,10 @@ divideCount = 1,  -- 1 = no divide, 2 = duplicate, etc.
 ```lua
 if card.divide_count then
     result.divideCount = (result.divideCount or 1) * card.divide_count
+end
+
+if card.divide_damage_multiplier then
+    result.divideDamageMultiplier = (result.divideDamageMultiplier or 1.0) * card.divide_damage_multiplier
 end
 ```
 
@@ -550,14 +722,22 @@ end
 ```lua
 -- After calculating angles, before spawning (around line 314)
 local divideCount = modifiers.divideCount or 1
+local divideDamageMultiplier = modifiers.divideDamageMultiplier or 1.0
 local spawnedProjectiles = {}
 
 for _, angle in ipairs(angles) do
     -- Spawn divide copies for each angle
     for d = 1, divideCount do
+        -- Apply damage reduction for divided projectiles
+        local dividedProps = props
+        if divideCount > 1 then
+            dividedProps = shallowCopy(props)
+            dividedProps.damage = (dividedProps.damage or 0) * divideDamageMultiplier
+        end
+        
         local projectileId = WandActions.spawnSingleProjectile(
             actionCard,
-            props,
+            dividedProps,
             modifiers,
             context,
             spawnPos,
@@ -572,6 +752,23 @@ for _, angle in ipairs(angles) do
     end
 end
 ```
+
+### Divide Damage Reduction
+
+By default, `divideDamageMultiplier = 1.0` (no reduction). Noita-style divide weakening:
+
+| Modifier | divide_count | divide_damage_multiplier | Result |
+|----------|--------------|--------------------------|--------|
+| Divide By 2 | 2 | 0.6 | 2 copies @ 60% damage each |
+| Divide By 4 | 4 | 0.4 | 4 copies @ 40% damage each |
+| Divide By 10 | 10 | 0.2 | 10 copies @ 20% damage each |
+
+**Total damage comparison:**
+- No divide: 100 damage × 1 = 100 total
+- Divide By 2 (0.6): 60 damage × 2 = 120 total (+20%)
+- Divide By 4 (0.4): 40 damage × 4 = 160 total (+60%)
+
+This allows divide to increase total output while reducing per-hit burst.
 
 ---
 
@@ -706,15 +903,16 @@ Cards.MOD_SPIRAL_ARC = {
     description = "Spiraling corkscrew path",
 }
 
--- DIVIDE
+-- DIVIDE (with damage reduction per copy)
 Cards.DIVIDE_BY_2 = {
     id = "DIVIDE_BY_2",
     type = "modifier",
     mana_cost = 35,
     cast_delay = 330,
     divide_count = 2,
+    divide_damage_multiplier = 0.6,  -- Each copy deals 60% damage
     tags = { "Arcane" },
-    description = "Splits the next spell into 2 copies",
+    description = "Splits the next spell into 2 weaker copies",
 }
 
 Cards.DIVIDE_BY_4 = {
@@ -723,8 +921,20 @@ Cards.DIVIDE_BY_4 = {
     mana_cost = 70,
     cast_delay = 830,
     divide_count = 4,
+    divide_damage_multiplier = 0.4,  -- Each copy deals 40% damage
     tags = { "Arcane" },
-    description = "Splits the next spell into 4 copies",
+    description = "Splits the next spell into 4 weaker copies",
+}
+
+Cards.DIVIDE_BY_10 = {
+    id = "DIVIDE_BY_10",
+    type = "modifier",
+    mana_cost = 200,
+    cast_delay = 2500,
+    divide_count = 10,
+    divide_damage_multiplier = 0.2,  -- Each copy deals 20% damage
+    tags = { "Arcane" },
+    description = "Splits the next spell into 10 weak copies",
 }
 
 -- FRIENDLY FIRE EXAMPLES
@@ -832,10 +1042,10 @@ assert(bomb.friendly_fire == true)
 
 | File | Changes |
 |------|---------|
-| `assets/scripts/combat/projectile_system.lua` | friendlyFire, new movement types |
-| `assets/scripts/wand/wand_actions.lua` | formations, teleport, divide spawn loop |
-| `assets/scripts/wand/wand_modifiers.lua` | formation field, divideCount, calculateFormationAngles |
-| `assets/scripts/data/cards.lua` | New card definitions |
+| `assets/scripts/combat/projectile_system.lua` | friendlyFire, resolveCollisionTargets faction support, new movement types |
+| `assets/scripts/wand/wand_actions.lua` | buildExecutionContext (faction-agnostic), formations, teleport (caster-aware), divide spawn loop with damage multiplier |
+| `assets/scripts/wand/wand_modifiers.lua` | formation field, divideCount, divideDamageMultiplier, calculateFormationAngles |
+| `assets/scripts/data/cards.lua` | New card definitions with divide_damage_multiplier |
 
 ---
 

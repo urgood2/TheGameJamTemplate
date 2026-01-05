@@ -486,3 +486,45 @@
   - Improved tutorial dialogue system: spotlight shader refinements, speaker animation states, and timer chain fixes.
   - Fixed queueDrawSprite API and prevented duplicate dialogue spawning.
   - Added demo polish features specification document outlining remaining work for vertical slice.
+  - Implemented stats panel UI with Sol2 crash protection for safe property access.
+
+01/01/2026
+  - Implemented dynamic multi-light layer shader system: support for up to 16 simultaneous point/spot lights per layer with subtractive/additive blend modes.
+  - Added lighting.lua fluent builder API with entity attachment for lights that follow movement, plus camera-aware UV conversion.
+  - Created interactive lighting demo with 6 test scenarios showcasing different light types and effects.
+  - Fixed integer uniform handling in ShaderUniformSet that was silently dropping int values.
+  - Fixed scroll pane collision detection and timer API issues.
+
+01/02/2026
+  - Added patch notes modal accessible from main menu with DSL button for proper click handling.
+  - Implemented planning phase sepia shader as fullscreen effect during PLANNING_STATE for visual phase differentiation.
+  - Added outline support to 3d_skew shader family with configurable color and thickness uniforms.
+  - Fixed MOD_CAST_FROM_EVENT + TRIGGER_ON_KILL to spawn projectiles at enemy death position instead of player position.
+  - Added rightClick callback support to EntityBuilder for card context menus.
+  - Updated critical hit damage numbers to display gold color instead of orange.
+  - Fixed Y-flip in lighting shader for proper RenderTexture coordinate handling.
+  - Synced Lua cookbook with codebase, adding 6 new recipes.
+
+01/03/2026
+  - Implemented C++ backend for rightClick callback in EntityBuilder, enabling proper mouse button detection for card interactions.
+  - Fixed patch notes asset path resolution using util.getRawAssetPathNoUUID.
+
+01/04/2026
+  - Implemented Tooltip V2 system with 3-box vertical stack architecture (name, description, info boxes).
+  - Added tooltip positioning cascade (RIGHT → LEFT → ABOVE → BELOW) with pop entrance animation.
+  - Improved tooltip display: stats grid with colored tag pills, rich text markup, full caching with language change invalidation.
+  - Added rarity-based text effects to tooltip titles and improved overall positioning logic.
+  - Fixed shadow uniform type mismatch across shaders and improved outline rendering consistency.
+
+01/05/2026
+  - Added ChildBuilder fluent API for attaching child entities to parents with offset, rotation inheritance, and orbit animations.
+  - Added EntityLinks module for horizontal entity dependencies ("die when target dies" patterns).
+  - Improved card board layout algorithm with preferredGap (24px) and graceful overlap when needed.
+  - Fixed shadow uniform from boolean to float comparison across 40+ shaders for WebGL compatibility.
+  - Added performance optimizations inspired by Godot Engine: LTO for 18% binary size reduction, MinSizeRel configuration, and compile-time module toggles.
+  - Added StringId system for O(1) string comparisons with compile-time FNV-1a hashing.
+  - Implemented tab UI system with ReplaceChildren for efficient DOM-style updates.
+  - Converted stats panel to use new tab system for organized stat display.
+  - Eliminated shared_ptr ref-counting on render hot path with Layer* overloads for 25-40% render dispatch improvement.
+  - Fixed sprite lookup race condition by deferring to prevent atlas loading issues.
+  - Updated cookbook with TooltipV2 and TooltipEffects recipes.

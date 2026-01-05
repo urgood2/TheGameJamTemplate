@@ -334,10 +334,10 @@ function dsl.button(label, opts)
         config = {
             id             = opts.id,
             color          = color(opts.color or "gray"),
-            hover          = true,
+            hover          = opts.hover ~= false,
+            canCollide     = true,
             buttonCallback = opts.onClick,
             tooltip        = opts.tooltip,
-            hover          = opts.hover,
             emboss         = opts.emboss or 2,
             minWidth       = opts.minWidth,
             minHeight      = opts.minHeight,
@@ -612,7 +612,9 @@ function dsl.tabs(opts)
     -- Store tab definitions for later lookup
     _tabRegistry[containerId] = {
         tabs = tabs,
-        activeId = activeTab
+        activeId = activeTab,
+        buttonColor = color(opts.buttonColor or "gray"),
+        activeButtonColor = color(opts.activeButtonColor or "blue"),
     }
     
     -- Build tab buttons
@@ -747,7 +749,6 @@ function dsl.switchTab(containerId, newTabId)
         newContent = dsl.text("Error loading tab", { color = "red" })
     end
     
-    -- Update button states
     local oldTabId = tabData.activeId
     for _, tab in ipairs(tabData.tabs) do
         local btnId = "tab_btn_" .. tab.id
@@ -757,6 +758,7 @@ function dsl.switchTab(containerId, newTabId)
             if btnConfig then
                 local isNowActive = (tab.id == newTabId)
                 btnConfig.chosen = isNowActive
+                btnConfig.color = isNowActive and tabData.activeButtonColor or tabData.buttonColor
             end
         end
     end

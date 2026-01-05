@@ -495,6 +495,78 @@ function initMainMenu()
 
     PatchNotesModal.init()
     createPatchNotesButton()
+    createTabDemo()
+end
+
+function createTabDemo()
+    local dsl = require("ui.ui_syntax_sugar")
+    
+    local tabDef = dsl.root {
+        config = {
+            color = util.getColor("blackberry"),
+            padding = 4,
+            emboss = 3,
+        },
+        children = {
+            dsl.tabs {
+                id = "demo_tabs",
+                activeTab = "game",
+                contentMinWidth = 200,
+                contentMinHeight = 120,
+                tabs = {
+                    {
+                        id = "game",
+                        label = "Game",
+                        content = function()
+                            return dsl.vbox {
+                                config = { padding = 4 },
+                                children = {
+                                    dsl.text("Game Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.spacer(8),
+                                    dsl.text("Speed: Normal", { fontSize = 12, color = "lightgray" }),
+                                    dsl.text("Difficulty: Medium", { fontSize = 12, color = "lightgray" }),
+                                }
+                            }
+                        end
+                    },
+                    {
+                        id = "graphics",
+                        label = "Graphics",
+                        content = function()
+                            return dsl.vbox {
+                                config = { padding = 4 },
+                                children = {
+                                    dsl.text("Graphics Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.spacer(8),
+                                    dsl.text("Fullscreen: Off", { fontSize = 12, color = "lightgray" }),
+                                    dsl.text("VSync: On", { fontSize = 12, color = "lightgray" }),
+                                }
+                            }
+                        end
+                    },
+                    {
+                        id = "audio",
+                        label = "Audio",
+                        content = function()
+                            return dsl.vbox {
+                                config = { padding = 4 },
+                                children = {
+                                    dsl.text("Audio Settings", { fontSize = 16, color = "white", shadow = true }),
+                                    dsl.spacer(8),
+                                    dsl.text("Master: 100%", { fontSize = 12, color = "lightgray" }),
+                                    dsl.text("Music: 80%", { fontSize = 12, color = "lightgray" }),
+                                    dsl.text("SFX: 100%", { fontSize = 12, color = "lightgray" }),
+                                }
+                            }
+                        end
+                    },
+                }
+            }
+        }
+    }
+    
+    mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = 50, y = 50 }, tabDef)
+    ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
 end
 
 function createPatchNotesButton()
@@ -657,6 +729,12 @@ function clearMainMenu()
         mainMenuEntities.patch_notes_button = nil
     end
     PatchNotesModal.destroy()
+    if mainMenuEntities.tab_demo_uibox and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, mainMenuEntities.tab_demo_uibox)
+        local dsl = require("ui.ui_syntax_sugar")
+        dsl.cleanupTabs("demo_tabs")
+        mainMenuEntities.tab_demo_uibox = nil
+    end
     if entity_cache and entity_cache.valid and entity_cache.valid(globals.ui.logo) then
         registry:destroy(globals.ui.logo)
         globals.ui.logo = nil

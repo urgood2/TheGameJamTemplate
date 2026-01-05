@@ -8,7 +8,14 @@
 local TimerChain = {}
 TimerChain.__index = TimerChain
 
--- no-op helper
+local timer
+local function getTimer()
+    if not timer then
+        timer = require("core.timer")
+    end
+    return timer
+end
+
 local function noop() end
 
 --- Creates a new TimerChain.
@@ -324,21 +331,21 @@ end
 --- Pause all timers in this chain's group.
 ---@return TimerChain self
 function TimerChain:pause()
-    timer.pause_group(self._group)
+    getTimer().pause_group(self._group)
     return self
 end
 
 --- Resume all timers in this chain's group.
 ---@return TimerChain self
 function TimerChain:resume()
-    timer.resume_group(self._group)
+    getTimer().resume_group(self._group)
     return self
 end
 
 --- Cancel/kill all timers in this chain's group.
 ---@return TimerChain self
 function TimerChain:cancel()
-    timer.kill_group(self._group)
+    getTimer().kill_group(self._group)
     return self
 end
 
@@ -347,47 +354,48 @@ end
 ---@return TimerChain self
 function TimerChain:start()
     self:validate()
+    local t = getTimer()
     local offset = 0
     for i, e in ipairs(self._steps) do
         local tag = (e.tag and #e.tag > 0) and e.tag or (self._chain_id .. "_" .. i)
         local grp = e.group or self._group
 
         if e.type == "after" then
-            timer.after(offset + e.delay, e.fn, tag, grp)
+            t.after(offset + e.delay, e.fn, tag, grp)
             offset = offset + e.delay
 
         elseif e.type == "every" then
-            timer.after(offset,
-                function() timer.every(e.interval, e.fn, e.times, e.immediate, e.after, tag, grp) end,
+            t.after(offset,
+                function() t.every(e.interval, e.fn, e.times, e.immediate, e.after, tag, grp) end,
                 tag .. "_start", grp
             )
 
         elseif e.type == "cooldown" then
-            timer.after(offset,
-                function() timer.cooldown(e.delay, e.cond, e.fn, e.times, e.after, tag, grp) end,
+            t.after(offset,
+                function() t.cooldown(e.delay, e.cond, e.fn, e.times, e.after, tag, grp) end,
                 tag .. "_start", grp
             )
 
         elseif e.type == "every_step" then
-            timer.after(offset,
+            t.after(offset,
                 function()
-                    timer.every_step(e.start_delay, e.end_delay, e.times, e.fn,
+                    t.every_step(e.start_delay, e.end_delay, e.times, e.fn,
                                      e.immediate, e.step, e.after, tag, grp)
                 end,
                 tag .. "_start", grp
             )
 
         elseif e.type == "for_time" then
-            timer.after(offset,
-                function() timer.for_time(e.delay, e.fn_dt, e.after, tag, grp) end,
+            t.after(offset,
+                function() t.for_time(e.delay, e.fn_dt, e.after, tag, grp) end,
                 tag .. "_start", grp
             )
             offset = offset + e.delay
 
         elseif e.type == "tween" then
-            timer.after(offset,
+            t.after(offset,
                 function()
-                    timer.tween(e.delay, e.getter, e.setter, e.target,
+                    t.tween(e.delay, e.getter, e.setter, e.target,
                                 tag, grp, e.easing, e.after)
                 end,
                 tag .. "_start", grp
@@ -395,7 +403,7 @@ function TimerChain:start()
             offset = offset + e.delay
 
         elseif e.type == "fork" then
-            timer.after(offset,
+            t.after(offset,
                 function() e.chain:start() end,
                 tag .. "_fork", grp
             )
@@ -403,7 +411,7 @@ function TimerChain:start()
     end
 
     if self._on_complete then
-        timer.after(offset, self._on_complete, self._chain_id .. "_complete", self._group)
+        t.after(offset, self._on_complete, self._chain_id .. "_complete", self._group)
     end
 
     return self

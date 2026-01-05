@@ -14,7 +14,7 @@ uniform float dissolve;
 uniform float time;
 uniform vec4 texture_details;
 uniform vec2 image_details;
-uniform bool shadow;
+uniform float shadow;
 uniform vec4 burn_colour_1;
 uniform vec4 burn_colour_2;
 
@@ -81,7 +81,7 @@ vec4 dissolve_mask(vec4 tex, vec2 texcoord, vec2 uv) {
         - (floored_uv.x < borders.x ? (borders.x - floored_uv.x) * (5.0 + 5.0 * dissolve) : 0.0) * dissolve
         - (floored_uv.y < borders.x ? (borders.x - floored_uv.y) * (5.0 + 5.0 * dissolve) : 0.0) * dissolve;
 
-    if (tex.a > 0.01 && burn_colour_1.a > 0.01 && !shadow &&
+    if (tex.a > 0.01 && burn_colour_1.a > 0.01 && shadow < 0.5 &&
         res < adjusted_dissolve + 0.8 * (0.5 - abs(adjusted_dissolve - 0.5)) &&
         res > adjusted_dissolve) {
 

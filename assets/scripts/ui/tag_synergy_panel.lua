@@ -1,7 +1,6 @@
 --[[
-Tag Synergy Panel
-Displays deck tag progress on the right side of the screen with small
-pill indicators for each breakpoint so partially-filled synergies stay visible.
+Tag Synergy Panel - Icon Grid Layout
+Displays deck tag progress as a compact 3×4 icon grid with tier dots and animations.
 ]]
 
 local TagSynergyPanel = {}
@@ -10,10 +9,20 @@ local z_orders = require("core.z_orders")
 local component_cache = require("core.component_cache")
 local dsl = require("ui.ui_syntax_sugar")
 local HoverRegistry = require("ui.hover_registry")
--- local bit = require("bit")
+local SynergyIcons = require("data.synergy_icons")
+local timer = require("core.timer")
+local Easing = require("util.easing")
 
 local DEFAULT_THRESHOLDS = { 3, 5, 7, 9 }
-local MAX_ROWS = 6
+local GRID_COLS = 3
+local GRID_ROWS = 4
+local CELL_SIZE = 48
+local ICON_SIZE = 32
+local DOT_RADIUS = 3
+local DOT_SPACING = 8
+local BADGE_RADIUS = 10
+local PANEL_PADDING = 12
+local CELL_SPACING = 4
 
 local function safeColor(name, fallback)
     local ok, c = pcall(util.getColor, name)
@@ -36,34 +45,29 @@ local function resolveScreenSize()
 end
 
 local colors = {
-    panel = Col(12, 14, 20, 218),
+    panel = Col(12, 14, 20, 230),
     outline = safeColor("apricot_cream", "white"),
-    header = safeColor("apricot", "white"),
-    row = Col(20, 22, 30, 232),
-    text = safeColor("white"),
-    muted = safeColor("gray", "light_gray"),
-    track = Col(36, 40, 52, 245),
+    dotEmpty = Col(60, 65, 80, 200),
+    dotFilled = Col(255, 255, 255, 255),
+    badgeBg = Col(30, 32, 42, 240),
+    badgeText = Col(255, 255, 255, 255),
+    inactive = Col(80, 85, 100, 180),
+    glowBase = Col(255, 255, 255, 60),
 }
 
 local tooltipStyle = {
-    bg = Col(16, 18, 26, 240),
-    inner = Col(24, 26, 36, 235),
+    bg = Col(16, 18, 26, 245),
+    inner = Col(24, 26, 36, 240),
     outline = safeColor("apricot_cream", "white"),
     title = safeColor("apricot", "white"),
     text = safeColor("white"),
     muted = safeColor("gray", "light_gray"),
-    label = safeColor("apricot_cream", "white"),
-    value = safeColor("white", "white"),
+    active = safeColor("mint_green", "green"),
     fontName = "tooltip",
-    padding = 12,
+    padding = 10,
     outlineThickness = 2,
-    maxWidth = 400,
-    labelColumnMinWidth = 160,
-    valueColumnMinWidth = 200,
-    rowPadding = 6,
-    innerPadding = 10,
-    fontSize = 16,
-    titleFontSize = 20,
+    fontSize = 14,
+    titleFontSize = 18,
 }
 
 local tag_palette = {
@@ -85,7 +89,9 @@ TagSynergyPanel.breakpoints = {}
 TagSynergyPanel.breakpointDetails = {}
 TagSynergyPanel.displayedCounts = {}
 TagSynergyPanel._pulses = {}
-TagSynergyPanel._hoverKey = nil
+TagSynergyPanel._thresholdAnimations = {}
+TagSynergyPanel._hoverTag = nil
+TagSynergyPanel._hoverScale = {}
 TagSynergyPanel._activeTooltip = nil
 TagSynergyPanel._tooltips = {}
 TagSynergyPanel._layoutCache = nil
@@ -93,19 +99,11 @@ TagSynergyPanel.isActive = false
 TagSynergyPanel.layout = {
     marginX = 22,
     marginTop = 120,
-    panelWidth = 420
 }
 
--- Slide animation state
-TagSynergyPanel._slideState = "hidden"  -- "hidden", "entering", "visible", "exiting"
-TagSynergyPanel._slideProgress = 0       -- 0 = fully hidden, 1 = fully visible
-TagSynergyPanel._slideSpeed = 4.0        -- Animation speed multiplier
-
-local Easing = require("util.easing")
-
--- NOTE: Tooltip font is now loaded in gameplay.lua with language-specific selection
--- at the correct size (22px to match tooltipStyle.fontSize). Removed duplicate load
--- that was causing font size conflicts.
+TagSynergyPanel._slideState = "hidden"
+TagSynergyPanel._slideProgress = 0
+TagSynergyPanel._slideSpeed = 4.0
 
 local function clamp01(v)
     if v < 0 then return 0 end
@@ -128,7 +126,6 @@ local function normalizeBreakpoints(raw)
     local thresholdsOnly = {}
     local details = {}
     if not raw then return thresholdsOnly, details end
-
     for tag, thresholds in pairs(raw) do
         local sorted = {}
         thresholdsOnly[tag] = sorted
@@ -139,7 +136,6 @@ local function normalizeBreakpoints(raw)
         end
         table.sort(sorted)
     end
-
     return thresholdsOnly, details
 end
 
@@ -157,8 +153,6 @@ end
 
 local function getMousePosition()
     if input then
-        -- Prefer raw mouse input so we stay in screen-space even if the cursor
-        -- entity isn't keeping up (e.g., controller focus).
         if input.getMousePos then
             local m = input.getMousePos()
             if m and m.x and m.y then
@@ -172,7 +166,6 @@ local function getMousePosition()
             end
         end
     end
-
     if globals and globals.cursor and component_cache then
         local cursor = globals.cursor()
         if cursor then
@@ -193,254 +186,82 @@ local function pointInRect(mx, my, x, y, w, h)
     return mx >= x and mx <= x + w and my >= y and my <= y + h
 end
 
-local function wrapTextToWidth(text, maxWidth, fontSize)
-    if not text then return {} end
-    local plain = tostring(text)
-    if not (localization and localization.getTextWidthWithCurrentFont) then
-        return { plain }
-    end
-    local words = {}
-    for w in plain:gmatch("%S+") do
-        words[#words + 1] = w
-    end
-    if #words == 0 then return { plain } end
-
-    local lines = {}
-    local current = words[1]
-    local function width(str)
-        return localization.getTextWidthWithCurrentFont(str, fontSize or 12, 1)
-    end
-
-    for i = 2, #words do
-        local candidate = current .. " " .. words[i]
-        if width(candidate) <= maxWidth then
-            current = candidate
-        else
-            lines[#lines + 1] = current
-            current = words[i]
+local function countThresholdsReached(count, thresholds)
+    local reached = 0
+    for _, t in ipairs(thresholds) do
+        if count >= t then
+            reached = reached + 1
         end
     end
-    lines[#lines + 1] = current
-    return lines
+    return reached
 end
 
-local function makeLabelNode(text, color, fontSize)
-    if not text or text == "" then return nil end
-    return dsl.hbox {
-        config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-            padding = 0,
-            minWidth = tooltipStyle.labelColumnMinWidth
-        },
-        children = {
-            dsl.text(text, {
-                color = color or tooltipStyle.label,
-                fontSize = fontSize or tooltipStyle.fontSize or 16,
-                fontName = tooltipStyle.fontName,
-                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
-            })
-        }
-    }
-end
-
-local function makeValueNode(text, color, fontSize)
-    if not text or text == "" then return nil end
-    local effectiveFontSize = fontSize or tooltipStyle.fontSize or 16
-    local maxWidth = (tooltipStyle.maxWidth or 400)
-        - (tooltipStyle.labelColumnMinWidth or 0)
-        - (tooltipStyle.padding or 0) * 2
-        - (tooltipStyle.innerPadding or 0) * 2
-    local lines = wrapTextToWidth(text, maxWidth, effectiveFontSize)
-    local children = {}
-    for _, line in ipairs(lines) do
-        children[#children + 1] = dsl.text(line, {
-            color = color or tooltipStyle.value,
-            fontSize = effectiveFontSize,
-            fontName = tooltipStyle.fontName,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
-        })
-    end
-    return dsl.vbox {
-        config = {
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-            padding = 0,
-            minWidth = tooltipStyle.valueColumnMinWidth
-        },
-        children = children
-    }
-end
-
-local function buildTooltipDef(title, rows, accent)
-    local children = {}
-
-    local titleNode = makeLabelNode(title, accent or tooltipStyle.title, tooltipStyle.titleFontSize or 20)
-    if titleNode then
-        children[#children + 1] = titleNode
-    end
-
-    for _, row in ipairs(rows or {}) do
-        local labelNode = makeLabelNode(row.label, row.labelColor or tooltipStyle.label, row.fontSize)
-        local valueNode = makeValueNode(row.value, row.valueColor or tooltipStyle.value, row.fontSize)
-        if not labelNode then
-            labelNode = dsl.hbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-                    padding = 0,
-                    minWidth = tooltipStyle.labelColumnMinWidth
-                },
-                children = {}
-            }
+local function getNextThreshold(count, thresholds)
+    for _, t in ipairs(thresholds) do
+        if count < t then
+            return t
         end
-        if not valueNode then
-            valueNode = dsl.hbox {
-                config = {
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-                    padding = 0,
-                    minWidth = tooltipStyle.valueColumnMinWidth
-                },
-                children = {}
-            }
-        end
-
-        children[#children + 1] = dsl.hbox {
-            config = {
-                align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER),
-                padding = tooltipStyle.rowPadding or 0
-            },
-            children = { labelNode, valueNode }
-        }
     end
-
-    return dsl.root {
-        config = {
-            color = tooltipStyle.bg,
-            padding = tooltipStyle.padding,
-            outlineThickness = tooltipStyle.outlineThickness,
-            outlineColor = tooltipStyle.outline,
-            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-            shadow = true,
-        },
-        children = {
-            dsl.vbox {
-                config = {
-                    color = tooltipStyle.inner,
-                    padding = tooltipStyle.innerPadding,
-                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
-                },
-                children = children
-            }
-        }
-    }
+    return nil
 end
 
-local function destroyTooltip(key)
-    local cached = TagSynergyPanel._tooltips[key]
-    if not cached then return end
-    if cached.entity and registry and registry.valid and registry:valid(cached.entity) then
-        registry:destroy(cached.entity)
-    end
-    TagSynergyPanel._tooltips[key] = nil
+local function makeGrayscaleColor(c)
+    local gray = math.floor(0.299 * c.r + 0.587 * c.g + 0.114 * c.b)
+    gray = math.floor(gray * 0.5)
+    return Col(gray, gray, gray, 180)
 end
 
-local function resetTooltipCache()
-    for key in pairs(TagSynergyPanel._tooltips) do
-        destroyTooltip(key)
-    end
-    TagSynergyPanel._tooltips = {}
-    TagSynergyPanel._activeTooltip = nil
-end
-
-local function getOrBuildTooltip(target)
-    if not target or not target.key then return nil end
-    local cached = TagSynergyPanel._tooltips[target.key]
-    if cached and cached.signature == target.signature and cached.entity then
-        return cached.entity
-    end
-
-    destroyTooltip(target.key)
-    local def = buildTooltipDef(target.title or "Synergy", target.rows or {}, colorForTag(target.entry and target.entry.tag))
-    local tooltipZ = (z_orders.ui_tooltips or 0) + 50
-    local entity = dsl.spawn({ x = -2000, y = -2000 }, def, "ui", tooltipZ)
-    
-    if transform and transform.set_space then
-        transform.set_space(entity, "screen")
-    end
-    
-    if layer_order_system and layer_order_system.assignZIndexToEntity then
-        layer_order_system.assignZIndexToEntity(entity, tooltipZ)
-    end
-    
-    if ui and ui.box and ui.box.RenewAlignment then
-        ui.box.RenewAlignment(registry, entity)
-    end
-    -- Snap visual dimensions to prevent tween-from-zero animation
-    local t = component_cache.get(entity, Transform)
-    if t then
-        t.visualW = t.actualW or t.visualW
-        t.visualH = t.actualH or t.visualH
-    end
-    if ui and ui.box and ui.box.AssignStateTagsToUIBox and PLANNING_STATE then
-        ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
-    end
-    if remove_default_state_tag then
-        remove_default_state_tag(entity)
-    end
-    TagSynergyPanel._tooltips[target.key] = {
-        entity = entity,
-        signature = target.signature
-    }
-    return entity
-end
-
-local function positionTooltip(entity, mouse)
-    if not entity then return end
-    if ui and ui.box and ui.box.RenewAlignment then
-        ui.box.RenewAlignment(registry, entity)
-    end
-    local t = component_cache.get(entity, Transform)
-    if not t then return end
-
+local function computeGridLayout()
     local screenW, screenH = resolveScreenSize()
-    local w = t.actualW or 0
-    local h = t.actualH or 0
-    local margin = 12
-    local offsetX = 16
-    local offsetY = 16
-    local x = (mouse and mouse.x + offsetX) or (screenW - w - margin)
-    local y = (mouse and mouse.y + offsetY) or margin
-    if tooltipStyle.maxWidth and tooltipStyle.maxWidth > 0 and w > tooltipStyle.maxWidth + tooltipStyle.padding * 2 then
-        w = tooltipStyle.maxWidth + tooltipStyle.padding * 2
-        t.actualW = w
-        t.visualW = w
+    local gridOrder = SynergyIcons.getGridOrder()
+    
+    local panelW = GRID_COLS * CELL_SIZE + (GRID_COLS - 1) * CELL_SPACING + PANEL_PADDING * 2
+    local panelH = GRID_ROWS * CELL_SIZE + (GRID_ROWS - 1) * CELL_SPACING + PANEL_PADDING * 2
+    
+    local buttonBounds = TagSynergyPanel._toggleButtonBounds
+    local marginTop = TagSynergyPanel.layout.marginTop
+    if buttonBounds then
+        local buttonBottom = (buttonBounds.y or 0) + (buttonBounds.h or 40) + 12
+        marginTop = math.max(marginTop, buttonBottom)
     end
-    if x < margin then x = margin end
-    if x + w > screenW - margin then x = math.max(margin, screenW - w - margin) end
-    if y < margin then y = margin end
-    if y + h > screenH - margin then y = math.max(margin, screenH - h - margin) end
-
-    t.actualX = x
-    t.visualX = x
-    t.actualY = y
-    t.visualY = y
-end
-
-local function hideActiveTooltip()
-    if TagSynergyPanel._activeTooltip then
-        local t = component_cache.get(TagSynergyPanel._activeTooltip, Transform)
-        if t then
-            t.actualX = -2000
-            t.actualY = -2000
-            t.visualX = t.actualX
-            t.visualY = t.actualY
+    
+    local panelLeft = screenW - panelW - TagSynergyPanel.layout.marginX
+    local panelTop = marginTop
+    
+    local cells = {}
+    for i, tag in ipairs(gridOrder) do
+        if tag then
+            local col = ((i - 1) % GRID_COLS)
+            local row = math.floor((i - 1) / GRID_COLS)
+            
+            local cellX = panelLeft + PANEL_PADDING + col * (CELL_SIZE + CELL_SPACING)
+            local cellY = panelTop + PANEL_PADDING + row * (CELL_SIZE + CELL_SPACING)
+            
+            cells[tag] = {
+                tag = tag,
+                index = i,
+                col = col,
+                row = row,
+                x = cellX,
+                y = cellY,
+                centerX = cellX + CELL_SIZE / 2,
+                centerY = cellY + CELL_SIZE / 2,
+            }
         end
     end
-    TagSynergyPanel._activeTooltip = nil
-    TagSynergyPanel._hoverKey = nil
-end
-
-local function clearHover()
-    hideActiveTooltip()
-    HoverRegistry.clear()
+    
+    return {
+        screenW = screenW,
+        screenH = screenH,
+        panelW = panelW,
+        panelH = panelH,
+        panelLeft = panelLeft,
+        panelTop = panelTop,
+        panelCenterX = panelLeft + panelW / 2,
+        panelCenterY = panelTop + panelH / 2,
+        cells = cells,
+        gridOrder = gridOrder,
+    }
 end
 
 local statDescriptions = {
@@ -502,7 +323,6 @@ local function describeStat(stat, value)
     elseif formatter then
         return string.format(formatter, value or 0)
     end
-
     local label = stat:gsub("_", " ")
     label = label:sub(1, 1):upper() .. label:sub(2)
     if value then
@@ -531,7 +351,6 @@ local function describeBonus(tag, threshold)
     if not detail then
         return "Unknown bonus"
     end
-
     if detail.type == "stat" then
         return describeStat(detail.stat, detail.value)
     elseif detail.type == "proc" then
@@ -540,177 +359,207 @@ local function describeBonus(tag, threshold)
     return "Unknown bonus"
 end
 
-local function formatThresholdStatus(entry, threshold)
-    local count = entry.count or 0
-    if count >= threshold then
-        return string.format("Active (%d/%d %s tags)", count, threshold, entry.tag)
+local function destroyTooltip(key)
+    local cached = TagSynergyPanel._tooltips[key]
+    if not cached then return end
+    if cached.entity and registry and registry.valid and registry:valid(cached.entity) then
+        registry:destroy(cached.entity)
     end
-    local remaining = threshold - count
-    local noun = remaining == 1 and "tag" or "tags"
-    return string.format("%d/%d %s tags — %d more %s", count, threshold, entry.tag, remaining, noun)
+    TagSynergyPanel._tooltips[key] = nil
 end
 
-local function computeLayoutCache()
-    local screenW, screenH = resolveScreenSize()
-    local totalRows = math.min(#TagSynergyPanel.entries, MAX_ROWS)
-    local layout = TagSynergyPanel.layout
-    local marginX = math.max(12, layout.marginX or 18)
-    local baseMarginTop = math.max(12, layout.marginTop or 60)
+local function resetTooltipCache()
+    for key in pairs(TagSynergyPanel._tooltips) do
+        destroyTooltip(key)
+    end
+    TagSynergyPanel._tooltips = {}
+    TagSynergyPanel._activeTooltip = nil
+end
+
+local function buildTooltipDef(tag, count, thresholds, accent)
+    local reached = countThresholdsReached(count, thresholds)
+    local nextThreshold = getNextThreshold(count, thresholds)
     
-    local buttonBounds = TagSynergyPanel._toggleButtonBounds
-    local marginTop = baseMarginTop
-    if buttonBounds then
-        local buttonBottom = (buttonBounds.y or 0) + (buttonBounds.h or 40) + 12
-        marginTop = math.max(baseMarginTop, buttonBottom)
+    local children = {}
+    
+    children[#children + 1] = dsl.text(tag .. " Synergy", {
+        color = accent,
+        fontSize = tooltipStyle.titleFontSize,
+        fontName = tooltipStyle.fontName,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+    })
+    
+    children[#children + 1] = dsl.text("Cards in deck: " .. tostring(count), {
+        color = tooltipStyle.muted,
+        fontSize = tooltipStyle.fontSize,
+        fontName = tooltipStyle.fontName,
+        align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+    })
+    
+    for i, threshold in ipairs(thresholds) do
+        local isActive = count >= threshold
+        local indicator = isActive and "●" or "○"
+        local bonus = describeBonus(tag, threshold)
+        local tierText = string.format("%s Tier %d (%d+): %s", indicator, i, threshold, bonus)
+        
+        children[#children + 1] = dsl.text(tierText, {
+            color = isActive and tooltipStyle.active or tooltipStyle.muted,
+            fontSize = tooltipStyle.fontSize,
+            fontName = tooltipStyle.fontName,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+        })
     end
     
-    local panelW = math.max(240, math.min(layout.panelWidth or 360, screenW - marginX * 2))
-    local paddingX = 14
-    local paddingY = 14
-    local rowH = 56
-    local rowSpacing = 8
-    local headerH = 26
-    local indicatorWidth = 160
-    local indicatorHeight = 14
-    local panelRadius = 16
-    local outlineWidth = 2
-
-    local totalHeight = paddingY * 2 + headerH + (rowH * totalRows) + (rowSpacing * math.max(0, totalRows - 1))
-    local panelLeft = math.max(marginX, screenW - panelW - marginX)
-    local maxTop = math.max(12, screenH - totalHeight - 12)
-    local panelTop = math.max(12, math.min(marginTop, maxTop))
-    local panelCenterX = panelLeft + panelW * 0.5
-    local panelCenterY = panelTop + totalHeight * 0.5
-
-    local rowLeft = panelLeft + paddingX
-    local rowWidth = panelW - paddingX * 2
-    local rowStartY = panelTop + paddingY + headerH
-    local rows = {}
-
-    for index = 1, totalRows do
-        local entry = TagSynergyPanel.entries[index]
-        local rowTop = rowStartY + (index - 1) * (rowH + rowSpacing)
-        local rowCenterY = rowTop + rowH * 0.5
-        local indicatorLeft = rowLeft + rowWidth - indicatorWidth - 14
-        local indicatorTop = rowCenterY - indicatorHeight * 0.5 + 8
-        local spacing = 8
-        local availableWidth = indicatorWidth - spacing * (math.max(1, #entry.thresholds) - 1)
-        local segWidth = availableWidth / math.max(1, #entry.thresholds)
-        local segments = {}
-        for i, threshold in ipairs(entry.thresholds) do
-            local left = indicatorLeft + (segWidth + spacing) * (i - 1)
-            segments[#segments + 1] = {
-                left = left,
-                top = indicatorTop,
-                width = segWidth,
-                height = indicatorHeight,
-                threshold = threshold
+    if nextThreshold then
+        local needed = nextThreshold - count
+        local hintText = string.format("%d more card%s for Tier %d", needed, needed == 1 and "" or "s", countThresholdsReached(count, thresholds) + 1)
+        children[#children + 1] = dsl.text(hintText, {
+            color = accent,
+            fontSize = tooltipStyle.fontSize,
+            fontName = tooltipStyle.fontName,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_CENTER)
+        })
+    end
+    
+    return dsl.root {
+        config = {
+            color = tooltipStyle.bg,
+            padding = tooltipStyle.padding,
+            outlineThickness = tooltipStyle.outlineThickness,
+            outlineColor = tooltipStyle.outline,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+            shadow = true,
+        },
+        children = {
+            dsl.vbox {
+                config = {
+                    color = tooltipStyle.inner,
+                    padding = 8,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_LEFT, AlignmentFlag.VERTICAL_TOP),
+                },
+                children = children
             }
+        }
+    }
+end
+
+local function getOrBuildTooltip(tag, count, thresholds)
+    local key = tag
+    local signature = tag .. ":" .. tostring(count)
+    local cached = TagSynergyPanel._tooltips[key]
+    
+    if cached and cached.signature == signature and cached.entity then
+        return cached.entity
+    end
+    
+    destroyTooltip(key)
+    
+    local accent = colorForTag(tag)
+    local def = buildTooltipDef(tag, count, thresholds, accent)
+    local tooltipZ = (z_orders.ui_tooltips or 0) + 50
+    local entity = dsl.spawn({ x = -2000, y = -2000 }, def, "ui", tooltipZ)
+    
+    if transform and transform.set_space then
+        transform.set_space(entity, "screen")
+    end
+    
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        layer_order_system.assignZIndexToEntity(entity, tooltipZ)
+    end
+    
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, entity)
+    end
+    
+    local t = component_cache.get(entity, Transform)
+    if t then
+        t.visualW = t.actualW or t.visualW
+        t.visualH = t.actualH or t.visualH
+    end
+    
+    if ui and ui.box and ui.box.AssignStateTagsToUIBox and PLANNING_STATE then
+        ui.box.AssignStateTagsToUIBox(entity, PLANNING_STATE)
+    end
+    if remove_default_state_tag then
+        remove_default_state_tag(entity)
+    end
+    
+    TagSynergyPanel._tooltips[key] = {
+        entity = entity,
+        signature = signature
+    }
+    return entity
+end
+
+local function positionTooltip(entity, mouse)
+    if not entity then return end
+    if ui and ui.box and ui.box.RenewAlignment then
+        ui.box.RenewAlignment(registry, entity)
+    end
+    local t = component_cache.get(entity, Transform)
+    if not t then return end
+
+    local screenW, screenH = resolveScreenSize()
+    local w = t.actualW or 0
+    local h = t.actualH or 0
+    local margin = 12
+    local offsetX = 16
+    local offsetY = 16
+    local x = (mouse and mouse.x + offsetX) or (screenW - w - margin)
+    local y = (mouse and mouse.y + offsetY) or margin
+    
+    if x < margin then x = margin end
+    if x + w > screenW - margin then x = math.max(margin, screenW - w - margin) end
+    if y < margin then y = margin end
+    if y + h > screenH - margin then y = math.max(margin, screenH - h - margin) end
+
+    t.actualX = x
+    t.visualX = x
+    t.actualY = y
+    t.visualY = y
+end
+
+local function hideActiveTooltip()
+    if TagSynergyPanel._activeTooltip then
+        local t = component_cache.get(TagSynergyPanel._activeTooltip, Transform)
+        if t then
+            t.actualX = -2000
+            t.actualY = -2000
+            t.visualX = t.actualX
+            t.visualY = t.actualY
         end
+    end
+    TagSynergyPanel._activeTooltip = nil
+    TagSynergyPanel._hoverTag = nil
+end
 
-        -- Calculate the max width for text before it overlaps with indicators
-        local textMaxWidth = indicatorLeft - rowLeft - 24  -- 12px left margin + 12px gap
+local function clearHover()
+    hideActiveTooltip()
+    HoverRegistry.clear()
+end
 
-        rows[#rows + 1] = {
-            entry = entry,
-            top = rowTop,
-            centerY = rowCenterY,
-            rowLeft = rowLeft,
-            rowWidth = rowWidth,
-            rowHeight = rowH,
-            segments = segments,
-            textMaxWidth = textMaxWidth
+local function spawnThresholdParticles(x, y, color)
+    if not particle then return end
+    
+    local particleCount = 6 + math.random(3)
+    for i = 1, particleCount do
+        local angle = (i / particleCount) * math.pi * 2 + math.random() * 0.5
+        local speed = 80 + math.random() * 40
+        local vx = math.cos(angle) * speed
+        local vy = math.sin(angle) * speed
+        
+        local opts = {
+            renderType = particle.ParticleRenderType and particle.ParticleRenderType.CIRCLE_FILLED or 4,
+            velocity = Vec2(vx, vy),
+            lifespan = 0.4 + math.random() * 0.2,
+            startColor = color,
+            endColor = Col(color.r, color.g, color.b, 0),
+            gravity = 50,
         }
+        
+        local size = 3 + math.random() * 2
+        particle.CreateParticle(Vec2(x, y), Vec2(size, size), opts)
     end
-
-    return {
-        screenW = screenW,
-        screenH = screenH,
-        totalRows = totalRows,
-        marginX = marginX,
-        marginTop = marginTop,
-        panelW = panelW,
-        paddingX = paddingX,
-        paddingY = paddingY,
-        rowH = rowH,
-        rowSpacing = rowSpacing,
-        headerH = headerH,
-        indicatorWidth = indicatorWidth,
-        indicatorHeight = indicatorHeight,
-        panelRadius = panelRadius,
-        outlineWidth = outlineWidth,
-        totalHeight = totalHeight,
-        panelLeft = panelLeft,
-        panelTop = panelTop,
-        panelCenterX = panelCenterX,
-        panelCenterY = panelCenterY,
-        rowLeft = rowLeft,
-        rowWidth = rowWidth,
-        rowStartY = rowStartY,
-        rows = rows
-    }
-end
-
-local hoverPadX = 6
-local hoverPadY = 12
-
-local function buildTooltipLines(entry, focusThreshold)
-    local lines = {}
-    lines[#lines + 1] = {
-        label = "cards in deck",
-        value = tostring(entry.count or 0),
-        labelColor = tooltipStyle.label,
-        valueColor = tooltipStyle.value,
-        fontSize = 12
-    }
-    for _, threshold in ipairs(entry.thresholds) do
-        local focus = (threshold == focusThreshold)
-        local bonus = describeBonus(entry.tag, threshold)
-        local status = formatThresholdStatus(entry, threshold)
-        local color = focus and colorForTag(entry.tag) or tooltipStyle.text
-        lines[#lines + 1] = {
-            label = string.format("threshold %d", threshold),
-            value = string.format("%s (%s)", bonus, status),
-            labelColor = color,
-            valueColor = color,
-            fontSize = focus and 13 or 12
-        }
-    end
-    return lines
-end
-
-local function buildHoverTarget(entry, focusThreshold)
-    local lines = buildTooltipLines(entry, focusThreshold)
-    local sigParts = {}
-    for _, l in ipairs(lines) do
-        sigParts[#sigParts + 1] = (l.label or "") .. ":" .. (l.value or "")
-    end
-    local signature = table.concat(sigParts, "|")
-    return {
-        key = entry.tag .. ":" .. (focusThreshold or "row"),
-        title = string.format("%s Synergy", entry.tag),
-        rows = lines,
-        signature = signature,
-        entry = entry,
-        threshold = focusThreshold
-    }
-end
-
-local function updateHoverTooltip(target, mouse)
-    if not target then
-        hideActiveTooltip()
-        return
-    end
-
-    local tooltip = getOrBuildTooltip(target)
-    if not tooltip then
-        hideActiveTooltip()
-        return
-    end
-
-    TagSynergyPanel._activeTooltip = tooltip
-    TagSynergyPanel._hoverKey = target.key
-    positionTooltip(tooltip, mouse)
 end
 
 function TagSynergyPanel.init(opts)
@@ -719,7 +568,9 @@ function TagSynergyPanel.init(opts)
     TagSynergyPanel.entries = {}
     TagSynergyPanel.displayedCounts = {}
     TagSynergyPanel._pulses = {}
-    TagSynergyPanel._hoverKey = nil
+    TagSynergyPanel._thresholdAnimations = {}
+    TagSynergyPanel._hoverTag = nil
+    TagSynergyPanel._hoverScale = {}
     TagSynergyPanel._activeTooltip = nil
     resetTooltipCache()
     TagSynergyPanel._layoutCache = nil
@@ -734,11 +585,9 @@ function TagSynergyPanel.setLayout(layout)
     TagSynergyPanel.layout = {
         marginX = layout.marginX or TagSynergyPanel.layout.marginX,
         marginTop = layout.marginTop or TagSynergyPanel.layout.marginTop,
-        panelWidth = layout.panelWidth or TagSynergyPanel.layout.panelWidth
     }
 end
 
---- Show the synergy panel with slide-up animation
 function TagSynergyPanel.show()
     if TagSynergyPanel._slideState == "visible" or TagSynergyPanel._slideState == "entering" then
         return
@@ -746,7 +595,6 @@ function TagSynergyPanel.show()
     TagSynergyPanel._slideState = "entering"
 end
 
---- Hide the synergy panel with slide-down animation
 function TagSynergyPanel.hide()
     if TagSynergyPanel._slideState == "hidden" or TagSynergyPanel._slideState == "exiting" then
         return
@@ -755,7 +603,6 @@ function TagSynergyPanel.hide()
     hideActiveTooltip()
 end
 
---- Toggle the synergy panel visibility
 function TagSynergyPanel.toggle()
     if TagSynergyPanel._slideState == "visible" or TagSynergyPanel._slideState == "entering" then
         TagSynergyPanel.hide()
@@ -764,12 +611,10 @@ function TagSynergyPanel.toggle()
     end
 end
 
---- Check if the panel is currently visible (or animating in)
 function TagSynergyPanel.isVisible()
     return TagSynergyPanel._slideState == "visible" or TagSynergyPanel._slideState == "entering"
 end
 
---- Get the current panel bounds for hit-testing (includes slide offset)
 function TagSynergyPanel.getPanelBounds()
     local cache = TagSynergyPanel._layoutCache
     if not cache then return nil end
@@ -778,11 +623,10 @@ function TagSynergyPanel.getPanelBounds()
         x = cache.panelLeft,
         y = cache.panelTop + slideOffset,
         w = cache.panelW,
-        h = cache.totalHeight
+        h = cache.panelH
     }
 end
 
---- Check if a point is inside the panel
 function TagSynergyPanel.containsPoint(px, py)
     local bounds = TagSynergyPanel.getPanelBounds()
     if not bounds then return false end
@@ -790,7 +634,6 @@ function TagSynergyPanel.containsPoint(px, py)
        and py >= bounds.y and py <= bounds.y + bounds.h
 end
 
---- Handle click-outside to dismiss
 function TagSynergyPanel.handleClickOutside(mx, my)
     if TagSynergyPanel._slideState ~= "visible" then return end
     if not TagSynergyPanel.containsPoint(mx, my) then
@@ -798,7 +641,6 @@ function TagSynergyPanel.handleClickOutside(mx, my)
     end
 end
 
---- Set the toggle button bounds for click-outside exclusion
 function TagSynergyPanel.setToggleButtonBounds(bounds)
     TagSynergyPanel._toggleButtonBounds = bounds
 end
@@ -808,37 +650,51 @@ function TagSynergyPanel.setData(tagCounts, breakpoints)
         TagSynergyPanel.breakpoints, TagSynergyPanel.breakpointDetails = normalizeBreakpoints(breakpoints)
     end
 
-    local entries = {}
+    local entriesByTag = {}
     for tag, count in pairs(tagCounts or {}) do
-        if count and count > 0 then
-            table.insert(entries, {
-                tag = tag,
-                count = count,
-                thresholds = copyThresholds(thresholdsFor(tag, TagSynergyPanel.breakpoints)),
-            })
-        end
+        entriesByTag[tag] = {
+            tag = tag,
+            count = count,
+            thresholds = copyThresholds(thresholdsFor(tag, TagSynergyPanel.breakpoints)),
+        }
     end
-
-    local seen = {}
-    for _, entry in ipairs(entries) do
-        seen[entry.tag] = true
-    end
-
-    table.sort(entries, function(a, b)
-        if a.count == b.count then
-            return a.tag < b.tag
+    
+    TagSynergyPanel.entries = entriesByTag
+    
+    for tag, entry in pairs(entriesByTag) do
+        local previous = TagSynergyPanel.displayedCounts[tag]
+        local previousReached = previous and countThresholdsReached(previous, entry.thresholds) or 0
+        local currentReached = countThresholdsReached(entry.count, entry.thresholds)
+        
+        if currentReached > previousReached then
+            TagSynergyPanel._thresholdAnimations[tag] = {
+                scale = 1.0,
+                glow = 1.0,
+                startTime = 0,
+            }
+            
+            local cache = TagSynergyPanel._layoutCache
+            if cache and cache.cells[tag] then
+                local cell = cache.cells[tag]
+                spawnThresholdParticles(cell.centerX, cell.centerY, colorForTag(tag))
+            end
         end
-        return a.count > b.count
-    end)
-
+        
+        if previous and previous ~= entry.count then
+            TagSynergyPanel._pulses[tag] = 1.0
+        end
+        
+        TagSynergyPanel.displayedCounts[tag] = entry.count
+    end
+    
     for tag, _ in pairs(TagSynergyPanel.displayedCounts) do
-        if not seen[tag] then
+        if not entriesByTag[tag] then
             TagSynergyPanel.displayedCounts[tag] = nil
             TagSynergyPanel._pulses[tag] = nil
+            TagSynergyPanel._thresholdAnimations[tag] = nil
         end
     end
-
-    TagSynergyPanel.entries = entries
+    
     resetTooltipCache()
     TagSynergyPanel._layoutCache = nil
 end
@@ -851,7 +707,6 @@ function TagSynergyPanel.update(dt)
     end
     if not dt then dt = GetFrameTime() end
 
-    -- Update slide animation state machine
     local state = TagSynergyPanel._slideState
     local progress = TagSynergyPanel._slideProgress
     local speed = TagSynergyPanel._slideSpeed
@@ -873,23 +728,19 @@ function TagSynergyPanel.update(dt)
         end
     end
 
-    -- Skip further updates if fully hidden
     if TagSynergyPanel._slideState == "hidden" then
         clearHover()
         TagSynergyPanel._layoutCache = nil
         return
     end
 
-    TagSynergyPanel._pulses = TagSynergyPanel._pulses or {}
-    TagSynergyPanel._layoutCache = computeLayoutCache()
+    TagSynergyPanel._layoutCache = computeGridLayout()
 
-    -- Check for click-outside-to-dismiss when fully visible
     if TagSynergyPanel._slideState == "visible" and input and input.action_down then
         local clickedOutside = input.action_down("mouse_click")
         if clickedOutside then
             local mouse = getMousePosition()
             if mouse then
-                -- Check if click is inside synergy toggle button (don't dismiss if clicking the button)
                 local buttonBounds = TagSynergyPanel._toggleButtonBounds
                 local insideButton = buttonBounds and
                     mouse.x >= buttonBounds.x and mouse.x <= buttonBounds.x + buttonBounds.w and
@@ -902,64 +753,128 @@ function TagSynergyPanel.update(dt)
         end
     end
 
-    for _, entry in ipairs(TagSynergyPanel.entries) do
-        local previous = TagSynergyPanel.displayedCounts[entry.tag]
-        if previous and previous ~= entry.count then
-            TagSynergyPanel._pulses[entry.tag] = 1.0
-        end
-        TagSynergyPanel.displayedCounts[entry.tag] = entry.count
-    end
-
     for tag, pulse in pairs(TagSynergyPanel._pulses) do
-        TagSynergyPanel._pulses[tag] = math.max(0, pulse - dt * 2.4)
+        TagSynergyPanel._pulses[tag] = math.max(0, pulse - dt * 3.0)
     end
-
+    
+    for tag, anim in pairs(TagSynergyPanel._thresholdAnimations) do
+        anim.startTime = anim.startTime + dt
+        
+        local t = anim.startTime
+        if t < 0.3 then
+            local p = t / 0.3
+            anim.scale = 1.0 + 0.15 * math.sin(p * math.pi)
+        else
+            anim.scale = 1.0
+        end
+        
+        anim.glow = math.max(0, 1.0 - anim.startTime * 2.5)
+        
+        if anim.startTime > 0.5 then
+            TagSynergyPanel._thresholdAnimations[tag] = nil
+        end
+    end
+    
+    for tag, scale in pairs(TagSynergyPanel._hoverScale) do
+        local targetScale = (tag == TagSynergyPanel._hoverTag) and 1.08 or 1.0
+        TagSynergyPanel._hoverScale[tag] = scale + (targetScale - scale) * math.min(1, dt * 12)
+    end
 end
 
-local function drawSegment(left, top, width, height, fill, accent, tag, threshold, z, space, font)
-    local centerX = left + width * 0.5
-    local centerY = top + height * 0.5
-    local partialColor = Col(accent.r, accent.g, accent.b, 180)
-    local trackColor = colors.track
-
-    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
-        c.x = centerX
-        c.y = centerY
-        c.w = width
-        c.h = height
-        c.fillColor = trackColor
-        c.borderColor = Col(0, 0, 0, 0)
-        c.borderWidth = 0
-        c.numSteps = 2
-    end, z, space)
-
-    if fill > 0 then
-        local fillWidth = math.max(math.min(width, width * clamp01(fill)), math.min(width, 6))
-        local fillCenter = left + fillWidth * 0.5
-        command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
-            c.x = fillCenter
-            c.y = centerY
-            c.w = fillWidth
-            c.h = height
-            c.fillColor = (fill >= 1) and accent or partialColor
-            c.borderColor = Col(0, 0, 0, 0)
-            c.borderWidth = 0
-            c.numSteps = 2
-        end, z + 1, space)
+local function drawIcon(cellX, cellY, tag, count, thresholds, scale, glowAlpha, slideOffset, baseZ, space, font)
+    local accent = colorForTag(tag)
+    local isActive = count > 0
+    local iconColor = isActive and accent or makeGrayscaleColor(accent)
+    
+    local cx = cellX + CELL_SIZE / 2
+    local cy = cellY + CELL_SIZE / 2 + slideOffset
+    local iconHalfSize = (ICON_SIZE / 2) * scale
+    
+    if glowAlpha > 0 then
+        local glowSize = iconHalfSize * 1.4
+        command_buffer.queueDrawCircleFilled(layers.ui, function(c)
+            c.x = cx
+            c.y = cy
+            c.radius = glowSize
+            c.color = Col(accent.r, accent.g, accent.b, math.floor(60 * glowAlpha))
+        end, baseZ, space)
     end
-
-    if threshold then
-        local label = tostring(threshold)
-        local fontSize = 13
-        local w = localization.getTextWidthWithCurrentFont(label, fontSize, 1)
+    
+    local iconConfig = SynergyIcons.getConfig(tag)
+    local shouldTint = iconConfig and iconConfig.tint ~= false
+    local tintColor = shouldTint and iconColor or Col(255, 255, 255, isActive and 255 or 180)
+    
+    if not isActive then
+        tintColor = Col(80, 85, 100, 180)
+    end
+    
+    local iconSize = ICON_SIZE * scale
+    local iconLeft = cx - iconSize / 2
+    local iconTop = cy - iconSize / 2 - 6
+    
+    command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
+        c.x = cx
+        c.y = iconTop + iconSize / 2
+        c.w = iconSize
+        c.h = iconSize
+        c.fillColor = tintColor
+        c.borderColor = Col(0, 0, 0, 100)
+        c.borderWidth = 1
+        c.numSteps = 3
+    end, baseZ + 1, space)
+    
+    local dotsY = cy + ICON_SIZE / 2 - 4
+    local dotsTotalWidth = 4 * (DOT_RADIUS * 2) + 3 * (DOT_SPACING - DOT_RADIUS * 2)
+    local dotsStartX = cx - dotsTotalWidth / 2
+    
+    local reachedCount = countThresholdsReached(count, thresholds)
+    
+    for i = 1, 4 do
+        local dotX = dotsStartX + (i - 1) * DOT_SPACING + DOT_RADIUS
+        local isFilled = i <= reachedCount
+        local dotColor = isFilled and accent or colors.dotEmpty
+        
+        command_buffer.queueDrawCircleFilled(layers.ui, function(c)
+            c.x = dotX
+            c.y = dotsY
+            c.radius = DOT_RADIUS
+            c.color = dotColor
+        end, baseZ + 2, space)
+    end
+    
+    if isActive then
+        local badgeX = cellX + CELL_SIZE - BADGE_RADIUS - 2
+        local badgeY = cellY + slideOffset + BADGE_RADIUS + 2
+        
+        local pulse = TagSynergyPanel._pulses[tag] or 0
+        local badgeScale = 1.0 + pulse * 0.15
+        local badgeR = BADGE_RADIUS * badgeScale
+        
+        command_buffer.queueDrawCircleFilled(layers.ui, function(c)
+            c.x = badgeX
+            c.y = badgeY
+            c.radius = badgeR
+            c.color = colors.badgeBg
+        end, baseZ + 3, space)
+        
+        command_buffer.queueDrawCircleFilled(layers.ui, function(c)
+            c.x = badgeX
+            c.y = badgeY
+            c.radius = badgeR - 1
+            c.color = Col(accent.r, accent.g, accent.b, 200)
+        end, baseZ + 4, space)
+        
+        local countStr = tostring(count)
+        local fontSize = count >= 10 and 10 or 12
+        local textW = localization.getTextWidthWithCurrentFont(countStr, fontSize, 1)
         command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = label
+            c.text = countStr
             c.font = font
-            c.x = centerX - w * 0.5
-            c.y = top - fontSize - 2
-            c.color = colors.muted
+            c.x = badgeX - textW / 2
+            c.y = badgeY - fontSize / 2 - 1
+            c.color = colors.badgeText
             c.fontSize = fontSize
-        end, z + 2, space)
+        end, baseZ + 5, space)
     end
 end
 
@@ -973,20 +888,15 @@ function TagSynergyPanel.draw()
         return
     end
 
-    -- Skip drawing if fully hidden
     if TagSynergyPanel._slideState == "hidden" then
         clearHover()
         return
     end
 
-    TagSynergyPanel._layoutCache = computeLayoutCache()
-    local layoutCache = TagSynergyPanel._layoutCache
-    local screenW = layoutCache.screenW
-    local screenH = layoutCache.screenH
+    TagSynergyPanel._layoutCache = computeGridLayout()
+    local cache = TagSynergyPanel._layoutCache
     local font = localization.getFont()
-    local totalRows = layoutCache.totalRows
 
-    -- Calculate slide offset (panel slides up from bottom)
     local slideProgress = TagSynergyPanel._slideProgress
     local easedProgress
     if TagSynergyPanel._slideState == "entering" then
@@ -996,139 +906,82 @@ function TagSynergyPanel.draw()
     else
         easedProgress = 1
     end
-    local slideOffset = (1 - easedProgress) * (layoutCache.totalHeight + 40)
-
-    -- If nothing to show, render a small hint and exit.
-    if totalRows == 0 then
-        local hint = "Add tagged cards to start a synergy"
-        local fontSize = 15
-        local w = localization.getTextWidthWithCurrentFont(hint, fontSize, 1)
-        local x = screenW - w - math.max(14, layoutCache.marginX or 0)
-        local y = math.max(24, layoutCache.marginTop - 56) + slideOffset
-        command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = hint
-            c.font = font
-            c.x = x
-            c.y = y
-            c.color = colors.muted
-            c.fontSize = fontSize
-        end, (z_orders.ui_tooltips or 0) + 3, layer.DrawCommandSpace.Screen)
-        clearHover()
-        return
-    end
+    local slideOffset = (1 - easedProgress) * (cache.panelH + 40)
+    TagSynergyPanel._currentSlideOffset = slideOffset
 
     local space = layer.DrawCommandSpace.Screen
-    local baseZ = 100  -- Lower z so other UI can draw above
+    local baseZ = 100
 
-    -- Apply slide offset to panel position
-    local panelCenterY = layoutCache.panelCenterY + slideOffset
-    local panelTop = layoutCache.panelTop + slideOffset
+    local panelCenterY = cache.panelCenterY + slideOffset
 
     command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
-        c.x = layoutCache.panelCenterX
+        c.x = cache.panelCenterX
         c.y = panelCenterY
-        c.w = layoutCache.panelW
-        c.h = layoutCache.totalHeight
+        c.w = cache.panelW
+        c.h = cache.panelH
         c.fillColor = colors.panel
         c.borderColor = colors.outline
-        c.borderWidth = layoutCache.outlineWidth
+        c.borderWidth = 2
         c.numSteps = 4
     end, baseZ, space)
 
-    command_buffer.queueDrawText(layers.ui, function(c)
-        c.text = localization and localization.get and localization.get("ui.tag_synergies_title") or "Tag Synergies"
-        c.font = font
-        c.x = layoutCache.panelLeft + layoutCache.paddingX
-        c.y = panelTop + layoutCache.paddingY - 2
-        c.color = colors.header
-        c.fontSize = 22
-    end, baseZ + 2, space)
-
-    -- Store slideOffset for use in row rendering
-    TagSynergyPanel._currentSlideOffset = slideOffset
-
-    for _, row in ipairs(layoutCache.rows or {}) do
-        local entry = row.entry
-        local rowCenterY = row.centerY + slideOffset
-        local rowTop = row.top + slideOffset
-        local accent = colorForTag(entry.tag)
-        local pulse = TagSynergyPanel._pulses[entry.tag] or 0
-        local nameSize = 20 * (1 + pulse * 0.08)
-        local subtitleSize = 14
-
-        command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
-            c.x = row.rowLeft + row.rowWidth * 0.5
-            c.y = rowCenterY
-            c.w = row.rowWidth
-            c.h = row.rowHeight
-            c.fillColor = colors.row
-            c.borderColor = Col(0, 0, 0, 0)
-            c.borderWidth = 0
-            c.numSteps = 3
-        end, baseZ + 1, space)
-
-        -- Title
-        command_buffer.queueDrawText(layers.ui, function(c)
-            c.text = entry.tag
-            c.font = font
-            c.x = row.rowLeft + 12
-            c.y = rowCenterY - 16
-            c.color = accent
-            c.fontSize = nameSize
-        end, baseZ + 2, space)
-
-        for _, seg in ipairs(row.segments or {}) do
-            local fill = entry.count / seg.threshold
-            local segTop = seg.top + slideOffset
-            drawSegment(seg.left, segTop, seg.width, seg.height, fill, accent, entry.tag, seg.threshold, baseZ + 2, space, font)
+    local gridOrder = cache.gridOrder
+    for _, tag in ipairs(gridOrder) do
+        if tag and cache.cells[tag] then
+            local cell = cache.cells[tag]
+            local entry = TagSynergyPanel.entries[tag]
+            local count = entry and entry.count or 0
+            local thresholds = entry and entry.thresholds or DEFAULT_THRESHOLDS
+            
+            local hoverScale = TagSynergyPanel._hoverScale[tag] or 1.0
+            local anim = TagSynergyPanel._thresholdAnimations[tag]
+            local animScale = anim and anim.scale or 1.0
+            local glowAlpha = anim and anim.glow or 0
+            
+            local finalScale = hoverScale * animScale
+            
+            if tag == TagSynergyPanel._hoverTag then
+                glowAlpha = math.max(glowAlpha, 0.3)
+            end
+            
+            drawIcon(cell.x, cell.y, tag, count, thresholds, finalScale, glowAlpha, slideOffset, baseZ + 10, space, font)
         end
     end
 
-    -- Don't register hover regions while animating
     if TagSynergyPanel._slideState ~= "visible" then
         return
     end
 
-    -- Register hover regions with HoverRegistry
-    for _, row in ipairs(layoutCache.rows or {}) do
-        -- Register row region (lower z)
-        HoverRegistry.region({
-            id = "synergy_" .. row.entry.tag,
-            x = row.rowLeft,
-            y = row.top + slideOffset,
-            w = row.rowWidth,
-            h = row.rowHeight,
-            z = 100,
-            onHover = function()
-                local target = buildHoverTarget(row.entry)
-                local mouse = getMousePosition()
-                if mouse then
-                    updateHoverTooltip(target, mouse)
-                end
-            end,
-            onUnhover = function()
-                hideActiveTooltip()
-            end,
-        })
-
-        -- Register segment regions (higher z)
-        for _, seg in ipairs(row.segments or {}) do
+    for _, tag in ipairs(gridOrder) do
+        if tag and cache.cells[tag] then
+            local cell = cache.cells[tag]
+            local entry = TagSynergyPanel.entries[tag]
+            local count = entry and entry.count or 0
+            local thresholds = entry and entry.thresholds or DEFAULT_THRESHOLDS
+            
             HoverRegistry.region({
-                id = "synergy_" .. row.entry.tag .. "_" .. seg.threshold,
-                x = seg.left - hoverPadX,
-                y = seg.top + slideOffset - hoverPadY,
-                w = seg.width + hoverPadX * 2,
-                h = seg.height + hoverPadY * 2,
+                id = "synergy_grid_" .. tag,
+                x = cell.x,
+                y = cell.y + slideOffset,
+                w = CELL_SIZE,
+                h = CELL_SIZE,
                 z = 101,
                 onHover = function()
-                    local target = buildHoverTarget(row.entry, seg.threshold)
+                    TagSynergyPanel._hoverTag = tag
+                    TagSynergyPanel._hoverScale[tag] = TagSynergyPanel._hoverScale[tag] or 1.0
+                    
+                    local tooltip = getOrBuildTooltip(tag, count, thresholds)
                     local mouse = getMousePosition()
-                    if mouse then
-                        updateHoverTooltip(target, mouse)
+                    if mouse and tooltip then
+                        TagSynergyPanel._activeTooltip = tooltip
+                        positionTooltip(tooltip, mouse)
                     end
                 end,
                 onUnhover = function()
-                    hideActiveTooltip()
+                    if TagSynergyPanel._hoverTag == tag then
+                        TagSynergyPanel._hoverTag = nil
+                        hideActiveTooltip()
+                    end
                 end,
             })
         end

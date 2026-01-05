@@ -86,7 +86,12 @@ namespace shaders
             sol::constructors<>(),
             // your existing setter stays the same
             "set", [](shaders::ShaderUniformSet& s, const std::string& name, sol::object value) {
-                if (value.is<float>()) {
+                // Check int BEFORE float - Lua numbers can be either
+                // Use sol's integer check which handles Lua's number representation correctly
+                if (value.is<int>()) {
+                    s.set(name, value.as<int>());
+                }
+                else if (value.is<float>()) {
                     s.set(name, value.as<float>());
                 }
                 else if (value.is<bool>()) {
@@ -174,6 +179,8 @@ namespace shaders
         sh.new_usertype<shaders::ShaderUniformComponent>("ShaderUniformComponent",
             sol::constructors<>(),
             "set", &shaders::ShaderUniformComponent::set,
+            "setInt", &shaders::ShaderUniformComponent::setInt,
+            "setFloat", &shaders::ShaderUniformComponent::setFloat,
             "registerEntityUniformCallback", &shaders::ShaderUniformComponent::registerEntityUniformCallback,
             "getSet", &shaders::ShaderUniformComponent::getSet,
             // --- OVERRIDE get for Lua: ---
@@ -412,7 +419,10 @@ namespace shaders
             int loc = g_shaderApi.get_location(shader, name.c_str());
             
             if (loc < 0) {
-                // SPDLOG_WARN("Shader uniform '{}' not found in shader ID {}. Skipping.", name, shader.id);
+                // Only warn for lighting shader uniforms (avoid spam from others)
+                if (name.find("u_light") != std::string::npos || name == "u_ambientLevel" || name == "u_blendMode") {
+                    SPDLOG_WARN("Shader uniform '{}' not found in shader ID {}. Skipping.", name, shader.id);
+                }
                 continue;  // skip missing uniforms
             }
             if (name == "atlas") {

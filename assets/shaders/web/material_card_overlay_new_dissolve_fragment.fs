@@ -14,7 +14,7 @@ uniform float dissolve;    // Drives the collapse (0 → 1)
 uniform float time;
 uniform vec4 texture_details; // kept for uniform parity
 uniform vec2 image_details;   // kept for uniform parity
-uniform bool shadow;
+uniform float shadow;
 uniform vec4 burn_colour_1;
 uniform vec4 burn_colour_2;
 
@@ -115,7 +115,7 @@ void main() {
     float edgeDistance = length(warpedLocal - clampedLocal);
     float burnMask = smoothstep(0.0, 0.02, edgeDistance) * (1.0 - alphaFactor);
 
-    if (!shadow && burn_colour_1.a > 0.01) {
+    if (shadow < 0.5 && burn_colour_1.a > 0.01) {
         vec3 burnMix = burn_colour_1.rgb;
         if (burn_colour_2.a > 0.01) {
             float t = clamp(edgeDistance / 0.04, 0.0, 1.0);
@@ -125,7 +125,7 @@ void main() {
     }
 
     // --- Shadow / final output ---
-    if (shadow) {
+    if (shadow > 0.5) {
         finalColor = vec4(vec3(0.0), alpha * 0.35);
     } else {
         finalColor = vec4(lit, alpha);

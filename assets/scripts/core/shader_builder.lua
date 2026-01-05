@@ -89,7 +89,7 @@ local families = {
             "thickness"
         },
         defaults = {
-            outlineType = 8,
+            outlineType = 2,
             thickness = 2.0,
         },
     },

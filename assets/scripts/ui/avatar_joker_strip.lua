@@ -42,7 +42,7 @@ AvatarJokerStrip.layout = {
 }
 
 local colors = {
-    panel = Col(12, 14, 24, 205),
+    panel = Col(12, 14, 24, 255),
     outline = util.getColor("apricot_cream"),
     avatarAccent = util.getColor("mint_green"),
     jokerAccent = util.getColor("gold"),
@@ -325,20 +325,18 @@ local function drawGroup(box, accent, label, baseZ)
     local space = layer.DrawCommandSpace.Screen
     local font = localization.getFont()
 
-    -- Drop shadow layer (offset down-right) using stepped rectangle
     local shadowOffset = 4
     command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = box.x + box.w * 0.5 + shadowOffset
         c.y = box.y + box.h * 0.5 + shadowOffset
         c.w = box.w + 4
         c.h = box.h + 4
-        c.fillColor = Col(0, 0, 0, 80)
+        c.fillColor = Col(0, 0, 0, 255)
         c.borderColor = Col(0, 0, 0, 0)
         c.borderWidth = 0
         c.numSteps = 4
     end, baseZ - 1, space)
 
-    -- Main panel with stepped corners and border
     command_buffer.queueDrawSteppedRoundedRect(layers.ui, function(c)
         c.x = box.x + box.w * 0.5
         c.y = box.y + box.h * 0.5

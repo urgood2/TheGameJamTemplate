@@ -28,7 +28,7 @@ uniform float dissolve;
 uniform float time;
 uniform vec4 texture_details;
 uniform vec2 image_details;
-uniform bool shadow;
+uniform float shadow;
 uniform vec4 burn_colour_1;
 uniform vec4 burn_colour_2;
 
@@ -148,7 +148,7 @@ vec4 applyOverlay(vec2 atlasUV) {
         abs(sheen_strength) < EPS &&
         burn_colour_1.a < EPS &&
         burn_colour_2.a < EPS &&
-        !shadow &&
+        shadow < 0.5 &&
         length(material_tint - vec3(1.0)) < EPS;
 
     if (effectInactive && (abs(iridescent.x) + abs(iridescent.y)) < EPS) {
@@ -240,7 +240,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
     float alpha = base.a * alphaFactor;
 
-    if (shadow) {
+    if (shadow > 0.5) {
         return vec4(vec3(0.0), alpha * 0.35);
     }
 

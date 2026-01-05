@@ -22,8 +22,12 @@ local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 local TextBuilderDemo = require("demos.text_builder_demo")
 local Text = require("core.text") -- TextBuilder system for fire-and-forget text
-local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups
+local TutorialDialogueDemo = require("tutorial.dialogue.demo")
+local LightingDemo = require("demos.lighting_demo")
+-- local RenderGroupsTest = require("tests.test_render_groups_visual") -- Visual test for render groups (disabled: DrawRenderGroup command not registered)
+local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
+local PatchNotesModal = require("ui.patch_notes_modal")
 -- Represents game loop main module
 main = main or {}
 
@@ -108,8 +112,131 @@ function initMainMenu()
     playMusic("main-menu", true)
     setTrackVolume("main-menu", 0.3)
 
-    -- Initialize render groups visual test
-    RenderGroupsTest.init()
+    -- RenderGroupsTest.init() -- disabled
+
+    local screenW = globals.screenWidth()
+    local screenH = globals.screenHeight()
+    local centerY = screenH / 2 - 100
+    
+    -- TEST: Using same shader for all 3 items to isolate shader vs position issue
+    -- Uncomment one of these options to test:
+    -- OPTION A: All prismatic (currently working shader)
+    local testShader = "3d_skew_prismatic"
+    -- OPTION B: All holo (currently not working)
+    -- local testShader = "3d_skew_holo"
+
+    log_debug("[SpecialItem Test] Using shader: " .. testShader .. " for all items")
+
+    mainMenuEntities.special_item_1 = SpecialItem.new("frame0012.png")
+        :at(screenW / 2 - 150, centerY)
+        :size(64, 64)
+        :shader(testShader)
+        :particles("bubble", { colors = { "cyan", "magenta", "yellow" } })
+        :outline("gold", 2)
+        :build()
+
+    mainMenuEntities.special_item_2 = SpecialItem.new("frame0012.png")
+        :at(screenW / 2, centerY)
+        :size(64, 64)
+        :shader(testShader)
+        :particles("sparkle", { colors = { "white", "gold" } })
+        :outline("cyan", 2)
+        :build()
+
+    mainMenuEntities.special_item_3 = SpecialItem.new("frame0012.png")
+        :at(screenW / 2 + 150, centerY)
+        :size(64, 64)
+        :shader(testShader)
+        :particles("magical", { colors = { "purple", "blue", "pink" } })
+        :outline("purple", 2)
+        :build()
+
+    -- DEBUG: Verify SpecialItem components
+    local function debugSpecialItem(name, item)
+        if not item then
+            log_warn("[SpecialItem Debug] " .. name .. " is nil!")
+            return
+        end
+        local eid = item:handle()
+        if not entity_cache.valid(eid) then
+            log_warn("[SpecialItem Debug] " .. name .. " has invalid entity handle!")
+            return
+        end
+        local transform = component_cache.get(eid, Transform)
+        local hasShaderPipeline = registry:has(eid, shader_pipeline.ShaderPipelineComponent)
+        local hasAnimQueue = registry:has(eid, AnimationQueueComponent)
+        local hasGameObject = registry:has(eid, GameObject)
+
+        -- Check shader pipeline details
+        local shaderInfo = "none"
+        if hasShaderPipeline then
+            local comp = component_cache.get(eid, shader_pipeline.ShaderPipelineComponent)
+            if comp and comp.getPassCount then
+                shaderInfo = tostring(comp:getPassCount()) .. " passes"
+            else
+                shaderInfo = "present"
+            end
+        end
+
+        -- Check draw layer
+        local layerInfo = "unknown"
+        if hasGameObject then
+            local go = component_cache.get(eid, GameObject)
+            if go and go.layer then
+                layerInfo = tostring(go.layer)
+            end
+        end
+
+        log_debug(string.format("[SpecialItem Debug] %s: entity=%s, pos=(%.0f,%.0f), size=(%.0f,%.0f), shader=%s, animQueue=%s, layer=%s, particles=%s",
+            name,
+            tostring(eid),
+            transform and transform.actualX or -1,
+            transform and transform.actualY or -1,
+            transform and transform.actualW or -1,
+            transform and transform.actualH or -1,
+            shaderInfo,
+            hasAnimQueue and "YES" or "NO",
+            layerInfo,
+            item.particleStream and "YES" or "NO"
+        ))
+    end
+
+    debugSpecialItem("special_item_1", mainMenuEntities.special_item_1)
+    debugSpecialItem("special_item_2", mainMenuEntities.special_item_2)
+    debugSpecialItem("special_item_3", mainMenuEntities.special_item_3)
+    log_debug("[SpecialItem Debug] Active count: " .. SpecialItem.getActiveCount())
+
+    -- Additional debug: Check entity version and renderer state
+    local function checkEntityRenderState(name, item)
+        if not item then return end
+        local eid = item:handle()
+        if not entity_cache.valid(eid) then return end
+
+        -- Check if entity has a visible sprite frame
+        local animQueue = component_cache.get(eid, AnimationQueueComponent)
+        if animQueue then
+            local defaultAnim = animQueue.defaultAnimation
+            local animListEmpty = (not defaultAnim or not defaultAnim.animationList or #defaultAnim.animationList == 0)
+            log_debug(string.format("[SpecialItem Debug] %s animList empty: %s", name, tostring(animListEmpty)))
+        else
+            log_debug(string.format("[SpecialItem Debug] %s has NO AnimationQueueComponent!", name))
+        end
+
+        -- Check draw layer in GameObject
+        local go = component_cache.get(eid, GameObject)
+        if go then
+            log_debug(string.format("[SpecialItem Debug] %s drawLayer: %s, visible: %s, zIndex: %s",
+                name,
+                tostring(go.layer or "nil"),
+                tostring(go.visible),
+                tostring(go.zIndex or "nil")
+            ))
+        end
+    end
+
+    checkEntityRenderState("special_item_1", mainMenuEntities.special_item_1)
+    checkEntityRenderState("special_item_2", mainMenuEntities.special_item_2)
+    checkEntityRenderState("special_item_3", mainMenuEntities.special_item_3)
 
     -- create start game button
     
@@ -204,7 +331,7 @@ function initMainMenu()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Discord link
                     record_telemetry("discord_button_clicked", { scene = "main_menu" })
-                    OpenURL("https://discord.gg/urpjVuPwjW") 
+                    OpenURL("https://discord.gg/rp6yXxKu5z") 
                 end)
                 :addShadow(true)
                 :addMinWidth(500) -- minimum width of the button
@@ -366,8 +493,76 @@ function initMainMenu()
     languageButtonTransform.actualX = globals.screenWidth() - languageButtonTransform.actualW - 20
     languageButtonTransform.actualY = globals.screenHeight() - languageButtonTransform.actualH - 20
 
-    -- Start TextBuilder visual demo in the top area
-    TextBuilderDemo.start()
+    PatchNotesModal.init()
+    createPatchNotesButton()
+end
+
+function createPatchNotesButton()
+    local dsl = require("ui.ui_syntax_sugar")
+    
+    local hasUnread = PatchNotesModal.hasUnread()
+    
+    -- Use dsl.button which properly handles click via buttonCallback
+    local buttonDef = dsl.root {
+        config = {
+            color = util.getColor("gray"),
+            padding = 8,
+            emboss = 2,
+        },
+        children = {
+            dsl.button("Notes", {
+                fontSize = 14,
+                color = "transparent", -- Use transparent so root color shows through
+                textColor = "white",
+                shadow = true,
+                onClick = function()
+                    if playSoundEffect then
+                        playSoundEffect("effects", "button-click")
+                    end
+                    PatchNotesModal.open()
+                end
+            })
+        }
+    }
+
+    mainMenuEntities.patch_notes_button = dsl.spawn(
+        { x = 20, y = globals.screenHeight() - 60 },
+        buttonDef,
+        "ui",
+        100
+    )
+    ui.box.set_draw_layer(mainMenuEntities.patch_notes_button, "ui")
+    
+    mainMenuEntities._patchNotesHasUnread = hasUnread
+end
+
+function drawPatchNotesBadge()
+    if not mainMenuEntities.patch_notes_button then return end
+    if not mainMenuEntities._patchNotesHasUnread then return end
+    if not PatchNotesModal.hasUnread() then 
+        mainMenuEntities._patchNotesHasUnread = false
+        return 
+    end
+    
+    -- Get position from UIBoxComponent's uiRoot (UIBox entities store transform there)
+    local boxComp = component_cache.get(mainMenuEntities.patch_notes_button, UIBoxComponent)
+    if not boxComp or not boxComp.uiRoot then return end
+    
+    local t = component_cache.get(boxComp.uiRoot, Transform)
+    if not t then return end
+    
+    local badgeX = t.actualX + t.actualW - 4
+    local badgeY = t.actualY + 4
+    local badgeRadius = 6
+    local space = layer.DrawCommandSpace.Screen
+    
+    command_buffer.queueDrawCenteredEllipse(layers.ui, function(c)
+        c.x = badgeX
+        c.y = badgeY
+        c.rx = badgeRadius
+        c.ry = badgeRadius
+        c.color = util.getColor("red")
+    end, 150, space)
 end
 
 function startGameButtonCallback()
@@ -417,17 +612,19 @@ function startGameButtonCallback()
     
 end
 function clearMainMenu()
-    -- Stop TextBuilder demo
-    TextBuilderDemo.stop()
 
-    -- Clean up render groups test
-    RenderGroupsTest.cleanup()
+    -- RenderGroupsTest.cleanup()
 
-    -- for each entity in mainMenuEntities, push it down out of view
+    if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
+    if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end
+    if mainMenuEntities.special_item_3 then mainMenuEntities.special_item_3:destroy(); mainMenuEntities.special_item_3 = nil end
+
     for _, entity in pairs(mainMenuEntities) do
-        if registry:has(entity, Transform) then
+        if type(entity) == "number" and registry:valid(entity) and registry:has(entity, Transform) then
             local transform = component_cache.get(entity, Transform)
-            transform.actualY = globals.screenHeight() + 500 -- push it down out of view
+            if transform then
+                transform.actualY = globals.screenHeight() + 500
+            end
         end
     end
     
@@ -455,6 +652,11 @@ function clearMainMenu()
         ui.box.Remove(registry, mainMenuEntities.language_button_uibox)
         mainMenuEntities.language_button_uibox = nil
     end
+    if mainMenuEntities.patch_notes_button and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, mainMenuEntities.patch_notes_button)
+        mainMenuEntities.patch_notes_button = nil
+    end
+    PatchNotesModal.destroy()
     if entity_cache and entity_cache.valid and entity_cache.valid(globals.ui.logo) then
         registry:destroy(globals.ui.logo)
         globals.ui.logo = nil
@@ -511,6 +713,8 @@ function initMainGame()
         local WandTests = require("wand.wand_test_examples")
         WandTests.runAllTests()
     end
+
+    -- LightingDemo.start()
 
 end
 
@@ -718,8 +922,11 @@ function main.update(dt)
 
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
-        -- Draw render groups test entity with shader
-        RenderGroupsTest.draw()
+        SpecialItem.update(dt)
+        SpecialItem.draw()
+        PatchNotesModal.update(dt)
+        PatchNotesModal.draw()
+        drawPatchNotesBadge()
     end
 
     if isPaused then

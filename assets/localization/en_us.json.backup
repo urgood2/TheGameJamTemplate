@@ -110,6 +110,29 @@
 			"dur_pct": "Dur %"
 		}
 	},
+	"stats_panel": {
+		"title": "Character Stats",
+		"tab": {
+			"combat": "Combat",
+			"resist": "Resist",
+			"mods": "Mods",
+			"dots": "DoTs",
+			"utility": "Utility"
+		},
+		"section": {
+			"vitals": "Vitals",
+			"attributes": "Attributes",
+			"offense": "Offense",
+			"defense": "Defense",
+			"elements": "Elements",
+			"movement": "Movement",
+			"resources": "Resources",
+			"buffs": "Buffs",
+			"summon": "Summon",
+			"hazard": "Hazard",
+			"special": "Special"
+		}
+	},
 	"ui": {
 		"stats_button": "Stats",
 		"detailed_button": "Detailed",
@@ -117,6 +140,10 @@
 		"exec_graph_button": "Wand Preview",
 		"on": "on",
 		"off": "off",
+		"patch_notes_title": "Patch Notes",
+		"patch_notes_version": "Version %s",
+		"patch_notes_date": "%s",
+		"patch_notes_close": "Close",
 		"MK2_dust_collector_desc": "Collects Whale Dust from Whales at a faster rate",
 		"MK2_dust_collector_name": "Advanced Dust Collector",
 		"achievements_button": "Achievements",
@@ -388,6 +415,7 @@
 		"whale_song_gatherer_name": "Whale Song Gatherer",
 		"whale_title": "Whale",
 		"avatars_label": "Avatars",
+		"avatar_label": "Avatar",
 		"jokers_label": "Artifacts",
 		"level_up_title": "LEVEL UP",
 		"gold_label": "Gold",
@@ -398,7 +426,12 @@
 		"press_key_auto_aim": "Press {key} to toggle auto-aim.",
 		"wave_label": "Wave",
 		"tutorial_to_move": "to move",
-		"tutorial_to_dash": "to dash"
+		"tutorial_to_dash": "to dash",
+		"pickup_gold_title": "Gold",
+		"pickup_gold_body": "Currency for shops",
+		"pickup_health_potion_title": "Health Potion",
+		"pickup_health_potion_body": "Restores 25 HP",
+		"wand_last_cast": "Last Cast"
 	},
 	"joker": {
 		"pyromaniac": {
@@ -656,5 +689,35 @@
 		"styled_mixed": "A [powerful](color=gold) attack dealing {damage|red} damage",
 		"styled_no_color": "You have {count} items",
 		"styled_heal": "Restore {amount|green} HP to target"
+	},
+	"joker": {
+		"lightning_rod": {
+			"name": "Lightning Rod",
+			"description": "+15 Damage to Lightning spells. Critical hits chain to one extra enemy."
+		},
+		"conductor": {
+			"name": "The Conductor",
+			"description": "Chain lightning applies Static Charge. Mark detonations chain to other marked enemies."
+		},
+		"storm_battery": {
+			"name": "Storm Battery",
+			"description": "+5% lightning damage per Static Charge stack on any enemy."
+		},
+		"arc_reactor": {
+			"name": "Arc Reactor",
+			"description": "Electrocute heals you for 2 HP per tick."
+		}
+	},
+	"avatar": {
+		"stormlord": {
+			"name": "Avatar of the Storm",
+			"description": "Ride the lightning.",
+			"effect": "Critical hits always Chain to a nearby enemy. Chain effects apply Static Charge."
+		},
+		"conduit": {
+			"name": "Avatar of the Conduit",
+			"description": "Pain becomes power. Lightning becomes you.",
+			"effect": "+30% Lightning Resistance and Damage. Physical damage taken becomes Conduit Charge."
+		}
 	}
 }

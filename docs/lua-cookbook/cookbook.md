@@ -90,6 +90,12 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Group event handlers for cleanup | \pageref{recipe:signal-group} |
 | Bridge combat bus to signals | \pageref{recipe:event-bridge} |
 | Show popup text (damage, heal, etc.) | \pageref{recipe:popup} |
+| Use state machine for entity behavior | \pageref{recipe:fsm} |
+| Animate properties with easing | \pageref{recipe:tween} |
+| Chain visual effects (flash, shake, particles) | \pageref{recipe:fx} |
+| Pool objects for performance | \pageref{recipe:pool} |
+| Visualize debug information | \pageref{recipe:debug} |
+| Add dynamic lighting to layers | \pageref{recipe:lighting} |
 | **Rendering & Shaders** | |
 | Add shader to entity | \pageref{recipe:add-shader} |
 | Stack multiple shaders | \pageref{recipe:stack-shaders} |
@@ -106,6 +112,8 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Create UI with DSL | \pageref{recipe:ui-dsl} |
 | Add tooltip on hover | \pageref{recipe:tooltip} |
 | Use tooltip registry (reusable templates) | \pageref{recipe:tooltip-registry} |
+| Use TooltipV2 3-box system for cards | \pageref{recipe:tooltip-v2} |
+| Add rarity-based text effects to tooltips | \pageref{recipe:tooltip-effects} |
 | Create grid layout | \pageref{recipe:ui-grid} |
 | Use styled localization for colored text | \pageref{recipe:styled-localization} |
 | Create localized tooltip with color codes | \pageref{recipe:localized-tooltip} |
@@ -1138,6 +1146,359 @@ end
 **Gotcha:** Constants are lowercase strings internally (e.g., `C.DamageTypes.FIRE` → `"fire"`). This matches the existing codebase conventions.
 
 **Gotcha:** Use `C.States.ACTION` instead of the internal string `"SURVIVORS"` — the constant abstracts implementation details.
+
+***
+
+## FSM: Declarative State Machine
+
+\label{recipe:fsm}
+
+**When to use:** Manage entity states (idle, chase, attack) with automatic state tag syncing and clean transition callbacks.
+
+```lua
+local FSM = require("core.fsm")
+
+-- Define state machine structure
+local enemyFSM = FSM.define {
+    initial = "idle",
+    states = {
+        idle = {
+            enter = function(self) print("entering idle") end,
+            update = function(self, dt)
+                if self:seePlayer() then
+                    self:transition("chase")
+                end
+            end,
+            exit = function(self) print("leaving idle") end,
+        },
+        chase = {
+            enter = function(self) self.speed = 100 end,
+            update = function(self, dt)
+                Q.chase(self.entity, player, self.speed)
+                if self:inRange() then
+                    self:transition("attack")
+                end
+            end,
+        },
+        attack = {
+            enter = function(self) self:startAttack() end,
+            update = function(self, dt) end,
+        },
+    },
+}
+
+-- Create instance for an entity
+local fsm = enemyFSM:new(entity, { speed = 50 })
+
+-- In update loop
+fsm:update(dt)
+
+-- Manual transition
+fsm:transition("chase")
+
+-- Check current state
+if fsm:is("idle") then ... end
+local state = fsm:getState()
+
+-- Pause/resume
+fsm:pause()
+fsm:resume()
+```
+
+*— from core/fsm.lua:1-151*
+
+**API Reference:**
+
+| Method | Description |
+|--------|-------------|
+| `FSM.define(config)` | Create state machine definition |
+| `definition:new(entity, data)` | Create instance for entity |
+| `instance:transition(state)` | Switch to new state |
+| `instance:update(dt)` | Run current state's update |
+| `instance:is(state)` | Check if in state |
+| `instance:getState()` | Get current state name |
+| `instance:pause() / :resume()` | Control updates |
+
+**Gotcha:** FSM state names are independent of global constants (PLANNING_STATE, etc.). The FSM auto-syncs with ECS state tags via `add_state_tag()` if available.
+
+***
+
+## Tween: Property Animation
+
+\label{recipe:tween}
+
+**When to use:** Animate entity properties (position, scale, alpha) with easing functions.
+
+```lua
+local Tween = require("core.tween")
+
+-- Animate entity transform
+Tween.to(entity, 0.5, { x = 100, y = 200 })
+    :ease("outQuad")
+    :onComplete(function() print("done!") end)
+    :start()
+
+-- Animate scale with bounce
+Tween.to(entity, 0.3, { scale = 1.2 })
+    :ease("outBack")
+    :start()
+
+-- Fade out
+Tween.to(entity, 0.5, { alpha = 0 })
+    :ease("outQuad")
+    :onComplete(function() destroy(entity) end)
+    :start()
+
+-- Animate arbitrary value
+Tween.value(0, 100, 1.0, function(v) bar.width = v end)
+    :ease("outBounce")
+    :start()
+
+-- Convenience presets
+Tween.fadeOut(entity, 0.3)
+Tween.fadeIn(entity, 0.3)
+Tween.popIn(entity, 0.2)
+```
+
+*— from core/tween.lua:1-200*
+
+**Available Easing Functions:**
+
+| Name | Description |
+|------|-------------|
+| `linear` | Constant speed |
+| `inQuad`, `outQuad`, `inOutQuad` | Quadratic |
+| `inCubic`, `outCubic`, `inOutCubic` | Cubic |
+| `outBack` | Overshoot then settle |
+| `outElastic` | Spring-like bounce |
+| `outBounce` | Bouncing ball |
+
+**Gotcha:** Don't forget to call `:start()` — the tween won't run until started.
+
+**Gotcha:** Tweens use timer internally. Use `:tag("name")` if you need to cancel.
+
+***
+
+## Fx: Unified Visual Effects
+
+\label{recipe:fx}
+
+**When to use:** Combine flash, shake, particles, sound, and popups in one fluent chain.
+
+```lua
+local Fx = require("core.fx")
+
+-- Fluent chaining (deferred execution)
+Fx.at(enemy)
+    :flash(0.2)
+    :shake(5, 0.3)
+    :particles("spark", 10)
+    :sound("hit_01")
+    :go()
+
+-- Presets for common effects
+Fx.hit(enemy)           -- flash + shake + sparks
+Fx.death(enemy)         -- explosion particles + sound
+Fx.damage(enemy, 25)    -- flash + damage number
+Fx.heal(entity, 50)     -- green particles + heal number
+
+-- Position-based effects
+Fx.point(100, 200)
+    :particles("explosion", 20)
+    :shake(10, 0.5)
+    :go()
+```
+
+*— from core/fx.lua:1-200*
+
+**Chain Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `:flash(duration)` | Flash entity white |
+| `:shake(intensity, duration)` | Screen shake |
+| `:particles(name, count)` | Spawn particles |
+| `:sound(name, category?)` | Play sound effect |
+| `:popup(text, opts)` | Show floating text |
+| `:damage(amount, opts)` | Show damage number |
+| `:heal(amount, opts)` | Show heal number |
+| `:delay(seconds)` | Wait before next action |
+| `:go()` | Execute the chain |
+
+**Gotcha:** Call `:go()` to execute the chain. Without it, nothing happens.
+
+***
+
+## Pool: Object Pooling
+
+\label{recipe:pool}
+
+**When to use:** Reuse frequently created/destroyed objects (projectiles, particles) to reduce garbage collection.
+
+```lua
+local Pool = require("core.pool")
+
+-- Create a pool
+local bulletPool = Pool.create({
+    name = "bullets",
+    factory = function() return createBulletEntity() end,
+    reset = function(entity) resetBullet(entity) end,
+    initial = 20,   -- Pre-create 20 objects
+    max = 100,      -- Maximum pool size
+})
+
+-- Acquire object from pool
+local bullet = bulletPool:acquire()
+if bullet then
+    initBullet(bullet, x, y, direction)
+end
+
+-- Release back to pool when done
+bulletPool:release(bullet)
+
+-- Auto-release after duration
+bulletPool:acquireFor(1.5, function(bullet)
+    -- bullet auto-releases after 1.5 seconds
+    initBullet(bullet, x, y, direction)
+end)
+
+-- Pool stats
+local available = bulletPool:availableCount()
+local active = bulletPool:activeCount()
+```
+
+*— from core/pool.lua:1-120*
+
+**Configuration Options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `name` | string | Pool identifier (for debugging) |
+| `factory` | function | Creates new object when pool is empty |
+| `reset` | function | Resets object state before reuse |
+| `onAcquire` | function | Called when object is acquired |
+| `onRelease` | function | Called when object is released |
+| `initial` | number | Pre-created objects (default: 0) |
+| `max` | number | Maximum pool size (default: 100) |
+
+**Gotcha:** Always call `release()` when done with an object. Leaking objects defeats the purpose of pooling.
+
+**Gotcha:** `acquire()` returns `nil` if pool is at max capacity. Check the return value.
+
+***
+
+## Debug: Visual Debugging
+
+\label{recipe:debug}
+
+**When to use:** Visualize bounds, velocities, colliders, and paths during development.
+
+```lua
+local Debug = require("core.debug")
+
+-- Enable debug rendering
+Debug.enabled = true
+
+-- In update loop
+function update(dt)
+    Debug.bounds(entity)          -- Green rectangle around entity
+    Debug.velocity(entity)        -- Yellow arrow showing velocity
+    Debug.circle(x, y, radius)    -- Circle outline
+    Debug.text(entity, "HP: 100") -- Text label above entity
+    Debug.collider(entity)        -- Red collision shape
+    Debug.point(x, y)             -- Small marker at position
+    Debug.line(x1, y1, x2, y2)    -- Line between points
+    Debug.path(points)            -- Connected path visualization
+end
+
+-- Customize colors
+Debug.colors.bounds = { r = 0, g = 255, b = 0, a = 128 }
+Debug.colors.velocity = { r = 255, g = 255, b = 0, a = 200 }
+```
+
+*— from core/debug.lua:1-150*
+
+**Available Functions:**
+
+| Function | Description |
+|----------|-------------|
+| `Debug.bounds(entity)` | Draw bounding box |
+| `Debug.velocity(entity)` | Draw velocity vector |
+| `Debug.circle(x, y, r)` | Draw circle outline |
+| `Debug.text(entity, str)` | Draw text label |
+| `Debug.collider(entity)` | Draw collision shape |
+| `Debug.point(x, y)` | Draw point marker |
+| `Debug.line(x1, y1, x2, y2)` | Draw line |
+| `Debug.path(points)` | Draw connected points |
+
+**Gotcha:** Set `Debug.enabled = false` in production builds. Debug drawing has performance cost.
+
+***
+
+## Lighting: Dynamic Layer Lights
+
+\label{recipe:lighting}
+
+**When to use:** Add dynamic point lights and spotlights to render layers with real-time shadows.
+
+```lua
+local Lighting = require("core.lighting")
+
+-- Enable lighting on a layer
+Lighting.enable("sprites", { mode = "subtractive" })
+Lighting.setAmbient("sprites", 0.1)  -- Dim ambient (0-1)
+
+-- Create a point light attached to player
+local light = Lighting.point()
+    :attachTo(playerEntity)
+    :radius(200)
+    :intensity(1.0)
+    :color("orange")
+    :layer("sprites")
+    :create()
+
+-- Create a spotlight
+local spot = Lighting.spot()
+    :at(400, 300)
+    :direction(90)      -- degrees
+    :angle(45)          -- cone angle
+    :radius(300)
+    :layer("sprites")
+    :create()
+
+-- Animate light
+timer.every(0.1, function()
+    light:setIntensity(0.8 + math.random() * 0.4)  -- Flickering
+end)
+
+-- Move light
+light:setPosition(x, y)
+
+-- Cleanup
+light:destroy()
+Lighting.removeAll("sprites")
+Lighting.disable("sprites")
+```
+
+*— from core/lighting.lua:1-400*
+
+**Light Builder Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `:at(x, y)` | Set position |
+| `:attachTo(entity)` | Follow entity (auto-updates) |
+| `:radius(pixels)` | Light reach distance |
+| `:intensity(0-1)` | Light brightness |
+| `:color(name/rgb)` | Light color |
+| `:layer(name)` | Target render layer |
+| `:direction(degrees)` | Spotlight direction |
+| `:angle(degrees)` | Spotlight cone angle |
+| `:create()` | Finalize and add to scene |
+
+**Named Colors:** `white`, `orange`, `fire`, `ice`, `electric`, `gold`, `red`, `blue`, etc.
+
+**Gotcha:** Max 16 lights per layer (shader limit). Lights auto-cleanup when attached entities are destroyed.
 
 \newpage
 
@@ -4599,6 +4960,154 @@ local tooltip = makeLocalizedTooltip("card.desc." .. card.id, {
 -- Position above the card
 showSimpleTooltipAbove(cardEntity, tooltip)
 ```
+
+***
+
+## TooltipV2: 3-Box Card Tooltip System
+
+\label{recipe:tooltip-v2}
+
+**When to use:** Display rich, structured card tooltips with rarity effects, stats, and tags using the new 3-box vertical stack design.
+
+**Pattern:** TooltipV2 uses a 3-box architecture: name box (with effects), description box (with color markup), and info box (stats grid + tag pills).
+
+```lua
+local TooltipV2 = require("ui.tooltip_v2")
+
+-- Show tooltip for any entity
+TooltipV2.show(anchorEntity, {
+    name = "Fireball",
+    nameEffects = "pop=0.2,0.04,in;rainbow=40,8,0",  -- Optional: C++ text effects
+    description = "Deal [25](color=red) fire damage to target enemy",
+    info = {
+        stats = {
+            { label = "Damage", value = 25 },
+            { label = "Mana", value = 12 },
+        },
+        tags = { "Fire", "Projectile", "AoE" }
+    }
+})
+
+-- Hide tooltip
+TooltipV2.hide(anchorEntity)
+
+-- Card-specific helper (auto-applies rarity-based effects)
+TooltipV2.showCard(anchorEntity, cardDef)
+```
+
+*— from ui/tooltip_v2.lua:1-300*
+
+### Visual Structure
+
+```
+┌─────────────────────────┐
+│       CARD NAME         │  ← Box 1: Name (larger font + pop entrance)
+└─────────────────────────┘
+           4px gap
+┌─────────────────────────┐
+│   Effect description    │  ← Box 2: Description (supports [text](color) markup)
+│   text goes here...     │
+└─────────────────────────┘
+           4px gap
+┌─────────────────────────┐
+│ Damage: 25    Mana: 12  │  ← Box 3: Info (stats grid + tag pills)
+│ [Fire] [Projectile]     │
+└─────────────────────────┘
+```
+
+### Positioning
+
+TooltipV2 auto-positions with priority order: RIGHT → LEFT → ABOVE → BELOW
+
+- Never covers anchor entity
+- Top-aligns with anchor, shifts down if clipping
+- 12px minimum edge gap
+
+### API Reference
+
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| `TooltipV2.show(entity, opts)` | entity, options table | Show tooltip attached to entity |
+| `TooltipV2.hide(entity)` | entity | Hide tooltip for entity |
+| `TooltipV2.showCard(entity, cardDef)` | entity, card definition | Show with auto rarity effects |
+| `TooltipV2.clearCache()` | - | Clear all cached tooltips |
+
+**Gotcha:** TooltipV2 is enabled when `USE_TOOLTIP_V2 = true` is set in gameplay.lua.
+
+**Gotcha:** The tooltip_registry module automatically uses TooltipV2 when enabled.
+
+***
+
+## Tooltip Effects: Rarity-Based Text Effects
+
+\label{recipe:tooltip-effects}
+
+**When to use:** Apply entrance animations and persistent effects to tooltip text based on content type or rarity.
+
+**Pattern:** Use predefined presets or build custom effect combinations for styled text.
+
+```lua
+local TooltipEffects = require("core.tooltip_effects")
+
+-- Get effect string for a rarity
+local effects = TooltipEffects.get("legendary")
+-- Result: "pop=0.25,0.04,in;rainbow=50,6,0;pulse=0.93,1.07,1.2,0.05"
+
+-- Get rarity color
+local color = TooltipEffects.getColor("legendary")
+-- Result: "gold"
+
+-- Build styled text for C++ text system
+local styledText = TooltipEffects.styledText("Fireball", "legendary")
+-- Result: "[Fireball](pop=0.25,0.04,in;rainbow=50,6,0;pulse=0.93,1.07,1.2,0.05;color=gold)"
+
+-- Combine multiple effects
+local combined = TooltipEffects.combine("pop_in", "gentle_float")
+-- Result: "pop=0.2,0.05,in;float=2,3,0.2"
+```
+
+*— from core/tooltip_effects.lua:1-112*
+
+### Effect Presets by Rarity
+
+| Rarity | Effects | Description |
+|--------|---------|-------------|
+| `common` | `pop=0.15,0.02,in` | Simple pop entrance |
+| `uncommon` | `pop=0.18,0.025,in;highlight=3,0.15,0.2,right` | Pop + subtle shimmer |
+| `rare` | `pop=0.2,0.03,in;highlight=2.5,0.25,0.15,right,bleed;pulse=0.97,1.03,2,0.08` | Pop + highlight + pulse |
+| `epic` | `slide=0.22,0.035,in,l;highlight=2,0.35,0.12,right,bleed;pulse=0.95,1.05,1.5,0.06` | Slide + strong effects |
+| `legendary` | `pop=0.25,0.04,in;rainbow=50,6,0;pulse=0.93,1.07,1.2,0.05` | Pop + rainbow + pulse |
+| `mythic` | `scramble=0.25,0.03,12;rainbow=80,8,0;pulse=0.9,1.1,1,0.04;wiggle=4,2,0.3` | Full chaos effects |
+
+### Rarity Colors
+
+| Rarity | Color | Hex |
+|--------|-------|-----|
+| common | white | #FFFFFF |
+| uncommon | lime | #00FF00 |
+| rare | cyan | #00FFFF |
+| epic | purple | #AA00FF |
+| legendary | gold | #FFD700 |
+| mythic | magenta | #FF00FF |
+
+### Available Effect Types
+
+**Entrance Effects** (one-time animations):
+- `pop_in` - Scale up entrance
+- `slide_left`, `slide_right`, `slide_up` - Directional slides
+- `bounce` - Bounce entrance
+- `scramble` - Character scramble reveal
+
+**Persistent Effects** (continuous animations):
+- `gentle_float` - Subtle floating motion
+- `pulse` - Size pulsing
+- `wiggle` - Side-to-side wiggle
+- `rainbow` - Color cycling
+- `highlight`, `shimmer` - Moving highlight
+
+**Gotcha:** Effect strings are passed to the C++ text rendering system. Invalid effects are ignored.
+
+**Gotcha:** Use `TooltipEffects.combine()` to merge multiple effects into a single string.
 
 \newpage
 
@@ -13942,6 +14451,14 @@ Alphabetical listing of all documented functions and APIs.
 | `tooltips.isRegistered()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
 | `tooltips.register()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
 | `tooltips.showFor()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `TooltipEffects.combine()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipEffects.get()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipEffects.getColor()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipEffects.styledText()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipV2.clearCache()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
+| `TooltipV2.hide()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
+| `TooltipV2.show()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
+| `TooltipV2.showCard()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
 | `unpauseGame()` | Global | \pageref{recipe:game-control} |
 | `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
 | `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |

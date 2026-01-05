@@ -49,8 +49,10 @@ local StatusIndicatorSystem = require("systems.status_indicator_system")
 local MarkSystem = require("systems.mark_system")
 local C = require("core.constants")
 local CardsData = require("data.cards")
+TooltipV2 = require("ui.tooltip_v2") -- global to avoid local variable limit
 
--- Localization helper: returns localized string or fallback
+USE_TOOLTIP_V2 = true
+
 local function L(key, fallback)
     if localization and localization.get then
         local result = localization.get(key)
@@ -85,6 +87,34 @@ function gameplay_cfg.getDeathScreen()
         gameplay_cfg.DeathScreen = require("ui.death_screen")
     end
     return gameplay_cfg.DeathScreen
+end
+
+function gameplay_cfg.getDemoFooterUI()
+    if not gameplay_cfg.DemoFooterUI then
+        gameplay_cfg.DemoFooterUI = require("ui.demo_footer_ui")
+    end
+    return gameplay_cfg.DemoFooterUI
+end
+
+function gameplay_cfg.getStatsPanel()
+    if not gameplay_cfg.StatsPanel then
+        gameplay_cfg.StatsPanel = require("ui.stats_panel_v2")
+    end
+    return gameplay_cfg.StatsPanel
+end
+
+function gameplay_cfg.getManualTriggerPromptUI()
+    if not gameplay_cfg.ManualTriggerPromptUI then
+        gameplay_cfg.ManualTriggerPromptUI = require("ui.manual_trigger_prompt_ui")
+    end
+    return gameplay_cfg.ManualTriggerPromptUI
+end
+
+function gameplay_cfg.getShopPackUI()
+    if not gameplay_cfg.ShopPackUI then
+        gameplay_cfg.ShopPackUI = require("ui.shop_pack_ui")
+    end
+    return gameplay_cfg.ShopPackUI
 end
 
 require("core.type_defs") -- for Node customizations
@@ -215,6 +245,7 @@ WAND_TOOLTIP_STATE = "WAND_TOOLTIP_STATE" -- we use this to show wand tooltips a
 CARD_TOOLTIP_STATE = "CARD_TOOLTIP_STATE" -- we use this to show card tooltips and hide them when needed.
 PLAYER_STATS_TOOLTIP_STATE = "PLAYER_STATS_TOOLTIP_STATE"
 DETAILED_STATS_TOOLTIP_STATE = "DETAILED_STATS_TOOLTIP_STATE"
+STATS_PANEL_STATE = "STATS_PANEL_STATE"
 
 -- combat context, to be used with the combat system.
 combat_context = nil
@@ -318,8 +349,12 @@ local function hideCardTooltip(entity)
     if not entity or not entity_cache.valid(entity) then
         return
     end
-    clear_state_tags(entity)
-    ui.box.ClearStateTagsFromUIBox(entity)
+    if USE_TOOLTIP_V2 then
+        TooltipV2.hide(entity)
+    else
+        clear_state_tags(entity)
+        ui.box.ClearStateTagsFromUIBox(entity)
+    end
 end
 -- Player stats tooltip state (consolidated to save local slots)
 local stats_tooltip = {
@@ -329,8 +364,7 @@ local stats_tooltip = {
     detailedVersion = 0,
     signalRegistered = false,
     makeTooltip = nil,  -- forward declaration
-    testStickerInfo = getSpriteFrameTextureInfo("b138.png") or
-        getSpriteFrameTextureInfo("graphics/pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy/b138.png"),
+    testStickerInfo = nil,
 }
 
 local function make_rect(x, y, w, h)
@@ -385,22 +419,47 @@ local function unpack_rect_like(rectLike, fallbackTable)
 end
 
 local tooltipStyle = {
-    fontSize = 22,  -- eight-bit-dragon default size
+    -- COMPACT FONT SIZES (reduced from 22)
+    fontSize = 16,              -- Base text size (was 22)
+    titleFontSize = 18,         -- Title/header size
+    labelFontSize = 14,         -- Label text size
+    valueFontSize = 14,         -- Value text size
+    
+    -- COLORS
     labelBg = "black",
     idBg = "gold",
     idTextColor = "black",
     labelColor = "apricot_cream",
     valueColor = "white",
-    innerPadding = 6,
-    rowPadding = 2,
-    textPadding = 2,
-    pillPadding = 4,
-    outerPadding = 10,
-    labelColumnMinWidth = 140,
-    valueColumnMinWidth = 80,
+    
+    -- COMPACT PADDING (reduced from original)
+    innerPadding = 4,           -- Was 6
+    rowPadding = 1,             -- Was 2
+    textPadding = 1,            -- Was 2
+    pillPadding = 3,            -- Was 4
+    outerPadding = 6,           -- Was 10
+    
+    -- COMPACT COLUMN WIDTHS
+    labelColumnMinWidth = 100,  -- Was 140
+    valueColumnMinWidth = 60,   -- Was 80
+    maxWidth = 280,             -- Max tooltip width
+    
+    -- BACKGROUND COLORS
     bgColor = Col(18, 22, 32, 255),       -- Fully opaque
     innerColor = Col(28, 32, 44, 255),    -- Fully opaque
     outlineColor = (util.getColor and util.getColor("apricot_cream")) or Col(255, 214, 170, 255),
+    
+    -- TITLE TEXT EFFECTS (dynamic text from C++ text system)
+    -- Available effects: pop, slide, bounce, pulse, float, wiggle, shake, rainbow, fade, highlight
+    titleEffects = {
+        default = "pop=0.15,0.03,in",                    -- Subtle pop entrance
+        card = "slide=0.2,0.02,in,l",                    -- Slide from left
+        trigger = "bounce=500,-10,0.35,0.02",            -- Bouncy entrance
+        joker = "pop=0.2,0.04,in;float=1.5,2,0.15",      -- Pop + gentle float
+        wand = "slide=0.18,0.02,in,r",                   -- Slide from right
+        stats = "pop=0.12,0.02,in",                      -- Very subtle pop
+    },
+    
     -- Named font for tooltip text (loaded below)
     fontName = "tooltip"
 }
@@ -445,6 +504,10 @@ if localization and localization.onLanguageChanged then
         card_tooltip_disabled_cache = {}
         wand_tooltip_cache = {}
         previously_hovered_tooltip = nil
+        
+        if TooltipV2 and TooltipV2.clearCache then
+            TooltipV2.clearCache()
+        end
     end)
 end
 
@@ -520,17 +583,31 @@ local function makeTooltipPill(text, opts)
         align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)
     }
     if opts.minWidth then cfg.minWidth = opts.minWidth end
+    
+    local displayText = tostring(text)
+    local effects = opts.effects or opts.titleEffects
+    local useCoded = opts.coded or false
+    
+    if effects and effects ~= "" then
+        local colorName = opts.color
+        if type(colorName) ~= "string" then
+            colorName = "apricot_cream"
+        end
+        displayText = "[" .. displayText .. "](" .. effects .. ";color=" .. colorName .. ")"
+        useCoded = true
+    end
+    
     local textOpts = {
         color = opts.color or tooltipStyle.labelColor,
-        fontSize = opts.fontSize,
+        fontSize = opts.fontSize or tooltipStyle.titleFontSize,
         align = opts.textAlign,
         fontName = opts.fontName or tooltipStyle.fontName,
         shadow = opts.shadow,
-        coded = opts.coded
+        coded = useCoded
     }
     return dsl.hbox {
         config = cfg,
-        children = { makeTooltipTextDef(text, textOpts) }
+        children = { makeTooltipTextDef(displayText, textOpts) }
     }
 end
 
@@ -596,36 +673,39 @@ end
 -- Simple tooltip for title + description (jokers, avatars, relics, buttons)
 local function makeSimpleTooltip(title, body, opts)
     opts = opts or {}
-    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding or 10
+    local outerPadding = opts.outerPadding or tooltipStyle.outerPadding
     local rows = {}
 
-    -- Title pill (styled like card ID pill) - slightly larger font
+    local tooltipType = opts.tooltipType or "default"
+    local titleEffect = opts.titleEffects
+        or (tooltipStyle.titleEffects and tooltipStyle.titleEffects[tooltipType])
+        or (tooltipStyle.titleEffects and tooltipStyle.titleEffects.default)
+
     if title and title ~= "" then
         table.insert(rows, makeTooltipPill(title, {
             background = opts.titleBg or tooltipStyle.labelBg,
             color = opts.titleColor or tooltipStyle.labelColor,
             fontName = opts.titleFont or tooltipStyle.fontName,
-            fontSize = opts.titleFontSize or (tooltipStyle.fontSize + 2),
-            coded = opts.titleCoded,
+            fontSize = opts.titleFontSize or tooltipStyle.titleFontSize,
+            effects = titleEffect,
+            coded = true,
             padding = tooltipStyle.pillPadding
         }))
     end
 
-    -- Body text (wrapped, no pill background)
     if body and body ~= "" then
         table.insert(rows, makeTooltipValueBox(body, {
             color = opts.bodyColor or tooltipStyle.valueColor,
             fontName = opts.bodyFont or tooltipStyle.fontName,
-            fontSize = opts.bodyFontSize or tooltipStyle.fontSize,
+            fontSize = opts.bodyFontSize or tooltipStyle.valueFontSize,
             coded = opts.bodyCoded,
-            maxWidth = opts.maxWidth or 320,
+            maxWidth = opts.maxWidth or tooltipStyle.maxWidth,
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
-            padding = 4
+            padding = tooltipStyle.textPadding
         }))
     end
 
-    -- Build with DSL (single column)
-    local innerPad = tooltipStyle.innerPadding or 6
+    local innerPad = tooltipStyle.innerPadding
     local v = dsl.vbox {
         config = {
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_TOP),
@@ -971,11 +1051,20 @@ board_sets = {}
 current_board_set_index = 1
 
 local reevaluateDeckTags -- forward declaration; defined after deck helpers
+local relayoutBoardCardsInOrder -- forward declaration; defined at ~line 8044
 -- updateWandResourceBar defined as global at line ~6642 (forward decl removed to stay under 200 local limit)
 
 local function notifyDeckChanged(boardEntityID)
-    if not boardEntityID or not board_sets or #board_sets == 0 then return end
+    if not boardEntityID then return end
 
+    -- Always relayout the board when cards change
+    local board = boards[boardEntityID]
+    if board and relayoutBoardCardsInOrder then
+        relayoutBoardCardsInOrder(board)
+    end
+
+    -- Board set-specific updates (deck tags, resource bar)
+    if not board_sets or #board_sets == 0 then return end
     for _, boardSet in ipairs(board_sets) do
         if boardSet.action_board_id == boardEntityID or boardSet.trigger_board_id == boardEntityID then
             if reevaluateDeckTags then
@@ -2119,6 +2208,9 @@ function createNewCard(id, x, y, gameStateToApply)
                                     true -- force text pass (uses uv_passthrough in 3d_skew)
                                 )
 
+                                if not stats_tooltip.testStickerInfo then
+                                    stats_tooltip.testStickerInfo = getSpriteFrameTextureInfo("b138.png")
+                                end
                                 if stats_tooltip.testStickerInfo then
                                     shader_draw_commands.add_local_command(
                                         registry, eid, "texture_pro",
@@ -2289,6 +2381,20 @@ function createNewCard(id, x, y, gameStateToApply)
             end
         end
     end
+
+    -- Add outline shader pass (applied after 3d_skew transformation)
+    -- Uncomment to enable card outlines:
+    -- do
+    --     local outlinePass = shaderPipelineComp:addPass("efficient_pixel_outline", false)
+    --     outlinePass.customPrePassFunction = function()
+    --         if globalShaderUniforms then
+    --             globalShaderUniforms:set("efficient_pixel_outline", "outlineColor", Vector4{ x = 0.0, y = 0.0, z = 0.0, w = 1.0 })
+    --             globalShaderUniforms:set("efficient_pixel_outline", "outlineType", 2)
+    --             globalShaderUniforms:set("efficient_pixel_outline", "thickness", 1.0)
+    --         end
+    --     end
+    -- end
+
     -- shaderPipelineComp:addPass("3d_polychrome")
     -- shaderPipelineComp:addPass("material_card_overlay_new_dissolve")
 
@@ -2298,10 +2404,10 @@ function createNewCard(id, x, y, gameStateToApply)
     nodeComp.shadowMode = ShadowMode.SpriteBased
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
-    -- gameObjectState.triggerOnReleaseEnabled = true
     gameObjectState.collisionEnabled = true
     gameObjectState.clickEnabled = true
-    gameObjectState.dragEnabled = true -- allow dragging the colonist
+    gameObjectState.dragEnabled = true
+    gameObjectState.rightClickEnabled = true
 
     animation_system.resizeAnimationObjectsInEntityToFit(
         card,
@@ -2458,6 +2564,10 @@ function createNewCard(id, x, y, gameStateToApply)
         nodeComp.state.isBeingFocused = cardScript.selected
     end
 
+    nodeComp.methods.onRightClick = function(registry, clickedEntity)
+        transferCardViaRightClick(card, cardScript)
+    end
+
     nodeComp.methods.onHover = function()
         log_debug("card onHover called for", card)
 
@@ -2478,22 +2588,27 @@ function createNewCard(id, x, y, gameStateToApply)
             tooltipOpts = { status = "disabled", statusColor = "red" }
         end
 
-        local tooltip = ensureCardTooltip(cardDef, tooltipOpts)
-        if not tooltip then
-            return
+        if USE_TOOLTIP_V2 then
+            if previously_hovered_tooltip and previously_hovered_tooltip ~= card then
+                TooltipV2.hide(previously_hovered_tooltip)
+            end
+            TooltipV2.showCard(card, cardDef, tooltipOpts)
+            activate_state(CARD_TOOLTIP_STATE)
+            previously_hovered_tooltip = card
+        else
+            local tooltip = ensureCardTooltip(cardDef, tooltipOpts)
+            if not tooltip then
+                return
+            end
+            positionTooltipRightOfEntity(tooltip, card, { gap = 12 })
+            if previously_hovered_tooltip and previously_hovered_tooltip ~= tooltip then
+                hideCardTooltip(previously_hovered_tooltip)
+            end
+            add_state_tag(tooltip, CARD_TOOLTIP_STATE)
+            activate_state(CARD_TOOLTIP_STATE)
+            ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE)
+            previously_hovered_tooltip = tooltip
         end
-        positionTooltipRightOfEntity(tooltip, card, { gap = 12 })
-        -- hide the previously hovered tooltip (avoid clearing hundreds of cached tooltips every frame)
-        if previously_hovered_tooltip and previously_hovered_tooltip ~= tooltip then
-            hideCardTooltip(previously_hovered_tooltip)
-        end
-
-        add_state_tag(tooltip, CARD_TOOLTIP_STATE)
-        activate_state(CARD_TOOLTIP_STATE)
-        ui.box.AddStateTagToUIBox(tooltip, CARD_TOOLTIP_STATE)
-        -- propagate_state_effects_to_ui_box(tooltip)
-
-        previously_hovered_tooltip = tooltip
 
         -- Track for alt-preview
         card_ui_state.hovered_card = card
@@ -2505,18 +2620,18 @@ function createNewCard(id, x, y, gameStateToApply)
     end
 
     nodeComp.methods.onStopHover = function()
-        -- get script
         local hoveredCardScript = getScriptTableFromEntityID(card)
         if not hoveredCardScript then return end
 
-        -- disable the currently active tooltip
         if previously_hovered_tooltip then
-            hideCardTooltip(previously_hovered_tooltip)
-            -- propagate_state_effects_to_ui_box(previously_hovered_tooltip)
+            if USE_TOOLTIP_V2 then
+                TooltipV2.hide(previously_hovered_tooltip)
+            else
+                hideCardTooltip(previously_hovered_tooltip)
+            end
             previously_hovered_tooltip = nil
         end
 
-        -- Clear hover tracking and end alt-preview if this was the previewed card
         card_ui_state.hovered_card = nil
         if card_ui_state.alt_entity == card then
             endAltPreview()
@@ -3562,9 +3677,11 @@ function makeCardTooltip(card_def, opts)
 
     local cardId = card_def.id or card_def.cardID
     local rowPadding = tooltipStyle.rowPadding
-    local innerPad = tooltipStyle.innerPadding or 6
+    local innerPad = tooltipStyle.innerPadding
 
-    -- Helper function to check if value should be excluded
+    local tooltipType = card_def.type == "trigger" and "trigger" or "card"
+    local titleEffect = tooltipStyle.titleEffects and tooltipStyle.titleEffects[tooltipType]
+
     local function shouldExclude(value)
         if value == nil then return true end
         if value == -1 then return true end
@@ -3573,9 +3690,12 @@ function makeCardTooltip(card_def, opts)
         return false
     end
 
-    -- Helper function to add a line if value is not excluded
     local function addLine(rows, label, value, labelOpts, valueOpts)
         if shouldExclude(value) then return end
+        labelOpts = labelOpts or {}
+        valueOpts = valueOpts or {}
+        labelOpts.fontSize = labelOpts.fontSize or tooltipStyle.labelFontSize
+        valueOpts.fontSize = valueOpts.fontSize or tooltipStyle.valueFontSize
         local row = makeTooltipRow(label, value, {
             rowPadding = rowPadding,
             labelOpts = labelOpts,
@@ -3598,7 +3718,9 @@ function makeCardTooltip(card_def, opts)
             children = {
                 makeTooltipPill(L("card.label.id_prefix", "ID: ") .. tostring(cardId), {
                     background = tooltipStyle.idBg,
-                    color = tooltipStyle.idTextColor or tooltipStyle.labelColor
+                    color = tooltipStyle.idTextColor or tooltipStyle.labelColor,
+                    fontSize = tooltipStyle.titleFontSize,
+                    effects = titleEffect
                 })
             }
         })
@@ -4609,6 +4731,30 @@ function initPlanningPhase()
             CurrencyDisplay.draw()
         end
 
+        do
+            local DemoFooterUI = gameplay_cfg.getDemoFooterUI()
+            if DemoFooterUI then
+                DemoFooterUI.update(dt)
+                DemoFooterUI.draw()
+            end
+        end
+
+        if is_state_active and is_state_active(ACTION_STATE) then
+            local ManualTriggerPromptUI = gameplay_cfg.getManualTriggerPromptUI()
+            if ManualTriggerPromptUI then
+                ManualTriggerPromptUI.update(dt)
+                ManualTriggerPromptUI.draw()
+            end
+        end
+
+        if is_state_active and is_state_active(SHOP_STATE) then
+            local ShopPackUI = gameplay_cfg.getShopPackUI()
+            if ShopPackUI then
+                ShopPackUI.update(dt)
+                ShopPackUI.draw()
+            end
+        end
+
         if TagSynergyPanel and TagSynergyPanel.isActive and is_state_active
             and is_state_active(PLANNING_STATE) then
             TagSynergyPanel.update(dt)
@@ -4683,6 +4829,13 @@ function initPlanningPhase()
         end
         if MarkSystem then
             MarkSystem.update(dt)
+        end
+
+        -- Update StatsPanel (available in planning, action, and shop phases)
+        local StatsPanel = gameplay_cfg.getStatsPanel()
+        if StatsPanel then
+            StatsPanel.handleInput()
+            StatsPanel.update(dt)
         end
 
         -- Process hover regions after all UIs have registered
@@ -5122,7 +5275,7 @@ function initPlanningPhase()
 
             if self.noDashedBorder then
                 local baseColor = self.borderColor or util.getColor("yellow")
-                local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 40)
+                local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 100)
                 local borderThickness = 3
                 command_buffer.queueDrawSteppedRoundedRect(layers.sprites, function(c)
                     c.x           = area.actualX + area.actualW * 0.5
@@ -5138,7 +5291,7 @@ function initPlanningPhase()
             end
             local dashedRadius = math.max(math.max(area.actualW, area.actualH) / 60, 12)
             local baseColor = self.borderColor or util.getColor("yellow")
-            local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 30)
+            local fillColor = Col(baseColor.r, baseColor.g, baseColor.b, 80)
             
             command_buffer.queueDrawSteppedRoundedRect(layers.sprites, function(c)
                 c.x           = area.actualX + area.actualW * 0.5
@@ -5372,10 +5525,9 @@ function initPlanningPhase()
     end
 
 
-    -- let's set up an update timer for triggers.
     setUpLogicTimers()
 
-    -- Per-frame card UI updates (alt-preview and right-click transfer)
+    -- Timer for preview updates (StatsPanel now updated in main loop)
     timer.every(0.016, function()
         updateAltPreview()
         updateRightClickTransfer()
@@ -5420,8 +5572,10 @@ local function formatDamageNumber(amount)
     return string.format("%.1f", amount)
 end
 
-local function pickDamageColor(amount)
-    -- Damage above zero → opaque red, non-damage/zero → white
+local function pickDamageColor(amount, isCrit)
+    if isCrit then
+        return { r = 255, g = 215, b = 0, a = 255 }
+    end
     if amount and amount > 0 then
         return { r = 255, g = 70, b = 70, a = 255 }
     end
@@ -5448,7 +5602,7 @@ local function spawnDamageNumber(targetEntity, amount, isCrit)
         text     = formatDamageNumber(amount),
         crit     = isCrit or false,
         fontSize = DAMAGE_NUMBER_FONT_SIZE,
-        color    = pickDamageColor(amount),
+        color    = pickDamageColor(amount, isCrit),
     }
 end
 
@@ -7445,10 +7599,13 @@ end
 local oily_water_bg = require("core.oily_water_background")
 
 function startActionPhase()
-    clear_states() -- disable all states.
+    local previousState = is_state_active(PLANNING_STATE) and "PLANNING" or (is_state_active(SHOP_STATE) and "SHOP" or "default")
+    clear_states()
     if setPlanningPeekMode then
         setPlanningPeekMode(false)
     end
+
+    remove_fullscreen_shader("planning_phase_sepia")
 
     -- Explicitly deactivate planning phase tooltip states
     if deactivate_state then
@@ -7475,7 +7632,8 @@ function startActionPhase()
     end
 
     activate_state(ACTION_STATE)
-    activate_state("default_state") -- just for defaults, keep them open
+    activate_state("default_state")
+    signal.emit("game_state_changed", { previous = previousState, current = "SURVIVORS" })
 
     add_layer_shader("sprites", "pixelate_image")
 
@@ -7560,7 +7718,8 @@ function startActionPhase()
 end
 
 function startPlanningPhase()
-	    clear_states() -- disable all states.
+    local previousState = is_state_active(ACTION_STATE) and "SURVIVORS" or (is_state_active(SHOP_STATE) and "SHOP" or "default")
+	    clear_states()
 	    if setPlanningPeekMode then
 	        setPlanningPeekMode(false)
 	    end
@@ -7592,8 +7751,14 @@ function startPlanningPhase()
     end
 
     activate_state(PLANNING_STATE)
-    activate_state("default_state")     -- just for defaults, keep them open
-    activate_state(WAND_TOOLTIP_STATE)  -- re-enable wand tooltips for planning phase
+    activate_state("default_state")
+    activate_state(WAND_TOOLTIP_STATE)
+    signal.emit("game_state_changed", { previous = previousState, current = "PLANNING" })
+
+    -- DISABLED: planning phase sepia effect (uncomment to re-enable)
+    -- add_fullscreen_shader("planning_phase_sepia")
+    -- globalShaderUniforms:set("planning_phase_sepia", "u_phase_blend", 1.0)
+    -- globalShaderUniforms:set("planning_phase_sepia", "u_intensity", 0.5)
 
     if board_sets and #board_sets > 0 then
         for index, boardSet in ipairs(board_sets) do
@@ -7640,9 +7805,10 @@ function startPlanningPhase()
 end
 
 function startShopPhase()
+    local previousState = is_state_active(ACTION_STATE) and "SURVIVORS" or (is_state_active(PLANNING_STATE) and "PLANNING" or "default")
     local preShopGold = globals.currency or 0
     local interestPreview = ShopSystem.calculateInterest(preShopGold)
-    clear_states() -- disable all states.
+    clear_states()
     if setPlanningPeekMode then
         setPlanningPeekMode(false)
     end
@@ -7669,7 +7835,8 @@ function startShopPhase()
     end
 
     activate_state(SHOP_STATE)
-    activate_state("default_state") -- just for defaults, keep them open
+    activate_state("default_state")
+    signal.emit("game_state_changed", { previous = previousState, current = "SHOP" })
 
     remove_layer_shader("sprites", "pixelate_image")
 
@@ -7883,7 +8050,7 @@ local function getActiveActionBoard()
     return board, set, set.action_board_id
 end
 
-local function relayoutBoardCardsInOrder(board)
+relayoutBoardCardsInOrder = function(board)
     if not board or not board.cards or #board.cards == 0 then return end
     local boardTransform = component_cache.get(board:handle(), Transform)
     if not boardTransform then return end
@@ -7901,18 +8068,36 @@ local function relayoutBoardCardsInOrder(board)
 
     local padding = 20
     local availW = math.max(0, boardTransform.actualW - padding * 2)
-    local minGap = 12
+    local preferredGap = 24  -- Gap between card edges when there's room
+    local minGap = 4         -- Minimum visible gap/offset when overlapping
     local n = #board.cards
     local spacing, groupW
+
     if n == 1 then
         spacing, groupW = 0, cardW
     else
-        local fitSpacing = (availW - cardW) / (n - 1)
-        spacing = math.max(minGap, fitSpacing)
-        groupW = cardW + spacing * (n - 1)
-        if groupW > availW then
-            spacing = math.max(0, fitSpacing)
-            groupW = cardW + spacing * (n - 1)
+        -- Ideal layout: cards separated with gaps between them (no overlap)
+        local idealGroupW = n * cardW + preferredGap * (n - 1)
+
+        if idealGroupW <= availW then
+            -- Room for full separation: offset = cardW + gap
+            spacing = cardW + preferredGap
+            groupW = idealGroupW
+        else
+            -- Not enough room - need to compress
+            -- First try: reduce gap while keeping cards separate (no overlap)
+            local gapSpace = availW - n * cardW
+            if gapSpace >= minGap * (n - 1) then
+                -- Can fit with reduced gaps (no overlap)
+                local reducedGap = gapSpace / (n - 1)
+                spacing = cardW + reducedGap
+                groupW = availW
+            else
+                -- Must overlap - use minimum visible offset
+                local fitSpacing = (availW - cardW) / (n - 1)
+                spacing = math.max(minGap, fitSpacing)
+                groupW = cardW + spacing * (n - 1)
+            end
         end
     end
 
@@ -8439,7 +8624,7 @@ function initSurvivorEntity()
 
 
         -- play sound
-        -- playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
+        playSoundEffect("effects", "player_hurt", 0.9 + math.random() * 0.2)
 
         -- DISABLED: time slow and music silencing effects
         -- playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
@@ -8533,6 +8718,16 @@ function initSurvivorEntity()
         trigger = "Pressed",
         context = "gameplay"
     })
+
+    for _, ctx in ipairs({ "gameplay", "planning-phase" }) do
+        input.bind("toggle_stats_panel", { device = "keyboard", key = KeyboardKey.KEY_C, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_close", { device = "keyboard", key = KeyboardKey.KEY_ESCAPE, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_1", { device = "keyboard", key = KeyboardKey.KEY_ONE, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_2", { device = "keyboard", key = KeyboardKey.KEY_TWO, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_3", { device = "keyboard", key = KeyboardKey.KEY_THREE, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_4", { device = "keyboard", key = KeyboardKey.KEY_FOUR, trigger = "Pressed", context = ctx })
+        input.bind("stats_panel_tab_5", { device = "keyboard", key = KeyboardKey.KEY_FIVE, trigger = "Pressed", context = ctx })
+    end
 
     --also allow gamepad.
     -- same dash
@@ -9052,6 +9247,9 @@ function initShopPhase()
             --TODO: buy logic.
         end
     end
+    
+    local ShopPackUI = gameplay_cfg.getShopPackUI()
+    if ShopPackUI then ShopPackUI.init() end
 end
 
 SCREEN_BOUND_LEFT = 0
@@ -9239,6 +9437,13 @@ function initActionPhase()
     WandCooldownUI.init()
     SubcastDebugUI.init()
     TriggerStripUI.show()
+    
+    -- Demo polish UIs
+    local DemoFooterUI = gameplay_cfg.getDemoFooterUI()
+    if DemoFooterUI then DemoFooterUI.init() end
+    
+    local ManualTriggerPromptUI = gameplay_cfg.getManualTriggerPromptUI()
+    if ManualTriggerPromptUI then ManualTriggerPromptUI.init() end
     
     -- add shader to backgorund layer
     add_layer_shader("background", "oily_water_background")
@@ -10504,11 +10709,10 @@ function initPlanningUI()
             local resolvedButtonHeight = (boxTransform and boxTransform.actualH) or defaultButtonHeight
             local resolvedButtonWidth = (boxTransform and boxTransform.actualW) or defaultButtonWidth
             if boxTransform then
-                local targetX = startX - (resolvedButtonWidth + buttonMargin)
                 local totalHeight = (#board_sets) * (resolvedButtonHeight + verticalSpacing) - verticalSpacing
                 local centeredTop = (usableScreenH - totalHeight) * 0.5
                 local clampedY = math.max(buttonMargin, math.min(centeredTop, usableScreenH - totalHeight - buttonMargin))
-                boxTransform.actualX = math.max(buttonMargin, targetX)
+                boxTransform.actualX = buttonMargin
                 boxTransform.actualY = clampedY + (buttonIndex - 1) * (resolvedButtonHeight + verticalSpacing)
             end
 

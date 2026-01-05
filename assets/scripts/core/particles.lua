@@ -386,6 +386,19 @@ function RecipeMethods:drawCommand(fn)
     return self
 end
 
+--- Mark particles to be stencil-masked by a source entity
+--- Particles will only render within the source entity's sprite bounds.
+--- The source entity must have a shader pipeline (e.g., 3d_skew shader).
+--- @param sourceEntity Entity The entity whose bounds define the stencil mask
+--- @param opts table? Optional configuration: { padding = number }
+--- @return self
+function RecipeMethods:maskedBy(sourceEntity, opts)
+    opts = opts or {}
+    self._maskSource = sourceEntity
+    self._maskPadding = opts.padding or 0.0
+    return self
+end
+
 --- Get the recipe configuration (includes all settings)
 --- @return table Configuration table
 function RecipeMethods:getConfig()
@@ -858,7 +871,14 @@ function EmissionMethods:_spawnSingle(particleModule, index, total)
     local location = Vec2(pos.x, pos.y)
     local sizeVec = Vec2(size, size)
 
-    local entity = particleModule.CreateParticle(location, sizeVec, opts, nil, nil)
+    local entity
+    if self._recipe._maskSource then
+        local sourceEntity = self._recipe._maskSource
+        particleModule.AddStencilMaskSource(sourceEntity, self._recipe._maskPadding or 0.0)
+        entity = particleModule.CreateStencilMaskedParticle(location, sizeVec, opts, sourceEntity, nil, nil)
+    else
+        entity = particleModule.CreateParticle(location, sizeVec, opts, nil, nil)
+    end
 
     -- If recipe has shaders, add ShaderParticleTag to prevent double-render
     if config.shaders and #config.shaders > 0 then

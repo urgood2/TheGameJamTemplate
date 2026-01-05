@@ -455,6 +455,9 @@ local function init_static_defaults()
     set("3d_skew", "distortion_strength", 0.05)
     set("3d_skew", "fade_start", 0.7)
     set("3d_skew", "time", get_time())
+    set("3d_skew", "outline_enabled", 0.0)
+    set("3d_skew", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew", "outline_thickness", 3.0)
 
     -- 3d_skew_hologram (shares the same base params; overlay effect differs in shader)
     set("3d_skew_hologram", "fov", -0.39)
@@ -492,6 +495,9 @@ local function init_static_defaults()
     set("3d_skew_hologram", "distortion_strength", 0.05)
     set("3d_skew_hologram", "fade_start", 0.7)
     set("3d_skew_hologram", "time", get_time())
+    set("3d_skew_hologram", "outline_enabled", 0.0)
+    set("3d_skew_hologram", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_hologram", "outline_thickness", 1.0)
 
     -- 3d_skew_polychrome (polychrome hue shift replaces sheen)
     set("3d_skew_polychrome", "fov", -0.39)
@@ -530,6 +536,9 @@ local function init_static_defaults()
     set("3d_skew_polychrome", "fade_start", 0.7)
     set("3d_skew_polychrome", "polychrome", Vector2{ x = 0.65, y = 0.25 })
     set("3d_skew_polychrome", "time", get_time())
+    set("3d_skew_polychrome", "outline_enabled", 0.0)
+    set("3d_skew_polychrome", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_polychrome", "outline_thickness", 1.0)
 
     -- 3d_skew_foil (foil overlay effect)
     set("3d_skew_foil", "fov", -0.39)
@@ -568,6 +577,9 @@ local function init_static_defaults()
     set("3d_skew_foil", "fade_start", 0.7)
     set("3d_skew_foil", "foil", Vector2{ x = 0.65, y = 0.25 })
     set("3d_skew_foil", "time", get_time())
+    set("3d_skew_foil", "outline_enabled", 0.0)
+    set("3d_skew_foil", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_foil", "outline_thickness", 1.0)
 
     -- 3d_skew_negative_shine
     set("3d_skew_negative_shine", "fov", -0.39)
@@ -606,6 +618,9 @@ local function init_static_defaults()
     set("3d_skew_negative_shine", "fade_start", 0.7)
     set("3d_skew_negative_shine", "negative_shine", Vector2{ x = 0.65, y = 0.25 })
     set("3d_skew_negative_shine", "time", get_time())
+    set("3d_skew_negative_shine", "outline_enabled", 0.0)
+    set("3d_skew_negative_shine", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_negative_shine", "outline_thickness", 1.0)
 
     -- 3d_skew_negative
     set("3d_skew_negative", "fov", -0.39)
@@ -644,6 +659,9 @@ local function init_static_defaults()
     set("3d_skew_negative", "fade_start", 0.7)
     set("3d_skew_negative", "negative", Vector2{ x = 0.65, y = 0.25 })
     set("3d_skew_negative", "time", get_time())
+    set("3d_skew_negative", "outline_enabled", 0.0)
+    set("3d_skew_negative", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_negative", "outline_thickness", 1.0)
 
     -- 3d_skew_holo
     set("3d_skew_holo", "fov", -0.39)
@@ -682,6 +700,9 @@ local function init_static_defaults()
     set("3d_skew_holo", "fade_start", 0.7)
     set("3d_skew_holo", "holo", Vector2{ x = 0.65, y = 0.25 })
     set("3d_skew_holo", "time", get_time())
+    set("3d_skew_holo", "outline_enabled", 0.0)
+    set("3d_skew_holo", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_holo", "outline_thickness", 1.0)
 
     -- 3d_skew_voucher
     set("3d_skew_voucher", "fov", -0.39)
@@ -720,6 +741,9 @@ local function init_static_defaults()
     set("3d_skew_voucher", "fade_start", 0.7)
     set("3d_skew_voucher", "booster", Vector2{ x = 0.65, y = 0.25 })
     set("3d_skew_voucher", "time", get_time())
+    set("3d_skew_voucher", "outline_enabled", 0.0)
+    set("3d_skew_voucher", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_voucher", "outline_thickness", 1.0)
 
     -- 3d_skew_gold_seal
     set("3d_skew_gold_seal", "fov", -0.39)
@@ -758,6 +782,9 @@ local function init_static_defaults()
     set("3d_skew_gold_seal", "fade_start", 0.7)
     set("3d_skew_gold_seal", "gold_seal", Vector4{ x = 0.65, y = 0.25, z = 0.0, w = 1.0 })
     set("3d_skew_gold_seal", "time", get_time())
+    set("3d_skew_gold_seal", "outline_enabled", 0.0)
+    set("3d_skew_gold_seal", "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+    set("3d_skew_gold_seal", "outline_thickness", 1.0)
 
     local function set_pseudo_3d_skew_defaults(name, effect_uniform, effect_value)
         local effectValue = effect_value or Vector2{ x = 0.65, y = 0.25 }
@@ -801,6 +828,9 @@ local function init_static_defaults()
             set(name, effect_uniform, effectValue)
         end
 
+        set(name, "outline_enabled", 0.0)
+        set(name, "outline_color", Vector4{ x = 1.0, y = 1.0, z = 1.0, w = 1.0 })
+        set(name, "outline_thickness", 1.0)
         set(name, "time", get_time())
     end
 
@@ -1191,6 +1221,28 @@ local function init_static_defaults()
     set("fade", "slide_direction", Vector2{ x = 1.0, y = 0.0 })
     set("fade", "fade_color", Vector3{ x = 0.0, y = 0.0, z = 0.0 })
 
+    -- lighting (multi-light layer shader)
+    set("lighting", "screen_width", VW)
+    set("lighting", "screen_height", VH)
+    set("lighting", "u_lightCount", 0)
+    set("lighting", "u_ambientLevel", 0.2)
+    set("lighting", "u_blendMode", 0)
+    set("lighting", "u_feather", 0.2)
+    for i = 0, 15 do
+        set("lighting", "u_lightPositions[" .. i .. "]", Vector2{ x = 0.0, y = 0.0 })
+        set("lighting", "u_lightRadii[" .. i .. "]", 0.0)
+        set("lighting", "u_lightIntensities[" .. i .. "]", 0.0)
+        set("lighting", "u_lightColors[" .. i .. "]", Vector3{ x = 1.0, y = 1.0, z = 1.0 })
+        set("lighting", "u_lightTypes[" .. i .. "]", 0)
+        set("lighting", "u_lightBlendModes[" .. i .. "]", 0)
+        set("lighting", "u_lightDirections[" .. i .. "]", 0.0)
+        set("lighting", "u_lightAngles[" .. i .. "]", 0.0)
+    end
+
+    -- planning_phase_sepia (fullscreen phase transition effect)
+    set("planning_phase_sepia", "u_phase_blend", 0.0)
+    set("planning_phase_sepia", "u_intensity", 0.5)
+
     -- Additional shader defaults still need to be ported from C++.
     -- Refer to src/core/misc_functions.cpp for the remaining uniforms.
 end
@@ -1447,6 +1499,16 @@ local function init_updates()
 
     register("fade", function(_shader)
         set("fade", "time", get_time())
+    end)
+
+    register("lighting", function(_shader)
+        local ok, Lighting = pcall(require, "core.lighting")
+        if ok and Lighting then
+            Lighting._update()
+            for layerName, _ in pairs(Lighting._layers) do
+                Lighting._syncUniforms(layerName)
+            end
+        end
     end)
 end
 

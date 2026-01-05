@@ -96,4 +96,30 @@ ShaderPresets.trigger_card = {
     },
 }
 
+-- NOTE: Card outline presets disabled - efficient_pixel_outline shader fails to compile
+-- The outline effect has been integrated directly into 3d_skew shader instead
+-- See: docs/plans/2025-12-30-3d-skew-outline-design.md
+
+-- Card outline effect (standalone) - DISABLED
+-- ShaderPresets.card_outline = {
+--     id = "card_outline",
+--     passes = {"efficient_pixel_outline"},
+--     ...
+-- }
+
+-- Card with colored outline - DISABLED
+-- ShaderPresets.card_outline_gold = {
+--     id = "card_outline_gold",
+--     passes = {"efficient_pixel_outline"},
+--     ...
+-- }
+
+-- Full card effect: 3d_skew + outline combined - DISABLED
+-- Use 3d_skew with outline_enabled uniform instead
+-- ShaderPresets.card_with_outline = {
+--     id = "card_with_outline",
+--     passes = {"3d_skew", "efficient_pixel_outline"},
+--     ...
+-- }
+
 return ShaderPresets

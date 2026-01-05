@@ -243,6 +243,7 @@ namespace input
         handleCursorHoverEvent(inputState, registry);
 
         propagateClicksToGameObjects(registry, inputState);
+        cursor_events::propagate_right_clicks(registry, inputState);
         propagateDragToGameObjects(registry, inputState);
         propagateReleaseToGameObjects(inputState, registry);
         // hover target is also being dragged right now, and touch input not being used (no touch input)

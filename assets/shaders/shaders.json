@@ -17,6 +17,15 @@
             "fragment": "web/screen_tone_transition_fragment.fs"
         }
     },
+    "planning_phase_sepia": {
+        "vertex": "planning_phase_sepia_vertex.vs",
+        "fragment": "planning_phase_sepia.fs",
+
+        "web": {
+            "vertex": "web/planning_phase_sepia_vertex.vs",
+            "fragment": "web/planning_phase_sepia.fs"
+        }
+    },
     "crt": {
         "vertex": "crt_vertex.vs",
         "fragment": "crt_fragment.fs",
@@ -440,6 +449,15 @@
             "fragment": "web/spotlight_fragment.fs"
         }
     },
+    "lighting": {
+        "vertex": "lighting_vertex.vs",
+        "fragment": "lighting_fragment.fs",
+
+        "web": {
+            "vertex": "web/lighting_vertex.vs",
+            "fragment": "web/lighting_fragment.fs"
+        }
+    },
     "custom_polychrome": {
         "vertex": "custom_polychrome_vertex.vs",
         "fragment": "custom_polychrome_fragment.fs",
@@ -816,6 +834,15 @@
         "web": {
             "vertex": "web/cooldown_pie_vertex.vs",
             "fragment": "web/cooldown_pie_fragment.fs"
+        }
+    },
+    "alpha_cutout": {
+        "vertex": "alpha_cutout_vertex.vs",
+        "fragment": "alpha_cutout_fragment.fs",
+
+        "web": {
+            "vertex": "web/alpha_cutout_vertex.vs",
+            "fragment": "web/alpha_cutout_fragment.fs"
         }
     }
 }

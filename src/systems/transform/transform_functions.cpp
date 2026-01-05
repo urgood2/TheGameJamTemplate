@@ -2695,6 +2695,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
         "update",          &GameObject::Methods::update,
         "draw",            &GameObject::Methods::draw,
         "onClick",         &GameObject::Methods::onClick,
+        "onRightClick",    &GameObject::Methods::onRightClick,
         "onRelease",       &GameObject::Methods::onRelease,
         "onHover",         &GameObject::Methods::onHover,
         "onStopHover",     &GameObject::Methods::onStopHover,
@@ -2707,6 +2708,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     rec.record_property("GameObjectMethods", {"update", "function|nil", "Called every frame."});
     rec.record_property("GameObjectMethods", {"draw", "function|nil", "Called every frame for drawing."});
     rec.record_property("GameObjectMethods", {"onClick", "function|nil", "Called on click."});
+    rec.record_property("GameObjectMethods", {"onRightClick", "function|nil", "Called on right-click."});
     rec.record_property("GameObjectMethods", {"onRelease", "function|nil", "Called on click release."});
     rec.record_property("GameObjectMethods", {"onHover", "function|nil", "Called when hover starts."});
     rec.record_property("GameObjectMethods", {"onStopHover", "function|nil", "Called when hover ends."});
@@ -2727,6 +2729,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
         "enlargeOnDrag",           &GameObject::State::enlargeOnDrag,
         "clickEnabled",            &GameObject::State::clickEnabled,
         "isBeingClicked",          &GameObject::State::isBeingClicked,
+        "rightClickEnabled",       &GameObject::State::rightClickEnabled,
         "dragEnabled",             &GameObject::State::dragEnabled,
         "isBeingDragged",          &GameObject::State::isBeingDragged,
         "triggerOnReleaseEnabled", &GameObject::State::triggerOnReleaseEnabled,
@@ -2746,6 +2749,7 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     rec.record_property("GameObjectState", {"enlargeOnDrag", "boolean"});
     rec.record_property("GameObjectState", {"clickEnabled", "boolean"});
     rec.record_property("GameObjectState", {"isBeingClicked", "boolean"});
+    rec.record_property("GameObjectState", {"rightClickEnabled", "boolean"});
     rec.record_property("GameObjectState", {"dragEnabled", "boolean"});
     rec.record_property("GameObjectState", {"isBeingDragged", "boolean"});
     rec.record_property("GameObjectState", {"triggerOnReleaseEnabled", "boolean"});

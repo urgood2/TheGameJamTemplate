@@ -470,3 +470,19 @@
   - Implemented unified cast origin resolution system for consistent projectile spawning across different trigger types.
   - Comprehensive UI improvements for planning and action phases: better visual feedback, state transitions, and layout polish.
   - Standardized corner rounding in Lua to match C++ util::getCornerSizeForRect for consistent UI appearance.
+
+12/30/2025
+  - Expanded enemy behavior system with ranged attacks, behavior composition, and 8+ new enemy archetypes (skirmisher, bomber, summoner, etc.) plus comprehensive documentation.
+  - Built configurable tutorial dialogue system: speaker sprites with shaders, typewriter text, input prompts, spotlight effect, and action queue for scripted sequences.
+  - Added stencil-masked particle rendering for shader pipeline with sprite-shape masking instead of bounding rect.
+  - Added outline shader pass to card rendering pipeline with toggleable preset.
+  - Fixed stepped rounded rectangle rendering to use RL_TRIANGLES for proper fill display.
+  - Fixed mini card progress shader and activation pulse timing in trigger strip UI.
+  - Implemented render_groups for SpecialItem shader rendering with proper screen-space entity handling.
+
+12/31/2025
+  - Added sound effects to combat events: enemy spawn, wave start, elite spawn, stage complete, and random tutorial dialogue voices (6 variations).
+  - Implemented tooltip enhancements: dynamic title effects (shimmer, glow), compact styling, and card descriptions with localized text.
+  - Improved tutorial dialogue system: spotlight shader refinements, speaker animation states, and timer chain fixes.
+  - Fixed queueDrawSprite API and prevented duplicate dialogue spawning.
+  - Added demo polish features specification document outlining remaining work for vertical slice.

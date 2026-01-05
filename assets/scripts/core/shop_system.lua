@@ -47,23 +47,23 @@ local shop_ui_initialized = false
 -- ============================================================================
 
 ShopSystem.config = {
-    offerSlots = 5,       -- Number of card offerings
-    baseRerollCost = 5,   -- Starting reroll cost (escalates each roll)
-    rerollCostIncrease = 1, -- Cost increase per reroll
-    interestRate = 1,     -- 1 gold per 10 gold
-    interestThreshold = 10, -- Gold needed for 1 interest
-    maxInterest = 5,      -- Maximum interest per round
-    interestCap = 50,     -- Max gold that counts for interest
+    offerSlots = 5,
+    baseRerollCost = 5,
+    rerollCostIncrease = 1,
+    interestRate = 1,
+    interestThreshold = 10,
+    maxInterest = 5,
+    interestCap = 50,
+    removalCost = 2,
 
-    -- Service costs
-    removalCost = 2, -- Cost to remove a card (TBC)
-
-    -- Card type distribution
     typeWeights = {
-        trigger = 15, -- 15% triggers
-        modifier = 40, -- 40% modifiers
-        action = 45 -- 45% actions
-    }
+        trigger = 15,
+        modifier = 40,
+        action = 45
+    },
+    
+    packCost = 25,
+    packSize = 3,
 }
 
 -- ============================================================================
@@ -618,7 +618,6 @@ function ShopSystem.init()
     print(string.format("[ShopSystem] Card pool: %d cards", total))
 end
 
---- Initializes the shop UI (delegates to ui_defs) if not already created.
 function ShopSystem.initUI()
     if shop_ui_initialized then
         return
@@ -628,6 +627,102 @@ function ShopSystem.initUI()
         shop_ui_initialized = true
         print("[ShopSystem] Shop UI initialized")
     end
+end
+
+function ShopSystem.generatePack(playerLevel, packType)
+    playerLevel = playerLevel or 1
+    packType = packType or "action"
+    
+    local pack = {
+        packType = packType,
+        cost = ShopSystem.config.packCost,
+        cards = {},
+        rarities = {},
+    }
+    
+    for i = 1, ShopSystem.config.packSize do
+        local rarity = ShopSystem.selectRarity(playerLevel)
+        local cardDef = ShopSystem.selectCard(packType, rarity)
+        
+        if cardDef then
+            table.insert(pack.cards, cardDef)
+            table.insert(pack.rarities, rarity)
+        else
+            local fallbackRarity = "common"
+            local fallbackCard = ShopSystem.selectCard(packType, fallbackRarity)
+            if fallbackCard then
+                table.insert(pack.cards, fallbackCard)
+                table.insert(pack.rarities, fallbackRarity)
+            end
+        end
+    end
+    
+    return pack
+end
+
+function ShopSystem.canAffordPack(player)
+    return player and player.gold and player.gold >= ShopSystem.config.packCost
+end
+
+function ShopSystem.purchasePack(packType, player, playerLevel)
+    if not player or not player.gold then
+        return false, "Invalid player"
+    end
+    
+    if player.gold < ShopSystem.config.packCost then
+        return false, "Not enough gold"
+    end
+    
+    player.gold = player.gold - ShopSystem.config.packCost
+    
+    local pack = ShopSystem.generatePack(playerLevel or 1, packType)
+    
+    print(string.format("[ShopSystem] Purchased %s pack for %dg, contains %d cards", 
+        packType, ShopSystem.config.packCost, #pack.cards))
+    
+    return true, pack
+end
+
+function ShopSystem.chooseFromPack(pack, chosenIndex, player)
+    if not pack or not pack.cards or #pack.cards == 0 then
+        return false, nil, {}
+    end
+    
+    if chosenIndex < 1 or chosenIndex > #pack.cards then
+        return false, nil, {}
+    end
+    
+    local chosenCardDef = pack.cards[chosenIndex]
+    local chosenInstance = ShopSystem.createCardInstance(chosenCardDef)
+    
+    if not player.cards then
+        player.cards = {}
+    end
+    table.insert(player.cards, chosenInstance)
+    
+    local unchosenCards = {}
+    for i, cardDef in ipairs(pack.cards) do
+        if i ~= chosenIndex then
+            table.insert(unchosenCards, cardDef)
+        end
+    end
+    
+    print(string.format("[ShopSystem] Player chose %s from pack", chosenCardDef.id))
+    
+    return true, chosenInstance, unchosenCards
+end
+
+function ShopSystem.getPackTypes()
+    return { "trigger", "modifier", "action" }
+end
+
+function ShopSystem.getPackDisplayName(packType)
+    local names = {
+        trigger = "Trigger Pack",
+        modifier = "Mod Pack",
+        action = "Action Pack",
+    }
+    return names[packType] or packType
 end
 
 return ShopSystem

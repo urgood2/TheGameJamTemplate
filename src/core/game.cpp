@@ -704,7 +704,10 @@ namespace game
                 bool include = true;
                 auto paneRef = globals::getRegistry().try_get<ui::UIPaneParentRef>(e);
                 bool isInScrollPane = paneRef != nullptr;
-                if (paneRef) {
+                // Check if this entity IS the scroll pane itself (not just a child of it)
+                // The scroll pane itself should NOT have its position adjusted by scroll offset
+                bool isScrollPaneItself = isInScrollPane && paneRef->pane == e;
+                if (paneRef && !isScrollPaneItself) {
                     if (paneRef->pane != entt::null && globals::getRegistry().valid(paneRef->pane)) {
                         const auto &scr = globals::getRegistry().get<ui::UIScrollComponent>(paneRef->pane);
                         Rectangle paneR = paneViewport(globals::getRegistry(), paneRef->pane);
@@ -717,10 +720,11 @@ namespace game
                         include = rectsOverlap(eltR, paneR);
                     }
                 }
-                if (isInScrollPane && include && expandedBounds.contains(box)) 
+                if (isInScrollPane && !isScrollPaneItself && include && expandedBounds.contains(box))
                     globals::quadtreeUI.add(e);
-                else if (!isInScrollPane && expandedBounds.contains(box)) {
+                else if ((!isInScrollPane || isScrollPaneItself) && expandedBounds.contains(box)) {
                     // Add the entity to the quadtree if it is within the expanded bounds
+                    // Also add scroll pane entities themselves (they don't need scroll adjustment)
                     globals::quadtreeUI.add(e);
                 } ;
             });
@@ -2168,6 +2172,11 @@ void DrawHollowCircleStencil(Vector2 center, float outerR, float innerR, Color c
         {
             ZONE_SCOPED("Particle Draw");
             particle::DrawParticles(globals::getRegistry(), sprites);
+        }
+        
+        {
+            ZONE_SCOPED("Stencil Masked Particles");
+            particle::DrawAllStencilMaskedParticles(globals::getRegistry(), sprites);
         }
         
         {

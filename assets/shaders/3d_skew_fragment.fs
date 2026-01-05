@@ -28,7 +28,7 @@ uniform float dissolve;
 uniform float time;
 uniform vec4 texture_details;
 uniform vec2 image_details;
-uniform bool shadow;
+uniform float shadow;
 uniform vec4 burn_colour_1;
 uniform vec4 burn_colour_2;
 
@@ -43,6 +43,10 @@ uniform float noise_amount;
 uniform float spread_strength;
 uniform float distortion_strength;
 uniform float fade_start;
+
+uniform vec4 outline_color;
+uniform float outline_thickness;
+uniform float outline_enabled;
 
 out vec4 finalColor;
 
@@ -89,6 +93,42 @@ vec4 sampleTinted(vec2 uv) {
     return vec4(rgb, alpha);
 }
 
+vec4 applyOutline(vec2 atlasUV, vec4 baseColor) {
+    // Skip outline for shadows and when disabled
+    if (shadow > 0.5) return baseColor;
+    if (outline_enabled < 0.5) return baseColor;
+    if (baseColor.a > 0.1) return baseColor;
+
+    // Pixel-perfect: use exact 1-pixel steps based on texture size
+    vec2 texSize = vec2(textureSize(texture0, 0));
+    vec2 pixelSize = 1.0 / texSize;
+
+    float thickness = outline_thickness;
+    float neighborAlpha = 0.0;
+    
+    // 8-direction sampling at the specified thickness (pixel-perfect integer offsets)
+    // No clamping - allow sampling the transparent padding area
+    vec2 offsets[8] = vec2[8](
+        vec2(-thickness, 0.0), vec2(thickness, 0.0), 
+        vec2(0.0, -thickness), vec2(0.0, thickness),
+        vec2(-thickness, -thickness), vec2(thickness, -thickness), 
+        vec2(-thickness, thickness), vec2(thickness, thickness)
+    );
+
+    for (int i = 0; i < 8; i++) {
+        vec2 sampleUV = atlasUV + offsets[i] * pixelSize;
+        // Clamp to valid texture coords [0,1] to avoid wrapping artifacts
+        sampleUV = clamp(sampleUV, vec2(0.0), vec2(1.0));
+        neighborAlpha = max(neighborAlpha, texture(texture0, sampleUV).a);
+    }
+
+    if (neighborAlpha > 0.1) {
+        return outline_color;
+    }
+
+    return baseColor;
+}
+
 vec4 applyOverlay(vec2 atlasUV) {
     const float EPS = 0.0001;
     bool effectInactive =
@@ -97,7 +137,7 @@ vec4 applyOverlay(vec2 atlasUV) {
         abs(sheen_strength) < EPS &&
         burn_colour_1.a < EPS &&
         burn_colour_2.a < EPS &&
-        !shadow &&
+        shadow < 0.5 &&
         length(material_tint - vec3(1.0)) < EPS;
 
     if (effectInactive) {
@@ -126,7 +166,7 @@ vec4 applyOverlay(vec2 atlasUV) {
     float alphaFactor = 1.0 - smoothstep(fade_start, 1.0, progress);
     float alpha = base.a * alphaFactor;
 
-    if (shadow) {
+    if (shadow > 0.5) {
         return vec4(vec3(0.0), alpha * 0.35);
     }
 
@@ -156,7 +196,8 @@ void main()
         vec2 finalUV = identityAtlas
             ? clamped
             : (pivot + clamped * regionRate);
-        finalColor = applyOverlay(finalUV);
+        vec4 overlayColor = applyOverlay(finalUV);
+        finalColor = applyOutline(finalUV, overlayColor);
     } else {
         // Full atlas-aware path for sprites.
         float cosX = tiltCos.x;
@@ -182,6 +223,7 @@ void main()
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
 
         vec2 finalUV = pivot + uv * regionRate;
-        finalColor = applyOverlay(finalUV);
+        vec4 overlayColor = applyOverlay(finalUV);
+        finalColor = applyOutline(finalUV, overlayColor);
     }
 }

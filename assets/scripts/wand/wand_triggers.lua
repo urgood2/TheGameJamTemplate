@@ -193,8 +193,10 @@ function WandTriggers.setupTimerTrigger(registration, interval)
             log_debug("WandTriggers: Timer trigger fired for wand", wandId)
             -- Reset elapsed time when trigger fires
             registration.elapsed = 0
-            registration.executor(wandId, "timer_trigger")
-            signal.emit("trigger_activated", wandId, registration.triggerType)
+            local success = registration.executor(wandId, "timer_trigger")
+            if success then
+                signal.emit("trigger_activated", wandId, registration.triggerType)
+            end
         end
     end, -1, false, nil, timerTag)  -- infinite repetitions
 
@@ -218,8 +220,10 @@ function WandTriggers.setupCooldownTrigger(registration)
     end, function()
         if registration.enabled and registration.executor then
             log_debug("WandTriggers: Cooldown trigger fired for wand", wandId)
-            registration.executor(wandId, "cooldown_trigger")
-            signal.emit("trigger_activated", wandId, registration.triggerType)
+            local success = registration.executor(wandId, "cooldown_trigger")
+            if success then
+                signal.emit("trigger_activated", wandId, registration.triggerType)
+            end
         end
     end, -1, nil, timerTag)  -- infinite repetitions
 
@@ -346,8 +350,10 @@ function WandTriggers.processPendingEvents()
     for _, evt in ipairs(queued) do
         local registration = WandTriggers.registrations[evt.wandId]
         if registration and registration.enabled and registration.executor then
-            registration.executor(evt.wandId, evt.eventType, evt.eventData)
-            signal.emit("trigger_activated", evt.wandId, registration.triggerType)
+            local success = registration.executor(evt.wandId, evt.eventType, evt.eventData)
+            if success then
+                signal.emit("trigger_activated", evt.wandId, registration.triggerType)
+            end
         end
     end
 end
@@ -416,8 +422,10 @@ function WandTriggers.updateDistanceTriggers(playerEntity)
                         print("[AvatarRule] move_casts_trigger_onhit would apply here")
                     end
 
-                    registration.executor(wandId, "distance_trigger")
-                    signal.emit("trigger_activated", wandId, registration.triggerType)
+                    local success = registration.executor(wandId, "distance_trigger")
+                    if success then
+                        signal.emit("trigger_activated", wandId, registration.triggerType)
+                    end
 
                     -- Reset distance
                     tracking.totalDistance = 0
@@ -499,6 +507,73 @@ function WandTriggers.getTriggerDisplayName(triggerType)
     }
 
     return names[triggerType] or triggerType
+end
+
+--- Manually fires a specific wand's registered trigger once (for E-key activation)
+--- @param wandId string Wand identifier
+--- @param eventData table|nil Optional event data to pass
+--- @return boolean success
+function WandTriggers.fireManual(wandId, eventData)
+    local registration = WandTriggers.registrations[wandId]
+    if not registration then
+        log_debug("WandTriggers.fireManual: no registration for wand", wandId)
+        return false
+    end
+    
+    if not registration.enabled then
+        log_debug("WandTriggers.fireManual: trigger disabled for wand", wandId)
+        return false
+    end
+    
+    if not registration.executor then
+        log_debug("WandTriggers.fireManual: no executor for wand", wandId)
+        return false
+    end
+    
+    log_debug("WandTriggers: Manual trigger fired for wand", wandId)
+    
+    local payload = eventData or {}
+    payload._source_event_type = "manual_trigger"
+    
+    local success = registration.executor(wandId, "manual_trigger", payload)
+    if success then
+        signal.emit("trigger_activated", wandId, registration.triggerType)
+    end
+    
+    return success
+end
+
+--- Manually fires ALL registered wand triggers once (for E-key burst activation)
+--- @param eventData table|nil Optional event data to pass
+--- @return integer firedCount Number of triggers that fired successfully
+function WandTriggers.fireManualAll(eventData)
+    local firedCount = 0
+    
+    for wandId, registration in pairs(WandTriggers.registrations) do
+        if registration.enabled and registration.executor then
+            local success = WandTriggers.fireManual(wandId, eventData)
+            if success then
+                firedCount = firedCount + 1
+            end
+        end
+    end
+    
+    if firedCount > 0 then
+        log_debug("WandTriggers: Manual burst fired", firedCount, "triggers")
+    end
+    
+    return firedCount
+end
+
+--- Checks if any triggers are available for manual firing
+--- @return boolean hasManualTriggers
+function WandTriggers.hasManualTriggers()
+    for wandId, registration in pairs(WandTriggers.registrations) do
+        if registration.enabled and registration.executor then
+            return true
+        end
+    end
+    return false
 end
 
 return WandTriggers

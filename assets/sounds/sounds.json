@@ -1,11 +1,6 @@
 {
     "music": {
         "main-menu": "Tranquil Tides.wav",
-        "main-music-1": "SMILETRON - Self Titled - 01 SANCTUM.ogg",
-        "main-music-2": "SMILETRON - Self Titled - 02 ORACLE.ogg",
-        "main-music-3": "SMILETRON - Self Titled - 03 MICROCOSMIC.ogg",
-        "main-music-4": "SMILETRON - Self Titled - 04 GEMINI.ogg",
-        "main-music-5": "SMILETRON - Self Titled - 05 CERULEAN.ogg",
         "lo_fi_wash_over_intensity_1": "Lo-Fi Wash Over Intensity 1.wav",
         "lo_fi_wash_over_intensity_2": "Lo-Fi Wash Over Intensity 2.wav",
         "lo_fi_wash_over_main": "Lo-Fi Wash Over Main.wav"
@@ -14,7 +9,7 @@
     "categories": {
         "effects": {
             "sounds": {
-                "button-click": "UIClick_Button Press Small-009_OS_Quute UI.wav",
+                "button-click": "UIClick_Button Press Small-009_OS_Quute UI.ogg",
                 "card_activate": "CHURCH_BELL_03_mono.ogg",
                 "trigger_activate": "SNAP_Clean_mono.ogg",
                 "card_pick_up": "CARDS_Deal_02_RR1_mono.ogg",
@@ -42,7 +37,7 @@
                 "dash_7": "WHOOSH_Fast_03_mono.ogg",
                 "chain_lightning_trigger": "wav_Thunder_spell_magical.ogg",
                 "chain_lightning_individual_hit": "ZAP_Subtle_07_mono.ogg",
-                "new_achievement": "UIAlert_Achievement_Unique_Short-011.ogg",
+                "new_achievement": "UIAlert_Achievement Unique Short-011_OS_Quute UI.ogg",
                 "walk_1": "FOOTSTEP_Rock_Walk_01_RR01_mono.ogg",
                 "walk_2": "FOOTSTEP_Rock_Walk_01_RR02_mono.ogg",
                 "walk_3": "FOOTSTEP_Rock_Walk_01_RR03_mono.ogg",
@@ -106,15 +101,29 @@
                 "electric_spell_cast_2": "Electric_Spell-Cast_2.ogg",
                 "electric_individual_hit": "THUD_Bright_01_mono.ogg",
                 "projectile_hit_wall_default": "IMPACT_Metal_Cling_Clean_mono.ogg",
-                "wand-button-click": "UIClick_Button Select Poppy Playful-045_OS_Quute UI.wav",
-                "simple_button": "Simple Button.wav",
-                "cycle-wand-set": "Simple Button.wav",
-                "button-hover-sound": "UIClick_Button Plip Pop Bubble-001_OS_Quute UI.wav",
-                "card-hover": "Discard Card 9.wav",
-                "level-up-choose": "UIAlert_Achievement_Unique_Short-006.wav",
+                "wand-button-click": "UIClick_Button Select Poppy Playful-045_OS_Quute UI.ogg",
+                "simple_button": "Simple Button.ogg",
+                "cycle-wand-set": "Simple Button.ogg",
+                "button-hover-sound": "UIClick_Button Plip Pop Bubble-001_OS_Quute UI.ogg",
+                "card-hover": "Discard Card 9.ogg",
+                "level-up-choose": "UIAlert_Achievement_Unique_Short-006.ogg",
                 "ui_click_snappy_mono": "UI_Click_Snappy_mono.ogg",
-                "uialert_achievement_unique_short_006": "UIAlert_Achievement_Unique_Short-006.wav",
-                "uialert_achievement_unique_short_011": "UIAlert_Achievement_Unique_Short-011.ogg"
+                "uialert_achievement_unique_short_006": "UIAlert_Achievement_Unique_Short-006.ogg",
+                "uialert_achievement_unique_short_011": "UIAlert_Achievement_Unique_Short-011.ogg",
+                "tutorial-talk-1": "ROBTVox_Robo Assistant Vocalization Playful-002_OS_Quute UI.ogg",
+                "tutorial-talk-2": "ROBTVox_Robo Assistant Vocalization Playful-004_OS_Quute UI.ogg",
+                "tutorial-talk-3": "ROBTVox_Robo Assistant Vocalization Playful-007_OS_Quute UI.ogg",
+                "tutorial-talk-4": "ROBTVox_Robo Assistant Vocalization Playful-009_OS_Quute UI.ogg",
+                "tutorial-talk-5": "ROBTVox_Robo Assistant Vocalization Playful-014_OS_Quute UI.ogg",
+                "tutorial-talk-6": "ROBTVox_Robo Assistant Vocalization Playful-016_OS_Quute UI.ogg",
+                "stage-complete": "UIMisc_Interact Playful Phrase-010_OS_Quute UI.ogg",
+                "new-wave": "UIMisc_Interact Playful Short-035_OS_Quute UI.ogg",
+                "elite-default-spawn": "UIMisc_Interact Playful Phrase-008_OS_Quute UI.ogg",
+                "default-spawn": "Spawn - Venom Burst 2.ogg",
+                "uimisc_interact_percussive_005_os_quute_ui": "UIMisc_Interact Percussive-005_OS_Quute UI.ogg",
+                "uimisc_interact_playful_phrase_008_os_quute_ui": "UIMisc_Interact Playful Phrase-008_OS_Quute UI.ogg",
+                "uimisc_interact_playful_phrase_010_os_quute_ui": "UIMisc_Interact Playful Phrase-010_OS_Quute UI.ogg",
+                "uimisc_interact_playful_short_035_os_quute_ui": "UIMisc_Interact Playful Short-035_OS_Quute UI.ogg"
             },
             "volume": 0.3
         },

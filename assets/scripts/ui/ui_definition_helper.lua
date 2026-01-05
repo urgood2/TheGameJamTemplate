@@ -23,10 +23,44 @@ local function makeConfigFromTable(tbl)
 
     for k, v in pairs(tbl) do
         ------------------------------------------------------------
-        -- Inline conversions
+        -- CRITICAL: Skip nil values entirely
+        -- Sol2 crashes with SIGSEGV when passing nil to C++ methods
+        -- expecting const references (e.g., addColor(const Color&))
+        -- The crash happens during argument conversion, before pcall can catch it
         ------------------------------------------------------------
-        if k == "color" and type(v) == "string" then
-            v = util.getColor(v)
+        if v == nil then
+            log_debug("[ui.def] Skipping nil value for key: " .. tostring(k))
+            goto continue
+        end
+
+        ------------------------------------------------------------
+        -- Inline conversions and type validation
+        ------------------------------------------------------------
+        -- Handle color keys specially: they must be valid Color userdata
+        local colorKeys = { color = true, outlineColor = true, shadowColor = true,
+                            progressBarEmptyColor = true, progressBarFullColor = true }
+
+        if colorKeys[k] then
+            -- If it's a string, convert to Color
+            if type(v) == "string" then
+                local ok, result = pcall(util.getColor, v)
+                if not ok or result == nil then
+                    log_debug("[ui.def] util.getColor failed for " .. k .. ": " .. tostring(v) .. ", skipping")
+                    goto continue
+                end
+                v = result
+            end
+            -- Validate that v is now a userdata (Color)
+            if type(v) ~= "userdata" then
+                local tableInfo = ""
+                if type(v) == "table" then
+                    local keys = {}
+                    for tk, _ in pairs(v) do keys[#keys+1] = tostring(tk) end
+                    tableInfo = " (keys: " .. table.concat(keys, ", ") .. ")"
+                end
+                log_debug("[ui.def] Invalid type for " .. k .. ": expected Color userdata, got " .. type(v) .. tableInfo .. ", skipping")
+                goto continue
+            end
         elseif k == "tooltip" and type(v) == "table" then
             local t = Tooltip.new()
             t.title = v.title or ""
@@ -52,6 +86,8 @@ local function makeConfigFromTable(tbl)
         else
             log_debug("[ui.def] Unknown config key: " .. tostring(k))
         end
+
+        ::continue::
     end
 
     return b:build()

@@ -16,10 +16,10 @@ Features:
 
 local TriggerStripUI = {}
 
--- Dependencies
 local timer = require("core.timer")
 local signal = require("external.hump.signal")
 local signal_group = require("core.signal_group")
+local z_orders = require("core.z_orders")
 
 -- Lazy-load WandTriggers to avoid circular dependencies
 local WandTriggers
@@ -54,14 +54,20 @@ local VERTICAL_SPACING = 20     -- Gap between cards
 local ACTIVATION_SCALE = 1.4    -- Scale on trigger activation
 local FLASH_DURATION = 0.15     -- Flash effect duration
 
+local MP_BAR_WIDTH = 6
+local MP_BAR_HEIGHT_RATIO = 0.75
+local MP_BAR_OFFSET_X = 8
+local MP_BAR_VPAD = 6
+
 -- State
-local strip_entries = {}        -- Array of {entity, sourceCardEntity, wandId, triggerId, centerY, influence}
+local strip_entries = {}        -- Array of {entity, sourceCardEntity, wandId, triggerId, centerY, influence, smoothManaRatio}
 local strip_visible = false
 local focusedEntry = nil
 local previousFocusedEntry = nil
 local activeTooltipEntry = nil
 local tooltipTimerTag = nil
 local handlers = nil
+local manaState = {}            -- wandId -> {smoothRatio, currentMana, maxMana}
 
 -- Screen dimensions cache
 local screenHeight = 1080
@@ -481,21 +487,18 @@ function TriggerStripUI.update(dt)
         end
     end
 
-    -- Handle tooltip
     TriggerStripUI.updateTooltip()
-
-    -- Update cooldowns
     TriggerStripUI.updateCooldowns()
+    TriggerStripUI.updateManaState(dt)
 end
 
 --------------------------------------------------------------------------------
 -- TOOLTIPS
 --------------------------------------------------------------------------------
 
--- Smaller font sizes for compact dual-tooltip display
-local TOOLTIP_TITLE_SIZE = 18
-local TOOLTIP_BODY_SIZE = 14
-local TOOLTIP_GAP = 4  -- Gap between stacked tooltips
+local TOOLTIP_TITLE_SIZE = 16
+local TOOLTIP_BODY_SIZE = 12
+local TOOLTIP_GAP = 3
 
 -- Helper to get wandDef from entry's actionBoardId
 local function getWandDefForEntry(entry)
@@ -769,6 +772,29 @@ function TriggerStripUI.updateCooldowns()
     end
 end
 
+function TriggerStripUI.updateManaState(dt)
+    local executor = getWandExecutor()
+    if not executor then return end
+    
+    for _, entry in ipairs(strip_entries) do
+        local state = executor.getWandState and executor.getWandState(entry.wandId)
+        if state then
+            local ms = manaState[entry.wandId] or { smoothRatio = 1, currentMana = 0, maxMana = 0 }
+            ms.currentMana = state.currentMana or 0
+            ms.maxMana = state.maxMana or 0
+            
+            local targetRatio = 1
+            if ms.maxMana > 0 then
+                targetRatio = math.max(0, math.min(1, ms.currentMana / ms.maxMana))
+            end
+            
+            local lerpRate = math.min(1, dt * 8)
+            ms.smoothRatio = ms.smoothRatio + (targetRatio - ms.smoothRatio) * lerpRate
+            manaState[entry.wandId] = ms
+        end
+    end
+end
+
 --------------------------------------------------------------------------------
 -- ACTIVATION FEEDBACK
 --------------------------------------------------------------------------------
@@ -858,6 +884,49 @@ function TriggerStripUI.draw()
                     cmd.e = entry.entity
                 end, z, space)
                 drawCount = drawCount + 1
+            end
+            
+            local ms = manaState[entry.wandId]
+            if ms and ms.smoothRatio < 0.99 then
+                local t = component_cache.get(entry.entity, Transform)
+                if t then
+                    local barHeight = CARD_HEIGHT * MP_BAR_HEIGHT_RATIO
+                    local barX = t.actualX + CARD_WIDTH + MP_BAR_OFFSET_X
+                    local barCenterY = t.actualY + CARD_HEIGHT * 0.5
+                    local barTop = barCenterY - barHeight * 0.5
+                    
+                    command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+                        c.x = barX + MP_BAR_WIDTH * 0.5
+                        c.y = barCenterY
+                        c.w = MP_BAR_WIDTH
+                        c.h = barHeight
+                        c.rx = MP_BAR_WIDTH * 0.5
+                        c.ry = MP_BAR_WIDTH * 0.5
+                        c.color = Col(40, 40, 50, 80)
+                    end, z + 1, space)
+                    
+                    local fillH = barHeight * ms.smoothRatio
+                    if fillH > 1 then
+                        local fillY = barTop + barHeight - fillH * 0.5
+                        local barColor
+                        if ms.smoothRatio < 0.25 then
+                            barColor = Col(255, 80, 80, 200)
+                        elseif ms.smoothRatio < 0.50 then
+                            barColor = Col(255, 200, 80, 200)
+                        else
+                            barColor = Col(80, 200, 255, 200)
+                        end
+                        command_buffer.queueDrawCenteredFilledRoundedRect(layers.ui, function(c)
+                            c.x = barX + MP_BAR_WIDTH * 0.5
+                            c.y = fillY
+                            c.w = MP_BAR_WIDTH
+                            c.h = fillH
+                            c.rx = MP_BAR_WIDTH * 0.5
+                            c.ry = MP_BAR_WIDTH * 0.5
+                            c.color = barColor
+                        end, z + 2, space)
+                    end
+                end
             end
         end
     end

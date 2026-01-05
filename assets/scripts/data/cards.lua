@@ -36,25 +36,19 @@ local Cards = {}
 
 
 Cards.MY_FIREBALL = {
-    -- Required fields
-    id = "MY_FIREBALL",              -- Must match table key
-    type = "action",                  -- "action", "modifier", or "trigger"
+    id = "MY_FIREBALL",
+    type = "action",
     mana_cost = 12,
     tags = { "Fire", "Projectile" },
-    test_label = "MY\nfireball",     -- Display label (use \n for line breaks)
-    -- sprite = "fireball_icon",     -- Optional: custom sprite (default: sample_card.png)
-
-    -- Action-specific fields (omit defaults from content_defaults.lua)
+    test_label = "MY\nfireball",
+    description = "Launches a fiery projectile that explodes on impact, dealing fire damage in an area.",
     damage = 25,
-    damage_type = "fire",            -- fire/ice/lightning/poison/arcane/holy/void/magic/physical
+    damage_type = "fire",
     projectile_speed = 400,
-    lifetime = 2000,                 -- ms
-    radius_of_effect = 50,           -- AoE radius (default: 0 = no AoE)
-
-    -- Fields with default 0 are omitted (spread_angle, cast_delay, homing_strength, ricochet_count)
+    lifetime = 2000,
+    radius_of_effect = 50,
 }
 
--- Action Cards
 Cards.TEST_PROJECTILE = {
     id = "TEST_PROJECTILE",
     type = "action",
@@ -66,6 +60,7 @@ Cards.TEST_PROJECTILE = {
     cast_delay = 100,
     tags = { "Projectile" },
     test_label = "TEST\nprojectile",
+    description = "A basic magic bolt for testing purposes.",
 }
 
 Cards.TEST_PROJECTILE_TIMER = {
@@ -81,6 +76,7 @@ Cards.TEST_PROJECTILE_TIMER = {
     weight = 2,
     tags = { "Projectile", "Arcane" },
     test_label = "TEST\nprojectile\ntimer",
+    description = "Magic bolt that triggers effects after a delay.",
 }
 
 Cards.TEST_PROJECTILE_TRIGGER = {
@@ -96,9 +92,9 @@ Cards.TEST_PROJECTILE_TRIGGER = {
     weight = 2,
     tags = { "Projectile", "Arcane" },
     test_label = "TEST\nprojectile\ntrigger",
+    description = "Magic bolt that triggers effects on collision.",
 }
 
--- Modifier Cards
 Cards.TEST_DAMAGE_BOOST = {
     id = "TEST_DAMAGE_BOOST",
     type = "modifier",
@@ -110,6 +106,7 @@ Cards.TEST_DAMAGE_BOOST = {
     revisit_limit = 2,
     tags = { "Buff", "Brute" },
     test_label = "TEST\ndamage\nboost",
+    description = "Increases damage of the next spell.",
 }
 
 Cards.TEST_MULTICAST_2 = {
@@ -121,9 +118,9 @@ Cards.TEST_MULTICAST_2 = {
     weight = 2,
     tags = { "Arcane" },
     test_label = "TEST\nmulticast",
+    description = "Casts the next spell twice.",
 }
 
--- Action Cards
 Cards.ACTION_BASIC_PROJECTILE = {
     id = "ACTION_BASIC_PROJECTILE",
     type = "action",
@@ -136,6 +133,7 @@ Cards.ACTION_BASIC_PROJECTILE = {
     tags = { "Projectile" },
     test_label = "ACTION\nbasic\nprojectile",
     sprite = "action-basic-projectile.png",
+    description = "A simple magic bolt that travels in a straight line.",
 }
 
 Cards.ACTION_CHAIN_LIGHTNING = {
@@ -211,7 +209,7 @@ Cards.ACTION_CHAIN_LIGHTNING = {
     tags = { "Arcane", "Lightning" },
     damage_type = "lightning",
     sprite = "action-chain-lightning.png",
-
+    description = "Lightning arcs between enemies, chaining up to 3 times.",
 }
 
 -- Setup card: applies static_charge mark
@@ -224,30 +222,25 @@ Cards.ACTION_STATIC_CHARGE = {
     projectile_speed = 600,
     lifetime = 1500,
     cast_delay = 80,
-
-    -- Mark application
     apply_mark = "static_charge",
     mark_stacks = 1,
-
     tags = { "Lightning", "Debuff" },
     test_label = "STATIC\nCHARGE",
-    sprite = "action-chain-lightning.png",  -- TODO: replace with action-static-charge.png
+    sprite = "action-chain-lightning.png",
+    description = "Marks the target with static charge for combo potential.",
 }
 
--- Defensive counter: applies shield mark to self
 Cards.ACTION_STATIC_SHIELD = {
     id = "ACTION_STATIC_SHIELD",
     type = "action",
     mana_cost = 8,
     cast_delay = 50,
-
-    -- Self-applied defensive mark
     apply_to_self = "static_shield",
     self_mark_stacks = 1,
-
     tags = { "Lightning", "Defense" },
     test_label = "STATIC\nSHIELD",
-    sprite = "action-chain-lightning.png",  -- TODO: replace with action-static-shield.png
+    sprite = "action-chain-lightning.png",
+    description = "Creates a protective lightning barrier around you.",
 }
 
 
@@ -263,6 +256,7 @@ Cards.ACTION_FAST_ACCURATE_PROJECTILE = {
     cast_delay = 80,
     tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nfast\naccurate\nprojectile",
+    description = "A precise, fast-moving bolt with minimal spread.",
 }
 
 Cards.ACTION_SLOW_ORB = {
@@ -278,6 +272,7 @@ Cards.ACTION_SLOW_ORB = {
     weight = 2,
     tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nslow\norb",
+    description = "A powerful but slow-moving magical orb.",
 }
 
 Cards.ACTION_EXPLOSIVE_FIRE_PROJECTILE = {
@@ -295,6 +290,7 @@ Cards.ACTION_EXPLOSIVE_FIRE_PROJECTILE = {
     tags = { "Fire", "Projectile", "AoE" },
     test_label = "ACTION\nexplosive\nfire\nprojectile",
     sprite = "action-explosive-fire-projectile.png",
+    description = "Fiery projectile that explodes on impact.",
 }
 
 Cards.ACTION_RICOCHET_PROJECTILE = {
@@ -311,6 +307,7 @@ Cards.ACTION_RICOCHET_PROJECTILE = {
     tags = { "Projectile" },
     test_label = "ACTION\nricochet\nprojectile",
     sprite = "action-richochet-projectile.png",
+    description = "Bounces off walls up to 3 times.",
 }
 
 Cards.ACTION_HEAVY_OBJECT_PROJECTILE = {
@@ -326,6 +323,7 @@ Cards.ACTION_HEAVY_OBJECT_PROJECTILE = {
     weight = 2,
     tags = { "Projectile", "Brute" },
     test_label = "ACTION\nheavy\nobject\nprojectile",
+    description = "A heavy projectile affected by gravity.",
 }
 
 Cards.ACTION_VACUUM_PROJECTILE = {
@@ -343,9 +341,9 @@ Cards.ACTION_VACUUM_PROJECTILE = {
     tags = { "Void", "Projectile", "AoE" },
     test_label = "ACTION\nvacuum\nprojectile",
     sprite = "action-vacuum-projectile.png",
+    description = "Creates a void that pulls enemies inward.",
 }
 
--- Modifier Cards
 Cards.MOD_SEEKING = {
     id = "MOD_SEEKING",
     type = "modifier",
@@ -357,6 +355,7 @@ Cards.MOD_SEEKING = {
     revisit_limit = 2,
     tags = { "Arcane", "Projectile" },
     test_label = "MOD\nseeking",
+    description = "Projectiles gently curve toward enemies.",
 }
 
 Cards.MOD_SPEED_UP = {
@@ -370,6 +369,7 @@ Cards.MOD_SPEED_UP = {
     revisit_limit = 2,
     tags = { "Buff", "Mobility" },
     test_label = "MOD\nspeed\nup",
+    description = "Increases projectile speed.",
 }
 
 Cards.MOD_SPEED_DOWN = {
@@ -383,6 +383,7 @@ Cards.MOD_SPEED_DOWN = {
     revisit_limit = 2,
     tags = { "Debuff" },
     test_label = "MOD\nspeed\ndown",
+    description = "Decreases projectile speed.",
 }
 
 Cards.MOD_REDUCE_SPREAD = {
@@ -396,6 +397,7 @@ Cards.MOD_REDUCE_SPREAD = {
     revisit_limit = 2,
     tags = { "Buff", "Projectile" },
     test_label = "MOD\nreduce\nspread",
+    description = "Improves accuracy by reducing spread.",
 }
 
 Cards.MOD_DAMAGE_UP = {
@@ -411,6 +413,7 @@ Cards.MOD_DAMAGE_UP = {
     tags = { "Buff", "Brute" },
     test_label = "MOD\ndamage\nup",
     sprite = "mod-damage-up.png",
+    description = "Increases damage and critical hit chance.",
 }
 
 Cards.MOD_SHORT_LIFETIME = {
@@ -424,6 +427,7 @@ Cards.MOD_SHORT_LIFETIME = {
     revisit_limit = 2,
     tags = { "Debuff" },
     test_label = "MOD\nshort\nlifetime",
+    description = "Reduces projectile lifetime.",
 }
 
 Cards.MOD_TRIGGER_ON_HIT = {
@@ -438,6 +442,7 @@ Cards.MOD_TRIGGER_ON_HIT = {
     tags = { "Arcane" },
     test_label = "MOD\ntrigger\non\nhit",
     sprite = "mod-trigger-on-hit.png",
+    description = "Casts wrapped spells when projectile hits.",
 }
 
 Cards.MOD_TRIGGER_TIMER = {
@@ -452,6 +457,7 @@ Cards.MOD_TRIGGER_TIMER = {
     tags = { "Arcane" },
     test_label = "MOD\ntrigger\ntimer",
     sprite = "mod-trigger-on-timer.png",
+    description = "Casts wrapped spells after a 1 second delay.",
 }
 
 Cards.MOD_TRIGGER_ON_DEATH = {
@@ -465,9 +471,9 @@ Cards.MOD_TRIGGER_ON_DEATH = {
     revisit_limit = 1,
     tags = { "Arcane", "Void" },
     test_label = "MOD\ntrigger\non\ndeath",
+    description = "Casts wrapped spells when projectile expires.",
 }
 
--- Multicasts
 Cards.MULTI_DOUBLE_CAST = {
     id = "MULTI_DOUBLE_CAST",
     type = "modifier",
@@ -478,6 +484,7 @@ Cards.MULTI_DOUBLE_CAST = {
     tags = { "Arcane" },
     test_label = "MULTI\ndouble\ncast",
     sprite = "mod-multi-double-cast.png",
+    description = "Casts the next spell twice simultaneously.",
 }
 
 Cards.MULTI_TRIPLE_CAST = {
@@ -489,6 +496,7 @@ Cards.MULTI_TRIPLE_CAST = {
     weight = 3,
     tags = { "Arcane" },
     test_label = "MULTI\ntriple\ncast",
+    description = "Casts the next spell three times.",
 }
 
 Cards.MULTI_CIRCLE_FIVE_CAST = {
@@ -501,9 +509,9 @@ Cards.MULTI_CIRCLE_FIVE_CAST = {
     weight = 4,
     tags = { "Arcane", "AoE" },
     test_label = "MULTI\ncircle\nfive\ncast",
+    description = "Casts 5 projectiles in a circular pattern.",
 }
 
--- Utility Cards
 Cards.UTIL_TELEPORT_TO_IMPACT = {
     id = "UTIL_TELEPORT_TO_IMPACT",
     type = "action",
@@ -516,6 +524,7 @@ Cards.UTIL_TELEPORT_TO_IMPACT = {
     tags = { "Mobility", "Arcane" },
     test_label = "UTIL\nteleport\nto\nimpact",
     sprite = "action-teleport-to-impact.png",
+    description = "Teleport to where your projectile lands.",
 }
 
 Cards.UTIL_HEAL_AREA = {
@@ -531,6 +540,7 @@ Cards.UTIL_HEAL_AREA = {
     tags = { "Buff", "AoE", "Holy" },
     test_label = "UTIL\nheal\narea",
     sprite = "action-heal-area.png",
+    description = "Creates a healing zone for allies.",
 }
 
 Cards.UTIL_SHIELD_BUBBLE = {
@@ -546,6 +556,7 @@ Cards.UTIL_SHIELD_BUBBLE = {
     tags = { "Defense", "Buff", "AoE" },
     test_label = "UTIL\nshield\nbubble",
     sprite = "action-shield-bubble.png",
+    description = "Generates a protective shield bubble.",
 }
 
 Cards.UTIL_SUMMON_ALLY = {
@@ -559,9 +570,9 @@ Cards.UTIL_SUMMON_ALLY = {
     weight = 4,
     tags = { "Summon" },
     test_label = "UTIL\nsummon\nally",
+    description = "Summons a friendly unit to fight for you.",
 }
 
--- Meta / Super Recasts
 Cards.META_RECAST_FIRST = {
     id = "META_RECAST_FIRST",
     type = "modifier",
@@ -572,6 +583,7 @@ Cards.META_RECAST_FIRST = {
     weight = 3,
     tags = { "Arcane" },
     test_label = "META\nrecast\nfirst",
+    description = "Recasts the first spell in your wand.",
 }
 
 Cards.META_APPLY_ALL_MODS_NEXT = {
@@ -584,6 +596,7 @@ Cards.META_APPLY_ALL_MODS_NEXT = {
     weight = 3,
     tags = { "Arcane" },
     test_label = "META\napply\nall\nmods\nnext",
+    description = "Applies all modifiers to the next action.",
 }
 
 Cards.META_CAST_ALL_AT_ONCE = {
@@ -596,6 +609,7 @@ Cards.META_CAST_ALL_AT_ONCE = {
     weight = 5,
     tags = { "Arcane" },
     test_label = "META\ncast\nall\nat\nonce",
+    description = "Casts all remaining spells simultaneously.",
 }
 
 Cards.META_CONVERT_WEIGHT_TO_DAMAGE = {
@@ -608,9 +622,9 @@ Cards.META_CONVERT_WEIGHT_TO_DAMAGE = {
     weight = 3,
     tags = { "Arcane", "Brute" },
     test_label = "META\nconvert\nweight\nto\ndamage",
+    description = "Converts spell weight into bonus damage.",
 }
 
--- Add max mana to wand
 Cards.ACTION_ADD_MANA = {
     id = "ACTION_ADD_MANA",
     type = "action",
@@ -623,9 +637,9 @@ Cards.ACTION_ADD_MANA = {
     tags = { "Arcane", "Buff" },
     test_label = "ACTION\nadd\nmana",
     sprite = "action-add-mana.png",
+    description = "Permanently increases your wand's max mana.",
 }
 
--- Ball that bounces 3 times
 Cards.ACTION_BOUNCE_BALL = {
     id = "ACTION_BOUNCE_BALL",
     type = "action",
@@ -641,9 +655,9 @@ Cards.ACTION_BOUNCE_BALL = {
     weight = 2,
     tags = { "Projectile" },
     test_label = "ACTION\nbounce\nball",
+    description = "A bouncing projectile that ricochets 3 times.",
 }
 
--- Ball that bounces 3 times and casts another spell on hit
 Cards.ACTION_BOUNCE_TRIGGER = {
     id = "ACTION_BOUNCE_TRIGGER",
     type = "action",
@@ -661,9 +675,9 @@ Cards.ACTION_BOUNCE_TRIGGER = {
     tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nbounce\ntrigger",
     sprite = "action-bounce-trigger.png",
+    description = "Bouncing projectile that triggers spells on each hit.",
 }
 
--- Leave spike hazard, cast another spell after X seconds
 Cards.ACTION_SPIKE_HAZARD_TIMER = {
     id = "ACTION_SPIKE_HAZARD_TIMER",
     type = "action",
@@ -680,9 +694,9 @@ Cards.ACTION_SPIKE_HAZARD_TIMER = {
     weight = 3,
     tags = { "Hazard", "AoE" },
     test_label = "ACTION\nspike\nhazard\ntimer",
+    description = "Leaves a damaging hazard that triggers after delay.",
 }
 
--- Flying cross projectile
 Cards.ACTION_FLYING_CROSS = {
     id = "ACTION_FLYING_CROSS",
     type = "action",
@@ -699,9 +713,9 @@ Cards.ACTION_FLYING_CROSS = {
     tags = { "Holy", "Projectile" },
     test_label = "ACTION\nflying\ncross",
     sprite = "action-flying-cross.png",
+    description = "A holy cross projectile that pierces enemies.",
 }
 
--- Bolt that teleports you to target location on hit
 Cards.ACTION_TELEPORT_BOLT = {
     id = "ACTION_TELEPORT_BOLT",
     type = "action",
@@ -719,9 +733,9 @@ Cards.ACTION_TELEPORT_BOLT = {
     tags = { "Arcane", "Projectile", "Mobility" },
     test_label = "ACTION\nteleport\nbolt",
     sprite = "action-teleport-bolt.png",
+    description = "Bolt that teleports you to its impact location.",
 }
 
--- Basic projectile that launches another spell after timer
 Cards.ACTION_PROJECTILE_TIMER_CAST = {
     id = "ACTION_PROJECTILE_TIMER_CAST",
     type = "action",
@@ -739,9 +753,9 @@ Cards.ACTION_PROJECTILE_TIMER_CAST = {
     tags = { "Projectile", "Arcane" },
     test_label = "ACTION\nprojectile\ntimer\ncast",
     sprite = "action-projectile-timer-cast.png",
+    description = "Projectile that casts another spell after 1.5s.",
 }
 
--- Summon minion that wanders and attacks
 Cards.ACTION_SUMMON_MINION = {
     id = "ACTION_SUMMON_MINION",
     type = "action",
@@ -754,10 +768,10 @@ Cards.ACTION_SUMMON_MINION = {
     weight = 4,
     tags = { "Summon" },
     test_label = "ACTION\nsummon\nminion",
+    description = "Summons a wandering minion that attacks enemies.",
 }
 
 
--- Double spell
 Cards.MOD_DOUBLE_SPELL = {
     id = "MOD_DOUBLE_SPELL",
     type = "modifier",
@@ -767,9 +781,9 @@ Cards.MOD_DOUBLE_SPELL = {
     weight = 2,
     tags = { "Arcane" },
     test_label = "MOD\ndouble\nspell",
+    description = "Casts the next spell twice.",
 }
 
--- Triple spell
 Cards.MOD_TRIPLE_SPELL = {
     id = "MOD_TRIPLE_SPELL",
     type = "modifier",
@@ -779,9 +793,9 @@ Cards.MOD_TRIPLE_SPELL = {
     weight = 3,
     tags = { "Arcane" },
     test_label = "MOD\ntriple\nspell",
+    description = "Casts the next spell three times.",
 }
 
--- Make next spell crit
 Cards.MOD_FORCE_CRIT = {
     id = "MOD_FORCE_CRIT",
     type = "modifier",
@@ -793,9 +807,9 @@ Cards.MOD_FORCE_CRIT = {
     tags = { "Buff", "Brute" },
     test_label = "MOD\nforce\ncrit",
     sprite = "mod-force-crit.png",
+    description = "Guarantees the next spell is a critical hit.",
 }
 
--- Greatly increase size but reduce speed
 Cards.MOD_BIG_SLOW = {
     id = "MOD_BIG_SLOW",
     type = "modifier",
@@ -807,9 +821,9 @@ Cards.MOD_BIG_SLOW = {
     tags = { "Brute", "Projectile" },
     test_label = "MOD\nbig\nslow",
     sprite = "mod-big-slow.png",
+    description = "Doubles size but reduces speed.",
 }
 
--- Immunity + add 1 card to cast block
 Cards.MOD_IMMUNE_AND_ADD_CARD = {
     id = "MOD_IMMUNE_AND_ADD_CARD",
     type = "modifier",
@@ -820,9 +834,9 @@ Cards.MOD_IMMUNE_AND_ADD_CARD = {
     weight = 3,
     tags = { "Defense", "Buff" },
     test_label = "MOD\nimmune\n+1card",
+    description = "Grants brief immunity and adds a card to cast.",
 }
 
--- Heal player if projectile hits
 Cards.MOD_HEAL_ON_HIT = {
     id = "MOD_HEAL_ON_HIT",
     type = "modifier",
@@ -833,9 +847,9 @@ Cards.MOD_HEAL_ON_HIT = {
     tags = { "Buff", "Holy" },
     test_label = "MOD\nheal\non\nhit",
     sprite = "mod-heal-on-hit.png",
+    description = "Heals you when projectile hits an enemy.",
 }
 
--- Cast random modifier from wand
 Cards.MOD_RANDOM_MODIFIER = {
     id = "MOD_RANDOM_MODIFIER",
     type = "modifier",
@@ -845,9 +859,9 @@ Cards.MOD_RANDOM_MODIFIER = {
     weight = 3,
     tags = { "Arcane" },
     test_label = "MOD\nrandom\nmodifier",
+    description = "Applies a random modifier from your wand.",
 }
 
--- Auto-aim nearest enemy
 Cards.MOD_AUTO_AIM = {
     id = "MOD_AUTO_AIM",
     type = "modifier",
@@ -857,9 +871,9 @@ Cards.MOD_AUTO_AIM = {
     weight = 2,
     tags = { "Arcane", "Projectile" },
     test_label = "MOD\nauto\naim",
+    description = "Projectiles automatically target nearest enemy.",
 }
 
--- Homing projectile
 Cards.MOD_HOMING = {
     id = "MOD_HOMING",
     type = "modifier",
@@ -870,9 +884,9 @@ Cards.MOD_HOMING = {
     tags = { "Arcane", "Projectile" },
     test_label = "MOD\nhoming",
     sprite = "mod-homing.png",
+    description = "Projectiles track toward enemies.",
 }
 
--- Explosive projectile
 Cards.MOD_EXPLOSIVE = {
     id = "MOD_EXPLOSIVE",
     type = "modifier",
@@ -884,9 +898,9 @@ Cards.MOD_EXPLOSIVE = {
     tags = { "Fire", "AoE" },
     test_label = "MOD\nexplosive",
     sprite = "mod-explosive.png",
+    description = "Adds explosion on impact.",
 }
 
--- Slow phasing projectile
 Cards.MOD_PHASE_SLOW = {
     id = "MOD_PHASE_SLOW",
     type = "modifier",
@@ -897,9 +911,9 @@ Cards.MOD_PHASE_SLOW = {
     weight = 2,
     tags = { "Arcane", "Void" },
     test_label = "MOD\nphase\nslow",
+    description = "Projectile phases in and out of reality.",
 }
 
--- Long-distance cast
 Cards.MOD_LONG_CAST = {
     id = "MOD_LONG_CAST",
     type = "modifier",
@@ -909,9 +923,9 @@ Cards.MOD_LONG_CAST = {
     weight = 3,
     tags = { "Arcane", "Projectile" },
     test_label = "MOD\nlong\ndistance\ncast",
+    description = "Casts from a greater distance.",
 }
 
--- Teleporting cast (from nearest enemy)
 Cards.MOD_TELEPORT_CAST = {
     id = "MOD_TELEPORT_CAST",
     type = "modifier",
@@ -921,11 +935,13 @@ Cards.MOD_TELEPORT_CAST = {
     weight = 3,
     tags = { "Arcane", "Mobility" },
     test_label = "MOD\nteleport\ncast",
+    description = "Casts from the nearest enemy's location.",
 }
 
 Cards.MOD_CAST_FROM_EVENT = {
     id = "MOD_CAST_FROM_EVENT",
     type = "modifier",
+    sprite = "mod-cast-from-event.png",
     max_uses = -1,
     mana_cost = 5,
     cast_from_event = true,
@@ -935,7 +951,6 @@ Cards.MOD_CAST_FROM_EVENT = {
     test_label = "MOD\ncast\nfrom\nevent",
 }
 
--- Blood to damage (sacrifice health)
 Cards.MOD_BLOOD_TO_DAMAGE = {
     id = "MOD_BLOOD_TO_DAMAGE",
     type = "modifier",
@@ -947,9 +962,9 @@ Cards.MOD_BLOOD_TO_DAMAGE = {
     tags = { "Brute", "Void" },
     test_label = "MOD\nblood\nto\ndamage",
     sprite = "mod-blood-to-damage.png",
+    description = "Sacrifice health for bonus damage.",
 }
 
--- Wand refresh
 Cards.MOD_WAND_REFRESH = {
     id = "MOD_WAND_REFRESH",
     type = "modifier",
@@ -959,6 +974,7 @@ Cards.MOD_WAND_REFRESH = {
     weight = 3,
     tags = { "Arcane" },
     test_label = "MOD\nwand\nrefresh",
+    description = "Immediately recharges your wand.",
 }
 
 

@@ -8068,7 +8068,8 @@ relayoutBoardCardsInOrder = function(board)
 
     local padding = 20
     local availW = math.max(0, boardTransform.actualW - padding * 2)
-    local preferredGap = 24  -- Gap between card edges when there's room
+    local preferredGap = 24  -- Minimum comfortable gap between card edges
+    local maxGap = 60        -- Maximum gap when spreading cards to fill space
     local minGap = 4         -- Minimum visible gap/offset when overlapping
     local n = #board.cards
     local spacing, groupW
@@ -8076,13 +8077,23 @@ relayoutBoardCardsInOrder = function(board)
     if n == 1 then
         spacing, groupW = 0, cardW
     else
-        -- Ideal layout: cards separated with gaps between them (no overlap)
-        local idealGroupW = n * cardW + preferredGap * (n - 1)
+        -- Calculate minimum layout (cards with preferred gap)
+        local minGroupW = n * cardW + preferredGap * (n - 1)
+        -- Calculate maximum layout (cards with max gap)
+        local maxGroupW = n * cardW + maxGap * (n - 1)
 
-        if idealGroupW <= availW then
-            -- Room for full separation: offset = cardW + gap
-            spacing = cardW + preferredGap
-            groupW = idealGroupW
+        if minGroupW <= availW then
+            -- Room for at least preferred separation
+            if availW >= maxGroupW then
+                -- Lots of room: use max gap (don't over-spread)
+                spacing = cardW + maxGap
+                groupW = maxGroupW
+            else
+                -- Spread cards to fill available space (between preferred and max gap)
+                local expandedGap = (availW - n * cardW) / (n - 1)
+                spacing = cardW + expandedGap
+                groupW = availW
+            end
         else
             -- Not enough room - need to compress
             -- First try: reduce gap while keeping cards separate (no overlap)

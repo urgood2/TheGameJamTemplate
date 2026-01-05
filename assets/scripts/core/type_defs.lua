@@ -49,7 +49,8 @@ function BoardType:update(dt)
     ------------------------------------------------------------
     local padding = 20
     local availW = math_max(0, area.actualW - padding * 2)
-    local preferredGap = 24  -- Comfortable spacing between cards
+    local preferredGap = 24  -- Minimum comfortable gap between card edges
+    local maxGap = 60        -- Maximum gap when spreading cards to fill space
     local minGap = 4         -- Minimum spacing when compressed
 
     local n = #cards
@@ -57,11 +58,25 @@ function BoardType:update(dt)
     if n == 1 then
         spacing, groupW = 0, cardW
     else
-        -- Start with preferred spacing (clumping behavior - cards stay together)
-        spacing = preferredGap
-        groupW = cardW + spacing * (n - 1)
-        -- Gradually compress spacing if cards don't fit
-        if groupW > availW then
+        -- Calculate minimum layout (cards with preferred gap)
+        local minGroupW = n * cardW + preferredGap * (n - 1)
+        -- Calculate maximum layout (cards with max gap)
+        local maxGroupW = n * cardW + maxGap * (n - 1)
+
+        if minGroupW <= availW then
+            -- Room for at least preferred separation
+            if availW >= maxGroupW then
+                -- Lots of room: use max gap (don't over-spread)
+                spacing = cardW + maxGap
+                groupW = maxGroupW
+            else
+                -- Spread cards to fill available space (between preferred and max gap)
+                local expandedGap = (availW - n * cardW) / (n - 1)
+                spacing = cardW + expandedGap
+                groupW = availW
+            end
+        else
+            -- Not enough room - need to compress
             local fitSpacing = (availW - cardW) / (n - 1)
             spacing = math_max(minGap, fitSpacing)
             groupW = cardW + spacing * (n - 1)

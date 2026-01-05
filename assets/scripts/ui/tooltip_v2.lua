@@ -123,8 +123,9 @@ local Style = {
     -- Default tag color
     defaultTagColor = "dim_gray",
     
-    -- Text effects (for name box entrance)
-    nameEntranceEffect = "pop=0.2,0.04,in",
+    -- Text effects (for name box - entrance + subtle continuous animation)
+    -- All card names get a gentle highlight sweep effect for visual polish
+    nameEntranceEffect = "pop=0.2,0.04,in;highlight=4,0.2,0.25,right",
     
     -- Available C++ text effects (for reference when using dynamic effects)
     -- Each effect can take parameters via effect=arg1,arg2,... syntax

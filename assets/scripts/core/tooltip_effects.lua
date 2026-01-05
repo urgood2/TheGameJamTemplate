@@ -41,18 +41,19 @@ TooltipEffects.RARITY_COLORS = {
 -- PRESETS (combined entrance + persistent effects)
 --------------------------------------------------------------------------------
 TooltipEffects.PRESETS = {
-    -- Generic content types
-    default = "pop=0.15,0.03,in",
-    card = "pop=0.18,0.025,in",
-    trigger = "bounce=500,-10,0.35,0.02",
+    -- Generic content types (all include subtle continuous highlight for polish)
+    default = "pop=0.15,0.03,in;highlight=4,0.15,0.25,right",
+    card = "pop=0.18,0.025,in;highlight=4,0.2,0.25,right",
+    trigger = "bounce=500,-10,0.35,0.02;highlight=3,0.2,0.2,right",
     joker = "pop=0.2,0.04,in;float=1.5,2,0.15",
-    wand = "slide=0.18,0.02,in,r",
+    wand = "slide=0.18,0.02,in,r;highlight=3,0.15,0.2,right",
     stats = "pop=0.12,0.02,in",
     status = "pop=0.15,0.02,in;wiggle=6,3,0.3",
 
     -- Rarity-based effects (increasingly dramatic)
-    common = "pop=0.15,0.02,in",
-    uncommon = "pop=0.18,0.025,in;highlight=3,0.15,0.2,right",
+    -- All rarities now include continuous highlight sweep for visual polish
+    common = "pop=0.15,0.02,in;highlight=4,0.15,0.25,right",
+    uncommon = "pop=0.18,0.025,in;highlight=3,0.2,0.2,right",
     rare = "pop=0.2,0.03,in;highlight=2.5,0.25,0.15,right,bleed;pulse=0.97,1.03,2,0.08",
     epic = "slide=0.22,0.035,in,l;highlight=2,0.35,0.12,right,bleed;pulse=0.95,1.05,1.5,0.06",
     legendary = "pop=0.25,0.04,in;rainbow=50,6,0;pulse=0.93,1.07,1.2,0.05",

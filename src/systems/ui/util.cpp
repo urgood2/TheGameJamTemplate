@@ -930,7 +930,7 @@ namespace ui
             }
         }
         
-        AssertThat(rectCache, Is().Not().EqualTo(nullptr));
+        if (!rectCache) return;
 
         // render the vertices using flags, parallax, emboss thickness, type flags
 
@@ -1343,7 +1343,7 @@ namespace ui
             }
         }
         
-        AssertThat(rectCache, Is().Not().EqualTo(nullptr));
+        if (!rectCache) return;
 
         // render the vertices using flags, parallax, emboss thickness, type flags
 

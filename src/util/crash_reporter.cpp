@@ -469,13 +469,13 @@ std::string CreateSummary(const Report& report) {
     oss << "Platform: " << report.platform << "\n";
 
     if (!report.stacktrace.empty()) {
-        oss << "\n--- Stack Trace (top 5) ---" << "\n";
-        size_t count = std::min(report.stacktrace.size(), size_t{5});
+        oss << "\n--- Stack Trace (top 50) ---" << "\n";
+        size_t count = std::min(report.stacktrace.size(), size_t{50});
         for (size_t i = 0; i < count; ++i) {
             oss << "  " << report.stacktrace[i] << "\n";
         }
-        if (report.stacktrace.size() > 5) {
-            oss << "  ... and " << (report.stacktrace.size() - 5) << " more frames" << "\n";
+        if (report.stacktrace.size() > 50) {
+            oss << "  ... and " << (report.stacktrace.size() - 50) << " more frames" << "\n";
         }
     }
 

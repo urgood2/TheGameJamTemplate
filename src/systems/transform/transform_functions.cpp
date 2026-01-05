@@ -2420,26 +2420,29 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto RemoveEntity(entt::registry *registry, entt::entity e) -> void
     {
-        if (registry->valid(e) == false || e == entt::null)
+        if (!registry->valid(e) || e == entt::null)
         {
             return;
         }
-        auto &node = registry->get<GameObject>(e);
-        auto &role = registry->get<InheritedProperties>(e);
+        
+        auto *node = registry->try_get<GameObject>(e);
+        
+        if (node)
+        {
+            // Copy child list first to avoid iterator invalidation
+            std::vector<entt::entity> childrenCopy;
+            childrenCopy.reserve(node->children.size());
+            for (auto &entry : node->children)
+            {
+                childrenCopy.push_back(entry.second);
+            }
 
-        // node hierarchy is separate from transform parent/child hierarchy
-        // Copy child list first to avoid iterator invalidation
-    std::vector<entt::entity> childrenCopy;
-    childrenCopy.reserve(node.children.size());
-    for (auto &entry : node.children)
-    {
-        childrenCopy.push_back(entry.second);
-    }
-
-    for (auto child : childrenCopy)
-    {
-        RemoveEntity(registry, child);
-    }
+            for (auto child : childrenCopy)
+            {
+                RemoveEntity(registry, child);
+            }
+        }
+        
         // remove the node
         registry->destroy(e);
     }

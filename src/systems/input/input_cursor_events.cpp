@@ -260,10 +260,8 @@ void propagate_clicks(entt::registry &registry, input::InputState &inputState)
 
         auto &clickedTargetNode = registry.get<transform::GameObject>(inputState.cursor_clicked_target);
 
-        // use node's custom click handler if there is one
-        if (registry.any_of<ui::UIElementComponent>(inputState.cursor_clicked_target))
+        if (registry.all_of<ui::UIElementComponent, ui::UIConfig, ui::UIState, transform::GameObject>(inputState.cursor_clicked_target))
         {
-            auto &uiElement = registry.get<ui::UIElementComponent>(inputState.cursor_clicked_target);
             ui::element::Click(registry, inputState.cursor_clicked_target);
 
             if (static_cast<int>(inputState.cursor_clicked_target) == 228)

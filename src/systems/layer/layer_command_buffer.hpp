@@ -423,6 +423,14 @@ inline void PopulateLastCommandIDs(std::shared_ptr<Layer> &layer, const T* cmd) 
   lastCmd.texture_id = ExtractTextureID<T>(cmd);
 }
 
+// Raw pointer overload to avoid ref-counting overhead on hot paths
+template <typename T>
+inline void PopulateLastCommandIDs(Layer *layer, const T* cmd) {
+  auto &lastCmd = layer->commands_ptr->back();
+  lastCmd.shader_id = ExtractShaderID<T>(cmd);
+  lastCmd.texture_id = ExtractTextureID<T>(cmd);
+}
+
 // Infer render state (shader/texture) for all commands in a layer.
 // Must be called before sorting when g_enableShaderTextureBatching is true.
 // This pass propagates state from SetShader/SetTexture commands to all subsequent
@@ -497,6 +505,25 @@ inline T *Add(std::shared_ptr<Layer> &layer, int z = 0,
   return AddExplicit<T>(layer, GetDrawCommandType<T>(), z, space);
 }
 
+// Raw pointer overloads to avoid ref-counting overhead on hot paths
+template <typename T>
+T *AddExplicit(Layer *layer, DrawCommandType type, int z,
+               DrawCommandSpace space) {
+  T *cmd = GetDrawCommandPool<T>(*layer).new_object();
+  assert(cmd && "Draw command allocation failed");
+  layer->commands_ptr->push_back({type, cmd, z, space});
+  auto &added = layer->commands_ptr->back();
+  added.uniqueID = gNextUniqueID++;
+  layer->isSorted = false;
+  return cmd;
+}
+
+template <typename T>
+inline T *Add(Layer *layer, int z = 0,
+              DrawCommandSpace space = DrawCommandSpace::Screen) {
+  return AddExplicit<T>(layer, GetDrawCommandType<T>(), z, space);
+}
+
 // --------------------------------------------------------------------------------------
 //  GetDrawCommandPool<T>(layer)
 //  --------------------------------
@@ -526,6 +553,17 @@ inline T *QueueCommand(std::shared_ptr<Layer> layer, Initializer &&init,
   // Populate shader_id and texture_id after initialization (for batching optimization)
   layer_command_buffer::PopulateLastCommandIDs<T>(layer, cmd);
 
+  return cmd;
+}
+
+// Raw pointer overload to avoid ref-counting overhead on hot paths
+template <typename T, typename Initializer>
+inline T *QueueCommand(Layer *layer, Initializer &&init,
+                       int z = 0,
+                       DrawCommandSpace space = DrawCommandSpace::Screen) {
+  T *cmd = layer_command_buffer::Add<T>(layer, z, space);
+  init(cmd);
+  layer_command_buffer::PopulateLastCommandIDs<T>(layer, cmd);
   return cmd;
 }
 
@@ -580,14 +618,35 @@ inline void ImmediateCommand(std::shared_ptr<Layer> layer, Initializer &&init,
   auto type = layer::layer_command_buffer::GetDrawCommandType<T>();
   auto it = dispatcher.find(type);
   if (it != dispatcher.end()) {
-    it->second(layer, static_cast<void *>(&tmp));
+    it->second(layer.get(), static_cast<void *>(&tmp));
     IncrementDrawCallStats(type);  // Count immediate commands
   } else {
     SPDLOG_ERROR("Unhandled draw command type {}", magic_enum::enum_name(type));
   }
 }
 
-/// Logs the block count and current allocations for a given CmdType pool
+// Raw pointer overload for ImmediateCommand to avoid ref-counting overhead
+template <typename T, typename Initializer>
+inline void ImmediateCommand(Layer *layer, Initializer &&init,
+                             int /*z*/ = 0,
+                             DrawCommandSpace space = DrawCommandSpace::Screen,
+                             Camera2D *camera = nullptr,
+                             bool *cameraActivePtr = nullptr) {
+  if (cameraActivePtr) {
+    ApplyCameraForSpace(camera, space, *cameraActivePtr);
+  }
+  T tmp{};
+  init(&tmp);
+  auto type = layer::layer_command_buffer::GetDrawCommandType<T>();
+  auto it = dispatcher.find(type);
+  if (it != dispatcher.end()) {
+    it->second(layer, static_cast<void *>(&tmp));
+    IncrementDrawCallStats(type);
+  } else {
+    SPDLOG_ERROR("Unhandled draw command type {}", magic_enum::enum_name(type));
+  }
+}
+
 template <typename CmdType>
 inline void LogPoolStats(const std::shared_ptr<Layer> &layer) {
   auto &pool = layer_command_buffer::GetDrawCommandPool<CmdType>(*layer);

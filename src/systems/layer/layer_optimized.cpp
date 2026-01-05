@@ -33,42 +33,42 @@ namespace layer
     // Command Execution Functions
     // -------------------------------------------------------------------------------------
     
-    void RenderDrawCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c) {
+    void RenderDrawCircle(Layer* layer, CmdDrawCircleFilled* c) {
         DrawCircleV({c->x, c->y}, c->radius, c->color);
     }
     
-    void RenderDrawCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c) {
+    void RenderDrawCircleLine(Layer* layer, CmdDrawCircleLine* c) {
         DrawRing({c->x, c->y}, c->innerRadius, c->outerRadius, c->startAngle, c->endAngle, c->segments, c->color);
     }
     
-    void ExecuteTranslate(std::shared_ptr<layer::Layer> layer, CmdTranslate* c) {
+    void ExecuteTranslate(Layer* layer, CmdTranslate* c) {
         Translate(c->x, c->y);
     }
-    void ExecuteScale(std::shared_ptr<layer::Layer> layer, CmdScale* c) {
+    void ExecuteScale(Layer* layer, CmdScale* c) {
         Scale(c->scaleX, c->scaleY);
     }
     
-    void ExecuteRotate(std::shared_ptr<layer::Layer> layer, CmdRotate* c) {
+    void ExecuteRotate(Layer* layer, CmdRotate* c) {
         Rotate(c->angle);
     }
     
-    void ExecuteAddPush(std::shared_ptr<layer::Layer> layer, CmdAddPush* c) {
+    void ExecuteAddPush(Layer* layer, CmdAddPush* c) {
         Push(c->camera);
     }
     
-    void ExecuteAddPop(std::shared_ptr<layer::Layer> layer, CmdAddPop* c) {
+    void ExecuteAddPop(Layer* layer, CmdAddPop* c) {
         Pop();
     }
     
-    void ExecutePushMatrix(std::shared_ptr<layer::Layer> layer, CmdPushMatrix* c) {
+    void ExecutePushMatrix(Layer* layer, CmdPushMatrix* c) {
         PushMatrix();
     }
     
-    void ExecutePushObjectTransformsToMatrix(std::shared_ptr<layer::Layer> layer, CmdPushObjectTransformsToMatrix* c) {
+    void ExecutePushObjectTransformsToMatrix(Layer* layer, CmdPushObjectTransformsToMatrix* c) {
         layer::pushEntityTransformsToMatrix(globals::getRegistry(), c->entity, layer);
     }
     
-    void ExecuteScopedTransformCompositeRender(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRender* c) {
+    void ExecuteScopedTransformCompositeRender(Layer* layer, CmdScopedTransformCompositeRender* c) {
         layer::pushEntityTransformsToMatrixImmediate(globals::getRegistry(), c->entity, layer);
         // Execute child commands
         for (auto& cmd : c->children) {
@@ -81,7 +81,7 @@ namespace layer
         PopMatrix();
     }
 
-    void ExecuteScopedTransformCompositeRenderWithPipeline(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRenderWithPipeline* c) {
+    void ExecuteScopedTransformCompositeRenderWithPipeline(Layer* layer, CmdScopedTransformCompositeRenderWithPipeline* c) {
         if (!c->registry) {
             SPDLOG_WARN("ScopedTransformCompositeRenderWithPipeline: registry is null");
             return;
@@ -114,39 +114,39 @@ namespace layer
         }
     }
 
-    void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c) {
+    void ExecutePopMatrix(Layer* layer, CmdPopMatrix* c) {
         PopMatrix();
     }
     
-    void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c) {
+    void ExecuteCircle(Layer* layer, CmdDrawCircleFilled* c) {
         Circle(c->x, c->y, c->radius, c->color);
     }
     
-    void ExecuteCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c) {
+    void ExecuteCircleLine(Layer* layer, CmdDrawCircleLine* c) {
         CircleLine(c->x, c->y, c->innerRadius, c->outerRadius, c->startAngle, c->endAngle, c->segments, c->color);
     }
     
-    void ExecuteRectangle(std::shared_ptr<layer::Layer> layer, CmdDrawRectangle* c) {
+    void ExecuteRectangle(Layer* layer, CmdDrawRectangle* c) {
         RectangleDraw(c->x, c->y, c->width, c->height, c->color, c->lineWidth);
     }
     
-    void ExecuteRectanglePro(std::shared_ptr<layer::Layer> layer, CmdDrawRectanglePro* c) {
+    void ExecuteRectanglePro(Layer* layer, CmdDrawRectanglePro* c) {
         RectanglePro(c->offsetX, c->offsetY, c->size, c->rotationCenter, c->rotation, c->color);
     }
     
-    void ExecuteRectangleLinesPro(std::shared_ptr<layer::Layer> layer, CmdDrawRectangleLinesPro* c) {
+    void ExecuteRectangleLinesPro(Layer* layer, CmdDrawRectangleLinesPro* c) {
         RectangleLinesPro(c->offsetX, c->offsetY, c->size, c->lineThickness, c->color);
     }
     
-    void ExecuteLine(std::shared_ptr<layer::Layer> layer, CmdDrawLine* c) {
+    void ExecuteLine(Layer* layer, CmdDrawLine* c) {
         Line(c->x1, c->y1, c->x2, c->y2, c->color, c->lineWidth);
     }
     
-    void ExecuteDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c) {
+    void ExecuteDashedLine(Layer* layer, CmdDrawDashedLine* c) {
         layer::DrawDashedLine(c->start, c->end, c->dashLength, c->gapLength, c->phase, c->thickness, c->color);
     }
     
-    void ExecuteDrawGradientRectCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectCentered* c) {
+    void ExecuteDrawGradientRectCentered(Layer* layer, CmdDrawGradientRectCentered* c) {
         layer::DrawGradientRectCentered(
             c->cx, c->cy,
             c->width, c->height,
@@ -155,7 +155,7 @@ namespace layer
         );
     }
     
-    void ExecuteDrawGradientRectRoundedCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectRoundedCentered* c) {
+    void ExecuteDrawGradientRectRoundedCentered(Layer* layer, CmdDrawGradientRectRoundedCentered* c) {
         layer::DrawGradientRectRoundedCentered(
             c->cx, c->cy,
             c->width, c->height,
@@ -166,177 +166,177 @@ namespace layer
         );
     }
     
-    void ExecuteText(std::shared_ptr<layer::Layer> layer, CmdDrawText* c) {
+    void ExecuteText(Layer* layer, CmdDrawText* c) {
         Text(c->text, c->font, c->x, c->y, c->color, c->fontSize);
     }
     
-    void ExecuteTextCentered(std::shared_ptr<layer::Layer> layer, CmdDrawTextCentered* c) {
+    void ExecuteTextCentered(Layer* layer, CmdDrawTextCentered* c) {
         Text(c->text, c->font, c->x, c->y, c->color, c->fontSize);
     }
     
-    void ExecuteTextPro(std::shared_ptr<layer::Layer> layer, CmdTextPro* c) {
+    void ExecuteTextPro(Layer* layer, CmdTextPro* c) {
         TextPro(c->text, c->font, c->x, c->y, c->origin, c->rotation, c->fontSize, c->spacing, c->color);
     }
     
-    void ExecuteDrawImage(std::shared_ptr<layer::Layer> layer, CmdDrawImage* c) {
+    void ExecuteDrawImage(Layer* layer, CmdDrawImage* c) {
         DrawImage(c->image, c->x, c->y, c->rotation, c->scaleX, c->scaleY, c->color);
     }
     
-    void ExecuteTexturePro(std::shared_ptr<layer::Layer> layer, CmdTexturePro* c) {
+    void ExecuteTexturePro(Layer* layer, CmdTexturePro* c) {
         TexturePro(c->texture, c->source, c->offsetX, c->offsetY, c->size, c->rotationCenter, c->rotation, c->color);
     }
     
-    void ExecuteDrawEntityAnimation(std::shared_ptr<layer::Layer> layer, CmdDrawEntityAnimation* c) {
+    void ExecuteDrawEntityAnimation(Layer* layer, CmdDrawEntityAnimation* c) {
         DrawEntityWithAnimation(*c->registry, c->e, c->x, c->y);
     }
     
-    void ExecuteDrawTransformEntityAnimation(std::shared_ptr<layer::Layer> layer, CmdDrawTransformEntityAnimation* c) {
+    void ExecuteDrawTransformEntityAnimation(Layer* layer, CmdDrawTransformEntityAnimation* c) {
         DrawTransformEntityWithAnimation(*c->registry, c->e);
     }
     
-    void ExecuteDrawTransformEntityAnimationPipeline(std::shared_ptr<layer::Layer> layer, CmdDrawTransformEntityAnimationPipeline* c) {
+    void ExecuteDrawTransformEntityAnimationPipeline(Layer* layer, CmdDrawTransformEntityAnimationPipeline* c) {
         DrawTransformEntityWithAnimationWithPipeline(*c->registry, c->e);
     }
     
-    void ExecuteSetShader(std::shared_ptr<layer::Layer> layer, CmdSetShader* c) {
+    void ExecuteSetShader(Layer* layer, CmdSetShader* c) {
         SetShader(c->shader);
     }
     
-    void ExecuteResetShader(std::shared_ptr<layer::Layer> layer, CmdResetShader* c) {
+    void ExecuteResetShader(Layer* layer, CmdResetShader* c) {
         ResetShader();
     }
     
-    void ExecuteSetBlendMode(std::shared_ptr<layer::Layer> layer, CmdSetBlendMode* c) {
+    void ExecuteSetBlendMode(Layer* layer, CmdSetBlendMode* c) {
         SetBlendMode(c->blendMode);
     }
     
-    void ExecuteUnsetBlendMode(std::shared_ptr<layer::Layer> layer, CmdUnsetBlendMode* c) {
+    void ExecuteUnsetBlendMode(Layer* layer, CmdUnsetBlendMode* c) {
         UnsetBlendMode();
     }
     
-    void ExecuteSendUniformFloat(std::shared_ptr<layer::Layer> layer, CmdSendUniformFloat* c) {
+    void ExecuteSendUniformFloat(Layer* layer, CmdSendUniformFloat* c) {
         SendUniformFloat(c->shader, c->uniform, c->value);
     }
     
-    void ExecuteSendUniformInt(std::shared_ptr<layer::Layer> layer, CmdSendUniformInt* c) {
+    void ExecuteSendUniformInt(Layer* layer, CmdSendUniformInt* c) {
         SendUniformInt(c->shader, c->uniform, c->value);
     }
     
-    void ExecuteSendUniformVec2(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec2* c) {
+    void ExecuteSendUniformVec2(Layer* layer, CmdSendUniformVec2* c) {
         SendUniformVector2(c->shader, c->uniform, c->value);
     }
     
-    void ExecuteSendUniformVec3(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec3* c) {
+    void ExecuteSendUniformVec3(Layer* layer, CmdSendUniformVec3* c) {
         SendUniformVector3(c->shader, c->uniform, c->value);
     }
     
-    void ExecuteSendUniformVec4(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec4* c) {
+    void ExecuteSendUniformVec4(Layer* layer, CmdSendUniformVec4* c) {
         SendUniformVector4(c->shader, c->uniform, c->value);
     }
     
-    void ExecuteSendUniformFloatArray(std::shared_ptr<layer::Layer> layer, CmdSendUniformFloatArray* c) {
+    void ExecuteSendUniformFloatArray(Layer* layer, CmdSendUniformFloatArray* c) {
         SendUniformFloatArray(c->shader, c->uniform, c->values.data(), c->values.size());
     }
     
-    void ExecuteSendUniformIntArray(std::shared_ptr<layer::Layer> layer, CmdSendUniformIntArray* c) {
+    void ExecuteSendUniformIntArray(Layer* layer, CmdSendUniformIntArray* c) {
         SendUniformIntArray(c->shader, c->uniform, c->values.data(), c->values.size());
     }
     
-    void ExecuteVertex(std::shared_ptr<layer::Layer> layer, CmdVertex* c) {
+    void ExecuteVertex(Layer* layer, CmdVertex* c) {
         Vertex(c->v, c->color);
     }
     
-    void ExecuteBeginOpenGLMode(std::shared_ptr<layer::Layer> layer, CmdBeginOpenGLMode* c) {
+    void ExecuteBeginOpenGLMode(Layer* layer, CmdBeginOpenGLMode* c) {
         BeginRLMode(c->mode);
     }
     
-    void ExecuteEndOpenGLMode(std::shared_ptr<layer::Layer> layer, CmdEndOpenGLMode* c) {
+    void ExecuteEndOpenGLMode(Layer* layer, CmdEndOpenGLMode* c) {
         EndRLMode();
     }
     
-    void ExecuteSetColor(std::shared_ptr<layer::Layer> layer, CmdSetColor* c) {
+    void ExecuteSetColor(Layer* layer, CmdSetColor* c) {
         SetColor(c->color);
     }
     
-    void ExecuteSetLineWidth(std::shared_ptr<layer::Layer> layer, CmdSetLineWidth* c) {
+    void ExecuteSetLineWidth(Layer* layer, CmdSetLineWidth* c) {
         SetLineWidth(c->lineWidth);
     }
     
-    void ExecuteSetTexture(std::shared_ptr<layer::Layer> layer, CmdSetTexture* c) {
+    void ExecuteSetTexture(Layer* layer, CmdSetTexture* c) {
         SetRLTexture(c->texture);
     }
     
-    void ExecuteRenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layer, CmdRenderRectVerticesFilledLayer* c) {
+    void ExecuteRenderRectVerticesFilledLayer(Layer* layer, CmdRenderRectVerticesFilledLayer* c) {
         RenderRectVerticesFilledLayer(layer, c->outerRec, c->progressOrFullBackground, c->cache, c->color);
     }
     
-    void ExecuteRenderRectVerticesOutlineLayer(std::shared_ptr<layer::Layer> layer, CmdRenderRectVerticesOutlineLayer* c) {
+    void ExecuteRenderRectVerticesOutlineLayer(Layer* layer, CmdRenderRectVerticesOutlineLayer* c) {
         RenderRectVerticlesOutlineLayer(layer, c->cache, c->color, c->useFullVertices);
     }
     
-    void ExecutePolygon(std::shared_ptr<layer::Layer> layer, CmdDrawPolygon* c) {
+    void ExecutePolygon(Layer* layer, CmdDrawPolygon* c) {
         Polygon(c->vertices, c->color, c->lineWidth);
     }
     
-    void ExecuteRenderNPatchRect(std::shared_ptr<layer::Layer> layer, CmdRenderNPatchRect* c) {
+    void ExecuteRenderNPatchRect(Layer* layer, CmdRenderNPatchRect* c) {
         RenderNPatchRect(c->sourceTexture, c->info, c->dest, c->origin, c->rotation, c->tint);
     }
     
-    void ExecuteTriangle(std::shared_ptr<layer::Layer> layer, CmdDrawTriangle* c) {
+    void ExecuteTriangle(Layer* layer, CmdDrawTriangle* c) {
         Triangle(c->p1, c->p2, c->p3, c->color);
     }
     
     
-    void ExecuteClearStencilBuffer(std::shared_ptr<layer::Layer> layer, CmdClearStencilBuffer* c) {
+    void ExecuteClearStencilBuffer(Layer* layer, CmdClearStencilBuffer* c) {
         clearStencilBuffer();
     }
-    void ExecuteBeginStencilMode(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMode* c) {
+    void ExecuteBeginStencilMode(Layer* layer, CmdBeginStencilMode* c) {
         beginStencil();
     }
-    void ExecuteStencilOp(std::shared_ptr<layer::Layer> layer, CmdStencilOp* c) {
+    void ExecuteStencilOp(Layer* layer, CmdStencilOp* c) {
         glStencilOp(c->sfail, c->dpfail, c->dppass);
     }
-    void ExecuteRenderBatchFlush(std::shared_ptr<layer::Layer> layer, CmdRenderBatchFlush* c) {
+    void ExecuteRenderBatchFlush(Layer* layer, CmdRenderBatchFlush* c) {
         rlDrawRenderBatchActive();
     }
-    void ExecuteAtomicStencilMask(std::shared_ptr<layer::Layer> layer, CmdAtomicStencilMask* c) {
+    void ExecuteAtomicStencilMask(Layer* layer, CmdAtomicStencilMask* c) {
         glStencilMask(c->mask);
     }
-    void ExecuteColorMask(std::shared_ptr<layer::Layer> layer, CmdColorMask* c) {
+    void ExecuteColorMask(Layer* layer, CmdColorMask* c) {
         glColorMask(c->red, c->green, c->blue, c->alpha);
     }
-    void ExecuteStencilFunc(std::shared_ptr<layer::Layer> layer, CmdStencilFunc* c) {
+    void ExecuteStencilFunc(Layer* layer, CmdStencilFunc* c) {
         glStencilFunc(c->func, c->ref, c->mask);
     }
-    void ExecuteEndStencilMode(std::shared_ptr<layer::Layer> layer, CmdEndStencilMode* c) {
+    void ExecuteEndStencilMode(Layer* layer, CmdEndStencilMode* c) {
         endStencil();
     }
-    void ExecuteBeginStencilMask(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMask* c) {
+    void ExecuteBeginStencilMask(Layer* layer, CmdBeginStencilMask* c) {
         beginStencilMask();
     }
-    void ExecuteEndStencilMask(std::shared_ptr<layer::Layer> layer, CmdEndStencilMask* c) {
+    void ExecuteEndStencilMask(Layer* layer, CmdEndStencilMask* c) {
         endStencilMask();
     }
-    void ExecuteDrawCenteredEllipse(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredEllipse* c) {
+    void ExecuteDrawCenteredEllipse(Layer* layer, CmdDrawCenteredEllipse* c) {
         ellipse(c->x, c->y, c->rx, c->ry, c->color, c->lineWidth);
     }
-    void ExecuteDrawRoundedLine(std::shared_ptr<layer::Layer> layer, CmdDrawRoundedLine* c) {
+    void ExecuteDrawRoundedLine(Layer* layer, CmdDrawRoundedLine* c) {
         rounded_line(c->x1, c->y1, c->x2, c->y2, c->color, c->lineWidth);
     }
-    void ExecuteDrawPolyline(std::shared_ptr<layer::Layer> layer, CmdDrawPolyline* c) {
+    void ExecuteDrawPolyline(Layer* layer, CmdDrawPolyline* c) {
         polyline(c->points, c->color, c->lineWidth);
     }
-    void ExecuteDrawArc(std::shared_ptr<layer::Layer> layer, CmdDrawArc* c) {
+    void ExecuteDrawArc(Layer* layer, CmdDrawArc* c) {
         arc(c->type.c_str(), c->x, c->y, c->r, c->r1, c->r2, c->color, c->lineWidth, c->segments);
     }
-    void ExecuteDrawTriangleEquilateral(std::shared_ptr<layer::Layer> layer, CmdDrawTriangleEquilateral* c) {
+    void ExecuteDrawTriangleEquilateral(Layer* layer, CmdDrawTriangleEquilateral* c) {
         triangle_equilateral(c->x, c->y, c->w, c->color, c->lineWidth);
     }
-    void ExecuteDrawCenteredFilledRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredFilledRoundedRect* c) {
+    void ExecuteDrawCenteredFilledRoundedRect(Layer* layer, CmdDrawCenteredFilledRoundedRect* c) {
         rectangle(c->x, c->y, c->w, c->h, c->rx, c->ry, c->color, c->lineWidth);
     }
     
-    void ExecuteDrawSteppedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawSteppedRoundedRect* c) {
+    void ExecuteDrawSteppedRoundedRect(Layer* layer, CmdDrawSteppedRoundedRect* c) {
         float width = c->w;
         float height = c->h;
         float x = c->x - width * 0.5f;
@@ -486,23 +486,23 @@ namespace layer
         }
     }
     
-    void ExecuteDrawSpriteCentered(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteCentered* c) {
+    void ExecuteDrawSpriteCentered(Layer* layer, CmdDrawSpriteCentered* c) {
         DrawSpriteCentered(c->spriteName, c->x, c->y, c->dstW, c->dstH, c->tint);
     }
-    void ExecuteDrawSpriteTopLeft(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteTopLeft* c) {
+    void ExecuteDrawSpriteTopLeft(Layer* layer, CmdDrawSpriteTopLeft* c) {
         DrawSpriteTopLeft(c->spriteName, c->x, c->y, c->dstW, c->dstH, c->tint);
     }
-    void ExecuteDrawDashedCircle(std::shared_ptr<layer::Layer> layer, CmdDrawDashedCircle* c) {
+    void ExecuteDrawDashedCircle(Layer* layer, CmdDrawDashedCircle* c) {
         DrawDashedCircle({c->center.x, c->center.y}, c->radius, c->dashLength, c->gapLength, c->phase, c->segments, c->thickness, c->color);
     }
-    void ExecuteDrawDashedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawDashedRoundedRect* c) {
+    void ExecuteDrawDashedRoundedRect(Layer* layer, CmdDrawDashedRoundedRect* c) {
         DrawDashedRoundedRect(c->rec, c->dashLen, c->gapLen, c->phase, c->radius, c->arcSteps, c->thickness, c->color);
     }
-    void ExecuteDrawDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c) {
+    void ExecuteDrawDashedLine(Layer* layer, CmdDrawDashedLine* c) {
         DashedLine(c->start.x, c->start.y, c->end.x, c->end.y, c->dashLength, c->gapLength, c->color, c->thickness);
     }
 
-    void ExecuteDrawBatchedEntities(std::shared_ptr<layer::Layer> layer, CmdDrawBatchedEntities* c) {
+    void ExecuteDrawBatchedEntities(Layer* layer, CmdDrawBatchedEntities* c) {
         // Create a batch and execute all entities through it
         shader_draw_commands::DrawCommandBatch batch;
         batch.beginRecording();
@@ -525,7 +525,7 @@ namespace layer
         batch.execute();
     }
 
-    void ExecuteDrawRenderGroup(std::shared_ptr<layer::Layer> layer, CmdDrawRenderGroup* c) {
+    void ExecuteDrawRenderGroup(Layer* layer, CmdDrawRenderGroup* c) {
         auto* group = render_groups::getGroup(c->groupName);
         if (!group) {
             SPDLOG_WARN("ExecuteDrawRenderGroup: group '{}' not found", c->groupName);
@@ -594,22 +594,22 @@ namespace layer
     // -------------------------------------------------------------------------------------
     
     void InitDispatcher() {
-        RegisterRenderer<CmdBeginDrawing>(DrawCommandType::BeginDrawing, [](std::shared_ptr<layer::Layer> layer, CmdBeginDrawing*) { 
+        RegisterRenderer<CmdBeginDrawing>(DrawCommandType::BeginDrawing, [](Layer* layer, CmdBeginDrawing*) { 
             BeginDrawingAction(); });
-        RegisterRenderer<CmdEndDrawing>(DrawCommandType::EndDrawing, [](std::shared_ptr<layer::Layer> layer, CmdEndDrawing*) { EndDrawingAction(); });
-        RegisterRenderer<CmdClearBackground>(DrawCommandType::ClearBackground, [](std::shared_ptr<layer::Layer> layer, CmdClearBackground* c) { 
+        RegisterRenderer<CmdEndDrawing>(DrawCommandType::EndDrawing, [](Layer* layer, CmdEndDrawing*) { EndDrawingAction(); });
+        RegisterRenderer<CmdClearBackground>(DrawCommandType::ClearBackground, [](Layer* layer, CmdClearBackground* c) { 
             ClearBackgroundAction(c->color); 
         });
-        RegisterRenderer<CmdBeginScissorMode>(DrawCommandType::BeginScissorMode, [](std::shared_ptr<layer::Layer> layer, CmdBeginScissorMode* c) { 
+        RegisterRenderer<CmdBeginScissorMode>(DrawCommandType::BeginScissorMode, [](Layer* layer, CmdBeginScissorMode* c) { 
             BeginScissorMode(c->area.x, c->area.y, c->area.width, c->area.height);
         });
-        RegisterRenderer<CmdEndScissorMode>(DrawCommandType::EndScissorMode, [](std::shared_ptr<layer::Layer> layer, CmdEndScissorMode*) { 
+        RegisterRenderer<CmdEndScissorMode>(DrawCommandType::EndScissorMode, [](Layer* layer, CmdEndScissorMode*) { 
             EndScissorMode(); 
         });
-        RegisterRenderer<CmdRenderUISliceFromDrawList>(DrawCommandType::RenderUISliceFromDrawList, [](std::shared_ptr<layer::Layer> layer, CmdRenderUISliceFromDrawList* c) { 
+        RegisterRenderer<CmdRenderUISliceFromDrawList>(DrawCommandType::RenderUISliceFromDrawList, [](Layer* layer, CmdRenderUISliceFromDrawList* c) { 
             renderSliceOffscreenFromDrawList(globals::getRegistry(), c->drawList, c->startIndex, c->endIndex, layer, c->pad); 
         });
-        RegisterRenderer<CmdRenderUISelfImmediate>(DrawCommandType::RenderUISelfImmediate, [](std::shared_ptr<layer::Layer> layer, CmdRenderUISelfImmediate* c) { 
+        RegisterRenderer<CmdRenderUISelfImmediate>(DrawCommandType::RenderUISelfImmediate, [](Layer* layer, CmdRenderUISelfImmediate* c) { 
             auto &uiElementComp = ui::globalUIGroup.get<ui::UIElementComponent>(c->entity);
             auto &configComp = ui::globalUIGroup.get<ui::UIConfig>(c->entity);
             auto &stateComp = ui::globalUIGroup.get<ui::UIState>(c->entity);

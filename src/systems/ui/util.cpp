@@ -234,7 +234,7 @@ namespace ui
         return {c.r, c.g, c.b, alpha};
     }
 
-    void util::ApplyTransformMatrixImmediate(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation)
+    void util::ApplyTransformMatrixImmediate(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, layer::Layer* layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation)
     {
 
         if (applyOnlyTranslation)
@@ -287,7 +287,7 @@ namespace ui
 
     // be sure to call PushMatrix before calling this function
     // if applyOnlyTranslation is true, only translation will be applied, not rotation or scale
-    void util::ApplyTransformMatrix(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation, const int& zIndex)
+    void util::ApplyTransformMatrix(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, layer::Layer* layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation, const int& zIndex)
     {
 
         if (applyOnlyTranslation)
@@ -602,7 +602,7 @@ namespace ui
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             
             //TODO: zindex not applied
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
 
             Color colorToUse{};
 
@@ -628,7 +628,7 @@ namespace ui
         // then draw the npatch element itself
         layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
         
-        util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false, zIndex);
+        util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{0, 0}, false, zIndex);
 
         // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
         //     cmd->x = x;
@@ -656,7 +656,7 @@ namespace ui
         {
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{0, 0}, false, zIndex);
 
             Color colorToUse{};
 
@@ -696,7 +696,7 @@ namespace ui
         }
     }
 
-    void util::DrawNPatchUIElementImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress)
+    void util::DrawNPatchUIElementImmediate(layer::Layer* layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress)
     {
         ZONE_SCOPED("ui::util::DrawNPatchUIElement");
         ::util::Profiler profiler("DrawNPatchUIElement");
@@ -961,7 +961,7 @@ namespace ui
             
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -shadowOffsetX * parallaxModifier, y = -shadowOffsetY * parallaxModifier](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
             //     cmd->y = y;
@@ -1011,7 +1011,7 @@ namespace ui
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
 
             Color colorToUse{};
 
@@ -1046,7 +1046,7 @@ namespace ui
             if (!uiConfig->emboss)
                 SPDLOG_DEBUG("Emboss value not provided for emboss fill rectangle render flag");
                 
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
 
             Color colorToUse{};
 
@@ -1088,7 +1088,7 @@ namespace ui
             //     cmd->y = y;
             // }); // shift y down for emboss effect
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
 // 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
@@ -1132,7 +1132,7 @@ namespace ui
             // FIXME: testing with commenting out
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{0, 0}, false, zIndex);
 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
@@ -1175,7 +1175,7 @@ namespace ui
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{0, 0}, false, zIndex);
             
             // shrink the inner vertices so they look outlined
             {
@@ -1248,7 +1248,7 @@ namespace ui
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false, zIndex);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr.get(), Vector2{0, 0}, false, zIndex);
 
             Color colorToUse{};
 
@@ -1279,7 +1279,7 @@ namespace ui
     }
     
     
-    void util::DrawSteppedRoundedRectangleImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, transform::Transform &transform, ui::UIConfig* uiConfig, transform::GameObject &node, RoundedRectangleVerticesCache* rectCache, const float &visualX, const float & visualY, const float & visualW, const float & visualH, const float & visualScaleWithHoverAndMotion, const float & visualR, const float & rotationOffset, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
+    void util::DrawSteppedRoundedRectangleImmediate(layer::Layer* layerPtr, entt::registry &registry, entt::entity entity, transform::Transform &transform, ui::UIConfig* uiConfig, transform::GameObject &node, RoundedRectangleVerticesCache* rectCache, const float &visualX, const float & visualY, const float & visualW, const float & visualH, const float & visualScaleWithHoverAndMotion, const float & visualR, const float & rotationOffset, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
     {
         
         if (progress.value_or(1.0f) <= 0.0f)
@@ -1781,7 +1781,7 @@ namespace ui
         layer::EndRLMode();
     }
     
-    void util::RenderRectVerticesFilledLayerImmediate(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, const std::vector<Vector2> &outerVertices, const Color color)
+    void util::RenderRectVerticesFilledLayerImmediate(layer::Layer* layerPtr, const Rectangle outerRec, const std::vector<Vector2> &outerVertices, const Color color)
     {
 
         // ::util::Profiler profiler("RenderRectVerticesFilledLayer");

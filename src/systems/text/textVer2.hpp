@@ -258,7 +258,7 @@ namespace TextSystem
         extern void updateText(entt::entity textEntity, float dt);
 
         extern void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug = true);
-        extern void renderTextImmediate(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug);
+        extern void renderTextImmediate(entt::entity textEntity, layer::Layer* layerPtr, bool debug);
 
         extern void clearAllEffects(entt::entity textEntity);
 

@@ -735,7 +735,7 @@ local function buildFooter()
             align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
         },
         children = {
-            dsl.text("C: toggle   Esc: close", {
+            dsl.text("C: toggle   1-5: tabs   Esc: close", {
                 fontSize = 9,
                 color = "gray",
             }),
@@ -747,7 +747,7 @@ end
 local function createScrollPane(children, opts)
     opts = opts or {}
     local _, screenH = getScreenSize()
-    local height = opts.height or math.floor(screenH * 0.7)
+    local height = opts.height or math.floor(screenH * 0.6)
     local width = PANEL_WIDTH - (PANEL_PADDING * 2) - 8
     
     return ui.definitions.def {
@@ -766,26 +766,65 @@ local function createScrollPane(children, opts)
     }
 end
 
--- Build complete panel
-local function buildPanelDefinition(snapshot)
-    -- Build all sections
-    local sectionElements = {}
-    for _, sectionDef in ipairs(SECTIONS) do
-        local section = buildSection(sectionDef, snapshot)
-        table.insert(sectionElements, section)
-        table.insert(sectionElements, dsl.spacer(4))
+-- Build section content for a single tab
+local function buildSectionContent(sectionDef, snapshot)
+    if sectionDef.isGrid then
+        return buildElementalGrid(snapshot)
     end
     
-    local scrollContent = dsl.vbox {
-        config = { padding = 0 },
-        children = sectionElements,
-    }
+    local statRows = {}
+    for _, statKey in ipairs(sectionDef.stats or {}) do
+        local row = buildStatRow(statKey, snapshot)
+        if row then
+            table.insert(statRows, row)
+        end
+    end
     
+    if #statRows == 0 then
+        return dsl.text("No stats available", { fontSize = 11, color = "gray" })
+    end
+    
+    return dsl.vbox {
+        config = { padding = 4 },
+        children = statRows,
+    }
+end
+
+-- Build complete panel with tabs
+local function buildPanelDefinition(snapshot)
     local _, screenH = getScreenSize()
-    local scrollPane = createScrollPane({ scrollContent }, {
-        id = "stats_panel_scroll",
-        height = math.floor(screenH * 0.7),
-    })
+    local scrollHeight = math.floor(screenH * 0.55)
+    
+    local tabDefs = {}
+    for _, sectionDef in ipairs(SECTIONS) do
+        table.insert(tabDefs, {
+            id = sectionDef.id,
+            label = sectionDef.label,
+            content = function()
+                local content = buildSectionContent(sectionDef, StatsPanel._state.snapshot or snapshot)
+                local scrollContent = dsl.vbox {
+                    config = { padding = 0 },
+                    children = { content }
+                }
+                return createScrollPane({ scrollContent }, {
+                    id = "stats_panel_scroll",
+                    height = scrollHeight,
+                })
+            end
+        })
+    end
+    
+    local tabContainer = dsl.tabs {
+        id = "stats_panel_tabs",
+        tabs = tabDefs,
+        activeTab = "combat",
+        buttonColor = "dark_gray_slate",
+        activeButtonColor = "gray",
+        contentPadding = 0,
+        tabBarPadding = 2,
+        fontSize = 11,
+        contentMinHeight = scrollHeight + 20,
+    }
     
     return dsl.root {
         config = {
@@ -804,7 +843,7 @@ local function buildPanelDefinition(snapshot)
                 children = {
                     buildHeader(snapshot),
                     dsl.spacer(4),
-                    scrollPane,
+                    tabContainer,
                     dsl.spacer(4),
                     buildFooter(),
                 }
@@ -1067,6 +1106,7 @@ function StatsPanel._destroyPanel()
     local state = StatsPanel._state
     
     timer.kill_group("stats_panel_v2")
+    dsl.cleanupTabs("stats_panel_tabs")
     
     if state.panelEntity and entity_cache and entity_cache.valid(state.panelEntity) then
         registry:destroy(state.panelEntity)
@@ -1249,6 +1289,14 @@ function StatsPanel.handleInput()
     if input.key_pressed and (input.key_pressed(KEY_ESCAPE) or input.key_pressed(256)) then
         StatsPanel.hide()
         return true
+    end
+    
+    for i = 1, #SECTIONS do
+        if input.action_pressed and input.action_pressed("stats_panel_tab_" .. i) then
+            local sectionId = SECTIONS[i].id
+            dsl.switchTab("stats_panel_tabs", sectionId)
+            return true
+        end
     end
     
     return false

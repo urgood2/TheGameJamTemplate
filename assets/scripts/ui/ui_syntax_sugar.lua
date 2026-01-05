@@ -334,10 +334,10 @@ function dsl.button(label, opts)
         config = {
             id             = opts.id,
             color          = color(opts.color or "gray"),
-            hover          = true,
+            hover          = opts.hover ~= false,
+            canCollide     = true,
             buttonCallback = opts.onClick,
             tooltip        = opts.tooltip,
-            hover          = opts.hover,
             emboss         = opts.emboss or 2,
             minWidth       = opts.minWidth,
             minHeight      = opts.minHeight,
@@ -558,6 +558,257 @@ function dsl.list(data, mapper)
         end
     end
     return nodes
+end
+
+------------------------------------------------------------
+-- TAB SYSTEM
+-- Stores tab definitions in Lua closures, no C++ tab components needed
+------------------------------------------------------------
+
+--- Module-level storage for tab definitions
+--- Key: container ID (string), Value: { tabs = {...}, activeId = "..." }
+local _tabRegistry = {}
+
+--- Create a tabbed UI container
+--- @param opts table Configuration options
+--- @param opts.id string Unique container ID (auto-generated if nil)
+--- @param opts.tabs table Array of {id, label, content} tab definitions
+--- @param opts.activeTab string ID of initially active tab (defaults to first)
+--- @param opts.tabBarPadding number Padding in tab bar (default 2)
+--- @param opts.contentPadding number Padding in content area (default 6)
+--- @param opts.buttonColor string Tab button color (default "gray")
+--- @param opts.activeButtonColor string Active tab button color (default "blue")
+--- @param opts.contentColor string Content area background color
+--- @param opts.contentMinWidth number Minimum content area width
+--- @param opts.contentMinHeight number Minimum content area height
+--- @return table UI definition node
+function dsl.tabs(opts)
+    opts = opts or {}
+    local tabs = opts.tabs or {}
+    
+    -- Validate tabs
+    if #tabs == 0 then
+        log_warn("dsl.tabs: No tabs provided")
+        return dsl.vbox{ children = {} }
+    end
+    
+    -- Generate container ID
+    local containerId = opts.id or ("tabs_" .. tostring(math.random(100000, 999999)))
+    local activeTab = opts.activeTab or tabs[1].id
+    
+    -- Validate activeTab exists
+    local activeFound = false
+    for _, tab in ipairs(tabs) do
+        if tab.id == activeTab then
+            activeFound = true
+            break
+        end
+    end
+    if not activeFound then
+        log_warn("dsl.tabs: activeTab '" .. tostring(activeTab) .. "' not found, using first tab")
+        activeTab = tabs[1].id
+    end
+    
+    -- Store tab definitions for later lookup
+    _tabRegistry[containerId] = {
+        tabs = tabs,
+        activeId = activeTab,
+        buttonColor = color(opts.buttonColor or "gray"),
+        activeButtonColor = color(opts.activeButtonColor or "blue"),
+    }
+    
+    -- Build tab buttons
+    local tabButtons = {}
+    for i, tab in ipairs(tabs) do
+        local isActive = (tab.id == activeTab)
+        local buttonId = "tab_btn_" .. tab.id
+        
+        table.insert(tabButtons, def{
+            type = "HORIZONTAL_CONTAINER",
+            config = {
+                id = buttonId,
+                color = color(isActive and (opts.activeButtonColor or "blue") or (opts.buttonColor or "gray")),
+                hover = true,
+                choice = true,
+                chosen = isActive,
+                group = containerId,
+                emboss = opts.emboss or 2,
+                padding = opts.buttonPadding or 4,
+                minWidth = opts.buttonMinWidth,
+                minHeight = opts.buttonMinHeight,
+                buttonCallback = function()
+                    dsl.switchTab(containerId, tab.id)
+                end,
+            },
+            children = {
+                dsl.text(tab.label, {
+                    fontSize = opts.fontSize or 14,
+                    color = opts.textColor or "white",
+                    shadow = true
+                })
+            }
+        })
+    end
+    
+    -- Get initial content
+    local initialContent = nil
+    for _, tab in ipairs(tabs) do
+        if tab.id == activeTab then
+            local success, result = pcall(tab.content)
+            if success then
+                initialContent = result
+            else
+                log_error("dsl.tabs: Error generating content for tab '" .. tab.id .. "': " .. tostring(result))
+                initialContent = dsl.text("Error loading tab", { color = "red" })
+            end
+            break
+        end
+    end
+    
+    -- Build container
+    return def{
+        type = "VERTICAL_CONTAINER",
+        config = {
+            id = containerId,
+            padding = opts.containerPadding or 0,
+            color = color(opts.containerColor),
+        },
+        children = {
+            -- Tab bar
+            def{
+                type = "HORIZONTAL_CONTAINER",
+                config = {
+                    id = containerId .. "_bar",
+                    padding = opts.tabBarPadding or 2,
+                    align = opts.tabBarAlign or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                },
+                children = tabButtons
+            },
+            -- Content area
+            def{
+                type = "VERTICAL_CONTAINER",
+                config = {
+                    id = containerId .. "_content",
+                    padding = opts.contentPadding or 6,
+                    minWidth = opts.contentMinWidth,
+                    minHeight = opts.contentMinHeight,
+                    color = color(opts.contentColor),
+                },
+                children = initialContent and { initialContent } or {}
+            }
+        }
+    }
+end
+
+--- Switch to a different tab
+--- @param containerId string The tab container's ID
+--- @param newTabId string The ID of the tab to switch to
+--- @return boolean true if switch succeeded
+function dsl.switchTab(containerId, newTabId)
+    -- Get stored tab data
+    local tabData = _tabRegistry[containerId]
+    if not tabData then
+        log_warn("dsl.switchTab: Unknown container '" .. tostring(containerId) .. "'")
+        return false
+    end
+    
+    -- Already on this tab?
+    if tabData.activeId == newTabId then
+        log_debug("dsl.switchTab: Already on tab '" .. newTabId .. "'")
+        return true
+    end
+    
+    -- Find the container entity
+    local container = ui.box.GetUIEByID(registry, containerId)
+    if not container then
+        log_warn("dsl.switchTab: Container entity not found: " .. containerId)
+        return false
+    end
+    
+    -- Find the new tab definition
+    local newTabDef = nil
+    for _, tab in ipairs(tabData.tabs) do
+        if tab.id == newTabId then
+            newTabDef = tab
+            break
+        end
+    end
+    
+    if not newTabDef then
+        log_warn("dsl.switchTab: Tab not found: " .. newTabId)
+        return false
+    end
+    
+    -- Generate new content (with error handling)
+    local newContent
+    local success, result = pcall(newTabDef.content)
+    if success then
+        newContent = result
+    else
+        log_error("dsl.switchTab: Error generating content for tab '" .. newTabId .. "': " .. tostring(result))
+        newContent = dsl.text("Error loading tab", { color = "red" })
+    end
+    
+    local oldTabId = tabData.activeId
+    for _, tab in ipairs(tabData.tabs) do
+        local btnId = "tab_btn_" .. tab.id
+        local btn = ui.box.GetUIEByID(registry, container, btnId)
+        if btn then
+            local btnConfig = component_cache.get(btn, UIConfig)
+            if btnConfig then
+                local isNowActive = (tab.id == newTabId)
+                btnConfig.chosen = isNowActive
+                btnConfig.color = isNowActive and tabData.activeButtonColor or tabData.buttonColor
+            end
+        end
+    end
+    
+    -- Replace content
+    local contentSlot = ui.box.GetUIEByID(registry, container, containerId .. "_content")
+    if not contentSlot then
+        log_warn("dsl.switchTab: Content slot not found: " .. containerId .. "_content")
+        return false
+    end
+    
+    local replaceSuccess = ui.box.ReplaceChildren(contentSlot, newContent)
+    if not replaceSuccess then
+        log_error("dsl.switchTab: Failed to replace content")
+        return false
+    end
+    
+    -- Update stored state
+    tabData.activeId = newTabId
+    
+    log_debug("dsl.switchTab: Switched from '" .. oldTabId .. "' to '" .. newTabId .. "'")
+    return true
+end
+
+--- Get the currently active tab ID
+--- @param containerId string The tab container's ID
+--- @return string|nil Active tab ID, or nil if container not found
+function dsl.getActiveTab(containerId)
+    local tabData = _tabRegistry[containerId]
+    return tabData and tabData.activeId or nil
+end
+
+--- Clean up tab registry entry (call when destroying tab container)
+--- @param containerId string The tab container's ID
+function dsl.cleanupTabs(containerId)
+    _tabRegistry[containerId] = nil
+end
+
+--- Get all registered tab IDs for a container
+--- @param containerId string The tab container's ID
+--- @return table|nil Array of tab IDs, or nil if container not found
+function dsl.getTabIds(containerId)
+    local tabData = _tabRegistry[containerId]
+    if not tabData then return nil end
+    
+    local ids = {}
+    for _, tab in ipairs(tabData.tabs) do
+        table.insert(ids, tab.id)
+    end
+    return ids
 end
 
 ------------------------------------------------------------

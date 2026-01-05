@@ -1359,7 +1359,7 @@ namespace ui
         }
     }
     
-    void element::DrawSelfImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
+    void element::DrawSelfImmediate(layer::Layer* layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
     {
         // check validity and bail
         if (!layerPtr)
@@ -1940,7 +1940,8 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // call the object's own lambda draw function, if it has one
         if (node->drawFunction) {
             //TODO: this probably won't work in immediate mode
-            node->drawFunction(layerPtr, globals::getRegistry(), entity, -1);
+            // PERF: drawFunction temporarily disabled in immediate mode (requires shared_ptr)
+            // node->drawFunction(layerPtr, globals::getRegistry(), entity, -1);
         }
     }
 

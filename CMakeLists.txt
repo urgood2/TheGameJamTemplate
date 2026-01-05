@@ -190,6 +190,98 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+##########################################################################################
+# PERFORMANCE OPTIMIZATION: Link-Time Optimization (LTO)
+##########################################################################################
+option(ENABLE_LTO "Enable Link-Time Optimization for Release builds" ON)
+
+if(ENABLE_LTO AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT lto_supported OUTPUT lto_output)
+    if(lto_supported)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        message(STATUS "LTO/IPO ENABLED - expect 10-20% smaller binaries and potential runtime speedup")
+    else()
+        message(WARNING "LTO requested but not supported: ${lto_output}")
+    endif()
+endif()
+
+##########################################################################################
+# PERFORMANCE OPTIMIZATION: MinSizeRel configuration with aggressive size reduction
+##########################################################################################
+# Set aggressive size optimization flags for MinSizeRel builds
+if(NOT MSVC)
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -ffunction-sections -fdata-sections" CACHE STRING "" FORCE)
+    if(APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Wl,-dead_strip" CACHE STRING "" FORCE)
+    elseif(UNIX)
+        set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Wl,--gc-sections -Wl,--strip-all" CACHE STRING "" FORCE)
+    endif()
+else()
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "/O1 /Ob1 /DNDEBUG /GR-" CACHE STRING "" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "/OPT:REF /OPT:ICF" CACHE STRING "" FORCE)
+endif()
+
+##########################################################################################
+# MODULE TOGGLES: Compile-time feature flags to reduce binary size
+##########################################################################################
+option(ENABLE_SPINE "Enable Spine 2D skeletal animation support (40+ source files)" ON)
+option(ENABLE_IMGUI_CONSOLE "Enable ImGui developer console" ON)
+option(ENABLE_NAVMESH "Enable NavMesh pathfinding system" ON)
+option(ENABLE_GOAP "Enable GOAP AI planning system" ON)
+option(ENABLE_LDTK "Enable LDtk level loader" ON)
+option(ENABLE_TELEMETRY "Enable telemetry/crash reporting" ON)
+
+# Propagate module toggles to compile definitions
+if(ENABLE_SPINE)
+    add_compile_definitions(ENABLE_SPINE=1)
+    message(STATUS "Module SPINE: ENABLED")
+else()
+    add_compile_definitions(ENABLE_SPINE=0)
+    message(STATUS "Module SPINE: DISABLED (saves ~40 source files)")
+endif()
+
+if(ENABLE_IMGUI_CONSOLE)
+    add_compile_definitions(ENABLE_IMGUI_CONSOLE=1)
+    message(STATUS "Module IMGUI_CONSOLE: ENABLED")
+else()
+    add_compile_definitions(ENABLE_IMGUI_CONSOLE=0)
+    message(STATUS "Module IMGUI_CONSOLE: DISABLED")
+endif()
+
+if(ENABLE_NAVMESH)
+    add_compile_definitions(ENABLE_NAVMESH=1)
+    message(STATUS "Module NAVMESH: ENABLED")
+else()
+    add_compile_definitions(ENABLE_NAVMESH=0)
+    message(STATUS "Module NAVMESH: DISABLED")
+endif()
+
+if(ENABLE_GOAP)
+    add_compile_definitions(ENABLE_GOAP=1)
+    message(STATUS "Module GOAP: ENABLED")
+else()
+    add_compile_definitions(ENABLE_GOAP=0)
+    message(STATUS "Module GOAP: DISABLED")
+endif()
+
+if(ENABLE_LDTK)
+    add_compile_definitions(ENABLE_LDTK=1)
+    message(STATUS "Module LDTK: ENABLED")
+else()
+    add_compile_definitions(ENABLE_LDTK=0)
+    message(STATUS "Module LDTK: DISABLED")
+endif()
+
+if(ENABLE_TELEMETRY)
+    add_compile_definitions(ENABLE_TELEMETRY=1)
+    message(STATUS "Module TELEMETRY: ENABLED")
+else()
+    add_compile_definitions(ENABLE_TELEMETRY=0)
+    message(STATUS "Module TELEMETRY: DISABLED")
+endif()
+
 # enable tracy (disable for web)
 
 # Force Tracy off on Web builds regardless of the option.
@@ -709,6 +801,44 @@ endif()
 # Pull in objectpool implementation directly (the bundled CMake project doesn't produce a library target).
 set(OBJECTPOOL_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/third_party/objectpool-master/src/object_pool.cpp")
 list(APPEND PROJECT_SOURCES ${OBJECTPOOL_SOURCES})
+
+##########################################################################################
+# MODULE-BASED SOURCE FILTERING: Exclude sources when modules are disabled
+##########################################################################################
+
+# SPINE: 68 source files - significant compile time and binary size impact
+if(NOT ENABLE_SPINE)
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/third_party/spine_impl/")
+    message(STATUS "  -> Excluding Spine sources (68 files)")
+endif()
+
+# IMGUI_CONSOLE: Developer console - not needed in release builds
+if(NOT ENABLE_IMGUI_CONSOLE)
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/third_party/imgui_console/")
+    message(STATUS "  -> Excluding ImGui console sources (2 files)")
+endif()
+
+# NAVMESH: Pathfinding system - may not be needed for all game types
+if(NOT ENABLE_NAVMESH)
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/third_party/navmesh/")
+    message(STATUS "  -> Excluding NavMesh sources (5 files)")
+endif()
+
+# LDTK: Level loader - only needed if using LDtk levels
+if(NOT ENABLE_LDTK)
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/third_party/ldtk_loader/")
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/third_party/ldtkimport/")
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/systems/ldtk_loader/")
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/systems/ldtk_rule_import/")
+    message(STATUS "  -> Excluding LDtk sources (20 files)")
+endif()
+
+# GOAP: AI planning system - only needed for complex AI
+if(NOT ENABLE_GOAP)
+    # GOAP is built as a separate library (gpgoap), but we may have wrapper code
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX "/src/systems/ai/goap")
+    message(STATUS "  -> Excluding GOAP wrapper sources")
+endif()
 
 # Avoid pulling heavy precompiled headers into the Spine runtime sources; they don't
 # benefit much and can introduce name clashes with raylib types (e.g. Color/BlendMode).

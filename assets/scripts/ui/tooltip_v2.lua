@@ -307,10 +307,10 @@ local function buildNameBox(name, opts)
     local textNode
     if effects and effects ~= "" and ui.definitions.getNewDynamicTextEntry then
         local dynamicText = "[" .. displayName .. "](color=" .. nameColor .. ")"
-        -- getNewDynamicTextEntry expects a function that returns text, not a string directly
         textNode = ui.definitions.getNewDynamicTextEntry(
-            function() return dynamicText end,
+            dynamicText,
             Style.nameFontSize,
+            nil,
             effects
         )
     else

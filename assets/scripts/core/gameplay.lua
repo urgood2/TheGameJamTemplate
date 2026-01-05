@@ -574,8 +574,7 @@ local function makeTooltipTextDef(text, opts)
             
             local dynamicText = "[" .. plainText .. "](color=" .. colorName .. ")"
             
-            -- getNewDynamicTextEntry expects a function that returns text, not a string directly
-            return ui.definitions.getNewDynamicTextEntry(function() return dynamicText end, fontSize, effectString)
+            return ui.definitions.getNewDynamicTextEntry(dynamicText, fontSize, nil, effectString)
         end
         
         if ui.definitions.getTextFromString then
@@ -10799,12 +10798,10 @@ function initPlanningUI()
         local startX = (anchorTransform and anchorTransform.actualX) or (screenW * 0.08)
         local startY = math.max(buttonMargin, (usableScreenH - estimatedTotalHeight) * 0.5)
 
-        -- Use existing roguelike sprites as placeholder wand icons
-        -- TODO: Replace with actual wand icon sprites when available
         local wandIconSprites = {
-            "3207-TheRoguelike_1_10_alpha_0.png",
-            "3208-TheRoguelike_1_10_alpha_1.png",
-            "3209-TheRoguelike_1_10_alpha_2.png",
+            "modern_icons_330.png",
+            "modern_icons_331.png",
+            "modern_icons_332.png",
         }
 
         for index, boardSet in ipairs(board_sets) do

@@ -349,6 +349,7 @@ function WandModifiers.createAggregate()
         formation = nil,
         divideCount = 1,
         divideDamageMultiplier = 1.0,
+        movementType = nil,
     }
 end
 
@@ -541,6 +542,10 @@ function WandModifiers.applyCardToAggregate(agg, card)
 
     if card.divide_damage_multiplier then
         agg.divideDamageMultiplier = (agg.divideDamageMultiplier or 1.0) * card.divide_damage_multiplier
+    end
+
+    if card.movement_type then
+        agg.movementType = card.movement_type
     end
 end
 

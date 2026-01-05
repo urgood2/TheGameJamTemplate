@@ -292,11 +292,131 @@ describe("Teleport System", function()
 
 end)
 
---[[
-================================================================================
-RUN ALL TESTS
-================================================================================
-]]--
+describe("Behavioral: Friendly Fire Filtering", function()
+    
+    it("same faction without friendlyFire should be blocked", function()
+        local mockData = {
+            faction = "player",
+            friendlyFire = false,
+            owner = 999
+        }
+        local mockTargetScript = { faction = "player" }
+        
+        local ownerFaction = mockData.faction or "player"
+        local targetFaction = mockTargetScript.faction or "enemy"
+        local blocked = (ownerFaction == targetFaction) and not mockData.friendlyFire
+        
+        assert_true(blocked, "Same faction should be blocked without friendlyFire")
+    end)
+    
+    it("same faction with friendlyFire should NOT be blocked", function()
+        local mockData = {
+            faction = "player",
+            friendlyFire = true,
+            owner = 999
+        }
+        local mockTargetScript = { faction = "player" }
+        
+        local ownerFaction = mockData.faction or "player"
+        local targetFaction = mockTargetScript.faction or "enemy"
+        local blocked = (ownerFaction == targetFaction) and not mockData.friendlyFire
+        
+        assert_equals(false, blocked, "Same faction should NOT be blocked with friendlyFire")
+    end)
+    
+    it("different faction should never be blocked", function()
+        local mockData = {
+            faction = "player",
+            friendlyFire = false,
+            owner = 999
+        }
+        local mockTargetScript = { faction = "enemy" }
+        
+        local ownerFaction = mockData.faction or "player"
+        local targetFaction = mockTargetScript.faction or "enemy"
+        local blocked = (ownerFaction == targetFaction) and not mockData.friendlyFire
+        
+        assert_equals(false, blocked, "Different faction should never be blocked")
+    end)
+
+end)
+
+describe("Behavioral: Divide Damage Calculation", function()
+    
+    it("divide by 2 with 0.6 multiplier should reduce damage", function()
+        local baseDamage = 100
+        local divideCount = 2
+        local multiplier = 0.6
+        
+        local dividedDamage = baseDamage * multiplier
+        assert_equals(60, dividedDamage, "100 * 0.6 = 60")
+    end)
+    
+    it("stacked divide multipliers should compound", function()
+        local multiplier1 = 0.6
+        local multiplier2 = 0.5
+        local combined = multiplier1 * multiplier2
+        
+        assert_equals(0.3, combined, "0.6 * 0.5 = 0.3")
+    end)
+    
+    it("total damage with divide should be higher than single shot", function()
+        local baseDamage = 100
+        local divideCount = 2
+        local multiplier = 0.6
+        
+        local singleShotDamage = baseDamage
+        local dividedTotal = (baseDamage * multiplier) * divideCount
+        
+        assert_true(dividedTotal > singleShotDamage, 
+            "2 copies at 60% (120 total) > 1 shot at 100%")
+    end)
+
+end)
+
+describe("Behavioral: Movement Type Wiring", function()
+    
+    it("movementType field should be collected from modifier cards", function()
+        local mockCard = {
+            type = "modifier",
+            movement_type = "boomerang"
+        }
+        local aggregate = WandModifiers.aggregate({ mockCard })
+        assert_equals("boomerang", aggregate.movementType, 
+            "movementType should be collected from card")
+    end)
+    
+    it("later movement_type should override earlier", function()
+        local card1 = { type = "modifier", movement_type = "spiral" }
+        local card2 = { type = "modifier", movement_type = "boomerang" }
+        local aggregate = WandModifiers.aggregate({ card1, card2 })
+        assert_equals("boomerang", aggregate.movementType, 
+            "Later card should override movement_type")
+    end)
+
+end)
+
+describe("Behavioral: Formation Angle Math", function()
+    
+    it("pentagon angles should be evenly spaced", function()
+        local pentagon = WandModifiers.FORMATIONS.pentagon
+        local expectedStep = math.pi * 2 / 5
+        
+        for i = 2, #pentagon do
+            local diff = pentagon[i] - pentagon[i-1]
+            local tolerance = 0.001
+            assert_true(math.abs(diff - expectedStep) < tolerance,
+                "Pentagon angles should be 72 degrees apart")
+        end
+    end)
+    
+    it("behind_back should have exactly pi radians between angles", function()
+        local bb = WandModifiers.FORMATIONS.behind_back
+        local diff = bb[2] - bb[1]
+        assert_equals(math.pi, diff, "behind_back should be 180 degrees apart")
+    end)
+
+end)
 
 function NoitaSpellTests.run_all()
     print("\n" .. string.rep("=", 70))

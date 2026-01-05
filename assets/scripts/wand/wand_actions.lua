@@ -391,10 +391,16 @@ function WandActions.spawnSingleProjectile(actionCard, props, modifiers, context
     -- Get raw card definition (card scripts don't have all properties like custom_render)
     local cardDef = getRawCardDefinition(actionCard) or actionCard
 
-    -- Determine movement type
     local movementType = ProjectileSystem.MovementType.STRAIGHT
 
-    if props.homingEnabled or modifiers.autoAim then
+    local cardMovement = actionCard.movement_type or cardDef.movement_type
+    local modMovement = modifiers.movementType
+    
+    if cardMovement and ProjectileSystem.MovementType[string.upper(cardMovement)] then
+        movementType = ProjectileSystem.MovementType[string.upper(cardMovement)]
+    elseif modMovement and ProjectileSystem.MovementType[string.upper(modMovement)] then
+        movementType = ProjectileSystem.MovementType[string.upper(modMovement)]
+    elseif props.homingEnabled or modifiers.autoAim then
         movementType = ProjectileSystem.MovementType.HOMING
     elseif actionCard.gravity_affected then
         movementType = ProjectileSystem.MovementType.ARC
@@ -926,7 +932,7 @@ function WandActions.executeTeleportAction(actionCard, modifiers, context)
         return false
     end
     
-    if actionCard.teleport_on_hit then
+    if actionCard.teleport_on_hit or actionCard.teleport_to_impact then
         local props = WandModifiers.applyToAction(actionCard, modifiers)
         local spawnPos = context.playerPosition
         local angle = context.playerAngle or 0
@@ -936,12 +942,12 @@ function WandActions.executeTeleportAction(actionCard, modifiers, context)
             positionIsCenter = true,
             angle = angle,
             movementType = ProjectileSystem.MovementType.STRAIGHT,
-            baseSpeed = props.speed or 800,
+            baseSpeed = props.speed or actionCard.projectile_speed or 800,
             damage = props.damage or 0,
             damageType = props.damageType or "arcane",
             owner = caster,
             faction = context.faction or "player",
-            lifetime = props.lifetime or 2.0,
+            lifetime = props.lifetime or actionCard.lifetime or 2.0,
             collisionBehavior = ProjectileSystem.CollisionBehavior.DESTROY,
             size = 8,
             

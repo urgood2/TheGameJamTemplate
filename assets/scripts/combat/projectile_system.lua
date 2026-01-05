@@ -344,6 +344,14 @@ local function resolveCollisionTargets(params)
     local targetTag = params.targetCollisionTag or C.CollisionTags.ENEMY
     addIfNotPresent(targets, seen, targetTag)
 
+    if params.friendlyFire then
+        local ownerFaction = params.faction or "player"
+        local ownFactionTag = (ownerFaction == "player") 
+            and C.CollisionTags.PLAYER 
+            or C.CollisionTags.ENEMY
+        addIfNotPresent(targets, seen, ownFactionTag)
+    end
+
     local collideWithWorld = params.collideWithWorld
     if collideWithWorld == nil then
         collideWithWorld = true
@@ -1835,16 +1843,14 @@ end
 
 -- Handle collision between projectile and another entity
 function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
-    print("[ProjectileSystem.handleCollision] CALLED - projectile:", projectileEntity, "other:", otherEntity)
+    log_debug("[ProjectileSystem.handleCollision] projectile:", projectileEntity, "other:", otherEntity)
 
     if not entity_cache.valid(projectileEntity) then
-        print("[ProjectileSystem.handleCollision] projectile invalid, returning")
         return
     end
 
     local projectileScript = ProjectileSystem.getProjectileScript(projectileEntity)
     if not projectileScript or not projectileScript.projectileData then
-        print("[ProjectileSystem.handleCollision] no projectileScript or projectileData, returning")
         return
     end
 
@@ -1856,7 +1862,6 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     local otherIsValid = ensure_entity(otherEntity)
     local targetGameObject = otherIsValid and component_cache.get(otherEntity, GameObject) or nil
     local isDamageable = targetGameObject ~= nil
-    print("[ProjectileSystem.handleCollision] otherIsValid:", otherIsValid, "isDamageable:", isDamageable)
     local now = os.clock()
 
     -- Check if already hit this entity (for piercing) – only track damageable targets
@@ -1927,11 +1932,23 @@ function ProjectileSystem.handleCollision(projectileEntity, otherEntity)
     end
 end
 
--- Apply damage to target entity
 function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, precomputedGameObject)
-    -- Check if target has health
     local targetGameObj = precomputedGameObject or component_cache.get(targetEntity, GameObject)
     if not targetGameObj then return nil, nil end
+
+    if not data.friendlyFire then
+        local ownerFaction = data.faction or "player"
+        local targetScript = getScriptTableFromEntityID(targetEntity)
+        local targetFaction = targetScript and targetScript.faction or "enemy"
+        
+        if ownerFaction == targetFaction then
+            return nil, nil
+        end
+        
+        if targetEntity == data.owner then
+            return nil, nil
+        end
+    end
 
     local function combatActorForEntity(eid)
         if not eid or eid == entt_null or not entity_cache.valid(eid) then
@@ -1945,11 +1962,10 @@ function ProjectileSystem.applyDamage(projectileEntity, targetEntity, data, prec
     local targetCombatActor = combatActorForEntity(targetEntity)
     local sourceCombatActor = combatActorForEntity(data.owner)
 
-    -- DEBUG: Trace damage application
-    print("[ProjectileSystem.applyDamage] targetEntity:", targetEntity)
-    print("[ProjectileSystem.applyDamage] ctx:", ctx and "EXISTS" or "NIL")
-    print("[ProjectileSystem.applyDamage] targetCombatActor:", targetCombatActor and "EXISTS" or "NIL")
-    print("[ProjectileSystem.applyDamage] CombatSystem.Game.Effects:", CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and "EXISTS" or "NIL")
+    log_debug("[ProjectileSystem.applyDamage] targetEntity:", targetEntity)
+    log_debug("[ProjectileSystem.applyDamage] ctx:", ctx and "EXISTS" or "NIL")
+    log_debug("[ProjectileSystem.applyDamage] targetCombatActor:", targetCombatActor and "EXISTS" or "NIL")
+    log_debug("[ProjectileSystem.applyDamage] CombatSystem.Game.Effects:", CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and "EXISTS" or "NIL")
 
     -- Use combat system if available
     if CombatSystem and CombatSystem.Game and CombatSystem.Game.Effects and ctx and targetCombatActor then

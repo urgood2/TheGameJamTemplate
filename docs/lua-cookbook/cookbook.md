@@ -76,6 +76,8 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Create entity with physics | \pageref{recipe:add-physics} |
 | Create interactive entity (hover/click) | \pageref{recipe:entity-interactive} |
 | Initialize script table for data | \pageref{recipe:script-table} |
+| Attach child entity to parent | \pageref{recipe:child-builder} |
+| Link entity lifecycle (die when target dies) | \pageref{recipe:entity-links} |
 | **Movement & Physics** | |
 | Add physics to existing entity | \pageref{recipe:add-physics} |
 | Set collision tags and masks | \pageref{recipe:collision-masks} |
@@ -115,6 +117,7 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Use TooltipV2 3-box system for cards | \pageref{recipe:tooltip-v2} |
 | Add rarity-based text effects to tooltips | \pageref{recipe:tooltip-effects} |
 | Create grid layout | \pageref{recipe:ui-grid} |
+| Create tabbed UI panels | \pageref{recipe:tabs-ui} |
 | Use styled localization for colored text | \pageref{recipe:styled-localization} |
 | Create localized tooltip with color codes | \pageref{recipe:localized-tooltip} |
 | **Combat** | |
@@ -1616,6 +1619,158 @@ local entity, script = builder:build()
 *— from core/entity_builder.lua:276-368*
 
 **Gotcha:** Escape hatches (`getEntity()`, `getTransform()`, `getGameObject()`, `getScript()`) return raw objects — mix builder + manual operations freely!
+
+***
+
+## ChildBuilder (Parent-Child Attachment)
+
+\label{recipe:child-builder}
+
+**When to use:** Attach child entities to parents with transform inheritance (e.g., weapons following players, effects attached to characters).
+
+```lua
+local ChildBuilder = require("core.child_builder")
+
+-- Attach weapon to player with offset and rotation inheritance
+ChildBuilder.for_entity(weapon)
+    :attachTo(player)
+    :offset(20, 0)              -- 20px right of parent center
+    :rotateWith()               -- rotate with parent
+    :apply()
+
+-- Attach with eased following (smooth movement)
+ChildBuilder.for_entity(floatingOrb)
+    :attachTo(player)
+    :offset(0, -40)
+    :eased()                    -- smooth position following
+    :scaleWith()                -- scale with parent
+    :apply()
+
+-- Named child for lookup
+ChildBuilder.for_entity(shield)
+    :attachTo(player)
+    :offset(-30, 0)
+    :named("shield")
+    :permanent()                -- survives parent death
+    :apply()
+```
+
+*— from core/child_builder.lua:66-180*
+
+### Builder Methods
+
+| Method | Description |
+|--------|-------------|
+| `:attachTo(parent)` | Set parent entity |
+| `:offset(x, y)` | Position offset from parent center |
+| `:rotateWith()` | Inherit parent rotation |
+| `:scaleWith()` | Inherit parent scale |
+| `:eased()` | Smooth position following |
+| `:instant()` | Instant position snap (default) |
+| `:named(name)` | Name for lookup |
+| `:permanent()` | Persist after parent death |
+| `:apply()` | Apply configuration |
+
+### Static Helpers
+
+```lua
+-- Immediately change offset
+ChildBuilder.setOffset(weapon, 10, 5)
+
+-- Get current offset
+local ox, oy = ChildBuilder.getOffset(weapon)
+
+-- Get parent entity
+local parent = ChildBuilder.getParent(weapon)
+
+-- Detach from parent
+ChildBuilder.detach(weapon)
+
+-- Animate offset (weapon swing)
+ChildBuilder.animateOffset(weapon, {
+    to = { x = -20, y = 30 },
+    duration = 0.2,
+    ease = "outQuad"
+})
+
+-- Orbit animation (circular swing)
+ChildBuilder.orbit(weapon, {
+    radius = 30,
+    startAngle = 0,
+    endAngle = math.pi/2,
+    duration = 0.2
+})
+```
+
+**Gotcha:** `:apply()` must be called to finalize the attachment.
+
+**Gotcha:** Offset is relative to parent center, not parent origin.
+
+**Gotcha:** Use `:permanent()` for children that should survive parent death (e.g., dropped loot).
+
+***
+
+## EntityLinks (Lifecycle Dependencies)
+
+\label{recipe:entity-links}
+
+**When to use:** Make entities automatically die when their "owner" entity is destroyed (e.g., projectiles linked to caster, buffs linked to source).
+
+```lua
+local EntityLinks = require("core.entity_links")
+
+-- Projectile dies when owner dies
+EntityLinks.link(projectile, owner)
+
+-- Remove specific link
+EntityLinks.unlink(projectile, owner)
+
+-- Remove all links for entity
+EntityLinks.unlinkAll(projectile)
+
+-- Check if linked
+if EntityLinks.isLinkedTo(projectile, owner) then
+    print("Projectile will die when owner dies")
+end
+
+-- Get all targets this entity is linked to
+local targets = EntityLinks.getLinkedTargets(projectile)
+```
+
+*— from core/entity_links.lua:42-120*
+
+### From Script Instance
+
+```lua
+-- behavior_script_v2 has built-in link methods
+local projectile = spawn.projectile("fireball", x, y, angle)
+
+-- Link to owner
+projectile:linkTo(owner)
+
+-- Unlink
+projectile:unlinkFrom(owner)
+
+-- Clear all links
+projectile:unlinkAll()
+```
+
+*— from monobehavior/behavior_script_v2.lua:320-340*
+
+**Use Cases:**
+
+| Scenario | Pattern |
+|----------|---------|
+| Projectile cleanup | `EntityLinks.link(projectile, caster)` |
+| Buff tied to source | `EntityLinks.link(buffEffect, buffSource)` |
+| Summon tied to summoner | `EntityLinks.link(summon, summoner)` |
+| UI tied to entity | `EntityLinks.link(healthBar, enemy)` |
+
+**Gotcha:** Links are one-way: dependent dies when target dies, not vice versa.
+
+**Gotcha:** Links are automatically cleaned up when either entity is destroyed.
+
+**Gotcha:** This is "horizontal" linking (peer entities). For "vertical" parent-child relationships, use ChildBuilder instead.
 
 ***
 
@@ -4842,6 +4997,113 @@ local ui = dsl.root {
     children = { statsRow, skillGrid }
 }
 ```
+
+***
+
+## Tabs UI (Tabbed Panels)
+
+\label{recipe:tabs-ui}
+
+**When to use:** Create tabbed interfaces where users switch between content panels (e.g., inventory tabs, settings categories, stats panels).
+
+```lua
+local dsl = require("ui.ui_syntax_sugar")
+
+-- Basic tabs
+local tabsUI = dsl.tabs {
+    id = "inventory_tabs",
+    tabs = {
+        {
+            id = "weapons",
+            label = "Weapons",
+            content = function()
+                return dsl.vbox {
+                    children = {
+                        dsl.text("Sword of Fire"),
+                        dsl.text("Ice Dagger"),
+                    }
+                }
+            end
+        },
+        {
+            id = "armor",
+            label = "Armor",
+            content = function()
+                return dsl.vbox {
+                    children = {
+                        dsl.text("Steel Plate"),
+                        dsl.text("Leather Boots"),
+                    }
+                }
+            end
+        },
+        {
+            id = "items",
+            label = "Items",
+            content = function()
+                return dsl.text("Health Potion x3")
+            end
+        }
+    }
+}
+
+-- Spawn the tabs UI
+local boxID = dsl.spawn({ x = 100, y = 100 }, tabsUI, "ui", 900)
+```
+
+*— from ui/ui_syntax_sugar.lua:tabs*
+
+### Tab Definition Structure
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique tab identifier |
+| `label` | string | Button text shown to user |
+| `content` | function | Returns DSL definition for tab content |
+
+### Options
+
+```lua
+dsl.tabs {
+    id = "my_tabs",           -- Container ID for cleanup/state
+    activeTab = "second",     -- Start with specific tab active (default: first)
+    tabs = { ... }
+}
+```
+
+### Programmatic Control
+
+```lua
+-- Get active tab ID
+local activeId = dsl.getActiveTab("inventory_tabs")
+
+-- Switch to a tab programmatically
+dsl.setActiveTab("inventory_tabs", "armor")
+
+-- Cleanup when done
+dsl.cleanupTabs("inventory_tabs")
+```
+
+### Visual Structure
+
+```
+┌─────────────────────────────────────────┐
+│ [Weapons] [Armor] [Items]               │  ← Tab buttons (horizontal)
+├─────────────────────────────────────────┤
+│                                         │
+│   Content for selected tab appears      │  ← Content area
+│   here and switches when tabs clicked   │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+**Gotcha:** The `content` field must be a function that returns a DSL definition, not a raw definition. This allows lazy evaluation when switching tabs.
+
+**Gotcha:** Tab switching uses ReplaceChildren internally for efficient DOM-style updates without recreating the entire UI.
+
+**Gotcha:** Call `dsl.cleanupTabs(id)` when destroying the UI to clean up internal state tracking.
+
+***
 
 ## Styled Localization
 

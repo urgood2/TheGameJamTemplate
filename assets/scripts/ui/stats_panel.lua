@@ -840,7 +840,8 @@ end
 
 -- Creates a collapsible section header
 local function createSectionHeader(sectionId, title, isExpanded, onToggle)
-    local icon = isExpanded and "▼ " or "▶ "
+    -- Use simple ASCII arrows instead of unicode (unicode can render too large)
+    local icon = isExpanded and "- " or "+ "
     
     return dsl.hbox {
         config = {

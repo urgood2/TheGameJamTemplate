@@ -821,8 +821,9 @@ local function buildPanelDefinition(snapshot)
         buttonColor = "dark_gray_slate",
         activeButtonColor = "gray",
         contentPadding = 0,
-        tabBarPadding = 2,
-        fontSize = 11,
+        tabBarPadding = 4,
+        fontSize = 13,
+        buttonPadding = 6,
         contentMinHeight = scrollHeight + 20,
     }
     

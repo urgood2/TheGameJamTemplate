@@ -112,6 +112,8 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Create UI with DSL | \pageref{recipe:ui-dsl} |
 | Add tooltip on hover | \pageref{recipe:tooltip} |
 | Use tooltip registry (reusable templates) | \pageref{recipe:tooltip-registry} |
+| Use TooltipV2 3-box system for cards | \pageref{recipe:tooltip-v2} |
+| Add rarity-based text effects to tooltips | \pageref{recipe:tooltip-effects} |
 | Create grid layout | \pageref{recipe:ui-grid} |
 | Use styled localization for colored text | \pageref{recipe:styled-localization} |
 | Create localized tooltip with color codes | \pageref{recipe:localized-tooltip} |
@@ -4958,6 +4960,154 @@ local tooltip = makeLocalizedTooltip("card.desc." .. card.id, {
 -- Position above the card
 showSimpleTooltipAbove(cardEntity, tooltip)
 ```
+
+***
+
+## TooltipV2: 3-Box Card Tooltip System
+
+\label{recipe:tooltip-v2}
+
+**When to use:** Display rich, structured card tooltips with rarity effects, stats, and tags using the new 3-box vertical stack design.
+
+**Pattern:** TooltipV2 uses a 3-box architecture: name box (with effects), description box (with color markup), and info box (stats grid + tag pills).
+
+```lua
+local TooltipV2 = require("ui.tooltip_v2")
+
+-- Show tooltip for any entity
+TooltipV2.show(anchorEntity, {
+    name = "Fireball",
+    nameEffects = "pop=0.2,0.04,in;rainbow=40,8,0",  -- Optional: C++ text effects
+    description = "Deal [25](color=red) fire damage to target enemy",
+    info = {
+        stats = {
+            { label = "Damage", value = 25 },
+            { label = "Mana", value = 12 },
+        },
+        tags = { "Fire", "Projectile", "AoE" }
+    }
+})
+
+-- Hide tooltip
+TooltipV2.hide(anchorEntity)
+
+-- Card-specific helper (auto-applies rarity-based effects)
+TooltipV2.showCard(anchorEntity, cardDef)
+```
+
+*— from ui/tooltip_v2.lua:1-300*
+
+### Visual Structure
+
+```
+┌─────────────────────────┐
+│       CARD NAME         │  ← Box 1: Name (larger font + pop entrance)
+└─────────────────────────┘
+           4px gap
+┌─────────────────────────┐
+│   Effect description    │  ← Box 2: Description (supports [text](color) markup)
+│   text goes here...     │
+└─────────────────────────┘
+           4px gap
+┌─────────────────────────┐
+│ Damage: 25    Mana: 12  │  ← Box 3: Info (stats grid + tag pills)
+│ [Fire] [Projectile]     │
+└─────────────────────────┘
+```
+
+### Positioning
+
+TooltipV2 auto-positions with priority order: RIGHT → LEFT → ABOVE → BELOW
+
+- Never covers anchor entity
+- Top-aligns with anchor, shifts down if clipping
+- 12px minimum edge gap
+
+### API Reference
+
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| `TooltipV2.show(entity, opts)` | entity, options table | Show tooltip attached to entity |
+| `TooltipV2.hide(entity)` | entity | Hide tooltip for entity |
+| `TooltipV2.showCard(entity, cardDef)` | entity, card definition | Show with auto rarity effects |
+| `TooltipV2.clearCache()` | - | Clear all cached tooltips |
+
+**Gotcha:** TooltipV2 is enabled when `USE_TOOLTIP_V2 = true` is set in gameplay.lua.
+
+**Gotcha:** The tooltip_registry module automatically uses TooltipV2 when enabled.
+
+***
+
+## Tooltip Effects: Rarity-Based Text Effects
+
+\label{recipe:tooltip-effects}
+
+**When to use:** Apply entrance animations and persistent effects to tooltip text based on content type or rarity.
+
+**Pattern:** Use predefined presets or build custom effect combinations for styled text.
+
+```lua
+local TooltipEffects = require("core.tooltip_effects")
+
+-- Get effect string for a rarity
+local effects = TooltipEffects.get("legendary")
+-- Result: "pop=0.25,0.04,in;rainbow=50,6,0;pulse=0.93,1.07,1.2,0.05"
+
+-- Get rarity color
+local color = TooltipEffects.getColor("legendary")
+-- Result: "gold"
+
+-- Build styled text for C++ text system
+local styledText = TooltipEffects.styledText("Fireball", "legendary")
+-- Result: "[Fireball](pop=0.25,0.04,in;rainbow=50,6,0;pulse=0.93,1.07,1.2,0.05;color=gold)"
+
+-- Combine multiple effects
+local combined = TooltipEffects.combine("pop_in", "gentle_float")
+-- Result: "pop=0.2,0.05,in;float=2,3,0.2"
+```
+
+*— from core/tooltip_effects.lua:1-112*
+
+### Effect Presets by Rarity
+
+| Rarity | Effects | Description |
+|--------|---------|-------------|
+| `common` | `pop=0.15,0.02,in` | Simple pop entrance |
+| `uncommon` | `pop=0.18,0.025,in;highlight=3,0.15,0.2,right` | Pop + subtle shimmer |
+| `rare` | `pop=0.2,0.03,in;highlight=2.5,0.25,0.15,right,bleed;pulse=0.97,1.03,2,0.08` | Pop + highlight + pulse |
+| `epic` | `slide=0.22,0.035,in,l;highlight=2,0.35,0.12,right,bleed;pulse=0.95,1.05,1.5,0.06` | Slide + strong effects |
+| `legendary` | `pop=0.25,0.04,in;rainbow=50,6,0;pulse=0.93,1.07,1.2,0.05` | Pop + rainbow + pulse |
+| `mythic` | `scramble=0.25,0.03,12;rainbow=80,8,0;pulse=0.9,1.1,1,0.04;wiggle=4,2,0.3` | Full chaos effects |
+
+### Rarity Colors
+
+| Rarity | Color | Hex |
+|--------|-------|-----|
+| common | white | #FFFFFF |
+| uncommon | lime | #00FF00 |
+| rare | cyan | #00FFFF |
+| epic | purple | #AA00FF |
+| legendary | gold | #FFD700 |
+| mythic | magenta | #FF00FF |
+
+### Available Effect Types
+
+**Entrance Effects** (one-time animations):
+- `pop_in` - Scale up entrance
+- `slide_left`, `slide_right`, `slide_up` - Directional slides
+- `bounce` - Bounce entrance
+- `scramble` - Character scramble reveal
+
+**Persistent Effects** (continuous animations):
+- `gentle_float` - Subtle floating motion
+- `pulse` - Size pulsing
+- `wiggle` - Side-to-side wiggle
+- `rainbow` - Color cycling
+- `highlight`, `shimmer` - Moving highlight
+
+**Gotcha:** Effect strings are passed to the C++ text rendering system. Invalid effects are ignored.
+
+**Gotcha:** Use `TooltipEffects.combine()` to merge multiple effects into a single string.
 
 \newpage
 
@@ -14301,6 +14451,14 @@ Alphabetical listing of all documented functions and APIs.
 | `tooltips.isRegistered()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
 | `tooltips.register()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
 | `tooltips.showFor()` | `core.tooltip_registry` | \pageref{recipe:tooltip-registry} |
+| `TooltipEffects.combine()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipEffects.get()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipEffects.getColor()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipEffects.styledText()` | `core.tooltip_effects` | \pageref{recipe:tooltip-effects} |
+| `TooltipV2.clearCache()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
+| `TooltipV2.hide()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
+| `TooltipV2.show()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
+| `TooltipV2.showCard()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
 | `unpauseGame()` | Global | \pageref{recipe:game-control} |
 | `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
 | `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |

@@ -21,6 +21,7 @@ local component_cache = require("core.component_cache")
 local timer = require("core.timer")
 local UIBackground = require("ui.ui_background")
 local UIDecorations = require("ui.ui_decorations")
+local shader_pipeline = _G.shader_pipeline
 
 local InventoryGridInit = require("ui.inventory_grid_init")
 
@@ -33,6 +34,7 @@ local demoState = {
     signalHandlers = {},
     stackBadges = {},
     timerGroup = "inventory_demo",
+    cardRegistry = {}, -- Track cards for shader rendering
 }
 
 --------------------------------------------------------------------------------
@@ -64,11 +66,6 @@ local function createSimpleCard(spriteName, x, y, cardData)
         registry:emplace(entity, ObjectAttachedToUITag)
     end
     
-    local animComp = component_cache.get(entity, AnimationQueueComponent)
-    if animComp then
-        animComp.noDraw = true
-    end
-    
     local go = component_cache.get(entity, GameObject)
     if go then
         go.state.dragEnabled = true
@@ -76,17 +73,38 @@ local function createSimpleCard(spriteName, x, y, cardData)
         go.state.hoverEnabled = true
     end
     
-    if setScriptTableForEntityID then
-        setScriptTableForEntityID(entity, {
-            entity = entity,
-            id = cardData.id,
-            name = cardData.name,
-            element = cardData.element,
-            stackId = cardData.stackId,
-            category = "card",
-            cardData = cardData,
-        })
+    local shaderPipelineComp = registry:emplace(entity, shader_pipeline.ShaderPipelineComponent)
+    shaderPipelineComp:addPass("3d_skew")
+    
+    local skewSeed = math.random() * 10000
+    local passes = shaderPipelineComp.passes
+    if passes and #passes >= 1 then
+        local pass = passes[#passes]
+        if pass and pass.shaderName and pass.shaderName:sub(1, 7) == "3d_skew" then
+            pass.customPrePassFunction = function()
+                if globalShaderUniforms then
+                    globalShaderUniforms:set(pass.shaderName, "rand_seed", skewSeed)
+                end
+            end
+        end
     end
+    
+    local scriptData = {
+        entity = entity,
+        id = cardData.id,
+        name = cardData.name,
+        element = cardData.element,
+        stackId = cardData.stackId,
+        category = "card",
+        cardData = cardData,
+        skewSeed = skewSeed,
+    }
+    
+    if setScriptTableForEntityID then
+        setScriptTableForEntityID(entity, scriptData)
+    end
+    
+    demoState.cardRegistry[entity] = scriptData
     
     log_debug("[InventoryGridDemo] Created card: " .. cardData.name .. " at " .. x .. "," .. y)
     return entity
@@ -118,6 +136,7 @@ function InventoryGridDemo.init()
         action = function()
             InventoryGridDemo.spawnMockCards()
             InventoryGridDemo.setupStackBadges()
+            InventoryGridDemo.setupCardRenderTimer()
         end,
     })
     
@@ -457,32 +476,70 @@ function InventoryGridDemo.spawnMockCards()
     end
     
     log_debug("[InventoryGridDemo] Spawned " .. #demoState.mockCards .. " mock cards")
-    
-    InventoryGridDemo.setupCardRenderer()
 end
 
-function InventoryGridDemo.setupCardRenderer()
+--------------------------------------------------------------------------------
+-- Card Render Timer (batched shader pipeline rendering)
+--------------------------------------------------------------------------------
+
+function InventoryGridDemo.setupCardRenderTimer()
     timer.run_every_render_frame(function()
-        if not layers or not layers.ui then return end
-        if not command_buffer or not command_buffer.queueDrawBatchedEntities then return end
-        if #demoState.mockCards == 0 then return end
+        local batchedCardBuckets = {}
+        local cardZCache = {}
         
-        local validCards = {}
-        for _, eid in ipairs(demoState.mockCards) do
+        if not (command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.sprites) then
+            return
+        end
+        
+        for eid, cardScript in pairs(demoState.cardRegistry) do
             if eid and registry:valid(eid) then
-                table.insert(validCards, eid)
+                local hasPipeline = shader_pipeline and shader_pipeline.ShaderPipelineComponent
+                    and registry:has(eid, shader_pipeline.ShaderPipelineComponent)
+                local animComp = component_cache.get(eid, AnimationQueueComponent)
+                
+                if animComp then
+                    animComp.drawWithLegacyPipeline = true
+                end
+                
+                if hasPipeline and animComp and not animComp.noDraw then
+                    local zToUse = layer_order_system.getZIndex(eid)
+                    if cardScript and cardScript.isBeingDragged then
+                        zToUse = (z_orders and z_orders.top_card or 900) + 2
+                    end
+                    cardZCache[eid] = zToUse
+                    
+                    local bucket = batchedCardBuckets[zToUse]
+                    if not bucket then
+                        bucket = {}
+                        batchedCardBuckets[zToUse] = bucket
+                    end
+                    bucket[#bucket + 1] = eid
+                    animComp.drawWithLegacyPipeline = false
+                end
             end
         end
         
-        if #validCards > 0 then
-            local z = (z_orders and z_orders.ui_tooltips or 800) + 500
-            command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
-                cmd.registry = registry
-                cmd.entities = validCards
-                cmd.autoOptimize = true
-            end, z, layer.DrawCommandSpace.Screen)
+        if next(batchedCardBuckets) then
+            local zKeys = {}
+            for z, entityList in pairs(batchedCardBuckets) do
+                if #entityList > 0 then
+                    table.insert(zKeys, z)
+                end
+            end
+            table.sort(zKeys)
+            
+            for _, z in ipairs(zKeys) do
+                local entityList = batchedCardBuckets[z]
+                if entityList and #entityList > 0 then
+                    command_buffer.queueDrawBatchedEntities(layers.sprites, function(cmd)
+                        cmd.registry = registry
+                        cmd.entities = entityList
+                        cmd.autoOptimize = true
+                    end, z, layer.DrawCommandSpace.World)
+                end
+            end
         end
-    end, "demo_card_render", demoState.timerGroup)
+    end, nil, "demo_card_render_timer", demoState.timerGroup)
 end
 
 --------------------------------------------------------------------------------
@@ -507,6 +564,7 @@ function InventoryGridDemo.cleanup()
         end
     end
     demoState.mockCards = {}
+    demoState.cardRegistry = {}
     
     if demoState.gridEntity then
         for i = 1, 12 do

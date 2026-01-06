@@ -483,11 +483,13 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.setupCardRenderTimer()
+    local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) + 500
+    
     timer.run_every_render_frame(function()
         local batchedCardBuckets = {}
         local cardZCache = {}
         
-        if not (command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.sprites) then
+        if not (command_buffer and command_buffer.queueDrawBatchedEntities and layers and layers.ui) then
             return
         end
         
@@ -502,9 +504,9 @@ function InventoryGridDemo.setupCardRenderTimer()
                 end
                 
                 if hasPipeline and animComp and not animComp.noDraw then
-                    local zToUse = layer_order_system.getZIndex(eid)
+                    local zToUse = UI_CARD_Z
                     if cardScript and cardScript.isBeingDragged then
-                        zToUse = (z_orders and z_orders.top_card or 900) + 2
+                        zToUse = UI_CARD_Z + 100
                     end
                     cardZCache[eid] = zToUse
                     
@@ -531,11 +533,11 @@ function InventoryGridDemo.setupCardRenderTimer()
             for _, z in ipairs(zKeys) do
                 local entityList = batchedCardBuckets[z]
                 if entityList and #entityList > 0 then
-                    command_buffer.queueDrawBatchedEntities(layers.sprites, function(cmd)
+                    command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
                         cmd.registry = registry
                         cmd.entities = entityList
                         cmd.autoOptimize = true
-                    end, z, layer.DrawCommandSpace.World)
+                    end, z, layer.DrawCommandSpace.Screen)
                 end
             end
         end

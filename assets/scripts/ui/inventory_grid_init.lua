@@ -8,7 +8,7 @@ Called after dsl.spawn() creates the UIBox entity.
 Usage:
     -- In ui_syntax_sugar.lua spawn function or after spawning:
     local InventoryGridInit = require("ui.inventory_grid_init")
-    InventoryGridInit.initializeIfGrid(boxEntity)
+    InventoryGridInit.initializeIfGrid(boxEntity, "my_grid_id")
 ================================================================================
 ]]
 
@@ -22,34 +22,54 @@ local signal = require("external.hump.signal")
 -- Check if entity is an inventory grid and initialize it
 --------------------------------------------------------------------------------
 
-function InventoryGridInit.initializeIfGrid(boxEntity)
+function InventoryGridInit.initializeIfGrid(boxEntity, gridId)
     if not registry:valid(boxEntity) then
         return false
     end
     
-    -- Get UIConfig to check for grid marker
-    local uiConfig = component_cache.get(boxEntity, UIConfig)
-    if not uiConfig then
+    -- Get grid config from DSL registry (not C++ component)
+    local dsl = require("ui.ui_syntax_sugar")
+    
+    -- Try to find gridId from UIConfig if not provided
+    if not gridId then
+        local uiConfig = component_cache.get(boxEntity, UIConfig)
+        if uiConfig and uiConfig.id then
+            gridId = uiConfig.id
+        end
+    end
+    
+    if not gridId then
+        log_warn("[InventoryGridInit] No gridId provided or found")
         return false
     end
     
-    -- Check if this is an inventory grid
-    if not uiConfig._isInventoryGrid then
+    -- Get grid config from DSL registry
+    local gridData = dsl.getGridConfig(gridId)
+    if not gridData then
+        log_warn("[InventoryGridInit] Grid not found in DSL registry: " .. tostring(gridId))
         return false
     end
     
-    local rows = uiConfig._gridRows or 3
-    local cols = uiConfig._gridCols or 3
-    local gridConfig = uiConfig._gridConfig or {}
-    local slotsConfig = uiConfig._slotsConfig or {}
+    local rows = gridData.rows or 3
+    local cols = gridData.cols or 3
+    local gridConfig = gridData.config or {}
+    local slotsConfig = gridData.slotsConfig or {}
     
     -- Initialize grid data
     grid.initializeGrid(boxEntity, rows, cols, gridConfig, slotsConfig)
     
     -- Find and register slot entities
-    local gridId = uiConfig.id
-    if gridId then
-        InventoryGridInit.registerSlotEntities(boxEntity, gridId, rows, cols)
+    InventoryGridInit.registerSlotEntities(boxEntity, gridId, rows, cols)
+    
+    -- Store callbacks
+    local go = component_cache.get(boxEntity, GameObject)
+    if go then
+        go.config = go.config or {}
+        go.config._gridCallbacks = {
+            onSlotChange = gridData.onSlotChange,
+            onSlotClick = gridData.onSlotClick,
+            onItemStack = gridData.onItemStack,
+        }
     end
     
     log_debug("[InventoryGridInit] Initialized grid: " .. tostring(gridId) .. " (" .. rows .. "x" .. cols .. ")")

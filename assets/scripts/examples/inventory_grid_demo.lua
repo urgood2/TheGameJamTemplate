@@ -1,13 +1,8 @@
 --[[
 ================================================================================
-Inventory Grid Demo
+Inventory Grid Demo (Simplified)
 ================================================================================
-Demonstrates all features of the new inventory grid system:
-- dsl.inventoryGrid() with drag-drop slots
-- dsl.customPanel() with custom rendering
-- UIBackground for per-element backgrounds with states
-- UIDecorations for badges and overlays
-- Signal events for grid interactions
+Demonstrates inventory grid system with drag-drop slots.
 
 Usage:
     local InventoryGridDemo = require("examples.inventory_grid_demo")
@@ -21,8 +16,6 @@ local InventoryGridDemo = {}
 -- Dependencies
 local dsl = require("ui.ui_syntax_sugar")
 local grid = require("core.inventory_grid")
-local UIBackground = require("ui.ui_background")
-local UIDecorations = require("ui.ui_decorations")
 local signal = require("external.hump.signal")
 local component_cache = require("core.component_cache")
 local timer = require("core.timer")
@@ -30,44 +23,26 @@ local timer = require("core.timer")
 -- Demo state
 local demoState = {
     gridEntity = nil,
-    customPanelEntity = nil,
     infoBoxEntity = nil,
     mockCards = {},
-    selectedSlot = nil,
     signalHandlers = {},
     timerGroup = "inventory_demo",
 }
 
--- Sprite references (using existing assets)
-local SPRITES = {
-    cardAction = "card-new-test-action.png",
-    cardTrigger = "card-new-test-trigger.png", 
-    cardModifier = "card-new-test-modifier.png",
-    cardBack = "card_back.png",
-    iconStar = "modern_icons_363.png",
-    iconFire = "modern_icons_102.png",
-    iconIce = "modern_icons_103.png",
-    iconLock = "modern_icons_116.png",
-}
-
--- Card definitions for mock items
-local MOCK_CARDS = {
-    { id = "fireball", name = "Fireball", sprite = "card-new-test-action.png", element = "Fire", stackId = "fireball" },
-    { id = "ice_shard", name = "Ice Shard", sprite = "card-new-test-action.png", element = "Ice", stackId = "ice_shard" },
-    { id = "trigger_click", name = "On Click", sprite = "card-new-test-trigger.png", element = nil, stackId = "trigger_click" },
-    { id = "modifier_double", name = "Double Cast", sprite = "card-new-test-modifier.png", element = nil, stackId = "modifier_double" },
-    { id = "heal", name = "Heal", sprite = "card-new-test-action.png", element = "Holy", stackId = "heal" },
-}
-
 --------------------------------------------------------------------------------
--- Helper: Create a mock card entity
+-- Helper: Create a simple draggable card entity
 --------------------------------------------------------------------------------
 
-local function createMockCard(cardDef, x, y)
-    -- Create animated sprite entity
+local function createSimpleCard(spriteName, x, y, cardData)
+    -- Use animation_system to create a sprite entity
     local entity = animation_system.createAnimatedObjectWithTransform(
-        cardDef.sprite, true, x or 0, y or 0, nil, true
+        spriteName, true, x or 0, y or 0, nil, true
     )
+    
+    if not entity or not registry:valid(entity) then
+        log_warn("[InventoryGridDemo] Failed to create card entity for: " .. tostring(spriteName))
+        return nil
+    end
     
     -- Resize to card size
     animation_system.resizeAnimationObjectsInEntityToFit(entity, 60, 84)
@@ -79,27 +54,25 @@ local function createMockCard(cardDef, x, y)
         go.state.collisionEnabled = true
         go.state.hoverEnabled = true
         
-        -- Store card data in config
+        -- Store card data
         go.config = go.config or {}
-        go.config.cardData = cardDef
+        go.config.cardData = cardData
     end
     
-    -- Store script-like data for stacking
-    local script = {
-        entity = entity,
-        id = cardDef.id,
-        name = cardDef.name,
-        element = cardDef.element,
-        stackId = cardDef.stackId,
-        category = "card",
-    }
-    
-    -- Register with script table system if available
+    -- Register script data for filtering
     if setScriptTableForEntityID then
-        setScriptTableForEntityID(entity, script)
+        setScriptTableForEntityID(entity, {
+            entity = entity,
+            id = cardData.id,
+            name = cardData.name,
+            element = cardData.element,
+            stackId = cardData.stackId,
+            category = "card",
+        })
     end
     
-    return entity, script
+    log_debug("[InventoryGridDemo] Created card: " .. cardData.name .. " at " .. x .. "," .. y)
+    return entity
 end
 
 --------------------------------------------------------------------------------
@@ -112,15 +85,28 @@ function InventoryGridDemo.init()
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
     
-    -- Position demo on right side of screen
-    local demoX = screenW - 400
-    local demoY = 100
+    -- Position demo elements
+    local gridX = screenW - 380
+    local gridY = 80
     
-    InventoryGridDemo.createMainGrid(demoX, demoY)
-    InventoryGridDemo.createCustomPanel(demoX, demoY + 350)
-    InventoryGridDemo.createInfoBox(demoX - 220, demoY)
+    -- Create grid
+    InventoryGridDemo.createMainGrid(gridX, gridY)
+    
+    -- Create info box
+    InventoryGridDemo.createInfoBox(gridX - 220, gridY)
+    
+    -- Setup signal handlers
     InventoryGridDemo.setupSignalHandlers()
-    InventoryGridDemo.spawnMockCards()
+    
+    -- Spawn mock cards after a short delay (give UI time to initialize)
+    timer.after_opts({
+        delay = 0.3,
+        tag = "demo_spawn_cards",
+        group = demoState.timerGroup,
+        action = function()
+            InventoryGridDemo.spawnMockCards()
+        end,
+    })
     
     log_debug("[InventoryGridDemo] Initialized successfully")
 end
@@ -142,13 +128,6 @@ function InventoryGridDemo.createMainGrid(x, y)
             allowDragOut = true,
             stackable = true,
             maxStackSize = 5,
-            
-            -- Grid-wide filter: only accept cards
-            filter = function(item, slotIndex)
-                local script = getScriptTableFromEntityID(item)
-                return script and script.category == "card"
-            end,
-            
             slotColor = "darkgray",
             slotEmboss = 2,
             padding = 8,
@@ -157,41 +136,35 @@ function InventoryGridDemo.createMainGrid(x, y)
         
         -- Per-slot configuration
         slots = {
-            -- Slot 1: Fire cards only (with special background)
+            -- Slot 1: Fire cards only (red tint)
             [1] = {
                 filter = function(item)
                     local script = getScriptTableFromEntityID(item)
                     return script and script.element == "Fire"
                 end,
                 color = util.getColor("fiery_red"),
-                tooltip = { title = "Fire Slot", body = "Only fire element cards" },
             },
-            -- Slot 2: Ice cards only
+            -- Slot 2: Ice cards only (blue tint)
             [2] = {
                 filter = function(item)
                     local script = getScriptTableFromEntityID(item)
                     return script and script.element == "Ice"
                 end,
                 color = util.getColor("baby_blue"),
-                tooltip = { title = "Ice Slot", body = "Only ice element cards" },
             },
-            -- Slot 12: Locked slot
+            -- Slot 12: Locked slot (gray)
             [12] = {
                 locked = true,
                 color = util.getColor("gray"),
-                tooltip = { title = "Locked", body = "This slot is locked" },
             },
         },
         
         onSlotChange = function(gridEntity, slotIndex, oldItem, newItem)
             log_debug("[Demo] Slot " .. slotIndex .. " changed")
-            InventoryGridDemo.updateInfoBox()
         end,
         
         onSlotClick = function(gridEntity, slotIndex, button)
-            log_debug("[Demo] Slot " .. slotIndex .. " clicked with " .. button)
-            demoState.selectedSlot = slotIndex
-            InventoryGridDemo.updateInfoBox()
+            log_debug("[Demo] Slot " .. slotIndex .. " clicked")
         end,
     }
     
@@ -199,132 +172,19 @@ function InventoryGridDemo.createMainGrid(x, y)
     demoState.gridEntity = dsl.spawn({ x = x, y = y }, gridDef, "ui", 100)
     ui.box.set_draw_layer(demoState.gridEntity, "ui")
     
-    -- Initialize grid data
+    -- Initialize grid data structure
     local InventoryGridInit = require("ui.inventory_grid_init")
-    InventoryGridInit.initializeIfGrid(demoState.gridEntity)
+    local success = InventoryGridInit.initializeIfGrid(demoState.gridEntity, "demo_inventory")
     
-    -- Add decorations to slots
-    InventoryGridDemo.decorateSlots()
-    
-    log_debug("[InventoryGridDemo] Grid created at " .. x .. ", " .. y)
-end
-
---------------------------------------------------------------------------------
--- Decorate Slots with Badges and Overlays
---------------------------------------------------------------------------------
-
-function InventoryGridDemo.decorateSlots()
-    -- Add element icons to filtered slots
-    local slot1Entity = grid.getSlotEntity(demoState.gridEntity, 1)
-    if slot1Entity then
-        UIDecorations.addBadge(slot1Entity, {
-            id = "fire_badge",
-            icon = SPRITES.iconFire,
-            position = "top_left",
-            offset = { x = 2, y = 2 },
-            size = { w = 16, h = 16 },
-        })
-    end
-    
-    local slot2Entity = grid.getSlotEntity(demoState.gridEntity, 2)
-    if slot2Entity then
-        UIDecorations.addBadge(slot2Entity, {
-            id = "ice_badge",
-            icon = SPRITES.iconIce,
-            position = "top_left",
-            offset = { x = 2, y = 2 },
-            size = { w = 16, h = 16 },
-        })
-    end
-    
-    -- Add lock icon to locked slot
-    local slot12Entity = grid.getSlotEntity(demoState.gridEntity, 12)
-    if slot12Entity then
-        UIDecorations.addBadge(slot12Entity, {
-            id = "lock_badge",
-            icon = SPRITES.iconLock,
-            position = "center",
-            size = { w = 24, h = 24 },
-        })
+    if success then
+        log_debug("[InventoryGridDemo] Grid initialized successfully")
+    else
+        log_warn("[InventoryGridDemo] Grid initialization failed!")
     end
 end
 
 --------------------------------------------------------------------------------
--- Create Custom Panel (demonstrates dsl.customPanel)
---------------------------------------------------------------------------------
-
-function InventoryGridDemo.createCustomPanel(x, y)
-    local panelDef = dsl.customPanel {
-        id = "demo_custom_panel",
-        minWidth = 300,
-        minHeight = 80,
-        
-        onDraw = function(self, px, py, pw, ph, dt)
-            local z = 101
-            local space = "screen"
-            
-            -- Draw background
-            command_buffer.queueDrawRoundedRect(layers.ui, function(c)
-                c.x = px
-                c.y = py
-                c.w = pw
-                c.h = ph
-                c.fillColor = Col(30, 30, 40, 230)
-                c.borderColor = util.getColor("apricot_cream")
-                c.borderWidth = 2
-                c.cornerRadius = 8
-            end, z, space)
-            
-            -- Draw title
-            command_buffer.queueDrawText(layers.ui, function(c)
-                c.text = "Custom Panel Demo"
-                c.x = px + 10
-                c.y = py + 10
-                c.fontSize = 16
-                c.color = util.getColor("white")
-            end, z + 1, space)
-            
-            -- Draw animated element
-            local time = globals.main_menu_elapsed_time or 0
-            local pulse = 0.8 + 0.2 * math.sin(time * 3)
-            
-            command_buffer.queueDrawCircleFilled(layers.ui, function(c)
-                c.x = px + pw - 40
-                c.y = py + ph / 2
-                c.radius = 15 * pulse
-                c.color = util.getColor("mint_green")
-            end, z + 1, space)
-            
-            -- Draw selection indicator if slot selected
-            if demoState.selectedSlot then
-                command_buffer.queueDrawText(layers.ui, function(c)
-                    c.text = "Selected: Slot " .. demoState.selectedSlot
-                    c.x = px + 10
-                    c.y = py + 35
-                    c.fontSize = 12
-                    c.color = util.getColor("gold")
-                end, z + 1, space)
-            end
-        end,
-        
-        onUpdate = function(self, dt)
-            -- Custom update logic here
-        end,
-        
-        config = {
-            hover = true,
-            canCollide = true,
-        },
-    }
-    
-    demoState.customPanelEntity = dsl.spawn({ x = x, y = y }, panelDef, "ui", 100)
-    ui.box.set_draw_layer(demoState.customPanelEntity, "ui")
-    
-    log_debug("[InventoryGridDemo] Custom panel created")
-end
-
---------------------------------------------------------------------------------
--- Create Info Box (demonstrates UIBackground with states)
+-- Create Info Box
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.createInfoBox(x, y)
@@ -335,15 +195,16 @@ function InventoryGridDemo.createInfoBox(x, y)
             padding = 12,
             emboss = 3,
             minWidth = 200,
-            minHeight = 300,
+            minHeight = 280,
         },
         children = {
             dsl.text("Inventory Demo", { fontSize = 18, color = "white", shadow = true }),
             dsl.spacer(10),
             dsl.divider("horizontal", { color = "apricot_cream", thickness = 1, length = 180 }),
             dsl.spacer(10),
-            dsl.text("Drag cards between slots", { fontSize = 12, color = "light_gray" }),
-            dsl.text("Stack identical cards (max 5)", { fontSize = 12, color = "light_gray" }),
+            dsl.text("Drag cards to slots", { fontSize = 12, color = "light_gray" }),
+            dsl.text("Stack same cards (max 5)", { fontSize = 12, color = "light_gray" }),
+            dsl.spacer(8),
             dsl.text("Slot 1: Fire only", { fontSize = 12, color = "fiery_red" }),
             dsl.text("Slot 2: Ice only", { fontSize = 12, color = "baby_blue" }),
             dsl.text("Slot 12: Locked", { fontSize = 12, color = "gray" }),
@@ -365,38 +226,6 @@ function InventoryGridDemo.createInfoBox(x, y)
     
     demoState.infoBoxEntity = dsl.spawn({ x = x, y = y }, infoDef, "ui", 100)
     ui.box.set_draw_layer(demoState.infoBoxEntity, "ui")
-    
-    -- Apply background with hover state
-    UIBackground.apply(demoState.infoBoxEntity, {
-        normal = {
-            type = "color",
-            color = "blackberry",
-        },
-        hover = {
-            type = "color", 
-            color = "plum",
-        },
-    })
-    
-    -- Add star badge to info box
-    UIDecorations.addBadge(demoState.infoBoxEntity, {
-        id = "info_star",
-        icon = SPRITES.iconStar,
-        position = "top_right",
-        offset = { x = -8, y = 8 },
-        size = { w = 20, h = 20 },
-    })
-    
-    log_debug("[InventoryGridDemo] Info box created")
-end
-
---------------------------------------------------------------------------------
--- Update Info Box (refresh dynamic content)
---------------------------------------------------------------------------------
-
-function InventoryGridDemo.updateInfoBox()
-    -- Dynamic text updates automatically via callback
-    -- This function can be extended for additional updates
 end
 
 --------------------------------------------------------------------------------
@@ -408,12 +237,8 @@ function InventoryGridDemo.setupSignalHandlers()
     demoState.signalHandlers.itemAdded = signal.register("grid_item_added", function(gridEntity, slotIndex, itemEntity)
         if gridEntity == demoState.gridEntity then
             log_debug("[Demo Signal] Item added to slot " .. slotIndex)
-            playSound("inventory_item_drop")
-            
-            -- Flash effect on slot
-            local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
-            if slotEntity then
-                -- Could add flash decoration here
+            if playSoundEffect then
+                playSoundEffect("effects", "button-click")
             end
         end
     end)
@@ -422,20 +247,6 @@ function InventoryGridDemo.setupSignalHandlers()
     demoState.signalHandlers.itemRemoved = signal.register("grid_item_removed", function(gridEntity, slotIndex, itemEntity)
         if gridEntity == demoState.gridEntity then
             log_debug("[Demo Signal] Item removed from slot " .. slotIndex)
-            playSound("inventory_item_pickup")
-        end
-    end)
-    
-    -- Listen for grid stack changed
-    demoState.signalHandlers.stackChanged = signal.register("grid_stack_changed", function(gridEntity, slotIndex, itemEntity, oldCount, newCount)
-        if gridEntity == demoState.gridEntity then
-            log_debug("[Demo Signal] Stack changed: " .. oldCount .. " -> " .. newCount)
-            
-            -- Update stack badge
-            local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
-            if slotEntity and newCount > 1 then
-                UIDecorations.setBadgeText(slotEntity, "stack_count", "x" .. newCount)
-            end
         end
     end)
     
@@ -443,7 +254,6 @@ function InventoryGridDemo.setupSignalHandlers()
     demoState.signalHandlers.slotClicked = signal.register("grid_slot_clicked", function(gridEntity, slotIndex, button, modifiers)
         if gridEntity == demoState.gridEntity then
             log_debug("[Demo Signal] Slot " .. slotIndex .. " clicked")
-            demoState.selectedSlot = slotIndex
         end
     end)
     
@@ -455,38 +265,31 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.spawnMockCards()
-    -- Spawn cards at staggered positions near the grid
-    local baseX = globals.screenWidth() - 500
-    local baseY = 150
+    local screenW = globals.screenWidth()
     
-    for i, cardDef in ipairs(MOCK_CARDS) do
-        local x = baseX + ((i - 1) % 3) * 80
-        local y = baseY + math.floor((i - 1) / 3) * 110
+    -- Card definitions
+    local cards = {
+        { id = "fireball", name = "Fireball", sprite = "card-new-test-action.png", element = "Fire", stackId = "fireball" },
+        { id = "ice_shard", name = "Ice Shard", sprite = "card-new-test-action.png", element = "Ice", stackId = "ice_shard" },
+        { id = "trigger", name = "Trigger", sprite = "card-new-test-trigger.png", element = nil, stackId = "trigger" },
+        { id = "modifier", name = "Modifier", sprite = "card-new-test-modifier.png", element = nil, stackId = "modifier" },
+    }
+    
+    -- Spawn cards in a row above the grid
+    local startX = screenW - 500
+    local startY = 400
+    
+    for i, cardDef in ipairs(cards) do
+        local x = startX + (i - 1) * 80
+        local y = startY
         
-        local entity, script = createMockCard(cardDef, x, y)
-        table.insert(demoState.mockCards, { entity = entity, script = script })
-        
-        log_debug("[Demo] Spawned mock card: " .. cardDef.name .. " at " .. x .. ", " .. y)
+        local entity = createSimpleCard(cardDef.sprite, x, y, cardDef)
+        if entity then
+            table.insert(demoState.mockCards, entity)
+        end
     end
     
-    -- Add some cards directly to grid slots
-    timer.after_opts({
-        delay = 0.5,
-        tag = "demo_populate_grid",
-        group = demoState.timerGroup,
-        action = function()
-            -- Add fireball to fire slot
-            if demoState.mockCards[1] then
-                grid.addItem(demoState.gridEntity, demoState.mockCards[1].entity, 1)
-            end
-            -- Add ice shard to ice slot
-            if demoState.mockCards[2] then
-                grid.addItem(demoState.gridEntity, demoState.mockCards[2].entity, 2)
-            end
-        end,
-    })
-    
-    log_debug("[InventoryGridDemo] Mock cards spawned")
+    log_debug("[InventoryGridDemo] Spawned " .. #demoState.mockCards .. " mock cards")
 end
 
 --------------------------------------------------------------------------------
@@ -508,9 +311,9 @@ function InventoryGridDemo.cleanup()
     timer.kill_group(demoState.timerGroup)
     
     -- Destroy mock cards
-    for _, card in ipairs(demoState.mockCards) do
-        if card.entity and registry:valid(card.entity) then
-            registry:destroy(card.entity)
+    for _, entity in ipairs(demoState.mockCards) do
+        if entity and registry:valid(entity) then
+            registry:destroy(entity)
         end
     end
     demoState.mockCards = {}
@@ -522,17 +325,10 @@ function InventoryGridDemo.cleanup()
         demoState.gridEntity = nil
     end
     
-    if demoState.customPanelEntity and ui.box and ui.box.Remove then
-        ui.box.Remove(registry, demoState.customPanelEntity)
-        demoState.customPanelEntity = nil
-    end
-    
     if demoState.infoBoxEntity and ui.box and ui.box.Remove then
         ui.box.Remove(registry, demoState.infoBoxEntity)
         demoState.infoBoxEntity = nil
     end
-    
-    demoState.selectedSlot = nil
     
     log_debug("[InventoryGridDemo] Cleanup complete")
 end

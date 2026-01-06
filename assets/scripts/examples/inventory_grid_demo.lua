@@ -19,13 +19,19 @@ local grid = require("core.inventory_grid")
 local signal = require("external.hump.signal")
 local component_cache = require("core.component_cache")
 local timer = require("core.timer")
+local UIBackground = require("ui.ui_background")
+local UIDecorations = require("ui.ui_decorations")
 
--- Demo state
+local InventoryGridInit = require("ui.inventory_grid_init")
+
 local demoState = {
     gridEntity = nil,
     infoBoxEntity = nil,
+    customPanelEntity = nil,
+    backgroundDemoEntity = nil,
     mockCards = {},
     signalHandlers = {},
+    stackBadges = {},
     timerGroup = "inventory_demo",
 }
 
@@ -34,7 +40,6 @@ local demoState = {
 --------------------------------------------------------------------------------
 
 local function createSimpleCard(spriteName, x, y, cardData)
-    -- Use animation_system to create a sprite entity
     local entity = animation_system.createAnimatedObjectWithTransform(
         spriteName, true, x or 0, y or 0, nil, true
     )
@@ -44,10 +49,26 @@ local function createSimpleCard(spriteName, x, y, cardData)
         return nil
     end
     
-    -- Resize to card size
     animation_system.resizeAnimationObjectsInEntityToFit(entity, 60, 84)
     
-    -- Setup GameObject for drag-drop
+    if add_state_tag then
+        add_state_tag(entity, "default_state")
+    end
+    
+    if layer_order_system and layer_order_system.assignZIndexToEntity then
+        local z = (z_orders and z_orders.ui_tooltips or 800) + 500
+        layer_order_system.assignZIndexToEntity(entity, z)
+    end
+    
+    if ObjectAttachedToUITag and not registry:has(entity, ObjectAttachedToUITag) then
+        registry:emplace(entity, ObjectAttachedToUITag)
+    end
+    
+    local animComp = component_cache.get(entity, AnimationQueueComponent)
+    if animComp then
+        animComp.noDraw = true
+    end
+    
     local go = component_cache.get(entity, GameObject)
     if go then
         go.state.dragEnabled = true
@@ -81,26 +102,22 @@ function InventoryGridDemo.init()
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
     
-    -- Position demo elements
     local gridX = screenW - 380
     local gridY = 80
     
-    -- Create grid
     InventoryGridDemo.createMainGrid(gridX, gridY)
-    
-    -- Create info box
     InventoryGridDemo.createInfoBox(gridX - 220, gridY)
-    
-    -- Setup signal handlers
+    InventoryGridDemo.createCustomPanel(gridX - 220, gridY + 300)
+    InventoryGridDemo.createBackgroundDemo(gridX - 220, gridY + 420)
     InventoryGridDemo.setupSignalHandlers()
     
-    -- Spawn mock cards after a short delay (give UI time to initialize)
     timer.after_opts({
         delay = 0.3,
         tag = "demo_spawn_cards",
         group = demoState.timerGroup,
         action = function()
             InventoryGridDemo.spawnMockCards()
+            InventoryGridDemo.setupStackBadges()
         end,
     })
     
@@ -124,7 +141,7 @@ function InventoryGridDemo.createMainGrid(x, y)
             allowDragOut = true,
             stackable = true,
             maxStackSize = 5,
-            slotColor = "darkgray",
+            slotColor = "gray",
             slotEmboss = 2,
             padding = 8,
             backgroundColor = "blackberry",
@@ -225,29 +242,183 @@ function InventoryGridDemo.createInfoBox(x, y)
 end
 
 --------------------------------------------------------------------------------
+-- Create Custom Panel Demo (demonstrates dsl.customPanel with onDraw)
+--------------------------------------------------------------------------------
+
+function InventoryGridDemo.createCustomPanel(x, y)
+    local customDef = dsl.customPanel {
+        id = "demo_custom_panel",
+        minWidth = 120,
+        minHeight = 80,
+        config = {
+            color = "midnight_blue",
+            hover = true,
+            canCollide = true,
+        },
+        onDraw = function(entity, px, py, pw, ph, z)
+            if command_buffer and command_buffer.queueDrawRectangle then
+                local pulseAlpha = math.abs(math.sin((globals.time or 0) * 2)) * 0.3 + 0.2
+                local pulseColor = Color and Color.new(100, 200, 255, math.floor(pulseAlpha * 255)) or nil
+                if pulseColor then
+                    command_buffer.queueDrawRectangle(
+                        layers.ui or "ui",
+                        function() end,
+                        px + 4, py + 4, pw - 8, ph - 8,
+                        pulseColor, z + 1, layer.DrawCommandSpace.Screen
+                    )
+                end
+            end
+        end,
+        onUpdate = function(entity, dt)
+        end,
+    }
+    
+    local panelContainer = dsl.vbox {
+        config = { padding = 4 },
+        children = {
+            dsl.text("Custom Panel", { fontSize = 10, color = "cyan" }),
+            customDef,
+            dsl.text("(animated draw)", { fontSize = 8, color = "light_gray" }),
+        },
+    }
+    
+    demoState.customPanelEntity = dsl.spawn({ x = x, y = y }, panelContainer, "ui", 100)
+    ui.box.set_draw_layer(demoState.customPanelEntity, "ui")
+end
+
+--------------------------------------------------------------------------------
+-- Create Background Demo (demonstrates UIBackground state-based backgrounds)
+--------------------------------------------------------------------------------
+
+function InventoryGridDemo.createBackgroundDemo(x, y)
+    local buttonDef = dsl.button("Hover Me!", {
+        id = "demo_bg_button",
+        minWidth = 120,
+        minHeight = 40,
+        color = "gray",
+        hover = true,
+    })
+    
+    local container = dsl.vbox {
+        config = { padding = 4 },
+        children = {
+            dsl.text("UIBackground", { fontSize = 10, color = "gold" }),
+            buttonDef,
+            dsl.text("(state changes)", { fontSize = 8, color = "light_gray" }),
+        },
+    }
+    
+    demoState.backgroundDemoEntity = dsl.spawn({ x = x, y = y }, container, "ui", 100)
+    ui.box.set_draw_layer(demoState.backgroundDemoEntity, "ui")
+    
+    timer.after_opts({
+        delay = 0.1,
+        tag = "setup_bg_demo",
+        group = demoState.timerGroup,
+        action = function()
+            local buttonEntity = ui.box.GetUIEByID(registry, demoState.backgroundDemoEntity, "demo_bg_button")
+            if buttonEntity and registry:valid(buttonEntity) then
+                UIBackground.apply(buttonEntity, {
+                    normal = { type = "color", color = "gray" },
+                    hover = { type = "color", color = "steel_blue" },
+                    pressed = { type = "color", color = "midnight_blue" },
+                })
+                log_debug("[Demo] UIBackground applied to button")
+            end
+        end,
+    })
+end
+
+--------------------------------------------------------------------------------
+-- Setup Stack Count Badges (demonstrates UIDecorations)
+--------------------------------------------------------------------------------
+
+function InventoryGridDemo.setupStackBadges()
+    for i = 1, 12 do
+        local slotEntity = grid.getSlotEntity(demoState.gridEntity, i)
+        if slotEntity and registry:valid(slotEntity) then
+            local badgeId = UIDecorations.addBadge(slotEntity, {
+                id = "stack_badge_" .. i,
+                text = "",
+                position = UIDecorations.Position.BOTTOM_RIGHT,
+                offset = { x = -2, y = -2 },
+                size = { w = 18, h = 18 },
+                backgroundColor = "charcoal",
+                textColor = "white",
+            })
+            demoState.stackBadges[i] = badgeId
+        end
+    end
+    
+    timer.every_opts({
+        delay = 0.016,
+        tag = "demo_badge_draw",
+        group = demoState.timerGroup,
+        action = function()
+            InventoryGridDemo.drawStackBadges()
+        end,
+    })
+    
+    log_debug("[Demo] Stack badges created for all slots")
+end
+
+function InventoryGridDemo.drawStackBadges()
+    if not demoState.gridEntity then return end
+    
+    local baseZ = (z_orders and z_orders.ui_tooltips or 800) + 100
+    
+    for i = 1, 12 do
+        local slotEntity = grid.getSlotEntity(demoState.gridEntity, i)
+        if slotEntity and registry:valid(slotEntity) then
+            UIDecorations.draw(slotEntity, baseZ)
+        end
+    end
+end
+
+function InventoryGridDemo.updateStackBadge(slotIndex)
+    local count = grid.getStackCount(demoState.gridEntity, slotIndex)
+    local slotEntity = grid.getSlotEntity(demoState.gridEntity, slotIndex)
+    if slotEntity and demoState.stackBadges[slotIndex] then
+        local text = count > 1 and tostring(count) or ""
+        UIDecorations.setBadgeText(slotEntity, demoState.stackBadges[slotIndex], text)
+    end
+end
+
+--------------------------------------------------------------------------------
 -- Setup Signal Handlers
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.setupSignalHandlers()
-    -- Listen for grid item added
-    demoState.signalHandlers.itemAdded = signal.register("grid_item_added", function(gridEntity, slotIndex, itemEntity)
+    local function registerHandler(eventName, handler)
+        signal.register(eventName, handler)
+        table.insert(demoState.signalHandlers, { event = eventName, handler = handler })
+    end
+    
+    registerHandler("grid_item_added", function(gridEntity, slotIndex, itemEntity)
         if gridEntity == demoState.gridEntity then
             log_debug("[Demo Signal] Item added to slot " .. slotIndex)
+            InventoryGridDemo.updateStackBadge(slotIndex)
             if playSoundEffect then
                 playSoundEffect("effects", "button-click")
             end
         end
     end)
     
-    -- Listen for grid item removed
-    demoState.signalHandlers.itemRemoved = signal.register("grid_item_removed", function(gridEntity, slotIndex, itemEntity)
+    registerHandler("grid_item_removed", function(gridEntity, slotIndex, itemEntity)
         if gridEntity == demoState.gridEntity then
             log_debug("[Demo Signal] Item removed from slot " .. slotIndex)
+            InventoryGridDemo.updateStackBadge(slotIndex)
         end
     end)
     
-    -- Listen for slot clicked
-    demoState.signalHandlers.slotClicked = signal.register("grid_slot_clicked", function(gridEntity, slotIndex, button, modifiers)
+    registerHandler("grid_stack_changed", function(gridEntity, slotIndex, itemEntity, oldCount, newCount)
+        if gridEntity == demoState.gridEntity then
+            log_debug("[Demo Signal] Stack at slot " .. slotIndex .. " changed: " .. oldCount .. " -> " .. newCount)
+            InventoryGridDemo.updateStackBadge(slotIndex)
+        end
+    end)
+    
+    registerHandler("grid_slot_clicked", function(gridEntity, slotIndex, button, modifiers)
         if gridEntity == demoState.gridEntity then
             log_debug("[Demo Signal] Slot " .. slotIndex .. " clicked")
         end
@@ -271,9 +442,9 @@ function InventoryGridDemo.spawnMockCards()
         { id = "modifier", name = "Modifier", sprite = "card-new-test-modifier.png", element = nil, stackId = "modifier" },
     }
     
-    -- Spawn cards in a row above the grid
-    local startX = screenW - 500
-    local startY = 400
+    local screenH = globals.screenHeight()
+    local startX = screenW - 370
+    local startY = screenH - 120
     
     for i, cardDef in ipairs(cards) do
         local x = startX + (i - 1) * 80
@@ -286,6 +457,32 @@ function InventoryGridDemo.spawnMockCards()
     end
     
     log_debug("[InventoryGridDemo] Spawned " .. #demoState.mockCards .. " mock cards")
+    
+    InventoryGridDemo.setupCardRenderer()
+end
+
+function InventoryGridDemo.setupCardRenderer()
+    timer.run_every_render_frame(function()
+        if not layers or not layers.ui then return end
+        if not command_buffer or not command_buffer.queueDrawBatchedEntities then return end
+        if #demoState.mockCards == 0 then return end
+        
+        local validCards = {}
+        for _, eid in ipairs(demoState.mockCards) do
+            if eid and registry:valid(eid) then
+                table.insert(validCards, eid)
+            end
+        end
+        
+        if #validCards > 0 then
+            local z = (z_orders and z_orders.ui_tooltips or 800) + 500
+            command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
+                cmd.registry = registry
+                cmd.entities = validCards
+                cmd.autoOptimize = true
+            end, z, layer.DrawCommandSpace.Screen)
+        end
+    end, "demo_card_render", demoState.timerGroup)
 end
 
 --------------------------------------------------------------------------------
@@ -295,18 +492,15 @@ end
 function InventoryGridDemo.cleanup()
     log_debug("[InventoryGridDemo] Cleaning up...")
     
-    -- Remove signal handlers
-    for name, handler in pairs(demoState.signalHandlers) do
-        if handler then
-            signal.remove(handler)
+    for _, entry in ipairs(demoState.signalHandlers) do
+        if entry.event and entry.handler then
+            signal.remove(entry.event, entry.handler)
         end
     end
     demoState.signalHandlers = {}
     
-    -- Cancel timers
     timer.kill_group(demoState.timerGroup)
     
-    -- Destroy mock cards
     for _, entity in ipairs(demoState.mockCards) do
         if entity and registry:valid(entity) then
             registry:destroy(entity)
@@ -314,16 +508,44 @@ function InventoryGridDemo.cleanup()
     end
     demoState.mockCards = {}
     
-    -- Destroy UI elements
-    if demoState.gridEntity and ui.box and ui.box.Remove then
+    if demoState.gridEntity then
+        for i = 1, 12 do
+            local slotEntity = grid.getSlotEntity(demoState.gridEntity, i)
+            if slotEntity then
+                UIDecorations.cleanup(slotEntity)
+                InventoryGridInit.cleanupSlotMetadata(slotEntity)
+            end
+        end
+        
+        grid.cleanup(demoState.gridEntity)
         dsl.cleanupGrid("demo_inventory")
-        ui.box.Remove(registry, demoState.gridEntity)
+        
+        if ui.box and ui.box.Remove then
+            ui.box.Remove(registry, demoState.gridEntity)
+        end
         demoState.gridEntity = nil
+    end
+    demoState.stackBadges = {}
+    
+    if demoState.backgroundDemoEntity then
+        local buttonEntity = ui.box.GetUIEByID(registry, demoState.backgroundDemoEntity, "demo_bg_button")
+        if buttonEntity then
+            UIBackground.remove(buttonEntity)
+        end
+        if ui.box and ui.box.Remove then
+            ui.box.Remove(registry, demoState.backgroundDemoEntity)
+        end
+        demoState.backgroundDemoEntity = nil
     end
     
     if demoState.infoBoxEntity and ui.box and ui.box.Remove then
         ui.box.Remove(registry, demoState.infoBoxEntity)
         demoState.infoBoxEntity = nil
+    end
+    
+    if demoState.customPanelEntity and ui.box and ui.box.Remove then
+        ui.box.Remove(registry, demoState.customPanelEntity)
+        demoState.customPanelEntity = nil
     end
     
     log_debug("[InventoryGridDemo] Cleanup complete")

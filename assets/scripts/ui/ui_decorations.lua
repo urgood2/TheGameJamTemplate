@@ -278,7 +278,49 @@ function UIDecorations.draw(entity, baseZ)
     
     baseZ = baseZ or 0
     
-    -- Draw custom overlays
+    for _, badge in ipairs(decor.badges) do
+        local visible = true
+        if badge.visible then
+            visible = type(badge.visible) == "function" and badge.visible(entity) or badge.visible
+        end
+        
+        if visible and badge.text and badge.text ~= "" then
+            local ox, oy = calculatePosition(
+                badge.position, elementW, elementH,
+                badge.size.w, badge.size.h, badge.offset
+            )
+            local bx, by = elementX + ox, elementY + oy
+            
+            if command_buffer and command_buffer.queueDrawRectangle then
+                local bgColor = badge.backgroundColor
+                if type(bgColor) == "string" then
+                    bgColor = util and util.getColor(bgColor)
+                end
+                if bgColor then
+                    command_buffer.queueDrawRectangle(
+                        layers.ui or "ui", function() end,
+                        bx, by, badge.size.w, badge.size.h,
+                        bgColor, baseZ + 1, layer.DrawCommandSpace.Screen
+                    )
+                end
+            end
+            
+            if command_buffer and command_buffer.queueDrawTextPro then
+                local textColor = badge.textColor
+                if type(textColor) == "string" then
+                    textColor = util and util.getColor(textColor)
+                end
+                command_buffer.queueDrawTextPro(
+                    layers.ui or "ui", function() end,
+                    badge.text,
+                    bx + badge.size.w / 2, by + badge.size.h / 2,
+                    10, textColor or Color.new(255,255,255,255),
+                    baseZ + 2, layer.DrawCommandSpace.Screen
+                )
+            end
+        end
+    end
+    
     for _, overlay in ipairs(decor.customOverlays) do
         local visible = true
         if overlay.visible then

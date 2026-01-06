@@ -142,44 +142,53 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
     
     local go = component_cache.get(droppedEntity, GameObject)
     if not go or not go.state.dragEnabled then
-        return  -- Not a draggable item
+        return
     end
     
-    -- Check if can accept
     if not grid.canSlotAccept(gridEntity, slotIndex, droppedEntity) then
-        -- Return item to original position (or handle rejection)
         log_debug("[InventoryGridInit] Slot " .. slotIndex .. " rejected item")
         return
     end
     
-    -- Check if item came from another slot in this grid
     local sourceSlot = grid.findSlotContaining(gridEntity, droppedEntity)
     
     if sourceSlot then
-        -- Moving within same grid
         if sourceSlot == slotIndex then
-            return  -- Dropped on same slot, no action
+            return
         end
         
         local targetItem = grid.getItemAtIndex(gridEntity, slotIndex)
         if targetItem then
-            -- Swap items
-            grid.swapItems(gridEntity, sourceSlot, slotIndex)
+            local sourceStackId = InventoryGridInit._getStackId(droppedEntity)
+            local targetStackId = InventoryGridInit._getStackId(targetItem)
+            if sourceStackId and sourceStackId == targetStackId then
+                grid.mergeStacks(gridEntity, sourceSlot, slotIndex)
+            else
+                grid.swapItems(gridEntity, sourceSlot, slotIndex)
+            end
         else
-            -- Move to empty slot
             grid.moveItem(gridEntity, sourceSlot, slotIndex)
         end
     else
-        -- Item from outside - try to add
-        local success = grid.addItem(gridEntity, droppedEntity, slotIndex)
+        local success, slot, action = grid.addItem(gridEntity, droppedEntity, slotIndex)
         if success then
-            -- Center item in slot
-            local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
-            if slotEntity then
-                game.centerInventoryItemOnTargetUI(droppedEntity, slotEntity)
+            if action == "stacked" then
+                if registry:valid(droppedEntity) then
+                    registry:destroy(droppedEntity)
+                end
+            elseif action == "placed" then
+                local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+                if slotEntity and game and game.centerInventoryItemOnTargetUI then
+                    game.centerInventoryItemOnTargetUI(droppedEntity, slotEntity)
+                end
             end
         end
     end
+end
+
+function InventoryGridInit._getStackId(entity)
+    local script = getScriptTableFromEntityID(entity)
+    return script and script.stackId
 end
 
 --------------------------------------------------------------------------------

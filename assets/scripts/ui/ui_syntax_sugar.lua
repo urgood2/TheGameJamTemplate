@@ -373,7 +373,7 @@ function dsl.progressBar(opts)
             minHeight             = opts.minHeight or 20,
             progressBar           = true,
             progressBarMaxValue   = opts.maxValue or 1.0,
-            progressBarEmptyColor = color(opts.emptyColor or "darkgray"),
+            progressBarEmptyColor = color(opts.emptyColor or "gray"),
             progressBarFullColor  = color(opts.fullColor or "green"),
             progressBarFetchValueLambda = opts.getValue,
             align                 = opts.align or (bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER)),
@@ -850,7 +850,9 @@ function dsl.inventoryGrid(opts)
             slotIndex = slotIndex + 1
             local slotId = gridId .. "_slot_" .. slotIndex
             local slotConfig = slotsConfig[slotIndex] or {}
-            local slotColor = slotConfig.color or gridConfig.slotColor or color("gray")
+            -- Convert gridConfig.slotColor string to actual color, fall back to gray
+            local defaultSlotColor = gridConfig.slotColor and color(gridConfig.slotColor) or color("gray")
+            local slotColor = slotConfig.color or defaultSlotColor
             
             local slotNode = def{
                 type = "HORIZONTAL_CONTAINER",

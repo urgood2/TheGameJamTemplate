@@ -286,7 +286,6 @@ function grid.addItem(gridEntity, itemEntity, slotIndex)
         end
     end
     
-    -- Handle stacking
     if slot.item then
         if data.config.stackable then
             local existingStackId = getStackId(slot.item)
@@ -298,20 +297,19 @@ function grid.addItem(gridEntity, itemEntity, slotIndex)
                     local oldCount = slot.stackCount
                     slot.stackCount = math.min(slot.stackCount + 1, maxStack)
                     signal.emit("grid_stack_changed", gridEntity, slotIndex, slot.item, oldCount, slot.stackCount)
-                    return true, slotIndex
+                    return true, slotIndex, "stacked"
                 end
             end
         end
-        return false, nil  -- Slot occupied, can't stack
+        return false, nil, nil
     end
     
-    -- Add item to empty slot
     slot.item = itemEntity
     slot.stackCount = 1
     
     signal.emit("grid_item_added", gridEntity, slotIndex, itemEntity)
     
-    return true, slotIndex
+    return true, slotIndex, "placed"
 end
 
 function grid.removeItem(gridEntity, slotIndex)
@@ -371,7 +369,6 @@ function grid.swapItems(gridEntity, slot1, slot2)
     if not s1 or not s2 then return false end
     if s1.locked or s2.locked then return false end
     
-    -- Swap
     local tempItem = s1.item
     local tempCount = s1.stackCount
     
@@ -381,7 +378,71 @@ function grid.swapItems(gridEntity, slot1, slot2)
     s2.item = tempItem
     s2.stackCount = tempCount
     
+    signal.emit("grid_items_swapped", gridEntity, slot1, slot2, s2.item, s1.item)
+    
     return true
+end
+
+function grid.mergeStacks(gridEntity, fromSlot, toSlot)
+    local data = getGridComponent(gridEntity)
+    if not data then return false, 0 end
+    if not data.config.stackable then return false, 0 end
+    
+    local source = data.slots[fromSlot]
+    local target = data.slots[toSlot]
+    
+    if not source or not target then return false, 0 end
+    if source.locked or target.locked then return false, 0 end
+    if not source.item or not target.item then return false, 0 end
+    
+    local sourceStackId = getStackId(source.item)
+    local targetStackId = getStackId(target.item)
+    if not sourceStackId or sourceStackId ~= targetStackId then return false, 0 end
+    
+    local maxStack = data.config.maxStackSize or 999
+    local available = maxStack - target.stackCount
+    if available <= 0 then return false, 0 end
+    
+    local toTransfer = math.min(source.stackCount, available)
+    local oldTargetCount = target.stackCount
+    local oldSourceCount = source.stackCount
+    
+    target.stackCount = target.stackCount + toTransfer
+    source.stackCount = source.stackCount - toTransfer
+    
+    signal.emit("grid_stack_changed", gridEntity, toSlot, target.item, oldTargetCount, target.stackCount)
+    
+    if source.stackCount <= 0 then
+        local removedItem = source.item
+        source.item = nil
+        source.stackCount = 0
+        signal.emit("grid_item_removed", gridEntity, fromSlot, removedItem)
+    else
+        signal.emit("grid_stack_changed", gridEntity, fromSlot, source.item, oldSourceCount, source.stackCount)
+    end
+    
+    return true, toTransfer
+end
+
+function grid.splitStack(gridEntity, slotIndex, amount, newItemEntity)
+    local data = getGridComponent(gridEntity)
+    if not data then return false end
+    
+    local slot = data.slots[slotIndex]
+    if not slot or not slot.item then return false end
+    if slot.locked then return false end
+    if slot.stackCount <= 1 then return false end
+    
+    amount = math.min(amount or 1, slot.stackCount - 1)
+    if amount <= 0 then return false end
+    
+    local oldCount = slot.stackCount
+    slot.stackCount = slot.stackCount - amount
+    
+    signal.emit("grid_stack_changed", gridEntity, slotIndex, slot.item, oldCount, slot.stackCount)
+    signal.emit("grid_stack_split", gridEntity, slotIndex, amount, newItemEntity)
+    
+    return true, amount
 end
 
 --------------------------------------------------------------------------------

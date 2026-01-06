@@ -880,7 +880,6 @@ function dsl.inventoryGrid(opts)
             slotIndex = slotIndex + 1
             local slotId = gridId .. "_slot_" .. slotIndex
             local slotConfig = slotsConfig[slotIndex] or {}
-            -- Convert gridConfig.slotColor string to actual color, fall back to gray
             local defaultSlotColor = gridConfig.slotColor and color(gridConfig.slotColor) or color("gray")
             local slotColor = slotConfig.color or defaultSlotColor
             

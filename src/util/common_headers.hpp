@@ -50,7 +50,10 @@ using json = nlohmann::json;
 
 #include "snowhouse/snowhouse.h" // Snowhouse assertion lib
 
-#define MAGIC_ENUM_RANGE_MIN -126
-#define MAGIC_ENUM_RANGE_MAX 400
+// magic_enum range: each enum value in range generates template instantiations
+// Reduced from -126..400 (526 values!) to -16..256 (272 values) for ~50% less bloat
+// If you have enums outside this range, use magic_enum::customize::enum_range<YourEnum>
+#define MAGIC_ENUM_RANGE_MIN -16
+#define MAGIC_ENUM_RANGE_MAX 256
 #include "magic_enum/magic_enum.hpp" // magic_enum lib
 #include "../core/globals.hpp"

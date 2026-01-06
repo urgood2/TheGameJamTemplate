@@ -67,6 +67,16 @@ build-tracy:
 	cmake -B build-tracy -DTRACY_ENABLE=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_UNIT_TESTS=OFF
 	cmake --build build-tracy --target raylib-cpp-cmake-template -j4 --
 
+# Size-optimized RelWithDebInfo build (63 MB vs 1.3 GB Debug)
+build-optimized:
+	cmake --preset windows-relwithdebinfo
+	cmake --build build --target raylib-cpp-cmake-template -j8
+
+# Minimal size build (disables optional modules)
+build-minsize:
+	cmake --preset windows-minsizerel
+	cmake --build build-minsize --target raylib-cpp-cmake-template -j8
+
 # =============================================================================
 # Testing
 # =============================================================================

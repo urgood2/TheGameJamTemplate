@@ -200,27 +200,69 @@ if(ENABLE_LTO AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     check_ipo_supported(RESULT lto_supported OUTPUT lto_output)
     if(lto_supported)
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-        message(STATUS "LTO/IPO ENABLED - expect 10-20% smaller binaries and potential runtime speedup")
+        # MinGW requires gcc-ar and gcc-ranlib for LTO to work properly
+        if(MINGW)
+            find_program(GCC_AR gcc-ar)
+            find_program(GCC_RANLIB gcc-ranlib)
+            if(GCC_AR AND GCC_RANLIB)
+                set(CMAKE_AR ${GCC_AR})
+                set(CMAKE_RANLIB ${GCC_RANLIB})
+                message(STATUS "LTO/IPO ENABLED with gcc-ar/gcc-ranlib for MinGW")
+            else()
+                message(WARNING "LTO on MinGW requires gcc-ar and gcc-ranlib; falling back to no LTO")
+                set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+            endif()
+        else()
+            message(STATUS "LTO/IPO ENABLED - expect 10-20% smaller binaries and potential runtime speedup")
+        endif()
     else()
         message(WARNING "LTO requested but not supported: ${lto_output}")
     endif()
 endif()
 
 ##########################################################################################
-# PERFORMANCE OPTIMIZATION: MinSizeRel configuration with aggressive size reduction
+# PERFORMANCE OPTIMIZATION: Size reduction for Release/RelWithDebInfo/MinSizeRel
 ##########################################################################################
-# Set aggressive size optimization flags for MinSizeRel builds
+option(ENABLE_SIZE_OPTIMIZATION "Enable aggressive size optimization flags" OFF)
+
+# MinSizeRel: Aggressive size reduction (disables RTTI and exceptions)
 if(NOT MSVC)
     set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions" CACHE STRING "" FORCE)
     set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -ffunction-sections -fdata-sections" CACHE STRING "" FORCE)
     if(APPLE)
         set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Wl,-dead_strip" CACHE STRING "" FORCE)
-    elseif(UNIX)
+    elseif(UNIX OR MINGW)
         set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Wl,--gc-sections -Wl,--strip-all" CACHE STRING "" FORCE)
     endif()
 else()
     set(CMAKE_CXX_FLAGS_MINSIZEREL "/O1 /Ob1 /DNDEBUG /GR-" CACHE STRING "" FORCE)
     set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "/OPT:REF /OPT:ICF" CACHE STRING "" FORCE)
+endif()
+
+# Size optimization for Release and RelWithDebInfo when ENABLE_SIZE_OPTIMIZATION is ON
+if(ENABLE_SIZE_OPTIMIZATION AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "SIZE OPTIMIZATION: Enabling gc-sections and dead code elimination")
+    if(NOT MSVC)
+        # Enable function and data sections for dead code elimination
+        add_compile_options(-ffunction-sections -fdata-sections)
+        # Note: -gsplit-dwarf disabled on MinGW due to compatibility issues
+        # Linker flags for garbage collection of unused sections
+        if(APPLE)
+            add_link_options(-Wl,-dead_strip)
+        elseif(UNIX OR MINGW)
+            add_link_options(-Wl,--gc-sections)
+            # For Release, also strip all symbols
+            if(CMAKE_BUILD_TYPE STREQUAL "Release")
+                add_link_options(-Wl,--strip-all)
+            elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+                # Strip debug symbols from binary (can reduce size by 50%+)
+                add_link_options(-Wl,--strip-debug)
+            endif()
+        endif()
+    else()
+        # MSVC equivalent: /OPT:REF removes unreferenced functions
+        add_link_options(/OPT:REF /OPT:ICF)
+    endif()
 endif()
 
 ##########################################################################################

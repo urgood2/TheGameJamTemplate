@@ -575,7 +575,17 @@ function createTabDemo()
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
     
     -- Initialize inventory grid demo
-    InventoryGridDemo.init()
+    if InventoryGridDemo then
+        print("[TRACE] Initializing InventoryGridDemo...")
+        local ok, err = pcall(InventoryGridDemo.init)
+        if not ok then
+            print("[ERROR] InventoryGridDemo.init() failed: " .. tostring(err))
+        else
+            print("[TRACE] InventoryGridDemo initialized successfully")
+        end
+    else
+        print("[WARN] InventoryGridDemo module not loaded, skipping init")
+    end
 end
 
 function createPatchNotesButton()

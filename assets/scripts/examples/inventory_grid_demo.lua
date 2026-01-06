@@ -62,9 +62,13 @@ local function createSimpleCard(spriteName, x, y, cardData)
         layer_order_system.assignZIndexToEntity(entity, z)
     end
     
-    -- NOTE: Do NOT add ObjectAttachedToUITag - cards should be in world-space quadtree
-    -- for collision, even though they render to UI layer. The dual-quadtree system
-    -- (FindAllEntitiesAtPoint) queries both world and UI quadtrees automatically.
+    -- ObjectAttachedToUITag: excludes from main sprite render (rendered by our custom timer)
+    if ObjectAttachedToUITag and not registry:has(entity, ObjectAttachedToUITag) then
+        registry:emplace(entity, ObjectAttachedToUITag)
+    end
+    
+    -- Screen-space collision: cards are at screen coords, camera has zoom=0.8
+    transform.set_space(entity, "screen")
     
     local go = component_cache.get(entity, GameObject)
     if go then
@@ -125,8 +129,8 @@ function InventoryGridDemo.init()
     
     InventoryGridDemo.createMainGrid(gridX, gridY)
     InventoryGridDemo.createInfoBox(gridX - 220, gridY)
-    InventoryGridDemo.createCustomPanel(gridX - 220, gridY + 300)
-    InventoryGridDemo.createBackgroundDemo(gridX - 220, gridY + 420)
+    InventoryGridDemo.createCustomPanel(gridX - 220, gridY + 310)
+    InventoryGridDemo.createBackgroundDemo(gridX - 220, gridY + 470)
     InventoryGridDemo.setupSignalHandlers()
     
     timer.after_opts({
@@ -293,11 +297,17 @@ function InventoryGridDemo.createCustomPanel(x, y)
     }
     
     local panelContainer = dsl.vbox {
-        config = { padding = 4 },
+        config = { 
+            padding = 8,
+            color = "blackberry",
+            emboss = 2,
+        },
         children = {
-            dsl.text("Custom Panel", { fontSize = 10, color = "cyan" }),
+            dsl.text("Custom Panel", { fontSize = 12, color = "cyan", shadow = true }),
+            dsl.spacer(4),
             customDef,
-            dsl.text("(animated draw)", { fontSize = 8, color = "light_gray" }),
+            dsl.spacer(4),
+            dsl.text("(animated draw)", { fontSize = 10, color = "light_gray" }),
         },
     }
     
@@ -319,11 +329,17 @@ function InventoryGridDemo.createBackgroundDemo(x, y)
     })
     
     local container = dsl.vbox {
-        config = { padding = 4 },
+        config = { 
+            padding = 8,
+            color = "blackberry",
+            emboss = 2,
+        },
         children = {
-            dsl.text("UIBackground", { fontSize = 10, color = "gold" }),
+            dsl.text("UIBackground", { fontSize = 12, color = "gold", shadow = true }),
+            dsl.spacer(4),
             buttonDef,
-            dsl.text("(state changes)", { fontSize = 8, color = "light_gray" }),
+            dsl.spacer(4),
+            dsl.text("(state changes)", { fontSize = 10, color = "light_gray" }),
         },
     }
     

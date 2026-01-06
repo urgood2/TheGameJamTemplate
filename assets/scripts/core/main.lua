@@ -28,6 +28,7 @@ local LightingDemo = require("demos.lighting_demo")
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 local PatchNotesModal = require("ui.patch_notes_modal")
+local InventoryGridDemo = require("examples.inventory_grid_demo")
 -- Represents game loop main module
 main = main or {}
 
@@ -567,6 +568,9 @@ function createTabDemo()
     
     mainMenuEntities.tab_demo_uibox = dsl.spawn({ x = 50, y = 50 }, tabDef)
     ui.box.set_draw_layer(mainMenuEntities.tab_demo_uibox, "ui")
+    
+    -- Initialize inventory grid demo
+    InventoryGridDemo.init()
 end
 
 function createPatchNotesButton()
@@ -686,6 +690,7 @@ end
 function clearMainMenu()
 
     -- RenderGroupsTest.cleanup()
+    InventoryGridDemo.cleanup()
 
     if mainMenuEntities.special_item_1 then mainMenuEntities.special_item_1:destroy(); mainMenuEntities.special_item_1 = nil end
     if mainMenuEntities.special_item_2 then mainMenuEntities.special_item_2:destroy(); mainMenuEntities.special_item_2 = nil end

@@ -528,3 +528,12 @@
   - Eliminated shared_ptr ref-counting on render hot path with Layer* overloads for 25-40% render dispatch improvement.
   - Fixed sprite lookup race condition by deferring to prevent atlas loading issues.
   - Updated cookbook with TooltipV2 and TooltipEffects recipes.
+  - Fixed UI cycle detection to prevent infinite recursion during element removal.
+  - Hardened UI click propagation and crash reporting with 50-frame stack traces.
+  - Improved tooltip text wrapping with proper container layout and standardized font hierarchy.
+  - Enhanced card board layout to spread cards with variable gap (24-60px) when extra space available.
+  - Added continuous highlight sweep animation to tooltip card names based on rarity.
+
+01/06/2026
+  - Fixed dynamic text entry binding to pass function instead of string, preventing crashes on card hover.
+  - Replaced missing wand icon sprites with placeholder assets.

@@ -32,13 +32,6 @@ just build-web                # Web build (requires emsdk)
 
 ## Lua Runtime Debugging
 
-**File logging enabled:** Warnings and errors are written to `build/debug.log` (truncated each run).
-
-**Workflow after a test run:**
-```bash
-cat build/debug.log | grep -E "(warning|error|Error)" | head -50
-```
-
 **Auto-run and grep for errors:**
 ```bash
 (./build/raylib-cpp-cmake-template 2>&1 & sleep 8; kill $!) | grep -E "(error|Error|Lua)"
@@ -50,124 +43,9 @@ cat build/debug.log | grep -E "(warning|error|Error)" | head -50
 ```
 
 **Common Lua error patterns:**
-- `sol: cannot set (new_index)` → C++ userdata doesn't allow arbitrary keys. Use `buttonCallback` in DSL config or Lua-side registry table
+- `sol: cannot set (new_index)` → C++ userdata doesn't allow arbitrary keys. Use Lua-side registry table instead of `go.config.foo = bar`
 - `attempt to index a nil value` → Component/entity not found or not initialized
 - Stack traces show file:line → Read that exact location to find the bug
-
-## C++ Bindings vs Lua Modules (CRITICAL)
-
-**Many "modules" are C++ globals, NOT Lua files you can `require()`!**
-
-```lua
--- WRONG: These will fail with "module not found"
-local shader_pipeline = require("shaders.shader_pipeline")  -- ERROR!
-local registry = require("core.registry")                    -- ERROR!
-
--- CORRECT: Access C++ bindings from _G
-local shader_pipeline = _G.shader_pipeline
-local registry = _G.registry  -- or just use `registry` directly
-```
-
-### C++ Globals (use `_G.name` or bare name)
-| Global | Purpose |
-|--------|---------|
-| `registry` | EnTT entity registry |
-| `component_cache` | Cached component access |
-| `shader_pipeline` | Shader pipeline manager |
-| `physics` | Physics system bindings |
-| `globals` | Game state and screen dimensions |
-| `localization` | Localization system |
-| `animation_system` | Animation creation/control |
-| `layer_order_system` | Z-ordering system |
-| `command_buffer` | Draw command queue |
-| `layers` | Layer references (sprites, ui, etc.) |
-| `z_orders` | Z-order constants |
-| `globalShaderUniforms` | Shader uniform manager |
-
-### Lua Modules (use `require()`)
-| Module | Path |
-|--------|------|
-| Timer | `require("core.timer")` |
-| Signal | `require("external.hump.signal")` |
-| Component Cache | `require("core.component_cache")` |
-| UI DSL | `require("ui.ui_syntax_sugar")` |
-| EntityBuilder | `require("core.entity_builder")` |
-| ShaderBuilder | `require("core.shader_builder")` |
-
-**Rule of thumb:** If it's defined in C++ (check `chugget_code_definitions.lua` for hints), use `_G.name`. If it's a `.lua` file in `assets/scripts/`, use `require()`.
-
-## Z-Order and Layer Rendering
-
-### Setting Entity Z-Level
-
-Use `layer_order_system.assignZIndexToEntity()` to set an entity's z-order:
-
-```lua
--- Set entity z-level (modifies LayerOrderComponent)
-layer_order_system.assignZIndexToEntity(entity, z_orders.ui_tooltips + 100)
-
--- Get current z-level
-local z = layer_order_system.getZIndex(entity)
-```
-
-### DrawCommandSpace (Camera Awareness)
-
-| Space | Behavior | Use For |
-|-------|----------|---------|
-| `layer.DrawCommandSpace.World` | Follows camera (camera-aware) | Game objects, cards in world, anything that should move with camera |
-| `layer.DrawCommandSpace.Screen` | Fixed to screen (ignores camera) | HUD, fixed UI elements, screen overlays |
-
-```lua
--- Camera-aware rendering (moves with camera)
-command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
-    cmd.entities = entityList
-end, z, layer.DrawCommandSpace.World)
-
--- Fixed to screen (ignores camera)
-command_buffer.queueDrawRectangle(layers.ui, function(c)
-    c.x, c.y, c.w, c.h = 10, 10, 100, 50
-end, z, layer.DrawCommandSpace.Screen)
-```
-
-### Common Z-Order Values (from `core/z_orders.lua`)
-
-| Constant | Value | Purpose |
-|----------|-------|---------|
-| `z_orders.background` | ~0 | Background layers |
-| `z_orders.card` | ~100 | Normal cards |
-| `z_orders.top_card` | 200 | Dragged/focused cards |
-| `z_orders.ui_tooltips` | 900 | UI tooltips |
-
-**For UI cards above everything:** Use `z_orders.ui_tooltips + 500` (~1400).
-
-### World-Space vs Screen-Space Collision (Dual Quadtree)
-
-The engine uses **two separate quadtrees** for collision detection:
-
-| Quadtree | Entities | Marker |
-|----------|----------|--------|
-| `quadtreeWorld` | Game entities, cards, enemies | NO `ScreenSpaceCollisionMarker` |
-| `quadtreeUI` | UI elements, buttons, slots | HAS `ScreenSpaceCollisionMarker` |
-
-**`FindAllEntitiesAtPoint()` queries BOTH quadtrees automatically**, enabling world-space cards to collide with screen-space UI.
-
-```lua
--- World-space card that renders above UI but collides with UI slots:
-local entity = createCard(...)
-
--- 1. Do NOT add ObjectAttachedToUITag (stays in world quadtree)
--- 2. Render to UI layer with World space (camera-aware, above UI)
-command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
-    cmd.entities = { entity }
-end, z_orders.ui_tooltips + 500, layer.DrawCommandSpace.World)
-
--- 3. UI slots (screen-space) get ScreenSpaceCollisionMarker automatically
--- 4. Drag-drop works: input system queries both quadtrees
-```
-
-**Key component:** `ObjectAttachedToUITag` / `ScreenSpaceCollisionMarker`
-- **WITH tag**: Entity is screen-space (UI quadtree), uses screen coordinates
-- **WITHOUT tag**: Entity is world-space (world quadtree), uses camera-transformed coordinates
 
 ## Architecture Overview
 

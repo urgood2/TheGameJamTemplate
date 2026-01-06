@@ -197,6 +197,7 @@ function InventoryGridDemo.createMainGrid(x, y)
     
     -- Spawn grid
     demoState.gridEntity = dsl.spawn({ x = x, y = y }, gridDef, "ui", 100)
+    ui.box.set_draw_layer(demoState.gridEntity, "ui")
     
     -- Initialize grid data
     local InventoryGridInit = require("ui.inventory_grid_init")
@@ -317,6 +318,7 @@ function InventoryGridDemo.createCustomPanel(x, y)
     }
     
     demoState.customPanelEntity = dsl.spawn({ x = x, y = y }, panelDef, "ui", 100)
+    ui.box.set_draw_layer(demoState.customPanelEntity, "ui")
     
     log_debug("[InventoryGridDemo] Custom panel created")
 end
@@ -362,6 +364,7 @@ function InventoryGridDemo.createInfoBox(x, y)
     }
     
     demoState.infoBoxEntity = dsl.spawn({ x = x, y = y }, infoDef, "ui", 100)
+    ui.box.set_draw_layer(demoState.infoBoxEntity, "ui")
     
     -- Apply background with hover state
     UIBackground.apply(demoState.infoBoxEntity, {

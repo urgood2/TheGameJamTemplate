@@ -89,6 +89,50 @@ local registry = _G.registry  -- or just use `registry` directly
 
 **Rule of thumb:** If it's defined in C++ (check `chugget_code_definitions.lua` for hints), use `_G.name`. If it's a `.lua` file in `assets/scripts/`, use `require()`.
 
+## Z-Order and Layer Rendering
+
+### Setting Entity Z-Level
+
+Use `layer_order_system.assignZIndexToEntity()` to set an entity's z-order:
+
+```lua
+-- Set entity z-level (modifies LayerOrderComponent)
+layer_order_system.assignZIndexToEntity(entity, z_orders.ui_tooltips + 100)
+
+-- Get current z-level
+local z = layer_order_system.getZIndex(entity)
+```
+
+### DrawCommandSpace (Camera Awareness)
+
+| Space | Behavior | Use For |
+|-------|----------|---------|
+| `layer.DrawCommandSpace.World` | Follows camera (camera-aware) | Game objects, cards in world, anything that should move with camera |
+| `layer.DrawCommandSpace.Screen` | Fixed to screen (ignores camera) | HUD, fixed UI elements, screen overlays |
+
+```lua
+-- Camera-aware rendering (moves with camera)
+command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
+    cmd.entities = entityList
+end, z, layer.DrawCommandSpace.World)
+
+-- Fixed to screen (ignores camera)
+command_buffer.queueDrawRectangle(layers.ui, function(c)
+    c.x, c.y, c.w, c.h = 10, 10, 100, 50
+end, z, layer.DrawCommandSpace.Screen)
+```
+
+### Common Z-Order Values (from `core/z_orders.lua`)
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `z_orders.background` | ~0 | Background layers |
+| `z_orders.card` | ~100 | Normal cards |
+| `z_orders.top_card` | 200 | Dragged/focused cards |
+| `z_orders.ui_tooltips` | 900 | UI tooltips |
+
+**For UI cards above everything:** Use `z_orders.ui_tooltips + 500` (~1400).
+
 ## Architecture Overview
 
 **Engine**: C++20 + Lua on Raylib 5.5, EnTT (ECS), Chipmunk (physics).

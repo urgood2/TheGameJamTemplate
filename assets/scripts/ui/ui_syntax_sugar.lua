@@ -811,6 +811,141 @@ function dsl.getTabIds(containerId)
     return ids
 end
 
+
+------------------------------------------------------------
+-- INVENTORY GRID
+-- Draggable item grid with slots, stacking, and filtering
+------------------------------------------------------------
+
+local _gridRegistry = {}
+
+function dsl.inventoryGrid(opts)
+    opts = opts or {}
+    local rows = opts.rows or 3
+    local cols = opts.cols or 3
+    local slotW = opts.slotSize and opts.slotSize.w or 64
+    local slotH = opts.slotSize and opts.slotSize.h or 64
+    local spacing = opts.slotSpacing or 4
+    local gridId = opts.id or ("grid_" .. tostring(math.random(100000, 999999)))
+    local gridConfig = opts.config or {}
+    local slotsConfig = opts.slots or {}
+    
+    _gridRegistry[gridId] = {
+        rows = rows,
+        cols = cols,
+        config = gridConfig,
+        slotsConfig = slotsConfig,
+        onSlotChange = opts.onSlotChange,
+        onSlotClick = opts.onSlotClick,
+        onItemStack = opts.onItemStack,
+    }
+    
+    local gridRows = {}
+    local slotIndex = 0
+    
+    for r = 1, rows do
+        local rowChildren = {}
+        
+        for c = 1, cols do
+            slotIndex = slotIndex + 1
+            local slotId = gridId .. "_slot_" .. slotIndex
+            local slotConfig = slotsConfig[slotIndex] or {}
+            local slotColor = slotConfig.color or gridConfig.slotColor or color("gray")
+            
+            local slotNode = def{
+                type = "HORIZONTAL_CONTAINER",
+                config = {
+                    id = slotId,
+                    color = slotColor,
+                    minWidth = slotW,
+                    minHeight = slotH,
+                    maxWidth = slotW,
+                    maxHeight = slotH,
+                    hover = true,
+                    canCollide = true,
+                    emboss = gridConfig.slotEmboss or 1,
+                    align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+                    _slotIndex = slotIndex,
+                    _gridId = gridId,
+                    _isInventorySlot = true,
+                },
+                children = {}
+            }
+            
+            table.insert(rowChildren, slotNode)
+            if c < cols then
+                table.insert(rowChildren, dsl.spacer(spacing, slotH))
+            end
+        end
+        
+        local rowNode = def{
+            type = "HORIZONTAL_CONTAINER",
+            config = { align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER) },
+            children = rowChildren
+        }
+        
+        table.insert(gridRows, rowNode)
+        if r < rows then
+            table.insert(gridRows, dsl.spacer(slotW * cols + spacing * (cols - 1), spacing))
+        end
+    end
+    
+    return def{
+        type = "VERTICAL_CONTAINER",
+        config = {
+            id = gridId,
+            color = gridConfig.backgroundColor and color(gridConfig.backgroundColor) or nil,
+            padding = gridConfig.padding or 4,
+            align = bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            _isInventoryGrid = true,
+            _gridConfig = gridConfig,
+            _slotsConfig = slotsConfig,
+            _gridRows = rows,
+            _gridCols = cols,
+        },
+        children = gridRows
+    }
+end
+
+function dsl.getGridConfig(gridId)
+    return _gridRegistry[gridId]
+end
+
+function dsl.cleanupGrid(gridId)
+    _gridRegistry[gridId] = nil
+end
+
+------------------------------------------------------------
+-- CUSTOM PANEL
+-- Custom-rendered UI element that participates in layout
+------------------------------------------------------------
+
+function dsl.customPanel(opts)
+    opts = opts or {}
+    local panelId = opts.id or ("custom_panel_" .. tostring(math.random(100000, 999999)))
+    local panelConfig = opts.config or {}
+    
+    return def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            id = panelId,
+            minWidth = opts.minWidth or 100,
+            minHeight = opts.minHeight or 100,
+            maxWidth = opts.preferredWidth,
+            maxHeight = opts.preferredHeight,
+            color = panelConfig.color and color(panelConfig.color) or nil,
+            hover = panelConfig.hover,
+            canCollide = panelConfig.canCollide,
+            _isCustomPanel = true,
+            _onDraw = opts.onDraw,
+            _onUpdate = opts.onUpdate,
+            _onInput = opts.onInput,
+            _focusable = opts.focusable,
+        },
+        children = {}
+    }
+end
+
 ------------------------------------------------------------
 -- Return DSL module
 ------------------------------------------------------------

@@ -62,9 +62,9 @@ local function createSimpleCard(spriteName, x, y, cardData)
         layer_order_system.assignZIndexToEntity(entity, z)
     end
     
-    if ObjectAttachedToUITag and not registry:has(entity, ObjectAttachedToUITag) then
-        registry:emplace(entity, ObjectAttachedToUITag)
-    end
+    -- NOTE: Do NOT add ObjectAttachedToUITag - cards should be in world-space quadtree
+    -- for collision, even though they render to UI layer. The dual-quadtree system
+    -- (FindAllEntitiesAtPoint) queries both world and UI quadtrees automatically.
     
     local go = component_cache.get(entity, GameObject)
     if go then

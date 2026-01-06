@@ -133,6 +133,35 @@ end, z, layer.DrawCommandSpace.Screen)
 
 **For UI cards above everything:** Use `z_orders.ui_tooltips + 500` (~1400).
 
+### World-Space vs Screen-Space Collision (Dual Quadtree)
+
+The engine uses **two separate quadtrees** for collision detection:
+
+| Quadtree | Entities | Marker |
+|----------|----------|--------|
+| `quadtreeWorld` | Game entities, cards, enemies | NO `ScreenSpaceCollisionMarker` |
+| `quadtreeUI` | UI elements, buttons, slots | HAS `ScreenSpaceCollisionMarker` |
+
+**`FindAllEntitiesAtPoint()` queries BOTH quadtrees automatically**, enabling world-space cards to collide with screen-space UI.
+
+```lua
+-- World-space card that renders above UI but collides with UI slots:
+local entity = createCard(...)
+
+-- 1. Do NOT add ObjectAttachedToUITag (stays in world quadtree)
+-- 2. Render to UI layer with World space (camera-aware, above UI)
+command_buffer.queueDrawBatchedEntities(layers.ui, function(cmd)
+    cmd.entities = { entity }
+end, z_orders.ui_tooltips + 500, layer.DrawCommandSpace.World)
+
+-- 3. UI slots (screen-space) get ScreenSpaceCollisionMarker automatically
+-- 4. Drag-drop works: input system queries both quadtrees
+```
+
+**Key component:** `ObjectAttachedToUITag` / `ScreenSpaceCollisionMarker`
+- **WITH tag**: Entity is screen-space (UI quadtree), uses screen coordinates
+- **WITHOUT tag**: Entity is world-space (world quadtree), uses camera-transformed coordinates
+
 ## Architecture Overview
 
 **Engine**: C++20 + Lua on Raylib 5.5, EnTT (ECS), Chipmunk (physics).

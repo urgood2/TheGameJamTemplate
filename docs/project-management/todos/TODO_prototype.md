@@ -1,32 +1,85 @@
 # TODO Prototype - Organized Status Report
 > Last verified: Dec 29, 2025
 
-- ui updates: wand bar horizontal for showing wand ui at a glance?
-  │  ┌─────────────────────────────────────────────────────────────────────┐   │
-  │  │ WAND BAR: [Fireball] [Burn Mod] [Explosive] [Chain] [Ice]           │   │
-  │  │ Mana: ████████░░ 80/100    Cast Delay: 0.2s                         │   │
-  │  └─────────────────────────────────────────────────────────────────────┘
-- ui updates: show applied effects from synergy?
-  │  ┌─────────────┐                              ┌─────────────────────────┐   │
-  │  │ TAG SYNERGY │                              │    AVATAR & JOKERS      │   │
-  │  │   PANEL     │                              │                         │   │
-  │  │             │                              │  ┌───┐ ┌───┐ ┌───┐     │   │
-  │  │ Fire  ●●●○○ │                              │  │🔥 │ │⚡│ │🎭│     │   │
-  │  │ Ice   ●○○○○ │                              │  │Wld│ │Pyr│ │Tag│     │   │
-  │  │ Light ●○○○○ │                              │  └───┘ └───┘ └───┘     │   │
-  │  │ Brute ○○○○○ │                              │  Avatar  Joker  Joker   │   │
-  │  │             │                              │                         │   │
-  │  │ Active:     │                              │  Hover for tooltips     │   │
-  │  │ +10% burn   │                              └─────────────────────────┘   │
-  │  └─────────────┘
+-------------
+
+- ui planning.
+
+each window is minimized and displayed as a button/tab on the sdie fo screen:
+
+----|
+ IMG|
+----|
 
 
-- refine ui. cutout buttons on left and right side, sticking out of off screen for better look. slide in and out?
-- combine dsl with the synergy panel? make the lua ui objects hcildren to the other ui elements in the tree, allow lua element to render itself on top. would this work? how ?
+skill selection window spec
+
+- a single ui box.
+- dismissable into a tab thing on side of screen.
+one panel at the top, flat, with a line of 7 emtpy squares.
+another bigger panel below, which contains a grid of skills.
+each column aligns to one element/damage archetype. 
+they are image buttons.
+on the right side is a vertical panel spanning the entire window vertically, which shows an image of the skill,
+as well as color coded text + icons as necessary to describe what the skill does.
+
+inventory window spec
+- always open
+- a central window at bottom half of screen.
+- it has multiple tabs: wands, triggers, mods+actions, equipment.
+- below them, in a separate panel, is a grid of inventory squares which can be navigated in pages via buttons on right and left of the grid, as well as sorting options.
+
+
+wand window spec
+- always open
+- not sure, but we may add a custom background to this.
+- three vertically stacked inventory squares which wands can be dragged into. these grids can be clicked to be selected.
+- on the right is a horizontally flat ui box (separate) specific to each grid. it has a single square on left side for the trigger, which may be locked or unlocked based on wand (allowing trigger to be replaced). if not locked, it should be indicated. there should be a plus sign text elemnt to the right, then to the right, as many squares as there are slots in the wand. then each slot will contain the mod/action cards.
+
+equipment window
+
+- dismissable into a tab thing on side of screen.
+- a human-shaped alignment of inventory grids for headgear, chestpiece, pants, boots, gloves, necklace, 2 rings. each should have a flat outline sprite inside it to indicate what it's for when empty.
+- equipment items matching the slot can be dragged into the slot, and doing so should modify the stats/skills, etc.
+
+gold ui 
+- one ui box
+- always present
+- subtle effect dynamic text.
+- gold image should be a sprite.
+
+
+shop ui 
+one ui box.
+- one horizontal box for individual cards on offer (weighted by rarity, triggers, mods, actions)
+- one horizontal box below that for card packs (trigger, mod, action)
+- one box right of that for jokers (3 on offer)
+- reroll button and "next" buttons on bottom row. reroll only rerolls the cards, nothing else.
+- every item on display is a draggable game object rendered like cards in planning phase. when clicked, they should show a pop-up uibox that has a buy button.
+- each item should have a dynamic text attached with price on it below it.
+
+achievement ui
+
+- dismissable into a tab thing on side of screen.
+- this is the tracking for ALL unlockables and discoveries.
+- tabs for: discovered equipment, jokers, avatars, trigger cards, mod cards, action cards.
+- below that is a seaprate panel with buttons for page navigation.
+each page contains game objects representing the unlocks. they can be dragged and hovered.
+those that are not unlocked will desplay a default "locked" sprite.
+
+---------
+
+- check stat derivation. we need to ensure that the three primary stats affect meaningful derivd stats.
+- inspect the poa-research directory for info on poa mechanics.
+
+- brainstorming for pack opening:
+- fade out to black, bring up the pack from bottom of screen.
+- shake it, show streaming rapid white paticles from below + screen shake. play build up sound. release particles from the pack itself, slowly turn the pack white with a shader.
+- explosion + screenshake.. rainbow particles streaming up in bg, the wobbly particles going off like smokef rom the pack. rotating gradient spokes (use my rendeirng for gradient in command buffer) behind whatever popped out. play satsifying sting.
+
+
 - make the x button in patch notes part of window, use x sprite.
 - need to make progress window with avatars, jokers, and varioud card previews.
-- hook up shop, also with dsl ui + lua objects and make it so we have a functioning econoym
-- replace gold circle with srpite
 - consider giving new art for the board itself.
 
 - need to make path notes and stats panel snap to full size.

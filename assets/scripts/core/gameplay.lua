@@ -9941,6 +9941,10 @@ function initActionPhase()
         if math.abs(playerShotRecoil.y) < 0.5 then playerShotRecoil.y = 0 end
     end
 
+    local playerIdleTime = 0
+    local STAND_STILL_THRESHOLD = 1.0
+    local standStillTriggered = false
+
     -- create input timer. this must run every frame.
     timer.every_physics_step(
         function()
@@ -10095,6 +10099,27 @@ function initActionPhase()
                 moveDir.x * speed + recoilX,
                 moveDir.y * speed + recoilY
             )
+
+            if playerMoving then
+                signal.emit("on_step", survivorEntity, {
+                    direction = moveDir,
+                    speed = speed,
+                })
+                signal.emit("player_moved", survivorEntity, {
+                    direction = moveDir,
+                    speed = speed,
+                })
+                playerIdleTime = 0
+                standStillTriggered = false
+            else
+                playerIdleTime = playerIdleTime + (1 / 60)
+                if playerIdleTime >= STAND_STILL_THRESHOLD and not standStillTriggered then
+                    standStillTriggered = true
+                    signal.emit("on_stand_still", survivorEntity, {
+                        idle_time = playerIdleTime,
+                    })
+                end
+            end
 
             decayPlayerShotRecoil(recoilX, recoilY)
 
@@ -10802,9 +10827,7 @@ function initPlanningUI()
         -- Use existing roguelike sprites as placeholder wand icons
         -- TODO: Replace with actual wand icon sprites when available
         local wandIconSprites = {
-            "3207-TheRoguelike_1_10_alpha_0.png",
-            "3208-TheRoguelike_1_10_alpha_1.png",
-            "3209-TheRoguelike_1_10_alpha_2.png",
+            "wand_test.png",
         }
 
         for index, boardSet in ipairs(board_sets) do

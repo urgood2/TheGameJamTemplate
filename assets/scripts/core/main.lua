@@ -284,7 +284,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("gray"))
+                :addColor(util.getColor("muted_plum"))  -- Resurrect 64 palette
                 :addEmboss(2.0)
                 :addMinWidth(500) -- minimum width of the button
                 :addShadow(true)
@@ -324,14 +324,14 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("gray"))
+                :addColor(util.getColor("purple_slate"))  -- Resurrect 64 palette
                 :addEmboss(2.0)
                 :addMinWidth(500) -- minimum width of the button
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Discord link
                     record_telemetry("discord_button_clicked", { scene = "main_menu" })
-                    OpenURL("https://discord.gg/rp6yXxKu5z") 
+                    OpenURL("https://discord.gg/rp6yXxKu5z")
                 end)
                 :addShadow(true)
                 :addMinWidth(500) -- minimum width of the button
@@ -365,13 +365,13 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("gray"))
+                :addColor(util.getColor("purple_slate"))  -- Resurrect 64 palette
                 :addEmboss(2.0)
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Bluesky link
                     record_telemetry("follow_button_clicked", { scene = "main_menu", platform = "bluesky" })
-                    OpenURL("https://bsky.app/profile/chugget.itch.io") 
+                    OpenURL("https://bsky.app/profile/chugget.itch.io")
                 end)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -386,7 +386,7 @@ function initMainMenu()
         :addType(UITypeEnum.INPUT_TEXT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("gray"))
+                :addColor(util.getColor("dark_lavender"))  -- Resurrect 64 palette
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addMinHeight(50) -- minimum height of the input text
@@ -395,12 +395,12 @@ function initMainMenu()
                 :build()
         )
     :build()
-        
+
     local inputTextRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("gray"))
+                :addColor(util.getColor("dark_lavender"))  -- Resurrect 64 palette
                 :addEmboss(2.0)
                 :build()
         )
@@ -413,7 +413,7 @@ function initMainMenu()
     :addType(UITypeEnum.SCROLL_PANE)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("yellow"))
+            :addColor(util.getColor("blackberry"))  -- Resurrect 64 palette
             :addShadow(true)
             :addHeight(200)
             :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
@@ -448,7 +448,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("gray"))
+                :addColor(util.getColor("jade_green"))  -- Resurrect 64 palette
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -468,13 +468,13 @@ function initMainMenu()
         )
         :addChild(languageText)
         :build()
-        
+
     -- new root
     local languageButtonRoot = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("green"))
+                :addColor(util.getColor("deep_teal"))  -- Resurrect 64 palette
                 :addShadow(true)
                 :addAlign(bit.bor(AlignmentFlag.HORIZONTAL_CENTER , AlignmentFlag.VERTICAL_CENTER))
                 :addInitFunc(function(registry, entity)

@@ -82,7 +82,13 @@ local SECTIONS = {
         id = "combat",
         label = "COMBAT",
         stats = {
+            -- Primary attributes
+            "physique",
+            "cunning",
+            "spirit",
+            -- Core combat stats
             "offensive_ability",
+            "damage",
             "all_damage_pct",
             "weapon_damage_pct",
             "crit_damage_pct",
@@ -167,6 +173,7 @@ local SECTIONS = {
 local ELEMENT_TYPES = {
     "fire", "cold", "lightning", "acid",
     "vitality", "aether", "chaos",
+    "blood", "death",
     "physical", "pierce"
 }
 
@@ -179,6 +186,8 @@ local ELEMENT_CONFIG = {
     vitality  = { color = "purple",   hasResist = true,  hasDuration = true },
     aether    = { color = "cyan",     hasResist = true,  hasDuration = true },
     chaos     = { color = "fiery_red",hasResist = true,  hasDuration = true },
+    blood     = { color = "fiery_red",hasResist = true,  hasDuration = false },
+    death     = { color = "purple",   hasResist = true,  hasDuration = false },
     physical  = { color = "gray",     hasResist = false, hasDuration = false },
     pierce    = { color = "gray",     hasResist = false, hasDuration = false },
 }
@@ -1162,17 +1171,17 @@ function StatsPanel.show()
         log_debug("[StatsPanelV2] Already visible")
         return
     end
-    
+
     state.visible = true
-    state.slideDirection = "entering"
-    state.slideProgress = 0
-    
+    state.slideDirection = "idle"  -- Snap to full size (no animation)
+    state.slideProgress = 1        -- Start at full size
+
     state.snapshot = StatsPanel._collectSnapshot()
     state.snapshotHash = StatsPanel._computeSnapshotHash(state.snapshot)
-    
+
     StatsPanel._createPanel()
     StatsPanel._registerSignalHandler()
-    
+
     if activate_state and STATS_PANEL_STATE then
         activate_state(STATS_PANEL_STATE)
     end
@@ -1181,11 +1190,15 @@ end
 function StatsPanel.hide()
     local state = StatsPanel._state
     if not state.visible or state.slideDirection == "exiting" then return end
-    
-    state.slideDirection = "exiting"
-    
+
+    -- Snap closed immediately (no animation)
+    state.slideDirection = "idle"
+    state.slideProgress = 0
+    state.visible = false
+
     StatsPanel._unregisterSignalHandler()
-    
+    StatsPanel._destroyPanel()
+
     if deactivate_state and STATS_PANEL_STATE then
         deactivate_state(STATS_PANEL_STATE)
     end

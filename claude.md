@@ -817,3 +817,4 @@ All modules in `assets/scripts/core/` - import with `require("core.<name>")`:
 - [Content Creation Guides](docs/content-creation/)
 - [Text Builder API](docs/api/text-builder.md)
 - [API Documentation](docs/api/)
+- Always provide full executable path in single line when done in a worktree (e.g., /Users/joshuashin/Projects/TheGameJamTemplate/inventory-grid-ui/build/raylib-cpp-cmake-template)

@@ -7,6 +7,8 @@ Simplified design: icon + number only (no background/borders).
 local CurrencyDisplay = {}
 
 local z_orders = require("core.z_orders")
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
 
 CurrencyDisplay.amount = 0
 CurrencyDisplay.displayAmount = 0
@@ -56,22 +58,74 @@ function CurrencyDisplay.update(dt)
     CurrencyDisplay.wobbleTime = CurrencyDisplay.wobbleTime + dt
 end
 
-local function drawCoinIcon(centerX, centerY, radius, z, space)
-    command_buffer.queueDrawCenteredEllipse(layers.ui, function(c)
-        c.x = centerX
-        c.y = centerY
-        c.rx = radius
-        c.ry = radius
-        c.color = colors.accent
-    end, z, space)
+-- Gold coin sprite entity (lazy created)
+local coinSpriteEntity = nil
+local COIN_SPRITE_ID = "4024-TheRoguelike_1_10_alpha_817.png"
+local COIN_SPRITE_SIZE = 28  -- Base size for the coin sprite
 
-    command_buffer.queueDrawCenteredEllipse(layers.ui, function(c)
-        c.x = centerX
-        c.y = centerY
-        c.rx = radius * 0.55
-        c.ry = radius * 0.55
-        c.color = Col(255, 255, 255, 140)
-    end, z + 1, space)
+local function ensureCoinSprite()
+    if coinSpriteEntity and entity_cache and entity_cache.valid(coinSpriteEntity) then
+        return coinSpriteEntity
+    end
+
+    -- Create sprite entity using animation system
+    if animation_system and animation_system.createAnimatedObjectWithTransform then
+        coinSpriteEntity = animation_system.createAnimatedObjectWithTransform(
+            COIN_SPRITE_ID,
+            true,  -- isSprite (load from atlas)
+            0, 0,  -- initial position
+            nil,
+            false  -- no shadow
+        )
+
+        if coinSpriteEntity and animation_system.resizeAnimationObjectsInEntityToFit then
+            animation_system.resizeAnimationObjectsInEntityToFit(coinSpriteEntity, COIN_SPRITE_SIZE, COIN_SPRITE_SIZE)
+        end
+
+        -- Set to screen space
+        if transform and transform.set_space then
+            transform.set_space(coinSpriteEntity, "screen")
+        end
+
+        -- Set z-order
+        if layer_order_system and layer_order_system.assignZIndexToEntity then
+            local zOrder = (z_orders.ui_tooltips or 0) - 4
+            layer_order_system.assignZIndexToEntity(coinSpriteEntity, zOrder)
+        end
+
+        -- Set draw layer
+        if ui and ui.box and ui.box.set_draw_layer then
+            ui.box.set_draw_layer(coinSpriteEntity, "ui")
+        end
+    end
+
+    return coinSpriteEntity
+end
+
+local function drawCoinIcon(centerX, centerY, radius, z, space)
+    local sprite = ensureCoinSprite()
+    if sprite and entity_cache and entity_cache.valid(sprite) then
+        local t = component_cache.get(sprite, Transform)
+        if t then
+            -- Scale sprite based on pulse (radius includes pulse effect)
+            local scale = radius / (COIN_SPRITE_SIZE / 2)
+            local size = COIN_SPRITE_SIZE * scale
+
+            t.actualX = centerX - size / 2
+            t.actualY = centerY - size / 2
+            t.actualW = size
+            t.actualH = size
+            t.visualX = t.actualX
+            t.visualY = t.actualY
+            t.visualW = size
+            t.visualH = size
+
+            -- Resize animation to match
+            if animation_system and animation_system.resizeAnimationObjectsInEntityToFit then
+                animation_system.resizeAnimationObjectsInEntityToFit(sprite, size, size)
+            end
+        end
+    end
 end
 
 function CurrencyDisplay.draw()

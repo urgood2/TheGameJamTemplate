@@ -1006,6 +1006,7 @@ local DAMAGE_TYPES = {
   'physical', 'pierce', 'bleed', 'trauma',
   'fire', 'cold', 'lightning', 'acid',
   'vitality', 'aether', 'chaos',
+  'blood', 'death',  -- New damage types for berserker/necromancer builds
   'burn', 'frostburn', 'electrocute', 'poison', 'vitality_decay'
 }
 
@@ -2191,6 +2192,14 @@ Effects.deal_damage = function(p)
     local PTH = util.clamp(pth(OA, DA), 60, 140) -- Lower floor ensures some hit chance even when outmatched.
     dbg("Hit check: OA=%.1f DA=%.1f PTH=%.1f%%", OA, DA, PTH)
 
+    emit_combat_event(ctx, 'OnAttack', {
+      source = src, target = tgt, components = comps, reason = reason, tags = tags
+    }, 'on_attack')
+
+    emit_combat_event(ctx, 'OnBeingAttacked', {
+      source = src, target = tgt, components = comps, reason = reason, tags = tags
+    }, 'on_being_attacked')
+
     -- Miss check
     if math.random() * 100 > PTH then
       dbg("Attack missed!")
@@ -2279,6 +2288,10 @@ Effects.deal_damage = function(p)
       ctx.time:set_cooldown(tgt.timers, 'block', math.max(0.1, rec))
       dbg("Block triggered: chance=%.1f%% amt=%.1f next_ready=%.2f",
         blk_chance, block_amt, tgt.timers['block'] or -1)
+
+      emit_combat_event(ctx, 'OnBlock', {
+        source = tgt, attacker = src, block_amount = block_amt, reason = reason, tags = tags
+      }, 'on_block')
     end
 
     -- Add defensive mark block (stacks with shield block)
@@ -2292,10 +2305,17 @@ Effects.deal_damage = function(p)
     for _, c in ipairs(comps) do
       sums[c.type] = (sums[c.type] or 0) + c.amount
     end
+    local is_crit = crit_mult > 1.0
     for t, amt in pairs(sums) do
       sums[t] = amt * crit_mult
     end
     dbg("Post-crit sums: %s", _sums_to_string(sums))
+
+    if is_crit then
+      emit_combat_event(ctx, 'OnCrit', {
+        source = src, target = tgt, crit_mult = crit_mult, components = sums, reason = reason, tags = tags
+      }, 'on_crit')
+    end
 
     -- Apply outgoing modifiers (attacker) ------------------------------------
     local allpct = 1 + src.stats:get('all_damage_pct') / 100
@@ -2383,6 +2403,9 @@ Effects.deal_damage = function(p)
     if tgt.hp <= 0 and not tgt.dead then
       tgt.dead = true
       ctx.bus:emit('OnDeath', { entity = tgt, killer = src })
+      emit_combat_event(ctx, 'OnKill', {
+        killer = src, target = tgt, damage = dealt, reason = reason, tags = tags
+      }, 'on_kill')
     end
 
     -- Lifesteal (attacker) ----------------------------------------------------
@@ -2423,17 +2446,20 @@ Effects.deal_damage = function(p)
       Effects.deal_damage { components = ret_components } (ctx, tgt, src)
     end
 
-    ctx.bus:emit('OnHitResolved', {
+    local hit_event = {
       source     = src,
       target     = tgt,
-      damage     = dealt,     -- total final damage after all defenses
+      damage     = dealt,
       did_damage = (dealt or 0) > 0,
       crit       = (crit_mult > 1.0) or false,
       pth        = PTH or nil,
-      reason     = reason,    -- supplied by caller to categorize the hit
-      tags       = tags,      -- free-form classification (aoe, projectile, retaliation, etc.)
-      components = sums,      -- pre-defense per-type totals (post-crit & attacker mods)
-    })
+      reason     = reason,
+      tags       = tags,
+      components = sums,
+    }
+    ctx.bus:emit('OnHitResolved', hit_event)
+    signal.emit('on_hit', src, hit_event)
+    signal.emit('on_being_hit', tgt, hit_event)
 
     -- Emit player_damaged signal for avatar procs when player takes damage
     if tgt.side == 1 and dealt > 0 then
@@ -2699,16 +2725,23 @@ end
 --   • The allowlist is purely declarative; extend or swap tables per game.
 --   • If you wish to enforce two-handed mutual exclusion or set conflicts, do that in your ItemSystem.equip.
 -- ============================================================================
+Items.SLOTS = {
+  'head', 'chest', 'glove', 'necklace', 'ring1', 'ring2', 'boots', 'pants',
+  'main_hand', 'off_hand',
+}
+
+Items.SlotOrder = Items.SLOTS
+
 Items.equip_rules = {
   sole = {
-    physique = { 'helm', 'shoulders', 'chest', 'gloves', 'belt', 'pants', 'boots', 'axe1', 'axe2', 'mace1', 'mace2', 'sword2', 'shield' },
-    cunning  = { 'sword1', 'bow1', 'bow2', 'gun1', 'gun2' },
-    spirit   = { 'offhand', 'ring', 'amulet', 'medal' },
+    physique = { 'head', 'chest', 'glove', 'boots', 'pants', 'main_hand', 'off_hand' },
+    cunning  = { 'main_hand', 'off_hand', 'glove', 'boots' },
+    spirit   = { 'necklace', 'ring1', 'ring2', 'off_hand' },
   },
   with_other = {
-    physique = { 'caster_helm', 'caster_chest', 'scepter' },
-    cunning  = { 'dagger' },
-    spirit   = { 'caster_helm', 'caster_chest', 'dagger', 'scepter' },
+    physique = { 'head', 'chest' },
+    cunning  = { 'main_hand' },
+    spirit   = { 'head', 'chest', 'main_hand', 'necklace' },
   },
 }
 
@@ -4848,22 +4881,27 @@ end
 -- ============================================================================
 StatusEngine.update_entity = function(ctx, e, dt)
   -- Expire timed buffs --------------------------------------------------------
-  -- Every status is stored as e.statuses[id] = { entries = { <entry...> } }.
-  -- We rebuild the list by keeping entries whose .until_time is nil (permanent)
-  -- or still in the future. Expired entries call entry.remove(e) if present,
-  -- then we emit 'OnStatusExpired' for observers (UI, logs, gameplay).
   if e.statuses then
+    local expired_ids = {}
     for id, b in pairs(e.statuses) do
-      local kept = {}
-      for _, entry in ipairs(b.entries) do
-        if (not entry.until_time) or entry.until_time > ctx.time.now then
-          kept[#kept + 1] = entry
-        else
-          if entry.remove then entry.remove(e) end
-          ctx.bus:emit('OnStatusExpired', { entity = e, id = id })
+      if b.until_time and b.until_time <= ctx.time.now then
+        expired_ids[#expired_ids + 1] = id
+      else
+        local kept = {}
+        for _, entry in ipairs(b.entries or {}) do
+          if (not entry.until_time) or entry.until_time > ctx.time.now then
+            kept[#kept + 1] = entry
+          else
+            if entry.remove then entry.remove(e) end
+            ctx.bus:emit('OnStatusExpired', { entity = e, id = id })
+          end
         end
+        b.entries = kept
       end
-      b.entries = kept
+    end
+    for _, id in ipairs(expired_ids) do
+      ctx.bus:emit('OnStatusExpired', { entity = e, id = id })
+      StatusEngine.remove(ctx, e, id)
     end
   end
 
@@ -4893,16 +4931,215 @@ StatusEngine.update_entity = function(ctx, e, dt)
     for _, d in ipairs(e.dots) do
       if d.until_time and d.until_time <= ctx.time.now then
         ctx.bus:emit('OnDotExpired', { entity = e, dot = d })
+        if d.status_id then
+          StatusEngine.remove(ctx, e, d.status_id)
+        end
       else
         if ctx.time.now >= (d.next_tick or ctx.time.now) then
           local tick = d.tick or 1.0
-          Effects.deal_damage { components = { { type = d.type, amount = (d.dps or 0) * tick } } } (ctx, d.source, e)
+          local dps = d.dps or (d.base_dps and d.stacks and d.base_dps * d.stacks) or 0
+          Effects.deal_damage {
+            components = { { type = d.type, amount = dps * tick } },
+            tags = { dot = true, status_id = d.status_id },
+          } (ctx, d.source, e)
           d.next_tick = (d.next_tick or ctx.time.now) + (d.tick or 1.0)
         end
         kept[#kept + 1] = d
       end
     end
     e.dots = kept
+  end
+end
+
+StatusEngine.STACK_MODE = {
+  REPLACE = "replace",
+  TIME_EXTEND = "time_extend",
+  INTENSITY = "intensity",
+  COUNT = "count",
+}
+
+StatusEngine.apply = function(ctx, target, status_id, opts)
+  opts = opts or {}
+  local StatusEffects = require("data.status_effects")
+  local def = StatusEffects[status_id]
+  if not def then return 0 end
+
+  local stacks = opts.stacks or 1
+  local source = opts.source
+  local duration = opts.duration or def.duration or 0
+  local mode = def.stack_mode or "replace"
+  local max_stacks = def.max_stacks or 99
+
+  target.statuses = target.statuses or {}
+  local bucket = target.statuses[status_id]
+
+  if not bucket then
+    bucket = { entries = {}, stacks = 0, source = source }
+    target.statuses[status_id] = bucket
+  end
+
+  local old_stacks = bucket.stacks or 0
+
+  if mode == "intensity" then
+    bucket.stacks = math.min((bucket.stacks or 0) + stacks, max_stacks)
+    if duration > 0 then
+      bucket.until_time = ctx.time.now + duration
+    end
+
+  elseif mode == "time_extend" then
+    bucket.stacks = math.min((bucket.stacks or 0) + stacks, max_stacks)
+    local add = stacks * (def.duration_per_stack or duration or 1)
+    bucket.until_time = (bucket.until_time or ctx.time.now) + add
+
+  elseif mode == "replace" then
+    bucket.stacks = math.min(stacks, max_stacks)
+    if duration > 0 then
+      bucket.until_time = ctx.time.now + duration
+    end
+
+  elseif mode == "count" then
+    bucket.stacks = math.min((bucket.stacks or 0) + stacks, max_stacks)
+    if duration > 0 then
+      bucket.until_time = ctx.time.now + duration
+    end
+  end
+
+  bucket.source = source or bucket.source
+
+  if def.dot_type and def.base_dps then
+    local existing_dot = nil
+    target.dots = target.dots or {}
+    for _, d in ipairs(target.dots) do
+      if d.status_id == status_id then
+        existing_dot = d
+        break
+      end
+    end
+
+    if existing_dot then
+      existing_dot.stacks = bucket.stacks
+      if bucket.until_time then
+        existing_dot.until_time = bucket.until_time
+      end
+    else
+      target.dots[#target.dots + 1] = {
+        status_id = status_id,
+        type = def.damage_type or "physical",
+        base_dps = def.base_dps,
+        stacks = bucket.stacks,
+        source = source,
+        until_time = bucket.until_time,
+        tick = 1.0,
+        next_tick = ctx.time.now + 1.0,
+      }
+    end
+  end
+
+  if target.stats and old_stacks ~= bucket.stacks then
+    if def.stat_mods_per_stack then
+      local delta = bucket.stacks - old_stacks
+      for stat, value in pairs(def.stat_mods_per_stack) do
+        target.stats:add_base(stat, value * delta)
+      end
+    end
+    if def.stat_mods and old_stacks == 0 then
+      for stat, value in pairs(def.stat_mods) do
+        target.stats:add_base(stat, value)
+      end
+    end
+  end
+
+  ctx.bus:emit("OnStatusApplied", {
+    source = source,
+    target = target,
+    id = status_id,
+    stacks = bucket.stacks,
+  })
+
+  local signal = require("external.hump.signal")
+  signal.emit("on_apply_status", target, {
+    source = source,
+    status_id = status_id,
+    stacks = bucket.stacks,
+  })
+
+  return bucket.stacks
+end
+
+StatusEngine.remove = function(ctx, target, status_id, stacks_to_remove)
+  if not target.statuses then return 0 end
+  local bucket = target.statuses[status_id]
+  if not bucket then return 0 end
+
+  local StatusEffects = require("data.status_effects")
+  local def = StatusEffects[status_id]
+  local old_stacks = bucket.stacks or 0
+
+  if stacks_to_remove then
+    bucket.stacks = math.max(0, (bucket.stacks or 0) - stacks_to_remove)
+  else
+    bucket.stacks = 0
+  end
+
+  if target.stats and def and old_stacks ~= bucket.stacks then
+    if def.stat_mods_per_stack then
+      local delta = bucket.stacks - old_stacks
+      for stat, value in pairs(def.stat_mods_per_stack) do
+        target.stats:add_base(stat, value * delta)
+      end
+    end
+    if def.stat_mods and bucket.stacks == 0 then
+      for stat, value in pairs(def.stat_mods) do
+        target.stats:add_base(stat, -value)
+      end
+    end
+  end
+
+  if bucket.stacks <= 0 then
+    target.statuses[status_id] = nil
+    ctx.bus:emit("OnStatusRemoved", { target = target, id = status_id })
+    local signal = require("external.hump.signal")
+    signal.emit("on_remove_status", target, { status_id = status_id })
+
+    if target.dots then
+      local kept = {}
+      for _, d in ipairs(target.dots) do
+        if d.status_id ~= status_id then
+          kept[#kept + 1] = d
+        end
+      end
+      target.dots = kept
+    end
+  elseif target.dots then
+    for _, d in ipairs(target.dots) do
+      if d.status_id == status_id then
+        d.stacks = bucket.stacks
+        break
+      end
+    end
+  end
+
+  return bucket.stacks or 0
+end
+
+StatusEngine.getStacks = function(target, status_id)
+  if not target.statuses then return 0 end
+  local bucket = target.statuses[status_id]
+  return bucket and bucket.stacks or 0
+end
+
+StatusEngine.hasStatus = function(target, status_id)
+  return StatusEngine.getStacks(target, status_id) > 0
+end
+
+StatusEngine.clearAll = function(ctx, target)
+  if not target.statuses then return end
+  local ids = {}
+  for id, _ in pairs(target.statuses) do
+    ids[#ids + 1] = id
+  end
+  for _, id in ipairs(ids) do
+    StatusEngine.remove(ctx, target, id)
   end
 end
 
@@ -4949,7 +5186,6 @@ World.update = function(ctx, dt)
   end
 
   -- Process both sides: expiry → DoT tick (via StatusEngine) → regen.
-  -- Rename suggestion: each -> tick_side
   local function each(L)
     for _, ent in ipairs(L or {}) do
       StatusEngine.update_entity(ctx, ent, dt)

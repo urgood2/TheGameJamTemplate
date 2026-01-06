@@ -33,7 +33,7 @@ local VALID_CARD_TYPES = { "action", "modifier", "trigger" }
 local VALID_RARITIES = { "Common", "Uncommon", "Rare", "Epic", "Legendary" }
 local VALID_MOVEMENT_TYPES = { "straight", "homing", "arc", "orbital", "custom" }
 local VALID_COLLISION_TYPES = { "destroy", "pierce", "bounce", "explode", "pass_through", "chain" }
-local VALID_DAMAGE_TYPES = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic" }
+local VALID_DAMAGE_TYPES = { "physical", "fire", "ice", "lightning", "poison", "arcane", "holy", "void", "magic", "blood", "death", "cold", "acid", "vitality", "aether", "chaos" }
 
 -- Build lookup tables
 local TAG_LOOKUP = {}

@@ -1383,7 +1383,7 @@ function InventoryGridDemo.setupCardRenderTimer()
                         cmd.registry = registry
                         cmd.entities = entityList
                         cmd.autoOptimize = true
-                    end, z, layer.DrawCommandSpace.World)
+                    end, z, layer.DrawCommandSpace.Screen)
                 end
             end
         end

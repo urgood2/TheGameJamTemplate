@@ -31,6 +31,8 @@ local UIBackground = {}
 
 local component_cache = require("core.component_cache")
 
+local _backgroundRegistry = {}
+
 --------------------------------------------------------------------------------
 -- State Constants
 --------------------------------------------------------------------------------
@@ -103,26 +105,19 @@ function UIBackground.apply(entity, config)
         return false
     end
     
-    local go = component_cache.get(entity, GameObject)
-    if not go then return false end
-    
-    go.config = go.config or {}
-    go.config._background = {
+    local key = tostring(entity)
+    _backgroundRegistry[key] = {
         states = {},
         currentState = UIBackground.State.NORMAL,
     }
     
-    -- Parse each state
     for state, def in pairs(config) do
         if UIBackground.State[state:upper()] or state == "normal" or state == "hover" or state == "pressed" or state == "disabled" or state == "focused" then
-            go.config._background.states[state] = parseBackgroundDef(def)
+            _backgroundRegistry[key].states[state] = parseBackgroundDef(def)
         end
     end
     
-    -- Apply initial state
     UIBackground.setState(entity, UIBackground.State.NORMAL)
-    
-    -- Setup state change hooks
     UIBackground.setupStateHooks(entity)
     
     return true
@@ -133,12 +128,11 @@ end
 --------------------------------------------------------------------------------
 
 function UIBackground.setState(entity, state)
-    local go = component_cache.get(entity, GameObject)
-    if not go or not go.config or not go.config._background then
+    local key = tostring(entity)
+    local bgConfig = _backgroundRegistry[key]
+    if not bgConfig then
         return false
     end
-    
-    local bgConfig = go.config._background
     bgConfig.currentState = state
     
     -- Get background def for state (fallback to normal)
@@ -254,11 +248,12 @@ end
 --------------------------------------------------------------------------------
 
 function UIBackground.getState(entity)
-    local go = component_cache.get(entity, GameObject)
-    if not go or not go.config or not go.config._background then
+    local key = tostring(entity)
+    local bgConfig = _backgroundRegistry[key]
+    if not bgConfig then
         return UIBackground.State.NORMAL
     end
-    return go.config._background.currentState
+    return bgConfig.currentState
 end
 
 --------------------------------------------------------------------------------
@@ -266,8 +261,8 @@ end
 --------------------------------------------------------------------------------
 
 function UIBackground.hasBackground(entity)
-    local go = component_cache.get(entity, GameObject)
-    return go and go.config and go.config._background ~= nil
+    local key = tostring(entity)
+    return _backgroundRegistry[key] ~= nil
 end
 
 --------------------------------------------------------------------------------
@@ -275,10 +270,8 @@ end
 --------------------------------------------------------------------------------
 
 function UIBackground.remove(entity)
-    local go = component_cache.get(entity, GameObject)
-    if go and go.config then
-        go.config._background = nil
-    end
+    local key = tostring(entity)
+    _backgroundRegistry[key] = nil
 end
 
 return UIBackground

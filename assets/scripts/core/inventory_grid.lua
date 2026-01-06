@@ -19,38 +19,38 @@ Dependencies: signal (for events)
 local grid = {}
 
 local signal = require("external.hump.signal")
-local component_cache = require("core.component_cache")
 
---------------------------------------------------------------------------------
--- Internal: Get grid component
---------------------------------------------------------------------------------
+local _gridDataRegistry = {}
 
 local function getGridComponent(gridEntity)
     if not registry:valid(gridEntity) then
         return nil
     end
-    -- Look for InventoryGridComponent (to be created in C++)
-    -- For now, use GameObject.config as storage
-    local go = component_cache.get(gridEntity, GameObject)
-    if go and go.config and go.config._inventoryGrid then
-        return go.config._inventoryGrid
-    end
-    return nil
+    local key = tostring(gridEntity)
+    return _gridDataRegistry[key]
 end
 
 local function getOrCreateGridData(gridEntity)
-    local go = component_cache.get(gridEntity, GameObject)
-    if not go then return nil end
-    go.config = go.config or {}
-    if not go.config._inventoryGrid then
-        go.config._inventoryGrid = {
+    if not registry:valid(gridEntity) then
+        return nil
+    end
+    local key = tostring(gridEntity)
+    if not _gridDataRegistry[key] then
+        _gridDataRegistry[key] = {
             rows = 0,
             cols = 0,
-            slots = {},  -- slotIndex -> { entity, item, stackCount, locked, filter }
+            slots = {},
             config = {},
         }
     end
-    return go.config._inventoryGrid
+    return _gridDataRegistry[key]
+end
+
+function grid.cleanup(gridEntity)
+    if gridEntity then
+        local key = tostring(gridEntity)
+        _gridDataRegistry[key] = nil
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -469,6 +469,18 @@ function grid.setSlotEntity(gridEntity, slotIndex, slotEntity)
     local data = getGridComponent(gridEntity)
     if not data or not data.slots[slotIndex] then return end
     data.slots[slotIndex].entity = slotEntity
+end
+
+function grid.setCallbacks(gridEntity, callbacks)
+    local data = getGridComponent(gridEntity)
+    if not data then return end
+    data.callbacks = callbacks
+end
+
+function grid.getCallbacks(gridEntity)
+    local data = getGridComponent(gridEntity)
+    if not data then return nil end
+    return data.callbacks
 end
 
 return grid

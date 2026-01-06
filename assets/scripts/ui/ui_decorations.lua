@@ -41,6 +41,8 @@ local UIDecorations = {}
 
 local component_cache = require("core.component_cache")
 
+local _decorRegistry = {}
+
 --------------------------------------------------------------------------------
 -- Position Constants
 --------------------------------------------------------------------------------
@@ -91,15 +93,16 @@ end
 --------------------------------------------------------------------------------
 
 local function getDecorations(entity)
-    local go = component_cache.get(entity, GameObject)
-    if not go then return nil end
-    go.config = go.config or {}
-    go.config._decorations = go.config._decorations or {
-        badges = {},
-        overlays = {},
-        customOverlays = {},
-    }
-    return go.config._decorations
+    if not registry:valid(entity) then return nil end
+    local key = tostring(entity)
+    if not _decorRegistry[key] then
+        _decorRegistry[key] = {
+            badges = {},
+            overlays = {},
+            customOverlays = {},
+        }
+    end
+    return _decorRegistry[key]
 end
 
 --------------------------------------------------------------------------------
@@ -293,8 +296,26 @@ end
 --------------------------------------------------------------------------------
 
 function UIDecorations.hasDecorations(entity)
-    local go = component_cache.get(entity, GameObject)
-    return go and go.config and go.config._decorations ~= nil
+    local key = tostring(entity)
+    return _decorRegistry[key] ~= nil
+end
+
+function UIDecorations.cleanup(entity)
+    local key = tostring(entity)
+    local decor = _decorRegistry[key]
+    if decor then
+        for _, badge in ipairs(decor.badges) do
+            if badge.entity and registry:valid(badge.entity) then
+                registry:destroy(badge.entity)
+            end
+        end
+        for _, overlay in ipairs(decor.overlays) do
+            if overlay.entity and registry:valid(overlay.entity) then
+                registry:destroy(overlay.entity)
+            end
+        end
+    end
+    _decorRegistry[key] = nil
 end
 
 --------------------------------------------------------------------------------

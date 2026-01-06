@@ -61,16 +61,11 @@ function InventoryGridInit.initializeIfGrid(boxEntity, gridId)
     -- Find and register slot entities
     InventoryGridInit.registerSlotEntities(boxEntity, gridId, rows, cols)
     
-    -- Store callbacks
-    local go = component_cache.get(boxEntity, GameObject)
-    if go then
-        go.config = go.config or {}
-        go.config._gridCallbacks = {
-            onSlotChange = gridData.onSlotChange,
-            onSlotClick = gridData.onSlotClick,
-            onItemStack = gridData.onItemStack,
-        }
-    end
+    grid.setCallbacks(boxEntity, {
+        onSlotChange = gridData.onSlotChange,
+        onSlotClick = gridData.onSlotClick,
+        onItemStack = gridData.onItemStack,
+    })
     
     log_debug("[InventoryGridInit] Initialized grid: " .. tostring(gridId) .. " (" .. rows .. "x" .. cols .. ")")
     
@@ -100,26 +95,25 @@ end
 -- Setup drag-drop interaction for a slot
 --------------------------------------------------------------------------------
 
+local _slotMetadata = {}
+
 function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotIndex)
     local go = component_cache.get(slotEntity, GameObject)
     if not go then return end
     
-    -- Enable collision and interaction
     go.state.collisionEnabled = true
     go.state.hoverEnabled = true
     go.state.triggerOnReleaseEnabled = true
     
-    -- Store reference to parent grid
-    go.config = go.config or {}
-    go.config._parentGrid = gridEntity
-    go.config._slotIndex = slotIndex
+    _slotMetadata[tostring(slotEntity)] = {
+        parentGrid = gridEntity,
+        slotIndex = slotIndex,
+    }
     
-    -- Setup onRelease callback for drag-drop
     go.methods.onRelease = function(releasedOn, released)
         InventoryGridInit.handleItemDrop(gridEntity, slotIndex, released)
     end
     
-    -- Setup click callback
     local originalOnClick = go.methods.onClick
     go.methods.onClick = function(entity)
         signal.emit("grid_slot_clicked", gridEntity, slotIndex, "left", {})
@@ -127,6 +121,14 @@ function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotInde
             originalOnClick(entity)
         end
     end
+end
+
+function InventoryGridInit.getSlotMetadata(slotEntity)
+    return _slotMetadata[tostring(slotEntity)]
+end
+
+function InventoryGridInit.cleanupSlotMetadata(slotEntity)
+    _slotMetadata[tostring(slotEntity)] = nil
 end
 
 --------------------------------------------------------------------------------

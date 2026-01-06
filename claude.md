@@ -21,8 +21,6 @@ terminal-notifier -title "Claude Code" -message "Your message here"
 
 **Use exponential wait delays when checking builds.** When polling for build completion (e.g., background builds, CI checks), use exponential backoff (e.g., 1s → 2s → 4s → 8s) instead of fixed intervals to reduce unnecessary load.
 
-**Use exponential wait delays when checking builds.** When polling for build completion (e.g., background builds, CI checks), use exponential backoff (e.g., 1s → 2s → 4s → 8s) instead of fixed intervals to reduce unnecessary load.
-
 ```bash
 just build-debug              # Debug build → ./build/raylib-cpp-cmake-template
 just build-release            # Release build
@@ -31,6 +29,23 @@ just test                     # Run all tests
 just test-asan                # With AddressSanitizer
 just build-web                # Web build (requires emsdk)
 ```
+
+## Lua Runtime Debugging
+
+**Auto-run and grep for errors:**
+```bash
+(./build/raylib-cpp-cmake-template 2>&1 & sleep 8; kill $!) | grep -E "(error|Error|Lua)"
+```
+
+**Full output tail (last N lines):**
+```bash
+(./build/raylib-cpp-cmake-template 2>&1 & sleep 8; kill $!) | tail -80
+```
+
+**Common Lua error patterns:**
+- `sol: cannot set (new_index)` → C++ userdata doesn't allow arbitrary keys. Use Lua-side registry table instead of `go.config.foo = bar`
+- `attempt to index a nil value` → Component/entity not found or not initialized
+- Stack traces show file:line → Read that exact location to find the bug
 
 ## Architecture Overview
 

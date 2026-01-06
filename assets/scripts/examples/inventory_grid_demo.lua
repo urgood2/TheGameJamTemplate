@@ -53,13 +53,8 @@ local function createSimpleCard(spriteName, x, y, cardData)
         go.state.dragEnabled = true
         go.state.collisionEnabled = true
         go.state.hoverEnabled = true
-        
-        -- Store card data
-        go.config = go.config or {}
-        go.config.cardData = cardData
     end
     
-    -- Register script data for filtering
     if setScriptTableForEntityID then
         setScriptTableForEntityID(entity, {
             entity = entity,
@@ -68,6 +63,7 @@ local function createSimpleCard(spriteName, x, y, cardData)
             element = cardData.element,
             stackId = cardData.stackId,
             category = "card",
+            cardData = cardData,
         })
     end
     

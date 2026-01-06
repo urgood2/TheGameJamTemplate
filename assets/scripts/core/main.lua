@@ -28,7 +28,11 @@ local LightingDemo = require("demos.lighting_demo")
 local SpecialItem = require("core.special_item")
 SaveManager = require("core.save_manager") -- Global for C++ debug UI access
 local PatchNotesModal = require("ui.patch_notes_modal")
-local InventoryGridDemo = require("examples.inventory_grid_demo")
+local ok, InventoryGridDemo = pcall(require, "examples.inventory_grid_demo")
+if not ok then
+    print("[ERROR] Failed to load InventoryGridDemo: " .. tostring(InventoryGridDemo))
+    InventoryGridDemo = nil
+end
 -- Represents game loop main module
 main = main or {}
 
@@ -500,6 +504,7 @@ function initMainMenu()
 end
 
 function createTabDemo()
+    print("[TRACE] createTabDemo called")
     local dsl = require("ui.ui_syntax_sugar")
     
     local tabDef = dsl.root {

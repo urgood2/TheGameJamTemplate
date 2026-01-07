@@ -315,18 +315,28 @@ void handle_released_event(input::InputState &inputState, entt::registry &regist
     {
 
         auto *cursorUpTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_up_target);
+        
+        SPDLOG_DEBUG("[RELEASE-DEBUG] cursor_up_target={} prev_dragging={} collision_list_size={}", 
+            static_cast<int>(inputState.cursor_up_target), 
+            static_cast<int>(inputState.cursor_prev_dragging_target),
+            inputState.collision_list.size());
 
         // if cursorUpTargetNode is the same as the cursor_prev_dragging_target, get another entity colliding with the cursor from the collision list and use that instead for cursor_up_target
         if (inputState.cursor_up_target == inputState.cursor_prev_dragging_target)
         {
+            SPDLOG_DEBUG("[RELEASE-DEBUG] Looking for drop target in collision_list...");
             entt::entity nextCollided{entt::null};
             for (auto &collision : inputState.collision_list)
             {
                 auto *collisionNode = registry.try_get<transform::GameObject>(collision);
-                if (collisionNode == nullptr)
+                if (collisionNode == nullptr) {
+                    SPDLOG_DEBUG("[RELEASE-DEBUG] entity {} has no GameObject", static_cast<int>(collision));
                     continue;
-                if (collisionNode->state.triggerOnReleaseEnabled == false)
+                }
+                if (collisionNode->state.triggerOnReleaseEnabled == false) {
+                    SPDLOG_DEBUG("[RELEASE-DEBUG] entity {} has triggerOnReleaseEnabled=false", static_cast<int>(collision));
                     continue;
+                }
                 if (collision != inputState.cursor_prev_dragging_target)
                 {
                     nextCollided = collision;
@@ -339,6 +349,8 @@ void handle_released_event(input::InputState &inputState, entt::registry &regist
             {
                 inputState.cursor_up_target = nextCollided;
                 cursorUpTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_up_target);
+            } else {
+                SPDLOG_DEBUG("[RELEASE-DEBUG] No valid drop target found in collision_list!");
             }
         }
 

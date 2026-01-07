@@ -132,16 +132,14 @@ function InventoryGridDemo.init()
     local screenW = globals.screenWidth()
     local screenH = globals.screenHeight()
     
-    local gridX = screenW - 380
-    local gridY = 80
+    local gridX = screenW - 350
+    local gridY = 100
     
     InventoryGridDemo.createPostItTabs(gridX, gridY, 320)
     InventoryGridDemo.createMainGrid(gridX, gridY)
     InventoryGridDemo.createInfoBox(gridX - 220, gridY)
-    InventoryGridDemo.createSortButtons(gridX, gridY + 360)
-    InventoryGridDemo.createCustomPanel(gridX - 220, gridY + 310)
-    InventoryGridDemo.createBackgroundDemo(gridX - 220, gridY + 470)
-    InventoryGridDemo.createDecorationDemo(gridX - 220, gridY + 580)
+    -- Sort buttons below info box (info box height ~320 + padding)
+    InventoryGridDemo.createSortButtons(gridX - 220, gridY + 340)
     InventoryGridDemo.setupSignalHandlers()
     InventoryGridDemo.setupDragDebugTimer()
     
@@ -638,42 +636,31 @@ function InventoryGridDemo.createPostItTabs(windowX, windowY, windowW)
     local startX = windowX + 10
     local tabY = windowY - tabHeight + tabOverlap
     
+    demoState.tabButtonEntities = {}
+    
     for i, tab in ipairs(tabs) do
         local isActive = (tab.id == demoState.activeTab)
         local tabX = startX + (i - 1) * (tabWidth + tabSpacing)
         local tabId = tab.id
         
-        local tabDef = dsl.hbox {
-            config = {
-                id = "tab_" .. tab.id,
-                padding = 6,
-                minWidth = tabWidth,
-                minHeight = tabHeight,
-                color = isActive and "steel_blue" or "gray",
-                emboss = isActive and 2 or 1,
-                hover = true,
-                canCollide = true,
-                buttonCallback = function()
-                    InventoryGridDemo.switchTab(tabId)
-                end,
-                choice = true,
-                chosen = isActive,
-                group = "demo_tabs",
-            },
-            children = {
-                dsl.text(tab.label, { 
-                    fontSize = 11, 
-                    color = isActive and "white" or "light_gray",
-                    shadow = isActive,
-                }),
-            },
-        }
+        local tabDef = dsl.button(tab.label, {
+            id = "tab_" .. tab.id,
+            minWidth = tabWidth,
+            minHeight = tabHeight,
+            fontSize = 11,
+            color = isActive and "steel_blue" or "gray",
+            hover = true,
+            onClick = function()
+                InventoryGridDemo.switchTab(tabId)
+            end,
+        })
         
         local tabEntity = dsl.spawn({ x = tabX, y = tabY }, tabDef, "ui", 50)
         ui.box.set_draw_layer(tabEntity, "ui")
         
         table.insert(demoState.tabEntities, tabEntity)
-        log_debug("[Demo] Created tab: " .. tab.id .. " at " .. tabX .. ", " .. tabY)
+        demoState.tabButtonEntities[tabId] = tabEntity
+        log_debug("[Demo] Created tab button: " .. tab.id .. " at " .. tabX .. ", " .. tabY)
     end
     
     log_debug("[Demo] Created " .. #tabs .. " post-it tabs")
@@ -685,14 +672,22 @@ function InventoryGridDemo.switchTab(tabId)
     local oldTab = demoState.activeTab
     demoState.activeTab = tabId
     
-    for _, tabEntity in ipairs(demoState.tabEntities) do
-        if tabEntity and registry:valid(tabEntity) then
-            local uiConfig = component_cache.get(tabEntity, UIConfig)
-            if uiConfig then
-                local isActive = uiConfig.id and uiConfig.id:find(tabId)
-                uiConfig.chosen = isActive or false
-                uiConfig.color = isActive and util.getColor("steel_blue") or util.getColor("gray")
-                uiConfig.emboss = isActive and 2 or 1
+    local tabs = { "inventory", "equipment", "crafting" }
+    for _, id in ipairs(tabs) do
+        local tabBoxEntity = demoState.tabButtonEntities[id]
+        log_debug("[Demo] switchTab: checking tab " .. id .. " boxEntity=" .. tostring(tabBoxEntity))
+        if tabBoxEntity and registry:valid(tabBoxEntity) then
+            local buttonEntity = ui.box.GetUIEByID(registry, tabBoxEntity, "tab_" .. id)
+            log_debug("[Demo] switchTab: buttonEntity for tab_" .. id .. " = " .. tostring(buttonEntity))
+            if buttonEntity and registry:valid(buttonEntity) then
+                local uiConfig = component_cache.get(buttonEntity, UIConfig)
+                if uiConfig then
+                    local isActive = (id == tabId)
+                    uiConfig.chosen = isActive
+                    uiConfig.color = isActive and util.getColor("steel_blue") or util.getColor("gray")
+                    uiConfig.emboss = isActive and 2 or 1
+                    log_debug("[Demo] switchTab: set tab " .. id .. " active=" .. tostring(isActive))
+                end
             end
         end
     end

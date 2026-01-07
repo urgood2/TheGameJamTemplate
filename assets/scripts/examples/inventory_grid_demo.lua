@@ -956,6 +956,22 @@ function InventoryGridDemo.setupSignalHandlers()
         end
     end)
     
+    registerHandler("grid_item_moved", function(gridEntity, fromSlot, toSlot, itemEntity)
+        if gridEntity == demoState.gridEntity then
+            log_debug("[Demo Signal] Item moved from slot " .. fromSlot .. " to " .. toSlot)
+            InventoryGridDemo.updateStackBadge(fromSlot)
+            InventoryGridDemo.updateStackBadge(toSlot)
+        end
+    end)
+    
+    registerHandler("grid_items_swapped", function(gridEntity, slot1, slot2, item1, item2)
+        if gridEntity == demoState.gridEntity then
+            log_debug("[Demo Signal] Items swapped between slots " .. slot1 .. " and " .. slot2)
+            InventoryGridDemo.updateStackBadge(slot1)
+            InventoryGridDemo.updateStackBadge(slot2)
+        end
+    end)
+    
     registerHandler("grid_slot_clicked", function(gridEntity, slotIndex, button, modifiers)
         if gridEntity == demoState.gridEntity then
             log_debug("[Demo Signal] Slot " .. slotIndex .. " clicked")
@@ -998,6 +1014,29 @@ function InventoryGridDemo.spawnMockCards()
 end
 
 --------------------------------------------------------------------------------
+-- Per-frame snapping: keep items centered on their slots
+--------------------------------------------------------------------------------
+
+function InventoryGridDemo.snapItemsToSlots()
+    if not demoState.gridEntity then return end
+    
+    local inputState = input and input.getState and input.getState()
+    local draggedEntity = inputState and inputState.cursor_dragging_target
+    
+    local items = grid.getAllItems(demoState.gridEntity)
+    for slotIndex, itemEntity in pairs(items) do
+        if itemEntity and registry:valid(itemEntity) then
+            if itemEntity ~= draggedEntity then
+                local slotEntity = grid.getSlotEntity(demoState.gridEntity, slotIndex)
+                if slotEntity then
+                    InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+                end
+            end
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- Card Render Timer (batched shader pipeline rendering)
 --------------------------------------------------------------------------------
 
@@ -1005,6 +1044,8 @@ function InventoryGridDemo.setupCardRenderTimer()
     local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) + 500
     
     timer.run_every_render_frame(function()
+        InventoryGridDemo.snapItemsToSlots()
+        
         local batchedCardBuckets = {}
         local cardZCache = {}
         

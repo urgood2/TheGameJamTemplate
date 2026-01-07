@@ -52,6 +52,71 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             font-size: 12px;
             color: #e0e0e0;
         }
+
+        /* File tabs for multi-file review */
+        .file-tabs {
+            display: flex;
+            background: #252526;
+            border-bottom: 1px solid #3c3c3c;
+            padding: 0 12px;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .file-tabs:empty {
+            display: none;
+        }
+        .file-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #808080;
+            font-size: 12px;
+            font-family: "SF Mono", Consolas, monospace;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .file-tab:hover {
+            color: #d4d4d4;
+            background: rgba(255,255,255,0.05);
+        }
+        .file-tab.active {
+            color: #ffffff;
+            border-bottom-color: #0e639c;
+            background: rgba(255,255,255,0.05);
+        }
+        .file-tab .comment-badge {
+            background: #f0b429;
+            color: #1e1e1e;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        .file-tab .comment-badge:empty,
+        .file-tab .comment-badge[data-count="0"] {
+            display: none;
+        }
+        .file-tab .file-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .file-tab .file-status.modified {
+            background: #f0b429;
+        }
+        .file-tab .file-status.added {
+            background: #89d185;
+        }
+        .file-tab .file-status.removed {
+            background: #f85149;
+        }
         .view-toggle {
             display: flex;
             gap: 4px;
@@ -496,6 +561,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
     </div>
 
+    <div class="file-tabs" id="fileTabs"></div>
+
     <div class="main-container">
         <div class="diff-container side-by-side" id="diffContainer">
             <div class="diff-pane original">
@@ -539,8 +606,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <script>
-        let pendingData = null;
-        let comments = [];
+        // Multi-file support
+        let files = [];           // Array of file objects
+        let currentFileIndex = 0; // Currently viewed file
+        let commentsByFile = {};  // { filepath: [comments] }
         let currentSelection = null;
         let currentView = 'side';
         let diffResult = null;
@@ -560,18 +629,99 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         async function loadPending() {
             try {
                 const res = await fetch('/api/pending');
-                pendingData = await res.json();
-                document.getElementById('filePath').textContent = pendingData.file_path;
-                computeDiff();
-                renderCode();
+                const data = await res.json();
+
+                // Support both single-file and multi-file formats
+                if (data.files && Array.isArray(data.files)) {
+                    files = data.files;
+                } else {
+                    // Convert single file to array format
+                    files = [{
+                        file_path: data.file_path,
+                        file_type: data.file_type,
+                        original_content: data.original_content,
+                        proposed_content: data.proposed_content
+                    }];
+                }
+
+                // Initialize comments for each file
+                files.forEach(f => {
+                    if (!commentsByFile[f.file_path]) {
+                        commentsByFile[f.file_path] = [];
+                    }
+                });
+
+                renderFileTabs();
+                switchToFile(0);
             } catch (e) {
                 document.getElementById('filePath').textContent = 'Error loading';
+                console.error(e);
             }
         }
 
+        function renderFileTabs() {
+            const tabsContainer = document.getElementById('fileTabs');
+
+            // Hide tabs if only one file
+            if (files.length <= 1) {
+                tabsContainer.innerHTML = '';
+                return;
+            }
+
+            tabsContainer.innerHTML = files.map((f, i) => {
+                const filename = f.file_path.split('/').pop();
+                const commentCount = (commentsByFile[f.file_path] || []).length;
+                const isNew = !f.original_content || f.original_content.trim() === '';
+                const isDeleted = !f.proposed_content || f.proposed_content.trim() === '';
+                const statusClass = isNew ? 'added' : (isDeleted ? 'removed' : 'modified');
+
+                return `
+                    <button class="file-tab ${i === currentFileIndex ? 'active' : ''}" data-index="${i}">
+                        <span class="file-status ${statusClass}"></span>
+                        <span class="filename">${filename}</span>
+                        <span class="comment-badge" data-count="${commentCount}">${commentCount || ''}</span>
+                    </button>
+                `;
+            }).join('');
+
+            // Add click handlers
+            tabsContainer.querySelectorAll('.file-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchToFile(parseInt(tab.dataset.index));
+                });
+            });
+        }
+
+        function switchToFile(index) {
+            currentFileIndex = index;
+            const file = files[index];
+
+            // Update file path display
+            document.getElementById('filePath').textContent = file.file_path;
+
+            // Update tab active state
+            document.querySelectorAll('.file-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+
+            computeDiff();
+            renderCode();
+            renderComments();
+        }
+
+        function getCurrentFile() {
+            return files[currentFileIndex];
+        }
+
+        function getCurrentComments() {
+            const file = getCurrentFile();
+            return commentsByFile[file.file_path] || [];
+        }
+
         function computeDiff() {
-            const origLines = (pendingData.original_content || '').split('\\n');
-            const propLines = (pendingData.proposed_content || '').split('\\n');
+            const file = getCurrentFile();
+            const origLines = (file.original_content || '').split('\\n');
+            const propLines = (file.proposed_content || '').split('\\n');
             diffResult = Diff.diffArrays(origLines, propLines);
         }
 
@@ -582,11 +732,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 renderUnified();
             }
             applySyntaxHighlighting();
+            renderInlineMarkers();
         }
 
         function renderSideBySide() {
-            const origLines = (pendingData.original_content || '').split('\\n');
-            const propLines = (pendingData.proposed_content || '').split('\\n');
+            const file = getCurrentFile();
+            const origLines = (file.original_content || '').split('\\n');
+            const propLines = (file.proposed_content || '').split('\\n');
 
             // Build line-by-line diff info
             let origIdx = 0, propIdx = 0;
@@ -645,7 +797,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         function applySyntaxHighlighting() {
-            const lang = getLanguage(pendingData.file_type);
+            const file = getCurrentFile();
+            const lang = getLanguage(file.file_type);
             if (lang && hljs.getLanguage(lang)) {
                 document.querySelectorAll('.line-content').forEach(el => {
                     if (el.textContent.trim()) {
@@ -732,7 +885,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         function saveComment() {
             const commentText = document.getElementById('commentInput').value.trim();
             if (commentText && currentSelection) {
-                comments.push({
+                const file = getCurrentFile();
+                if (!commentsByFile[file.file_path]) {
+                    commentsByFile[file.file_path] = [];
+                }
+                commentsByFile[file.file_path].push({
                     selection: {
                         start: currentSelection.start,
                         end: currentSelection.end
@@ -741,6 +898,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     comment: commentText
                 });
                 renderComments();
+                renderFileTabs(); // Update comment count badges
             }
             closePopup();
         }
@@ -755,6 +913,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         function renderComments() {
             // Update sidebar
             const container = document.getElementById('commentsList');
+            const comments = getCurrentComments();
             if (comments.length === 0) {
                 container.innerHTML = '<div class="no-comments">Select text to add comments</div>';
             } else {
@@ -786,6 +945,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             });
 
             // Group comments by line
+            const comments = getCurrentComments();
             const commentsByLine = {};
             comments.forEach((c, i) => {
                 const line = c.selection.start.line;
@@ -965,17 +1125,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         function deleteComment(index) {
-            comments.splice(index, 1);
+            const file = getCurrentFile();
+            if (commentsByFile[file.file_path]) {
+                commentsByFile[file.file_path].splice(index, 1);
+            }
             renderComments();
+            renderFileTabs();
         }
 
         document.getElementById('submitBtn').addEventListener('click', async () => {
+            // Build feedback for all files
+            const filesWithComments = files.map(f => ({
+                file: f.file_path,
+                file_type: f.file_type,
+                comments: commentsByFile[f.file_path] || []
+            })).filter(f => f.comments.length > 0);
+
+            // Total comment count
+            const totalComments = Object.values(commentsByFile).reduce((sum, arr) => sum + arr.length, 0);
+
             const feedback = {
-                file: pendingData.file_path,
                 reviewed_at: new Date().toISOString(),
                 status: document.getElementById('statusSelect').value,
-                comments: comments,
-                general_comment: document.getElementById('generalComment').value.trim()
+                general_comment: document.getElementById('generalComment').value.trim(),
+                total_files: files.length,
+                total_comments: totalComments,
+                // Multi-file format
+                files: filesWithComments,
+                // Legacy single-file format (for backward compatibility, uses first file)
+                file: files[0]?.file_path,
+                comments: filesWithComments[0]?.comments || []
             };
 
             try {
@@ -985,7 +1164,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     body: JSON.stringify(feedback)
                 });
                 if (res.ok) {
-                    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;background:#1e1e1e;"><h1 style="color:#89d185;">Feedback Submitted!</h1><p style="color:#6e7681;margin-top:16px;">You can close this tab.</p></div>';
+                    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;background:#1e1e1e;"><h1 style="color:#89d185;">Feedback Submitted!</h1><p style="color:#6e7681;margin-top:16px;">${totalComments} comment${totalComments !== 1 ? 's' : ''} on ${filesWithComments.length} file${filesWithComments.length !== 1 ? 's' : ''}</p></div>`;
                 }
             } catch (e) {
                 alert('Error submitting feedback');

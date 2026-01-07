@@ -682,18 +682,22 @@ function InventoryGridDemo.switchTab(tabId)
     local tabs = { "inventory", "equipment", "crafting" }
     for _, id in ipairs(tabs) do
         local tabBoxEntity = demoState.tabButtonEntities[id]
-        log_debug("[Demo] switchTab: checking tab " .. id .. " boxEntity=" .. tostring(tabBoxEntity))
         if tabBoxEntity and registry:valid(tabBoxEntity) then
             local buttonEntity = ui.box.GetUIEByID(registry, tabBoxEntity, "tab_" .. id)
-            log_debug("[Demo] switchTab: buttonEntity for tab_" .. id .. " = " .. tostring(buttonEntity))
             if buttonEntity and registry:valid(buttonEntity) then
-                local uiConfig = component_cache.get(buttonEntity, UIConfig)
-                if uiConfig then
-                    local isActive = (id == tabId)
+                local isActive = (id == tabId)
+                local newColor = isActive and util.getColor("steel_blue") or util.getColor("gray")
+                
+                if registry:has(buttonEntity, UIStyleConfig) then
+                    local styleConfig = registry:get(buttonEntity, UIStyleConfig)
+                    styleConfig.color = newColor
+                    styleConfig.emboss = isActive and 2 or 1
+                end
+                
+                if registry:has(buttonEntity, UIConfig) then
+                    local uiConfig = registry:get(buttonEntity, UIConfig)
                     uiConfig.chosen = isActive
-                    uiConfig.color = isActive and util.getColor("steel_blue") or util.getColor("gray")
-                    uiConfig.emboss = isActive and 2 or 1
-                    log_debug("[Demo] switchTab: set tab " .. id .. " active=" .. tostring(isActive))
+                    uiConfig.color = newColor
                 end
             end
         end

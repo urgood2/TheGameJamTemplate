@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <functional>
 
 // #include "tweeny.h"
 
@@ -65,6 +66,10 @@ struct AnimationObject
     float speedMultiplier{1.0f};
     int loopCount{-1};
     int currentLoopCount{0};
+    
+    std::function<void(unsigned int, unsigned int)> onFrameChange{};
+    std::function<void(int)> onLoopComplete{};
+    std::function<void()> onAnimationEnd{};
 };
 
 /// @brief Any object with this component will be updated by an animationSystem. This object should be attached to any entity which has an animation.

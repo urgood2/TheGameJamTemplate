@@ -52,4 +52,9 @@ namespace animation_system {
     extern auto seekAnimationFrame(entt::entity e, unsigned int frame) -> void;
     extern auto setPlaybackDirection(entt::entity e, PlaybackDirection direction) -> void;
     extern auto setLoopCount(entt::entity e, int loopCount) -> void;
+    
+    extern auto setOnFrameChange(entt::entity e, std::function<void(unsigned int, unsigned int)> callback) -> void;
+    extern auto setOnLoopComplete(entt::entity e, std::function<void(int)> callback) -> void;
+    extern auto setOnAnimationEnd(entt::entity e, std::function<void()> callback) -> void;
+    extern auto clearAnimationCallbacks(entt::entity e) -> void;
 }

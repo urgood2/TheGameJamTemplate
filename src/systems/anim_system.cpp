@@ -271,6 +271,128 @@ auto exposeToLua(sol::state &lua) -> void {
       "---@param targetHeight number # Desired height\n"
       "---@return nil",
       "Resizes a single animation object to fit");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "getCurrentFrame",
+      &animation_system::getCurrentFrame,
+      "---@param e entt.entity # Target entity\n"
+      "---@return number frame # Current frame index",
+      "Gets the current frame index of the active animation");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "getFrameCount",
+      &animation_system::getFrameCount,
+      "---@param e entt.entity # Target entity\n"
+      "---@return number count # Total frame count",
+      "Gets the total number of frames in the active animation");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "isPlaying",
+      &animation_system::isPlaying,
+      "---@param e entt.entity # Target entity\n"
+      "---@return boolean playing # True if animation is playing",
+      "Checks if the animation is currently playing");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "getProgress",
+      &animation_system::getProgress,
+      "---@param e entt.entity # Target entity\n"
+      "---@return number progress # Progress from 0.0 to 1.0",
+      "Gets the progress of the current animation (0.0 to 1.0)");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "play",
+      &animation_system::playAnimation,
+      "---@param e entt.entity # Target entity\n"
+      "---@return nil",
+      "Starts or resumes the animation");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "pause",
+      &animation_system::pauseAnimation,
+      "---@param e entt.entity # Target entity\n"
+      "---@return nil",
+      "Pauses the animation at the current frame");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "stop",
+      &animation_system::stopAnimation,
+      "---@param e entt.entity # Target entity\n"
+      "---@return nil",
+      "Stops the animation and resets to frame 0");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "setSpeed",
+      &animation_system::setAnimationSpeed,
+      "---@param e entt.entity # Target entity\n"
+      "---@param speed number # Speed multiplier (1.0 = normal)\n"
+      "---@return nil",
+      "Sets the animation playback speed multiplier");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "seekFrame",
+      &animation_system::seekAnimationFrame,
+      "---@param e entt.entity # Target entity\n"
+      "---@param frame number # Frame index to seek to\n"
+      "---@return nil",
+      "Seeks to a specific frame in the animation");
+
+  lua.new_enum<PlaybackDirection>(
+      "PlaybackDirection",
+      {
+          {"Forward", PlaybackDirection::Forward},
+          {"Reverse", PlaybackDirection::Reverse},
+          {"Pingpong", PlaybackDirection::Pingpong},
+          {"PingpongReverse", PlaybackDirection::PingpongReverse}
+      }
+  );
+
+  rec.bind_function(
+      lua, {"animation_system"}, "setDirection",
+      &animation_system::setPlaybackDirection,
+      "---@param e entt.entity # Target entity\n"
+      "---@param direction PlaybackDirection # Playback direction\n"
+      "---@return nil",
+      "Sets the playback direction (Forward, Reverse, Pingpong, PingpongReverse)");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "setLoopCount",
+      &animation_system::setLoopCount,
+      "---@param e entt.entity # Target entity\n"
+      "---@param loopCount number # Number of loops (-1 = infinite, 0 = play once)\n"
+      "---@return nil",
+      "Sets the number of times the animation should loop");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "onFrameChange",
+      &animation_system::setOnFrameChange,
+      "---@param e entt.entity # Target entity\n"
+      "---@param callback fun(oldFrame: number, newFrame: number) # Callback function\n"
+      "---@return nil",
+      "Sets callback fired when animation frame changes");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "onLoopComplete",
+      &animation_system::setOnLoopComplete,
+      "---@param e entt.entity # Target entity\n"
+      "---@param callback fun(loopCount: number) # Callback with current loop count\n"
+      "---@return nil",
+      "Sets callback fired when animation completes a loop");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "onAnimationEnd",
+      &animation_system::setOnAnimationEnd,
+      "---@param e entt.entity # Target entity\n"
+      "---@param callback fun() # Callback function\n"
+      "---@return nil",
+      "Sets callback fired when animation ends (loopCount reached)");
+
+  rec.bind_function(
+      lua, {"animation_system"}, "clearCallbacks",
+      &animation_system::clearAnimationCallbacks,
+      "---@param e entt.entity # Target entity\n"
+      "---@return nil",
+      "Clears all animation callbacks for the entity");
 }
 
 auto createStillAnimationFromSpriteUUID(std::string spriteUUID,
@@ -649,6 +771,140 @@ auto getNinepatchUIBorderInfo(std::string uuid_or_raw_identifier)
   return std::make_tuple(nPatchInfo, texture ? *texture : Texture2D{});
 }
 
+namespace {
+AnimationObject* getActiveAnimation(entt::entity e) {
+  auto& registry = globals::getRegistry();
+  if (!registry.valid(e) || !registry.all_of<AnimationQueueComponent>(e)) {
+    return nullptr;
+  }
+  auto& ac = registry.get<AnimationQueueComponent>(e);
+  if (!ac.animationQueue.empty() && ac.currentAnimationIndex < ac.animationQueue.size()) {
+    return &ac.animationQueue[ac.currentAnimationIndex];
+  }
+  if (!ac.defaultAnimation.animationList.empty()) {
+    return &ac.defaultAnimation;
+  }
+  return nullptr;
+}
+}
+
+auto getCurrentFrame(entt::entity e) -> unsigned int {
+  auto* anim = getActiveAnimation(e);
+  return anim ? anim->currentAnimIndex : 0;
+}
+
+auto getFrameCount(entt::entity e) -> size_t {
+  auto* anim = getActiveAnimation(e);
+  return anim ? anim->animationList.size() : 0;
+}
+
+auto isPlaying(entt::entity e) -> bool {
+  auto* anim = getActiveAnimation(e);
+  return anim && !anim->paused && anim->speedMultiplier > 0.0f;
+}
+
+auto getProgress(entt::entity e) -> float {
+  auto* anim = getActiveAnimation(e);
+  if (!anim || anim->animationList.empty()) return 0.0f;
+  return static_cast<float>(anim->currentAnimIndex) / static_cast<float>(anim->animationList.size());
+}
+
+auto playAnimation(entt::entity e) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->paused = false;
+    if (anim->speedMultiplier <= 0.0f) {
+      anim->speedMultiplier = 1.0f;
+    }
+  }
+}
+
+auto pauseAnimation(entt::entity e) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->paused = true;
+  }
+}
+
+auto stopAnimation(entt::entity e) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->paused = true;
+    anim->currentAnimIndex = 0;
+    anim->currentElapsedTime = 0;
+    anim->currentLoopCount = 0;
+    anim->pingpongReversing = false;
+  }
+}
+
+auto setAnimationSpeed(entt::entity e, float speed) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->speedMultiplier = std::max(0.0f, speed);
+  }
+}
+
+auto seekAnimationFrame(entt::entity e, unsigned int frame) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim && !anim->animationList.empty()) {
+    anim->currentAnimIndex = std::min(frame, static_cast<unsigned int>(anim->animationList.size() - 1));
+    anim->currentElapsedTime = 0;
+  }
+}
+
+auto setPlaybackDirection(entt::entity e, PlaybackDirection direction) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->playbackDirection = direction;
+    if (direction == PlaybackDirection::Reverse || direction == PlaybackDirection::PingpongReverse) {
+      if (anim->currentAnimIndex == 0 && !anim->animationList.empty()) {
+        anim->currentAnimIndex = static_cast<unsigned int>(anim->animationList.size() - 1);
+      }
+      if (direction == PlaybackDirection::PingpongReverse) {
+        anim->pingpongReversing = true;
+      }
+    }
+  }
+}
+
+auto setLoopCount(entt::entity e, int loopCount) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->loopCount = loopCount;
+    anim->currentLoopCount = 0;
+  }
+}
+
+auto setOnFrameChange(entt::entity e, std::function<void(unsigned int, unsigned int)> callback) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->onFrameChange = std::move(callback);
+  }
+}
+
+auto setOnLoopComplete(entt::entity e, std::function<void(int)> callback) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->onLoopComplete = std::move(callback);
+  }
+}
+
+auto setOnAnimationEnd(entt::entity e, std::function<void()> callback) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->onAnimationEnd = std::move(callback);
+  }
+}
+
+auto clearAnimationCallbacks(entt::entity e) -> void {
+  auto* anim = getActiveAnimation(e);
+  if (anim) {
+    anim->onFrameChange = nullptr;
+    anim->onLoopComplete = nullptr;
+    anim->onAnimationEnd = nullptr;
+  }
+}
+
 auto update(float delta) -> void {
   ZONE_SCOPED("Update animation system");
   auto view = globals::getRegistry().view<AnimationQueueComponent>();
@@ -693,15 +949,21 @@ auto update(float delta) -> void {
         size_t frameCount = anim.animationList.size();
         unsigned int oldIndex = anim.currentAnimIndex;
         anim.currentElapsedTime = 0;
+        bool loopCompleted = false;
+        bool animationEnded = false;
         
         switch (anim.playbackDirection) {
           case PlaybackDirection::Forward:
             anim.currentAnimIndex = (anim.currentAnimIndex + 1) % frameCount;
-            if (anim.currentAnimIndex == 0 && anim.loopCount >= 0) {
-              anim.currentLoopCount++;
-              if (anim.currentLoopCount > anim.loopCount) {
-                anim.paused = true;
-                anim.currentAnimIndex = oldIndex;
+            if (anim.currentAnimIndex == 0) {
+              loopCompleted = true;
+              if (anim.loopCount >= 0) {
+                anim.currentLoopCount++;
+                if (anim.currentLoopCount > anim.loopCount) {
+                  anim.paused = true;
+                  anim.currentAnimIndex = oldIndex;
+                  animationEnded = true;
+                }
               }
             }
             break;
@@ -709,11 +971,13 @@ auto update(float delta) -> void {
           case PlaybackDirection::Reverse:
             if (anim.currentAnimIndex == 0) {
               anim.currentAnimIndex = static_cast<unsigned int>(frameCount - 1);
+              loopCompleted = true;
               if (anim.loopCount >= 0) {
                 anim.currentLoopCount++;
                 if (anim.currentLoopCount > anim.loopCount) {
                   anim.paused = true;
                   anim.currentAnimIndex = 0;
+                  animationEnded = true;
                 }
               }
             } else {
@@ -732,10 +996,12 @@ auto update(float delta) -> void {
             } else {
               if (anim.currentAnimIndex == 0) {
                 anim.pingpongReversing = false;
+                loopCompleted = true;
                 if (anim.loopCount >= 0) {
                   anim.currentLoopCount++;
                   if (anim.currentLoopCount > anim.loopCount) {
                     anim.paused = true;
+                    animationEnded = true;
                   }
                 }
                 if (!anim.paused && frameCount > 1) anim.currentAnimIndex++;
@@ -756,10 +1022,12 @@ auto update(float delta) -> void {
             } else {
               if (anim.currentAnimIndex >= frameCount - 1) {
                 anim.pingpongReversing = true;
+                loopCompleted = true;
                 if (anim.loopCount >= 0) {
                   anim.currentLoopCount++;
                   if (anim.currentLoopCount > anim.loopCount) {
                     anim.paused = true;
+                    animationEnded = true;
                   }
                 }
                 if (!anim.paused && frameCount > 1) anim.currentAnimIndex--;
@@ -768,6 +1036,16 @@ auto update(float delta) -> void {
               }
             }
             break;
+        }
+        
+        if (anim.currentAnimIndex != oldIndex && anim.onFrameChange) {
+          anim.onFrameChange(oldIndex, anim.currentAnimIndex);
+        }
+        if (loopCompleted && anim.onLoopComplete) {
+          anim.onLoopComplete(anim.currentLoopCount);
+        }
+        if (animationEnded && anim.onAnimationEnd) {
+          anim.onAnimationEnd();
         }
       }
     } else {
@@ -802,6 +1080,7 @@ auto update(float delta) -> void {
         anim.currentElapsedTime = 0;
         
         bool loopCompleted = false;
+        bool animationEnded = false;
         
         switch (anim.playbackDirection) {
           case PlaybackDirection::Forward:
@@ -813,6 +1092,7 @@ auto update(float delta) -> void {
                 if (anim.currentLoopCount > anim.loopCount) {
                   anim.paused = true;
                   anim.currentAnimIndex = oldIndex;
+                  animationEnded = true;
                 }
               }
             }
@@ -827,6 +1107,7 @@ auto update(float delta) -> void {
                 if (anim.currentLoopCount > anim.loopCount) {
                   anim.paused = true;
                   anim.currentAnimIndex = 0;
+                  animationEnded = true;
                 }
               }
             } else {
@@ -850,6 +1131,7 @@ auto update(float delta) -> void {
                   anim.currentLoopCount++;
                   if (anim.currentLoopCount > anim.loopCount) {
                     anim.paused = true;
+                    animationEnded = true;
                   }
                 }
                 if (!anim.paused && frameCount > 1) anim.currentAnimIndex++;
@@ -875,6 +1157,7 @@ auto update(float delta) -> void {
                   anim.currentLoopCount++;
                   if (anim.currentLoopCount > anim.loopCount) {
                     anim.paused = true;
+                    animationEnded = true;
                   }
                 }
                 if (!anim.paused && frameCount > 1) anim.currentAnimIndex--;
@@ -885,7 +1168,17 @@ auto update(float delta) -> void {
             break;
         }
         
-        if (loopCompleted && anim.loopCount >= 0 && anim.currentLoopCount > anim.loopCount) {
+        if (anim.currentAnimIndex != oldIndex && anim.onFrameChange) {
+          anim.onFrameChange(oldIndex, anim.currentAnimIndex);
+        }
+        if (loopCompleted && anim.onLoopComplete) {
+          anim.onLoopComplete(anim.currentLoopCount);
+        }
+        if (animationEnded && anim.onAnimationEnd) {
+          anim.onAnimationEnd();
+        }
+        
+        if (animationEnded) {
           if (ac.currentAnimationIndex + 1 < ac.animationQueue.size()) {
             ac.currentAnimationIndex++;
             ac.animationQueue[ac.currentAnimationIndex].currentAnimIndex = 0;

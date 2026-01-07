@@ -319,6 +319,22 @@ void loadAnimationsFromJSON() {
         ac.animationList.emplace_back(frame, duration);
       }
 
+      if (animation.value().contains("aseDirection")) {
+        std::string dir = animation.value().at("aseDirection").get<std::string>();
+        if (dir == "reverse") {
+          ac.playbackDirection = PlaybackDirection::Reverse;
+          ac.currentAnimIndex = ac.animationList.empty() ? 0 : ac.animationList.size() - 1;
+        } else if (dir == "pingpong") {
+          ac.playbackDirection = PlaybackDirection::Pingpong;
+        } else if (dir == "pingpong_reverse") {
+          ac.playbackDirection = PlaybackDirection::PingpongReverse;
+          ac.pingpongReversing = true;
+          ac.currentAnimIndex = ac.animationList.empty() ? 0 : ac.animationList.size() - 1;
+        } else if (dir != "forward") {
+          SPDLOG_WARN("Unknown aseDirection '{}' for animation '{}', defaulting to forward", dir, ac.id);
+        }
+      }
+
       globals::getAnimationsMap()[ac.id] = ac;
     }
   } catch (const std::exception &e) {

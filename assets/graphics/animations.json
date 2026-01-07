@@ -1,350 +1,240 @@
 {
-    "idle_animation": {
-        "frames": [
-            {
-                "sprite_UUID": "3308-TheRoguelike_1_10_alpha_101.png",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            },
-            {
-                "sprite_UUID": "1_10_103_3310_alpha_theroguelike",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            },
-            {
-                "sprite_UUID": "1_10_107_3314_alpha_theroguelike",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            },
-            {
-                "sprite_UUID": "3321-TheRoguelike_1_10_alpha_114.png",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            }
-        ]
-    },
-    "checkbox": {
-        "frames": [
-            {
-                "sprite_UUID": "1_10_4157_950_alpha_theroguelike",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_000": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-000.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_001": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-001.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_002": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-002.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_003": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-003.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_004": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-004.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_005": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-005.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_000": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-000.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_001": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-001.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_002": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-002.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_003": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-003.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_004": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-004.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "divider_anim_fade_005": {
-        "frames": [
-            {
-                "sprite_UUID": "divider-fade-005.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "right_arrow": {
-        "frames": [
-            {
-                "sprite_UUID": "right.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "left_arrow": {
-        "frames": [
-            {
-                "sprite_UUID": "left.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "gear_icon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "gear.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "mouse_left_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "mouse_left_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "mouse_right_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "mouse_right_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "keyboard_enter_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "keyboard_enter_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "keyboard_space_outline_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "keyboard_space_outline.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_1_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_2_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill-1.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_3_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill-2.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "krill_4_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "krill-3.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "whale_dust_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4169-TheRoguelike_1_10_alpha_962.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "dream_weaver_antenna_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "3509-TheRoguelike_1_10_alpha_302.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "resonance_beacon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "3973-TheRoguelike_1_10_alpha_766.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "whale_song_essence_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "3840-TheRoguelike_1_10_alpha_633.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "black_hole_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4168-TheRoguelike_1_10_alpha_961.png",
-                "duration_seconds": 5,
-                "fg_color": "BLACK",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "discord_icon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "Socials 16x16_Discord.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "bluesky_icon_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "Socials 16x16_Bsky.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-  "3654_TheRoguelike_1_10_alpha_447_anim": {
+  "idle_animation": {
     "frames": [
       {
-        "sprite_UUID": "3654-TheRoguelike_1_10_alpha_447.png",
+        "sprite_UUID": "3308-TheRoguelike_1_10_alpha_101.png",
+        "duration_seconds": 0.5,
+        "fg_color": "WHITE",
+        "bg_color": "NONE",
+        "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
+      },
+      {
+        "sprite_UUID": "1_10_103_3310_alpha_theroguelike",
+        "duration_seconds": 0.5,
+        "fg_color": "WHITE",
+        "bg_color": "NONE",
+        "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
+      },
+      {
+        "sprite_UUID": "1_10_107_3314_alpha_theroguelike",
+        "duration_seconds": 0.5,
+        "fg_color": "WHITE",
+        "bg_color": "NONE",
+        "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
+      },
+      {
+        "sprite_UUID": "3321-TheRoguelike_1_10_alpha_114.png",
+        "duration_seconds": 0.5,
+        "fg_color": "WHITE",
+        "bg_color": "NONE",
+        "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
+      }
+    ]
+  },
+  "checkbox": {
+    "frames": [
+      {
+        "sprite_UUID": "1_10_4157_950_alpha_theroguelike",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_000": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-000.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_001": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-001.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_002": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-002.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_003": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-003.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_004": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-004.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_005": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-005.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_000": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-000.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_001": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-001.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_002": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-002.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_003": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-003.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_004": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-004.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "divider_anim_fade_005": {
+    "frames": [
+      {
+        "sprite_UUID": "divider-fade-005.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "right_arrow": {
+    "frames": [
+      {
+        "sprite_UUID": "right.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "left_arrow": {
+    "frames": [
+      {
+        "sprite_UUID": "left.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "gear_icon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "gear.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "mouse_left_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "mouse_left_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "mouse_right_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "mouse_right_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "keyboard_enter_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "keyboard_enter_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "keyboard_space_outline_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "keyboard_space_outline.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_1_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill.png",
         "duration_seconds": 5,
         "fg_color": "NONE",
         "bg_color": "NONE"
@@ -355,6 +245,106 @@
     "frames": [
       {
         "sprite_UUID": "krill-2.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_3_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill-2.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_4_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill-3.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "whale_dust_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4169-TheRoguelike_1_10_alpha_962.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "dream_weaver_antenna_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3509-TheRoguelike_1_10_alpha_302.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "resonance_beacon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3973-TheRoguelike_1_10_alpha_766.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "whale_song_essence_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3840-TheRoguelike_1_10_alpha_633.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "black_hole_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4168-TheRoguelike_1_10_alpha_961.png",
+        "duration_seconds": 5,
+        "fg_color": "BLACK",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "discord_icon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "Socials 16x16_Discord.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "bluesky_icon_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "Socials 16x16_Bsky.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3654_TheRoguelike_1_10_alpha_447_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3654-TheRoguelike_1_10_alpha_447.png",
         "duration_seconds": 5,
         "fg_color": "NONE",
         "bg_color": "NONE"
@@ -620,5 +610,64 @@
         "bg_color": "NONE"
       }
     ]
+  },
+  "test_anim_no-tag": {
+    "frames": [
+      {
+        "sprite_UUID": "test_anim_no-tag_000.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_001.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_002.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_003.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_004.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_005.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_006.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_007.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      },
+      {
+        "sprite_UUID": "test_anim_no-tag_008.png",
+        "duration_seconds": 0.1,
+        "fg_color": "WHITE",
+        "bg_color": "NONE"
+      }
+    ],
+    "aseDirection": "forward"
   }
 }

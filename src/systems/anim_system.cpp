@@ -668,67 +668,236 @@ auto update(float delta) -> void {
       continue;
     } else if (ac.animationQueue.empty()) {
       if (ac.defaultAnimation.animationList.empty()) {
-        continue; // nothing to update
+        continue;
       }
-      // Guard: clamp index to valid range
+      
+      if (ac.defaultAnimation.paused) {
+        continue;
+      }
+      
       if (ac.defaultAnimation.currentAnimIndex >= ac.defaultAnimation.animationList.size()) {
         ac.defaultAnimation.currentAnimIndex = 0;
       }
-      ac.defaultAnimation.currentElapsedTime += delta;
+      
+      float effectiveSpeed = std::max(0.0f, ac.defaultAnimation.speedMultiplier);
+      if (effectiveSpeed == 0.0f) {
+        continue;
+      }
+      
+      ac.defaultAnimation.currentElapsedTime += delta * effectiveSpeed;
 
       if (ac.defaultAnimation.currentElapsedTime >
           ac.defaultAnimation.animationList[ac.defaultAnimation.currentAnimIndex].second) {
-        ac.defaultAnimation.currentAnimIndex =
-            (++ac.defaultAnimation.currentAnimIndex %
-             ac.defaultAnimation.animationList.size());
-        ac.defaultAnimation.currentElapsedTime = 0;
+        
+        auto& anim = ac.defaultAnimation;
+        size_t frameCount = anim.animationList.size();
+        unsigned int oldIndex = anim.currentAnimIndex;
+        anim.currentElapsedTime = 0;
+        
+        switch (anim.playbackDirection) {
+          case PlaybackDirection::Forward:
+            anim.currentAnimIndex = (anim.currentAnimIndex + 1) % frameCount;
+            if (anim.currentAnimIndex == 0 && anim.loopCount >= 0) {
+              anim.currentLoopCount++;
+              if (anim.currentLoopCount > anim.loopCount) {
+                anim.paused = true;
+                anim.currentAnimIndex = oldIndex;
+              }
+            }
+            break;
+            
+          case PlaybackDirection::Reverse:
+            if (anim.currentAnimIndex == 0) {
+              anim.currentAnimIndex = static_cast<unsigned int>(frameCount - 1);
+              if (anim.loopCount >= 0) {
+                anim.currentLoopCount++;
+                if (anim.currentLoopCount > anim.loopCount) {
+                  anim.paused = true;
+                  anim.currentAnimIndex = 0;
+                }
+              }
+            } else {
+              anim.currentAnimIndex--;
+            }
+            break;
+            
+          case PlaybackDirection::Pingpong:
+            if (!anim.pingpongReversing) {
+              if (anim.currentAnimIndex >= frameCount - 1) {
+                anim.pingpongReversing = true;
+                if (frameCount > 1) anim.currentAnimIndex--;
+              } else {
+                anim.currentAnimIndex++;
+              }
+            } else {
+              if (anim.currentAnimIndex == 0) {
+                anim.pingpongReversing = false;
+                if (anim.loopCount >= 0) {
+                  anim.currentLoopCount++;
+                  if (anim.currentLoopCount > anim.loopCount) {
+                    anim.paused = true;
+                  }
+                }
+                if (!anim.paused && frameCount > 1) anim.currentAnimIndex++;
+              } else {
+                anim.currentAnimIndex--;
+              }
+            }
+            break;
+            
+          case PlaybackDirection::PingpongReverse:
+            if (anim.pingpongReversing) {
+              if (anim.currentAnimIndex == 0) {
+                anim.pingpongReversing = false;
+                if (frameCount > 1) anim.currentAnimIndex++;
+              } else {
+                anim.currentAnimIndex--;
+              }
+            } else {
+              if (anim.currentAnimIndex >= frameCount - 1) {
+                anim.pingpongReversing = true;
+                if (anim.loopCount >= 0) {
+                  anim.currentLoopCount++;
+                  if (anim.currentLoopCount > anim.loopCount) {
+                    anim.paused = true;
+                  }
+                }
+                if (!anim.paused && frameCount > 1) anim.currentAnimIndex--;
+              } else {
+                anim.currentAnimIndex++;
+              }
+            }
+            break;
+        }
       }
     } else {
       if (ac.currentAnimationIndex >= ac.animationQueue.size()) {
         ac.currentAnimationIndex = 0;
       }
 
-      // Guard: queue should not be empty at this point
-      if (ac.animationQueue.empty()) {
+      auto &currentAnimation = ac.animationQueue[ac.currentAnimationIndex];
+      
+      if (currentAnimation.paused) {
         continue;
       }
 
-      auto &currentAnimation = ac.animationQueue[ac.currentAnimationIndex];
-
-      // Update the current animation
-      currentAnimation.currentElapsedTime += delta;
-
-      // Guard: ensure animation list has frames
       if (currentAnimation.animationList.empty() ||
           currentAnimation.currentAnimIndex >= currentAnimation.animationList.size()) {
         continue;
       }
+      
+      float effectiveSpeed = std::max(0.0f, currentAnimation.speedMultiplier);
+      if (effectiveSpeed == 0.0f) {
+        continue;
+      }
+
+      currentAnimation.currentElapsedTime += delta * effectiveSpeed;
 
       if (currentAnimation.currentElapsedTime >
           currentAnimation.animationList[currentAnimation.currentAnimIndex].second) {
-        if (currentAnimation.currentAnimIndex >=
-            currentAnimation.animationList.size() - 1) {
-          // The current animation has completed
+        
+        auto& anim = currentAnimation;
+        size_t frameCount = anim.animationList.size();
+        unsigned int oldIndex = anim.currentAnimIndex;
+        anim.currentElapsedTime = 0;
+        
+        bool loopCompleted = false;
+        
+        switch (anim.playbackDirection) {
+          case PlaybackDirection::Forward:
+            anim.currentAnimIndex = (anim.currentAnimIndex + 1) % frameCount;
+            if (anim.currentAnimIndex == 0) {
+              loopCompleted = true;
+              if (anim.loopCount >= 0) {
+                anim.currentLoopCount++;
+                if (anim.currentLoopCount > anim.loopCount) {
+                  anim.paused = true;
+                  anim.currentAnimIndex = oldIndex;
+                }
+              }
+            }
+            break;
+            
+          case PlaybackDirection::Reverse:
+            if (anim.currentAnimIndex == 0) {
+              anim.currentAnimIndex = static_cast<unsigned int>(frameCount - 1);
+              loopCompleted = true;
+              if (anim.loopCount >= 0) {
+                anim.currentLoopCount++;
+                if (anim.currentLoopCount > anim.loopCount) {
+                  anim.paused = true;
+                  anim.currentAnimIndex = 0;
+                }
+              }
+            } else {
+              anim.currentAnimIndex--;
+            }
+            break;
+            
+          case PlaybackDirection::Pingpong:
+            if (!anim.pingpongReversing) {
+              if (anim.currentAnimIndex >= frameCount - 1) {
+                anim.pingpongReversing = true;
+                if (frameCount > 1) anim.currentAnimIndex--;
+              } else {
+                anim.currentAnimIndex++;
+              }
+            } else {
+              if (anim.currentAnimIndex == 0) {
+                anim.pingpongReversing = false;
+                loopCompleted = true;
+                if (anim.loopCount >= 0) {
+                  anim.currentLoopCount++;
+                  if (anim.currentLoopCount > anim.loopCount) {
+                    anim.paused = true;
+                  }
+                }
+                if (!anim.paused && frameCount > 1) anim.currentAnimIndex++;
+              } else {
+                anim.currentAnimIndex--;
+              }
+            }
+            break;
+            
+          case PlaybackDirection::PingpongReverse:
+            if (anim.pingpongReversing) {
+              if (anim.currentAnimIndex == 0) {
+                anim.pingpongReversing = false;
+                if (frameCount > 1) anim.currentAnimIndex++;
+              } else {
+                anim.currentAnimIndex--;
+              }
+            } else {
+              if (anim.currentAnimIndex >= frameCount - 1) {
+                anim.pingpongReversing = true;
+                loopCompleted = true;
+                if (anim.loopCount >= 0) {
+                  anim.currentLoopCount++;
+                  if (anim.currentLoopCount > anim.loopCount) {
+                    anim.paused = true;
+                  }
+                }
+                if (!anim.paused && frameCount > 1) anim.currentAnimIndex--;
+              } else {
+                anim.currentAnimIndex++;
+              }
+            }
+            break;
+        }
+        
+        if (loopCompleted && anim.loopCount >= 0 && anim.currentLoopCount > anim.loopCount) {
           if (ac.currentAnimationIndex + 1 < ac.animationQueue.size()) {
-            // Move to the next animation in the queue
             ac.currentAnimationIndex++;
-            // Reset the next animation's state (already bounds-checked above)
             ac.animationQueue[ac.currentAnimationIndex].currentAnimIndex = 0;
             ac.animationQueue[ac.currentAnimationIndex].currentElapsedTime = 0;
           } else {
-            // All animations in the queue have completed
             ac.animationQueue.clear();
             ac.currentAnimationIndex = 0;
-            // Optionally, invoke the callback here if all animations completed
             if (ac.useCallbackOnAnimationQueueComplete &&
                 ac.onAnimationQueueCompleteCallback) {
               ac.onAnimationQueueCompleteCallback();
             }
           }
-        } else {
-          // Move to the next frame in the current animation
-          currentAnimation.currentAnimIndex++;
-          currentAnimation.currentElapsedTime = 0;
         }
       }
     }

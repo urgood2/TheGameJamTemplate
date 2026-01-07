@@ -39,4 +39,17 @@ namespace animation_system {
     extern void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally = true, bool centerVertically = true);
     extern void resetAnimationUIRenderScale(entt::entity e);
     extern auto resizeAnimationObjectToFit(AnimationObject &animObj, float targetWidth, float targetHeight) -> void;
+    
+    extern auto getCurrentFrame(entt::entity e) -> unsigned int;
+    extern auto getFrameCount(entt::entity e) -> size_t;
+    extern auto isPlaying(entt::entity e) -> bool;
+    extern auto getProgress(entt::entity e) -> float;
+    
+    extern auto playAnimation(entt::entity e) -> void;
+    extern auto pauseAnimation(entt::entity e) -> void;
+    extern auto stopAnimation(entt::entity e) -> void;
+    extern auto setAnimationSpeed(entt::entity e, float speed) -> void;
+    extern auto seekAnimationFrame(entt::entity e, unsigned int frame) -> void;
+    extern auto setPlaybackDirection(entt::entity e, PlaybackDirection direction) -> void;
+    extern auto setLoopCount(entt::entity e, int loopCount) -> void;
 }

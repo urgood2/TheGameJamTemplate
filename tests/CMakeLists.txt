@@ -1,4 +1,5 @@
 add_executable(unit_tests
+    unit/test_animation_playback.cpp
     unit/test_engine_context.cpp
     unit/test_color_utils.cpp
     unit/test_component_cache.cpp

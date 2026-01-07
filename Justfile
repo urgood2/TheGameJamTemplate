@@ -555,8 +555,8 @@ rebuild-atlas:
 	ls -lh assets/graphics/sprites_atlas-*.png
 	ls -lh assets/graphics/sprites-*.json
 
-# Full pipeline: export from Aseprite + rebuild atlas
-update-sprites: export-aseprite rebuild-atlas
+# Full pipeline: export from Aseprite + animations + rebuild atlas
+update-sprites: export-aseprite export-animations rebuild-atlas
 	@echo "=== Sprite pipeline complete ==="
 
 # Watch for Aseprite file changes and auto-rebuild (requires fswatch)
@@ -586,6 +586,40 @@ clean-sprites:
 	echo "=== Cleaning auto-exported sprites ==="
 	rm -f "{{export_dir}}"/*.png "{{export_dir}}"/*.json 2>/dev/null || true
 	echo "=== Clean complete ==="
+
+# =============================================================================
+# Animation Auto-Export
+# =============================================================================
+
+animations_source_dir := "assets/animations"
+
+# Export animations from assets/animations/*.aseprite to frames + animations.json
+export-animations *args:
+	python3 scripts/export_animations.py {{args}}
+
+# Watch assets/animations/ for changes and auto-rebuild (requires fswatch)
+watch-animations:
+	#!/usr/bin/env bash
+
+	if ! command -v fswatch &>/dev/null; then
+		echo "ERROR: fswatch not installed"
+		echo "  Install with: brew install fswatch"
+		exit 1
+	fi
+
+	echo "=== Watching {{animations_source_dir}} for changes ==="
+	echo "  Press Ctrl+C to stop"
+
+	fswatch -l 2.0 -o "{{animations_source_dir}}" | while read; do
+		echo ""
+		echo "=== Change detected, rebuilding animations ==="
+		just export-animations || echo "Build failed, waiting for next change..."
+		just rebuild-atlas || echo "Atlas rebuild failed"
+	done
+
+# Clean orphaned animation frames (frames without source .aseprite)
+clean-animations:
+	python3 scripts/export_animations.py --clean
 
 # =============================================================================
 # Sound File Automation

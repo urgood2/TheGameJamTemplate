@@ -20,6 +20,13 @@ namespace globals {
     struct SpriteFrameData;
 }
 
+enum class PlaybackDirection {
+    Forward,
+    Reverse,
+    Pingpong,
+    PingpongReverse
+};
+
 struct SpriteComponentASCII
 {
     std::shared_ptr<globals::SpriteFrameData> spriteFrame{}; // coordinates of the sprite on the sprite image
@@ -47,10 +54,17 @@ struct AnimationObject
     unsigned int currentAnimIndex{0};
     double currentElapsedTime{0};
     std::vector<std::pair<SpriteComponentASCII, double>> animationList{};
-    bool flippedHorizontally{false}; // if true, flip the animation horizontally
-    bool flippedVertically{false}; // if true, flip the animation vertically
-    std::optional<float> intrinsincRenderScale{std::nullopt}; // the scale of the animation, animation will be scaled relative to the original size if this exists. This serves as a default scale for the animation object.
-    std::optional<float> uiRenderScale{std::nullopt}; // this is scaling applied atop the intrinsic render scale. It's used to scale down animations in ui, when ui animations are already scaled down/up based on necessity. Only applied when it exists.
+    bool flippedHorizontally{false};
+    bool flippedVertically{false};
+    std::optional<float> intrinsincRenderScale{std::nullopt};
+    std::optional<float> uiRenderScale{std::nullopt};
+    
+    PlaybackDirection playbackDirection{PlaybackDirection::Forward};
+    bool pingpongReversing{false};
+    bool paused{false};
+    float speedMultiplier{1.0f};
+    int loopCount{-1};
+    int currentLoopCount{0};
 };
 
 /// @brief Any object with this component will be updated by an animationSystem. This object should be attached to any entity which has an animation.

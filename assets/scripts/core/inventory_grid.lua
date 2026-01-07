@@ -214,24 +214,20 @@ function grid.canSlotAccept(gridEntity, slotIndex, itemEntity)
     
     local slot = data.slots[slotIndex]
     
-    -- Check if locked
     if slot.locked then
         return false
     end
     
-    -- Check if occupied (and not stackable)
     if slot.item and not data.config.stackable then
         return false
     end
     
-    -- Check grid-wide filter
     if data.config.filter then
         if not data.config.filter(itemEntity, slotIndex) then
             return false
         end
     end
     
-    -- Check per-slot filter
     if slot.filter then
         if not slot.filter(itemEntity) then
             return false

@@ -142,7 +142,7 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
-    log_debug("[DRAG-DEBUG] handleItemDrop called: grid=" .. tostring(gridEntity) .. 
+    log_debug("[DRAG-DEBUG] handleItemDrop: grid=" .. tostring(gridEntity) .. 
               " slot=" .. slotIndex .. " dropped=" .. tostring(droppedEntity))
     
     if not registry:valid(droppedEntity) then
@@ -160,16 +160,15 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
         return
     end
     
-    log_debug("[DRAG-DEBUG] Checking canSlotAccept...")
     if not grid.canSlotAccept(gridEntity, slotIndex, droppedEntity) then
         log_debug("[DRAG-DEBUG] REJECTED by canSlotAccept")
         return
     end
-    log_debug("[DRAG-DEBUG] canSlotAccept passed!")
     
     local sourceSlot = grid.findSlotContaining(gridEntity, droppedEntity)
     
     if sourceSlot then
+        -- Item is already in this grid, move/swap/merge
         if sourceSlot == slotIndex then
             return
         end
@@ -187,6 +186,7 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
             grid.moveItem(gridEntity, sourceSlot, slotIndex)
         end
     else
+        -- New item being dropped into grid
         local success, slot, action = grid.addItem(gridEntity, droppedEntity, slotIndex)
         if success then
             if action == "stacked" then
@@ -195,8 +195,8 @@ function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
                 end
             elseif action == "placed" then
                 local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
-                if slotEntity and game and game.centerInventoryItemOnTargetUI then
-                    game.centerInventoryItemOnTargetUI(droppedEntity, slotEntity)
+                if slotEntity then
+                    InventoryGridInit.centerItemOnSlot(droppedEntity, slotEntity)
                 end
             end
         end
@@ -218,6 +218,33 @@ function InventoryGridInit.makeItemDraggable(itemEntity)
     
     go.state.dragEnabled = true
     go.state.collisionEnabled = true
+end
+
+function InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
+    if not registry:valid(itemEntity) or not registry:valid(slotEntity) then
+        return
+    end
+    
+    local slotTransform = component_cache.get(slotEntity, Transform)
+    local itemTransform = component_cache.get(itemEntity, Transform)
+    
+    if not slotTransform or not itemTransform then
+        return
+    end
+    
+    local slotX = slotTransform.visualX or slotTransform.actualX or 0
+    local slotY = slotTransform.visualY or slotTransform.actualY or 0
+    local slotW = slotTransform.actualW or 64
+    local slotH = slotTransform.actualH or 64
+    
+    local itemW = itemTransform.actualW or 64
+    local itemH = itemTransform.actualH or 64
+    
+    local centerX = slotX + (slotW - itemW) / 2
+    local centerY = slotY + (slotH - itemH) / 2
+    
+    itemTransform.actualX = centerX
+    itemTransform.actualY = centerY
 end
 
 return InventoryGridInit

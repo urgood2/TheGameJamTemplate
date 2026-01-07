@@ -83,39 +83,6 @@ local function createSimpleCard(spriteName, x, y, cardData)
         go.state.dragEnabled = true
         go.state.collisionEnabled = true
         go.state.hoverEnabled = true
-        
-        local function safeSetMethod(name, fn)
-            local ok = pcall(function() go.methods[name] = fn end)
-            if not ok then
-                log_warn("[DRAG-DEBUG] Card " .. cardData.name .. " failed to set " .. name)
-            end
-        end
-        
-        safeSetMethod("onHoverStart", function(e)
-            log_debug("[DRAG-DEBUG] Card " .. cardData.name .. " HOVER START")
-        end)
-        safeSetMethod("onHoverEnd", function(e)
-            log_debug("[DRAG-DEBUG] Card " .. cardData.name .. " HOVER END")
-        end)
-        safeSetMethod("onDragStart", function(e)
-            log_debug("[DRAG-DEBUG] Card " .. cardData.name .. " DRAG START at " .. 
-                      (component_cache.get(e, Transform) and component_cache.get(e, Transform).actualX or "?") .. "," ..
-                      (component_cache.get(e, Transform) and component_cache.get(e, Transform).actualY or "?"))
-            if demoState.cardRegistry[e] then
-                demoState.cardRegistry[e].isBeingDragged = true
-            end
-        end)
-        safeSetMethod("onDragEnd", function(e)
-            log_debug("[DRAG-DEBUG] Card " .. cardData.name .. " DRAG END at " ..
-                      (component_cache.get(e, Transform) and component_cache.get(e, Transform).actualX or "?") .. "," ..
-                      (component_cache.get(e, Transform) and component_cache.get(e, Transform).actualY or "?"))
-            if demoState.cardRegistry[e] then
-                demoState.cardRegistry[e].isBeingDragged = false
-            end
-        end)
-        safeSetMethod("onClick", function(e)
-            log_debug("[DRAG-DEBUG] Card " .. cardData.name .. " CLICKED")
-        end)
     end
     
     local shaderPipelineComp = registry:emplace(entity, shader_pipeline.ShaderPipelineComponent)
@@ -534,6 +501,9 @@ function InventoryGridDemo.createSortButtons(x, y)
                 fontSize = 11,
                 color = demoState.sortBy == "name" and "steel_blue" or "gray",
                 hover = true,
+                onClick = function()
+                    InventoryGridDemo.toggleSort("name")
+                end,
             }),
             dsl.spacer(4),
             dsl.button("Type" .. getSortIndicator("element"), {
@@ -543,46 +513,16 @@ function InventoryGridDemo.createSortButtons(x, y)
                 fontSize = 11,
                 color = demoState.sortBy == "element" and "steel_blue" or "gray",
                 hover = true,
+                onClick = function()
+                    InventoryGridDemo.toggleSort("element")
+                end,
             }),
         },
     }
     
     demoState.sortButtonsEntity = dsl.spawn({ x = x, y = y }, sortDef, "ui", 100)
     ui.box.set_draw_layer(demoState.sortButtonsEntity, "ui")
-    
-    timer.after_opts({
-        delay = 0.1,
-        tag = "setup_sort_buttons",
-        group = demoState.timerGroup,
-        action = function()
-            local nameBtn = ui.box.GetUIEByID(registry, demoState.sortButtonsEntity, "sort_name_btn")
-            local typeBtn = ui.box.GetUIEByID(registry, demoState.sortButtonsEntity, "sort_type_btn")
-            
-            if nameBtn then
-                local go = component_cache.get(nameBtn, GameObject)
-                if go then
-                    go.state.collisionEnabled = true
-                    pcall(function()
-                        go.methods.onClick = function()
-                            InventoryGridDemo.toggleSort("name")
-                        end
-                    end)
-                end
-            end
-            
-            if typeBtn then
-                local go = component_cache.get(typeBtn, GameObject)
-                if go then
-                    go.state.collisionEnabled = true
-                    pcall(function()
-                        go.methods.onClick = function()
-                            InventoryGridDemo.toggleSort("element")
-                        end
-                    end)
-                end
-            end
-        end,
-    })
+    log_debug("[Demo] Sort buttons created at " .. x .. ", " .. y)
 end
 
 function InventoryGridDemo.toggleSort(sortKey)
@@ -701,6 +641,7 @@ function InventoryGridDemo.createPostItTabs(windowX, windowY, windowW)
     for i, tab in ipairs(tabs) do
         local isActive = (tab.id == demoState.activeTab)
         local tabX = startX + (i - 1) * (tabWidth + tabSpacing)
+        local tabId = tab.id
         
         local tabDef = dsl.hbox {
             config = {
@@ -711,6 +652,10 @@ function InventoryGridDemo.createPostItTabs(windowX, windowY, windowW)
                 color = isActive and "steel_blue" or "gray",
                 emboss = isActive and 2 or 1,
                 hover = true,
+                canCollide = true,
+                buttonCallback = function()
+                    InventoryGridDemo.switchTab(tabId)
+                end,
                 choice = true,
                 chosen = isActive,
                 group = "demo_tabs",
@@ -728,26 +673,7 @@ function InventoryGridDemo.createPostItTabs(windowX, windowY, windowW)
         ui.box.set_draw_layer(tabEntity, "ui")
         
         table.insert(demoState.tabEntities, tabEntity)
-        
-        timer.after_opts({
-            delay = 0.1 + i * 0.02,
-            tag = "setup_tab_" .. tab.id,
-            group = demoState.timerGroup,
-            action = function()
-                local tabBtn = ui.box.GetUIEByID(registry, tabEntity, "tab_" .. tab.id)
-                if tabBtn then
-                    local go = component_cache.get(tabBtn, GameObject)
-                    if go then
-                        go.state.collisionEnabled = true
-                        pcall(function()
-                            go.methods.onClick = function()
-                                InventoryGridDemo.switchTab(tab.id)
-                            end
-                        end)
-                    end
-                end
-            end,
-        })
+        log_debug("[Demo] Created tab: " .. tab.id .. " at " .. tabX .. ", " .. tabY)
     end
     
     log_debug("[Demo] Created " .. #tabs .. " post-it tabs")
@@ -767,16 +693,6 @@ function InventoryGridDemo.switchTab(tabId)
                 uiConfig.chosen = isActive or false
                 uiConfig.color = isActive and util.getColor("steel_blue") or util.getColor("gray")
                 uiConfig.emboss = isActive and 2 or 1
-            end
-            
-            local children = ui.box.GetAllChildren(registry, tabEntity)
-            for _, child in ipairs(children or {}) do
-                local childConfig = component_cache.get(child, UIConfig)
-                if childConfig and childConfig.id and childConfig.id:find("tab_") then
-                    local isActive = childConfig.id:find(tabId)
-                    childConfig.chosen = isActive or false
-                    childConfig.color = isActive and util.getColor("steel_blue") or util.getColor("gray")
-                end
             end
         end
     end

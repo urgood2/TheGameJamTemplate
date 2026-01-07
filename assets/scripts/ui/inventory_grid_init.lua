@@ -104,12 +104,6 @@ function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotInde
         return 
     end
     
-    -- Ensure methods table exists (C++ may not initialize it)
-    if not go.methods then
-        log_warn("[DRAG-DEBUG] Slot " .. slotIndex .. " has no methods table, creating one")
-        go.methods = {}
-    end
-    
     go.state.collisionEnabled = true
     go.state.hoverEnabled = true
     go.state.triggerOnReleaseEnabled = true
@@ -123,36 +117,26 @@ function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotInde
         slotIndex = slotIndex,
     }
     
-    -- Use pcall to safely set methods in case the userdata doesn't support new_index
-    local function safeSetMethod(name, fn)
+    local function trySetMethod(name, fn)
         local ok, err = pcall(function()
             go.methods[name] = fn
         end)
-        if not ok then
+        if ok then
+            log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " set " .. name .. " successfully")
+        else
             log_warn("[DRAG-DEBUG] Slot " .. slotIndex .. " failed to set " .. name .. ": " .. tostring(err))
         end
+        return ok
     end
     
-    safeSetMethod("onHoverStart", function(e)
-        log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " HOVER START")
-    end)
-    safeSetMethod("onHoverEnd", function(e)
-        log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " HOVER END")
-    end)
-    safeSetMethod("onRelease", function(releasedOn, released)
+    trySetMethod("onRelease", function(reg, releasedOn, dragged)
         log_debug("[DRAG-DEBUG] *** onRelease TRIGGERED! *** slotIndex=" .. slotIndex .. 
-                  " releasedOn=" .. tostring(releasedOn) .. " released=" .. tostring(released))
-        InventoryGridInit.handleItemDrop(gridEntity, slotIndex, released)
+                  " releasedOn=" .. tostring(releasedOn) .. " dragged=" .. tostring(dragged))
+        InventoryGridInit.handleItemDrop(gridEntity, slotIndex, dragged)
     end)
     
-    local originalOnClick = nil
-    pcall(function() originalOnClick = go.methods.onClick end)
-    
-    safeSetMethod("onClick", function(entity)
+    trySetMethod("onClick", function(reg, entity)
         signal.emit("grid_slot_clicked", gridEntity, slotIndex, "left", {})
-        if originalOnClick then
-            originalOnClick(entity)
-        end
     end)
 end
 

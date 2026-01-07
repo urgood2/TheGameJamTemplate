@@ -32,6 +32,13 @@ just build-web                # Web build (requires emsdk)
 
 ## Lua Runtime Debugging
 
+**File logging enabled:** Warnings and errors are written to `build/debug.log` (truncated each run).
+
+**Workflow after a test run:**
+```bash
+cat build/debug.log | grep -E "(warning|error|Error)" | head -50
+```
+
 **Auto-run and grep for errors:**
 ```bash
 (./build/raylib-cpp-cmake-template 2>&1 & sleep 8; kill $!) | grep -E "(error|Error|Lua)"
@@ -43,7 +50,7 @@ just build-web                # Web build (requires emsdk)
 ```
 
 **Common Lua error patterns:**
-- `sol: cannot set (new_index)` → C++ userdata doesn't allow arbitrary keys. Use Lua-side registry table instead of `go.config.foo = bar`
+- `sol: cannot set (new_index)` → C++ userdata doesn't allow arbitrary keys. Use `buttonCallback` in DSL config or Lua-side registry table
 - `attempt to index a nil value` → Component/entity not found or not initialized
 - Stack traces show file:line → Read that exact location to find the bug
 

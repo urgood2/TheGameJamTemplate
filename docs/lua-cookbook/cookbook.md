@@ -140,6 +140,10 @@ local component_cache, entity_cache, timer, signal = imports.core()
 | Aggregate modifiers | \pageref{recipe:modifier-aggregate} |
 | Detect spell type | \pageref{recipe:spell-type} |
 | Register wand trigger | \pageref{recipe:wand-trigger} |
+| **Status Effects & Equipment** | |
+| Define status effect (DoT/buff/mark) | \pageref{recipe:define-status-effect} |
+| Use trigger constants | \pageref{recipe:define-trigger-constants} |
+| Define equipment with procs | \pageref{recipe:define-equipment} |
 | **AI** | |
 | Create AI entity | \pageref{recipe:ai-entity-type} |
 | Define AI action | \pageref{recipe:ai-action} |
@@ -8212,6 +8216,357 @@ addShaderPass(registry, entity, "outline", { thickness = 2.0 })
 
 ***
 
+## Define Status Effect
+
+\label{recipe:define-status-effect}
+
+**When to use:** Creating DoTs (damage over time), buffs, debuffs, or detonatable marks.
+
+**Pattern:** Status effects define ongoing effects applied to entities with visual feedback, stacking behavior, and optional particle/shader effects.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/status_effects.lua
+
+local Particles = require("core.particles")
+
+StatusEffects.burning = {
+    id = "burning",
+    dot_type = true,             -- Is this a DoT effect?
+    damage_type = "fire",
+    stack_mode = "intensity",    -- replace/time_extend/intensity/count
+    max_stacks = 99,
+    duration = 5,
+    base_dps = 5,
+    scaling = "linear",
+
+    -- Visual feedback
+    icon = "status-burn.png",
+    icon_position = "above",
+    icon_offset = { x = 0, y = -12 },
+    icon_scale = 0.5,
+    icon_bob = true,
+    show_stacks = true,
+
+    -- Optional shader
+    shader = "fire_overlay",
+    shader_uniforms = { intensity = 0.8 },
+
+    -- Particle effect
+    particles = function()
+        return Particles.define()
+            :shape("circle")
+            :size(3, 6)
+            :color("orange", "red")
+            :velocity(20, 40)
+            :lifespan(0.2, 0.4)
+            :fade()
+    end,
+    particle_rate = 0.08,
+}
+```
+
+**Status effect fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `dot_type` | boolean | True for damage-over-time effects |
+| `is_mark` | boolean | True for detonatable marks |
+| `damage_type` | string | fire/ice/lightning/poison/arcane/holy/void |
+| `stack_mode` | string | How stacks interact (see below) |
+| `max_stacks` | number | Maximum stack count |
+| `duration` | number | Duration in seconds |
+| `base_dps` | number | Base damage per second (for DoTs) |
+| `scaling` | string | "linear" or "exponential" |
+| `icon` | string | Status icon sprite |
+| `icon_position` | string | "above" or "below" entity |
+| `icon_offset` | table | `{ x, y }` offset from position |
+| `icon_scale` | number | Icon scale factor |
+| `icon_bob` | boolean | Enable gentle bobbing animation |
+| `show_stacks` | boolean | Display stack count on icon |
+| `shader` | string | Shader to apply to affected entity |
+| `shader_uniforms` | table | Shader uniform values |
+| `particles` | function | Returns particle recipe |
+| `particle_rate` | number | Seconds between particle emissions |
+| `particle_orbit` | boolean | Particles orbit entity |
+
+**Stack modes:**
+
+| Mode | Behavior |
+|------|----------|
+| `"replace"` | New application replaces existing |
+| `"time_extend"` | New application extends duration |
+| `"intensity"` | Stacks increase effect power |
+| `"count"` | Independent stacks with separate timers |
+
+**Detonatable marks:**
+
+```lua
+StatusEffects.static_charge = {
+    id = "static_charge",
+    is_mark = true,
+    duration = 8,
+    max_stacks = 5,
+    stack_mode = "count",
+
+    -- Detonation trigger
+    triggers = "lightning",  -- or "any", "on_damaged", {"fire", "lightning"}
+
+    -- Effect on detonate
+    on_detonate = function(ctx, target, stacks)
+        local damage = 20 * stacks
+        ctx.deal_damage(target, damage, "lightning")
+    end,
+
+    icon = "status-static.png",
+}
+```
+
+**Trigger options for marks:**
+
+- `"lightning"`, `"fire"`, etc.: Damage type triggers detonation
+- `"any"`: Any damage triggers detonation
+- `"on_damaged"`: Entity taking damage triggers it (defensive)
+- `{ "fire", "lightning" }`: Array of damage types
+- `function(hit)`: Custom function returning true to detonate
+
+**Provenance:** See `assets/scripts/data/status_effects.lua:22-180` for examples.
+
+**Gotcha:** `dot_type = true` and `is_mark = true` are mutually exclusive.
+
+**Gotcha:** Marks with `triggers = "on_damaged"` are defensive (trigger when target takes damage).
+
+***
+
+## Define Trigger Constants
+
+\label{recipe:define-trigger-constants}
+
+**When to use:** Reference standardized trigger events in equipment, jokers, or custom systems.
+
+**Pattern:** The Triggers module provides categorized constants for all game events.
+
+**Example:**
+
+```lua
+-- Using triggers in equipment procs
+local Triggers = require("data.triggers")
+
+Equipment.flaming_sword = {
+    procs = {
+        {
+            trigger = Triggers.COMBAT.ON_HIT,
+            chance = 30,
+            effect = function(ctx, src, ev)
+                -- Apply burn on hit
+            end,
+        },
+        {
+            trigger = Triggers.COMBAT.ON_KILL,
+            effect = function(ctx, src, ev)
+                -- Trigger on every kill
+            end,
+        },
+    },
+}
+```
+
+**Trigger categories:**
+
+**Combat triggers (Triggers.COMBAT):**
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `ON_ATTACK` | "on_attack" | When attack is initiated |
+| `ON_HIT` | "on_hit" | When attack connects |
+| `ON_KILL` | "on_kill" | When attack kills target |
+| `ON_CRIT` | "on_crit" | When attack crits |
+| `ON_MISS` | "on_miss" | When attack misses |
+| `ON_BASIC_ATTACK` | "on_basic_attack" | Auto-attack only |
+| `ON_SPELL_CAST` | "on_spell_cast" | Any spell cast |
+| `ON_CHAIN_HIT` | "on_chain_hit" | Chain lightning/pierce hit |
+| `ON_PROJECTILE_HIT` | "on_projectile_hit" | Projectile impact |
+| `ON_PROJECTILE_SPAWN` | "on_projectile_spawn" | Projectile created |
+
+**Defensive triggers (Triggers.DEFENSIVE):**
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `ON_BEING_ATTACKED` | "on_being_attacked" | When targeted by attack |
+| `ON_BEING_HIT` | "on_being_hit" | When damage received |
+| `ON_PLAYER_DAMAGED` | "on_player_damaged" | Player takes damage |
+| `ON_BLOCK` | "on_block" | Attack blocked |
+| `ON_DODGE` | "on_dodge" | Attack dodged |
+
+**Status triggers (Triggers.STATUS):**
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `ON_APPLY_STATUS` | "on_apply_status" | Any status applied |
+| `ON_REMOVE_STATUS` | "on_remove_status" | Any status removed |
+| `ON_DOT_TICK` | "on_dot_tick" | DoT deals damage |
+| `ON_MARK_DETONATED` | "on_mark_detonated" | Mark triggered |
+| `ON_APPLY_BURN` | "on_apply_burn" | Burn specifically applied |
+| `ON_APPLY_FREEZE` | "on_apply_freeze" | Freeze applied |
+
+**Progression triggers (Triggers.PROGRESSION):**
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `ON_WAVE_START` | "on_wave_start" | Wave begins |
+| `ON_WAVE_CLEAR` | "on_wave_clear" | Wave completed |
+| `ON_LEVEL_UP` | "on_level_up" | Player levels up |
+| `ON_EXPERIENCE_GAINED` | "on_experience_gained" | XP received |
+
+**Resource triggers (Triggers.RESOURCE):**
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `ON_HEAL` | "on_heal" | Healing received |
+| `ON_MANA_SPENT` | "on_mana_spent" | Mana consumed |
+| `ON_LOW_HEALTH` | "on_low_health" | HP falls below threshold |
+| `ON_FULL_HEALTH` | "on_full_health" | HP reaches 100% |
+
+**Provenance:** See `assets/scripts/data/triggers.lua:1-100` for all categories.
+
+**Gotcha:** Use constants instead of string literals to avoid typos and enable refactoring.
+
+***
+
+## Define Equipment
+
+\label{recipe:define-equipment}
+
+**When to use:** Creating weapons, armor, and accessories with stats, proc effects, and damage conversions.
+
+**Pattern:** Equipment defines stat bonuses, proc triggers, and damage type conversions.
+
+**Example:**
+
+```lua
+-- In assets/scripts/data/equipment.lua
+local Triggers = require("data.triggers")
+
+Equipment.flaming_sword = {
+    id = "flaming_sword",
+    name = "Flaming Sword",
+    slot = "main_hand",      -- main_hand, off_hand, head, chest, gloves, boots, ring, amulet
+    rarity = "Rare",
+
+    -- Base stats
+    stats = {
+        weapon_min = 50,
+        weapon_max = 80,
+        fire_damage = 20,
+        attack_speed = 0.1,  -- +10% attack speed
+    },
+
+    -- Attribute requirements
+    requires = { attribute = "physique", value = 20, mode = "sole" },
+
+    -- Proc effects (trigger-based abilities)
+    procs = {
+        {
+            trigger = Triggers.COMBAT.ON_HIT,
+            chance = 30,  -- 30% chance
+            effect = function(ctx, src, ev)
+                local StatusEngine = require("combat.combat_system").StatusEngine
+                StatusEngine.apply(ctx, ev.target, "burning", {
+                    stacks = 3,
+                    source = src,
+                })
+            end,
+        },
+    },
+
+    -- Damage conversions
+    conversions = {
+        { from = "physical", to = "fire", pct = 50 },  -- 50% physical → fire
+    },
+}
+```
+
+**Equipment fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `name` | string | Display name |
+| `slot` | string | Equipment slot |
+| `rarity` | string | Common/Uncommon/Rare/Epic/Legendary |
+| `stats` | table | Stat bonuses |
+| `requires` | table | Attribute requirements |
+| `procs` | table | Trigger-based effects |
+| `conversions` | table | Damage type conversions |
+
+**Equipment slots:**
+
+- `main_hand`: Primary weapon
+- `off_hand`: Shield or secondary
+- `head`: Helmet
+- `chest`: Armor
+- `gloves`: Gauntlets
+- `boots`: Footwear
+- `ring`: Ring slot (2 available)
+- `amulet`: Necklace
+
+**Common stats:**
+
+| Stat | Description |
+|------|-------------|
+| `weapon_min`, `weapon_max` | Weapon damage range |
+| `fire_damage`, `ice_damage`, etc. | Flat elemental damage |
+| `attack_speed` | % bonus attack speed |
+| `crit_chance` | % critical chance |
+| `crit_damage` | % critical damage multiplier |
+| `armor` | Flat armor |
+| `hp_bonus` | Flat HP |
+| `hp_percent` | % HP bonus |
+| `mana_regen` | Mana per second |
+
+**Proc structure:**
+
+```lua
+{
+    trigger = Triggers.COMBAT.ON_HIT,  -- When to trigger
+    chance = 30,                        -- Optional: % chance (omit for 100%)
+    cooldown = 2.0,                     -- Optional: seconds between procs
+    effect = function(ctx, src, ev)
+        -- ctx: combat context
+        -- src: entity that equipped this
+        -- ev: trigger event data
+    end,
+}
+```
+
+**Damage conversions:**
+
+```lua
+conversions = {
+    { from = "physical", to = "fire", pct = 50 },   -- 50% converted
+    { from = "physical", to = "lightning", pct = 25 },
+}
+-- Total: 75% physical converted, 25% remains physical
+```
+
+**Requirement modes:**
+
+- `"sole"`: Only this attribute counts
+- `"primary"`: Must be highest attribute
+- `"either"`: One of multiple attributes (use array)
+
+**Provenance:** See `assets/scripts/data/equipment.lua:10-150` for examples.
+
+**Gotcha:** Procs without `chance` field trigger every time.
+
+**Gotcha:** Conversions are calculated before damage bonuses apply.
+
+**Gotcha:** Multiple items can have procs on the same trigger; they all fire independently.
+
+***
+
 ## Validate Content Definitions
 
 \label{recipe:validate-content}
@@ -14644,6 +14999,7 @@ Alphabetical listing of all documented functions and APIs.
 | `EntityBuilder.create()` | `core.entity_builder` | \pageref{recipe:entity-sprite} |
 | `EntityBuilder.interactive()` | `core.entity_builder` | \pageref{recipe:entity-interactive} |
 | `EntityBuilder.simple()` | `core.entity_builder` | \pageref{recipe:entity-sprite} |
+| `Equipment.<id>` | `data.equipment` | \pageref{recipe:define-equipment} |
 | `getScriptTableFromEntityID()` | `util.lua` | \pageref{recipe:script-table} |
 | `GetFrameTime()` | Global | \pageref{recipe:screen-camera} |
 | `GetScreenHeight()` | Global | \pageref{recipe:screen-camera} |
@@ -14694,6 +15050,8 @@ Alphabetical listing of all documented functions and APIs.
 | `signal.register()` | `external.hump.signal` | \pageref{recipe:signals} |
 | `signal.clear()` | `external.hump.signal` | \pageref{recipe:signal-api} |
 | `signal.remove()` | `external.hump.signal` | \pageref{recipe:signal-api} |
+| `StatusEffects.<id>` | `data.status_effects` | \pageref{recipe:define-status-effect} |
+| `StatusEffects.STACK_MODE` | `data.status_effects` | \pageref{recipe:define-status-effect} |
 | `TagEvaluator.count_tags()` | `wand.tag_evaluator` | \pageref{recipe:tag-evaluate} |
 | `TagEvaluator.evaluate_deck()` | `wand.tag_evaluator` | \pageref{recipe:tag-evaluate} |
 | `TagEvaluator.get_breakpoints()` | `wand.tag_evaluator` | \pageref{recipe:tag-synergy} |
@@ -14721,6 +15079,11 @@ Alphabetical listing of all documented functions and APIs.
 | `TooltipV2.hide()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
 | `TooltipV2.show()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
 | `TooltipV2.showCard()` | `ui.tooltip_v2` | \pageref{recipe:tooltip-v2} |
+| `Triggers.COMBAT.*` | `data.triggers` | \pageref{recipe:define-trigger-constants} |
+| `Triggers.DEFENSIVE.*` | `data.triggers` | \pageref{recipe:define-trigger-constants} |
+| `Triggers.STATUS.*` | `data.triggers` | \pageref{recipe:define-trigger-constants} |
+| `Triggers.PROGRESSION.*` | `data.triggers` | \pageref{recipe:define-trigger-constants} |
+| `Triggers.RESOURCE.*` | `data.triggers` | \pageref{recipe:define-trigger-constants} |
 | `unpauseGame()` | Global | \pageref{recipe:game-control} |
 | `util.getColor()` | `util.util` | \pageref{recipe:util-colors} |
 | `util.makeSimpleTooltip()` | `util.util` | \pageref{recipe:tooltip} |

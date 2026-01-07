@@ -561,6 +561,36 @@ function dsl.list(data, mapper)
 end
 
 ------------------------------------------------------------
+-- 1️⃣7️⃣ Sprite Box (9-patch or fixed sprite background)
+------------------------------------------------------------
+function dsl.spriteBox(opts)
+    opts = opts or {}
+    local config = {
+        id = opts.id,
+        padding = opts.padding or 0,
+    }
+    
+    if opts.sprite then
+        if opts.sprite.fixed then
+            local frame = init and init.getSpriteFrame and init.getSpriteFrame(opts.sprite.sprite, globals.g_ctx)
+            if frame then
+                config.minWidth = frame.frame.width
+                config.minHeight = frame.frame.height
+                config.maxWidth = frame.frame.width
+                config.maxHeight = frame.frame.height
+            end
+        end
+        config.spriteBorder = opts.sprite
+    end
+    
+    return def{
+        type = opts.vertical and "VERTICAL_CONTAINER" or "HORIZONTAL_CONTAINER",
+        config = config,
+        children = opts.children or {},
+    }
+end
+
+------------------------------------------------------------
 -- TAB SYSTEM
 -- Stores tab definitions in Lua closures, no C++ tab components needed
 ------------------------------------------------------------

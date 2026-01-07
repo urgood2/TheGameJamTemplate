@@ -99,28 +99,61 @@ local _slotMetadata = {}
 
 function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotIndex)
     local go = component_cache.get(slotEntity, GameObject)
-    if not go then return end
+    if not go then 
+        log_warn("[DRAG-DEBUG] Slot " .. slotIndex .. " has no GameObject!")
+        return 
+    end
+    
+    -- Ensure methods table exists (C++ may not initialize it)
+    if not go.methods then
+        log_warn("[DRAG-DEBUG] Slot " .. slotIndex .. " has no methods table, creating one")
+        go.methods = {}
+    end
     
     go.state.collisionEnabled = true
     go.state.hoverEnabled = true
     go.state.triggerOnReleaseEnabled = true
+    
+    log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " setup: collision=" .. tostring(go.state.collisionEnabled) .. 
+              " hover=" .. tostring(go.state.hoverEnabled) .. 
+              " triggerOnRelease=" .. tostring(go.state.triggerOnReleaseEnabled))
     
     _slotMetadata[tostring(slotEntity)] = {
         parentGrid = gridEntity,
         slotIndex = slotIndex,
     }
     
-    go.methods.onRelease = function(releasedOn, released)
-        InventoryGridInit.handleItemDrop(gridEntity, slotIndex, released)
+    -- Use pcall to safely set methods in case the userdata doesn't support new_index
+    local function safeSetMethod(name, fn)
+        local ok, err = pcall(function()
+            go.methods[name] = fn
+        end)
+        if not ok then
+            log_warn("[DRAG-DEBUG] Slot " .. slotIndex .. " failed to set " .. name .. ": " .. tostring(err))
+        end
     end
     
-    local originalOnClick = go.methods.onClick
-    go.methods.onClick = function(entity)
+    safeSetMethod("onHoverStart", function(e)
+        log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " HOVER START")
+    end)
+    safeSetMethod("onHoverEnd", function(e)
+        log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " HOVER END")
+    end)
+    safeSetMethod("onRelease", function(releasedOn, released)
+        log_debug("[DRAG-DEBUG] *** onRelease TRIGGERED! *** slotIndex=" .. slotIndex .. 
+                  " releasedOn=" .. tostring(releasedOn) .. " released=" .. tostring(released))
+        InventoryGridInit.handleItemDrop(gridEntity, slotIndex, released)
+    end)
+    
+    local originalOnClick = nil
+    pcall(function() originalOnClick = go.methods.onClick end)
+    
+    safeSetMethod("onClick", function(entity)
         signal.emit("grid_slot_clicked", gridEntity, slotIndex, "left", {})
         if originalOnClick then
             originalOnClick(entity)
         end
-    end
+    end)
 end
 
 function InventoryGridInit.getSlotMetadata(slotEntity)
@@ -136,19 +169,30 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridInit.handleItemDrop(gridEntity, slotIndex, droppedEntity)
+    log_debug("[DRAG-DEBUG] handleItemDrop called: grid=" .. tostring(gridEntity) .. 
+              " slot=" .. slotIndex .. " dropped=" .. tostring(droppedEntity))
+    
     if not registry:valid(droppedEntity) then
+        log_debug("[DRAG-DEBUG] REJECTED: droppedEntity invalid")
         return
     end
     
     local go = component_cache.get(droppedEntity, GameObject)
-    if not go or not go.state.dragEnabled then
+    if not go then
+        log_debug("[DRAG-DEBUG] REJECTED: droppedEntity has no GameObject")
+        return
+    end
+    if not go.state.dragEnabled then
+        log_debug("[DRAG-DEBUG] REJECTED: dragEnabled=" .. tostring(go.state.dragEnabled))
         return
     end
     
+    log_debug("[DRAG-DEBUG] Checking canSlotAccept...")
     if not grid.canSlotAccept(gridEntity, slotIndex, droppedEntity) then
-        log_debug("[InventoryGridInit] Slot " .. slotIndex .. " rejected item")
+        log_debug("[DRAG-DEBUG] REJECTED by canSlotAccept")
         return
     end
+    log_debug("[DRAG-DEBUG] canSlotAccept passed!")
     
     local sourceSlot = grid.findSlotContaining(gridEntity, droppedEntity)
     

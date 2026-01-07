@@ -978,6 +978,119 @@ function dsl.customPanel(opts)
 end
 
 ------------------------------------------------------------
+-- SPRITE PANEL
+-- Nine-patch sprite panel with inline definition (no JSON)
+------------------------------------------------------------
+
+function dsl.spritePanel(opts)
+    opts = opts or {}
+    local panelId = opts.id or ("sprite_panel_" .. tostring(math.random(100000, 999999)))
+    
+    local borders = opts.borders or { 8, 8, 8, 8 }
+    if type(borders) == "table" and #borders == 4 then
+        borders = { left = borders[1], top = borders[2], right = borders[3], bottom = borders[4] }
+    end
+    
+    local decorations = {}
+    if opts.decorations then
+        for _, decor in ipairs(opts.decorations) do
+            table.insert(decorations, {
+                sprite = decor.sprite,
+                position = decor.position or "top_left",
+                offset = decor.offset or { 0, 0 },
+                opacity = decor.opacity or 1.0,
+                flip = decor.flip,
+                rotation = decor.rotation or 0,
+                zOffset = decor.zOffset or 0,
+                visible = decor.visible ~= false,
+                id = decor.id
+            })
+        end
+    end
+    
+    return def{
+        type = opts.containerType or "VERTICAL_CONTAINER",
+        config = {
+            id = panelId,
+            minWidth = opts.minWidth,
+            minHeight = opts.minHeight,
+            maxWidth = opts.maxWidth,
+            maxHeight = opts.maxHeight,
+            padding = opts.padding,
+            hover = opts.hover,
+            canCollide = opts.canCollide,
+            align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            _isSpritePanel = true,
+            _spriteName = opts.sprite,
+            _borders = borders,
+            _sizing = opts.sizing or "fit_content",
+            _decorations = decorations,
+            _regions = opts.regions,
+            _tint = opts.tint and color(opts.tint) or nil,
+        },
+        children = opts.children or {}
+    }
+end
+
+------------------------------------------------------------
+-- SPRITE BUTTON
+-- Button with different sprites for each state
+------------------------------------------------------------
+
+function dsl.spriteButton(opts)
+    opts = opts or {}
+    local buttonId = opts.id or ("sprite_btn_" .. tostring(math.random(100000, 999999)))
+    
+    local borders = opts.borders or { 4, 4, 4, 4 }
+    if type(borders) == "table" and #borders == 4 then
+        borders = { left = borders[1], top = borders[2], right = borders[3], bottom = borders[4] }
+    end
+    
+    local states = opts.states
+    local baseSprite = nil
+    
+    if not states and opts.sprite then
+        baseSprite = opts.sprite
+        states = {
+            normal = opts.sprite .. "_normal.png",
+            hover = opts.sprite .. "_hover.png",
+            pressed = opts.sprite .. "_pressed.png",
+            disabled = opts.sprite .. "_disabled.png"
+        }
+    end
+    
+    local textNode = nil
+    if opts.label or opts.text then
+        textNode = dsl.text(opts.label or opts.text, {
+            fontSize = opts.fontSize or 16,
+            color = opts.textColor or "white",
+            shadow = opts.shadow ~= false
+        })
+    end
+    
+    return def{
+        type = "HORIZONTAL_CONTAINER",
+        config = {
+            id = buttonId,
+            minWidth = opts.minWidth,
+            minHeight = opts.minHeight,
+            padding = opts.padding or 4,
+            hover = true,
+            canCollide = true,
+            buttonCallback = opts.onClick,
+            disableButton = opts.disabled,
+            align = opts.align or bit.bor(AlignmentFlag.HORIZONTAL_CENTER, AlignmentFlag.VERTICAL_CENTER),
+            _isSpriteButton = true,
+            _states = states,
+            _baseSprite = baseSprite,
+            _borders = borders,
+            _currentState = "normal",
+        },
+        children = textNode and { textNode } or (opts.children or {})
+    }
+end
+
+------------------------------------------------------------
 -- Return DSL module
 ------------------------------------------------------------
 return dsl

@@ -566,6 +566,14 @@ function createTabDemo()
                             }
                         end
                     },
+                    {
+                        id = "sprites",
+                        label = "Sprites",
+                        content = function()
+                            local SpriteShowcase = require("ui.sprite_ui_showcase")
+                            return SpriteShowcase.createShowcase()
+                        end
+                    },
                 }
             }
         }

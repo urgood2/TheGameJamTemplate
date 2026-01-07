@@ -12,6 +12,96 @@
 ui.definitions = ui.definitions or {}
 
 ------------------------------------------------------------
+-- Helper: Process sprite panel special fields
+-- Translates _isSpritePanel, _spriteName, _borders into existing 
+-- UIConfig fields (stylingType, nPatchInfo) using animation_system API
+------------------------------------------------------------
+local function processSpritePanelFields(tbl, builder)
+    if not tbl._isSpritePanel then return false end
+    
+    local spriteName = tbl._spriteName
+    if not spriteName then
+        log_warn("[ui.def] _isSpritePanel set but no _spriteName provided")
+        return false
+    end
+    
+    local nPatchInfo, atlasTexture = animation_system.getNinepatchUIBorderInfo(spriteName)
+    if not nPatchInfo then
+        log_warn("[ui.def] Sprite not found for spritePanel: " .. tostring(spriteName))
+        return false
+    end
+    
+    local borders = tbl._borders or { left = 8, top = 8, right = 8, bottom = 8 }
+    if type(borders) == "table" and borders[1] then
+        borders = { left = borders[1], top = borders[2], right = borders[3], bottom = borders[4] }
+    end
+    
+    nPatchInfo.left = borders.left or 8
+    nPatchInfo.top = borders.top or 8
+    nPatchInfo.right = borders.right or 8
+    nPatchInfo.bottom = borders.bottom or 8
+    
+    builder:addStylingType(UIStylingType.NinePatchBorders)
+    builder:addNPatchInfo(nPatchInfo)
+    builder:addNPatchSourceTexture(atlasTexture)
+    
+    local sizing = tbl._sizing or "fit_content"
+    if sizing == "fit_sprite" then
+        local sw = nPatchInfo.source.width
+        local sh = nPatchInfo.source.height
+        builder:addMinWidth(math.floor(sw))
+        builder:addMinHeight(math.floor(sh))
+        builder:addMaxWidth(math.floor(sw))
+        builder:addMaxHeight(math.floor(sh))
+    end
+    
+    if tbl._tint then
+        builder:addColor(tbl._tint)
+    end
+    
+    log_debug("[ui.def] Configured spritePanel with sprite: " .. spriteName)
+    return true
+end
+
+------------------------------------------------------------
+-- Helper: Process sprite button special fields
+-- Translates _isSpriteButton, _states into existing UIConfig fields
+------------------------------------------------------------
+local function processSpriteButtonFields(tbl, builder)
+    if not tbl._isSpriteButton then return false end
+    
+    local states = tbl._states
+    if not states or not states.normal then
+        log_warn("[ui.def] _isSpriteButton set but no _states.normal provided")
+        return false
+    end
+    
+    local spriteName = states.normal
+    local nPatchInfo, atlasTexture = animation_system.getNinepatchUIBorderInfo(spriteName)
+    if not nPatchInfo then
+        log_warn("[ui.def] Sprite not found for spriteButton: " .. tostring(spriteName))
+        return false
+    end
+    
+    local borders = tbl._borders or { left = 4, top = 4, right = 4, bottom = 4 }
+    if type(borders) == "table" and borders[1] then
+        borders = { left = borders[1], top = borders[2], right = borders[3], bottom = borders[4] }
+    end
+    
+    nPatchInfo.left = borders.left or 4
+    nPatchInfo.top = borders.top or 4
+    nPatchInfo.right = borders.right or 4
+    nPatchInfo.bottom = borders.bottom or 4
+    
+    builder:addStylingType(UIStylingType.NinePatchBorders)
+    builder:addNPatchInfo(nPatchInfo)
+    builder:addNPatchSourceTexture(atlasTexture)
+    
+    log_debug("[ui.def] Configured spriteButton with sprite: " .. spriteName)
+    return true
+end
+
+------------------------------------------------------------
 -- Helper: Build UIConfig from table
 ------------------------------------------------------------
 local function makeConfigFromTable(tbl)
@@ -20,6 +110,12 @@ local function makeConfigFromTable(tbl)
     end
 
     local b = UIConfigBuilder.create()
+    
+    -- Process sprite panel/button fields first (they set up stylingType etc.)
+    local isSprite = processSpritePanelFields(tbl, b)
+    if not isSprite then
+        processSpriteButtonFields(tbl, b)
+    end
 
     for k, v in pairs(tbl) do
         ------------------------------------------------------------
@@ -30,6 +126,11 @@ local function makeConfigFromTable(tbl)
         ------------------------------------------------------------
         if v == nil then
             log_debug("[ui.def] Skipping nil value for key: " .. tostring(k))
+            goto continue
+        end
+        
+        -- Skip underscore-prefixed sprite panel/button fields (already processed above)
+        if k:sub(1, 1) == "_" then
             goto continue
         end
 

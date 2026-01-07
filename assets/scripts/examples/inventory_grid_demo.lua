@@ -135,11 +135,18 @@ function InventoryGridDemo.init()
     local gridX = screenW - 350
     local gridY = 100
     
+    local leftPanelX = 50
+    local leftPanelY = 100
+    
     InventoryGridDemo.createPostItTabs(gridX, gridY, 320)
     InventoryGridDemo.createMainGrid(gridX, gridY)
     InventoryGridDemo.createInfoBox(gridX - 220, gridY)
-    -- Sort buttons below info box (info box height ~320 + padding)
     InventoryGridDemo.createSortButtons(gridX - 220, gridY + 340)
+    
+    InventoryGridDemo.createCustomPanel(leftPanelX, leftPanelY)
+    InventoryGridDemo.createBackgroundDemo(leftPanelX, leftPanelY + 160)
+    InventoryGridDemo.createDecorationDemo(leftPanelX, leftPanelY + 280)
+    
     InventoryGridDemo.setupSignalHandlers()
     InventoryGridDemo.setupDragDebugTimer()
     

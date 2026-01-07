@@ -149,6 +149,7 @@ function InventoryGridDemo.init()
     
     InventoryGridDemo.setupSignalHandlers()
     InventoryGridDemo.setupDragDebugTimer()
+    InventoryGridDemo.setupGridStateDebugTimer()
     
     timer.after_opts({
         delay = 0.3,
@@ -263,22 +264,56 @@ function InventoryGridDemo.createInfoBox(x, y)
             dsl.text("Slot 12: Locked", { fontSize = 12, color = "gray" }),
             dsl.spacer(15),
             dsl.text("Stats:", { fontSize = 14, color = "gold" }),
-            dsl.dynamicText(function()
-                local used = grid.getUsedSlotCount(demoState.gridEntity) or 0
-                local total = grid.getCapacity(demoState.gridEntity) or 12
-                return "Slots: " .. used .. "/" .. total
-            end, 12, nil, { id = "stats_slots", color = "white" }),
-            dsl.dynamicText(function()
-                local items = grid.getAllItems(demoState.gridEntity) or {}
-                local count = 0
-                for _ in pairs(items) do count = count + 1 end
-                return "Items: " .. count
-            end, 12, nil, { id = "stats_items", color = "white" }),
+            dsl.text("Slots: 0/12", { id = "stats_slots", fontSize = 12, color = "white" }),
+            dsl.text("Items: 0", { id = "stats_items", fontSize = 12, color = "white" }),
         },
     }
     
     demoState.infoBoxEntity = dsl.spawn({ x = x, y = y }, infoDef, "ui", 100)
     ui.box.set_draw_layer(demoState.infoBoxEntity, "ui")
+    
+    timer.after_opts({
+        delay = 0.2,
+        tag = "setup_stats_textgetter",
+        group = demoState.timerGroup,
+        action = function()
+            InventoryGridDemo.setupStatsTextGetters()
+        end,
+    })
+end
+
+function InventoryGridDemo.setupStatsTextGetters()
+    local slotsEntity = ui.box.GetUIEByID(registry, demoState.infoBoxEntity, "stats_slots")
+    local itemsEntity = ui.box.GetUIEByID(registry, demoState.infoBoxEntity, "stats_items")
+    
+    if slotsEntity and registry:valid(slotsEntity) then
+        local uiConfig = component_cache.get(slotsEntity, UIConfig)
+        if uiConfig then
+            uiConfig.textGetter = function()
+                local ge = demoState.gridEntity
+                if not ge then return "Slots: ?/?" end
+                local used = grid.getUsedSlotCount(ge) or 0
+                local total = grid.getCapacity(ge) or 12
+                return "Slots: " .. used .. "/" .. total
+            end
+        end
+    end
+    
+    if itemsEntity and registry:valid(itemsEntity) then
+        local uiConfig = component_cache.get(itemsEntity, UIConfig)
+        if uiConfig then
+            uiConfig.textGetter = function()
+                local ge = demoState.gridEntity
+                if not ge then return "Items: ?" end
+                local items = grid.getAllItems(ge) or {}
+                local count = 0
+                for _ in pairs(items) do count = count + 1 end
+                return "Items: " .. count
+            end
+        end
+    end
+    
+    log_debug("[Demo] Stats textGetters configured")
 end
 
 --------------------------------------------------------------------------------
@@ -881,6 +916,30 @@ end
 --------------------------------------------------------------------------------
 -- Setup Signal Handlers
 --------------------------------------------------------------------------------
+
+function InventoryGridDemo.setupGridStateDebugTimer()
+    timer.every_opts({
+        delay = 2.0,
+        tag = "grid_state_debug",
+        group = demoState.timerGroup,
+        action = function()
+            local ge = demoState.gridEntity
+            if not ge then
+                log_debug("[GRID-STATE] gridEntity is nil!")
+                return
+            end
+            local used = grid.getUsedSlotCount(ge) or 0
+            local total = grid.getCapacity(ge) or 0
+            local items = grid.getAllItems(ge) or {}
+            local itemCount = 0
+            for k, v in pairs(items) do
+                itemCount = itemCount + 1
+                log_debug("[GRID-STATE] Slot " .. k .. " has item " .. tostring(v))
+            end
+            log_debug("[GRID-STATE] gridEntity=" .. tostring(ge) .. " used=" .. used .. "/" .. total .. " items=" .. itemCount)
+        end,
+    })
+end
 
 function InventoryGridDemo.setupDragDebugTimer()
     local lastDragState = nil

@@ -283,18 +283,36 @@ function InventoryGridDemo.createInfoBox(x, y)
 end
 
 function InventoryGridDemo.setupStatsTextGetters()
-    local slotsEntity = ui.box.GetUIEByID(registry, demoState.infoBoxEntity, "stats_slots")
-    local itemsEntity = ui.box.GetUIEByID(registry, demoState.infoBoxEntity, "stats_items")
+    demoState.statsSlotEntity = ui.box.GetUIEByID(registry, demoState.infoBoxEntity, "stats_slots")
+    demoState.statsItemEntity = ui.box.GetUIEByID(registry, demoState.infoBoxEntity, "stats_items")
+    
+    timer.every_opts({
+        delay = 0.1,
+        tag = "stats_update",
+        group = demoState.timerGroup,
+        action = function()
+            InventoryGridDemo.updateStatsText()
+        end,
+    })
+    
+    log_debug("[Demo] Stats timer configured")
+end
+
+function InventoryGridDemo.updateStatsText()
+    local ge = demoState.gridEntity
+    if not ge then return end
+    
+    local slotsEntity = demoState.statsSlotEntity
+    local itemsEntity = demoState.statsItemEntity
     
     if slotsEntity and registry:valid(slotsEntity) then
         local uiConfig = component_cache.get(slotsEntity, UIConfig)
         if uiConfig then
-            uiConfig.textGetter = function()
-                local ge = demoState.gridEntity
-                if not ge then return "Slots: ?/?" end
-                local used = grid.getUsedSlotCount(ge) or 0
-                local total = grid.getCapacity(ge) or 12
-                return "Slots: " .. used .. "/" .. total
+            local used = grid.getUsedSlotCount(ge) or 0
+            local total = grid.getCapacity(ge) or 12
+            local newText = "Slots: " .. used .. "/" .. total
+            if uiConfig.text ~= newText then
+                uiConfig.text = newText
             end
         end
     end
@@ -302,18 +320,15 @@ function InventoryGridDemo.setupStatsTextGetters()
     if itemsEntity and registry:valid(itemsEntity) then
         local uiConfig = component_cache.get(itemsEntity, UIConfig)
         if uiConfig then
-            uiConfig.textGetter = function()
-                local ge = demoState.gridEntity
-                if not ge then return "Items: ?" end
-                local items = grid.getAllItems(ge) or {}
-                local count = 0
-                for _ in pairs(items) do count = count + 1 end
-                return "Items: " .. count
+            local items = grid.getAllItems(ge) or {}
+            local count = 0
+            for _ in pairs(items) do count = count + 1 end
+            local newText = "Items: " .. count
+            if uiConfig.text ~= newText then
+                uiConfig.text = newText
             end
         end
     end
-    
-    log_debug("[Demo] Stats textGetters configured")
 end
 
 --------------------------------------------------------------------------------

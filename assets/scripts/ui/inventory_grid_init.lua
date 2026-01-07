@@ -100,7 +100,6 @@ local _slotMetadata = {}
 function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotIndex)
     local go = component_cache.get(slotEntity, GameObject)
     if not go then 
-        log_warn("[DRAG-DEBUG] Slot " .. slotIndex .. " has no GameObject!")
         return 
     end
     
@@ -108,36 +107,26 @@ function InventoryGridInit.setupSlotInteraction(gridEntity, slotEntity, slotInde
     go.state.hoverEnabled = true
     go.state.triggerOnReleaseEnabled = true
     
-    log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " setup: collision=" .. tostring(go.state.collisionEnabled) .. 
-              " hover=" .. tostring(go.state.hoverEnabled) .. 
-              " triggerOnRelease=" .. tostring(go.state.triggerOnReleaseEnabled))
+    if add_state_tag then
+        add_state_tag(slotEntity, "default_state")
+    end
+    
+    if transform.set_space then
+        transform.set_space(slotEntity, "screen")
+    end
     
     _slotMetadata[tostring(slotEntity)] = {
         parentGrid = gridEntity,
         slotIndex = slotIndex,
     }
     
-    local function trySetMethod(name, fn)
-        local ok, err = pcall(function()
-            go.methods[name] = fn
-        end)
-        if ok then
-            log_debug("[DRAG-DEBUG] Slot " .. slotIndex .. " set " .. name .. " successfully")
-        else
-            log_warn("[DRAG-DEBUG] Slot " .. slotIndex .. " failed to set " .. name .. ": " .. tostring(err))
-        end
-        return ok
+    go.methods.onRelease = function(reg, releasedOn, dragged)
+        InventoryGridInit.handleItemDrop(gridEntity, slotIndex, dragged)
     end
     
-    trySetMethod("onRelease", function(reg, releasedOn, dragged)
-        log_debug("[DRAG-DEBUG] *** onRelease TRIGGERED! *** slotIndex=" .. slotIndex .. 
-                  " releasedOn=" .. tostring(releasedOn) .. " dragged=" .. tostring(dragged))
-        InventoryGridInit.handleItemDrop(gridEntity, slotIndex, dragged)
-    end)
-    
-    trySetMethod("onClick", function(reg, entity)
+    go.methods.onClick = function(reg, entity)
         signal.emit("grid_slot_clicked", gridEntity, slotIndex, "left", {})
-    end)
+    end
 end
 
 function InventoryGridInit.getSlotMetadata(slotEntity)

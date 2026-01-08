@@ -13,14 +13,18 @@ namespace graphics {
     // ------------------------------------------------
     
     extern auto setNextCameraTarget(Vector2 target) -> void;
-    extern void centerCameraOnEntity( entt::entity entity);
+    extern void centerCameraOnEntity(entt::registry& registry, entt::entity entity);
+[[deprecated("Use explicit registry overload")]]
+extern void centerCameraOnEntity(entt::entity entity);
     extern auto updateCameraForSpringierMovement(Vector2 targetPosition, float deltaTime) -> void;
     
     // --------------------------------------------------------
     // Drawing
     // ------------------------------------------------
 
-    extern auto drawEntityAtArbitraryLocation(entt::entity, Vector2 location) -> void;
+    extern auto drawEntityAtArbitraryLocation(entt::registry& registry, entt::entity, Vector2 location) -> void;
+[[deprecated("Use explicit registry overload")]]
+extern auto drawEntityAtArbitraryLocation(entt::entity, Vector2 location) -> void;
     extern auto init() -> void;
     extern auto drawSpriteFromAtlas(int spriteNumber, Rectangle destRec, Color fg) -> void;
     // extern auto Vector2Subtract(Vector2 v1, Vector2 v2) -> Vector2;
@@ -28,7 +32,9 @@ namespace graphics {
     // extern auto Vector2Scale(Vector2 v, float scale) -> Vector2;
     extern auto Vector2Normalize(Vector2 v) -> Vector2;
     extern auto Vector2Length(Vector2 v) -> float;
-    extern auto drawSpriteComponentASCII(entt::entity e) -> void;
+    extern auto drawSpriteComponentASCII(entt::registry& registry, entt::entity e) -> void;
+[[deprecated("Use explicit registry overload")]]
+extern auto drawSpriteComponentASCII(entt::entity e) -> void;
     
     // --------------------------------------------------------
     // Tile visibility

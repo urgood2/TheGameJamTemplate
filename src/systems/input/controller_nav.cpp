@@ -671,7 +671,7 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
         "Attach an existing group to a layer.");
     rec.bind_function(lua, {"controller_nav"}, "navigate",
         [&](const string& g, const string& d){
-            auto& reg = globals::getRegistry();
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry();
             auto& state = globals::getInputState();
             NM.navigate(reg, state, g, d);
         },
@@ -681,7 +681,7 @@ void exposeToLua(sol::state& lua, EngineContext* ctx) {
         "Navigate within or across groups.");
     rec.bind_function(lua, {"controller_nav"}, "select_current",
         [&](const string& g){
-            auto& reg = globals::getRegistry();
+            auto& reg = (globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry();
             NM.select_current(reg, g);
         },
         "---@param g string\n"

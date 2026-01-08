@@ -18,12 +18,12 @@ void exposeToLua(sol::state& lua) {
   ldtk.set_function("load_config", [](const std::string &cfgPath) {
     // cfgPath is relative to assets/ (same convention as other loaders)
     ldtk_loader::ReloadProject(cfgPath);
-    ldtk_loader::SetRegistry(globals::getRegistry());
+    ldtk_loader::SetRegistry((globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry());
   });
 
   ldtk.set_function(
       "spawn_entities", [](const std::string &levelName, sol::function cb) {
-        ldtk_loader::SetRegistry(globals::getRegistry());
+        ldtk_loader::SetRegistry((globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry());
         ldtk_loader::ForEachEntity(
             levelName, [cb](const ldtk_loader::EntitySpawnInfo &info) {
               if (cb.valid()) {
@@ -252,7 +252,7 @@ void exposeToLua(sol::state& lua) {
             spdlog::error("LDtk entity spawner unknown error for '{}'", ent.getName());
           }
         });
-    ldtk_loader::SetRegistry(globals::getRegistry());
+    ldtk_loader::SetRegistry((globals::g_ctx) ? globals::g_ctx->registry : globals::getRegistry());
   });
 
   ldtk.set_function("each_intgrid", [](const std::string &levelName,

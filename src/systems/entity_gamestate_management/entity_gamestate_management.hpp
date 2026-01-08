@@ -68,13 +68,18 @@ void activate_state(entt::registry &registry, std::string_view s);
 void deactivate_state(entt::registry &registry, std::string_view s);
 void clear_states(entt::registry &registry);
 
-// Backward-compatible overloads (use globals internally)
+// Backward-compatible overloads (use globals internally) - DEPRECATED
+[[deprecated("Use explicit registry overload")]]
 void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name);
+[[deprecated("Use explicit registry overload")]]
 void assignDefaultStateTag(entt::entity entity);
+[[deprecated("Use explicit registry overload")]]
 bool isEntityActive(entt::entity entity);
-
+[[deprecated("Use explicit registry overload")]]
 void activate_state(std::string_view s);
+[[deprecated("Use explicit registry overload")]]
 void deactivate_state(std::string_view s);
+[[deprecated("Use explicit registry overload")]]
 void clear_states();
 bool is_state_active(const StateTag &t);
 bool is_state_active_name(std::string_view s);

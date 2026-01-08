@@ -124,7 +124,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
     // ----------------
     for (int key = 0; key <= KEY_KP_EQUAL; key++) {
         if (provider.is_key_down(key)) {
-            hid::reconfigure_device_info(state, InputDeviceInputCategory::KEYBOARD);
+            hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::KEYBOARD);
             keyboard::process_key_down(state, static_cast<KeyboardKey>(key));
 
             // Detect first frame of key press
@@ -138,7 +138,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
         }
 
         if (provider.is_key_released(key)) {
-            hid::reconfigure_device_info(state, InputDeviceInputCategory::KEYBOARD);
+            hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::KEYBOARD);
             keyboard::process_key_release(state, static_cast<KeyboardKey>(key));
             s_keyDownLastFrame[key] = 0;
         }
@@ -148,7 +148,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
     // Touch Input
     // ----------------
     if (provider.get_touch_point_count() > 0) {
-        hid::reconfigure_device_info(state, InputDeviceInputCategory::TOUCH);
+        hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::TOUCH);
     }
 
     // ----------------
@@ -161,14 +161,14 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
     bool mouseDetectDownFirstFrameRight = mouseRightDownCurrentFrame && !s_mouseRightDownLastFrame;
 
     if (mouseDetectDownFirstFrameLeft) {
-        hid::reconfigure_device_info(state, InputDeviceInputCategory::MOUSE);
+        hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::MOUSE);
         Vector2 mousePos = globals::getScaledMousePositionCached();
         cursor_events::enqueue_left_press(state, mousePos.x, mousePos.y);
         bus.publish(events::MouseClicked{mousePos, MOUSE_LEFT_BUTTON});
     }
 
     if (mouseDetectDownFirstFrameRight) {
-        hid::reconfigure_device_info(state, InputDeviceInputCategory::MOUSE);
+        hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::MOUSE);
         Vector2 mousePos = globals::getScaledMousePositionCached();
         cursor_events::enqueue_right_press(state, mousePos.x, mousePos.y);
         bus.publish(events::MouseClicked{mousePos, MOUSE_RIGHT_BUTTON});
@@ -176,7 +176,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
 
     if (!mouseLeftDownCurrentFrame && s_mouseLeftDownLastFrame) {
         // Left button release
-        hid::reconfigure_device_info(state, InputDeviceInputCategory::MOUSE);
+        hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::MOUSE);
         Vector2 mousePos = globals::getScaledMousePositionCached();
         cursor_events::process_left_release(reg, state, mousePos.x, mousePos.y, ctx);
     }
@@ -189,7 +189,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
     // ----------------
     Vector2 delta = provider.get_mouse_delta();
     if (delta.x != 0.0f || delta.y != 0.0f) {
-        hid::reconfigure_device_info(state, InputDeviceInputCategory::MOUSE);
+        hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::MOUSE);
     }
 
     // ----------------
@@ -197,7 +197,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
     // ----------------
     float wheelMove = provider.get_mouse_wheel_move();
     if (wheelMove != 0.0f) {
-        hid::reconfigure_device_info(state, InputDeviceInputCategory::MOUSE);
+        hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::MOUSE);
         // Dispatch as axis input (using special AXIS_MOUSE_WHEEL_Y code)
         input::DispatchRaw(state,
             InputDeviceInputCategory::GAMEPAD_AXIS, // intentionally using gamepad axis category
@@ -232,13 +232,13 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
 
             if (gamepadButtonDetectDownFirstFrame) {
                 hid::set_current_gamepad(state, provider.get_gamepad_name(0), 0);
-                hid::reconfigure_device_info(state, InputDeviceInputCategory::GAMEPAD_BUTTON, static_cast<GamepadButton>(button));
+                hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::GAMEPAD_BUTTON, static_cast<GamepadButton>(button));
                 gamepad::process_button_press(state, static_cast<GamepadButton>(button), ctx);
             }
 
             if (gamepadButtonDetectUpFirstFrame) {
                 hid::set_current_gamepad(state, provider.get_gamepad_name(0), 0);
-                hid::reconfigure_device_info(state, InputDeviceInputCategory::GAMEPAD_BUTTON, static_cast<GamepadButton>(button));
+                hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::GAMEPAD_BUTTON, static_cast<GamepadButton>(button));
                 gamepad::process_button_release(state, static_cast<GamepadButton>(button), ctx);
             }
 
@@ -262,7 +262,7 @@ void poll_all_inputs(entt::registry& reg, InputState& state, float dt, EngineCon
             axisLT > -1.0f || axisRT > -1.0f) {
 
             hid::set_current_gamepad(state, provider.get_gamepad_name(0), 0);
-            hid::reconfigure_device_info(state, InputDeviceInputCategory::GAMEPAD_AXIS);
+            hid::reconfigure_device_info(reg, state, InputDeviceInputCategory::GAMEPAD_AXIS);
             gamepad::update_axis_input(state, reg, dt, ctx);
         }
     }

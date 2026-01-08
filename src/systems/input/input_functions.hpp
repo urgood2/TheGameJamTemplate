@@ -73,7 +73,7 @@ void ProcessInputLocks(input::InputState &inputState, entt::registry &registry,
 
 // HID (Human Interface Device) Management
 auto ReconfigureInputDeviceInfo(
-    InputState &state, InputDeviceInputCategory category,
+    entt::registry &registry, InputState &state, InputDeviceInputCategory category,
     GamepadButton button = GamepadButton::GAMEPAD_BUTTON_UNKNOWN) -> void;
 auto UpdateUISprites(const std::string &console_type) -> void;
 auto SetCurrentGamepad(InputState &state, const std::string &gamepad_object,

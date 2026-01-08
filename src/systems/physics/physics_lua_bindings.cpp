@@ -1108,7 +1108,7 @@ rec.bind_function(lua, path, "set_arrive_radius",
     );
     
     physics_table.set_function("set_sensor",
-        [](entt::entity e, bool isSensor) { SetSensor(e, isSensor); });  
+        [defaultRegistry](entt::entity e, bool isSensor) { SetSensor(*defaultRegistry, e, isSensor); });  
     rec.record_free_function(path, {
         "set_sensor",
         "---@param e entt.entity\n---@param isSensor boolean\n---@return nil",

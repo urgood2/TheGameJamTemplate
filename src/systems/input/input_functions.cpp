@@ -166,7 +166,7 @@ namespace input
         // SPDLOG_DEBUG("Final category is {}", magic_enum::enum_name(finalCategory));
 
         if (finalCategory != InputDeviceInputCategory::NONE) {
-            hid::reconfigure_device_info(inputState, finalCategory);
+            hid::reconfigure_device_info(registry, inputState, finalCategory);
         }
 
         // auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt, ctx);
@@ -449,9 +449,9 @@ namespace input
     // HID Management - Wrappers
     // ========================================
 
-    auto ReconfigureInputDeviceInfo(InputState &state, InputDeviceInputCategory category, GamepadButton button) -> void
+    auto ReconfigureInputDeviceInfo(entt::registry &registry, InputState &state, InputDeviceInputCategory category, GamepadButton button) -> void
     {
-        hid::reconfigure_device_info(state, category, button);
+        hid::reconfigure_device_info(registry, state, category, button);
     }
 
     auto UpdateUISprites(const std::string &console_type) -> void

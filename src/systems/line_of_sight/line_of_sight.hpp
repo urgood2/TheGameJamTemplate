@@ -3,6 +3,7 @@
 #include <entt/entt.hpp>
 
 extern auto initLineOfSight(entt::registry& registry) -> void;
+[[deprecated("Use explicit registry overload")]]
 extern auto initLineOfSight() -> void;
 
 namespace los

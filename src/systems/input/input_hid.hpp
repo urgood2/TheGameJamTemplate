@@ -14,7 +14,7 @@ namespace input::hid {
      * @param category Type of input detected
      * @param button Optional button that triggered the switch (for gamepad)
      */
-    void reconfigure_device_info(InputState& state, InputDeviceInputCategory category,
+    void reconfigure_device_info(entt::registry& registry, InputState& state, InputDeviceInputCategory category,
                                  GamepadButton button = GAMEPAD_BUTTON_UNKNOWN);
 
     /**

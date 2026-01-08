@@ -24,7 +24,7 @@ namespace input::hid {
             ShowCursor();
     }
 
-    void reconfigure_device_info(InputState& state, InputDeviceInputCategory category, const GamepadButton button)
+    void reconfigure_device_info(entt::registry& registry, InputState& state, InputDeviceInputCategory category, const GamepadButton button)
     {
         if (category == InputDeviceInputCategory::NONE || category == state.hid.last_type)
             return;
@@ -85,8 +85,7 @@ namespace input::hid {
             safe_show_cursor();
 
             // unfocus UI
-            auto& reg = globals::getRegistry();
-            auto view = reg.view<transform::GameObject, ui::UIConfig>();
+            auto view = registry.view<transform::GameObject, ui::UIConfig>();
             for (auto entity : view)
                 view.get<transform::GameObject>(entity).state.isBeingFocused = false;
         }

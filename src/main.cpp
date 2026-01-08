@@ -409,7 +409,7 @@ void RunGameLoop() {
     MainLoopRenderAbstraction(scaledStep);
 
     // Update performance overlay metrics AFTER rendering so draw call stats are populated
-    perf_overlay::update();
+    perf_overlay::update(globals::getRegistry());
 
     // Render performance overlay (uses ImGui)
     perf_overlay::render();

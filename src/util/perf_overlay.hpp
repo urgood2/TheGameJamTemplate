@@ -68,7 +68,7 @@ extern int g_frameHistoryIndex;
 
 // Core functions
 void init();
-void update();  // Call once per frame to collect metrics
+void update(entt::registry& registry);  // Call once per frame to collect metrics
 void render();  // Call in render loop to draw overlay
 
 // Control

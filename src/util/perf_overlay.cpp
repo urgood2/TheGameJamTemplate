@@ -29,7 +29,7 @@ void init() {
     g_frameHistoryIndex = 0;
 }
 
-void update() {
+void update(entt::registry& registry) {
     if (!g_config.enabled) return;
 
     // Frame timing
@@ -50,7 +50,6 @@ void update() {
     g_currentMetrics.drawCallsState = stats.state;
 
     // Entity count from registry
-    auto& registry = globals::getRegistry();
     g_currentMetrics.entityCount = static_cast<int>(registry.storage<entt::entity>().in_use());
 
     // Lua memory (via collectgarbage("count")) - with proper state validation

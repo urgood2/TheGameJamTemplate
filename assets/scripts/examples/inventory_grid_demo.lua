@@ -172,6 +172,18 @@ end
 -- Create All Inventory Grids (one per tab)
 --------------------------------------------------------------------------------
 
+local function getCardElement(item)
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(item)
+    if script and script.element then
+        return script.element
+    end
+    local cardData = demoState.cardRegistry[item]
+    if cardData and cardData.element then
+        return cardData.element
+    end
+    return nil
+end
+
 local TAB_CONFIGS = {
     inventory = {
         id = "demo_inventory",
@@ -179,15 +191,19 @@ local TAB_CONFIGS = {
         slots = {
             [1] = {
                 filter = function(item)
-                    local script = getScriptTableFromEntityID(item)
-                    return script and script.element == "Fire"
+                    local element = getCardElement(item)
+                    local accepted = element == "Fire"
+                    log_debug("[Filter:Slot1] item=" .. tostring(item) .. " element=" .. tostring(element) .. " accepted=" .. tostring(accepted))
+                    return accepted
                 end,
                 color = util.getColor("fiery_red"),
             },
             [2] = {
                 filter = function(item)
-                    local script = getScriptTableFromEntityID(item)
-                    return script and script.element == "Ice"
+                    local element = getCardElement(item)
+                    local accepted = element == "Ice"
+                    log_debug("[Filter:Slot2] item=" .. tostring(item) .. " element=" .. tostring(element) .. " accepted=" .. tostring(accepted))
+                    return accepted
                 end,
                 color = util.getColor("baby_blue"),
             },
@@ -215,6 +231,24 @@ local function setGridVisible(gridEntity, visible, onscreenX)
     local transform = component_cache.get(gridEntity, Transform)
     if transform then
         transform.actualX = visible and onscreenX or OFFSCREEN_X
+    end
+end
+
+local function setGridItemsVisible(gridEntity, visible)
+    if not gridEntity then return end
+    local items = grid.getAllItems(gridEntity)
+    for _, itemEntity in pairs(items) do
+        if itemEntity and registry:valid(itemEntity) then
+            if visible then
+                if add_state_tag then
+                    add_state_tag(itemEntity, "default_state")
+                end
+            else
+                if clear_state_tags then
+                    clear_state_tags(itemEntity)
+                end
+            end
+        end
     end
 end
 
@@ -820,16 +854,17 @@ function InventoryGridDemo.switchTab(tabId)
     local tabs = { "inventory", "equipment", "crafting" }
     for _, id in ipairs(tabs) do
         local gridEntity = demoState.grids[id]
+        local isActive = (id == tabId)
+        
         if gridEntity and registry:valid(gridEntity) then
-            local isActive = (id == tabId)
             setGridVisible(gridEntity, isActive, demoState.gridOnscreenX)
+            setGridItemsVisible(gridEntity, isActive)
         end
         
         local tabBoxEntity = demoState.tabButtonEntities[id]
         if tabBoxEntity and registry:valid(tabBoxEntity) then
             local buttonEntity = ui.box.GetUIEByID(registry, tabBoxEntity, "tab_" .. id)
             if buttonEntity and registry:valid(buttonEntity) then
-                local isActive = (id == tabId)
                 local newColor = isActive and util.getColor("steel_blue") or util.getColor("gray")
                 
                 if registry:has(buttonEntity, UIStyleConfig) then
@@ -1264,6 +1299,21 @@ end
 -- Card Render Timer (batched shader pipeline rendering)
 --------------------------------------------------------------------------------
 
+local function isCardInActiveGrid(eid)
+    local activeGrid = demoState.grids[demoState.activeTab]
+    if not activeGrid then return true end
+    
+    for tabId, gridEntity in pairs(demoState.grids) do
+        if gridEntity then
+            local slotIndex = grid.findSlotContaining(gridEntity, eid)
+            if slotIndex then
+                return tabId == demoState.activeTab
+            end
+        end
+    end
+    return true
+end
+
 function InventoryGridDemo.setupCardRenderTimer()
     local UI_CARD_Z = (z_orders and z_orders.ui_tooltips or 900) + 500
     
@@ -1278,7 +1328,7 @@ function InventoryGridDemo.setupCardRenderTimer()
         end
         
         for eid, cardScript in pairs(demoState.cardRegistry) do
-            if eid and registry:valid(eid) then
+            if eid and registry:valid(eid) and isCardInActiveGrid(eid) then
                 local hasPipeline = shader_pipeline and shader_pipeline.ShaderPipelineComponent
                     and registry:has(eid, shader_pipeline.ShaderPipelineComponent)
                 local animComp = component_cache.get(eid, AnimationQueueComponent)

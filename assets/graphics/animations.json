@@ -31,16 +31,6 @@
             }
         ]
     },
-    "example_char": {
-        "frames": [
-            {
-                "sprite_UUID": "test_char_woman.png",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
     "sword_anim": {
         "frames": [
             {

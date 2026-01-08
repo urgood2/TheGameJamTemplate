@@ -7,6 +7,7 @@
 #include "systems/nine_patch/nine_patch_baker.hpp"
 #include "util/utilities.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
+#include <algorithm>
 
 namespace ui
 {
@@ -843,6 +844,157 @@ namespace ui
             
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
+        }
+    }
+
+    void util::DrawUIDecorations(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH)
+    {
+        if (decorations.items.empty()) return;
+        
+        std::vector<const UIDecoration*> sorted;
+        sorted.reserve(decorations.items.size());
+        for (const auto& d : decorations.items) {
+            if (d.visible) sorted.push_back(&d);
+        }
+        std::sort(sorted.begin(), sorted.end(), [](const UIDecoration* a, const UIDecoration* b) {
+            return a->zOffset < b->zOffset;
+        });
+        
+        for (const auto* decor : sorted) {
+            auto frame = init::getSpriteFrame(decor->spriteName, globals::g_ctx);
+            if (frame.frame.width <= 0 || frame.frame.height <= 0) {
+                SPDLOG_WARN("DrawUIDecorations: Sprite '{}' not found", decor->spriteName);
+                continue;
+            }
+            
+            Texture2D* texture = getAtlasTexture(frame.atlasUUID);
+            if (!texture || texture->id == 0) {
+                SPDLOG_WARN("DrawUIDecorations: Atlas '{}' not found for sprite '{}'", frame.atlasUUID, decor->spriteName);
+                continue;
+            }
+            
+            float anchorX = 0.f, anchorY = 0.f;
+            float pivotX = 0.f, pivotY = 0.f;
+            switch (decor->anchor) {
+                case UIDecoration::Anchor::TopLeft:      anchorX = 0.f;             anchorY = 0.f;             pivotX = 0.f;  pivotY = 0.f;  break;
+                case UIDecoration::Anchor::TopCenter:    anchorX = parentW * 0.5f;  anchorY = 0.f;             pivotX = 0.5f; pivotY = 0.f;  break;
+                case UIDecoration::Anchor::TopRight:     anchorX = parentW;         anchorY = 0.f;             pivotX = 1.f;  pivotY = 0.f;  break;
+                case UIDecoration::Anchor::MiddleLeft:   anchorX = 0.f;             anchorY = parentH * 0.5f;  pivotX = 0.f;  pivotY = 0.5f; break;
+                case UIDecoration::Anchor::Center:       anchorX = parentW * 0.5f;  anchorY = parentH * 0.5f;  pivotX = 0.5f; pivotY = 0.5f; break;
+                case UIDecoration::Anchor::MiddleRight:  anchorX = parentW;         anchorY = parentH * 0.5f;  pivotX = 1.f;  pivotY = 0.5f; break;
+                case UIDecoration::Anchor::BottomLeft:   anchorX = 0.f;             anchorY = parentH;         pivotX = 0.f;  pivotY = 1.f;  break;
+                case UIDecoration::Anchor::BottomCenter: anchorX = parentW * 0.5f;  anchorY = parentH;         pivotX = 0.5f; pivotY = 1.f;  break;
+                case UIDecoration::Anchor::BottomRight:  anchorX = parentW;         anchorY = parentH;         pivotX = 1.f;  pivotY = 1.f;  break;
+            }
+            
+            float drawW = frame.frame.width * decor->scale.x;
+            float drawH = frame.frame.height * decor->scale.y;
+            float anchorPosX = parentX + anchorX + decor->offset.x;
+            float anchorPosY = parentY + anchorY + decor->offset.y;
+            float spritePivotX = pivotX * drawW;
+            float spritePivotY = pivotY * drawH;
+            
+            Rectangle source = frame.frame;
+            if (decor->flipX) { source.width = -source.width; }
+            if (decor->flipY) { source.height = -source.height; }
+            
+            Color tint = decor->tint;
+            float alpha = static_cast<float>(tint.a) * decor->opacity;
+            tint.a = static_cast<unsigned char>(std::clamp(alpha, 0.f, 255.f));
+            
+            layer::PushMatrix();
+            layer::Translate(anchorPosX, anchorPosY);
+            layer::Rotate(decor->rotation);
+            layer::Translate(-spritePivotX, -spritePivotY);
+            
+            DrawTexturePro(*texture, source, Rectangle{0, 0, drawW, drawH}, {0, 0}, 0.f, tint);
+            
+            layer::PopMatrix();
+        }
+    }
+
+    void util::DrawUIDecorationsQueued(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH, int zIndex)
+    {
+        if (decorations.items.empty()) return;
+        
+        std::vector<const UIDecoration*> sorted;
+        sorted.reserve(decorations.items.size());
+        for (const auto& d : decorations.items) {
+            if (d.visible) sorted.push_back(&d);
+        }
+        std::sort(sorted.begin(), sorted.end(), [](const UIDecoration* a, const UIDecoration* b) {
+            return a->zOffset < b->zOffset;
+        });
+        
+        for (const auto* decor : sorted) {
+            auto frame = init::getSpriteFrame(decor->spriteName, globals::g_ctx);
+            if (frame.frame.width <= 0 || frame.frame.height <= 0) {
+                SPDLOG_WARN("DrawUIDecorationsQueued: Sprite '{}' not found", decor->spriteName);
+                continue;
+            }
+            
+            Texture2D* texture = getAtlasTexture(frame.atlasUUID);
+            if (!texture || texture->id == 0) {
+                SPDLOG_WARN("DrawUIDecorationsQueued: Atlas '{}' not found for sprite '{}'", frame.atlasUUID, decor->spriteName);
+                continue;
+            }
+            
+            float anchorX = 0.f, anchorY = 0.f;
+            float pivotX = 0.f, pivotY = 0.f;
+            switch (decor->anchor) {
+                case UIDecoration::Anchor::TopLeft:      anchorX = 0.f;             anchorY = 0.f;             pivotX = 0.f;  pivotY = 0.f;  break;
+                case UIDecoration::Anchor::TopCenter:    anchorX = parentW * 0.5f;  anchorY = 0.f;             pivotX = 0.5f; pivotY = 0.f;  break;
+                case UIDecoration::Anchor::TopRight:     anchorX = parentW;         anchorY = 0.f;             pivotX = 1.f;  pivotY = 0.f;  break;
+                case UIDecoration::Anchor::MiddleLeft:   anchorX = 0.f;             anchorY = parentH * 0.5f;  pivotX = 0.f;  pivotY = 0.5f; break;
+                case UIDecoration::Anchor::Center:       anchorX = parentW * 0.5f;  anchorY = parentH * 0.5f;  pivotX = 0.5f; pivotY = 0.5f; break;
+                case UIDecoration::Anchor::MiddleRight:  anchorX = parentW;         anchorY = parentH * 0.5f;  pivotX = 1.f;  pivotY = 0.5f; break;
+                case UIDecoration::Anchor::BottomLeft:   anchorX = 0.f;             anchorY = parentH;         pivotX = 0.f;  pivotY = 1.f;  break;
+                case UIDecoration::Anchor::BottomCenter: anchorX = parentW * 0.5f;  anchorY = parentH;         pivotX = 0.5f; pivotY = 1.f;  break;
+                case UIDecoration::Anchor::BottomRight:  anchorX = parentW;         anchorY = parentH;         pivotX = 1.f;  pivotY = 1.f;  break;
+            }
+            
+            float drawW = frame.frame.width * decor->scale.x;
+            float drawH = frame.frame.height * decor->scale.y;
+            float anchorPosX = parentX + anchorX + decor->offset.x;
+            float anchorPosY = parentY + anchorY + decor->offset.y;
+            float spritePivotX = pivotX * drawW;
+            float spritePivotY = pivotY * drawH;
+            
+            Rectangle source = frame.frame;
+            if (decor->flipX) { source.width = -source.width; }
+            if (decor->flipY) { source.height = -source.height; }
+            
+            Color tint = decor->tint;
+            float alpha = static_cast<float>(tint.a) * decor->opacity;
+            tint.a = static_cast<unsigned char>(std::clamp(alpha, 0.f, 255.f));
+            
+            float rotation = decor->rotation;
+            
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [anchorPosX, anchorPosY](layer::CmdTranslate *cmd) {
+                cmd->x = anchorPosX;
+                cmd->y = anchorPosY;
+            }, zIndex);
+            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation](layer::CmdRotate *cmd) {
+                cmd->angle = rotation;
+            }, zIndex);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [spritePivotX, spritePivotY](layer::CmdTranslate *cmd) {
+                cmd->x = -spritePivotX;
+                cmd->y = -spritePivotY;
+            }, zIndex);
+            
+            layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex = *texture, source, drawW, drawH, tint](layer::CmdTexturePro *cmd) {
+                cmd->texture = tex;
+                cmd->source = source;
+                cmd->offsetX = 0;
+                cmd->offsetY = 0;
+                cmd->size = {drawW, drawH};
+                cmd->rotationCenter = {0, 0};
+                cmd->rotation = 0.f;
+                cmd->color = tint;
+            }, zIndex);
+            
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         }
     }
 

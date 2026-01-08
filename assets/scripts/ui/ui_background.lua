@@ -148,10 +148,10 @@ function UIBackground.setState(entity, state)
             local c = type(def.color) == "string" and util.getColor(def.color) or def.color
             uiConfig.color = c
         end
-        uiConfig.stylingType = UIStylingType.ROUNDED_RECTANGLE
+        uiConfig.stylingType = UIStylingType.RoundedRectangle
         
     elseif def.type == UIBackground.Type.NINEPATCH then
-        uiConfig.stylingType = UIStylingType.NINEPATCH_BORDERS
+        uiConfig.stylingType = UIStylingType.NinePatchBorders
         
         -- If corners defined, need to bake ninepatch
         if def.corners then
@@ -191,7 +191,7 @@ function UIBackground.setState(entity, state)
         end
         
     elseif def.type == UIBackground.Type.SPRITE then
-        uiConfig.stylingType = UIStylingType.SPRITE
+        uiConfig.stylingType = UIStylingType.Sprite
         
         -- Get sprite texture
         if def.sprite then

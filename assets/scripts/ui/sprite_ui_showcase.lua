@@ -130,8 +130,14 @@ function Showcase.createSpriteButtonDemo()
                 config = { padding = 4 },
                 children = {
                     dsl.spriteButton {
-                        sprite = "rounded_rect_small",
-                        label = "Auto States",
+                        states = {
+                            normal = "rounded_rect_small.png",
+                            hover = "rounded_rect_small.png",
+                            pressed = "rounded_rect_very_small.png",
+                            disabled = "rounded_rect_small.png"
+                        },
+                        borders = { 4, 4, 4, 4 },
+                        label = "Small Button",
                         onClick = function()
                             print("Button clicked!")
                         end

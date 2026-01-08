@@ -1,8 +1,6 @@
 #pragma once
 
 #include "raylib.h"
-#include "systems/ui/core/ui_components.hpp"
-#include "systems/nine_patch/nine_patch_baker.hpp"
 #include <optional>
 #include <string>
 #include <vector>
@@ -45,44 +43,11 @@ struct UIDecorations {
     std::vector<UIDecoration> items;
 };
 
-struct UIStateBackgrounds {
-    enum class State {
-        NORMAL,
-        HOVER,
-        PRESSED,
-        DISABLED
-    };
-    
-    std::optional<UIStyleConfig> normal;
-    std::optional<UIStyleConfig> hover;
-    std::optional<UIStyleConfig> pressed;
-    std::optional<UIStyleConfig> disabled;
-    State currentState = State::NORMAL;
-    
-    const UIStyleConfig* getCurrentStyle() const {
-        switch (currentState) {
-            case State::NORMAL: return normal.has_value() ? &normal.value() : nullptr;
-            case State::HOVER: return hover.has_value() ? &hover.value() : nullptr;
-            case State::PRESSED: return pressed.has_value() ? &pressed.value() : nullptr;
-            case State::DISABLED: return disabled.has_value() ? &disabled.value() : nullptr;
-        }
-        return nullptr;
-    }
-};
-
 struct SpritePanelBorders {
     int left = 0;
     int top = 0;
     int right = 0;
     int bottom = 0;
-};
-
-struct SpritePanelConfig {
-    std::string spriteName;
-    SpritePanelBorders borders;
-    nine_patch::NPatchRegionModes regionModes;
-    UISizingMode sizingMode = UISizingMode::FitContent;
-    UIDecorations decorations;
 };
 
 struct SpriteButtonStates {

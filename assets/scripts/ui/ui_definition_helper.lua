@@ -59,6 +59,66 @@ local function processSpritePanelFields(tbl, builder)
         builder:addColor(tbl._tint)
     end
     
+    if tbl._decorations and #tbl._decorations > 0 then
+        local positionToAnchor = {
+            top_left = UIDecorationAnchor.TopLeft,
+            top_center = UIDecorationAnchor.TopCenter,
+            top_right = UIDecorationAnchor.TopRight,
+            middle_left = UIDecorationAnchor.MiddleLeft,
+            center = UIDecorationAnchor.Center,
+            middle_right = UIDecorationAnchor.MiddleRight,
+            bottom_left = UIDecorationAnchor.BottomLeft,
+            bottom_center = UIDecorationAnchor.BottomCenter,
+            bottom_right = UIDecorationAnchor.BottomRight,
+        }
+        
+        local decorations = UIDecorations.new()
+        for _, decor in ipairs(tbl._decorations) do
+            if not decor.sprite or decor.sprite == "" then
+                log_warn("[ui.def] Decoration missing sprite name, skipping")
+                goto continue_decoration
+            end
+            
+            local d = UIDecoration.new()
+            d.spriteName = decor.sprite
+            d.anchor = positionToAnchor[decor.position] or UIDecorationAnchor.TopLeft
+            if decor.offset then
+                d.offset = Vector2(decor.offset[1] or 0, decor.offset[2] or 0)
+            end
+            d.opacity = decor.opacity or 1.0
+            d.flipX = decor.flip == "x" or decor.flip == "both"
+            d.flipY = decor.flip == "y" or decor.flip == "both"
+            d.rotation = decor.rotation or 0
+            if decor.scale then
+                if type(decor.scale) == "number" then
+                    d.scale = Vector2(decor.scale, decor.scale)
+                else
+                    d.scale = Vector2(decor.scale[1] or 1, decor.scale[2] or 1)
+                end
+            else
+                d.scale = Vector2(1.0, 1.0)
+            end
+            d.zOffset = decor.zOffset or 0
+            d.visible = decor.visible ~= false
+            d.id = decor.id or ""
+            if decor.tint then
+                if type(decor.tint) == "string" then
+                    local ok, result = pcall(util.getColor, decor.tint)
+                    if ok and result then
+                        d.tint = result
+                    end
+                elseif type(decor.tint) == "userdata" then
+                    d.tint = decor.tint
+                end
+            end
+            table.insert(decorations.items, d)
+            
+            ::continue_decoration::
+        end
+        builder:addDecorations(decorations)
+        log_debug("[ui.def] Added " .. #tbl._decorations .. " decorations")
+    end
+    
     log_debug("[ui.def] Configured spritePanel with sprite: " .. spriteName)
     return true
 end

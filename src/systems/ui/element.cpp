@@ -1667,7 +1667,10 @@ namespace ui
                 
                 SPDLOG_DEBUG("DrawSelf(): Drawing rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
             }
-        
+            
+            if (config->decorations.has_value()) {
+                util::DrawUIDecorations(layerPtr, config->decorations.value(), 0, 0, visualW, visualH);
+            }
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
@@ -2483,7 +2486,10 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 
                 SPDLOG_DEBUG("DrawSelf(): Drawing rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
             }
-        
+            
+            if (config->decorations.has_value()) {
+                util::DrawUIDecorationsQueued(layerPtr.get(), config->decorations.value(), 0, 0, visualW, visualH, zIndex);
+            }
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         }

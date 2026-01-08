@@ -7,29 +7,37 @@ Corner badges, overlays, and decorative elements for UI components.
 Usage:
     local decor = require("ui.ui_decorations")
     
-    -- Add corner badge
+    -- Text badge
     decor.addBadge(element, {
-        icon = "star_icon",
-        position = "top_right",
-        offset = { x = -4, y = 4 },
+        text = "5",
+        backgroundColor = "red",
+        position = decor.Position.BOTTOM_RIGHT,
         size = { w = 16, h = 16 },
     })
     
-    -- Add overlay
-    decor.addOverlay(element, {
-        id = "glow",
-        sprite = "glow_effect",
-        position = "center",
-        opacity = 0.5,
-        z = -1,  -- Behind content
+    -- Sprite icon badge
+    decor.addBadge(element, {
+        icon = "fire_icon",
+        position = decor.Position.TOP_LEFT,
+        size = { w = 16, h = 16 },
     })
     
-    -- Add custom draw overlay
+    -- Sprite overlay with visibility function (for hover/selection)
+    decor.addOverlay(element, {
+        sprite = "glow_effect",
+        opacity = 0.5,
+        z = -1,
+        visible = function(eid)
+            local inputState = component_cache.get(eid, InputState)
+            return inputState and inputState.cursor_hovering_target
+        end,
+    })
+    
+    -- Custom draw overlay (no sprite required)
     decor.addCustomOverlay(element, {
-        id = "selection",
-        visible = function(self) return isSelected(self) end,
-        onDraw = function(self, x, y, w, h, z)
-            -- Custom rendering
+        visible = function(eid) return someCondition end,
+        onDraw = function(eid, x, y, w, h, z)
+            command_buffer.queueDrawRectangle(...)
         end,
     })
 
@@ -154,18 +162,21 @@ function UIDecorations.addOverlay(entity, config)
         sprite = config.sprite,
         position = config.position or UIDecorations.Position.CENTER,
         offset = config.offset or { x = 0, y = 0 },
-        size = config.size,  -- nil = fill element
+        size = config.size,
         opacity = config.opacity or 1.0,
-        z = config.z or 0,  -- Relative z-offset (negative = behind)
+        z = config.z or 0,
         visible = config.visible,
-        blendMode = config.blendMode,  -- Future: additive, multiply
+        blendMode = config.blendMode,
         entity = nil,
+        _entityCreated = false,
     }
     
     table.insert(decor.overlays, overlay)
     
     return overlay.id
 end
+
+
 
 --------------------------------------------------------------------------------
 -- Add custom draw overlay
@@ -264,6 +275,37 @@ end
 -- Draw decorations (call during element draw)
 --------------------------------------------------------------------------------
 
+local function ensureOverlayEntity(overlay, elementW, elementH)
+    if overlay._entityCreated or not overlay.sprite then return end
+    if not animation_system then return end
+    
+    local w = overlay.size and overlay.size.w or elementW
+    local h = overlay.size and overlay.size.h or elementH
+    
+    overlay.entity = animation_system.createAnimatedObjectWithTransform(
+        overlay.sprite, true, 0, 0, nil, false
+    )
+    if overlay.entity and registry:valid(overlay.entity) then
+        animation_system.resizeAnimationObjectsInEntityToFit(overlay.entity, w, h)
+        overlay._entityCreated = true
+        overlay._cachedSize = { w = w, h = h }
+    end
+end
+
+local function ensureBadgeEntity(badge)
+    if badge.entity or not badge.icon then return end
+    if not animation_system then return end
+    
+    badge.entity = animation_system.createAnimatedObjectWithTransform(
+        badge.icon, true, 0, 0, nil, false
+    )
+    if badge.entity and registry:valid(badge.entity) then
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            badge.entity, badge.size.w, badge.size.h
+        )
+    end
+end
+
 function UIDecorations.draw(entity, baseZ)
     local decor = getDecorations(entity)
     if not decor then return end
@@ -278,13 +320,73 @@ function UIDecorations.draw(entity, baseZ)
     
     baseZ = baseZ or 0
     
+    for _, overlay in ipairs(decor.overlays) do
+        local visible = true
+        if overlay.visible then
+            visible = type(overlay.visible) == "function" and overlay.visible(entity) or overlay.visible
+        end
+        
+        if visible and overlay.sprite then
+            ensureOverlayEntity(overlay, elementW, elementH)
+            
+            if overlay.entity and registry:valid(overlay.entity) then
+                local overlayW = overlay._cachedSize and overlay._cachedSize.w or elementW
+                local overlayH = overlay._cachedSize and overlay._cachedSize.h or elementH
+                
+                local ox, oy = calculatePosition(
+                    overlay.position, elementW, elementH,
+                    overlayW, overlayH, overlay.offset
+                )
+                
+                local overlayTransform = component_cache.get(overlay.entity, Transform)
+                if overlayTransform then
+                    overlayTransform.actualX = elementX + ox
+                    overlayTransform.actualY = elementY + oy
+                    overlayTransform.z = baseZ + overlay.z
+                end
+                
+                local go = component_cache.get(overlay.entity, GameObject)
+                if go then
+                    go.state.isActive = true
+                    go.state.alpha = overlay.opacity
+                end
+            end
+        elseif overlay.entity and registry:valid(overlay.entity) then
+            local go = component_cache.get(overlay.entity, GameObject)
+            if go then
+                go.state.isActive = false
+            end
+        end
+    end
+    
     for _, badge in ipairs(decor.badges) do
         local visible = true
         if badge.visible then
             visible = type(badge.visible) == "function" and badge.visible(entity) or badge.visible
         end
         
-        if visible and badge.text and badge.text ~= "" then
+        if visible and badge.icon then
+            ensureBadgeEntity(badge)
+            
+            if badge.entity and registry:valid(badge.entity) then
+                local ox, oy = calculatePosition(
+                    badge.position, elementW, elementH,
+                    badge.size.w, badge.size.h, badge.offset
+                )
+                
+                local badgeTransform = component_cache.get(badge.entity, Transform)
+                if badgeTransform then
+                    badgeTransform.actualX = elementX + ox
+                    badgeTransform.actualY = elementY + oy
+                    badgeTransform.z = baseZ + 2
+                end
+                
+                local go = component_cache.get(badge.entity, GameObject)
+                if go then
+                    go.state.isActive = true
+                end
+            end
+        elseif visible and badge.text and badge.text ~= "" then
             local ox, oy = calculatePosition(
                 badge.position, elementW, elementH,
                 badge.size.w, badge.size.h, badge.offset
@@ -317,6 +419,11 @@ function UIDecorations.draw(entity, baseZ)
                     10, textColor or Color.new(255,255,255,255),
                     baseZ + 2, layer.DrawCommandSpace.Screen
                 )
+            end
+        elseif badge.entity and registry:valid(badge.entity) then
+            local go = component_cache.get(badge.entity, GameObject)
+            if go then
+                go.state.isActive = false
             end
         end
     end

@@ -26,23 +26,19 @@ local shader_pipeline = _G.shader_pipeline
 local InventoryGridInit = require("ui.inventory_grid_init")
 
 local demoState = {
-    -- Per-tab grids: { inventory = entity, equipment = entity, crafting = entity }
     grids = {},
-    gridEntity = nil,  -- Points to currently active grid (for backwards compat)
+    gridEntity = nil,
     infoBoxEntity = nil,
     customPanelEntity = nil,
-    backgroundDemoEntity = nil,
     sortButtonsEntity = nil,
-    decorationDemoEntity = nil,
     tabEntities = {},
     tabButtonEntities = {},
     mockCards = {},
     signalHandlers = {},
-    stackBadges = {},  -- Per-tab: { inventory = {}, equipment = {}, crafting = {} }
+    stackBadges = {},
     timerGroup = "inventory_demo",
     cardRegistry = {},
     customPanelState = nil,
-    decoratedElementHovered = false,
     sortBy = nil,
     sortAscending = true,
     activeTab = "inventory",
@@ -146,9 +142,7 @@ function InventoryGridDemo.init()
     InventoryGridDemo.createInfoBox(gridX - 220, gridY)
     InventoryGridDemo.createSortButtons(gridX - 220, gridY + 340)
     
-    InventoryGridDemo.createCustomPanel(leftPanelX, leftPanelY)
-    InventoryGridDemo.createBackgroundDemo(leftPanelX, leftPanelY + 160)
-    InventoryGridDemo.createDecorationDemo(leftPanelX, leftPanelY + 280)
+    InventoryGridDemo.createCustomPanel(leftPanelX, leftPanelY + 200)
     
     InventoryGridDemo.setupSignalHandlers()
     InventoryGridDemo.setupDragDebugTimer()
@@ -161,6 +155,7 @@ function InventoryGridDemo.init()
         action = function()
             InventoryGridDemo.spawnMockCards()
             InventoryGridDemo.setupStackBadges()
+            InventoryGridDemo.setupSlotOverlays()
             InventoryGridDemo.setupCardRenderTimer()
         end,
     })
@@ -442,7 +437,7 @@ function InventoryGridDemo.createCustomPanel(x, y)
         x = x,
         y = y,
         w = 200,
-        h = 140,
+        h = 145,
         isHovered = false,
         iconHovered = false,
     }
@@ -450,17 +445,16 @@ function InventoryGridDemo.createCustomPanel(x, y)
     local panelContainer = dsl.vbox {
         config = { 
             id = "demo_custom_panel_container",
-            padding = 8,
+            padding = 10,
             color = "blackberry",
             emboss = 2,
             minWidth = 200,
-            minHeight = 140,
+            minHeight = 145,
         },
         children = {
-            dsl.text("Custom Panel", { fontSize = 12, color = "cyan", shadow = true }),
+            dsl.text("Custom Panel", { fontSize = 12, color = "gold", shadow = true }),
             dsl.spacer(4),
-            dsl.text("Immediate-mode rendering", { fontSize = 10, color = "light_gray" }),
-            dsl.text("+ HoverRegistry", { fontSize = 10, color = "light_gray" }),
+            dsl.text("(immediate-mode + hover)", { fontSize = 10, color = "light_gray" }),
         },
     }
     
@@ -488,10 +482,10 @@ function InventoryGridDemo.renderCustomPanel()
     local SPACE = layer.DrawCommandSpace.Screen
     local uiLayer = layers.ui or "ui"
     
-    local panelX = state.x + 8
-    local panelY = state.y + 60
-    local panelW = state.w - 16
-    local panelH = 60
+    local panelX = state.x + 10
+    local panelY = state.y + 50
+    local panelW = state.w - 20
+    local panelH = 75
     
     local pulseTime = (globals.time or 0) * 2
     local pulseAlpha = math.abs(math.sin(pulseTime)) * 0.3 + 0.5
@@ -578,72 +572,6 @@ function InventoryGridDemo.renderCustomPanel()
             c.fontSize = fontSize
         end, baseZ + 2, SPACE)
     end
-end
-
---------------------------------------------------------------------------------
--- UIBackground Demo
---
--- DEMONSTRATES: State-based background styling (normal/hover/pressed)
---
--- USE CASE: Buttons, selectable items, or any UI element that needs visual
--- feedback on interaction states without manual state tracking.
---
--- KEY CONCEPTS:
--- 1. UIBackground.apply(entity, states): Attach state-based backgrounds
--- 2. States: normal, hover, pressed - each can be color, gradient, or image
--- 3. Automatic: System handles state transitions, no manual onHover needed
---
--- PATTERN:
---   UIBackground.apply(buttonEntity, {
---       normal = { type = "color", color = "gray" },
---       hover = { type = "color", color = "steel_blue" },
---       pressed = { type = "color", color = "midnight_blue" },
---   })
---------------------------------------------------------------------------------
-
-function InventoryGridDemo.createBackgroundDemo(x, y)
-    local buttonDef = dsl.button("Hover Me!", {
-        id = "demo_bg_button",
-        minWidth = 120,
-        minHeight = 40,
-        color = "gray",
-        hover = true,
-    })
-    
-    local container = dsl.vbox {
-        config = { 
-            padding = 8,
-            color = "blackberry",
-            emboss = 2,
-        },
-        children = {
-            dsl.text("UIBackground", { fontSize = 12, color = "gold", shadow = true }),
-            dsl.spacer(4),
-            buttonDef,
-            dsl.spacer(4),
-            dsl.text("(state changes)", { fontSize = 10, color = "light_gray" }),
-        },
-    }
-    
-    demoState.backgroundDemoEntity = dsl.spawn({ x = x, y = y }, container, "ui", 100)
-    ui.box.set_draw_layer(demoState.backgroundDemoEntity, "ui")
-    
-    timer.after_opts({
-        delay = 0.1,
-        tag = "setup_bg_demo",
-        group = demoState.timerGroup,
-        action = function()
-            local buttonEntity = ui.box.GetUIEByID(registry, demoState.backgroundDemoEntity, "demo_bg_button")
-            if buttonEntity and registry:valid(buttonEntity) then
-                UIBackground.apply(buttonEntity, {
-                    normal = { type = "color", color = "gray" },
-                    hover = { type = "color", color = "steel_blue" },
-                    pressed = { type = "color", color = "midnight_blue" },
-                })
-                log_debug("[Demo] UIBackground applied to button")
-            end
-        end,
-    })
 end
 
 --------------------------------------------------------------------------------
@@ -901,147 +829,6 @@ function InventoryGridDemo.switchTab(tabId)
 end
 
 --------------------------------------------------------------------------------
--- UIDecorations Demo
---
--- DEMONSTRATES: Badges and custom overlays (glow borders, indicators)
---
--- USE CASE: "NEW" badges, notification dots, selection highlights, rarity
--- borders - anything layered on top of existing UI without modifying it.
---
--- KEY CONCEPTS:
--- 1. UIDecorations.addBadge(): Small labels positioned at corners (TOP_RIGHT, etc)
--- 2. UIDecorations.addCustomOverlay(): Arbitrary rendering (glows, borders)
--- 3. visible function: Conditionally show decorations based on state
--- 4. UIDecorations.draw(): Call every frame to render decorations
---
--- PATTERN (Badge):
---   UIDecorations.addBadge(entity, {
---       text = "NEW", position = UIDecorations.Position.TOP_RIGHT,
---       backgroundColor = "fiery_red", textColor = "white",
---   })
---
--- PATTERN (Glow Border):
---   UIDecorations.addCustomOverlay(entity, {
---       visible = function() return isHovered end,
---       onDraw = function(entity, px, py, pw, ph, z)
---           command_buffer.queueDrawSteppedRoundedRect(...)
---       end,
---   })
---------------------------------------------------------------------------------
-
-function InventoryGridDemo.createDecorationDemo(x, y)
-    local container = dsl.vbox {
-        config = {
-            id = "decoration_demo_container",
-            padding = 12,
-            color = "midnight_blue",
-            emboss = 2,
-            minWidth = 150,
-            minHeight = 100,
-        },
-        children = {
-            dsl.text("Decoration Demo", { fontSize = 12, color = "cyan", shadow = true }),
-            dsl.spacer(8),
-            dsl.hbox {
-                config = {
-                    id = "decorated_element",
-                    padding = 16,
-                    color = "blackberry",
-                    emboss = 1,
-                    minWidth = 100,
-                    minHeight = 50,
-                },
-                children = {
-                    dsl.text("Hover me!", { fontSize = 11, color = "white" }),
-                },
-            },
-        },
-    }
-    
-    demoState.decorationDemoEntity = dsl.spawn({ x = x, y = y }, container, "ui", 100)
-    ui.box.set_draw_layer(demoState.decorationDemoEntity, "ui")
-    
-    timer.after_opts({
-        delay = 0.15,
-        tag = "setup_decoration_demo",
-        group = demoState.timerGroup,
-        action = function()
-            local decoratedElement = ui.box.GetUIEByID(registry, demoState.decorationDemoEntity, "decorated_element")
-            if not decoratedElement or not registry:valid(decoratedElement) then
-                log_warn("[Demo] Could not find decorated_element")
-                return
-            end
-            
-            UIDecorations.addBadge(decoratedElement, {
-                id = "demo_badge",
-                text = "NEW",
-                position = UIDecorations.Position.TOP_RIGHT,
-                offset = { x = 8, y = -8 },
-                size = { w = 32, h = 18 },
-                backgroundColor = "fiery_red",
-                textColor = "white",
-            })
-            
-            demoState.decoratedElementHovered = false
-            
-            UIDecorations.addCustomOverlay(decoratedElement, {
-                id = "glow_border",
-                z = 5,
-                visible = function()
-                    return demoState.decoratedElementHovered
-                end,
-                onDraw = function(entity, px, py, pw, ph, z)
-                    local pulseTime = (globals.time or 0) * 3
-                    local pulseAlpha = math.abs(math.sin(pulseTime)) * 0.5 + 0.5
-                    local glowColor = Color.new(100, 200, 255, math.floor(pulseAlpha * 200))
-                    
-                    if command_buffer and command_buffer.queueDrawSteppedRoundedRect then
-                        command_buffer.queueDrawSteppedRoundedRect(layers.ui or "ui", function(c)
-                            c.x = px + pw / 2
-                            c.y = py + ph / 2
-                            c.w = pw + 8
-                            c.h = ph + 8
-                            c.fillColor = Color.new(0, 0, 0, 0)
-                            c.borderColor = glowColor
-                            c.borderWidth = 3
-                            c.numSteps = 4
-                        end, z, layer.DrawCommandSpace.Screen)
-                    end
-                end,
-            })
-            
-            local go = component_cache.get(decoratedElement, GameObject)
-            if go then
-                go.state.hoverEnabled = true
-                go.state.collisionEnabled = true
-                pcall(function()
-                    go.methods.onHover = function()
-                        demoState.decoratedElementHovered = true
-                    end
-                    go.methods.onStopHover = function()
-                        demoState.decoratedElementHovered = false
-                    end
-                end)
-            end
-            
-            timer.every_opts({
-                delay = 0.016,
-                tag = "decoration_demo_render",
-                group = demoState.timerGroup,
-                action = function()
-                    if decoratedElement and registry:valid(decoratedElement) then
-                        local baseZ = (z_orders and z_orders.ui_tooltips or 800) + 150
-                        UIDecorations.draw(decoratedElement, baseZ)
-                    end
-                end,
-            })
-            
-            log_debug("[Demo] Decoration demo setup complete")
-        end,
-    })
-end
-
---------------------------------------------------------------------------------
 -- Setup Stack Count Badges (demonstrates UIDecorations)
 --------------------------------------------------------------------------------
 
@@ -1080,6 +867,41 @@ function InventoryGridDemo.setupStackBadges()
     })
     
     log_debug("[Demo] Stack badges created for all grids")
+end
+
+function InventoryGridDemo.setupSlotOverlays()
+    for tabId, gridEntity in pairs(demoState.grids) do
+        if gridEntity and registry:valid(gridEntity) then
+            local cfg = TAB_CONFIGS[tabId]
+            local slotCount = cfg and (cfg.rows * cfg.cols) or 12
+            
+            for i = 1, slotCount do
+                local slotEntity = grid.getSlotEntity(gridEntity, i)
+                if slotEntity and registry:valid(slotEntity) then
+                    UIDecorations.addCustomOverlay(slotEntity, {
+                        id = "hover_rect_" .. tabId .. "_" .. i,
+                        z = -1,
+                        visible = function(eid)
+                            local inputState = component_cache.get(eid, InputState)
+                            return inputState and inputState.cursor_hovering_target
+                        end,
+                        onDraw = function(eid, x, y, w, h, z)
+                            if command_buffer and command_buffer.queueDrawRectangle then
+                                command_buffer.queueDrawRectangle(
+                                    layers.ui or "ui", function() end,
+                                    x + 2, y + 2, w - 4, h - 4,
+                                    Color.new(100, 150, 255, 60),
+                                    z, layer.DrawCommandSpace.Screen
+                                )
+                            end
+                        end,
+                    })
+                end
+            end
+        end
+    end
+    
+    log_debug("[Demo] Slot hover overlays created")
 end
 
 function InventoryGridDemo.drawStackBadges()
@@ -1440,17 +1262,6 @@ function InventoryGridDemo.cleanup()
     demoState.gridEntity = nil
     demoState.stackBadges = {}
     
-    if demoState.backgroundDemoEntity then
-        local buttonEntity = ui.box.GetUIEByID(registry, demoState.backgroundDemoEntity, "demo_bg_button")
-        if buttonEntity then
-            UIBackground.remove(buttonEntity)
-        end
-        if ui.box and ui.box.Remove then
-            ui.box.Remove(registry, demoState.backgroundDemoEntity)
-        end
-        demoState.backgroundDemoEntity = nil
-    end
-    
     if demoState.infoBoxEntity and ui.box and ui.box.Remove then
         ui.box.Remove(registry, demoState.infoBoxEntity)
         demoState.infoBoxEntity = nil
@@ -1476,18 +1287,6 @@ function InventoryGridDemo.cleanup()
     end
     demoState.tabEntities = {}
     demoState.activeTab = "inventory"
-    
-    if demoState.decorationDemoEntity then
-        local decoratedElement = ui.box.GetUIEByID(registry, demoState.decorationDemoEntity, "decorated_element")
-        if decoratedElement then
-            UIDecorations.cleanup(decoratedElement)
-        end
-        if ui.box and ui.box.Remove then
-            ui.box.Remove(registry, demoState.decorationDemoEntity)
-        end
-        demoState.decorationDemoEntity = nil
-    end
-    demoState.decoratedElementHovered = false
     
     log_debug("[InventoryGridDemo] Cleanup complete")
 end

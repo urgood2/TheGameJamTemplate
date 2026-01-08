@@ -46,20 +46,33 @@ namespace ai_system
     void runWorldStateUpdaters(GOAPComponent &goapStruct, entt::entity &entity);
     extern auto resetAllGOAPComponentsAndScripting() -> void;
 
-    // goap methodse
+    extern void fill_action_queue_based_on_plan(entt::registry& registry, entt::entity e, const char** plan, int planSize);
+    [[deprecated("Use fill_action_queue_based_on_plan(registry, e, plan, planSize) instead")]]
     extern void fill_action_queue_based_on_plan(entt::entity e, const char** plan, int planSize);
+    
+    extern void initGOAPComponent(entt::registry& registry, entt::entity entity,
+                           const std::string &type,
+                           sol::optional<sol::table> overrides = sol::nullopt);
+    [[deprecated("Use initGOAPComponent(registry, entity, type, overrides) instead")]]
     extern void initGOAPComponent(entt::entity entity,
                            const std::string &type,
-                           sol::optional<sol::table> overrides = sol::nullopt /*may be nil*/);
+                           sol::optional<sol::table> overrides = sol::nullopt);
     extern auto requestAISystemReset() -> void;
+    
+    auto runBlackboardInitFunction(entt::registry& registry, entt::entity entity, const std::string &identifier) -> void;
+    [[deprecated("Use runBlackboardInitFunction(registry, entity, identifier) instead")]]
     auto runBlackboardInitFunction(entt::entity entity, const std::string &identifier) -> void;
     extern bool goap_worldstate_get(actionplanner_t *ap, worldstate_t ws, const char *atomname, bool *value);
     extern bool goap_worldstate_match(actionplanner_t* ap, worldstate_t current_state, worldstate_t expected_state);
     extern std::map<std::string, bool> goap_worldstate_to_map(const actionplanner_t* ap, const worldstate_t* ws);
     extern void goap_actionplanner_clear_memory( actionplanner_t* ap );
     extern bool goap_is_goapstruct_valid(GOAPComponent& goapStruct);
+    extern void select_goal(entt::registry& registry, entt::entity entity);
+    [[deprecated("Use select_goal(registry, entity) instead")]]
     extern void select_goal(entt::entity entity);
     extern bool execute_current_action(entt::entity entity);
+    extern void handle_no_plan(entt::registry& registry, entt::entity entity);
+    [[deprecated("Use handle_no_plan(registry, entity) instead")]]
     extern void handle_no_plan(entt::entity entity);
     extern void checkAndSetGOAPDirty(GOAPComponent& goapStruct, int initialPlanBufferSize);
     extern void fill_action_queue_based_on_plan(entt::entity e, const char** plan, int planSize);

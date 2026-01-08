@@ -106,9 +106,9 @@ namespace ai_system
      * // Next frame, behavior_system::update(myEntity, dt) will resume the first action’s coroutine.
      * @endcode
      */
-    void fill_action_queue_based_on_plan(entt::entity e, const char **plan, int planSize)
+    void fill_action_queue_based_on_plan(entt::registry& registry, entt::entity e, const char **plan, int planSize)
     {
-        auto &cmp = globals::getRegistry().get<GOAPComponent>(e);
+        auto &cmp = registry.get<GOAPComponent>(e);
 
         while (!cmp.actionQueue.empty())
             cmp.actionQueue.pop();
@@ -155,6 +155,11 @@ namespace ai_system
         }
     }
 
+    [[deprecated("Use fill_action_queue_based_on_plan(registry, e, plan, planSize) instead")]]
+    void fill_action_queue_based_on_plan(entt::entity e, const char **plan, int planSize)
+    {
+        fill_action_queue_based_on_plan(globals::getRegistry(), e, plan, planSize);
+    }
 
     /*
      * @brief Clears the action planner by resetting atom and action counts and data.
@@ -340,9 +345,9 @@ namespace ai_system
      * blackboard initialization function in the lua master state. If nothing is found, a default blackboard initialization function will be used.
      * Also clears the blackboard before initializing it.
      */
-    auto runBlackboardInitFunction(entt::entity entity, const std::string &identifier) -> void
+    auto runBlackboardInitFunction(entt::registry& registry, entt::entity entity, const std::string &identifier) -> void
     {
-        auto &goapStruct = globals::getRegistry().get<GOAPComponent>(entity);
+        auto &goapStruct = registry.get<GOAPComponent>(entity);
         goapStruct.blackboard.clear();
 
         // 1) Grab the lua table you populated in ai.init.lua
@@ -383,6 +388,12 @@ namespace ai_system
         {
             SPDLOG_ERROR("Error in blackboard init '{}': {}", identifier, result.error());
         }
+    }
+
+    [[deprecated("Use runBlackboardInitFunction(registry, entity, identifier) instead")]]
+    auto runBlackboardInitFunction(entt::entity entity, const std::string &identifier) -> void
+    {
+        runBlackboardInitFunction(globals::getRegistry(), entity, identifier);
     }
 
     void load_actions_from_lua(GOAPComponent &comp, actionplanner_t &planner)
@@ -448,11 +459,11 @@ namespace ai_system
         }
     }
 
-    void initGOAPComponent(entt::entity entity,
+    void initGOAPComponent(entt::registry& registry, entt::entity entity,
                            const std::string &type,
                            sol::optional<sol::table> overrides /*may be nil*/)
     {
-        auto &goap = globals::getRegistry().get<GOAPComponent>(entity);
+        auto &goap = registry.get<GOAPComponent>(entity);
 
         // look up prototype
         sol::table types = masterStateLua["ai"]["entity_types"];
@@ -491,6 +502,14 @@ namespace ai_system
         goap.type = type;
         runBlackboardInitFunction(entity, type); // Initialize the blackboard for this entity type
         select_goal(entity);
+    }
+
+    [[deprecated("Use initGOAPComponent(registry, entity, type, overrides) instead")]]
+    void initGOAPComponent(entt::entity entity,
+                           const std::string &type,
+                           sol::optional<sol::table> overrides)
+    {
+        initGOAPComponent(globals::getRegistry(), entity, type, overrides);
     }
 
     // void initGOAPComponent(entt::entity entity, const std::string& type)
@@ -681,25 +700,21 @@ namespace ai_system
      *
      * @param goapStruct The GOAP component structure.
      */
-    void handle_no_plan(entt::entity entity)
+    void handle_no_plan(entt::registry& registry, entt::entity entity)
     {
-        auto &goapStruct = globals::getRegistry().get<GOAPComponent>(entity);
+        auto &goapStruct = registry.get<GOAPComponent>(entity);
 
-        // Implement your strategy for when no plan can be found
-
-        // Example 1: Set a fallback goal (e.g., wandering)
         goap_worldstate_clear(&goapStruct.goal);
-        // goap_worldstate_set(&goapStruct.ap, &goapStruct.goal, "wander", true);
-        // SPDLOG_DEBUG("No valid plan found, setting goal to wander.");
-        // replan(entity);
 
         if (goapStruct.planSize == 0)
         {
-            // Still no plan found, perhaps enter an idle state or default action
-            // Example: Log the error or set the creature to an idle state
-            // SPDLOG_DEBUG("- No valid plan found.");
-            // You can implement an idle behavior or log the issue here.
         }
+    }
+
+    [[deprecated("Use handle_no_plan(registry, entity) instead")]]
+    void handle_no_plan(entt::entity entity)
+    {
+        handle_no_plan(globals::getRegistry(), entity);
     }
 
     /**
@@ -728,9 +743,9 @@ namespace ai_system
     //     replan(entity);
     // }
 
-    void select_goal(entt::entity entity)
+    void select_goal(entt::registry& registry, entt::entity entity)
     {
-        auto &goap = globals::getRegistry().get<GOAPComponent>(entity);
+        auto &goap = registry.get<GOAPComponent>(entity);
         auto type = goap.type;
 
         sol::table goals = goap.def["goal_selectors"];
@@ -749,6 +764,12 @@ namespace ai_system
         }
 
         replan(entity);
+    }
+
+    [[deprecated("Use select_goal(registry, entity) instead")]]
+    void select_goal(entt::entity entity)
+    {
+        select_goal(globals::getRegistry(), entity);
     }
 
     // Execute the current action in the plan

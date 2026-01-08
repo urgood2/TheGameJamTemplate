@@ -1440,32 +1440,28 @@ namespace ai_system
         }
     }
 
-    auto updateHumanAI(float deltaTime) -> void
+    auto updateHumanAI(entt::registry& registry, float deltaTime) -> void
     {
         if (ai_system_paused) return;
 
-        // add deltaTime to aiUpdateTickTotal
         aiUpdateTickTotal += deltaTime;
 
-        // if aiUpdateTickTotal is greater than aiUpdateTickInSeconds
-        // then we need to tick the ai
         if (aiUpdateTickTotal < aiUpdateTickInSeconds)
             return;
 
         SPDLOG_DEBUG("---------- ai_system:: new goap ai tick ------------------");
-        // reset aiUpdateTickTotal
         aiUpdateTickTotal = 0.0f;
 
-        // get all humans
-        auto view = globals::getRegistry().view<GOAPComponent>();
+        auto view = registry.view<GOAPComponent>();
 
         for (auto entity : view)
         {
-
-            // SPDLOG_DEBUG("Updating AI for entity: {}", static_cast<int>(entity));
-
-            // update the goap logic
             update_goap(entity);
         }
+    }
+
+    auto updateHumanAI(float deltaTime) -> void
+    {
+        updateHumanAI(globals::getRegistry(), deltaTime);
     }
 }

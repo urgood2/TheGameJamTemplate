@@ -32,10 +32,8 @@ void setHorizontalFlip(entt::entity e, bool flip) {
 
   auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
 
-  // Apply to default animation
   animQueue.defaultAnimation.flippedHorizontally = flip;
 
-  // Apply to all animations in the queue
   for (auto &animObj : animQueue.animationQueue)
     animObj.flippedHorizontally = flip;
 }
@@ -88,15 +86,14 @@ auto exposeToLua(sol::state &lua) -> void {
   // 2) Bind & record free functions under animation_system
 
   rec.bind_function(lua, {"animation_system"}, "set_horizontal_flip",
-                    &animation_system::setHorizontalFlip,
+                    static_cast<void(*)(entt::entity, bool)>(&animation_system::setHorizontalFlip),
                     "---@param e entt.entity # Target entity\n"
                     "---@param flip boolean # Whether to flip horizontally\n"
                     "---@return nil\n"
                     "Flips all animations for the entity horizontally");
 
-  // update(dt: number) -> nil
   rec.bind_function(lua, {"animation_system"}, "update",
-                    &animation_system::update,
+                    static_cast<void(*)(float)>(&animation_system::update),
                     "---@param dt number # Delta time in seconds\n"
                     "---@return nil",
                     "Advances all animations by dt");
@@ -905,12 +902,12 @@ auto clearAnimationCallbacks(entt::entity e) -> void {
   }
 }
 
-auto update(float delta) -> void {
+auto update(entt::registry& registry, float delta) -> void {
   ZONE_SCOPED("Update animation system");
-  auto view = globals::getRegistry().view<AnimationQueueComponent>();
+  auto view = registry.view<AnimationQueueComponent>();
 
   for (auto &e : view) {
-    auto &ac = globals::getRegistry().get<AnimationQueueComponent>(e);
+    auto &ac = registry.get<AnimationQueueComponent>(e);
 
     // only update if enabled
     if (!ac.enabled) {
@@ -1196,4 +1193,9 @@ auto update(float delta) -> void {
     }
   }
 }
+
+auto update(float delta) -> void {
+  update(globals::getRegistry(), delta);
+}
+
 } // namespace animation_system

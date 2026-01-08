@@ -11,11 +11,12 @@ namespace animation_system {
     
     extern auto exposeToLua(sol::state &lua) -> void;
 
+    extern auto update(entt::registry& registry, float dt) -> void;
     extern auto update(float dt) -> void;
+    
     extern auto getNinepatchUIBorderInfo(std::string uuid_or_raw_identifier) -> std::tuple<NPatchInfo, Texture2D>;
     extern auto setFGColorForAllAnimationObjects(entt::entity e, Color fgColor) -> void;
     
-    // pass a function which sets up shader pipeline if desired.
     extern auto createAnimatedObjectWithTransform (std::string defaultAnimationIDOrSpriteUUID, bool generateNewAnimFromSprite = false, int x = 0, int y = 0, std::function<void(entt::entity)> shaderPassConfigFunc = [](entt::entity e){}, bool shadowEnabled = true) ->  entt::entity;
     auto replaceAnimatedObjectOnEntity(
         entt::entity                            e,
@@ -25,7 +26,6 @@ namespace animation_system {
         bool                                    shadowEnabled
     ) -> void;
     
-    // convenience function to create a still animation object from a sprite UUID
     auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg = std::nullopt, std::optional<Color> bg = std::nullopt) -> AnimationObject;
     auto setupAnimatedObjectOnEntity(
         entt::entity                            e,

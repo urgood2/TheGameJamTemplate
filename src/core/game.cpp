@@ -98,6 +98,7 @@ using std::pair;
 #include "core/ui_definitions.hpp"
 
 #include "systems/layer/layer.hpp"
+#include "core/system_registry.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/layer/layer_order_system.hpp"
@@ -1350,7 +1351,8 @@ world.SetDamping(player, 0.05f);      // velocity damping
 world.SetGlobalDamping(0.2f);         // world‑wide damping
         */
 
-        // init                                  lua main script        
+        SystemRegistry::global().initAll();
+
         luaMainInitFunc = ai_system::masterStateLua["main"]["init"];
         luaMainUpdateFunc = ai_system::masterStateLua["main"]["update"];
         luaMainDrawFunc = ai_system::masterStateLua["main"]["draw"];
@@ -1509,7 +1511,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         if (game::isPaused)
             return;
 
-        // TODO: anything that ha s
+        SystemRegistry::global().updateAll(delta);
 
         // auto viewUIBox = globals::getRegistry().view<ui::UIBoxComponent>();
         // for (auto e : viewUIBox)

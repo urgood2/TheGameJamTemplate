@@ -32,11 +32,11 @@ namespace ai_system
     extern float aiUpdateTickTotal; // running total of time passed since last tick
     extern bool resetGOAPAndLuaStateRequested;
     
-    // init must be called after json configs are loaded
     extern auto init() -> void;
     extern auto cleanup() -> void;
     extern void bind_ai_utilities(sol::state& lua);
     extern void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::string> &luaFiles);
+    extern auto updateHumanAI(entt::registry& registry, float deltaTime) -> void;
     extern auto updateHumanAI(float deltaTime) -> void;
 
     extern void replan(entt::entity entity);

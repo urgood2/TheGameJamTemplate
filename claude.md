@@ -831,6 +831,35 @@ local myUI = dsl.root {
 local boxID = dsl.spawn({ x = 200, y = 200 }, myUI)
 ```
 
+### Sprite Panels & Decorations
+
+See [docs/api/sprite-panels.md](docs/api/sprite-panels.md) for full documentation.
+
+```lua
+-- Sprite panel with nine-patch stretching
+dsl.spritePanel {
+    sprite = "ui-panel-frame.png",
+    borders = { 8, 8, 8, 8 },  -- left, top, right, bottom
+    decorations = {
+        { sprite = "corner.png", position = "top_left", offset = { -4, -4 } },
+        { sprite = "gem.png", position = "top_center", scale = { 0.6, 0.6 } },
+    },
+    children = { dsl.text("Content") }
+}
+
+-- Sprite button with 4 states
+dsl.spriteButton {
+    sprite = "button.png",  -- auto-discovers button-hover.png, button-pressed.png, etc.
+    borders = { 6, 6, 6, 6 },
+    onClick = function() print("clicked!") end,
+    children = { dsl.text("Click Me") }
+}
+```
+
+**Decoration anchors:** `top_left`, `top_center`, `top_right`, `middle_left`, `center`, `middle_right`, `bottom_left`, `bottom_center`, `bottom_right`
+
+**Decoration options:** `offset`, `scale`, `rotation`, `flip` (x/y/both), `opacity`, `tint`
+
 ---
 
 ## Content Creation

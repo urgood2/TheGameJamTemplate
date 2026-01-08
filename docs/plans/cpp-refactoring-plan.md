@@ -316,6 +316,62 @@ After migrating each system:
 3. Check no new compiler warnings
 4. Commit with message: `refactor(context): migrate XxxSystem to EngineContext`
 
+### 2.5 Migration Pattern (Implemented Example)
+
+**Example: `entity_gamestate_management` system**
+
+The migration pattern creates explicit-registry function signatures while maintaining backward compatibility:
+
+**Header changes (`entity_gamestate_management.hpp`):**
+```cpp
+// New explicit-registry versions (preferred for dependency injection)
+void emplaceOrReplaceStateTag(entt::registry &registry, entt::entity entity, const std::string &name);
+void assignDefaultStateTag(entt::registry &registry, entt::entity entity);
+bool isEntityActive(entt::registry &registry, entt::entity entity);
+
+void activate_state(entt::registry &registry, std::string_view s);
+void deactivate_state(entt::registry &registry, std::string_view s);
+void clear_states(entt::registry &registry);
+
+// Backward-compatible overloads (use globals internally)
+void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name);
+void assignDefaultStateTag(entt::entity entity);
+bool isEntityActive(entt::entity entity);
+
+void activate_state(std::string_view s);
+void deactivate_state(std::string_view s);
+void clear_states();
+```
+
+**Implementation changes (`entity_gamestate_management.cpp`):**
+```cpp
+// Explicit registry version - contains actual logic
+void emplaceOrReplaceStateTag(entt::registry &registry, entt::entity entity, const std::string &name) {
+    registry.emplace_or_replace<StateTag>(entity, name);
+    applyStateEffectsToEntity(registry, entity);
+}
+
+// Backward-compatible overload - delegates to explicit version
+void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name) {
+    emplaceOrReplaceStateTag(globals::getRegistry(), entity, name);
+}
+```
+
+**Lua bindings with overloaded functions:**
+```cpp
+// Use static_cast to disambiguate overloaded functions for Sol2
+lua.set_function("activate_state",   static_cast<void(*)(std::string_view)>(&activate_state));
+lua.set_function("deactivate_state", static_cast<void(*)(std::string_view)>(&deactivate_state));
+lua.set_function("clear_states",     static_cast<void(*)()>(&clear_states));
+lua.set_function("is_entity_active", static_cast<bool(*)(entt::entity)>(&isEntityActive));
+```
+
+**Benefits:**
+1. New code can use explicit registry injection (testable, no global state)
+2. Existing code continues to work unchanged (backward compatible)
+3. Gradual migration - convert callers one at a time
+4. Lua bindings remain unchanged (use backward-compatible overloads)
+
 ---
 
 ## Phase 3: Include Explosion Fix

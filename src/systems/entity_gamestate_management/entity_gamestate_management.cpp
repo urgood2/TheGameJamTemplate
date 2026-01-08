@@ -107,52 +107,76 @@ bool hasAllTagNames(const std::vector<std::string>& tags) {
 }
 
 //-----------------------------------------------------------------------------
-// Entity tag helpers
+// Entity tag helpers - explicit registry versions
 //-----------------------------------------------------------------------------
-void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name) {
-    auto& registry = globals::getRegistry();
+void emplaceOrReplaceStateTag(entt::registry &registry, entt::entity entity, const std::string &name) {
     registry.emplace_or_replace<StateTag>(entity, name);
     applyStateEffectsToEntity(registry, entity);
 }
 
-void assignDefaultStateTag(entt::entity entity) {
-    auto& registry = globals::getRegistry();
+void assignDefaultStateTag(entt::registry &registry, entt::entity entity) {
     registry.emplace_or_replace<StateTag>(entity, DEFAULT_STATE_TAG);
     applyStateEffectsToEntity(registry, entity);
 }
 
-bool isEntityActive(entt::entity entity) {
-    auto &registry = globals::getRegistry();
+bool isEntityActive(entt::registry &registry, entt::entity entity) {
     if (!registry.all_of<StateTag>(entity)) return false;
     const auto &tag = registry.get<StateTag>(entity);
     return is_active(tag);
 }
 
 //-----------------------------------------------------------------------------
-// State activation/deactivation
+// Entity tag helpers - backward-compatible overloads
 //-----------------------------------------------------------------------------
-void activate_state(std::string_view s) { 
+void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name) {
+    emplaceOrReplaceStateTag(globals::getRegistry(), entity, name);
+}
+
+void assignDefaultStateTag(entt::entity entity) {
+    assignDefaultStateTag(globals::getRegistry(), entity);
+}
+
+bool isEntityActive(entt::entity entity) {
+    return isEntityActive(globals::getRegistry(), entity);
+}
+
+//-----------------------------------------------------------------------------
+// State activation/deactivation - explicit registry versions
+//-----------------------------------------------------------------------------
+void activate_state(entt::registry &registry, std::string_view s) { 
     active_states_instance().activate(std::string{s}); 
-    auto& registry = globals::getRegistry();
     auto view = registry.view<StateTag>();
     for (auto entity : view)
         applyStateEffectsToEntity(registry, entity);
+}
+
+void deactivate_state(entt::registry &registry, std::string_view s) { 
+    active_states_instance().deactivate(std::string{s}); 
+    auto view = registry.view<StateTag>();
+    for (auto entity : view)
+        applyStateEffectsToEntity(registry, entity);
+}
+
+void clear_states(entt::registry &registry) { 
+    active_states_instance().clear(); 
+    auto view = registry.view<StateTag>();
+    for (auto entity : view)
+        applyStateEffectsToEntity(registry, entity);
+}
+
+//-----------------------------------------------------------------------------
+// State activation/deactivation - backward-compatible overloads
+//-----------------------------------------------------------------------------
+void activate_state(std::string_view s) { 
+    activate_state(globals::getRegistry(), s);
 }
 
 void deactivate_state(std::string_view s) { 
-    active_states_instance().deactivate(std::string{s}); 
-    auto& registry = globals::getRegistry();
-    auto view = registry.view<StateTag>();
-    for (auto entity : view)
-        applyStateEffectsToEntity(registry, entity);
+    deactivate_state(globals::getRegistry(), s);
 }
 
 void clear_states() { 
-    active_states_instance().clear(); 
-    auto& registry = globals::getRegistry();
-    auto view = registry.view<StateTag>();
-    for (auto entity : view)
-        applyStateEffectsToEntity(registry, entity);
+    clear_states(globals::getRegistry());
 }
 
 bool is_state_active(const StateTag &t) { 
@@ -333,14 +357,14 @@ void exposeToLua(sol::state &lua) {
 
     lua["active_states"] = &active_states;
 
-    lua.set_function("activate_state",   &activate_state);
-    lua.set_function("deactivate_state", &deactivate_state);
-    lua.set_function("clear_states",     &clear_states);
+    lua.set_function("activate_state",   static_cast<void(*)(std::string_view)>(&activate_state));
+    lua.set_function("deactivate_state", static_cast<void(*)(std::string_view)>(&deactivate_state));
+    lua.set_function("clear_states",     static_cast<void(*)()>(&clear_states));
     lua.set_function("is_state_active",  sol::overload(
         &is_state_active,
         &is_state_active_name
     ));
-    lua.set_function("is_entity_active", &isEntityActive);
+    lua.set_function("is_entity_active", static_cast<bool(*)(entt::entity)>(&isEntityActive));
     
     lua.set_function("hasAnyTag", sol::overload(
         &hasAnyTag,

@@ -59,6 +59,16 @@ bool hasAllTags(const StateTag& tag);
 bool hasAnyTagNames(const std::vector<std::string>& tags);
 bool hasAllTagNames(const std::vector<std::string>& tags);
 
+// New explicit-registry versions (preferred for dependency injection)
+void emplaceOrReplaceStateTag(entt::registry &registry, entt::entity entity, const std::string &name);
+void assignDefaultStateTag(entt::registry &registry, entt::entity entity);
+bool isEntityActive(entt::registry &registry, entt::entity entity);
+
+void activate_state(entt::registry &registry, std::string_view s);
+void deactivate_state(entt::registry &registry, std::string_view s);
+void clear_states(entt::registry &registry);
+
+// Backward-compatible overloads (use globals internally)
 void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name);
 void assignDefaultStateTag(entt::entity entity);
 bool isEntityActive(entt::entity entity);

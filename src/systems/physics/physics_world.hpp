@@ -17,6 +17,7 @@
 
 namespace physics {
   
+  extern void SetSensor(entt::registry& registry, entt::entity e, bool isSensor);
   extern void SetSensor(entt::entity e, bool isSensor);
   
   // Public POD we expose to Lua

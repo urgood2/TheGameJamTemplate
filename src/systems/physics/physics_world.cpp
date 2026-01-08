@@ -1155,8 +1155,8 @@ bool PhysicsWorld::RemoveShapeAt(entt::entity e, size_t index) {
   return true;
 }
 
-void SetSensor(entt::entity e, bool isSensor) {
-  auto &c = globals::getRegistry().get<ColliderComponent>(e);
+void SetSensor(entt::registry& registry, entt::entity e, bool isSensor) {
+  auto &c = registry.get<ColliderComponent>(e);
   if (c.shape) {
     cpShapeSetSensor(c.shape.get(), isSensor);
   }
@@ -1164,6 +1164,10 @@ void SetSensor(entt::entity e, bool isSensor) {
     if (s.shape)
       cpShapeSetSensor(s.shape.get(), isSensor);
   }
+}
+
+void SetSensor(entt::entity e, bool isSensor) {
+  SetSensor(globals::getRegistry(), e, isSensor);
 }
 
 void PhysicsWorld::ClearAllShapes(entt::entity e) {

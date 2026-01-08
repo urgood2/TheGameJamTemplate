@@ -7,38 +7,25 @@
 
 #include "variables.hpp"
 
-// call this method to initialize the line of sight system using global variables.
 /**
- * An entity with line of sight must have the 
- * 
- * hasVisionComponent active. 
- * 
+ * An entity with line of sight must have the hasVisionComponent active.
  * auto &visionComp = registry.emplace<HasVisionComponent>(combatant1);
- * 
  * Tiles on the map which block light should have the BlocksLightComponent.
- * 
- * Updates to visibility are seemingly done with myVisibility->Compute.
+ * Updates to visibility are done with myVisibility->Compute.
  */
-auto initLineOfSight() -> void {
-    auto& registry = globals::getRegistry();
-    // init visibility map
+auto initLineOfSight(entt::registry& registry) -> void {
     globals::getGlobalVisibilityMap() = std::vector<std::vector<uint8_t>>(globals::getWorldWidth(), std::vector<uint8_t>(globals::getWorldHeight(), 0));
 
-    // init visibility functions
-    los::MyVisibility::ActionSetVisible actionSetVisible = [&](int x, int y) {
+    los::MyVisibility::ActionSetVisible actionSetVisible = [](int x, int y) {
         if (x >= 0 && x < globals::getWorldWidth() && y >= 0 && y < globals::getWorldHeight()) {
-            globals::getGlobalVisibilityMap()[x][y] = 1;  // Mark the tile as visible (use 1/0 instead of true/false)
+            globals::getGlobalVisibilityMap()[x][y] = 1;
         }
     };
 
-    los::MyVisibility::FuncBlocksLight blocksLight = [&](int x, int y) {
-        auto& registry = globals::getRegistry();
-
-        // check if x or y is out of bounds
+    los::MyVisibility::FuncBlocksLight blocksLight = [&registry](int x, int y) {
         if (x < 0 || x >= globals::getWorldWidth() || y < 0 || y >= globals::getWorldHeight()) {
             return true;
         }
-        // check if the tile and anything on the tile blocks light
         auto &tileComp = registry.get<TileComponent>(globals::map[x][y]);
         if (tileComp.blocksLight) {
             return true;
@@ -60,13 +47,16 @@ auto initLineOfSight() -> void {
 
     myVisibility = std::make_shared<los::MyVisibility>(los::MyVisibility(blocksLight, actionSetVisible, getDistance));
 
-    // initial update for visibility map
     auto visView = registry.view<HasVisionComponent, LocationComponent>();
     for (auto entity : visView) {
         auto &loc = visView.get<LocationComponent>(entity);
         auto &visionComp = visView.get<HasVisionComponent>(entity);
         myVisibility->Compute({(int)loc.x, (int)loc.y}, visionComp.visionRange);
     }
+}
+
+auto initLineOfSight() -> void {
+    initLineOfSight(globals::getRegistry());
 }
 
 namespace los

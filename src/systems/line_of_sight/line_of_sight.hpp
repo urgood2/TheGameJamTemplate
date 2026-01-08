@@ -1,6 +1,8 @@
 #pragma once
 #include <functional>
+#include <entt/entt.hpp>
 
+extern auto initLineOfSight(entt::registry& registry) -> void;
 extern auto initLineOfSight() -> void;
 
 namespace los

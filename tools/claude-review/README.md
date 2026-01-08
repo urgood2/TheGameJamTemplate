@@ -15,25 +15,51 @@ When Claude proposes changes you want to annotate:
 
 ## Manual Usage
 
+### Basic (Single Session)
+
 ```bash
-# Prepare review data
-python3 ~/.claude-review/prepare_review.py <file_path> \
-    --original <original_file> \
-    --proposed <proposed_file>
+# Prepare review data (creates isolated session)
+python3 ~/.claude-review/prepare_review.py myfile.lua \
+    --original /tmp/original.lua \
+    --proposed /tmp/proposed.lua
+# Output: Session ID: 20260108-103500-abc12345
 
-# Start review server
-python3 ~/.claude-review/server.py
-
-# Or with options
-python3 ~/.claude-review/server.py --port 4000 --no-browser
+# Start review server for that session
+python3 ~/.claude-review/server.py --session 20260108-103500-abc12345
 ```
+
+### Concurrent Sessions (Multiple Terminals)
+
+Each invocation creates an isolated session, so you can run multiple reviews simultaneously:
+
+```bash
+# Terminal 1
+python3 ~/.claude-review/prepare_review.py file1.lua --original a.lua --proposed b.lua
+# Session ID: 20260108-103500-abc12345
+python3 ~/.claude-review/server.py --session 20260108-103500-abc12345
+# → Runs on port 3456
+
+# Terminal 2 (at the same time)
+python3 ~/.claude-review/prepare_review.py file2.lua --original c.lua --proposed d.lua
+# Session ID: 20260108-103501-def67890
+python3 ~/.claude-review/server.py --session 20260108-103501-def67890
+# → Automatically finds port 3457
+```
+
+**Concurrency features:**
+- **Session isolation** - Each review gets its own directory under `~/.claude-review/sessions/<id>/`
+- **Automatic port discovery** - If port 3456 is taken, finds the next available port
+- **File locking** - Prevents two servers from accessing the same session
+- **Atomic writes** - Feedback files are written atomically to prevent corruption
 
 ## CLI Options
 
 **server.py:**
-- `--port PORT` - Server port (default: 3456)
+- `--session ID` - Session ID to serve (uses `~/.claude-review/sessions/<id>/`)
+- `--port PORT` - Preferred port (default: 3456, auto-discovers next if taken)
 - `--no-browser` - Don't auto-open browser
 - `--no-shutdown` - Don't shutdown after feedback submission
+- `--test-dir DIR` - Override directory (bypasses session system, for testing)
 
 **prepare_review.py:**
 - `--original FILE` - File with original content
@@ -41,11 +67,12 @@ python3 ~/.claude-review/server.py --port 4000 --no-browser
 - `--original-text TEXT` - Original content as string
 - `--proposed-text TEXT` - Proposed content as string
 - `--diff FILE` - Optional diff file
-- `--output-dir DIR` - Custom output directory
+- `--session ID` - Use existing session ID instead of creating new one
+- `--output-dir DIR` - Custom output directory (bypasses session system, for testing)
 
 ## Feedback Format
 
-After submitting, feedback is saved to `~/.claude-review/feedback.json`:
+After submitting, feedback is saved to the session directory:
 
 ```json
 {
@@ -73,12 +100,24 @@ After submitting, feedback is saved to `~/.claude-review/feedback.json`:
 
 ```
 ~/.claude-review/
-├── server.py           # Review server
-├── prepare_review.py   # Prepare review data
-├── pending_meta.json   # Current review data
-├── pending.diff        # Optional diff file
-├── feedback.json       # Latest feedback
-└── history/            # Archived reviews
+├── sessions/                    # Isolated review sessions
+│   └── 20260108-103500-abc123/  # Session directory
+│       ├── .lock                # Session lock file
+│       ├── pending_meta.json    # Review data
+│       ├── pending.diff         # Optional diff
+│       ├── feedback.json        # Submitted feedback
+│       └── history/             # Archived reviews
+├── server.py                    # Review server (legacy location)
+└── prepare_review.py            # Prepare script (legacy location)
+```
+
+## Legacy Mode
+
+For backward compatibility, running without `--session` uses the old shared directory:
+
+```bash
+# Old behavior (not concurrent-safe)
+python3 ~/.claude-review/server.py
 ```
 
 ## Running Tests

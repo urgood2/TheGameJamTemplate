@@ -1,18 +1,79 @@
 #!/usr/bin/env python3
-"""Claude Code Annotation Review Server"""
+"""Claude Code Annotation Review Server with concurrent session support."""
 
 import argparse
+import fcntl
 import http.server
 import json
+import os
 import signal
+import socket
 import socketserver
 import sys
+import tempfile
 import threading
+import uuid
 import webbrowser
 from pathlib import Path
 
 DEFAULT_PORT = 3456
 DEFAULT_REVIEW_DIR = Path.home() / ".claude-review"
+SESSIONS_DIR = DEFAULT_REVIEW_DIR / "sessions"
+
+
+def find_available_port(start_port: int, max_attempts: int = 100) -> int:
+    """Find an available port starting from start_port.
+
+    If start_port is available, use it. Otherwise, try subsequent ports.
+    This is safer than port 0 because it provides predictable behavior.
+    """
+    for offset in range(max_attempts):
+        port = start_port + offset
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(("", port))
+                return port
+        except OSError:
+            continue
+    raise RuntimeError(f"Could not find available port in range {start_port}-{start_port + max_attempts}")
+
+
+def atomic_write_json(path: Path, data: dict) -> None:
+    """Write JSON atomically using temp file + rename pattern."""
+    fd, temp_path = tempfile.mkstemp(
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, 'w') as f:
+            json.dump(data, f, indent=2)
+        os.rename(temp_path, path)
+    except:
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
+        raise
+
+
+def acquire_session_lock(session_dir: Path) -> int:
+    """Acquire an exclusive lock on the session directory.
+
+    Returns the file descriptor for the lock file (caller must keep it open).
+    """
+    lock_file = session_dir / ".lock"
+    fd = os.open(str(lock_file), os.O_RDWR | os.O_CREAT)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return fd
+    except BlockingIOError:
+        os.close(fd)
+        raise RuntimeError(f"Session {session_dir.name} is locked by another process")
+
+
+def get_session_dir(session_id: str) -> Path:
+    """Get the directory for a specific session."""
+    return SESSIONS_DIR / session_id
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -1235,15 +1296,31 @@ class ReviewHandler(http.server.BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         feedback = json.loads(post_data.decode("utf-8"))
 
+        # Atomic write to feedback.json
         feedback_path = self.review_dir / "feedback.json"
-        feedback_path.write_text(json.dumps(feedback, indent=2))
+        atomic_write_json(feedback_path, feedback)
 
+        # Archive with collision-resistant naming:
+        # - Full timestamp with microseconds
+        # - UUID suffix for guaranteed uniqueness
+        # - Full relative path hash to distinguish files with same name
         history_dir = self.review_dir / "history"
         history_dir.mkdir(exist_ok=True)
+
         timestamp = feedback["reviewed_at"].replace(":", "-").replace(".", "-")
-        filename = Path(feedback["file"]).stem
-        archive_path = history_dir / f"{timestamp[:19]}-{filename}.json"
-        archive_path.write_text(json.dumps(feedback, indent=2))
+        file_path = feedback.get("file", "unknown")
+        filename = Path(file_path).stem
+
+        # Use first 8 chars of UUID for uniqueness (handles same-second submissions)
+        unique_suffix = uuid.uuid4().hex[:8]
+
+        # Include path hash to distinguish files with same name in different dirs
+        # e.g., src/index.lua vs lib/index.lua both have stem "index"
+        path_hash = hex(hash(file_path) & 0xFFFF)[2:]  # 4-char hash
+
+        archive_name = f"{timestamp[:19]}-{filename}-{path_hash}-{unique_suffix}.json"
+        archive_path = history_dir / archive_name
+        atomic_write_json(archive_path, feedback)
 
         self.send_response(200)
         self.send_header("Content-type", "application/json")
@@ -1261,7 +1338,7 @@ class ReviewHandler(http.server.BaseHTTPRequestHandler):
 def main():
     parser = argparse.ArgumentParser(description="Claude Code Review Server")
     parser.add_argument(
-        "--port", type=int, default=DEFAULT_PORT, help="Port to serve on"
+        "--port", type=int, default=DEFAULT_PORT, help="Preferred port (will find next available if taken)"
     )
     parser.add_argument(
         "--no-browser", action="store_true", help="Do not open browser automatically"
@@ -1272,39 +1349,91 @@ def main():
         help="Do not shutdown after feedback (for testing)",
     )
     parser.add_argument(
-        "--test-dir", type=str, help="Override review directory (for testing)"
+        "--test-dir", type=str, help="Override review directory (for testing, bypasses sessions)"
+    )
+    parser.add_argument(
+        "--session", type=str, help="Session ID to serve (uses ~/.claude-review/sessions/<id>)"
     )
     args = parser.parse_args()
 
-    review_dir = Path(args.test_dir) if args.test_dir else DEFAULT_REVIEW_DIR
+    # Determine review directory
+    lock_fd = None
+    if args.test_dir:
+        # Testing mode - bypass session system
+        review_dir = Path(args.test_dir)
+    elif args.session:
+        # Session mode - use specific session directory
+        review_dir = get_session_dir(args.session)
+        if not review_dir.exists():
+            print(f"[server] Session not found: {args.session}")
+            print(f"[server] Expected directory: {review_dir}")
+            sys.exit(1)
+        # Acquire session lock
+        try:
+            lock_fd = acquire_session_lock(review_dir)
+            print(f"[server] Acquired lock for session: {args.session}")
+        except RuntimeError as e:
+            print(f"[server] Error: {e}")
+            sys.exit(1)
+    else:
+        # Legacy mode - use default directory (backward compatible)
+        review_dir = DEFAULT_REVIEW_DIR
+
     review_dir.mkdir(parents=True, exist_ok=True)
 
     meta_path = review_dir / "pending_meta.json"
     if not meta_path.exists():
         print("[server] No pending changes to review.")
         print(f"[server] Create {meta_path} with change data first.")
+        if lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
         sys.exit(1)
 
     ReviewHandler.review_dir = review_dir
     ReviewHandler.shutdown_on_feedback = not args.no_shutdown
 
-    server = socketserver.TCPServer(("", args.port), ReviewHandler)
+    # Find available port (handles concurrent server instances)
+    try:
+        port = find_available_port(args.port)
+        if port != args.port:
+            print(f"[server] Port {args.port} in use, using {port} instead")
+    except RuntimeError as e:
+        print(f"[server] Error: {e}")
+        if lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
+        sys.exit(1)
+
+    # Create server with the found port
+    server = socketserver.TCPServer(("", port), ReviewHandler)
     server.allow_reuse_address = True
 
     def signal_handler(sig, frame):
         print("\n[server] Shutting down...")
         server.shutdown()
+        # Release session lock if held
+        if lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    print(f"[server] Review server running at http://localhost:{args.port}")
+    session_info = f" (session: {args.session})" if args.session else ""
+    print(f"[server] Review server running at http://localhost:{port}{session_info}")
 
     if not args.no_browser:
-        webbrowser.open(f"http://localhost:{args.port}")
+        webbrowser.open(f"http://localhost:{port}")
 
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    finally:
+        # Release session lock on exit
+        if lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
 
 
 if __name__ == "__main__":

@@ -90,8 +90,8 @@ function Showcase.createDecorationsDemo()
                     { sprite = "ornate-corner-test.png", position = "bottom_left", offset = { -8, 8 }, flip = "y" },
                     { sprite = "ornate-corner-test.png", position = "bottom_right", offset = { 8, 8 }, flip = "both" },
                     
-                    -- Gem decoration at top center
-                    { sprite = "test-gem-ui-decor.png", position = "top_center", offset = { 0, -16 } },
+                    -- Gem decoration at top center (scaled to 60%, doesn't affect layout)
+                    { sprite = "test-gem-ui-decor.png", position = "top_center", offset = { 0, -14 }, scale = { 0.6, 0.6 } },
                 },
                 children = {
                     dsl.text("Ornate corners!", { fontSize = 12, color = "white" }),
@@ -130,7 +130,7 @@ function Showcase.createDividerDemo()
                     
                     dsl.spacer(16),
                     
-                    -- Divider as decoration on a panel
+                    -- Divider as decoration (arbitrary position, ignores layout)
                     dsl.vbox {
                         config = { padding = 2 },
                         children = {
@@ -140,13 +140,15 @@ function Showcase.createDividerDemo()
                                 sprite = "ui-decor-test-2.png",
                                 borders = { 6, 6, 6, 6 },
                                 minWidth = 80,
-                                minHeight = 60,
+                                minHeight = 70,
                                 padding = 8,
                                 decorations = {
-                                    { sprite = "test-divider.png", position = "bottom_center", offset = { 0, 12 } },
+                                    { sprite = "test-divider.png", position = "middle_left", offset = { -30, 0 } },
+                                    { sprite = "test-divider.png", position = "bottom_center", offset = { 0, 16 } },
                                 },
                                 children = {
-                                    dsl.text("Panel", { fontSize = 10, color = "white" })
+                                    dsl.text("Panel", { fontSize = 10, color = "white" }),
+                                    dsl.text("(decor outside)", { fontSize = 8, color = "cyan" })
                                 }
                             }
                         }

@@ -158,6 +158,7 @@ local function processSpriteButtonFields(tbl, builder)
     builder:addStylingType(UIStylingType.NinePatchBorders)
     builder:addNPatchInfo(nPatchInfo)
     builder:addNPatchSourceTexture(atlasTexture)
+    builder:addColor(Col(255, 255, 255, 255))
     
     log_debug("[ui.def] Configured spriteButton with sprite: " .. spriteName)
     return true

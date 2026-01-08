@@ -711,6 +711,12 @@ function InventoryGridDemo.toggleSort(sortKey)
     InventoryGridDemo.updateSortButtonLabels()
 end
 
+local function getCardData(eid)
+    local script = getScriptTableFromEntityID and getScriptTableFromEntityID(eid)
+    if script then return script end
+    return demoState.cardRegistry[eid]
+end
+
 function InventoryGridDemo.applySorting()
     local activeGrid = demoState.grids[demoState.activeTab]
     if not demoState.sortBy or not activeGrid then return end
@@ -727,16 +733,16 @@ function InventoryGridDemo.applySorting()
     local itemsWithData = {}
     for _, itemEntry in ipairs(items) do
         local entity = itemEntry.item
-        local script = getScriptTableFromEntityID(entity)
-        if script then
-            table.insert(itemsWithData, {
-                entity = entity,
-                slotIndex = itemEntry.slot,
-                name = script.name or "",
-                element = script.element or "",
-            })
-        end
+        local cardData = getCardData(entity)
+        table.insert(itemsWithData, {
+            entity = entity,
+            slotIndex = itemEntry.slot,
+            name = cardData and cardData.name or "",
+            element = cardData and cardData.element or "",
+        })
     end
+    
+    log_debug("[Demo] Sorting " .. #itemsWithData .. " items by " .. demoState.sortBy)
     
     local sortKey = demoState.sortBy
     local ascending = demoState.sortAscending
@@ -757,7 +763,13 @@ function InventoryGridDemo.applySorting()
     
     local targetSlot = 1
     for _, item in ipairs(itemsWithData) do
-        while grid.isSlotLocked(activeGrid, targetSlot) and targetSlot <= maxSlots do
+        while targetSlot <= maxSlots do
+            local slotData = cfg.slots and cfg.slots[targetSlot]
+            local isLocked = grid.isSlotLocked(activeGrid, targetSlot)
+            local hasFilter = slotData and slotData.filter
+            if not isLocked and not hasFilter then
+                break
+            end
             targetSlot = targetSlot + 1
         end
         if targetSlot <= maxSlots then

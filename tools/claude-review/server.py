@@ -36,18 +36,18 @@ def find_available_port(start_port: int, max_attempts: int = 100) -> int:
                 return port
         except OSError:
             continue
-    raise RuntimeError(f"Could not find available port in range {start_port}-{start_port + max_attempts}")
+    raise RuntimeError(
+        f"Could not find available port in range {start_port}-{start_port + max_attempts}"
+    )
 
 
 def atomic_write_json(path: Path, data: dict) -> None:
     """Write JSON atomically using temp file + rename pattern."""
     fd, temp_path = tempfile.mkstemp(
-        dir=path.parent,
-        prefix=f".{path.name}.",
-        suffix=".tmp"
+        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
     )
     try:
-        with os.fdopen(fd, 'w') as f:
+        with os.fdopen(fd, "w") as f:
             json.dump(data, f, indent=2)
         os.rename(temp_path, path)
     except:
@@ -75,6 +75,7 @@ def get_session_dir(session_id: str) -> Path:
     """Get the directory for a specific session."""
     return SESSIONS_DIR / session_id
 
+
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,6 +85,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+    <!-- Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -610,6 +613,273 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             background: rgba(240, 180, 41, 0.6);
             box-shadow: 0 0 0 2px rgba(240, 180, 41, 0.3);
         }
+
+        /* Markdown rendering styles */
+        .markdown-body {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3,
+        .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            line-height: 1.25;
+            color: #ffffff;
+        }
+        .markdown-body h1 { font-size: 1.5em; border-bottom: 1px solid #3c3c3c; padding-bottom: 4px; }
+        .markdown-body h2 { font-size: 1.3em; border-bottom: 1px solid #3c3c3c; padding-bottom: 4px; }
+        .markdown-body h3 { font-size: 1.15em; }
+        .markdown-body h4 { font-size: 1em; }
+        .markdown-body p {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .markdown-body p:last-child {
+            margin-bottom: 0;
+        }
+        .markdown-body code {
+            background: #2d2d2d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.9em;
+            color: #e6db74;
+        }
+        .markdown-body pre {
+            background: #1a1a1a;
+            border: 1px solid #3c3c3c;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 12px;
+            color: #d4d4d4;
+        }
+        .markdown-body ul, .markdown-body ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        .markdown-body li {
+            margin: 4px 0;
+        }
+        .markdown-body li > p {
+            margin: 0;
+        }
+        .markdown-body blockquote {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-left: 4px solid #0e639c;
+            background: rgba(14, 99, 156, 0.1);
+            color: #a0c4e8;
+        }
+        .markdown-body blockquote p {
+            margin: 0;
+        }
+        .markdown-body a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+        .markdown-body strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .markdown-body em {
+            font-style: italic;
+            color: #c0c0c0;
+        }
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid #3c3c3c;
+            margin: 12px 0;
+        }
+        .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .markdown-body th, .markdown-body td {
+            border: 1px solid #3c3c3c;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        .markdown-body th {
+            background: #2d2d2d;
+            font-weight: 600;
+        }
+
+        /* Comment type badges - functional visual flair */
+        .comment-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .comment-type-badge.suggestion {
+            background: rgba(88, 166, 255, 0.2);
+            color: #58a6ff;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+        }
+        .comment-type-badge.issue {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+        .comment-type-badge.praise {
+            background: rgba(137, 209, 133, 0.2);
+            color: #89d185;
+            border: 1px solid rgba(137, 209, 133, 0.3);
+        }
+        .comment-type-badge.question {
+            background: rgba(210, 153, 34, 0.2);
+            color: #d29922;
+            border: 1px solid rgba(210, 153, 34, 0.3);
+        }
+        .comment-type-badge.nitpick {
+            background: rgba(139, 148, 158, 0.2);
+            color: #8b949e;
+            border: 1px solid rgba(139, 148, 158, 0.3);
+        }
+        .comment-type-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Enhanced comment card styling */
+        .comment-card {
+            background: #1e1e1e;
+            border: 1px solid #3c3c3c;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .comment-card:hover {
+            border-color: #4c4c4c;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .comment-card .selection {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 11px;
+            color: #6e7681;
+            background: #2d2d2d;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-left: 3px solid #f0b429;
+        }
+        .comment-card .text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+        .comment-card .delete-btn {
+            font-size: 11px;
+            color: #f85149;
+            cursor: pointer;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .comment-card:hover .delete-btn {
+            opacity: 0.7;
+        }
+        .comment-card .delete-btn:hover {
+            opacity: 1;
+        }
+
+        /* Speech balloon enhanced */
+        .speech-balloon {
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #252526;
+            border: 1px solid #4c4c4c;
+            border-radius: 10px;
+            padding: 14px 16px;
+            max-width: 380px;
+            min-width: 200px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .speech-balloon .balloon-comment {
+            margin-bottom: 12px;
+        }
+        .speech-balloon .balloon-comment:last-child {
+            margin-bottom: 0;
+        }
+        .speech-balloon .balloon-selection {
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 11px;
+            color: #6e7681;
+            background: #1e1e1e;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-left: 3px solid #f0b429;
+        }
+
+        /* Markdown preview panes */
+        .preview-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+        }
+        .preview-pane {
+            flex: 1;
+            overflow: auto;
+            background: #1e1e1e;
+        }
+        .preview-pane.original {
+            border-right: 1px solid #3c3c3c;
+        }
+        .preview-content {
+            padding: 24px;
+            max-width: 900px;
+        }
+        .preview-content img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+        .preview-content h1:first-child,
+        .preview-content h2:first-child {
+            margin-top: 0;
+        }
+        .preview-comment-highlight {
+            background: rgba(240, 180, 41, 0.3);
+            border-bottom: 2px solid #f0b429;
+            padding: 2px 0;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background 0.15s;
+        }
+        .preview-comment-highlight:hover {
+            background: rgba(240, 180, 41, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -619,6 +889,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="view-toggle">
             <button class="active" data-view="side">Split</button>
             <button data-view="unified">Unified</button>
+            <button data-view="preview" id="previewBtn" style="display:none;">Preview</button>
         </div>
     </div>
 
@@ -635,6 +906,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div class="code-block" id="proposedCode"></div>
             </div>
         </div>
+        <div class="preview-container" id="previewContainer" style="display:none;">
+            <div class="preview-pane original">
+                <div class="pane-header removed">− Original</div>
+                <div class="preview-content markdown-body" id="originalPreview"></div>
+            </div>
+            <div class="preview-pane proposed">
+                <div class="pane-header added">+ Proposed</div>
+                <div class="preview-content markdown-body" id="proposedPreview"></div>
+            </div>
+        </div>
 
         <div class="comments-sidebar">
             <div class="sidebar-header">Comments</div>
@@ -642,8 +923,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div class="no-comments">Select text to add comments</div>
             </div>
             <div class="general-comment">
-                <label>General feedback</label>
-                <textarea id="generalComment" placeholder="Overall thoughts..."></textarea>
+                <label>General feedback (Markdown supported)</label>
+                <textarea id="generalComment" placeholder="Overall thoughts... **bold**, `code`, - lists"></textarea>
             </div>
         </div>
     </div>
@@ -658,8 +939,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="comment-popup" id="commentPopup">
-        <textarea id="commentInput" placeholder="Add your comment..."></textarea>
-        <div class="hint">⌘+Enter to save</div>
+        <textarea id="commentInput" placeholder="Add your comment... (Markdown supported)"></textarea>
+        <div class="hint">⌘+Enter to save · Markdown supported: **bold**, `code`, - lists</div>
         <div class="btn-row">
             <button class="btn" id="cancelComment">Cancel</button>
             <button class="btn primary" id="saveComment">Save</button>
@@ -667,23 +948,160 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <script>
-        // Multi-file support
-        let files = [];           // Array of file objects
-        let currentFileIndex = 0; // Currently viewed file
-        let commentsByFile = {};  // { filepath: [comments] }
+        let files = [];
+        let currentFileIndex = 0;
+        let commentsByFile = {};
         let currentSelection = null;
         let currentView = 'side';
         let diffResult = null;
 
-        // View toggle
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false
+        });
+
+        function renderMarkdown(text) {
+            if (!text) return '';
+            try {
+                return marked.parse(text);
+            } catch (e) {
+                console.error('Markdown parse error:', e);
+                return escapeHtml(text);
+            }
+        }
+
+        function detectCommentType(text) {
+            const lower = text.toLowerCase();
+            const firstLine = lower.split('\\n')[0];
+            
+            if (/^(issue|bug|error|problem|wrong|broken|fix)[:!\\s]/i.test(firstLine) || 
+                /\\b(should not|shouldn't|must not|mustn't|breaks?|crash|fail)\\b/i.test(firstLine)) {
+                return { type: 'issue', icon: '⚠', label: 'Issue' };
+            }
+            if (/^(suggest|consider|maybe|could|might|alternatively|idea)[:!\\s]/i.test(firstLine) ||
+                /\\b(would be better|try using|recommend)\\b/i.test(firstLine)) {
+                return { type: 'suggestion', icon: '💡', label: 'Suggestion' };
+            }
+            if (/^(nice|good|great|love|excellent|perfect|awesome|well done|\\+1|👍)[:!\\s]?/i.test(firstLine) ||
+                /\\b(looks good|well done|nice work)\\b/i.test(firstLine)) {
+                return { type: 'praise', icon: '✓', label: 'Praise' };
+            }
+            if (/^(question|why|how|what|is this|does this|\\?)[:!\\s]/i.test(firstLine) ||
+                firstLine.includes('?')) {
+                return { type: 'question', icon: '?', label: 'Question' };
+            }
+            if (/^(nit|nitpick|minor|tiny|small)[:!\\s]/i.test(firstLine) ||
+                /\\b(optional|not important|low priority)\\b/i.test(firstLine)) {
+                return { type: 'nitpick', icon: '·', label: 'Nitpick' };
+            }
+            return null;
+        }
+
+        function renderCommentTypeBadge(text) {
+            const typeInfo = detectCommentType(text);
+            if (!typeInfo) return '';
+            return `<span class="comment-type-badge ${typeInfo.type}">${typeInfo.icon} ${typeInfo.label}</span>`;
+        }
+
+        function isMarkdownFile() {
+            const file = getCurrentFile();
+            if (!file) return false;
+            const ext = file.file_type?.toLowerCase();
+            return ext === 'md' || ext === 'markdown' || file.file_path?.endsWith('.md');
+        }
+
+        function updatePreviewButton() {
+            const previewBtn = document.getElementById('previewBtn');
+            previewBtn.style.display = isMarkdownFile() ? 'inline-block' : 'none';
+        }
+
+        function renderPreview() {
+            const file = getCurrentFile();
+            if (!file) return;
+            document.getElementById('originalPreview').innerHTML = renderMarkdown(file.original_content || '');
+            document.getElementById('proposedPreview').innerHTML = renderMarkdown(file.proposed_content || '');
+            renderPreviewCommentHighlights();
+        }
+
+        function renderPreviewCommentHighlights() {
+            const comments = getCurrentComments();
+            if (comments.length === 0) return;
+
+            const previewEl = document.getElementById('proposedPreview');
+            
+            comments.forEach((c, idx) => {
+                if (c.selected_text) {
+                    highlightTextInPreview(previewEl, c.selected_text, idx, c.comment);
+                }
+            });
+        }
+
+        function highlightTextInPreview(container, searchText, commentIndex, commentText) {
+            if (!searchText || searchText.length < 2) return;
+            
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+            let node;
+            while (node = walker.nextNode()) {
+                textNodes.push(node);
+            }
+
+            for (const textNode of textNodes) {
+                const nodeText = textNode.textContent;
+                const matchIndex = nodeText.indexOf(searchText);
+                
+                if (matchIndex !== -1) {
+                    const before = nodeText.substring(0, matchIndex);
+                    const match = nodeText.substring(matchIndex, matchIndex + searchText.length);
+                    const after = nodeText.substring(matchIndex + searchText.length);
+
+                    const wrapper = document.createElement('span');
+                    wrapper.className = 'preview-comment-highlight';
+                    wrapper.dataset.commentIndex = commentIndex;
+                    wrapper.textContent = match;
+                    wrapper.title = commentText.substring(0, 100) + (commentText.length > 100 ? '...' : '');
+                    
+                    wrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const card = document.querySelector(`.comment-card[data-comment-idx="${commentIndex}"]`);
+                        if (card) {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            card.style.outline = '2px solid #f0b429';
+                            setTimeout(() => card.style.outline = '', 2000);
+                        }
+                    });
+
+                    const parent = textNode.parentNode;
+                    if (before) parent.insertBefore(document.createTextNode(before), textNode);
+                    parent.insertBefore(wrapper, textNode);
+                    if (after) parent.insertBefore(document.createTextNode(after), textNode);
+                    parent.removeChild(textNode);
+                    break;
+                }
+            }
+        }
+
         document.querySelectorAll('.view-toggle button').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentView = btn.dataset.view;
-                const container = document.getElementById('diffContainer');
-                container.className = 'diff-container ' + (currentView === 'side' ? 'side-by-side' : 'unified');
-                renderCode();
+                
+                const diffContainer = document.getElementById('diffContainer');
+                const previewContainer = document.getElementById('previewContainer');
+                
+                if (currentView === 'preview') {
+                    diffContainer.style.display = 'none';
+                    previewContainer.style.display = 'flex';
+                    renderPreview();
+                } else {
+                    diffContainer.style.display = 'flex';
+                    previewContainer.style.display = 'none';
+                    diffContainer.className = 'diff-container ' + (currentView === 'side' ? 'side-by-side' : 'unified');
+                    renderCode();
+                }
             });
         });
 
@@ -757,16 +1175,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             currentFileIndex = index;
             const file = files[index];
 
-            // Update file path display
             document.getElementById('filePath').textContent = file.file_path;
 
-            // Update tab active state
             document.querySelectorAll('.file-tab').forEach((tab, i) => {
                 tab.classList.toggle('active', i === index);
             });
 
+            updatePreviewButton();
             computeDiff();
-            renderCode();
+            
+            if (currentView === 'preview') {
+                renderPreview();
+            } else {
+                renderCode();
+            }
             renderComments();
         }
 
@@ -886,9 +1308,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             return map[fileType] || fileType;
         }
 
-        // Selection handling - both panes
         document.getElementById('proposedCode').addEventListener('mouseup', handleSelection);
         document.getElementById('originalCode').addEventListener('mouseup', handleSelection);
+        document.getElementById('proposedPreview').addEventListener('mouseup', handlePreviewSelection);
+        document.getElementById('originalPreview').addEventListener('mouseup', handlePreviewSelection);
 
         function handleSelection(e) {
             const selection = window.getSelection();
@@ -902,16 +1325,54 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 currentSelection = {
                     start: { line: startLine, col: range.startOffset },
                     end: { line: endLine, col: range.endOffset },
-                    text: text
+                    text: text,
+                    isPreview: false
                 };
 
-                const rect = range.getBoundingClientRect();
-                const popup = document.getElementById('commentPopup');
-                popup.style.top = Math.min(rect.bottom + 8, window.innerHeight - 200) + 'px';
-                popup.style.left = Math.min(rect.left, window.innerWidth - 340) + 'px';
-                popup.classList.add('visible');
-                document.getElementById('commentInput').focus();
+                showCommentPopup(range);
             }
+        }
+
+        function handlePreviewSelection(e) {
+            const selection = window.getSelection();
+            const text = selection.toString().trim();
+
+            if (text.length > 0) {
+                const range = selection.getRangeAt(0);
+                const file = getCurrentFile();
+                const content = file.proposed_content || '';
+                const textPosition = findTextPosition(content, text);
+
+                currentSelection = {
+                    start: { line: textPosition.line, col: textPosition.col },
+                    end: { line: textPosition.line, col: textPosition.col + text.length },
+                    text: text,
+                    isPreview: true
+                };
+
+                showCommentPopup(range);
+            }
+        }
+
+        function findTextPosition(content, searchText) {
+            const index = content.indexOf(searchText);
+            if (index === -1) return { line: 1, col: 0 };
+            
+            const before = content.substring(0, index);
+            const lines = before.split('\\n');
+            return {
+                line: lines.length,
+                col: lines[lines.length - 1].length
+            };
+        }
+
+        function showCommentPopup(range) {
+            const rect = range.getBoundingClientRect();
+            const popup = document.getElementById('commentPopup');
+            popup.style.top = Math.min(rect.bottom + 8, window.innerHeight - 200) + 'px';
+            popup.style.left = Math.min(rect.left, window.innerWidth - 340) + 'px';
+            popup.classList.add('visible');
+            document.getElementById('commentInput').focus();
         }
 
         function getLineNumber(node) {
@@ -972,7 +1433,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         function renderComments() {
-            // Update sidebar
             const container = document.getElementById('commentsList');
             const comments = getCurrentComments();
             if (comments.length === 0) {
@@ -981,14 +1441,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 container.innerHTML = comments.map((c, i) => `
                     <div class="comment-card" data-comment-idx="${i}" onmouseenter="highlightLine(${c.selection.start.line})" onmouseleave="unhighlightLine(${c.selection.start.line})">
                         <div class="selection">L${c.selection.start.line}: ${c.selected_text.substring(0, 40)}${c.selected_text.length > 40 ? '...' : ''}</div>
-                        <div class="text">${escapeHtml(c.comment)}</div>
+                        ${renderCommentTypeBadge(c.comment)}
+                        <div class="text markdown-body">${renderMarkdown(c.comment)}</div>
                         <div class="delete-btn" onclick="deleteComment(${i})">Delete</div>
                     </div>
                 `).join('');
             }
 
-            // Add inline markers to code lines
-            renderInlineMarkers();
+            if (currentView === 'preview') {
+                renderPreview();
+            } else {
+                renderInlineMarkers();
+            }
         }
 
         function renderInlineMarkers() {
@@ -1041,12 +1505,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     marker.textContent = lineComments.length;
                     marker.dataset.line = lineNum;
 
-                    // Create speech balloon
                     const balloon = document.createElement('div');
                     balloon.className = 'speech-balloon';
                     balloon.innerHTML = lineComments.map(c => `
                         <div class="balloon-comment">
-                            <div class="balloon-text">${escapeHtml(c.comment)}</div>
+                            ${renderCommentTypeBadge(c.comment)}
+                            <div class="balloon-text markdown-body">${renderMarkdown(c.comment)}</div>
                             <div class="balloon-selection">"${c.selected_text.substring(0, 50)}${c.selected_text.length > 50 ? '...' : ''}"</div>
                         </div>
                     `).join('<hr style="border:none;border-top:1px solid #3c3c3c;margin:10px 0;">');
@@ -1338,7 +1802,10 @@ class ReviewHandler(http.server.BaseHTTPRequestHandler):
 def main():
     parser = argparse.ArgumentParser(description="Claude Code Review Server")
     parser.add_argument(
-        "--port", type=int, default=DEFAULT_PORT, help="Preferred port (will find next available if taken)"
+        "--port",
+        type=int,
+        default=DEFAULT_PORT,
+        help="Preferred port (will find next available if taken)",
     )
     parser.add_argument(
         "--no-browser", action="store_true", help="Do not open browser automatically"
@@ -1349,10 +1816,14 @@ def main():
         help="Do not shutdown after feedback (for testing)",
     )
     parser.add_argument(
-        "--test-dir", type=str, help="Override review directory (for testing, bypasses sessions)"
+        "--test-dir",
+        type=str,
+        help="Override review directory (for testing, bypasses sessions)",
     )
     parser.add_argument(
-        "--session", type=str, help="Session ID to serve (uses ~/.claude-review/sessions/<id>)"
+        "--session",
+        type=str,
+        help="Session ID to serve (uses ~/.claude-review/sessions/<id>)",
     )
     args = parser.parse_args()
 

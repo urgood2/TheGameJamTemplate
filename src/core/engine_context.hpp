@@ -132,6 +132,48 @@ struct EngineContext {
     EngineContext(EngineContext&&) = default;
     EngineContext& operator=(EngineContext&&) = delete;
 
+    [[nodiscard]] bool hasInputState() const noexcept { return inputState != nullptr; }
+    [[nodiscard]] ::input::InputState& getInputState() {
+        if (!inputState) {
+            throw std::runtime_error("InputState not initialized");
+        }
+        return *inputState;
+    }
+    [[nodiscard]] const ::input::InputState& getInputState() const {
+        if (!inputState) {
+            throw std::runtime_error("InputState not initialized");
+        }
+        return *inputState;
+    }
+
+    [[nodiscard]] bool hasAudio() const noexcept { return audio != nullptr; }
+    [[nodiscard]] AudioContext& getAudio() {
+        if (!audio) {
+            throw std::runtime_error("AudioContext not initialized");
+        }
+        return *audio;
+    }
+    [[nodiscard]] const AudioContext& getAudio() const {
+        if (!audio) {
+            throw std::runtime_error("AudioContext not initialized");
+        }
+        return *audio;
+    }
+
+    [[nodiscard]] bool hasShaderUniforms() const noexcept { return shaderUniformsPtr != nullptr; }
+    [[nodiscard]] ::shaders::ShaderUniformComponent& getShaderUniforms() {
+        if (!shaderUniformsPtr) {
+            throw std::runtime_error("ShaderUniformComponent not initialized");
+        }
+        return *shaderUniformsPtr;
+    }
+    [[nodiscard]] const ::shaders::ShaderUniformComponent& getShaderUniforms() const {
+        if (!shaderUniformsPtr) {
+            throw std::runtime_error("ShaderUniformComponent not initialized");
+        }
+        return *shaderUniformsPtr;
+    }
+
 private:
     const EngineConfig config;
 };
@@ -143,8 +185,7 @@ private:
  */
 std::unique_ptr<EngineContext> createEngineContext(const std::string& configPath);
 
-/// Helper: prefer context atlas, fall back to legacy globals.
-inline Texture2D* getAtlasTexture(const std::string& atlasUUID) {
+[[nodiscard]] inline Texture2D* getAtlasTexture(const std::string& atlasUUID) {
     if (globals::g_ctx) {
         auto it = globals::g_ctx->textureAtlas.find(atlasUUID);
         if (it != globals::g_ctx->textureAtlas.end()) {

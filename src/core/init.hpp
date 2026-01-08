@@ -41,18 +41,13 @@ void loadAnimationsFromJSON();
 void loadColorsFromJSON();
 /// Load sprite frame metadata from graphics/ JSON files.
 void loadInSpriteFramesFromJSON();
-/// Retrieve a texture by UUID/raw id when it is not part of the atlas cache.
-Texture2D retrieveNotAtlasTexture(string refrence);
-/// Resolve an asset path from UUID or raw identifier.
-std::string getAssetPath(const std::string path_uuid_or_raw_identifier);
-/// Fetch animation data using UUID/raw id, preferring EngineContext when set.
-AnimationObject getAnimationObject(std::string uuid_or_raw_identifier,
+[[nodiscard]] Texture2D retrieveNotAtlasTexture(string refrence);
+[[nodiscard]] std::string getAssetPath(const std::string path_uuid_or_raw_identifier);
+[[nodiscard]] AnimationObject getAnimationObject(std::string uuid_or_raw_identifier,
                                     ::EngineContext *ctx = nullptr);
-/// Lookup a UI string via UUID/raw id, preferring EngineContext when set.
-std::string getUIString(std::string uuid_or_raw_identifier,
+[[nodiscard]] std::string getUIString(std::string uuid_or_raw_identifier,
                         ::EngineContext *ctx = nullptr);
-/// Fetch sprite frame metadata via UUID/raw id, preferring EngineContext when set.
-globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier,
+[[nodiscard]] globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier,
                                         ::EngineContext *ctx = nullptr);
 
 // utility

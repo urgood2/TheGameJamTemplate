@@ -15,6 +15,57 @@
 #include <unordered_map>
 
 namespace game {
+
+/**
+ * @brief State container for ShowDebugUI() to eliminate function-local statics.
+ *
+ * Extracted from ShowDebugUI() to enable deterministic initialization/reset
+ * and improve testability. Pass by reference to ShowDebugUI().
+ */
+struct DebugUIState {
+    // UI scale state
+    static constexpr float kUIScales[] = { 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f };
+    int currentScaleIndex{2};  // Default to 1.0f
+    int previousScaleIndex{2};
+
+    // Loading screen state
+    int lastLoadingCountShown{0};
+    float fakeProgress{0.0f};
+
+    // Pack editor state
+    ui::editor::PackEditorState packEditorState{};
+
+    // Save preview state
+    std::string lastSaveContent{};
+    bool showSaveContent{false};
+
+    // Delete confirmation state
+    bool confirmDelete{false};
+
+    // Statistics editor state
+    int statsRuns{0};
+    int statsWave{0};
+    int statsKills{0};
+    int statsGold{0};
+    bool statsInitialized{false};
+
+    /// Reset all state to defaults (useful for testing or scene transitions)
+    void reset() {
+        currentScaleIndex = 2;
+        previousScaleIndex = 2;
+        lastLoadingCountShown = 0;
+        fakeProgress = 0.0f;
+        packEditorState = {};
+        lastSaveContent.clear();
+        showSaveContent = false;
+        confirmDelete = false;
+        statsRuns = 0;
+        statsWave = 0;
+        statsKills = 0;
+        statsGold = 0;
+        statsInitialized = false;
+    }
+};
     void SetUpShaderUniforms(); 
     
     extern std::function<void()> OnUIScaleChanged;
@@ -42,15 +93,19 @@ namespace game {
         itemTransform.setActualY(targetTransform.getActualY() + itemRole.offset->y);
     }
 
-    inline void ShowDebugUI()
-    {
-        static const float uiScales[] = { 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f };
-        static int currentScaleIndex = 2; // Default to 1.0f
-        static int previousScaleIndex = currentScaleIndex;
-        static int lastLoadingCountShown = 0;
-        static float fakeProgress = 0.0f;
-        static ui::editor::PackEditorState packEditorState;
+    inline DebugUIState& getDebugUIState() {
+        static DebugUIState s_state;
+        return s_state;
+    }
 
+    inline void ShowDebugUI(DebugUIState& state);
+
+    inline void ShowDebugUI() {
+        ShowDebugUI(getDebugUIState());
+    }
+
+    inline void ShowDebugUI(DebugUIState& state)
+    {
         const bool debugWindowOpen = ImGui::Begin("DebugWindow");
         if (debugWindowOpen)
         {
@@ -67,11 +122,12 @@ namespace game {
                     }
 
                     ImGui::Text("UI Scale:");
-                    if (ImGui::BeginCombo("##uiScaleCombo", std::to_string(uiScales[currentScaleIndex]).c_str())) {
-                        for (int i = 0; i < IM_ARRAYSIZE(uiScales); ++i) {
-                            bool isSelected = (i == currentScaleIndex);
-                            if (ImGui::Selectable(std::to_string(uiScales[i]).c_str(), isSelected)) {
-                                currentScaleIndex = i;
+                    if (ImGui::BeginCombo("##uiScaleCombo", std::to_string(DebugUIState::kUIScales[state.currentScaleIndex]).c_str())) {
+                        constexpr int numScales = sizeof(DebugUIState::kUIScales) / sizeof(DebugUIState::kUIScales[0]);
+                        for (int i = 0; i < numScales; ++i) {
+                            bool isSelected = (i == state.currentScaleIndex);
+                            if (ImGui::Selectable(std::to_string(DebugUIState::kUIScales[i]).c_str(), isSelected)) {
+                                state.currentScaleIndex = i;
                             }
                             if (isSelected)
                                 ImGui::SetItemDefaultFocus();
@@ -79,10 +135,10 @@ namespace game {
                         ImGui::EndCombo();
                     }
 
-                    if (currentScaleIndex != previousScaleIndex) {
-                        previousScaleIndex = currentScaleIndex;
-                        globals::setGlobalUIScaleFactor(uiScales[currentScaleIndex]);
-                        OnUIScaleChanged(); // ✅ Call your method here
+                    if (state.currentScaleIndex != state.previousScaleIndex) {
+                        state.previousScaleIndex = state.currentScaleIndex;
+                        globals::setGlobalUIScaleFactor(DebugUIState::kUIScales[state.currentScaleIndex]);
+                        OnUIScaleChanged();
                     }
 
                     ImGui::EndTabItem();
@@ -142,17 +198,16 @@ namespace game {
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("Events")) {
-                    // Loading progress bar (debug-only).
                     int stagesComplete = globals::loadingStateIndex;
-                    float progress = std::min(1.0f, stagesComplete / 10.0f); // heuristic until a real total is known
-                    if (stagesComplete != lastLoadingCountShown) {
-                        fakeProgress = progress;
-                        lastLoadingCountShown = stagesComplete;
+                    float progress = std::min(1.0f, stagesComplete / 10.0f);
+                    if (stagesComplete != state.lastLoadingCountShown) {
+                        state.fakeProgress = progress;
+                        state.lastLoadingCountShown = stagesComplete;
                     } else {
-                        fakeProgress = std::min(1.0f, fakeProgress + 0.02f); // creep forward visually
+                        state.fakeProgress = std::min(1.0f, state.fakeProgress + 0.02f);
                     }
                     ImGui::Text("Loading progress");
-                    ImGui::ProgressBar(fakeProgress, ImVec2(0.0f, 0.0f));
+                    ImGui::ProgressBar(state.fakeProgress, ImVec2(0.0f, 0.0f));
 
                     ImGui::Text("Last loading stage: %s (%s)",
                                 globals::getLastLoadingStage().empty() ? "<none>" : globals::getLastLoadingStage().c_str(),
@@ -166,7 +221,7 @@ namespace game {
                 }
                 if (ImGui::BeginTabItem("UI Pack Editor")) {
                     if (ImGui::Button("Open UI Pack Editor")) {
-                        packEditorState.isOpen = true;
+                        state.packEditorState.isOpen = true;
                     }
                     ImGui::Text("Use this tool to create and edit UI asset packs");
                     ImGui::EndTabItem();
@@ -191,21 +246,18 @@ namespace game {
                     ImGui::Text("Save Path: %s", savePath.c_str());
                     if (saveExists) {
                         ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "  Status: EXISTS");
-                        // Show file contents preview
-                        static std::string lastContent;
-                        static bool showContent = false;
                         if (ImGui::Button("Preview Save File")) {
                             auto content = save_io::load_file(savePath);
-                            lastContent = content.value_or("<failed to load>");
-                            showContent = true;
+                            state.lastSaveContent = content.value_or("<failed to load>");
+                            state.showSaveContent = true;
                         }
-                        if (showContent && !lastContent.empty()) {
+                        if (state.showSaveContent && !state.lastSaveContent.empty()) {
                             ImGui::SameLine();
                             if (ImGui::Button("Hide")) {
-                                showContent = false;
+                                state.showSaveContent = false;
                             }
                             ImGui::BeginChild("SavePreview", ImVec2(0, 150), true);
-                            ImGui::TextWrapped("%s", lastContent.c_str());
+                            ImGui::TextWrapped("%s", state.lastSaveContent.c_str());
                             ImGui::EndChild();
                         }
                     } else {
@@ -258,11 +310,9 @@ namespace game {
 
                     ImGui::SameLine();
 
-                    // Delete save with confirmation
-                    static bool confirmDelete = false;
-                    if (!confirmDelete) {
+                    if (!state.confirmDelete) {
                         if (ImGui::Button("Delete Save")) {
-                            confirmDelete = true;
+                            state.confirmDelete = true;
                         }
                     } else {
                         ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Confirm delete?");
@@ -280,11 +330,11 @@ namespace game {
                             } catch (const std::exception& e) {
                                 SPDLOG_WARN("[DebugUI] Failed to call SaveManager.delete_save(): {}", e.what());
                             }
-                            confirmDelete = false;
+                            state.confirmDelete = false;
                         }
                         ImGui::SameLine();
                         if (ImGui::Button("Cancel")) {
-                            confirmDelete = false;
+                            state.confirmDelete = false;
                         }
                     }
 
@@ -313,41 +363,36 @@ namespace game {
 
                     ImGui::Separator();
 
-                    // Live Statistics Editor
                     ImGui::Text("Statistics (Live Edit):");
                     try {
                         sol::table stats = ai_system::masterStateLua["Statistics"];
                         if (stats.valid()) {
-                            static int runs = 0, wave = 0, kills = 0, gold = 0;
-                            static bool initialized = false;
-
-                            // Read current values
-                            if (!initialized || ImGui::Button("Refresh")) {
-                                runs = stats.get_or("runs_completed", 0);
-                                wave = stats.get_or("highest_wave", 0);
-                                kills = stats.get_or("total_kills", 0);
-                                gold = stats.get_or("total_gold_earned", 0);
-                                initialized = true;
+                            if (!state.statsInitialized || ImGui::Button("Refresh")) {
+                                state.statsRuns = stats.get_or("runs_completed", 0);
+                                state.statsWave = stats.get_or("highest_wave", 0);
+                                state.statsKills = stats.get_or("total_kills", 0);
+                                state.statsGold = stats.get_or("total_gold_earned", 0);
+                                state.statsInitialized = true;
                             }
 
-                            ImGui::InputInt("Runs Completed", &runs);
-                            ImGui::InputInt("Highest Wave", &wave);
-                            ImGui::InputInt("Total Kills", &kills);
-                            ImGui::InputInt("Total Gold", &gold);
+                            ImGui::InputInt("Runs Completed", &state.statsRuns);
+                            ImGui::InputInt("Highest Wave", &state.statsWave);
+                            ImGui::InputInt("Total Kills", &state.statsKills);
+                            ImGui::InputInt("Total Gold", &state.statsGold);
 
                             if (ImGui::Button("Apply Changes")) {
-                                stats["runs_completed"] = runs;
-                                stats["highest_wave"] = wave;
-                                stats["total_kills"] = kills;
-                                stats["total_gold_earned"] = gold;
+                                stats["runs_completed"] = state.statsRuns;
+                                stats["highest_wave"] = state.statsWave;
+                                stats["total_kills"] = state.statsKills;
+                                stats["total_gold_earned"] = state.statsGold;
                                 SPDLOG_INFO("[DebugUI] Applied Statistics changes");
                             }
                             ImGui::SameLine();
                             if (ImGui::Button("Apply & Save")) {
-                                stats["runs_completed"] = runs;
-                                stats["highest_wave"] = wave;
-                                stats["total_kills"] = kills;
-                                stats["total_gold_earned"] = gold;
+                                stats["runs_completed"] = state.statsRuns;
+                                stats["highest_wave"] = state.statsWave;
+                                stats["total_kills"] = state.statsKills;
+                                stats["total_gold_earned"] = state.statsGold;
 
                                 sol::table saveManager = ai_system::masterStateLua["SaveManager"];
                                 if (saveManager.valid()) {
@@ -373,8 +418,7 @@ namespace game {
 
         ImGui::End();
 
-        // Render the UI Pack Editor window (outside the debug window)
-        ui::editor::renderPackEditor(packEditorState);
+        ui::editor::renderPackEditor(state.packEditorState);
     }
 
 }

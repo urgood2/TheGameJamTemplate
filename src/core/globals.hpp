@@ -112,10 +112,10 @@ void setEngineContext(::EngineContext *ctx);
 /// @cond LEGACY_ENGINECTX_GLOBALS
 ENGINECTX_DEPRECATED(
     "Access EngineContext::inputState instead of globals::getInputState()")
-input::InputState &getInputState();
+[[nodiscard]] input::InputState &getInputState();
 
-extern Vector2 GetScaledMousePosition();
-extern Vector2 getScaledMousePositionCached();
+[[nodiscard]] extern Vector2 GetScaledMousePosition();
+[[nodiscard]] extern Vector2 getScaledMousePositionCached();
 
 // Virtual design resolution (like SNKRX)
 extern const int VIRTUAL_WIDTH;
@@ -128,13 +128,13 @@ extern float finalLetterboxOffsetX;
 extern float finalLetterboxOffsetY;
 ENGINECTX_DEPRECATED("Access EngineContext::finalRenderScale instead of "
                      "globals::getFinalRenderScale()")
-float &getFinalRenderScale();
+[[nodiscard]] float &getFinalRenderScale();
 ENGINECTX_DEPRECATED("Access EngineContext::finalLetterboxOffsetX instead of "
                      "globals::getLetterboxOffsetX()")
-float &getLetterboxOffsetX();
+[[nodiscard]] float &getLetterboxOffsetX();
 ENGINECTX_DEPRECATED("Access EngineContext::finalLetterboxOffsetY instead of "
                      "globals::getLetterboxOffsetY()")
-float &getLetterboxOffsetY();
+[[nodiscard]] float &getLetterboxOffsetY();
 void setFinalRenderScale(float v);
 void setLetterboxOffsetX(float v);
 void setLetterboxOffsetY(float v);
@@ -142,17 +142,17 @@ void setLetterboxOffsetY(float v);
 extern bool useImGUI; // set to true to use imGUI for debugging
 ENGINECTX_DEPRECATED(
     "Access EngineContext::useImGUI instead of globals::getUseImGUI()")
-bool &getUseImGUI();
+[[nodiscard]] bool &getUseImGUI();
 void setUseImGUI(bool v);
 
 extern std::shared_ptr<PhysicsManager>
     physicsManager; // physics manager instance
 ENGINECTX_DEPRECATED("Access EngineContext::physicsManager instead of "
                      "globals::getPhysicsManagerPtr()")
-std::shared_ptr<PhysicsManager> &getPhysicsManagerPtr();
+[[nodiscard]] std::shared_ptr<PhysicsManager> &getPhysicsManagerPtr();
 ENGINECTX_DEPRECATED("Access EngineContext::physicsManager instead of "
                      "globals::getPhysicsManager()")
-PhysicsManager *getPhysicsManager();
+[[nodiscard]] PhysicsManager *getPhysicsManager();
 
 extern std::unordered_map<entt::entity, transform::SpringCacheBundle>
     g_springCache;
@@ -163,17 +163,17 @@ extern std::unordered_map<entt::entity, transform::MasterCacheEntry>
 extern float globalUIScaleFactor; // scale factor for UI elements
 ENGINECTX_DEPRECATED("Access EngineContext::globalUIScaleFactor instead of "
                      "globals::getGlobalUIScaleFactor()")
-float &getGlobalUIScaleFactor();
+[[nodiscard]] float &getGlobalUIScaleFactor();
 void setGlobalUIScaleFactor(float v);
 
 extern bool drawDebugInfo,
     drawPhysicsDebug; // set to true to allow debug drawing of transforms
 ENGINECTX_DEPRECATED("Access EngineContext::drawDebugInfo instead of "
                      "globals::getDrawDebugInfo()")
-bool &getDrawDebugInfo();
+[[nodiscard]] bool &getDrawDebugInfo();
 ENGINECTX_DEPRECATED("Access EngineContext::drawPhysicsDebug instead of "
                      "globals::getDrawPhysicsDebug()")
-bool &getDrawPhysicsDebug();
+[[nodiscard]] bool &getDrawPhysicsDebug();
 void setDrawDebugInfo(bool v);
 void setDrawPhysicsDebug(bool v);
 
@@ -185,12 +185,12 @@ extern shaders::ShaderUniformComponent
     globalShaderUniforms; // keep track of shader uniforms;
 ENGINECTX_DEPRECATED("Access EngineContext::shaderUniforms instead of "
                      "globals::getGlobalShaderUniforms()")
-shaders::ShaderUniformComponent &getGlobalShaderUniforms();
+[[nodiscard]] shaders::ShaderUniformComponent &getGlobalShaderUniforms();
 
 extern GameState currentGameState;
 ENGINECTX_DEPRECATED("Access EngineContext::currentGameState instead of "
                      "globals::getCurrentGameState()")
-GameState &getCurrentGameState();
+[[nodiscard]] GameState &getCurrentGameState();
 
 //---------------------------------------------------------
 // constants
@@ -200,16 +200,16 @@ extern const float FONT_SIZE;
 extern string gameTitle;
 ENGINECTX_DEPRECATED(
     "Access EngineContext sizes instead of globals::getScreenWidth()")
-int &getScreenWidth();
+[[nodiscard]] int &getScreenWidth();
 ENGINECTX_DEPRECATED(
     "Access EngineContext sizes instead of globals::getScreenHeight()")
-int &getScreenHeight();
+[[nodiscard]] int &getScreenHeight();
 ENGINECTX_DEPRECATED("Access EngineContext sizes instead of "
                      "globals::getGameWorldViewportWidth()")
-int &getGameWorldViewportWidth();
+[[nodiscard]] int &getGameWorldViewportWidth();
 ENGINECTX_DEPRECATED("Access EngineContext sizes instead of "
                      "globals::getGameWorldViewportHeight()")
-int &getGameWorldViewportHeight();
+[[nodiscard]] int &getGameWorldViewportHeight();
 
 //---------------------------------------------------------
 // imGUI variables
@@ -246,7 +246,7 @@ extern int loadingStateIndex;
 
 // store loaded animation data mapped to animation id
 extern std::map<std::string, AnimationObject> animationsMap;
-std::map<std::string, AnimationObject> &getAnimationsMap();
+[[nodiscard]] std::map<std::string, AnimationObject> &getAnimationsMap();
 
 // show mouse current status
 extern bool isMouseDragStarted;
@@ -257,8 +257,8 @@ extern Vector2 mouseDragStartedCoords, mouseDragEndedCoords;
 extern bool showObserverWindow;
 
 extern int worldWidth, worldHeight;
-int &getWorldWidth();
-int &getWorldHeight();
+[[nodiscard]] int &getWorldWidth();
+[[nodiscard]] int &getWorldHeight();
 
 // font for the ui (IMGUI)
 extern ImFont *uiFont12;
@@ -271,7 +271,7 @@ extern vector<vector<entt::entity>> map;
 
 // for pathfinding version of map
 extern vector<double> pathfindingMatrix;
-std::vector<double> &getPathfindingMatrix();
+[[nodiscard]] std::vector<double> &getPathfindingMatrix();
 
 // clicked entity
 extern entt::entity clickedEntity;
@@ -295,18 +295,18 @@ extern json spritesJSON, cp437MappingsJSON;
 
 // Global vector to hold all loaded textures
 extern std::map<string, Texture2D> textureAtlasMap;
-std::map<std::string, Texture2D> &getTextureAtlasMap();
+[[nodiscard]] std::map<std::string, Texture2D> &getTextureAtlasMap();
 
 // game config
 extern json configJSON;
-json &getConfigJson();
-json &getColorsJson();
-json &getUiStringsJson();
-json &getAnimationsJson();
-json &getAiConfigJson();
-json &getAiActionsJson();
-json &getAiWorldstateJson();
-json &getNinePatchJson();
+[[nodiscard]] json &getConfigJson();
+[[nodiscard]] json &getColorsJson();
+[[nodiscard]] json &getUiStringsJson();
+[[nodiscard]] json &getAnimationsJson();
+[[nodiscard]] json &getAiConfigJson();
+[[nodiscard]] json &getAiActionsJson();
+[[nodiscard]] json &getAiWorldstateJson();
+[[nodiscard]] json &getNinePatchJson();
 
 // game camera
 // extern Camera2D camera;
@@ -316,16 +316,16 @@ extern Vector2
     nextCameraTarget; // keep track of desired next camera target position
 ENGINECTX_DEPRECATED("Access EngineContext::cameraDamping instead of "
                      "globals::getCameraDamping()")
-float &getCameraDamping();
+[[nodiscard]] float &getCameraDamping();
 ENGINECTX_DEPRECATED("Access EngineContext::cameraStiffness instead of "
                      "globals::getCameraStiffness()")
-float &getCameraStiffness();
+[[nodiscard]] float &getCameraStiffness();
 ENGINECTX_DEPRECATED("Access EngineContext::cameraVelocity instead of "
                      "globals::getCameraVelocity()")
-Vector2 &getCameraVelocity();
+[[nodiscard]] Vector2 &getCameraVelocity();
 ENGINECTX_DEPRECATED("Access EngineContext::nextCameraTarget instead of "
                      "globals::getNextCameraTarget()")
-Vector2 &getNextCameraTarget();
+[[nodiscard]] Vector2 &getNextCameraTarget();
 
 struct SpriteFrameData {
   std::string
@@ -335,7 +335,7 @@ struct SpriteFrameData {
 
 // map sprite number to sprite draw rect (source)
 extern std::map<std::string, SpriteFrameData> spriteDrawFrames;
-std::map<std::string, SpriteFrameData> &getSpriteFrameMap();
+[[nodiscard]] std::map<std::string, SpriteFrameData> &getSpriteFrameMap();
 
 // map sprite number to CP437 char and UTF codepoint, vice versa
 
@@ -348,7 +348,7 @@ extern std::map<string, json> environmentTilesMap;
 
 // map color name to color
 extern std::map<std::string, Color> colors;
-std::map<std::string, Color> &getColorsMap();
+[[nodiscard]] std::map<std::string, Color> &getColorsMap();
 
 // true if forced branching dialogue choices have been displayed and we're
 // waiting for player input
@@ -398,9 +398,9 @@ extern entt::entity G_ROOM; // entity that is a moveable representing the map
 extern float G_COLLISION_BUFFER; // Buffer for collision detection from lua
                                  // //TODO: move to globals later
 extern int G_TILESIZE; // TODO: used by movable, not sure how it is used
-float &getTimerReal();
-float &getTimerTotal();
-long &getFramesMove();
+[[nodiscard]] float &getTimerReal();
+[[nodiscard]] float &getTimerTotal();
+[[nodiscard]] long &getFramesMove();
 
 extern bool reduced_motion;
 
@@ -412,8 +412,8 @@ extern std::map<std::string, gui::NinePatchData>
 
 extern std::vector<std::vector<uint8_t>> globalVisibilityMap;
 extern bool useLineOfSight;
-std::vector<std::vector<uint8_t>> &getGlobalVisibilityMap();
-bool &getUseLineOfSight();
+[[nodiscard]] std::vector<std::vector<uint8_t>> &getGlobalVisibilityMap();
+[[nodiscard]] bool &getUseLineOfSight();
 
 extern sol::state lua; // for events
 
@@ -422,11 +422,11 @@ extern Texture2D titleTexture;
 extern layer::Layer backgroundLayer, gameLayer, uiLayer;
 
 extern float BASE_SHADOW_EXAGGERATION; // multiplied to shadow offsets
-float &getBaseShadowExaggeration();
+[[nodiscard]] float &getBaseShadowExaggeration();
 
 // Fixed text shadow offset - consistent regardless of screen position (not affected by parallax)
 extern Vector2 FIXED_TEXT_SHADOW_OFFSET;
-Vector2 &getFixedTextShadowOffset();
+[[nodiscard]] Vector2 &getFixedTextShadowOffset();
 
 extern std::optional<int> REFRESH_FRAME_MASTER_CACHE;
 
@@ -453,7 +453,7 @@ struct Settings {
 };
 
 extern Settings settings;
-Settings &getSettings();
+[[nodiscard]] Settings &getSettings();
 void setCurrentGameState(GameState state);
 
 struct FontData {
@@ -469,8 +469,7 @@ struct FontData {
   // <— store your codepoint list if you ever need it later
   std::vector<int> codepoints;
 
-  // Returns best font for requested size (prefers larger for downscaling)
-  const Font& getBestFontForSize(float requestedSize) const {
+  [[nodiscard]] const Font& getBestFontForSize(float requestedSize) const {
     int requested = static_cast<int>(std::round(requestedSize));
 
     // Find smallest size >= requested (prefer downscaling)
@@ -487,8 +486,7 @@ struct FontData {
     return empty;
   }
 
-  // Convenience method to get the default font
-  const Font& getDefaultFont() const {
+  [[nodiscard]] const Font& getDefaultFont() const {
     return getBestFontForSize(static_cast<float>(defaultSize));
   }
 };
@@ -496,7 +494,7 @@ struct FontData {
 extern float uiPadding;
 ENGINECTX_DEPRECATED(
     "Access EngineContext::uiPadding instead of globals::getUiPadding()")
-float &getUiPadding();
+[[nodiscard]] float &getUiPadding();
 
 extern input::InputState inputState;
 
@@ -508,29 +506,29 @@ extern std::string language; // the current language for the game
 extern bool under_overlay; // set to true when an ui overlay is active
 ENGINECTX_DEPRECATED(
     "Access EngineContext::underOverlay instead of globals::getUnderOverlay()")
-bool &getUnderOverlay();
+[[nodiscard]] bool &getUnderOverlay();
 
 extern float vibration; // vibration strength for controllers
 ENGINECTX_DEPRECATED(
     "Access EngineContext::vibration instead of globals::getVibration()")
-float &getVibration();
+[[nodiscard]] float &getVibration();
 
 extern bool releaseMode; // set to true to disable debug features
 ENGINECTX_DEPRECATED(
     "Access EngineContext::releaseMode instead of globals::getReleaseMode()")
-bool &getReleaseMode();
+[[nodiscard]] bool &getReleaseMode();
 
 extern bool isGamePaused;
 ENGINECTX_DEPRECATED(
     "Access EngineContext::isGamePaused instead of globals::getIsGamePaused()")
-bool &getIsGamePaused();
+[[nodiscard]] bool &getIsGamePaused();
 void setIsGamePaused(bool v);
 
 extern bool screenWipe; // true when the screen is being wiped (transitioning
                         // between scenes)
 ENGINECTX_DEPRECATED(
     "Access EngineContext::screenWipe instead of globals::getScreenWipe()")
-bool &getScreenWipe();
+[[nodiscard]] bool &getScreenWipe();
 
 extern entt::entity
     gameWorldContainerEntity; // entity representing the entire game world
@@ -541,50 +539,50 @@ extern entt::registry registry;
 
 ENGINECTX_DEPRECATED(
     "Access EngineContext::eventBus instead of globals::getEventBus()")
-event_bus::EventBus &getEventBus();
+[[nodiscard]] event_bus::EventBus &getEventBus();
 
 // Helpers to bridge cursor entity while migrating to EngineContext.
 ENGINECTX_DEPRECATED(
     "Access EngineContext::cursor instead of globals::getCursorEntity()")
-entt::entity getCursorEntity();
+[[nodiscard]] entt::entity getCursorEntity();
 void setCursorEntity(entt::entity e);
 ENGINECTX_DEPRECATED(
     "Access EngineContext::overlayMenu instead of globals::getOverlayMenu()")
-entt::entity getOverlayMenu();
+[[nodiscard]] entt::entity getOverlayMenu();
 void setOverlayMenu(entt::entity e);
 ENGINECTX_DEPRECATED("Access EngineContext::gameWorldContainerEntity instead "
                      "of globals::getGameWorldContainer()")
-entt::entity getGameWorldContainer();
+[[nodiscard]] entt::entity getGameWorldContainer();
 void setGameWorldContainer(entt::entity e);
-std::unordered_map<std::string, std::vector<entt::entity>> &
+[[nodiscard]] std::unordered_map<std::string, std::vector<entt::entity>> &
 getGlobalUIInstanceMap();
-std::unordered_map<std::string, std::function<void()>> &getButtonCallbacks();
+[[nodiscard]] std::unordered_map<std::string, std::function<void()>> &getButtonCallbacks();
 
 // Accessors that respect EngineContext when available.
 ENGINECTX_DEPRECATED(
     "Access EngineContext::registry instead of globals::getRegistry()")
-entt::registry &getRegistry();
+[[nodiscard]] entt::registry &getRegistry();
 // extern Camera2D camera2D;
 
 extern void updateGlobalVariables();
-extern Vector2 getWorldMousePosition();
+[[nodiscard]] extern Vector2 getWorldMousePosition();
 
 void setReleaseMode(bool v);
 void recordMouseClick(Vector2 pos, int button);
-bool hasLastMouseClick();
-Vector2 getLastMouseClickPosition();
-int getLastMouseClickButton();
+[[nodiscard]] bool hasLastMouseClick();
+[[nodiscard]] Vector2 getLastMouseClickPosition();
+[[nodiscard]] int getLastMouseClickButton();
 void recordMouseClick(Vector2 pos, int button, entt::entity target);
-entt::entity getLastMouseClickTarget();
-entt::entity getLastCollisionA();
-entt::entity getLastCollisionB();
+[[nodiscard]] entt::entity getLastMouseClickTarget();
+[[nodiscard]] entt::entity getLastCollisionA();
+[[nodiscard]] entt::entity getLastCollisionB();
 void setLastCollision(entt::entity a, entt::entity b);
-entt::entity getLastUIFocus();
+[[nodiscard]] entt::entity getLastUIFocus();
 void setLastUIFocus(entt::entity e);
-entt::entity getLastUIButtonActivated();
+[[nodiscard]] entt::entity getLastUIButtonActivated();
 void setLastUIButtonActivated(entt::entity e);
-const std::string &getLastLoadingStage();
-bool getLastLoadingStageSuccess();
+[[nodiscard]] const std::string &getLastLoadingStage();
+[[nodiscard]] bool getLastLoadingStageSuccess();
 void setLastLoadingStage(const std::string &stageId, bool success);
 
 struct CollisionNote {
@@ -595,7 +593,7 @@ struct CollisionNote {
   double timestamp{0.0};
 };
 
-const std::vector<CollisionNote> &getCollisionLog();
+[[nodiscard]] const std::vector<CollisionNote> &getCollisionLog();
 void pushCollisionLog(const CollisionNote &note);
 /// @endcond
 } // namespace globals

@@ -370,7 +370,7 @@ namespace tutorial_system_v2 {
             lua,
             tutorialPath,
             "moveCameraToEntity",
-            &moveCameraToEntity,
+            static_cast<void(*)(entt::entity)>(&moveCameraToEntity),
             "---@param entity Entity # The entity to focus the camera on.\n"
             "---@return nil",
             "Moves the camera to center on the given entity."
@@ -515,35 +515,30 @@ namespace tutorial_system_v2 {
         // REVIEW: how to access entity ids from lua? keep entity alias list accessible from lua
     }
 
-    // shows a ninepatch indicator around the single-tile entity. The indicator id is from npatch.json
-    auto displayIndicatorAroundEntity(entt::entity entity, std::string indicatorTypeID) -> void {
-
-        // check that the id is valud
+    auto displayIndicatorAroundEntity(entt::registry& registry, entt::entity entity, std::string indicatorTypeID) -> void {
         if (globals::ninePatchDataMap.find(indicatorTypeID) == globals::ninePatchDataMap.end()) {
             SPDLOG_ERROR("Indicator type ID {} is not valid", indicatorTypeID);
             return;
         }
 
-        // get location of entity
-        if (globals::getRegistry().any_of<LocationComponent>(entity) == false) {
+        if (registry.any_of<LocationComponent>(entity) == false) {
             SPDLOG_ERROR("Entity {} does not have a location component. Cannot display arrow.", static_cast<int>(entity));
             return;
         }
 
-        if (globals::getRegistry().any_of<AnimationQueueComponent>(entity) == false) {
+        if (registry.any_of<AnimationQueueComponent>(entity) == false) {
             SPDLOG_ERROR("Entity {} does not have an animation queue component. Cannot display arrow.", static_cast<int>(entity));
             return;
         }
 
-        auto &loc = globals::getRegistry().get<LocationComponent>(entity);
-        auto &animComp = globals::getRegistry().get<AnimationQueueComponent>(entity);
+        auto &loc = registry.get<LocationComponent>(entity);
+        auto &animComp = registry.get<AnimationQueueComponent>(entity);
 
-        float renderX = loc.x * 32; //FIXME: this 32 value should probably be offloaded to a json file, global tile size
+        float renderX = loc.x * 32;
         float renderY = loc.y * 32;
 
         float spriteW = animComp.defaultAnimation.animationList.at(0).first.spriteData.frame.width;
         float spriteH = animComp.defaultAnimation.animationList.at(0).first.spriteData.frame.height;
-
 
         auto &ninePatchData = globals::ninePatchDataMap[indicatorTypeID];
 
@@ -563,17 +558,23 @@ namespace tutorial_system_v2 {
             .height = spriteH + ninePatchData.top + ninePatchData.bottom
         };
 
-        auto &nPatchComp = globals::getRegistry().emplace_or_replace<NinePatchComponent>(entity);
+        auto &nPatchComp = registry.emplace_or_replace<NinePatchComponent>(entity);
         nPatchComp.nPatchInfo = nPatchInfo;
         nPatchComp.destRect = destRect;
         nPatchComp.texture = ninePatchData.texture;
-        // set to live 10 seconds
         nPatchComp.timeToLive = 10.0f;
-        // the dest rect will be the target entity tile + 1-tile border
+    }
+
+    auto displayIndicatorAroundEntity(entt::entity entity, std::string indicatorTypeID) -> void {
+        displayIndicatorAroundEntity(globals::getRegistry(), entity, indicatorTypeID);
+    }
+
+    auto displayIndicatorAroundEntity(entt::registry& registry, entt::entity entity) -> void {
+        displayIndicatorAroundEntity(registry, entity, "ui_indicator");
     }
 
     auto displayIndicatorAroundEntity(entt::entity entity) -> void {
-        displayIndicatorAroundEntity(entity, "ui_indicator");
+        displayIndicatorAroundEntity(globals::getRegistry(), entity, "ui_indicator");
     }
 
 
@@ -597,13 +598,16 @@ namespace tutorial_system_v2 {
         graphics::setNextCameraTarget({x, y});
     }
 
-    // only works if the entity has a location component
-    auto moveCameraToEntity(entt::entity entity) -> void {
-        if (globals::getRegistry().any_of<LocationComponent>(entity) == false) {
+    auto moveCameraToEntity(entt::registry& registry, entt::entity entity) -> void {
+        if (registry.any_of<LocationComponent>(entity) == false) {
             SPDLOG_ERROR("Entity {} does not have a location component. Cannot move camera to entity.", static_cast<int>(entity));
             return;
         }
-        graphics::centerCameraOnEntity(entity);
+        graphics::centerCameraOnEntity(registry, entity);
+    }
+
+    auto moveCameraToEntity(entt::entity entity) -> void {
+        moveCameraToEntity(globals::getRegistry(), entity);
     }
     
     //TODO: import wait functions from lua as well

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/fwd.hpp>
+#include <entt/entt.hpp>
 #include <sol/sol.hpp>
 #include <string>
 
@@ -30,9 +30,15 @@ namespace tutorial_system_v2 {
     extern auto addGameAnnouncement(const std::string &announcementText) -> void;
 
     extern auto moveCameraTo(float x, float y) -> void;
+    extern auto moveCameraToEntity(entt::registry& registry, entt::entity entity) -> void;
+    [[deprecated("Use explicit registry overload")]]
     extern auto moveCameraToEntity(entt::entity entity) -> void;
 
-    extern auto displayIndicatorAroundEntity(entt::entity entit, std::string indicatorTypeID) -> void;
+    extern auto displayIndicatorAroundEntity(entt::registry& registry, entt::entity entity, std::string indicatorTypeID) -> void;
+    [[deprecated("Use explicit registry overload")]]
+    extern auto displayIndicatorAroundEntity(entt::entity entity, std::string indicatorTypeID) -> void;
+    extern auto displayIndicatorAroundEntity(entt::registry& registry, entt::entity entity) -> void;
+    [[deprecated("Use explicit registry overload")]]
     extern auto displayIndicatorAroundEntity(entt::entity entity) -> void;
 
     extern auto fadeOutScreen(float seconds) -> void;

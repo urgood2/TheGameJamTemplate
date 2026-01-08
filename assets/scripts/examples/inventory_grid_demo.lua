@@ -268,7 +268,7 @@ local function createSingleGrid(tabId, x, y, visible)
         config = {
             allowDragIn = true,
             allowDragOut = true,
-            stackable = true,
+            stackable = false,  -- TODO: stacking incomplete, needs visual stack count + merge logic
             maxStackSize = 5,
             slotColor = "gray",
             slotEmboss = 2,

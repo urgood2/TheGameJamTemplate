@@ -226,21 +226,29 @@ namespace TextSystem
         
         extern void preprocessTypingInlineTags(Text &txt);
 
-        extern Character createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
+        extern Character createCharacter(entt::registry& registry, entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
             float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
             float &currentLineWidth, std::vector<float> &lineWidths, int index, int &lineNumber);
 
-        extern void adjustAlignment(entt::entity textEntity, const std::vector<float> &lineWidths);
+        extern void adjustAlignment(entt::registry& registry, entt::entity textEntity, const std::vector<float> &lineWidths);
 
         extern ParsedEffectArguments splitEffects(const std::string &effects);
         
+        // Registry-parameterized version (preferred)
+        extern auto createTextEntity(entt::registry& registry, const Text &text, float x, float y, sol::optional<sol::table> waitersOpt = sol::nullopt) -> entt::entity;
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use createTextEntity(registry, ...) instead")]]
         extern auto createTextEntity(const Text &text, float x, float y, sol::optional<sol::table> waitersOpt = sol::nullopt) -> entt::entity;
         
-        extern Vector2 calculateBoundingBox (entt::entity textEntity);
+        // Registry-parameterized version (preferred)
+        extern Vector2 calculateBoundingBox(entt::registry& registry, entt::entity textEntity);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use calculateBoundingBox(registry, ...) instead")]]
+        extern Vector2 calculateBoundingBox(entt::entity textEntity);
 
         extern std::string CodepointToString(int codepoint);
         
-        extern Character createImageCharacter(entt::entity textEntity, const std::string &uuid, float width, float height, float scale,
+        extern Character createImageCharacter(entt::registry& registry, entt::entity textEntity, const std::string &uuid, float width, float height, float scale,
             Color fg, Color bg,
             const Vector2 &startPosition, // Added to match createCharacter
             float &currentX, float &currentY,
@@ -249,27 +257,76 @@ namespace TextSystem
             float &currentLineWidth, std::vector<float> &lineWidths,
             int index, int &lineNumber);
 
+        // Registry-parameterized version (preferred)
+        extern void parseText(entt::registry& registry, entt::entity textEntity);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use parseText(registry, ...) instead")]]
         extern void parseText(entt::entity textEntity);
+        
         void handleWaitSentinelChar(int codepoint, TextSystem::Text &text,
                                     int &codepointIndex,
                                     const char *&currentPos, int codepointSize,
                                     int &retFlag);
-        void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
+        void handleEffectSegment(entt::registry& registry, const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
+        
+        // Registry-parameterized version (preferred)
+        extern void updateText(entt::registry& registry, entt::entity textEntity, float dt);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use updateText(registry, ...) instead")]]
         extern void updateText(entt::entity textEntity, float dt);
 
+        // Registry-parameterized version (preferred)
+        extern void renderText(entt::registry& registry, entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug = true);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use renderText(registry, ...) instead")]]
         extern void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug = true);
+        
+        // Registry-parameterized version (preferred)
+        extern void renderTextImmediate(entt::registry& registry, entt::entity textEntity, layer::Layer* layerPtr, bool debug);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use renderTextImmediate(registry, ...) instead")]]
         extern void renderTextImmediate(entt::entity textEntity, layer::Layer* layerPtr, bool debug);
 
+        // Registry-parameterized version (preferred)
+        extern void clearAllEffects(entt::registry& registry, entt::entity textEntity);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use clearAllEffects(registry, ...) instead")]]
         extern void clearAllEffects(entt::entity textEntity);
 
+        // Registry-parameterized version (preferred)
+        extern void applyGlobalEffects(entt::registry& registry, entt::entity textEntity, const std::string &effectString);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use applyGlobalEffects(registry, ...) instead")]]
         extern void applyGlobalEffects(entt::entity textEntity, const std::string &effectString);
 
+        // Registry-parameterized version (preferred)
+        extern void debugPrintText(entt::registry& registry, entt::entity textEntity);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use debugPrintText(registry, ...) instead")]]
         extern void debugPrintText(entt::entity textEntity);
 
-        extern void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight, bool centerLaterally =true, bool centerVertically = true);
+        // Registry-parameterized version (preferred)
+        extern void resizeTextToFit(entt::registry& registry, entt::entity textEntity, float targetWidth, float targetHeight, bool centerLaterally = true, bool centerVertically = true);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use resizeTextToFit(registry, ...) instead")]]
+        extern void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight, bool centerLaterally = true, bool centerVertically = true);
+        
+        // Registry-parameterized version (preferred)
+        extern void setTextScaleAndRecenter(entt::registry& registry, entt::entity textEntity, float renderScale, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use setTextScaleAndRecenter(registry, ...) instead")]]
         extern void setTextScaleAndRecenter(entt::entity textEntity, float renderScale, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically);
+        
+        // Registry-parameterized version (preferred)
+        extern void resetTextScaleAndLayout(entt::registry& registry, entt::entity textEntity);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use resetTextScaleAndLayout(registry, ...) instead")]]
         extern void resetTextScaleAndLayout(entt::entity textEntity);
         
+        // Registry-parameterized version (preferred)
+        extern void setText(entt::registry& registry, entt::entity textEntity, const std::string &text);
+        // Deprecated wrapper for backward compatibility
+        [[deprecated("Use setText(registry, ...) instead")]]
         extern void setText(entt::entity textEntity, const std::string &text);
 
     } // namespace Functions

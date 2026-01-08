@@ -1290,9 +1290,9 @@ namespace ui
         }
         
         // is the object text?
-        if (globals::getRegistry().any_of<TextSystem::Text>(elementConfig->object.value()) && objectConfig->textGetter)
+        if (registry.any_of<TextSystem::Text>(elementConfig->object.value()) && objectConfig->textGetter)
         {
-            auto &text = globals::getRegistry().get<TextSystem::Text>(elementConfig->object.value());
+            auto &text = registry.get<TextSystem::Text>(elementConfig->object.value());
             
             auto result = objectConfig->textGetter.value()();
             // compare to text getter
@@ -1551,9 +1551,9 @@ namespace ui
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                 //FIXME: needs immediate draw version
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist, {}, std::nullopt, std::nullopt);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist, {}, std::nullopt, std::nullopt);
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                    util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, shadowColor, parallaxDist, std::nullopt);
+                    util::DrawNPatchUIElementImmediate(layerPtr, registry, entity, shadowColor, parallaxDist, std::nullopt);
                     
             }
             
@@ -1564,11 +1564,11 @@ namespace ui
                 
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt);
                     
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                 //TODO: ninepatch doens't support layer order yet
-                    util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, c, parallaxDist, std::nullopt);
+                    util::DrawNPatchUIElementImmediate(layerPtr, registry, entity, c, parallaxDist, std::nullopt);
             }
         
             
@@ -1603,15 +1603,15 @@ namespace ui
                 {
                     // gray background
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, color, parallaxDist, std::nullopt);
+                        util::DrawNPatchUIElementImmediate(layerPtr, registry, entity, color, parallaxDist, std::nullopt);
 
                     // progress bar for button delay                  
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, color, parallaxDist, config->buttonDelayProgress);
+                        util::DrawNPatchUIElementImmediate(layerPtr, registry, entity, color, parallaxDist, config->buttonDelayProgress);
 
                 }
                 else if (config->progressBar)
@@ -1632,19 +1632,19 @@ namespace ui
                         }
                     }
                     else if (config->progressBarValueComponentName){
-                        auto component = reflection::retrieveComponent(&globals::getRegistry(), entity, config->progressBarValueComponentName.value());
+                        auto component = reflection::retrieveComponent(&registry, entity, config->progressBarValueComponentName.value());
                         auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
                         float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
                         SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
                     }
                     
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS){
                         // Draw empty portion first (background)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, config->progressBarEmptyColor.value_or(GRAY), parallaxDist, std::nullopt);
+                        util::DrawNPatchUIElementImmediate(layerPtr, registry, entity, config->progressBarEmptyColor.value_or(GRAY), parallaxDist, std::nullopt);
                         // Draw filled portion on top with fullColor
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, config->progressBarFullColor.value_or(GREEN), parallaxDist, progress);
+                        util::DrawNPatchUIElementImmediate(layerPtr, registry, entity, config->progressBarFullColor.value_or(GREEN), parallaxDist, progress);
                     }
                     
                 }
@@ -1653,9 +1653,9 @@ namespace ui
                     
                     // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::getRegistry(), entity, color, parallaxDist, std::nullopt);
+                        util::DrawNPatchUIElementImmediate(layerPtr, registry, entity, color, parallaxDist, std::nullopt);
                 }
             }
             else
@@ -1677,21 +1677,21 @@ namespace ui
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
-        else if (config->uiType == UITypeEnum::OBJECT && config->object && globals::getRegistry().any_of<transform::GameObject>(config->object.value()))
+        else if (config->uiType == UITypeEnum::OBJECT && config->object && registry.any_of<transform::GameObject>(config->object.value()))
         {
             ZONE_SCOPED("UI Element: Object Logic");
             //TODO: this part needs fixing
             // hightlighted object outline
-            auto &objectNode = globals::getRegistry().get<transform::GameObject>(config->object.value());
+            auto &objectNode = registry.get<transform::GameObject>(config->object.value());
             if (config->focusWithObject && objectNode.state.isBeingFocused)
             {
                 state->object_focus_timer = state->object_focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
                 float lw = 50.0f * std::pow(std::max(0.0f, (state->object_focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
                 // util::PrepDraw(layerPtr, registry, entity, 1.0f);
                 Color c = util::AdjustAlpha(WHITE, 0.2f * lw);
-                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, std::nullopt);
+                util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, std::nullopt);
                 c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
-                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, std::nullopt);
+                util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, std::nullopt);
                 // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
                 layer::PopMatrix();
             }
@@ -1703,7 +1703,7 @@ namespace ui
     // draw input text (IMMEDIATE MODE)
 if (config->uiType == UITypeEnum::INPUT_TEXT) {
     // Source
-    auto& ti             = globals::getRegistry().get<ui::TextInput>(entity);
+    auto& ti             = registry.get<ui::TextInput>(entity);
     const std::string& s = ti.text;
 
     // Font & knobs (match TEXT path)
@@ -1803,11 +1803,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 if (config->line_emboss)
                 {
                     Color c = ColorBrightness(config->outlineColor.value(), node->state.isBeingHovered ? 0.5f : 0.3f);
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth);
                 }
                 if (transform->getVisualW() > 0.01)
                 {
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth);
                 }
             }
         }
@@ -1820,12 +1820,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             Color c = Fade(WHITE, 0.2f * lw);
 
-            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f);
+            util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f);
             //TODO: refactor this whole method later
 
             c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
 
-            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f);
+            util::DrawSteppedRoundedRectangleImmediate(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f);
             
         }
         else
@@ -1888,12 +1888,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             entt::entity e = config->object.value();
             
             // is it dynamic text?
-            auto textView = globals::getRegistry().view<TextSystem::Text, entity_gamestate_management::StateTag>();
-            auto animationView = globals::getRegistry().view<AnimationQueueComponent, entity_gamestate_management::StateTag>();
+            auto textView = registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
+            auto animationView = registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>();
             if (textView.contains(e))
             {
                 // check if the entity is active
-                if (entity_gamestate_management::active_states_instance().is_active(globals::getRegistry().get<entity_gamestate_management::StateTag>(e)))
+                if (entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(e)))
                 {
                     TextSystem::Functions::renderTextImmediate(e, layerPtr, true);
                 }
@@ -1905,27 +1905,27 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             {
                  // check if the entity is active
                 if (entity_gamestate_management::active_states_instance().is_active(animationView.get<entity_gamestate_management::StateTag>(e))) {
-                    auto *layerOrder = globals::getRegistry().try_get<layer::LayerOrderComponent>(e);
+                    auto *layerOrder = registry.try_get<layer::LayerOrderComponent>(e);
                     auto zIndex = layerOrder ? layerOrder->zIndex : 0;
-                    bool isScreenSpace = globals::getRegistry().any_of<collision::ScreenSpaceCollisionMarker>(e);
+                    bool isScreenSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
                     
                     if (!isScreenSpace)
                     {
                         // SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
                     }
                     
-                    if (globals::getRegistry().any_of<shader_pipeline::ShaderPipelineComponent>(e))
+                    if (registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                     {
-                        layer::ImmediateCommand<layer::CmdDrawTransformEntityAnimationPipeline>(layerPtr, [e](auto* cmd) {
+                        layer::ImmediateCommand<layer::CmdDrawTransformEntityAnimationPipeline>(layerPtr, [e, &registry](auto* cmd) {
                             cmd->e = e;
-                            cmd->registry = &globals::getRegistry();
+                            cmd->registry = &registry;
                         }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                     }
                     else
                     {
-                        layer::ImmediateCommand<layer::CmdDrawTransformEntityAnimation>(layerPtr, [e](auto* cmd) {
+                        layer::ImmediateCommand<layer::CmdDrawTransformEntityAnimation>(layerPtr, [e, &registry](auto* cmd) {
                             cmd->e = e;
-                            cmd->registry = &globals::getRegistry();
+                            cmd->registry = &registry;
                         }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                     }      
                 }
@@ -2031,11 +2031,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             auto parentEntity = node->parent.value();
             Vector2 parentParallax = {0, 0};
 
-            auto *parentElement = globals::getRegistry().try_get<UIElementComponent>(parentEntity);
-            auto *parentNode = globals::getRegistry().try_get<transform::GameObject>(parentEntity);
+            auto *parentElement = registry.try_get<UIElementComponent>(parentEntity);
+            auto *parentNode = registry.try_get<transform::GameObject>(parentEntity);
 
-            float parentLayerX = (globals::getRegistry().valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
-            float parentLayerY = (globals::getRegistry().valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
+            float parentLayerX = (registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
+            float parentLayerY = (registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
 
             float shadowOffsetX = (styleShadow ? 0.4f * node->shadowDisplacement->x : 0) ;
             float shadowOffsetY = (styleShadow ? 0.4f * node->shadowDisplacement->y : 0) ;
@@ -2097,7 +2097,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 ctx.buttonBeingPressed = buttonBeingPressed;
                 ctx.buttonActive = buttonActive;
 
-                handler->draw(globals::getRegistry(), entity, styleConfig, *transform, ctx);
+                handler->draw(registry, entity, styleConfig, *transform, ctx);
                 // Skip legacy rendering for handled types
                 // Note: Common rendering (outline, focus) still runs after this
             }
@@ -2247,9 +2247,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 }
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                    util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist, {}, std::nullopt, std::nullopt, zIndex);
+                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist, {}, std::nullopt, std::nullopt, zIndex);
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                    util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, shadowColor, parallaxDist, std::nullopt, zIndex);
+                    util::DrawNPatchUIElement(layerPtr, registry, entity, shadowColor, parallaxDist, std::nullopt, zIndex);
                     
                 // layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
                 //     cmd->scaleX = 1 / 0.98f;
@@ -2281,11 +2281,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
 
                 if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                    util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt, zIndex);
+                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt, zIndex);
 
                 else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                 //TODO: ninepatch doens't support layer order yet
-                    util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, c, parallaxDist, std::nullopt, zIndex);
+                    util::DrawNPatchUIElement(layerPtr, registry, entity, c, parallaxDist, std::nullopt, zIndex);
             }
 
 
@@ -2339,15 +2339,15 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 {
                     // gray background
                     if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
                     else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, std::nullopt, zIndex);
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, std::nullopt, zIndex);
 
                     // progress bar
                     if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt, zIndex);
                     else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, config->buttonDelayProgress, zIndex);
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, config->buttonDelayProgress, zIndex);
 
                 }
                 else if (config->progressBar)
@@ -2375,19 +2375,19 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                         }
                     }
                     else if (config->progressBarValueComponentName){
-                        auto component = reflection::retrieveComponent(&globals::getRegistry(), entity, config->progressBarValueComponentName.value());
+                        auto component = reflection::retrieveComponent(&registry, entity, config->progressBarValueComponentName.value());
                         auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
                         float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
                         SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
                     }
 
                     if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt, zIndex);
                     else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS) {
                         // Draw empty portion first (background)
-                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, styleProgressBarEmptyColor.value_or(GRAY), parallaxDist, std::nullopt, zIndex);
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, styleProgressBarEmptyColor.value_or(GRAY), parallaxDist, std::nullopt, zIndex);
                         // Draw filled portion on top with fullColor
-                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, colorToUse, parallaxDist, progress, zIndex);
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, colorToUse, parallaxDist, progress, zIndex);
                     }
 
                 }
@@ -2396,9 +2396,9 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
                     // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
                     if (stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
                     else if (stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, globals::getRegistry(), entity, color, parallaxDist, std::nullopt, zIndex);
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, std::nullopt, zIndex);
                     else if (stylingType == ui::UIStylingType::SPRITE && config->spriteSourceTexture && config->spriteSourceRect)
                     {
                         auto* tex = config->spriteSourceTexture.value();
@@ -2501,16 +2501,16 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         {
             //TODO: this part needs fixing
             // hightlighted object outline
-            auto &objectNode = globals::getRegistry().get<transform::GameObject>(config->object.value());
+            auto &objectNode = registry.get<transform::GameObject>(config->object.value());
             if (config->focusWithObject && objectNode.state.isBeingFocused)
             {
                 state->object_focus_timer = state->object_focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
                 float lw = 50.0f * std::pow(std::max(0.0f, (state->object_focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
                 // util::PrepDraw(layerPtr, registry, entity, 1.0f);
                 Color c = util::AdjustAlpha(WHITE, 0.2f * lw);
-                util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, std::nullopt, zIndex);
+                util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, std::nullopt, zIndex);
                 c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
-                util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, std::nullopt, zIndex);
+                util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, std::nullopt, zIndex);
                 layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             }
             else
@@ -2523,7 +2523,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (config->uiType == UITypeEnum::INPUT_TEXT)
         {
             // Text source: ui::TextInput on the same entity
-            auto &textInput = globals::getRegistry().get<ui::TextInput>(entity);
+            auto &textInput = registry.get<ui::TextInput>(entity);
             const std::string &displayText = textInput.text;  // (optionally mask if you add that feature)
 
             // Reuse same font + knobs you used for TEXT
@@ -2660,11 +2660,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
                 if (config->line_emboss)
                 {
                     Color c = ColorBrightness(config->outlineColor.value(), node->state.isBeingHovered ? 0.5f : 0.3f);
-                    util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth, zIndex);
+                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth, zIndex);
                 }
                 if (transform->getVisualW() > 0.01)
                 {
-                    util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth, zIndex);
+                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth, zIndex);
                 }
             }
         }
@@ -2677,12 +2677,12 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             Color c = Fade(WHITE, 0.2f * lw);
 
-            util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f, zIndex);
+            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f, zIndex);
             //TODO: refactor this whole method later
 
             c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
 
-            util::DrawSteppedRoundedRectangle(layerPtr, globals::getRegistry(), entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f, zIndex);
+            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f, zIndex);
             
         }
         else
@@ -2743,11 +2743,11 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             entt::entity e = config->object.value();
             
             // is it dynamic text?
-            auto textView = globals::getRegistry().view<TextSystem::Text, entity_gamestate_management::StateTag>();
+            auto textView = registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
             if (textView.contains(e))
             {
                 // check if the entity is active
-                if (entity_gamestate_management::active_states_instance().is_active(globals::getRegistry().get<entity_gamestate_management::StateTag>(e)))
+                if (entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(e)))
                 {
                     TextSystem::Functions::renderText(e, layerPtr, true);
                 }
@@ -2788,7 +2788,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         // call the object's own lambda draw function, if it has one
         if (node->drawFunction) {
             // util::PrepDraw(layerPtr, registry, entity, 0.98f);
-            node->drawFunction(layerPtr, globals::getRegistry(), entity, zIndex);
+            node->drawFunction(layerPtr, registry, entity, zIndex);
         }
         
         //TODO: enable this back later

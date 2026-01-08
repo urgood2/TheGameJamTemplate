@@ -36,11 +36,7 @@ namespace ImGui {
     void SameLine(float, float) {}
 }
 
-// Stub out UI traversal/interaction hooks used by input_functions.
 namespace ui {
-namespace box {
-    void TraverseUITreeBottomUp(entt::registry&, entt::entity, std::function<void(entt::entity)>, bool) {}
-}
 namespace element {
     void ApplyHover(entt::registry&, entt::entity) {}
     void Click(entt::registry&, entt::entity) {}
@@ -105,4 +101,56 @@ namespace ai_system {
 namespace game {
     double g_maxGcPauseMs{0.0};
     double g_avgGcPauseMs{0.0};
+    std::unordered_map<std::string, std::shared_ptr<layer::Layer>> s_layers{};
+}
+
+namespace layer {
+namespace layer_order_system {
+    int newZIndex{0};
+}
+}
+
+namespace TextSystem {
+namespace Functions {
+    void resetTextScaleAndLayout(entt::entity) {}
+}
+}
+
+namespace animation_system {
+    void resetAnimationUIRenderScale(entt::entity) {}
+}
+
+namespace ui {
+namespace util {
+    void AddInstanceToRegistry(entt::registry&, entt::entity, const std::string&) {}
+    void RemoveAll(entt::registry&, entt::entity) {}
+}
+}
+
+namespace ui {
+namespace element {
+    entt::entity Initialize(entt::registry& reg, entt::entity, entt::entity, ui::UITypeEnum, std::optional<ui::UIConfig>) { return reg.create(); }
+    void SetAlignments(entt::registry&, entt::entity, std::optional<Vector2>, bool) {}
+    void ApplyAlignment(entt::registry&, entt::entity, float, float) {}
+    std::string DebugPrintTree(entt::registry&, entt::entity, int) { return ""; }
+    void buildUIDrawList(entt::registry&, entt::entity, std::vector<ui::UIDrawListItem>&, int) {}
+    void InitializeVisualTransform(entt::registry&, entt::entity) {}
+    void UpdateUIObjectScalingAndRecnter(entt::registry&, ui::UIConfig*, float, transform::Transform*) {}
+    void UpdateUIObjectScalingAndRecnter(ui::UIConfig*, float, transform::Transform*) {}
+    void ApplyScalingFactorToSizesInSubtree(entt::registry&, entt::entity, float) {}
+    std::pair<float, float> SetWH(entt::registry&, entt::entity) { return {0.0f, 0.0f}; }
+    void Remove(entt::registry&, entt::entity) {}
+    void DrawSelf(entt::registry&, std::shared_ptr<layer::Layer>, entt::entity, ui::UIElementComponent&, ui::UIConfig&, ui::UIState&, transform::GameObject&, transform::Transform&, const int&) {}
+    void DrawSelf(std::shared_ptr<layer::Layer>, entt::entity, ui::UIElementComponent&, ui::UIConfig&, ui::UIState&, transform::GameObject&, transform::Transform&, const int&) {}
+    void SetValues(entt::registry&, entt::entity, const ui::LocalTransform&, bool) {}
+}
+}
+
+namespace transform {
+    void AssignRole(entt::registry*, entt::entity, std::optional<transform::InheritedProperties::Type>, entt::entity, std::optional<transform::InheritedProperties::Sync>, std::optional<transform::InheritedProperties::Sync>, std::optional<transform::InheritedProperties::Sync>, std::optional<transform::InheritedProperties::Sync>, std::optional<Vector2>) {}
+    void RemoveEntity(entt::registry*, entt::entity) {}
+    void AlignToMaster(entt::registry*, entt::entity, bool) {}
+    void ConfigureAlignment(entt::registry*, entt::entity, bool, entt::entity, std::optional<transform::InheritedProperties::Sync>, std::optional<transform::InheritedProperties::Sync>, std::optional<transform::InheritedProperties::Sync>, std::optional<transform::InheritedProperties::Sync>, std::optional<int>, std::optional<Vector2>) {}
+    void ConfigureContainerForEntity(entt::registry*, entt::entity, entt::entity) {}
+    void DrawBoundingBoxAndDebugInfo(entt::registry*, entt::entity, std::shared_ptr<layer::Layer>) {}
 }

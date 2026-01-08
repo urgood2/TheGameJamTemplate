@@ -28,8 +28,9 @@ TEST_F(InputStateDefaultsTest, HIDFlagsStartWithMouseEnabled) {
 
 TEST_F(InputStateDefaultsTest, ReconfigureToControllerThenBackToMouse) {
     input::InputState state{};
+    entt::registry registry;
 
-    input::ReconfigureInputDeviceInfo(state, input::InputDeviceInputCategory::GAMEPAD_BUTTON);
+    input::ReconfigureInputDeviceInfo(registry, state, input::InputDeviceInputCategory::GAMEPAD_BUTTON);
     EXPECT_TRUE(state.hid.controller_enabled);
     EXPECT_EQ(state.hid.last_type, input::InputDeviceInputCategory::GAMEPAD_BUTTON);
     EXPECT_FALSE(state.hid.mouse_enabled);
@@ -42,7 +43,7 @@ TEST_F(InputStateDefaultsTest, ReconfigureToControllerThenBackToMouse) {
     state.hid.controller_enabled = true;
     state.hid.dpad_enabled = true;
 
-    input::ReconfigureInputDeviceInfo(state, input::InputDeviceInputCategory::MOUSE);
+    input::ReconfigureInputDeviceInfo(registry, state, input::InputDeviceInputCategory::MOUSE);
     EXPECT_FALSE(state.hid.controller_enabled);
     EXPECT_EQ(state.hid.last_type, input::InputDeviceInputCategory::MOUSE);
     EXPECT_TRUE(state.hid.mouse_enabled);
@@ -56,7 +57,8 @@ TEST_F(InputStateDefaultsTest, ReconfigureToControllerThenBackToMouse) {
 
 TEST_F(InputStateDefaultsTest, AxisCursorEnablesPointerAndAxisFlags) {
     input::InputState state{};
-    input::ReconfigureInputDeviceInfo(state, input::InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
+    entt::registry registry;
+    input::ReconfigureInputDeviceInfo(registry, state, input::InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR);
 
     EXPECT_TRUE(state.hid.controller_enabled);
     EXPECT_TRUE(state.hid.pointer_enabled);

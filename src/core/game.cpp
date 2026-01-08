@@ -72,7 +72,6 @@
 #include "systems/scripting/binding_recorder.hpp"
 #include "systems/spring/spring.hpp"
 #include "systems/transform/transform.hpp"
-#include "systems/ui/ui_data.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
@@ -96,18 +95,12 @@ using std::pair;
 #include <vector>
 
 #include "util/common_headers.hpp"
-#include "util/utilities.hpp"
-
-#include "core/globals.hpp"
-#include "core/misc_fuctions.hpp"
 #include "core/ui_definitions.hpp"
 
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/layer/layer_order_system.hpp"
-#include "systems/shaders/shader_system.hpp"
-#include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/ui/ui.hpp"
 #include "systems/ui/util.hpp"
@@ -120,8 +113,6 @@ using std::pair;
 #include "entt/entt.hpp"
 
 #include "third_party/rlImGui/rlImGui.h"
-
-#include "raymath.h"
 
 
 

@@ -1186,9 +1186,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>, entt::exclude<InactiveTag>);
         
-        group.each([dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
+        group.each([dt, registry](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
             UpdateTransform(e, dt, transform, role, node);
-            UpdateTransformMatrices(globals::getRegistry(), e);
+            UpdateTransformMatrices(*registry, e);
         });
         
         
@@ -1803,11 +1803,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      * @return A sorted vector of entities at the specified point, from lowest to highest zIndex.
      *         Entities without a zIndex are placed after those with a zIndex.
      */
-    std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& mouseScreen, Camera2D * camera)
+    std::vector<entt::entity> FindAllEntitiesAtPoint(entt::registry& registry, const Vector2& mouseScreen, Camera2D * camera)
     {
         using namespace quadtree;
         constexpr float pointBoxSize = 1.0f;
-        auto &registry = globals::getRegistry();
 
         // ——— 1) UI pass (screen-space) ———
         // Build a tiny AABB around the mouse in screen coords
@@ -1875,29 +1874,28 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         };
         auto getInfo = [&](entt::entity e) {
             OrderInfo info;
-            auto& r = globals::getRegistry();
-            if (!r.valid(e)) return info;
+            if (!registry.valid(e)) return info;
 
-            info.isScreen = r.any_of<collision::ScreenSpaceCollisionMarker>(e)
-                        || r.any_of<ui::UIElementComponent>(e);
+            info.isScreen = registry.any_of<collision::ScreenSpaceCollisionMarker>(e)
+                        || registry.any_of<ui::UIElementComponent>(e);
 
             // Prefer entity's own z
-            if (auto loc = r.try_get<layer::LayerOrderComponent>(e))
+            if (auto loc = registry.try_get<layer::LayerOrderComponent>(e))
                 { info.layerOrder = loc->zIndex; info.hasOrder = true; }
 
             // If it's a UI element, allow fallback to its parent box z
-            if (auto uiElem = r.try_get<ui::UIElementComponent>(e)) {
+            if (auto uiElem = registry.try_get<ui::UIElementComponent>(e)) {
                 info.parentBox = uiElem->uiBox;
-                if (!info.hasOrder && r.valid(info.parentBox)) {
-                    if (auto locp = r.try_get<layer::LayerOrderComponent>(info.parentBox)) {
+                if (!info.hasOrder && registry.valid(info.parentBox)) {
+                    if (auto locp = registry.try_get<layer::LayerOrderComponent>(info.parentBox)) {
                         info.layerOrder = locp->zIndex; info.hasOrder = true;
                     }
                 }
-                if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
+                if (auto toc = registry.try_get<transform::TreeOrderComponent>(e))
                     info.treeOrder = toc->order; // higher in front? match your renderer
             } else {
                 // world objects may also have TreeOrderComponent (use if you render by it)
-                if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
+                if (auto toc = registry.try_get<transform::TreeOrderComponent>(e))
                     info.treeOrder = toc->order;
             }
 
@@ -1931,6 +1929,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         });
 
         return hits;
+    }
+
+    [[deprecated("Use FindAllEntitiesAtPoint(registry, mouseScreen, camera) instead")]]
+    std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& mouseScreen, Camera2D * camera)
+    {
+        return FindAllEntitiesAtPoint(globals::getRegistry(), mouseScreen, camera);
     }
     
     auto GetCollisionOrderInfo(entt::registry& registry, entt::entity e) -> CollisionOrderInfo {
@@ -1991,10 +1995,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      *    collision with the point.
      * 6. Returns the first entity that collides with the point, skipping the cursor entity.
      */
-    std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point) {
+    std::optional<entt::entity> FindTopEntityAtPoint(entt::registry& registry, const Vector2& point) {
         using namespace quadtree;
-        auto &registry = globals::getRegistry();
-        // Make a tiny AABB around the point for the quadtree query
         constexpr float pointBoxSize = 1.0f;
         Box<float> queryBox = {
             {point.x - pointBoxSize * 0.5f, point.y - pointBoxSize * 0.5f},
@@ -2037,7 +2039,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
         return std::nullopt;
     }
-    
+
+    [[deprecated("Use FindTopEntityAtPoint(registry, point) instead")]]
+    std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point) {
+        return FindTopEntityAtPoint(globals::getRegistry(), point);
+    }
 
     auto SetClickOffset(entt::registry *registry, entt::entity e, const Vector2 &point, bool trueForClickFalseForHover) -> void
     {
@@ -3076,10 +3082,12 @@ auto exposeToLua(sol::state &lua, EngineContext* /*ctx*/) -> void {
     transform_tbl.set_function("DrawBoundingBoxAndDebugInfo", &transform::DrawBoundingBoxAndDebugInfo);
     rec.record_free_function({"transform"}, {"DrawBoundingBoxAndDebugInfo", "---@param registry registry\n---@param e Entity\n---@param layer Layer\n---@return nil", "Draws debug visuals for a transform.", true, false});
     
-    transform_tbl.set_function("FindTopEntityAtPoint", &transform::FindTopEntityAtPoint);
+    transform_tbl.set_function("FindTopEntityAtPoint", 
+        static_cast<std::optional<entt::entity>(*)(const Vector2&)>(&transform::FindTopEntityAtPoint));
     rec.record_free_function({"transform"}, {"FindTopEntityAtPoint", "---@param point Vector2\n---@return Entity|nil", "Finds the top-most interactable entity at a screen point.", true, false});
 
-    transform_tbl.set_function("FindAllEntitiesAtPoint", &transform::FindAllEntitiesAtPoint);
+    transform_tbl.set_function("FindAllEntitiesAtPoint", 
+        static_cast<std::vector<entt::entity>(*)(const Vector2&, Camera2D*)>(&transform::FindAllEntitiesAtPoint));
     rec.record_free_function({"transform"}, {"FindAllEntitiesAtPoint", "---@param point Vector2\n---@return Entity[]", "Finds all interactable entities at a screen point.", true, false});
     
     transform_tbl.set_function("RemoveEntity", &transform::RemoveEntity);

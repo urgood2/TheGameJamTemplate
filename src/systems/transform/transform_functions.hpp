@@ -208,8 +208,12 @@ namespace transform
      */
     auto CheckCollisionWithPoint(entt::registry *registry, entt::entity e, const Vector2 &point) -> bool;
     
-    extern std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point);    
+    std::optional<entt::entity> FindTopEntityAtPoint(entt::registry& registry, const Vector2& point);
+    [[deprecated("Use FindTopEntityAtPoint(registry, point) instead")]]
+    std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point);    
     
+    std::vector<entt::entity> FindAllEntitiesAtPoint(entt::registry& registry, const Vector2& mouseScreen, Camera2D *camera = nullptr);
+    [[deprecated("Use FindAllEntitiesAtPoint(registry, mouseScreen, camera) instead")]]
     std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& mouseScreen, Camera2D *camera = nullptr);    
     
     extern auto GetCollisionOrderInfo(entt::registry& registry, entt::entity e) -> CollisionOrderInfo;

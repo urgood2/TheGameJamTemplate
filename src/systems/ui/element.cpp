@@ -997,7 +997,7 @@ namespace ui
             
             if (uiConfig->object)
             {
-                UpdateUIObjectScalingAndRecnter(uiConfig, uiConfig->scale.value(), transform);
+                UpdateUIObjectScalingAndRecnter(registry, uiConfig, uiConfig->scale.value(), transform);
             }
 
             // SPDLOG_DEBUG("Applying scaling factor to entity {} resulted in width: {}, height: {}, content dimensions: {}, scale: {}",
@@ -1005,20 +1005,25 @@ namespace ui
         }
     }
 
-    void element::UpdateUIObjectScalingAndRecnter(ui::UIConfig *uiConfig, float newScale, transform::Transform *transform)
+    void element::UpdateUIObjectScalingAndRecnter(entt::registry& registry, ui::UIConfig *uiConfig, float newScale, transform::Transform *transform)
     {
         auto objectEntity = uiConfig->object.value();
 
         // is it text?
-        if (globals::getRegistry().any_of<TextSystem::Text>(objectEntity))
+        if (registry.any_of<TextSystem::Text>(objectEntity))
         {
             TextSystem::Functions::setTextScaleAndRecenter(objectEntity, newScale, transform->getActualW(), transform->getActualH(), true, true);
         }
-        else if (globals::getRegistry().any_of<AnimationQueueComponent>(objectEntity))
+        else if (registry.any_of<AnimationQueueComponent>(objectEntity))
         {
             // FIXME: this isn't working.
             animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI(objectEntity, transform->getActualW(), transform->getActualH());
         }
+    }
+
+    void element::UpdateUIObjectScalingAndRecnter(ui::UIConfig *uiConfig, float newScale, transform::Transform *transform)
+    {
+        UpdateUIObjectScalingAndRecnter(globals::getRegistry(), uiConfig, newScale, transform);
     }
 
     void element::ApplyAlignment(entt::registry &registry, entt::entity rootEntity, float offsetX, float offsetY) 
@@ -1350,12 +1355,12 @@ namespace ui
         }
     }
     
-    void element::DrawSelfImmediate(layer::Layer* layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
+    void element::DrawSelfImmediate(entt::registry& registry, layer::Layer* layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
     {
         // check validity and bail
         if (!layerPtr)
             return;
-        if (!globals::getRegistry().valid(entity))
+        if (!registry.valid(entity))
             return;
         if (entity == entt::null)
             return;
@@ -1366,7 +1371,7 @@ namespace ui
         auto *state = &stateComp;
         auto *node =  &nodeComp;
         auto *transform =  &transformComp;
-        auto *rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
+        auto *rectCache = registry.try_get<RoundedRectangleVerticesCache>(entity);
         const auto& fontData = resolveFontData(config);
 
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
@@ -1416,11 +1421,11 @@ namespace ui
             auto parentEntity = node->parent.value();
             Vector2 parentParallax = {0, 0};
 
-            auto *parentElement = globals::getRegistry().try_get<UIElementComponent>(parentEntity);
-            auto *parentNode = globals::getRegistry().try_get<transform::GameObject>(parentEntity);
+            auto *parentElement = registry.try_get<UIElementComponent>(parentEntity);
+            auto *parentNode = registry.try_get<transform::GameObject>(parentEntity);
 
-            float parentLayerX = (globals::getRegistry().valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
-            float parentLayerY = (globals::getRegistry().valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
+            float parentLayerX = (registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
+            float parentLayerY = (registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
 
             float shadowOffsetX = (config->shadow ? 0.4f * node->shadowDisplacement->x : 0) ;
             float shadowOffsetY = (config->shadow ? 0.4f * node->shadowDisplacement->y : 0) ;
@@ -1932,11 +1937,16 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         if (node->drawFunction) {
             //TODO: this probably won't work in immediate mode
             // PERF: drawFunction temporarily disabled in immediate mode (requires shared_ptr)
-            // node->drawFunction(layerPtr, globals::getRegistry(), entity, -1);
+            // node->drawFunction(layerPtr, registry, entity, -1);
         }
     }
 
-    void element::DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex)
+    void element::DrawSelfImmediate(layer::Layer* layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
+    {
+        DrawSelfImmediate(globals::getRegistry(), layerPtr, entity, uiElementComp, configComp, stateComp, nodeComp, transformComp);
+    }
+
+    void element::DrawSelf(entt::registry& registry, std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex)
     {
         ZONE_SCOPED("UI Element: DrawSelf");
         auto *uiElement = &uiElementComp;
@@ -1944,14 +1954,14 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         auto *state = &stateComp;
         auto *node =  &nodeComp;
         auto *transform =  &transformComp;
-        auto *rectCache = globals::getRegistry().try_get<RoundedRectangleVerticesCache>(entity);
+        auto *rectCache = registry.try_get<RoundedRectangleVerticesCache>(entity);
         const auto& fontData = resolveFontData(config);
 
         // Phase 7: Use split components directly (always present since SetUpUIElement)
-        auto& styleConfig = globals::getRegistry().get<UIStyleConfig>(entity);
-        auto& layoutConfig = globals::getRegistry().get<UILayoutConfig>(entity);
-        auto& interactionConfig = globals::getRegistry().get<UIInteractionConfig>(entity);
-        auto& contentConfig = globals::getRegistry().get<UIContentConfig>(entity);
+        auto& styleConfig = registry.get<UIStyleConfig>(entity);
+        auto& layoutConfig = registry.get<UILayoutConfig>(entity);
+        auto& interactionConfig = registry.get<UIInteractionConfig>(entity);
+        auto& contentConfig = registry.get<UIContentConfig>(entity);
 
         // Style field accessors from UIStyleConfig
         const auto& stylingType = styleConfig.stylingType;
@@ -2784,9 +2794,13 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
         //TODO: enable this back later
 
         if (globals::getDrawDebugInfo())
-            transform::DrawBoundingBoxAndDebugInfo(&globals::getRegistry(), entity, layerPtr);
+            transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
     }
-    
+
+    void element::DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex)
+    {
+        DrawSelf(globals::getRegistry(), layerPtr, entity, uiElementComp, configComp, stateComp, nodeComp, transformComp, zIndex);
+    }
 
     void element::Update(entt::registry &registry, entt::entity entity, float dt,  UIConfig *uiConfig, transform::Transform *transform, UIElementComponent *uiElement, transform::GameObject *node)
     {

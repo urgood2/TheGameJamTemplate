@@ -29,6 +29,8 @@ namespace ui {
     namespace element {
         auto Initialize(entt::registry &registry, entt::entity parent, entt::entity uiBox, UITypeEnum type, std::optional<UIConfig> config) -> entt::entity;
         auto ApplyScalingFactorToSizesInSubtree(entt::registry &registry, entt::entity rootEntity, float scaling) -> void;
+        void UpdateUIObjectScalingAndRecnter(entt::registry& registry, ui::UIConfig *uiConfig, float newScale, transform::Transform *transform);
+        [[deprecated("Use explicit registry overload")]]
         void UpdateUIObjectScalingAndRecnter(ui::UIConfig *uiConfig, float newScale, transform::Transform *transform);
         auto SetValues(entt::registry &registry, entt::entity entity, const LocalTransform &_T, bool recalculate) -> void;
         auto DebugPrintTree(entt::registry &registry, entt::entity entity, int indent) -> std::string;
@@ -41,7 +43,11 @@ namespace ui {
         auto SetAlignments(entt::registry &registry, entt::entity entity, std::optional<Vector2> uiBoxOffset = std::nullopt, bool rootEntity = false) -> void;
         void UpdateText(entt::registry &registry, entt::entity entity, UIConfig *config, UIState *state);
         void UpdateObject(entt::registry &registry, entt::entity entity, UIConfig *elementConfig, transform::GameObject *elementNode, UIConfig *objectConfig, transform::Transform *objTransform, transform::InheritedProperties *objectRole, transform::GameObject *objectNode);
+        void DrawSelf(entt::registry& registry, std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex = 0);
+        [[deprecated("Use explicit registry overload")]]
         void DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex = 0);
+        void DrawSelfImmediate(entt::registry& registry, layer::Layer* layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp);
+        [[deprecated("Use explicit registry overload")]]
         void DrawSelfImmediate(layer::Layer* layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp);
         void Update(entt::registry &registry, entt::entity entity, float dt,  UIConfig *uiConfig, transform::Transform *transform, UIElementComponent *uiElement, transform::GameObject *node);
         auto CollidesWithPoint(entt::registry &registry, entt::entity entity, const Vector2 &cursorPosition) -> bool;

@@ -945,7 +945,8 @@ namespace ui {
         // element.set_function("Initialize",                   &ui::element::Initialize);
         
         element.set_function("ApplyScalingToSubtree",        &ui::element::ApplyScalingFactorToSizesInSubtree);
-        element.set_function("UpdateUIObjectScalingAndRecenter",&ui::element::UpdateUIObjectScalingAndRecnter);
+        element.set_function("UpdateUIObjectScalingAndRecenter",
+            static_cast<void(*)(ui::UIConfig*, float, transform::Transform*)>(&ui::element::UpdateUIObjectScalingAndRecnter));
         element.set_function("SetValues",                    &ui::element::SetValues);
         element.set_function("DebugPrintTree",               &ui::element::DebugPrintTree);
         element.set_function("InitializeVisualTransform",    &ui::element::InitializeVisualTransform);
@@ -956,7 +957,8 @@ namespace ui {
         element.set_function("SetAlignments",                &ui::element::SetAlignments);
         element.set_function("UpdateText",                   &ui::element::UpdateText);
         element.set_function("UpdateObject",                 &ui::element::UpdateObject);
-        element.set_function("DrawSelf",                     &ui::element::DrawSelf);
+        element.set_function("DrawSelf",
+            static_cast<void(*)(std::shared_ptr<layer::Layer>, entt::entity, ui::UIElementComponent&, ui::UIConfig&, ui::UIState&, transform::GameObject&, transform::Transform&, const int&)>(&ui::element::DrawSelf));
         element.set_function("Update",                       &ui::element::Update);
         element.set_function("CollidesWithPoint",            &ui::element::CollidesWithPoint);
         element.set_function("PutFocusedCursor",             &ui::element::PutFocusedCursor);

@@ -26,11 +26,11 @@ static Texture2D *resolveAtlasTexture(const std::string &atlasUUID) {
   return getAtlasTexture(atlasUUID);
 }
 
-void setHorizontalFlip(entt::entity e, bool flip) {
-  if (!globals::getRegistry().any_of<AnimationQueueComponent>(e))
+void setHorizontalFlip(entt::registry& registry, entt::entity e, bool flip) {
+  if (!registry.any_of<AnimationQueueComponent>(e))
     return;
 
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
 
   animQueue.defaultAnimation.flippedHorizontally = flip;
 
@@ -38,33 +38,47 @@ void setHorizontalFlip(entt::entity e, bool flip) {
     animObj.flippedHorizontally = flip;
 }
 
-void flipAnimation(entt::entity e, bool horizontal, bool vertical) {
-  if (!globals::getRegistry().any_of<AnimationQueueComponent>(e))
+void setHorizontalFlip(entt::entity e, bool flip) {
+  setHorizontalFlip(globals::getRegistry(), e, flip);
+}
+
+void flipAnimation(entt::registry& registry, entt::entity e, bool horizontal, bool vertical) {
+  if (!registry.any_of<AnimationQueueComponent>(e))
     return;
 
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
 
-  // flip default animation
   animQueue.defaultAnimation.flippedHorizontally = horizontal;
   animQueue.defaultAnimation.flippedVertically = vertical;
 
-  // also apply to any queued animations
   for (auto &animObj : animQueue.animationQueue) {
     animObj.flippedHorizontally = horizontal;
     animObj.flippedVertically = vertical;
   }
 }
 
+void flipAnimation(entt::entity e, bool horizontal, bool vertical) {
+  flipAnimation(globals::getRegistry(), e, horizontal, vertical);
+}
+
+void setAnimationFlip(entt::registry& registry, entt::entity e, bool flipH, bool flipV) {
+  flipAnimation(registry, e, flipH, flipV);
+}
+
 void setAnimationFlip(entt::entity e, bool flipH, bool flipV) {
-  flipAnimation(e, flipH, flipV);
+  flipAnimation(globals::getRegistry(), e, flipH, flipV);
+}
+
+void toggleAnimationFlip(entt::registry& registry, entt::entity e) {
+  if (!registry.any_of<AnimationQueueComponent>(e))
+    return;
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
+  auto &anim = animQueue.defaultAnimation;
+  anim.flippedHorizontally = !anim.flippedHorizontally;
 }
 
 void toggleAnimationFlip(entt::entity e) {
-  if (!globals::getRegistry().any_of<AnimationQueueComponent>(e))
-    return;
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
-  auto &anim = animQueue.defaultAnimation;
-  anim.flippedHorizontally = !anim.flippedHorizontally;
+  toggleAnimationFlip(globals::getRegistry(), e);
 }
 
 auto exposeToLua(sol::state &lua) -> void {
@@ -109,7 +123,7 @@ auto exposeToLua(sol::state &lua) -> void {
 
   rec.bind_function(
       lua, {"animation_system"}, "setFGColorForAllAnimationObjects",
-      &animation_system::setFGColorForAllAnimationObjects,
+      static_cast<void(*)(entt::entity, Color)>(&animation_system::setFGColorForAllAnimationObjects),
       "---@param e entt.entity # Target entity\n"
       "---@param fgColor Color # Foreground color to set\n"
       "---@return nil",
@@ -186,7 +200,7 @@ auto exposeToLua(sol::state &lua) -> void {
   // ) -> void
   rec.bind_function(
       lua, {"animation_system"}, "setupAnimatedObjectOnEntity",
-      &animation_system::setupAnimatedObjectOnEntity,
+      static_cast<void(*)(entt::entity, std::string, bool, std::function<void(entt::entity)>, bool)>(&animation_system::setupAnimatedObjectOnEntity),
       R"lua(
         ---@param e entt.entity                        # The existing entity to configure
         ---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID
@@ -200,7 +214,7 @@ auto exposeToLua(sol::state &lua) -> void {
 
   rec.bind_function(
       lua, {"animation_system"}, "set_flip",
-      &animation_system::setAnimationFlip,
+      static_cast<void(*)(entt::entity, bool, bool)>(&animation_system::setAnimationFlip),
       "---@param e entt.entity\n"
       "---@param flipH boolean\n"
       "---@param flipV boolean\n"
@@ -209,7 +223,7 @@ auto exposeToLua(sol::state &lua) -> void {
 
   rec.bind_function(
       lua, {"animation_system"}, "toggle_flip",
-      &animation_system::toggleAnimationFlip,
+      static_cast<void(*)(entt::entity)>(&animation_system::toggleAnimationFlip),
       "---@param e entt.entity\n"
       "---@return nil\n"
       "Toggles horizontal flip for the entity's current animation");
@@ -225,11 +239,9 @@ auto exposeToLua(sol::state &lua) -> void {
       "---@return AnimationObject animObj # New still animation object",
       "Creates a still animation from a sprite UUID");
 
-  // resizeAnimationObjectsInEntityToFit(e: entt.entity, targetWidth: number,
-  // targetHeight: number) -> nil
   rec.bind_function(lua, {"animation_system"},
                     "resizeAnimationObjectsInEntityToFit",
-                    &animation_system::resizeAnimationObjectsInEntityToFit,
+                    static_cast<void(*)(entt::entity, float, float)>(&animation_system::resizeAnimationObjectsInEntityToFit),
                     "---@param e entt.entity # Target entity\n"
                     "---@param targetWidth number # Desired width\n"
                     "---@param targetHeight number # Desired height\n"
@@ -242,7 +254,7 @@ auto exposeToLua(sol::state &lua) -> void {
   rec.bind_function(
       lua, {"animation_system"},
       "resizeAnimationObjectsInEntityToFitAndCenterUI",
-      &animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI,
+      static_cast<void(*)(entt::entity, float, float, bool, bool)>(&animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI),
       "---@param e entt.entity # Target entity\n"
       "---@param targetWidth number # Desired width\n"
       "---@param targetHeight number # Desired height\n"
@@ -253,7 +265,7 @@ auto exposeToLua(sol::state &lua) -> void {
 
   // resetAnimationUIRenderScale(e: entt.entity) -> nil
   rec.bind_function(lua, {"animation_system"}, "resetAnimationUIRenderScale",
-                    &animation_system::resetAnimationUIRenderScale,
+                    static_cast<void(*)(entt::entity)>(&animation_system::resetAnimationUIRenderScale),
                     "---@param e entt.entity # Target entity\n"
                     "---@return nil",
                     "Resets UI render scale for an entity’s animations");
@@ -443,70 +455,68 @@ auto createStillAnimationFromSpriteUUID(std::string spriteUUID,
   return ao;
 }
 
-/*
-    for generateNewAnimFromSprite, please set only to true if the provided uuid
-   is not for an animation (animations.json), but for a sprite from the sprite
-   sheet
-*/
 auto createAnimatedObjectWithTransform(
+    entt::registry& registry,
     std::string defaultAnimationIDorSpriteUUID, bool generateNewAnimFromSprite,
     int x, int y, std::function<void(entt::entity)> shaderPassConfig,
     bool shadowEnabled) -> entt::entity {
-  auto e = globals::getRegistry().create();
-  transform::CreateOrEmplace(&globals::getRegistry(),
+  auto e = registry.create();
+  transform::CreateOrEmplace(&registry,
                              globals::getGameWorldContainer(), x, y, 0, 0, e);
-  auto &transform = globals::getRegistry().get<transform::Transform>(e);
-  auto &animQueue = globals::getRegistry().emplace<AnimationQueueComponent>(e);
+  auto &transform = registry.get<transform::Transform>(e);
+  auto &animQueue = registry.emplace<AnimationQueueComponent>(e);
   if (generateNewAnimFromSprite) {
-    // create a new animation object from the sprite UUID
     animQueue.defaultAnimation = createStillAnimationFromSpriteUUID(
         defaultAnimationIDorSpriteUUID, std::nullopt, std::nullopt);
   } else {
-    // use the default animation object
     animQueue.defaultAnimation =
         init::getAnimationObject(defaultAnimationIDorSpriteUUID);
   }
 
-  auto &gameObject = globals::getRegistry().get<transform::GameObject>(e);
+  auto &gameObject = registry.get<transform::GameObject>(e);
 
   if (!shadowEnabled) {
     gameObject.shadowDisplacement.reset();
   }
 
-  // set width and height to the animation size
-  // TODO: optionally provide custom size upon init
   if (!animQueue.defaultAnimation.animationList.empty()) {
     const auto& firstFrame = animQueue.defaultAnimation.animationList.front().first;
     transform.setActualW(firstFrame.spriteFrame->frame.width);
     transform.setActualH(firstFrame.spriteFrame->frame.height);
   } else {
     SPDLOG_WARN("createAnimatedObjectWithTransform: empty animation list for entity {}", static_cast<int>(e));
-    transform.setActualW(1);  // Fallback to minimal valid dimensions
+    transform.setActualW(1);
     transform.setActualH(1);
   }
 
   if (shaderPassConfig)
-    shaderPassConfig(e); // pass the entity to the shader pass config function
+    shaderPassConfig(e);
 
   return e;
 }
 
+auto createAnimatedObjectWithTransform(
+    std::string defaultAnimationIDorSpriteUUID, bool generateNewAnimFromSprite,
+    int x, int y, std::function<void(entt::entity)> shaderPassConfig,
+    bool shadowEnabled) -> entt::entity {
+  return createAnimatedObjectWithTransform(
+      globals::getRegistry(), defaultAnimationIDorSpriteUUID, generateNewAnimFromSprite,
+      x, y, shaderPassConfig, shadowEnabled);
+}
+
 auto replaceAnimatedObjectOnEntity(
+    entt::registry& registry,
     entt::entity e, std::string defaultAnimationIDorSpriteUUID,
     bool generateNewAnimFromSprite,
     std::function<void(entt::entity)> shaderPassConfig, bool shadowEnabled)
     -> void {
-  // --- ASSUME: `e` already has a transform::Transform attached ---
-  auto &registry = globals::getRegistry();
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
   auto &gameObject = registry.get<transform::GameObject>(e);
   auto &transform = registry.get<transform::Transform>(e);
 
-  // 0) remember how big this entity *really* is right now:
   auto storedW = transform.getActualW();
   auto storedH = transform.getActualH();
 
-  // 1) swap in the new animation
   if (generateNewAnimFromSprite) {
     animQueue.defaultAnimation = createStillAnimationFromSpriteUUID(
         defaultAnimationIDorSpriteUUID, std::nullopt, std::nullopt);
@@ -514,7 +524,7 @@ auto replaceAnimatedObjectOnEntity(
     animQueue.defaultAnimation =
         init::getAnimationObject(defaultAnimationIDorSpriteUUID);
   }
-  // 4) size the transform to match the first frame
+
   if (!animQueue.defaultAnimation.animationList.empty()) {
     const auto &firstFrame =
         animQueue.defaultAnimation.animationList.front().first.spriteFrame->frame;
@@ -522,31 +532,34 @@ auto replaceAnimatedObjectOnEntity(
     transform.setActualH(firstFrame.height);
   } else {
     SPDLOG_WARN("replaceAnimatedObjectOnEntity: empty animation list for entity {}", static_cast<int>(e));
-    transform.setActualW(1);  // Fallback to minimal valid dimensions
+    transform.setActualW(1);
     transform.setActualH(1);
   }
 
-  // transform.setActualW(newW);
-  // transform.setActualH(newH);
-
   if (shaderPassConfig)
-    shaderPassConfig(e); // pass the entity to the shader pass config function
+    shaderPassConfig(e);
 
   if (!shadowEnabled) {
     gameObject.shadowDisplacement.reset();
   }
 }
 
-auto setupAnimatedObjectOnEntity(
+auto replaceAnimatedObjectOnEntity(
     entt::entity e, std::string defaultAnimationIDorSpriteUUID,
     bool generateNewAnimFromSprite,
     std::function<void(entt::entity)> shaderPassConfig, bool shadowEnabled)
     -> void {
-  // --- ASSUME: `e` already has a transform::Transform attached ---
-  auto &registry = globals::getRegistry();
-  auto &transform = registry.get<transform::Transform>(e);
+  replaceAnimatedObjectOnEntity(globals::getRegistry(), e, defaultAnimationIDorSpriteUUID,
+      generateNewAnimFromSprite, shaderPassConfig, shadowEnabled);
+}
 
-  // 1) attach animation queue
+auto setupAnimatedObjectOnEntity(
+    entt::registry& registry,
+    entt::entity e, std::string defaultAnimationIDorSpriteUUID,
+    bool generateNewAnimFromSprite,
+    std::function<void(entt::entity)> shaderPassConfig, bool shadowEnabled)
+    -> void {
+  auto &transform = registry.get<transform::Transform>(e);
   auto &animQueue = registry.emplace_or_replace<AnimationQueueComponent>(e);
 
   if (generateNewAnimFromSprite) {
@@ -557,16 +570,12 @@ auto setupAnimatedObjectOnEntity(
         init::getAnimationObject(defaultAnimationIDorSpriteUUID);
   }
 
-  // 2) grab the GameObject (should already exist via your Transform→GameObject
-  // mapping)
   auto &gameObject = registry.get<transform::GameObject>(e);
 
-  // 3) optionally disable shadow
   if (!shadowEnabled) {
     gameObject.shadowDisplacement.reset();
   }
 
-  // 4) size the transform to match the first frame
   if (!animQueue.defaultAnimation.animationList.empty()) {
     const auto &firstFrame =
         animQueue.defaultAnimation.animationList.front().first.spriteFrame->frame;
@@ -578,25 +587,31 @@ auto setupAnimatedObjectOnEntity(
     transform.setActualH(1);
   }
 
-  // 5) run any custom shader‐pass config
   if (shaderPassConfig) {
     shaderPassConfig(e);
   }
 }
 
-auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth,
-                                         float targetHeight) -> void {
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
-  auto &transform = globals::getRegistry().get<transform::Transform>(e);
+auto setupAnimatedObjectOnEntity(
+    entt::entity e, std::string defaultAnimationIDorSpriteUUID,
+    bool generateNewAnimFromSprite,
+    std::function<void(entt::entity)> shaderPassConfig, bool shadowEnabled)
+    -> void {
+  setupAnimatedObjectOnEntity(globals::getRegistry(), e, defaultAnimationIDorSpriteUUID,
+      generateNewAnimFromSprite, shaderPassConfig, shadowEnabled);
+}
 
-  // get the scale factor which will fit the target width and height
+auto resizeAnimationObjectsInEntityToFit(entt::registry& registry, entt::entity e, float targetWidth,
+                                         float targetHeight) -> void {
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
+  auto &transform = registry.get<transform::Transform>(e);
+
   float scaleX = targetWidth / transform.getActualW();
   float scaleY = targetHeight / transform.getActualH();
   float scale = std::min(scaleX, scaleY);
   transform.setActualW(transform.getActualW() * scale);
   transform.setActualH(transform.getActualH() * scale);
 
-  // apply the scale to the animation objects
   for (auto &animObject : animQueue.animationQueue) {
     animObject.intrinsincRenderScale = scale;
   }
@@ -605,27 +620,34 @@ auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth,
   }
 }
 
-auto setFGColorForAllAnimationObjects(entt::entity e, Color fgColor) -> void {
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
+auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth,
+                                         float targetHeight) -> void {
+  resizeAnimationObjectsInEntityToFit(globals::getRegistry(), e, targetWidth, targetHeight);
+}
 
-  // set the foreground color for all animation objects
+auto setFGColorForAllAnimationObjects(entt::registry& registry, entt::entity e, Color fgColor) -> void {
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
+
   for (auto &animObject : animQueue.animationQueue) {
     for (auto &frame : animObject.animationList) {
       frame.first.fgColor = fgColor;
     }
   }
 
-  // also set the default animation's frames
   for (auto &frame : animQueue.defaultAnimation.animationList) {
     frame.first.fgColor = fgColor;
   }
 }
 
-void resetAnimationUIRenderScale(entt::entity e) {
-  if (!globals::getRegistry().any_of<AnimationQueueComponent>(e)) {
+auto setFGColorForAllAnimationObjects(entt::entity e, Color fgColor) -> void {
+  setFGColorForAllAnimationObjects(globals::getRegistry(), e, fgColor);
+}
+
+void resetAnimationUIRenderScale(entt::registry& registry, entt::entity e) {
+  if (!registry.any_of<AnimationQueueComponent>(e)) {
     return;
   }
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
   for (auto &animObject : animQueue.animationQueue) {
     animObject.uiRenderScale = 1.0f;
   }
@@ -633,11 +655,9 @@ void resetAnimationUIRenderScale(entt::entity e) {
     animQueue.defaultAnimation.uiRenderScale = 1.0f;
   }
 
-  // calc intrinsic size, set to transform
-  auto &transform = globals::getRegistry().get<transform::Transform>(e);
-  auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
+  auto &transform = registry.get<transform::Transform>(e);
+  auto &role = registry.get<transform::InheritedProperties>(e);
 
-  // Guard: ensure default animation has frames
   if (animQueue.defaultAnimation.animationList.empty()) {
     SPDLOG_WARN("resetAnimationUIRenderScale: empty animation list for entity {}", static_cast<int>(e));
     return;
@@ -660,18 +680,19 @@ void resetAnimationUIRenderScale(entt::entity e) {
                effectiveWidth, effectiveHeight);
 }
 
-// utilizes ui render scale to resize the animation objects
-// uses default animation object for size calculations
-void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e,
+void resetAnimationUIRenderScale(entt::entity e) {
+  resetAnimationUIRenderScale(globals::getRegistry(), e);
+}
+
+void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::registry& registry, entt::entity e,
                                                     float targetWidth,
                                                     float targetHeight,
                                                     bool centerLaterally,
                                                     bool centerVertically) {
-  auto &animQueue = globals::getRegistry().get<AnimationQueueComponent>(e);
-  auto &transform = globals::getRegistry().get<transform::Transform>(e);
-  auto &role = globals::getRegistry().get<transform::InheritedProperties>(e);
+  auto &animQueue = registry.get<AnimationQueueComponent>(e);
+  auto &transform = registry.get<transform::Transform>(e);
+  auto &role = registry.get<transform::InheritedProperties>(e);
 
-  // Runtime guard (assertions removed in release builds)
   if (animQueue.defaultAnimation.animationList.empty()) {
     SPDLOG_ERROR("resizeAnimationObjectsInEntityToFitAndCenterUI: empty animation list for entity {}", static_cast<int>(e));
     return;
@@ -681,13 +702,11 @@ void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e,
   float rawWidth = firstFrame.spriteFrame->frame.width;
   float rawHeight = firstFrame.spriteFrame->frame.height;
 
-  // Use intrinsic scale if available
   float intrinsicScale =
       animQueue.defaultAnimation.intrinsincRenderScale.value_or(1.0f);
   float effectiveWidth = rawWidth * intrinsicScale;
   float effectiveHeight = rawHeight * intrinsicScale;
 
-  // Calculate the scale needed to fit within target size
   float scaleX = targetWidth / effectiveWidth;
   float scaleY = targetHeight / effectiveHeight;
   float uiScale = std::min(scaleX, scaleY);
@@ -695,7 +714,6 @@ void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e,
   float finalW = effectiveWidth * uiScale;
   float finalH = effectiveHeight * uiScale;
 
-  // Apply to transform
   transform.setActualW(finalW);
   transform.setActualH(finalH);
 
@@ -704,7 +722,6 @@ void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e,
                static_cast<int>(e), rawWidth, rawHeight, intrinsicScale,
                uiScale, finalW, finalH);
 
-  // Apply only uiRenderScale
   for (auto &animObject : animQueue.animationQueue) {
     animObject.uiRenderScale = uiScale;
   }
@@ -712,9 +729,17 @@ void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e,
     animQueue.defaultAnimation.uiRenderScale = uiScale;
   }
 
-  // Optional centering
   role.offset->x = centerLaterally ? (targetWidth - finalW) / 2.0f : 0.0f;
   role.offset->y = centerVertically ? (targetHeight - finalH) / 2.0f : 0.0f;
+}
+
+void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e,
+                                                    float targetWidth,
+                                                    float targetHeight,
+                                                    bool centerLaterally,
+                                                    bool centerVertically) {
+  resizeAnimationObjectsInEntityToFitAndCenterUI(globals::getRegistry(), e, targetWidth,
+      targetHeight, centerLaterally, centerVertically);
 }
 
 // resizes all animation objects in the queue to fit the target width and height

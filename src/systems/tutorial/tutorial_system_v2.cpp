@@ -6,6 +6,7 @@
 #include "sol/sol.hpp"
 
 #include "../../core/globals.hpp"
+#include "../../core/system_registry.hpp"
 #include "../../core/gui.hpp"
 #include "../../core/graphics.hpp"
 
@@ -624,3 +625,9 @@ namespace tutorial_system_v2 {
         //TODO: use imgui foreground draw list
     }
 }
+
+REGISTER_SYSTEM(tutorial_system, 600,
+    [](float dt) { tutorial_system_v2::update(dt); },
+    []() { tutorial_system_v2::init(); },
+    [](float dt) { tutorial_system_v2::draw(); }
+)

@@ -26,16 +26,19 @@ local shader_pipeline = _G.shader_pipeline
 local InventoryGridInit = require("ui.inventory_grid_init")
 
 local demoState = {
-    gridEntity = nil,
+    -- Per-tab grids: { inventory = entity, equipment = entity, crafting = entity }
+    grids = {},
+    gridEntity = nil,  -- Points to currently active grid (for backwards compat)
     infoBoxEntity = nil,
     customPanelEntity = nil,
     backgroundDemoEntity = nil,
     sortButtonsEntity = nil,
     decorationDemoEntity = nil,
     tabEntities = {},
+    tabButtonEntities = {},
     mockCards = {},
     signalHandlers = {},
-    stackBadges = {},
+    stackBadges = {},  -- Per-tab: { inventory = {}, equipment = {}, crafting = {} }
     timerGroup = "inventory_demo",
     cardRegistry = {},
     customPanelState = nil,
@@ -166,14 +169,65 @@ function InventoryGridDemo.init()
 end
 
 --------------------------------------------------------------------------------
--- Create Main Inventory Grid (3x4)
+-- Create All Inventory Grids (one per tab)
 --------------------------------------------------------------------------------
 
-function InventoryGridDemo.createMainGrid(x, y)
-    local gridDef = dsl.inventoryGrid {
+local TAB_CONFIGS = {
+    inventory = {
         id = "demo_inventory",
-        rows = 3,
-        cols = 4,
+        rows = 3, cols = 4,
+        slots = {
+            [1] = {
+                filter = function(item)
+                    local script = getScriptTableFromEntityID(item)
+                    return script and script.element == "Fire"
+                end,
+                color = util.getColor("fiery_red"),
+            },
+            [2] = {
+                filter = function(item)
+                    local script = getScriptTableFromEntityID(item)
+                    return script and script.element == "Ice"
+                end,
+                color = util.getColor("baby_blue"),
+            },
+            [12] = { locked = true, color = util.getColor("gray") },
+        },
+    },
+    equipment = {
+        id = "demo_equipment",
+        rows = 2, cols = 3,
+        slots = {},
+    },
+    crafting = {
+        id = "demo_crafting",
+        rows = 3, cols = 3,
+        slots = {
+            [5] = { color = util.getColor("gold") },
+        },
+    },
+}
+
+local OFFSCREEN_X = -9999
+
+local function setGridVisible(gridEntity, visible, onscreenX)
+    if not gridEntity or not registry:valid(gridEntity) then return end
+    local transform = component_cache.get(gridEntity, Transform)
+    if transform then
+        transform.actualX = visible and onscreenX or OFFSCREEN_X
+    end
+end
+
+local function createSingleGrid(tabId, x, y, visible)
+    local cfg = TAB_CONFIGS[tabId]
+    if not cfg then return nil end
+    
+    local spawnX = visible and x or OFFSCREEN_X
+    
+    local gridDef = dsl.inventoryGrid {
+        id = cfg.id,
+        rows = cfg.rows,
+        cols = cfg.cols,
         slotSize = { w = 72, h = 100 },
         slotSpacing = 6,
         
@@ -188,53 +242,46 @@ function InventoryGridDemo.createMainGrid(x, y)
             backgroundColor = "blackberry",
         },
         
-        -- Per-slot configuration
-        slots = {
-            -- Slot 1: Fire cards only (red tint)
-            [1] = {
-                filter = function(item)
-                    local script = getScriptTableFromEntityID(item)
-                    return script and script.element == "Fire"
-                end,
-                color = util.getColor("fiery_red"),
-            },
-            -- Slot 2: Ice cards only (blue tint)
-            [2] = {
-                filter = function(item)
-                    local script = getScriptTableFromEntityID(item)
-                    return script and script.element == "Ice"
-                end,
-                color = util.getColor("baby_blue"),
-            },
-            -- Slot 12: Locked slot (gray)
-            [12] = {
-                locked = true,
-                color = util.getColor("gray"),
-            },
-        },
+        slots = cfg.slots,
         
         onSlotChange = function(gridEntity, slotIndex, oldItem, newItem)
-            log_debug("[Demo] Slot " .. slotIndex .. " changed")
+            log_debug("[Demo:" .. tabId .. "] Slot " .. slotIndex .. " changed")
         end,
         
         onSlotClick = function(gridEntity, slotIndex, button)
-            log_debug("[Demo] Slot " .. slotIndex .. " clicked")
+            log_debug("[Demo:" .. tabId .. "] Slot " .. slotIndex .. " clicked")
         end,
     }
     
-    -- Spawn grid
-    demoState.gridEntity = dsl.spawn({ x = x, y = y }, gridDef, "ui", 100)
-    ui.box.set_draw_layer(demoState.gridEntity, "ui")
+    local gridEntity = dsl.spawn({ x = spawnX, y = y }, gridDef, "ui", 100)
+    ui.box.set_draw_layer(gridEntity, "ui")
     
-    -- Initialize grid data structure
-    local InventoryGridInit = require("ui.inventory_grid_init")
-    local success = InventoryGridInit.initializeIfGrid(demoState.gridEntity, "demo_inventory")
-    
+    local success = InventoryGridInit.initializeIfGrid(gridEntity, cfg.id)
     if success then
-        log_debug("[InventoryGridDemo] Grid initialized successfully")
+        log_debug("[InventoryGridDemo] Grid '" .. tabId .. "' initialized at x=" .. spawnX)
     else
-        log_warn("[InventoryGridDemo] Grid initialization failed!")
+        log_warn("[InventoryGridDemo] Grid '" .. tabId .. "' init failed!")
     end
+    
+    return gridEntity
+end
+
+function InventoryGridDemo.createMainGrid(x, y)
+    demoState.grids = {}
+    demoState.stackBadges = {}
+    demoState.gridOnscreenX = x
+    demoState.gridOnscreenY = y
+    
+    local tabs = { "inventory", "equipment", "crafting" }
+    for _, tabId in ipairs(tabs) do
+        local visible = (tabId == demoState.activeTab)
+        local gridEntity = createSingleGrid(tabId, x, y, visible)
+        demoState.grids[tabId] = gridEntity
+        demoState.stackBadges[tabId] = {}
+    end
+    
+    demoState.gridEntity = demoState.grids[demoState.activeTab]
+    log_debug("[InventoryGridDemo] All grids created, active: " .. demoState.activeTab)
 end
 
 --------------------------------------------------------------------------------
@@ -299,7 +346,7 @@ function InventoryGridDemo.setupStatsTextGetters()
 end
 
 function InventoryGridDemo.updateStatsText()
-    local ge = demoState.gridEntity
+    local ge = demoState.grids[demoState.activeTab]
     if not ge then return end
     
     local slotsEntity = demoState.statsSlotEntity
@@ -332,7 +379,26 @@ function InventoryGridDemo.updateStatsText()
 end
 
 --------------------------------------------------------------------------------
--- Create Custom Panel Demo (demonstrates immediate-mode rendering with HoverRegistry)
+-- Custom Panel Demo
+-- 
+-- DEMONSTRATES: Immediate-mode UI rendering with HoverRegistry
+-- 
+-- USE CASE: When DSL/retained-mode UI is too rigid and you need pixel-perfect
+-- control over rendering (e.g., custom health bars, minimap, skill trees).
+--
+-- KEY CONCEPTS:
+-- 1. HoverRegistry: Register hover regions by ID each frame, then call update()
+--    to determine which region is hovered based on z-order
+-- 2. command_buffer: Queue draw commands (circles, rects, text) for batched rendering
+-- 3. timer.every_opts: Re-render every frame (~0.016s) for smooth animations
+--
+-- PATTERN:
+--   timer.every_opts({ delay = 0.016, action = function()
+--       HoverRegistry.clear()
+--       -- Queue draw commands
+--       -- Register hover regions
+--       HoverRegistry.update()
+--   end})
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.createCustomPanel(x, y)
@@ -481,7 +547,24 @@ function InventoryGridDemo.renderCustomPanel()
 end
 
 --------------------------------------------------------------------------------
--- Create Background Demo (demonstrates UIBackground state-based backgrounds)
+-- UIBackground Demo
+--
+-- DEMONSTRATES: State-based background styling (normal/hover/pressed)
+--
+-- USE CASE: Buttons, selectable items, or any UI element that needs visual
+-- feedback on interaction states without manual state tracking.
+--
+-- KEY CONCEPTS:
+-- 1. UIBackground.apply(entity, states): Attach state-based backgrounds
+-- 2. States: normal, hover, pressed - each can be color, gradient, or image
+-- 3. Automatic: System handles state transitions, no manual onHover needed
+--
+-- PATTERN:
+--   UIBackground.apply(buttonEntity, {
+--       normal = { type = "color", color = "gray" },
+--       hover = { type = "color", color = "steel_blue" },
+--       pressed = { type = "color", color = "midnight_blue" },
+--   })
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.createBackgroundDemo(x, y)
@@ -595,21 +678,26 @@ function InventoryGridDemo.toggleSort(sortKey)
 end
 
 function InventoryGridDemo.applySorting()
-    if not demoState.sortBy or not demoState.gridEntity then return end
+    local activeGrid = demoState.grids[demoState.activeTab]
+    if not demoState.sortBy or not activeGrid then return end
     
-    local items = grid.getItemList(demoState.gridEntity)
+    local cfg = TAB_CONFIGS[demoState.activeTab]
+    local maxSlots = cfg and (cfg.rows * cfg.cols) or 12
+    
+    local items = grid.getItemList(activeGrid)
     if not items or #items == 0 then
         log_debug("[Demo] No items to sort")
         return
     end
     
     local itemsWithData = {}
-    for _, item in ipairs(items) do
-        local script = getScriptTableFromEntityID(item.entity)
+    for _, itemEntry in ipairs(items) do
+        local entity = itemEntry.item
+        local script = getScriptTableFromEntityID(entity)
         if script then
             table.insert(itemsWithData, {
-                entity = item.entity,
-                slotIndex = item.slotIndex,
+                entity = entity,
+                slotIndex = itemEntry.slot,
                 name = script.name or "",
                 element = script.element or "",
             })
@@ -630,16 +718,16 @@ function InventoryGridDemo.applySorting()
     end)
     
     for _, item in ipairs(itemsWithData) do
-        grid.removeItemFromSlot(demoState.gridEntity, item.slotIndex)
+        grid.removeItem(activeGrid, item.slotIndex)
     end
     
     local targetSlot = 1
     for _, item in ipairs(itemsWithData) do
-        while grid.isSlotLocked(demoState.gridEntity, targetSlot) and targetSlot <= 12 do
+        while grid.isSlotLocked(activeGrid, targetSlot) and targetSlot <= maxSlots do
             targetSlot = targetSlot + 1
         end
-        if targetSlot <= 12 then
-            grid.addItem(demoState.gridEntity, item.entity, targetSlot)
+        if targetSlot <= maxSlots then
+            grid.addItem(activeGrid, item.entity, targetSlot)
             targetSlot = targetSlot + 1
         end
     end
@@ -731,6 +819,12 @@ function InventoryGridDemo.switchTab(tabId)
     
     local tabs = { "inventory", "equipment", "crafting" }
     for _, id in ipairs(tabs) do
+        local gridEntity = demoState.grids[id]
+        if gridEntity and registry:valid(gridEntity) then
+            local isActive = (id == tabId)
+            setGridVisible(gridEntity, isActive, demoState.gridOnscreenX)
+        end
+        
         local tabBoxEntity = demoState.tabButtonEntities[id]
         if tabBoxEntity and registry:valid(tabBoxEntity) then
             local buttonEntity = ui.box.GetUIEByID(registry, tabBoxEntity, "tab_" .. id)
@@ -753,12 +847,39 @@ function InventoryGridDemo.switchTab(tabId)
         end
     end
     
+    demoState.gridEntity = demoState.grids[tabId]
+    
     signal.emit("tab_changed", tabId)
     log_debug("[Demo] Switched tab: " .. oldTab .. " -> " .. tabId)
 end
 
 --------------------------------------------------------------------------------
--- Create Decoration Demo (glowing border + badge)
+-- UIDecorations Demo
+--
+-- DEMONSTRATES: Badges and custom overlays (glow borders, indicators)
+--
+-- USE CASE: "NEW" badges, notification dots, selection highlights, rarity
+-- borders - anything layered on top of existing UI without modifying it.
+--
+-- KEY CONCEPTS:
+-- 1. UIDecorations.addBadge(): Small labels positioned at corners (TOP_RIGHT, etc)
+-- 2. UIDecorations.addCustomOverlay(): Arbitrary rendering (glows, borders)
+-- 3. visible function: Conditionally show decorations based on state
+-- 4. UIDecorations.draw(): Call every frame to render decorations
+--
+-- PATTERN (Badge):
+--   UIDecorations.addBadge(entity, {
+--       text = "NEW", position = UIDecorations.Position.TOP_RIGHT,
+--       backgroundColor = "fiery_red", textColor = "white",
+--   })
+--
+-- PATTERN (Glow Border):
+--   UIDecorations.addCustomOverlay(entity, {
+--       visible = function() return isHovered end,
+--       onDraw = function(entity, px, py, pw, ph, z)
+--           command_buffer.queueDrawSteppedRoundedRect(...)
+--       end,
+--   })
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.createDecorationDemo(x, y)
@@ -878,19 +999,27 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.setupStackBadges()
-    for i = 1, 12 do
-        local slotEntity = grid.getSlotEntity(demoState.gridEntity, i)
-        if slotEntity and registry:valid(slotEntity) then
-            local badgeId = UIDecorations.addBadge(slotEntity, {
-                id = "stack_badge_" .. i,
-                text = "",
-                position = UIDecorations.Position.BOTTOM_RIGHT,
-                offset = { x = -2, y = -2 },
-                size = { w = 18, h = 18 },
-                backgroundColor = "charcoal",
-                textColor = "white",
-            })
-            demoState.stackBadges[i] = badgeId
+    for tabId, gridEntity in pairs(demoState.grids) do
+        if gridEntity and registry:valid(gridEntity) then
+            local cfg = TAB_CONFIGS[tabId]
+            local slotCount = cfg and (cfg.rows * cfg.cols) or 12
+            demoState.stackBadges[tabId] = {}
+            
+            for i = 1, slotCount do
+                local slotEntity = grid.getSlotEntity(gridEntity, i)
+                if slotEntity and registry:valid(slotEntity) then
+                    local badgeId = UIDecorations.addBadge(slotEntity, {
+                        id = "stack_badge_" .. tabId .. "_" .. i,
+                        text = "",
+                        position = UIDecorations.Position.BOTTOM_RIGHT,
+                        offset = { x = -2, y = -2 },
+                        size = { w = 18, h = 18 },
+                        backgroundColor = "charcoal",
+                        textColor = "white",
+                    })
+                    demoState.stackBadges[tabId][i] = badgeId
+                end
+            end
         end
     end
     
@@ -903,28 +1032,41 @@ function InventoryGridDemo.setupStackBadges()
         end,
     })
     
-    log_debug("[Demo] Stack badges created for all slots")
+    log_debug("[Demo] Stack badges created for all grids")
 end
 
 function InventoryGridDemo.drawStackBadges()
-    if not demoState.gridEntity then return end
+    local activeGrid = demoState.grids[demoState.activeTab]
+    if not activeGrid then return end
     
     local baseZ = (z_orders and z_orders.ui_tooltips or 800) + 100
+    local cfg = TAB_CONFIGS[demoState.activeTab]
+    local slotCount = cfg and (cfg.rows * cfg.cols) or 12
     
-    for i = 1, 12 do
-        local slotEntity = grid.getSlotEntity(demoState.gridEntity, i)
+    for i = 1, slotCount do
+        local slotEntity = grid.getSlotEntity(activeGrid, i)
         if slotEntity and registry:valid(slotEntity) then
             UIDecorations.draw(slotEntity, baseZ)
         end
     end
 end
 
-function InventoryGridDemo.updateStackBadge(slotIndex)
-    local count = grid.getStackCount(demoState.gridEntity, slotIndex)
-    local slotEntity = grid.getSlotEntity(demoState.gridEntity, slotIndex)
-    if slotEntity and demoState.stackBadges[slotIndex] then
+function InventoryGridDemo.updateStackBadge(slotIndex, gridEntity)
+    gridEntity = gridEntity or demoState.gridEntity
+    if not gridEntity then return end
+    
+    local tabId = nil
+    for id, ge in pairs(demoState.grids) do
+        if ge == gridEntity then tabId = id break end
+    end
+    if not tabId then return end
+    
+    local count = grid.getStackCount(gridEntity, slotIndex)
+    local slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+    local badges = demoState.stackBadges[tabId]
+    if slotEntity and badges and badges[slotIndex] then
         local text = count > 1 and tostring(count) or ""
-        UIDecorations.setBadgeText(slotEntity, demoState.stackBadges[slotIndex], text)
+        UIDecorations.setBadgeText(slotEntity, badges[slotIndex], text)
     end
 end
 
@@ -938,9 +1080,9 @@ function InventoryGridDemo.setupGridStateDebugTimer()
         tag = "grid_state_debug",
         group = demoState.timerGroup,
         action = function()
-            local ge = demoState.gridEntity
+            local ge = demoState.grids[demoState.activeTab]
             if not ge then
-                log_debug("[GRID-STATE] gridEntity is nil!")
+                log_debug("[GRID-STATE] active grid is nil! tab=" .. tostring(demoState.activeTab))
                 return
             end
             local used = grid.getUsedSlotCount(ge) or 0
@@ -951,7 +1093,7 @@ function InventoryGridDemo.setupGridStateDebugTimer()
                 itemCount = itemCount + 1
                 log_debug("[GRID-STATE] Slot " .. k .. " has item " .. tostring(v))
             end
-            log_debug("[GRID-STATE] gridEntity=" .. tostring(ge) .. " used=" .. used .. "/" .. total .. " items=" .. itemCount)
+            log_debug("[GRID-STATE] tab=" .. demoState.activeTab .. " used=" .. used .. "/" .. total .. " items=" .. itemCount)
         end,
     })
 end
@@ -1006,10 +1148,17 @@ function InventoryGridDemo.setupSignalHandlers()
         table.insert(demoState.signalHandlers, { event = eventName, handler = handler })
     end
     
+    local function isOurGrid(gridEntity)
+        for _, ge in pairs(demoState.grids) do
+            if ge == gridEntity then return true end
+        end
+        return false
+    end
+    
     registerHandler("grid_item_added", function(gridEntity, slotIndex, itemEntity)
-        if gridEntity == demoState.gridEntity then
+        if isOurGrid(gridEntity) then
             log_debug("[Demo Signal] Item added to slot " .. slotIndex)
-            InventoryGridDemo.updateStackBadge(slotIndex)
+            InventoryGridDemo.updateStackBadge(slotIndex, gridEntity)
             if playSoundEffect then
                 playSoundEffect("effects", "button-click")
             end
@@ -1017,37 +1166,37 @@ function InventoryGridDemo.setupSignalHandlers()
     end)
     
     registerHandler("grid_item_removed", function(gridEntity, slotIndex, itemEntity)
-        if gridEntity == demoState.gridEntity then
+        if isOurGrid(gridEntity) then
             log_debug("[Demo Signal] Item removed from slot " .. slotIndex)
-            InventoryGridDemo.updateStackBadge(slotIndex)
+            InventoryGridDemo.updateStackBadge(slotIndex, gridEntity)
         end
     end)
     
     registerHandler("grid_stack_changed", function(gridEntity, slotIndex, itemEntity, oldCount, newCount)
-        if gridEntity == demoState.gridEntity then
+        if isOurGrid(gridEntity) then
             log_debug("[Demo Signal] Stack at slot " .. slotIndex .. " changed: " .. oldCount .. " -> " .. newCount)
-            InventoryGridDemo.updateStackBadge(slotIndex)
+            InventoryGridDemo.updateStackBadge(slotIndex, gridEntity)
         end
     end)
     
     registerHandler("grid_item_moved", function(gridEntity, fromSlot, toSlot, itemEntity)
-        if gridEntity == demoState.gridEntity then
+        if isOurGrid(gridEntity) then
             log_debug("[Demo Signal] Item moved from slot " .. fromSlot .. " to " .. toSlot)
-            InventoryGridDemo.updateStackBadge(fromSlot)
-            InventoryGridDemo.updateStackBadge(toSlot)
+            InventoryGridDemo.updateStackBadge(fromSlot, gridEntity)
+            InventoryGridDemo.updateStackBadge(toSlot, gridEntity)
         end
     end)
     
     registerHandler("grid_items_swapped", function(gridEntity, slot1, slot2, item1, item2)
-        if gridEntity == demoState.gridEntity then
+        if isOurGrid(gridEntity) then
             log_debug("[Demo Signal] Items swapped between slots " .. slot1 .. " and " .. slot2)
-            InventoryGridDemo.updateStackBadge(slot1)
-            InventoryGridDemo.updateStackBadge(slot2)
+            InventoryGridDemo.updateStackBadge(slot1, gridEntity)
+            InventoryGridDemo.updateStackBadge(slot2, gridEntity)
         end
     end)
     
     registerHandler("grid_slot_clicked", function(gridEntity, slotIndex, button, modifiers)
-        if gridEntity == demoState.gridEntity then
+        if isOurGrid(gridEntity) then
             log_debug("[Demo Signal] Slot " .. slotIndex .. " clicked")
         end
     end)
@@ -1092,16 +1241,17 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.snapItemsToSlots()
-    if not demoState.gridEntity then return end
+    local activeGrid = demoState.grids[demoState.activeTab]
+    if not activeGrid then return end
     
     local inputState = input and input.getState and input.getState()
     local draggedEntity = inputState and inputState.cursor_dragging_target
     
-    local items = grid.getAllItems(demoState.gridEntity)
+    local items = grid.getAllItems(activeGrid)
     for slotIndex, itemEntity in pairs(items) do
         if itemEntity and registry:valid(itemEntity) then
             if itemEntity ~= draggedEntity then
-                local slotEntity = grid.getSlotEntity(demoState.gridEntity, slotIndex)
+                local slotEntity = grid.getSlotEntity(activeGrid, slotIndex)
                 if slotEntity then
                     InventoryGridInit.centerItemOnSlot(itemEntity, slotEntity)
                 end
@@ -1202,23 +1352,30 @@ function InventoryGridDemo.cleanup()
     demoState.mockCards = {}
     demoState.cardRegistry = {}
     
-    if demoState.gridEntity then
-        for i = 1, 12 do
-            local slotEntity = grid.getSlotEntity(demoState.gridEntity, i)
-            if slotEntity then
-                UIDecorations.cleanup(slotEntity)
-                InventoryGridInit.cleanupSlotMetadata(slotEntity)
+    for tabId, gridEntity in pairs(demoState.grids or {}) do
+        if gridEntity and registry:valid(gridEntity) then
+            local cfg = TAB_CONFIGS[tabId]
+            local slotCount = cfg and (cfg.rows * cfg.cols) or 12
+            for i = 1, slotCount do
+                local slotEntity = grid.getSlotEntity(gridEntity, i)
+                if slotEntity then
+                    UIDecorations.cleanup(slotEntity)
+                    InventoryGridInit.cleanupSlotMetadata(slotEntity)
+                end
+            end
+            
+            grid.cleanup(gridEntity)
+            if cfg then
+                dsl.cleanupGrid(cfg.id)
+            end
+            
+            if ui.box and ui.box.Remove then
+                ui.box.Remove(registry, gridEntity)
             end
         end
-        
-        grid.cleanup(demoState.gridEntity)
-        dsl.cleanupGrid("demo_inventory")
-        
-        if ui.box and ui.box.Remove then
-            ui.box.Remove(registry, demoState.gridEntity)
-        end
-        demoState.gridEntity = nil
     end
+    demoState.grids = {}
+    demoState.gridEntity = nil
     demoState.stackBadges = {}
     
     if demoState.backgroundDemoEntity then

@@ -1,6 +1,7 @@
 #include "guiIndicatorSystem.hpp"
 
 #include "../../util/common_headers.hpp"
+#include "../../core/system_registry.hpp"
 
 #include "../../components/components.hpp"
 
@@ -49,3 +50,5 @@ namespace ui_indicators {
         draw(globals::getRegistry());
     }
 }
+
+REGISTER_UPDATE_SYSTEM(ui_indicators, 500, [](float dt) { ui_indicators::update(dt); })

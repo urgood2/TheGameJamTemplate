@@ -2,6 +2,7 @@
 
 #include "../../util/common_headers.hpp"
 #include "../../util/utilities.hpp"
+#include "../../core/system_registry.hpp"
 
 
 namespace fade_system {
@@ -45,3 +46,9 @@ namespace fade_system {
         fadeAlpha = (state == FadeState::FADE_IN) ? 1.0f : 0.0f;
     }
 }
+
+REGISTER_SYSTEM(fade_system, 900, 
+    [](float dt) { fade_system::update(dt); },
+    nullptr,
+    [](float) { fade_system::draw(); }
+)

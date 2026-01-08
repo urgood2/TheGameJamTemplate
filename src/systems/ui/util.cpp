@@ -915,6 +915,8 @@ namespace ui
 
     void util::DrawUIDecorationsQueued(layer::Layer* layerPtr, const UIDecorations& decorations, float parentX, float parentY, float parentW, float parentH, int zIndex)
     {
+        SPDLOG_DEBUG("DrawUIDecorationsQueued called: {} items, parent=({},{},{},{}), z={}", 
+            decorations.items.size(), parentX, parentY, parentW, parentH, zIndex);
         if (decorations.items.empty()) return;
         
         std::vector<const UIDecoration*> sorted;

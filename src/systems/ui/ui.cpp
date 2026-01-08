@@ -262,11 +262,19 @@ namespace ui {
         // 12d) UIDecorations container
         lua.new_usertype<UIDecorations>("UIDecorations",
             sol::constructors<UIDecorations()>(),
-            "items", &UIDecorations::items
+            "items", &UIDecorations::items,
+            "add", [](UIDecorations& self, const UIDecoration& d) {
+                self.items.push_back(d);
+            },
+            "count", [](const UIDecorations& self) {
+                return self.items.size();
+            }
         );
         auto& decorsDef = rec.add_type("UIDecorations", /*is_data_class=*/true);
         decorsDef.doc = "A collection of UI decorations attached to an element.";
         rec.record_property("UIDecorations", {"items", "UIDecoration[]", "The list of decorations."});
+        rec.record_method("UIDecorations", {"add", "---@param decoration UIDecoration\n---@return nil", "Adds a decoration to the collection.", false, false});
+        rec.record_method("UIDecorations", {"count", "---@return integer", "Returns the number of decorations.", false, false});
 
         // 13) UIConfig
         lua.new_usertype<UIConfig>("UIConfig",  sol::call_constructor, sol::constructors<UIConfig>(),

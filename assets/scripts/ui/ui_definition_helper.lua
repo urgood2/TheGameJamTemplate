@@ -57,6 +57,8 @@ local function processSpritePanelFields(tbl, builder)
     
     if tbl._tint then
         builder:addColor(tbl._tint)
+    else
+        builder:addColor(Col(255, 255, 255, 255))
     end
     
     if tbl._decorations and #tbl._decorations > 0 then
@@ -111,12 +113,12 @@ local function processSpritePanelFields(tbl, builder)
                     d.tint = decor.tint
                 end
             end
-            table.insert(decorations.items, d)
+            decorations:add(d)
             
             ::continue_decoration::
         end
         builder:addDecorations(decorations)
-        log_debug("[ui.def] Added " .. #tbl._decorations .. " decorations")
+        log_debug("[ui.def] Added " .. decorations:count() .. " decorations")
     end
     
     log_debug("[ui.def] Configured spritePanel with sprite: " .. spriteName)

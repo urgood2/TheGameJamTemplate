@@ -1669,7 +1669,7 @@ namespace ui
             }
             
             if (config->decorations.has_value()) {
-                util::DrawUIDecorations(layerPtr, config->decorations.value(), 0, 0, visualW, visualH);
+                util::DrawUIDecorations(layerPtr, config->decorations.value(), visualX, visualY, visualW, visualH);
             }
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
@@ -2488,7 +2488,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
             }
             
             if (config->decorations.has_value()) {
-                util::DrawUIDecorationsQueued(layerPtr.get(), config->decorations.value(), 0, 0, visualW, visualH, zIndex);
+                util::DrawUIDecorationsQueued(layerPtr.get(), config->decorations.value(), visualX, visualY, visualW, visualH, zIndex);
             }
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);

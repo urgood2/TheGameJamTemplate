@@ -4208,6 +4208,19 @@ UIDecorations = {
     items = nil  -- The list of decorations.
 }
 
+---
+--- Adds a decoration to the collection.
+---
+---@param decoration UIDecoration
+---@return nil
+function UIDecorations:add(...) end
+
+---
+--- Returns the number of decorations.
+---
+---@return integer
+function UIDecorations:count(...) end
+
 
 ---
 --- A comprehensive configuration component for defining all aspects of a UI element.

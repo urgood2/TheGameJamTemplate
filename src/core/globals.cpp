@@ -696,6 +696,9 @@ void setEngineContext(EngineContext* ctx) {
         if (g_ctx) {
             return g_ctx->registry;
         }
+#ifndef NDEBUG
+        SPDLOG_WARN("[registry] getRegistry() called before EngineContext set - using legacy fallback");
+#endif
         return registry;
     }
 

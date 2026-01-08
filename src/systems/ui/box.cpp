@@ -1311,7 +1311,7 @@ namespace ui
         // am I a ui element?
         if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
         {
-            placeNonContainerUIE(role, runningTransform, uiElement, parentType, uiState, uiConfig);
+            placeNonContainerUIE(registry, role, runningTransform, uiElement, parentType, uiState, uiConfig);
             return;
         }
 
@@ -1379,9 +1379,9 @@ namespace ui
         }
     }
 
-    void box::placeNonContainerUIE(transform::InheritedProperties &role, ui::LocalTransform &runningTransform, entt::entity uiElement, ui::UITypeEnum parentType, ui::UIState &uiState, ui::UIConfig &uiConfig)
+    void box::placeNonContainerUIE(entt::registry &registry, transform::InheritedProperties &role, ui::LocalTransform &runningTransform, entt::entity uiElement, ui::UITypeEnum parentType, ui::UIState &uiState, ui::UIConfig &uiConfig)
     {
-        auto object = globals::getRegistry().get<UIConfig>(uiElement).object.value_or(entt::null);
+        auto object = registry.get<UIConfig>(uiElement).object.value_or(entt::null);
         // REVIEW: why is the ui element checked? shouldn't the object be checked?
         //  if (globals::getRegistry().any_of<TextSystem::Text>(uiElement))
         //  {
@@ -1806,7 +1806,7 @@ namespace ui
                 // text, animated, or inventory grid object.
                 // if (globals::getRegistry().any_of<TextSystem::Text>(object) || globals::getRegistry().any_of<AnimationQueueComponent>(object) || globals::getRegistry().any_of<InventoryGrid>(object))
                 // {
-                auto &objectTransform = globals::getRegistry().get<transform::Transform>(object);
+                auto &objectTransform = registry.get<transform::Transform>(object);
                 calcCurrentNodeTransform.w = objectTransform.getActualW();
                 calcCurrentNodeTransform.h = objectTransform.getActualH();
                 // }
@@ -2533,7 +2533,7 @@ namespace ui
             uiBoxViewInitialized = true;
             globalUIBoxView = registry.view<UIBoxComponent>();
 
-            globalUIGroup = globals::getRegistry().group<
+            globalUIGroup = registry.group<
                 UIElementComponent,
                 UIConfig,
                 UIState,
@@ -3132,7 +3132,7 @@ namespace ui
         
         auto *uiConfig = registry.try_get<UIConfig>(uiBox->uiRoot.value());
 
-        auto layerOrderComp = globals::getRegistry().try_get<layer::LayerOrderComponent>(self);
+        auto layerOrderComp = registry.try_get<layer::LayerOrderComponent>(self);
 
         std::string result = fmt::format(" \n| UIBox | - ID: {} [entt-{}] w/h: {}/{} UIElement children: {} | LOC({},{}) OFF({},{}) OFF_ALN({},{}) {} LayerOrder: {}",
                                          uiConfig->id.value_or("N/A"),

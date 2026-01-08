@@ -34,7 +34,7 @@ namespace ui {
         auto BuildUIElementTree(entt::registry& registry, entt::entity uiBoxEntity, UIElementTemplateNode &uiElementDef, entt::entity uiElementParent) -> void;
         auto Initialize(entt::registry &registry, const TransformConfig &transformData, UIElementTemplateNode definition, std::optional<UIConfig> config = std::nullopt) -> entt::entity;
         auto placeUIElementsRecursively(entt::registry &registry, entt::entity uiElement, ui::LocalTransform &runningTransform, ui::UITypeEnum parentType, entt::entity parent) -> void;
-        void placeNonContainerUIE(transform::InheritedProperties &role, ui::LocalTransform &runningTransform, entt::entity uiElement, ui::UITypeEnum parentType, ui::UIState &uiState, ui::UIConfig &uiConfig);
+        void placeNonContainerUIE(entt::registry &registry, transform::InheritedProperties &role, ui::LocalTransform &runningTransform, entt::entity uiElement, ui::UITypeEnum parentType, ui::UIState &uiState, ui::UIConfig &uiConfig);
         auto ClampDimensionsToMinimumsIfPresent(ui::UIConfig &uiConfig, ui::LocalTransform &calcTransform) -> void;
         auto CalcTreeSizes(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
             bool forceRecalculateLayout = false, std::optional<float> scale = std::nullopt) -> std::pair<float, float>;

@@ -1065,7 +1065,7 @@ namespace ui {
         rec.record_free_function({"ui", "box"}, {"placeUIElementsRecursively", "---@param registry registry\n---@param uiElement Entity\n---@param runningTransform table\n---@param parentType UITypeEnum\n---@param parent Entity\n---@return nil", "Recursively places UI elements within a layout.", true, false});
 
         box.set_function("placeNonContainerUIE", &ui::box::placeNonContainerUIE);
-        rec.record_free_function({"ui", "box"}, {"placeNonContainerUIE", "---@param role InheritedProperties\n---@param runningTransform table\n---@param uiElement Entity\n---@param parentType UITypeEnum\n---@param uiState UIState\n---@param uiConfig UIConfig\n---@return nil", "Places a single non-container element within its parent.", true, false});
+        rec.record_free_function({"ui", "box"}, {"placeNonContainerUIE", "---@param registry registry\n---@param role InheritedProperties\n---@param runningTransform table\n---@param uiElement Entity\n---@param parentType UITypeEnum\n---@param uiState UIState\n---@param uiConfig UIConfig\n---@return nil", "Places a single non-container element within its parent.", true, false});
 
         // 3) Layout calculations
         box.set_function("ClampDimensionsToMinimumsIfPresent", &ui::box::ClampDimensionsToMinimumsIfPresent);

@@ -1,3 +1,70 @@
+--[[
+================================================================================
+SPRITE UI SHOWCASE - Reference Implementation for Custom UI Elements
+================================================================================
+
+This file demonstrates the UI DSL (Domain Specific Language) for creating
+sprite-based UI elements. Use this as a reference when building your own UI.
+
+QUICK START - Creating UI:
+--------------------------
+local dsl = require("ui.ui_syntax_sugar")
+
+-- 1. Define your UI structure
+local myUI = dsl.vbox {
+    config = { padding = 10, color = "darkgray" },
+    children = {
+        dsl.text("Hello World", { fontSize = 16, color = "white" }),
+        dsl.button("Click Me", { onClick = function() print("clicked!") end })
+    }
+}
+
+-- 2. Spawn it at a position
+local entity = dsl.spawn({ x = 100, y = 100 }, myUI, "ui", 100)
+
+LAYOUT CONTAINERS:
+-----------------
+dsl.vbox { config = {...}, children = {...} }  -- Vertical stack
+dsl.hbox { config = {...}, children = {...} }  -- Horizontal stack
+dsl.root { config = {...}, children = {...} }  -- Root container
+
+BASIC ELEMENTS:
+--------------
+dsl.text(label, opts)           -- Text label
+dsl.button(label, opts)         -- Clickable button
+dsl.spacer(size)                -- Empty space for layout
+dsl.divider(direction, opts)    -- Horizontal/vertical line (participates in layout)
+
+SPRITE ELEMENTS (demonstrated in this showcase):
+-----------------------------------------------
+dsl.spritePanel { ... }         -- Nine-patch panel (stretches to fit content)
+dsl.spriteButton { ... }        -- Button with sprite states (normal/hover/pressed/disabled)
+
+CONFIG OPTIONS:
+--------------
+config = {
+    id = "my_element",          -- Unique ID for lookup
+    padding = 10,               -- Inner padding
+    color = "darkgray",         -- Background color (name or Color.new())
+    minWidth = 100,             -- Minimum dimensions
+    minHeight = 50,
+    emboss = 2,                 -- 3D effect depth
+    hover = true,               -- Enable hover detection
+    canCollide = true,          -- Enable click detection
+    buttonCallback = function() end,  -- Click handler
+}
+
+SPAWNING:
+--------
+dsl.spawn({ x = 100, y = 200 }, definition, "ui", zOrder)
+  - position: { x, y } screen coordinates
+  - definition: UI tree from dsl functions
+  - layer: "ui" for UI layer
+  - zOrder: higher = drawn on top
+
+================================================================================
+]]
+
 local dsl = require("ui.ui_syntax_sugar")
 
 local Showcase = {}
@@ -113,7 +180,6 @@ function Showcase.createDividerDemo()
             dsl.hbox {
                 config = { padding = 4 },
                 children = {
-                    -- Divider as standalone panel element
                     dsl.vbox {
                         config = { padding = 2 },
                         children = {
@@ -122,7 +188,7 @@ function Showcase.createDividerDemo()
                             dsl.text("Above divider", { fontSize = 10, color = "white" }),
                             dsl.spritePanel {
                                 sprite = "test-divider.png",
-                                sizing = "fit_sprite",  -- 58x16 original size
+                                sizing = "fit_sprite",
                             },
                             dsl.text("Below divider", { fontSize = 10, color = "white" }),
                         }

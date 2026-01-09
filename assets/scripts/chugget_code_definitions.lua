@@ -7133,6 +7133,118 @@ function animation_system.resetAnimationUIRenderScale(...) end
 function animation_system.resizeAnimationObjectToFit(...) end
 
 ---
+--- Gets the current frame index of the active animation
+---
+---@param e entt.entity # Target entity
+---@return number frame # Current frame index
+function animation_system.getCurrentFrame(...) end
+
+---
+--- Gets the total number of frames in the active animation
+---
+---@param e entt.entity # Target entity
+---@return number count # Total frame count
+function animation_system.getFrameCount(...) end
+
+---
+--- Checks if the animation is currently playing
+---
+---@param e entt.entity # Target entity
+---@return boolean playing # True if animation is playing
+function animation_system.isPlaying(...) end
+
+---
+--- Gets the progress of the current animation (0.0 to 1.0)
+---
+---@param e entt.entity # Target entity
+---@return number progress # Progress from 0.0 to 1.0
+function animation_system.getProgress(...) end
+
+---
+--- Starts or resumes the animation
+---
+---@param e entt.entity # Target entity
+---@return nil
+function animation_system.play(...) end
+
+---
+--- Pauses the animation at the current frame
+---
+---@param e entt.entity # Target entity
+---@return nil
+function animation_system.pause(...) end
+
+---
+--- Stops the animation and resets to frame 0
+---
+---@param e entt.entity # Target entity
+---@return nil
+function animation_system.stop(...) end
+
+---
+--- Sets the animation playback speed multiplier
+---
+---@param e entt.entity # Target entity
+---@param speed number # Speed multiplier (1.0 = normal)
+---@return nil
+function animation_system.setSpeed(...) end
+
+---
+--- Seeks to a specific frame in the animation
+---
+---@param e entt.entity # Target entity
+---@param frame number # Frame index to seek to
+---@return nil
+function animation_system.seekFrame(...) end
+
+---
+--- Sets the playback direction (Forward, Reverse, Pingpong, PingpongReverse)
+---
+---@param e entt.entity # Target entity
+---@param direction PlaybackDirection # Playback direction
+---@return nil
+function animation_system.setDirection(...) end
+
+---
+--- Sets the number of times the animation should loop
+---
+---@param e entt.entity # Target entity
+---@param loopCount number # Number of loops (-1 = infinite, 0 = play once)
+---@return nil
+function animation_system.setLoopCount(...) end
+
+---
+--- Sets callback fired when animation frame changes
+---
+---@param e entt.entity # Target entity
+---@param callback fun(oldFrame: number, newFrame: number) # Callback function
+---@return nil
+function animation_system.onFrameChange(...) end
+
+---
+--- Sets callback fired when animation completes a loop
+---
+---@param e entt.entity # Target entity
+---@param callback fun(loopCount: number) # Callback with current loop count
+---@return nil
+function animation_system.onLoopComplete(...) end
+
+---
+--- Sets callback fired when animation ends (loopCount reached)
+---
+---@param e entt.entity # Target entity
+---@param callback fun() # Callback function
+---@return nil
+function animation_system.onAnimationEnd(...) end
+
+---
+--- Clears all animation callbacks for the entity
+---
+---@param e entt.entity # Target entity
+---@return nil
+function animation_system.clearCallbacks(...) end
+
+---
 ---
 ---@param name string               # Unique camera name
 ---@param registry entt.registry*   # Pointer to your ECS registry
@@ -12151,6 +12263,7 @@ function ui.box.placeUIElementsRecursively(...) end
 ---
 --- Places a single non-container element within its parent.
 ---
+---@param registry registry
 ---@param role InheritedProperties
 ---@param runningTransform table
 ---@param uiElement Entity

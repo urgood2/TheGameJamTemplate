@@ -1,36 +1,4 @@
 {
-    "idle_animation": {
-        "frames": [
-            {
-                "sprite_UUID": "3308-TheRoguelike_1_10_alpha_101.png",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            },
-            {
-                "sprite_UUID": "1_10_103_3310_alpha_theroguelike",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            },
-            {
-                "sprite_UUID": "1_10_107_3314_alpha_theroguelike",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            },
-            {
-                "sprite_UUID": "3321-TheRoguelike_1_10_alpha_114.png",
-                "duration_seconds": 0.5,
-                "fg_color": "WHITE",
-                "bg_color": "NONE",
-                "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
-            }
-        ]
-    },
     "sword_anim": {
         "frames": [
             {
@@ -371,26 +339,6 @@
                 "sprite_UUID": "3840-TheRoguelike_1_10_alpha_633.png",
                 "duration_seconds": 5,
                 "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "black_hole_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "4168-TheRoguelike_1_10_alpha_961.png",
-                "duration_seconds": 5,
-                "fg_color": "BLACK",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-    "black_hole_particle_anim": {
-        "frames": [
-            {
-                "sprite_UUID": "star_01.png",
-                "duration_seconds": 5,
-                "fg_color": "WHITE",
                 "bg_color": "NONE"
             }
         ]

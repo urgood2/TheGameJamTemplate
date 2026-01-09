@@ -1,13 +1,79 @@
 --[[
 ================================================================================
-Inventory Grid Demo (Simplified)
+INVENTORY GRID DEMO - Complete Reference Implementation
 ================================================================================
-Demonstrates inventory grid system with drag-drop slots.
 
-Usage:
-    local InventoryGridDemo = require("examples.inventory_grid_demo")
-    InventoryGridDemo.init()  -- Call from main menu initMainMenu()
-    InventoryGridDemo.cleanup()  -- Call from clearMainMenu()
+Demonstrates a full inventory system with:
+- Drag-and-drop slots
+- Tab switching (Inventory/Equipment/Crafting)
+- Item stacking
+- Slot filtering (element restrictions)
+- Sorting functionality
+- Stack count badges
+- Custom immediate-mode rendering panel
+
+LIFECYCLE:
+---------
+local InventoryGridDemo = require("examples.inventory_grid_demo")
+InventoryGridDemo.init()     -- Initialize all UI elements
+InventoryGridDemo.cleanup()  -- Destroy all entities and cancel timers
+
+CREATING YOUR OWN INVENTORY GRID:
+--------------------------------
+1. Create grid definition with dsl.inventoryGrid():
+
+    local gridDef = dsl.inventoryGrid({
+        rows = 3,
+        cols = 4,
+        slotSize = 64,
+        slotGap = 4,
+        background = { color = "darkgray", padding = 8 },
+        slotBackground = { color = "lightgray" },
+    })
+
+2. Spawn the grid:
+
+    local gridEntity = dsl.spawn({ x = 100, y = 100 }, gridDef, "ui", 50)
+
+3. Access grid API (see core/inventory_grid.lua):
+
+    local grid = require("core.inventory_grid")
+    grid.addItem(gridEntity, itemEntity)           -- Add item to first empty slot
+    grid.addItem(gridEntity, itemEntity, 5)        -- Add to specific slot
+    grid.removeItem(gridEntity, slotIndex)         -- Remove and return item
+    grid.getItemAt(gridEntity, row, col)           -- Get item at position
+    grid.findEmptySlot(gridEntity)                 -- Find first empty slot
+    grid.getUsedSlotCount(gridEntity)              -- Count occupied slots
+
+SLOT CONFIGURATION:
+------------------
+Configure individual slots with filters and states:
+
+    slots = {
+        [1] = { filter = function(item) return getElement(item) == "fire" end },
+        [2] = { locked = true },  -- Cannot add/remove items
+        [12] = { background = { color = "red" } },  -- Custom appearance
+    }
+
+EVENTS (via hump.signal):
+------------------------
+signal.register("grid_item_added", function(gridEntity, slotIndex, itemEntity) end)
+signal.register("grid_item_removed", function(gridEntity, slotIndex, itemEntity) end)
+signal.register("grid_item_moved", function(gridEntity, fromSlot, toSlot, itemEntity) end)
+signal.register("grid_stack_changed", function(gridEntity, slotIndex, itemEntity, oldCount, newCount) end)
+
+TAB SYSTEM:
+----------
+Use dsl.tabs() for tabbed interfaces:
+
+    local tabDef = dsl.tabs({
+        tabs = {
+            { id = "inv", label = "Inventory", content = function() return myGridDef end },
+            { id = "equip", label = "Equipment", content = function() return equipGridDef end },
+        },
+        activeTab = "inv",
+    })
+
 ================================================================================
 ]]
 
@@ -142,7 +208,9 @@ function InventoryGridDemo.init()
     InventoryGridDemo.createInfoBox(gridX - 220, gridY)
     InventoryGridDemo.createSortButtons(gridX - 220, gridY + 340)
     
-    InventoryGridDemo.createCustomPanel(leftPanelX, leftPanelY + 200)
+    local customPanelX = screenW - 220
+    local customPanelY = screenH - 180
+    InventoryGridDemo.createCustomPanel(customPanelX, customPanelY)
     
     InventoryGridDemo.setupSignalHandlers()
     InventoryGridDemo.setupDragDebugTimer()
@@ -431,8 +499,6 @@ end
 --------------------------------------------------------------------------------
 
 function InventoryGridDemo.createCustomPanel(x, y)
-    local HoverRegistry = require("ui.hover_registry")
-    
     demoState.customPanelState = {
         x = x,
         y = y,
@@ -466,31 +532,55 @@ function InventoryGridDemo.createCustomPanel(x, y)
         tag = "custom_panel_render",
         group = demoState.timerGroup,
         action = function()
-            HoverRegistry.clear()
             InventoryGridDemo.renderCustomPanel()
-            HoverRegistry.update()
         end,
     })
 end
 
 function InventoryGridDemo.renderCustomPanel()
-    local HoverRegistry = require("ui.hover_registry")
     local state = demoState.customPanelState
     if not state then return end
+    if not demoState.customPanelEntity or not registry:valid(demoState.customPanelEntity) then return end
+    
+    local transform = component_cache.get(demoState.customPanelEntity, Transform)
+    if not transform then return end
+    
+    local baseX = transform.actualX or transform.visualX or state.x
+    local baseY = transform.actualY or transform.visualY or state.y
     
     local baseZ = (z_orders and z_orders.ui_tooltips or 800) + 200
     local SPACE = layer.DrawCommandSpace.Screen
     local uiLayer = layers.ui or "ui"
     
-    local panelX = state.x + 10
-    local panelY = state.y + 50
+    local panelX = baseX + 10
+    local panelY = baseY + 42
     local panelW = state.w - 20
-    local panelH = 75
+    local panelH = 85
+    
+    local iconX = panelX + 20
+    local iconY = panelY + panelH / 2
+    local iconRadius = 12
+    
+    local mouse = nil
+    if input and input.getMousePos then
+        mouse = input.getMousePos()
+    end
+    
+    state.iconHovered = false
+    state.isHovered = false
+    if mouse then
+        local inIcon = mouse.x >= (iconX - iconRadius) and mouse.x <= (iconX + iconRadius) and
+                       mouse.y >= (iconY - iconRadius) and mouse.y <= (iconY + iconRadius)
+        local inPanel = mouse.x >= panelX and mouse.x <= panelX + panelW and
+                        mouse.y >= panelY and mouse.y <= panelY + panelH
+        state.iconHovered = inIcon
+        state.isHovered = inPanel and not inIcon
+    end
     
     local pulseTime = (globals.time or 0) * 2
     local pulseAlpha = math.abs(math.sin(pulseTime)) * 0.3 + 0.5
     
-    local bgColor = state.isHovered 
+    local bgColor = (state.isHovered or state.iconHovered)
         and Color.new(80, 120, 180, math.floor(pulseAlpha * 255))
         or Color.new(40, 60, 100, math.floor(pulseAlpha * 200))
     
@@ -501,60 +591,26 @@ function InventoryGridDemo.renderCustomPanel()
             c.w = panelW
             c.h = panelH
             c.fillColor = bgColor
-            c.borderColor = state.isHovered and Color.new(150, 200, 255, 255) or Color.new(80, 100, 140, 255)
+            c.borderColor = (state.isHovered or state.iconHovered) and Color.new(150, 200, 255, 255) or Color.new(80, 100, 140, 255)
             c.borderWidth = 2
             c.numSteps = 4
         end, baseZ, SPACE)
     end
     
-    HoverRegistry.region({
-        id = "custom_panel_bg",
-        x = panelX,
-        y = panelY,
-        w = panelW,
-        h = panelH,
-        z = baseZ,
-        data = { state = state },
-        onHover = function(data)
-            data.state.isHovered = true
-        end,
-        onUnhover = function(data)
-            data.state.isHovered = false
-        end,
-    })
-    
-    local iconX = panelX + 20
-    local iconY = panelY + panelH / 2
-    local iconRadius = 12
-    
+    local iconPulse = math.abs(math.sin(pulseTime * 1.5)) * 0.3 + 0.7
     local iconColor = state.iconHovered
         and Color.new(255, 220, 100, 255)
-        or Color.new(200, 180, 80, 200)
+        or Color.new(255, 230, 100, math.floor(iconPulse * 255))
+    local pulsingRadius = iconRadius + (iconPulse - 0.7) * 8
     
     if command_buffer and command_buffer.queueDrawCircleFilled then
         command_buffer.queueDrawCircleFilled(uiLayer, function(c)
             c.x = iconX
             c.y = iconY
-            c.radius = iconRadius
+            c.radius = pulsingRadius
             c.color = iconColor
         end, baseZ + 1, SPACE)
     end
-    
-    HoverRegistry.region({
-        id = "custom_panel_icon",
-        x = iconX - iconRadius,
-        y = iconY - iconRadius,
-        w = iconRadius * 2,
-        h = iconRadius * 2,
-        z = baseZ + 10,
-        data = { state = state },
-        onHover = function(data)
-            data.state.iconHovered = true
-        end,
-        onUnhover = function(data)
-            data.state.iconHovered = false
-        end,
-    })
     
     local font = localization and localization.getFont and localization.getFont()
     local labelText = state.iconHovered and "Icon Hovered!" or (state.isHovered and "Panel Hovered" or "Hover me")
@@ -801,23 +857,21 @@ function InventoryGridDemo.switchTab(tabId)
             setGridItemsVisible(gridEntity, isActive)
         end
         
-        local tabBoxEntity = demoState.tabButtonEntities[id]
-        if tabBoxEntity and registry:valid(tabBoxEntity) then
-            local buttonEntity = ui.box.GetUIEByID(registry, tabBoxEntity, "tab_" .. id)
-            if buttonEntity and registry:valid(buttonEntity) then
-                local newColor = isActive and util.getColor("steel_blue") or util.getColor("gray")
-                
-                if registry:has(buttonEntity, UIStyleConfig) then
-                    local styleConfig = registry:get(buttonEntity, UIStyleConfig)
-                    styleConfig.color = newColor
-                    styleConfig.emboss = isActive and 2 or 1
-                end
-                
-                if registry:has(buttonEntity, UIConfig) then
-                    local uiConfig = registry:get(buttonEntity, UIConfig)
-                    uiConfig.chosen = isActive
-                    uiConfig.color = newColor
-                end
+        -- tabBoxEntity IS the button entity (returned from dsl.spawn), not a container with a child button
+        local buttonEntity = demoState.tabButtonEntities[id]
+        if buttonEntity and registry:valid(buttonEntity) then
+            local newColor = isActive and util.getColor("steel_blue") or util.getColor("gray")
+            
+            if registry:has(buttonEntity, UIStyleConfig) then
+                local styleConfig = registry:get(buttonEntity, UIStyleConfig)
+                styleConfig.color = newColor
+                styleConfig.emboss = isActive and 2 or 1
+            end
+            
+            if registry:has(buttonEntity, UIConfig) then
+                local uiConfig = registry:get(buttonEntity, UIConfig)
+                uiConfig.chosen = isActive
+                uiConfig.color = newColor
             end
         end
     end
@@ -880,17 +934,17 @@ function InventoryGridDemo.setupSlotOverlays()
                 if slotEntity and registry:valid(slotEntity) then
                     UIDecorations.addCustomOverlay(slotEntity, {
                         id = "hover_rect_" .. tabId .. "_" .. i,
-                        z = -1,
+                        z = 5,
                         visible = function(eid)
-                            local inputState = component_cache.get(eid, InputState)
-                            return inputState and inputState.cursor_hovering_target
+                            local globalInput = input and input.getState and input.getState()
+                            return globalInput and globalInput.cursor_hovering_target == eid
                         end,
                         onDraw = function(eid, x, y, w, h, z)
                             if command_buffer and command_buffer.queueDrawRectangle then
                                 command_buffer.queueDrawRectangle(
                                     layers.ui or "ui", function() end,
                                     x + 2, y + 2, w - 4, h - 4,
-                                    Color.new(100, 150, 255, 60),
+                                    Color.new(100, 150, 255, 100),
                                     z, layer.DrawCommandSpace.Screen
                                 )
                             end

@@ -1,18 +1,65 @@
 --[[
 ================================================================================
-Inventory Grid API
+INVENTORY GRID API - Core Grid Operations
 ================================================================================
-Helper functions for interacting with inventory grid entities.
-Provides a clean Lua API for grid operations.
 
-Usage:
-    local grid = require("core.inventory_grid")
-    
-    local rows, cols = grid.getDimensions(gridEntity)
-    local item = grid.getItemAt(gridEntity, 2, 3)
-    grid.addItem(gridEntity, itemEntity, slotIndex)
+Lua API for inventory grid manipulation. Use with dsl.inventoryGrid() for UI.
 
-Dependencies: signal (for events)
+QUICK REFERENCE:
+---------------
+local grid = require("core.inventory_grid")
+
+-- Dimensions
+rows, cols = grid.getDimensions(gridEntity)
+capacity = grid.getCapacity(gridEntity)
+
+-- Item Access
+item = grid.getItemAtIndex(gridEntity, slotIndex)    -- By slot number (1-based)
+item = grid.getItemAt(gridEntity, row, col)          -- By row/col (1-based)
+items = grid.getAllItems(gridEntity)                  -- { [slotIndex] = item }
+list = grid.getItemList(gridEntity)                   -- { { slot=1, item=e }, ... }
+
+-- Slot Access
+slotEntity = grid.getSlotEntity(gridEntity, slotIndex)
+slots = grid.getAllSlots(gridEntity)
+usedCount = grid.getUsedSlotCount(gridEntity)
+emptyCount = grid.getEmptySlotCount(gridEntity)
+
+-- Find Operations
+slotIndex = grid.findSlotContaining(gridEntity, itemEntity)
+slotIndex = grid.findEmptySlot(gridEntity)
+slots = grid.findSlotsMatching(gridEntity, function(slot, item) return ... end)
+
+-- Item Operations (emit events)
+success, slot, action = grid.addItem(gridEntity, itemEntity, slotIndex?)
+item = grid.removeItem(gridEntity, slotIndex)
+success = grid.moveItem(gridEntity, fromSlot, toSlot)
+success = grid.swapItems(gridEntity, slot1, slot2)
+
+-- Stack Operations (for stackable grids)
+count = grid.getStackCount(gridEntity, slotIndex)
+success = grid.addToStack(gridEntity, slotIndex, amount)
+success = grid.removeFromStack(gridEntity, slotIndex, amount)
+success, transferred = grid.mergeStacks(gridEntity, fromSlot, toSlot)
+success, amount = grid.splitStack(gridEntity, slotIndex, amount, newItemEntity)
+
+-- Slot State
+isLocked = grid.isSlotLocked(gridEntity, slotIndex)
+grid.setSlotLocked(gridEntity, slotIndex, true/false)
+canAccept = grid.canSlotAccept(gridEntity, slotIndex, itemEntity)
+
+-- Cleanup
+grid.cleanup(gridEntity)  -- Call when destroying grid
+
+EVENTS (via hump.signal):
+------------------------
+"grid_item_added"     (gridEntity, slotIndex, itemEntity)
+"grid_item_removed"   (gridEntity, slotIndex, itemEntity)
+"grid_item_moved"     (gridEntity, fromSlot, toSlot, itemEntity)
+"grid_items_swapped"  (gridEntity, slot1, slot2, item1, item2)
+"grid_stack_changed"  (gridEntity, slotIndex, itemEntity, oldCount, newCount)
+"grid_stack_split"    (gridEntity, slotIndex, amount, newItemEntity)
+
 ================================================================================
 ]]
 

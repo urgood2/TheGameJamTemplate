@@ -26,10 +26,10 @@ Usage:
     decor.addOverlay(element, {
         sprite = "glow_effect",
         opacity = 0.5,
-        z = -1,
+        z = 1,
         visible = function(eid)
-            local inputState = component_cache.get(eid, InputState)
-            return inputState and inputState.cursor_hovering_target
+            local globalInput = input and input.getState and input.getState()
+            return globalInput and globalInput.cursor_hovering_target == eid
         end,
     })
     

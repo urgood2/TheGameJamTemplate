@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <any>
 
+#include "systems/ai/blackboard.hpp"
+
 // ! component usage index
 /*
  * Tile :
@@ -43,48 +45,6 @@ struct TransformCustom {
 // ------------------ GOAP AI COMPONENTS ------------------
 // --------------------------------------------------------
 struct GOAPComponent;
-
-// Used to store variables between actions for separate entities with a string identifier
-class Blackboard {
-public:
-    // Set a value in the blackboard
-    template<typename T>
-    void set(const std::string& key, const T& value) {
-        data[key] = value;
-    }
-
-    // Get a value from the blackboard (returns std::any)
-    template<typename T>
-    T get(const std::string& key) const {
-        if (data.find(key) != data.end()) {
-            return std::any_cast<T>(data.at(key));
-        }
-        throw std::runtime_error("Key not found");
-    }
-
-    // Check if a key exists in the blackboard
-    bool contains(const std::string& key) const {
-        return data.find(key) != data.end();
-    }
-
-    // Check the number of items in the blackboard
-    std::size_t size() const {
-        return data.size();
-    }
-
-    // Check if the blackboard is empty
-    bool isEmpty() const {
-        return data.empty();
-    }
-
-    // Clear all items from the blackboard
-    void clear() {
-        data.clear();
-    }
-
-private:
-    std::unordered_map<std::string, std::any> data;  // Key-value store for variables
-};
 
 // holds the modular "actions" that the AI can take
 struct Action {

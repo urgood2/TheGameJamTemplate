@@ -99,13 +99,7 @@ struct GOAPComponent
 
     sol::table def; // Lua table to store loaded goap AI data (ai directory under scripts), which can be customized per entity.
     
-    // New field to store the current action's update() coroutine
     sol::coroutine currentUpdateCoroutine;
-
-    ~GOAPComponent()
-    {
-        goap_actionplanner_clear(&ap);
-    }
 };
 
 // --------------------------------------------------------
